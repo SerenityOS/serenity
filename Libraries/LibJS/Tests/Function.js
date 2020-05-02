@@ -2,7 +2,9 @@ load("test-common.js");
 
 try {
     assert(Function.length === 1);
+    assert(Function.name === "Function");
     assert(Function.prototype.length === 0);
+    assert(Function.prototype.name === "");
 
     assert(typeof Function() === "function");
     assert(typeof new Function() === "function");
@@ -21,6 +23,7 @@ try {
     assert(new Function("return typeof Function()")() === "function");
     assert(new Function("x", "return function (y) { return x + y };")(1)(2) === 3);
 
+    assert(new Function().name === "anonymous");
     assert(new Function().toString() === "function anonymous() {\n  ???\n}");
 
     console.log("PASS");

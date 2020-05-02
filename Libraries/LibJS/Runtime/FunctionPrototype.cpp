@@ -51,6 +51,7 @@ void FunctionPrototype::initialize()
     put_native_function("call", call, 1, attr);
     put_native_function("toString", to_string, 0, attr);
     put("length", Value(0), Attribute::Configurable);
+    put("name", js_string(heap(), ""), Attribute::Configurable);
 }
 
 FunctionPrototype::~FunctionPrototype()

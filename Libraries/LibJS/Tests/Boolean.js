@@ -2,6 +2,9 @@ load("test-common.js");
 
 try {
     assert(Boolean.length === 1);
+    assert(Boolean.name === "Boolean");
+    assert(Boolean.prototype.length === undefined);
+
     assert(typeof new Boolean() === "object");
     assert(new Boolean().valueOf() === false);
 

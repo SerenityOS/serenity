@@ -34,6 +34,18 @@
 
 namespace JS {
 
+static ScriptFunction* script_function_from(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return nullptr;
+    if (!this_object->is_function()) {
+        interpreter.throw_exception<TypeError>("Not a function");
+        return nullptr;
+    }
+    return static_cast<ScriptFunction*>(this_object);
+}
+
 ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment)
 {
     return global_object.heap().allocate<ScriptFunction>(name, body, move(parameters), parent_environment, *global_object.function_prototype());
@@ -47,7 +59,8 @@ ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vec
     , m_parent_environment(parent_environment)
 {
     put("prototype", Object::create_empty(interpreter(), interpreter().global_object()), 0);
-    put_native_property("length", length_getter, length_setter, Attribute::Configurable);
+    put_native_property("length", length_getter, nullptr, Attribute::Configurable);
+    put_native_property("name", name_getter, nullptr, Attribute::Configurable);
 }
 
 ScriptFunction::~ScriptFunction()
@@ -101,16 +114,18 @@ Value ScriptFunction::construct(Interpreter& interpreter)
 
 Value ScriptFunction::length_getter(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto* function = script_function_from(interpreter);
+    if (!function)
         return {};
-    if (!this_object->is_function())
-        return interpreter.throw_exception<TypeError>("Not a function");
-    return Value(static_cast<i32>(static_cast<const ScriptFunction*>(this_object)->parameters().size()));
+    return Value(static_cast<i32>(function->parameters().size()));
 }
 
-void ScriptFunction::length_setter(Interpreter&, Value)
+Value ScriptFunction::name_getter(Interpreter& interpreter)
 {
+    auto* function = script_function_from(interpreter);
+    if (!function)
+        return {};
+    return js_string(interpreter, function->name().is_null() ? "" : function->name());
 }
 
 }

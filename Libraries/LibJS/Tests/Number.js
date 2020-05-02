@@ -2,8 +2,12 @@ load("test-common.js");
 
 try {
     assert(Number.length === 1);
+    assert(Number.name === "Number");
+    assert(Number.prototype.length === undefined);
+
     assert(typeof Number() === "number");
     assert(typeof new Number() === "object");
+
     assert(Number() === 0);
     assert(new Number().valueOf() === 0);
     assert(Number("42") === 42);

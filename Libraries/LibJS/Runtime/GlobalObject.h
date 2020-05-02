@@ -48,15 +48,15 @@ public:
 protected:
     virtual void visit_children(Visitor&) override;
 
+    template<typename ConstructorType>
+    void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);
+
 private:
     virtual const char* class_name() const override { return "GlobalObject"; }
 
     static Value gc(Interpreter&);
     static Value is_nan(Interpreter&);
     static Value is_finite(Interpreter&);
-
-    template<typename ConstructorType>
-    void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);
 
     Shape* m_empty_object_shape { nullptr };
 
