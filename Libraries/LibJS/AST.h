@@ -149,12 +149,17 @@ class Declaration : public Statement {
 
 class FunctionNode {
 public:
+    struct Parameter {
+        FlyString name;
+        RefPtr<Expression> default_value;
+    };
+
     const FlyString& name() const { return m_name; }
     const Statement& body() const { return *m_body; }
-    const Vector<FlyString>& parameters() const { return m_parameters; };
+    const Vector<Parameter>& parameters() const { return m_parameters; };
 
 protected:
-    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
+    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
         : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
@@ -169,7 +174,7 @@ protected:
 private:
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
-    const Vector<FlyString> m_parameters;
+    const Vector<Parameter> m_parameters;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
 };
 
@@ -179,7 +184,7 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
+    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
         : FunctionNode(name, move(body), move(parameters), move(variables))
     {
     }
@@ -196,7 +201,7 @@ class FunctionExpression final : public Expression
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
+    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
         : FunctionNode(name, move(body), move(parameters), move(variables))
     {
     }
