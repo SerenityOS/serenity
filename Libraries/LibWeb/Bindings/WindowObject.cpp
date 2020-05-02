@@ -64,7 +64,7 @@ void WindowObject::initialize()
     m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>();
     m_xhr_constructor = heap().allocate<XMLHttpRequestConstructor>();
     m_xhr_constructor->put("prototype", m_xhr_prototype, 0);
-    put("XMLHttpRequest", m_xhr_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+    add_constructor("XMLHttpRequest", m_xhr_constructor, *m_xhr_prototype);
 }
 
 WindowObject::~WindowObject()

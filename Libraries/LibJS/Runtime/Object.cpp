@@ -397,6 +397,7 @@ bool Object::put_native_function(const FlyString& property_name, AK::Function<Va
 {
     auto* function = NativeFunction::create(interpreter(), interpreter().global_object(), property_name, move(native_function));
     function->put("length", Value(length), Attribute::Configurable);
+    function->put("name", js_string(heap(), property_name), Attribute::Configurable);
     return put(property_name, function, attributes);
 }
 
