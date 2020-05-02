@@ -3,8 +3,10 @@ load("test-common.js");
 try {
     assert(Function.length === 1);
     assert(Function.prototype.length === 0);
+
     assert(typeof Function() === "function");
     assert(typeof new Function() === "function");
+
     assert(Function()() === undefined);
     assert(new Function()() === undefined);
     assert(Function("return 42")() === 42);
@@ -18,6 +20,8 @@ try {
     assert(new Function("foo", "if (foo) { return 42; } else { return 'bar'; }")(false) === "bar");
     assert(new Function("return typeof Function()")() === "function");
     assert(new Function("x", "return function (y) { return x + y };")(1)(2) === 3);
+
+    assert(new Function().toString() === "function anonymous() {\n  ???\n}");
 
     console.log("PASS");
 } catch (e) {
