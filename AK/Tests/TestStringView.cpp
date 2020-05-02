@@ -111,4 +111,47 @@ TEST_CASE(lines)
     EXPECT_EQ(test_string_vector.at(2).is_empty(), true);
 }
 
+TEST_CASE(find_first_of)
+{
+    String test_string = "aabbcc_xy_ccbbaa";
+    StringView test_string_view = test_string.view();
+
+    EXPECT_EQ(test_string_view.find_first_of('b').has_value(), true);
+    EXPECT_EQ(test_string_view.find_first_of('b').value(), 2U);
+
+    EXPECT_EQ(test_string_view.find_first_of('_').has_value(), true);
+    EXPECT_EQ(test_string_view.find_first_of('_').value(), 6U);
+
+    EXPECT_EQ(test_string_view.find_first_of("bc").has_value(), true);
+    EXPECT_EQ(test_string_view.find_first_of("bc").value(), 2U);
+
+    EXPECT_EQ(test_string_view.find_first_of("yx").has_value(), true);
+    EXPECT_EQ(test_string_view.find_first_of("yx").value(), 7U);
+
+    EXPECT_EQ(test_string_view.find_first_of('n').has_value(), false);
+    EXPECT_EQ(test_string_view.find_first_of("defg").has_value(), false);
+}
+
+TEST_CASE(find_last_of)
+{
+    String test_string = "aabbcc_xy_ccbbaa";
+    StringView test_string_view = test_string.view();
+
+    EXPECT_EQ(test_string_view.find_last_of('b').has_value(), true);
+    EXPECT_EQ(test_string_view.find_last_of('b').value(), 13U);
+
+    EXPECT_EQ(test_string_view.find_last_of('_').has_value(), true);
+    EXPECT_EQ(test_string_view.find_last_of('_').value(), 9U);
+
+    EXPECT_EQ(test_string_view.find_last_of("bc").has_value(), true);
+    EXPECT_EQ(test_string_view.find_last_of("bc").value(), 13U);
+
+    EXPECT_EQ(test_string_view.find_last_of("yx").has_value(), true);
+    EXPECT_EQ(test_string_view.find_last_of("yx").value(), 8U);
+
+    EXPECT_EQ(test_string_view.find_last_of('3').has_value(), false);
+    EXPECT_EQ(test_string_view.find_last_of("fghi").has_value(), false);
+}
+
+
 TEST_MAIN(StringView)

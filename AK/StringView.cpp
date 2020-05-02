@@ -222,4 +222,46 @@ bool StringView::operator==(const String& string) const
     return !__builtin_memcmp(m_characters, string.characters(), m_length);
 }
 
+Optional<size_t> StringView::find_first_of(char c) const
+{
+    for (size_t pos = 0; pos < m_length; ++pos) {
+        if (m_characters[pos] == c)
+            return pos;
+    }
+    return {};
+}
+
+Optional<size_t> StringView::find_first_of(const StringView& view) const
+{
+    for (size_t pos = 0; pos < m_length; ++pos) {
+        char c = m_characters[pos];
+        for (char view_char : view) {
+            if (c == view_char)
+                return pos;
+        }
+    }
+    return {};
+}
+
+Optional<size_t> StringView::find_last_of(char c) const
+{
+    for (size_t pos = m_length; --pos >0;) {
+        if (m_characters[pos] == c)
+            return pos;
+    }
+    return {};
+}
+
+Optional<size_t> StringView::find_last_of(const StringView& view) const
+{
+    for (size_t pos = m_length - 1; --pos > 0;) {
+        char c = m_characters[pos];
+        for (char view_char : view) {
+            if (c == view_char)
+                return pos;
+        }
+    }
+    return {};
+}
+
 }
