@@ -89,12 +89,13 @@ Window::Window(Core::Object& parent, WindowType type)
     WindowManager::the().add_window(*this);
 }
 
-Window::Window(ClientConnection& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool resizable, bool fullscreen)
+Window::Window(ClientConnection& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen)
     : Core::Object(&client)
     , m_client(&client)
     , m_type(window_type)
     , m_modal(modal)
     , m_minimizable(minimizable)
+    , m_frameless(frameless)
     , m_resizable(resizable)
     , m_fullscreen(fullscreen)
     , m_window_id(window_id)

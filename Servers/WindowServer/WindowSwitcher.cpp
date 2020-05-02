@@ -223,6 +223,8 @@ void WindowSwitcher::refresh()
     int longest_title_width = 0;
     wm.for_each_window_of_type_from_front_to_back(
         WindowType::Normal, [&](Window& window) {
+            if (window.is_frameless())
+                return IterationDecision::Continue;
             ++window_count;
             longest_title_width = max(longest_title_width, wm.font().width(window.title()));
             if (selected_window == &window)
