@@ -57,15 +57,6 @@
 
 namespace JS {
 
-template<typename ConstructorType>
-void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object& prototype)
-{
-    constructor = heap().allocate<ConstructorType>();
-    constructor->put("name", js_string(heap(), property_name), Attribute::Configurable);
-    prototype.put("constructor", constructor);
-    put(property_name, constructor, Attribute::Writable | Attribute::Configurable);
-}
-
 GlobalObject::GlobalObject()
     : Object(nullptr)
 {

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
@@ -66,5 +67,14 @@ private:
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 };
+
+template<typename ConstructorType>
+inline void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object& prototype)
+{
+    constructor = heap().allocate<ConstructorType>();
+    constructor->put("name", js_string(heap(), property_name), Attribute::Configurable);
+    prototype.put("constructor", constructor);
+    put(property_name, constructor, Attribute::Writable | Attribute::Configurable);
+}
 
 }
