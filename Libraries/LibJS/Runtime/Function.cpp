@@ -43,9 +43,12 @@ Function::Function(Object& prototype, Value bound_this, Vector<Value> bound_argu
 {
 }
 
+Function::~Function()
+{
+}
+
 BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
 {
-
     Function& target_function = is_bound_function() ? static_cast<BoundFunction&>(*this).target_function() : *this;
 
     auto bound_this_object = [bound_this_value, this]() -> Value {
@@ -63,21 +66,17 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
 
     i32 computed_length = 0;
     auto length_property = get("length");
-    if (interpreter().exception()) {
+    if (interpreter().exception())
         return nullptr;
-    }
-    if (length_property.is_number()) {
+    if (length_property.is_number())
         computed_length = max(0, length_property.to_i32() - static_cast<i32>(arguments.size()));
-    }
 
     Object* constructor_prototype = nullptr;
     auto prototype_property = target_function.get("prototype");
-    if (interpreter().exception()) {
+    if (interpreter().exception())
         return nullptr;
-    }
-    if (prototype_property.is_object()) {
+    if (prototype_property.is_object())
         constructor_prototype = &prototype_property.as_object();
-    }
 
     auto all_bound_arguments = bound_arguments();
     all_bound_arguments.append(move(arguments));
@@ -91,13 +90,8 @@ void Function::visit_children(Visitor& visitor)
 
     visitor.visit(m_bound_this);
 
-    for (auto argument : m_bound_arguments) {
+    for (auto argument : m_bound_arguments)
         visitor.visit(argument);
-    }
-}
-
-Function::~Function()
-{
 }
 
 }
