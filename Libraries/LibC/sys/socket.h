@@ -41,6 +41,7 @@ __BEGIN_DECLS
 #define PF_LOCAL AF_LOCAL
 #define PF_UNIX PF_LOCAL
 #define PF_INET AF_INET
+#define PF_UNSPEC AF_UNSPEC
 
 #define SOCK_TYPE_MASK 0xff
 #define SOCK_STREAM 1
@@ -76,11 +77,12 @@ struct ucred {
 
 #define SO_RCVTIMEO 1
 #define SO_SNDTIMEO 2
-#define SO_KEEPALIVE 3
+#define SO_TYPE 3
 #define SO_ERROR 4
 #define SO_PEERCRED 5
 #define SO_REUSEADDR 6
 #define SO_BINDTODEVICE 7
+#define SO_KEEPALIVE 9
 
 int socket(int domain, int type, int protocol);
 int bind(int sockfd, const struct sockaddr* addr, socklen_t);
