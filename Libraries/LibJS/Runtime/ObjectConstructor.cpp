@@ -39,6 +39,7 @@ ObjectConstructor::ObjectConstructor()
     : NativeFunction("Object", *interpreter().global_object().function_prototype())
 {
     put("prototype", interpreter().global_object().object_prototype(), 0);
+    put("length", Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     put_native_function("defineProperty", define_property, 3, attr);
