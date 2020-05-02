@@ -52,6 +52,7 @@ namespace Kernel {
 #define PS2MOUSE_RESET 0xFF
 
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
+#define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
 //#define PS2MOUSE_DEBUG
 
@@ -151,6 +152,14 @@ void PS2MouseDevice::parse_data_packet()
     packet.y = y;
     packet.z = z;
     packet.buttons = m_data[0] & 0x07;
+
+    if (m_has_five_buttons) {
+        if (m_data[3] & 0x10)
+            packet.buttons |= MousePacket::BackButton;
+        if (m_data[3] & 0x20)
+            packet.buttons |= MousePacket::ForwardButton;
+    }
+
     packet.is_relative = true;
 #ifdef PS2MOUSE_DEBUG
     dbg() << "PS2 Relative Mouse: Buttons " << String::format("%x", packet.buttons);
@@ -201,6 +210,21 @@ void PS2MouseDevice::check_device_presence()
     }
 }
 
+u8 PS2MouseDevice::get_device_id()
+{
+    mouse_write(PS2MOUSE_GET_DEVICE_ID);
+    expect_ack();
+    return mouse_read();
+}
+
+void PS2MouseDevice::set_sample_rate(u8 rate)
+{
+    mouse_write(PS2MOUSE_SET_SAMPLE_RATE);
+    expect_ack();
+    mouse_write(rate);
+    expect_ack();
+}
+
 void PS2MouseDevice::initialize_device()
 {
     if (!m_device_present)
@@ -223,28 +247,14 @@ void PS2MouseDevice::initialize_device()
     mouse_write(PS2MOUSE_ENABLE_PACKET_STREAMING);
     expect_ack();
 
-    mouse_write(PS2MOUSE_GET_DEVICE_ID);
-    expect_ack();
-    u8 device_id = mouse_read();
+    u8 device_id = get_device_id();
 
     if (device_id != PS2MOUSE_INTELLIMOUSE_ID) {
         // Send magical wheel initiation sequence.
-        mouse_write(PS2MOUSE_SET_SAMPLE_RATE);
-        expect_ack();
-        mouse_write(200);
-        expect_ack();
-        mouse_write(PS2MOUSE_SET_SAMPLE_RATE);
-        expect_ack();
-        mouse_write(100);
-        expect_ack();
-        mouse_write(PS2MOUSE_SET_SAMPLE_RATE);
-        expect_ack();
-        mouse_write(80);
-        expect_ack();
-
-        mouse_write(PS2MOUSE_GET_DEVICE_ID);
-        expect_ack();
-        device_id = mouse_read();
+        set_sample_rate(200);
+        set_sample_rate(100);
+        set_sample_rate(80);
+        device_id = get_device_id();
     }
 
     if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
@@ -252,6 +262,19 @@ void PS2MouseDevice::initialize_device()
         klog() << "PS2MouseDevice: Mouse wheel enabled!";
     } else {
         klog() << "PS2MouseDevice: No mouse wheel detected!";
+    }
+
+    if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
+        // Try to enable 5 buttons as well!
+        set_sample_rate(200);
+        set_sample_rate(200);
+        set_sample_rate(80);
+        device_id = get_device_id();
+    }
+
+    if (device_id == PS2MOUSE_INTELLIMOUSE_EXPLORER_ID) {
+        m_has_five_buttons = true;
+        klog() << "PS2MouseDevice: 5 buttons enabled!";
     }
 
     enable_irq();
