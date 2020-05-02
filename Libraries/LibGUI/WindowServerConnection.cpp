@@ -178,6 +178,10 @@ MouseButton to_gmousebutton(u32 button)
         return MouseButton::Right;
     case 4:
         return MouseButton::Middle;
+    case 8:
+        return MouseButton::Back;
+    case 16:
+        return MouseButton::Forward;
     default:
         ASSERT_NOT_REACHED();
         break;

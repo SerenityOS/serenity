@@ -683,6 +683,10 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> 
         return m_right;
     case MouseButton::Middle:
         return m_middle;
+    case MouseButton::Back:
+        return m_back;
+    case MouseButton::Forward:
+        return m_forward;
     default:
         ASSERT_NOT_REACHED();
     }
