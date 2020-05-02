@@ -52,7 +52,7 @@ private:
     virtual void visit_children(Visitor&) override;
 
     static Value length_getter(Interpreter&);
-    static void length_setter(Interpreter&, Value);
+    static Value name_getter(Interpreter&);
 
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;

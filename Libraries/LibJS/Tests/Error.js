@@ -1,6 +1,10 @@
 load("test-common.js");
 
 try {
+    assert(Error.length === 1);
+    assert(Error.name === "Error");
+    assert(Error.prototype.length === undefined);
+
     var e;
 
     e = Error();
