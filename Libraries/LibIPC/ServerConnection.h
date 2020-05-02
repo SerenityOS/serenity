@@ -57,15 +57,9 @@ public:
             handle_messages();
         };
 
-        int retries = 100000;
-        while (retries) {
-            if (m_connection->connect(Core::SocketAddress::local(address))) {
-                break;
-            }
-
-            dbgprintf("Client::Connection: connect failed: %d, %s\n", errno, strerror(errno));
-            usleep(10000);
-            --retries;
+        if (!m_connection->connect(Core::SocketAddress::local(address))) {
+            perror("connect");
+            ASSERT_NOT_REACHED();
         }
 
         ucred creds;
