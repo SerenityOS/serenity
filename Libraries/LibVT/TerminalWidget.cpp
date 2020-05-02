@@ -568,10 +568,12 @@ void TerminalWidget::paste()
 {
     if (m_ptm_fd == -1)
         return;
-    auto text = GUI::Clipboard::the().data();
-    if (text.is_empty())
+    auto [data, type] = GUI::Clipboard::the().data_and_type();
+    if (type != "text")
         return;
-    int nwritten = write(m_ptm_fd, text.characters(), text.length());
+    if (data.is_empty())
+        return;
+    int nwritten = write(m_ptm_fd, data.characters(), data.length());
     if (nwritten < 0) {
         perror("write");
         ASSERT_NOT_REACHED();
