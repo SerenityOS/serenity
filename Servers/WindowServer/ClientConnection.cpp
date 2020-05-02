@@ -462,7 +462,7 @@ Window* ClientConnection::window_from_id(i32 window_id)
 OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(const Messages::WindowServer::CreateWindow& message)
 {
     int window_id = m_next_window_id++;
-    auto window = Window::construct(*this, (WindowType)message.type(), window_id, message.modal(), message.minimizable(), message.resizable(), message.fullscreen());
+    auto window = Window::construct(*this, (WindowType)message.type(), window_id, message.modal(), message.minimizable(), message.frameless(), message.resizable(), message.fullscreen());
 
     dbg() << "Constructing window with parent_window_id=" << message.parent_window_id();
 
@@ -478,8 +478,6 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
         }
         window->set_parent_window(*parent_window);
     }
-
-    window->set_frameless(message.frameless());
 
     window->set_has_alpha_channel(message.has_alpha_channel());
     window->set_title(message.title());

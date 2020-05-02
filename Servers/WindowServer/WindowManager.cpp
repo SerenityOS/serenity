@@ -251,7 +251,7 @@ void WindowManager::tell_wm_listener_about_window(Window& listener, Window& wind
         return;
     if (window.is_internal())
         return;
-    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), window.is_active(), window.is_minimized(), (i32)window.type(), window.title(), window.rect()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), window.is_active(), window.is_minimized(), window.is_frameless(), (i32)window.type(), window.title(), window.rect()));
 }
 
 void WindowManager::tell_wm_listener_about_window_rect(Window& listener, Window& window)

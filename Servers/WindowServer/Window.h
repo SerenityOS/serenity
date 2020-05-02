@@ -66,7 +66,7 @@ class Window final : public Core::Object
     , public InlineLinkedListNode<Window> {
     C_OBJECT(Window)
 public:
-    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool resizable, bool fullscreen);
+    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen);
     Window(Core::Object&, WindowType);
     virtual ~Window() override;
 
@@ -254,6 +254,7 @@ private:
     bool m_has_alpha_channel { false };
     bool m_modal { false };
     bool m_minimizable { false };
+    bool m_frameless { false };
     bool m_resizable { false };
     bool m_listens_to_wm_events { false };
     bool m_minimized { false };
@@ -262,7 +263,6 @@ private:
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::Rect m_untiled_rect;
     bool m_occluded { false };
-    bool m_frameless { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
     int m_window_id { -1 };
