@@ -28,6 +28,7 @@
 #include "Parser.h"
 #include <AK/FileSystemPath.h>
 #include <AK/Function.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/ElapsedTimer.h>
@@ -580,7 +581,7 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
 
 class FileDescriptionCollector {
 public:
-    FileDescriptionCollector() { }
+    FileDescriptionCollector() {}
     ~FileDescriptionCollector() { collect(); }
 
     void collect()
@@ -906,7 +907,17 @@ static int run_command(const String& cmd)
                 int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
                 if (rc < 0) {
                     if (errno == ENOENT) {
-                        fprintf(stderr, "%s: Command not found.\n", argv[0]);
+                        int shebang_fd = open(argv[0], O_RDONLY);
+                        auto close_argv = ScopeGuard([shebang_fd]() { if (shebang_fd >= 0)  close(shebang_fd); });
+                        char shebang[256] {};
+                        ssize_t num_read = -1;
+                        if ((shebang_fd >= 0) && ((num_read = read(shebang_fd, shebang, sizeof(shebang))) >= 2) && (StringView(shebang).starts_with("#!"))) {
+                            StringView shebang_path_view(&shebang[2], num_read - 2);
+                            Optional<size_t> newline_pos = shebang_path_view.find_first_of("\n\r");
+                            shebang[newline_pos.has_value() ? newline_pos.value() : num_read] = '\0';
+                            fprintf(stderr, "%s: Invalid interpreter \"%s\": %s\n", argv[0], &shebang[2], strerror(ENOENT));
+                        } else
+                            fprintf(stderr, "%s: Command not found.\n", argv[0]);
                     } else {
                         struct stat st;
                         if (stat(argv[0], &st) == 0 && S_ISDIR(st.st_mode)) {
@@ -915,7 +926,7 @@ static int run_command(const String& cmd)
                         }
                         fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(errno));
                     }
-                    _exit(1);
+                    _exit(126);
                 }
                 ASSERT_NOT_REACHED();
             }
