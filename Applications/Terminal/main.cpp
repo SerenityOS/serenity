@@ -221,7 +221,7 @@ int main(int argc, char** argv)
     if (command_to_execute)
         run_command(ptm_fd, command_to_execute);
     else
-        run_command(ptm_fd, config->read_entry("Startup", "Command"));
+        run_command(ptm_fd, config->read_entry("Startup", "Command", ""));
 
     auto window = GUI::Window::construct();
     window->set_title("Terminal");
