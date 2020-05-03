@@ -329,6 +329,15 @@ int main(int argc, char** argv)
                     out() << "                return nullptr;";
                     out() << "            " << parameter.name << ".append(value);";
                     out() << "        }";
+                } else if (parameter.type.starts_with("Optional<")) {
+                    out() << "        bool has_value = false;";
+                    out() << "        stream >> has_value;";
+                    out() << "        if (has_value) {";
+                    out() << "            " << parameter.type.substring_view(9, parameter.type.length() - 10) << " value;";
+                    out() << "            if (!decoder.decode(value))";
+                    out() << "                return nullptr;";
+                    out() << "            " << parameter.name << " = value;";
+                    out() << "        }";
                 } else {
                     out() << "        if (!decoder.decode(" << parameter.name << "))";
                     out() << "            return nullptr;";
@@ -382,6 +391,10 @@ int main(int argc, char** argv)
                     out() << "        stream << m_" << parameter.name << ".shbuf_id();";
                     out() << "        stream << m_" << parameter.name << ".width();";
                     out() << "        stream << m_" << parameter.name << ".height();";
+                } else if (parameter.type.starts_with("Optional<")) {
+                    out() << "        stream << m_" << parameter.name << ".has_value();";
+                    out() << "        if (m_" << parameter.name << ".has_value())";
+                    out() << "            stream << m_" << parameter.name << ".value();";
                 } else {
                     out() << "        stream << m_" << parameter.name << ";";
                 }
