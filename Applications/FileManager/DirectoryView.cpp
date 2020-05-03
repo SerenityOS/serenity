@@ -26,30 +26,13 @@
 
 #include "DirectoryView.h"
 #include <AK/FileSystemPath.h>
+#include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/DesktopServices.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 #include <unistd.h>
-
-// FIXME: Remove this hackery once printf() supports floats.
-static String number_string_with_one_decimal(float number, const char* suffix)
-{
-    float decimals = number - (int)number;
-    return String::format("%d.%d %s", (int)number, (int)(decimals * 10), suffix);
-}
-
-static String human_readable_size(size_t size)
-{
-    if (size < 1 * KB)
-        return String::format("%zu bytes", size);
-    if (size < 1 * MB)
-        return number_string_with_one_decimal((float)size / (float)KB, "KB");
-    if (size < 1 * GB)
-        return number_string_with_one_decimal((float)size / (float)MB, "MB");
-    return number_string_with_one_decimal((float)size / (float)GB, "GB");
-}
 
 void DirectoryView::handle_activation(const GUI::ModelIndex& index)
 {
@@ -98,9 +81,9 @@ DirectoryView::DirectoryView()
             open(m_path_history.at(m_path_history_position));
         else
             quit = true;
-        
+
         if (on_error)
-            on_error(error, error_string, quit);        
+            on_error(error, error_string, quit);
     };
 
     m_model->on_complete = [this] {
