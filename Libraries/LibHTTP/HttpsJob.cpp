@@ -156,37 +156,47 @@ void HttpsJob::on_socket_connected()
         }
         ASSERT(m_state == State::InBody);
         ASSERT(tls.can_read());
-        auto payload = tls.read(64 * KB);
-        if (!payload) {
-            if (tls.eof())
-                return finish_up();
-            return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-        }
-        m_received_buffers.append(payload);
-        m_received_size += payload.size();
 
-        auto content_length_header = m_headers.get("Content-Length");
-        Optional<u32> content_length {};
+        while (tls.can_read())
+            read_body(tls);
 
-        if (content_length_header.has_value()) {
-            bool ok;
-            auto length = content_length_header.value().to_uint(ok);
-            if (ok)
-                content_length = length;
-        }
-
-        // This needs to be synchronous
-        // FIXME: Somehow enforce that this should not modify anything
-        did_progress(content_length, m_received_size);
-
-        if (content_length.has_value()) {
-            auto length = content_length.value();
-            if (m_received_size >= length) {
-                m_received_size = length;
-                finish_up();
-            }
-        }
+        if (!tls.is_established())
+            return finish_up();
     };
+}
+
+void HttpsJob::read_body(TLS::TLSv12& tls)
+{
+    auto payload = tls.read(64 * KB);
+    if (!payload) {
+        if (tls.eof())
+            return finish_up();
+        return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+    }
+    m_received_buffers.append(payload);
+    m_received_size += payload.size();
+
+    auto content_length_header = m_headers.get("Content-Length");
+    Optional<u32> content_length {};
+
+    if (content_length_header.has_value()) {
+        bool ok;
+        auto length = content_length_header.value().to_uint(ok);
+        if (ok)
+            content_length = length;
+    }
+
+    // This needs to be synchronous
+    // FIXME: Somehow enforce that this should not modify anything
+    did_progress(content_length, m_received_size);
+
+    if (content_length.has_value()) {
+        auto length = content_length.value();
+        if (m_received_size >= length) {
+            m_received_size = length;
+            finish_up();
+        }
+    }
 }
 
 void HttpsJob::finish_up()
