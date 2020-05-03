@@ -79,11 +79,7 @@ protected:
         }
         case PaddingMode::RFC5246: {
             auto maybe_padding_length = data[size - 1];
-            if (maybe_padding_length >= T::block_size() - 1) {
-                // cannot be padding (the entire block cannot be padding)
-                return;
-            }
-            // FIXME: If we want to constant-time operations, this loop should not stop
+            // FIXME: If we want constant-time operations, this loop should not stop
             for (auto i = size - maybe_padding_length - 1; i < size; ++i) {
                 if (data[i] != maybe_padding_length) {
                     // note that this is likely invalid padding
