@@ -41,13 +41,12 @@ public:
     UnsignedBigInteger(u32 x) { m_words.append(x); }
 
     explicit UnsignedBigInteger(AK::Vector<u32, STARTING_WORD_SIZE>&& words)
-        : m_words(words)
+        : m_words(move(words))
     {
     }
 
-    UnsignedBigInteger() { }
+    UnsignedBigInteger() {}
 
-    static UnsignedBigInteger from_base10(const String& str);
     static UnsignedBigInteger create_invalid();
 
     static UnsignedBigInteger import_data(const AK::StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
@@ -60,30 +59,30 @@ public:
         return export_data(buffer);
     }
 
+    static UnsignedBigInteger from_base10(const String& str);
+    String to_base10() const;
+
     const AK::Vector<u32, STARTING_WORD_SIZE>& words() const { return m_words; }
+
+    void invalidate() { m_is_invalid = true; }
+
+    bool is_invalid() const { return m_is_invalid; }
+
+    size_t length() const { return m_words.size(); }
+    // The "trimmed length" is the number of words after trimming leading zeroed words
+    size_t trimmed_length() const;
 
     UnsignedBigInteger plus(const UnsignedBigInteger& other) const;
     UnsignedBigInteger minus(const UnsignedBigInteger& other) const;
-    UnsignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     UnsignedBigInteger shift_left(size_t num_bits) const;
-
+    UnsignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     UnsignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
 
     void set_bit_inplace(size_t bit_index);
 
-    size_t length() const { return m_words.size(); }
-
-    // The "trimmed length" is the number of words after trimming leading zeroed words
-    size_t trimmed_length() const;
-
     bool operator==(const UnsignedBigInteger& other) const;
     bool operator!=(const UnsignedBigInteger& other) const;
     bool operator<(const UnsignedBigInteger& other) const;
-
-    void invalidate() { m_is_invalid = true; }
-    bool is_invalid() const { return m_is_invalid; }
-
-    String to_base10() const;
 
 private:
     ALWAYS_INLINE UnsignedBigInteger shift_left_by_n_words(const size_t number_of_words) const;

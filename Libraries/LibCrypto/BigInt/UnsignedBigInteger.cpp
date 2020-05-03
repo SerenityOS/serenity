@@ -29,6 +29,41 @@
 
 namespace Crypto {
 
+UnsignedBigInteger UnsignedBigInteger::create_invalid()
+{
+    UnsignedBigInteger invalid(0);
+    invalid.invalidate();
+    return invalid;
+}
+
+// FIXME: in great need of optimisation
+UnsignedBigInteger UnsignedBigInteger::import_data(const u8* ptr, size_t length)
+{
+    UnsignedBigInteger integer { 0 };
+
+    for (size_t i = 0; i < length; ++i) {
+        auto part = UnsignedBigInteger { ptr[length - i - 1] }.shift_left(8 * i);
+        integer = integer.plus(part);
+    }
+
+    return integer;
+}
+
+size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data)
+{
+    UnsignedBigInteger copy { *this };
+
+    size_t size = trimmed_length() * sizeof(u32);
+    size_t i = 0;
+    for (; i < size; ++i) {
+        if (copy.length() == 0)
+            break;
+        data[size - i - 1] = copy.m_words[0] & 0xff;
+        copy = copy.divided_by(256).quotient;
+    }
+    return i;
+}
+
 UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)
 {
     UnsignedBigInteger result;
@@ -61,9 +96,14 @@ String UnsignedBigInteger::to_base10() const
     return builder.to_string();
 }
 
-bool UnsignedBigInteger::operator!=(const UnsignedBigInteger& other) const
+size_t UnsignedBigInteger::trimmed_length() const
 {
-    return !(*this == other);
+    size_t num_leading_zeroes = 0;
+    for (int i = length() - 1; i >= 0; --i, ++num_leading_zeroes) {
+        if (m_words[i] != 0)
+            break;
+    }
+    return length() - num_leading_zeroes;
 }
 
 /**
@@ -141,6 +181,32 @@ UnsignedBigInteger UnsignedBigInteger::minus(const UnsignedBigInteger& other) co
     return result;
 }
 
+UnsignedBigInteger UnsignedBigInteger::shift_left(size_t num_bits) const
+{
+    // We can only do shift operations on individual words
+    // where the shift amount is <= size of word (32).
+    // But we do know how to shift by a multiple of word size (e.g 64=32*2)
+    // So we first shift the result by how many whole words fit in 'num_bits'
+    UnsignedBigInteger temp_result = shift_left_by_n_words(num_bits / UnsignedBigInteger::BITS_IN_WORD);
+
+    // And now we shift by the leftover amount of bits
+    num_bits %= UnsignedBigInteger::BITS_IN_WORD;
+
+    UnsignedBigInteger result(temp_result);
+
+    for (size_t i = 0; i < temp_result.length(); ++i) {
+        u32 current_word_of_temp_result = temp_result.shift_left_get_one_word(num_bits, i);
+        result.m_words[i] = current_word_of_temp_result;
+    }
+
+    // Shifting the last word can produce a carry
+    u32 carry_word = temp_result.shift_left_get_one_word(num_bits, temp_result.length());
+    if (carry_word != 0) {
+        result = result.plus(UnsignedBigInteger(carry_word).shift_left_by_n_words(temp_result.length()));
+    }
+    return result;
+}
+
 /**
  * Complexity: O(N^2) where N is the number of words in the larger number
  * Multiplcation method:
@@ -210,30 +276,48 @@ void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
     m_words[word_index] |= (1 << inner_word_index);
 }
 
-UnsignedBigInteger UnsignedBigInteger::shift_left(size_t num_bits) const
+bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
 {
-    // We can only do shift operations on individual words
-    // where the shift amount is <= size of word (32).
-    // But we do know how to shift by a multiple of word size (e.g 64=32*2)
-    // So we first shift the result by how many whole words fit in 'num_bits'
-    UnsignedBigInteger temp_result = shift_left_by_n_words(num_bits / UnsignedBigInteger::BITS_IN_WORD);
+    auto length = trimmed_length();
 
-    // And now we shift by the leftover amount of bits
-    num_bits %= UnsignedBigInteger::BITS_IN_WORD;
-
-    UnsignedBigInteger result(temp_result);
-
-    for (size_t i = 0; i < temp_result.length(); ++i) {
-        u32 current_word_of_temp_result = temp_result.shift_left_get_one_word(num_bits, i);
-        result.m_words[i] = current_word_of_temp_result;
+    if (length != other.trimmed_length()) {
+        return false;
     }
 
-    // Shifting the last word can produce a carry
-    u32 carry_word = temp_result.shift_left_get_one_word(num_bits, temp_result.length());
-    if (carry_word != 0) {
-        result = result.plus(UnsignedBigInteger(carry_word).shift_left_by_n_words(temp_result.length()));
+    if (is_invalid() != other.is_invalid()) {
+        return false;
     }
-    return result;
+
+    return !__builtin_memcmp(m_words.data(), other.words().data(), length);
+}
+
+bool UnsignedBigInteger::operator!=(const UnsignedBigInteger& other) const
+{
+    return !(*this == other);
+}
+
+bool UnsignedBigInteger::operator<(const UnsignedBigInteger& other) const
+{
+    auto length = trimmed_length();
+    auto other_length = other.trimmed_length();
+
+    if (length < other_length) {
+        return true;
+    }
+
+    if (length > other_length) {
+        return false;
+    }
+
+    if (length == 0) {
+        return false;
+    }
+    for (int i = length - 1; i >= 0; --i) {
+        if (m_words[i] == other.m_words[i])
+            continue;
+        return m_words[i] < other.m_words[i];
+    }
+    return false;
 }
 
 ALWAYS_INLINE UnsignedBigInteger UnsignedBigInteger::shift_left_by_n_words(const size_t number_of_words) const
@@ -271,89 +355,5 @@ ALWAYS_INLINE u32 UnsignedBigInteger::shift_left_get_one_word(const size_t num_b
         result += m_words[result_word_index] << num_bits;
     }
     return result;
-}
-
-bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
-{
-    auto length = trimmed_length();
-
-    if (length != other.trimmed_length()) {
-        return false;
-    }
-
-    if (is_invalid() != other.is_invalid()) {
-        return false;
-    }
-
-    return !__builtin_memcmp(m_words.data(), other.words().data(), length);
-}
-
-bool UnsignedBigInteger::operator<(const UnsignedBigInteger& other) const
-{
-    auto length = trimmed_length();
-    auto other_length = other.trimmed_length();
-
-    if (length < other_length) {
-        return true;
-    }
-
-    if (length > other_length) {
-        return false;
-    }
-
-    if (length == 0) {
-        return false;
-    }
-    for (int i = length - 1; i >= 0; --i) {
-        if (m_words[i] == other.m_words[i])
-            continue;
-        return m_words[i] < other.m_words[i];
-    }
-    return false;
-}
-
-size_t UnsignedBigInteger::trimmed_length() const
-{
-    size_t num_leading_zeroes = 0;
-    for (int i = length() - 1; i >= 0; --i, ++num_leading_zeroes) {
-        if (m_words[i] != 0)
-            break;
-    }
-    return length() - num_leading_zeroes;
-}
-
-UnsignedBigInteger UnsignedBigInteger::create_invalid()
-{
-    UnsignedBigInteger invalid(0);
-    invalid.invalidate();
-    return invalid;
-}
-
-// FIXME: in great need of optimisation
-UnsignedBigInteger UnsignedBigInteger::import_data(const u8* ptr, size_t length)
-{
-    UnsignedBigInteger integer { 0 };
-
-    for (size_t i = 0; i < length; ++i) {
-        auto part = UnsignedBigInteger { ptr[length - i - 1] }.shift_left(8 * i);
-        integer = integer.plus(part);
-    }
-
-    return integer;
-}
-
-size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data)
-{
-    UnsignedBigInteger copy { *this };
-
-    size_t size = trimmed_length() * sizeof(u32);
-    size_t i = 0;
-    for (; i < size; ++i) {
-        if (copy.length() == 0)
-            break;
-        data[size - i - 1] = copy.m_words[0] & 0xff;
-        copy = copy.divided_by(256).quotient;
-    }
-    return i;
 }
 }
