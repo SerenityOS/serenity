@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,35 +26,35 @@
 
 #pragma once
 
-#include <LibIPC/Forward.h>
-#include <LibIPC/Message.h>
+#include <AK/HashMap.h>
+#include <AK/String.h>
 
 namespace IPC {
 
-class Encoder {
+class Dictionary {
 public:
-    explicit Encoder(MessageBuffer& buffer)
-        : m_buffer(buffer)
+    Dictionary() {}
+
+    bool is_empty() const { return m_entries.is_empty(); }
+    size_t size() const { return m_entries.size(); }
+
+    void add(String key, String value)
     {
+        m_entries.set(move(key), move(value));
     }
 
-    Encoder& operator<<(bool);
-    Encoder& operator<<(u8);
-    Encoder& operator<<(u16);
-    Encoder& operator<<(u32);
-    Encoder& operator<<(u64);
-    Encoder& operator<<(i8);
-    Encoder& operator<<(i16);
-    Encoder& operator<<(i32);
-    Encoder& operator<<(i64);
-    Encoder& operator<<(float);
-    Encoder& operator<<(const char*);
-    Encoder& operator<<(const StringView&);
-    Encoder& operator<<(const String&);
-    Encoder& operator<<(const Dictionary&);
+    template<typename Callback>
+    void for_each_entry(Callback callback) const
+    {
+        for (auto& it : m_entries) {
+            callback(it.key, it.value);
+        }
+    }
+
+    const HashMap<String, String>& entries() const { return m_entries; }
 
 private:
-    MessageBuffer& m_buffer;
+    HashMap<String, String> m_entries;
 };
 
 }

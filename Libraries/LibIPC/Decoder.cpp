@@ -26,6 +26,7 @@
 
 #include <AK/BufferStream.h>
 #include <LibIPC/Decoder.h>
+#include <LibIPC/Dictionary.h>
 
 namespace IPC {
 
@@ -110,6 +111,29 @@ bool Decoder::decode(String& value)
     }
     value = *text_impl;
     return !m_stream.handle_read_failure();
+}
+
+bool Decoder::decode(Dictionary& dictionary)
+{
+    u64 size = 0;
+    m_stream >> size;
+    if (m_stream.handle_read_failure())
+        return false;
+    if (size >= NumericLimits<i32>::max()) {
+        ASSERT_NOT_REACHED();
+    }
+
+    for (size_t i = 0; i < size; ++i) {
+        String key;
+        if (!decode(key))
+            return false;
+        String value;
+        if (!decode(value))
+            return false;
+        dictionary.add(move(key), move(value));
+    }
+
+    return true;
 }
 
 }

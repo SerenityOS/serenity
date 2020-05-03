@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
 
 namespace IPC {
@@ -137,6 +138,15 @@ Encoder& Encoder::operator<<(const String& value)
         return *this << (i32)-1;
     *this << static_cast<i32>(value.length());
     return *this << value.view();
+}
+
+Encoder& Encoder::operator<<(const Dictionary& dictionary)
+{
+    *this << (u64)dictionary.size();
+    dictionary.for_each_entry([this](auto& key, auto& value) {
+        *this << key << value;
+    });
+    return *this;
 }
 
 }
