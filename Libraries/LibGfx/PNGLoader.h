@@ -46,6 +46,10 @@ public:
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile() override;
     virtual bool sniff() override;
+    virtual bool is_animated() override;
+    virtual size_t loop_count() override;
+    virtual size_t frame_count() override;
+    virtual ImageFrameDescriptor frame(size_t i) override;
 
 private:
     OwnPtr<PNGLoadingContext> m_context;

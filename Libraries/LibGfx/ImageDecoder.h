@@ -26,14 +26,19 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 #include <LibGfx/Size.h>
 
 namespace Gfx {
 
 class Bitmap;
+
+struct ImageFrameDescriptor {
+    RefPtr<Bitmap> image;
+    int duration { 0 };
+};
 
 class ImageDecoderPlugin {
 public:
@@ -46,6 +51,11 @@ public:
     [[nodiscard]] virtual bool set_nonvolatile() = 0;
 
     virtual bool sniff() = 0;
+
+    virtual bool is_animated() = 0;
+    virtual size_t loop_count() = 0;
+    virtual size_t frame_count() = 0;
+    virtual ImageFrameDescriptor frame(size_t i) = 0;
 
 protected:
     ImageDecoderPlugin() {}
@@ -62,7 +72,11 @@ public:
     RefPtr<Gfx::Bitmap> bitmap() const;
     void set_volatile() { m_plugin->set_volatile(); }
     [[nodiscard]] bool set_nonvolatile() { return m_plugin->set_nonvolatile(); }
-    bool sniff() { return m_plugin->sniff(); };
+    bool sniff() const { return m_plugin->sniff(); }
+    bool is_animated() const { return m_plugin->is_animated(); }
+    size_t loop_count() const { return m_plugin->loop_count(); }
+    size_t frame_count() const { return m_plugin->frame_count(); }
+    ImageFrameDescriptor frame(size_t i) const { return m_plugin->frame(i); }
 
 private:
     ImageDecoder(const u8*, size_t);
