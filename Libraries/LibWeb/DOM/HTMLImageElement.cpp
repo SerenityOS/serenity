@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibWeb/CSS/StyleResolver.h>
@@ -37,6 +38,7 @@ namespace Web {
 
 HTMLImageElement::HTMLImageElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
+    , m_timer(Core::Timer::construct())
 {
 }
 
@@ -66,10 +68,40 @@ void HTMLImageElement::load_image(const String& src)
         m_encoded_data = data;
         m_image_decoder = Gfx::ImageDecoder::create(m_encoded_data.data(), m_encoded_data.size());
 
+        if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
+            const auto& first_frame = m_image_decoder->frame(0);
+            m_timer->set_interval(first_frame.duration);
+            m_timer->on_timeout = [this] { animate(); };
+            m_timer->start();
+        }
+
         document().update_layout();
 
         dispatch_event(Event::create("load"));
     });
+}
+
+void HTMLImageElement::animate()
+{
+    if (!layout_node()) {
+        return;
+    }
+
+    m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
+    const auto& current_frame = m_image_decoder->frame(m_current_frame_index);
+
+    if (current_frame.duration != m_timer->interval()) {
+        m_timer->restart(current_frame.duration);
+    }
+
+    if (m_current_frame_index == m_image_decoder->frame_count() - 1) {
+        ++m_loops_completed;
+        if (m_loops_completed > 0 && m_loops_completed == m_image_decoder->loop_count()) {
+            m_timer->stop();
+        }
+    }
+
+    layout_node()->set_needs_display();
 }
 
 int HTMLImageElement::preferred_width() const
@@ -111,6 +143,11 @@ const Gfx::Bitmap* HTMLImageElement::bitmap() const
 {
     if (!m_image_decoder)
         return nullptr;
+
+    if (m_image_decoder->is_animated()) {
+        return m_image_decoder->frame(m_current_frame_index).image;
+    }
+
     return m_image_decoder->bitmap();
 }
 

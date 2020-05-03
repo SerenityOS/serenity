@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/DOM/HTMLElement.h>
 
@@ -56,10 +57,16 @@ public:
 private:
     void load_image(const String& src);
 
+    void animate();
+
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
     RefPtr<Gfx::ImageDecoder> m_image_decoder;
     ByteBuffer m_encoded_data;
+
+    size_t m_current_frame_index { 0 };
+    size_t m_loops_completed { 0 };
+    NonnullRefPtr<Core::Timer> m_timer;
 };
 
 template<>
