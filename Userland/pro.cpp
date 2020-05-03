@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/URL.h>
+#include <AK/NumberFormat.h>
 #include <AK/SharedBuffer.h>
+#include <AK/URL.h>
 #include <LibCore/EventLoop.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
@@ -53,10 +54,30 @@ int main(int argc, char** argv)
         fprintf(stderr, "Failed to start download for '%s'\n", url_string.characters());
         return 1;
     }
-    download->on_progress = [](u32 total_size, u32 downloaded_size) {
-        dbgprintf("download progress: %u / %u\n", downloaded_size, total_size);
+    u32 previous_downloaded_size { 0 };
+    timeval prev_time, current_time, time_diff;
+    gettimeofday(&prev_time, nullptr);
+
+    download->on_progress = [&](Optional<u32> maybe_total_size, u32 downloaded_size) {
+        fprintf(stderr, "\r\033[2K");
+        if (maybe_total_size.has_value())
+            fprintf(stderr, "Download progress: %s / %s", human_readable_size(downloaded_size).characters(), human_readable_size(maybe_total_size.value()).characters());
+        else
+            fprintf(stderr, "Download progress: %s / ???", human_readable_size(downloaded_size).characters());
+
+        gettimeofday(&current_time, nullptr);
+        timersub(&current_time, &prev_time, &time_diff);
+
+        auto time_diff_ms = time_diff.tv_sec * 1000 + time_diff.tv_usec / 1000;
+        auto size_diff = downloaded_size - previous_downloaded_size;
+
+        fprintf(stderr, " at %s/s", human_readable_size(((float)size_diff / (float)time_diff_ms) * 1000).characters());
+
+        previous_downloaded_size = downloaded_size;
+        prev_time = current_time;
     };
     download->on_finish = [&](bool success, auto& payload, auto) {
+        fprintf(stderr, "\n");
         if (success)
             write(STDOUT_FILENO, payload.data(), payload.size());
         else
