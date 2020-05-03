@@ -1229,6 +1229,28 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
     return array;
 }
 
+void TemplateLiteral::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    for (auto& expression : expressions())
+        expression.dump(indent + 1);
+}
+
+Value TemplateLiteral::execute(Interpreter& interpreter) const
+{
+    StringBuilder string_builder;
+
+    for (auto& expression : expressions()) {
+        auto expr = expression.execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        string_builder.append(expr.to_string());
+    }
+
+    return js_string(interpreter, string_builder.build());
+}
+
 void TryStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
@@ -1398,15 +1420,15 @@ Value ConditionalExpression::execute(Interpreter& interpreter) const
 void ConditionalExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
-    print_indent(indent);
+    print_indent(indent + 1);
     printf("(Test)\n");
-    m_test->dump(indent + 1);
-    print_indent(indent);
+    m_test->dump(indent + 2);
+    print_indent(indent + 1);
     printf("(Consequent)\n");
-    m_consequent->dump(indent + 1);
-    print_indent(indent);
+    m_consequent->dump(indent + 2);
+    print_indent(indent + 1);
     printf("(Alternate)\n");
-    m_alternate->dump(indent + 1);
+    m_alternate->dump(indent + 2);
 }
 
 void SequenceExpression::dump(int indent) const

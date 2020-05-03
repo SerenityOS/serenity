@@ -42,7 +42,9 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenType::NumericLiteral:
         return { palette.syntax_number() };
     case JS::TokenType::StringLiteral:
-    case JS::TokenType::TemplateLiteral:
+    case JS::TokenType::TemplateLiteralStart:
+    case JS::TokenType::TemplateLiteralEnd:
+    case JS::TokenType::TemplateLiteralString:
     case JS::TokenType::RegexLiteral:
     case JS::TokenType::UnterminatedStringLiteral:
         return { palette.syntax_string() };
@@ -55,6 +57,8 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenType::ParenClose:
     case JS::TokenType::ParenOpen:
     case JS::TokenType::Semicolon:
+    case JS::TokenType::TemplateLiteralExprStart:
+    case JS::TokenType::TemplateLiteralExprEnd:
         return { palette.syntax_punctuation() };
     case JS::TokenType::Ampersand:
     case JS::TokenType::AmpersandEquals:

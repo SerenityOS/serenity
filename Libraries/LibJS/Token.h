@@ -112,7 +112,11 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(SlashEquals)                 \
     __ENUMERATE_JS_TOKEN(StringLiteral)               \
     __ENUMERATE_JS_TOKEN(Switch)                      \
-    __ENUMERATE_JS_TOKEN(TemplateLiteral)             \
+    __ENUMERATE_JS_TOKEN(TemplateLiteralEnd)          \
+    __ENUMERATE_JS_TOKEN(TemplateLiteralExprEnd)      \
+    __ENUMERATE_JS_TOKEN(TemplateLiteralExprStart)    \
+    __ENUMERATE_JS_TOKEN(TemplateLiteralStart)        \
+    __ENUMERATE_JS_TOKEN(TemplateLiteralString)       \
     __ENUMERATE_JS_TOKEN(This)                        \
     __ENUMERATE_JS_TOKEN(Throw)                       \
     __ENUMERATE_JS_TOKEN(Tilde)                       \
@@ -122,6 +126,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(UnsignedShiftRight)          \
     __ENUMERATE_JS_TOKEN(UnsignedShiftRightEquals)    \
     __ENUMERATE_JS_TOKEN(UnterminatedStringLiteral)   \
+    __ENUMERATE_JS_TOKEN(UnterminatedTemplateLiteral) \
     __ENUMERATE_JS_TOKEN(Var)                         \
     __ENUMERATE_JS_TOKEN(Void)                        \
     __ENUMERATE_JS_TOKEN(While)                       \
