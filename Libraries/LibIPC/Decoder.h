@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
 
 namespace IPC {
@@ -55,6 +56,7 @@ public:
     bool decode(i64&);
     bool decode(float&);
     bool decode(String&);
+    bool decode(Dictionary&);
 
     template<typename T>
     bool decode(T& value)

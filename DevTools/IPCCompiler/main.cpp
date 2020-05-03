@@ -230,6 +230,7 @@ int main(int argc, char** argv)
     out() << "#include <LibGfx/Rect.h>";
     out() << "#include <LibGfx/ShareableBitmap.h>";
     out() << "#include <LibIPC/Decoder.h>";
+    out() << "#include <LibIPC/Dictionary.h>";
     out() << "#include <LibIPC/Encoder.h>";
     out() << "#include <LibIPC/Endpoint.h>";
     out() << "#include <LibIPC/Message.h>";
