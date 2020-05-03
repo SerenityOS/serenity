@@ -1,3 +1,28 @@
+/*
+ * Copyright (c) 2020, Cole Blakley <cblakley15@gmail.com>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 #include <AK/StringBuilder.h>
 #include <LibEmail/IMAPClient.h>
 #include <ctype.h>
@@ -6,7 +31,7 @@ namespace LibEmail {
 
 static ResponseStatus get_response_status(StringView response)
 {
-    if (response.empty())
+    if (response.is_empty())
         return ResponseStatus::Bad;
 
     const auto right_before_status = response.find_first_of(' ');
@@ -38,10 +63,11 @@ static String get_message_field_string(Field value)
     case Field::BodyText:
         return "BODY[TEXT]";
     }
+    return "";
 }
 
 IMAPClient::IMAPClient(StringView address, int port)
-    : m_socket(address, std::to_string(port))
+    : m_socket{ Core::TCPSocket::construct() }
 {
     bool connected = m_socket->connect(address, port);
     dbg() << "Step 1: connection: ";
@@ -54,17 +80,18 @@ IMAPClient::IMAPClient(StringView address, int port)
     m_receive_thread = LibThread::Thread::construct(
         [this] {
             while (true) {
-                const std::string response { m_socket->receive(1000) };
-                if (response.empty())
+                const StringBuilder response{ m_socket->receive(1000) };
+                if (response.is_empty()) {
                     // For some reason servers sometimes send empty messages
                     continue;
+                }
                 m_queue_lock.lock();
-                m_message_queue.push_back(response);
+                m_message_queue.append(response.to_string());
                 m_queue_lock.unlock();
             }
             return 0;
         });
-    m_receive_thread.start();
+    m_receive_thread->start();
 }
 
 IMAPClient::~IMAPClient()
@@ -74,7 +101,8 @@ IMAPClient::~IMAPClient()
 
 ResponseStatus IMAPClient::login(StringView username, StringView password)
 {
-    StringBuilder command { "login " };
+    StringBuilder command;
+    command.append("login ");
     command.append(username);
     command.append(" ");
     command.append(password);
@@ -83,7 +111,7 @@ ResponseStatus IMAPClient::login(StringView username, StringView password)
         dbg() << "Failed to send LOGIN command";
         return ResponseStatus::FailedToSend;
     }
-    String response { receive_response() };
+    String response{ receive_response() };
     dbg() << "Step 2: Login: \n";
     const auto res_status = get_response_status(response.view());
     if (res_status == ResponseStatus::Ok) {
@@ -101,7 +129,8 @@ ResponseStatus IMAPClient::select_mailbox(StringView mailbox)
         dbg() << "Cannot select: improper current state";
         return ResponseStatus::FailedToSend;
     }
-    StringBuilder command { "select " };
+    StringBuilder command;
+    command.append("select ");
     command.append(mailbox);
     bool status = send_command(command.string_view());
     if (!status) {
@@ -109,7 +138,7 @@ ResponseStatus IMAPClient::select_mailbox(StringView mailbox)
         return ResponseStatus::FailedToSend;
     }
 
-    String response { receive_response() };
+    String response{ receive_response() };
     dbg() << "Step 3: Selected mailbox: " << mailbox;
     const auto res_status = get_response_status(response.view());
     if (res_status == ResponseStatus::Ok) {
@@ -129,7 +158,8 @@ ResponseStatus IMAPClient::create_mailbox(StringView mailbox)
         return ResponseStatus::FailedToSend;
     }
 
-    StringBuilder command { "create " };
+    StringBuilder command;
+    command.append("create ");
     command.append(mailbox);
     bool status = send_command(command.string_view());
     if (!status) {
@@ -137,7 +167,7 @@ ResponseStatus IMAPClient::create_mailbox(StringView mailbox)
         return ResponseStatus::FailedToSend;
     }
 
-    String response { receive_response() };
+    String response{ receive_response() };
     return get_response_status(response.view());
 }
 
@@ -148,7 +178,8 @@ ResponseStatus IMAPClient::delete_mailbox(StringView mailbox)
         return ResponseStatus::FailedToSend;
     }
 
-    StringBuilder command { "delete " };
+    StringBuilder command;
+    command.append("delete ");
     command.append(mailbox);
     bool status = send_command(command.string_view());
     if (!status) {
@@ -156,7 +187,7 @@ ResponseStatus IMAPClient::delete_mailbox(StringView mailbox)
         return ResponseStatus::FailedToSend;
     }
 
-    String response { receive_response() };
+    String response{ receive_response() };
     return get_response_status(response.view());
 }
 
@@ -167,7 +198,8 @@ ResponseStatus IMAPClient::rename_mailbox(StringView old_name, StringView new_na
         return ResponseStatus::FailedToSend;
     }
 
-    StringBuilder command { "rename " };
+    StringBuilder command;
+    command.append("rename ");
     command.append(old_name);
     command.append(" ");
     command.append(new_name);
@@ -177,13 +209,13 @@ ResponseStatus IMAPClient::rename_mailbox(StringView old_name, StringView new_na
         return ResponseStatus::FailedToSend;
     }
 
-    String response { receive_response() };
+    String response{ receive_response() };
     return get_response_status(response.view());
 }
 
 Optional<Message> IMAPClient::fetch(unsigned int sequence_id, Field parameter)
 {
-    const Vector<Field> parameter_list { parameter };
+    const Vector<Field> parameter_list{ parameter };
     return fetch(sequence_id, parameter_list);
 }
 
@@ -195,8 +227,9 @@ Optional<Message> IMAPClient::fetch(unsigned int sequence_id,
         return {};
     }
 
-    StringBuilder command { "fetch " };
-    command.append(std::to_string(sequence_id));
+    StringBuilder command;
+    command.append("fetch ");
+    command.append(String::number(sequence_id));
     command.append(" (");
     for (auto field : parameter_list) {
         command.append(get_message_field_string(field));
@@ -206,13 +239,14 @@ Optional<Message> IMAPClient::fetch(unsigned int sequence_id,
         command.trim(1);
         command.append(')');
     }
-    bool status = send_command(command.string_view);
+
+    bool status = send_command(command.string_view());
     if (!status) {
         dbg() << "Fetch failed";
         return {};
     }
 
-    String response { receive_response() };
+    String response{ receive_response() };
     /* Some servers like to give a status message before giving the
        fetched message. If there is a status message, ignore it, use the
        next response (which will contain the actual fetched message).
@@ -221,21 +255,25 @@ Optional<Message> IMAPClient::fetch(unsigned int sequence_id,
         response = receive_response();
     }
 
-    // Fetch response format: "*[gap1]2[gap2]FETCH[gap3]rest of response data...".
-    const auto gap1 = response.find_first_of(' ');
-    const auto gap2 = response.find_first_of(' ', gap1 + 1);
-    const auto gap3 = response.find_first_of(' ', gap2 + 1);
-    if (!gap1.has_value() || !gap2.has_value() || !gap3.has_value()) {
+    // Fetch response format: "*[gap0]2[gap1]FETCH[gap2]rest of response data...".
+    int gaps[] = { -1, -1, -1 };
+    int curr_gap = 0;
+    for (unsigned int i = 0; i < response.length(); ++i) {
+        if (response[i] == ' ') {
+            gaps[curr_gap++] = i;
+            if (curr_gap >= 3)
+                break;
+        }
+    }
+    if (gaps[0] == -1 || gaps[1] == -1 || gaps[2] == -1) {
         dbg() << "Fetch response is in unexpected format";
         return {};
-    } else if (response.substring_view(gap2.value() + 1,
-                   gap3.value() - gap2.value() - 1)
-            == "FETCH"
-        && response.substring_view(gap3.value() + 1, 9) != "completed") {
+    } else if (response.substring_view(gaps[1] + 1, gaps[2] - gaps[1] - 1) == "FETCH"
+        && response.substring_view(gaps[2] + 1, 9) != "completed") {
         dbg() << "Fetched message successfully";
         dbg() << "Response: " << response;
         // Strip the "0 FETCH" part out of the response message.
-        return { Message::create_from_imap_data(response.substring_view(gap3.value() + 2)) };
+        return { Message::create_from_imap_data(response.substring_view(gaps[2] + 2, response.length())) };
     } else {
         dbg() << "No message found using given sequence: " << sequence_id;
         dbg() << "Response: " << response;
@@ -253,11 +291,11 @@ StringBuilder IMAPClient::next_message_id()
 
 bool IMAPClient::send_command(StringView command)
 {
-    StringBuilder message { next_message_id() };
+    StringBuilder message{ next_message_id() };
     message.append(" ");
     message.append(command);
     message.append("\r\n");
-    bool status = m_socket.send(message.string_view());
+    bool status = m_socket->send(message.to_byte_buffer());
     dbg() << "Sent: " << command.to_string();
     if (!status) {
         dbg() << "Failed to send command: " << command;
@@ -270,7 +308,7 @@ String IMAPClient::receive_response()
     String response;
     while (true) {
         m_queue_lock.lock();
-        if (!m_message_queue.empty()) {
+        if (!m_message_queue.is_empty()) {
             response = m_message_queue.take_first();
             m_queue_lock.unlock();
             return response;
@@ -280,5 +318,4 @@ String IMAPClient::receive_response()
     // Should never reach here.
     return response;
 }
-
 }
