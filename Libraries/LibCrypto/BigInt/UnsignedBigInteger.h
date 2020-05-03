@@ -65,6 +65,7 @@ public:
     const AK::Vector<u32, STARTING_WORD_SIZE>& words() const { return m_words; }
 
     void set_to_0();
+    void set_to(u32 other);
     void set_to(const UnsignedBigInteger& other);
     void invalidate() { m_is_invalid = true; }
 
@@ -87,6 +88,7 @@ public:
     static void shift_left_without_allocation(const UnsignedBigInteger& number, size_t bits_to_shift_by, UnsignedBigInteger& temp_result, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
     static void multiply_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
     static void divide_without_allocation(const UnsignedBigInteger& numerator, const UnsignedBigInteger& denominator, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_minus, UnsignedBigInteger& quotient, UnsignedBigInteger& remainder);
+    static void divide_u16_without_allocation(const UnsignedBigInteger& numerator, u32 denominator, UnsignedBigInteger& quotient, UnsignedBigInteger& remainder);
 
     bool operator==(const UnsignedBigInteger& other) const;
     bool operator!=(const UnsignedBigInteger& other) const;
