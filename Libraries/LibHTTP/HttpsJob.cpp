@@ -32,13 +32,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
-//#define HTTPJOB_DEBUG
+//#define HTTPSJOB_DEBUG
 
 namespace HTTP {
 
 static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
 {
-#ifdef CHTTPJOB_DEBUG
+#ifdef HTTPSJOB_DEBUG
     dbg() << "HttpsJob::handle_content_encoding: buf has content_encoding = " << content_encoding;
 #endif
 
@@ -47,7 +47,7 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
             dbg() << "HttpsJob::handle_content_encoding: buf is not gzip compressed!";
         }
 
-#ifdef CHTTPJOB_DEBUG
+#ifdef HTTPSJOB_DEBUG
         dbg() << "HttpsJob::handle_content_encoding: buf is gzip compressed!";
 #endif
 
@@ -57,7 +57,7 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
             return buf;
         }
 
-#ifdef CHTTPJOB_DEBUG
+#ifdef HTTPSJOB_DEBUG
         dbg() << "HttpsJob::handle_content_encoding: Gzip::decompress() successful.\n"
               << "  Input size = " << buf.size() << "\n"
               << "  Output size = " << uncompressed.value().size();
@@ -97,7 +97,9 @@ void HttpsJob::on_socket_connected()
     };
 
     m_socket->on_tls_ready_to_read = [&](TLS::TLSv12& tls) {
+#ifdef HTTPS_DEBUG
         dbg() << " ON TLS READY TO READ: " << (u16)m_state;
+#endif
         if (is_cancelled())
             return;
         if (m_state == State::InStatus) {
@@ -149,7 +151,7 @@ void HttpsJob::on_socket_connected()
             }
             auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
             m_headers.set(name, value);
-#ifdef CHTTPJOB_DEBUG
+#ifdef HTTPSJOB_DEBUG
             dbg() << "HttpsJob: [" << name << "] = '" << value << "'";
 #endif
             return;
@@ -226,7 +228,7 @@ void HttpsJob::start()
     ASSERT(!m_socket);
     m_socket = TLS::TLSv12::construct(this);
     m_socket->on_tls_connected = [this] {
-#ifdef CHTTPJOB_DEBUG
+#ifdef HTTPSJOB_DEBUG
         dbg() << "HttpsJob: on_connected callback";
 #endif
         on_socket_connected();
