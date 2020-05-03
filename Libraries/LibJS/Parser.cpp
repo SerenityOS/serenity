@@ -394,6 +394,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return parse_function_node<FunctionExpression>();
     case TokenType::BracketOpen:
         return parse_array_expression();
+    case TokenType::TemplateLiteralStart:
+        return parse_template_literal();
     case TokenType::New:
         return parse_new_expression();
     default:
@@ -534,6 +536,40 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
 
     consume(TokenType::BracketClose);
     return create_ast_node<ArrayExpression>(move(elements));
+}
+
+NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal()
+{
+    consume(TokenType::TemplateLiteralStart);
+
+    NonnullRefPtrVector<Expression> expressions;
+
+    while (!match(TokenType::TemplateLiteralEnd) && !match(TokenType::UnterminatedTemplateLiteral)) {
+        if (match(TokenType::TemplateLiteralString)) {
+            expressions.append(create_ast_node<StringLiteral>(consume().string_value()));
+        } else if (match(TokenType::TemplateLiteralExprStart)) {
+            consume(TokenType::TemplateLiteralExprStart);
+            if (match(TokenType::TemplateLiteralExprEnd)) {
+                syntax_error("Empty template literal expression block");
+                return create_ast_node<TemplateLiteral>(expressions);
+            }
+
+            expressions.append(parse_expression(0));
+            if (match(TokenType::UnterminatedTemplateLiteral)) {
+                syntax_error("Unterminated template literal");
+                return create_ast_node<TemplateLiteral>(expressions);
+            }
+            consume(TokenType::TemplateLiteralExprEnd);
+        }
+    }
+
+    if (match(TokenType::UnterminatedTemplateLiteral)) {
+        syntax_error("Unterminated template literal");
+    } else {
+        consume(TokenType::TemplateLiteralEnd);
+    }
+
+    return create_ast_node<TemplateLiteral>(expressions);
 }
 
 NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)
@@ -1087,7 +1123,7 @@ bool Parser::match_expression() const
     return type == TokenType::BoolLiteral
         || type == TokenType::NumericLiteral
         || type == TokenType::StringLiteral
-        || type == TokenType::TemplateLiteral
+        || type == TokenType::TemplateLiteralStart
         || type == TokenType::NullLiteral
         || type == TokenType::Identifier
         || type == TokenType::New

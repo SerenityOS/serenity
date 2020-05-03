@@ -69,6 +69,7 @@ public:
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
     NonnullRefPtr<ObjectExpression> parse_object_expression();
     NonnullRefPtr<ArrayExpression> parse_array_expression();
+    NonnullRefPtr<TemplateLiteral> parse_template_literal();
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();

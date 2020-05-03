@@ -762,6 +762,24 @@ private:
     Vector<RefPtr<Expression>> m_elements;
 };
 
+class TemplateLiteral final : public Expression {
+public:
+    TemplateLiteral(NonnullRefPtrVector<Expression> expressions)
+        : m_expressions(expressions)
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+    const NonnullRefPtrVector<Expression>& expressions() const { return m_expressions; }
+
+private:
+    virtual const char* class_name() const override { return "TemplateLiteral"; }
+
+    const NonnullRefPtrVector<Expression> m_expressions;
+};
+
 class MemberExpression final : public Expression {
 public:
     MemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property, bool computed = false)

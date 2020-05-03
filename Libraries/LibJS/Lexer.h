@@ -71,6 +71,12 @@ private:
     size_t m_line_column = 1;
     bool m_log_errors = true;
 
+    struct TemplateState {
+        bool in_expr;
+        u8 open_bracket_count;
+    };
+    Vector<TemplateState> m_template_states;
+
     static HashMap<String, TokenType> s_keywords;
     static HashMap<String, TokenType> s_three_char_tokens;
     static HashMap<String, TokenType> s_two_char_tokens;

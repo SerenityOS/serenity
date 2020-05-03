@@ -244,34 +244,74 @@ void Lexer::syntax_error(const char* msg)
 Token Lexer::next()
 {
     size_t trivia_start = m_position;
+    auto in_template = !m_template_states.is_empty();
 
-    // consume whitespace and comments
-    while (true) {
-        if (isspace(m_current_char)) {
-            do {
+    if (!in_template || m_template_states.last().in_expr) {
+        // consume whitespace and comments
+        while (true) {
+            if (isspace(m_current_char)) {
+                do {
+                    consume();
+                } while (isspace(m_current_char));
+            } else if (is_line_comment_start()) {
                 consume();
-            } while (isspace(m_current_char));
-        } else if (is_line_comment_start()) {
-            consume();
-            do {
+                do {
+                    consume();
+                } while (!is_eof() && m_current_char != '\n');
+            } else if (is_block_comment_start()) {
                 consume();
-            } while (!is_eof() && m_current_char != '\n');
-        } else if (is_block_comment_start()) {
-            consume();
-            do {
-                consume();
-            } while (!is_eof() && !is_block_comment_end());
-            consume(); // consume *
-            consume(); // consume /
-        } else {
-            break;
+                do {
+                    consume();
+                } while (!is_eof() && !is_block_comment_end());
+                consume(); // consume *
+                consume(); // consume /
+            } else {
+                break;
+            }
         }
     }
 
     size_t value_start = m_position;
     auto token_type = TokenType::Invalid;
 
-    if (is_identifier_start()) {
+    if (m_current_char == '`') {
+        consume();
+
+        if (!in_template) {
+            token_type = TokenType::TemplateLiteralStart;
+            m_template_states.append({ false, 0 });
+        } else {
+            if (m_template_states.last().in_expr) {
+                m_template_states.append({ false, 0 });
+                token_type = TokenType::TemplateLiteralStart;
+            } else {
+                m_template_states.take_last();
+                token_type = TokenType::TemplateLiteralEnd;
+            }
+        }
+    } else if (in_template && m_template_states.last().in_expr && m_template_states.last().open_bracket_count == 0 && m_current_char == '}') {
+        consume();
+        token_type = TokenType::TemplateLiteralExprEnd;
+        m_template_states.last().in_expr = false;
+    } else if (in_template && !m_template_states.last().in_expr) {
+        if (is_eof()) {
+            token_type = TokenType::UnterminatedTemplateLiteral;
+            m_template_states.take_last();
+        } else if (match('$', '{')) {
+            token_type = TokenType::TemplateLiteralExprStart;
+            consume();
+            consume();
+            m_template_states.last().in_expr = true;
+        } else {
+            while (!match('$', '{') && m_current_char != '`' && !is_eof()) {
+                if (match('\\', '$') || match('\\', '`'))
+                    consume();
+                consume();
+            }
+
+            token_type = TokenType::TemplateLiteralString;
+        }
+    } else if (is_identifier_start()) {
         // identifier or keyword
         do {
             consume();
@@ -339,7 +379,7 @@ Token Lexer::next()
             }
         }
         token_type = TokenType::NumericLiteral;
-    } else if (m_current_char == '"' || m_current_char == '\'' || m_current_char == '`') {
+    } else if (m_current_char == '"' || m_current_char == '\'') {
         char stop_char = m_current_char;
         consume();
         while (m_current_char != stop_char && m_current_char != '\n' && !is_eof()) {
@@ -353,10 +393,7 @@ Token Lexer::next()
             token_type = TokenType::UnterminatedStringLiteral;
         } else {
             consume();
-            if (stop_char == '`')
-                token_type = TokenType::TemplateLiteral;
-            else
-                token_type = TokenType::StringLiteral;
+            token_type = TokenType::StringLiteral;
         }
     } else if (m_current_char == EOF) {
         token_type = TokenType::Eof;
@@ -416,6 +453,14 @@ Token Lexer::next()
         }
     }
 
+    if (!m_template_states.is_empty() && m_template_states.last().in_expr) {
+        if (token_type == TokenType::CurlyOpen) {
+            m_template_states.last().open_bracket_count++;
+        } else if (token_type == TokenType::CurlyClose) {
+            m_template_states.last().open_bracket_count--;
+        }
+    }
+
     m_current_token = Token(
         token_type,
         m_source.substring_view(trivia_start - 1, value_start - trivia_start),
@@ -425,4 +470,5 @@ Token Lexer::next()
 
     return m_current_token;
 }
+
 }
