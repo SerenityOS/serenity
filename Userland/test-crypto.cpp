@@ -1341,7 +1341,7 @@ void bigint_subtraction()
         PASS;
     }
     {
-        I_TEST((BigInteger | Subtraction Regerssion 1));
+        I_TEST((BigInteger | Subtraction Regression 1));
         auto num = Crypto::UnsignedBigInteger { 1 }.shift_left(256);
         if (num.minus(1).words() == Vector<u32> { 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 0 }) {
             PASS;
@@ -1354,7 +1354,7 @@ void bigint_subtraction()
 void bigint_multiplication()
 {
     {
-        I_TEST((BigInteger | Simple Multipliction));
+        I_TEST((BigInteger | Simple Multiplication));
         Crypto::UnsignedBigInteger num1(8);
         Crypto::UnsignedBigInteger num2(251);
         Crypto::UnsignedBigInteger result = num1.multiplied_by(num2);
