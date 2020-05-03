@@ -12,6 +12,7 @@
 #include <LibLine/Editor.h>
 #include <LibTLS/TLSv12.h>
 #include <stdio.h>
+#include <time.h>
 
 static const char* secret_key = "WellHelloFreinds";
 static const char* suite = nullptr;
@@ -23,6 +24,10 @@ static bool interactive = false;
 static bool run_tests = false;
 static int port = 443;
 
+static struct timeval start_time {
+    0, 0
+};
+static struct timezone tz;
 static bool encrypting = true;
 
 constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
@@ -381,8 +386,23 @@ auto main(int argc, char** argv) -> int
     {                                     \
         printf("Testing " #thing "... "); \
         fflush(stdout);                   \
+        gettimeofday(&start_time, &tz);   \
     }
-#define PASS printf("PASS\n")
+#define PASS                                                     \
+    {                                                            \
+        struct timeval end_time {                                \
+            0, 0                                                 \
+        };                                                       \
+        gettimeofday(&end_time, &tz);                            \
+        time_t interval_s = end_time.tv_sec - start_time.tv_sec; \
+        suseconds_t interval_us = end_time.tv_usec;              \
+        if (interval_us < start_time.tv_usec) {                  \
+            interval_s -= 1;                                     \
+            interval_us += 1000000;                              \
+        }                                                        \
+        interval_us -= start_time.tv_usec;                       \
+        printf("PASS %llds %dus\n", interval_s, interval_us);    \
+    }
 #define FAIL(reason) printf("FAIL: " #reason "\n")
 
 ByteBuffer operator""_b(const char* string, size_t length)
@@ -1063,10 +1083,11 @@ void bigint_test_number_theory()
 {
     {
         I_TEST((Number Theory | Modular Inverse));
-        if (Crypto::NumberTheory::ModularInverse(7, 87) == 25)
+        if (Crypto::NumberTheory::ModularInverse(7, 87) == 25) {
             PASS;
-        else
+        } else {
             FAIL(Invalid result);
+        }
     }
     {
         I_TEST((Number Theory | Modular Power));
@@ -1227,9 +1248,9 @@ void bigint_test_fibo500()
         I_TEST((BigInteger | Fibonacci500));
         bool pass = (bigint_fibonacci(500).words() == AK::Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
 
-        if (pass)
+        if (pass) {
             PASS;
-        else {
+        } else {
             FAIL(Incorrect Result);
         }
     }
