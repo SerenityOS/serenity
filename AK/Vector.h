@@ -539,14 +539,17 @@ public:
         m_capacity = new_capacity;
     }
 
-    void shrink(size_t new_size)
+    void shrink(size_t new_size, bool keep_capacity = false)
     {
         ASSERT(new_size <= size());
         if (new_size == size())
             return;
 
         if (!new_size) {
-            clear();
+            if (keep_capacity)
+                clear_with_capacity();
+            else
+                clear();
             return;
         }
 
@@ -555,15 +558,20 @@ public:
         m_size = new_size;
     }
 
-    void resize(size_t new_size)
+    void resize(size_t new_size, bool keep_capacity = false)
     {
         if (new_size <= size())
-            return shrink(new_size);
+            return shrink(new_size, keep_capacity);
 
         ensure_capacity(new_size);
         for (size_t i = size(); i < new_size; ++i)
             new (slot(i)) T;
         m_size = new_size;
+    }
+
+    void resize_and_keep_capacity(size_t new_size)
+    {
+        return resize(new_size, true);
     }
 
     using Iterator = VectorIterator<Vector, T>;
