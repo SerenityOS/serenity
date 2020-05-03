@@ -29,6 +29,7 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <cstring>
 
 TEST_CASE(construct_empty)
 {
