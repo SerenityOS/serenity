@@ -33,8 +33,10 @@ HttpsDownload::HttpsDownload(PSClientConnection& client, NonnullRefPtr<HTTP::Htt
     , m_job(job)
 {
     m_job->on_finish = [this](bool success) {
-        if (m_job->response())
-            set_payload(m_job->response()->payload());
+        if (auto* response = m_job->response()) {
+            set_payload(response->payload());
+            set_response_headers(response->headers());
+        }
 
         // if we didn't know the total size, pretend that the download finished successfully
         // and set the total size to the downloaded size

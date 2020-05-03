@@ -47,7 +47,7 @@ void HTMLLinkElement::inserted_into(Node&)
 {
     if (rel() == "stylesheet") {
         URL url = document().complete_url(href());
-        ResourceLoader::the().load(url, [&](auto data) {
+        ResourceLoader::the().load(url, [&](auto data, auto&) {
             if (data.is_null()) {
                 dbg() << "HTMLLinkElement: Failed to load stylesheet: " << href();
                 return;

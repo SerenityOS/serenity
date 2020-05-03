@@ -64,6 +64,11 @@ void Download::set_payload(const ByteBuffer& payload)
     m_total_size = payload.size();
 }
 
+void Download::set_response_headers(const HashMap<String, String>& response_headers)
+{
+    m_response_headers = response_headers;
+}
+
 void Download::did_finish(bool success)
 {
     if (!m_client) {

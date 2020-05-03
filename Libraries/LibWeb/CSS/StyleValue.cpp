@@ -68,7 +68,7 @@ ImageStyleValue::ImageStyleValue(const URL& url, Document& document)
     , m_document(document.make_weak_ptr())
 {
     NonnullRefPtr<ImageStyleValue> protector(*this);
-    ResourceLoader::the().load(url, [this, protector](auto& data) {
+    ResourceLoader::the().load(url, [this, protector](auto& data, auto&) {
         if (!m_document)
             return;
         m_bitmap = Gfx::load_png_from_memory(data.data(), data.size());

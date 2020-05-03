@@ -41,7 +41,7 @@ bool Download::stop()
     return m_client->stop_download({}, *this);
 }
 
-void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf_id)
+void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf_id, const IPC::Dictionary& response_headers)
 {
     if (!on_finish)
         return;
@@ -52,7 +52,8 @@ void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf
         shared_buffer = SharedBuffer::create_from_shbuf_id(shbuf_id);
         payload = ByteBuffer::wrap(shared_buffer->data(), total_size);
     }
-    on_finish(success, payload, move(shared_buffer));
+
+    on_finish(success, payload, move(shared_buffer), response_headers.entries());
 }
 
 void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size)

@@ -47,14 +47,14 @@ ResourceLoader::ResourceLoader()
 {
 }
 
-void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     Core::EventLoop loop;
 
     load(
         url,
-        [&](auto& data) {
-            success_callback(data);
+        [&](auto& data, auto& response_headers) {
+            success_callback(data, response_headers);
             loop.quit(0);
         },
         [&](auto& string) {
@@ -66,7 +66,7 @@ void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&)>
     loop.exec();
 }
 
-void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     if (is_port_blocked(url.port())) {
         dbg() << "ResourceLoader::load: Error: blocked port " << url.port() << " for URL: " << url;
@@ -83,7 +83,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> succ
             data = url.data_payload().to_byte_buffer();
 
         deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
-            success_callback(data);
+            success_callback(data, {});
         });
         return;
     }
@@ -100,7 +100,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> succ
 
         auto data = f->read_all();
         deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
-            success_callback(data);
+            success_callback(data, {});
         });
         return;
     }
@@ -112,7 +112,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> succ
                 error_callback("Failed to initiate load");
             return;
         }
-        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, const ByteBuffer& payload, auto) {
+        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, const ByteBuffer& payload, auto, auto& response_headers) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -121,7 +121,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> succ
                     error_callback("HTTP load failed");
                 return;
             }
-            success_callback(ByteBuffer::copy(payload.data(), payload.size()));
+            success_callback(ByteBuffer::copy(payload.data(), payload.size()), response_headers);
         };
         ++m_pending_loads;
         if (on_load_counter_change)

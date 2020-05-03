@@ -72,7 +72,7 @@ void XMLHttpRequest::send()
     // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
     ResourceLoader::the().load(
         m_window->document().complete_url(m_url),
-        [weak_this = make_weak_ptr()](auto& data) {
+        [weak_this = make_weak_ptr()](auto& data, auto&) {
             if (!weak_this)
                 return;
             const_cast<XMLHttpRequest&>(*weak_this).m_response = data;

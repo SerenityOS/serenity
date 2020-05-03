@@ -87,7 +87,11 @@ void PSClientConnection::did_finish_download(Badge<Download>, Download& download
         m_shared_buffers.set(buffer->shbuf_id(), buffer);
     }
     ASSERT(download.total_size().has_value());
-    post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size().value(), buffer ? buffer->shbuf_id() : -1));
+
+    IPC::Dictionary response_headers;
+    for (auto& it : download.response_headers())
+        response_headers.add(it.key, it.value);
+    post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size().value(), buffer ? buffer->shbuf_id() : -1, response_headers));
 }
 
 void PSClientConnection::did_progress_download(Badge<Download>, Download& download)
