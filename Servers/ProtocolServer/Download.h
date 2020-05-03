@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
@@ -46,6 +47,7 @@ public:
     Optional<u32> total_size() const { return m_total_size; }
     size_t downloaded_size() const { return m_downloaded_size; }
     const ByteBuffer& payload() const { return m_payload; }
+    const HashMap<String, String>& response_headers() const { return m_response_headers; }
 
     void stop();
 
@@ -55,6 +57,7 @@ protected:
     void did_finish(bool success);
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void set_payload(const ByteBuffer&);
+    void set_response_headers(const HashMap<String, String>&);
 
 private:
     i32 m_id;
@@ -62,5 +65,6 @@ private:
     Optional<u32> m_total_size {};
     size_t m_downloaded_size { 0 };
     ByteBuffer m_payload;
+    HashMap<String, String> m_response_headers;
     WeakPtr<PSClientConnection> m_client;
 };

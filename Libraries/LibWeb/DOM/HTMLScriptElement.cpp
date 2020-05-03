@@ -82,7 +82,7 @@ void HTMLScriptElement::inserted_into(Node& new_parent)
     }
 
     String source;
-    ResourceLoader::the().load_sync(src_url, [&](auto& data) {
+    ResourceLoader::the().load_sync(src_url, [&](auto& data, auto&) {
         if (data.is_null()) {
             dbg() << "HTMLScriptElement: Failed to load " << src;
             return;

@@ -360,7 +360,7 @@ void HtmlView::load(const URL& url)
 
     ResourceLoader::the().load(
         url,
-        [this, url](auto data) {
+        [this, url](auto data, auto& response_headers) {
             if (data.is_null()) {
                 load_error_page(url, "No data");
                 return;
@@ -390,7 +390,7 @@ void HtmlView::load(const URL& url)
 
         ResourceLoader::the().load(
             favicon_url,
-            [this, favicon_url](auto data) {
+            [this, favicon_url](auto data, auto&) {
                 dbg() << "Favicon downloaded, " << data.size() << " bytes from " << favicon_url.to_string();
                 auto decoder = Gfx::ImageDecoder::create(data.data(), data.size());
                 auto bitmap = decoder->bitmap();
@@ -412,7 +412,7 @@ void HtmlView::load_error_page(const URL& failed_url, const String& error)
     auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(
         error_page_url,
-        [this, failed_url, error](auto data) {
+        [this, failed_url, error](auto data, auto&) {
             ASSERT(!data.is_null());
             auto html = String::format(
                 String::copy(data).characters(),

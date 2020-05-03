@@ -31,6 +31,7 @@
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
+#include <LibIPC/Forward.h>
 
 namespace Protocol {
 
@@ -46,10 +47,10 @@ public:
     int id() const { return m_download_id; }
     bool stop();
 
-    Function<void(bool success, const ByteBuffer& payload, RefPtr<SharedBuffer> payload_storage)> on_finish;
+    Function<void(bool success, const ByteBuffer& payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String>& response_headers)> on_finish;
     Function<void(Optional<u32> total_size, u32 downloaded_size)> on_progress;
 
-    void did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf_id);
+    void did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf_id, const IPC::Dictionary& response_headers);
     void did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size);
 
 private:

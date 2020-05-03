@@ -76,7 +76,7 @@ int main(int argc, char** argv)
         previous_downloaded_size = downloaded_size;
         prev_time = current_time;
     };
-    download->on_finish = [&](bool success, auto& payload, auto) {
+    download->on_finish = [&](bool success, auto& payload, auto, auto&) {
         fprintf(stderr, "\n");
         if (success)
             write(STDOUT_FILENO, payload.data(), payload.size());
