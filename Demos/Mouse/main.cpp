@@ -1,9 +1,14 @@
+#include <LibGUI/AboutDialog.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 
 static unsigned s_mouse_button_state;
 
@@ -95,6 +100,16 @@ int main(int argc, char** argv)
     main_widget.add<MouseButtonIndicator>("Back", GUI::MouseButton::Back);
     main_widget.add<MouseButtonIndicator>("Forward", GUI::MouseButton::Forward);
 
+    auto menubar = GUI::MenuBar::construct();
+    auto& app_menu = menubar->add_menu("Mouse Demo");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
+
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("Mouse Demo", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-mouse.png"), window);
+    }));
+
+    app.set_menubar(move(menubar));
     window->show();
     return app.exec();
 }
