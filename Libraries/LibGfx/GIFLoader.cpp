@@ -528,4 +528,28 @@ bool GIFImageDecoderPlugin::sniff()
     BufferStream stream(buffer);
     return decode_gif_header(stream).has_value();
 }
+
+bool GIFImageDecoderPlugin::is_animated()
+{
+    return false;
+}
+
+size_t GIFImageDecoderPlugin::loop_count()
+{
+    return 0;
+}
+
+size_t GIFImageDecoderPlugin::frame_count()
+{
+    return 1;
+}
+
+ImageFrameDescriptor GIFImageDecoderPlugin::frame(size_t i)
+{
+    if (i > 0) {
+        return { bitmap(), 0 };
+    }
+    return {};
+}
+
 }
