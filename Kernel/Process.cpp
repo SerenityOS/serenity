@@ -1865,7 +1865,7 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
         description->set_file_flags(arg);
         break;
     default:
-        ASSERT_NOT_REACHED();
+        return -EINVAL;
     }
     return 0;
 }
