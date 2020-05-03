@@ -11,6 +11,6 @@ OBJS = \
 
 PROGRAM = IRCClient
 
-LIB_DEPS = Web JS GUI Gfx Protocol IPC Thread Pthread Core
+LIB_DEPS = Web TextCodec JS GUI Gfx Protocol IPC Thread Pthread Core
 
 include ../../Makefile.common

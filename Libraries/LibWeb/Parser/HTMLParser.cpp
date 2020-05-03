@@ -27,6 +27,7 @@
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
@@ -385,21 +386,9 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
 
 String to_utf8(const StringView& input, const String& encoding)
 {
-    String output;
-    if (encoding == "utf-8") {
-        output = input;
-    } else if (encoding == "iso-8859-1") {
-        StringBuilder builder(input.length());
-        for (size_t i = 0; i < input.length(); ++i) {
-            u8 ch = input[i];
-            builder.append(ch >= 0x80 ? '?' : ch);
-        }
-        output = builder.to_string();
-    } else {
-        dbg() << "Unknown encoding " << encoding;
-        ASSERT_NOT_REACHED();
-    }
-    return output;
+    auto* decoder = TextCodec::decoder_for(encoding);
+    ASSERT(decoder);
+    return decoder->to_utf8(input);
 }
 
 RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringView& raw_html, const String& encoding)
