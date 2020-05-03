@@ -64,6 +64,8 @@ public:
 
     const AK::Vector<u32, STARTING_WORD_SIZE>& words() const { return m_words; }
 
+    void set_to_0();
+    void set_to(const UnsignedBigInteger& other);
     void invalidate() { m_is_invalid = true; }
 
     bool is_invalid() const { return m_is_invalid; }
@@ -80,13 +82,19 @@ public:
 
     void set_bit_inplace(size_t bit_index);
 
+    static void add_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
+    static void subtract_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
+    static void shift_left_without_allocation(const UnsignedBigInteger& number, size_t bits_to_shift_by, UnsignedBigInteger& temp_result, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
+    static void multiply_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
+    static void divide_without_allocation(const UnsignedBigInteger& numerator, const UnsignedBigInteger& denominator, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_minus, UnsignedBigInteger& quotient, UnsignedBigInteger& remainder);
+
     bool operator==(const UnsignedBigInteger& other) const;
     bool operator!=(const UnsignedBigInteger& other) const;
     bool operator<(const UnsignedBigInteger& other) const;
 
 private:
-    ALWAYS_INLINE UnsignedBigInteger shift_left_by_n_words(const size_t number_of_words) const;
-    ALWAYS_INLINE u32 shift_left_get_one_word(const size_t num_bits, const size_t result_word_index) const;
+    ALWAYS_INLINE static void shift_left_by_n_words(const UnsignedBigInteger& number, size_t number_of_words, UnsignedBigInteger& output);
+    ALWAYS_INLINE static u32 shift_left_get_one_word(const UnsignedBigInteger& number, size_t num_bits, size_t result_word_index);
 
     static constexpr size_t BITS_IN_WORD = 32;
     AK::Vector<u32, STARTING_WORD_SIZE> m_words;
