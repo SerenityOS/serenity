@@ -52,14 +52,17 @@ UnsignedBigInteger UnsignedBigInteger::import_data(const u8* ptr, size_t length)
 size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data)
 {
     UnsignedBigInteger copy { *this };
+    UnsignedBigInteger quotient;
+    UnsignedBigInteger remainder;
 
     size_t size = trimmed_length() * sizeof(u32);
     size_t i = 0;
     for (; i < size; ++i) {
-        if (copy.length() == 0)
+        if (copy.trimmed_length() == 0)
             break;
         data[size - i - 1] = copy.m_words[0] & 0xff;
-        copy = copy.divided_by(256).quotient;
+        divide_u16_without_allocation(copy, 256, quotient, remainder);
+        copy.set_to(quotient);
     }
     return i;
 }
@@ -79,12 +82,14 @@ String UnsignedBigInteger::to_base10() const
 {
     StringBuilder builder;
     UnsignedBigInteger temp(*this);
+    UnsignedBigInteger quotient;
+    UnsignedBigInteger remainder;
 
     while (temp != UnsignedBigInteger { 0 }) {
-        auto div_result = temp.divided_by({ 10 });
-        ASSERT(div_result.remainder.words()[0] < 10);
-        builder.append(static_cast<char>(div_result.remainder.words()[0] + '0'));
-        temp = div_result.quotient;
+        divide_u16_without_allocation(temp, 10, quotient, remainder);
+        ASSERT(remainder.words()[0] < 10);
+        builder.append(static_cast<char>(remainder.words()[0] + '0'));
+        temp.set_to(quotient);
     }
 
     auto reversed_string = builder.to_string();
@@ -100,6 +105,13 @@ void UnsignedBigInteger::set_to_0()
 {
     m_words.clear_with_capacity();
     m_is_invalid = false;
+}
+
+void UnsignedBigInteger::set_to(u32 other)
+{
+    m_is_invalid = false;
+    m_words.clear_with_capacity();
+    m_words.append(other);
 }
 
 void UnsignedBigInteger::set_to(const UnsignedBigInteger& other)
@@ -167,6 +179,13 @@ FLATTEN UnsignedDivisionResult UnsignedBigInteger::divided_by(const UnsignedBigI
 {
     UnsignedBigInteger quotient;
     UnsignedBigInteger remainder;
+
+    // If we actually have a u16-compatible divisor, short-circuit to the
+    // less computationally-intensive "divide_u16_without_allocation" method.
+    if (divisor.trimmed_length() == 1 && divisor.m_words[0] < (1 << 16)) {
+        divide_u16_without_allocation(*this, divisor.m_words[0], quotient, remainder);
+        return UnsignedDivisionResult { quotient, remainder };
+    }
 
     UnsignedBigInteger temp_shift_result;
     UnsignedBigInteger temp_shift_plus;
@@ -432,6 +451,41 @@ FLATTEN void UnsignedBigInteger::divide_without_allocation(
             }
         }
     }
+}
+
+/**
+ * Complexity : O(N) where N is the number of digits in the numerator
+ * Division method :
+ * Starting from the most significant one, for each half-word of the numerator, combine it
+ * with the existing remainder if any, divide the combined number as a u32 operation and
+ * update the quotient / remainder as needed.
+ */
+FLATTEN void UnsignedBigInteger::divide_u16_without_allocation(
+    const UnsignedBigInteger& numerator,
+    u32 denominator,
+    UnsignedBigInteger& quotient,
+    UnsignedBigInteger& remainder)
+{
+    ASSERT(denominator < (1 << 16));
+    u32 remainder_word = 0;
+    auto numerator_length = numerator.trimmed_length();
+    quotient.set_to_0();
+    quotient.m_words.resize(numerator_length);
+    for (int word_index = numerator_length - 1; word_index >= 0; --word_index) {
+        auto word_high = numerator.m_words[word_index] >> 16;
+        auto word_low = numerator.m_words[word_index] & ((1 << 16) - 1);
+
+        auto number_to_divide_high = (remainder_word << 16) | word_high;
+        auto quotient_high = number_to_divide_high / denominator;
+        remainder_word = number_to_divide_high % denominator;
+
+        auto number_to_divide_low = remainder_word << 16 | word_low;
+        auto quotient_low = number_to_divide_low / denominator;
+        remainder_word = number_to_divide_low % denominator;
+
+        quotient.m_words[word_index] = (quotient_high << 16) | quotient_low;
+    }
+    remainder.set_to(remainder_word);
 }
 
 ALWAYS_INLINE void UnsignedBigInteger::shift_left_by_n_words(
