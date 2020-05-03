@@ -180,7 +180,7 @@ void init_stage2()
         if (bxvga_found) {
             new BXVGADevice;
         } else {
-            if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
+            if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB || multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
                 new MBVGADevice(
                     PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
                     multiboot_info_ptr->framebuffer_pitch,
