@@ -28,21 +28,22 @@
 #include <LibCore/File.h>
 #include <stdio.h>
 
-#include <Kernel/Syscall.h>
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Vector.h>
 #include <AK/kmalloc.h>
+#include <Kernel/Syscall.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-char* read_map(const JsonObject& json, const String& name)
+static Vector<char> read_map(const JsonObject& json, const String& name)
 {
     if (!json.has(name))
-        return nullptr;
+        return {};
 
-    char* map = new char[0x80]();
+    Vector<char, 0x80> map;
     auto map_arr = json.get(name).as_array();
 
     for (int i = 0; i < map_arr.size(); i++) {
@@ -69,7 +70,7 @@ char* read_map(const JsonObject& json, const String& name)
     return map;
 }
 
-RefPtr<Core::File> open_keymap_file(String& filename)
+static RefPtr<Core::File> open_keymap_file(String& filename)
 {
     auto file = Core::File::construct(filename);
     if (file->open(Core::IODevice::ReadOnly))
@@ -89,7 +90,7 @@ RefPtr<Core::File> open_keymap_file(String& filename)
     return file;
 }
 
-int read_map_from_file(String& filename)
+static int read_map_from_file(String& filename)
 {
     auto file = open_keymap_file(filename);
     if (!file->is_open()) {
@@ -100,17 +101,17 @@ int read_map_from_file(String& filename)
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents).as_object();
 
-    char* map = read_map(json, "map");
-    char* shift_map = read_map(json, "shift_map");
-    char* alt_map = read_map(json, "alt_map");
-    char* altgr_map = read_map(json, "altgr_map");
+    auto map = read_map(json, "map");
+    auto shift_map = read_map(json, "shift_map");
+    auto alt_map = read_map(json, "alt_map");
+    auto altgr_map = read_map(json, "altgr_map");
 
-    if (!altgr_map) {
+    if (altgr_map.is_empty()) {
         // AltGr map was not found, using Alt map as fallback.
         altgr_map = alt_map;
     }
 
-    Syscall::SC_setkeymap_params params { map, shift_map, alt_map, altgr_map };
+    Syscall::SC_setkeymap_params params { map.data(), shift_map.data(), alt_map.data(), altgr_map.data() };
     return syscall(SC_setkeymap, &params);
 }
 
