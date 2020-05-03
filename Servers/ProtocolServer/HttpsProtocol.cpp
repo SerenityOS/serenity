@@ -44,6 +44,7 @@ RefPtr<Download> HttpsProtocol::start_download(PSClientConnection& client, const
     request.set_method(HTTP::HttpRequest::Method::GET);
     request.set_url(url);
     auto job = HTTP::HttpsJob::construct(request);
+    auto download = HttpsDownload::create_with_job({}, client, (HTTP::HttpsJob&)*job);
     job->start();
-    return HttpsDownload::create_with_job({}, client, (HTTP::HttpsJob&)*job);
+    return download;
 }

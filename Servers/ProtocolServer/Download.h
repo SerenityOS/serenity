@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <AK/WeakPtr.h>
@@ -42,7 +43,7 @@ public:
     i32 id() const { return m_id; }
     URL url() const { return m_url; }
 
-    size_t total_size() const { return m_total_size; }
+    Optional<u32> total_size() const { return m_total_size; }
     size_t downloaded_size() const { return m_downloaded_size; }
     const ByteBuffer& payload() const { return m_payload; }
 
@@ -52,13 +53,13 @@ protected:
     explicit Download(PSClientConnection&);
 
     void did_finish(bool success);
-    void did_progress(size_t total_size, size_t downloaded_size);
+    void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void set_payload(const ByteBuffer&);
 
 private:
     i32 m_id;
     URL m_url;
-    size_t m_total_size { 0 };
+    Optional<u32> m_total_size {};
     size_t m_downloaded_size { 0 };
     ByteBuffer m_payload;
     WeakPtr<PSClientConnection> m_client;

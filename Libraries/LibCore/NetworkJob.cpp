@@ -78,6 +78,16 @@ void NetworkJob::did_fail(Error error)
     shutdown();
 }
 
+void NetworkJob::did_progress(Optional<u32> total_size, u32 downloaded)
+{
+    // NOTE: We protect ourselves here, since the callback may otherwise
+    //       trigger destruction of this job somehow.
+    NonnullRefPtr<NetworkJob> protector(*this);
+
+    if (on_progress)
+        on_progress(total_size, downloaded);
+}
+
 const char* to_string(NetworkJob::Error error)
 {
     switch (error) {
