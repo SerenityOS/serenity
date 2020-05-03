@@ -110,17 +110,15 @@ void UnsignedBigInteger::set_to_0()
 void UnsignedBigInteger::set_to(u32 other)
 {
     m_is_invalid = false;
-    m_words.clear_with_capacity();
-    m_words.append(other);
+    m_words.resize_and_keep_capacity(1);
+    m_words[0] = other;
 }
 
 void UnsignedBigInteger::set_to(const UnsignedBigInteger& other)
 {
     m_is_invalid = other.m_is_invalid;
-    m_words.clear_with_capacity();
-    m_words.ensure_capacity(other.m_words.size());
-    for (size_t i = 0; i < other.m_words.size(); ++i)
-        m_words.unchecked_append(other.m_words[i]);
+    m_words.resize_and_keep_capacity(other.m_words.size());
+    __builtin_memcpy(m_words.data(), other.m_words.data(), other.m_words.size() * sizeof(u32));
 }
 
 size_t UnsignedBigInteger::trimmed_length() const
@@ -212,15 +210,13 @@ void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
 
 bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
 {
+    if (is_invalid() != other.is_invalid())
+        return false;
+
     auto length = trimmed_length();
 
-    if (length != other.trimmed_length()) {
+    if (length != other.trimmed_length())
         return false;
-    }
-
-    if (is_invalid() != other.is_invalid()) {
-        return false;
-    }
 
     return !__builtin_memcmp(m_words.data(), other.words().data(), length);
 }
@@ -268,7 +264,7 @@ void UnsignedBigInteger::add_without_allocation(
     u8 carry = 0;
 
     output.set_to_0();
-    output.m_words.ensure_capacity(longer->length() + 1);
+    output.m_words.resize_and_keep_capacity(longer->length());
 
     for (size_t i = 0; i < shorter->length(); ++i) {
         u32 word_addition_result = shorter->m_words[i] + longer->m_words[i];
@@ -281,7 +277,7 @@ void UnsignedBigInteger::add_without_allocation(
             word_addition_result++;
         }
         carry = carry_out;
-        output.m_words.unchecked_append(word_addition_result);
+        output.m_words[i] = word_addition_result;
     }
 
     for (size_t i = shorter->length(); i < longer->length(); ++i) {
@@ -291,10 +287,10 @@ void UnsignedBigInteger::add_without_allocation(
         if (word_addition_result < longer->m_words[i]) {
             carry = 1;
         }
-        output.m_words.unchecked_append(word_addition_result);
+        output.m_words[i] = word_addition_result;
     }
     if (carry) {
-        output.m_words.unchecked_append(carry);
+        output.m_words.append(carry);
     }
 }
 
@@ -316,7 +312,7 @@ void UnsignedBigInteger::subtract_without_allocation(
     auto other_length = right.length();
 
     output.set_to_0();
-    output.m_words.ensure_capacity(own_length);
+    output.m_words.resize_and_keep_capacity(own_length);
 
     for (size_t i = 0; i < own_length; ++i) {
         u32 other_word = (i < other_length) ? right.m_words[i] : 0;
@@ -326,7 +322,7 @@ void UnsignedBigInteger::subtract_without_allocation(
         if (temp < 0) {
             temp += (UINT32_MAX + 1);
         }
-        output.m_words.append(temp);
+        output.m_words[i] = temp;
     }
 
     // This assertion should not fail, because we verified that *this>=other at the beginning of the function
@@ -495,14 +491,10 @@ ALWAYS_INLINE void UnsignedBigInteger::shift_left_by_n_words(
 {
     // shifting left by N words means just inserting N zeroes to the beginning of the words vector
     output.set_to_0();
-    output.m_words.ensure_capacity(number_of_words + number.length());
+    output.m_words.resize_and_keep_capacity(number_of_words + number.length());
 
-    for (size_t i = 0; i < number_of_words; ++i) {
-        output.m_words.unchecked_append(0);
-    }
-    for (size_t i = 0; i < number.length(); ++i) {
-        output.m_words.unchecked_append(number.m_words[i]);
-    }
+    __builtin_memset(output.m_words.data(), 0, number_of_words * sizeof(unsigned));
+    __builtin_memcpy(&output.m_words.data()[number_of_words], number.m_words.data(), number.m_words.size() * sizeof(unsigned));
 }
 
 /**
