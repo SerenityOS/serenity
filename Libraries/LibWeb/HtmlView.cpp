@@ -27,11 +27,11 @@
 #include <AK/FileSystemPath.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/ImageDecoder.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -370,6 +370,13 @@ void HtmlView::load(const URL& url)
     ResourceLoader::the().load(
         url,
         [this, url](auto data, auto& response_headers) {
+            // FIXME: Also check HTTP status code before redirecting
+            auto location = response_headers.get("Location");
+            if (location.has_value()) {
+                load(location.value());
+                return;
+            }
+
             if (data.is_null()) {
                 load_error_page(url, "No data");
                 return;
