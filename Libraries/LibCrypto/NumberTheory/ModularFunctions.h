@@ -39,7 +39,6 @@ static auto ModularInverse(const UnsignedBigInteger& a_, const UnsignedBigIntege
         return { 1 };
 
     UnsignedBigInteger one { 1 };
-    UnsignedBigInteger two { 2 };
     UnsignedBigInteger temp_1;
     UnsignedBigInteger temp_2;
     UnsignedBigInteger temp_3;
@@ -82,11 +81,11 @@ static auto ModularInverse(const UnsignedBigInteger& a_, const UnsignedBigIntege
                 }
 
                 // u /= 2
-                UnsignedBigInteger::divide_without_allocation(u, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+                UnsignedBigInteger::divide_u16_without_allocation(u, 2, temp_quotient, temp_remainder);
                 u.set_to(temp_quotient);
 
                 // d /= 2
-                UnsignedBigInteger::divide_without_allocation(d, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+                UnsignedBigInteger::divide_u16_without_allocation(d, 2, temp_quotient, temp_remainder);
                 d.set_to(temp_quotient);
             }
         }
@@ -107,11 +106,11 @@ static auto ModularInverse(const UnsignedBigInteger& a_, const UnsignedBigIntege
             }
 
             // v /= 2
-            UnsignedBigInteger::divide_without_allocation(v, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+            UnsignedBigInteger::divide_u16_without_allocation(v, 2, temp_quotient, temp_remainder);
             v.set_to(temp_quotient);
 
             // x /= 2
-            UnsignedBigInteger::divide_without_allocation(x, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+            UnsignedBigInteger::divide_u16_without_allocation(x, 2, temp_quotient, temp_remainder);
             x.set_to(temp_quotient);
         }
     }
@@ -129,7 +128,6 @@ static auto ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& 
     UnsignedBigInteger ep { e };
     UnsignedBigInteger base { b };
     UnsignedBigInteger exp { 1 };
-    UnsignedBigInteger two { 2 };
 
     UnsignedBigInteger temp_1;
     UnsignedBigInteger temp_2;
@@ -151,7 +149,7 @@ static auto ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& 
         }
 
         // ep = ep / 2;
-        UnsignedBigInteger::divide_without_allocation(ep, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+        UnsignedBigInteger::divide_u16_without_allocation(ep, 2, temp_quotient, temp_remainder);
         ep.set_to(temp_quotient);
 
         // base = (base * base) % m;
