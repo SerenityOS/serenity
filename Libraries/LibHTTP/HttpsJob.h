@@ -50,6 +50,7 @@ private:
     RefPtr<TLS::TLSv12> construct_socket() { return TLS::TLSv12::construct(this); }
     void on_socket_connected();
     void finish_up();
+    void read_body(TLS::TLSv12&);
 
     enum class State {
         InStatus,
@@ -66,6 +67,7 @@ private:
     Vector<ByteBuffer> m_received_buffers;
     size_t m_received_size { 0 };
     bool m_sent_data { false };
+    bool m_queued_finish { false };
 };
 
 }

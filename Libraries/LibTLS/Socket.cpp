@@ -113,7 +113,7 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
 
     Core::Socket::on_connected = [this] {
         Core::Socket::on_ready_to_read = [this] {
-            if (!Core::Socket::is_open()) {
+            if (!Core::Socket::is_open() || !Core::Socket::is_connected() || Core::Socket::eof()) {
                 // an abrupt closure (the server is a jerk)
                 dbg() << "Socket not open, assuming abrupt closure";
                 m_context.connection_finished = true;
@@ -143,7 +143,7 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
                     on_tls_ready_to_read(*this);
         };
         Core::Socket::on_ready_to_write = [this] {
-            if (!Core::Socket::is_open()) {
+            if (!Core::Socket::is_open() || !Core::Socket::is_connected() || Core::Socket::eof()) {
                 // an abrupt closure (the server is a jerk)
                 dbg() << "Socket not open, assuming abrupt closure";
                 m_context.connection_finished = true;
