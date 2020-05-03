@@ -44,6 +44,7 @@ public:
     virtual ~NetworkJob() override;
 
     Function<void(bool success)> on_finish;
+    Function<void(Optional<u32>, u32)> on_progress;
 
     bool is_cancelled() const { return m_error == Error::Cancelled; }
     bool has_error() const { return m_error != Error::None; }
@@ -64,6 +65,7 @@ protected:
     NetworkJob();
     void did_finish(NonnullRefPtr<NetworkResponse>&&);
     void did_fail(Error);
+    void did_progress(Optional<u32> total_size, u32 downloaded);
 
 private:
     RefPtr<NetworkResponse> m_response;

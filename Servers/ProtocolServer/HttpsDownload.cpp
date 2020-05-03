@@ -35,7 +35,16 @@ HttpsDownload::HttpsDownload(PSClientConnection& client, NonnullRefPtr<HTTP::Htt
     m_job->on_finish = [this](bool success) {
         if (m_job->response())
             set_payload(m_job->response()->payload());
+
+        // if we didn't know the total size, pretend that the download finished successfully
+        // and set the total size to the downloaded size
+        if (!total_size().has_value())
+            did_progress(downloaded_size(), downloaded_size());
+
         did_finish(success);
+    };
+    m_job->on_progress = [this](Optional<u32> total, u32 current) {
+        did_progress(total, current);
     };
 }
 

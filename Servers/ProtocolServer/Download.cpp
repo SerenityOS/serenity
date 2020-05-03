@@ -74,7 +74,7 @@ void Download::did_finish(bool success)
     all_downloads().remove(m_id);
 }
 
-void Download::did_progress(size_t total_size, size_t downloaded_size)
+void Download::did_progress(Optional<u32> total_size, u32 downloaded_size)
 {
     if (!m_client) {
         // FIXME: We should also abort the download in this situation, I guess!

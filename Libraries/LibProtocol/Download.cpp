@@ -55,7 +55,7 @@ void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf
     on_finish(success, payload, move(shared_buffer));
 }
 
-void Download::did_progress(Badge<Client>, u32 total_size, u32 downloaded_size)
+void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size)
 {
     if (on_progress)
         on_progress(total_size, downloaded_size);

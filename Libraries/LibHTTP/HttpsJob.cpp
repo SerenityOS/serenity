@@ -166,16 +166,25 @@ void HttpsJob::on_socket_connected()
         m_received_size += payload.size();
 
         auto content_length_header = m_headers.get("Content-Length");
+        Optional<u32> content_length {};
+
         if (content_length_header.has_value()) {
             bool ok;
-            auto content_length = content_length_header.value().to_uint(ok);
-            if (ok && m_received_size >= content_length) {
-                m_received_size = content_length;
+            auto length = content_length_header.value().to_uint(ok);
+            if (ok)
+                content_length = length;
+        }
+
+        // This needs to be synchronous
+        // FIXME: Somehow enforce that this should not modify anything
+        did_progress(content_length, m_received_size);
+
+        if (content_length.has_value()) {
+            auto length = content_length.value();
+            if (m_received_size >= length) {
+                m_received_size = length;
                 finish_up();
             }
-        } else {
-            // no content-length, assume closed connection
-            finish_up();
         }
     };
 }
