@@ -71,6 +71,12 @@ private:
 class Statement : public ASTNode {
 };
 
+class EmptyStatement final : public Statement {
+public:
+    Value execute(Interpreter&) const override { return js_undefined(); }
+    const char* class_name() const override { return "EmptyStatement"; }
+};
+
 class ErrorStatement final : public Statement {
 public:
     Value execute(Interpreter&) const override { return js_undefined(); }
