@@ -105,7 +105,7 @@ TEST_CASE(convert_to_uint)
     AK::StringUtils::convert_to_uint("-1", ok);
     EXPECT(!ok);
 
-    uint actual = AK::StringUtils::convert_to_uint("0", ok);
+    unsigned actual = AK::StringUtils::convert_to_uint("0", ok);
     EXPECT(ok && actual == 0u);
 
     actual = AK::StringUtils::convert_to_uint("1", ok);

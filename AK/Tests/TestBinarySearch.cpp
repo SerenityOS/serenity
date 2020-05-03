@@ -27,6 +27,7 @@
 #include <AK/TestSuite.h>
 
 #include <AK/BinarySearch.h>
+#include <cstring>
 
 TEST_CASE(vector_ints)
 {
