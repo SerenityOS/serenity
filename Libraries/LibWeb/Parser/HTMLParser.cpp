@@ -383,16 +383,37 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
     return true;
 }
 
-RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringView& html)
+String to_utf8(const StringView& input, const String& encoding)
+{
+    String output;
+    if (encoding == "utf-8") {
+        output = input;
+    } else if (encoding == "iso-8859-1") {
+        StringBuilder builder(input.length());
+        for (size_t i = 0; i < input.length(); ++i) {
+            u8 ch = input[i];
+            builder.append(ch >= 0x80 ? '?' : ch);
+        }
+        output = builder.to_string();
+    } else {
+        dbg() << "Unknown encoding " << encoding;
+        ASSERT_NOT_REACHED();
+    }
+    return output;
+}
+
+RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringView& raw_html, const String& encoding)
 {
     auto fragment = adopt(*new DocumentFragment(document));
-    if (!parse_html_document(html, document, *fragment))
+    if (!parse_html_document(to_utf8(raw_html, encoding), document, *fragment))
         return nullptr;
     return fragment;
 }
 
-RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
+RefPtr<Document> parse_html_document(const StringView& raw_html, const URL& url, const String& encoding)
 {
+    String html = to_utf8(raw_html, encoding);
+
     auto document = adopt(*new Document(url));
     document->set_source(html);
 

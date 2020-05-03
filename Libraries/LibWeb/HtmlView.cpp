@@ -343,6 +343,15 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
     return document;
 }
 
+String encoding_from_content_type(const String& content_type)
+{
+    auto offset = content_type.index_of("charset=");
+    if (offset.has_value())
+        return content_type.substring(offset.value() + 8, content_type.length() - offset.value() - 8).to_lowercase();
+
+    return "utf-8";
+}
+
 void HtmlView::load(const URL& url)
 {
     dbg() << "HtmlView::load: " << url.to_string();
@@ -370,7 +379,15 @@ void HtmlView::load(const URL& url)
             if (url.path().ends_with(".png") || url.path().ends_with(".gif")) {
                 document = create_image_document(data, url);
             } else {
-                document = parse_html_document(data, url);
+                String encoding = "utf-8";
+
+                auto content_type = response_headers.get("Content-Type");
+                if (content_type.has_value()) {
+                    encoding = encoding_from_content_type(content_type.value());
+                    dbg() << "I think this content has encoding '" << encoding << "'";
+                }
+
+                document = parse_html_document(data, url, encoding);
             }
             ASSERT(document);
             set_document(document);
