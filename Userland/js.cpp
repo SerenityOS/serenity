@@ -500,7 +500,9 @@ int main(int argc, char** argv)
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Magenta) });
                     break;
                 case JS::TokenType::StringLiteral:
-                case JS::TokenType::TemplateLiteral:
+                case JS::TokenType::TemplateLiteralStart:
+                case JS::TokenType::TemplateLiteralEnd:
+                case JS::TokenType::TemplateLiteralString:
                 case JS::TokenType::RegexLiteral:
                 case JS::TokenType::UnterminatedStringLiteral:
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Green), Line::Style::Bold });
@@ -571,6 +573,8 @@ int main(int argc, char** argv)
                 case JS::TokenType::Interface:
                 case JS::TokenType::Let:
                 case JS::TokenType::New:
+                case JS::TokenType::TemplateLiteralExprStart:
+                case JS::TokenType::TemplateLiteralExprEnd:
                 case JS::TokenType::Throw:
                 case JS::TokenType::Typeof:
                 case JS::TokenType::Var:

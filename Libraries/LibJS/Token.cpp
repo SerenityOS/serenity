@@ -74,10 +74,14 @@ double Token::double_value() const
 
 String Token::string_value() const
 {
-    ASSERT(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteral);
+    ASSERT(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteralString);
+    auto is_template = type() == TokenType::TemplateLiteralString;
+
+    auto offset = type() == TokenType::TemplateLiteralString ? 0 : 1;
+
     StringBuilder builder;
-    for (size_t i = 1; i < m_value.length() - 1; ++i) {
-        if (m_value[i] == '\\' && i + 1 < m_value.length() - 1) {
+    for (size_t i = offset; i < m_value.length() - offset; ++i) {
+        if (m_value[i] == '\\' && i + 1 < m_value.length() - offset) {
             i++;
             switch (m_value[i]) {
             case 'b':
@@ -107,18 +111,18 @@ String Token::string_value() const
             case '"':
                 builder.append('"');
                 break;
-            case '`':
-                builder.append('`');
-                break;
             case '\\':
                 builder.append('\\');
                 break;
             default:
-                // FIXME: Also parse octal, hex and unicode sequences
-                // should anything else generate a syntax error?
-                builder.append(m_value[i]);
+                if (is_template && (m_value[i] == '$' || m_value[i] == '`')) {
+                    builder.append(m_value[i]);
+                } else {
+                    // FIXME: Also parse octal, hex and unicode sequences
+                    // should anything else generate a syntax error?
+                    builder.append(m_value[i]);
+                }
             }
-
         } else {
             builder.append(m_value[i]);
         }
