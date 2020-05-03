@@ -464,8 +464,6 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     int window_id = m_next_window_id++;
     auto window = Window::construct(*this, (WindowType)message.type(), window_id, message.modal(), message.minimizable(), message.frameless(), message.resizable(), message.fullscreen());
 
-    dbg() << "Constructing window with parent_window_id=" << message.parent_window_id();
-
     if (message.parent_window_id()) {
         auto* parent_window = window_from_id(message.parent_window_id());
         if (!parent_window) {
