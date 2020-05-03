@@ -123,16 +123,15 @@ Optional<GIFFormat> decode_gif_header(BufferStream& stream)
 }
 
 class LZWDecoder {
-public:
-    struct CodeTableEntry {
-        Vector<u8> colors;
-        u16 code;
-    };
+private:
+    static constexpr int max_code_size = 12;
 
+public:
     explicit LZWDecoder(const Vector<u8>& lzw_bytes, u8 min_code_size)
         : m_lzw_bytes(lzw_bytes)
         , m_code_size(min_code_size)
         , m_original_code_size(min_code_size)
+        , m_table_capacity(pow(2, min_code_size))
     {
         init_code_table();
     }
@@ -140,11 +139,13 @@ public:
     u16 add_control_code()
     {
         const u16 control_code = m_code_table.size();
-        m_code_table.append({ {}, control_code });
-        m_original_code_table.append({ {}, control_code });
-        if (m_code_table.size() >= pow(2, m_code_size) && m_code_size < 12) {
+        m_code_table.append(Vector<u8> {});
+        m_original_code_table.append(Vector<u8> {});
+        if (m_code_table.size() >= m_table_capacity && m_code_size < max_code_size) {
+
             ++m_code_size;
             ++m_original_code_size;
+            m_table_capacity *= 2;
         }
         return control_code;
     }
@@ -154,6 +155,7 @@ public:
         m_code_table.clear();
         m_code_table.append(m_original_code_table);
         m_code_size = m_original_code_size;
+        m_table_capacity = pow(2, m_code_size);
         m_output.clear();
     }
 
@@ -167,7 +169,7 @@ public:
         // Extract the code bits using a 32-bit mask to cover the possibility that if
         // the current code size > 9 bits then the code can span 3 bytes.
         u8 current_bit_offset = m_current_bit_index % 8;
-        u32 mask = (u32)(pow(2, m_code_size) - 1) << current_bit_offset;
+        u32 mask = (u32)(m_table_capacity - 1) << current_bit_offset;
 
         // Make a padded copy of the final bytes in the data to ensure we don't read past the end.
         if (current_byte_index + sizeof(mask) > m_lzw_bytes.size()) {
@@ -193,12 +195,12 @@ public:
         return m_current_code;
     }
 
-    Vector<u8> get_output()
+    Vector<u8>& get_output()
     {
         ASSERT(m_current_code <= m_code_table.size());
         if (m_current_code < m_code_table.size()) {
             Vector<u8> new_entry = m_output;
-            m_output = m_code_table.at(m_current_code).colors;
+            m_output = m_code_table.at(m_current_code);
             new_entry.append(m_output[0]);
             extend_code_table(new_entry);
         } else if (m_current_code == m_code_table.size()) {
@@ -211,20 +213,20 @@ public:
 private:
     void init_code_table()
     {
-        const int initial_table_size = pow(2, m_code_size);
         m_code_table.clear();
-        for (u16 i = 0; i < initial_table_size; ++i) {
-            m_code_table.append({ { (u8)i }, i });
+        for (u16 i = 0; i < m_table_capacity; ++i) {
+            m_code_table.append({ (u8)i });
         }
         m_original_code_table = m_code_table;
     }
 
-    void extend_code_table(Vector<u8> entry)
+    void extend_code_table(const Vector<u8>& entry)
     {
         if (entry.size() > 1 && m_code_table.size() < 4096) {
-            m_code_table.append({ entry, (u16)m_code_table.size() });
-            if (m_code_table.size() >= pow(2, m_code_size) && m_code_size < 12) {
+            m_code_table.append(entry);
+            if (m_code_table.size() >= m_table_capacity && m_code_size < max_code_size) {
                 ++m_code_size;
+                m_table_capacity *= 2;
             }
         }
     }
@@ -233,11 +235,13 @@ private:
 
     int m_current_bit_index { 0 };
 
-    Vector<CodeTableEntry> m_code_table {};
-    Vector<CodeTableEntry> m_original_code_table {};
+    Vector<Vector<u8>> m_code_table {};
+    Vector<Vector<u8>> m_original_code_table {};
 
     u8 m_code_size { 0 };
     u8 m_original_code_size { 0 };
+
+    u32 m_table_capacity { 0 };
 
     u16 m_current_code { 0 };
     Vector<u8> m_output {};
