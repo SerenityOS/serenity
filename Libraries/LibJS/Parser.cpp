@@ -206,9 +206,7 @@ NonnullRefPtr<Program> Parser::parse_program()
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let);
     auto program = adopt(*new Program);
     while (!done()) {
-        if (match(TokenType::Semicolon)) {
-            consume();
-        } else if (match_statement()) {
+        if (match_statement()) {
             program->append(parse_statement());
         } else {
             expected("statement");
@@ -255,6 +253,9 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_while_statement();
     case TokenType::Debugger:
          return parse_debugger_statement();
+    case TokenType::Semicolon:
+        consume();
+        return create_ast_node<EmptyStatement>();
     default:
         if (match_expression()) {
             auto expr = parse_expression(0);
@@ -1176,7 +1177,8 @@ bool Parser::match_statement() const
         || type == TokenType::Break
         || type == TokenType::Continue
         || type == TokenType::Var
-        || type == TokenType::Debugger;
+        || type == TokenType::Debugger
+        || type == TokenType::Semicolon;
 }
 
 bool Parser::match_identifier_name() const
