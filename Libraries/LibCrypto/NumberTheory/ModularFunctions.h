@@ -38,38 +38,87 @@ static auto ModularInverse(const UnsignedBigInteger& a_, const UnsignedBigIntege
     if (b == 1)
         return { 1 };
 
+    UnsignedBigInteger one { 1 };
+    UnsignedBigInteger two { 2 };
+    UnsignedBigInteger temp_1;
+    UnsignedBigInteger temp_2;
+    UnsignedBigInteger temp_3;
+    UnsignedBigInteger temp_4;
+    UnsignedBigInteger temp_plus;
+    UnsignedBigInteger temp_minus;
+    UnsignedBigInteger temp_quotient;
+    UnsignedBigInteger temp_remainder;
+    UnsignedBigInteger d;
+
     auto a = a_;
     auto u = a;
-    if (a.words()[0] % 2 == 0)
-        u = u.plus(b);
+    if (a.words()[0] % 2 == 0) {
+        // u += b
+        UnsignedBigInteger::add_without_allocation(u, b, temp_plus);
+        u.set_to(temp_plus);
+    }
 
     auto v = b;
     UnsignedBigInteger x { 0 };
-    auto d = b.minus(1);
+
+    // d = b - 1
+    UnsignedBigInteger::subtract_without_allocation(b, one, d);
 
     while (!(v == 1)) {
         while (v < u) {
-            u = u.minus(v);
-            d = d.plus(x);
+            // u -= v
+            UnsignedBigInteger::subtract_without_allocation(u, v, temp_minus);
+            u.set_to(temp_minus);
+
+            // d += x
+            UnsignedBigInteger::add_without_allocation(d, x, temp_plus);
+            d.set_to(temp_plus);
+
             while (u.words()[0] % 2 == 0) {
                 if (d.words()[0] % 2 == 1) {
-                    d = d.plus(b);
+                    // d += b
+                    UnsignedBigInteger::add_without_allocation(d, b, temp_plus);
+                    d.set_to(temp_plus);
                 }
-                u = u.divided_by(2).quotient;
-                d = d.divided_by(2).quotient;
+
+                // u /= 2
+                UnsignedBigInteger::divide_without_allocation(u, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+                u.set_to(temp_quotient);
+
+                // d /= 2
+                UnsignedBigInteger::divide_without_allocation(d, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+                d.set_to(temp_quotient);
             }
         }
-        v = v.minus(u);
-        x = x.plus(d);
+
+        // v -= u
+        UnsignedBigInteger::subtract_without_allocation(v, u, temp_minus);
+        v.set_to(temp_minus);
+
+        // x += d
+        UnsignedBigInteger::add_without_allocation(x, d, temp_plus);
+        x.set_to(temp_plus);
+
         while (v.words()[0] % 2 == 0) {
             if (x.words()[0] % 2 == 1) {
-                x = x.plus(b);
+                // x += b
+                UnsignedBigInteger::add_without_allocation(x, b, temp_plus);
+                x.set_to(temp_plus);
             }
-            v = v.divided_by(2).quotient;
-            x = x.divided_by(2).quotient;
+
+            // v /= 2
+            UnsignedBigInteger::divide_without_allocation(v, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+            v.set_to(temp_quotient);
+
+            // x /= 2
+            UnsignedBigInteger::divide_without_allocation(x, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+            x.set_to(temp_quotient);
         }
     }
-    return x.divided_by(b).remainder;
+
+    // x % b
+    UnsignedBigInteger::divide_without_allocation(x, b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+    return temp_remainder;
 }
 
 static auto ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& e, const UnsignedBigInteger& m) -> UnsignedBigInteger
@@ -80,43 +129,121 @@ static auto ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& 
     UnsignedBigInteger ep { e };
     UnsignedBigInteger base { b };
     UnsignedBigInteger exp { 1 };
+    UnsignedBigInteger two { 2 };
+
+    UnsignedBigInteger temp_1;
+    UnsignedBigInteger temp_2;
+    UnsignedBigInteger temp_3;
+    UnsignedBigInteger temp_4;
+    UnsignedBigInteger temp_multiply;
+    UnsignedBigInteger temp_quotient;
+    UnsignedBigInteger temp_remainder;
 
     while (!(ep < 1)) {
 #ifdef NT_DEBUG
         dbg() << ep.to_base10();
 #endif
         if (ep.words()[0] % 2 == 1) {
-            exp = exp.multiplied_by(base).divided_by(m).remainder;
+            // exp = (exp * base) % m;
+            UnsignedBigInteger::multiply_without_allocation(exp, base, temp_1, temp_2, temp_3, temp_4, temp_multiply);
+            UnsignedBigInteger::divide_without_allocation(temp_multiply, m, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+            exp.set_to(temp_remainder);
         }
-        ep = ep.divided_by(2).quotient;
-        base = base.multiplied_by(base).divided_by(m).remainder;
+
+        // ep = ep / 2;
+        UnsignedBigInteger::divide_without_allocation(ep, two, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+        ep.set_to(temp_quotient);
+
+        // base = (base * base) % m;
+        UnsignedBigInteger::multiply_without_allocation(base, base, temp_1, temp_2, temp_3, temp_4, temp_multiply);
+        UnsignedBigInteger::divide_without_allocation(temp_multiply, m, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+        base.set_to(temp_remainder);
     }
     return exp;
 }
 
-static auto GCD(const UnsignedBigInteger& a, const UnsignedBigInteger& b) -> UnsignedBigInteger
+static void GCD_without_allocation(
+    const UnsignedBigInteger& a,
+    const UnsignedBigInteger& b,
+    UnsignedBigInteger& temp_a,
+    UnsignedBigInteger& temp_b,
+    UnsignedBigInteger& temp_1,
+    UnsignedBigInteger& temp_2,
+    UnsignedBigInteger& temp_3,
+    UnsignedBigInteger& temp_4,
+    UnsignedBigInteger& temp_quotient,
+    UnsignedBigInteger& temp_remainder,
+    UnsignedBigInteger& output)
 {
-    UnsignedBigInteger a_ { a }, b_ { b };
+    temp_a.set_to(a);
+    temp_b.set_to(b);
     for (;;) {
-        if (a_ == 0)
-            return b_;
-        b_ = b_.divided_by(a_).remainder;
-        if (b_ == 0)
-            return a_;
-        a_ = a_.divided_by(b_).remainder;
+        if (temp_a == 0) {
+            output.set_to(temp_b);
+            return;
+        }
+
+        // temp_b %= temp_a
+        UnsignedBigInteger::divide_without_allocation(temp_b, temp_a, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+        temp_b.set_to(temp_remainder);
+        if (temp_b == 0) {
+            output.set_to(temp_a);
+            return;
+        }
+
+        // temp_a %= temp_b
+        UnsignedBigInteger::divide_without_allocation(temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+        temp_a.set_to(temp_remainder);
     }
+}
+
+static UnsignedBigInteger GCD(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
+{
+    UnsignedBigInteger temp_a;
+    UnsignedBigInteger temp_b;
+    UnsignedBigInteger temp_1;
+    UnsignedBigInteger temp_2;
+    UnsignedBigInteger temp_3;
+    UnsignedBigInteger temp_4;
+    UnsignedBigInteger temp_quotient;
+    UnsignedBigInteger temp_remainder;
+    UnsignedBigInteger output;
+
+    GCD_without_allocation(a, b, temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, output);
+
+    return output;
 }
 
 static auto LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b) -> UnsignedBigInteger
 {
-    auto temp = GCD(a, b);
+    UnsignedBigInteger temp_a;
+    UnsignedBigInteger temp_b;
+    UnsignedBigInteger temp_1;
+    UnsignedBigInteger temp_2;
+    UnsignedBigInteger temp_3;
+    UnsignedBigInteger temp_4;
+    UnsignedBigInteger temp_quotient;
+    UnsignedBigInteger temp_remainder;
+    UnsignedBigInteger gcd_output;
+    UnsignedBigInteger output { 0 };
 
-    auto div = a.divided_by(temp);
+    GCD_without_allocation(a, b, temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, gcd_output);
+    if (gcd_output == 0) {
+#ifdef NT_DEBUG
+        dbg() << "GCD is zero";
+#endif
+        return output;
+    }
+
+    // output = (a / gcd_output) * b
+    UnsignedBigInteger::divide_without_allocation(a, gcd_output, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+    UnsignedBigInteger::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, temp_4, output);
 
 #ifdef NT_DEBUG
-    dbg() << "quot: " << div.quotient << " rem: " << div.remainder;
+    dbg() << "quot: " << temp_quotient << " rem: " << temp_remainder << " out: " << output;
 #endif
-    return temp == 0 ? 0 : (a.divided_by(temp).quotient.multiplied_by(b));
+
+    return output;
 }
 
 template<size_t test_count>
