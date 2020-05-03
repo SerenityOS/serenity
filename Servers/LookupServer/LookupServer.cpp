@@ -243,6 +243,8 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
     Vector<String, 8> responses;
     Vector<DNSAnswer, 8> cacheable_answers;
     for (auto& answer : response.answers()) {
+        if (answer.type() != T_A)
+            continue;
         responses.append(answer.record_data());
         if (!answer.has_expired())
             cacheable_answers.append(answer);
