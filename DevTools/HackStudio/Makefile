@@ -18,6 +18,6 @@ OBJS = \
 
 PROGRAM = HackStudio
 
-LIB_DEPS = GUI Web VT Protocol Markdown Gfx IPC Thread Pthread Core JS Debug
+LIB_DEPS = GUI Web TextCodec VT Protocol Markdown Gfx IPC Thread Pthread Core JS Debug
 
 include ../../Makefile.common
