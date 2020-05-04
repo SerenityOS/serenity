@@ -30,6 +30,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibJS/AST.h>
+#include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
@@ -388,6 +389,82 @@ void sigint_handler()
     interrupt_interpreter();
 }
 
+class ReplConsoleClient final : public JS::ConsoleClient {
+public:
+    ReplConsoleClient(JS::Console& console)
+        : ConsoleClient(console)
+    {
+    }
+
+    virtual JS::Value log() override
+    {
+        puts(interpreter().join_arguments().characters());
+        return JS::js_undefined();
+    }
+    virtual JS::Value info() override
+    {
+        printf("(i) %s\n", interpreter().join_arguments().characters());
+        return JS::js_undefined();
+    }
+    virtual JS::Value debug() override
+    {
+        printf("\033[36;1m");
+        puts(interpreter().join_arguments().characters());
+        printf("\033[0m");
+        return JS::js_undefined();
+    }
+    virtual JS::Value warn() override
+    {
+        printf("\033[33;1m");
+        puts(interpreter().join_arguments().characters());
+        printf("\033[0m");
+        return JS::js_undefined();
+    }
+    virtual JS::Value error() override
+    {
+        printf("\033[31;1m");
+        puts(interpreter().join_arguments().characters());
+        printf("\033[0m");
+        return JS::js_undefined();
+    }
+    virtual JS::Value clear() override
+    {
+        printf("\033[3J\033[H\033[2J");
+        fflush(stdout);
+        return JS::js_undefined();
+    }
+    virtual JS::Value trace() override
+    {
+        puts(interpreter().join_arguments().characters());
+        auto trace = interpreter().get_trace();
+        for (auto function_name : trace) {
+            if (String(function_name).is_empty())
+                function_name = "<anonymous>";
+            printf(" -> %s\n", function_name.characters());
+        }
+        return JS::js_undefined();
+    }
+    virtual JS::Value count() override
+    {
+        auto label = interpreter().argument_count() ? interpreter().argument(0).to_string() : "default";
+        auto counter_value = m_console.counter_increment(label);
+        printf("%s: %u\n", label.characters(), counter_value);
+        return JS::js_undefined();
+    }
+    virtual JS::Value count_reset() override
+    {
+        auto label = interpreter().argument_count() ? interpreter().argument(0).to_string() : "default";
+        if (m_console.counter_reset(label)) {
+            printf("%s: 0\n", label.characters());
+        } else {
+            printf("\033[33;1m");
+            printf("\"%s\" doesn't have a count\n", label.characters());
+            printf("\033[0m");
+        }
+        return JS::js_undefined();
+    }
+};
+
 int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
@@ -415,6 +492,8 @@ int main(int argc, char** argv)
 
     if (script_path == nullptr) {
         interpreter = JS::Interpreter::create<ReplObject>();
+        ReplConsoleClient console_client(interpreter->console());
+        interpreter->console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         if (test_mode)
             enable_test_mode(*interpreter);
@@ -635,6 +714,8 @@ int main(int argc, char** argv)
         repl(*interpreter);
     } else {
         interpreter = JS::Interpreter::create<JS::GlobalObject>();
+        ReplConsoleClient console_client(interpreter->console());
+        interpreter->console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         if (test_mode)
             enable_test_mode(*interpreter);
