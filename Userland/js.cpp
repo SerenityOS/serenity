@@ -520,7 +520,7 @@ int main(int argc, char** argv)
                 case JS::TokenType::Ampersand:
                 case JS::TokenType::AmpersandEquals:
                 case JS::TokenType::Asterisk:
-                case JS::TokenType::AsteriskAsteriskEquals:
+                case JS::TokenType::DoubleAsteriskEquals:
                 case JS::TokenType::AsteriskEquals:
                 case JS::TokenType::Caret:
                 case JS::TokenType::CaretEquals:
