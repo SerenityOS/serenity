@@ -45,12 +45,12 @@ static String read_var(const String& name)
     auto path = builder.to_string();
     auto f = Core::File::construct(path);
     if (!f->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "open: %s", f->error_string());
+        fprintf(stderr, "open: %s\n", f->error_string());
         exit(1);
     }
     const auto& b = f->read_all();
     if (f->error() < 0) {
-        fprintf(stderr, "read: %s", f->error_string());
+        fprintf(stderr, "read: %s\n", f->error_string());
         exit(1);
     }
     return String((const char*)b.data(), b.size(), Chomp);
@@ -64,12 +64,12 @@ static void write_var(const String& name, const String& value)
     auto path = builder.to_string();
     auto f = Core::File::construct(path);
     if (!f->open(Core::IODevice::WriteOnly)) {
-        fprintf(stderr, "open: %s", f->error_string());
+        fprintf(stderr, "open: %s\n", f->error_string());
         exit(1);
     }
     f->write(value);
     if (f->error() < 0) {
-        fprintf(stderr, "write: %s", f->error_string());
+        fprintf(stderr, "write: %s\n", f->error_string());
         exit(1);
     }
 }
