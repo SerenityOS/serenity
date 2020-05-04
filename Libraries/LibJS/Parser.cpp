@@ -133,7 +133,7 @@ Parser::Parser(Lexer lexer)
         g_operator_precedence.set(TokenType::Equals, 3);
         g_operator_precedence.set(TokenType::PlusEquals, 3);
         g_operator_precedence.set(TokenType::MinusEquals, 3);
-        g_operator_precedence.set(TokenType::AsteriskAsteriskEquals, 3);
+        g_operator_precedence.set(TokenType::DoubleAsteriskEquals, 3);
         g_operator_precedence.set(TokenType::AsteriskEquals, 3);
         g_operator_precedence.set(TokenType::SlashEquals, 3);
         g_operator_precedence.set(TokenType::PercentEquals, 3);
@@ -637,6 +637,9 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::DoubleAsterisk:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Exponentiation, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::DoubleAsteriskEquals:
+        consume();
+        return create_ast_node<AssignmentExpression>(AssignmentOp::ExponentiationAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::GreaterThan:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::GreaterThan, move(lhs), parse_expression(min_precedence, associativity));
@@ -1192,6 +1195,7 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::SlashEquals
         || type == TokenType::Percent
         || type == TokenType::DoubleAsterisk
+        || type == TokenType::DoubleAsteriskEquals
         || type == TokenType::Equals
         || type == TokenType::EqualsEqualsEquals
         || type == TokenType::ExclamationMarkEqualsEquals

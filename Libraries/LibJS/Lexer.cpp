@@ -81,7 +81,7 @@ Lexer::Lexer(StringView source)
     if (s_three_char_tokens.is_empty()) {
         s_three_char_tokens.set("===", TokenType::EqualsEqualsEquals);
         s_three_char_tokens.set("!==", TokenType::ExclamationMarkEqualsEquals);
-        s_three_char_tokens.set("**=", TokenType::AsteriskAsteriskEquals);
+        s_three_char_tokens.set("**=", TokenType::DoubleAsteriskEquals);
         s_three_char_tokens.set("<<=", TokenType::ShiftLeftEquals);
         s_three_char_tokens.set(">>=", TokenType::ShiftRightEquals);
         s_three_char_tokens.set(">>>", TokenType::UnsignedShiftRight);
