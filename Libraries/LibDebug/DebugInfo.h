@@ -26,11 +26,15 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibELF/Loader.h>
+#include <Libraries/LibDebug/Dwarf/DIE.h>
 #include <Libraries/LibDebug/Dwarf/LineProgram.h>
+#include <sys/arch/i386/regs.h>
 
 class DebugInfo {
 public:
@@ -44,6 +48,33 @@ public:
         bool operator==(const SourcePosition& other) const { return file_path == other.file_path && line_number == other.line_number; }
         bool operator!=(const SourcePosition& other) const { return !(*this == other); }
     };
+
+    struct VariableInfo {
+        enum class LocationType {
+            None,
+            Address,
+            Regsiter,
+        };
+        String name;
+        String type;
+        LocationType location_type { LocationType::None };
+        union {
+            u32 address;
+        } location_data { 0 };
+
+        NonnullOwnPtrVector<VariableInfo> members;
+        VariableInfo* parent { nullptr };
+    };
+
+    struct VariablesScope {
+        bool is_function { false };
+        Optional<String> name;
+        u32 address_low { 0 };
+        u32 address_high { 0 };
+        Vector<Dwarf::DIE> dies_of_variables;
+    };
+
+    NonnullOwnPtrVector<VariableInfo> get_variables_in_current_scope(const PtraceRegisters&) const;
 
     Optional<SourcePosition> get_source_position(u32 address) const;
     Optional<u32> get_instruction_from_source(const String& file, size_t line) const;
@@ -63,9 +94,15 @@ public:
     }
 
 private:
+    void prepare_variable_scopes();
     void prepare_lines();
+    void parse_scopes_impl(const Dwarf::DIE& die);
+    Optional<VariablesScope> get_scope(u32 instruction_pointer) const;
+    NonnullOwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&) const;
 
     NonnullRefPtr<const ELF::Loader> m_elf;
+    NonnullRefPtr<Dwarf::DwarfInfo> m_dwarf_info;
 
+    Vector<VariablesScope> m_scopes;
     Vector<LineProgram::LineInfo> m_sorted_lines;
 };
