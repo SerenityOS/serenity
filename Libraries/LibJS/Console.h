@@ -33,12 +33,16 @@
 
 namespace JS {
 
+class ConsoleClient;
+
 class Console {
     AK_MAKE_NONCOPYABLE(Console);
     AK_MAKE_NONMOVABLE(Console);
 
 public:
     Console(Interpreter&);
+
+    void set_client(ConsoleClient& client) { m_client = &client; }
 
     Interpreter& interpreter() { return m_interpreter; }
     const Interpreter& interpreter() const { return m_interpreter; }
@@ -64,8 +68,33 @@ public:
 
 private:
     Interpreter& m_interpreter;
+    ConsoleClient* m_client { nullptr };
 
     HashMap<String, unsigned> m_counters;
+};
+
+class ConsoleClient {
+public:
+    ConsoleClient(Console& console)
+        : m_console(console)
+    {
+    }
+
+    virtual Value debug() = 0;
+    virtual Value error() = 0;
+    virtual Value info() = 0;
+    virtual Value log() = 0;
+    virtual Value warn() = 0;
+    virtual Value clear() = 0;
+    virtual Value trace() = 0;
+    virtual Value count() = 0;
+    virtual Value count_reset() = 0;
+
+protected:
+    Interpreter& interpreter() { return m_console.interpreter(); }
+    const Interpreter& interpreter() const { return m_console.interpreter(); }
+
+    Console& m_console;
 };
 
 }
