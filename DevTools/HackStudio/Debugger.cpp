@@ -35,7 +35,7 @@ Debugger& Debugger::the()
 }
 
 void Debugger::initialize(
-    Function<void(DebugInfo::SourcePosition)> on_stop_callback,
+    Function<void(const PtraceRegisters&)> on_stop_callback,
     Function<void()> on_continue_callback,
     Function<void()> on_exit_callback)
 {
@@ -48,7 +48,7 @@ bool Debugger::is_initialized()
 }
 
 Debugger::Debugger(
-    Function<void(DebugInfo::SourcePosition)> on_stop_callback,
+    Function<void(const PtraceRegisters&)> on_stop_callback,
     Function<void()> on_continue_callback,
     Function<void()> on_exit_callback)
     : m_on_stopped_callback(move(on_stop_callback))
@@ -129,10 +129,6 @@ int Debugger::debugger_loop()
         }
         ASSERT(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
-        auto source_position = m_debug_session->debug_info().get_source_position(regs.eip);
-        if (!source_position.has_value()) {
-            return DebugSession::DebugDecision::Continue;
-        }
 
         if (in_single_step_mode) {
             for (auto address : temporary_breakpoints) {
@@ -142,8 +138,7 @@ int Debugger::debugger_loop()
             in_single_step_mode = false;
         }
 
-        dbg() << "Debugee stopped @ " << source_position.value().file_path << ":" << source_position.value().line_number;
-        m_on_stopped_callback(source_position.value());
+        m_on_stopped_callback(regs);
 
         pthread_mutex_lock(&m_continue_mutex);
         pthread_cond_wait(&m_continue_cond, &m_continue_mutex);
