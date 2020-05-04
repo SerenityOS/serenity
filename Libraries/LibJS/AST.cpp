@@ -1384,21 +1384,17 @@ void SwitchStatement::dump(int indent) const
 void SwitchCase::dump(int indent) const
 {
     ASTNode::dump(indent);
-    print_indent(indent);
+    print_indent(indent + 1);
     if (m_test) {
         printf("(Test)\n");
-        m_test->dump(indent + 1);
+        m_test->dump(indent + 2);
     } else {
         printf("(Default)\n");
     }
-    print_indent(indent);
+    print_indent(indent + 1);
     printf("(Consequent)\n");
-    int i = 0;
-    for (auto& statement : m_consequent) {
-        print_indent(indent);
-        printf("[%d]\n", i++);
-        statement.dump(indent + 1);
-    }
+    for (auto& statement : m_consequent)
+        statement.dump(indent + 2);
 }
 
 Value ConditionalExpression::execute(Interpreter& interpreter) const
