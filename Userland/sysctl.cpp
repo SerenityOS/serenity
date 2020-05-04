@@ -114,10 +114,16 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(show_all, "Show all variables", nullptr, 'a');
-    args_parser.add_positional_argument(var, "Command (var[=value])", "command");
+    args_parser.add_positional_argument(var, "Command (var[=value])", "command", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
+    if (var == nullptr) {
+        // Not supplied; assume `-a`.
+        show_all = true;
+    }
+
     if (show_all) {
+        // Ignore `var`, even if it was supplied. Just like the real procps does.
         return handle_show_all();
     }
 
