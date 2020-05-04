@@ -388,37 +388,6 @@ void sigint_handler()
     interrupt_interpreter();
 }
 
-void console_message_handler(JS::ConsoleMessage& message)
-{
-    switch (message.kind) {
-    case JS::ConsoleMessageKind::Count:
-    case JS::ConsoleMessageKind::Log:
-    case JS::ConsoleMessageKind::Info:
-    case JS::ConsoleMessageKind::Trace:
-        puts(message.text.characters());
-        break;
-    case JS::ConsoleMessageKind::Debug:
-        printf("\033[36;1m");
-        puts(message.text.characters());
-        printf("\033[0m");
-        break;
-    case JS::ConsoleMessageKind::Warn:
-        printf("\033[33;1m");
-        puts(message.text.characters());
-        printf("\033[0m");
-        break;
-    case JS::ConsoleMessageKind::Error:
-        printf("\033[31;1m");
-        puts(message.text.characters());
-        printf("\033[0m");
-        break;
-    case JS::ConsoleMessageKind::Clear:
-        printf("\033[3J\033[H\033[2J");
-        fflush(stdout);
-        break;
-    }
-};
-
 int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
@@ -446,7 +415,6 @@ int main(int argc, char** argv)
 
     if (script_path == nullptr) {
         interpreter = JS::Interpreter::create<ReplObject>();
-        interpreter->console().on_new_message = console_message_handler;
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         if (test_mode)
             enable_test_mode(*interpreter);
@@ -671,7 +639,6 @@ int main(int argc, char** argv)
         repl(*interpreter);
     } else {
         interpreter = JS::Interpreter::create<JS::GlobalObject>();
-        interpreter->console().on_new_message = console_message_handler;
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         if (test_mode)
             enable_test_mode(*interpreter);
