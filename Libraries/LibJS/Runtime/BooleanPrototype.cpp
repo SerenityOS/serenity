@@ -39,7 +39,7 @@ BooleanPrototype::BooleanPrototype()
     put_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
 }
 
-BooleanPrototype::~BooleanPrototype() {}
+BooleanPrototype::~BooleanPrototype() { }
 
 Value BooleanPrototype::to_string(Interpreter& interpreter)
 {

@@ -35,7 +35,7 @@ MarkedValueList::MarkedValueList(Heap& heap)
     m_heap.did_create_marked_value_list({}, *this);
 }
 
-MarkedValueList:: MarkedValueList(MarkedValueList&& other)
+MarkedValueList::MarkedValueList(MarkedValueList&& other)
     : m_heap(other.m_heap)
     , m_values(move(other.m_values))
 {

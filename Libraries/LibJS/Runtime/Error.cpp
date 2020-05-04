@@ -48,16 +48,16 @@ Error::~Error()
 {
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                          \
-    ClassName* ClassName::create(GlobalObject& global_object, const String& message)                   \
-    {                                                                                                  \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                              \
+    ClassName* ClassName::create(GlobalObject& global_object, const String& message)                       \
+    {                                                                                                      \
         return global_object.heap().allocate<ClassName>(message, *global_object.snake_name##_prototype()); \
-    }                                                                                                  \
-    ClassName::ClassName(const String& message, Object& prototype)                                     \
-        : Error(#ClassName, message, prototype)                                                        \
-    {                                                                                                  \
-    }                                                                                                  \
-    ClassName::~ClassName() {}                                                                         \
+    }                                                                                                      \
+    ClassName::ClassName(const String& message, Object& prototype)                                         \
+        : Error(#ClassName, message, prototype)                                                            \
+    {                                                                                                      \
+    }                                                                                                      \
+    ClassName::~ClassName() { }                                                                            \
     const char* ClassName::class_name() const { return #ClassName; }
 
 JS_ENUMERATE_ERROR_SUBCLASSES

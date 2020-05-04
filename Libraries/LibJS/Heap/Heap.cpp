@@ -198,7 +198,7 @@ Cell* Heap::cell_from_possible_pointer(FlatPtr pointer)
 
 class MarkingVisitor final : public Cell::Visitor {
 public:
-    MarkingVisitor() {}
+    MarkingVisitor() { }
 
     virtual void visit_impl(Cell* cell)
     {

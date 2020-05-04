@@ -109,7 +109,7 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
         : Object(interpreter().global_object().error_prototype())             \
     {                                                                         \
     }                                                                         \
-    PrototypeName::~PrototypeName() {}                                        \
+    PrototypeName::~PrototypeName() { }                                       \
     const char* PrototypeName::class_name() const { return #PrototypeName; }
 
 JS_ENUMERATE_ERROR_SUBCLASSES
