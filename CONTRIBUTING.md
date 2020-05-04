@@ -8,6 +8,15 @@ Everyone is welcome to work on the project, and while we have lots of fun, it's 
 
 The easiest way to get in touch is by joining the `#serenityos` channel on the Freenode IRC network.
 
+## Issue policy
+
+Unlike many other software projects, SerenityOS is not concerned with gaining the largest possible userbase. Its target audience is its own developers. As such, we have limited interest in feature requests from non-contributors.
+
+That said, please do file any bugs you find, keeping the following in mind:
+
+* One issue per bug. Putting multiple things in the same issue makes both discussion and completion unnecessarily complicated.
+* No build issues (or other support requests.) If the Travis CI is green, the build problem is most likely on your side. Work it out locally, or ask on IRC.
+
 ## Feature policy
 
 As a labor of love, Serenity is strongly user-focused. When proposing or building a new feature, you should start by imagining how a person would use it. Like a tree falling in the woods with nobody around, does a feature with no user impact really provide value?
