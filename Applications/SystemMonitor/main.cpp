@@ -75,6 +75,40 @@ static NonnullRefPtr<GUI::Widget> build_pci_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_graphs_tab();
 
+class UnavailableProcessWidget final : public GUI::Frame {
+    C_OBJECT(UnavailableProcessWidget)
+public:
+    virtual ~UnavailableProcessWidget() override {}
+
+    const String& text() const { return m_text; }
+    void set_text(String text) { m_text = move(text); }
+
+private:
+    UnavailableProcessWidget(String text)
+        : m_text(move(text))
+    {
+    }
+
+    virtual void paint_event(GUI::PaintEvent& event) override
+    {
+        Frame::paint_event(event);
+        if (text().is_empty())
+            return;
+        GUI::Painter painter(*this);
+        painter.add_clip_rect(event.rect());
+        painter.draw_text(frame_inner_rect(), text(), Gfx::TextAlignment::Center, palette().window_text(), Gfx::TextElision::Right);
+    }
+
+    String m_text;
+};
+
+static bool
+can_access_pid(pid_t pid)
+{
+    auto path = String::format("/proc/%d", pid);
+    return access(path.characters(), X_OK) == 0;
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio proc shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
@@ -221,7 +255,11 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
+    auto& process_tab_unused_widget = process_container_splitter.add<UnavailableProcessWidget>("No process selected");
+    process_tab_unused_widget.set_visible(true);
+
     auto& process_tab_widget = process_container_splitter.add<GUI::TabWidget>();
+    process_tab_widget.set_visible(false);
 
     auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
     auto& open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
@@ -229,6 +267,15 @@ int main(int argc, char** argv)
     auto& stacks_widget = process_tab_widget.add_tab<ProcessStacksWidget>("Stacks");
 
     process_table_view.on_process_selected = [&](pid_t pid) {
+        if (!can_access_pid(pid)) {
+            process_tab_widget.set_visible(false);
+            process_tab_unused_widget.set_text("Process cannot be accessed");
+            process_tab_unused_widget.set_visible(true);
+            return;
+        }
+
+        process_tab_widget.set_visible(true);
+        process_tab_unused_widget.set_visible(false);
         open_files_widget.set_pid(pid);
         stacks_widget.set_pid(pid);
         memory_map_widget.set_pid(pid);
