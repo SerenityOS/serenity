@@ -27,6 +27,7 @@
 #include <AK/Function.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
@@ -99,10 +100,19 @@ Value ScriptFunction::call(Interpreter& interpreter)
     for (size_t i = 0; i < m_parameters.size(); ++i) {
         auto parameter = parameters()[i];
         auto value = js_undefined();
-        if (i < argument_values.size() && !argument_values[i].is_undefined()) {
-            value = argument_values[i];
-        } else if (parameter.default_value) {
-            value = parameter.default_value->execute(interpreter);
+        if (parameter.is_rest) {
+            auto* array = Array::create(interpreter.global_object());
+            for (size_t rest_index = i; rest_index < argument_values.size(); ++rest_index)
+                array->elements().append(argument_values[rest_index]);
+            value = Value(array);
+        } else {
+            if (i < argument_values.size() && !argument_values[i].is_undefined()) {
+                value = argument_values[i];
+            } else if (parameter.default_value) {
+                value = parameter.default_value->execute(interpreter);
+                if (interpreter.exception())
+                    return {};
+            }
         }
         arguments.append({ parameter.name, value });
         interpreter.current_environment()->set(parameter.name, { value, DeclarationKind::Var });

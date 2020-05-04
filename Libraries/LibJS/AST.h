@@ -158,6 +158,7 @@ public:
     struct Parameter {
         FlyString name;
         RefPtr<Expression> default_value;
+        bool is_rest { false };
     };
 
     const FlyString& name() const { return m_name; }
