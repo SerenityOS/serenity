@@ -52,6 +52,9 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
     ASSERT(frame.html_view());
     auto& html_view = const_cast<HtmlView&>(*frame.html_view());
 
+    if (type() == "hidden")
+        return nullptr;
+
     RefPtr<GUI::Widget> widget;
     if (type() == "submit") {
         auto& button = html_view.add<GUI::Button>(value());
