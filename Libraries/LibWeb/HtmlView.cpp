@@ -124,7 +124,7 @@ void HtmlView::layout_and_sync_size()
         set_content_size(enclosing_int_rect(layout_root()->rect()).size());
     }
 
-    main_frame().set_viewport_rect(visible_content_rect());
+    main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
 
 #ifdef HTML_DEBUG
     dbgprintf("\033[33;1mLayout tree after layout:\033[0m\n");
@@ -162,7 +162,7 @@ void HtmlView::paint_event(GUI::PaintEvent& event)
 
     RenderingContext context(painter, palette());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
-    context.set_viewport_rect(visible_content_rect());
+    context.set_viewport_rect(viewport_rect_in_content_coordinates());
     layout_root()->render(context);
 }
 
@@ -518,7 +518,7 @@ void HtmlView::dump_selection(const char* event_name)
 
 void HtmlView::did_scroll()
 {
-    main_frame().set_viewport_rect(visible_content_rect());
+    main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
 }
 
 Gfx::Point HtmlView::compute_mouse_event_offset(const Gfx::Point& event_position, const LayoutNode& layout_node) const
