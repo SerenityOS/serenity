@@ -1,6 +1,6 @@
 ## Name
 
-chroot, chroot_with_mount_flags - change filesystem root
+chroot, chroot\_with\_mount\_flags - change filesystem root
 
 ## Synopsis
 

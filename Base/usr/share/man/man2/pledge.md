@@ -56,3 +56,7 @@ Promises marked with an asterisk (\*) are SerenityOS specific extensions not sup
 ## History
 
 The `pledge()` system call was first introduced by OpenBSD. The implementation in SerenityOS differs in many ways and is by no means final.
+
+## See also
+
+* [`unveil`(2)](unveil.md)
