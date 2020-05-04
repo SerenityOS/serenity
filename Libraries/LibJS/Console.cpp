@@ -37,40 +37,46 @@ Console::Console(Interpreter& interpreter)
 {
 }
 
-void Console::debug(String text)
+Value Console::debug()
 {
-    dbg() << "debug: " << text;
+    dbg() << "debug: " << m_interpreter.join_arguments();
+    return js_undefined();
 }
 
-void Console::error(String text)
+Value Console::error()
 {
-    dbg() << "error: " << text;
+    dbg() << "error: " << m_interpreter.join_arguments();
+    return js_undefined();
 }
 
-void Console::info(String text)
+Value Console::info()
 {
-    dbg() << "info: " << text;
+    dbg() << "info: " << m_interpreter.join_arguments();
+    return js_undefined();
 }
 
-void Console::log(String text)
+Value Console::log()
 {
-    dbg() << "log: " << text;
+    dbg() << "log: " << m_interpreter.join_arguments();
+    return js_undefined();
 }
 
-void Console::warn(String text)
+Value Console::warn()
 {
-    dbg() << "warn: " << text;
+    dbg() << "warn: " << m_interpreter.join_arguments();
+    return js_undefined();
 }
 
-void Console::clear()
+Value Console::clear()
 {
     dbg() << "clear:";
+    return js_undefined();
 }
 
-void Console::trace(String title)
+Value Console::trace()
 {
     StringBuilder message_text;
-    message_text.append(title);
+    message_text.append(m_interpreter.join_arguments());
 
     auto call_stack = m_interpreter.call_stack();
     // -2 to skip the console.trace() call frame
@@ -83,31 +89,39 @@ void Console::trace(String title)
     }
 
     dbg() << "log: " << message_text.build();
+    return js_undefined();
 }
 
-void Console::count(String label)
+Value Console::count()
 {
+    auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string() : "default";
+
     auto counter_value = m_counters.get(label);
     if (!counter_value.has_value()) {
         dbg() << "log: " << label << ": 1";
         m_counters.set(label, 1);
-        return;
+        return js_undefined();
     }
 
     auto new_counter_value = counter_value.value() + 1;
     dbg() << "log: " << label << ": " << new_counter_value;
     m_counters.set(label, new_counter_value);
+
+    return js_undefined();
 }
 
-void Console::count_reset(String label)
+Value Console::count_reset()
 {
+    auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string() : "default";
+
     if (m_counters.contains(label)) {
         dbg() << "warn: \"" << label << "\" doesn't have a count";
-        return;
+        return js_undefined();
     }
 
     m_counters.remove(label);
     dbg() << "log: " << label << ": 0";
+    return js_undefined();
 }
 
 }

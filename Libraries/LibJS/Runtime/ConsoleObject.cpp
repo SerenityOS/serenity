@@ -28,7 +28,6 @@
 
 #include <AK/FlyString.h>
 #include <AK/Function.h>
-#include <AK/StringBuilder.h>
 #include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
@@ -56,62 +55,47 @@ ConsoleObject::~ConsoleObject()
 
 Value ConsoleObject::log(Interpreter& interpreter)
 {
-    interpreter.console().log(interpreter.join_arguments());
-    return js_undefined();
+    return interpreter.console().log();
 }
 
 Value ConsoleObject::debug(Interpreter& interpreter)
 {
-    interpreter.console().debug(interpreter.join_arguments());
-    return js_undefined();
+    return interpreter.console().debug();
 }
 
 Value ConsoleObject::info(Interpreter& interpreter)
 {
-    interpreter.console().info(interpreter.join_arguments());
-    return js_undefined();
+    return interpreter.console().info();
 }
 
 Value ConsoleObject::warn(Interpreter& interpreter)
 {
-    interpreter.console().warn(interpreter.join_arguments());
-    return js_undefined();
+    return interpreter.console().warn();
 }
 
 Value ConsoleObject::error(Interpreter& interpreter)
 {
-    interpreter.console().error(interpreter.join_arguments());
-    return js_undefined();
+    return interpreter.console().error();
 }
 
 Value ConsoleObject::trace(Interpreter& interpreter)
 {
-    interpreter.console().trace(interpreter.join_arguments());
-    return js_undefined();
+    return interpreter.console().trace();
 }
 
 Value ConsoleObject::count(Interpreter& interpreter)
 {
-    if (interpreter.argument_count())
-        interpreter.console().count(interpreter.argument(0).to_string());
-    else
-        interpreter.console().count();
-    return js_undefined();
+    return interpreter.console().count();
 }
 
 Value ConsoleObject::count_reset(Interpreter& interpreter)
 {
-    if (interpreter.argument_count())
-        interpreter.console().count_reset(interpreter.argument(0).to_string());
-    else
-        interpreter.console().count_reset();
-    return js_undefined();
+    return interpreter.console().count_reset();
 }
 
 Value ConsoleObject::clear(Interpreter& interpreter)
 {
-    interpreter.console().clear();
-    return js_undefined();
+    return interpreter.console().clear();
 }
 
 }
