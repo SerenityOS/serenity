@@ -25,6 +25,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
@@ -259,6 +260,17 @@ GlobalObject& Interpreter::global_object()
 const GlobalObject& Interpreter::global_object() const
 {
     return static_cast<const GlobalObject&>(*m_global_object);
+}
+
+String Interpreter::join_arguments()
+{
+    StringBuilder joined_arguments;
+    for (size_t i = 0; i < argument_count(); ++i) {
+        joined_arguments.append(argument(i).to_string().characters());
+        if (i != argument_count() - 1)
+            joined_arguments.append(' ');
+    }
+    return joined_arguments.build();
 }
 
 }
