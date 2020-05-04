@@ -166,6 +166,8 @@ public:
 
     Console& console() { return m_console; }
 
+    String join_arguments();
+
 private:
     Interpreter();
 

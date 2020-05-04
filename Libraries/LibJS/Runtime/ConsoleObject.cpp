@@ -36,17 +36,6 @@
 
 namespace JS {
 
-static String join_args(Interpreter& interpreter)
-{
-    StringBuilder joined_arguments;
-    for (size_t i = 0; i < interpreter.argument_count(); ++i) {
-        joined_arguments.append(interpreter.argument(i).to_string().characters());
-        if (i != interpreter.argument_count() - 1)
-            joined_arguments.append(' ');
-    }
-    return joined_arguments.build();
-}
-
 ConsoleObject::ConsoleObject()
     : Object(interpreter().global_object().object_prototype())
 {
@@ -67,37 +56,37 @@ ConsoleObject::~ConsoleObject()
 
 Value ConsoleObject::log(Interpreter& interpreter)
 {
-    interpreter.console().log(join_args(interpreter));
+    interpreter.console().log(interpreter.join_arguments());
     return js_undefined();
 }
 
 Value ConsoleObject::debug(Interpreter& interpreter)
 {
-    interpreter.console().debug(join_args(interpreter));
+    interpreter.console().debug(interpreter.join_arguments());
     return js_undefined();
 }
 
 Value ConsoleObject::info(Interpreter& interpreter)
 {
-    interpreter.console().info(join_args(interpreter));
+    interpreter.console().info(interpreter.join_arguments());
     return js_undefined();
 }
 
 Value ConsoleObject::warn(Interpreter& interpreter)
 {
-    interpreter.console().warn(join_args(interpreter));
+    interpreter.console().warn(interpreter.join_arguments());
     return js_undefined();
 }
 
 Value ConsoleObject::error(Interpreter& interpreter)
 {
-    interpreter.console().error(join_args(interpreter));
+    interpreter.console().error(interpreter.join_arguments());
     return js_undefined();
 }
 
 Value ConsoleObject::trace(Interpreter& interpreter)
 {
-    interpreter.console().trace(join_args(interpreter));
+    interpreter.console().trace(interpreter.join_arguments());
     return js_undefined();
 }
 
