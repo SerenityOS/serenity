@@ -78,8 +78,14 @@ void Button::on_mouse_event(const MouseEvent& event)
             if (on_click)
                 on_click(*this);
         }
-        if (old_pressed != m_pressed)
+        if (old_pressed != m_pressed) {
+            // Would like to compute:
+            // m_hovered = rect_after_action().contains(event.position());
+            // However, we don't know that rect yet. We can make an educated
+            // guess which also looks okay even when wrong:
+            m_hovered = false;
             wm.invalidate(screen_rect());
+        }
         return;
     }
 
