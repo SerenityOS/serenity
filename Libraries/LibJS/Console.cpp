@@ -39,42 +39,63 @@ Console::Console(Interpreter& interpreter)
 
 Value Console::debug()
 {
+    if (m_client)
+        return m_client->debug();
+
     dbg() << "debug: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
 Value Console::error()
 {
+    if (m_client)
+        return m_client->error();
+
     dbg() << "error: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
 Value Console::info()
 {
+    if (m_client)
+        return m_client->info();
+
     dbg() << "info: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
 Value Console::log()
 {
+    if (m_client)
+        return m_client->log();
+
     dbg() << "log: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
 Value Console::warn()
 {
+    if (m_client)
+        return m_client->warn();
+
     dbg() << "warn: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
 Value Console::clear()
 {
+    if (m_client)
+        return m_client->clear();
+
     dbg() << "clear:";
     return js_undefined();
 }
 
 Value Console::trace()
 {
+    if (m_client)
+        return m_client->trace();
+
     StringBuilder message_text;
     message_text.append(m_interpreter.join_arguments());
 
@@ -92,6 +113,9 @@ Value Console::trace()
 
 Value Console::count()
 {
+    if (m_client)
+        return m_client->count();
+
     auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string() : "default";
 
     auto counter_value = counter_increment(label);
@@ -102,6 +126,9 @@ Value Console::count()
 
 Value Console::count_reset()
 {
+    if (m_client)
+        return m_client->count_reset();
+
     auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string() : "default";
 
     if (counter_reset(label))
