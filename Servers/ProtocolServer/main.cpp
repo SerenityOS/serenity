@@ -43,6 +43,15 @@ int main(int, char**)
         perror("pledge");
         return 1;
     }
+    if (unveil("/tmp/portal/lookup", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     (void)*new HttpProtocol;
     (void)*new HttpsProtocol;
     auto server = Core::LocalServer::construct();
