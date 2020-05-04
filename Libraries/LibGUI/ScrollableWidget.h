@@ -43,6 +43,13 @@ public:
 
     Gfx::Rect widget_inner_rect() const;
 
+    Gfx::Rect viewport_rect_in_content_coordinates() const
+    {
+        auto viewport_rect = visible_content_rect();
+        viewport_rect.set_size(widget_inner_rect().size());
+        return viewport_rect;
+    }
+
     void scroll_into_view(const Gfx::Rect&, Orientation);
     void scroll_into_view(const Gfx::Rect&, bool scroll_horizontally, bool scroll_vertically);
 
