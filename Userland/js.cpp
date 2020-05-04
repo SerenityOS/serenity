@@ -509,7 +509,6 @@ int main(int argc, char** argv)
                     break;
                 case JS::TokenType::BracketClose:
                 case JS::TokenType::BracketOpen:
-                case JS::TokenType::Caret:
                 case JS::TokenType::Comma:
                 case JS::TokenType::CurlyClose:
                 case JS::TokenType::CurlyOpen:
@@ -523,6 +522,8 @@ int main(int argc, char** argv)
                 case JS::TokenType::Asterisk:
                 case JS::TokenType::AsteriskAsteriskEquals:
                 case JS::TokenType::AsteriskEquals:
+                case JS::TokenType::Caret:
+                case JS::TokenType::CaretEquals:
                 case JS::TokenType::DoubleAmpersand:
                 case JS::TokenType::DoubleAsterisk:
                 case JS::TokenType::DoublePipe:

@@ -23,6 +23,18 @@ try {
     assert((x /= 2) === 3);
     assert(x === 3);
 
+    x = 3;
+    assert((x &= 2) === 2);
+    assert(x === 2);
+
+    x = 3;
+    assert((x |= 4) === 7);
+    assert(x === 7);
+
+    x = 6;
+    assert((x ^= 2) === 4);
+    assert(x === 4);
+
     x = 2;
     assert((x <<= 2) === 8);
     assert(x === 8);
