@@ -282,8 +282,13 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
     Vector<FunctionNode::Parameter> parameters;
     bool parse_failed = false;
+    bool has_rest_parameter = false;
     while (true) {
         if (match(TokenType::Comma)) {
+            if (has_rest_parameter) {
+                parse_failed = true;
+                break;
+            }
             consume(TokenType::Comma);
         } else if (match(TokenType::Identifier)) {
             auto parameter_name = consume(TokenType::Identifier).value();
@@ -293,6 +298,15 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
                 default_value = parse_expression(0);
             }
             parameters.append({ parameter_name, default_value });
+        } else if (match(TokenType::TripleDot)) {
+            consume();
+            if (has_rest_parameter) {
+                parse_failed = true;
+                break;
+            }
+            has_rest_parameter = true;
+            auto parameter_name = consume(TokenType::Identifier).value();
+            parameters.append({ parameter_name, nullptr, true });
         } else if (match(TokenType::ParenClose)) {
             if (expect_parens) {
                 consume(TokenType::ParenClose);
@@ -359,7 +373,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::ParenOpen: {
         consume(TokenType::ParenOpen);
-        if (match(TokenType::ParenClose) || match(TokenType::Identifier)) {
+        if (match(TokenType::ParenClose) || match(TokenType::Identifier) || match(TokenType::TripleDot)) {
             auto arrow_function_result = try_parse_arrow_function_expression(true);
             if (!arrow_function_result.is_null()) {
                 return arrow_function_result.release_nonnull();
@@ -818,7 +832,13 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
     }
     consume(TokenType::ParenOpen);
     Vector<FunctionNode::Parameter> parameters;
-    while (match(TokenType::Identifier)) {
+    while (match(TokenType::Identifier) || match(TokenType::TripleDot)) {
+        if (match(TokenType::TripleDot)) {
+            consume();
+            auto parameter_name = consume(TokenType::Identifier).value();
+            parameters.append({ parameter_name, nullptr, true });
+            break;
+        }
         auto parameter_name = consume(TokenType::Identifier).value();
         RefPtr<Expression> default_value;
         if (match(TokenType::Equals)) {
@@ -826,9 +846,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
             default_value = parse_expression(0);
         }
         parameters.append({ parameter_name, default_value });
-        if (match(TokenType::ParenClose)) {
+        if (match(TokenType::ParenClose))
             break;
-        }
         consume(TokenType::Comma);
     }
     consume(TokenType::ParenClose);

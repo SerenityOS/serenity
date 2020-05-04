@@ -695,10 +695,11 @@ void FunctionNode::dump(int indent, const char* class_name) const
 
         for (auto& parameter : m_parameters) {
             print_indent(indent + 2);
+            if (parameter.is_rest)
+                printf("...");
             printf("%s\n", parameter.name.characters());
-            if (parameter.default_value) {
+            if (parameter.default_value)
                 parameter.default_value->dump(indent + 3);
-            }
         }
     }
     if (!m_variables.is_empty()) {
