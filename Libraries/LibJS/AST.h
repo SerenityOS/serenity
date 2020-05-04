@@ -604,6 +604,7 @@ enum class AssignmentOp {
     SubtractionAssignment,
     MultiplicationAssignment,
     DivisionAssignment,
+    ExponentiationAssignment,
     BitwiseAndAssignment,
     BitwiseOrAssignment,
     BitwiseXorAssignment,
