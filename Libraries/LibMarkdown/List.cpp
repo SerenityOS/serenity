@@ -69,6 +69,20 @@ String List::render_for_terminal() const
 bool List::parse(Vector<StringView>::ConstIterator& lines)
 {
     bool first = true;
+    size_t offset = 0;
+    StringBuilder item_builder;
+    auto flush_item_if_needed = [&] {
+        if (first)
+            return;
+
+        Text text;
+        bool success = text.parse(item_builder.string_view());
+        ASSERT(success);
+        m_items.append(move(text));
+
+        item_builder.clear();
+    };
+
     while (true) {
         if (lines.is_end())
             break;
@@ -77,12 +91,12 @@ bool List::parse(Vector<StringView>::ConstIterator& lines)
             break;
 
         bool appears_unordered = false;
-        size_t offset = 0;
-        if (line.length() > 2)
+        if (line.length() > 2) {
             if (line[1] == ' ' && (line[0] == '*' || line[0] == '-')) {
                 appears_unordered = true;
                 offset = 2;
             }
+        }
 
         bool appears_ordered = false;
         for (size_t i = 0; i < 10 && i < line.length(); i++) {
@@ -98,21 +112,35 @@ bool List::parse(Vector<StringView>::ConstIterator& lines)
         }
 
         ASSERT(!(appears_unordered && appears_ordered));
-        if (!appears_unordered && !appears_ordered)
-            return false;
-        if (first)
-            m_is_ordered = appears_ordered;
-        else if (m_is_ordered != appears_ordered)
-            return false;
+
+        if (appears_unordered || appears_ordered) {
+            if (first)
+                m_is_ordered = appears_ordered;
+            else if (m_is_ordered != appears_ordered)
+                return false;
+
+            flush_item_if_needed();
+
+            while (offset + 1 < line.length() && line[offset + 1] == ' ')
+                offset++;
+
+        } else {
+            if (first)
+                return false;
+            for (size_t i = 0; i < offset; i++) {
+                if (line[i] != ' ')
+                    return false;
+            }
+        }
 
         first = false;
-        Text text;
-        bool success = text.parse(line.substring_view(offset, line.length() - offset));
-        ASSERT(success);
-        m_items.append(move(text));
+        if (!item_builder.is_empty())
+            item_builder.append(' ');
+        item_builder.append(line.substring_view(offset, line.length() - offset));
         ++lines;
     }
 
+    flush_item_if_needed();
     return !first;
 }
 
