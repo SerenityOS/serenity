@@ -236,6 +236,9 @@ Value ForStatement::execute(Interpreter& interpreter) const
 
     if (m_init && m_init->is_variable_declaration() && static_cast<const VariableDeclaration*>(m_init.ptr())->declaration_kind() != DeclarationKind::Var) {
         wrapper = create_ast_node<BlockStatement>();
+        NonnullRefPtrVector<VariableDeclaration> decls;
+        decls.append(*static_cast<const VariableDeclaration*>(m_init.ptr()));
+        wrapper->add_variables(decls);
         interpreter.enter_scope(*wrapper, {}, ScopeType::Block);
     }
 
