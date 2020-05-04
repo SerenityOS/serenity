@@ -78,10 +78,8 @@ Value Console::trace()
     StringBuilder message_text;
     message_text.append(m_interpreter.join_arguments());
 
-    auto call_stack = m_interpreter.call_stack();
-    // -2 to skip the console.trace() call frame
-    for (ssize_t i = call_stack.size() - 2; i >= 0; --i) {
-        auto function_name = call_stack[i].function_name;
+    auto trace = m_interpreter.get_trace();
+    for (auto function_name : trace) {
         message_text.append("\n      -> ");
         if (String(function_name).is_empty())
             function_name = "<anonymous>";
@@ -96,16 +94,8 @@ Value Console::count()
 {
     auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string() : "default";
 
-    auto counter_value = m_counters.get(label);
-    if (!counter_value.has_value()) {
-        dbg() << "log: " << label << ": 1";
-        m_counters.set(label, 1);
-        return js_undefined();
-    }
-
-    auto new_counter_value = counter_value.value() + 1;
-    dbg() << "log: " << label << ": " << new_counter_value;
-    m_counters.set(label, new_counter_value);
+    auto counter_value = counter_increment(label);
+    dbg() << "log: " << label << ": " << counter_value;
 
     return js_undefined();
 }
@@ -114,14 +104,34 @@ Value Console::count_reset()
 {
     auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string() : "default";
 
-    if (m_counters.contains(label)) {
+    if (counter_reset(label))
+        dbg() << "log: " << label << ": 0";
+    else
         dbg() << "warn: \"" << label << "\" doesn't have a count";
-        return js_undefined();
+
+    return js_undefined();
+}
+
+unsigned Console::counter_increment(String label)
+{
+    auto value = m_counters.get(label);
+    if (!value.has_value()) {
+        m_counters.set(label, 1);
+        return 1;
     }
 
+    auto new_value = value.value() + 1;
+    m_counters.set(label, new_value);
+    return new_value;
+}
+
+bool Console::counter_reset(String label)
+{
+    if (!m_counters.contains(label))
+        return false;
+
     m_counters.remove(label);
-    dbg() << "log: " << label << ": 0";
-    return js_undefined();
+    return true;
 }
 
 }

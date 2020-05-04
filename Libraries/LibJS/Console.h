@@ -41,8 +41,10 @@ public:
     Console(Interpreter&);
 
     Interpreter& interpreter() { return m_interpreter; }
+    const Interpreter& interpreter() const { return m_interpreter; }
 
     HashMap<String, unsigned>& counters() { return m_counters; }
+    const HashMap<String, unsigned>& counters() const { return m_counters; }
 
     Value debug();
     Value error();
@@ -56,6 +58,9 @@ public:
 
     Value count();
     Value count_reset();
+
+    unsigned counter_increment(String label);
+    bool counter_reset(String label);
 
 private:
     Interpreter& m_interpreter;

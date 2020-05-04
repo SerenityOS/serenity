@@ -165,8 +165,10 @@ public:
     Value last_value() const { return m_last_value; }
 
     Console& console() { return m_console; }
+    const Console& console() const { return m_console; }
 
-    String join_arguments();
+    String join_arguments() const;
+    Vector<String> get_trace() const;
 
 private:
     Interpreter();
