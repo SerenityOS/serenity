@@ -321,7 +321,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 if (*(p + 1))
                     goto one_more;
             }
-            if (! zero_pad && !field_width && *p == '0') {
+            if (!zero_pad && !field_width && *p == '0') {
                 zero_pad = true;
                 if (*(p + 1))
                     goto one_more;
