@@ -850,6 +850,12 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
             return {};
         rhs_result = div(interpreter, lhs_result, rhs_result);
         break;
+    case AssignmentOp::ModuloAssignment:
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = mod(interpreter, lhs_result, rhs_result);
+        break;
     case AssignmentOp::ExponentiationAssignment:
         lhs_result = m_lhs->execute(interpreter);
         if (interpreter.exception())
@@ -959,6 +965,9 @@ void AssignmentExpression::dump(int indent) const
         break;
     case AssignmentOp::DivisionAssignment:
         op_string = "/=";
+        break;
+    case AssignmentOp::ModuloAssignment:
+        op_string = "%=";
         break;
     case AssignmentOp::ExponentiationAssignment:
         op_string = "**=";
