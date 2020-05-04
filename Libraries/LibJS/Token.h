@@ -44,6 +44,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(BracketOpen)                 \
     __ENUMERATE_JS_TOKEN(Break)                       \
     __ENUMERATE_JS_TOKEN(Caret)                       \
+    __ENUMERATE_JS_TOKEN(CaretEquals)                 \
     __ENUMERATE_JS_TOKEN(Case)                        \
     __ENUMERATE_JS_TOKEN(Catch)                       \
     __ENUMERATE_JS_TOKEN(Class)                       \

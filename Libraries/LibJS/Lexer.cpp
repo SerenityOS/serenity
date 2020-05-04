@@ -97,6 +97,7 @@ Lexer::Lexer(StringView source)
         s_two_char_tokens.set("%=", TokenType::PercentEquals);
         s_two_char_tokens.set("&=", TokenType::AmpersandEquals);
         s_two_char_tokens.set("|=", TokenType::PipeEquals);
+        s_two_char_tokens.set("^=", TokenType::CaretEquals);
         s_two_char_tokens.set("&&", TokenType::DoubleAmpersand);
         s_two_char_tokens.set("||", TokenType::DoublePipe);
         s_two_char_tokens.set("??", TokenType::DoubleQuestionMark);
