@@ -44,6 +44,7 @@ static Vector<char> read_map(const JsonObject& json, const String& name)
         return {};
 
     Vector<char, 0x80> map;
+    map.resize(0x80);
     auto map_arr = json.get(name).as_array();
 
     for (int i = 0; i < map_arr.size(); i++) {
