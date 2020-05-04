@@ -44,18 +44,18 @@ public:
 
     HashMap<String, unsigned>& counters() { return m_counters; }
 
-    void debug(String text);
-    void error(String text);
-    void info(String text);
-    void log(String text);
-    void warn(String text);
+    Value debug();
+    Value error();
+    Value info();
+    Value log();
+    Value warn();
 
-    void clear();
+    Value clear();
 
-    void trace(String title);
+    Value trace();
 
-    void count(String label = "default");
-    void count_reset(String label = "default");
+    Value count();
+    Value count_reset();
 
 private:
     Interpreter& m_interpreter;
