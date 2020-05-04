@@ -1770,123 +1770,32 @@ String Instruction::mnemonic() const
 
 const char* register_name(SegmentRegister index)
 {
-    switch (index) {
-    case SegmentRegister::CS:
-        return "cs";
-    case SegmentRegister::DS:
-        return "ds";
-    case SegmentRegister::ES:
-        return "es";
-    case SegmentRegister::SS:
-        return "ss";
-    case SegmentRegister::FS:
-        return "fs";
-    case SegmentRegister::GS:
-        return "gs";
-    case SegmentRegister::SegR6:
-        return "segr6";
-    case SegmentRegister::SegR7:
-        return "segr7";
-    default:
-        ASSERT_NOT_REACHED();
-        return nullptr;
-    }
+    static constexpr const char* names[] = { "es", "cs", "ss", "ds", "fs", "gs", "segr6", "segr7" };
+    return names[(int)index & 7];
 }
 
 const char* register_name(RegisterIndex8 register_index)
 {
-    switch (register_index) {
-    case RegisterAL:
-        return "al";
-    case RegisterBL:
-        return "bl";
-    case RegisterCL:
-        return "cl";
-    case RegisterDL:
-        return "dl";
-    case RegisterAH:
-        return "ah";
-    case RegisterBH:
-        return "bh";
-    case RegisterCH:
-        return "ch";
-    case RegisterDH:
-        return "dh";
-    }
-    ASSERT_NOT_REACHED();
-    return nullptr;
+    static constexpr const char* names[] = { "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh" };
+    return names[register_index & 7];
 }
 
 const char* register_name(RegisterIndex16 register_index)
 {
-    switch (register_index) {
-    case RegisterAX:
-        return "ax";
-    case RegisterBX:
-        return "bx";
-    case RegisterCX:
-        return "cx";
-    case RegisterDX:
-        return "dx";
-    case RegisterBP:
-        return "bp";
-    case RegisterSP:
-        return "sp";
-    case RegisterSI:
-        return "si";
-    case RegisterDI:
-        return "di";
-    }
-    ASSERT_NOT_REACHED();
-    return nullptr;
+    static constexpr const char* names[] = { "ax", "cx", "dx", "bx", "sp", "bp", "si", "di" };
+    return names[register_index & 7];
 }
 
 const char* register_name(RegisterIndex32 register_index)
 {
-    switch (register_index) {
-    case RegisterEAX:
-        return "eax";
-    case RegisterEBX:
-        return "ebx";
-    case RegisterECX:
-        return "ecx";
-    case RegisterEDX:
-        return "edx";
-    case RegisterEBP:
-        return "ebp";
-    case RegisterESP:
-        return "esp";
-    case RegisterESI:
-        return "esi";
-    case RegisterEDI:
-        return "edi";
-    }
-    ASSERT_NOT_REACHED();
-    return nullptr;
+    static constexpr const char* names[] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
+    return names[register_index & 7];
 }
 
 const char* register_name(MMXRegisterIndex register_index)
 {
-    switch (register_index) {
-    case RegisterMM0:
-        return "mm0";
-    case RegisterMM1:
-        return "mm1";
-    case RegisterMM2:
-        return "mm2";
-    case RegisterMM3:
-        return "mm3";
-    case RegisterMM4:
-        return "mm4";
-    case RegisterMM5:
-        return "mm5";
-    case RegisterMM6:
-        return "mm6";
-    case RegisterMM7:
-        return "mm7";
-    }
-    ASSERT_NOT_REACHED();
-    return nullptr;
+    static constexpr const char* names[] = { "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7" };
+    return names[register_index & 7];
 }
 
 void MemoryOrRegisterReference::decode(InstructionStream& stream, bool a32)
