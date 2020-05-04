@@ -48,9 +48,13 @@ void HTMLFormElement::submit()
         return;
     }
 
-    if (method().to_lowercase() != "get") {
-        dbg() << "Unsupported form method '" << method() << "'";
-        return;
+    auto effective_method = method().to_lowercase();
+    if (effective_method != "get") {
+        if (effective_method == "post" || effective_method == "dialog") {
+            dbg() << "Unsupported form method '" << method() << "'";
+            return;
+        }
+        effective_method = "get";
     }
 
     URL url(document().complete_url(action()));
