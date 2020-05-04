@@ -50,7 +50,7 @@ create_ast_node(Args&&... args)
 
 class ASTNode : public RefCounted<ASTNode> {
 public:
-    virtual ~ASTNode() {}
+    virtual ~ASTNode() { }
     virtual const char* class_name() const = 0;
     virtual Value execute(Interpreter&) const = 0;
     virtual void dump(int indent) const;
@@ -63,7 +63,7 @@ public:
     virtual bool is_new_expression() const { return false; }
 
 protected:
-    ASTNode() {}
+    ASTNode() { }
 
 private:
 };
@@ -120,7 +120,7 @@ public:
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
 
 protected:
-    ScopeNode() {}
+    ScopeNode() { }
 
 private:
     virtual bool is_scope_node() const final { return true; }
@@ -130,7 +130,7 @@ private:
 
 class Program : public ScopeNode {
 public:
-    Program() {}
+    Program() { }
 
 private:
     virtual bool is_program() const override { return true; }
@@ -139,7 +139,7 @@ private:
 
 class BlockStatement : public ScopeNode {
 public:
-    BlockStatement() {}
+    BlockStatement() { }
 
 private:
     virtual const char* class_name() const override { return "BlockStatement"; }
@@ -453,7 +453,7 @@ private:
 
 class Literal : public Expression {
 protected:
-    explicit Literal() {}
+    explicit Literal() { }
 };
 
 class BooleanLiteral final : public Literal {
@@ -506,7 +506,7 @@ private:
 
 class NullLiteral final : public Literal {
 public:
-    explicit NullLiteral() {}
+    explicit NullLiteral() { }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -916,7 +916,7 @@ private:
 
 class BreakStatement final : public Statement {
 public:
-    BreakStatement() {}
+    BreakStatement() { }
 
     virtual Value execute(Interpreter&) const override;
 
@@ -926,7 +926,7 @@ private:
 
 class ContinueStatement final : public Statement {
 public:
-    ContinueStatement() {}
+    ContinueStatement() { }
 
     virtual Value execute(Interpreter&) const override;
 
@@ -936,7 +936,7 @@ private:
 
 class DebuggerStatement final : public Statement {
 public:
-    DebuggerStatement() {}
+    DebuggerStatement() { }
 
     virtual Value execute(Interpreter&) const override;
 

@@ -62,7 +62,7 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
         put("prototype", interpreter().global_object().snake_name##_prototype(), 0);                                 \
         put("length", Value(1), Attribute::Configurable);                                                            \
     }                                                                                                                \
-    ConstructorName::~ConstructorName() {}                                                                           \
+    ConstructorName::~ConstructorName() { }                                                                          \
     Value ConstructorName::call(Interpreter& interpreter)                                                            \
     {                                                                                                                \
         return construct(interpreter);                                                                               \
