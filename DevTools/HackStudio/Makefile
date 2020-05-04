@@ -6,6 +6,7 @@ OBJS = \
     ProcessStateWidget.o \
     FormEditorWidget.o \
     FormWidget.o \
+    DebugInfoWidget.o \
     Editor.o \
     EditorWrapper.o \
     Locator.o \
