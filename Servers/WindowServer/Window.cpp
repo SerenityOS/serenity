@@ -362,7 +362,14 @@ bool Window::is_active() const
 
 bool Window::is_blocked_by_modal_window() const
 {
-    return !is_modal() && client() && client()->is_showing_modal_window();
+    bool is_any_modal = false;
+    const Window* next = this;
+    while (!is_any_modal && next) {
+        is_any_modal = next->is_modal();
+        next = next->parent_window();
+    }
+
+    return !is_any_modal && client() && client()->is_showing_modal_window();
 }
 
 void Window::set_default_icon()
