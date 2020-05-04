@@ -850,6 +850,24 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
             return {};
         rhs_result = div(interpreter, lhs_result, rhs_result);
         break;
+    case AssignmentOp::BitwiseAndAssignment:
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = bitwise_and(interpreter, lhs_result, rhs_result);
+        break;
+    case AssignmentOp::BitwiseOrAssignment:
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = bitwise_or(interpreter, lhs_result, rhs_result);
+        break;
+    case AssignmentOp::BitwiseXorAssignment:
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = bitwise_xor(interpreter, lhs_result, rhs_result);
+        break;
     case AssignmentOp::LeftShiftAssignment:
         lhs_result = m_lhs->execute(interpreter);
         if (interpreter.exception())
@@ -935,6 +953,15 @@ void AssignmentExpression::dump(int indent) const
         break;
     case AssignmentOp::DivisionAssignment:
         op_string = "/=";
+        break;
+    case AssignmentOp::BitwiseAndAssignment:
+        op_string = "&=";
+        break;
+    case AssignmentOp::BitwiseOrAssignment:
+        op_string = "|=";
+        break;
+    case AssignmentOp::BitwiseXorAssignment:
+        op_string = "^=";
         break;
     case AssignmentOp::LeftShiftAssignment:
         op_string = "<<=";

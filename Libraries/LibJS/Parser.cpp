@@ -140,7 +140,9 @@ Parser::Parser(Lexer lexer)
         g_operator_precedence.set(TokenType::ShiftLeftEquals, 3);
         g_operator_precedence.set(TokenType::ShiftRightEquals, 3);
         g_operator_precedence.set(TokenType::UnsignedShiftRightEquals, 3);
+        g_operator_precedence.set(TokenType::AmpersandEquals, 3);
         g_operator_precedence.set(TokenType::PipeEquals, 3);
+        g_operator_precedence.set(TokenType::CaretEquals, 3);
 
         g_operator_precedence.set(TokenType::Yield, 2);
 
@@ -668,12 +670,21 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::Ampersand:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::BitwiseAnd, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::AmpersandEquals:
+        consume();
+        return create_ast_node<AssignmentExpression>(AssignmentOp::BitwiseAndAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Pipe:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::BitwiseOr, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::PipeEquals:
+        consume();
+        return create_ast_node<AssignmentExpression>(AssignmentOp::BitwiseOrAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Caret:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::BitwiseXor, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::CaretEquals:
+        consume();
+        return create_ast_node<AssignmentExpression>(AssignmentOp::BitwiseXorAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ShiftLeft:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::LeftShift, move(lhs), parse_expression(min_precedence, associativity));
@@ -1199,8 +1210,11 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Instanceof
         || type == TokenType::QuestionMark
         || type == TokenType::Ampersand
+        || type == TokenType::AmpersandEquals
         || type == TokenType::Pipe
+        || type == TokenType::PipeEquals
         || type == TokenType::Caret
+        || type == TokenType::CaretEquals
         || type == TokenType::ShiftLeft
         || type == TokenType::ShiftLeftEquals
         || type == TokenType::ShiftRight
