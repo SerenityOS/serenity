@@ -169,8 +169,8 @@ struct InstructionDescriptor {
 
 static InstructionDescriptor s_table16[256];
 static InstructionDescriptor s_table32[256];
-static InstructionDescriptor s_0F_table16[256];
-static InstructionDescriptor s_0F_table32[256];
+static InstructionDescriptor s_0f_table16[256];
+static InstructionDescriptor s_0f_table32[256];
 
 static bool opcode_has_register_index(u8 op)
 {
@@ -316,7 +316,7 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     }
 }
 
-static void buildSlash(InstructionDescriptor* table, u8 op, u8 slash, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     InstructionDescriptor& d = table[op];
     d.format = MultibyteWithSlash;
@@ -327,10 +327,10 @@ static void buildSlash(InstructionDescriptor* table, u8 op, u8 slash, const char
     build(d.slashes, slash, mnemonic, format, lock_prefix_allowed);
 }
 
-static void build0F(u8 op, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f(u8 op, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_0F_table16, op, mnemonic, format, lock_prefix_allowed);
-    build(s_0F_table32, op, mnemonic, format, lock_prefix_allowed);
+    build(s_0f_table16, op, mnemonic, format, lock_prefix_allowed);
+    build(s_0f_table32, op, mnemonic, format, lock_prefix_allowed);
 }
 
 static void build(u8 op, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
@@ -345,10 +345,10 @@ static void build(u8 op, const char* mnemonic, InstructionFormat format16, Instr
     build(s_table32, op, mnemonic, format32, lock_prefix_allowed);
 }
 
-static void build0F(u8 op, const char* mnemonic, InstructionFormat format16, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f(u8 op, const char* mnemonic, InstructionFormat format16, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_0F_table16, op, mnemonic, format16, lock_prefix_allowed);
-    build(s_0F_table32, op, mnemonic, format32, lock_prefix_allowed);
+    build(s_0f_table16, op, mnemonic, format16, lock_prefix_allowed);
+    build(s_0f_table32, op, mnemonic, format32, lock_prefix_allowed);
 }
 
 static void build(u8 op, const char* mnemonic16, InstructionFormat format16, const char* mnemonic32, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
@@ -357,34 +357,34 @@ static void build(u8 op, const char* mnemonic16, InstructionFormat format16, con
     build(s_table32, op, mnemonic32, format32, lock_prefix_allowed);
 }
 
-static void build0F(u8 op, const char* mnemonic16, InstructionFormat format16, const char* mnemonic32, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f(u8 op, const char* mnemonic16, InstructionFormat format16, const char* mnemonic32, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_0F_table16, op, mnemonic16, format16, lock_prefix_allowed);
-    build(s_0F_table32, op, mnemonic32, format32, lock_prefix_allowed);
+    build(s_0f_table16, op, mnemonic16, format16, lock_prefix_allowed);
+    build(s_0f_table32, op, mnemonic32, format32, lock_prefix_allowed);
 }
 
-static void buildSlash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    buildSlash(s_table16, op, slash, mnemonic, format, lock_prefix_allowed);
-    buildSlash(s_table32, op, slash, mnemonic, format, lock_prefix_allowed);
+    build_slash(s_table16, op, slash, mnemonic, format, lock_prefix_allowed);
+    build_slash(s_table32, op, slash, mnemonic, format, lock_prefix_allowed);
 }
 
-static void buildSlash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format16, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format16, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    buildSlash(s_table16, op, slash, mnemonic, format16, lock_prefix_allowed);
-    buildSlash(s_table32, op, slash, mnemonic, format32, lock_prefix_allowed);
+    build_slash(s_table16, op, slash, mnemonic, format16, lock_prefix_allowed);
+    build_slash(s_table32, op, slash, mnemonic, format32, lock_prefix_allowed);
 }
 
 static void build0FSlash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format16, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    buildSlash(s_0F_table16, op, slash, mnemonic, format16, lock_prefix_allowed);
-    buildSlash(s_0F_table32, op, slash, mnemonic, format32, lock_prefix_allowed);
+    build_slash(s_0f_table16, op, slash, mnemonic, format16, lock_prefix_allowed);
+    build_slash(s_0f_table32, op, slash, mnemonic, format32, lock_prefix_allowed);
 }
 
 static void build0FSlash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    buildSlash(s_0F_table16, op, slash, mnemonic, format, lock_prefix_allowed);
-    buildSlash(s_0F_table32, op, slash, mnemonic, format, lock_prefix_allowed);
+    build_slash(s_0f_table16, op, slash, mnemonic, format, lock_prefix_allowed);
+    build_slash(s_0f_table32, op, slash, mnemonic, format, lock_prefix_allowed);
 }
 
 void build_opcode_tables_if_needed()
@@ -601,117 +601,117 @@ void build_opcode_tables_if_needed()
     build(0xFC, "CLD", OP);
     build(0xFD, "STD", OP);
 
-    buildSlash(0x80, 0, "ADD", OP_RM8_imm8, LockPrefixAllowed);
-    buildSlash(0x80, 1, "OR", OP_RM8_imm8, LockPrefixAllowed);
-    buildSlash(0x80, 2, "ADC", OP_RM8_imm8, LockPrefixAllowed);
-    buildSlash(0x80, 3, "SBB", OP_RM8_imm8, LockPrefixAllowed);
-    buildSlash(0x80, 4, "AND", OP_RM8_imm8, LockPrefixAllowed);
-    buildSlash(0x80, 5, "SUB", OP_RM8_imm8, LockPrefixAllowed);
-    buildSlash(0x80, 6, "XOR", OP_RM8_imm8, LockPrefixAllowed);
-    buildSlash(0x80, 7, "CMP", OP_RM8_imm8);
+    build_slash(0x80, 0, "ADD", OP_RM8_imm8, LockPrefixAllowed);
+    build_slash(0x80, 1, "OR", OP_RM8_imm8, LockPrefixAllowed);
+    build_slash(0x80, 2, "ADC", OP_RM8_imm8, LockPrefixAllowed);
+    build_slash(0x80, 3, "SBB", OP_RM8_imm8, LockPrefixAllowed);
+    build_slash(0x80, 4, "AND", OP_RM8_imm8, LockPrefixAllowed);
+    build_slash(0x80, 5, "SUB", OP_RM8_imm8, LockPrefixAllowed);
+    build_slash(0x80, 6, "XOR", OP_RM8_imm8, LockPrefixAllowed);
+    build_slash(0x80, 7, "CMP", OP_RM8_imm8);
 
-    buildSlash(0x81, 0, "ADD", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
-    buildSlash(0x81, 1, "OR", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
-    buildSlash(0x81, 2, "ADC", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
-    buildSlash(0x81, 3, "SBB", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
-    buildSlash(0x81, 4, "AND", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
-    buildSlash(0x81, 5, "SUB", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
-    buildSlash(0x81, 6, "XOR", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
-    buildSlash(0x81, 7, "CMP", OP_RM16_imm16, OP_RM32_imm32);
+    build_slash(0x81, 0, "ADD", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
+    build_slash(0x81, 1, "OR", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
+    build_slash(0x81, 2, "ADC", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
+    build_slash(0x81, 3, "SBB", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
+    build_slash(0x81, 4, "AND", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
+    build_slash(0x81, 5, "SUB", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
+    build_slash(0x81, 6, "XOR", OP_RM16_imm16, OP_RM32_imm32, LockPrefixAllowed);
+    build_slash(0x81, 7, "CMP", OP_RM16_imm16, OP_RM32_imm32);
 
-    buildSlash(0x83, 0, "ADD", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    buildSlash(0x83, 1, "OR", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    buildSlash(0x83, 2, "ADC", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    buildSlash(0x83, 3, "SBB", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    buildSlash(0x83, 4, "AND", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    buildSlash(0x83, 5, "SUB", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    buildSlash(0x83, 6, "XOR", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    buildSlash(0x83, 7, "CMP", OP_RM16_imm8, OP_RM32_imm8);
+    build_slash(0x83, 0, "ADD", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_slash(0x83, 1, "OR", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_slash(0x83, 2, "ADC", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_slash(0x83, 3, "SBB", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_slash(0x83, 4, "AND", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_slash(0x83, 5, "SUB", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_slash(0x83, 6, "XOR", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_slash(0x83, 7, "CMP", OP_RM16_imm8, OP_RM32_imm8);
 
-    buildSlash(0x8F, 0, "POP", OP_RM16, OP_RM32);
+    build_slash(0x8F, 0, "POP", OP_RM16, OP_RM32);
 
-    buildSlash(0xC0, 0, "ROL", OP_RM8_imm8);
-    buildSlash(0xC0, 1, "ROR", OP_RM8_imm8);
-    buildSlash(0xC0, 2, "RCL", OP_RM8_imm8);
-    buildSlash(0xC0, 3, "RCR", OP_RM8_imm8);
-    buildSlash(0xC0, 4, "SHL", OP_RM8_imm8);
-    buildSlash(0xC0, 5, "SHR", OP_RM8_imm8);
-    buildSlash(0xC0, 6, "SHL", OP_RM8_imm8); // Undocumented
-    buildSlash(0xC0, 7, "SAR", OP_RM8_imm8);
+    build_slash(0xC0, 0, "ROL", OP_RM8_imm8);
+    build_slash(0xC0, 1, "ROR", OP_RM8_imm8);
+    build_slash(0xC0, 2, "RCL", OP_RM8_imm8);
+    build_slash(0xC0, 3, "RCR", OP_RM8_imm8);
+    build_slash(0xC0, 4, "SHL", OP_RM8_imm8);
+    build_slash(0xC0, 5, "SHR", OP_RM8_imm8);
+    build_slash(0xC0, 6, "SHL", OP_RM8_imm8); // Undocumented
+    build_slash(0xC0, 7, "SAR", OP_RM8_imm8);
 
-    buildSlash(0xC1, 0, "ROL", OP_RM16_imm8, OP_RM32_imm8);
-    buildSlash(0xC1, 1, "ROR", OP_RM16_imm8, OP_RM32_imm8);
-    buildSlash(0xC1, 2, "RCL", OP_RM16_imm8, OP_RM32_imm8);
-    buildSlash(0xC1, 3, "RCR", OP_RM16_imm8, OP_RM32_imm8);
-    buildSlash(0xC1, 4, "SHL", OP_RM16_imm8, OP_RM32_imm8);
-    buildSlash(0xC1, 5, "SHR", OP_RM16_imm8, OP_RM32_imm8);
-    buildSlash(0xC1, 6, "SHL", OP_RM16_imm8, OP_RM32_imm8); // Undocumented
-    buildSlash(0xC1, 7, "SAR", OP_RM16_imm8, OP_RM32_imm8);
+    build_slash(0xC1, 0, "ROL", OP_RM16_imm8, OP_RM32_imm8);
+    build_slash(0xC1, 1, "ROR", OP_RM16_imm8, OP_RM32_imm8);
+    build_slash(0xC1, 2, "RCL", OP_RM16_imm8, OP_RM32_imm8);
+    build_slash(0xC1, 3, "RCR", OP_RM16_imm8, OP_RM32_imm8);
+    build_slash(0xC1, 4, "SHL", OP_RM16_imm8, OP_RM32_imm8);
+    build_slash(0xC1, 5, "SHR", OP_RM16_imm8, OP_RM32_imm8);
+    build_slash(0xC1, 6, "SHL", OP_RM16_imm8, OP_RM32_imm8); // Undocumented
+    build_slash(0xC1, 7, "SAR", OP_RM16_imm8, OP_RM32_imm8);
 
-    buildSlash(0xD0, 0, "ROL", OP_RM8_1);
-    buildSlash(0xD0, 1, "ROR", OP_RM8_1);
-    buildSlash(0xD0, 2, "RCL", OP_RM8_1);
-    buildSlash(0xD0, 3, "RCR", OP_RM8_1);
-    buildSlash(0xD0, 4, "SHL", OP_RM8_1);
-    buildSlash(0xD0, 5, "SHR", OP_RM8_1);
-    buildSlash(0xD0, 6, "SHL", OP_RM8_1); // Undocumented
-    buildSlash(0xD0, 7, "SAR", OP_RM8_1);
+    build_slash(0xD0, 0, "ROL", OP_RM8_1);
+    build_slash(0xD0, 1, "ROR", OP_RM8_1);
+    build_slash(0xD0, 2, "RCL", OP_RM8_1);
+    build_slash(0xD0, 3, "RCR", OP_RM8_1);
+    build_slash(0xD0, 4, "SHL", OP_RM8_1);
+    build_slash(0xD0, 5, "SHR", OP_RM8_1);
+    build_slash(0xD0, 6, "SHL", OP_RM8_1); // Undocumented
+    build_slash(0xD0, 7, "SAR", OP_RM8_1);
 
-    buildSlash(0xD1, 0, "ROL", OP_RM16_1, OP_RM32_1);
-    buildSlash(0xD1, 1, "ROR", OP_RM16_1, OP_RM32_1);
-    buildSlash(0xD1, 2, "RCL", OP_RM16_1, OP_RM32_1);
-    buildSlash(0xD1, 3, "RCR", OP_RM16_1, OP_RM32_1);
-    buildSlash(0xD1, 4, "SHL", OP_RM16_1, OP_RM32_1);
-    buildSlash(0xD1, 5, "SHR", OP_RM16_1, OP_RM32_1);
-    buildSlash(0xD1, 6, "SHL", OP_RM16_1, OP_RM32_1); // Undocumented
-    buildSlash(0xD1, 7, "SAR", OP_RM16_1, OP_RM32_1);
+    build_slash(0xD1, 0, "ROL", OP_RM16_1, OP_RM32_1);
+    build_slash(0xD1, 1, "ROR", OP_RM16_1, OP_RM32_1);
+    build_slash(0xD1, 2, "RCL", OP_RM16_1, OP_RM32_1);
+    build_slash(0xD1, 3, "RCR", OP_RM16_1, OP_RM32_1);
+    build_slash(0xD1, 4, "SHL", OP_RM16_1, OP_RM32_1);
+    build_slash(0xD1, 5, "SHR", OP_RM16_1, OP_RM32_1);
+    build_slash(0xD1, 6, "SHL", OP_RM16_1, OP_RM32_1); // Undocumented
+    build_slash(0xD1, 7, "SAR", OP_RM16_1, OP_RM32_1);
 
-    buildSlash(0xD2, 0, "ROL", OP_RM8_CL);
-    buildSlash(0xD2, 1, "ROR", OP_RM8_CL);
-    buildSlash(0xD2, 2, "RCL", OP_RM8_CL);
-    buildSlash(0xD2, 3, "RCR", OP_RM8_CL);
-    buildSlash(0xD2, 4, "SHL", OP_RM8_CL);
-    buildSlash(0xD2, 5, "SHR", OP_RM8_CL);
-    buildSlash(0xD2, 6, "SHL", OP_RM8_CL); // Undocumented
-    buildSlash(0xD2, 7, "SAR", OP_RM8_CL);
+    build_slash(0xD2, 0, "ROL", OP_RM8_CL);
+    build_slash(0xD2, 1, "ROR", OP_RM8_CL);
+    build_slash(0xD2, 2, "RCL", OP_RM8_CL);
+    build_slash(0xD2, 3, "RCR", OP_RM8_CL);
+    build_slash(0xD2, 4, "SHL", OP_RM8_CL);
+    build_slash(0xD2, 5, "SHR", OP_RM8_CL);
+    build_slash(0xD2, 6, "SHL", OP_RM8_CL); // Undocumented
+    build_slash(0xD2, 7, "SAR", OP_RM8_CL);
 
-    buildSlash(0xD3, 0, "ROL", OP_RM16_CL, OP_RM32_CL);
-    buildSlash(0xD3, 1, "ROR", OP_RM16_CL, OP_RM32_CL);
-    buildSlash(0xD3, 2, "RCL", OP_RM16_CL, OP_RM32_CL);
-    buildSlash(0xD3, 3, "RCR", OP_RM16_CL, OP_RM32_CL);
-    buildSlash(0xD3, 4, "SHL", OP_RM16_CL, OP_RM32_CL);
-    buildSlash(0xD3, 5, "SHR", OP_RM16_CL, OP_RM32_CL);
-    buildSlash(0xD3, 6, "SHL", OP_RM16_CL, OP_RM32_CL); // Undocumented
-    buildSlash(0xD3, 7, "SAR", OP_RM16_CL, OP_RM32_CL);
+    build_slash(0xD3, 0, "ROL", OP_RM16_CL, OP_RM32_CL);
+    build_slash(0xD3, 1, "ROR", OP_RM16_CL, OP_RM32_CL);
+    build_slash(0xD3, 2, "RCL", OP_RM16_CL, OP_RM32_CL);
+    build_slash(0xD3, 3, "RCR", OP_RM16_CL, OP_RM32_CL);
+    build_slash(0xD3, 4, "SHL", OP_RM16_CL, OP_RM32_CL);
+    build_slash(0xD3, 5, "SHR", OP_RM16_CL, OP_RM32_CL);
+    build_slash(0xD3, 6, "SHL", OP_RM16_CL, OP_RM32_CL); // Undocumented
+    build_slash(0xD3, 7, "SAR", OP_RM16_CL, OP_RM32_CL);
 
-    buildSlash(0xF6, 0, "TEST", OP_RM8_imm8);
-    buildSlash(0xF6, 1, "TEST", OP_RM8_imm8); // Undocumented
-    buildSlash(0xF6, 2, "NOT", OP_RM8, LockPrefixAllowed);
-    buildSlash(0xF6, 3, "NEG", OP_RM8, LockPrefixAllowed);
-    buildSlash(0xF6, 4, "MUL", OP_RM8);
-    buildSlash(0xF6, 5, "IMUL", OP_RM8);
-    buildSlash(0xF6, 6, "DIV", OP_RM8);
-    buildSlash(0xF6, 7, "IDIV", OP_RM8);
+    build_slash(0xF6, 0, "TEST", OP_RM8_imm8);
+    build_slash(0xF6, 1, "TEST", OP_RM8_imm8); // Undocumented
+    build_slash(0xF6, 2, "NOT", OP_RM8, LockPrefixAllowed);
+    build_slash(0xF6, 3, "NEG", OP_RM8, LockPrefixAllowed);
+    build_slash(0xF6, 4, "MUL", OP_RM8);
+    build_slash(0xF6, 5, "IMUL", OP_RM8);
+    build_slash(0xF6, 6, "DIV", OP_RM8);
+    build_slash(0xF6, 7, "IDIV", OP_RM8);
 
-    buildSlash(0xF7, 0, "TEST", OP_RM16_imm16, OP_RM32_imm32);
-    buildSlash(0xF7, 1, "TEST", OP_RM16_imm16, OP_RM32_imm32); // Undocumented
-    buildSlash(0xF7, 2, "NOT", OP_RM16, OP_RM32, LockPrefixAllowed);
-    buildSlash(0xF7, 3, "NEG", OP_RM16, OP_RM32, LockPrefixAllowed);
-    buildSlash(0xF7, 4, "MUL", OP_RM16, OP_RM32);
-    buildSlash(0xF7, 5, "IMUL", OP_RM16, OP_RM32);
-    buildSlash(0xF7, 6, "DIV", OP_RM16, OP_RM32);
-    buildSlash(0xF7, 7, "IDIV", OP_RM16, OP_RM32);
+    build_slash(0xF7, 0, "TEST", OP_RM16_imm16, OP_RM32_imm32);
+    build_slash(0xF7, 1, "TEST", OP_RM16_imm16, OP_RM32_imm32); // Undocumented
+    build_slash(0xF7, 2, "NOT", OP_RM16, OP_RM32, LockPrefixAllowed);
+    build_slash(0xF7, 3, "NEG", OP_RM16, OP_RM32, LockPrefixAllowed);
+    build_slash(0xF7, 4, "MUL", OP_RM16, OP_RM32);
+    build_slash(0xF7, 5, "IMUL", OP_RM16, OP_RM32);
+    build_slash(0xF7, 6, "DIV", OP_RM16, OP_RM32);
+    build_slash(0xF7, 7, "IDIV", OP_RM16, OP_RM32);
 
-    buildSlash(0xFE, 0, "INC", OP_RM8, LockPrefixAllowed);
-    buildSlash(0xFE, 1, "DEC", OP_RM8, LockPrefixAllowed);
+    build_slash(0xFE, 0, "INC", OP_RM8, LockPrefixAllowed);
+    build_slash(0xFE, 1, "DEC", OP_RM8, LockPrefixAllowed);
 
-    buildSlash(0xFF, 0, "INC", OP_RM16, OP_RM32, LockPrefixAllowed);
-    buildSlash(0xFF, 1, "DEC", OP_RM16, OP_RM32, LockPrefixAllowed);
-    buildSlash(0xFF, 2, "CALL", OP_RM16, OP_RM32);
-    buildSlash(0xFF, 3, "CALL", OP_FAR_mem16, OP_FAR_mem32);
-    buildSlash(0xFF, 4, "JMP", OP_RM16, OP_RM32);
-    buildSlash(0xFF, 5, "JMP", OP_FAR_mem16, OP_FAR_mem32);
-    buildSlash(0xFF, 6, "PUSH", OP_RM16, OP_RM32);
+    build_slash(0xFF, 0, "INC", OP_RM16, OP_RM32, LockPrefixAllowed);
+    build_slash(0xFF, 1, "DEC", OP_RM16, OP_RM32, LockPrefixAllowed);
+    build_slash(0xFF, 2, "CALL", OP_RM16, OP_RM32);
+    build_slash(0xFF, 3, "CALL", OP_FAR_mem16, OP_FAR_mem32);
+    build_slash(0xFF, 4, "JMP", OP_RM16, OP_RM32);
+    build_slash(0xFF, 5, "JMP", OP_FAR_mem16, OP_FAR_mem32);
+    build_slash(0xFF, 6, "PUSH", OP_RM16, OP_RM32);
 
     // Instructions starting with 0x0F are multi-byte opcodes.
     build0FSlash(0x00, 0, "SLDT", OP_RM16);
@@ -736,108 +736,108 @@ void build_opcode_tables_if_needed()
 
     build0FSlash(0xC7, 6, "RDRAND", OP_RM16, OP_RM32);
 
-    build0F(0x02, "LAR", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x03, "LSL", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x06, "CLTS", OP);
-    build0F(0x09, "WBINVD", OP);
-    build0F(0x0B, "UD2", OP);
+    build_0f(0x02, "LAR", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x03, "LSL", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x06, "CLTS", OP);
+    build_0f(0x09, "WBINVD", OP);
+    build_0f(0x0B, "UD2", OP);
 
-    build0F(0x20, "MOV", OP_reg32_CR);
-    build0F(0x21, "MOV", OP_reg32_DR);
-    build0F(0x22, "MOV", OP_CR_reg32);
-    build0F(0x23, "MOV", OP_DR_reg32);
+    build_0f(0x20, "MOV", OP_reg32_CR);
+    build_0f(0x21, "MOV", OP_reg32_DR);
+    build_0f(0x22, "MOV", OP_CR_reg32);
+    build_0f(0x23, "MOV", OP_DR_reg32);
 
-    build0F(0x31, "RDTSC", OP);
+    build_0f(0x31, "RDTSC", OP);
 
-    build0F(0x40, "CMOVO", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x41, "CMOVNO", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x42, "CMOVC", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x43, "CMOVNC", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x44, "CMOVZ", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x45, "CMOVNZ", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x46, "CMOVNA", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x47, "CMOVA", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x48, "CMOVS", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x49, "CMOVNS", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x4A, "CMOVP", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x4B, "CMOVNP", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x4C, "CMOVL", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x4D, "CMOVNL", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x4E, "CMOVNG", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0x4F, "CMOVG", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x40, "CMOVO", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x41, "CMOVNO", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x42, "CMOVC", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x43, "CMOVNC", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x44, "CMOVZ", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x45, "CMOVNZ", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x46, "CMOVNA", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x47, "CMOVA", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x48, "CMOVS", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x49, "CMOVNS", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x4A, "CMOVP", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x4B, "CMOVNP", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x4C, "CMOVL", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x4D, "CMOVNL", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x4E, "CMOVNG", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0x4F, "CMOVG", OP_reg16_RM16, OP_reg32_RM32);
 
-    build0F(0x6F, "MOVQ", OP_mm1_mm2m64);
-    build0F(0x77, "EMMS", OP);
-    build0F(0x7F, "MOVQ", OP_mm1m64_mm2);
+    build_0f(0x6F, "MOVQ", OP_mm1_mm2m64);
+    build_0f(0x77, "EMMS", OP);
+    build_0f(0x7F, "MOVQ", OP_mm1m64_mm2);
 
-    build0F(0x80, "JO", OP_NEAR_imm);
-    build0F(0x81, "JNO", OP_NEAR_imm);
-    build0F(0x82, "JC", OP_NEAR_imm);
-    build0F(0x83, "JNC", OP_NEAR_imm);
-    build0F(0x84, "JZ", OP_NEAR_imm);
-    build0F(0x85, "JNZ", OP_NEAR_imm);
-    build0F(0x86, "JNA", OP_NEAR_imm);
-    build0F(0x87, "JA", OP_NEAR_imm);
-    build0F(0x88, "JS", OP_NEAR_imm);
-    build0F(0x89, "JNS", OP_NEAR_imm);
-    build0F(0x8A, "JP", OP_NEAR_imm);
-    build0F(0x8B, "JNP", OP_NEAR_imm);
-    build0F(0x8C, "JL", OP_NEAR_imm);
-    build0F(0x8D, "JNL", OP_NEAR_imm);
-    build0F(0x8E, "JNG", OP_NEAR_imm);
-    build0F(0x8F, "JG", OP_NEAR_imm);
+    build_0f(0x80, "JO", OP_NEAR_imm);
+    build_0f(0x81, "JNO", OP_NEAR_imm);
+    build_0f(0x82, "JC", OP_NEAR_imm);
+    build_0f(0x83, "JNC", OP_NEAR_imm);
+    build_0f(0x84, "JZ", OP_NEAR_imm);
+    build_0f(0x85, "JNZ", OP_NEAR_imm);
+    build_0f(0x86, "JNA", OP_NEAR_imm);
+    build_0f(0x87, "JA", OP_NEAR_imm);
+    build_0f(0x88, "JS", OP_NEAR_imm);
+    build_0f(0x89, "JNS", OP_NEAR_imm);
+    build_0f(0x8A, "JP", OP_NEAR_imm);
+    build_0f(0x8B, "JNP", OP_NEAR_imm);
+    build_0f(0x8C, "JL", OP_NEAR_imm);
+    build_0f(0x8D, "JNL", OP_NEAR_imm);
+    build_0f(0x8E, "JNG", OP_NEAR_imm);
+    build_0f(0x8F, "JG", OP_NEAR_imm);
 
-    build0F(0x90, "SETO", OP_RM8);
-    build0F(0x91, "SETNO", OP_RM8);
-    build0F(0x92, "SETC", OP_RM8);
-    build0F(0x93, "SETNC", OP_RM8);
-    build0F(0x94, "SETZ", OP_RM8);
-    build0F(0x95, "SETNZ", OP_RM8);
-    build0F(0x96, "SETNA", OP_RM8);
-    build0F(0x97, "SETA", OP_RM8);
-    build0F(0x98, "SETS", OP_RM8);
-    build0F(0x99, "SETNS", OP_RM8);
-    build0F(0x9A, "SETP", OP_RM8);
-    build0F(0x9B, "SETNP", OP_RM8);
-    build0F(0x9C, "SETL", OP_RM8);
-    build0F(0x9D, "SETNL", OP_RM8);
-    build0F(0x9E, "SETNG", OP_RM8);
-    build0F(0x9F, "SETG", OP_RM8);
+    build_0f(0x90, "SETO", OP_RM8);
+    build_0f(0x91, "SETNO", OP_RM8);
+    build_0f(0x92, "SETC", OP_RM8);
+    build_0f(0x93, "SETNC", OP_RM8);
+    build_0f(0x94, "SETZ", OP_RM8);
+    build_0f(0x95, "SETNZ", OP_RM8);
+    build_0f(0x96, "SETNA", OP_RM8);
+    build_0f(0x97, "SETA", OP_RM8);
+    build_0f(0x98, "SETS", OP_RM8);
+    build_0f(0x99, "SETNS", OP_RM8);
+    build_0f(0x9A, "SETP", OP_RM8);
+    build_0f(0x9B, "SETNP", OP_RM8);
+    build_0f(0x9C, "SETL", OP_RM8);
+    build_0f(0x9D, "SETNL", OP_RM8);
+    build_0f(0x9E, "SETNG", OP_RM8);
+    build_0f(0x9F, "SETG", OP_RM8);
 
-    build0F(0xA0, "PUSH", OP_FS);
-    build0F(0xA1, "POP", OP_FS);
-    build0F(0xA2, "CPUID", OP);
-    build0F(0xA3, "BT", OP_RM16_reg16, OP_RM32_reg32);
-    build0F(0xA4, "SHLD", OP_RM16_reg16_imm8, OP_RM32_reg32_imm8);
-    build0F(0xA5, "SHLD", OP_RM16_reg16_CL, OP_RM32_reg32_CL);
-    build0F(0xA8, "PUSH", OP_GS);
-    build0F(0xA9, "POP", OP_GS);
-    build0F(0xAB, "BTS", OP_RM16_reg16, OP_RM32_reg32);
-    build0F(0xAC, "SHRD", OP_RM16_reg16_imm8, OP_RM32_reg32_imm8);
-    build0F(0xAD, "SHRD", OP_RM16_reg16_CL, OP_RM32_reg32_CL);
-    build0F(0xAF, "IMUL", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0xB0, "CMPXCHG", OP_RM8_reg8, LockPrefixAllowed);
-    build0F(0xB1, "CMPXCHG", OP_RM16_reg16, OP_RM32_reg32, LockPrefixAllowed);
-    build0F(0xB2, "LSS", OP_reg16_mem16, OP_reg32_mem32);
-    build0F(0xB3, "BTR", OP_RM16_reg16, OP_RM32_reg32);
-    build0F(0xB4, "LFS", OP_reg16_mem16, OP_reg32_mem32);
-    build0F(0xB5, "LGS", OP_reg16_mem16, OP_reg32_mem32);
-    build0F(0xB6, "MOVZX", OP_reg16_RM8, OP_reg32_RM8);
-    build0F(0xB7, "0xB7", OP, "MOVZX", OP_reg32_RM16);
-    build0F(0xB9, "UD1", OP);
-    build0F(0xBB, "BTC", OP_RM16_reg16, OP_RM32_reg32);
-    build0F(0xBC, "BSF", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0xBD, "BSR", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0xBE, "MOVSX", OP_reg16_RM8, OP_reg32_RM8);
-    build0F(0xBF, "0xBF", OP, "MOVSX", OP_reg32_RM16);
+    build_0f(0xA0, "PUSH", OP_FS);
+    build_0f(0xA1, "POP", OP_FS);
+    build_0f(0xA2, "CPUID", OP);
+    build_0f(0xA3, "BT", OP_RM16_reg16, OP_RM32_reg32);
+    build_0f(0xA4, "SHLD", OP_RM16_reg16_imm8, OP_RM32_reg32_imm8);
+    build_0f(0xA5, "SHLD", OP_RM16_reg16_CL, OP_RM32_reg32_CL);
+    build_0f(0xA8, "PUSH", OP_GS);
+    build_0f(0xA9, "POP", OP_GS);
+    build_0f(0xAB, "BTS", OP_RM16_reg16, OP_RM32_reg32);
+    build_0f(0xAC, "SHRD", OP_RM16_reg16_imm8, OP_RM32_reg32_imm8);
+    build_0f(0xAD, "SHRD", OP_RM16_reg16_CL, OP_RM32_reg32_CL);
+    build_0f(0xAF, "IMUL", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0xB0, "CMPXCHG", OP_RM8_reg8, LockPrefixAllowed);
+    build_0f(0xB1, "CMPXCHG", OP_RM16_reg16, OP_RM32_reg32, LockPrefixAllowed);
+    build_0f(0xB2, "LSS", OP_reg16_mem16, OP_reg32_mem32);
+    build_0f(0xB3, "BTR", OP_RM16_reg16, OP_RM32_reg32);
+    build_0f(0xB4, "LFS", OP_reg16_mem16, OP_reg32_mem32);
+    build_0f(0xB5, "LGS", OP_reg16_mem16, OP_reg32_mem32);
+    build_0f(0xB6, "MOVZX", OP_reg16_RM8, OP_reg32_RM8);
+    build_0f(0xB7, "0xB7", OP, "MOVZX", OP_reg32_RM16);
+    build_0f(0xB9, "UD1", OP);
+    build_0f(0xBB, "BTC", OP_RM16_reg16, OP_RM32_reg32);
+    build_0f(0xBC, "BSF", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0xBD, "BSR", OP_reg16_RM16, OP_reg32_RM32);
+    build_0f(0xBE, "MOVSX", OP_reg16_RM8, OP_reg32_RM8);
+    build_0f(0xBF, "0xBF", OP, "MOVSX", OP_reg32_RM16);
 
     for (u8 i = 0xc8; i <= 0xcf; ++i)
-        build0F(i, "BSWAP", OP_reg32);
+        build_0f(i, "BSWAP", OP_reg32);
 
-    build0F(0xFC, "PADDB", OP_mm1_mm2m64);
-    build0F(0xFD, "PADDW", OP_mm1_mm2m64);
-    build0F(0xFE, "PADDD", OP_mm1_mm2m64);
-    build0F(0xFF, "UD0", OP);
+    build_0f(0xFC, "PADDB", OP_mm1_mm2m64);
+    build_0f(0xFD, "PADDW", OP_mm1_mm2m64);
+    build_0f(0xFE, "PADDD", OP_mm1_mm2m64);
+    build_0f(0xFF, "UD0", OP);
 
     has_built_tables = true;
 }
@@ -921,7 +921,7 @@ Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
     if (m_op == 0x0F) {
         m_has_sub_op = true;
         m_sub_op = stream.read8();
-        m_descriptor = m_o32 ? &s_0F_table32[m_sub_op] : &s_0F_table16[m_sub_op];
+        m_descriptor = m_o32 ? &s_0f_table32[m_sub_op] : &s_0f_table16[m_sub_op];
     } else {
         m_descriptor = m_o32 ? &s_table32[m_op] : &s_table16[m_op];
     }
