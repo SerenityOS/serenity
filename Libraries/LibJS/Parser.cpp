@@ -1133,6 +1133,7 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
     consume(TokenType::ParenOpen);
 
     bool first_semicolon_consumed = false;
+    bool in_scope = false;
     RefPtr<ASTNode> init;
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::Semicolon:
@@ -1141,6 +1142,11 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
         if (match_expression()) {
             init = parse_expression(0);
         } else if (match_variable_declaration()) {
+            if (m_parser_state.m_current_token.type() != TokenType::Var) {
+                m_parser_state.m_let_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
+                in_scope = true;
+            }
+
             init = parse_variable_declaration();
             first_semicolon_consumed = true;
         } else {
@@ -1175,6 +1181,10 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
     consume(TokenType::ParenClose);
 
     auto body = parse_statement();
+
+    if (in_scope) {
+        m_parser_state.m_let_scopes.take_last();
+    }
 
     return create_ast_node<ForStatement>(move(init), move(test), move(update), move(body));
 }
