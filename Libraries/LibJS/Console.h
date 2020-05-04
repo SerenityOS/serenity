@@ -33,22 +33,6 @@
 
 namespace JS {
 
-enum class ConsoleMessageKind {
-    Clear,
-    Count,
-    Debug,
-    Error,
-    Info,
-    Log,
-    Trace,
-    Warn,
-};
-
-struct ConsoleMessage {
-    ConsoleMessageKind kind;
-    String text;
-};
-
 class Console {
     AK_MAKE_NONCOPYABLE(Console);
     AK_MAKE_NONMOVABLE(Console);
@@ -70,17 +54,12 @@ public:
 
     void trace(String title);
 
-    unsigned count(String label = "default");
-    bool count_reset(String label = "default");
-
-    void add_message(ConsoleMessageKind, String text);
-
-    AK::Function<void(ConsoleMessage&)> on_new_message;
+    void count(String label = "default");
+    void count_reset(String label = "default");
 
 private:
     Interpreter& m_interpreter;
 
-    Vector<ConsoleMessage> m_messages;
     HashMap<String, unsigned> m_counters;
 };
 
