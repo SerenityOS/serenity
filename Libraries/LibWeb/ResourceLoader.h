@@ -48,12 +48,13 @@ public:
 
     int pending_loads() const { return m_pending_loads; }
 
+    Protocol::Client& protocol_client() { return *m_protocol_client; }
+
 private:
     ResourceLoader();
 
     int m_pending_loads { 0 };
 
-    Protocol::Client& protocol_client() { return *m_protocol_client; }
     RefPtr<Protocol::Client> m_protocol_client;
     bool is_port_blocked(int port);
 };
