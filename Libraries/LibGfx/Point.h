@@ -38,7 +38,7 @@ class Rect;
 
 class Point {
 public:
-    Point() {}
+    Point() { }
     Point(int x, int y)
         : m_x(x)
         , m_y(y)
@@ -106,6 +106,22 @@ public:
         return *this;
     }
     Point operator+(const Point& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
+
+    Point& operator*=(int factor)
+    {
+        m_x *= factor;
+        m_y *= factor;
+        return *this;
+    }
+    Point operator*(int factor) const { return { m_x * factor, m_y * factor }; }
+
+    Point& operator/=(int factor)
+    {
+        m_x /= factor;
+        m_y /= factor;
+        return *this;
+    }
+    Point operator/(int factor) const { return { m_x / factor, m_y / factor }; }
 
     String to_string() const;
 

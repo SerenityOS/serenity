@@ -1049,6 +1049,47 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
     }
 }
 
+static void draw_split_quadratic_bezier_curve(Painter& painter, const Point& original_control, const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
+{
+    auto po1_midpoint = original_control + p1;
+    po1_midpoint /= 2;
+
+    auto po2_midpoint = original_control + p2;
+    po2_midpoint /= 2;
+
+    auto new_segment = po1_midpoint + po2_midpoint;
+    new_segment /= 2;
+
+    painter.draw_quadratic_bezier_curve(po1_midpoint, p1, new_segment, color, thickness, dotted);
+    painter.draw_quadratic_bezier_curve(po2_midpoint, new_segment, p2, color, thickness, dotted);
+}
+
+static bool can_approximate_bezier_curve(const Point& p1, const Point& p2, const Point& control)
+{
+    constexpr static int tolerance = 15;
+
+    auto p1x = 3 * control.x() - 2 * p1.x() - p2.x();
+    auto p1y = 3 * control.y() - 2 * p1.y() - p2.y();
+    auto p2x = 3 * control.x() - 2 * p2.x() - p1.x();
+    auto p2y = 3 * control.y() - 2 * p2.y() - p1.y();
+
+    p1x = p1x * p1x;
+    p1y = p1y * p1y;
+    p2x = p2x * p2x;
+    p2y = p2y * p2y;
+
+    return max(p1x, p2x) + max(p1y, p2y) <= tolerance;
+}
+
+void Painter::draw_quadratic_bezier_curve(const Point& control_point, const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
+{
+    if (can_approximate_bezier_curve(p1, p2, control_point)) {
+        draw_line(p1, p2, color, thickness, dotted);
+    } else {
+        draw_split_quadratic_bezier_curve(*this, control_point, p1, p2, color, thickness, dotted);
+    }
+}
+
 void Painter::add_clip_rect(const Rect& rect)
 {
     state().clip_rect.intersect(rect.translated(m_clip_origin.location()));
@@ -1085,6 +1126,11 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
             break;
         case Path::Segment::Type::LineTo:
             draw_line(Point(cursor.x(), cursor.y()), Point(segment.point.x(), segment.point.y()), color, thickness);
+            cursor = segment.point;
+            break;
+        case Path::Segment::Type::QuadraticBezierCurveTo:
+            ASSERT(segment.through.has_value());
+            draw_quadratic_bezier_curve(Point(segment.through.value().x(), segment.through.value().y()), Point(cursor.x(), cursor.y()), Point(segment.point.x(), segment.point.y()), color, thickness);
             cursor = segment.point;
             break;
         }
