@@ -34,6 +34,7 @@
 #include <LibIPC/Decoder.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 namespace Gfx {
 
@@ -157,6 +158,43 @@ static Optional<Color> parse_rgb_color(const StringView& string)
         return {};
 
     return Color(r, g, b);
+}
+
+static Optional<Color> parse_rgba_color(const StringView& string)
+{
+    ASSERT(string.starts_with("rgba("));
+    ASSERT(string.ends_with(")"));
+
+    auto substring = string.substring_view(5, string.length() - 6);
+    auto parts = substring.split_view(',');
+
+    if (parts.size() != 4)
+        return {};
+
+    bool ok;
+    auto r = parts[0].to_int(ok);
+    if (!ok)
+        return {};
+    auto g = parts[1].to_int(ok);
+    if (!ok)
+        return {};
+    auto b = parts[2].to_int(ok);
+    if (!ok)
+        return {};
+
+    double alpha = strtod(String(parts[3]).characters(), nullptr);
+    int a = alpha * 255;
+
+    if (r < 0 || r > 255)
+        return {};
+    if (g < 0 || g > 255)
+        return {};
+    if (b < 0 || b > 255)
+        return {};
+    if (a < 0 || a > 255)
+        return {};
+
+    return Color(r, g, b, a);
 }
 
 Optional<Color> Color::from_string(const StringView& string)
@@ -333,6 +371,9 @@ Optional<Color> Color::from_string(const StringView& string)
 
     if (string.starts_with("rgb(") && string.ends_with(")"))
         return parse_rgb_color(string);
+
+    if (string.starts_with("rgba(") && string.ends_with(")"))
+        return parse_rgba_color(string);
 
     if (string[0] != '#')
         return {};
