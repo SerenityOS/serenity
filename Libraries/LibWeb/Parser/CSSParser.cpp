@@ -268,6 +268,8 @@ public:
 
     Optional<Selector::SimpleSelector> parse_simple_selector()
     {
+        auto index_at_start = index;
+
         if (consume_whitespace_or_comments())
             return {};
 
@@ -395,6 +397,11 @@ public:
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::OnlyChild;
             else if (pseudo_name == "empty")
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Empty;
+        }
+
+        if (index == index_at_start) {
+            // We consumed nothing.
+            return {};
         }
 
         return simple_selector;
