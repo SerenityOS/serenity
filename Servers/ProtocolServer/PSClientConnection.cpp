@@ -72,6 +72,7 @@ OwnPtr<Messages::ProtocolServer::StopDownloadResponse> PSClientConnection::handl
     bool success = false;
     if (download) {
         download->stop();
+        success = true;
     }
     return make<Messages::ProtocolServer::StopDownloadResponse>(success);
 }
