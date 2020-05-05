@@ -37,8 +37,14 @@
 class Debugger {
 public:
     static Debugger& the();
+
+    enum class HasControlPassedToUser {
+        No,
+        Yes,
+    };
+
     static void initialize(
-        Function<void(const PtraceRegisters&)> on_stop_callback,
+        Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
 
@@ -66,7 +72,7 @@ public:
 
 private:
     explicit Debugger(
-        Function<void(const PtraceRegisters&)> on_stop_callback,
+        Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
 
@@ -83,7 +89,7 @@ private:
     Vector<DebugInfo::SourcePosition> m_breakpoints;
     String m_executable_path;
 
-    Function<void(const PtraceRegisters&)> m_on_stopped_callback;
+    Function<HasControlPassedToUser(const PtraceRegisters&)> m_on_stopped_callback;
     Function<void()> m_on_continue_callback;
     Function<void()> m_on_exit_callback;
 
