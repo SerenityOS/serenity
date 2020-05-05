@@ -26,6 +26,7 @@
 
 #include "Tab.h"
 #include "BookmarksBarWidget.h"
+#include "DownloadWidget.h"
 #include "History.h"
 #include "InspectorWidget.h"
 #include "WindowActions.h"
@@ -143,6 +144,17 @@ Tab::Tab()
     m_link_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
         m_html_widget->on_link_click(m_link_context_menu_href, "_blank", 0);
     }));
+    m_link_context_menu->add_separator();
+    m_link_context_menu->add_action(GUI::Action::create("Download", [this](auto&) {
+        auto window = GUI::Window::construct();
+        window->set_rect(300, 300, 300, 150);
+        auto url = m_html_widget->document()->complete_url(m_link_context_menu_href);
+        window->set_title(String::format("0% of %s", url.basename().characters()));
+        window->set_resizable(false);
+        window->set_main_widget<DownloadWidget>(url);
+        window->show();
+        (void)window.leak_ref();
+    }));
 
     m_html_widget->on_link_context_menu_request = [this](auto& href, auto& screen_position) {
         m_link_context_menu_href = href;
@@ -165,10 +177,12 @@ Tab::Tab()
             on_favicon_change(icon);
     };
 
-    auto focus_location_box_action = GUI::Action::create("Focus location box", { Mod_Ctrl, Key_L }, [this](auto&) {
-        m_location_box->select_all();
-        m_location_box->set_focus(true);
-    }, this);
+    auto focus_location_box_action = GUI::Action::create(
+        "Focus location box", { Mod_Ctrl, Key_L }, [this](auto&) {
+            m_location_box->select_all();
+            m_location_box->set_focus(true);
+        },
+        this);
 
     m_statusbar = widget.add<GUI::StatusBar>();
 
@@ -198,37 +212,41 @@ Tab::Tab()
     }));
 
     auto& inspect_menu = m_menubar->add_menu("Inspect");
-    inspect_menu.add_action(GUI::Action::create("View source", { Mod_Ctrl, Key_U }, [this](auto&) {
-        String filename_to_open;
-        char tmp_filename[] = "/tmp/view-source.XXXXXX";
-        ASSERT(m_html_widget->document());
-        if (m_html_widget->document()->url().protocol() == "file") {
-            filename_to_open = m_html_widget->document()->url().path();
-        } else {
-            int fd = mkstemp(tmp_filename);
-            ASSERT(fd >= 0);
-            auto source = m_html_widget->document()->source();
-            write(fd, source.characters(), source.length());
-            close(fd);
-            filename_to_open = tmp_filename;
-        }
-        if (fork() == 0) {
-            execl("/bin/TextEditor", "TextEditor", filename_to_open.characters(), nullptr);
-            ASSERT_NOT_REACHED();
-        }
-    }, this));
-    inspect_menu.add_action(GUI::Action::create("Inspect DOM tree", { Mod_None, Key_F12 }, [this](auto&) {
-        if (!m_dom_inspector_window) {
-            m_dom_inspector_window = GUI::Window::construct();
-            m_dom_inspector_window->set_rect(100, 100, 300, 500);
-            m_dom_inspector_window->set_title("DOM inspector");
-            m_dom_inspector_window->set_main_widget<InspectorWidget>();
-        }
-        auto* inspector_widget = static_cast<InspectorWidget*>(m_dom_inspector_window->main_widget());
-        inspector_widget->set_document(m_html_widget->document());
-        m_dom_inspector_window->show();
-        m_dom_inspector_window->move_to_front();
-    }, this));
+    inspect_menu.add_action(GUI::Action::create(
+        "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
+            String filename_to_open;
+            char tmp_filename[] = "/tmp/view-source.XXXXXX";
+            ASSERT(m_html_widget->document());
+            if (m_html_widget->document()->url().protocol() == "file") {
+                filename_to_open = m_html_widget->document()->url().path();
+            } else {
+                int fd = mkstemp(tmp_filename);
+                ASSERT(fd >= 0);
+                auto source = m_html_widget->document()->source();
+                write(fd, source.characters(), source.length());
+                close(fd);
+                filename_to_open = tmp_filename;
+            }
+            if (fork() == 0) {
+                execl("/bin/TextEditor", "TextEditor", filename_to_open.characters(), nullptr);
+                ASSERT_NOT_REACHED();
+            }
+        },
+        this));
+    inspect_menu.add_action(GUI::Action::create(
+        "Inspect DOM tree", { Mod_None, Key_F12 }, [this](auto&) {
+            if (!m_dom_inspector_window) {
+                m_dom_inspector_window = GUI::Window::construct();
+                m_dom_inspector_window->set_rect(100, 100, 300, 500);
+                m_dom_inspector_window->set_title("DOM inspector");
+                m_dom_inspector_window->set_main_widget<InspectorWidget>();
+            }
+            auto* inspector_widget = static_cast<InspectorWidget*>(m_dom_inspector_window->main_widget());
+            inspector_widget->set_document(m_html_widget->document());
+            m_dom_inspector_window->show();
+            m_dom_inspector_window->move_to_front();
+        },
+        this));
 
     auto& debug_menu = m_menubar->add_menu("Debug");
     debug_menu.add_action(GUI::Action::create(

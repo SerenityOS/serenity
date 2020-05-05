@@ -1,5 +1,6 @@
 OBJS = \
     BookmarksBarWidget.o \
+    DownloadWidget.o \
     InspectorWidget.o \
     Tab.o \
     WindowActions.o \
