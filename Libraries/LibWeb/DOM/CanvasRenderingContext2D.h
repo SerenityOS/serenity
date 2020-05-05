@@ -69,6 +69,7 @@ public:
     void close_path();
     void move_to(float x, float y);
     void line_to(float x, float y);
+    void quadratic_curve_to(float cx, float cy, float x, float y);
     void stroke();
 
     RefPtr<ImageData> create_image_data(JS::GlobalObject&, int width, int height) const;

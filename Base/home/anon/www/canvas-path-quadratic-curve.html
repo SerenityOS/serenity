@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>canvas path - quadratic curve example</title>
+</head>
+<body>
+<canvas width=500 height=500></canvas>
+<script>
+
+function drawSomeCurves() {
+
+var canvas = document.querySelectorAll("canvas")[0];
+var ctx = canvas.getContext("2d");
+var x = 150;
+var y = 150;
+
+canvas.addEventListener("mousedown", function(e) {
+    x = e.offsetX;
+    y = e.offsetY;
+});
+
+canvas.addEventListener("mousemove", function(e) {
+    ctx.beginPath();
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 500, 500);
+
+    ctx.strokeStyle = 'red';
+
+    ctx.lineWidth = 1;
+
+    ctx.fillRect(0, 0, 500, 500);
+
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(e.offsetX, e.offsetY, x, y);
+    ctx.stroke();
+});
+
+}
+
+drawSomeCurves();
+
+</script>
+</body>
+</html>

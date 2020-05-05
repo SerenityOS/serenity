@@ -63,6 +63,7 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
     put_native_function("stroke", stroke, 0);
     put_native_function("moveTo", move_to, 2);
     put_native_function("lineTo", line_to, 2);
+    put_native_function("quadraticCurveTo", quadratic_curve_to, 4);
 
     put_native_function("createImageData", create_image_data, 1);
     put_native_function("putImageData", put_image_data, 3);
@@ -237,6 +238,19 @@ JS::Value CanvasRenderingContext2DWrapper::line_to(JS::Interpreter& interpreter)
     double x = interpreter.argument(0).to_double();
     double y = interpreter.argument(1).to_double();
     impl->line_to(x, y);
+    return JS::js_undefined();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::quadratic_curve_to(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    double cx = interpreter.argument(0).to_double();
+    double cy = interpreter.argument(1).to_double();
+    double x = interpreter.argument(2).to_double();
+    double y = interpreter.argument(3).to_double();
+    impl->quadratic_curve_to(cx, cy, x, y);
     return JS::js_undefined();
 }
 
