@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibWeb/DOM/HTMLElement.h>
+#include <LibWeb/DOM/HTMLInputElement.h>
 
 namespace Web {
 
@@ -38,7 +39,7 @@ public:
     String action() const { return attribute("action"); }
     String method() const { return attribute("method"); }
 
-    void submit();
+    void submit(RefPtr<HTMLInputElement> submitter);
 };
 
 template<>

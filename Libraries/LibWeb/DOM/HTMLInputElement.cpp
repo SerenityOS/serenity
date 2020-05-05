@@ -63,7 +63,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         button.on_click = [this] {
             if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
                 // FIXME: Remove this const_cast once we have a non-const first_ancestor_of_type.
-                const_cast<HTMLFormElement*>(form)->submit();
+                const_cast<HTMLFormElement*>(form)->submit(this);
             }
         };
         widget = button;

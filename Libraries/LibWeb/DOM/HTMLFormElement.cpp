@@ -41,7 +41,7 @@ HTMLFormElement::~HTMLFormElement()
 {
 }
 
-void HTMLFormElement::submit()
+void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
 {
     if (action().is_null()) {
         dbg() << "Unsupported form action ''";
@@ -68,7 +68,7 @@ void HTMLFormElement::submit()
 
     for_each_in_subtree_of_type<HTMLInputElement>([&](auto& node) {
         auto& input = to<HTMLInputElement>(node);
-        if (!input.name().is_null())
+        if (!input.name().is_null() && (input.type() != "submit" || &input == submitter))
             parameters.append({ input.name(), input.value() });
         return IterationDecision::Continue;
     });
