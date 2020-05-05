@@ -39,13 +39,15 @@ public:
             Invalid,
             MoveTo,
             LineTo,
+            QuadraticBezierCurveTo,
         };
 
         Type type { Type::Invalid };
         FloatPoint point;
+        Optional<FloatPoint> through {};
     };
 
-    Path() {}
+    Path() { }
 
     void move_to(const FloatPoint& point)
     {
@@ -55,6 +57,11 @@ public:
     void line_to(const FloatPoint& point)
     {
         m_segments.append({ Segment::Type::LineTo, point });
+    }
+
+    void quadratic_bezier_curve_to(const FloatPoint& through, const FloatPoint& point)
+    {
+        m_segments.append({ Segment::Type::QuadraticBezierCurveTo, point, through });
     }
 
     void close();
