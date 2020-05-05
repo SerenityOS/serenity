@@ -34,173 +34,6 @@
 //#define HTTPJOB_DEBUG
 
 namespace HTTP {
-
-static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
-{
-#ifdef CHTTPJOB_DEBUG
-    dbg() << "HttpJob::handle_content_encoding: buf has content_encoding = " << content_encoding;
-#endif
-
-    if (content_encoding == "gzip") {
-        if (!Core::Gzip::is_compressed(buf)) {
-            dbg() << "HttpJob::handle_content_encoding: buf is not gzip compressed!";
-        }
-
-#ifdef CHTTPJOB_DEBUG
-        dbg() << "HttpJob::handle_content_encoding: buf is gzip compressed!";
-#endif
-
-        auto uncompressed = Core::Gzip::decompress(buf);
-        if (!uncompressed.has_value()) {
-            dbg() << "HttpJob::handle_content_encoding: Gzip::decompress() failed. Returning original buffer.";
-            return buf;
-        }
-
-#ifdef CHTTPJOB_DEBUG
-        dbg() << "HttpJob::handle_content_encoding: Gzip::decompress() successful.\n"
-              << "  Input size = " << buf.size() << "\n"
-              << "  Output size = " << uncompressed.value().size();
-#endif
-
-        return uncompressed.value();
-    }
-
-    return buf;
-}
-
-HttpJob::HttpJob(const HttpRequest& request)
-    : m_request(request)
-{
-}
-
-HttpJob::~HttpJob()
-{
-}
-
-void HttpJob::on_socket_connected()
-{
-    auto raw_request = m_request.to_raw_request();
-#if 0
-    dbg() << "HttpJob: raw_request:";
-    dbg() << String::copy(raw_request).characters();
-#endif
-
-    bool success = m_socket->send(raw_request);
-    if (!success)
-        return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-
-    m_socket->on_ready_to_read = [&] {
-        if (is_cancelled())
-            return;
-        if (m_state == State::InStatus) {
-            if (!m_socket->can_read_line())
-                return;
-            auto line = m_socket->read_line(PAGE_SIZE);
-            if (line.is_null()) {
-                fprintf(stderr, "HttpJob: Expected HTTP status\n");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-            }
-            auto parts = String::copy(line, Chomp).split(' ');
-            if (parts.size() < 3) {
-                fprintf(stderr, "HttpJob: Expected 3-part HTTP status, got '%s'\n", line.data());
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-            }
-            bool ok;
-            m_code = parts[1].to_uint(ok);
-            if (!ok) {
-                fprintf(stderr, "HttpJob: Expected numeric HTTP status\n");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-            }
-            m_state = State::InHeaders;
-            return;
-        }
-        if (m_state == State::InHeaders) {
-            if (!m_socket->can_read_line())
-                return;
-            auto line = m_socket->read_line(PAGE_SIZE);
-            if (line.is_null()) {
-                fprintf(stderr, "HttpJob: Expected HTTP header\n");
-                return did_fail(Core::NetworkJob::Error::ProtocolFailed);
-            }
-            auto chomped_line = String::copy(line, Chomp);
-            if (chomped_line.is_empty()) {
-                m_state = State::InBody;
-                return;
-            }
-            auto parts = chomped_line.split(':');
-            if (parts.is_empty()) {
-                fprintf(stderr, "HttpJob: Expected HTTP header with key/value\n");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-            }
-            auto name = parts[0];
-            if (chomped_line.length() < name.length() + 2) {
-                fprintf(stderr, "HttpJob: Malformed HTTP header: '%s' (%zu)\n", chomped_line.characters(), chomped_line.length());
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-            }
-            auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
-            m_headers.set(name, value);
-#ifdef CHTTPJOB_DEBUG
-            dbg() << "HttpJob: [" << name << "] = '" << value << "'";
-#endif
-            return;
-        }
-        ASSERT(m_state == State::InBody);
-        ASSERT(m_socket->can_read());
-        auto payload = m_socket->receive(64 * KB);
-        if (!payload) {
-            if (m_socket->eof())
-                return finish_up();
-            return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-        }
-        m_received_buffers.append(payload);
-        m_received_size += payload.size();
-
-        auto content_length_header = m_headers.get("Content-Length");
-        Optional<u32> content_length {};
-
-        if (content_length_header.has_value()) {
-            bool ok;
-            auto length = content_length_header.value().to_uint(ok);
-            if (ok)
-                content_length = length;
-        }
-
-        deferred_invoke([this, content_length](auto&) {
-            did_progress(content_length, m_received_size);
-        });
-
-        if (content_length.has_value()) {
-            auto length = content_length.value();
-            if (m_received_size >= length) {
-                m_received_size = length;
-                finish_up();
-            }
-        }
-    };
-}
-
-void HttpJob::finish_up()
-{
-    m_state = State::Finished;
-    auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
-    u8* flat_ptr = flattened_buffer.data();
-    for (auto& received_buffer : m_received_buffers) {
-        memcpy(flat_ptr, received_buffer.data(), received_buffer.size());
-        flat_ptr += received_buffer.size();
-    }
-    m_received_buffers.clear();
-
-    auto content_encoding = m_headers.get("Content-Encoding");
-    if (content_encoding.has_value()) {
-        flattened_buffer = handle_content_encoding(flattened_buffer, content_encoding.value());
-    }
-
-    auto response = HttpResponse::create(m_code, move(m_headers), move(flattened_buffer));
-    deferred_invoke([this, response](auto&) {
-        did_finish(move(response));
-    });
-}
-
 void HttpJob::start()
 {
     ASSERT(!m_socket);
@@ -228,4 +61,46 @@ void HttpJob::shutdown()
     remove_child(*m_socket);
     m_socket = nullptr;
 }
+
+void HttpJob::register_on_ready_to_read(Function<void()> callback)
+{
+    m_socket->on_ready_to_read = move(callback);
+}
+
+void HttpJob::register_on_ready_to_write(Function<void()> callback)
+{
+    // There is no need to wait, the connection is already established
+    callback();
+}
+
+bool HttpJob::can_read_line()
+{
+    return m_socket->can_read_line();
+}
+
+ByteBuffer HttpJob::read_line(size_t size)
+{
+    return m_socket->read_line(size);
+}
+
+ByteBuffer HttpJob::receive(size_t size)
+{
+    return m_socket->receive(size);
+}
+
+bool HttpJob::can_read() const
+{
+    return m_socket->can_read();
+}
+
+bool HttpJob::eof() const
+{
+    return m_socket->eof();
+}
+
+bool HttpJob::write(const ByteBuffer& data)
+{
+    return m_socket->write(data);
+}
+
 }

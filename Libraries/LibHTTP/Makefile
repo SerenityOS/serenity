@@ -1,7 +1,8 @@
 OBJS = HttpResponse.o \
 	   HttpRequest.o \
 	   HttpJob.o \
-	   HttpsJob.o
+	   HttpsJob.o \
+	   Job.o
 
 LIBRARY = libhttp.a
 
