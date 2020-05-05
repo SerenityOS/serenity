@@ -6,6 +6,7 @@ OBJS = \
     DisjointRectSet.o \
     Emoji.o \
     Font.o \
+    FloatRect.o \
     GIFLoader.o \
     ImageDecoder.o \
     PNGLoader.o \
