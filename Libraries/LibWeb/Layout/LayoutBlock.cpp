@@ -56,7 +56,9 @@ LayoutNode& LayoutBlock::inline_wrapper()
 void LayoutBlock::layout()
 {
     compute_width();
-    compute_position();
+
+    if (!is_inline())
+        compute_position();
 
     if (children_are_inline())
         layout_inline_children();
@@ -167,6 +169,12 @@ void LayoutBlock::layout_inline_children()
 
             if (is<LayoutReplaced>(fragment.layout_node()))
                 const_cast<LayoutReplaced&>(to<LayoutReplaced>(fragment.layout_node())).set_rect(fragment.rect());
+
+            if (fragment.layout_node().is_inline_block()) {
+                auto& inline_block = const_cast<LayoutBlock&>(to<LayoutBlock>(fragment.layout_node()));
+                inline_block.set_rect(fragment.rect());
+                inline_block.layout();
+            }
 
             float final_line_box_width = 0;
             for (auto& fragment : line_box.fragments())
@@ -416,6 +424,18 @@ LineBox& LayoutBlock::add_line_box()
 {
     m_line_boxes.append(LineBox());
     return m_line_boxes.last();
+}
+
+void LayoutBlock::split_into_lines(LayoutBlock& container)
+{
+    ASSERT(is_inline());
+
+    layout();
+
+    auto* line_box = &container.ensure_last_line_box();
+    if (line_box->width() > 0 && line_box->width() + width() > container.width())
+        line_box = &container.add_line_box();
+    line_box->add_fragment(*this, 0, 0, width(), height());
 }
 
 }

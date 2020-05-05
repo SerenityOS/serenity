@@ -130,8 +130,11 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
         return adopt(*new LayoutTableRow(*this, move(style)));
     if (display == "table-cell")
         return adopt(*new LayoutTableCell(*this, move(style)));
-    if (display == "inline-block")
-        return adopt(*new LayoutBlock(this, move(style)));
+    if (display == "inline-block") {
+        auto inline_block = adopt(*new LayoutBlock(this, move(style)));
+        inline_block->set_inline(true);
+        return inline_block;
+    }
 
     dbg() << "Unknown display type: _" << display << "_";
     return adopt(*new LayoutInline(*this, move(style)));

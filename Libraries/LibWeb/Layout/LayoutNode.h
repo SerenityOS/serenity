@@ -97,6 +97,8 @@ public:
     bool is_inline() const { return m_inline; }
     void set_inline(bool b) { m_inline = b; }
 
+    bool is_inline_block() const { return is_inline() && is_block(); }
+
     virtual void layout();
     virtual void render(RenderingContext&);
 
