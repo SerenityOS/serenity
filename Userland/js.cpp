@@ -439,8 +439,9 @@ public:
         auto trace = interpreter().get_trace();
         for (auto function_name : trace) {
             if (String(function_name).is_empty())
-                function_name = "<anonymous>";
-            printf(" -> %s\n", function_name.characters());
+                printf(" -> <anonymous>\n");
+            else
+                printf(" -> %s\n", function_name.characters());
         }
         return JS::js_undefined();
     }
