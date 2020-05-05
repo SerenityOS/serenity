@@ -33,9 +33,29 @@ namespace AK {
 class FlyString {
 public:
     FlyString() {}
+    FlyString(const FlyString& other)
+        : m_impl(other.impl())
+    {
+    }
+    FlyString(FlyString&& other)
+        : m_impl(move(other.m_impl))
+    {
+    }
     FlyString(const String&);
     FlyString(const StringView&);
     FlyString(const char*);
+
+    FlyString& operator=(const FlyString& other)
+    {
+        m_impl = other.m_impl;
+        return *this;
+    }
+
+    FlyString& operator=(FlyString&& other)
+    {
+        m_impl = move(other.m_impl);
+        return *this;
+    }
 
     bool is_empty() const { return !m_impl || !m_impl->length(); }
     bool is_null() const { return !m_impl; }
