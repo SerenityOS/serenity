@@ -207,6 +207,9 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                     { "&gt;", ">" },
                     { "&amp;", "&" },
                     { "&mdash;", "-" },
+                    { "&nbsp;", " " }, // FIXME: Should actually be *non-breaking*
+                    { "&raquo;", ">>" },
+                    { "&laquo;", "<<" },
                 };
                 auto rest_of_html = html.substring_view(i, html.length() - i);
                 bool found = false;
