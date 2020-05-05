@@ -17,7 +17,7 @@ the file system the calling process is allowed to access.
 
 A process that has not made any `unveil()` calls is allowed to access the whole
 filesystem (subject to the regular permission checks). A process that has made
-one or more `unveil()` calls cannot access any paths excpet those that were
+one or more `unveil()` calls cannot access any paths except those that were
 explicitly unveiled.
 
 Calling `unveil()` allows the process to access the given `path`, which must be
