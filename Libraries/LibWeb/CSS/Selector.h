@@ -48,6 +48,7 @@ public:
             None,
             Link,
             Hover,
+            Focus,
             FirstChild,
             LastChild,
             OnlyChild,
