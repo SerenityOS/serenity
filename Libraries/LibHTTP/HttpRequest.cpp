@@ -65,6 +65,10 @@ ByteBuffer HttpRequest::to_raw_request() const
     builder.append(method_name());
     builder.append(' ');
     builder.append(m_url.path());
+    if (!m_url.query().is_empty()) {
+        builder.append('?');
+        builder.append(m_url.query());
+    }
     builder.append(" HTTP/1.1\r\nHost: ");
     builder.append(m_url.host());
     builder.append("\r\nConnection: close\r\n\r\n");
