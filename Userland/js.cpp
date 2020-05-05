@@ -437,8 +437,8 @@ public:
     {
         puts(interpreter().join_arguments().characters());
         auto trace = interpreter().get_trace();
-        for (auto function_name : trace) {
-            if (String(function_name).is_empty())
+        for (auto& function_name : trace) {
+            if (function_name.is_empty())
                 function_name = "<anonymous>";
             printf(" -> %s\n", function_name.characters());
         }
