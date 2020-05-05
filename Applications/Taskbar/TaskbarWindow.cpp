@@ -135,7 +135,6 @@ NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& 
     auto& button = main_widget()->add<TaskbarButton>(identifier);
     button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     button.set_preferred_size(140, 22);
-    button.set_checkable(true);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);
     return button;
