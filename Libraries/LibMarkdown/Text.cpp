@@ -113,7 +113,7 @@ String Text::render_to_html() const
         }
 
         current_style = span.style;
-        builder.append(span.text);
+        builder.append(escape_html_entities(span.text));
     }
 
     for (ssize_t i = open_tags.size() - 1; i >= 0; --i) {
