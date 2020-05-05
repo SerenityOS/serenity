@@ -133,7 +133,8 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
     if (display == "inline-block")
         return adopt(*new LayoutBlock(this, move(style)));
 
-    ASSERT_NOT_REACHED();
+    dbg() << "Unknown display type: _" << display << "_";
+    return adopt(*new LayoutInline(*this, move(style)));
 }
 
 void Element::parse_attribute(const FlyString&, const String&)
