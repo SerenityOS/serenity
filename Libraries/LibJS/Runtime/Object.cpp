@@ -212,6 +212,12 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     bool new_property = !metadata.has_value();
 
     if (new_property) {
+        if (!m_shape->is_unique() && shape().property_count() > 100) {
+            // If you add more than 100 properties to an object, let's stop doing
+            // transitions to avoid filling up the heap with shapes.
+            ensure_shape_is_unique();
+        }
+
         if (m_shape->is_unique()) {
             m_shape->add_property_to_unique_shape(property_name, attributes);
             m_storage.resize(m_shape->property_count());
