@@ -53,6 +53,14 @@ String StandardPaths::desktop_directory()
     return canonicalized_path(builder.to_string());
 }
 
+String StandardPaths::downloads_directory()
+{
+    StringBuilder builder;
+    builder.append(home_directory());
+    builder.append("/Downloads");
+    return canonicalized_path(builder.to_string());
+}
+
 String StandardPaths::tempfile_directory()
 {
     return "/tmp";
