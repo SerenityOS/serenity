@@ -366,4 +366,11 @@ URL URL::create_with_url_or_path(const String& url_or_path)
     return URL::create_with_file_protocol(path);
 }
 
+String URL::basename() const
+{
+    if (!m_valid)
+        return {};
+    return FileSystemPath(m_path).basename();
+}
+
 }

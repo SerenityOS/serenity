@@ -61,6 +61,7 @@ public:
     void set_fragment(const String& fragment);
     void set_port(u16 port) { m_port = port; }
 
+    String basename() const;
     String to_string() const;
 
     URL complete_url(const String&) const;
