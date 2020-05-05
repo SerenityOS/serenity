@@ -282,8 +282,9 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
             auto level = plain[0];
             auto code = plain[1];
             if (level == (u8)AlertLevel::Critical) {
-                dbg() << "We were alerted of a critical error: " << code;
+                dbg() << "We were alerted of a critical error: " << code << " (" << alert_name((AlertDescription)code) << ")";
                 m_context.critical_error = code;
+                try_disambiguate_error();
                 res = (i8)Error::UnknownError;
             } else {
                 dbg() << "Alert: " << code;

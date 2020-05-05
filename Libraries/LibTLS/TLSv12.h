@@ -73,35 +73,54 @@ enum class CipherSuite {
     RSA_WITH_AES_256_GCM_SHA384 = 0x009D,
 };
 
+#define ENUMERATE_ALERT_DESCRIPTIONS                        \
+    ENUMERATE_ALERT_DESCRIPTION(CloseNotify, 0)             \
+    ENUMERATE_ALERT_DESCRIPTION(UnexpectedMessage, 10)      \
+    ENUMERATE_ALERT_DESCRIPTION(BadRecordMAC, 20)           \
+    ENUMERATE_ALERT_DESCRIPTION(DecryptionFailed, 21)       \
+    ENUMERATE_ALERT_DESCRIPTION(RecordOverflow, 22)         \
+    ENUMERATE_ALERT_DESCRIPTION(DecompressionFailure, 30)   \
+    ENUMERATE_ALERT_DESCRIPTION(HandshakeFailure, 40)       \
+    ENUMERATE_ALERT_DESCRIPTION(NoCertificate, 41)          \
+    ENUMERATE_ALERT_DESCRIPTION(BadCertificate, 42)         \
+    ENUMERATE_ALERT_DESCRIPTION(UnsupportedCertificate, 43) \
+    ENUMERATE_ALERT_DESCRIPTION(CertificateRevoked, 44)     \
+    ENUMERATE_ALERT_DESCRIPTION(CertificateExpired, 45)     \
+    ENUMERATE_ALERT_DESCRIPTION(CertificateUnknown, 46)     \
+    ENUMERATE_ALERT_DESCRIPTION(IllegalParameter, 47)       \
+    ENUMERATE_ALERT_DESCRIPTION(UnknownCA, 48)              \
+    ENUMERATE_ALERT_DESCRIPTION(AccessDenied, 49)           \
+    ENUMERATE_ALERT_DESCRIPTION(DecodeError, 50)            \
+    ENUMERATE_ALERT_DESCRIPTION(DecryptError, 51)           \
+    ENUMERATE_ALERT_DESCRIPTION(ExportRestriction, 60)      \
+    ENUMERATE_ALERT_DESCRIPTION(ProtocolVersion, 70)        \
+    ENUMERATE_ALERT_DESCRIPTION(InsufficientSecurity, 71)   \
+    ENUMERATE_ALERT_DESCRIPTION(InternalError, 80)          \
+    ENUMERATE_ALERT_DESCRIPTION(InappropriateFallback, 86)  \
+    ENUMERATE_ALERT_DESCRIPTION(UserCanceled, 90)           \
+    ENUMERATE_ALERT_DESCRIPTION(NoRenegotiation, 100)       \
+    ENUMERATE_ALERT_DESCRIPTION(UnsupportedExtension, 110)  \
+    ENUMERATE_ALERT_DESCRIPTION(NoError, 255)
+
 enum class AlertDescription : u8 {
-    CloseNotify = 0,
-    UnexpectedMessage = 10,
-    BadRecordMAC = 20,
-    DecryptionFailed = 21,
-    RecordOverflow = 22,
-    DecompressionFailure = 30,
-    HandshakeFailure = 40,
-    NoCertificate = 41,
-    BadCertificate = 42,
-    UnsupportedCertificate = 43,
-    CertificateRevoked = 44,
-    CertificateExpired = 45,
-    CertificateUnknown = 46,
-    IllegalParameter = 47,
-    UnknownCA = 48,
-    AccessDenied = 49,
-    DecodeError = 50,
-    DecryptError = 51,
-    ExportRestriction = 60,
-    ProtocolVersion = 70,
-    InsufficientSecurity = 71,
-    InternalError = 80,
-    InappropriateFallback = 86,
-    UserCanceled = 90,
-    NoRenegotiation = 100,
-    UnsupportedExtension = 110,
-    NoError = 255
+#define ENUMERATE_ALERT_DESCRIPTION(name, value) name = value,
+    ENUMERATE_ALERT_DESCRIPTIONS
+#undef ENUMERATE_ALERT_DESCRIPTION
 };
+
+constexpr static const char* alert_name(AlertDescription descriptor)
+{
+#define ENUMERATE_ALERT_DESCRIPTION(name, value) \
+    case AlertDescription::name:                 \
+        return #name;
+
+    switch (descriptor) {
+        ENUMERATE_ALERT_DESCRIPTIONS
+    }
+
+    return "Unknown";
+#undef ENUMERATE_ALERT_DESCRIPTION
+}
 
 enum class Error : i8 {
     NoError = 0,
@@ -436,6 +455,8 @@ private:
     bool expand_key();
 
     bool compute_master_secret(size_t length);
+
+    void try_disambiguate_error() const;
 
     Context m_context;
 
