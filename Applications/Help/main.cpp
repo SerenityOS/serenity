@@ -156,6 +156,12 @@ int main(int argc, char* argv[])
         char* dir_path = dirname(current_path);
         char* path = realpath(String::format("%s/%s", dir_path, href.characters()).characters(), nullptr);
         free(current_path);
+        auto tree_view_index = model->index_from_path(path);
+        if (tree_view_index.has_value()) {
+            dbg() << "Found path _" << path << "_ in model at index " << tree_view_index.value();
+            tree_view.selection().set(tree_view_index.value());
+            return;
+        }
         history.push(path);
         update_actions();
         open_page(path);
