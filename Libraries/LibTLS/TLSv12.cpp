@@ -519,4 +519,28 @@ void TLSv12::ensure_hmac(size_t digest_size, bool local)
         m_hmac_remote = move(hmac);
 }
 
+void TLSv12::try_disambiguate_error() const
+{
+    dbg() << "Possible failure cause: ";
+    switch ((AlertDescription)m_context.critical_error) {
+    case AlertDescription::HandshakeFailure:
+        if (!m_context.cipher_spec_set) {
+            dbg() << "- No cipher suite in common with " << m_context.SNI;
+        } else {
+            dbg() << "- Unknown internal issue";
+        }
+        break;
+    case AlertDescription::InsufficientSecurity:
+        dbg() << "- No cipher suite in common with " << m_context.SNI << " (the server is oh so secure)";
+        break;
+    case AlertDescription::DecryptionFailed:
+        dbg() << "- Bad MAC record from our side";
+        dbg() << "- Bad block cipher padding";
+        break;
+    default:
+        dbg() << "- No one knows";
+        break;
+    }
+}
+
 }
