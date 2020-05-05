@@ -29,7 +29,7 @@
 
 namespace Web {
 
-String url_encode(StringView view)
+String url_encode(const StringView& view)
 {
     StringBuilder builder;
 
@@ -46,7 +46,7 @@ String url_encode(StringView view)
     return builder.to_string();
 }
 
-String url_encode(Vector<URLQueryParam> pairs)
+String url_encode(const Vector<URLQueryParam>& pairs)
 {
     StringBuilder builder;
     for (size_t i = 0; i < pairs.size(); ++i) {
