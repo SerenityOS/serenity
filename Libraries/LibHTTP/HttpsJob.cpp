@@ -36,193 +36,6 @@
 
 namespace HTTP {
 
-static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
-{
-#ifdef HTTPSJOB_DEBUG
-    dbg() << "HttpsJob::handle_content_encoding: buf has content_encoding = " << content_encoding;
-#endif
-
-    if (content_encoding == "gzip") {
-        if (!Core::Gzip::is_compressed(buf)) {
-            dbg() << "HttpsJob::handle_content_encoding: buf is not gzip compressed!";
-        }
-
-#ifdef HTTPSJOB_DEBUG
-        dbg() << "HttpsJob::handle_content_encoding: buf is gzip compressed!";
-#endif
-
-        auto uncompressed = Core::Gzip::decompress(buf);
-        if (!uncompressed.has_value()) {
-            dbg() << "HttpsJob::handle_content_encoding: Gzip::decompress() failed. Returning original buffer.";
-            return buf;
-        }
-
-#ifdef HTTPSJOB_DEBUG
-        dbg() << "HttpsJob::handle_content_encoding: Gzip::decompress() successful.\n"
-              << "  Input size = " << buf.size() << "\n"
-              << "  Output size = " << uncompressed.value().size();
-#endif
-
-        return uncompressed.value();
-    }
-
-    return buf;
-}
-
-HttpsJob::HttpsJob(const HttpRequest& request)
-    : m_request(request)
-{
-}
-
-HttpsJob::~HttpsJob()
-{
-    m_socket = nullptr;
-}
-
-void HttpsJob::on_socket_connected()
-{
-
-    m_socket->on_tls_ready_to_write = [&](TLS::TLSv12& tls) {
-        if (m_sent_data)
-            return;
-        m_sent_data = true;
-        auto raw_request = m_request.to_raw_request();
-#if 0
-        dbg() << "HttpsJob: raw_request:";
-        dbg() << String::copy(raw_request).characters();
-#endif
-        bool success = tls.write(raw_request);
-        if (!success)
-            deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-    };
-
-    m_socket->on_tls_ready_to_read = [&](TLS::TLSv12& tls) {
-#ifdef HTTPS_DEBUG
-        dbg() << " ON TLS READY TO READ: " << (u16)m_state;
-#endif
-        if (is_cancelled())
-            return;
-        if (m_state == State::InStatus) {
-            if (!tls.can_read_line()) {
-                dbg() << " cannot read line";
-                return;
-            }
-            auto line = tls.read_line(PAGE_SIZE);
-            if (line.is_null()) {
-                fprintf(stderr, "HttpsJob: Expected HTTP status\n");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-            }
-            auto parts = String::copy(line, Chomp).split(' ');
-            if (parts.size() < 3) {
-                fprintf(stderr, "HttpsJob: Expected 3-part HTTP status, got '%s'\n", line.data());
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-            }
-            bool ok;
-            m_code = parts[1].to_uint(ok);
-            if (!ok) {
-                fprintf(stderr, "HttpsJob: Expected numeric HTTP status\n");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-            }
-            m_state = State::InHeaders;
-            return;
-        }
-        if (m_state == State::InHeaders) {
-            if (!tls.can_read_line())
-                return;
-            auto line = tls.read_line(PAGE_SIZE);
-            if (line.is_null()) {
-                fprintf(stderr, "HttpsJob: Expected HTTP header\n");
-                return did_fail(Core::NetworkJob::Error::ProtocolFailed);
-            }
-            auto chomped_line = String::copy(line, Chomp);
-            if (chomped_line.is_empty()) {
-                m_state = State::InBody;
-                return;
-            }
-            auto parts = chomped_line.split(':');
-            if (parts.is_empty()) {
-                fprintf(stderr, "HttpsJob: Expected HTTP header with key/value\n");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-            }
-            auto name = parts[0];
-            if (chomped_line.length() < name.length() + 2) {
-                fprintf(stderr, "HttpsJob: Malformed HTTP header: '%s' (%zu)\n", chomped_line.characters(), chomped_line.length());
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-            }
-            auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
-            m_headers.set(name, value);
-#ifdef HTTPSJOB_DEBUG
-            dbg() << "HttpsJob: [" << name << "] = '" << value << "'";
-#endif
-            return;
-        }
-        ASSERT(m_state == State::InBody);
-        ASSERT(tls.can_read());
-
-        while (tls.can_read())
-            read_body(tls);
-
-        if (!tls.is_established())
-            return finish_up();
-    };
-}
-
-void HttpsJob::read_body(TLS::TLSv12& tls)
-{
-    auto payload = tls.read(64 * KB);
-    if (!payload) {
-        if (tls.eof())
-            return finish_up();
-        return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
-    }
-    m_received_buffers.append(payload);
-    m_received_size += payload.size();
-
-    auto content_length_header = m_headers.get("Content-Length");
-    Optional<u32> content_length {};
-
-    if (content_length_header.has_value()) {
-        bool ok;
-        auto length = content_length_header.value().to_uint(ok);
-        if (ok)
-            content_length = length;
-    }
-
-    // This needs to be synchronous
-    // FIXME: Somehow enforce that this should not modify anything
-    did_progress(content_length, m_received_size);
-
-    if (content_length.has_value()) {
-        auto length = content_length.value();
-        if (m_received_size >= length) {
-            m_received_size = length;
-            finish_up();
-        }
-    }
-}
-
-void HttpsJob::finish_up()
-{
-    m_state = State::Finished;
-    auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
-    u8* flat_ptr = flattened_buffer.data();
-    for (auto& received_buffer : m_received_buffers) {
-        memcpy(flat_ptr, received_buffer.data(), received_buffer.size());
-        flat_ptr += received_buffer.size();
-    }
-    m_received_buffers.clear();
-
-    auto content_encoding = m_headers.get("Content-Encoding");
-    if (content_encoding.has_value()) {
-        flattened_buffer = handle_content_encoding(flattened_buffer, content_encoding.value());
-    }
-
-    auto response = HttpResponse::create(m_code, move(m_headers), move(flattened_buffer));
-    deferred_invoke([this, response](auto&) {
-        did_finish(move(response));
-    });
-}
-
 void HttpsJob::start()
 {
     ASSERT(!m_socket);
@@ -268,4 +81,57 @@ void HttpsJob::shutdown()
     remove_child(*m_socket);
     m_socket = nullptr;
 }
+
+void HttpsJob::read_while_data_available(Function<IterationDecision()> read)
+{
+    while (m_socket->can_read()) {
+        if (read() == IterationDecision::Break)
+            break;
+    }
+}
+
+void HttpsJob::register_on_ready_to_read(Function<void()> callback)
+{
+    m_socket->on_tls_ready_to_read = [callback = move(callback)](auto&) {
+        callback();
+    };
+}
+
+void HttpsJob::register_on_ready_to_write(Function<void()> callback)
+{
+    m_socket->on_tls_ready_to_write = [callback = move(callback)](auto&) {
+        callback();
+    };
+}
+
+bool HttpsJob::can_read_line()
+{
+    return m_socket->can_read_line();
+}
+
+ByteBuffer HttpsJob::read_line(size_t size)
+{
+    return m_socket->read_line(size);
+}
+
+ByteBuffer HttpsJob::receive(size_t size)
+{
+    return m_socket->read(size);
+}
+
+bool HttpsJob::can_read() const
+{
+    return m_socket->can_read();
+}
+
+bool HttpsJob::eof() const
+{
+    return m_socket->eof();
+}
+
+bool HttpsJob::write(const ByteBuffer& data)
+{
+    return m_socket->write(data);
+}
+
 }

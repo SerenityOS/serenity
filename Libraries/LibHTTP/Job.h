@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,38 +31,50 @@
 #include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
-#include <LibHTTP/Job.h>
 
 namespace HTTP {
 
-class HttpJob final : public Job {
-    C_OBJECT(HttpJob)
+class Job : public Core::NetworkJob {
 public:
-    explicit HttpJob(const HttpRequest& request)
-        : Job(request)
-    {
-    }
+    explicit Job(const HttpRequest&);
+    virtual ~Job() override;
 
-    virtual ~HttpJob() override
-    {
-    }
+    virtual void start() override = 0;
+    virtual void shutdown() override = 0;
 
-    virtual void start() override;
-    virtual void shutdown() override;
+    HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
+    const HttpResponse* response() const { return static_cast<const HttpResponse*>(Core::NetworkJob::response()); }
 
 protected:
-    virtual void register_on_ready_to_read(Function<void()>) override;
-    virtual void register_on_ready_to_write(Function<void()>) override;
-    virtual bool can_read_line() override;
-    virtual ByteBuffer read_line(size_t) override;
-    virtual bool can_read() const override;
-    virtual ByteBuffer receive(size_t) override;
-    virtual bool eof() const override;
-    virtual bool write(const ByteBuffer&) override;
-    virtual bool is_established() const override { return true; }
+    void finish_up();
+    void on_socket_connected();
+    virtual void register_on_ready_to_read(Function<void()>) = 0;
+    virtual void register_on_ready_to_write(Function<void()>) = 0;
+    // FIXME: I want const but Core::IODevice::can_read_line populates a cache with this
+    virtual bool can_read_line() = 0;
+    virtual ByteBuffer read_line(size_t) = 0;
+    virtual bool can_read() const = 0;
+    virtual ByteBuffer receive(size_t) = 0;
+    virtual bool eof() const = 0;
+    virtual bool write(const ByteBuffer&) = 0;
+    virtual bool is_established() const = 0;
+    virtual bool should_fail_on_empty_payload() const { return true; }
+    virtual void read_while_data_available(Function<IterationDecision()> read) { read(); };
 
-private:
-    RefPtr<Core::Socket> m_socket;
+    enum class State {
+        InStatus,
+        InHeaders,
+        InBody,
+        Finished,
+    };
+
+    HttpRequest m_request;
+    State m_state { State::InStatus };
+    int m_code { -1 };
+    HashMap<String, String> m_headers;
+    Vector<ByteBuffer> m_received_buffers;
+    size_t m_received_size { 0 };
+    bool m_sent_data { 0 };
 };
 
 }

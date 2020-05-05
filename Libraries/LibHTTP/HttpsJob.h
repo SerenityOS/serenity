@@ -30,43 +30,41 @@
 #include <LibCore/NetworkJob.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
+#include <LibHTTP/Job.h>
 #include <LibTLS/TLSv12.h>
 
 namespace HTTP {
 
-class HttpsJob final : public Core::NetworkJob {
+class HttpsJob final : public Job {
     C_OBJECT(HttpsJob)
 public:
-    explicit HttpsJob(const HttpRequest&);
-    virtual ~HttpsJob() override;
+    explicit HttpsJob(const HttpRequest& request)
+        : Job(request)
+    {
+    }
+
+    virtual ~HttpsJob() override
+    {
+    }
 
     virtual void start() override;
     virtual void shutdown() override;
 
-    HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
-    const HttpResponse* response() const { return static_cast<const HttpResponse*>(Core::NetworkJob::response()); }
+protected:
+    virtual void register_on_ready_to_read(Function<void()>) override;
+    virtual void register_on_ready_to_write(Function<void()>) override;
+    virtual bool can_read_line() override;
+    virtual ByteBuffer read_line(size_t) override;
+    virtual bool can_read() const override;
+    virtual ByteBuffer receive(size_t) override;
+    virtual bool eof() const override;
+    virtual bool write(const ByteBuffer&) override;
+    virtual bool is_established() const override { return m_socket->is_established(); }
+    virtual bool should_fail_on_empty_payload() const override { return false; }
+    virtual void read_while_data_available(Function<IterationDecision()>) override;
 
 private:
-    RefPtr<TLS::TLSv12> construct_socket() { return TLS::TLSv12::construct(this); }
-    void on_socket_connected();
-    void finish_up();
-    void read_body(TLS::TLSv12&);
-
-    enum class State {
-        InStatus,
-        InHeaders,
-        InBody,
-        Finished,
-    };
-
-    HttpRequest m_request;
     RefPtr<TLS::TLSv12> m_socket;
-    State m_state { State::InStatus };
-    int m_code { -1 };
-    HashMap<String, String> m_headers;
-    Vector<ByteBuffer> m_received_buffers;
-    size_t m_received_size { 0 };
-    bool m_sent_data { false };
     bool m_queued_finish { false };
 };
 

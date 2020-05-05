@@ -30,5 +30,6 @@ class HttpRequest;
 class HttpResponse;
 class HttpJob;
 class HttpsJob;
+class Job;
 
 }
