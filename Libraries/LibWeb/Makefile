@@ -89,7 +89,8 @@ LIBWEB_OBJS = \
     Layout/LineBoxFragment.o \
     Parser/CSSParser.o \
     Parser/HTMLParser.o \
-    ResourceLoader.o
+    ResourceLoader.o \
+    URLEncoder.o
 
 EXTRA_SOURCES = \
     CSS/DefaultStyleSheetSource.cpp \
