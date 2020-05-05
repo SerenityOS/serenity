@@ -60,7 +60,6 @@ String CodeBlock::render_to_html() const
     else
         builder.appendf("<code style=\"white-space: pre;\" class=\"%s\">", style_language.characters());
 
-    // TODO: This should also be done in other places.
     builder.append(escape_html_entities(m_code));
 
     builder.append("</code>");
