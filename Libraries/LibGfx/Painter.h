@@ -55,6 +55,7 @@ public:
     void draw_ellipse_intersecting(const Rect&, Color, int thickness = 1);
     void set_pixel(const Point&, Color);
     void draw_line(const Point&, const Point&, Color, int thickness = 1, bool dotted = false);
+    void draw_quadratic_bezier_curve(const Point& control_point, const Point&, const Point&, Color, int thickness = 1, bool dotted = false);
     void draw_scaled_bitmap(const Rect& dst_rect, const Gfx::Bitmap&, const Rect& src_rect);
     void blit(const Point&, const Gfx::Bitmap&, const Rect& src_rect, float opacity = 1.0f);
     void blit_dimmed(const Point&, const Gfx::Bitmap&, const Rect& src_rect);

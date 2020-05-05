@@ -59,6 +59,9 @@ String Path::to_string() const
         case Segment::Type::LineTo:
             builder.append("LineTo");
             break;
+        case Segment::Type::QuadraticBezierCurveTo:
+            builder.append("QuadraticBezierCurveTo");
+            break;
         case Segment::Type::Invalid:
             builder.append("Invalid");
             break;
