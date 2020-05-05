@@ -234,11 +234,16 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
             if (RefPtr<HTMLAnchorElement> link = node->enclosing_link_element()) {
                 dbg() << "HtmlView: clicking on a link to " << link->href();
 
-                if (link->href().starts_with("javascript:")) {
-                    run_javascript_url(link->href());
-                } else {
-                    if (on_link_click)
-                        on_link_click(link->href(), link->target(), event.modifiers());
+                if (event.button() == GUI::MouseButton::Left) {
+                    if (link->href().starts_with("javascript:")) {
+                        run_javascript_url(link->href());
+                    } else {
+                        if (on_link_click)
+                            on_link_click(link->href(), link->target(), event.modifiers());
+                    }
+                } else if (event.button() == GUI::MouseButton::Right) {
+                    if (on_link_context_menu_request)
+                        on_link_context_menu_request(link->href(), event.position().translated(screen_relative_rect().location()));
                 }
             } else {
                 if (event.button() == GUI::MouseButton::Left) {
