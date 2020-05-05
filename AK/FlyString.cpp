@@ -63,6 +63,10 @@ FlyString::FlyString(const String& string)
 {
     if (string.is_null())
         return;
+    if (string.impl()->is_fly()) {
+        m_impl = string.impl();
+        return;
+    }
     auto it = fly_impls().find(const_cast<StringImpl*>(string.impl()));
     if (it == fly_impls().end()) {
         fly_impls().set(const_cast<StringImpl*>(string.impl()));
