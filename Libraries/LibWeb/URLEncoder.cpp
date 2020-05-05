@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,54 +25,38 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibWeb/DOM/HTMLFormElement.h>
-#include <LibWeb/DOM/HTMLInputElement.h>
-#include <LibWeb/Frame.h>
-#include <LibWeb/HtmlView.h>
 #include <LibWeb/URLEncoder.h>
 
 namespace Web {
 
-HTMLFormElement::HTMLFormElement(Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+String url_encode(StringView view)
 {
-}
+    StringBuilder builder;
 
-HTMLFormElement::~HTMLFormElement()
-{
-}
-
-void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
-{
-    if (action().is_null()) {
-        dbg() << "Unsupported form action ''";
-        return;
-    }
-
-    auto effective_method = method().to_lowercase();
-    if (effective_method != "get") {
-        if (effective_method == "post" || effective_method == "dialog") {
-            dbg() << "Unsupported form method '" << method() << "'";
-            return;
+    for (char c : view) {
+        if (c == ' ') {
+            builder.append('+');
+        } else if (c == '*' || c == '-' || c == '.' || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= 'a' && c <= 'z')) {
+            builder.append(c);
+        } else {
+            builder.appendf("%%%02X", c);
         }
-        effective_method = "get";
     }
 
-    URL url(document().complete_url(action()));
+    return builder.to_string();
+}
 
-    Vector<URLQueryParam> parameters;
-
-    for_each_in_subtree_of_type<HTMLInputElement>([&](auto& node) {
-        auto& input = to<HTMLInputElement>(node);
-        if (!input.name().is_null() && (input.type() != "submit" || &input == submitter))
-            parameters.append({ input.name(), input.value() });
-        return IterationDecision::Continue;
-    });
-
-    url.set_query(url_encode(parameters));
-
-    // FIXME: We shouldn't let the form just do this willy-nilly.
-    document().frame()->html_view()->load(url);
+String url_encode(Vector<URLQueryParam> pairs)
+{
+    StringBuilder builder;
+    for (size_t i = 0; i < pairs.size(); ++i) {
+        builder.append(url_encode(pairs[i].name));
+        builder.append('=');
+        builder.append(url_encode(pairs[i].value));
+        if (i != pairs.size() - 1)
+            builder.append('&');
+    }
+    return builder.to_string();
 }
 
 }
