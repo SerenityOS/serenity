@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibGUI/Model.h>
 
@@ -38,6 +39,8 @@ public:
     }
 
     virtual ~ManualModel() override {};
+
+    Optional<GUI::ModelIndex> index_from_path(const StringView&) const;
 
     String page_path(const GUI::ModelIndex&) const;
     String page_and_section(const GUI::ModelIndex&) const;

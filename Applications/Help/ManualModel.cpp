@@ -47,6 +47,24 @@ ManualModel::ManualModel()
     m_page_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
 }
 
+Optional<GUI::ModelIndex> ManualModel::index_from_path(const StringView& path) const
+{
+    for (int section = 0; section < row_count(); ++section) {
+        auto parent_index = index(section, 0);
+        for (int row = 0; row < row_count(parent_index); ++row) {
+            auto child_index = index(row, 0, parent_index);
+            auto* node = static_cast<const ManualNode*>(child_index.internal_data());
+            if (!node->is_page())
+                continue;
+            auto* page = static_cast<const ManualPageNode*>(node);
+            if (page->path() != path)
+                continue;
+            return child_index;
+        }
+    }
+    return {};
+}
+
 String ManualModel::page_path(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
