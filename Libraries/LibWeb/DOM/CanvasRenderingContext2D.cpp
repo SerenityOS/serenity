@@ -165,10 +165,13 @@ void CanvasRenderingContext2D::line_to(float x, float y)
     m_path.line_to({ x, y });
 }
 
+void CanvasRenderingContext2D::quadratic_curve_to(float cx, float cy, float x, float y)
+{
+    m_path.quadratic_bezier_curve_to({ cx, cy }, { x, y });
+}
+
 void CanvasRenderingContext2D::stroke()
 {
-    dbg() << "stroke path " << m_path;
-
     auto painter = this->painter();
     if (!painter)
         return;
