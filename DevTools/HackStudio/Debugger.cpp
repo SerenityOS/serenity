@@ -35,7 +35,7 @@ Debugger& Debugger::the()
 }
 
 void Debugger::initialize(
-    Function<void(const PtraceRegisters&)> on_stop_callback,
+    Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
     Function<void()> on_continue_callback,
     Function<void()> on_exit_callback)
 {
@@ -48,7 +48,7 @@ bool Debugger::is_initialized()
 }
 
 Debugger::Debugger(
-    Function<void(const PtraceRegisters&)> on_stop_callback,
+    Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
     Function<void()> on_continue_callback,
     Function<void()> on_exit_callback)
     : m_on_stopped_callback(move(on_stop_callback))
@@ -138,13 +138,17 @@ int Debugger::debugger_loop()
             in_single_step_mode = false;
         }
 
-        m_on_stopped_callback(regs);
+        auto control_passed_to_user = m_on_stopped_callback(regs);
 
-        pthread_mutex_lock(&m_continue_mutex);
-        pthread_cond_wait(&m_continue_cond, &m_continue_mutex);
-        pthread_mutex_unlock(&m_continue_mutex);
+        if (control_passed_to_user == HasControlPassedToUser::Yes) {
+            pthread_mutex_lock(&m_continue_mutex);
+            pthread_cond_wait(&m_continue_cond, &m_continue_mutex);
+            pthread_mutex_unlock(&m_continue_mutex);
 
-        m_on_continue_callback();
+            m_on_continue_callback();
+        } else {
+            m_continue_type = ContinueType::Continue;
+        }
 
         if (m_continue_type == ContinueType::Continue) {
             return DebugSession::DebugDecision::Continue;
