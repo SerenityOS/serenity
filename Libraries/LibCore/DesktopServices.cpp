@@ -88,6 +88,9 @@ bool open_file_url(const URL& url)
     if (url.path().to_lowercase().ends_with(".wav"))
         return spawn("/bin/SoundPlayer", url.path());
 
+    if (url.path().to_lowercase().ends_with(".font"))
+        return spawn("/bin/FontEditor", url.path());
+
     return spawn("/bin/TextEditor", url.path());
 }
 
