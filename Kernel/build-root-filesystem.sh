@@ -93,6 +93,7 @@ printf "installing users... "
 mkdir -p mnt/root
 mkdir -p mnt/home/anon
 mkdir -p mnt/home/anon/Desktop
+mkdir -p mnt/home/anon/Downloads
 mkdir -p mnt/home/nona
 cp ../ReadMe.md mnt/home/anon/
 cp -r ../Libraries/LibJS/Tests mnt/home/anon/js-tests
