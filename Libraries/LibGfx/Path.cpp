@@ -68,6 +68,10 @@ String Path::to_string() const
         }
         builder.append('(');
         builder.append(segment.point.to_string());
+        if (segment.through.has_value()) {
+            builder.append(", ");
+            builder.append(segment.through.value().to_string());
+        }
         builder.append(')');
 
         builder.append(' ');
