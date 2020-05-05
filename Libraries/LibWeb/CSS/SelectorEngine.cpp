@@ -56,6 +56,9 @@ bool matches(const Selector::SimpleSelector& component, const Element& element)
         if (!matches_hover_pseudo_class(element))
             return false;
         break;
+    case Selector::SimpleSelector::PseudoClass::Focus:
+        // FIXME: Implement matches_focus_pseudo_class(element)
+        return false;
     case Selector::SimpleSelector::PseudoClass::FirstChild:
         if (element.previous_element_sibling())
             return false;
