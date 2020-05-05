@@ -69,6 +69,9 @@ private:
     RefPtr<GUI::MenuBar> m_menubar;
     RefPtr<GUI::ToolBarContainer> m_toolbar_container;
 
+    RefPtr<GUI::Menu> m_link_context_menu;
+    String m_link_context_menu_href;
+
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;
 

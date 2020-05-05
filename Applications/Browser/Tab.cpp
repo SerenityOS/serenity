@@ -136,6 +136,19 @@ Tab::Tab()
         }
     };
 
+    m_link_context_menu = GUI::Menu::construct();
+    m_link_context_menu->add_action(GUI::Action::create("Open", [this](auto&) {
+        m_html_widget->on_link_click(m_link_context_menu_href, "", 0);
+    }));
+    m_link_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
+        m_html_widget->on_link_click(m_link_context_menu_href, "_blank", 0);
+    }));
+
+    m_html_widget->on_link_context_menu_request = [this](auto& href, auto& screen_position) {
+        m_link_context_menu_href = href;
+        m_link_context_menu->popup(screen_position);
+    };
+
     m_html_widget->on_title_change = [this](auto& title) {
         if (title.is_null()) {
             m_title = m_html_widget->main_frame().document()->url().to_string();
