@@ -10,7 +10,6 @@ for f in $(find . -path ./Root -prune -o \
     -path ./Ports -prune -o \
     -path ./.git -prune -o \
     -path ./Toolchain -prune -o \
-    -path ./Libraries/LibJS/Tests -prune -o \
     -type f | sort -u); do
     if file "$f" | grep --quiet shell; then
         {
