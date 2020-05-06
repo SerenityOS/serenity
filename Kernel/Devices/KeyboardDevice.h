@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include "KeyCode.h"
 #include <AK/CircularQueue.h>
 #include <AK/DoublyLinkedList.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/KeyCode.h>
 
 namespace Kernel {
 

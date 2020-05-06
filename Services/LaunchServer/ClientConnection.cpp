@@ -25,10 +25,10 @@
  */
 
 #include "ClientConnection.h"
-#include "LaunchClientEndpoint.h"
 #include "Launcher.h"
 #include <AK/HashMap.h>
 #include <AK/URL.h>
+#include <LaunchServer/LaunchClientEndpoint.h>
 
 namespace LaunchServer {
 

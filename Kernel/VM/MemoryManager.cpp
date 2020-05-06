@@ -24,14 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CMOS.h"
-#include "Process.h"
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/ContiguousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>

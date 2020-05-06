@@ -1,5 +1,5 @@
 os: linux
-dist: xenial
+dist: bionic
 
 language: cpp
 
@@ -23,20 +23,26 @@ notifications:
 before_install:
 - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 - sudo apt-get update -qq
-- sudo apt-get install -y g++-8 libstdc++-8-dev cmake shellcheck libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
+- sudo apt-get install -y g++-8 libstdc++-8-dev shellcheck libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
 - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
 - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
+- sudo python2 -m pip install cmake
+- export PATH=/usr/local/bin/:$PATH
+- cmake --version
 
 script:
 - export SERENITY_ROOT=$(pwd)
+- Meta/lint-shell-scripts.sh
+- Meta/check-license-headers.sh
 - cd Toolchain
 - TRY_USE_LOCAL_TOOLCHAIN=y ./BuildIt.sh
-- cd ../Kernel
-- ./makeall.sh
-- ../Meta/lint-shell-scripts.sh
-- ../Meta/check-license-headers.sh
-- ../Meta/Lagom/build-js.sh
-- cd ../Libraries/LibJS/Tests
-- ./run-tests
-- cd ../../../Toolchain/Cache
+- cd "$SERENITY_ROOT"
+- mkdir -p Build
+- cd Build
+- cmake .. -DBUILD_LAGOM=1
+- make
+- make test
+- cd "$SERENITY_ROOT"/Libraries/LibJS/Tests
+- ./run-tests.sh
+- cd "$SERENITY_ROOT"/Toolchain/Cache
 - du -ch * || true
