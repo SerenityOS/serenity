@@ -1,0 +1,55 @@
+set(SOURCES
+    AST.cpp
+    Console.cpp
+    Heap/Handle.cpp
+    Heap/HeapBlock.cpp
+    Heap/Heap.cpp
+    Interpreter.cpp
+    Lexer.cpp
+    Parser.cpp
+    Runtime/ArrayConstructor.cpp
+    Runtime/Array.cpp
+    Runtime/ArrayPrototype.cpp
+    Runtime/BooleanConstructor.cpp
+    Runtime/BooleanObject.cpp
+    Runtime/BooleanPrototype.cpp
+    Runtime/BoundFunction.cpp
+    Runtime/Cell.cpp
+    Runtime/ConsoleObject.cpp
+    Runtime/DateConstructor.cpp
+    Runtime/Date.cpp
+    Runtime/DatePrototype.cpp
+    Runtime/ErrorConstructor.cpp
+    Runtime/Error.cpp
+    Runtime/ErrorPrototype.cpp
+    Runtime/Exception.cpp
+    Runtime/FunctionConstructor.cpp
+    Runtime/Function.cpp
+    Runtime/FunctionPrototype.cpp
+    Runtime/GlobalObject.cpp
+    Runtime/LexicalEnvironment.cpp
+    Runtime/MarkedValueList.cpp
+    Runtime/MathObject.cpp
+    Runtime/NativeFunction.cpp
+    Runtime/NativeProperty.cpp
+    Runtime/NumberConstructor.cpp
+    Runtime/NumberObject.cpp
+    Runtime/NumberPrototype.cpp
+    Runtime/ObjectConstructor.cpp
+    Runtime/Object.cpp
+    Runtime/ObjectPrototype.cpp
+    Runtime/PrimitiveString.cpp
+    Runtime/Reference.cpp
+    Runtime/ReflectObject.cpp
+    Runtime/ScriptFunction.cpp
+    Runtime/Shape.cpp
+    Runtime/StringConstructor.cpp
+    Runtime/StringObject.cpp
+    Runtime/StringPrototype.cpp
+    Runtime/Uint8ClampedArray.cpp
+    Runtime/Value.cpp
+    Token.cpp
+)
+
+serenity_lib(LibJS js)
+target_link_libraries(LibJS LibM LibCore)

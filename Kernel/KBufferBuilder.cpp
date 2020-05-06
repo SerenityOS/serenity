@@ -26,7 +26,7 @@
 
 #include <AK/PrintfImplementation.h>
 #include <AK/StdLibExtras.h>
-#include <KBufferBuilder.h>
+#include <Kernel/KBufferBuilder.h>
 #include <stdarg.h>
 
 namespace Kernel {

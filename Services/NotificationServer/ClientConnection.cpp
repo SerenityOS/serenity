@@ -25,9 +25,9 @@
  */
 
 #include "ClientConnection.h"
-#include "NotificationClientEndpoint.h"
 #include "NotificationWindow.h"
 #include <AK/HashMap.h>
+#include <NotificationServer/NotificationClientEndpoint.h>
 
 namespace NotificationServer {
 

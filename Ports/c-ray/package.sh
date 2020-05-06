@@ -12,6 +12,6 @@ configure() {
 }
 
 install() {
-	mkdir -p $SERENITY_ROOT/Root/home/anon/c-ray
-	cp -r c-ray-master/* $SERENITY_ROOT/Root/home/anon/c-ray
+	mkdir -p $SERENITY_ROOT/Build/Root/home/anon/c-ray
+	cp -r c-ray-master/* $SERENITY_ROOT/Build/Root/home/anon/c-ray
 }

@@ -36,8 +36,8 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
-#include <Libraries/LibLine/Span.h>
-#include <Libraries/LibLine/Style.h>
+#include <LibLine/Span.h>
+#include <LibLine/Style.h>
 #include <sys/stat.h>
 #include <termios.h>
 
