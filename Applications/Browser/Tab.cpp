@@ -165,6 +165,10 @@ Tab::Tab()
         m_link_context_menu->popup(screen_position);
     };
 
+    m_html_widget->on_link_middle_click = [this](auto& href) {
+        m_html_widget->on_link_click(href, "_blank", 0);
+    };
+
     m_html_widget->on_title_change = [this](auto& title) {
         if (title.is_null()) {
             m_title = m_html_widget->main_frame().document()->url().to_string();
