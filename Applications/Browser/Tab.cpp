@@ -218,23 +218,17 @@ Tab::Tab()
     auto& inspect_menu = m_menubar->add_menu("Inspect");
     inspect_menu.add_action(GUI::Action::create(
         "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
-            String filename_to_open;
-            char tmp_filename[] = "/tmp/view-source.XXXXXX";
             ASSERT(m_html_widget->document());
-            if (m_html_widget->document()->url().protocol() == "file") {
-                filename_to_open = m_html_widget->document()->url().path();
-            } else {
-                int fd = mkstemp(tmp_filename);
-                ASSERT(fd >= 0);
-                auto source = m_html_widget->document()->source();
-                write(fd, source.characters(), source.length());
-                close(fd);
-                filename_to_open = tmp_filename;
-            }
-            if (fork() == 0) {
-                execl("/bin/TextEditor", "TextEditor", filename_to_open.characters(), nullptr);
-                ASSERT_NOT_REACHED();
-            }
+            auto url = m_html_widget->document()->url().to_string();
+            auto source = m_html_widget->document()->source();
+            auto window = GUI::Window::construct();
+            auto& editor = window->set_main_widget<GUI::TextEditor>();
+            editor.set_text(source);
+            editor.set_readonly(true);
+            window->set_rect(150, 150, 640, 480);
+            window->set_title(url);
+            window->show();
+            (void)window.leak_ref();
         },
         this));
     inspect_menu.add_action(GUI::Action::create(
