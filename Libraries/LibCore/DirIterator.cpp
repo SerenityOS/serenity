@@ -33,7 +33,7 @@ DirIterator::DirIterator(const StringView& path, Flags flags)
     : m_path(path)
     , m_flags(flags)
 {
-    m_dir = opendir(String(path).characters());
+    m_dir = opendir(path.to_string().characters());
     if (!m_dir) {
         m_error = errno;
     }

@@ -167,7 +167,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Unable to open %s, error: %s\n", String(path).characters(), file->error_string());
+        fprintf(stderr, "Unable to open %s, error: %s\n", path.to_string().characters(), file->error_string());
         return nullptr;
     }
 

@@ -307,7 +307,7 @@ void FilePicker::on_file_return()
 bool FilePicker::file_exists(const StringView& path)
 {
     struct stat st;
-    int rc = stat(String(path).characters(), &st);
+    int rc = stat(path.to_string().characters(), &st);
     if (rc < 0) {
         if (errno == ENOENT)
             return false;
