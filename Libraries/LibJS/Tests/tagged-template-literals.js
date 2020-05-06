@@ -82,6 +82,18 @@ try {
     var rating = "great";
     assert(review`${name} is a ${rating} project!` === "**SerenityOS** is a _great_ project!");
 
+    const getTemplateObject = (...rest) => rest;
+    const getRawTemplateStrings = arr => arr.raw;
+
+    let o = getTemplateObject`foo\nbar`;
+    assert(Object.getOwnPropertyNames(o[0]).includes('raw'));
+
+    let raw = getRawTemplateStrings`foo${1 + 3}\nbar`;
+    assert(!Object.getOwnPropertyNames(raw).includes('raw'));
+    assert(raw.length === 2);
+    assert(raw[0] === 'foo');
+    assert(raw[1].length === 5 && raw[1] === '\\nbar');
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);

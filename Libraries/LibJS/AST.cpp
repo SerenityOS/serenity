@@ -1347,6 +1347,16 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter) const
         else
             arguments.append(value);
     }
+
+    auto* raw_strings = Array::create(interpreter.global_object());
+    for (auto& raw_string : m_template_literal->raw_strings()) {
+        auto value = raw_string.execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        raw_strings->elements().append(value);
+    }
+    strings->put("raw", raw_strings, 0);
+
     return interpreter.call(tag_function, js_undefined(), move(arguments));
 }
 

@@ -417,7 +417,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     case TokenType::BracketOpen:
         return parse_array_expression();
     case TokenType::TemplateLiteralStart:
-        return parse_template_literal();
+        return parse_template_literal(false);
     case TokenType::New:
         return parse_new_expression();
     default:
@@ -560,18 +560,29 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
     return create_ast_node<ArrayExpression>(move(elements));
 }
 
-NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal()
+NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
 {
     consume(TokenType::TemplateLiteralStart);
 
     NonnullRefPtrVector<Expression> expressions;
+    NonnullRefPtrVector<Expression> raw_strings;
+
+    auto append_empty_string = [&expressions, &raw_strings, is_tagged]() {
+        auto string_literal = create_ast_node<StringLiteral>("");
+        expressions.append(string_literal);
+        if (is_tagged)
+            raw_strings.append(string_literal);
+    };
 
     if (!match(TokenType::TemplateLiteralString))
-        expressions.append(create_ast_node<StringLiteral>(""));
+        append_empty_string();
 
     while (!match(TokenType::TemplateLiteralEnd) && !match(TokenType::UnterminatedTemplateLiteral)) {
         if (match(TokenType::TemplateLiteralString)) {
-            expressions.append(create_ast_node<StringLiteral>(consume().string_value()));
+            auto token = consume();
+            expressions.append(create_ast_node<StringLiteral>(token.string_value()));
+            if (is_tagged)
+                raw_strings.append(create_ast_node<StringLiteral>(token.value()));
         } else if (match(TokenType::TemplateLiteralExprStart)) {
             consume(TokenType::TemplateLiteralExprStart);
             if (match(TokenType::TemplateLiteralExprEnd)) {
@@ -587,7 +598,7 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal()
             consume(TokenType::TemplateLiteralExprEnd);
 
             if (!match(TokenType::TemplateLiteralString))
-                expressions.append(create_ast_node<StringLiteral>(""));
+                append_empty_string();
         }
     }
 
@@ -597,6 +608,8 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal()
         consume(TokenType::TemplateLiteralEnd);
     }
 
+    if (is_tagged)
+        return create_ast_node<TemplateLiteral>(expressions, raw_strings);
     return create_ast_node<TemplateLiteral>(expressions);
 }
 
@@ -604,7 +617,7 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
 {
     auto expression = parse_primary_expression();
     while (match(TokenType::TemplateLiteralStart)) {
-        auto template_literal = parse_template_literal();
+        auto template_literal = parse_template_literal(true);
         expression = create_ast_node<TaggedTemplateLiteral>(move(expression), move(template_literal));
     }
     while (match_secondary_expression()) {
@@ -617,7 +630,7 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
         Associativity new_associativity = operator_associativity(m_parser_state.m_current_token.type());
         expression = parse_secondary_expression(move(expression), new_precedence, new_associativity);
         while (match(TokenType::TemplateLiteralStart)) {
-            auto template_literal = parse_template_literal();
+            auto template_literal = parse_template_literal(true);
             expression = create_ast_node<TaggedTemplateLiteral>(move(expression), move(template_literal));
         }
     }
