@@ -264,4 +264,6 @@ Optional<size_t> StringView::find_last_of(const StringView& view) const
     return {};
 }
 
+String StringView::to_string() const { return String { *this }; }
+
 }
