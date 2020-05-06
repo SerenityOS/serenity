@@ -1277,8 +1277,7 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
 void TemplateLiteral::dump(int indent) const
 {
     ASTNode::dump(indent);
-
-    for (auto& expression : expressions())
+    for (auto& expression : m_expressions)
         expression.dump(indent + 1);
 }
 
@@ -1286,7 +1285,7 @@ Value TemplateLiteral::execute(Interpreter& interpreter) const
 {
     StringBuilder string_builder;
 
-    for (auto& expression : expressions()) {
+    for (auto& expression : m_expressions) {
         auto expr = expression.execute(interpreter);
         if (interpreter.exception())
             return {};
@@ -1294,6 +1293,45 @@ Value TemplateLiteral::execute(Interpreter& interpreter) const
     }
 
     return js_string(interpreter, string_builder.build());
+}
+
+void TaggedTemplateLiteral::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent + 1);
+    printf("(Tag)\n");
+    m_tag->dump(indent + 2);
+    print_indent(indent + 1);
+    printf("(Template Literal)\n");
+    m_template_literal->dump(indent + 2);
+}
+
+Value TaggedTemplateLiteral::execute(Interpreter& interpreter) const
+{
+    auto tag = m_tag->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (!tag.is_function()) {
+        interpreter.throw_exception<TypeError>(String::format("%s is not a function", tag.to_string().characters()));
+        return {};
+    }
+    auto& tag_function = tag.as_function();
+    auto& expressions = m_template_literal->expressions();
+    auto* strings = Array::create(interpreter.global_object());
+    MarkedValueList arguments(interpreter.heap());
+    arguments.append(strings);
+    for (size_t i = 0; i < expressions.size(); ++i) {
+        auto value = expressions[i].execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        // tag`${foo}`             -> "", foo, ""                -> tag(["", ""], foo)
+        // tag`foo${bar}baz${qux}` -> "foo", bar, "baz", qux, "" -> tag(["foo", "baz", ""], bar, qux)
+        if (i % 2 == 0)
+            strings->elements().append(value);
+        else
+            arguments.append(value);
+    }
+    return interpreter.call(tag_function, js_undefined(), move(arguments));
 }
 
 void TryStatement::dump(int indent) const

@@ -560,6 +560,9 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal()
 
     NonnullRefPtrVector<Expression> expressions;
 
+    if (!match(TokenType::TemplateLiteralString))
+        expressions.append(create_ast_node<StringLiteral>(""));
+
     while (!match(TokenType::TemplateLiteralEnd) && !match(TokenType::UnterminatedTemplateLiteral)) {
         if (match(TokenType::TemplateLiteralString)) {
             expressions.append(create_ast_node<StringLiteral>(consume().string_value()));
@@ -576,6 +579,9 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal()
                 return create_ast_node<TemplateLiteral>(expressions);
             }
             consume(TokenType::TemplateLiteralExprEnd);
+
+            if (!match(TokenType::TemplateLiteralString))
+                expressions.append(create_ast_node<StringLiteral>(""));
         }
     }
 
@@ -591,6 +597,10 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal()
 NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)
 {
     auto expression = parse_primary_expression();
+    while (match(TokenType::TemplateLiteralStart)) {
+        auto template_literal = parse_template_literal();
+        expression = create_ast_node<TaggedTemplateLiteral>(move(expression), move(template_literal));
+    }
     while (match_secondary_expression()) {
         int new_precedence = operator_precedence(m_parser_state.m_current_token.type());
         if (new_precedence < min_precedence)
@@ -600,6 +610,10 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
 
         Associativity new_associativity = operator_associativity(m_parser_state.m_current_token.type());
         expression = parse_secondary_expression(move(expression), new_precedence, new_associativity);
+        while (match(TokenType::TemplateLiteralStart)) {
+            auto template_literal = parse_template_literal();
+            expression = create_ast_node<TaggedTemplateLiteral>(move(expression), move(template_literal));
+        }
     }
     return expression;
 }

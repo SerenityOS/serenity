@@ -786,6 +786,24 @@ private:
     const NonnullRefPtrVector<Expression> m_expressions;
 };
 
+class TaggedTemplateLiteral final : public Expression {
+public:
+    TaggedTemplateLiteral(NonnullRefPtr<Expression> tag, NonnullRefPtr<TemplateLiteral> template_literal)
+        : m_tag(move(tag))
+        , m_template_literal(move(template_literal))
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "TaggedTemplateLiteral"; }
+
+    const NonnullRefPtr<Expression> m_tag;
+    const NonnullRefPtr<TemplateLiteral> m_template_literal;
+};
+
 class MemberExpression final : public Expression {
 public:
     MemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property, bool computed = false)
