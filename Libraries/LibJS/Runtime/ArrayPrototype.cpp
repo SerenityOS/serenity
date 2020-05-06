@@ -76,11 +76,11 @@ static Function* callback_from_args(Interpreter& interpreter, const String& name
         return nullptr;
     }
     auto callback = interpreter.argument(0);
-    if (!callback.is_object() || !callback.as_object().is_function()) {
+    if (!callback.is_function()) {
         interpreter.throw_exception<TypeError>(String::format("%s is not a function", callback.to_string().characters()));
         return nullptr;
     }
-    return static_cast<Function*>(&callback.as_object());
+    return &callback.as_function();
 }
 
 Value ArrayPrototype::filter(Interpreter& interpreter)

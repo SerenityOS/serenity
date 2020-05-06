@@ -114,8 +114,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     ASSERT(!callee.is_empty());
 
-    if (!callee.is_object()
-        || !callee.as_object().is_function()
+    if (!callee.is_function()
         || (is_new_expression() && (callee.as_object().is_native_function() && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
         String error_message;
         auto call_type = is_new_expression() ? "constructor" : "function";
@@ -132,7 +131,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
         return interpreter.throw_exception<TypeError>(error_message);
     }
 
-    auto& function = static_cast<Function&>(callee.as_object());
+    auto& function = callee.as_function();
 
     MarkedValueList arguments(interpreter.heap());
     arguments.values().append(function.bound_arguments());
@@ -469,7 +468,7 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         case Value::Type::String:
             return js_string(interpreter, "string");
         case Value::Type::Object:
-            if (lhs_result.as_object().is_function())
+            if (lhs_result.is_function())
                 return js_string(interpreter, "function");
             return js_string(interpreter, "object");
         case Value::Type::Boolean:

@@ -47,11 +47,11 @@ static Object* get_target_object_from(Interpreter& interpreter, const String& na
 static Function* get_target_function_from(Interpreter& interpreter, const String& name)
 {
     auto target = interpreter.argument(0);
-    if (!target.is_object() || !target.as_object().is_function()) {
+    if (!target.is_function()) {
         interpreter.throw_exception<TypeError>(String::format("First argument of Reflect.%s() must be a function", name.characters()));
         return nullptr;
     }
-    return static_cast<Function*>(&target.as_object());
+    return &target.as_function();
 }
 
 static void prepare_arguments_list(Interpreter& interpreter, Value value, MarkedValueList* arguments)
@@ -121,13 +121,12 @@ Value ReflectObject::construct(Interpreter& interpreter)
     auto* new_target = target;
     if (interpreter.argument_count() > 2) {
         auto new_target_value = interpreter.argument(2);
-        if (!new_target_value.is_object()
-            || !new_target_value.as_object().is_function()
+        if (!new_target_value.is_function()
             || (new_target_value.as_object().is_native_function() && !static_cast<NativeFunction&>(new_target_value.as_object()).has_constructor())) {
             interpreter.throw_exception<TypeError>("Optional third argument of Reflect.construct() must be a constructor");
             return {};
         }
-        new_target = static_cast<Function*>(&new_target_value.as_object());
+        new_target = &new_target_value.as_function();
     }
     return interpreter.construct(*target, *new_target, move(arguments));
 }
