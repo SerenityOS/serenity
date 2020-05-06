@@ -80,7 +80,7 @@ ToolboxWidget::ToolboxWidget()
         button.set_checkable(true);
         button.set_exclusive(true);
 
-        button.set_icon(Gfx::Bitmap::load_from_file(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
+        button.set_icon(Gfx::Bitmap::load_from_file(String::format("/res/icons/paintbrush/%s.png", icon_name.to_string().characters())));
 
         button.on_checked = [button = &button](auto checked) {
             if (checked)

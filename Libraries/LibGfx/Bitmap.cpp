@@ -194,7 +194,7 @@ Bitmap::~Bitmap()
 void Bitmap::set_mmap_name(const StringView& name)
 {
     ASSERT(m_needs_munmap);
-    ::set_mmap_name(m_data, size_in_bytes(), String(name).characters());
+    ::set_mmap_name(m_data, size_in_bytes(), name.to_string().characters());
 }
 
 void Bitmap::fill(Color color)

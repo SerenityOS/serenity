@@ -870,7 +870,7 @@ void IRCClient::handle_user_command(const String& input)
             return;
         int command_length = command.length() + 1;
         StringView raw_message = input.view().substring_view(command_length, input.view().length() - command_length);
-        send(String::format("%s\r\n", String(raw_message).characters()));
+        send(String::format("%s\r\n", raw_message.to_string().characters()));
         return;
     }
     if (command == "/NICK") {

@@ -51,7 +51,7 @@ int parse_options(const StringView& options)
         else if (part == "bind")
             flags |= MS_BIND;
         else
-            fprintf(stderr, "Ignoring invalid option: %s\n", String(part).characters());
+            fprintf(stderr, "Ignoring invalid option: %s\n", part.to_string().characters());
     }
     return flags;
 }
