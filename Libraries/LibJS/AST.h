@@ -779,7 +779,13 @@ private:
 class TemplateLiteral final : public Expression {
 public:
     TemplateLiteral(NonnullRefPtrVector<Expression> expressions)
-        : m_expressions(expressions)
+        : m_expressions(move(expressions))
+    {
+    }
+
+    TemplateLiteral(NonnullRefPtrVector<Expression> expressions, NonnullRefPtrVector<Expression> raw_strings)
+        : m_expressions(move(expressions))
+        , m_raw_strings(move(raw_strings))
     {
     }
 
@@ -787,11 +793,13 @@ public:
     virtual void dump(int indent) const override;
 
     const NonnullRefPtrVector<Expression>& expressions() const { return m_expressions; }
+    const NonnullRefPtrVector<Expression>& raw_strings() const { return m_raw_strings; }
 
 private:
     virtual const char* class_name() const override { return "TemplateLiteral"; }
 
     const NonnullRefPtrVector<Expression> m_expressions;
+    const NonnullRefPtrVector<Expression> m_raw_strings;
 };
 
 class TaggedTemplateLiteral final : public Expression {
