@@ -1,0 +1,87 @@
+set(SOURCES
+    AboutDialog.cpp
+    AbstractButton.cpp
+    AbstractTableView.cpp
+    AbstractView.cpp
+    Action.cpp
+    ActionGroup.cpp
+    Application.cpp
+    BoxLayout.cpp
+    Button.cpp
+    CheckBox.cpp
+    Clipboard.cpp
+    ColorInput.cpp
+    ColorPicker.cpp
+    ColumnsView.cpp
+    ComboBox.cpp
+    Command.cpp
+    CppLexer.cpp
+    CppSyntaxHighlighter.cpp
+    Desktop.cpp
+    Dialog.cpp
+    DisplayLink.cpp
+    DragOperation.cpp
+    Event.cpp
+    FilePicker.cpp
+    FileSystemModel.cpp
+    FontDatabase.cpp
+    Frame.cpp
+    GroupBox.cpp
+    Icon.cpp
+    IconView.cpp
+    INILexer.cpp
+    INISyntaxHighlighter.cpp
+    InputBox.cpp
+    JsonArrayModel.cpp
+    JSSyntaxHighlighter.cpp
+    Label.cpp
+    Layout.cpp
+    LazyWidget.cpp
+    ListView.cpp
+    MenuBar.cpp
+    Menu.cpp
+    MenuItem.cpp
+    MessageBox.cpp
+    Model.cpp
+    ModelIndex.cpp
+    ModelSelection.cpp
+    MultiView.cpp
+    Notification.cpp
+    Painter.cpp
+    ProgressBar.cpp
+    RadioButton.cpp
+    ResizeCorner.cpp
+    ScrollableWidget.cpp
+    ScrollBar.cpp
+    Shortcut.cpp
+    Slider.cpp
+    SortingProxyModel.cpp
+    SpinBox.cpp
+    Splitter.cpp
+    StackWidget.cpp
+    StatusBar.cpp
+    SyntaxHighlighter.cpp
+    TableView.cpp
+    TabWidget.cpp
+    TextBox.cpp
+    TextDocument.cpp
+    TextEditor.cpp
+    ToolBarContainer.cpp
+    ToolBar.cpp
+    TreeView.cpp
+    UndoStack.cpp
+    Variant.cpp
+    Widget.cpp
+    Window.cpp
+    WindowServerConnection.cpp
+)
+
+set(GENERATED_SOURCES
+    ../../Services/WindowServer/WindowClientEndpoint.h
+    ../../Services/WindowServer/WindowServerEndpoint.h
+    ../../Services/NotificationServer/NotificationClientEndpoint.h
+    ../../Services/NotificationServer/NotificationServerEndpoint.h
+)
+
+serenity_lib(LibGUI gui)
+target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread)

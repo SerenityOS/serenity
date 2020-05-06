@@ -7,4 +7,4 @@ files="https://github.com/SerenityOS/SerenityQuake/archive/master.tar.gz quake.t
 makeopts="V=1 SYMBOLS_ON=Y "
 depends=SDL2
 
-export PATH=${SERENITY_ROOT}/Root/usr/bin:$PATH
+export PATH=${SERENITY_ROOT}/Build/Root/usr/bin:$PATH

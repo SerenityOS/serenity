@@ -1,0 +1,4 @@
+add_subdirectory(HackStudio)
+add_subdirectory(Inspector)
+add_subdirectory(ProfileViewer)
+add_subdirectory(VisualBuilder)

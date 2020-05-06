@@ -5,7 +5,7 @@ Make sure you have all the dependencies installed:
 
 **Debian / Ubuntu**
 ```bash
-sudo apt install build-essential curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
+sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
 ```
 
 On Docker, install these as well:
@@ -15,12 +15,12 @@ sudo apt install wget genext2fs
 
 **Fedora**
 ```bash
-sudo dnf install curl mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Development Tools and Libraries" @Virtualization
+sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Development Tools and Libraries" @Virtualization
 ```
 
 **Arch Linux / Manjaro**
 ```bash
-sudo pacman -S base-devel curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
+sudo pacman -S base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
 ```
 
 Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
@@ -61,16 +61,22 @@ Notes:
 pkg_add bash gmp gcc git flock gmake sudo
 ```
 
-When building with `make`, `gmake` must be used.  The `makeall.sh` script will do this automatically when building on OpenBSD.
-
 ### Build
 > Before starting, make sure that you have configured your global identity for git, or the first script will fail after running for a bit.
 
 Go into the `Toolchain/` directory and run the **BuildIt.sh** script.
 
-Once you've built the toolchain, go into the `Kernel/` directory, then run
-**./makeall.sh**, and if nothing breaks too much, take it for a spin by using
-**./run**.
+Once you've built the toolchain, create a directory for the build to live in (for example, `Build/`), and run the CMake build:
+```
+$ mkdir Build && cd Build
+$ cmake ..
+$ make
+$ make install
+```
+
+This will compile all of SerenityOS and install the built files into `Root/` inside the build tree. `make install` actually pulls in the regular `make` (`make all`) automatically, so there isn't really a need to run it exlicitly. You may also want ask `make` to build things in parallel by using `-j`, optionally specifying the maximum number of jobs to run.
+
+Now to build a disk image, run `make image`, and if nothing breaks too much, take it for a spin by using `make run`.
 
 Note that the `anon` user is able to become `root` without password by default, as a development convenience.
 To prevent this, remove `anon` from the `wheel` group and he will no longer be able to run `/bin/su`.
@@ -79,9 +85,9 @@ On Linux, QEMU is significantly faster if it's able to use KVM. The run script w
 
 Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/INSTALL.md)
 
-Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply rerun **./makeall.sh** in the `Kernel/` directory and you'll be good to **./run** again.
+Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply run `make install`, `make image`, `make run` again. CMake will only rebuild those parts that have been updated.
 
-You can even re-compile only parts of the system. Imagine you changed something in the **WindowServer**. Then run `make -C ../Services/WindowServer` (from the `Kernel/` directory) followed by **./sync.sh** to update the disk image. Then you can start the system with **./run** again.
+You may also want to replace `make` with `ninja` in the above (use `cmake .. -G Ninja` when configuring the build) for some additional build speed benefits.
 
 #### Ports
 To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run **./package.sh**. The sourcecode for the package will be downloaded and the package will be built. After that, run **./sync.sh** from the `Kernel/` directory to update the disk image. The next time you start Serenity with **./run**, `curl` will be available.

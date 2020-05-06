@@ -28,13 +28,10 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/Application.h>
 #include <string.h>
 
 int main(int argc, char* argv[])
 {
-    GUI::Application app(argc, argv);
-
     Vector<const char*> urls_or_paths;
     Core::ArgsParser parser;
     parser.add_positional_argument(urls_or_paths, "URL or file path to open", "url-or-path");

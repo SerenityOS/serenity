@@ -29,9 +29,9 @@
 #include "Event.h"
 #include "EventLoop.h"
 #include "Screen.h"
-#include "WindowClientEndpoint.h"
 #include "WindowManager.h"
 #include <AK/Badge.h>
+#include <WindowServer/WindowClientEndpoint.h>
 
 namespace WindowServer {
 

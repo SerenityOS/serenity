@@ -10,5 +10,5 @@ auth_type="sig"
 auth_import_key="BFD009061E535052AD0DF2150D28D4D2A0ACE884"
 auth_opts="nano-${version}.tar.xz.asc nano-${version}.tar.xz"
 
-export CPPFLAGS=-I${SERENITY_ROOT}/Root/usr/local/include/ncurses
-export PKG_CONFIG_PATH=${SERENITY_ROOT}/Root/usr/local/lib/pkgconfig
+export CPPFLAGS=-I${SERENITY_ROOT}/Build/Root/usr/local/include/ncurses
+export PKG_CONFIG_PATH=${SERENITY_ROOT}/Build/Root/usr/local/lib/pkgconfig

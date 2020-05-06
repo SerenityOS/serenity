@@ -29,7 +29,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <stdio.h>
 #include <unistd.h>
 

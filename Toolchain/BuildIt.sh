@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+shopt -s globstar
 # This file will need to be run in bash, for now.
 
 
@@ -12,7 +13,8 @@ echo "$DIR"
 ARCH=${ARCH:-"i686"}
 TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local"
-SYSROOT="$DIR/../Root"
+BUILD=$(realpath "$DIR/../Build")
+SYSROOT="$BUILD/Root"
 
 MAKE="make"
 MD5SUM="md5sum"
@@ -225,8 +227,18 @@ pushd "$DIR/Build/"
         "$MAKE" install-gcc install-target-libgcc || exit 1
 
         echo "XXX serenity libc and libm"
-        ( cd "$DIR/../Libraries/LibC/" && "$MAKE" clean && "$MAKE" EXTRA_LIBC_DEFINES="-DBUILDING_SERENITY_TOOLCHAIN" && "$MAKE" install )
-        ( cd "$DIR/../Libraries/LibM/" && "$MAKE" clean && "$MAKE" && "$MAKE" install )
+        mkdir -p "$BUILD"
+        pushd "$BUILD"
+            CXXFLAGS="-DBUILDING_SERENITY_TOOLCHAIN" cmake ..
+            "$MAKE" LibC
+            install -D Libraries/LibC/libc.a Libraries/LibM/libm.a Root/usr/lib/
+            SRC_ROOT=$(realpath "$DIR"/..)
+            for header in "$SRC_ROOT"/Libraries/Lib{C,M}/**/*.h; do
+                target=$(echo "$header" | sed -e "s@$SRC_ROOT/Libraries/LibC@@" -e "s@$SRC_ROOT/Libraries/LibM@@")
+                install -D "$header" "Root/usr/include/$target"
+            done
+            unset SRC_ROOT
+        popd
 
         echo "XXX build libstdc++"
         "$MAKE" all-target-libstdc++-v3 || exit 1
@@ -236,6 +248,7 @@ pushd "$DIR/Build/"
         if [ "$(uname -s)" = "OpenBSD" ]; then
             cd "$DIR/Local/libexec/gcc/i686-pc-serenity/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
         fi
+
     popd
 popd
 

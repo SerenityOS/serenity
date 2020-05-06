@@ -24,10 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ProcFS.h"
-#include "KSyms.h"
-#include "Process.h"
-#include "Scheduler.h"
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
@@ -38,11 +34,13 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KBufferBuilder.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -50,7 +48,9 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>

@@ -22,7 +22,9 @@
 *.cxxflags
 *.autosave
 Meta/Lagom/build
-Root
+Build
+build
+CMakeFiles
 Toolchain/Tarballs
 Toolchain/Build
 Toolchain/Local

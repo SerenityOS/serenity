@@ -2,5 +2,5 @@
 port=termcap
 version=1.3.1
 useconfigure=true
-configopts="--prefix=$SERENITY_ROOT/Root/usr"
+configopts="--prefix=$SERENITY_ROOT/Build/Root/usr"
 files="https://ftp.gnu.org/gnu/termcap/termcap-${version}.tar.gz termcap-${version}.tar.gz"

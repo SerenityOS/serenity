@@ -154,7 +154,7 @@ func_defined build || build() {
     run make $makeopts
 }
 func_defined install || install() {
-    run make DESTDIR="$SERENITY_ROOT"/Root $installopts install
+    run make DESTDIR="$SERENITY_ROOT"/Build/Root $installopts install
 }
 func_defined post_install || post_install() {
     echo
@@ -216,10 +216,10 @@ uninstall() {
             for f in `cat plist`; do
                 case $f in
                     */)
-                        run rmdir "$SERENITY_ROOT/Root/$f" || true
+                        run rmdir "$SERENITY_ROOT/Build/Root/$f" || true
                         ;;
                     *)
-                        run rm -rf "$SERENITY_ROOT/Root/$f"
+                        run rm -rf "$SERENITY_ROOT/Build/Root/$f"
                         ;;
                 esac
             done

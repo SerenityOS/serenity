@@ -1,0 +1,7 @@
+add_subdirectory(Cube)
+add_subdirectory(DynamicLink)
+add_subdirectory(Fire)
+add_subdirectory(HelloWorld)
+add_subdirectory(Mouse)
+add_subdirectory(Screensaver)
+add_subdirectory(WidgetGallery)
