@@ -179,6 +179,15 @@ void CanvasRenderingContext2D::stroke()
     painter->stroke_path(m_path, m_stroke_style, m_line_width);
 }
 
+void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
+{
+    auto painter = this->painter();
+    if (!painter)
+        return;
+
+    painter->fill_path(m_path, m_fill_style, winding);
+}
+
 RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(JS::GlobalObject& global_object, int width, int height) const
 {
     return ImageData::create_with_size(global_object, width, height);

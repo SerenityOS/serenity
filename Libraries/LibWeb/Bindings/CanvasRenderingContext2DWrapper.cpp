@@ -61,6 +61,7 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
     put_native_function("beginPath", begin_path, 0);
     put_native_function("closePath", close_path, 0);
     put_native_function("stroke", stroke, 0);
+    put_native_function("fill", fill, 0);
     put_native_function("moveTo", move_to, 2);
     put_native_function("lineTo", line_to, 2);
     put_native_function("quadraticCurveTo", quadratic_curve_to, 4);
@@ -216,6 +217,33 @@ JS::Value CanvasRenderingContext2DWrapper::stroke(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     impl->stroke();
+    return JS::js_undefined();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::fill(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    auto winding = Gfx::Painter::WindingRule::Nonzero;
+
+    if (interpreter.argument_count() == 1) {
+        auto arg0 = interpreter.argument(0);
+        if (arg0.is_string()) {
+            const auto& winding_name = arg0.as_string().string();
+            if (winding_name == "evenodd") {
+                winding = Gfx::Painter::WindingRule::EvenOdd;
+            } else if (winding_name != "nonzero") {
+                return interpreter.throw_exception<JS::TypeError>("fill winding rule must be either 'nonzero' or 'evenodd'");
+            }
+        } else {
+            return interpreter.throw_exception<JS::TypeError>("fill called with non-string");
+        }
+    } else {
+        // FIXME: Path2D object
+        return JS::js_undefined();
+    }
+    impl->fill(winding);
     return JS::js_undefined();
 }
 
