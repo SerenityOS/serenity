@@ -244,6 +244,9 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
                 } else if (event.button() == GUI::MouseButton::Right) {
                     if (on_link_context_menu_request)
                         on_link_context_menu_request(link->href(), event.position().translated(screen_relative_rect().location()));
+                } else if (event.button() == GUI::MouseButton::Middle) {
+                    if (on_link_middle_click)
+                        on_link_middle_click(link->href());
                 }
             } else {
                 if (event.button() == GUI::MouseButton::Left) {

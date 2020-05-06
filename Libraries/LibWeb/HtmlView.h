@@ -59,6 +59,7 @@ public:
 
     Function<void(const String& href, const String& target, unsigned modifiers)> on_link_click;
     Function<void(const String& href, const Gfx::Point& screen_position)> on_link_context_menu_request;
+    Function<void(const String& href)> on_link_middle_click;
     Function<void(const String&)> on_link_hover;
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_load_start;
