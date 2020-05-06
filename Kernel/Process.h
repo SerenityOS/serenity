@@ -314,7 +314,7 @@ public:
 
     static void initialize();
 
-    [[noreturn]] void crash(int signal, u32 eip);
+    [[noreturn]] void crash(int signal, u32 eip, bool out_of_memory = false);
     [[nodiscard]] static siginfo_t reap(Process&);
 
     const TTY* tty() const { return m_tty; }

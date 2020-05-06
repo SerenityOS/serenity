@@ -368,7 +368,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     auto page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
     if (page.is_null()) {
         klog() << "MM: handle_zero_fault was unable to allocate a physical page";
-        return PageFaultResponse::ShouldCrash;
+        return PageFaultResponse::OutOfMemory;
     }
 
 #ifdef PAGE_FAULT_DEBUG
@@ -401,7 +401,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     auto page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
     if (page.is_null()) {
         klog() << "MM: handle_cow_fault was unable to allocate a physical page";
-        return PageFaultResponse::ShouldCrash;
+        return PageFaultResponse::OutOfMemory;
     }
     auto physical_page_to_copy = move(page_slot);
     u8* dest_ptr = MM.quickmap_page(*page);
@@ -463,7 +463,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     vmobject_physical_page_entry = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
     if (vmobject_physical_page_entry.is_null()) {
         klog() << "MM: handle_inode_fault was unable to allocate a physical page";
-        return PageFaultResponse::ShouldCrash;
+        return PageFaultResponse::OutOfMemory;
     }
 
     u8* dest_ptr = MM.quickmap_page(*vmobject_physical_page_entry);
