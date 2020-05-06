@@ -186,7 +186,7 @@ NonnullOwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwa
     if (type_name.has_value()) {
         variable_info->type = type_name.value().data.as_string;
     } else {
-        dbg() << "Unnamed DWRAF type at offset: " << type_die.offset();
+        dbg() << "Unnamed DWARF type at offset: " << type_die.offset();
         variable_info->name = "[Unnamed Type]";
     }
 

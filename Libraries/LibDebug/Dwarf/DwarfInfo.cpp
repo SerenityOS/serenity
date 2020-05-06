@@ -42,7 +42,7 @@ ByteBuffer DwarfInfo::section_data(const String& section_name)
 {
     auto section = m_elf->image().lookup_section(section_name);
     ASSERT(!section.is_undefined());
-    return ByteBuffer::wrap(reinterpret_cast<const u8*>(section.raw_data()), section.size());
+    return section.wrapping_byte_buffer();
 }
 
 void DwarfInfo::populate_compilation_units()

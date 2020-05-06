@@ -38,7 +38,7 @@ namespace Dwarf {
 
 class DwarfInfo : public RefCounted<DwarfInfo> {
 public:
-    static NonnullRefPtr<DwarfInfo> create(NonnullRefPtr<const ELF::Loader> elf) { return adopt(*new DwarfInfo(elf)); }
+    static NonnullRefPtr<DwarfInfo> create(NonnullRefPtr<const ELF::Loader> elf) { return adopt(*new DwarfInfo(move(elf))); }
 
     const ByteBuffer& debug_info_data() const { return m_debug_info_data; }
     const ByteBuffer& abbreviation_data() const { return m_abbreviation_data; }

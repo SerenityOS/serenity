@@ -68,7 +68,7 @@ public:
 
     struct VariablesScope {
         bool is_function { false };
-        Optional<String> name;
+        String name;
         u32 address_low { 0 };
         u32 address_high { 0 };
         Vector<Dwarf::DIE> dies_of_variables;
