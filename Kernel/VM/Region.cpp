@@ -137,6 +137,7 @@ bool Region::commit(size_t page_index)
     auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
     if (!physical_page) {
         klog() << "MM: commit was unable to allocate a physical page";
+        ASSERT_NOT_REACHED();
         return false;
     }
     vmobject_physical_page_entry = move(physical_page);
