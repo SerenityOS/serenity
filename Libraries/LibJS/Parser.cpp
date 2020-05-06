@@ -295,7 +295,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         } else if (match(TokenType::Identifier)) {
             auto parameter_name = consume(TokenType::Identifier).value();
             RefPtr<Expression> default_value;
-            if (match(TokenType::Equals)) {
+            if (expect_parens && match(TokenType::Equals)) {
                 consume(TokenType::Equals);
                 default_value = parse_expression(0);
             }
