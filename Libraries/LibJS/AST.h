@@ -166,23 +166,26 @@ public:
     const Vector<Parameter>& parameters() const { return m_parameters; };
 
 protected:
-    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
+    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables)
         : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
         , m_variables(move(variables))
+        , m_function_length(function_length)
     {
     }
 
     void dump(int indent, const char* class_name) const;
 
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
+    i32 function_length() const { return m_function_length; }
 
 private:
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
     const Vector<Parameter> m_parameters;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
+    const i32 m_function_length;
 };
 
 class FunctionDeclaration final
@@ -191,8 +194,8 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
-        : FunctionNode(name, move(body), move(parameters), move(variables))
+    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables)
+        : FunctionNode(name, move(body), move(parameters), function_length, move(variables))
     {
     }
 
@@ -208,8 +211,8 @@ class FunctionExpression final : public Expression
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
-        : FunctionNode(name, move(body), move(parameters), move(variables))
+    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables)
+        : FunctionNode(name, move(body), move(parameters), function_length, move(variables))
     {
     }
 

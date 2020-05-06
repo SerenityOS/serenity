@@ -70,14 +70,14 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
-    auto* function = ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), interpreter.current_environment());
+    auto* function = ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), function_length(), interpreter.current_environment());
     interpreter.set_variable(name(), function);
     return js_undefined();
 }
 
 Value FunctionExpression::execute(Interpreter& interpreter) const
 {
-    return ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), interpreter.current_environment());
+    return ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), function_length(), interpreter.current_environment());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter) const
