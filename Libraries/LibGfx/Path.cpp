@@ -24,7 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Function.h>
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 
 namespace Gfx {
@@ -33,6 +36,8 @@ void Path::close()
 {
     if (m_segments.size() <= 1)
         return;
+
+    invalidate_split_lines();
 
     auto& last_point = m_segments.last().point;
 
@@ -78,6 +83,62 @@ String Path::to_string() const
     }
     builder.append("}");
     return builder.to_string();
+}
+
+void Path::segmentize_path()
+{
+    Vector<LineSegment> segments;
+
+    auto add_line = [&](const auto& p0, const auto& p1) {
+        if (p0.y() == p1.y())
+            return; // horizontal lines are not needed (there's nothing to fill inside)
+        float ymax = p0.y(), ymin = p1.y(), x_of_ymin = p1.x(), x_of_ymax = p0.x();
+        auto slope = p0.x() == p1.x() ? 0 : ((float)(p0.y() - p1.y())) / ((float)(p0.x() - p1.x()));
+        if (p0.y() < p1.y()) {
+            ymin = ymax;
+            ymax = p1.y();
+            x_of_ymax = x_of_ymin;
+            x_of_ymin = p0.x();
+        }
+
+        segments.append({ Point(p0.x(), p0.y()),
+            Point(p1.x(), p1.y()),
+            slope == 0 ? 0 : 1 / slope,
+            x_of_ymin,
+            ymax, ymin, x_of_ymax });
+    };
+
+    FloatPoint cursor { 0, 0 };
+    for (auto& segment : m_segments) {
+        switch (segment.type) {
+        case Segment::Type::MoveTo:
+            cursor = segment.point;
+            break;
+        case Segment::Type::LineTo: {
+            add_line(cursor, segment.point);
+            cursor = segment.point;
+            break;
+        }
+        case Segment::Type::QuadraticBezierCurveTo: {
+            auto& control = segment.through.value();
+            Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment.point, [&](const FloatPoint& p0, const FloatPoint& p1) {
+                add_line(Point(p0.x(), p0.y()), Point(p1.x(), p1.y()));
+            });
+            cursor = segment.point;
+            break;
+        }
+        case Segment::Type::Invalid:
+            ASSERT_NOT_REACHED();
+            break;
+        }
+    }
+
+    // sort segments by ymax
+    quick_sort(segments, [](const auto& line0, const auto& line1) {
+        return line1.maximum_y < line0.maximum_y;
+    });
+
+    m_split_lines = move(segments);
 }
 
 }

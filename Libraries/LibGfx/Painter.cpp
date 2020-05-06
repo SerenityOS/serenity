@@ -31,6 +31,7 @@
 #include <AK/Assertions.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
+#include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -1049,7 +1050,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
     }
 }
 
-static void draw_split_quadratic_bezier_curve(Painter& painter, const Point& original_control, const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
+static void split_quadratic_bezier_curve(const FloatPoint& original_control, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
     auto po1_midpoint = original_control + p1;
     po1_midpoint /= 2;
@@ -1060,11 +1061,11 @@ static void draw_split_quadratic_bezier_curve(Painter& painter, const Point& ori
     auto new_segment = po1_midpoint + po2_midpoint;
     new_segment /= 2;
 
-    painter.draw_quadratic_bezier_curve(po1_midpoint, p1, new_segment, color, thickness, dotted);
-    painter.draw_quadratic_bezier_curve(po2_midpoint, new_segment, p2, color, thickness, dotted);
+    Painter::for_each_line_segment_on_bezier_curve(po1_midpoint, p1, new_segment, callback);
+    Painter::for_each_line_segment_on_bezier_curve(po2_midpoint, new_segment, p2, callback);
 }
 
-static bool can_approximate_bezier_curve(const Point& p1, const Point& p2, const Point& control)
+static bool can_approximate_bezier_curve(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& control)
 {
     constexpr static int tolerance = 15;
 
@@ -1081,13 +1082,25 @@ static bool can_approximate_bezier_curve(const Point& p1, const Point& p2, const
     return max(p1x, p2x) + max(p1y, p2y) <= tolerance;
 }
 
-void Painter::draw_quadratic_bezier_curve(const Point& control_point, const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
+void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
     if (can_approximate_bezier_curve(p1, p2, control_point)) {
-        draw_line(p1, p2, color, thickness, dotted);
+        callback(p1, p2);
     } else {
-        draw_split_quadratic_bezier_curve(*this, control_point, p1, p2, color, thickness, dotted);
+        split_quadratic_bezier_curve(control_point, p1, p2, callback);
     }
+}
+
+void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&& callback)
+{
+    for_each_line_segment_on_bezier_curve(control_point, p1, p2, callback);
+}
+
+void Painter::draw_quadratic_bezier_curve(const Point& control_point, const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
+{
+    for_each_line_segment_on_bezier_curve(FloatPoint(control_point.x(), control_point.y()), FloatPoint(p1.x(), p1.y()), FloatPoint(p2.x(), p2.y()), [&](const FloatPoint& p1, const FloatPoint& p2) {
+        draw_line(Point(p1.x(), p1.y()), Point(p2.x(), p2.y()), color, thickness, dotted);
+    });
 }
 
 void Painter::add_clip_rect(const Rect& rect)
@@ -1135,6 +1148,158 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
             break;
         }
     }
+}
+
+//#define FILL_PATH_DEBUG
+
+void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
+{
+    const auto& segments = path.split_lines();
+
+    if (segments.size() == 0)
+        return;
+
+    Vector<Path::LineSegment> active_list;
+    active_list.ensure_capacity(segments.size());
+
+    // first, grab the segments for the very first scanline
+    auto first_y = segments.first().maximum_y;
+    auto last_y = segments.last().minimum_y;
+    auto scanline = first_y;
+
+    size_t last_active_segment { 0 };
+
+    for (auto& segment : segments) {
+        if (segment.maximum_y != scanline)
+            break;
+        active_list.append(segment);
+        ++last_active_segment;
+    }
+
+    auto is_inside_shape = [winding_rule](int winding_number) {
+        if (winding_rule == WindingRule::Nonzero)
+            return winding_number != 0;
+
+        if (winding_rule == WindingRule::EvenOdd)
+            return winding_number % 2 == 0;
+
+        ASSERT_NOT_REACHED();
+    };
+
+    auto increment_winding = [winding_rule](int& winding_number, const Point& from, const Point& to) {
+        if (winding_rule == WindingRule::EvenOdd) {
+            ++winding_number;
+            return;
+        }
+
+        if (winding_rule == WindingRule::Nonzero) {
+            if (from.dy_relative_to(to) < 0)
+                ++winding_number;
+            else
+                --winding_number;
+            return;
+        }
+
+        ASSERT_NOT_REACHED();
+    };
+
+    while (scanline >= last_y) {
+        if (active_list.size()) {
+            // sort the active list by 'x' from right to left
+            quick_sort(active_list, [](const auto& line0, const auto& line1) {
+                return line1.x < line0.x;
+            });
+#ifdef FILL_PATH_DEBUG
+            if ((int)scanline % 10 == 0) {
+                draw_text(Rect(active_list.last().x - 20, scanline, 20, 10), String::format("%d", (int)scanline));
+            }
+#endif
+
+            if (active_list.size() > 1) {
+                auto winding_number { 0 };
+                for (size_t i = 1; i < active_list.size(); ++i) {
+                    auto& previous = active_list[i - 1];
+                    auto& current = active_list[i];
+
+                    int int_distance = fabs(current.x - previous.x);
+                    Point from(previous.x, scanline);
+                    Point to(current.x, scanline);
+
+                    if (int_distance < 1) {
+                        // the two lines intersect on an int grid
+                        // so they should both be treated as a single line segment
+                        goto skip_drawing;
+                    }
+
+                    if (int_distance == 1 && is_inside_shape(winding_number)) {
+                        // The two lines form a singluar edge for the shape
+                        // while they do not intersect, they connect together
+                        goto skip_drawing;
+                    }
+
+                    if (is_inside_shape(winding_number)) {
+                        // The points between this segment and the previous are
+                        // inside the shape
+#ifdef FILL_PATH_DEBUG
+                        dbg() << "y=" << scanline << ": " << winding_number << " at " << i << ": " << from << " -- " << to;
+#endif
+                        draw_line(from, to, color, 1, false);
+                    }
+
+                skip_drawing:;
+
+                    auto is_passing_through_maxima = scanline == previous.maximum_y
+                        || scanline == previous.minimum_y
+                        || scanline == current.maximum_y
+                        || scanline == current.minimum_y;
+
+                    auto is_passing_through_vertex = false;
+
+                    if (is_passing_through_maxima) {
+                        is_passing_through_vertex = previous.x == current.x;
+                    }
+
+                    if (!is_passing_through_vertex || previous.inverse_slope * current.inverse_slope < 0)
+                        increment_winding(winding_number, from, to);
+
+                    // update the x coord
+                    active_list[i - 1].x -= active_list[i - 1].inverse_slope;
+                }
+                active_list.last().x -= active_list.last().inverse_slope;
+            } else {
+                auto point = Point(active_list[0].x, scanline);
+                draw_line(point, point, color);
+
+                // update the x coord
+                active_list.first().x -= active_list.first().inverse_slope;
+            }
+        }
+
+        --scanline;
+        // remove any edge that goes out of bound from the active list
+        for (size_t i = 0, count = active_list.size(); i < count; ++i) {
+            if (scanline <= active_list[i].minimum_y) {
+                active_list.remove(i);
+                --count;
+                --i;
+            }
+        }
+        for (size_t j = last_active_segment; j < segments.size(); ++j, ++last_active_segment) {
+            auto& segment = segments[j];
+            if (segment.maximum_y < scanline)
+                break;
+            if (segment.minimum_y >= scanline)
+                continue;
+
+            active_list.append(segment);
+        }
+    }
+
+#ifdef FILL_PATH_DEBUG
+    size_t i { 0 };
+    for (auto& segment : segments)
+        draw_line(segment.from, segment.to, Color::from_hsv(++i / segments.size() * 255, 255, 255), 1);
+#endif
 }
 
 }
