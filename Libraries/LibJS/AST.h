@@ -567,7 +567,12 @@ private:
 
 class CallExpression : public Expression {
 public:
-    CallExpression(NonnullRefPtr<Expression> callee, NonnullRefPtrVector<Expression> arguments = {})
+    struct Argument {
+        NonnullRefPtr<Expression> value;
+        bool is_spread;
+    };
+
+    CallExpression(NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
         : m_callee(move(callee))
         , m_arguments(move(arguments))
     {
@@ -586,12 +591,12 @@ private:
     ThisAndCallee compute_this_and_callee(Interpreter&) const;
 
     NonnullRefPtr<Expression> m_callee;
-    const NonnullRefPtrVector<Expression> m_arguments;
+    const Vector<Argument> m_arguments;
 };
 
 class NewExpression final : public CallExpression {
 public:
-    NewExpression(NonnullRefPtr<Expression> callee, NonnullRefPtrVector<Expression> arguments = {})
+    NewExpression(NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
         : CallExpression(move(callee), move(arguments))
     {
     }

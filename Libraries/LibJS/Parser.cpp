@@ -777,10 +777,15 @@ NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expres
 {
     consume(TokenType::ParenOpen);
 
-    NonnullRefPtrVector<Expression> arguments;
+    Vector<CallExpression::Argument> arguments;
 
-    while (match_expression()) {
-        arguments.append(parse_expression(0));
+    while (match_expression() || match(TokenType::TripleDot)) {
+        if (match(TokenType::TripleDot)) {
+            consume();
+            arguments.append({ parse_expression(0), true });
+        } else {
+            arguments.append({ parse_expression(0), false });
+        }
         if (!match(TokenType::Comma))
             break;
         consume();
@@ -798,12 +803,17 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
     // FIXME: Support full expressions as the callee as well.
     auto callee = create_ast_node<Identifier>(consume(TokenType::Identifier).value());
 
-    NonnullRefPtrVector<Expression> arguments;
+    Vector<CallExpression::Argument> arguments;
 
     if (match(TokenType::ParenOpen)) {
         consume(TokenType::ParenOpen);
-        while (match_expression()) {
-            arguments.append(parse_expression(0));
+        while (match_expression() || match(TokenType::TripleDot)) {
+            if (match(TokenType::TripleDot)) {
+                consume();
+                arguments.append({ parse_expression(0), true });
+            } else {
+                arguments.append({ parse_expression(0), false });
+            }
             if (!match(TokenType::Comma))
                 break;
             consume();

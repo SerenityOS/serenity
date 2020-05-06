@@ -137,12 +137,28 @@ Value CallExpression::execute(Interpreter& interpreter) const
     arguments.values().append(function.bound_arguments());
 
     for (size_t i = 0; i < m_arguments.size(); ++i) {
-        auto value = m_arguments[i].execute(interpreter);
+        auto value = m_arguments[i].value->execute(interpreter);
         if (interpreter.exception())
             return {};
-        arguments.append(value);
-        if (interpreter.exception())
-            return {};
+        if (m_arguments[i].is_spread) {
+            // FIXME: Support generic iterables
+            Vector<Value> iterables;
+            if (value.is_string()) {
+                for (auto ch : value.as_string().string())
+                    iterables.append(Value(js_string(interpreter, String::format("%c", ch))));
+            } else if (value.is_object() && value.as_object().is_array()) {
+                iterables = static_cast<const Array&>(value.as_object()).elements();
+            } else if (value.is_object() && value.as_object().is_string_object()) {
+                for (auto ch : static_cast<const StringObject&>(value.as_object()).primitive_string().string())
+                    iterables.append(Value(js_string(interpreter, String::format("%c", ch))));
+            } else {
+                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string()));
+            }
+            for (auto& value : iterables)
+                arguments.append(value);
+        } else {
+            arguments.append(value);
+        }
     }
 
     auto& call_frame = interpreter.push_call_frame();
@@ -657,7 +673,7 @@ void CallExpression::dump(int indent) const
     printf("CallExpression %s\n", is_new_expression() ? "[new]" : "");
     m_callee->dump(indent + 1);
     for (auto& argument : m_arguments)
-        argument.dump(indent + 1);
+        argument.value->dump(indent + 1);
 }
 
 void StringLiteral::dump(int indent) const
