@@ -31,6 +31,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -46,6 +47,17 @@ namespace JS {
 bool Value::is_array() const
 {
     return is_object() && as_object().is_array();
+}
+
+bool Value::is_function() const
+{
+    return is_object() && as_object().is_function();
+}
+
+Function& Value::as_function()
+{
+    ASSERT(is_function());
+    return static_cast<Function&>(as_object());
 }
 
 String Value::to_string() const

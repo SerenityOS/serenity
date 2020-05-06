@@ -477,10 +477,8 @@ Value Object::to_primitive(PreferredType preferred_type) const
 Value Object::to_string() const
 {
     auto to_string_property = get("toString");
-    if (!to_string_property.is_empty()
-        && to_string_property.is_object()
-        && to_string_property.as_object().is_function()) {
-        auto& to_string_function = static_cast<Function&>(to_string_property.as_object());
+    if (!to_string_property.is_empty() && to_string_property.is_function()) {
+        auto& to_string_function = to_string_property.as_function();
         auto& interpreter = const_cast<Object*>(this)->interpreter();
         auto to_string_result = interpreter.call(to_string_function, const_cast<Object*>(this));
         if (to_string_result.is_object())

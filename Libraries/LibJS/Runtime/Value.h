@@ -54,6 +54,7 @@ public:
     bool is_boolean() const { return m_type == Type::Boolean; }
     bool is_cell() const { return is_string() || is_object(); }
     bool is_array() const;
+    bool is_function() const;
 
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
@@ -156,6 +157,8 @@ public:
         ASSERT(is_cell());
         return m_value.as_cell;
     }
+
+    Function& as_function();
 
     String to_string() const;
     bool to_boolean() const;
