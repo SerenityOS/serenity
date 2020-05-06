@@ -56,6 +56,7 @@ private:
     static JS::Value begin_path(JS::Interpreter&);
     static JS::Value close_path(JS::Interpreter&);
     static JS::Value stroke(JS::Interpreter&);
+    static JS::Value fill(JS::Interpreter&);
     static JS::Value move_to(JS::Interpreter&);
     static JS::Value line_to(JS::Interpreter&);
     static JS::Value quadratic_curve_to(JS::Interpreter&);
