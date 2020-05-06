@@ -37,7 +37,7 @@ class FloatRect;
 
 class FloatPoint {
 public:
-    FloatPoint() {}
+    FloatPoint() { }
     FloatPoint(float x, float y)
         : m_x(x)
         , m_y(y)
@@ -111,6 +111,13 @@ public:
         return *this;
     }
     FloatPoint operator+(const FloatPoint& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
+
+    FloatPoint& operator/=(float factor)
+    {
+        m_x /= factor;
+        m_y /= factor;
+        return *this;
+    }
 
     String to_string() const { return String::format("[%g,%g]", x(), y()); }
 

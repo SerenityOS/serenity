@@ -57,21 +57,45 @@ public:
     void line_to(const FloatPoint& point)
     {
         m_segments.append({ Segment::Type::LineTo, point });
+        invalidate_split_lines();
     }
 
     void quadratic_bezier_curve_to(const FloatPoint& through, const FloatPoint& point)
     {
         m_segments.append({ Segment::Type::QuadraticBezierCurveTo, point, through });
+        invalidate_split_lines();
     }
 
     void close();
 
     const Vector<Segment>& segments() const { return m_segments; }
+    const auto& split_lines()
+    {
+        if (m_split_lines.has_value())
+            return m_split_lines.value();
+        segmentize_path();
+        ASSERT(m_split_lines.has_value());
+        return m_split_lines.value();
+    }
 
     String to_string() const;
 
+    struct LineSegment {
+        Point from, to;
+        float inverse_slope;
+        float x_of_minimum_y;
+        float maximum_y;
+        float minimum_y;
+        float x;
+    };
+
 private:
+    void invalidate_split_lines() { m_split_lines.clear(); }
+    void segmentize_path();
+
     Vector<Segment> m_segments;
+
+    Optional<Vector<LineSegment>> m_split_lines {};
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const Path& path)

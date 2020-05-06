@@ -71,7 +71,16 @@ public:
     void draw_emoji(const Point&, const Gfx::Bitmap&, const Font&);
     void draw_glyph_or_emoji(const Point&, u32 codepoint, const Font&, Color);
 
+    static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&);
+    static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&&);
+
     void stroke_path(const Path&, Color, int thickness);
+
+    enum class WindingRule {
+        Nonzero,
+        EvenOdd,
+    };
+    void fill_path(Path&, Color, WindingRule rule = WindingRule::Nonzero);
 
     const Font& font() const { return *state().font; }
     void set_font(const Font& font) { state().font = &font; }
