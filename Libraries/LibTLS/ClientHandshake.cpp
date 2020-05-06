@@ -363,6 +363,21 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
                     ASSERT_NOT_REACHED();
                 }
                 payload_res = handle_certificate(buffer.slice_view(1, payload_size));
+                if (m_context.certificates.size()) {
+                    auto it = m_context.certificates.find([&](auto& cert) { return cert.is_valid(); });
+
+                    if (it.is_end()) {
+                        // no valid certificates
+                        dbg() << "No valid certificates found";
+                        payload_res = (i8)Error::BadCertificate;
+                        m_context.critical_error = payload_res;
+                        break;
+                    }
+
+                    // swap the first certificate with the valid one
+                    if (it.index() != 0)
+                        swap(m_context.certificates[0], m_context.certificates[it.index()]);
+                }
             } else {
                 payload_res = (i8)Error::UnexpectedMessage;
             }

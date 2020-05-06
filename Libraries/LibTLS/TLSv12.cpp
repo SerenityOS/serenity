@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -65,13 +66,58 @@ static bool _asn1_is_oid(const u8* oid, const u8* compare, size_t length = 3)
     return true;
 }
 
-static void _set_algorithm(u32&, const u8* value, size_t length)
+static bool _set_algorithm(CertificateKeyAlgorithm& algorithm, const u8* value, size_t length)
 {
-    if (length != 9) {
-        dbg() << "unsupported algorithm " << value;
+    if (length == 7) {
+        // Elliptic Curve pubkey
+        dbg() << "Cert.algorithm: EC, unsupported";
+        return false;
     }
 
-    dbg() << "FIXME: Set algorithm";
+    if (length == 8) {
+        // named EC key
+        dbg() << "Cert.algorithm: Named EC (" << *value << "), unsupported";
+        return false;
+    }
+
+    if (length == 5) {
+        // named EC SECP key
+        dbg() << "Cert.algorithm: Named EC secp (" << *value << "), unsupported";
+        return false;
+    }
+
+    if (length != 9) {
+        dbg() << "Invalid certificate algorithm";
+        return false;
+    }
+
+    if (_asn1_is_oid(value, Constants::RSA_SIGN_RSA_OID, 9)) {
+        algorithm = CertificateKeyAlgorithm::RSA_RSA;
+        return true;
+    }
+
+    if (_asn1_is_oid(value, Constants::RSA_SIGN_SHA256_OID, 9)) {
+        algorithm = CertificateKeyAlgorithm::RSA_SHA256;
+        return true;
+    }
+
+    if (_asn1_is_oid(value, Constants::RSA_SIGN_SHA512_OID, 9)) {
+        algorithm = CertificateKeyAlgorithm::RSA_SHA512;
+        return true;
+    }
+
+    if (_asn1_is_oid(value, Constants::RSA_SIGN_SHA1_OID, 9)) {
+        algorithm = CertificateKeyAlgorithm::RSA_SHA1;
+        return true;
+    }
+
+    if (_asn1_is_oid(value, Constants::RSA_SIGN_MD5_OID, 9)) {
+        algorithm = CertificateKeyAlgorithm::RSA_MD5;
+        return true;
+    }
+
+    dbg() << "Unsupported RSA Signature mode " << value[8];
+    return false;
 }
 
 static size_t _get_asn1_length(const u8* buffer, size_t length, size_t& octets)
@@ -306,7 +352,35 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
         position += length;
     }
     if (level == 2 && cert.sign_key.size() && cert_length && cert_data) {
-        dbg() << "FIXME: Cert.fingerprint";
+        cert.fingerprint.clear();
+        Crypto::Hash::Manager hash;
+        switch (cert.key_algorithm) {
+        case CertificateKeyAlgorithm::RSA_MD5:
+            hash.initialize(Crypto::Hash::HashKind::MD5);
+            break;
+        case CertificateKeyAlgorithm::RSA_SHA1:
+            hash.initialize(Crypto::Hash::HashKind::SHA1);
+            break;
+        case CertificateKeyAlgorithm::RSA_SHA256:
+            hash.initialize(Crypto::Hash::HashKind::SHA256);
+            break;
+        case CertificateKeyAlgorithm::RSA_SHA512:
+            hash.initialize(Crypto::Hash::HashKind::SHA512);
+            break;
+        default:
+            dbg() << "Unsupported hash mode " << (u32)cert.key_algorithm;
+            // fallback to md5, it will fail later
+            hash.initialize(Crypto::Hash::HashKind::MD5);
+            break;
+        }
+        hash.update(cert_data, cert_length);
+        auto fingerprint = hash.digest();
+        cert.fingerprint.grow(fingerprint.data_length());
+        cert.fingerprint.overwrite(0, fingerprint.immutable_data(), fingerprint.data_length());
+#ifdef TLS_DEBUG
+        dbg() << "Certificate fingerprint:";
+        print_buffer(cert.fingerprint);
+#endif
     }
     return position;
 }
@@ -377,11 +451,15 @@ ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
         size_t certificates_in_chain = 0;
 
         do {
-            if (remaining <= 3)
+            if (remaining <= 3) {
+                dbg() << "Ran out of data";
                 break;
+            }
             ++certificates_in_chain;
-            if (buffer.size() < (size_t)res_cert + 3)
+            if (buffer.size() < (size_t)res_cert + 3) {
+                dbg() << "not enough data to read cert size (" << buffer.size() << " < " << res_cert + 3 << ")";
                 break;
+            }
             size_t certificate_size_specific = buffer[res_cert] * 0x10000 + buffer[res_cert + 1] * 0x100 + buffer[res_cert + 2];
             res_cert += 3;
             remaining -= 3;
@@ -397,7 +475,7 @@ ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
                 m_context.certificates.append(certificate.value());
                 valid_certificate = true;
             }
-            res_cert += certificate_size;
+            res_cert += certificate_size_specific;
         } while (remaining > 0);
         if (remaining) {
             dbg() << "extraneous " << remaining << " bytes left over after parsing certificates";
@@ -519,6 +597,27 @@ void TLSv12::ensure_hmac(size_t digest_size, bool local)
         m_hmac_remote = move(hmac);
 }
 
+bool Certificate::is_valid() const
+{
+    auto now = Core::DateTime::now();
+
+    if (!not_before.is_empty()) {
+        if (now.is_before(not_before)) {
+            dbg() << "certificate expired (not yet valid, signed for " << not_before << ")";
+            return false;
+        }
+    }
+
+    if (!not_after.is_empty()) {
+        if (!now.is_before(not_after)) {
+            dbg() << "certificate expired (expiry date " << not_after << ")";
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void TLSv12::try_disambiguate_error() const
 {
     dbg() << "Possible failure cause: ";
@@ -542,5 +641,4 @@ void TLSv12::try_disambiguate_error() const
         break;
     }
 }
-
 }
