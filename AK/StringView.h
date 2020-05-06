@@ -152,6 +152,8 @@ public:
 
     const StringImpl* impl() const { return m_impl; }
 
+    String to_string() const;
+
 private:
     friend class String;
     const StringImpl* m_impl { nullptr };
