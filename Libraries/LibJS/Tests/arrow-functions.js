@@ -4,6 +4,9 @@ try {
     let getNumber = () => 42;
     assert(getNumber() === 42);
 
+    getNumber = () => 99;
+    assert(getNumber() === 99);
+
     let add = (a, b) => a + b;
     assert(add(2, 3) === 5);
 
