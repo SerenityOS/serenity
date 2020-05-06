@@ -285,6 +285,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     Vector<FunctionNode::Parameter> parameters;
     bool parse_failed = false;
     bool has_rest_parameter = false;
+    i32 function_length = -1;
     while (true) {
         if (match(TokenType::Comma)) {
             if (has_rest_parameter) {
@@ -297,6 +298,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
             RefPtr<Expression> default_value;
             if (match(TokenType::Equals)) {
                 consume(TokenType::Equals);
+                function_length = parameters.size();
                 default_value = parse_expression(0);
             }
             parameters.append({ parameter_name, default_value });
@@ -307,6 +309,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
                 break;
             }
             has_rest_parameter = true;
+            function_length = parameters.size();
             auto parameter_name = consume(TokenType::Identifier).value();
             parameters.append({ parameter_name, nullptr, true });
         } else if (match(TokenType::ParenClose)) {
@@ -337,6 +340,9 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     if (parse_failed)
         return nullptr;
 
+    if (function_length == -1) 
+        function_length = parameters.size();
+
     auto function_body_result = [this]() -> RefPtr<BlockStatement> {
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
@@ -361,7 +367,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     if (!function_body_result.is_null()) {
         state_rollback_guard.disarm();
         auto body = function_body_result.release_nonnull();
-        return create_ast_node<FunctionExpression>("", move(body), move(parameters), m_parser_state.m_var_scopes.take_last());
+        return create_ast_node<FunctionExpression>("", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last());
     }
 
     return nullptr;
@@ -849,10 +855,12 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
     }
     consume(TokenType::ParenOpen);
     Vector<FunctionNode::Parameter> parameters;
+    i32 function_length = -1;
     while (match(TokenType::Identifier) || match(TokenType::TripleDot)) {
         if (match(TokenType::TripleDot)) {
             consume();
             auto parameter_name = consume(TokenType::Identifier).value();
+            function_length = parameters.size();
             parameters.append({ parameter_name, nullptr, true });
             break;
         }
@@ -860,6 +868,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
         RefPtr<Expression> default_value;
         if (match(TokenType::Equals)) {
             consume(TokenType::Equals);
+            function_length = parameters.size();
             default_value = parse_expression(0);
         }
         parameters.append({ parameter_name, default_value });
@@ -868,9 +877,13 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
         consume(TokenType::Comma);
     }
     consume(TokenType::ParenClose);
+
+    if (function_length == -1)
+        function_length = parameters.size();
+        
     auto body = parse_block_statement();
     body->add_variables(m_parser_state.m_var_scopes.last());
-    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), NonnullRefPtrVector<VariableDeclaration>());
+    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>());
 }
 
 NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
