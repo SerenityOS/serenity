@@ -30,6 +30,7 @@
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
@@ -71,6 +72,7 @@ public:
     void line_to(float x, float y);
     void quadratic_curve_to(float cx, float cy, float x, float y);
     void stroke();
+    void fill(Gfx::Painter::WindingRule);
 
     RefPtr<ImageData> create_image_data(JS::GlobalObject&, int width, int height) const;
     void put_image_data(const ImageData&, float x, float y);
