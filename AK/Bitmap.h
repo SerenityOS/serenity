@@ -243,6 +243,18 @@ public:
         }
 
         if (free_chunks < min_length) {
+            size_t first_trailing_bit = (m_size / 32) * 32;
+            size_t trailing_bits = size() % 32;
+            for (size_t i = 0; i < trailing_bits; ++i) {
+                if (!get(first_trailing_bit + i)) {
+                    if (!free_chunks)
+                        *start_of_free_chunks = first_trailing_bit + i;
+                    if (++free_chunks >= min_length)
+                        return min(free_chunks, max_length);
+                } else {
+                    free_chunks = 0;
+                }
+            }
             return {};
         }
 
@@ -340,7 +352,7 @@ public:
     static constexpr u32 max_size = 0xffffffff;
 
 private:
-    size_t size_in_bytes() const { return ceil_div(m_size, 8); }
+    size_t size_in_bytes() const { return ceil_div(m_size, static_cast<size_t>(8)); }
 
     u8* m_data { nullptr };
     size_t m_size { 0 };
