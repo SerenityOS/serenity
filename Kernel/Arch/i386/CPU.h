@@ -265,7 +265,7 @@ u16 gdt_alloc_entry();
 void gdt_free_entry(u16);
 Descriptor& get_gdt_entry(u16 selector);
 void write_gdt_entry(u16 selector, Descriptor&);
-void handle_crash(RegisterState&, const char* description, int signal);
+void handle_crash(RegisterState&, const char* description, int signal, bool out_of_memory = false);
 
 [[noreturn]] static inline void hang()
 {

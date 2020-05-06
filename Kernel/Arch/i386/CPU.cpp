@@ -167,7 +167,7 @@ static void dump(const RegisterState& regs)
     }
 }
 
-void handle_crash(RegisterState& regs, const char* description, int signal)
+void handle_crash(RegisterState& regs, const char* description, int signal, bool out_of_memory)
 {
     if (!Process::current) {
         klog() << description << " with !current";
@@ -188,7 +188,7 @@ void handle_crash(RegisterState& regs, const char* description, int signal)
     }
 
     cli();
-    Process::current->crash(signal, regs.eip);
+    Process::current->crash(signal, regs.eip, out_of_memory);
 }
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);
@@ -254,10 +254,12 @@ void page_fault_handler(RegisterState regs)
 
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
 
-    if (response == PageFaultResponse::ShouldCrash) {
-        if (Thread::current->has_signal_handler(SIGSEGV)) {
-            Thread::current->send_urgent_signal_to_self(SIGSEGV);
-            return;
+    if (response == PageFaultResponse::ShouldCrash || response == PageFaultResponse::OutOfMemory) {
+        if (response != PageFaultResponse::OutOfMemory) {
+            if (Thread::current->has_signal_handler(SIGSEGV)) {
+                Thread::current->send_urgent_signal_to_self(SIGSEGV);
+                return;
+            }
         }
 
         dbg() << "Unrecoverable page fault, "
@@ -287,7 +289,7 @@ void page_fault_handler(RegisterState regs)
             dbg() << "Note: Address " << VirtualAddress(fault_address) << " looks like a possible nullptr dereference";
         }
 
-        handle_crash(regs, "Page Fault", SIGSEGV);
+        handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "Continuing after resolved page fault";

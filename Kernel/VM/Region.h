@@ -40,6 +40,7 @@ class VMObject;
 
 enum class PageFaultResponse {
     ShouldCrash,
+    OutOfMemory,
     Continue,
 };
 

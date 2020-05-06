@@ -1540,21 +1540,25 @@ int Process::sys$sigreturn(RegisterState& registers)
     return smuggled_eax;
 }
 
-void Process::crash(int signal, u32 eip)
+void Process::crash(int signal, u32 eip, bool out_of_memory)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!is_dead());
     ASSERT(Process::current == this);
 
-    if (eip >= 0xc0000000 && g_kernel_symbols_available) {
-        auto* symbol = symbolicate_kernel_address(eip);
-        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << (symbol ? demangle(symbol->name) : "(k?)") << " +" << (symbol ? eip - symbol->address : 0) << "\033[0m\n";
-    } else if (auto elf_bundle = this->elf_bundle()) {
-        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << elf_bundle->elf_loader->symbolicate(eip) << "\033[0m\n";
+    if (out_of_memory) {
+        dbg() << "\033[31;1mOut of memory\033[m, killing: " << *this;
     } else {
-        dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
+        if (eip >= 0xc0000000 && g_kernel_symbols_available) {
+            auto* symbol = symbolicate_kernel_address(eip);
+            dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << (symbol ? demangle(symbol->name) : "(k?)") << " +" << (symbol ? eip - symbol->address : 0) << "\033[0m\n";
+        } else if (auto elf_bundle = this->elf_bundle()) {
+            dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << elf_bundle->elf_loader->symbolicate(eip) << "\033[0m\n";
+        } else {
+            dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
+        }
+        dump_backtrace();
     }
-    dump_backtrace();
     m_termination_signal = signal;
     dump_regions();
     ASSERT(is_ring3());
