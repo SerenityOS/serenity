@@ -182,7 +182,7 @@ static Optional<Color> parse_rgba_color(const StringView& string)
     if (!ok)
         return {};
 
-    double alpha = strtod(String(parts[3]).characters(), nullptr);
+    double alpha = strtod(parts[3].to_string().characters(), nullptr);
     int a = alpha * 255;
 
     if (r < 0 || r > 255)
