@@ -37,7 +37,7 @@ namespace Dwarf {
 
 class CompilationUnit;
 
-// DIE = Dwarf Information Entry
+// DIE = Debugging Information Entry
 class DIE {
 public:
     DIE(const CompilationUnit&, u32 offset);
