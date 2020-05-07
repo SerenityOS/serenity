@@ -74,7 +74,7 @@ int PurgeableVMObject::purge_impl()
         return 0;
     int purged_page_count = 0;
     for (size_t i = 0; i < m_physical_pages.size(); ++i) {
-        if (m_physical_pages[i])
+        if (m_physical_pages[i] && !m_physical_pages[i]->is_shared_zero_page())
             ++purged_page_count;
         m_physical_pages[i] = MM.shared_zero_page();
     }
