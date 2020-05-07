@@ -375,13 +375,13 @@ static void build_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat
     build_slash(s_table32, op, slash, mnemonic, format32, lock_prefix_allowed);
 }
 
-static void build0FSlash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format16, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format16, InstructionFormat format32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build_slash(s_0f_table16, op, slash, mnemonic, format16, lock_prefix_allowed);
     build_slash(s_0f_table32, op, slash, mnemonic, format32, lock_prefix_allowed);
 }
 
-static void build0FSlash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build_slash(s_0f_table16, op, slash, mnemonic, format, lock_prefix_allowed);
     build_slash(s_0f_table32, op, slash, mnemonic, format, lock_prefix_allowed);
@@ -714,27 +714,27 @@ void build_opcode_tables_if_needed()
     build_slash(0xFF, 6, "PUSH", OP_RM16, OP_RM32);
 
     // Instructions starting with 0x0F are multi-byte opcodes.
-    build0FSlash(0x00, 0, "SLDT", OP_RM16);
-    build0FSlash(0x00, 1, "STR", OP_RM16);
-    build0FSlash(0x00, 2, "LLDT", OP_RM16);
-    build0FSlash(0x00, 3, "LTR", OP_RM16);
-    build0FSlash(0x00, 4, "VERR", OP_RM16);
-    build0FSlash(0x00, 5, "VERW", OP_RM16);
+    build_0f_slash(0x00, 0, "SLDT", OP_RM16);
+    build_0f_slash(0x00, 1, "STR", OP_RM16);
+    build_0f_slash(0x00, 2, "LLDT", OP_RM16);
+    build_0f_slash(0x00, 3, "LTR", OP_RM16);
+    build_0f_slash(0x00, 4, "VERR", OP_RM16);
+    build_0f_slash(0x00, 5, "VERW", OP_RM16);
 
-    build0FSlash(0x01, 0, "SGDT", OP_RM16);
-    build0FSlash(0x01, 1, "SIDT", OP_RM16);
-    build0FSlash(0x01, 2, "LGDT", OP_RM16);
-    build0FSlash(0x01, 3, "LIDT", OP_RM16);
-    build0FSlash(0x01, 4, "SMSW", OP_RM16);
-    build0FSlash(0x01, 6, "LMSW", OP_RM16);
-    build0FSlash(0x01, 7, "INVLPG", OP_RM32);
+    build_0f_slash(0x01, 0, "SGDT", OP_RM16);
+    build_0f_slash(0x01, 1, "SIDT", OP_RM16);
+    build_0f_slash(0x01, 2, "LGDT", OP_RM16);
+    build_0f_slash(0x01, 3, "LIDT", OP_RM16);
+    build_0f_slash(0x01, 4, "SMSW", OP_RM16);
+    build_0f_slash(0x01, 6, "LMSW", OP_RM16);
+    build_0f_slash(0x01, 7, "INVLPG", OP_RM32);
 
-    build0FSlash(0xBA, 4, "BT", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    build0FSlash(0xBA, 5, "BTS", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    build0FSlash(0xBA, 6, "BTR", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
-    build0FSlash(0xBA, 7, "BTC", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_0f_slash(0xBA, 4, "BT", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_0f_slash(0xBA, 5, "BTS", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_0f_slash(0xBA, 6, "BTR", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
+    build_0f_slash(0xBA, 7, "BTC", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
 
-    build0FSlash(0xC7, 6, "RDRAND", OP_RM16, OP_RM32);
+    build_0f_slash(0xC7, 6, "RDRAND", OP_RM16, OP_RM32);
 
     build_0f(0x02, "LAR", OP_reg16_RM16, OP_reg32_RM32);
     build_0f(0x03, "LSL", OP_reg16_RM16, OP_reg32_RM32);
