@@ -48,6 +48,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
@@ -735,6 +736,8 @@ void open_file(const String& filename)
         current_editor().set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
     else if (filename.ends_with(".js"))
         current_editor().set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+    else if (filename.ends_with(".ini"))
+        current_editor().set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
     else
         current_editor().set_syntax_highlighter(nullptr);
 
