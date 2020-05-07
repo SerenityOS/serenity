@@ -238,6 +238,7 @@ Tab::Tab()
             auto& editor = window->set_main_widget<GUI::TextEditor>();
             editor.set_text(source);
             editor.set_readonly(true);
+            editor.set_ruler_visible(true);
             window->set_rect(150, 150, 640, 480);
             window->set_title(url);
             window->show();
