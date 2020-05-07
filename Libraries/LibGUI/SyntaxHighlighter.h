@@ -36,7 +36,7 @@ namespace GUI {
 enum class SyntaxLanguage {
     PlainText,
     Cpp,
-    Javascript,
+    JavaScript,
     INI
 };
 
