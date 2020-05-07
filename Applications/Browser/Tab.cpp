@@ -30,6 +30,7 @@
 #include "History.h"
 #include "InspectorWidget.h"
 #include "WindowActions.h"
+#include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -98,7 +99,15 @@ Tab::Tab()
     m_location_box = toolbar.add<GUI::TextBox>();
 
     m_location_box->on_return_pressed = [this] {
-        m_html_widget->load(m_location_box->text());
+        String location = m_location_box->text();
+        if (!location.starts_with("file://") && !location.starts_with("http://") && !location.starts_with("https://")) {
+            StringBuilder builder;
+            builder.append("http://");
+            builder.append(location);
+            location = builder.build();
+        }
+
+        m_html_widget->load(location);
     };
 
     m_bookmark_button = toolbar.add<GUI::Button>();
