@@ -233,7 +233,7 @@ OwnPtr<Project> Project::load_from_file(const String& path)
 
     for (auto& file : files) {
         if (file.ends_with(".js")) {
-            type = ProjectType::Javascript;
+            type = ProjectType::JavaScript;
             break;
         }
     }

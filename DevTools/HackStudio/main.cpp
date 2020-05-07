@@ -686,7 +686,7 @@ int main(int argc, char** argv)
 
 void build(TerminalWrapper& wrapper)
 {
-    if (g_project->type() == ProjectType::Javascript && g_currently_open_file.ends_with(".js"))
+    if (g_project->type() == ProjectType::JavaScript && g_currently_open_file.ends_with(".js"))
         wrapper.run_command(String::format("js -A %s", g_currently_open_file.characters()));
     else
         wrapper.run_command("make");
@@ -694,7 +694,7 @@ void build(TerminalWrapper& wrapper)
 
 void run(TerminalWrapper& wrapper)
 {
-    if (g_project->type() == ProjectType::Javascript && g_currently_open_file.ends_with(".js"))
+    if (g_project->type() == ProjectType::JavaScript && g_currently_open_file.ends_with(".js"))
         wrapper.run_command(String::format("js %s", g_currently_open_file.characters()));
     else
         wrapper.run_command("make run");

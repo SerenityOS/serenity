@@ -36,7 +36,7 @@
 enum class ProjectType {
     Unknown,
     Cpp,
-    Javascript
+    JavaScript
 };
 
 class Project {
