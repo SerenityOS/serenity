@@ -38,7 +38,7 @@ public:
     virtual bool is_identifier(void*) const override;
     virtual bool is_navigatable(void*) const override;
 
-    virtual SyntaxLanguage language() const override { return SyntaxLanguage::Javascript; }
+    virtual SyntaxLanguage language() const override { return SyntaxLanguage::JavaScript; }
     virtual void rehighlight(Gfx::Palette) override;
 
 protected:
