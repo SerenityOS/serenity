@@ -111,6 +111,11 @@ int main(int argc, char** argv)
         tab.did_become_active();
     };
 
+    tab_widget.on_middle_click = [&](auto& clicked_widget) {
+        auto& tab = static_cast<Browser::Tab&>(clicked_widget);
+        tab.on_tab_close_request(tab);
+    };
+
     Browser::WindowActions window_actions(*window);
 
     Function<void(URL url, bool activate)> create_new_tab;
