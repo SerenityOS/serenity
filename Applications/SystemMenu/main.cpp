@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "PowerDialog.h"
 #include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
@@ -32,17 +33,9 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/Desktop.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
-#include <stdio.h>
-#include <sys/utsname.h>
-#include <unistd.h>
-
-#include "PowerDialog.h"
 
 //#define SYSTEM_MENU_DEBUG
 
@@ -129,8 +122,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         sorted_app_categories.append(category);
     quick_sort(sorted_app_categories);
 
-    u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
-    auto system_menu = GUI::Menu::construct(String((const char*)system_menu_name));
+    auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"); // HIGH VOLTAGE SIGN
 
     // First we construct all the necessary app category submenus.
     for (const auto& category : sorted_app_categories) {
