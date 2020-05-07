@@ -49,7 +49,7 @@ UnsignedBigInteger UnsignedBigInteger::import_data(const u8* ptr, size_t length)
     return integer;
 }
 
-size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data)
+size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data) const
 {
     UnsignedBigInteger copy { *this };
     UnsignedBigInteger quotient;
@@ -105,6 +105,7 @@ void UnsignedBigInteger::set_to_0()
 {
     m_words.clear_with_capacity();
     m_is_invalid = false;
+    m_cached_trimmed_length = {};
 }
 
 void UnsignedBigInteger::set_to(u32 other)
@@ -112,6 +113,7 @@ void UnsignedBigInteger::set_to(u32 other)
     m_is_invalid = false;
     m_words.resize_and_keep_capacity(1);
     m_words[0] = other;
+    m_cached_trimmed_length = {};
 }
 
 void UnsignedBigInteger::set_to(const UnsignedBigInteger& other)
@@ -119,16 +121,20 @@ void UnsignedBigInteger::set_to(const UnsignedBigInteger& other)
     m_is_invalid = other.m_is_invalid;
     m_words.resize_and_keep_capacity(other.m_words.size());
     __builtin_memcpy(m_words.data(), other.m_words.data(), other.m_words.size() * sizeof(u32));
+    m_cached_trimmed_length = {};
 }
 
 size_t UnsignedBigInteger::trimmed_length() const
 {
-    size_t num_leading_zeroes = 0;
-    for (int i = length() - 1; i >= 0; --i, ++num_leading_zeroes) {
-        if (m_words[i] != 0)
-            break;
+    if (!m_cached_trimmed_length.has_value()) {
+        size_t num_leading_zeroes = 0;
+        for (int i = length() - 1; i >= 0; --i, ++num_leading_zeroes) {
+            if (m_words[i] != 0)
+                break;
+        }
+        m_cached_trimmed_length = length() - num_leading_zeroes;
     }
-    return length() - num_leading_zeroes;
+    return m_cached_trimmed_length.value();
 }
 
 FLATTEN UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) const
@@ -206,6 +212,8 @@ void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
         m_words.unchecked_append(0);
     }
     m_words[word_index] |= (1 << inner_word_index);
+
+    m_cached_trimmed_length = {};
 }
 
 bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const

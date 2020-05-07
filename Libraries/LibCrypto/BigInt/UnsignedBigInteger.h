@@ -52,8 +52,8 @@ public:
     static UnsignedBigInteger import_data(const AK::StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
     static UnsignedBigInteger import_data(const u8* ptr, size_t length);
 
-    size_t export_data(AK::ByteBuffer& data);
-    size_t export_data(const u8* ptr, size_t length)
+    size_t export_data(AK::ByteBuffer& data) const;
+    size_t export_data(const u8* ptr, size_t length) const
     {
         auto buffer = ByteBuffer::wrap(ptr, length);
         return export_data(buffer);
@@ -67,7 +67,12 @@ public:
     void set_to_0();
     void set_to(u32 other);
     void set_to(const UnsignedBigInteger& other);
-    void invalidate() { m_is_invalid = true; }
+
+    void invalidate()
+    {
+        m_is_invalid = true;
+        m_cached_trimmed_length = {};
+    }
 
     bool is_invalid() const { return m_is_invalid; }
 
@@ -103,6 +108,8 @@ private:
 
     // Used to indicate a negative result, or a result of an invalid operation
     bool m_is_invalid { false };
+
+    mutable Optional<size_t> m_cached_trimmed_length;
 };
 
 struct UnsignedDivisionResult {
