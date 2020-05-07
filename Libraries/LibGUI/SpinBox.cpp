@@ -87,6 +87,15 @@ void SpinBox::set_range(int min, int max)
     update();
 }
 
+void SpinBox::set_enabled(bool value)
+{
+    Widget::set_enabled(value);
+
+    m_editor->set_enabled(value);
+    m_increment_button->set_enabled(value);
+    m_decrement_button->set_enabled(value);
+}
+
 void SpinBox::keydown_event(KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Up) {
