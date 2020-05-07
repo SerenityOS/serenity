@@ -162,7 +162,7 @@ Tab::Tab()
         auto window = GUI::Window::construct();
         window->set_rect(300, 300, 300, 150);
         auto url = m_html_widget->document()->complete_url(m_link_context_menu_href);
-        window->set_title(String::format("0% of %s", url.basename().characters()));
+        window->set_title(String::format("0%% of %s", url.basename().characters()));
         window->set_resizable(false);
         window->set_main_widget<DownloadWidget>(url);
         window->show();
