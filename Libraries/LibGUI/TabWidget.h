@@ -80,6 +80,7 @@ public:
     int uniform_tab_width() const;
 
     Function<void(Widget&)> on_change;
+    Function<void(Widget&)> on_middle_click;
 
 protected:
     TabWidget();

@@ -236,7 +236,15 @@ void TabWidget::mousedown_event(MouseEvent& event)
         auto button_rect = this->button_rect(i);
         if (!button_rect.contains(event.position()))
             continue;
-        set_active_widget(m_tabs[i].widget);
+        if (event.button() == MouseButton::Left) {
+            set_active_widget(m_tabs[i].widget);
+        } else if (event.button() == MouseButton::Middle) {
+            auto* widget = m_tabs[i].widget;
+            deferred_invoke([this, widget](auto&) {
+                if (on_middle_click && widget)
+                    on_middle_click(*widget);
+            });
+        }
         return;
     }
 }
