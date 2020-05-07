@@ -154,6 +154,12 @@ Tab::Tab()
     m_link_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
         m_html_widget->on_link_click(m_link_context_menu_href, "_blank", 0);
     }));
+    m_link_context_menu->add_action(GUI::Action::create("Open in new window", [this](auto&) {
+        if (!fork()) {
+            execl("/bin/Browser", "Browser", m_html_widget->document()->complete_url(m_link_context_menu_href).to_string().characters(), nullptr);
+            ASSERT_NOT_REACHED();
+        }
+    }));
     m_link_context_menu->add_action(GUI::Action::create("Copy link", [this](auto&) {
         GUI::Clipboard::the().set_data(m_html_widget->document()->complete_url(m_link_context_menu_href).to_string());
     }));

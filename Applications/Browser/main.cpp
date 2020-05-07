@@ -49,7 +49,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio shared_buffer accept unix cpath rpath wpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept unix cpath rpath wpath fattr proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
     Web::ResourceLoader::the();
 
-    if (pledge("stdio shared_buffer accept cpath rpath wpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept cpath rpath wpath proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -75,6 +75,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/bin/Browser", "x") < 0) {
         perror("unveil");
         return 1;
     }
