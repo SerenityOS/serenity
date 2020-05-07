@@ -41,6 +41,8 @@ public:
 private:
     virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "StringConstructor"; }
+
+    static Value raw(Interpreter&);
 };
 
 }
