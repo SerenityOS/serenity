@@ -54,6 +54,10 @@ public:
     static DateTime now();
     static DateTime from_timestamp(time_t);
 
+    // FIXME: This should be replaced with a proper comparison
+    //        operator when we get the equivalent of strptime
+    bool is_before(const String&) const;
+
 private:
     time_t m_timestamp { 0 };
     unsigned m_year { 0 };
