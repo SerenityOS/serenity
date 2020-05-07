@@ -24,12 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringObject.h>
-#include <math.h>
 
 namespace JS {
 
@@ -38,6 +39,8 @@ StringConstructor::StringConstructor()
 {
     put("prototype", interpreter().global_object().string_prototype(), 0);
     put("length", Value(1), Attribute::Configurable);
+
+    put_native_function("raw", raw, 0, Attribute::Writable | Attribute::Configurable);
 }
 
 StringConstructor::~StringConstructor()
@@ -61,6 +64,32 @@ Value StringConstructor::construct(Interpreter& interpreter)
     if (!primitive_string)
         return {};
     return StringObject::create(interpreter.global_object(), *primitive_string);
+}
+
+Value StringConstructor::raw(Interpreter& interpreter)
+{
+    auto* template_object = interpreter.argument(0).to_object(interpreter.heap());
+    if (interpreter.exception())
+        return {};
+
+    auto raw = template_object->get("raw");
+    if (raw.is_empty() || raw.is_undefined() || raw.is_null()) {
+        interpreter.throw_exception<TypeError>(String::format("Cannot convert property 'raw' to object from %s", raw.is_null() ? "null" : "undefined"));
+        return {};
+    }
+    if (!raw.is_array())
+        return js_string(interpreter, "");
+
+    auto& raw_array_elements = static_cast<Array*>(raw.to_object(interpreter.heap()))->elements();
+    StringBuilder builder;
+
+    for (size_t i = 0; i < raw_array_elements.size(); ++i) {
+        builder.append(raw_array_elements.at(i).to_string());
+        if (i + 1 < interpreter.argument_count() && i < raw_array_elements.size() - 1)
+            builder.append(interpreter.argument(i + 1).to_string());
+    }
+
+    return js_string(interpreter, builder.build());
 }
 
 }
