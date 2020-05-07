@@ -448,6 +448,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
                 if (purged_page_count) {
                     klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from PurgeableVMObject{" << &purgeable_vmobject << "}";
                     page = find_free_user_physical_page();
+                    ASSERT(page);
                     return IterationDecision::Break;
                 }
             }
