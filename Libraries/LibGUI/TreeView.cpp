@@ -224,7 +224,17 @@ void TreeView::paint_event(PaintEvent& event)
             }
         }
 
-        Gfx::Rect row_rect { 0, rect.y(), frame_inner_rect().width(), rect.height() };
+        int row_width = 0;
+        for (int column_index = 0; column_index < model.column_count(); ++column_index) {
+            if (is_column_hidden(column_index))
+                continue;
+            row_width += this->column_width(column_index) + horizontal_padding() * 2;
+        }
+        if (frame_inner_rect().width() > row_width) {
+            row_width = frame_inner_rect().width();
+        }
+
+        Gfx::Rect row_rect { 0, rect.y(), row_width, rect.height() };
         painter.fill_rect(row_rect, background_color);
 
         int x_offset = 0;
