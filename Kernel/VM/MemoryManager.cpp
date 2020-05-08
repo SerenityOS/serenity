@@ -216,6 +216,9 @@ void MemoryManager::parse_memory_map()
 
     for (auto& region : m_user_physical_regions)
         m_user_physical_pages += region.finalize_capacity();
+
+    ASSERT(m_super_physical_pages > 0);
+    ASSERT(m_user_physical_pages > 0);
 }
 
 const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
@@ -434,13 +437,11 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page()
 RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
 {
     InterruptDisabler disabler;
-    RefPtr<PhysicalPage> page = find_free_user_physical_page();
+    auto page = find_free_user_physical_page();
 
     if (!page) {
-        if (m_user_physical_regions.is_empty()) {
-            klog() << "MM: no user physical regions available (?)";
-        }
-
+        // We didn't have a single free physical page. Let's try to free something up!
+        // First, we look for a purgeable VMObject in the volatile state.
         for_each_vmobject_of_type<PurgeableVMObject>([&](auto& vmobject) {
             int purged_page_count = vmobject.purge_with_interrupts_disabled({});
             if (purged_page_count) {
