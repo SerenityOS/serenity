@@ -93,6 +93,8 @@ public:
         }
     }
 
+    String name_of_containing_function(u32 address) const;
+
 private:
     void prepare_variable_scopes();
     void prepare_lines();

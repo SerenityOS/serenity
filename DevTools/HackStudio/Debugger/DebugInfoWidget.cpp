@@ -25,28 +25,31 @@
  */
 
 #include "DebugInfoWidget.h"
+#include "BacktraceModel.h"
 #include "Debugger.h"
 #include "VariablesModel.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/TableView.h>
+#include <LibGUI/Splitter.h>
 #include <LibGUI/TreeView.h>
 
 DebugInfoWidget::DebugInfoWidget()
 {
     set_layout<GUI::HorizontalBoxLayout>();
-    m_info_view = add<GUI::TreeView>();
-    m_backtrace_view = add<GUI::TableView>();
+    auto& splitter = add<GUI::HorizontalSplitter>();
+    m_backtrace_view = splitter.add<GUI::ListView>();
+    m_variables_view = splitter.add<GUI::TreeView>();
 }
 
 void DebugInfoWidget::update_state(const PtraceRegisters& regs)
 {
-    auto model = VariablesModel::create(regs);
-    m_info_view->set_model(model);
+    m_variables_view->set_model(VariablesModel::create(regs));
+    m_backtrace_view->set_model(BacktraceModel::create(regs));
 }
 
 void DebugInfoWidget::program_stopped()
 {
-    m_info_view->set_model({});
+    m_variables_view->set_model({});
 }

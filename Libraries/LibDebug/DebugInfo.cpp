@@ -212,3 +212,13 @@ NonnullOwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwa
 
     return variable_info;
 }
+
+String DebugInfo::name_of_containing_function(u32 address) const
+{
+    for (const auto& scope : m_scopes) {
+        if (!scope.is_function || address < scope.address_low || address >= scope.address_high)
+            continue;
+        return scope.name;
+    }
+    return {};
+}

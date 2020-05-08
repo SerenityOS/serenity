@@ -25,25 +25,40 @@
  */
 
 #pragma once
-
-#include "Debugger.h"
-#include "LibGUI/ListView.h"
-#include <AK/NonnullOwnPtr.h>
+#include <AK/Vector.h>
+#include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/Widget.h>
 #include <sys/arch/i386/regs.h>
 
-class DebugInfoWidget final : public GUI::Widget {
-    C_OBJECT(DebugInfoWidget)
+class BacktraceModel final : public GUI::Model {
 public:
-    virtual ~DebugInfoWidget() override {}
+    static RefPtr<BacktraceModel> create(const PtraceRegisters& regs);
 
-    void update_state(const PtraceRegisters&);
-    void program_stopped();
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_frames.size(); }
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
+
+    virtual String column_name(int) const override
+    {
+        return "";
+    }
+
+    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override;
+
+    virtual void update() override {}
+    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override { return create_index(row, column, &m_frames.at(row)); }
 
 private:
-    explicit DebugInfoWidget();
+    struct FrameInfo {
+        String function_name;
+        u32 address_in_frame;
+    };
 
-    RefPtr<GUI::TreeView> m_variables_view;
-    RefPtr<GUI::ListView> m_backtrace_view;
+    explicit BacktraceModel(Vector<FrameInfo>&& frames)
+        : m_frames(move(frames))
+    {
+    }
+
+    static Vector<FrameInfo> create_backtrace(const PtraceRegisters&);
+
+    Vector<FrameInfo> m_frames;
 };
