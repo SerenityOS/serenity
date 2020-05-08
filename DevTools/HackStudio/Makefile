@@ -6,7 +6,6 @@ OBJS = \
     ProcessStateWidget.o \
     FormEditorWidget.o \
     FormWidget.o \
-    DebugInfoWidget.o \
     Editor.o \
     EditorWrapper.o \
     Locator.o \
@@ -14,8 +13,10 @@ OBJS = \
     CursorTool.o \
     WidgetTool.o \
     WidgetTreeModel.o \
-    Debugger.o \
-    main.o
+    main.o \
+    Debugger/DebugInfoWidget.o \
+    Debugger/Debugger.o \
+    Debugger/VariablesModel.o
 
 PROGRAM = HackStudio
 

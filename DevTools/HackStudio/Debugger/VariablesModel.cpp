@@ -24,14 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DebugInfoWidget.h"
-#include "Debugger.h"
-#include <AK/StringBuilder.h>
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Model.h>
-#include <LibGUI/TreeView.h>
+#include "VariablesModel.h"
 
-GUI::ModelIndex DebugInfoModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
+GUI::ModelIndex VariablesModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
 {
     if (!parent_index.is_valid())
         return create_index(row, column, &m_variables[row]);
@@ -40,7 +35,7 @@ GUI::ModelIndex DebugInfoModel::index(int row, int column, const GUI::ModelIndex
     return create_index(row, column, child);
 }
 
-GUI::ModelIndex DebugInfoModel::parent_index(const GUI::ModelIndex& index) const
+GUI::ModelIndex VariablesModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -63,7 +58,7 @@ GUI::ModelIndex DebugInfoModel::parent_index(const GUI::ModelIndex& index) const
     ASSERT_NOT_REACHED();
 }
 
-int DebugInfoModel::row_count(const GUI::ModelIndex& index) const
+int VariablesModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return m_variables.size();
@@ -93,7 +88,7 @@ String variable_value_as_string(const DebugInfo::VariableInfo& variable)
     return String::format("type: %s @ %08x, ", variable.type.characters(), variable_address);
 }
 
-GUI::Variant DebugInfoModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto* variable = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
     switch (role) {
@@ -108,30 +103,13 @@ GUI::Variant DebugInfoModel::data(const GUI::ModelIndex& index, Role role) const
     }
 }
 
-void DebugInfoModel::update()
+void VariablesModel::update()
 {
     did_update();
 }
 
-static RefPtr<DebugInfoModel> create_model(const PtraceRegisters& regs)
+RefPtr<VariablesModel> VariablesModel::create(const PtraceRegisters& regs)
 {
     auto variables = Debugger::the().session()->debug_info().get_variables_in_current_scope(regs);
-    return adopt(*new DebugInfoModel(move(variables), regs));
-}
-
-DebugInfoWidget::DebugInfoWidget()
-{
-    set_layout<GUI::VerticalBoxLayout>();
-    m_info_view = add<GUI::TreeView>();
-}
-
-void DebugInfoWidget::update_variables(const PtraceRegisters& regs)
-{
-    auto model = create_model(regs);
-    m_info_view->set_model(model);
-}
-
-void DebugInfoWidget::program_stopped()
-{
-    m_info_view->set_model({});
+    return adopt(*new VariablesModel(move(variables), regs));
 }
