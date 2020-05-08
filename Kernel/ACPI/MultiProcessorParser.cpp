@@ -26,6 +26,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
+#include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibBareMetal/StdLib.h>
 
@@ -189,34 +190,34 @@ MultiProcessorParser& MultiProcessorParser::the()
     return *s_parser;
 }
 
-Vector<RefPtr<PCIInterruptOverrideMetadata>> MultiProcessorParser::get_pci_interrupt_redirections()
+Vector<PCIInterruptOverrideMetadata> MultiProcessorParser::get_pci_interrupt_redirections()
 {
     dbg() << "MultiProcessor: Get PCI IOAPIC redirections";
-    Vector<RefPtr<PCIInterruptOverrideMetadata>> overrides;
+    Vector<PCIInterruptOverrideMetadata> overrides;
     Vector<unsigned> pci_bus_ids = get_pci_bus_ids();
     for (auto entry : m_io_interrupt_redirection_entries) {
         auto entry_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)entry)), PAGE_ROUND_UP(m_configuration_table_length), "MultiProcessor Parser Parsing Bus Entry", Region::Access::Read, false, true);
         auto* v_entry_ptr = (MultiProcessor::IOInterruptAssignmentEntry*)entry_region->vaddr().offset(offset_in_page((u32)entry)).as_ptr();
-#ifdef MULTIPROCESSOR_DEBUG        
+#ifdef MULTIPROCESSOR_DEBUG
         dbg() << "MultiProcessor: Parsing Entry P 0x" << String::format("%x", entry) << ", V " << v_entry_ptr;
 #endif
         for (auto id : pci_bus_ids) {
             if (id == v_entry_ptr->source_bus_id) {
 
                 klog() << "Interrupts: Bus " << v_entry_ptr->source_bus_id << ", Polarity " << v_entry_ptr->polarity << ", Trigger Mode " << v_entry_ptr->trigger_mode << ", INT " << v_entry_ptr->source_bus_irq << ", IOAPIC " << v_entry_ptr->destination_ioapic_id << ", IOAPIC INTIN " << v_entry_ptr->destination_ioapic_intin_pin;
-                overrides.append(adopt(*new PCIInterruptOverrideMetadata(
+                overrides.empend(
                     v_entry_ptr->source_bus_id,
                     v_entry_ptr->polarity,
                     v_entry_ptr->trigger_mode,
                     v_entry_ptr->source_bus_irq,
                     v_entry_ptr->destination_ioapic_id,
-                    v_entry_ptr->destination_ioapic_intin_pin)));
+                    v_entry_ptr->destination_ioapic_intin_pin);
             }
         }
     }
 
-    for (auto override_metadata : overrides) {
-        klog() << "Interrupts: Bus " << override_metadata->bus() << ", Polarity " << override_metadata->polarity() << ", PCI Device " << override_metadata->pci_device_number() << ", Trigger Mode " << override_metadata->trigger_mode() << ", INT " << override_metadata->pci_interrupt_pin() << ", IOAPIC " << override_metadata->ioapic_id() << ", IOAPIC INTIN " << override_metadata->ioapic_interrupt_pin();
+    for (auto& override_metadata : overrides) {
+        klog() << "Interrupts: Bus " << override_metadata.bus() << ", Polarity " << override_metadata.polarity() << ", PCI Device " << override_metadata.pci_device_number() << ", Trigger Mode " << override_metadata.trigger_mode() << ", INT " << override_metadata.pci_interrupt_pin() << ", IOAPIC " << override_metadata.ioapic_id() << ", IOAPIC INTIN " << override_metadata.ioapic_interrupt_pin();
     }
     return overrides;
 }
@@ -231,32 +232,5 @@ PCIInterruptOverrideMetadata::PCIInterruptOverrideMetadata(u8 bus_id, u8 polarit
     , m_ioapic_interrupt_pin(ioapic_int_pin)
 {
 }
-u8 PCIInterruptOverrideMetadata::bus() const
-{
-    return m_bus_id;
-}
-u8 PCIInterruptOverrideMetadata::polarity() const
-{
-    return m_polarity;
-}
-u8 PCIInterruptOverrideMetadata::trigger_mode() const
-{
-    return m_trigger_mode;
-}
-u8 PCIInterruptOverrideMetadata::pci_interrupt_pin() const
-{
-    return m_pci_interrupt_pin;
-}
-u8 PCIInterruptOverrideMetadata::pci_device_number() const
-{
-    return m_pci_device_number;
-}
-u32 PCIInterruptOverrideMetadata::ioapic_id() const
-{
-    return m_ioapic_id;
-}
-u16 PCIInterruptOverrideMetadata::ioapic_interrupt_pin() const
-{
-    return m_ioapic_interrupt_pin;
-}
+
 }

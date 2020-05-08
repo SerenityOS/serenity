@@ -83,11 +83,6 @@ IRQController& InterruptManagement::get_interrupt_controller(int index)
     return *m_interrupt_controllers[index];
 }
 
-Vector<RefPtr<ISAInterruptOverrideMetadata>> InterruptManagement::isa_overrides()
-{
-    return m_isa_interrupt_overrides;
-}
-
 u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
 {
     if (!InterruptManagement::initialized()) {
@@ -223,11 +218,11 @@ void InterruptManagement::locate_apic_data()
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
             auto* interrupt_override_entry = (const ACPI::Structures::MADTEntries::InterruptSourceOverride*)madt_entry;
-            m_isa_interrupt_overrides.append(adopt(*new ISAInterruptOverrideMetadata(
+            m_isa_interrupt_overrides.empend(
                 interrupt_override_entry->bus,
                 interrupt_override_entry->source,
                 interrupt_override_entry->global_system_interrupt,
-                interrupt_override_entry->flags)));
+                interrupt_override_entry->flags);
             dbg() << "Interrupts: Overriding INT 0x" << String::format("%x", interrupt_override_entry->source) << " with GSI " << interrupt_override_entry->global_system_interrupt << ", for bus 0x" << String::format("%x", interrupt_override_entry->bus);
         }
         madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress((u32)madt_entry).offset(entry_length).get());
@@ -235,33 +230,10 @@ void InterruptManagement::locate_apic_data()
         entry_index++;
     }
 }
+
 void InterruptManagement::locate_pci_interrupt_overrides()
 {
     m_pci_interrupt_overrides = MultiProcessorParser::the().get_pci_interrupt_redirections();
 }
 
-ISAInterruptOverrideMetadata::ISAInterruptOverrideMetadata(u8 bus, u8 source, u32 global_system_interrupt, u16 flags)
-    : m_bus(bus)
-    , m_source(source)
-    , m_global_system_interrupt(global_system_interrupt)
-    , m_flags(flags)
-{
-}
-
-u8 ISAInterruptOverrideMetadata::bus() const
-{
-    return m_bus;
-}
-u8 ISAInterruptOverrideMetadata::source() const
-{
-    return m_source;
-}
-u32 ISAInterruptOverrideMetadata::gsi() const
-{
-    return m_global_system_interrupt;
-}
-u16 ISAInterruptOverrideMetadata::flags() const
-{
-    return m_flags;
-}
 }

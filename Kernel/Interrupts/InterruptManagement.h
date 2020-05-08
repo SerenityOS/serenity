@@ -40,7 +40,27 @@
 
 namespace Kernel {
 
-class ISAInterruptOverrideMetadata;
+class ISAInterruptOverrideMetadata {
+public:
+    ISAInterruptOverrideMetadata(u8 bus, u8 source, u32 global_system_interrupt, u16 flags)
+        : m_bus(bus)
+        , m_source(source)
+        , m_global_system_interrupt(global_system_interrupt)
+        , m_flags(flags)
+    {
+    }
+
+    u8 bus() const { return m_bus; }
+    u8 source() const { return m_source; }
+    u32 gsi() const { return m_global_system_interrupt; }
+    u16 flags() const { return m_flags; }
+
+private:
+    const u8 m_bus;
+    const u8 m_source;
+    const u32 m_global_system_interrupt;
+    const u16 m_flags;
+};
 
 class InterruptManagement {
 public:
@@ -56,7 +76,7 @@ public:
     bool smp_enabled() const { return m_smp_enabled; }
     RefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
 
-    Vector<RefPtr<ISAInterruptOverrideMetadata>> isa_overrides();
+    const Vector<ISAInterruptOverrideMetadata>& isa_overrides() const { return m_isa_interrupt_overrides; }
 
     u8 get_mapped_interrupt_vector(u8 original_irq);
     u8 get_irq_vector(u8 mapped_interrupt_vector);
@@ -71,23 +91,9 @@ private:
     void locate_pci_interrupt_overrides();
     bool m_smp_enabled { false };
     FixedArray<RefPtr<IRQController>> m_interrupt_controllers { 1 };
-    Vector<RefPtr<ISAInterruptOverrideMetadata>> m_isa_interrupt_overrides;
-    Vector<RefPtr<PCIInterruptOverrideMetadata>> m_pci_interrupt_overrides;
+    Vector<ISAInterruptOverrideMetadata> m_isa_interrupt_overrides;
+    Vector<PCIInterruptOverrideMetadata> m_pci_interrupt_overrides;
     PhysicalAddress m_madt;
 };
 
-class ISAInterruptOverrideMetadata : public RefCounted<ISAInterruptOverrideMetadata> {
-public:
-    ISAInterruptOverrideMetadata(u8 bus, u8 source, u32 global_system_interrupt, u16 flags);
-    u8 bus() const;
-    u8 source() const;
-    u32 gsi() const;
-    u16 flags() const;
-
-private:
-    u8 m_bus;
-    u8 m_source;
-    u32 m_global_system_interrupt;
-    u16 m_flags;
-};
 }
