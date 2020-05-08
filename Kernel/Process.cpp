@@ -4360,14 +4360,15 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* user_ts)
 
 int Process::sys$clock_settime(clockid_t clock_id, timespec* user_ts)
 {
-    SmapDisabler disabler;
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(user_ts))
+
+    timespec ts;
+    if (!validate_read_and_copy_typed(&ts, user_ts))
         return -EFAULT;
 
     switch (clock_id) {
     case CLOCK_REALTIME:
-        TimeManagement::the().set_epoch_time(user_ts->tv_sec);
+        TimeManagement::the().set_epoch_time(ts.tv_sec);
         break;
     default:
         return -EINVAL;
