@@ -71,7 +71,7 @@ public:
     void close();
 
     struct LineSegment {
-        Point from, to;
+        FloatPoint from, to;
         float inverse_slope;
         float x_of_minimum_y;
         float maximum_y;
@@ -79,13 +79,7 @@ public:
         float x;
     };
 
-    enum ShapeKind {
-        Simple,
-        Complex,
-    };
-
     const Vector<Segment>& segments() const { return m_segments; }
-    Vector<LineSegment> split_lines(ShapeKind);
     const auto& split_lines()
     {
         if (m_split_lines.has_value())
@@ -101,30 +95,12 @@ private:
     void invalidate_split_lines()
     {
         m_split_lines.clear();
-        m_graph_node_map.clear();
     }
     void segmentize_path();
-    void generate_path_graph();
-    bool is_part_of_closed_polygon(const Point& p0, const Point& p1);
-    static unsigned hash_line(const Point& from, const Point& to);
 
     Vector<Segment> m_segments;
 
     Optional<Vector<LineSegment>> m_split_lines {};
-
-    struct PathGraphNode {
-        PathGraphNode(u32 hash, const LineSegment& line)
-            : hash(hash)
-            , line(line)
-        {
-        }
-
-        Vector<const PathGraphNode*> children;
-        u32 hash;
-        LineSegment line;
-    };
-
-    Optional<HashMap<u32, OwnPtr<PathGraphNode>>> m_graph_node_map;
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const Path& path)
