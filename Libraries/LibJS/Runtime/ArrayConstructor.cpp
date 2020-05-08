@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +30,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Shape.h>
 
@@ -50,14 +52,21 @@ Value ArrayConstructor::call(Interpreter& interpreter)
     if (interpreter.argument_count() <= 0)
         return Array::create(interpreter.global_object());
 
-    if (interpreter.argument_count() == 1) {
+    if (interpreter.argument_count() == 1 && interpreter.argument(0).is_number()) {
+        auto array_length_value = interpreter.argument(0);
+        if (!array_length_value.is_integer() || array_length_value.to_i32() < 0) {
+            interpreter.throw_exception<TypeError>("Invalid array length");
+            return {};
+        }
         auto* array = Array::create(interpreter.global_object());
-        array->elements().resize(interpreter.argument(0).to_i32());
+        array->elements().resize(array_length_value.to_i32());
         return array;
     }
 
-    // FIXME: Handle "new Array(element0, element1, ...)"
-    ASSERT_NOT_REACHED();
+    auto* array = Array::create(interpreter.global_object());
+    for (size_t i = 0; i < interpreter.argument_count(); ++i)
+        array->elements().append(interpreter.argument(i));
+    return array;
 }
 
 Value ArrayConstructor::construct(Interpreter& interpreter)
