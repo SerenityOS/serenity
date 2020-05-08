@@ -38,6 +38,7 @@ struct [[gnu::packed]] CompilationUnitHeader
 
 enum class EntryTag : u32 {
     None = 0,
+    FormalParameter = 0x5,
     LexicalBlock = 0xb,
     Member = 0xd,
     SubProgram = 0x2e,
