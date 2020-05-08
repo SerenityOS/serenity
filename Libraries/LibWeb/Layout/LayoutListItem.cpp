@@ -40,6 +40,11 @@ LayoutListItem::~LayoutListItem()
 
 void LayoutListItem::layout()
 {
+    if (m_marker) {
+        remove_child(*m_marker);
+        m_marker = nullptr;
+    }
+
     LayoutBlock::layout();
 
     if (!m_marker) {
