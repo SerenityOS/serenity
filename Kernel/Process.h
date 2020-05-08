@@ -53,24 +53,25 @@ void kgettimeofday(timeval&);
 
 extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
 
-#define ENUMERATE_PLEDGE_PROMISES      \
-    __ENUMERATE_PLEDGE_PROMISE(stdio)  \
-    __ENUMERATE_PLEDGE_PROMISE(rpath)  \
-    __ENUMERATE_PLEDGE_PROMISE(wpath)  \
-    __ENUMERATE_PLEDGE_PROMISE(cpath)  \
-    __ENUMERATE_PLEDGE_PROMISE(dpath)  \
-    __ENUMERATE_PLEDGE_PROMISE(inet)   \
-    __ENUMERATE_PLEDGE_PROMISE(id)     \
-    __ENUMERATE_PLEDGE_PROMISE(proc)   \
-    __ENUMERATE_PLEDGE_PROMISE(exec)   \
-    __ENUMERATE_PLEDGE_PROMISE(unix)   \
-    __ENUMERATE_PLEDGE_PROMISE(fattr)  \
-    __ENUMERATE_PLEDGE_PROMISE(tty)    \
-    __ENUMERATE_PLEDGE_PROMISE(chown)  \
-    __ENUMERATE_PLEDGE_PROMISE(chroot) \
-    __ENUMERATE_PLEDGE_PROMISE(thread) \
-    __ENUMERATE_PLEDGE_PROMISE(video)  \
-    __ENUMERATE_PLEDGE_PROMISE(accept) \
+#define ENUMERATE_PLEDGE_PROMISES       \
+    __ENUMERATE_PLEDGE_PROMISE(stdio)   \
+    __ENUMERATE_PLEDGE_PROMISE(rpath)   \
+    __ENUMERATE_PLEDGE_PROMISE(wpath)   \
+    __ENUMERATE_PLEDGE_PROMISE(cpath)   \
+    __ENUMERATE_PLEDGE_PROMISE(dpath)   \
+    __ENUMERATE_PLEDGE_PROMISE(inet)    \
+    __ENUMERATE_PLEDGE_PROMISE(id)      \
+    __ENUMERATE_PLEDGE_PROMISE(proc)    \
+    __ENUMERATE_PLEDGE_PROMISE(exec)    \
+    __ENUMERATE_PLEDGE_PROMISE(unix)    \
+    __ENUMERATE_PLEDGE_PROMISE(fattr)   \
+    __ENUMERATE_PLEDGE_PROMISE(tty)     \
+    __ENUMERATE_PLEDGE_PROMISE(chown)   \
+    __ENUMERATE_PLEDGE_PROMISE(chroot)  \
+    __ENUMERATE_PLEDGE_PROMISE(thread)  \
+    __ENUMERATE_PLEDGE_PROMISE(video)   \
+    __ENUMERATE_PLEDGE_PROMISE(accept)  \
+    __ENUMERATE_PLEDGE_PROMISE(settime) \
     __ENUMERATE_PLEDGE_PROMISE(shared_buffer)
 
 enum class Pledge : u32 {

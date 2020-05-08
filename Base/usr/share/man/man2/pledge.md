@@ -44,6 +44,7 @@ If `promises` or `execpromises` is null, the corresponding value is unchanged.
 * `shared_buffer`: Shared memory buffers (\*)
 * `chroot`: The [`chroot(2)`](chroot.md) syscall (\*)
 * `video`: May use [`ioctl(2)`](ioctl.md) and [`mmap(2)`](mmap.md) on framebuffer video devices
+* `settime`: Changing the system time and date
 
 Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
 

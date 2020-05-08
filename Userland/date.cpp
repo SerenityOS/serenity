@@ -26,13 +26,14 @@
 
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/DateTime.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio", nullptr) < 0) {
+    if (pledge("stdio settime", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -47,10 +48,14 @@ int main(int argc, char** argv)
         bool ok;
         timespec ts = { String(argv[2]).to_uint(ok), 0 };
         if (!ok) {
-            printf("date: Invalid timestamp value\n");
+            fprintf(stderr, "date: Invalid timestamp value");
             return 1;
         }
-        return clock_settime(CLOCK_REALTIME, &ts);
+        if (clock_settime(CLOCK_REALTIME, &ts) < 0) {
+            perror("clock_settime");
+            return 1;
+        }
+        return 0;
     }
 
     printf("%s\n", Core::DateTime::from_timestamp(now).to_string().characters());
