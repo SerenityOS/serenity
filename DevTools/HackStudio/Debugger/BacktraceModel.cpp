@@ -27,9 +27,9 @@
 #include "BacktraceModel.h"
 #include "Debugger.h"
 
-RefPtr<BacktraceModel> BacktraceModel::create(const PtraceRegisters& regs)
+NonnullRefPtr<BacktraceModel> BacktraceModel::create(const DebugSession& debug_session, const PtraceRegisters& regs)
 {
-    return adopt(*new BacktraceModel(create_backtrace(regs)));
+    return adopt(*new BacktraceModel(create_backtrace(debug_session, regs)));
 }
 
 GUI::Variant BacktraceModel::data(const GUI::ModelIndex& index, Role role) const
@@ -41,20 +41,19 @@ GUI::Variant BacktraceModel::data(const GUI::ModelIndex& index, Role role) const
     return {};
 }
 
-Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const PtraceRegisters& regs)
+Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const DebugSession& debug_session, const PtraceRegisters& regs)
 {
     u32 current_ebp = regs.ebp;
     u32 current_instruction = regs.eip;
     Vector<BacktraceModel::FrameInfo> frames;
     do {
-        const auto& debug_info = Debugger::the().session()->debug_info();
-        String name = debug_info.name_of_containing_function(current_instruction);
+        String name = debug_session.debug_info().name_of_containing_function(current_instruction);
         if (name.is_null()) {
             dbg() << "BacktraceModel: couldn't find containing function for address: " << (void*)current_instruction;
             break;
         }
 
-        frames.append({ name, current_instruction });
+        frames.append({ name, current_instruction, current_ebp });
         current_instruction = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp + 4)).value();
         current_ebp = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp)).value();
     } while (current_ebp);

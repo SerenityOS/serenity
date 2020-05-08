@@ -608,14 +608,16 @@ int main(int argc, char** argv)
         [&](const PtraceRegisters& regs) {
             dbg() << "Program stopped";
 
-            auto source_position = Debugger::the().session()->debug_info().get_source_position(regs.eip);
+            ASSERT(Debugger::the().session());
+            const auto& debug_session = *Debugger::the().session();
+            auto source_position = debug_session.debug_info().get_source_position(regs.eip);
             if (!source_position.has_value()) {
                 dbg() << "Could not find source position for address: " << (void*)regs.eip;
                 return Debugger::HasControlPassedToUser::No;
             }
             current_editor_in_execution = get_editor_of_file(source_position.value().file_path);
             current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
-            debug_info_widget.update_state(regs);
+            debug_info_widget.update_state(debug_session, regs);
             continue_action->set_enabled(true);
             single_step_action->set_enabled(true);
             reveal_action_tab(debug_info_widget);

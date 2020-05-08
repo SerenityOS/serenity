@@ -43,10 +43,25 @@ DebugInfoWidget::DebugInfoWidget()
     m_variables_view = splitter.add<GUI::TreeView>();
 }
 
-void DebugInfoWidget::update_state(const PtraceRegisters& regs)
+void DebugInfoWidget::update_state(const DebugSession& debug_session, const PtraceRegisters& regs)
 {
     m_variables_view->set_model(VariablesModel::create(regs));
-    m_backtrace_view->set_model(BacktraceModel::create(regs));
+    m_backtrace_view->set_model(BacktraceModel::create(debug_session, regs));
+    m_backtrace_view->selection().set(m_backtrace_view->model()->index(0));
+
+    m_backtrace_view->on_selection
+        = [this](auto& index) {
+              auto& model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
+
+              // Note: The recontruction of the register set here is obviously incomplete.
+              // We currently only reconstruct eip & ebp. Ideally would also reconstruct the other registers somehow.
+              // (Other registers may be needed to get the values of variables who are not stored on the stack)
+              PtraceRegisters frame_regs {};
+              frame_regs.eip = model.frames()[index.row()].instruction_address;
+              frame_regs.ebp = model.frames()[index.row()].frame_base;
+
+              m_variables_view->set_model(VariablesModel::create(frame_regs));
+          };
 }
 
 void DebugInfoWidget::program_stopped()

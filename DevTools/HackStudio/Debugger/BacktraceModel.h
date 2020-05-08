@@ -30,9 +30,11 @@
 #include <LibGUI/Model.h>
 #include <sys/arch/i386/regs.h>
 
+class DebugSession;
+
 class BacktraceModel final : public GUI::Model {
 public:
-    static RefPtr<BacktraceModel> create(const PtraceRegisters& regs);
+    static NonnullRefPtr<BacktraceModel> create(const DebugSession&, const PtraceRegisters& regs);
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_frames.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
@@ -47,18 +49,21 @@ public:
     virtual void update() override {}
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override { return create_index(row, column, &m_frames.at(row)); }
 
-private:
     struct FrameInfo {
         String function_name;
-        u32 address_in_frame;
+        u32 instruction_address;
+        u32 frame_base;
     };
 
+    const Vector<FrameInfo>& frames() const { return m_frames; }
+
+private:
     explicit BacktraceModel(Vector<FrameInfo>&& frames)
         : m_frames(move(frames))
     {
     }
 
-    static Vector<FrameInfo> create_backtrace(const PtraceRegisters&);
+    static Vector<FrameInfo> create_backtrace(const DebugSession&, const PtraceRegisters&);
 
     Vector<FrameInfo> m_frames;
 };
