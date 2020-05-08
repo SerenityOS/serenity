@@ -56,4 +56,10 @@ private:
     virtual bool is_anonymous() const override { return true; }
 };
 
+template<>
+inline bool is<AnonymousVMObject>(const VMObject& vmobject)
+{
+    return vmobject.is_anonymous();
+}
+
 }

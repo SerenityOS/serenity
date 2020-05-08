@@ -441,16 +441,13 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
             klog() << "MM: no user physical regions available (?)";
         }
 
-        for_each_vmobject([&](auto& vmobject) {
-            if (vmobject.is_purgeable()) {
-                auto& purgeable_vmobject = static_cast<PurgeableVMObject&>(vmobject);
-                int purged_page_count = purgeable_vmobject.purge_with_interrupts_disabled({});
-                if (purged_page_count) {
-                    klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from PurgeableVMObject{" << &purgeable_vmobject << "}";
-                    page = find_free_user_physical_page();
-                    ASSERT(page);
-                    return IterationDecision::Break;
-                }
+        for_each_vmobject_of_type<PurgeableVMObject>([&](auto& vmobject) {
+            int purged_page_count = vmobject.purge_with_interrupts_disabled({});
+            if (purged_page_count) {
+                klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from PurgeableVMObject{" << &vmobject << "}";
+                page = find_free_user_physical_page();
+                ASSERT(page);
+                return IterationDecision::Break;
             }
             return IterationDecision::Continue;
         });

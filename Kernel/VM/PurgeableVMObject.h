@@ -64,4 +64,10 @@ private:
     bool m_volatile { false };
 };
 
+template<>
+inline bool is<PurgeableVMObject>(const VMObject& vmobject)
+{
+    return vmobject.is_purgeable();
+}
+
 }

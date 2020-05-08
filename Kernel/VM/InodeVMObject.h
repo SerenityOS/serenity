@@ -66,4 +66,10 @@ protected:
     Bitmap m_dirty_pages;
 };
 
+template<>
+inline bool is<InodeVMObject>(const VMObject& vmobject)
+{
+    return vmobject.is_inode();
+}
+
 }

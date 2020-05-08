@@ -125,6 +125,17 @@ public:
         }
     }
 
+    template<typename T, typename Callback>
+    static void for_each_vmobject_of_type(Callback callback)
+    {
+        for (auto& vmobject : MM.m_vmobjects) {
+            if (!is<T>(vmobject))
+                continue;
+            if (callback(static_cast<T&>(vmobject)) == IterationDecision::Break)
+                break;
+        }
+    }
+
     static Region* region_from_vaddr(Process&, VirtualAddress);
     static const Region* region_from_vaddr(const Process&, VirtualAddress);
 

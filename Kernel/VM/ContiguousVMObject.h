@@ -50,4 +50,11 @@ private:
 
     virtual bool is_contiguous() const override { return true; }
 };
+
+template<>
+inline bool is<ContiguousVMObject>(const VMObject& vmobject)
+{
+    return vmobject.is_contiguous();
+}
+
 }
