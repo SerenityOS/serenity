@@ -121,10 +121,10 @@ Vector<HardwareTimer*> TimeManagement::scan_and_initialize_periodic_timers()
     dbg() << "Time: Scanning for periodic timers";
     Vector<HardwareTimer*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
-        if (hardware_timer && hardware_timer->is_periodic_capable()) {
-            timers.append(hardware_timer);
+        if (hardware_timer.is_periodic_capable()) {
+            timers.append(&hardware_timer);
             if (should_enable)
-                hardware_timer->set_periodic();
+                hardware_timer.set_periodic();
         }
     }
     return timers;
@@ -135,8 +135,8 @@ Vector<HardwareTimer*> TimeManagement::scan_for_non_periodic_timers()
     dbg() << "Time: Scanning for non-periodic timers";
     Vector<HardwareTimer*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
-        if (hardware_timer && !hardware_timer->is_periodic_capable())
-            timers.append(hardware_timer);
+        if (!hardware_timer.is_periodic_capable())
+            timers.append(&hardware_timer);
     }
     return timers;
 }

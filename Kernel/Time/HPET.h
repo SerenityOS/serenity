@@ -27,10 +27,10 @@
 #pragma once
 
 #include <AK/FixedArray.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/Time/HPET.h>
 #include <Kernel/VM/Region.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 
@@ -47,7 +47,7 @@ public:
     u64 main_counter_value() const;
     u64 frequency() const;
 
-    const FixedArray<RefPtr<HPETComparator>>& comparators() const;
+    const NonnullRefPtrVector<HPETComparator>& comparators() const { return m_comparators; }
     void disable(const HPETComparator&);
     void enable(const HPETComparator&);
 
@@ -85,6 +85,6 @@ private:
     bool counter_is_64_bit_capable : 1;
     bool legacy_replacement_route_capable : 1;
 
-    FixedArray<RefPtr<HPETComparator>> m_comparators;
+    NonnullRefPtrVector<HPETComparator> m_comparators;
 };
 }
