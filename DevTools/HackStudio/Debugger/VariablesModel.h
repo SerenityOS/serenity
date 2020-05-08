@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,38 +25,32 @@
  */
 
 #pragma once
+#include "Debugger.h"
+#include <AK/NonnullOwnPtr.h>
+#include <LibGUI/Model.h>
+#include <LibGUI/TreeView.h>
+#include <sys/arch/i386/regs.h>
 
-#include "Debugger/BreakpointCallback.h"
-#include <AK/Function.h>
-#include <AK/Vector.h>
-#include <LibGUI/Widget.h>
-#include <string.h>
-
-class Editor;
-
-class EditorWrapper : public GUI::Widget {
-    C_OBJECT(EditorWrapper)
+class VariablesModel final : public GUI::Model {
 public:
-    virtual ~EditorWrapper() override;
+    static RefPtr<VariablesModel> create(const PtraceRegisters& regs);
 
-    Editor& editor() { return *m_editor; }
-    const Editor& editor() const { return *m_editor; }
-
-    GUI::Label& filename_label() { return *m_filename_label; }
-    const GUI::Label& filename_label() const { return *m_filename_label; }
-
-    void set_editor_has_focus(Badge<Editor>, bool);
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
+    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override;
+    virtual void update() override;
+    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
+    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override;
 
 private:
-    explicit EditorWrapper(BreakpointChangeCallback);
+    explicit VariablesModel(NonnullOwnPtrVector<DebugInfo::VariableInfo>&& variables, const PtraceRegisters& regs)
+        : m_variables(move(variables))
+        , m_regs(regs)
+    {
+        m_variable_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
+    }
+    NonnullOwnPtrVector<DebugInfo::VariableInfo> m_variables;
+    PtraceRegisters m_regs;
 
-    RefPtr<GUI::Label> m_filename_label;
-    RefPtr<GUI::Label> m_cursor_label;
-    RefPtr<Editor> m_editor;
+    GUI::Icon m_variable_icon;
 };
-
-template<>
-inline bool Core::is<EditorWrapper>(const Core::Object& object)
-{
-    return !strcmp(object.class_name(), "EditorWrapper");
-}

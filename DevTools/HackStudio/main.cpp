@@ -25,8 +25,8 @@
  */
 
 #include "CursorTool.h"
-#include "DebugInfoWidget.h"
-#include "Debugger.h"
+#include "Debugger/DebugInfoWidget.h"
+#include "Debugger/Debugger.h"
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
@@ -48,9 +48,9 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
@@ -615,7 +615,7 @@ int main(int argc, char** argv)
             }
             current_editor_in_execution = get_editor_of_file(source_position.value().file_path);
             current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
-            debug_info_widget.update_variables(regs);
+            debug_info_widget.update_state(regs);
             continue_action->set_enabled(true);
             single_step_action->set_enabled(true);
             reveal_action_tab(debug_info_widget);

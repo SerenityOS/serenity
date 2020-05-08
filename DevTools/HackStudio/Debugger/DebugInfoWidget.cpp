@@ -24,47 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
+#include "DebugInfoWidget.h"
 #include "Debugger.h"
-#include <AK/NonnullOwnPtr.h>
+#include "VariablesModel.h"
+#include <AK/StringBuilder.h>
+#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/Widget.h>
-#include <sys/arch/i386/regs.h>
+#include <LibGUI/TableView.h>
+#include <LibGUI/TreeView.h>
 
-class DebugInfoModel final : public GUI::Model {
-public:
-    explicit DebugInfoModel(NonnullOwnPtrVector<DebugInfo::VariableInfo>&& variables, const PtraceRegisters& regs)
-        : m_variables(move(variables))
-        , m_regs(regs)
-    {
-        m_variable_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
-    }
+DebugInfoWidget::DebugInfoWidget()
+{
+    set_layout<GUI::HorizontalBoxLayout>();
+    m_info_view = add<GUI::TreeView>();
+    m_backtrace_view = add<GUI::TableView>();
+}
 
-    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
-    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
-    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override;
-    virtual void update() override;
-    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
-    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+void DebugInfoWidget::update_state(const PtraceRegisters& regs)
+{
+    auto model = VariablesModel::create(regs);
+    m_info_view->set_model(model);
+}
 
-private:
-    NonnullOwnPtrVector<DebugInfo::VariableInfo> m_variables;
-    PtraceRegisters m_regs;
-
-    GUI::Icon m_variable_icon;
-};
-
-class DebugInfoWidget final : public GUI::Widget {
-    C_OBJECT(DebugInfoWidget)
-public:
-    virtual ~DebugInfoWidget() override {}
-
-    void update_variables(const PtraceRegisters&);
-    void program_stopped();
-
-private:
-    explicit DebugInfoWidget();
-
-    RefPtr<GUI::TreeView> m_info_view;
-};
+void DebugInfoWidget::program_stopped()
+{
+    m_info_view->set_model({});
+}
