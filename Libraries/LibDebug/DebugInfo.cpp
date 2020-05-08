@@ -74,7 +74,8 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
         scope.address_high = scope.address_low + child.get_attribute(Dwarf::Attribute::HighPc).value().data.as_u32;
 
         child.for_each_child([&](const Dwarf::DIE& variable_entry) {
-            if (variable_entry.tag() != Dwarf::EntryTag::Variable)
+            if (!(variable_entry.tag() == Dwarf::EntryTag::Variable
+                    || variable_entry.tag() == Dwarf::EntryTag::FormalParameter))
                 return;
             scope.dies_of_variables.append(variable_entry);
         });
@@ -148,15 +149,26 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
             continue;
 
         for (const auto& die_entry : scope.dies_of_variables) {
-            variables.append(create_variable_info(die_entry, regs));
+            auto variable_info = create_variable_info(die_entry, regs);
+            if (!variable_info)
+                continue;
+            variables.append(variable_info.release_nonnull());
         }
     }
     return variables;
 }
 
-NonnullOwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs) const
+OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs) const
 {
-    ASSERT(variable_die.tag() == Dwarf::EntryTag::Variable || variable_die.tag() == Dwarf::EntryTag::Member);
+    ASSERT(variable_die.tag() == Dwarf::EntryTag::Variable
+        || variable_die.tag() == Dwarf::EntryTag::Member
+        || variable_die.tag() == Dwarf::EntryTag::FormalParameter);
+
+    if (variable_die.tag() == Dwarf::EntryTag::FormalParameter
+        && !variable_die.get_attribute(Dwarf::Attribute::Name).has_value()) {
+        // We don't want to display info for unused paramters
+        return {};
+    }
 
     NonnullOwnPtr<VariableInfo> variable_info = make<VariableInfo>();
 
@@ -201,13 +213,15 @@ NonnullOwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwa
         if (member.is_null())
             return;
         auto member_variable = create_variable_info(member, regs);
+
+        ASSERT(member_variable);
         ASSERT(member_variable->location_type == DebugInfo::VariableInfo::LocationType::Address);
         ASSERT(variable_info->location_type == DebugInfo::VariableInfo::LocationType::Address);
 
         member_variable->location_data.address += variable_info->location_data.address;
         member_variable->parent = variable_info.ptr();
 
-        variable_info->members.append(move(member_variable));
+        variable_info->members.append(member_variable.release_nonnull());
     });
 
     return variable_info;
