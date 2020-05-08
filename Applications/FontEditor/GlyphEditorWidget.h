@@ -32,8 +32,8 @@ class GlyphEditorWidget final : public GUI::Frame {
 public:
     virtual ~GlyphEditorWidget() override;
 
-    u8 glyph() const { return m_glyph; }
-    void set_glyph(u8);
+    int glyph() const { return m_glyph; }
+    void set_glyph(int);
 
     int preferred_width() const;
     int preferred_height() const;
@@ -52,6 +52,6 @@ private:
     void draw_at_mouse(const GUI::MouseEvent&);
 
     RefPtr<Gfx::Font> m_font;
-    u8 m_glyph { 0 };
+    int m_glyph { 0 };
     int m_scale { 10 };
 };

@@ -8,11 +8,4 @@ PROGRAM = FontEditor
 
 LIB_DEPS = GUI Gfx Core IPC
 
-FontEditor.cpp: UI_FontEditorBottom.h
-
-UI_FontEditorBottom.h: FontEditorBottom.frm | FORMCOMPILER
-	$(QUIET) $(FORMCOMPILER) $< > $@
-
-EXTRA_CLEAN = UI_FontEditorBottom.h
-
 include ../../Makefile.common
