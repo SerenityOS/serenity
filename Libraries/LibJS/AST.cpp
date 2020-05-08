@@ -151,7 +151,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
                 for (auto ch : static_cast<const StringObject&>(value.as_object()).primitive_string().string())
                     iterables.append(Value(js_string(interpreter, String::format("%c", ch))));
             } else {
-                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string()));
+                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string().characters()));
             }
             for (auto& value : iterables)
                 arguments.append(value);
