@@ -27,7 +27,7 @@ trap finish EXIT
 # on *all* of their implementation and recursive dependencies.
 # Scan all files for potential dependencies.
 # Thinking in graphs, this computes the edge list:
-cat <(find AK/ Libraries/ Servers/ Kernel/ -name '*.h') \
+cat <(find AK/ Libraries/ Services/ Kernel/ -name '*.h') \
     <(find Libraries/LibC/ Libraries/LibM/ -name '*.cpp' ! -name 'Test*.cpp' ) | \
     xargs grep -F '#include ' | \
     sed -r \
@@ -38,7 +38,7 @@ cat <(find AK/ Libraries/ Servers/ Kernel/ -name '*.h') \
         -e 's^#include <((bits|netinet|sys|arpa|net)/.*)>^Libraries/LibC/\1^' \
         -e 's^#include <fd_set.h>^Libraries/LibC/fd_set.h^' \
         -e 's^#include <([a-z]{3,10}(_numbers)?\.h)>^Libraries/LibC/\1^' \
-        -e 's^#include <([A-Z][a-z]+Server/.*)>^Servers/\1^' \
+        -e 's^#include <([A-Z][a-z]+Server/.*)>^Services/\1^' \
         -e 's^#include <(.*)>^UNRESOLVED_I/\1^' \
         -e 's^#include "(.*)"^UNRESOLVED_L/\1^' > "${DEPLIST_FILE}"
 # Some #include's cannot be resolved, like <chrono>. However, these are only

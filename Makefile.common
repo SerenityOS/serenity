@@ -18,7 +18,7 @@ INCLUDE_FLAGS += \
     -I$(SERENITY_BASE_DIR)/DevTools \
     -I$(SERENITY_BASE_DIR) \
     -I$(SERENITY_BASE_DIR)/Libraries \
-    -I$(SERENITY_BASE_DIR)/Servers
+    -I$(SERENITY_BASE_DIR)/Services
 
 VERBOSE = 0
 

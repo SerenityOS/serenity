@@ -2,7 +2,7 @@ SUBDIRS += \
 	Libraries \
 	AK \
 	DevTools \
-	Servers
+	Services
 
 SUBDIRS += \
 	Applications \

@@ -77,18 +77,18 @@ OBJS = \
 
 LIBRARY = libgui.a
 
-Application.cpp: ../../Servers/WindowServer/WindowServerEndpoint.h
+Application.cpp: ../../Services/WindowServer/WindowServerEndpoint.h
 
-../../Servers/WindowServer/WindowServerEndpoint.h:
+../../Services/WindowServer/WindowServerEndpoint.h:
 	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
 # HACK: NotificationServer depends on LibGUI so we don't flock for these..
-Notification.cpp: ../../Servers/NotificationServer/NotificationServerEndpoint.h ../../Servers/NotificationServer/NotificationClientEndpoint.h
+Notification.cpp: ../../Services/NotificationServer/NotificationServerEndpoint.h ../../Services/NotificationServer/NotificationClientEndpoint.h
 
-../../Servers/NotificationServer/NotificationServerEndpoint.h:
+../../Services/NotificationServer/NotificationServerEndpoint.h:
 	$(MAKE) -C $(dir $(@)) NotificationServerEndpoint.h
 
-../../Servers/NotificationServer/NotificationClientEndpoint.h:
+../../Services/NotificationServer/NotificationClientEndpoint.h:
 	$(MAKE) -C $(dir $(@)) NotificationClientEndpoint.h
 
 install:

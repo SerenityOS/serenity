@@ -5,8 +5,8 @@ OBJS = \
 
 LIBRARY = libaudio.a
 
-ClientConnection.cpp: ../../Servers/AudioServer/AudioClientEndpoint.h
-../../Servers/AudioServer/AudioClientEndpoint.h:
+ClientConnection.cpp: ../../Services/AudioServer/AudioClientEndpoint.h
+../../Services/AudioServer/AudioClientEndpoint.h:
 	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
 install:
