@@ -12,7 +12,7 @@ file(GLOB_RECURSE KERNEL_SOURCES "serenity/Kernel/*.cpp")
 file(GLOB_RECURSE LIBRARIES_SOURCES "serenity/Libraries/*.cpp")
 file(GLOB_RECURSE MENU_APPLETS_SOURCES "serenity/MenuApplets/*.cpp")
 file(GLOB_RECURSE PORTS_SOURCES "serenity/Ports/*.cpp")
-file(GLOB_RECURSE SERVERS_SOURCES "serenity/Servers/*.cpp")
+file(GLOB_RECURSE SERVERS_SOURCES "serenity/Services/*.cpp")
 file(GLOB_RECURSE SHELL_SOURCES "serenity/Shell/*.cpp")
 file(GLOB_RECURSE TESTS_SOURCES "serenity/Tests/*.cpp")
 file(GLOB_RECURSE TOOLCHAIN_SOURCES "serenity/Toolchain/*.cpp")
@@ -24,7 +24,7 @@ set(INCLUDE_DIRS
     "serenity/Libraries"
     "serenity/Libraries/LibC"
     "serenity/Libraries/LibPthread"
-    "serenity/Servers"
+    "serenity/Services"
     "serenity/Toolchain/Local/i686-pc-serenity/include/c++/9.3.0")
 
 add_library(serenity
