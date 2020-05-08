@@ -4362,6 +4362,9 @@ int Process::sys$clock_settime(clockid_t clock_id, timespec* user_ts)
 {
     REQUIRE_PROMISE(stdio);
 
+    if (!is_superuser())
+        return -EPERM;
+
     timespec ts;
     if (!validate_read_and_copy_typed(&ts, user_ts))
         return -EFAULT;
