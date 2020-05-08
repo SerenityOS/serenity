@@ -129,14 +129,12 @@ cp ../Applications/FileManager/FileManager mnt/bin/FileManager
 cp ../Applications/FontEditor/FontEditor mnt/bin/FontEditor
 cp ../Applications/IRCClient/IRCClient mnt/bin/IRCClient
 cp ../Applications/SystemMonitor/SystemMonitor mnt/bin/SystemMonitor
-cp ../Applications/Taskbar/Taskbar mnt/bin/Taskbar
 cp ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
 cp ../Applications/HexEditor/HexEditor mnt/bin/HexEditor
 cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Applications/QuickShow/QuickShow mnt/bin/QuickShow
 cp ../Applications/Piano/Piano mnt/bin/Piano
-cp ../Applications/SystemMenu/SystemMenu mnt/bin/SystemMenu
 cp ../Applications/Calculator/Calculator mnt/bin/Calculator
 cp ../Applications/Calendar/Calendar mnt/bin/Calendar
 cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
@@ -165,8 +163,10 @@ cp ../Services/SystemServer/SystemServer mnt/bin/SystemServer
 cp ../Services/WindowServer/WindowServer mnt/bin/WindowServer
 cp ../Services/AudioServer/AudioServer mnt/bin/AudioServer
 cp ../Services/TTYServer/TTYServer mnt/bin/TTYServer
+cp ../Services/Taskbar/Taskbar mnt/bin/Taskbar
 cp ../Services/TelnetServer/TelnetServer mnt/bin/TelnetServer
 cp ../Services/ProtocolServer/ProtocolServer mnt/bin/ProtocolServer
+cp ../Services/SystemMenu/SystemMenu mnt/bin/SystemMenu
 cp ../Services/NotificationServer/NotificationServer mnt/bin/NotificationServer
 cp ../Services/WebServer/WebServer mnt/bin/WebServer
 cp ../Shell/Shell mnt/bin/Shell
