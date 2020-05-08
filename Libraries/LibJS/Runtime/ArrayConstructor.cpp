@@ -44,6 +44,7 @@ ArrayConstructor::ArrayConstructor()
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     put_native_function("isArray", is_array, 1, attr);
+    put_native_function("of", of, 0, attr);
 }
 
 ArrayConstructor::~ArrayConstructor()
@@ -84,6 +85,14 @@ Value ArrayConstructor::is_array(Interpreter& interpreter)
         return Value(false);
     // Exclude TypedArray and similar
     return Value(StringView(value.as_object().class_name()) == "Array");
+}
+
+Value ArrayConstructor::of(Interpreter& interpreter)
+{
+    auto* array = Array::create(interpreter.global_object());
+    for (size_t i = 0; i < interpreter.argument_count(); ++i)
+        array->elements().append(interpreter.argument(i));
+    return array;
 }
 
 }
