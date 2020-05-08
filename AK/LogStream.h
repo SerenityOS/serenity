@@ -115,6 +115,7 @@ const LogStream& operator<<(const LogStream&, const FlyString&);
 const LogStream& operator<<(const LogStream&, const String&);
 const LogStream& operator<<(const LogStream&, const StringView&);
 const LogStream& operator<<(const LogStream&, int);
+const LogStream& operator<<(const LogStream&, long);
 const LogStream& operator<<(const LogStream&, unsigned);
 const LogStream& operator<<(const LogStream&, long long);
 const LogStream& operator<<(const LogStream&, unsigned long);
