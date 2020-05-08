@@ -187,26 +187,7 @@ struct [[gnu::packed]] CompatibilityBusAddressSpaceModifierEntry
 
 }
 
-class PCIInterruptOverrideMetadata : public RefCounted<PCIInterruptOverrideMetadata> {
-public:
-    PCIInterruptOverrideMetadata(u8 bus_id, u8 polarity, u8 trigger_mode, u8 source_irq, u32 ioapic_id, u16 ioapic_int_pin);
-    u8 bus() const;
-    u8 polarity() const;
-    u8 trigger_mode() const;
-    u8 pci_interrupt_pin() const;
-    u8 pci_device_number() const;
-    u32 ioapic_id() const;
-    u16 ioapic_interrupt_pin() const;
-
-private:
-    u8 m_bus_id;
-    u8 m_polarity;
-    u8 m_trigger_mode;
-    u8 m_pci_interrupt_pin;
-    u8 m_pci_device_number;
-    u32 m_ioapic_id;
-    u16 m_ioapic_interrupt_pin;
-};
+class PCIInterruptOverrideMetadata;
 
 class MultiProcessorParser {
 public:
@@ -214,7 +195,7 @@ public:
 
     static bool is_initialized();
     static void initialize();
-    Vector<RefPtr<PCIInterruptOverrideMetadata>> get_pci_interrupt_redirections();
+    Vector<PCIInterruptOverrideMetadata> get_pci_interrupt_redirections();
 
 protected:
     MultiProcessorParser();

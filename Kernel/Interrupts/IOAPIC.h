@@ -36,8 +36,26 @@ struct [[gnu::packed]] ioapic_mmio_regs
     volatile u32 window;
 };
 
-class ISAInterruptOverrideMetadata;
-class PCIInterruptOverrideMetadata;
+class PCIInterruptOverrideMetadata {
+public:
+    PCIInterruptOverrideMetadata(u8 bus_id, u8 polarity, u8 trigger_mode, u8 source_irq, u32 ioapic_id, u16 ioapic_int_pin);
+    u8 bus() const { return m_bus_id; }
+    u8 polarity() const { return m_polarity; }
+    u8 trigger_mode() const { return m_trigger_mode; }
+    u8 pci_interrupt_pin() const { return m_pci_interrupt_pin; }
+    u8 pci_device_number() const { return m_pci_device_number; }
+    u32 ioapic_id() const { return m_ioapic_id; }
+    u16 ioapic_interrupt_pin() const { return m_ioapic_interrupt_pin; }
+
+private:
+    const u8 m_bus_id;
+    const u8 m_polarity;
+    const u8 m_trigger_mode;
+    const u8 m_pci_interrupt_pin;
+    const u8 m_pci_device_number;
+    const u32 m_ioapic_id;
+    const u16 m_ioapic_interrupt_pin;
+};
 
 class IOAPIC final : public IRQController {
 public:

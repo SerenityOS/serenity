@@ -66,12 +66,11 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
 {
     InterruptDisabler disabler;
     for (auto redirection_override : InterruptManagement::the().isa_overrides()) {
-        ASSERT(!redirection_override.is_null());
-        if (redirection_override->source() != interrupt_vector)
+        if (redirection_override.source() != interrupt_vector)
             continue;
         bool active_low;
         // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
-        switch ((redirection_override->flags() & 0b11)) {
+        switch ((redirection_override.flags() & 0b11)) {
         case 0:
             active_low = false;
             break;
@@ -87,7 +86,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
 
         bool trigger_level_mode;
         // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
-        switch (((redirection_override->flags() >> 2) & 0b11)) {
+        switch (((redirection_override.flags() >> 2) & 0b11)) {
         case 0:
             trigger_level_mode = false;
             break;
@@ -100,7 +99,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
             trigger_level_mode = true;
             break;
         }
-        configure_redirection_entry(redirection_override->gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override->source()) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, active_low, trigger_level_mode, true, 0);
+        configure_redirection_entry(redirection_override.gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override.source()) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, active_low, trigger_level_mode, true, 0);
         return;
     }
     isa_identity_map(interrupt_vector);
@@ -135,12 +134,11 @@ void IOAPIC::map_isa_interrupts()
 {
     InterruptDisabler disabler;
     for (auto redirection_override : InterruptManagement::the().isa_overrides()) {
-        ASSERT(!redirection_override.is_null());
-        if ((redirection_override->gsi() < gsi_base()) || (redirection_override->gsi() >= (gsi_base() + m_redirection_entries_count)))
+        if ((redirection_override.gsi() < gsi_base()) || (redirection_override.gsi() >= (gsi_base() + m_redirection_entries_count)))
             continue;
         bool active_low;
         // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
-        switch ((redirection_override->flags() & 0b11)) {
+        switch ((redirection_override.flags() & 0b11)) {
         case 0:
             active_low = false;
             break;
@@ -156,7 +154,7 @@ void IOAPIC::map_isa_interrupts()
 
         bool trigger_level_mode;
         // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
-        switch (((redirection_override->flags() >> 2) & 0b11)) {
+        switch (((redirection_override.flags() >> 2) & 0b11)) {
         case 0:
             trigger_level_mode = false;
             break;
@@ -169,7 +167,7 @@ void IOAPIC::map_isa_interrupts()
             trigger_level_mode = true;
             break;
         }
-        configure_redirection_entry(redirection_override->gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override->source()) + IRQ_VECTOR_BASE, 0, false, active_low, trigger_level_mode, true, 0);
+        configure_redirection_entry(redirection_override.gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override.source()) + IRQ_VECTOR_BASE, 0, false, active_low, trigger_level_mode, true, 0);
     }
 }
 
