@@ -84,11 +84,8 @@ public:
         // Double check we don't already have the event waiting for us.
         // Otherwise we might end up blocked for a while for no reason.
         for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
-            if (m_unprocessed_messages[i]->message_id() == MessageType::static_message_id()) {
-                auto message = move(m_unprocessed_messages[i]);
-                m_unprocessed_messages.remove(i);
-                return message.template release_nonnull<MessageType>();
-            }
+            if (m_unprocessed_messages[i].message_id() == MessageType::static_message_id())
+                return m_unprocessed_messages.take(i).template release_nonnull<MessageType>();
         }
         for (;;) {
             fd_set rfds;
@@ -103,11 +100,8 @@ public:
             if (!drain_messages_from_server())
                 return nullptr;
             for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
-                if (m_unprocessed_messages[i]->message_id() == MessageType::static_message_id()) {
-                    auto message = move(m_unprocessed_messages[i]);
-                    m_unprocessed_messages.remove(i);
-                    return message.template release_nonnull<MessageType>();
-                }
+                if (m_unprocessed_messages[i].message_id() == MessageType::static_message_id())
+                    return m_unprocessed_messages.take(i).template release_nonnull<MessageType>();
             }
         }
     }
@@ -162,9 +156,9 @@ private:
         for (size_t index = 0; index < bytes.size(); index += decoded_bytes) {
             auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
             if (auto message = LocalEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
-                m_unprocessed_messages.append(move(message));
+                m_unprocessed_messages.append(message.release_nonnull());
             } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
-                m_unprocessed_messages.append(move(message));
+                m_unprocessed_messages.append(message.release_nonnull());
             } else {
                 ASSERT_NOT_REACHED();
             }
@@ -183,15 +177,15 @@ private:
     {
         auto messages = move(m_unprocessed_messages);
         for (auto& message : messages) {
-            if (message->endpoint_magic() == LocalEndpoint::static_magic())
-                m_local_endpoint.handle(*message);
+            if (message.endpoint_magic() == LocalEndpoint::static_magic())
+                m_local_endpoint.handle(message);
         }
     }
 
     LocalEndpoint& m_local_endpoint;
     RefPtr<Core::LocalSocket> m_connection;
     RefPtr<Core::Notifier> m_notifier;
-    Vector<OwnPtr<Message>> m_unprocessed_messages;
+    NonnullOwnPtrVector<Message> m_unprocessed_messages;
     int m_server_pid { -1 };
     int m_my_client_id { -1 };
 };
