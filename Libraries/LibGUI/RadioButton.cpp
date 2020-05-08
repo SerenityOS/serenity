@@ -52,6 +52,12 @@ void RadioButton::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
+    if (fill_with_background_color())
+        painter.fill_rect(rect(), palette().window());
+
+    if (is_enabled() && is_hovered())
+        painter.fill_rect(rect(), palette().hover_highlight());
+
     Gfx::Rect circle_rect { { 2, 0 }, circle_size() };
     circle_rect.center_vertically_within(rect());
 
