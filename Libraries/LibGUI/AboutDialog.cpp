@@ -73,7 +73,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     };
     make_label(m_name, true);
     make_label("SerenityOS");
-    make_label("(C) The SerenityOS developers");
+    make_label("\xC2\xA9 The SerenityOS developers");
 
     right_container.layout()->add_spacer();
 
