@@ -1154,7 +1154,7 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
 
 void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 {
-    const auto& segments = path.split_lines(Path::Simple);
+    const auto& segments = path.split_lines();
 
     if (segments.size() == 0)
         return;
