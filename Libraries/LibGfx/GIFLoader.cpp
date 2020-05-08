@@ -36,21 +36,59 @@
 
 namespace Gfx {
 
-static bool load_gif_impl(GIFLoadingContext&);
+static bool load_gif_frame_descriptors(GIFLoadingContext&);
+
+struct RGB {
+    u8 r;
+    u8 g;
+    u8 b;
+};
+
+struct ImageDescriptor {
+    u16 x;
+    u16 y;
+    u16 width;
+    u16 height;
+    bool use_global_color_map;
+    RGB color_map[256];
+    u8 lzw_min_code_size;
+    Vector<u8> lzw_encoded_bytes;
+    RefPtr<Gfx::Bitmap> bitmap;
+
+    // Fields from optional graphic control extension block
+    enum DisposalMethod : u8 {
+        None = 0,
+        InPlace = 1,
+        RestoreBackground = 2,
+        RestorePrevious = 3,
+    };
+    DisposalMethod disposal_method { None };
+    u8 transparency_index { 0 };
+    u16 duration { 0 };
+    bool transparent { false };
+    bool user_input { false };
+};
+
+struct LogicalScreen {
+    u16 width;
+    u16 height;
+    RGB color_map[256];
+};
 
 struct GIFLoadingContext {
     enum State {
         NotDecoded = 0,
         Error,
-        HeaderDecoded,
-        BitmapDecoded,
+        FrameDescriptorsLoaded,
     };
     State state { NotDecoded };
+    size_t frames_decoded { 0 };
     const u8* data { nullptr };
     size_t data_size { 0 };
-    int width { -1 };
-    int height { -1 };
-    Vector<RefPtr<Gfx::Bitmap>> frames {};
+    LogicalScreen logical_screen {};
+    u8 background_color_index { 0 };
+    NonnullOwnPtrVector<ImageDescriptor> images {};
+    size_t loops { 1 };
 };
 
 RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
@@ -77,29 +115,6 @@ RefPtr<Gfx::Bitmap> load_gif_from_memory(const u8* data, size_t length)
 enum class GIFFormat {
     GIF87a,
     GIF89a,
-};
-
-struct RGB {
-    u8 r;
-    u8 g;
-    u8 b;
-};
-
-struct LogicalScreen {
-    u16 width;
-    u16 height;
-    RGB color_map[256];
-};
-
-struct ImageDescriptor {
-    u16 x;
-    u16 y;
-    u16 width;
-    u16 height;
-    bool use_global_color_map;
-    RGB color_map[256];
-    u8 lzw_min_code_size;
-    Vector<u8> lzw_encoded_bytes;
 };
 
 Optional<GIFFormat> decode_gif_header(BufferStream& stream)
@@ -247,7 +262,75 @@ private:
     Vector<u8> m_output {};
 };
 
-bool load_gif_impl(GIFLoadingContext& context)
+bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_index)
+{
+    if (frame_index >= context.images.size()) {
+        return false;
+    }
+
+    for (size_t i = context.frames_decoded; i <= frame_index; ++i) {
+        auto& image = context.images.at(i);
+        printf("Image %zu: %d,%d %dx%d  %zu bytes LZW-encoded\n", i, image.x, image.y, image.width, image.height, image.lzw_encoded_bytes.size());
+
+        dbg() << "Decoding frame: " << i + 1 << " of " << context.images.size();
+
+        LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
+
+        // Add GIF-specific control codes
+        const int clear_code = decoder.add_control_code();
+        const int end_of_information_code = decoder.add_control_code();
+
+        auto background_rgb = context.logical_screen.color_map[context.background_color_index];
+        Color background_color = Color(background_rgb.r, background_rgb.g, background_rgb.b);
+
+        image.bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
+        image.bitmap->fill(background_color);
+        if (i > 0 && image.disposal_method == ImageDescriptor::DisposalMethod::InPlace) {
+            for (int y = 0; y < image.bitmap->height(); ++y) {
+                for (int x = 0; x < image.bitmap->width(); ++x) {
+                    image.bitmap->set_pixel(x, y, context.images.at(i - 1).bitmap->get_pixel(x, y));
+                }
+            }
+        }
+
+        int pixel_index = 0;
+        while (true) {
+            Optional<u16> code = decoder.next_code();
+            if (!code.has_value()) {
+                dbg() << "Unexpectedly reached end of gif frame data";
+                return false;
+            }
+
+            if (code.value() == clear_code) {
+                decoder.reset();
+                continue;
+            } else if (code.value() == end_of_information_code) {
+                break;
+            }
+
+            auto colors = decoder.get_output();
+
+            for (const auto& color : colors) {
+                if (!image.transparent || color != image.transparency_index) {
+                    auto rgb = context.logical_screen.color_map[color];
+
+                    int x = pixel_index % image.width + image.x;
+                    int y = pixel_index / image.width + image.y;
+
+                    Color c = Color(rgb.r, rgb.g, rgb.b);
+                    image.bitmap->set_pixel(x, y, c);
+                }
+                ++pixel_index;
+            }
+        }
+
+        ++context.frames_decoded;
+    }
+
+    return true;
+}
+
+bool load_gif_frame_descriptors(GIFLoadingContext& context)
 {
     if (context.data_size < 32)
         return false;
@@ -262,14 +345,10 @@ bool load_gif_impl(GIFLoadingContext& context)
 
     printf("Format is %s\n", format.value() == GIFFormat::GIF89a ? "GIF89a" : "GIF87a");
 
-    LogicalScreen logical_screen;
-    stream >> logical_screen.width;
-    stream >> logical_screen.height;
+    stream >> context.logical_screen.width;
+    stream >> context.logical_screen.height;
     if (stream.handle_read_failure())
         return false;
-
-    context.width = logical_screen.width;
-    context.height = logical_screen.height;
 
     u8 gcm_info = 0;
     stream >> gcm_info;
@@ -281,17 +360,16 @@ bool load_gif_impl(GIFLoadingContext& context)
     u8 bits_per_pixel = (gcm_info & 7) + 1;
     u8 bits_of_color_resolution = (gcm_info >> 4) & 7;
 
-    printf("LogicalScreen: %dx%d\n", logical_screen.width, logical_screen.height);
+    printf("LogicalScreen: %dx%d\n", context.logical_screen.width, context.logical_screen.height);
     printf("global_color_map_follows_descriptor: %u\n", global_color_map_follows_descriptor);
     printf("bits_per_pixel: %u\n", bits_per_pixel);
     printf("bits_of_color_resolution: %u\n", bits_of_color_resolution);
 
-    u8 background_color = 0;
-    stream >> background_color;
+    stream >> context.background_color_index;
     if (stream.handle_read_failure())
         return false;
 
-    printf("background_color: %u\n", background_color);
+    printf("background_color: %u\n", context.background_color_index);
 
     u8 pixel_aspect_ratio = 0;
     stream >> pixel_aspect_ratio;
@@ -305,21 +383,20 @@ bool load_gif_impl(GIFLoadingContext& context)
     printf("color_map_entry_count: %d\n", color_map_entry_count);
 
     for (int i = 0; i < color_map_entry_count; ++i) {
-        stream >> logical_screen.color_map[i].r;
-        stream >> logical_screen.color_map[i].g;
-        stream >> logical_screen.color_map[i].b;
+        stream >> context.logical_screen.color_map[i].r;
+        stream >> context.logical_screen.color_map[i].g;
+        stream >> context.logical_screen.color_map[i].b;
     }
 
     if (stream.handle_read_failure())
         return false;
 
     for (int i = 0; i < color_map_entry_count; ++i) {
-        auto& rgb = logical_screen.color_map[i];
+        auto& rgb = context.logical_screen.color_map[i];
         printf("[%02x]: %s\n", i, Color(rgb.r, rgb.g, rgb.b).to_string().characters());
     }
 
-    NonnullOwnPtrVector<ImageDescriptor> images;
-
+    NonnullOwnPtr<ImageDescriptor> current_image = make<ImageDescriptor>();
     for (;;) {
         u8 sentinel = 0;
         stream >> sentinel;
@@ -335,6 +412,7 @@ bool load_gif_impl(GIFLoadingContext& context)
 
             u8 sub_block_length = 0;
 
+            Vector<u8> sub_block {};
             for (;;) {
                 stream >> sub_block_length;
 
@@ -345,18 +423,58 @@ bool load_gif_impl(GIFLoadingContext& context)
                     break;
 
                 u8 dummy;
-                for (u16 i = 0; i < sub_block_length; ++i)
+                for (u16 i = 0; i < sub_block_length; ++i) {
                     stream >> dummy;
+                    sub_block.append(dummy);
+                }
 
                 if (stream.handle_read_failure())
                     return false;
             }
+
+            if (extension_type == 0xF9) {
+                if (sub_block.size() != 4) {
+                    dbg() << "Unexpected graphic control size";
+                    continue;
+                }
+
+                u8 disposal_method = (sub_block[0] & 0x1C) >> 2;
+                current_image->disposal_method = (ImageDescriptor::DisposalMethod)disposal_method;
+
+                u8 user_input = (sub_block[0] & 0x2) >> 1;
+                current_image->user_input = user_input == 1;
+
+                u8 transparent = sub_block[0] & 1;
+                current_image->transparent = transparent == 1;
+
+                u16 duration = sub_block[1] + ((u16)sub_block[2] >> 8);
+                current_image->duration = duration;
+
+                current_image->transparency_index = sub_block[3];
+            }
+
+            if (extension_type == 0xFF) {
+                if (sub_block.size() != 14) {
+                    dbg() << "Unexpected application extension size: " << sub_block.size();
+                    continue;
+                }
+
+                if (sub_block[11] != 1) {
+                    dbg() << "Unexpected application extension format";
+                    continue;
+                }
+
+                u16 loops = sub_block[12] + (sub_block[13] << 8);
+                context.loops = loops;
+            }
+
             continue;
         }
 
         if (sentinel == 0x2c) {
-            images.append(make<ImageDescriptor>());
-            auto& image = images.last();
+            context.images.append(move(current_image));
+            auto& image = context.images.last();
+
             u8 packed_fields { 0 };
             stream >> image.x;
             stream >> image.y;
@@ -394,6 +512,8 @@ bool load_gif_impl(GIFLoadingContext& context)
                     image.lzw_encoded_bytes.append(buffer[i]);
                 }
             }
+
+            current_image = make<ImageDescriptor>();
             continue;
         }
 
@@ -405,59 +525,7 @@ bool load_gif_impl(GIFLoadingContext& context)
         return false;
     }
 
-    // We exited the block loop after finding a trailer. We should have everything needed.
-    printf("Image count: %zu\n", images.size());
-    if (images.is_empty())
-        return false;
-
-    for (size_t i = 0; i < images.size(); ++i) {
-        auto& image = images.at(i);
-        printf("Image %zu: %d,%d %dx%d  %zu bytes LZW-encoded\n", i, image.x, image.y, image.width, image.height, image.lzw_encoded_bytes.size());
-
-        LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
-
-        // Add GIF-specific control codes
-        const int clear_code = decoder.add_control_code();
-        const int end_of_information_code = decoder.add_control_code();
-
-        auto bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { image.width, image.height });
-
-        int pixel_index = 0;
-        while (true) {
-            Optional<u16> code = decoder.next_code();
-            if (!code.has_value()) {
-                dbg() << "Unexpectedly reached end of gif frame data";
-                return false;
-            }
-
-            if (code.value() == clear_code) {
-                decoder.reset();
-                continue;
-            } else if (code.value() == end_of_information_code) {
-                break;
-            }
-
-            auto colors = decoder.get_output();
-
-            for (const auto& color : colors) {
-                auto rgb = logical_screen.color_map[color];
-
-                int x = pixel_index % image.width;
-                int y = pixel_index / image.width;
-
-                Color c = Color(rgb.r, rgb.g, rgb.b);
-                bitmap->set_pixel(x, y, c);
-                ++pixel_index;
-            }
-        }
-
-        context.frames.append(bitmap);
-
-        // FIXME: for now only decode the first frame.
-        break;
-    }
-
-    context.state = GIFLoadingContext::State::BitmapDecoded;
+    context.state = GIFLoadingContext::State::FrameDescriptorsLoaded;
     return true;
 }
 
@@ -476,52 +544,37 @@ Size GIFImageDecoderPlugin::size()
         return {};
     }
 
-    if (m_context->state < GIFLoadingContext::State::BitmapDecoded) {
-        if (!load_gif_impl(*m_context)) {
+    if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
+        if (!load_gif_frame_descriptors(*m_context)) {
             m_context->state = GIFLoadingContext::State::Error;
             return {};
         }
     }
 
-    return { m_context->width, m_context->height };
+    return { m_context->logical_screen.width, m_context->logical_screen.height };
 }
 
 RefPtr<Gfx::Bitmap> GIFImageDecoderPlugin::bitmap()
 {
-    if (m_context->state == GIFLoadingContext::State::Error) {
-        return nullptr;
-    }
-
-    if (m_context->state < GIFLoadingContext::State::BitmapDecoded) {
-        if (!load_gif_impl(*m_context)) {
-            m_context->state = GIFLoadingContext::State::Error;
-            return nullptr;
-        }
-    }
-
-    // FIXME: for now only return the first frame.
-    if (m_context->frames.is_empty()) {
-        return nullptr;
-    }
-    return m_context->frames.first();
+    return frame(0).image;
 }
 
 void GIFImageDecoderPlugin::set_volatile()
 {
-    for (auto& frame : m_context->frames) {
-        frame->set_volatile();
+    for (size_t i = 0; i < m_context->frames_decoded; ++i) {
+        m_context->images.at(i).bitmap->set_volatile();
     }
 }
 
 bool GIFImageDecoderPlugin::set_nonvolatile()
 {
-    if (m_context->frames.is_empty()) {
+    if (m_context->images.is_empty()) {
         return false;
     }
 
     bool success = true;
-    for (auto& frame : m_context->frames) {
-        success &= frame->set_nonvolatile();
+    for (size_t i = 0; i < m_context->frames_decoded; ++i) {
+        success &= m_context->images.at(i).bitmap->set_nonvolatile();
     }
     return success;
 }
@@ -535,25 +588,67 @@ bool GIFImageDecoderPlugin::sniff()
 
 bool GIFImageDecoderPlugin::is_animated()
 {
-    return false;
+    if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
+        if (!load_gif_frame_descriptors(*m_context)) {
+            m_context->state = GIFLoadingContext::State::Error;
+            return false;
+        }
+    }
+
+    return m_context->images.size() > 1;
 }
 
 size_t GIFImageDecoderPlugin::loop_count()
 {
-    return 0;
+    if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
+        if (!load_gif_frame_descriptors(*m_context)) {
+            m_context->state = GIFLoadingContext::State::Error;
+            return 0;
+        }
+    }
+
+    return m_context->loops;
 }
 
 size_t GIFImageDecoderPlugin::frame_count()
 {
-    return 1;
+    if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
+        if (!load_gif_frame_descriptors(*m_context)) {
+            m_context->state = GIFLoadingContext::State::Error;
+            return 1;
+        }
+    }
+
+    return m_context->images.size();
 }
 
 ImageFrameDescriptor GIFImageDecoderPlugin::frame(size_t i)
 {
-    if (i > 0) {
-        return { bitmap(), 0 };
+    if (m_context->state == GIFLoadingContext::State::Error) {
+        return {};
     }
-    return {};
+
+    if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
+        if (!load_gif_frame_descriptors(*m_context)) {
+            m_context->state = GIFLoadingContext::State::Error;
+            return {};
+        }
+    }
+
+    if (!decode_frames_up_to_index(*m_context, i)) {
+        m_context->state = GIFLoadingContext::State::Error;
+        return {};
+    }
+
+    ImageFrameDescriptor frame {};
+    frame.image = m_context->images.at(i).bitmap;
+    frame.duration = m_context->images.at(i).duration * 10;
+
+    if (frame.duration <= 10) {
+        frame.duration = 100;
+    }
+
+    return frame;
 }
 
 }
