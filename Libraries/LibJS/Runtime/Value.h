@@ -60,6 +60,7 @@ public:
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
     bool is_positive_zero() const { return is_number() && 1.0 / as_double() == __builtin_huge_val(); }
     bool is_negative_zero() const { return is_number() && 1.0 / as_double() == -__builtin_huge_val(); }
+    bool is_integer() const { return is_finite_number() && (i32)as_double() == as_double(); }
     bool is_finite_number() const
     {
         if (!is_number())
