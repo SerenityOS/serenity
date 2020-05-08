@@ -84,8 +84,7 @@ Value NumberConstructor::is_finite(Interpreter& interpreter)
 
 Value NumberConstructor::is_integer(Interpreter& interpreter)
 {
-    auto value = interpreter.argument(0);
-    return Value(value.is_number() && (i32)value.as_double() == value.as_double());
+    return Value(interpreter.argument(0).is_integer());
 }
 
 Value NumberConstructor::is_nan(Interpreter& interpreter)
