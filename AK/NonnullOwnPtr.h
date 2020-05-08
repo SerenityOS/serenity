@@ -155,6 +155,13 @@ public:
         ::swap(m_ptr, other.m_ptr);
     }
 
+    template<typename U>
+    NonnullOwnPtr<U> release_nonnull()
+    {
+        ASSERT(m_ptr);
+        return NonnullOwnPtr<U>(NonnullOwnPtr<U>::Adopt, static_cast<U&>(*leak_ptr()));
+    }
+
 private:
     void clear()
     {
