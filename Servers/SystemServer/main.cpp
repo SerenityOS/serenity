@@ -123,14 +123,14 @@ int main(int, char**)
 
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
-    Vector<RefPtr<Service>> services;
+    NonnullRefPtrVector<Service> services;
     auto config = Core::ConfigFile::get_for_system("SystemServer");
     for (auto name : config->groups())
         services.append(Service::construct(*config, name));
 
     // After we've set them all up, activate them!
     for (auto& service : services)
-        service->activate();
+        service.activate();
 
     // This won't return if we're in test mode.
     check_for_test_mode();
