@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,37 +26,23 @@
 
 #pragma once
 
-#include "Debugger/BreakpointCallback.h"
-#include <AK/Function.h>
-#include <AK/Vector.h>
+#include "Debugger.h"
+#include <AK/NonnullOwnPtr.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>
-#include <string.h>
+#include <sys/arch/i386/regs.h>
 
-class Editor;
-
-class EditorWrapper : public GUI::Widget {
-    C_OBJECT(EditorWrapper)
+class DebugInfoWidget final : public GUI::Widget {
+    C_OBJECT(DebugInfoWidget)
 public:
-    virtual ~EditorWrapper() override;
+    virtual ~DebugInfoWidget() override {}
 
-    Editor& editor() { return *m_editor; }
-    const Editor& editor() const { return *m_editor; }
-
-    GUI::Label& filename_label() { return *m_filename_label; }
-    const GUI::Label& filename_label() const { return *m_filename_label; }
-
-    void set_editor_has_focus(Badge<Editor>, bool);
+    void update_state(const PtraceRegisters&);
+    void program_stopped();
 
 private:
-    explicit EditorWrapper(BreakpointChangeCallback);
+    explicit DebugInfoWidget();
 
-    RefPtr<GUI::Label> m_filename_label;
-    RefPtr<GUI::Label> m_cursor_label;
-    RefPtr<Editor> m_editor;
+    RefPtr<GUI::TreeView> m_info_view;
+    RefPtr<GUI::TableView> m_backtrace_view;
 };
-
-template<>
-inline bool Core::is<EditorWrapper>(const Core::Object& object)
-{
-    return !strcmp(object.class_name(), "EditorWrapper");
-}

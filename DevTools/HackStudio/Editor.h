@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "BreakpointCallback.h"
+#include "Debugger/BreakpointCallback.h"
 #include <AK/Optional.h>
 #include <LibGUI/TextEditor.h>
 #include <LibWeb/Forward.h>
