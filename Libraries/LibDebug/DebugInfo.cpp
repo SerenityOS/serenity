@@ -140,34 +140,18 @@ Optional<u32> DebugInfo::get_instruction_from_source(const String& file, size_t 
 
 NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current_scope(const PtraceRegisters& regs) const
 {
-    auto scope = get_scope(regs.eip);
-    if (!scope.has_value())
-        return {};
-
     NonnullOwnPtrVector<DebugInfo::VariableInfo> variables;
-    for (const auto& die_entry : scope.value().dies_of_variables) {
-        variables.append(create_variable_info(die_entry, regs));
-    }
-    return variables;
-}
-
-Optional<DebugInfo::VariablesScope> DebugInfo::get_scope(u32 instruction_pointer) const
-{
-    Optional<VariablesScope> best_matching_scope;
 
     // TODO: We can store the scopes in a better data strucutre
     for (const auto& scope : m_scopes) {
-        if (instruction_pointer < scope.address_low || instruction_pointer >= scope.address_high)
+        if (regs.eip < scope.address_low || regs.eip >= scope.address_high)
             continue;
 
-        if (!best_matching_scope.has_value()) {
-            best_matching_scope = scope;
-
-        } else if (scope.address_low > best_matching_scope.value().address_low || scope.address_high < best_matching_scope.value().address_high) {
-            best_matching_scope = scope;
+        for (const auto& die_entry : scope.dies_of_variables) {
+            variables.append(create_variable_info(die_entry, regs));
         }
     }
-    return best_matching_scope;
+    return variables;
 }
 
 NonnullOwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs) const

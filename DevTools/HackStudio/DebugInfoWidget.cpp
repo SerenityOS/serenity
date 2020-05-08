@@ -90,7 +90,7 @@ String variable_value_as_string(const DebugInfo::VariableInfo& variable)
         return String::format("'%c' (%d)", static_cast<char>(value.value()), static_cast<char>(value.value()));
     }
 
-    return String::format("address: %08x, ", variable_address);
+    return String::format("type: %s @ %08x, ", variable.type.characters(), variable_address);
 }
 
 GUI::Variant DebugInfoModel::data(const GUI::ModelIndex& index, Role role) const
@@ -129,4 +129,9 @@ void DebugInfoWidget::update_variables(const PtraceRegisters& regs)
 {
     auto model = create_model(regs);
     m_info_view->set_model(model);
+}
+
+void DebugInfoWidget::program_stopped()
+{
+    m_info_view->set_model({});
 }
