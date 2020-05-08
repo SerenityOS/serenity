@@ -344,7 +344,7 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
     auto search_element = interpreter.argument(0);
     for (i32 i = from_index; i < array_size; ++i) {
         auto& element = array->elements().at(i);
-        if (typed_eq(interpreter, element, search_element).as_bool())
+        if (strict_eq(interpreter, element, search_element))
             return Value(i);
     }
 
@@ -398,7 +398,7 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
     auto search_element = interpreter.argument(0);
     for (i32 i = array_size - 1; i >= from_index; --i) {
         auto& element = array->elements().at(i);
-        if (typed_eq(interpreter, element, search_element).as_bool())
+        if (strict_eq(interpreter, element, search_element))
             return Value(i);
     }
 
@@ -432,7 +432,7 @@ Value ArrayPrototype::includes(Interpreter& interpreter)
     auto value_to_find = interpreter.argument(0);
     for (i32 i = from_index; i < array_size; ++i) {
         auto& element = array->elements().at(i);
-        if (typed_eq(interpreter, element, value_to_find).as_bool())
+        if (same_value_zero(interpreter, element, value_to_find))
             return Value(true);
     }
 

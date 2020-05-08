@@ -156,12 +156,14 @@ Value Value::to_number() const
     case Type::Empty:
         ASSERT_NOT_REACHED();
         return {};
+    case Type::Undefined:
+        return js_nan();
+    case Type::Null:
+        return Value(0);
     case Type::Boolean:
         return Value(m_value.as_bool ? 1 : 0);
     case Type::Number:
         return Value(m_value.as_double);
-    case Type::Null:
-        return Value(0);
     case Type::String: {
         // FIXME: Trim whitespace beforehand
         auto& string = as_string().string();
@@ -179,8 +181,6 @@ Value Value::to_number() const
 
         return js_nan();
     }
-    case Type::Undefined:
-        return js_nan();
     case Type::Object:
         return m_value.as_object->to_primitive(Object::PreferredType::Number).to_number();
     }
@@ -348,61 +348,6 @@ Value exp(Interpreter&, Value lhs, Value rhs)
     return Value(pow(lhs.to_number().as_double(), rhs.to_number().as_double()));
 }
 
-Value typed_eq(Interpreter&, Value lhs, Value rhs)
-{
-    if (rhs.type() != lhs.type())
-        return Value(false);
-
-    switch (lhs.type()) {
-    case Value::Type::Empty:
-        ASSERT_NOT_REACHED();
-        return {};
-    case Value::Type::Undefined:
-        return Value(true);
-    case Value::Type::Null:
-        return Value(true);
-    case Value::Type::Number:
-        return Value(lhs.as_double() == rhs.as_double());
-    case Value::Type::String:
-        return Value(lhs.as_string().string() == rhs.as_string().string());
-    case Value::Type::Boolean:
-        return Value(lhs.as_bool() == rhs.as_bool());
-    case Value::Type::Object:
-        return Value(&lhs.as_object() == &rhs.as_object());
-    }
-
-    ASSERT_NOT_REACHED();
-}
-
-Value eq(Interpreter& interpreter, Value lhs, Value rhs)
-{
-    if (lhs.type() == rhs.type())
-        return typed_eq(interpreter, lhs, rhs);
-
-    if ((lhs.is_undefined() || lhs.is_null()) && (rhs.is_undefined() || rhs.is_null()))
-        return Value(true);
-
-    if (lhs.is_object() && rhs.is_boolean())
-        return eq(interpreter, lhs.as_object().to_primitive(), rhs.to_number());
-
-    if (lhs.is_boolean() && rhs.is_object())
-        return eq(interpreter, lhs.to_number(), rhs.as_object().to_primitive());
-
-    if (lhs.is_object())
-        return eq(interpreter, lhs.as_object().to_primitive(), rhs);
-
-    if (rhs.is_object())
-        return eq(interpreter, lhs, rhs.as_object().to_primitive());
-
-    if (lhs.is_number() || rhs.is_number())
-        return Value(lhs.to_number().as_double() == rhs.to_number().as_double());
-
-    if ((lhs.is_string() && rhs.is_boolean()) || (lhs.is_string() && rhs.is_boolean()))
-        return Value(lhs.to_number().as_double() == rhs.to_number().as_double());
-
-    return Value(false);
-}
-
 Value in(Interpreter& interpreter, Value lhs, Value rhs)
 {
     if (!rhs.is_object())
@@ -426,6 +371,109 @@ Value instance_of(Interpreter&, Value lhs, Value rhs)
 const LogStream& operator<<(const LogStream& stream, const Value& value)
 {
     return stream << value.to_string();
+}
+
+bool same_value(Interpreter& interpreter, Value lhs, Value rhs)
+{
+    if (lhs.type() != rhs.type())
+        return false;
+
+    if (lhs.is_number()) {
+        if (lhs.is_nan() && rhs.is_nan())
+            return true;
+        if (lhs.is_positive_zero() && rhs.is_negative_zero())
+            return false;
+        if (lhs.is_negative_zero() && rhs.is_positive_zero())
+            return false;
+        return lhs.to_double() == rhs.to_double();
+    }
+
+    return same_value_non_numeric(interpreter, lhs, rhs);
+}
+
+bool same_value_zero(Interpreter& interpreter, Value lhs, Value rhs)
+{
+    if (lhs.type() != rhs.type())
+        return false;
+
+    if (lhs.is_number()) {
+        if (lhs.is_nan() && rhs.is_nan())
+            return true;
+        if ((lhs.is_positive_zero() || lhs.is_negative_zero()) && (rhs.is_positive_zero() || rhs.is_negative_zero()))
+            return true;
+        return lhs.to_double() == rhs.to_double();
+    }
+
+    return same_value_non_numeric(interpreter, lhs, rhs);
+}
+
+bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs)
+{
+    ASSERT(!lhs.is_number());
+    ASSERT(lhs.type() == rhs.type());
+
+    switch (lhs.type()) {
+    case Value::Type::Empty:
+        ASSERT_NOT_REACHED();
+    case Value::Type::Undefined:
+    case Value::Type::Null:
+        return true;
+    case Value::Type::String:
+        return lhs.as_string().string() == rhs.as_string().string();
+    case Value::Type::Boolean:
+        return lhs.as_bool() == rhs.as_bool();
+    case Value::Type::Object:
+        return &lhs.as_object() == &rhs.as_object();
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+bool strict_eq(Interpreter& interpreter, Value lhs, Value rhs)
+{
+    if (lhs.type() != rhs.type())
+        return false;
+
+    if (lhs.is_number()) {
+        if (lhs.is_nan() || rhs.is_nan())
+            return false;
+        if (lhs.to_double() == rhs.to_double())
+            return true;
+        if ((lhs.is_positive_zero() || lhs.is_negative_zero()) && (rhs.is_positive_zero() || rhs.is_negative_zero()))
+            return true;
+        return false;
+    }
+
+    return same_value_non_numeric(interpreter, lhs, rhs);
+}
+
+bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
+{
+    if (lhs.type() == rhs.type())
+        return strict_eq(interpreter, lhs, rhs);
+
+    if ((lhs.is_undefined() || lhs.is_null()) && (rhs.is_undefined() || rhs.is_null()))
+        return true;
+
+    if (lhs.is_number() && rhs.is_string())
+        return abstract_eq(interpreter, lhs, rhs.to_number());
+
+    if (lhs.is_string() && rhs.is_number())
+        return abstract_eq(interpreter, lhs.to_number(), rhs);
+
+    if (lhs.is_boolean())
+        return abstract_eq(interpreter, lhs.to_number(), rhs);
+
+    if (rhs.is_boolean())
+        return abstract_eq(interpreter, lhs, rhs.to_number());
+
+    if ((lhs.is_string() || lhs.is_number()) && rhs.is_object())
+        return abstract_eq(interpreter, lhs, rhs.to_primitive(interpreter));
+
+    if (lhs.is_object() && (rhs.is_string() || rhs.is_number()))
+        return abstract_eq(interpreter, lhs.to_primitive(interpreter), rhs);
+
+    return false;
 }
 
 }

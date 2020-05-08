@@ -41,7 +41,6 @@
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
-#include <LibJS/Runtime/Value.h>
 #include <stdio.h>
 
 namespace JS {
@@ -345,13 +344,13 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
     case BinaryOp::Exponentiation:
         return exp(interpreter, lhs_result, rhs_result);
     case BinaryOp::TypedEquals:
-        return typed_eq(interpreter, lhs_result, rhs_result);
+        return Value(strict_eq(interpreter, lhs_result, rhs_result));
     case BinaryOp::TypedInequals:
-        return Value(!typed_eq(interpreter, lhs_result, rhs_result).as_bool());
+        return Value(!strict_eq(interpreter, lhs_result, rhs_result));
     case BinaryOp::AbstractEquals:
-        return eq(interpreter, lhs_result, rhs_result);
+        return Value(abstract_eq(interpreter, lhs_result, rhs_result));
     case BinaryOp::AbstractInequals:
-        return Value(!eq(interpreter, lhs_result, rhs_result).as_bool());
+        return Value(!abstract_eq(interpreter, lhs_result, rhs_result));
     case BinaryOp::GreaterThan:
         return greater_than(interpreter, lhs_result, rhs_result);
     case BinaryOp::GreaterThanEquals:
@@ -1444,7 +1443,7 @@ Value SwitchStatement::execute(Interpreter& interpreter) const
             auto test_result = switch_case.test()->execute(interpreter);
             if (interpreter.exception())
                 return {};
-            if (!eq(interpreter, discriminant_result, test_result).to_boolean())
+            if (!strict_eq(interpreter, discriminant_result, test_result))
                 continue;
         }
         falling_through = true;
