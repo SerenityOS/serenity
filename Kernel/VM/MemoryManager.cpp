@@ -358,8 +358,8 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     auto region = allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
     if (!region)
         return nullptr;
-    if (should_commit)
-        region->commit();
+    if (should_commit && !region->commit())
+        return nullptr;
     return region;
 }
 

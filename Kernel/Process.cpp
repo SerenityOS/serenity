@@ -193,23 +193,23 @@ Region& Process::allocate_split_region(const Region& source_region, const Range&
     return region;
 }
 
-Region* Process::allocate_region(const Range& range, const String& name, int prot, bool commit)
+Region* Process::allocate_region(const Range& range, const String& name, int prot, bool should_commit)
 {
     ASSERT(range.is_valid());
     auto vmobject = AnonymousVMObject::create_with_size(range.size());
-    auto& region = add_region(Region::create_user_accessible(range, vmobject, 0, name, prot_to_region_access_flags(prot)));
-    region.map(page_directory());
-    if (commit)
-        region.commit();
-    return &region;
+    auto region = Region::create_user_accessible(range, vmobject, 0, name, prot_to_region_access_flags(prot));
+    region->map(page_directory());
+    if (should_commit && !region->commit())
+        return nullptr;
+    return &add_region(move(region));
 }
 
-Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, bool commit)
+Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, bool should_commit)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    return allocate_region(range, name, prot, commit);
+    return allocate_region(range, name, prot, should_commit);
 }
 
 Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot)
