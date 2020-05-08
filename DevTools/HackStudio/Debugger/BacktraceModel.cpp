@@ -24,26 +24,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
+#include "BacktraceModel.h"
 #include "Debugger.h"
-#include "LibGUI/ListView.h"
-#include <AK/NonnullOwnPtr.h>
-#include <LibGUI/Model.h>
-#include <LibGUI/Widget.h>
-#include <sys/arch/i386/regs.h>
 
-class DebugInfoWidget final : public GUI::Widget {
-    C_OBJECT(DebugInfoWidget)
-public:
-    virtual ~DebugInfoWidget() override {}
+RefPtr<BacktraceModel> BacktraceModel::create(const PtraceRegisters& regs)
+{
+    return adopt(*new BacktraceModel(create_backtrace(regs)));
+}
 
-    void update_state(const PtraceRegisters&);
-    void program_stopped();
+GUI::Variant BacktraceModel::data(const GUI::ModelIndex& index, Role role) const
+{
+    if (role == Role::Display) {
+        auto& frame = m_frames.at(index.row());
+        return frame.function_name;
+    }
+    return {};
+}
 
-private:
-    explicit DebugInfoWidget();
+Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const PtraceRegisters& regs)
+{
+    u32 current_ebp = regs.ebp;
+    u32 current_instruction = regs.eip;
+    Vector<BacktraceModel::FrameInfo> frames;
+    do {
+        const auto& debug_info = Debugger::the().session()->debug_info();
+        String name = debug_info.name_of_containing_function(current_instruction);
+        if (name.is_null()) {
+            dbg() << "BacktraceModel: couldn't find containing function for address: " << (void*)current_instruction;
+            break;
+        }
 
-    RefPtr<GUI::TreeView> m_variables_view;
-    RefPtr<GUI::ListView> m_backtrace_view;
-};
+        frames.append({ name, current_instruction });
+        current_instruction = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp + 4)).value();
+        current_ebp = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp)).value();
+    } while (current_ebp);
+    return frames;
+}

@@ -16,7 +16,8 @@ OBJS = \
     main.o \
     Debugger/DebugInfoWidget.o \
     Debugger/Debugger.o \
-    Debugger/VariablesModel.o
+    Debugger/VariablesModel.o \
+    Debugger/BacktraceModel.o
 
 PROGRAM = HackStudio
 
