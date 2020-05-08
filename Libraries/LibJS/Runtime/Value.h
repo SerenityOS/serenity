@@ -233,10 +233,14 @@ Value mul(Interpreter&, Value lhs, Value rhs);
 Value div(Interpreter&, Value lhs, Value rhs);
 Value mod(Interpreter&, Value lhs, Value rhs);
 Value exp(Interpreter&, Value lhs, Value rhs);
-Value eq(Interpreter&, Value lhs, Value rhs);
-Value typed_eq(Interpreter&, Value lhs, Value rhs);
 Value in(Interpreter&, Value lhs, Value rhs);
 Value instance_of(Interpreter&, Value lhs, Value rhs);
+
+bool abstract_eq(Interpreter&, Value lhs, Value rhs);
+bool strict_eq(Interpreter&, Value lhs, Value rhs);
+bool same_value(Interpreter&, Value lhs, Value rhs);
+bool same_value_zero(Interpreter&, Value lhs, Value rhs);
+bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs);
 
 const LogStream& operator<<(const LogStream&, const Value&);
 

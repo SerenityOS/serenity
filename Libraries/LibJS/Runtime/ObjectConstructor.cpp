@@ -131,18 +131,7 @@ Value ObjectConstructor::define_property(Interpreter& interpreter)
 
 Value ObjectConstructor::is(Interpreter& interpreter)
 {
-    auto value1 = interpreter.argument(0);
-    auto value2 = interpreter.argument(1);
-    if (value1.is_nan() && value2.is_nan())
-        return Value(true);
-    if (value1.is_number() && value1.as_double() == 0 && value2.is_number() && value2.as_double() == 0) {
-        if (value1.is_positive_zero() && value2.is_positive_zero())
-            return Value(true);
-        if (value1.is_negative_zero() && value2.is_negative_zero())
-            return Value(true);
-        return Value(false);
-    }
-    return typed_eq(interpreter, value1, value2);
+    return Value(same_value(interpreter, interpreter.argument(0), interpreter.argument(1)));
 }
 
 Value ObjectConstructor::keys(Interpreter& interpreter)
