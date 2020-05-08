@@ -671,9 +671,8 @@ int Process::sys$purge(int mode)
         NonnullRefPtrVector<PurgeableVMObject> vmobjects;
         {
             InterruptDisabler disabler;
-            MM.for_each_vmobject([&](auto& vmobject) {
-                if (vmobject.is_purgeable())
-                    vmobjects.append(static_cast<PurgeableVMObject&>(vmobject));
+            MM.for_each_vmobject_of_type<PurgeableVMObject>([&](auto& vmobject) {
+                vmobjects.append(vmobject);
                 return IterationDecision::Continue;
             });
         }
@@ -685,9 +684,8 @@ int Process::sys$purge(int mode)
         NonnullRefPtrVector<InodeVMObject> vmobjects;
         {
             InterruptDisabler disabler;
-            MM.for_each_vmobject([&](auto& vmobject) {
-                if (vmobject.is_inode())
-                    vmobjects.append(static_cast<InodeVMObject&>(vmobject));
+            MM.for_each_vmobject_of_type<InodeVMObject>([&](auto& vmobject) {
+                vmobjects.append(vmobject);
                 return IterationDecision::Continue;
             });
         }

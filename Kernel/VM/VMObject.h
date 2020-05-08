@@ -84,4 +84,14 @@ private:
     VMObject(VMObject&&) = delete;
 };
 
+template<typename T>
+inline bool is(const VMObject&) { return false; }
+
+template<typename T>
+inline T& to(VMObject& object)
+{
+    ASSERT(is<typename RemoveConst<T>::Type>(object));
+    return static_cast<T&>(object);
+}
+
 }
