@@ -4360,7 +4360,7 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* user_ts)
 
 int Process::sys$clock_settime(clockid_t clock_id, timespec* user_ts)
 {
-    REQUIRE_PROMISE(stdio);
+    REQUIRE_PROMISE(settime);
 
     if (!is_superuser())
         return -EPERM;
