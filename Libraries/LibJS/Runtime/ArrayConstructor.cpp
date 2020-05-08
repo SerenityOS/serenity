@@ -41,6 +41,9 @@ ArrayConstructor::ArrayConstructor()
 {
     put("prototype", interpreter().global_object().array_prototype(), 0);
     put("length", Value(1), Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    put_native_function("isArray", is_array, 1, attr);
 }
 
 ArrayConstructor::~ArrayConstructor()
@@ -72,6 +75,15 @@ Value ArrayConstructor::call(Interpreter& interpreter)
 Value ArrayConstructor::construct(Interpreter& interpreter)
 {
     return call(interpreter);
+}
+
+Value ArrayConstructor::is_array(Interpreter& interpreter)
+{
+    auto value = interpreter.argument(0);
+    if (!value.is_array())
+        return Value(false);
+    // Exclude TypedArray and similar
+    return Value(StringView(value.as_object().class_name()) == "Array");
 }
 
 }
