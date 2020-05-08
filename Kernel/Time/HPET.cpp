@@ -161,11 +161,6 @@ bool HPET::check_for_exisiting_periodic_timers()
     return false;
 }
 
-const FixedArray<RefPtr<HPETComparator>>& HPET::comparators() const
-{
-    return m_comparators;
-}
-
 void HPET::global_disable()
 {
     auto* registers_block = (volatile HPETRegistersBlock*)m_hpet_mmio_region->vaddr().offset(m_physical_acpi_hpet_registers.offset_in_page()).as_ptr();
@@ -331,7 +326,6 @@ HPET::HPET(PhysicalAddress acpi_hpet)
     size_t timers_count = ((registers_block->raw_capabilites.reg >> 8) & 0x1f) + 1;
     klog() << "HPET: Timers count - " << timers_count;
     ASSERT(timers_count >= 2);
-    m_comparators.resize(timers_count);
     auto* capabilities_register = (const volatile HPETCapabilityRegister*)&registers_block->raw_capabilites.reg;
 
     global_disable();
@@ -345,15 +339,8 @@ HPET::HPET(PhysicalAddress acpi_hpet)
     if (registers_block->raw_capabilites.reg & (u32)HPETFlags::Attributes::LegacyReplacementRouteCapable)
         registers_block->configuration.reg |= (u32)HPETFlags::Configuration::LegacyReplacementRoute;
 
-    for (size_t index = 0; index < m_comparators.size(); index++) {
-        bool periodic = is_periodic_capable(index);
-        if (index == 0) {
-            m_comparators[index] = HPETComparator::create(index, 0, periodic);
-        }
-        if (index == 1) {
-            m_comparators[index] = HPETComparator::create(index, 8, periodic);
-        }
-    }
+    m_comparators.append(HPETComparator::create(0, 0, is_periodic_capable(0)));
+    m_comparators.append(HPETComparator::create(1, 8, is_periodic_capable(1)));
 
     global_enable();
 }

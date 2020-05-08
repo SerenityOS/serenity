@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/FixedArray.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/UnixTypes.h>
@@ -65,7 +66,7 @@ private:
     bool probe_and_set_non_legacy_hardware_timers();
     Vector<HardwareTimer*> scan_and_initialize_periodic_timers();
     Vector<HardwareTimer*> scan_for_non_periodic_timers();
-    Vector<RefPtr<HardwareTimer>> m_hardware_timers;
+    NonnullRefPtrVector<HardwareTimer> m_hardware_timers;
 
     u32 m_ticks_this_second { 0 };
     u32 m_seconds_since_boot { 0 };
