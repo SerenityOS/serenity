@@ -91,6 +91,8 @@ public:
     u8 glyph_height() const { return m_glyph_height; }
     u8 min_glyph_width() const { return m_min_glyph_width; }
     u8 max_glyph_width() const { return m_max_glyph_width; }
+    u8 glyph_fixed_width() const { return m_glyph_width; }
+
     int width(const StringView&) const;
     int width(const Utf8View&) const;
 
@@ -109,12 +111,15 @@ public:
         m_glyph_widths[(u8)ch] = width;
     }
 
+    int glyph_count() { return m_glyph_count; }
+
 private:
     Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing);
 
     static RefPtr<Font> load_from_memory(const u8*);
 
     String m_name;
+    size_t m_glyph_count { 256 };
 
     unsigned* m_rows { nullptr };
     u8* m_glyph_widths { nullptr };
