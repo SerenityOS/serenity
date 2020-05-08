@@ -27,6 +27,8 @@
 #include <LibGUI/Widget.h>
 #include <LibWeb/Forward.h>
 
+namespace Browser {
+
 class InspectorWidget final : public GUI::Widget {
     C_OBJECT(InspectorWidget)
 public:
@@ -42,3 +44,5 @@ private:
     RefPtr<GUI::TableView> m_computed_style_table_view;
     RefPtr<Web::Document> m_document;
 };
+
+}

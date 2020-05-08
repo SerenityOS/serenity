@@ -27,13 +27,15 @@
 #include "InspectorWidget.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
-#include <LibGUI/TabWidget.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/StylePropertiesModel.h>
+
+namespace Browser {
 
 InspectorWidget::InspectorWidget()
 {
@@ -74,4 +76,6 @@ void InspectorWidget::set_document(Web::Document* document)
         return;
     m_document = document;
     m_dom_tree_view->set_model(Web::DOMTreeModel::create(*document));
+}
+
 }
