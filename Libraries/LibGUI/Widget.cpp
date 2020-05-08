@@ -616,6 +616,12 @@ void Widget::set_enabled(bool enabled)
     if (m_enabled == enabled)
         return;
     m_enabled = enabled;
+
+    for_each_child_widget([enabled](auto& child) {
+        child.set_enabled(enabled);
+        return IterationDecision::Continue;
+    });
+
     Event e(Event::EnabledChange);
     event(e);
     update();
