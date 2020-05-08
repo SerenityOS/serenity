@@ -35,8 +35,8 @@ class GlyphMapWidget final : public GUI::Frame {
 public:
     virtual ~GlyphMapWidget() override;
 
-    u8 selected_glyph() const { return m_selected_glyph; }
-    void set_selected_glyph(u8);
+    int selected_glyph() const { return m_selected_glyph; }
+    void set_selected_glyph(int);
 
     int rows() const { return ceil_div(m_glyph_count, m_columns); }
     int columns() const { return m_columns; }
@@ -47,9 +47,9 @@ public:
     Gfx::Font& font() { return *m_font; }
     const Gfx::Font& font() const { return *m_font; }
 
-    void update_glyph(u8);
+    void update_glyph(int);
 
-    Function<void(u8)> on_glyph_selected;
+    Function<void(int)> on_glyph_selected;
 
 private:
     explicit GlyphMapWidget(Gfx::Font&);
@@ -58,12 +58,12 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    Gfx::Rect get_outer_rect(u8 glyph) const;
+    Gfx::Rect get_outer_rect(int glyph) const;
 
     RefPtr<Gfx::Font> m_font;
-    int m_glyph_count { 256 };
+    int m_glyph_count;
     int m_columns { 32 };
     int m_horizontal_spacing { 2 };
     int m_vertical_spacing { 2 };
-    u8 m_selected_glyph { 0 };
+    int m_selected_glyph { 0 };
 };

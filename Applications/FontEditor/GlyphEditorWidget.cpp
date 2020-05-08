@@ -39,7 +39,7 @@ GlyphEditorWidget::~GlyphEditorWidget()
 {
 }
 
-void GlyphEditorWidget::set_glyph(u8 glyph)
+void GlyphEditorWidget::set_glyph(int glyph)
 {
     if (m_glyph == glyph)
         return;

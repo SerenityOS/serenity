@@ -32,6 +32,7 @@
 GlyphMapWidget::GlyphMapWidget(Gfx::Font& mutable_font)
     : m_font(mutable_font)
 {
+    m_glyph_count = mutable_font.glyph_count();
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
 }
 
@@ -49,7 +50,7 @@ int GlyphMapWidget::preferred_height() const
     return rows() * (font().glyph_height() + m_vertical_spacing) + 2 + frame_thickness() * 2;
 }
 
-void GlyphMapWidget::set_selected_glyph(u8 glyph)
+void GlyphMapWidget::set_selected_glyph(int glyph)
 {
     if (m_selected_glyph == glyph)
         return;
@@ -59,7 +60,7 @@ void GlyphMapWidget::set_selected_glyph(u8 glyph)
     update();
 }
 
-Gfx::Rect GlyphMapWidget::get_outer_rect(u8 glyph) const
+Gfx::Rect GlyphMapWidget::get_outer_rect(int glyph) const
 {
     int row = glyph / columns();
     int column = glyph % columns();
@@ -72,7 +73,7 @@ Gfx::Rect GlyphMapWidget::get_outer_rect(u8 glyph) const
         .translated(frame_thickness(), frame_thickness());
 }
 
-void GlyphMapWidget::update_glyph(u8 glyph)
+void GlyphMapWidget::update_glyph(int glyph)
 {
     update(get_outer_rect(glyph));
 }
@@ -158,7 +159,8 @@ void GlyphMapWidget::keydown_event(GUI::KeyEvent& event)
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_End) {
         int new_selection = selected_glyph() / m_columns * m_columns + (m_columns - 1);
-        new_selection = clamp(new_selection, 0, m_glyph_count - 1);
+        int max = m_glyph_count - 1;
+        new_selection = clamp(new_selection, 0, max);
         set_selected_glyph(new_selection);
         return;
     }
