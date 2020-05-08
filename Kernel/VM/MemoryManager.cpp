@@ -492,13 +492,12 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
     ASSERT_NOT_REACHED();
 }
 
-Vector<RefPtr<PhysicalPage>> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
+NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
 {
     ASSERT(!(size % PAGE_SIZE));
     InterruptDisabler disabler;
     size_t count = ceil_div(size, PAGE_SIZE);
-    Vector<RefPtr<PhysicalPage>> physical_pages;
-    physical_pages.ensure_capacity(count);
+    NonnullRefPtrVector<PhysicalPage> physical_pages;
 
     for (auto& region : m_super_physical_regions) {
         physical_pages = region.take_contiguous_free_pages((count), true);
@@ -516,7 +515,7 @@ Vector<RefPtr<PhysicalPage>> MemoryManager::allocate_contiguous_supervisor_physi
         return {};
     }
 
-    auto cleanup_region = MM.allocate_kernel_region(physical_pages[0]->paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
+    auto cleanup_region = MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
     fast_u32_fill((u32*)cleanup_region->vaddr().as_ptr(), 0, (PAGE_SIZE * count) / sizeof(u32));
     m_super_physical_pages_used += count;
     return physical_pages;

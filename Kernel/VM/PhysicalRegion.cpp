@@ -64,19 +64,18 @@ unsigned PhysicalRegion::finalize_capacity()
     return size();
 }
 
-Vector<RefPtr<PhysicalPage>> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor)
+NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor)
 {
     ASSERT(m_pages);
     ASSERT(m_used != m_pages);
 
-    Vector<RefPtr<PhysicalPage>> physical_pages;
+    NonnullRefPtrVector<PhysicalPage> physical_pages;
     physical_pages.ensure_capacity(count);
 
     auto first_contiguous_page = find_contiguous_free_pages(count);
 
-    for (size_t index = 0; index < count; index++) {
+    for (size_t index = 0; index < count; index++)
         physical_pages.append(PhysicalPage::create(m_lower.offset(PAGE_SIZE * (index + first_contiguous_page)), supervisor));
-    }
     return physical_pages;
 }
 
