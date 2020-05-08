@@ -97,7 +97,6 @@ private:
     void prepare_variable_scopes();
     void prepare_lines();
     void parse_scopes_impl(const Dwarf::DIE& die);
-    Optional<VariablesScope> get_scope(u32 instruction_pointer) const;
     NonnullOwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&) const;
 
     NonnullRefPtr<const ELF::Loader> m_elf;
