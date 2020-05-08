@@ -135,7 +135,7 @@ void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
 
     const FlatPtr* raw_jmp_buf = reinterpret_cast<const FlatPtr*>(buf);
 
-    for (size_t i = 0; i < sizeof(buf) / sizeof(FlatPtr); i += sizeof(FlatPtr))
+    for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); i += sizeof(FlatPtr))
         possible_pointers.set(raw_jmp_buf[i]);
 
     FlatPtr stack_base;
