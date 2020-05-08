@@ -25,10 +25,13 @@
  */
 
 #include <AK/Function.h>
+#include <AK/HashFunctions.h>
+#include <AK/HashTable.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
+#include <math.h>
 
 namespace Gfx {
 
@@ -90,8 +93,6 @@ void Path::segmentize_path()
     Vector<LineSegment> segments;
 
     auto add_line = [&](const auto& p0, const auto& p1) {
-        if (p0.y() == p1.y())
-            return; // horizontal lines are not needed (there's nothing to fill inside)
         float ymax = p0.y(), ymin = p1.y(), x_of_ymin = p1.x(), x_of_ymax = p0.x();
         auto slope = p0.x() == p1.x() ? 0 : ((float)(p0.y() - p1.y())) / ((float)(p0.x() - p1.x()));
         if (p0.y() < p1.y()) {
@@ -139,6 +140,164 @@ void Path::segmentize_path()
     });
 
     m_split_lines = move(segments);
+}
+
+Vector<Path::LineSegment> Path::split_lines(Path::ShapeKind kind)
+{
+    if (m_split_lines.has_value()) {
+        const auto& lines = m_split_lines.value();
+        if (kind == Complex)
+            return lines;
+
+        Vector<LineSegment> segments;
+        for (auto& line : lines) {
+            if (is_part_of_closed_polygon(line.from, line.to))
+                segments.append(line);
+        }
+
+        return move(segments);
+    }
+
+    segmentize_path();
+    ASSERT(m_split_lines.has_value());
+    return split_lines(kind);
+}
+
+void Path::generate_path_graph()
+{
+    // Generate a (possibly) disconnected cyclic directed graph
+    // of the line segments in the path.
+    // This graph will be used to determine whether a line should
+    // be considered as part of an edge for the shape
+
+    // FIXME: This will not chop lines up, so we might still have some
+    //        filling artifacts after this, as a line might pass over an edge
+    //        but be itself a part of _another_ polygon.
+    HashMap<u32, OwnPtr<PathGraphNode>> graph;
+    m_graph_node_map = move(graph);
+
+    const auto& lines = split_lines();
+
+    if (!lines.size())
+        return;
+
+    // now use scanline to find intersecting lines
+    auto scanline = lines.first().maximum_y;
+    auto last_line = lines.last().minimum_y;
+
+    Vector<LineSegment> active_list;
+
+    for (auto& line : lines) {
+        if (line.maximum_y < scanline)
+            break;
+
+        active_list.append(line);
+    }
+
+    while (scanline >= last_line) {
+        if (active_list.size() > 1) {
+            quick_sort(active_list, [](const auto& line0, const auto& line1) {
+                return line1.x < line0.x;
+            });
+
+            // for every two lines next to each other in the active list
+            // figure out if they intersect, if they do, store
+            // the right line as the child of the left line
+            // in the path graph
+            for (size_t i = 1; i < active_list.size(); ++i) {
+                auto& left_line = active_list[i - 1];
+                auto& right_line = active_list[i];
+
+                auto left_hash = hash_line(left_line.from, left_line.to);
+                auto right_hash = hash_line(right_line.from, right_line.to);
+
+                auto maybe_left_entry = m_graph_node_map.value().get(left_hash);
+                auto maybe_right_entry = m_graph_node_map.value().get(right_hash);
+
+                if (!maybe_left_entry.has_value()) {
+                    auto left_entry = make<PathGraphNode>(left_hash, left_line);
+                    m_graph_node_map.value().set(left_hash, move(left_entry));
+                    maybe_left_entry = m_graph_node_map.value().get(left_hash);
+                }
+
+                if (!maybe_right_entry.has_value()) {
+                    auto right_entry = make<PathGraphNode>(right_hash, right_line);
+                    m_graph_node_map.value().set(right_hash, move(right_entry));
+                    maybe_right_entry = m_graph_node_map.value().get(right_hash);
+                }
+
+                // check all four sides for possible intersection
+                if (((int)fabs(left_line.x - right_line.x)) <= 1
+                    || ((int)fabs(left_line.x - right_line.x + left_line.inverse_slope)) <= 1
+                    || ((int)fabs(left_line.x - right_line.x + right_line.inverse_slope)) <= 1
+                    || ((int)fabs(left_line.x - right_line.x + +right_line.inverse_slope + left_line.inverse_slope)) <= 1) {
+
+                    const_cast<PathGraphNode*>(maybe_left_entry.value())->children.append(maybe_right_entry.value());
+                }
+
+                left_line.x -= left_line.inverse_slope;
+            }
+
+            active_list.last().x -= active_list.last().inverse_slope;
+        }
+
+        --scanline;
+
+        // remove any edge that goes out of bound from the active list
+        for (size_t i = 0, count = active_list.size(); i < count; ++i) {
+            if (scanline <= active_list[i].minimum_y) {
+                active_list.remove(i);
+                --count;
+                --i;
+            }
+        }
+    }
+}
+
+bool Path::is_part_of_closed_polygon(const Point& p0, const Point& p1)
+{
+    if (!m_graph_node_map.has_value())
+        generate_path_graph();
+
+    ASSERT(m_graph_node_map.has_value());
+
+    auto hash = hash_line(p0, p1);
+    auto maybe_entry = m_graph_node_map.value().get(hash);
+
+    if (!maybe_entry.has_value())
+        return true;
+
+    const auto& entry = maybe_entry.value();
+
+    // check if the entry is part of a loop
+    auto is_part_of_loop = false;
+    HashTable<u32> visited;
+    Vector<const PathGraphNode*> queue;
+
+    queue.append(entry);
+
+    for (; queue.size();) {
+        const auto* node = queue.take_first();
+        if (visited.contains(node->hash))
+            continue;
+
+        visited.set(node->hash);
+
+        if (node == entry) {
+            is_part_of_loop = true;
+            break;
+        }
+    }
+
+    return is_part_of_loop;
+}
+
+// FIXME: We need a better hash, and a wider type
+unsigned Path::hash_line(const Point& from, const Point& to)
+{
+    u32 p0 = pair_int_hash(from.x(), from.y());
+    u32 p1 = pair_int_hash(to.x(), to.y());
+    return pair_int_hash(p0, p1);
 }
 
 }
