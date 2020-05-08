@@ -43,6 +43,7 @@ private:
     virtual const char* class_name() const override { return "ArrayConstructor"; }
 
     static Value is_array(Interpreter&);
+    static Value of(Interpreter&);
 };
 
 }
