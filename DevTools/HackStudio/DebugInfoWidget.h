@@ -61,6 +61,7 @@ public:
     virtual ~DebugInfoWidget() override {}
 
     void update_variables(const PtraceRegisters&);
+    void program_stopped();
 
 private:
     explicit DebugInfoWidget();

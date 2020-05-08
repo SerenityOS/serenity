@@ -631,6 +631,8 @@ int main(int argc, char** argv)
         },
         [&]() {
             dbg() << "Program exited";
+            debug_info_widget.program_stopped();
+            hide_action_tabs();
             Core::EventLoop::main().post_event(*g_window, make<Core::DeferredInvocationEvent>([=](auto&) {
                 GUI::MessageBox::show("Program Exited", "Debugger", GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK, g_window);
             }));
