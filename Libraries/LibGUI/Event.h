@@ -278,6 +278,22 @@ public:
     u8 modifiers() const { return m_modifiers; }
     String text() const { return m_text; }
 
+    bool is_alpha() const { return m_key >= Key_A && m_key <= Key_Z; }
+    bool is_numeric() const { return m_key >= Key_0 && m_key <= Key_9; }
+    bool is_alphanumeric() const { return is_alpha() || is_numeric(); }
+    bool is_hex() const { return is_numeric() || (m_key >= KeyCode::Key_A && m_key <= KeyCode::Key_F); }
+
+    int to_number() const
+    {
+        ASSERT(is_numeric());
+        return m_key - Key_0;
+    }
+    int to_hex() const
+    {
+        ASSERT(is_hex());
+        return is_numeric() ? to_number() : m_key - KeyCode::Key_A + 0xA;
+    }
+
 private:
     friend class WindowServerConnection;
     int m_key { 0 };
