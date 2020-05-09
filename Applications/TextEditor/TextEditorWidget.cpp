@@ -473,7 +473,7 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
 
     if (m_extension == "cpp" || m_extension == "h") {
         m_cpp_highlight->activate();
-    } else if (m_extension == "js") {
+    } else if (m_extension == "js" || m_extension == "json") {
         m_js_highlight->activate();
     } else if (m_extension == "ini") {
         m_ini_highlight->activate();
