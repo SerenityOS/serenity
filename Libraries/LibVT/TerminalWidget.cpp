@@ -711,10 +711,10 @@ void TerminalWidget::beep()
     force_repaint();
 }
 
-void TerminalWidget::emit_char(u8 ch)
+void TerminalWidget::emit(const u8* data, size_t size)
 {
-    if (write(m_ptm_fd, &ch, 1) < 0) {
-        perror("emit_char: write");
+    if (write(m_ptm_fd, data, size) < 0) {
+        perror("TerminalWidget::emit: write");
     }
 }
 
