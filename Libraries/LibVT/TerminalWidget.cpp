@@ -644,6 +644,10 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     if (attribute.href_id != m_hovered_href_id) {
         m_hovered_href_id = attribute.href_id;
         m_hovered_href = attribute.href;
+        if (!m_hovered_href.is_empty())
+            window()->set_override_cursor(GUI::StandardCursor::Hand);
+        else
+            window()->set_override_cursor(GUI::StandardCursor::None);
         update();
     }
 
@@ -653,6 +657,16 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     auto old_selection_end = m_selection_end;
     m_selection_end = position;
     if (old_selection_end != m_selection_end)
+        update();
+}
+
+void TerminalWidget::leave_event(Core::Event&)
+{
+    window()->set_override_cursor(GUI::StandardCursor::None);
+    bool should_update = !m_hovered_href.is_empty();
+    m_hovered_href = {};
+    m_hovered_href_id = {};
+    if (should_update)
         update();
 }
 
