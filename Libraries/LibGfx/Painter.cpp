@@ -1298,7 +1298,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 #ifdef FILL_PATH_DEBUG
     size_t i { 0 };
     for (auto& segment : segments)
-        draw_line(segment.from, segment.to, Color::from_hsv(++i / segments.size() * 255, 255, 255), 1);
+        draw_line(Point(segment.from.x(), segment.from.y()), Point(segment.to.x(), segment.to.y()), Color::from_hsv(++i / segments.size() * 255, 255, 255), 1);
 #endif
 }
 
