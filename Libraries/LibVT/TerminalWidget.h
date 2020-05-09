@@ -133,6 +133,9 @@ private:
     String m_hovered_href;
     String m_hovered_href_id;
 
+    // Snapshot of m_hovered_href when opening a context menu for a hyperlink.
+    String m_context_menu_href;
+
     bool m_should_beep { false };
     bool m_belling { false };
     bool m_alt_key_held { false };
