@@ -132,10 +132,10 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     m_context_menu_for_hyperlink = GUI::Menu::construct();
     m_context_menu_for_hyperlink->add_action(GUI::Action::create("Open URL", [this](auto&) {
-        Desktop::Launcher::open(m_hovered_href);
+        Desktop::Launcher::open(m_context_menu_href);
     }));
     m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
-        GUI::Clipboard::the().set_data(m_hovered_href);
+        GUI::Clipboard::the().set_data(m_context_menu_href);
     }));
     m_context_menu_for_hyperlink->add_separator();
     m_context_menu_for_hyperlink->add_action(copy_action());
@@ -772,10 +772,12 @@ void TerminalWidget::emit(const u8* data, size_t size)
 
 void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 {
-    if (m_hovered_href_id.is_null())
+    if (m_hovered_href_id.is_null()) {
         m_context_menu->popup(event.screen_position());
-    else
+    } else {
+        m_context_menu_href = m_hovered_href;
         m_context_menu_for_hyperlink->popup(event.screen_position());
+    }
 }
 
 void TerminalWidget::drop_event(GUI::DropEvent& event)
