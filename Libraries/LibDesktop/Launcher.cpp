@@ -47,7 +47,6 @@ private:
     LaunchServerConnection()
         : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, "/tmp/portal/launch")
     {
-
     }
     virtual void handle(const Messages::LaunchClient::Dummy&) override {}
 };
@@ -55,18 +54,6 @@ private:
 bool Launcher::open(const URL& url)
 {
     auto connection = LaunchServerConnection::construct();
-
-    if (url.protocol() == "file") {
-        // Make the path fully qualified - LaunchServer won't know our cwd
-        char* path = realpath(url.path().characters(), nullptr);
-        if (path == nullptr) {
-            return false;
-        }
-        auto fully_qualified = URL::create_with_file_protocol(path);
-        free(path);
-
-        return connection->send_sync<Messages::LaunchServer::OpenUrl>(fully_qualified.to_string());
-    }
     return connection->send_sync<Messages::LaunchServer::OpenUrl>(url.to_string());
 }
 
