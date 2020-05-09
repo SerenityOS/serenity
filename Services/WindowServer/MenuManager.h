@@ -30,7 +30,9 @@
 #include "MenuBar.h"
 #include "Window.h"
 #include <AK/HashMap.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/Object.h>
+#include <LibCore/Timer.h>
 
 namespace WindowServer {
 
@@ -110,6 +112,8 @@ private:
     WeakPtr<Menu> m_current_menu;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
 
+    RefPtr<Core::Timer> m_search_timer;
+    StringBuilder m_current_search;
     WeakPtr<Menu> m_system_menu;
 
     bool m_needs_window_resize { false };
