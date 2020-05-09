@@ -185,7 +185,9 @@ void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
     if (!painter)
         return;
 
-    painter->fill_path(m_path, m_fill_style, winding);
+    auto path = m_path;
+    path.close_all_subpaths();
+    painter->fill_path(path, m_fill_style, winding);
 }
 
 RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(JS::GlobalObject& global_object, int width, int height) const
