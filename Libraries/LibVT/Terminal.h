@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -104,6 +105,9 @@ public:
     u16 cursor_row() const { return m_cursor_row; }
 
     struct Line {
+        AK_MAKE_NONCOPYABLE(Line);
+        AK_MAKE_NONMOVABLE(Line);
+    public:
         explicit Line(u16 columns);
         ~Line();
         void clear(Attribute);
