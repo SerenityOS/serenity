@@ -34,6 +34,7 @@ script:
 - cd ../Kernel
 - ./makeall.sh
 - ../Meta/lint-shell-scripts.sh
+- ../Meta/check-license-headers.sh
 - ../Meta/Lagom/build-js.sh
 - cd ../Libraries/LibJS/Tests
 - ./run-tests
