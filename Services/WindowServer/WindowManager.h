@@ -173,6 +173,8 @@ public:
     void set_hovered_window(Window*);
     void deliver_mouse_event(Window& window, MouseEvent& event);
 
+    void did_popup_a_menu(Badge<Menu>);
+
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
     NonnullRefPtr<Cursor> get_cursor(const String& name, const Gfx::Point& hotspot);

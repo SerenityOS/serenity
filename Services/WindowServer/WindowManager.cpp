@@ -1314,4 +1314,13 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     return true;
 }
 
+void WindowManager::did_popup_a_menu(Badge<Menu>)
+{
+    // Clear any ongoing input gesture
+    if (!m_active_input_window)
+        return;
+    m_active_input_window->set_automatic_cursor_tracking_enabled(false);
+    m_active_input_window = nullptr;
+}
+
 }
