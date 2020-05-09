@@ -69,6 +69,7 @@ public:
     }
 
     void close();
+    void close_all_subpaths();
 
     struct LineSegment {
         FloatPoint from, to;
