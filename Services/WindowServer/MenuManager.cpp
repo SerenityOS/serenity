@@ -42,6 +42,7 @@
 namespace WindowServer {
 
 static MenuManager* s_the;
+static constexpr int s_search_timeout = 3000;
 
 MenuManager& MenuManager::the()
 {
@@ -59,6 +60,10 @@ MenuManager::MenuManager()
 
     m_window = Window::construct(*this, WindowType::Menubar);
     m_window->set_rect(menubar_rect());
+
+    m_search_timer = Core::Timer::create_single_shot(0, [this] {
+        m_current_search.clear();
+    });
 }
 
 MenuManager::~MenuManager()
@@ -130,6 +135,26 @@ void MenuManager::event(Core::Event& event)
 
         if (key_event.type() == Event::KeyUp && key_event.key() == Key_Escape) {
             close_everyone();
+            return;
+        }
+
+        if (key_event.key() == Key_Backspace) {
+            if (m_current_menu)
+                m_current_menu->clear_hovered_item();
+            m_current_search.clear();
+            return;
+        }
+
+        if (m_current_menu && key_event.is_alphanumeric() && event.type() == Event::KeyDown) {
+            m_current_search.append(key_event.character());
+            m_search_timer->restart(s_search_timeout);
+            for (int i = 0; i < m_current_menu->item_count(); ++i) {
+                auto text = m_current_menu->item(i).text();
+                if (text.to_lowercase().starts_with(m_current_search.to_string().to_lowercase())) {
+                    m_current_menu->set_hovered_item(i);
+                    return;
+                }
+            }
             return;
         }
 
@@ -284,6 +309,7 @@ void MenuManager::close_everyone()
         menu->clear_hovered_item();
     }
     m_open_menu_stack.clear();
+    m_current_search.clear();
     m_current_menu = nullptr;
     refresh();
 }
@@ -381,6 +407,7 @@ void MenuManager::set_current_menu(Menu* menu)
         return;
     }
 
+    m_current_search.clear();
     m_current_menu = menu->make_weak_ptr();
 }
 
