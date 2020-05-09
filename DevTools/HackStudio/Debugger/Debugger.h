@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
