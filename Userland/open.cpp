@@ -29,6 +29,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
+#include <string.h>
 
 int main(int argc, char* argv[])
 {
@@ -43,8 +44,20 @@ int main(int argc, char* argv[])
 
     for (auto& url_or_path : urls_or_paths) {
         URL url = URL::create_with_url_or_path(url_or_path);
-        bool ok = Desktop::Launcher::open(url);
-        all_ok = all_ok && ok;
+        if (url.protocol() == "file" && !url.path().starts_with('/')) {
+            if (auto* path = realpath(url.path().characters(), nullptr)) {
+                url.set_path(path);
+                free(path);
+            } else {
+                fprintf(stderr, "Failed to open '%s': %s\n", url.path().characters(), strerror(errno));
+                all_ok = false;
+                continue;
+            }
+        }
+        if (!Desktop::Launcher::open(url)) {
+            fprintf(stderr, "Failed to open '%s'\n", url.path().characters());
+            all_ok = false;
+        }
     }
 
     return all_ok ? 0 : 1;
