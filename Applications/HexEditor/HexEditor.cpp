@@ -27,7 +27,6 @@
 #include "HexEditor.h"
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FontDatabase.h>
@@ -36,6 +35,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -417,32 +417,27 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
 
 void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
 {
-    if ((event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) || (event.key() >= KeyCode::Key_A && event.key() <= KeyCode::Key_F)) {
-        if (m_buffer.is_empty())
-            return;
-        ASSERT(m_position >= 0);
-        ASSERT(m_position < static_cast<int>(m_buffer.size()));
+    if (!event.is_hex() || m_buffer.is_empty())
+        return;
 
-        // yes, this is terrible... but it works.
-        auto value = (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9)
-            ? event.key() - KeyCode::Key_0
-            : (event.key() - KeyCode::Key_A) + 0xA;
+    ASSERT(m_position >= 0);
+    ASSERT(m_position < static_cast<int>(m_buffer.size()));
 
-        if (m_byte_position == 0) {
-            m_tracked_changes.set(m_position, m_buffer.data()[m_position]);
-            m_buffer.data()[m_position] = value << 4 | (m_buffer.data()[m_position] & 0xF); // shift new value left 4 bits, OR with existing last 4 bits
-            m_byte_position++;
-        } else {
-            m_buffer.data()[m_position] = (m_buffer.data()[m_position] & 0xF0) | value; // save the first 4 bits, OR the new value in the last 4
-            if (m_position + 1 < static_cast<int>(m_buffer.size()))
-                m_position++;
-            m_byte_position = 0;
-        }
-
-        update();
-        update_status();
-        did_change();
+    auto value = event.to_hex();
+    if (m_byte_position == 0) {
+        m_tracked_changes.set(m_position, m_buffer.data()[m_position]);
+        m_buffer.data()[m_position] = value << 4 | (m_buffer.data()[m_position] & 0xF); // shift new value left 4 bits, OR with existing last 4 bits
+        m_byte_position++;
+    } else {
+        m_buffer.data()[m_position] = (m_buffer.data()[m_position] & 0xF0) | value; // save the first 4 bits, OR the new value in the last 4
+        if (m_position + 1 < static_cast<int>(m_buffer.size()))
+            m_position++;
+        m_byte_position = 0;
     }
+
+    update();
+    update_status();
+    did_change();
 }
 
 void HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
