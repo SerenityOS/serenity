@@ -577,23 +577,38 @@ void Terminal::escape$P(const ParamVector& params)
 
 void Terminal::execute_xterm_command()
 {
-    m_final = '@';
-    bool ok;
-    unsigned value = String::copy(m_xterm_param1).to_uint(ok);
-    if (ok) {
-        switch (value) {
-        case 0:
-        case 1:
-        case 2:
-            m_client.set_window_title(String::copy(m_xterm_param2));
-            break;
-        default:
-            unimplemented_xterm_escape();
-            break;
-        }
+    ParamVector numeric_params;
+    auto param_string = String::copy(m_xterm_parameters);
+    auto params = param_string.split(';', true);
+    m_xterm_parameters.clear_with_capacity();
+    for (auto& parampart : params) {
+        bool ok;
+        unsigned value = parampart.to_uint(ok);
+        numeric_params.append(ok ? value : 0);
     }
-    m_xterm_param1.clear_with_capacity();
-    m_xterm_param2.clear_with_capacity();
+
+    while (params.size() < 3) {
+        params.append(String::empty());
+        numeric_params.append(0);
+    }
+
+    m_final = '@';
+
+    if (numeric_params.is_empty()) {
+        dbg() << "Empty Xterm params?";
+        return;
+    }
+
+    switch (numeric_params[0]) {
+    case 0:
+    case 1:
+    case 2:
+        m_client.set_window_title(params[1]);
+        break;
+    default:
+        unimplemented_xterm_escape();
+        break;
+    }
 }
 
 void Terminal::execute_escape_sequence(u8 final)
@@ -835,7 +850,8 @@ void Terminal::on_char(u8 ch)
             m_swallow_current = true;
             m_escape_state = ExpectParameter;
         } else if (ch == ']') {
-            m_escape_state = ExpectXtermParameter1;
+            m_escape_state = ExpectXtermParameter;
+            m_xterm_parameters.clear_with_capacity();
         } else if (ch == '#') {
             m_escape_state = ExpectHashtagDigit;
         } else if (ch == 'D') {
@@ -860,25 +876,25 @@ void Terminal::on_char(u8 ch)
             execute_hashtag(ch);
             m_escape_state = Normal;
         }
-        break;
-    case ExpectXtermParameter1:
-        if (ch != ';') {
-            m_xterm_param1.append(ch);
-            return;
-        }
-        m_escape_state = ExpectXtermParameter2;
         return;
-    case ExpectXtermParameter2:
-        if (ch != '\007') {
-            m_xterm_param2.append(ch);
+    case ExpectXtermParameter:
+        if (ch == 27) {
+            m_escape_state = ExpectStringTerminator;
             return;
         }
-        m_escape_state = ExpectXtermFinal;
-        [[fallthrough]];
-    case ExpectXtermFinal:
-        m_escape_state = Normal;
-        if (ch == '\007')
+        if (ch == 7) {
             execute_xterm_command();
+            m_escape_state = Normal;
+            return;
+        }
+        m_xterm_parameters.append(ch);
+        return;
+    case ExpectStringTerminator:
+        if (ch == '\\')
+            execute_xterm_command();
+        else
+            dbg() << "Unexpected string terminator: " << String::format("%02x", ch);
+        m_escape_state = Normal;
         return;
     case ExpectParameter:
         if (is_valid_parameter_character(ch)) {

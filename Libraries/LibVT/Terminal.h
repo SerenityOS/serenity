@@ -211,15 +211,14 @@ private:
         ExpectIntermediate,
         ExpectFinal,
         ExpectHashtagDigit,
-        ExpectXtermParameter1,
-        ExpectXtermParameter2,
-        ExpectXtermFinal,
+        ExpectXtermParameter,
+        ExpectStringTerminator,
     };
+
     EscapeState m_escape_state { Normal };
     Vector<u8> m_parameters;
     Vector<u8> m_intermediates;
-    Vector<u8> m_xterm_param1;
-    Vector<u8> m_xterm_param2;
+    Vector<u8> m_xterm_parameters;
     Vector<bool> m_horizontal_tabs;
     u8 m_final { 0 };
 
