@@ -232,8 +232,8 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
     if (event.key() == KeyCode::Key_Return) {
         m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
 
-    } else if (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) {
-        m_keypad.type_digit(atoi(event.text().characters()));
+    } else if (event.is_numeric()) {
+        m_keypad.type_digit(event.to_number());
 
     } else if (event.key() == KeyCode::Key_Period) {
         m_keypad.type_decimal_point();
