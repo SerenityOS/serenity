@@ -46,6 +46,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Desktop notifications (NotificationServer)
 * HTTP server (WebServer)
 * Telnet server (TelnetServer)
+* DHCP client (DHCPClient)
 
 ## Libraries
 
@@ -60,11 +61,13 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Audio (LibAudio)
 * PCI database (LibPCIDB)
 * Terminal emulation (LibVT)
-* Network protocols (HTTP) (LibProtocol)
+* Out-of-process network protocol I/O (LibProtocol)
 * Mathematical functions (LibM)
 * ELF file handing (LibELF)
 * POSIX threading (LibPthread)
 * Higher-level threading (LibThread)
+* Transport Layer Security (LibTLS)
+* HTTP and HTTPS (LibHTTP)
 
 ## Userland features
 
@@ -81,6 +84,10 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 ## How do I build and run this?
 
 See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md)
+
+## Before opening an issue
+
+Please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
 
 ## Wanna chat?
 
