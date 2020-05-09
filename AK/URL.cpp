@@ -112,8 +112,14 @@ bool URL::parse(const StringView& string)
                 buffer.append(consume());
                 continue;
             }
-            if (buffer.is_empty())
+            if (buffer.is_empty()) {
+                if (m_protocol == "file") {
+                    m_host = "";
+                    state = State::InPath;
+                    continue;
+                }
                 return false;
+            }
             m_host = String::copy(buffer);
             buffer.clear();
             if (peek() == ':') {

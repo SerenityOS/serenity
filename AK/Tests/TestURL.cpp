@@ -130,4 +130,22 @@ TEST_CASE(serialization)
     EXPECT_EQ(URL("https://www.serenityos.org:443/foo/bar.html?query#fragment").to_string(), "https://www.serenityos.org/foo/bar.html?query#fragment");
 }
 
+TEST_CASE(file_url_with_hostname)
+{
+    URL url("file://localhost/my/file");
+    EXPECT_EQ(url.is_valid(), true);
+    EXPECT_EQ(url.host(), "localhost");
+    EXPECT_EQ(url.path(), "/my/file");
+    EXPECT_EQ(url.to_string(), "file://localhost/my/file");
+}
+
+TEST_CASE(file_url_without_hostname)
+{
+    URL url("file:///my/file");
+    EXPECT_EQ(url.is_valid(), true);
+    EXPECT_EQ(url.host(), "");
+    EXPECT_EQ(url.path(), "/my/file");
+    EXPECT_EQ(url.to_string(), "file:///my/file");
+}
+
 TEST_MAIN(URL)
