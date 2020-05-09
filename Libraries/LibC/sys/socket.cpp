@@ -108,13 +108,15 @@ int setsockopt(int sockfd, int level, int option, const void* value, socklen_t v
 
 int getsockname(int sockfd, struct sockaddr* addr, socklen_t* addrlen)
 {
-    int rc = syscall(SC_getsockname, sockfd, addr, addrlen);
+    Syscall::SC_getsockname_params params { sockfd, addr, addrlen };
+    int rc = syscall(SC_getsockname, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int getpeername(int sockfd, struct sockaddr* addr, socklen_t* addrlen)
 {
-    int rc = syscall(SC_getpeername, sockfd, addr, addrlen);
+    Syscall::SC_getpeername_params params { sockfd, addr, addrlen };
+    int rc = syscall(SC_getpeername, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
