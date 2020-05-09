@@ -61,7 +61,8 @@ void Terminal::Line::set_length(u16 new_length)
     memset(new_characters, ' ', new_length);
     if (characters && attributes) {
         memcpy(new_characters, characters, min(m_length, new_length));
-        memcpy(new_attributes, attributes, min(m_length, new_length) * sizeof(Attribute));
+        for (size_t i = 0; i < min(m_length, new_length); ++i)
+            new_attributes[i] = attributes[i];
     }
     delete[] characters;
     delete[] attributes;
@@ -605,6 +606,11 @@ void Terminal::execute_xterm_command()
     case 2:
         m_client.set_window_title(params[1]);
         break;
+    case 8:
+        m_current_attribute.href = params[2];
+        // FIXME: Respect the provided ID
+        m_current_attribute.href_id = String::format("%u", m_next_href_id++);
+        break;
     default:
         unimplemented_xterm_escape();
         break;
@@ -1074,6 +1080,18 @@ void Terminal::execute_hashtag(u8 hashtag)
     default:
         dbg() << "Unknown hashtag: '" << hashtag << "'";
     }
+}
+
+Attribute Terminal::attribute_at(const Position& position) const
+{
+    if (!position.is_valid())
+        return {};
+    if (position.row() >= static_cast<int>(m_lines.size()))
+        return {};
+    auto& line = this->line(position.row());
+    if (position.column() >= line.m_length)
+        return {};
+    return line.attributes[position.column()];
 }
 
 }

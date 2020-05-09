@@ -60,6 +60,9 @@ struct Attribute {
     u8 foreground_color;
     u8 background_color;
 
+    String href;
+    String href_id;
+
     enum Flags : u8 {
         NoAttributes = 0x00,
         Bold = 0x01,
@@ -137,6 +140,8 @@ public:
 
     void inject_string(const StringView&);
 
+    Attribute attribute_at(const Position&) const;
+
 private:
     typedef Vector<unsigned, 4> ParamVector;
 
@@ -203,6 +208,8 @@ private:
     bool m_stomp { false };
 
     Attribute m_current_attribute;
+
+    u32 m_next_href_id { 0 };
 
     void execute_escape_sequence(u8 final);
     void execute_xterm_command();

@@ -32,6 +32,7 @@
 #include <AK/Utf8View.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/MimeData.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -371,7 +372,11 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
                     painter.clear_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
                 }
-                if (attribute.flags & VT::Attribute::Underline)
+
+                bool should_paint_underline = attribute.flags & VT::Attribute::Underline
+                    || (!m_hovered_href.is_empty() && m_hovered_href_id == attribute.href_id);
+
+                if (should_paint_underline)
                     painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
             }
 
@@ -586,6 +591,15 @@ void TerminalWidget::copy()
 
 void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 {
+    if (event.modifiers() == Mod_Ctrl && event.button() == GUI::MouseButton::Left) {
+        auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
+        if (!attribute.href.is_empty()) {
+            dbg() << "Open URL: _" << attribute.href << "_";
+            Desktop::Launcher::open(attribute.href);
+        }
+        return;
+    }
+
     if (event.button() == GUI::MouseButton::Left) {
         if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
             int start_column = 0;
@@ -609,11 +623,20 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 
 void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
 {
+    auto position = buffer_position_at(event.position());
+
+    auto attribute = m_terminal.attribute_at(position);
+    if (attribute.href_id != m_hovered_href_id) {
+        m_hovered_href_id = attribute.href_id;
+        m_hovered_href = attribute.href;
+        update();
+    }
+
     if (!(event.buttons() & GUI::MouseButton::Left))
         return;
 
     auto old_selection_end = m_selection_end;
-    m_selection_end = buffer_position_at(event.position());
+    m_selection_end = position;
     if (old_selection_end != m_selection_end)
         update();
 }
