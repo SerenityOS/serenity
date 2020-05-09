@@ -92,6 +92,10 @@ public:
     u8 modifiers() const { return m_modifiers; }
     char character() const { return m_character; }
 
+    bool is_alpha() const { return m_key >= Key_A && m_key <= Key_Z; }
+    bool is_numeric() const { return m_key >= Key_0 && m_key <= Key_9; }
+    bool is_alphanumeric() const { return is_alpha() || is_numeric(); }
+
 private:
     friend class EventLoop;
     friend class Screen;
