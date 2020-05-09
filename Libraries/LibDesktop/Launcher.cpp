@@ -48,13 +48,13 @@ private:
         : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, "/tmp/portal/launch")
     {
     }
-    virtual void handle(const Messages::LaunchClient::Dummy&) override {}
+    virtual void handle(const Messages::LaunchClient::Dummy&) override { }
 };
 
 bool Launcher::open(const URL& url)
 {
     auto connection = LaunchServerConnection::construct();
-    return connection->send_sync<Messages::LaunchServer::OpenUrl>(url.to_string());
+    return connection->send_sync<Messages::LaunchServer::OpenUrl>(url.to_string())->response();
 }
 
 }
