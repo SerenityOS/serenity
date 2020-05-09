@@ -33,7 +33,6 @@ LIBWEB_OBJS = \
     DOM/DocumentType.o \
     DOM/Element.o \
     DOM/ElementFactory.o \
-    DOM/Event.o \
     DOM/EventListener.o \
     DOM/EventTarget.o \
     DOM/HTMLAnchorElement.o \
@@ -55,7 +54,6 @@ LIBWEB_OBJS = \
     DOM/HTMLStyleElement.o \
     DOM/HTMLTitleElement.o \
     DOM/ImageData.o \
-    DOM/MouseEvent.o \
     DOM/Node.o \
     DOM/ParentNode.o \
     DOM/Text.o \
