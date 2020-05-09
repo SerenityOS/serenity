@@ -169,6 +169,7 @@ private:
     RefPtr<GUI::Action> m_paste_action;
 
     RefPtr<GUI::Menu> m_context_menu;
+    RefPtr<GUI::Menu> m_context_menu_for_hyperlink;
 
     Core::ElapsedTimer m_triple_click_timer;
 };

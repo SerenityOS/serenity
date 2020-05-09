@@ -125,6 +125,21 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/paste16.png"), [this](auto&) {
         paste();
     });
+
+    m_context_menu = GUI::Menu::construct();
+    m_context_menu->add_action(copy_action());
+    m_context_menu->add_action(paste_action());
+
+    m_context_menu_for_hyperlink = GUI::Menu::construct();
+    m_context_menu_for_hyperlink->add_action(GUI::Action::create("Open URL", [this](auto&) {
+        Desktop::Launcher::open(m_hovered_href);
+    }));
+    m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
+        GUI::Clipboard::the().set_data(m_hovered_href);
+    }));
+    m_context_menu_for_hyperlink->add_separator();
+    m_context_menu_for_hyperlink->add_action(copy_action());
+    m_context_menu_for_hyperlink->add_action(paste_action());
 }
 
 TerminalWidget::~TerminalWidget()
@@ -743,12 +758,10 @@ void TerminalWidget::emit(const u8* data, size_t size)
 
 void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 {
-    if (!m_context_menu) {
-        m_context_menu = GUI::Menu::construct();
-        m_context_menu->add_action(copy_action());
-        m_context_menu->add_action(paste_action());
-    }
-    m_context_menu->popup(event.screen_position());
+    if (m_hovered_href_id.is_null())
+        m_context_menu->popup(event.screen_position());
+    else
+        m_context_menu_for_hyperlink->popup(event.screen_position());
 }
 
 void TerminalWidget::drop_event(GUI::DropEvent& event)
