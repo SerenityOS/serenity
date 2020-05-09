@@ -55,6 +55,47 @@ void Path::close()
     }
 }
 
+void Path::close_all_subpaths()
+{
+    if (m_segments.size() <= 1)
+        return;
+
+    invalidate_split_lines();
+
+    Optional<FloatPoint> cursor, start_of_subpath;
+    bool is_first_point_in_subpath { false };
+
+    for (auto& segment : m_segments) {
+        switch (segment.type) {
+        case Segment::Type::MoveTo: {
+            if (cursor.has_value() && !is_first_point_in_subpath) {
+                // This is a move from a subpath to another
+                // connect the two ends of this subpath before
+                // moving on to the next one
+                ASSERT(start_of_subpath.has_value());
+
+                m_segments.append({ Segment::Type::MoveTo, cursor.value() });
+                m_segments.append({ Segment::Type::LineTo, start_of_subpath.value() });
+            }
+            is_first_point_in_subpath = true;
+            cursor = segment.point;
+            break;
+        }
+        case Segment::Type::LineTo:
+        case Segment::Type::QuadraticBezierCurveTo:
+            if (is_first_point_in_subpath) {
+                start_of_subpath = cursor;
+                is_first_point_in_subpath = false;
+            }
+            cursor = segment.point;
+            break;
+        case Segment::Type::Invalid:
+            ASSERT_NOT_REACHED();
+            break;
+        }
+    }
+}
+
 String Path::to_string() const
 {
     StringBuilder builder;
