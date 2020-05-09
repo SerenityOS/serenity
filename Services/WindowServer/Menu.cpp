@@ -551,6 +551,8 @@ void Menu::popup(const Gfx::Point& position, bool is_submenu)
     window.move_to(adjusted_pos);
     window.set_visible(true);
     MenuManager::the().set_current_menu(this, is_submenu);
+
+    WindowManager::the().did_popup_a_menu({});
 }
 
 bool Menu::is_menu_ancestor_of(const Menu& other) const
