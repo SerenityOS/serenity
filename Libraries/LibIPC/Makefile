@@ -1,6 +1,5 @@
 OBJS = \
     Decoder.o \
-    Dictionary.o \
     Encoder.o \
     Endpoint.o \
     Message.o
