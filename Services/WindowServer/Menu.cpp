@@ -282,12 +282,12 @@ MenuItem* Menu::hovered_item() const
 void Menu::update_for_new_hovered_item()
 {
     if (hovered_item() && hovered_item()->is_submenu()) {
+        ASSERT(menu_window());
         MenuManager::the().close_everyone_not_in_lineage(*hovered_item()->submenu());
-        hovered_item()->submenu()->popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()), true);
+        hovered_item()->submenu()->popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()));
     } else {
         MenuManager::the().close_everyone_not_in_lineage(*this);
-        MenuManager::the().set_current_menu(this);
-        menu_window()->set_visible(true);
+        ensure_menu_window().set_visible(true);
     }
     redraw();
 }
@@ -306,17 +306,17 @@ void Menu::open_hovered_item()
 void Menu::descend_into_submenu_at_hovered_item()
 {
     ASSERT(hovered_item());
-    ASSERT(hovered_item()->is_submenu());
     auto submenu = hovered_item()->submenu();
-    submenu->m_hovered_item_index = 0;
+    ASSERT(submenu);
+    MenuManager::the().open_menu(*submenu);
+    submenu->set_hovered_item(0);
     ASSERT(submenu->hovered_item()->type() != MenuItem::Separator);
-    submenu->update_for_new_hovered_item();
-    m_in_submenu = true;
 }
 
 void Menu::handle_mouse_move_event(const MouseEvent& mouse_event)
 {
     ASSERT(menu_window());
+    MenuManager::the().set_current_menu(this);
     if (hovered_item() && hovered_item()->is_submenu()) {
 
         auto item = *hovered_item();
@@ -336,8 +336,6 @@ void Menu::handle_mouse_move_event(const MouseEvent& mouse_event)
         return;
     m_hovered_item_index = index;
 
-    // FIXME: Tell parent menu (if it exists) that it is currently in a submenu
-    m_in_submenu = false;
     update_for_new_hovered_item();
     return;
 }
@@ -382,23 +380,6 @@ void Menu::event(Core::Event& event)
         if (!hovered_item()) {
             m_hovered_item_index = 0;
             update_for_new_hovered_item();
-            return;
-        }
-
-        // Pass the event for the submenu that we are currently in to handle
-        if (m_in_submenu && key != Key_Left) {
-            ASSERT(hovered_item()->is_submenu());
-            hovered_item()->submenu()->dispatch_event(event);
-            return;
-        }
-
-        if (key == Key_Return) {
-            if (!hovered_item()->is_enabled())
-                return;
-            if (hovered_item()->is_submenu())
-                descend_into_submenu_at_hovered_item();
-            else
-                open_hovered_item();
             return;
         }
 
@@ -451,22 +432,6 @@ void Menu::event(Core::Event& event)
             update_for_new_hovered_item();
             return;
         }
-
-        if (key == Key_Left) {
-            if (!m_in_submenu)
-                return;
-
-            ASSERT(hovered_item()->is_submenu());
-            hovered_item()->submenu()->clear_hovered_item();
-            m_in_submenu = false;
-            return;
-        }
-
-        if (key == Key_Right) {
-            if (hovered_item()->is_enabled() && hovered_item()->is_submenu())
-                descend_into_submenu_at_hovered_item();
-            return;
-        }
     }
     Core::Object::event(event);
 }
@@ -476,7 +441,7 @@ void Menu::clear_hovered_item()
     if (!hovered_item())
         return;
     m_hovered_item_index = -1;
-    m_in_submenu = false;
+    MenuManager::the().close_everyone_not_in_lineage(*this);
     redraw();
 }
 
@@ -525,7 +490,7 @@ void Menu::redraw_if_theme_changed()
         redraw();
 }
 
-void Menu::popup(const Gfx::Point& position, bool is_submenu)
+void Menu::popup(const Gfx::Point& position)
 {
     if (is_empty()) {
         dbg() << "Menu: Empty menu popup";
@@ -550,7 +515,7 @@ void Menu::popup(const Gfx::Point& position, bool is_submenu)
 
     window.move_to(adjusted_pos);
     window.set_visible(true);
-    MenuManager::the().set_current_menu(this, is_submenu);
+    MenuManager::the().open_menu(*this, false);
 }
 
 bool Menu::is_menu_ancestor_of(const Menu& other) const

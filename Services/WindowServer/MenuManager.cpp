@@ -134,11 +134,37 @@ void MenuManager::event(Core::Event& event)
         }
 
         if (event.type() == Event::KeyDown) {
-            for_each_active_menubar_menu([&](Menu& menu) {
-                if (is_open(menu))
-                    menu.dispatch_event(event);
-                return IterationDecision::Continue;
-            });
+
+            if (key_event.key() == Key_Left) {
+                auto it = m_open_menu_stack.find([&](auto& other) { return m_current_menu == other.ptr(); });
+                ASSERT(!it.is_end());
+
+                // Going "back" a menu should be the previous menu in the stack
+                if (it.index() > 0)
+                    set_current_menu(m_open_menu_stack.at(it.index() - 1));
+                close_everyone_not_in_lineage(*m_current_menu);
+                return;
+            }
+
+            if (key_event.key() == Key_Right) {
+                auto hovered_item = m_current_menu->hovered_item();
+                if (hovered_item && hovered_item->is_submenu())
+                    m_current_menu->descend_into_submenu_at_hovered_item();
+                return;
+            }
+
+            if (key_event.key() == Key_Return) {
+                auto hovered_item = m_current_menu->hovered_item();
+
+                if (!hovered_item->is_enabled())
+                    return;
+                if (hovered_item->is_submenu())
+                    m_current_menu->descend_into_submenu_at_hovered_item();
+                else
+                    m_current_menu->open_hovered_item();
+                return;
+            }
+            m_current_menu->dispatch_event(event);
         }
     }
 
@@ -252,7 +278,8 @@ void MenuManager::close_all_menus_from_client(Badge<ClientConnection>, ClientCon
 void MenuManager::close_everyone()
 {
     for (auto& menu : m_open_menu_stack) {
-        if (menu && menu->menu_window())
+        ASSERT(menu);
+        if (menu->menu_window())
             menu->menu_window()->set_visible(false);
         menu->clear_hovered_item();
     }
@@ -316,40 +343,45 @@ void MenuManager::toggle_menu(Menu& menu)
     open_menu(menu);
 }
 
-void MenuManager::open_menu(Menu& menu)
+void MenuManager::open_menu(Menu& menu, bool as_current_menu)
 {
-    if (is_open(menu))
+    if (is_open(menu)) {
+        if (as_current_menu)
+            set_current_menu(&menu);
         return;
+    }
+
     if (!menu.is_empty()) {
         menu.redraw_if_theme_changed();
-        auto& menu_window = menu.ensure_menu_window();
-        menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
-        menu_window.set_visible(true);
+        if (!menu.menu_window()) {
+            auto& menu_window = menu.ensure_menu_window();
+            menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
+        }
+        menu.menu_window()->set_visible(true);
     }
-    set_current_menu(&menu);
+
+    if (m_open_menu_stack.find([&menu](auto& other) { return &menu == other.ptr(); }).is_end())
+        m_open_menu_stack.append(menu.make_weak_ptr());
+
+    if (as_current_menu)
+        set_current_menu(&menu);
+
     refresh();
 }
 
-void MenuManager::set_current_menu(Menu* menu, bool is_submenu)
+void MenuManager::set_current_menu(Menu* menu)
 {
-    if (menu == m_current_menu)
-        return;
-
-    if (!is_submenu) {
-        if (menu)
-            close_everyone_not_in_lineage(*menu);
-        else
-            close_everyone();
-    }
-
     if (!menu) {
         m_current_menu = nullptr;
         return;
     }
 
+    ASSERT(is_open(*menu));
+    if (menu == m_current_menu) {
+        return;
+    }
+
     m_current_menu = menu->make_weak_ptr();
-    if (m_open_menu_stack.find([menu](auto& other) { return menu == other.ptr(); }).is_end())
-        m_open_menu_stack.append(menu->make_weak_ptr());
 }
 
 void MenuManager::close_bar()
