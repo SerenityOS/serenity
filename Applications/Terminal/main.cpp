@@ -190,7 +190,7 @@ int main(int argc, char** argv)
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec", nullptr) < 0) {
+    if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -309,6 +309,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/bin/Terminal", "x") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/launch", "rw") < 0) {
         perror("unveil");
         return 1;
     }

@@ -129,6 +129,9 @@ private:
     VT::Position m_selection_start;
     VT::Position m_selection_end;
 
+    String m_hovered_href;
+    String m_hovered_href_id;
+
     bool m_should_beep { false };
     bool m_belling { false };
     bool m_alt_key_held { false };
