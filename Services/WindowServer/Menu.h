@@ -104,13 +104,20 @@ public:
     void redraw();
 
     MenuItem* hovered_item() const;
+
+    void set_hovered_item(int index)
+    {
+        m_hovered_item_index = index;
+        update_for_new_hovered_item();
+    }
+
     void clear_hovered_item();
 
     Function<void(MenuItem&)> on_item_activation;
 
     void close();
 
-    void popup(const Gfx::Point&, bool is_submenu = false);
+    void popup(const Gfx::Point&);
 
     bool is_menu_ancestor_of(const Menu&) const;
 
@@ -118,6 +125,9 @@ public:
 
     bool is_scrollable() const { return m_scrollable; }
     int scroll_offset() const { return m_scroll_offset; }
+
+    void descend_into_submenu_at_hovered_item();
+    void open_hovered_item();
 
 private:
     virtual void event(Core::Event&) override;
@@ -130,9 +140,7 @@ private:
     int item_index_at(const Gfx::Point&);
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(MenuItem&);
-    void open_hovered_item();
     void update_for_new_hovered_item();
-    void descend_into_submenu_at_hovered_item();
 
     ClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
@@ -148,7 +156,6 @@ private:
     Gfx::Point m_last_position_in_hover;
     int m_theme_index_at_last_paint { -1 };
     int m_hovered_item_index { -1 };
-    bool m_in_submenu { false };
 
     bool m_scrollable { false };
     int m_scroll_offset { 0 };

@@ -53,8 +53,8 @@ public:
     void set_needs_window_resize();
 
     Menu* current_menu() { return m_current_menu.ptr(); }
-    void set_current_menu(Menu*, bool is_submenu = false);
-    void open_menu(Menu&);
+    void set_current_menu(Menu*);
+    void open_menu(Menu&, bool as_current_menu = true);
     void toggle_menu(Menu&);
 
     MenuBar* current_menubar() { return m_current_menubar.ptr(); }
