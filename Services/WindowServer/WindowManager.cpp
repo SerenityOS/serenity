@@ -423,7 +423,6 @@ void WindowManager::start_window_resize(Window& window, const Gfx::Point& positi
 #endif
     m_resizing_mouse_button = button;
     m_resize_window = window.make_weak_ptr();
-    ;
     m_resize_origin = position;
     m_resize_window_original_rect = window.rect();
 
