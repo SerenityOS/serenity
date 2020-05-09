@@ -326,6 +326,8 @@ int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)
         if (!process.validate_read(tp, sizeof(termios)))
             return -EFAULT;
         set_termios(*tp);
+        if (request == TCSETSF)
+            flush_input();
         return 0;
     case TIOCGWINSZ:
         ws = reinterpret_cast<winsize*>(arg);
