@@ -149,6 +149,14 @@ String Text::render_for_terminal() const
             builder.append('m');
         }
 
+        if (!span.style.href.is_null()) {
+            if (strstr(span.style.href.characters(), "://") != nullptr) {
+                builder.append("\033]8;;");
+                builder.append(span.style.href);
+                builder.append("\033\\");
+            }
+        }
+
         builder.append(span.text.characters());
 
         if (needs_styling)
@@ -160,6 +168,7 @@ String Text::render_for_terminal() const
             // chance to follow them anyway.
             if (strstr(span.style.href.characters(), "://") != nullptr) {
                 builder.appendf(" <%s>", span.style.href.characters());
+                builder.append("\033]8;;\033\\");
             }
         }
         if (!span.style.img.is_null()) {
