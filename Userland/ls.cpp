@@ -56,6 +56,7 @@ static bool flag_print_numeric = false;
 static bool flag_human_readable = false;
 static bool flag_sort_by_timestamp = false;
 static bool flag_reverse_sort = false;
+static bool flag_disable_hyperlinks = false;
 
 static size_t terminal_rows = 0;
 static size_t terminal_columns = 0;
@@ -95,6 +96,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
     args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
+    args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -144,8 +146,28 @@ int print_escaped(const char* name)
     return printed;
 }
 
+static String& hostname()
+{
+    static String s_hostname;
+    if (s_hostname.is_null()) {
+        char buffer[HOST_NAME_MAX];
+        if (gethostname(buffer, sizeof(buffer)) == 0)
+            s_hostname = buffer;
+        else
+            s_hostname = "localhost";
+    }
+    return s_hostname;
+}
+
 size_t print_name(const struct stat& st, const String& name, const char* path_for_link_resolution = nullptr)
 {
+    if (!flag_disable_hyperlinks) {
+        if (auto* full_path = realpath(name.characters(), nullptr)) {
+            printf("\033]8;;file://%s%s\033\\", hostname().characters(), full_path);
+            free(full_path);
+        }
+    }
+
     size_t nprinted = 0;
 
     if (!flag_colorize || !output_is_terminal) {
@@ -190,6 +212,11 @@ size_t print_name(const struct stat& st, const String& name, const char* path_fo
     } else if (st.st_mode & 0111) {
         nprinted += printf("*");
     }
+
+    if (!flag_disable_hyperlinks) {
+        printf("\033]8;;\033\\");
+    }
+
     return nprinted;
 }
 
