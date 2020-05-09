@@ -705,10 +705,7 @@ void Terminal::execute_escape_sequence(u8 final)
         HVP(params);
         break;
     case 'n':
-        if (params.size() == 1 && params[0] == 6)
-            DSR();
-        else
-            dbg() << "Unknown CSIxn command";
+        DSR(params);
         break;
     default:
         dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
@@ -812,10 +809,17 @@ void Terminal::RI()
     CUU({});
 }
 
-void Terminal::DSR()
+void Terminal::DSR(const ParamVector& params)
 {
-    // Device Status Report (cursor position query)
-    emit_string(String::format("\033[%d;%dR", m_cursor_row + 1, m_cursor_column + 1));
+    if (params.size() == 1 && params[0] == 5) {
+        // Device status
+        emit_string("\033[0n"); // Terminal status OK!
+    } else if (params.size() == 1 && params[0] == 6) {
+        // Cursor position query
+        emit_string(String::format("\033[%d;%dR", m_cursor_row + 1, m_cursor_column + 1));
+    } else {
+        dbg() << "Unknown DSR";
+    }
 }
 
 void Terminal::on_char(u8 ch)
@@ -962,10 +966,9 @@ void Terminal::inject_string(const StringView& str)
         on_char(str[i]);
 }
 
-void Terminal::emit_string(const StringView& str)
+void Terminal::emit_string(const StringView& string)
 {
-    for (size_t i = 0; i < str.length(); ++i)
-        m_client.emit_char(str[i]);
+    m_client.emit((const u8*)string.characters_without_null_termination(), string.length());
 }
 
 void Terminal::unimplemented_escape()
