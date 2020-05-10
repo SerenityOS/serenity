@@ -47,6 +47,7 @@ public:
     enum class LineStyle {
         Solid,
         Dotted,
+        Dashed,
     };
 
     void clear_rect(const Rect&, Color);
