@@ -44,7 +44,6 @@ struct Testcase {
     int should_consume;
     const char* hex;
     const char* test_string;
-    bool skip_old = false;
 };
 
 static Testcase TESTCASES[] = {
@@ -64,9 +63,9 @@ static Testcase TESTCASES[] = {
     // Exponent overflow:
     { "BW09", -1, "0000000000000000", "1e-4294967296" },
     // Excessive time use(!):
-    { "BW10", -1, "0000000000000000", "1e-999999999", true },
+    { "BW10", -1, "0000000000000000", "1e-999999999" },
     // Excessively large exponent (>64 bits):
-    { "BW10", -1, "0000000000000000", "1e-9999999999999999999999", true },
+    { "BW10", -1, "0000000000000000", "1e-9999999999999999999999" },
 
     // Bugs I nearly introduced
     { "BWN01", 2, "3ff0000000000000", "1.-2" },
@@ -81,8 +80,8 @@ static Testcase TESTCASES[] = {
     { "BWN10", 6, "4034000000000000", "2e0001" },
     { "BWN11", 6, "41ddcd6500000000", "2e0009" },
     { "BWN12", 1, "0000000000000000", "0d1" },
-    { "BWN13", -1, "7ff0000000000000", "184467440737095516151234567890e2147483639", true },
-    { "BWN14", -1, "0000000000000000", ".1234567890e-2147483639", true },
+    { "BWN13", -1, "7ff0000000000000", "184467440737095516151234567890e2147483639" },
+    { "BWN14", -1, "0000000000000000", ".1234567890e-2147483639" },
     { "BWN15", -1, "8000000000000000", "-1e-9999" },
     { "BWN16", -1, "c3389e56ee5e7a58", "-6929495644600919.5" },
     { "BWN17", -1, "c3389e56ee5e7a57", "-6929495644600919" },
@@ -365,11 +364,7 @@ int main()
         long long expect_ll = hex_to_ll(tc.hex);
 
         bool success = false;
-        if (tc.skip_old) {
-            printf(" %s_____(skip)_____%s(__)", TEXT_WRONG, TEXT_RESET);
-        } else {
-            success = is_strtod_close(strtod, tc.test_string, tc.hex, tc.should_consume, expect_ll);
-        }
+        success = is_strtod_close(strtod, tc.test_string, tc.hex, tc.should_consume, expect_ll);
         printf(" from %s\n", tc.test_string);
 
         if (success) {
