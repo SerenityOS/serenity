@@ -27,6 +27,7 @@
 #include <AK/FileSystemPath.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
@@ -588,6 +589,17 @@ void HtmlView::run_javascript_url(const String& url)
     auto source = url.substring_view(11, url.length() - 11);
     dbg() << "running js from url: _" << source << "_";
     document()->run_javascript(source);
+}
+
+void HtmlView::drop_event(GUI::DropEvent& event)
+{
+    if (event.mime_data().has_urls()) {
+        if (on_url_drop) {
+            on_url_drop(event.mime_data().urls().first());
+            return;
+        }
+    }
+    ScrollableWidget::drop_event(event);
 }
 
 }
