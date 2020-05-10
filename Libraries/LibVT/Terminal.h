@@ -37,7 +37,7 @@ namespace VT {
 
 class TerminalClient {
 public:
-    virtual ~TerminalClient() { }
+    virtual ~TerminalClient() {}
 
     virtual void beep() = 0;
     virtual void set_window_title(const StringView&) = 0;
@@ -126,15 +126,22 @@ public:
         u16 m_length { 0 };
     };
 
+    size_t line_count() const
+    {
+        return m_history.size() + m_lines.size();
+    }
+
     Line& line(size_t index)
     {
-        ASSERT(index < m_rows);
-        return m_lines[index];
+        if (index < m_history.size())
+            return m_history[index];
+        return m_lines[index - m_history.size()];
     }
     const Line& line(size_t index) const
     {
-        ASSERT(index < m_rows);
-        return m_lines[index];
+        if (index < m_history.size())
+            return m_history[index];
+        return m_lines[index - m_history.size()];
     }
 
     size_t max_history_size() const { return 500; }

@@ -107,7 +107,7 @@ bool Terminal::Line::has_only_one_background_color() const
 void Terminal::clear()
 {
     for (size_t i = 0; i < rows(); ++i)
-        line(i).clear(m_current_attribute);
+        m_lines[i].clear(m_current_attribute);
     set_cursor(0, 0);
 }
 
@@ -587,7 +587,7 @@ void Terminal::escape$P(const ParamVector& params)
     if (num == 0)
         num = 1;
 
-    auto& line = this->line(m_cursor_row);
+    auto& line = m_lines[m_cursor_row];
 
     // Move n characters of line to the left
     for (int i = m_cursor_column; i < line.m_length - num; i++)
@@ -827,7 +827,7 @@ void Terminal::put_character_at(unsigned row, unsigned column, u8 ch)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
-    auto& line = this->line(row);
+    auto& line = m_lines[row];
     line.characters[column] = ch;
     line.attributes[column] = m_current_attribute;
     line.attributes[column].flags |= Attribute::Touched;
@@ -1087,7 +1087,7 @@ void Terminal::set_size(u16 columns, u16 rows)
 
 void Terminal::invalidate_cursor()
 {
-    line(m_cursor_row).dirty = true;
+    m_lines[m_cursor_row].dirty = true;
 }
 
 void Terminal::execute_hashtag(u8 hashtag)
@@ -1110,7 +1110,7 @@ Attribute Terminal::attribute_at(const Position& position) const
 {
     if (!position.is_valid())
         return {};
-    if (position.row() >= static_cast<int>(m_lines.size()))
+    if (position.row() >= static_cast<int>(line_count()))
         return {};
     auto& line = this->line(position.row());
     if (position.column() >= line.m_length)
