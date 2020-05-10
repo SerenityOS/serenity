@@ -64,6 +64,7 @@ public:
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_load_start;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
+    Function<void(const URL&)> on_url_drop;
 
     virtual bool accepts_focus() const override { return true; }
 
@@ -76,6 +77,7 @@ protected:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
 private:
     virtual void did_scroll() override;
