@@ -327,7 +327,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     invalidate_cursor();
 
     int rows_from_history = 0;
-    int first_row_from_history = 0;
+    int first_row_from_history = m_terminal.history().size();
     int row_with_cursor = m_terminal.cursor_row();
     if (m_scrollbar->value() != m_scrollbar->max()) {
         rows_from_history = min((int)m_terminal.rows(), m_scrollbar->max() - m_scrollbar->value());
@@ -335,17 +335,11 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         row_with_cursor = m_terminal.cursor_row() + rows_from_history;
     }
 
-    auto line_for_visual_row = [&](u16 row) -> const VT::Terminal::Line& {
-        if (row < rows_from_history)
-            return m_terminal.history().at(first_row_from_history + row);
-        return m_terminal.line(row - rows_from_history);
-    };
-
-    for (u16 row = 0; row < m_terminal.rows(); ++row) {
-        auto row_rect = this->row_rect(row);
+    for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
+        auto row_rect = this->row_rect(visual_row);
         if (!event.rect().contains(row_rect))
             continue;
-        auto& line = line_for_visual_row(row);
+        auto& line = m_terminal.line(first_row_from_history + visual_row);
         bool has_only_one_background_color = line.has_only_one_background_color();
         if (m_visual_beep_timer->is_active())
             painter.clear_rect(row_rect, Color::Red);
@@ -380,12 +374,12 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             for (u16 column = this_char_column; column < next_char_column; ++column) {
                 should_reverse_fill_for_cursor_or_selection |= m_cursor_blink_state
                     && m_has_logical_focus
-                    && row == row_with_cursor
+                    && visual_row == row_with_cursor
                     && column == m_terminal.cursor_column();
-                should_reverse_fill_for_cursor_or_selection |= selection_contains({ row, column });
+                should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, column });
                 attribute = line.attributes[column];
                 text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
-                auto character_rect = glyph_rect(row, column);
+                auto character_rect = glyph_rect(visual_row, column);
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
                 if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
                     painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
@@ -429,7 +423,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             if (codepoint == ' ')
                 continue;
 
-            auto character_rect = glyph_rect(row, this_char_column);
+            auto character_rect = glyph_rect(visual_row, this_char_column);
             auto num_columns = next_char_column - this_char_column;
             character_rect.move_by((num_columns - 1) * font().glyph_width('x') / 2, 0);
             painter.draw_glyph_or_emoji(
@@ -441,7 +435,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     }
 
     if (!m_has_logical_focus && row_with_cursor < m_terminal.rows()) {
-        auto& cursor_line = line_for_visual_row(row_with_cursor);
+        auto& cursor_line = m_terminal.line(first_row_from_history + row_with_cursor);
         if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
             auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
             painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes[m_terminal.cursor_column()].foreground_color));
@@ -586,6 +580,7 @@ VT::Position TerminalWidget::buffer_position_at(const Gfx::Point& position) cons
         row = m_terminal.rows() - 1;
     if (column >= m_terminal.columns())
         column = m_terminal.columns() - 1;
+    row += m_scrollbar->value();
     return { row, column };
 }
 
