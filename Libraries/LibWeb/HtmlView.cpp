@@ -321,6 +321,31 @@ void HtmlView::reload()
     load(main_frame().document()->url());
 }
 
+static RefPtr<Document> create_text_document(const ByteBuffer& data, const URL& url)
+{
+    auto document = adopt(*new Document(url));
+
+    auto html_element = document->create_element("html");
+    document->append_child(html_element);
+
+    auto head_element = document->create_element("head");
+    html_element->append_child(head_element);
+    auto title_element = document->create_element("title");
+    head_element->append_child(title_element);
+
+    auto title_text = document->create_text_node(url.basename());
+    title_element->append_child(title_text);
+
+    auto body_element = document->create_element("body");
+    html_element->append_child(body_element);
+
+    auto pre_element = create_element(document, "pre");
+    body_element->append_child(pre_element);
+
+    pre_element->append_child(document->create_text_node(String::copy(data)));
+    return document;
+}
+
 static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL& url)
 {
     auto document = adopt(*new Document(url));
@@ -393,6 +418,8 @@ void HtmlView::load(const URL& url)
             RefPtr<Document> document;
             if (url.path().ends_with(".png") || url.path().ends_with(".gif")) {
                 document = create_image_document(data, url);
+            } else if (url.path().ends_with(".txt")) {
+                document = create_text_document(data, url);
             } else {
                 String encoding = "utf-8";
 
