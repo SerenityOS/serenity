@@ -47,7 +47,7 @@ ResourceLoader::ResourceLoader()
 {
 }
 
-void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     Core::EventLoop loop;
 
@@ -66,7 +66,7 @@ void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, 
     loop.exec();
 }
 
-void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     if (is_port_blocked(url.port())) {
         dbg() << "ResourceLoader::load: Error: blocked port " << url.port() << " for URL: " << url;

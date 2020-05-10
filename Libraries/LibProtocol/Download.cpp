@@ -53,7 +53,13 @@ void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf
         payload = ByteBuffer::wrap(shared_buffer->data(), total_size);
     }
 
-    on_finish(success, payload, move(shared_buffer), response_headers.entries());
+    // FIXME: It's a bit silly that we copy the response headers here just so we can move them into a HashMap with different traits.
+    HashMap<String, String, CaseInsensitiveStringTraits> caseless_response_headers;
+    response_headers.for_each_entry([&](auto& name, auto& value) {
+        caseless_response_headers.set(name, value);
+    });
+
+    on_finish(success, payload, move(shared_buffer), caseless_response_headers);
 }
 
 void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size)
@@ -61,5 +67,4 @@ void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloa
     if (on_progress)
         on_progress(total_size, downloaded_size);
 }
-
 }

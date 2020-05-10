@@ -41,8 +41,8 @@ class ResourceLoader : public Core::Object {
 public:
     static ResourceLoader& the();
 
-    void load(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);
-    void load_sync(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);
+    void load(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);
+    void load_sync(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);
 
     Function<void()> on_load_counter_change;
 
