@@ -134,6 +134,7 @@ private:
     String m_hovered_href;
     String m_hovered_href_id;
 
+    String m_active_href;
     String m_active_href_id;
 
     // Snapshot of m_hovered_href when opening a context menu for a hyperlink.
@@ -179,4 +180,6 @@ private:
     RefPtr<GUI::Menu> m_context_menu_for_hyperlink;
 
     Core::ElapsedTimer m_triple_click_timer;
+
+    Gfx::Point m_left_mousedown_position;
 };

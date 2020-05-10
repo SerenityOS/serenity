@@ -36,6 +36,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/DragOperation.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
@@ -639,6 +640,7 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
             Desktop::Launcher::open(attribute.href);
         }
         if (!m_active_href_id.is_null()) {
+            m_active_href = {};
             m_active_href_id = {};
             update();
         }
@@ -648,12 +650,16 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
 void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
+        m_left_mousedown_position = event.position();
+
         auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
         if (!(event.modifiers() & Mod_Shift) && !attribute.href.is_empty()) {
+            m_active_href = attribute.href;
             m_active_href_id = attribute.href_id;
             update();
             return;
         }
+        m_active_href = {};
         m_active_href_id = {};
 
         if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
@@ -700,8 +706,24 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     if (!(event.buttons() & GUI::MouseButton::Left))
         return;
 
-    if (!m_active_href_id.is_null())
+    if (!m_active_href_id.is_null()) {
+        auto diff = event.position() - m_left_mousedown_position;
+        auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
+        constexpr int drag_distance_threshold = 5;
+
+        if (distance_travelled_squared <= drag_distance_threshold)
+            return;
+
+        auto drag_operation = GUI::DragOperation::construct();
+        drag_operation->set_text(m_active_href);
+        drag_operation->set_data("text/uri-list", m_active_href);
+        drag_operation->exec();
+
+        m_active_href = {};
+        m_active_href_id = {};
+        update();
         return;
+    }
 
     auto old_selection_end = m_selection_end;
     m_selection_end = position;
