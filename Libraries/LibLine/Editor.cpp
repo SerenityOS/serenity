@@ -1031,6 +1031,11 @@ size_t Editor::actual_rendered_string_length(const StringView& string) const
                 state = Escape;
                 continue;
             }
+            if (c == '\r' || c == '\n') {
+                // reset length to 0, since we either overwrite, or are on a newline
+                length = 0;
+                continue;
+            }
             // FIXME: This will not support anything sophisticated
             ++length;
             break;

@@ -130,6 +130,7 @@ public:
     const Vector<String>& history() const { return m_history; }
 
     void register_character_input_callback(char ch, Function<bool(Editor&)> callback);
+    size_t actual_rendered_string_length(const StringView& string) const;
 
     Function<Vector<CompletionSuggestion>(const String&)> on_tab_complete_first_token;
     Function<Vector<CompletionSuggestion>(const String&)> on_tab_complete_other_token;
@@ -251,8 +252,6 @@ private:
     {
         return (m_drawn_cursor + current_prompt_length()) % m_num_columns;
     }
-
-    size_t actual_rendered_string_length(const StringView& string) const;
 
     void set_origin()
     {
