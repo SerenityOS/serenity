@@ -721,6 +721,8 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
 
         m_active_href = {};
         m_active_href_id = {};
+        m_hovered_href = {};
+        m_hovered_href_id = {};
         update();
         return;
     }
