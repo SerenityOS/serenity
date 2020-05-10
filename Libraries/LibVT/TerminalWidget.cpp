@@ -41,6 +41,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -374,6 +375,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
             bool should_reverse_fill_for_cursor_or_selection = false;
             VT::Attribute attribute;
+            Color text_color;
 
             for (u16 column = this_char_column; column < next_char_column; ++column) {
                 should_reverse_fill_for_cursor_or_selection |= m_cursor_blink_state
@@ -382,6 +384,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                     && column == m_terminal.cursor_column();
                 should_reverse_fill_for_cursor_or_selection |= selection_contains({ row, column });
                 attribute = line.attributes[column];
+                text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
                 auto character_rect = glyph_rect(row, column);
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
                 if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
@@ -401,22 +404,24 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                     underline_style = UnderlineStyle::Solid;
                 } else if (!attribute.href.is_empty()) {
                     // We're hovering a hyperlink
-                    if (m_hovered_href_id == attribute.href_id)
+                    if (m_hovered_href_id == attribute.href_id || m_active_href_id == attribute.href_id)
                         underline_style = UnderlineStyle::Solid;
                     else
                         underline_style = UnderlineStyle::Dotted;
                 }
 
                 if (underline_style == UnderlineStyle::Solid) {
-                    painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
+                    if (attribute.href_id == m_active_href_id && m_hovered_href_id == m_active_href_id)
+                        text_color = palette().active_link();
+                    painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), text_color);
                 } else if (underline_style == UnderlineStyle::Dotted) {
-                    auto color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color).darkened(0.6f);
+                    auto dotted_line_color = text_color.darkened(0.6f);
                     int x1 = cell_rect.bottom_left().x();
                     int x2 = cell_rect.bottom_right().x();
                     int y = cell_rect.bottom_left().y();
                     for (int x = x1; x <= x2; ++x) {
                         if ((x % 3) == 0)
-                            painter.set_pixel({ x, y }, color);
+                            painter.set_pixel({ x, y }, dotted_line_color);
                     }
                 }
             }
@@ -431,7 +436,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 character_rect.location(),
                 codepoint,
                 attribute.flags & VT::Attribute::Bold ? bold_font() : font(),
-                color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
+                text_color);
         }
     }
 
@@ -638,9 +643,11 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
             dbg() << "Open hyperlinked URL: _" << attribute.href << "_";
             Desktop::Launcher::open(attribute.href);
         }
-        m_active_href_id = {};
+        if (!m_active_href_id.is_null()) {
+            m_active_href_id = {};
+            update();
+        }
     }
-    return;
 }
 
 void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
@@ -649,6 +656,7 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
         auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
         if (!(event.modifiers() & Mod_Shift) && !attribute.href.is_empty()) {
             m_active_href_id = attribute.href_id;
+            update();
             return;
         }
         m_active_href_id = {};
