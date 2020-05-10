@@ -107,7 +107,7 @@ public:
         else
             return -1;
 
-        if (digit >= m_base)
+        if (static_cast<T>(digit) >= m_base)
             return -1;
 
         return digit;
@@ -161,6 +161,7 @@ private:
 
 typedef NumParser<int, INT_MIN, INT_MAX> IntParser;
 typedef NumParser<long long, LONG_LONG_MIN, LONG_LONG_MAX> LongLongParser;
+typedef NumParser<unsigned long long, 0ULL, ULONG_LONG_MAX> ULongLongParser;
 
 static bool is_either(char* str, int offset, char lower, char upper)
 {
@@ -942,11 +943,72 @@ long long strtoll(const char* str, char** endptr, int base)
 
 unsigned long long strtoull(const char* str, char** endptr, int base)
 {
-    auto value = strtoll(str, endptr, base);
-    // TODO: strtoull should not accept a sign character at all,
-    // not in `-0` and not even `+3`.
-    ASSERT(value >= 0);
-    return value;
+    // Parse spaces and sign
+    char* parse_ptr = const_cast<char*>(str);
+    strtons(parse_ptr, &parse_ptr);
+
+    // Parse base
+    if (base == 0) {
+        if (*parse_ptr == '0') {
+            parse_ptr += 1;
+            if (*parse_ptr == 'x' || *parse_ptr == 'X') {
+                base = 16;
+                parse_ptr += 2;
+            } else {
+                base = 8;
+            }
+        } else {
+            base = 10;
+        }
+    }
+
+    // Parse actual digits.
+    ULongLongParser digits { Sign::Positive, base };
+    bool digits_usable = false;
+    bool should_continue = true;
+    bool overflow = false;
+    do {
+        bool is_a_digit;
+        if (overflow) {
+            is_a_digit = digits.parse_digit(*parse_ptr) >= 0;
+        } else {
+            DigitConsumeDecision decision = digits.consume(*parse_ptr);
+            switch (decision) {
+            case DigitConsumeDecision::Consumed:
+                is_a_digit = true;
+                // The very first actual digit must pass here:
+                digits_usable = true;
+                break;
+            case DigitConsumeDecision::PosOverflow: // fall-through
+            case DigitConsumeDecision::NegOverflow:
+                is_a_digit = true;
+                overflow = true;
+                break;
+            case DigitConsumeDecision::Invalid:
+                is_a_digit = false;
+                break;
+            default:
+                ASSERT_NOT_REACHED();
+            }
+        }
+
+        should_continue = is_a_digit;
+        parse_ptr += should_continue;
+    } while (should_continue);
+
+    if (!digits_usable) {
+        // No actual number value available.
+        if (endptr)
+            *endptr = const_cast<char*>(str);
+        return 0;
+    }
+
+    if (overflow) {
+        errno = ERANGE;
+        return LONG_LONG_MAX;
+    }
+
+    return digits.number();
 }
 
 // Serenity's PRNG is not cryptographically secure. Do not rely on this for
