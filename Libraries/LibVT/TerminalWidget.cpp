@@ -388,12 +388,28 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                     painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
                 }
 
-                bool should_paint_underline = attribute.flags & VT::Attribute::Underline
-                    || (!m_hovered_href.is_empty() && m_hovered_href_id == attribute.href_id);
+                enum class UnderlineStyle {
+                    None,
+                    Dotted,
+                    Solid,
+                };
 
-                bool should_paint_dotted_underline = !attribute.href.is_empty() && m_hovered_href_id != attribute.href_id;
+                auto underline_style = UnderlineStyle::None;
 
-                if (should_paint_dotted_underline) {
+                if (attribute.flags & VT::Attribute::Underline) {
+                    // Content has specified underline
+                    underline_style = UnderlineStyle::Solid;
+                } else if (!attribute.href.is_empty()) {
+                    // We're hovering a hyperlink
+                    if (m_hovered_href_id == attribute.href_id)
+                        underline_style = UnderlineStyle::Solid;
+                    else
+                        underline_style = UnderlineStyle::Dotted;
+                }
+
+                if (underline_style == UnderlineStyle::Solid) {
+                    painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
+                } else if (underline_style == UnderlineStyle::Dotted) {
                     auto color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color).darkened(0.6f);
                     int x1 = cell_rect.bottom_left().x();
                     int x2 = cell_rect.bottom_right().x();
@@ -402,8 +418,6 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                         if ((x % 3) == 0)
                             painter.set_pixel({ x, y }, color);
                     }
-                } else if (should_paint_underline) {
-                    painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
                 }
             }
 
@@ -616,15 +630,28 @@ void TerminalWidget::copy()
         GUI::Clipboard::the().set_data(selected_text());
 }
 
+void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
+{
+    if (event.button() == GUI::MouseButton::Left) {
+        auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
+        if (!m_active_href_id.is_null() && attribute.href_id == m_active_href_id) {
+            dbg() << "Open hyperlinked URL: _" << attribute.href << "_";
+            Desktop::Launcher::open(attribute.href);
+        }
+        m_active_href_id = {};
+    }
+    return;
+}
+
 void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
         auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
-        if (!attribute.href.is_empty()) {
-            dbg() << "Open hyperlinked URL: _" << attribute.href << "_";
-            Desktop::Launcher::open(attribute.href);
+        if (!(event.modifiers() & Mod_Shift) && !attribute.href.is_empty()) {
+            m_active_href_id = attribute.href_id;
             return;
         }
+        m_active_href_id = {};
 
         if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
             int start_column = 0;
@@ -651,9 +678,15 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     auto position = buffer_position_at(event.position());
 
     auto attribute = m_terminal.attribute_at(position);
+
     if (attribute.href_id != m_hovered_href_id) {
-        m_hovered_href_id = attribute.href_id;
-        m_hovered_href = attribute.href;
+        if (m_active_href_id.is_null() || m_active_href_id == attribute.href_id) {
+            m_hovered_href_id = attribute.href_id;
+            m_hovered_href = attribute.href;
+        } else {
+            m_hovered_href_id = {};
+            m_hovered_href = {};
+        }
         if (!m_hovered_href.is_empty())
             window()->set_override_cursor(GUI::StandardCursor::Hand);
         else
@@ -662,6 +695,9 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     }
 
     if (!(event.buttons() & GUI::MouseButton::Left))
+        return;
+
+    if (!m_active_href_id.is_null())
         return;
 
     auto old_selection_end = m_selection_end;

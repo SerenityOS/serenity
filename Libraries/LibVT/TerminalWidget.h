@@ -94,6 +94,7 @@ private:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void doubleclick_event(GUI::MouseEvent&) override;
@@ -132,6 +133,8 @@ private:
 
     String m_hovered_href;
     String m_hovered_href_id;
+
+    String m_active_href_id;
 
     // Snapshot of m_hovered_href when opening a context menu for a hyperlink.
     String m_context_menu_href;
