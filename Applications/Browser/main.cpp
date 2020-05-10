@@ -40,7 +40,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+namespace Browser {
+
 static const char* bookmarks_filename = "/home/anon/bookmarks.json";
+String g_home_url;
+
+}
 
 int main(int argc, char** argv)
 {
@@ -82,10 +87,10 @@ int main(int argc, char** argv)
     unveil(nullptr, nullptr);
 
     auto m_config = Core::ConfigFile::get_for_app("Browser");
-    auto home_url = m_config->read_entry("Preferences", "Home", "file:///home/anon/www/welcome.html");
+    Browser::g_home_url = m_config->read_entry("Preferences", "Home", "about:blank");
 
     bool bookmarksbar_enabled = true;
-    auto bookmarks_bar = Browser::BookmarksBarWidget::construct(bookmarks_filename, bookmarksbar_enabled);
+    auto bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_filename, bookmarksbar_enabled);
 
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
@@ -154,12 +159,12 @@ int main(int argc, char** argv)
             tab_widget.set_active_widget(&new_tab);
     };
 
-    URL default_url = home_url;
+    URL first_url = Browser::g_home_url;
     if (app.args().size() >= 1)
-        default_url = URL::create_with_url_or_path(app.args()[0]);
+        first_url = URL::create_with_url_or_path(app.args()[0]);
 
     window_actions.on_create_new_tab = [&] {
-        create_new_tab(default_url, true);
+        create_new_tab(Browser::g_home_url, true);
     };
 
     window_actions.on_next_tab = [&] {
@@ -179,7 +184,7 @@ int main(int argc, char** argv)
     };
     window_actions.show_bookmarks_bar_action().set_checked(bookmarksbar_enabled);
 
-    create_new_tab(default_url, true);
+    create_new_tab(first_url, true);
     window->show();
 
     return app.exec();

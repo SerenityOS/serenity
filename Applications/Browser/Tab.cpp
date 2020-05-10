@@ -59,7 +59,7 @@
 
 namespace Browser {
 
-static const char* home_url = "file:///home/anon/www/welcome.html";
+extern String g_home_url;
 
 Tab::Tab()
 {
@@ -88,7 +88,7 @@ Tab::Tab()
     toolbar.add_action(*m_go_forward_action);
 
     toolbar.add_action(GUI::CommonActions::make_go_home_action([this](auto&) {
-        m_html_widget->load(home_url);
+        m_html_widget->load(g_home_url);
     }));
 
     toolbar.add_action(GUI::CommonActions::make_reload_action([this](auto&) {
