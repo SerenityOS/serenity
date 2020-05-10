@@ -106,6 +106,31 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::Fl
     if (border_style.has_value()) {
         if (border_style.value()->to_string() == "dotted")
             line_style = Gfx::Painter::LineStyle::Dotted;
+        if (border_style.value()->to_string() == "dashed")
+            line_style = Gfx::Painter::LineStyle::Dashed;
+    }
+
+    if (line_style != Gfx::Painter::LineStyle::Solid) {
+        switch (edge) {
+        case Edge::Top:
+            p1.move_by(int_width / 2, int_width / 2);
+            p2.move_by(-int_width / 2, int_width / 2);
+            break;
+        case Edge::Right:
+            p1.move_by(-int_width / 2, int_width / 2);
+            p2.move_by(-int_width / 2, -int_width / 2);
+            break;
+        case Edge::Bottom:
+            p1.move_by(int_width / 2, -int_width / 2);
+            p2.move_by(-int_width / 2, -int_width / 2);
+            break;
+        case Edge::Left:
+            p1.move_by(int_width / 2, int_width / 2);
+            p2.move_by(int_width / 2, -int_width / 2);
+            break;
+        }
+        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, int_width, line_style);
+        return;
     }
 
     auto draw_line = [&](auto& p1, auto& p2) {
