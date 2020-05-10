@@ -52,6 +52,9 @@
 
 GlobalState g;
 static Line::Editor editor { Line::Configuration { Line::Configuration::UnescapedSpaces } };
+// FIXME: We do not expand variables inside strings
+//        if we want to be more sh-like, we should do that some day
+static constexpr bool HighlightVariablesInsideStrings = false;
 
 struct ExitCodeOrContinuationRequest {
     enum ContinuationRequest {
@@ -1199,6 +1202,11 @@ void cache_path()
     quick_sort(cached_path);
 }
 
+static bool is_word_character(char c)
+{
+    return c == '_' || (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a');
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath wpath cpath proc exec tty", nullptr) < 0) {
@@ -1212,7 +1220,95 @@ int main(int argc, char** argv)
     editor.initialize();
     g.termios = editor.termios();
     g.default_termios = editor.default_termios();
+    editor.on_display_refresh = [&](Line::Editor& editor) {
+        editor.strip_styles();
+        StringBuilder builder;
+        if (s_should_continue == ExitCodeOrContinuationRequest::DoubleQuotedString) {
+            builder.append('"');
+        }
+        if (s_should_continue == ExitCodeOrContinuationRequest::SingleQuotedString) {
+            builder.append('\'');
+        }
+        builder.append(StringView { editor.buffer().data(), editor.buffer().size() });
+        auto commands = Parser { builder.string_view() }.parse();
+        auto first_command { true };
+        for (auto& command : commands) {
+            for (auto& subcommand : command.subcommands) {
+                auto first { true };
+                for (auto& arg : subcommand.args) {
+                    auto start = arg.end - arg.length;
 
+                    if (arg.type == Token::Comment) {
+                        editor.stylize({ start, arg.end }, { Line::Style::Foreground(150, 150, 150) }); // light gray
+                        continue;
+                    }
+
+                    if (s_should_continue == ExitCodeOrContinuationRequest::DoubleQuotedString || s_should_continue == ExitCodeOrContinuationRequest::SingleQuotedString) {
+                        if (!first_command)
+                            --start;
+                        --arg.end;
+                    }
+                    if (first) {
+                        first = false;
+                        // only treat this as a command name if we're not continuing strings
+                        if (!first_command || (s_should_continue == ExitCodeOrContinuationRequest::Nothing || s_should_continue == ExitCodeOrContinuationRequest::Pipe)) {
+                            editor.stylize({ start, arg.end }, { Line::Style::Bold });
+                            first_command = false;
+                            continue;
+                        }
+                        first_command = false;
+                    }
+
+                    if (arg.type == Token::SingleQuoted || arg.type == Token::UnterminatedSingleQuoted) {
+                        editor.stylize({ start - 1, arg.end + (arg.type != Token::UnterminatedSingleQuoted) }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+                        continue;
+                    }
+
+                    if (arg.type == Token::DoubleQuoted || arg.type == Token::UnterminatedDoubleQuoted) {
+                        editor.stylize({ start - 1, arg.end + (arg.type != Token::UnterminatedDoubleQuoted) }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+                        if constexpr (HighlightVariablesInsideStrings)
+                            goto highlight_variables;
+                        else
+                            continue;
+                    }
+
+                    if (is_glob(arg.text)) {
+                        editor.stylize({ start, arg.end }, { Line::Style::Foreground(59, 142, 234) }); // bright-ish blue
+                        continue;
+                    }
+
+                    if (arg.text.starts_with("--")) {
+                        if (arg.length == 2)
+                            editor.stylize({ start, arg.end }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
+                        else
+                            editor.stylize({ start, arg.end }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
+                    } else if (arg.text.starts_with("-") && arg.length > 1) {
+                        editor.stylize({ start, arg.end }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
+                    }
+
+                highlight_variables:;
+
+                    size_t slice_index = 0;
+                    Optional<size_t> maybe_index;
+                    while (slice_index < arg.length) {
+                        maybe_index = arg.text.substring_view(slice_index, arg.length - slice_index).find_first_of('$');
+                        if (!maybe_index.has_value())
+                            break;
+                        auto index = maybe_index.value() + 1;
+                        auto end_index = index;
+                        if (index >= arg.length)
+                            break;
+                        for (; end_index < arg.length; ++end_index) {
+                            if (!is_word_character(arg.text[end_index]))
+                                break;
+                        }
+                        editor.stylize({ index + start - 1, end_index + start }, { Line::Style::Foreground(214, 112, 214) });
+                        slice_index = end_index + 1;
+                    }
+                }
+            }
+        }
+    };
     editor.on_tab_complete_first_token = [&](const String& token_to_complete) -> Vector<Line::CompletionSuggestion> {
         auto token = unescape_token(token_to_complete);
 
