@@ -86,6 +86,19 @@ Vector<Command> Parser::parse()
         char ch = m_input.characters()[i];
         switch (state()) {
         case State::Free:
+            if (ch == '#') {
+                commit_token(Token::Bare);
+
+                while (i < m_input.length()) {
+                    ch = m_input.characters()[++i];
+                    ++m_position;
+                    if (ch == '\n')
+                        break;
+                    m_token.append(ch);
+                }
+                commit_token(Token::Comment);
+                break;
+            }
             if (ch == ' ') {
                 commit_token(Token::Bare);
                 break;

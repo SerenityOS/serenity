@@ -782,6 +782,9 @@ static Vector<String> process_arguments(const Vector<Token>& args)
 {
     Vector<String> argv_string;
     for (auto& arg : args) {
+        if (arg.type == Token::Comment)
+            continue;
+
         // This will return the text passed in if it wasn't a variable
         // This lets us just loop over its values
         auto expanded_parameters = expand_parameters(arg.text);
@@ -861,6 +864,9 @@ static ExitCodeOrContinuationRequest run_command(const StringView& cmd)
                     dbgprintf("\"<%s> ", arg.text.characters());
                     break;
                 case Token::Special:
+                    dbgprintf("<%s> ", arg.text.characters());
+                    break;
+                case Token::Comment:
                     dbgprintf("<%s> ", arg.text.characters());
                     break;
                 }
