@@ -93,6 +93,12 @@ bool URL::parse(const StringView& string)
                 continue;
             }
 
+            if (m_protocol == "about") {
+                buffer.clear();
+                state = State::InPath;
+                continue;
+            }
+
             if (consume() != '/')
                 return false;
             if (consume() != '/')
@@ -244,6 +250,12 @@ String URL::to_string() const
 {
     StringBuilder builder;
     builder.append(m_protocol);
+
+    if (m_protocol == "about") {
+        builder.append(':');
+        builder.append(m_path);
+        return builder.to_string();
+    }
 
     if (m_protocol == "data") {
         builder.append(':');

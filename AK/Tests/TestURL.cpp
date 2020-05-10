@@ -148,4 +148,13 @@ TEST_CASE(file_url_without_hostname)
     EXPECT_EQ(url.to_string(), "file:///my/file");
 }
 
+TEST_CASE(about_url)
+{
+    URL url("about:blank");
+    EXPECT_EQ(url.is_valid(), true);
+    EXPECT_EQ(url.protocol(), "about");
+    EXPECT_EQ(url.path(), "blank");
+    EXPECT_EQ(url.to_string(), "about:blank");
+}
+
 TEST_MAIN(URL)
