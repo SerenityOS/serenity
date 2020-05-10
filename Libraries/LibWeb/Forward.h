@@ -52,6 +52,7 @@ class Selector;
 class StyleResolver;
 class StyleRule;
 class StyleSheet;
+class Text;
 class Window;
 class XMLHttpRequest;
 
