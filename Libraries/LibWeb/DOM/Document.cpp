@@ -46,6 +46,7 @@
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/HTMLHtmlElement.h>
 #include <LibWeb/DOM/HTMLTitleElement.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame.h>
@@ -112,8 +113,8 @@ void Document::fixup()
     if (is<HTMLHtmlElement>(first_child()->next_sibling()))
         return;
 
-    auto body = create_element(*this, "body");
-    auto html = create_element(*this, "html");
+    auto body = create_element("body");
+    auto html = create_element("html");
     html->append_child(body);
     this->donate_all_children_to(body);
     this->append_child(html);
@@ -382,6 +383,16 @@ JS::Value Document::run_javascript(const StringView& source)
     dbg() << "Document::run_javascript('" << source << "') will run:";
     program->dump(0);
     return document().interpreter().run(*program);
+}
+
+NonnullRefPtr<Element> Document::create_element(const String& tag_name)
+{
+    return Web::create_element(*this, tag_name);
+}
+
+NonnullRefPtr<Text> Document::create_text_node(const String& data)
+{
+    return adopt(*new Text(*this, data));
 }
 
 }

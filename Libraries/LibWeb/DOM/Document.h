@@ -125,6 +125,9 @@ public:
 
     JS::Value run_javascript(const StringView&);
 
+    NonnullRefPtr<Element> create_element(const String& tag_name);
+    NonnullRefPtr<Text> create_text_node(const String& data);
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
