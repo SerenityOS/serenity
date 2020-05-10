@@ -137,7 +137,10 @@ int fflush(FILE* stream)
 char* fgets(char* buffer, int size, FILE* stream)
 {
     ASSERT(stream);
-    ASSERT(size);
+    if (size == 0) {
+        return nullptr;
+    }
+
     ssize_t nread = 0;
     while (nread < (size - 1)) {
         int ch = fgetc(stream);
