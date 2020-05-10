@@ -159,10 +159,10 @@ static String& hostname()
     return s_hostname;
 }
 
-size_t print_name(const struct stat& st, const String& name, const char* path_for_link_resolution = nullptr)
+size_t print_name(const struct stat& st, const String& name, const char* path_for_link_resolution, const char* path_for_hyperlink)
 {
     if (!flag_disable_hyperlinks) {
-        if (auto* full_path = realpath(name.characters(), nullptr)) {
+        if (auto* full_path = realpath(path_for_hyperlink, nullptr)) {
             printf("\033]8;;file://%s%s\033\\", hostname().characters(), full_path);
             free(full_path);
         }
@@ -302,7 +302,7 @@ bool print_filesystem_object(const String& path, const String& name, const struc
 
     printf("  %s  ", Core::DateTime::from_timestamp(st.st_mtime).to_string().characters());
 
-    print_name(st, name, path.characters());
+    print_name(st, name, path.characters(), path.characters());
 
     printf("\n");
     return true;
@@ -382,7 +382,7 @@ bool print_filesystem_object_short(const char* path, const char* name, size_t* n
         return false;
     }
 
-    *nprinted = print_name(st, name);
+    *nprinted = print_name(st, name, nullptr, path);
     return true;
 }
 
