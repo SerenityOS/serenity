@@ -94,7 +94,8 @@ void MenuManager::draw()
     Gfx::Painter painter(*window().backing_store());
 
     painter.fill_rect(menubar_rect, palette.window());
-    painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow1());
+    painter.draw_line({ 0, menubar_rect.bottom() - 1 }, { menubar_rect.right(), menubar_rect.bottom() - 1 }, palette.threed_shadow1());
+    painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow2());
 
     for_each_active_menubar_menu([&](Menu& menu) {
         Color text_color = palette.window_text();
@@ -420,7 +421,7 @@ void MenuManager::close_bar()
 
 Gfx::Rect MenuManager::menubar_rect() const
 {
-    return { 0, 0, Screen::the().rect().width(), 18 };
+    return { 0, 0, Screen::the().rect().width(), 19 };
 }
 
 void MenuManager::set_current_menubar(MenuBar* menubar)
