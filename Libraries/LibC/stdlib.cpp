@@ -44,92 +44,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-template<typename T, T min_value, T max_value>
-static inline T strtol_impl(const char* nptr, char** endptr, int base)
-{
-    errno = 0;
-
-    if (base < 0 || base == 1 || base > 36) {
-        errno = EINVAL;
-        if (endptr)
-            *endptr = const_cast<char*>(nptr);
-        return 0;
-    }
-
-    const char* p = nptr;
-    while (isspace(*p))
-        ++p;
-
-    bool is_negative = false;
-    if (*p == '-') {
-        is_negative = true;
-        ++p;
-    } else {
-        if (*p == '+')
-            ++p;
-    }
-
-    if (base == 0 || base == 16) {
-        if (base == 0)
-            base = 10;
-        if (*p == '0') {
-            if (*(p + 1) == 'X' || *(p + 1) == 'x') {
-                p += 2;
-                base = 16;
-            } else if (base != 16) {
-                base = 8;
-            }
-        }
-    }
-
-    T cutoff_point = is_negative ? (min_value / base) : (max_value / base);
-    int max_valid_digit_at_cutoff_point = is_negative ? (min_value % base) : (max_value % base);
-
-    T num = 0;
-
-    bool has_overflowed = false;
-    unsigned digits_consumed = 0;
-
-    for (;;) {
-        char ch = *(p++);
-        int digit;
-        if (isdigit(ch))
-            digit = ch - '0';
-        else if (islower(ch))
-            digit = ch - ('a' - 10);
-        else if (isupper(ch))
-            digit = ch - ('A' - 10);
-        else
-            break;
-
-        if (digit >= base)
-            break;
-
-        if (has_overflowed)
-            continue;
-
-        bool is_past_cutoff = is_negative ? num < cutoff_point : num > cutoff_point;
-
-        if (is_past_cutoff || (num == cutoff_point && digit > max_valid_digit_at_cutoff_point)) {
-            has_overflowed = true;
-            num = is_negative ? min_value : max_value;
-            errno = ERANGE;
-        } else {
-            num *= base;
-            num += is_negative ? -digit : digit;
-            ++digits_consumed;
-        }
-    }
-
-    if (endptr) {
-        if (has_overflowed || digits_consumed > 0)
-            *endptr = const_cast<char*>(p - 1);
-        else
-            *endptr = const_cast<char*>(nptr);
-    }
-    return num;
-}
-
 static void strtons(const char* str, char** endptr)
 {
     assert(endptr);
@@ -725,32 +639,21 @@ double atof(const char* str)
 
 int atoi(const char* str)
 {
-    size_t len = strlen(str);
-    int value = 0;
-    bool isNegative = false;
-    for (size_t i = 0; i < len; ++i) {
-        if (i == 0 && str[0] == '-') {
-            isNegative = true;
-            continue;
-        }
-        if (str[i] < '0' || str[i] > '9')
-            return value;
-        value = value * 10;
-        value += str[i] - '0';
+    long value = strtol(str, nullptr, 10);
+    if (value > INT_MAX) {
+        return INT_MAX;
     }
-    return isNegative ? -value : value;
+    return value;
 }
 
 long atol(const char* str)
 {
-    static_assert(sizeof(int) == sizeof(long));
-    return atoi(str);
+    return strtol(str, nullptr, 10);
 }
 
 long long atoll(const char* str)
 {
-    dbgprintf("FIXME(Libc): atoll('%s') passing through to atol()\n", str);
-    return atol(str);
+    return strtoll(str, nullptr, 10);
 }
 
 static char ptsname_buf[32];
@@ -941,24 +844,107 @@ size_t wcstombs(char* dest, const wchar_t* src, size_t max)
 
 long strtol(const char* str, char** endptr, int base)
 {
-    return strtol_impl<long, LONG_MIN, LONG_MAX>(str, endptr, base);
+    long long value = strtoll(str, endptr, base);
+    if (value < LONG_MIN) {
+        errno = ERANGE;
+        return LONG_MIN;
+    } else if (value > LONG_MAX) {
+        errno = ERANGE;
+        return LONG_MAX;
+    }
+    return value;
 }
 
 unsigned long strtoul(const char* str, char** endptr, int base)
 {
-    auto value = strtol(str, endptr, base);
-    ASSERT(value >= 0);
+    unsigned long long value = strtoull(str, endptr, base);
+    if (value > ULONG_MAX) {
+        errno = ERANGE;
+        return ULONG_MAX;
+    }
     return value;
 }
 
 long long strtoll(const char* str, char** endptr, int base)
 {
-    return strtol_impl<long long, LONG_LONG_MIN, LONG_LONG_MAX>(str, endptr, base);
+    // Parse spaces and sign
+    char* parse_ptr = const_cast<char*>(str);
+    strtons(parse_ptr, &parse_ptr);
+    const Sign sign = strtosign(parse_ptr, &parse_ptr);
+
+    // Parse base
+    if (base == 0) {
+        if (*parse_ptr == '0') {
+            parse_ptr += 1;
+            if (*parse_ptr == 'x' || *parse_ptr == 'X') {
+                base = 16;
+                parse_ptr += 2;
+            } else {
+                base = 8;
+            }
+        } else {
+            base = 10;
+        }
+    }
+
+    // Parse actual digits.
+    LongLongParser digits { sign, base };
+    bool digits_usable = false;
+    bool should_continue = true;
+    bool overflow = false;
+    do {
+        bool is_a_digit;
+        if (overflow) {
+            is_a_digit = digits.parse_digit(*parse_ptr) >= 0;
+        } else {
+            DigitConsumeDecision decision = digits.consume(*parse_ptr);
+            switch (decision) {
+            case DigitConsumeDecision::Consumed:
+                is_a_digit = true;
+                // The very first actual digit must pass here:
+                digits_usable = true;
+                break;
+            case DigitConsumeDecision::PosOverflow: // fall-through
+            case DigitConsumeDecision::NegOverflow:
+                is_a_digit = true;
+                overflow = true;
+                break;
+            case DigitConsumeDecision::Invalid:
+                is_a_digit = false;
+                break;
+            default:
+                ASSERT_NOT_REACHED();
+            }
+        }
+
+        should_continue = is_a_digit;
+        parse_ptr += should_continue;
+    } while (should_continue);
+
+    if (!digits_usable) {
+        // No actual number value available.
+        if (endptr)
+            *endptr = const_cast<char*>(str);
+        return 0;
+    }
+
+    if (overflow) {
+        errno = ERANGE;
+        if (sign != Sign::Negative) {
+            return LONG_LONG_MAX;
+        } else {
+            return LONG_LONG_MIN;
+        }
+    }
+
+    return digits.number();
 }
 
 unsigned long long strtoull(const char* str, char** endptr, int base)
 {
     auto value = strtoll(str, endptr, base);
+    // TODO: strtoull should not accept a sign character at all,
+    // not in `-0` and not even `+3`.
     ASSERT(value >= 0);
     return value;
 }
