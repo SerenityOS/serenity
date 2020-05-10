@@ -101,11 +101,11 @@ static void paint_button_new(Painter& painter, const Rect& rect, const Palette& 
         painter.draw_line({ 1, 2 }, { 1, rect.height() - 2 }, shadow_color1);
     } else {
         // Base
-        painter.fill_rect({ 1, 1, rect.width() - 3, rect.height() - 3 }, button_color);
+        painter.fill_rect({ 0, 0, rect.width(), rect.height() }, button_color);
 
         // Outer highlight
-        painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color2);
-        painter.draw_line({ 0, 1 }, { 0, rect.height() - 2 }, highlight_color2);
+        painter.draw_line({ 1, 1 }, { rect.width() - 3, 1 }, highlight_color2);
+        painter.draw_line({ 1, 1 }, { 1, rect.height() - 3 }, highlight_color2);
 
         // Outer shadow
         painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
