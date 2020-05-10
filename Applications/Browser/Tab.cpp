@@ -100,7 +100,7 @@ Tab::Tab()
 
     m_location_box->on_return_pressed = [this] {
         String location = m_location_box->text();
-        if (!location.starts_with("file://") && !location.starts_with("http://") && !location.starts_with("https://")) {
+        if (!URL(location).is_valid()) {
             StringBuilder builder;
             builder.append("http://");
             builder.append(location);

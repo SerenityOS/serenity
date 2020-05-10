@@ -73,6 +73,14 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         return;
     }
 
+    if (url.protocol() == "about") {
+        dbg() << "Loading about: URL " << url;
+        deferred_invoke([success_callback = move(success_callback)](auto&) {
+            success_callback(ByteBuffer::wrap(String::empty().characters(), 1), {});
+        });
+        return;
+    }
+
     if (url.protocol() == "data") {
         dbg() << "ResourceLoader loading a data URL with mime-type: '" << url.data_mime_type() << "', base64=" << url.data_payload_is_base64() << ", payload='" << url.data_payload() << "'";
 

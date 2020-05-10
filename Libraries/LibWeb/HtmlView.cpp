@@ -413,7 +413,7 @@ void HtmlView::load(const URL& url)
             load_error_page(url, error);
         });
 
-    if (url.protocol() != "file") {
+    if (url.protocol() != "file" && url.protocol() != "about") {
         URL favicon_url;
         favicon_url.set_protocol(url.protocol());
         favicon_url.set_host(url.host());
