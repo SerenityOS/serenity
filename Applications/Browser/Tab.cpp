@@ -207,6 +207,10 @@ Tab::Tab()
         m_statusbar->set_text(href);
     };
 
+    m_html_widget->on_url_drop = [this](auto& url) {
+        m_html_widget->load(url);
+    };
+
     m_menubar = GUI::MenuBar::construct();
 
     auto& app_menu = m_menubar->add_menu("Browser");
