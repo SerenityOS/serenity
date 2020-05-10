@@ -383,6 +383,12 @@ public:
             auto pseudo_name = String::copy(buffer);
             buffer.clear();
 
+
+            // Ignore for now, otherwise we produce a "false positive" selector
+            // and apply styles to the element itself, not its pseudo element
+            if (is_pseudo_element)
+                return {};
+
             if (pseudo_name == "link")
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Link;
             else if (pseudo_name == "hover")
@@ -441,6 +447,9 @@ public:
             // If this assert triggers, we're most likely up to no good.
             PARSE_ASSERT(simple_selectors.size() < 100);
         }
+
+        if (simple_selectors.is_empty())
+            return {};
 
         return Selector::ComplexSelector { relation, move(simple_selectors) };
     }
