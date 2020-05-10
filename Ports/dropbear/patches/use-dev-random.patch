@@ -1,0 +1,11 @@
+--- a/sysoptions.h
++++ b/sysoptions.h
+@@ -256,7 +256,7 @@
+ /* Source for randomness. This must be able to provide hundreds of bytes per SSH
+  * connection without blocking. */
+ #ifndef DROPBEAR_URANDOM_DEV
+-#define DROPBEAR_URANDOM_DEV "/dev/urandom"
++#define DROPBEAR_URANDOM_DEV "/dev/random"
+ #endif
+ 
+ /* client keyboard interactive authentication is often used for password auth.

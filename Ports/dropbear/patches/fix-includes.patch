@@ -1,0 +1,11 @@
+Not sure why this is missing, but okay.
+--- a/includes.h.orig
++++ b/includes.h
+@@ -38,6 +38,7 @@
+ #include <sys/un.h>
+ #include <sys/wait.h>
+ #include <sys/resource.h>
++#include <sys/select.h>
+ 
+ #include <stdio.h>
+ #include <errno.h>

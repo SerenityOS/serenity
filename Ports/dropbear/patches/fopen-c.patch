@@ -1,0 +1,11 @@
+--- a/compat.c
++++ b/compat.c
+@@ -244,7 +244,7 @@
+ 	if (strings != NULL)
+ 		free(strings);
+ 	strings = NULL;
+-	if ((fp = fopen("/etc/shells", "rc")) == NULL)
++	if ((fp = fopen("/etc/shells", "r")) == NULL)
+ 		return (char **) okshells;
+ 	if (fstat(fileno(fp), &statb) == -1) {
+ 		(void)fclose(fp);

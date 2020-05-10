@@ -1,0 +1,12 @@
+Serenity doesn't use /sbin.
+--- a/Makefile.in.orig
++++ b/Makefile.in
+@@ -87,7 +87,7 @@
+ exec_prefix=@exec_prefix@
+ datarootdir = @datarootdir@
+ bindir=@bindir@
+-sbindir=@sbindir@
++sbindir=$(bindir)
+ mandir=@mandir@
+ 
+ .DELETE_ON_ERROR:
