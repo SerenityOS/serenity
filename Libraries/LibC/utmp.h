@@ -27,6 +27,7 @@
 #pragma once
 
 #include <sys/cdefs.h>
+#include <sys/time.h>
 
 __BEGIN_DECLS
 
