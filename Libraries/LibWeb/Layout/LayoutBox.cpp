@@ -44,6 +44,8 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::Fl
 
     auto border_style = style().property(style_property_id);
     float width = border_width.value()->to_length().to_px();
+    if (width <= 0)
+        return;
 
     int int_width = max((int)width, 1);
 
