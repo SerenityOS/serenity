@@ -102,10 +102,14 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::Fl
         color = (edge == Edge::Left || edge == Edge::Top) ? top_left_color : bottom_right_color;
     }
 
-    bool dotted = border_style.has_value() && border_style.value()->to_string() == "dotted";
+    auto line_style = Gfx::Painter::LineStyle::Solid;
+    if (border_style.has_value()) {
+        if (border_style.value()->to_string() == "dotted")
+            line_style = Gfx::Painter::LineStyle::Dotted;
+    }
 
     auto draw_line = [&](auto& p1, auto& p2) {
-        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1, dotted);
+        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1, line_style);
     };
 
     auto width_for = [&](CSS::PropertyID property_id) -> float {

@@ -966,7 +966,7 @@ void Painter::draw_pixel(const Point& position, Color color, int thickness)
     fill_rect(rect.translated(-state().translation), color);
 }
 
-void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
+void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thickness, LineStyle style)
 {
     auto clip_rect = this->clip_rect();
 
@@ -989,7 +989,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
             return;
         int min_y = max(point1.y(), clip_rect.top());
         int max_y = min(point2.y(), clip_rect.bottom());
-        if (dotted) {
+        if (style == LineStyle::Dotted) {
             for (int y = min_y; y <= max_y; y += thickness * 2)
                 draw_pixel({ x, y }, color, thickness);
         } else {
@@ -1012,7 +1012,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
             return;
         int min_x = max(point1.x(), clip_rect.left());
         int max_x = min(point2.x(), clip_rect.right());
-        if (dotted) {
+        if (style == LineStyle::Dotted) {
             for (int x = min_x; x <= max_x; x += thickness * 2)
                 draw_pixel({ x, y }, color, thickness);
         } else {
@@ -1023,7 +1023,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
     }
 
     // FIXME: Implement dotted diagonal lines.
-    ASSERT(!dotted);
+    ASSERT(style == LineStyle::Solid);
 
     const double adx = abs(point2.x() - point1.x());
     const double ady = abs(point2.y() - point1.y());
@@ -1116,10 +1116,10 @@ void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_po
     for_each_line_segment_on_bezier_curve(control_point, p1, p2, callback);
 }
 
-void Painter::draw_quadratic_bezier_curve(const Point& control_point, const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
+void Painter::draw_quadratic_bezier_curve(const Point& control_point, const Point& p1, const Point& p2, Color color, int thickness, LineStyle style)
 {
     for_each_line_segment_on_bezier_curve(FloatPoint(control_point.x(), control_point.y()), FloatPoint(p1.x(), p1.y()), FloatPoint(p2.x(), p2.y()), [&](const FloatPoint& p1, const FloatPoint& p2) {
-        draw_line(Point(p1.x(), p1.y()), Point(p2.x(), p2.y()), color, thickness, dotted);
+        draw_line(Point(p1.x(), p1.y()), Point(p2.x(), p2.y()), color, thickness, style);
     });
 }
 
@@ -1263,7 +1263,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 #ifdef FILL_PATH_DEBUG
                         dbg() << "y=" << scanline << ": " << winding_number << " at " << i << ": " << from << " -- " << to;
 #endif
-                        draw_line(from, to, color, 1, false);
+                        draw_line(from, to, color, 1);
                     }
 
                 skip_drawing:;
