@@ -146,9 +146,9 @@ TerminalWidget::~TerminalWidget()
 {
 }
 
-static inline Color lookup_color(unsigned color)
+static inline Color color_from_rgb(unsigned color)
 {
-    return Color::from_rgb(xterm_colors[color]);
+    return Color::from_rgb(color);
 }
 
 Gfx::Rect TerminalWidget::glyph_rect(u16 row, u16 column)
@@ -349,7 +349,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (m_visual_beep_timer->is_active())
             painter.clear_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
-            painter.clear_rect(row_rect, lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
+            painter.clear_rect(row_rect, color_from_rgb(line.attributes[0].background_color).with_alpha(m_opacity));
 
         // The terminal insists on thinking characters and
         // bytes are the same thing. We want to still draw
@@ -385,14 +385,14 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 auto character_rect = glyph_rect(row, column);
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
                 if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
-                    painter.clear_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
+                    painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
                 }
 
                 bool should_paint_underline = attribute.flags & VT::Attribute::Underline
                     || (!m_hovered_href.is_empty() && m_hovered_href_id == attribute.href_id);
 
                 if (should_paint_underline)
-                    painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
+                    painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
             }
 
             if (codepoint == ' ')
@@ -405,7 +405,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 character_rect.location(),
                 codepoint,
                 attribute.flags & VT::Attribute::Bold ? bold_font() : font(),
-                lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
+                color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
         }
     }
 
@@ -413,7 +413,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         auto& cursor_line = line_for_visual_row(row_with_cursor);
         if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
             auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
-            painter.draw_rect(cell_rect, lookup_color(cursor_line.attributes[m_terminal.cursor_column()].foreground_color));
+            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes[m_terminal.cursor_column()].foreground_color));
         }
     }
 }
