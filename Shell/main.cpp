@@ -55,6 +55,16 @@ static Line::Editor editor { Line::Configuration { Line::Configuration::Unescape
 // FIXME: We do not expand variables inside strings
 //        if we want to be more sh-like, we should do that some day
 static constexpr bool HighlightVariablesInsideStrings = false;
+static bool s_disable_hyperlinks = false;
+
+static void print_path(const String& path)
+{
+    if (s_disable_hyperlinks) {
+        printf("%s", path.characters());
+        return;
+    }
+    printf("\033]8;;file://%s%s\033\\%s\033]8;;\033\\", g.hostname, path.characters(), path.characters());
+}
 
 struct ExitCodeOrContinuationRequest {
     enum ContinuationRequest {
@@ -167,7 +177,8 @@ static String prompt()
 
 static int sh_pwd(int, const char**)
 {
-    printf("%s\n", g.cwd.characters());
+    print_path(g.cwd);
+    fputc('\n', stdout);
     return 0;
 }
 
@@ -543,8 +554,10 @@ static int sh_dirs(int argc, const char** argv)
     g.directory_stack.at(0) = g.cwd.characters();
 
     if (argc == 1) {
-        for (String dir : g.directory_stack)
-            printf("%s ", dir.characters());
+        for (auto& directory : g.directory_stack) {
+            print_path(directory);
+            fputc(' ', stdout);
+        }
 
         printf("\n");
         return 0;
@@ -561,8 +574,10 @@ static int sh_dirs(int argc, const char** argv)
             continue;
         }
         if (!strcmp(arg, "-p") && !printed) {
-            for (auto& directory : g.directory_stack)
-                printf("%s\n", directory.characters());
+            for (auto& directory : g.directory_stack) {
+                print_path(directory);
+                fputc('\n', stdout);
+            }
 
             printed = true;
             continue;
@@ -570,7 +585,9 @@ static int sh_dirs(int argc, const char** argv)
         if (!strcmp(arg, "-v") && !printed) {
             int idx = 0;
             for (auto& directory : g.directory_stack) {
-                printf("%d %s\n", idx++, directory.characters());
+                printf("%d ", idx++);
+                print_path(directory);
+                fputc('\n', stdout);
             }
 
             printed = true;
@@ -638,7 +655,7 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
 
 class FileDescriptionCollector {
 public:
-    FileDescriptionCollector() { }
+    FileDescriptionCollector() {}
     ~FileDescriptionCollector() { collect(); }
 
     void collect()
