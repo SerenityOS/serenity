@@ -8,7 +8,7 @@ OBJS = \
 
 PROGRAM = Browser
 
-LIB_DEPS = Web JS TextCodec GUI Gfx IPC Protocol Core
+LIB_DEPS = Web JS Markdown TextCodec GUI Gfx IPC Protocol Core
 
 main.cpp: ../../Libraries/LibWeb/CSS/PropertyID.h
 ../../Libraries/LibWeb/CSS/PropertyID.h:

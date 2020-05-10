@@ -33,6 +33,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLAnchorElement.h>
@@ -321,6 +322,15 @@ void HtmlView::reload()
     load(main_frame().document()->url());
 }
 
+static RefPtr<Document> create_markdown_document(const ByteBuffer& data, const URL& url)
+{
+    Markdown::Document markdown_document;
+    if (!markdown_document.parse(data))
+        return nullptr;
+
+    return parse_html_document(markdown_document.render_to_html(), url);
+}
+
 static RefPtr<Document> create_text_document(const ByteBuffer& data, const URL& url)
 {
     auto document = adopt(*new Document(url));
@@ -420,6 +430,8 @@ void HtmlView::load(const URL& url)
                 document = create_image_document(data, url);
             } else if (url.path().ends_with(".txt")) {
                 document = create_text_document(data, url);
+            } else if (url.path().ends_with(".md")) {
+                document = create_markdown_document(data, url);
             } else {
                 String encoding = "utf-8";
 
