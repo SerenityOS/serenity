@@ -33,10 +33,30 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <stdio.h>
 
 //#define EVENT_DEBUG
+
+class TaskbarWidget final : public GUI::Widget {
+    C_OBJECT(TaskbarWidget);
+
+public:
+    virtual ~TaskbarWidget() override {}
+
+private:
+    TaskbarWidget() {}
+
+    virtual void paint_event(GUI::PaintEvent& event) override
+    {
+        GUI::Painter painter(*this);
+        painter.add_clip_rect(event.rect());
+        painter.fill_rect(rect(), palette().button());
+        painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
+    }
+};
 
 TaskbarWindow::TaskbarWindow()
 {
@@ -47,14 +67,10 @@ TaskbarWindow::TaskbarWindow()
 
     GUI::Desktop::the().on_rect_change = [this](const Gfx::Rect& rect) { on_screen_rect_change(rect); };
 
-    auto& widget = set_main_widget<GUI::Frame>();
-    widget.set_fill_with_background_color(true);
+    auto& widget = set_main_widget<TaskbarWidget>();
     widget.set_layout<GUI::HorizontalBoxLayout>();
     widget.layout()->set_margins({ 3, 2, 3, 2 });
     widget.layout()->set_spacing(3);
-    widget.set_frame_thickness(1);
-    widget.set_frame_shape(Gfx::FrameShape::Panel);
-    widget.set_frame_shadow(Gfx::FrameShadow::Raised);
 
     m_default_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
 
