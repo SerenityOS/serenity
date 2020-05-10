@@ -86,6 +86,7 @@ chmod 400 mnt/res/kernel.map
 
 chmod 660 mnt/etc/WindowServer/WindowServer.ini
 chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
+echo "/bin/sh" > mnt/etc/shells
 
 echo "done"
 

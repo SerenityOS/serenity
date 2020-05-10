@@ -1,0 +1,30 @@
+--- a/sshpty.c.orig
++++ b/sshpty.c
+@@ -347,8 +347,6 @@
+ 
+ 	w.ws_row = row;
+ 	w.ws_col = col;
+-	w.ws_xpixel = xpixel;
+-	w.ws_ypixel = ypixel;
+ 	(void) ioctl(ptyfd, TIOCSWINSZ, &w);
+ }
+ 
+--- a/cli-chansession.c.orig
++++ b/cli-chansession.c
+@@ -234,14 +234,12 @@
+ 		/* Some sane defaults */
+ 		ws.ws_row = 25;
+ 		ws.ws_col = 80;
+-		ws.ws_xpixel = 0;
+-		ws.ws_ypixel = 0;
+ 	}
+ 
+ 	buf_putint(ses.writepayload, ws.ws_col); /* Cols */
+ 	buf_putint(ses.writepayload, ws.ws_row); /* Rows */
+-	buf_putint(ses.writepayload, ws.ws_xpixel); /* Width */
+-	buf_putint(ses.writepayload, ws.ws_ypixel); /* Height */
++	buf_putint(ses.writepayload, 0); /* Width */
++	buf_putint(ses.writepayload, 0); /* Height */
+ 
+ }
+ 

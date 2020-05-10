@@ -1,0 +1,14 @@
+--- a/svr-tcpfwd.c.orig
++++ b/svr-tcpfwd.c
+@@ -186,11 +186,6 @@
+ 			TRACE(("invalid port: %d", port))
+ 			goto out;
+ 		}
+-
+-		if (!ses.allowprivport && port < IPPORT_RESERVED) {
+-			TRACE(("can't assign port < 1024 for non-root"))
+-			goto out;
+-		}
+ 	}
+ 
+ 	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener));

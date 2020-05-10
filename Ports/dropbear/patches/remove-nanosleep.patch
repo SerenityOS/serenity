@@ -1,0 +1,11 @@
+Hinders security by a little, but I guess we'll just have nanosleep soon enough.
+--- a/svr-auth.c.orig
++++ b/svr-auth.c
+@@ -424,7 +424,6 @@
+ 		if (!fuzz.fuzzing)
+ #endif
+ 		{
+-			while (nanosleep(&delay, &delay) == -1 && errno == EINTR) { /* Go back to sleep */ }
+ 		}
+ 
+ 		ses.authstate.failcount++;
