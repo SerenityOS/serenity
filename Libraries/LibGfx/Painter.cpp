@@ -990,7 +990,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
         int min_y = max(point1.y(), clip_rect.top());
         int max_y = min(point2.y(), clip_rect.bottom());
         if (dotted) {
-            for (int y = min_y; y <= max_y; y += 2)
+            for (int y = min_y; y <= max_y; y += thickness * 2)
                 draw_pixel({ x, y }, color, thickness);
         } else {
             for (int y = min_y; y <= max_y; ++y)
@@ -1013,7 +1013,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
         int min_x = max(point1.x(), clip_rect.left());
         int max_x = min(point2.x(), clip_rect.right());
         if (dotted) {
-            for (int x = min_x; x <= max_x; x += 2)
+            for (int x = min_x; x <= max_x; x += thickness * 2)
                 draw_pixel({ x, y }, color, thickness);
         } else {
             for (int x = min_x; x <= max_x; ++x)
