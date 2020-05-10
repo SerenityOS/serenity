@@ -396,6 +396,41 @@ String encoding_from_content_type(const String& content_type)
     return "utf-8";
 }
 
+String mime_type_from_content_type(const String& content_type)
+{
+    auto offset = content_type.index_of(";");
+    if (offset.has_value())
+        return content_type.substring(0, offset.value()).to_lowercase();
+
+    return content_type;
+}
+
+static String guess_mime_type_based_on_filename(const URL& url)
+{
+    if (url.path().ends_with(".png"))
+        return "image/png";
+    if (url.path().ends_with(".gif"))
+        return "image/gif";
+    if (url.path().ends_with(".md"))
+        return "text/markdown";
+    if (url.path().ends_with(".html") || url.path().ends_with(".htm"))
+        return "text/html";
+    return "text/plain";
+}
+
+static RefPtr<Document> create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
+{
+    if (mime_type.starts_with("image/"))
+        return create_image_document(data, url);
+    if (mime_type == "text/plain")
+        return create_text_document(data, url);
+    if (mime_type == "text/markdown")
+        return create_markdown_document(data, url);
+    if (mime_type == "text/html")
+        return parse_html_document(data, url, encoding);
+    return nullptr;
+}
+
 void HtmlView::load(const URL& url)
 {
     dbg() << "HtmlView::load: " << url.to_string();
@@ -426,24 +461,21 @@ void HtmlView::load(const URL& url)
                 return;
             }
 
-            RefPtr<Document> document;
-            if (url.path().ends_with(".png") || url.path().ends_with(".gif")) {
-                document = create_image_document(data, url);
-            } else if (url.path().ends_with(".txt")) {
-                document = create_text_document(data, url);
-            } else if (url.path().ends_with(".md")) {
-                document = create_markdown_document(data, url);
+            String encoding = "utf-8";
+            String mime_type;
+
+            auto content_type = response_headers.get("Content-Type");
+            if (content_type.has_value()) {
+                dbg() << "Content-Type header: _" << content_type.value() << "_";
+                encoding = encoding_from_content_type(content_type.value());
+                mime_type = mime_type_from_content_type(content_type.value());
             } else {
-                String encoding = "utf-8";
-
-                auto content_type = response_headers.get("Content-Type");
-                if (content_type.has_value()) {
-                    encoding = encoding_from_content_type(content_type.value());
-                    dbg() << "I think this content has encoding '" << encoding << "'";
-                }
-
-                document = parse_html_document(data, url, encoding);
+                dbg() << "No Content-Type header to go on! Guessing based on filename...";
+                mime_type = guess_mime_type_based_on_filename(url);
             }
+
+            dbg() << "I believe this content has MIME type '" << mime_type << "', encoding '" << encoding << "'";
+            auto document = create_document_from_mime_type(data, url, mime_type, encoding);
             ASSERT(document);
             set_document(document);
             if (on_title_change)
