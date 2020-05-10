@@ -379,6 +379,7 @@ struct pollfd {
 #define AF_UNSPEC 0
 #define AF_LOCAL 1
 #define AF_INET 2
+#define AF_MAX 3
 #define PF_LOCAL AF_LOCAL
 #define PF_INET AF_INET
 
