@@ -29,6 +29,21 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 
+struct Token {
+    enum Type {
+        Bare,
+        SingleQuoted,
+        DoubleQuoted,
+        UnterminatedSingleQuoted,
+        UnterminatedDoubleQuoted,
+        Special,
+    };
+    String text;
+    size_t end;
+    size_t length;
+    Type type;
+};
+
 struct Redirection {
     enum Type {
         Pipe,
@@ -48,7 +63,7 @@ struct Rewiring {
 };
 
 struct Subcommand {
-    Vector<String> args;
+    Vector<Token> args;
     Vector<Redirection> redirections;
     Vector<Rewiring> rewirings;
 };
@@ -71,7 +86,7 @@ private:
         No,
         Yes,
     };
-    void commit_token(AllowEmptyToken = AllowEmptyToken::No);
+    void commit_token(Token::Type, AllowEmptyToken = AllowEmptyToken::No);
     void commit_subcommand();
     void commit_command();
     void do_pipe();
@@ -105,7 +120,8 @@ private:
 
     Vector<Command> m_commands;
     Vector<Subcommand> m_subcommands;
-    Vector<String> m_tokens;
+    Vector<Token> m_tokens;
     Vector<Redirection> m_redirections;
     Vector<char> m_token;
+    size_t m_position { 0 };
 };
