@@ -38,10 +38,12 @@ __BEGIN_DECLS
 #define AF_LOCAL 1
 #define AF_UNIX AF_LOCAL
 #define AF_INET 2
+#define AF_MAX 3
 #define PF_LOCAL AF_LOCAL
 #define PF_UNIX PF_LOCAL
 #define PF_INET AF_INET
 #define PF_UNSPEC AF_UNSPEC
+#define PF_MAX AF_MAX
 
 #define SOCK_TYPE_MASK 0xff
 #define SOCK_STREAM 1
