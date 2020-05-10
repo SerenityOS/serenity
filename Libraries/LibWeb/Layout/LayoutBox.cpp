@@ -200,9 +200,6 @@ void LayoutBox::render(RenderingContext& context)
         context.painter().draw_rect(m_rect, Color::Red);
 #endif
 
-    if (node() && document().inspected_node() == node())
-        context.painter().draw_rect(enclosing_int_rect(m_rect), Color::Magenta);
-
     Gfx::FloatRect padded_rect;
     padded_rect.set_x(x() - box_model().padding().left.to_px());
     padded_rect.set_width(width() + box_model().padding().left.to_px() + box_model().padding().right.to_px());
@@ -236,6 +233,9 @@ void LayoutBox::render(RenderingContext& context)
     paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomWidth);
 
     LayoutNodeWithStyleAndBoxModelMetrics::render(context);
+
+    if (node() && document().inspected_node() == node())
+        context.painter().draw_rect(enclosing_int_rect(m_rect), Color::Magenta);
 }
 
 HitTestResult LayoutBox::hit_test(const Gfx::Point& position) const
