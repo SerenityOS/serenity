@@ -31,12 +31,13 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibVT/Position.h>
+#include <LibVT/XtermColors.h>
 
 namespace VT {
 
 class TerminalClient {
 public:
-    virtual ~TerminalClient() {}
+    virtual ~TerminalClient() { }
 
     virtual void beep() = 0;
     virtual void set_window_title(const StringView&) = 0;
@@ -48,8 +49,8 @@ public:
 struct Attribute {
     Attribute() { reset(); }
 
-    static const u8 default_foreground_color = 7;
-    static const u8 default_background_color = 0;
+    static const u32 default_foreground_color = xterm_colors[7];
+    static const u32 default_background_color = xterm_colors[0];
 
     void reset()
     {
@@ -57,8 +58,8 @@ struct Attribute {
         background_color = default_background_color;
         flags = Flags::NoAttributes;
     }
-    u8 foreground_color;
-    u8 background_color;
+    u32 foreground_color;
+    u32 background_color;
 
     String href;
     String href_id;
@@ -110,6 +111,7 @@ public:
     struct Line {
         AK_MAKE_NONCOPYABLE(Line);
         AK_MAKE_NONMOVABLE(Line);
+
     public:
         explicit Line(u16 columns);
         ~Line();

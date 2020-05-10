@@ -174,13 +174,37 @@ void Terminal::SGR(const ParamVector& params)
         m_current_attribute.reset();
         return;
     }
-    if (params.size() == 3 && params[1] == 5) {
-        if (params[0] == 38) {
-            m_current_attribute.foreground_color = params[2];
-            return;
-        } else if (params[0] == 48) {
-            m_current_attribute.background_color = params[2];
-            return;
+    if (params.size() >= 3) {
+        bool should_set = true;
+        auto kind = params[1];
+        u32 color = 0;
+        switch (kind) {
+        case 5: // 8-bit
+            color = xterm_colors[params[2]];
+            break;
+        case 2: // 24-bit
+            for (size_t i = 0; i < 3; ++i) {
+                u8 component = 0;
+                if (params.size() - 2 > i) {
+                    component = params[i + 2];
+                }
+                color <<= 8;
+                color |= component;
+            }
+            break;
+        default:
+            should_set = false;
+            break;
+        }
+
+        if (should_set) {
+            if (params[0] == 38) {
+                m_current_attribute.foreground_color = color;
+                return;
+            } else if (params[0] == 48) {
+                m_current_attribute.background_color = color;
+                return;
+            }
         }
     }
     for (auto param : params) {
@@ -230,7 +254,7 @@ void Terminal::SGR(const ParamVector& params)
             // Foreground color
             if (m_current_attribute.flags & Attribute::Bold)
                 param += 8;
-            m_current_attribute.foreground_color = param - 30;
+            m_current_attribute.foreground_color = xterm_colors[param - 30];
             break;
         case 39:
             // reset foreground
@@ -247,7 +271,7 @@ void Terminal::SGR(const ParamVector& params)
             // Background color
             if (m_current_attribute.flags & Attribute::Bold)
                 param += 8;
-            m_current_attribute.background_color = param - 40;
+            m_current_attribute.background_color = xterm_colors[param - 40];
             break;
         case 49:
             // reset background

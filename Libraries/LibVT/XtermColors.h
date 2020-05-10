@@ -26,7 +26,7 @@
 
 #pragma once
 
-static const unsigned xterm_colors[256] = {
+static constexpr unsigned xterm_colors[256] = {
     0x000000,
     0xcc0000,
     0x3e9a06,
