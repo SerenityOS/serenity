@@ -1,0 +1,93 @@
+--- tr-6.7/str.c.orig	Sun May 10 10:17:16 2020
++++ tr-6.7/str.c	Sun May 10 10:25:37 2020
+@@ -147,6 +147,90 @@
+ 	int *set;
+ } CLASS;
+ 
++#undef isalnum
++#undef isalpha
++#undef iscntrl
++#undef isdigit
++#undef isgraph
++#undef islower
++#undef isprint
++#undef ispunct
++#undef isspace
++#undef isupper
++#undef isxdigit
++
++int
++isalnum(int c)
++{
++	return (_ctype_[(int)(c)] & (_U | _L | _N));
++}
++
++int
++isalpha(int c)
++{
++	return (_ctype_[(int)(c)] & (_U | _L));
++}
++
++int
++isblank(int c)
++{
++	return (c == ' ' || c == '\t');
++}
++
++int
++iscntrl(int c)
++{
++	return (_ctype_[(int)(c)] & (_C));
++}
++
++int
++isdigit(int c)
++{
++	return (_ctype_[(int)(c)] & (_N));
++}
++
++int
++isgraph(int c)
++{
++	return (_ctype_[(int)(c)] & (_P | _U | _L | _N));
++}
++
++int
++islower(int c)
++{
++	return ((_ctype_[(int)(c)] & (_U | _L)) == _L);
++}
++
++int
++isprint(int c)
++{
++	return (_ctype_[(int)(c)] & (_P | _U | _L | _N | _B));
++}
++
++int
++ispunct(int c)
++{
++	return (_ctype_[(int)(c)] & (_P));
++}
++
++int
++isspace(int c)
++{
++	return (_ctype_[(int)(c)] & (_S));
++}
++
++int
++isupper(int c)
++{
++	return ((_ctype_[(int)(c)] & (_U | _L)) == _U);
++}
++
++int
++isxdigit(int c)
++{
++	return (_ctype_[(int)(c)] & (_N | _X));
++}
++
+ static CLASS classes[] = {
+ 	{ "alnum",  isalnum,  },
+ 	{ "alpha",  isalpha,  },
