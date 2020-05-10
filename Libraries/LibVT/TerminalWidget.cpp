@@ -391,8 +391,20 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 bool should_paint_underline = attribute.flags & VT::Attribute::Underline
                     || (!m_hovered_href.is_empty() && m_hovered_href_id == attribute.href_id);
 
-                if (should_paint_underline)
+                bool should_paint_dotted_underline = !attribute.href.is_empty() && m_hovered_href_id != attribute.href_id;
+
+                if (should_paint_dotted_underline) {
+                    auto color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color).darkened(0.6f);
+                    int x1 = cell_rect.bottom_left().x();
+                    int x2 = cell_rect.bottom_right().x();
+                    int y = cell_rect.bottom_left().y();
+                    for (int x = x1; x <= x2; ++x) {
+                        if ((x % 3) == 0)
+                            painter.set_pixel({ x, y }, color);
+                    }
+                } else if (should_paint_underline) {
                     painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
+                }
             }
 
             if (codepoint == ' ')
