@@ -53,63 +53,113 @@
 GlobalState g;
 static Line::Editor editor { Line::Configuration { Line::Configuration::UnescapedSpaces } };
 
-static int run_command(const String&);
+struct ExitCodeOrContinuationRequest {
+    enum ContinuationRequest {
+        Nothing,
+        Pipe,
+        DoubleQuotedString,
+        SingleQuotedString,
+    };
+
+    ExitCodeOrContinuationRequest(ContinuationRequest continuation)
+        : continuation(continuation)
+    {
+    }
+
+    ExitCodeOrContinuationRequest(int exit)
+        : exit_code(exit)
+    {
+    }
+
+    bool has_value() const { return exit_code.has_value(); }
+    int value() const
+    {
+        ASSERT(has_value());
+        return exit_code.value();
+    }
+
+    Optional<int> exit_code;
+    ContinuationRequest continuation { Nothing };
+};
+
+static ExitCodeOrContinuationRequest run_command(const StringView&);
 void cache_path();
+static ExitCodeOrContinuationRequest::ContinuationRequest s_should_continue { ExitCodeOrContinuationRequest::Nothing };
 
 static String prompt()
 {
-    auto* ps1 = getenv("PROMPT");
-    if (!ps1) {
-        if (g.uid == 0)
-            return "# ";
+    auto build_prompt = []() -> String {
+        auto* ps1 = getenv("PROMPT");
+        if (!ps1) {
+            if (g.uid == 0)
+                return "# ";
+
+            StringBuilder builder;
+            builder.appendf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
+            builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
+            return builder.to_string();
+        }
 
         StringBuilder builder;
-        builder.appendf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
-        builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
-        return builder.to_string();
-    }
-
-    StringBuilder builder;
-    for (char* ptr = ps1; *ptr; ++ptr) {
-        if (*ptr == '\\') {
-            ++ptr;
-            if (!*ptr)
-                break;
-            switch (*ptr) {
-            case 'X':
-                builder.append("\033]0;");
-                break;
-            case 'a':
-                builder.append(0x07);
-                break;
-            case 'e':
-                builder.append(0x1b);
-                break;
-            case 'u':
-                builder.append(g.username);
-                break;
-            case 'h':
-                builder.append(g.hostname);
-                break;
-            case 'w': {
-                String home_path = getenv("HOME");
-                if (g.cwd.starts_with(home_path)) {
-                    builder.append('~');
-                    builder.append(g.cwd.substring_view(home_path.length(), g.cwd.length() - home_path.length()));
-                } else {
-                    builder.append(g.cwd);
+        for (char* ptr = ps1; *ptr; ++ptr) {
+            if (*ptr == '\\') {
+                ++ptr;
+                if (!*ptr)
+                    break;
+                switch (*ptr) {
+                case 'X':
+                    builder.append("\033]0;");
+                    break;
+                case 'a':
+                    builder.append(0x07);
+                    break;
+                case 'e':
+                    builder.append(0x1b);
+                    break;
+                case 'u':
+                    builder.append(g.username);
+                    break;
+                case 'h':
+                    builder.append(g.hostname);
+                    break;
+                case 'w': {
+                    String home_path = getenv("HOME");
+                    if (g.cwd.starts_with(home_path)) {
+                        builder.append('~');
+                        builder.append(g.cwd.substring_view(home_path.length(), g.cwd.length() - home_path.length()));
+                    } else {
+                        builder.append(g.cwd);
+                    }
+                    break;
                 }
-                break;
+                case 'p':
+                    builder.append(g.uid == 0 ? '#' : '$');
+                    break;
+                }
+                continue;
             }
-            case 'p':
-                builder.append(g.uid == 0 ? '#' : '$');
-                break;
-            }
-            continue;
+            builder.append(*ptr);
         }
-        builder.append(*ptr);
+        return builder.to_string();
+    };
+
+    auto the_prompt = build_prompt();
+    auto prompt_length = editor.actual_rendered_string_length(the_prompt);
+
+    if (s_should_continue != ExitCodeOrContinuationRequest::Nothing) {
+        const auto format_string = "\033[34m%.*-s\033[m";
+        switch (s_should_continue) {
+        case ExitCodeOrContinuationRequest::Pipe:
+            return String::format(format_string, prompt_length, "pipe> ");
+        case ExitCodeOrContinuationRequest::DoubleQuotedString:
+            return String::format(format_string, prompt_length, "dquote> ");
+        case ExitCodeOrContinuationRequest::SingleQuotedString:
+            return String::format(format_string, prompt_length, "squote> ");
+        default:
+            break;
+        }
     }
-    return builder.to_string();
+    return the_prompt;
 }
 
 static int sh_pwd(int, const char**)
@@ -306,9 +356,13 @@ static int sh_time(int argc, const char** argv)
     }
     Core::ElapsedTimer timer;
     timer.start();
-    int exit_code = run_command(builder.to_string());
+    auto exit_code = run_command(builder.string_view());
+    if (!exit_code.has_value()) {
+        printf("Shell: Incomplete command: %s\n", builder.to_string().characters());
+        exit_code = 1;
+    }
     printf("Time: %d ms\n", timer.elapsed());
-    return exit_code;
+    return exit_code.value();
 }
 
 static int sh_umask(int argc, const char** argv)
@@ -581,7 +635,7 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
 
 class FileDescriptionCollector {
 public:
-    FileDescriptionCollector() {}
+    FileDescriptionCollector() { }
     ~FileDescriptionCollector() { collect(); }
 
     void collect()
@@ -724,13 +778,13 @@ static Vector<String> expand_parameters(const StringView& param)
     return res;
 }
 
-static Vector<String> process_arguments(const Vector<String>& args)
+static Vector<String> process_arguments(const Vector<Token>& args)
 {
     Vector<String> argv_string;
     for (auto& arg : args) {
         // This will return the text passed in if it wasn't a variable
         // This lets us just loop over its values
-        auto expanded_parameters = expand_parameters(arg);
+        auto expanded_parameters = expand_parameters(arg.text);
 
         for (auto& exp_arg : expanded_parameters) {
             if (exp_arg.starts_with('~'))
@@ -748,7 +802,29 @@ static Vector<String> process_arguments(const Vector<String>& args)
     return argv_string;
 }
 
-static int run_command(const String& cmd)
+static ExitCodeOrContinuationRequest::ContinuationRequest is_complete(const Vector<Command>& commands)
+{
+    // check if the last command ends with a pipe, or an unterminated string
+    auto& last_command = commands.last();
+    auto& subcommands = last_command.subcommands;
+    if (subcommands.size() == 0)
+        return ExitCodeOrContinuationRequest::Nothing;
+
+    auto& last_subcommand = subcommands.last();
+
+    if (!last_subcommand.redirections.find([](auto& redirection) { return redirection.type == Redirection::Pipe; }).is_end())
+        return ExitCodeOrContinuationRequest::Pipe;
+
+    if (!last_subcommand.args.find([](auto& token) { return token.type == Token::UnterminatedSingleQuoted; }).is_end())
+        return ExitCodeOrContinuationRequest::SingleQuotedString;
+
+    if (!last_subcommand.args.find([](auto& token) { return token.type == Token::UnterminatedDoubleQuoted; }).is_end())
+        return ExitCodeOrContinuationRequest::DoubleQuotedString;
+
+    return ExitCodeOrContinuationRequest::Nothing;
+}
+
+static ExitCodeOrContinuationRequest run_command(const StringView& cmd)
 {
     if (cmd.is_empty())
         return 0;
@@ -758,13 +834,36 @@ static int run_command(const String& cmd)
 
     auto commands = Parser(cmd).parse();
 
+    auto needs_more = is_complete(commands);
+    if (needs_more != ExitCodeOrContinuationRequest::Nothing)
+        return needs_more;
+
 #ifdef SH_DEBUG
     for (auto& command : commands) {
         for (size_t i = 0; i < command.subcommands.size(); ++i) {
             for (size_t j = 0; j < i; ++j)
                 dbgprintf("    ");
             for (auto& arg : command.subcommands[i].args) {
-                dbgprintf("<%s> ", arg.characters());
+                switch (arg.type) {
+                case Token::Bare:
+                    dbgprintf("<%s> ", arg.text.characters());
+                    break;
+                case Token::SingleQuoted:
+                    dbgprintf("'<%s>' ", arg.text.characters());
+                    break;
+                case Token::DoubleQuoted:
+                    dbgprintf("\"<%s>\" ", arg.text.characters());
+                    break;
+                case Token::UnterminatedSingleQuoted:
+                    dbgprintf("\'<%s> ", arg.text.characters());
+                    break;
+                case Token::UnterminatedDoubleQuoted:
+                    dbgprintf("\"<%s> ", arg.text.characters());
+                    break;
+                case Token::Special:
+                    dbgprintf("<%s> ", arg.text.characters());
+                    break;
+                }
             }
             dbgprintf("\n");
             for (auto& redirecton : command.subcommands[i].redirections) {
@@ -1320,12 +1419,27 @@ int main(int argc, char** argv)
 
     cache_path();
 
+    StringBuilder complete_line_builder;
+
     for (;;) {
         auto line = editor.get_line(prompt());
         if (line.is_empty())
             continue;
-        run_command(line);
-        editor.add_to_history(line);
+
+        // FIXME: This might be a bit counter-intuitive, since we put nothing
+        //        between the two lines, even though the user has pressed enter
+        //        but since the LineEditor cannot yet handle literal newlines
+        //        inside the text, we opt to do this the wrong way (for the time being)
+        complete_line_builder.append(line);
+
+        auto complete_or_exit_code = run_command(complete_line_builder.string_view());
+        s_should_continue = complete_or_exit_code.continuation;
+
+        if (!complete_or_exit_code.has_value())
+            continue;
+
+        editor.add_to_history(complete_line_builder.build());
+        complete_line_builder.clear();
     }
 
     return 0;
