@@ -44,7 +44,7 @@ private:
     explicit DownloadWidget(const URL&);
 
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
-    void did_finish(bool success, const ByteBuffer& payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String>& response_headers);
+    void did_finish(bool success, const ByteBuffer& payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers);
 
     URL m_url;
     String m_destination_path;
