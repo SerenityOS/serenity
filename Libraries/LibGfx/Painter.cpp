@@ -992,6 +992,12 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
         if (style == LineStyle::Dotted) {
             for (int y = min_y; y <= max_y; y += thickness * 2)
                 draw_pixel({ x, y }, color, thickness);
+        } else if (style == LineStyle::Dashed) {
+            for (int y = min_y; y <= max_y; y += thickness * 6) {
+                draw_pixel({ x, y }, color, thickness);
+                draw_pixel({ x, min(y + thickness, max_y) }, color, thickness);
+                draw_pixel({ x, min(y + thickness * 2, max_y) }, color, thickness);
+            }
         } else {
             for (int y = min_y; y <= max_y; ++y)
                 draw_pixel({ x, y }, color, thickness);
@@ -1015,6 +1021,12 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
         if (style == LineStyle::Dotted) {
             for (int x = min_x; x <= max_x; x += thickness * 2)
                 draw_pixel({ x, y }, color, thickness);
+        } else if (style == LineStyle::Dashed) {
+            for (int x = min_x; x <= max_x; x += thickness * 6) {
+                draw_pixel({ x, y }, color, thickness);
+                draw_pixel({ min(x + thickness, max_x), y }, color, thickness);
+                draw_pixel({ min(x + thickness * 2, max_x), y }, color, thickness);
+            }
         } else {
             for (int x = min_x; x <= max_x; ++x)
                 draw_pixel({ x, y }, color, thickness);
@@ -1022,7 +1034,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
         return;
     }
 
-    // FIXME: Implement dotted diagonal lines.
+    // FIXME: Implement dotted/dashed diagonal lines.
     ASSERT(style == LineStyle::Solid);
 
     const double adx = abs(point2.x() - point1.x());
