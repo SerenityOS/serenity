@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-void Parser::commit_token(AllowEmptyToken allow_empty)
+void Parser::commit_token(Token::Type type, AllowEmptyToken allow_empty)
 {
     if (allow_empty == AllowEmptyToken::No && m_token.is_empty())
         return;
@@ -38,7 +38,7 @@ void Parser::commit_token(AllowEmptyToken allow_empty)
         m_token.clear_with_capacity();
         return;
     }
-    m_tokens.append(String::copy(m_token));
+    m_tokens.append({ String::copy(m_token), m_position, m_token.size(), type });
     m_token.clear_with_capacity();
 };
 
@@ -82,22 +82,22 @@ bool Parser::in_state(State state) const
 
 Vector<Command> Parser::parse()
 {
-    for (size_t i = 0; i < m_input.length(); ++i) {
+    for (size_t i = 0; i < m_input.length(); ++i, m_position = i) {
         char ch = m_input.characters()[i];
         switch (state()) {
         case State::Free:
             if (ch == ' ') {
-                commit_token();
+                commit_token(Token::Bare);
                 break;
             }
             if (ch == ';') {
-                commit_token();
+                commit_token(Token::Special);
                 commit_subcommand();
                 commit_command();
                 break;
             }
             if (ch == '|') {
-                commit_token();
+                commit_token(Token::Special);
                 if (m_tokens.is_empty()) {
                     fprintf(stderr, "Syntax error: Nothing before pipe (|)\n");
                     return {};
@@ -106,7 +106,7 @@ Vector<Command> Parser::parse()
                 break;
             }
             if (ch == '>') {
-                commit_token();
+                commit_token(Token::Special);
                 begin_redirect_write(STDOUT_FILENO);
 
                 // Search for another > for append.
@@ -114,7 +114,7 @@ Vector<Command> Parser::parse()
                 break;
             }
             if (ch == '<') {
-                commit_token();
+                commit_token(Token::Special);
                 begin_redirect_read(STDIN_FILENO);
                 push_state(State::InRedirectionPath);
                 break;
@@ -163,7 +163,7 @@ Vector<Command> Parser::parse()
                 }
 
                 if (is_multi_fd_redirection) {
-                    commit_token();
+                    commit_token(Token::Special);
 
                     int fd = atoi(&m_input.characters()[i + 1]);
 
@@ -186,7 +186,7 @@ Vector<Command> Parser::parse()
                 if (i != m_input.length() - 1) {
                     char next_ch = m_input.characters()[i + 1];
                     if (next_ch == '>') {
-                        commit_token();
+                        commit_token(Token::Special);
                         begin_redirect_write(ch - '0');
                         ++i;
 
@@ -195,7 +195,7 @@ Vector<Command> Parser::parse()
                         break;
                     }
                     if (next_ch == '<') {
-                        commit_token();
+                        commit_token(Token::Special);
                         begin_redirect_read(ch - '0');
                         ++i;
 
@@ -208,7 +208,7 @@ Vector<Command> Parser::parse()
             break;
         case State::InWriteAppendOrRedirectionPath:
             if (ch == '>') {
-                commit_token();
+                commit_token(Token::Special);
                 pop_state();
                 push_state(State::InRedirectionPath);
                 ASSERT(m_redirections.size());
@@ -222,21 +222,21 @@ Vector<Command> Parser::parse()
             [[fallthrough]];
         case State::InRedirectionPath:
             if (ch == '<') {
-                commit_token();
+                commit_token(Token::Special);
                 begin_redirect_read(STDIN_FILENO);
                 pop_state();
                 push_state(State::InRedirectionPath);
                 break;
             }
             if (ch == '>') {
-                commit_token();
+                commit_token(Token::Special);
                 begin_redirect_read(STDOUT_FILENO);
                 pop_state();
                 push_state(State::InRedirectionPath);
                 break;
             }
             if (ch == '|') {
-                commit_token();
+                commit_token(Token::Special);
                 if (m_tokens.is_empty()) {
                     fprintf(stderr, "Syntax error: Nothing before pipe (|)\n");
                     return {};
@@ -260,7 +260,7 @@ Vector<Command> Parser::parse()
         case State::InSingleQuotes:
             if (ch == '\'') {
                 if (!in_state(State::InRedirectionPath))
-                    commit_token(AllowEmptyToken::Yes);
+                    commit_token(Token::SingleQuoted, AllowEmptyToken::Yes);
                 pop_state();
                 break;
             }
@@ -269,7 +269,7 @@ Vector<Command> Parser::parse()
         case State::InDoubleQuotes:
             if (ch == '\"') {
                 if (!in_state(State::InRedirectionPath))
-                    commit_token(AllowEmptyToken::Yes);
+                    commit_token(Token::DoubleQuoted, AllowEmptyToken::Yes);
                 pop_state();
                 break;
             }
@@ -294,15 +294,18 @@ Vector<Command> Parser::parse()
     }
 
     while (m_state_stack.size() > 1) {
-        auto allow_empty = AllowEmptyToken::No;
-        if (state() == State::InDoubleQuotes || state() == State::InSingleQuotes)
-            allow_empty = AllowEmptyToken::Yes;
-        commit_token(allow_empty);
+        if (state() == State::InDoubleQuotes) {
+            commit_token(Token::UnterminatedDoubleQuoted, AllowEmptyToken::Yes);
+        } else if (state() == State::InSingleQuotes) {
+            commit_token(Token::UnterminatedSingleQuoted, AllowEmptyToken::Yes);
+        } else {
+            commit_token(Token::Bare, AllowEmptyToken::No);
+        }
         pop_state();
     }
     ASSERT(state() == State::Free);
 
-    commit_token();
+    commit_token(Token::Bare);
     commit_subcommand();
     commit_command();
 
