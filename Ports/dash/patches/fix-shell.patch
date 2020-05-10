@@ -1,0 +1,17 @@
+--- dash-0.5.10.2/src/shell.h.orig	Sun Sep 28 04:19:32 2014
++++ dash-0.5.10.2/src/shell.h	Fri Apr 24 18:25:38 2020
+@@ -51,6 +51,14 @@
+ 
+ #include <sys/param.h>
+ 
++#ifndef PATH_MAX
++#define PATH_MAX 4096
++#endif
++
++#ifndef NAME_MAX
++#define NAME_MAX 1024
++#endif
++
+ #ifndef JOBS
+ #define JOBS 1
+ #endif
