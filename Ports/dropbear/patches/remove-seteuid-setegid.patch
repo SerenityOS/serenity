@@ -1,0 +1,96 @@
+Dropbear temporarily drops privilliges to make sure the user has access
+to do various actions (e.g access its authorized_keys file).
+Serenity doesn't implement seteuid/setegid, so we can't drop privilliges and
+regain them this way (at least, not that I know it's possible).
+--- a/svr-authpubkey.c.orig
++++ b/svr-authpubkey.c
+@@ -347,25 +347,8 @@
+ 	snprintf(filename, len + 22, "%s/.ssh/authorized_keys", 
+ 				ses.authstate.pw_dir);
+ 
+-#if DROPBEAR_SVR_MULTIUSER
+-	/* open the file as the authenticating user. */
+-	origuid = getuid();
+-	origgid = getgid();
+-	if ((setegid(ses.authstate.pw_gid)) < 0 ||
+-		(seteuid(ses.authstate.pw_uid)) < 0) {
+-		dropbear_exit("Failed to set euid");
+-	}
+-#endif
+-
+ 	authfile = fopen(filename, "r");
+ 
+-#if DROPBEAR_SVR_MULTIUSER
+-	if ((seteuid(origuid)) < 0 ||
+-		(setegid(origgid)) < 0) {
+-		dropbear_exit("Failed to revert euid");
+-	}
+-#endif
+-
+ 	if (authfile == NULL) {
+ 		goto out;
+ 	}
+--- a/svr-agentfwd.c.orig
++++ b/svr-agentfwd.c
+@@ -151,17 +151,6 @@
+ 
+ 	if (chansess->agentfile != NULL && chansess->agentdir != NULL) {
+ 
+-#if DROPBEAR_SVR_MULTIUSER
+-		/* Remove the dir as the user. That way they can't cause problems except
+-		 * for themselves */
+-		uid = getuid();
+-		gid = getgid();
+-		if ((setegid(ses.authstate.pw_gid)) < 0 ||
+-			(seteuid(ses.authstate.pw_uid)) < 0) {
+-			dropbear_exit("Failed to set euid");
+-		}
+-#endif
+-
+ 		/* 2 for "/" and "\0" */
+ 		len = strlen(chansess->agentdir) + strlen(chansess->agentfile) + 2;
+ 
+@@ -172,13 +161,6 @@
+ 
+ 		rmdir(chansess->agentdir);
+ 
+-#if DROPBEAR_SVR_MULTIUSER
+-		if ((seteuid(uid)) < 0 ||
+-			(setegid(gid)) < 0) {
+-			dropbear_exit("Failed to revert euid");
+-		}
+-#endif
+-
+ 		m_free(chansess->agentfile);
+ 		m_free(chansess->agentdir);
+ 	}
+@@ -220,16 +202,6 @@
+ 	gid_t gid;
+ 	int ret = DROPBEAR_FAILURE;
+ 
+-#if DROPBEAR_SVR_MULTIUSER
+-	/* drop to user privs to make the dir/file */
+-	uid = getuid();
+-	gid = getgid();
+-	if ((setegid(ses.authstate.pw_gid)) < 0 ||
+-		(seteuid(ses.authstate.pw_uid)) < 0) {
+-		dropbear_exit("Failed to set euid");
+-	}
+-#endif
+-
+ 	memset((void*)&addr, 0x0, sizeof(addr));
+ 	addr.sun_family = AF_UNIX;
+ 
+@@ -268,12 +240,6 @@
+ 
+ 
+ out:
+-#if DROPBEAR_SVR_MULTIUSER
+-	if ((seteuid(uid)) < 0 ||
+-		(setegid(gid)) < 0) {
+-		dropbear_exit("Failed to revert euid");
+-	}
+-#endif
+ 	return ret;
+ }
+ 
