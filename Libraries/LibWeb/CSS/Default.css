@@ -52,7 +52,8 @@ h1, h2, h3, h4,
 h5, h6, noframes,
 ol, p, ul, center,
 dir, hr, menu, pre,
-header, footer {
+header, footer, nav, main,
+article, aside, section {
     display: block;
 }
 
