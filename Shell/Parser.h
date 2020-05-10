@@ -36,6 +36,7 @@ struct Token {
         DoubleQuoted,
         UnterminatedSingleQuoted,
         UnterminatedDoubleQuoted,
+        Comment,
         Special,
     };
     String text;
