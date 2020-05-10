@@ -618,16 +618,14 @@ void TerminalWidget::copy()
 
 void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.modifiers() == Mod_Ctrl && event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Left) {
         auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
         if (!attribute.href.is_empty()) {
-            dbg() << "Open URL: _" << attribute.href << "_";
+            dbg() << "Open hyperlinked URL: _" << attribute.href << "_";
             Desktop::Launcher::open(attribute.href);
+            return;
         }
-        return;
-    }
 
-    if (event.button() == GUI::MouseButton::Left) {
         if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
             int start_column = 0;
             int end_column = m_terminal.columns() - 1;
