@@ -1,0 +1,79 @@
+--- dash-0.5.10.2/src/system.c.orig	Sun May 10 01:45:02 2020
++++ dash-0.5.10.2/src/system.c	Sun May 10 01:50:52 2020
+@@ -131,64 +131,64 @@
+ 
+ #ifndef HAVE_ISALPHA
+ int isalnum(int c) {
+-	return _isalnum(c);
++	return (_ctype_[(int)(c)] & (_U | _L | _N));
+ }
+ 
+ 
+ int iscntrl(int c) {
+-	return _iscntrl(c);
++	return (_ctype_[(int)(c)] & (_C));
+ }
+ 
+ 
+ int islower(int c) {
+-	return _islower(c);
++	return ((_ctype_[(int)(c)] & (_U | _L)) == _L);
+ }
+ 
+ 
+ int isspace(int c) {
+-	return _isspace(c);
++	return (_ctype_[(int)(c)] & (_S));
+ }
+ 
+ 
+ int isalpha(int c) {
+-	return _isalpha(c);
++	return (_ctype_[(int)(c)] & (_U | _L));
+ }
+ 
+ 
+ int isdigit(int c) {
+-	return _isdigit(c);
++	return (_ctype_[(int)(c)] & (_N));
+ }
+ 
+ 
+ int isprint(int c) {
+-	return _isprint(c);
++	return (_ctype_[(int)(c)] & (_P | _U | _L | _N | _B));
+ }
+ 
+ 
+ int isupper(int c) {
+-	return _isupper(c);
++	return ((_ctype_[(int)(c)] & (_U | _L)) == _U);
+ }
+ 
+ 
+ #if HAVE_DECL_ISBLANK
+ int isblank(int c) {
+-	return _isblank(c);
++	return (c == ' ' || c == '\t');
+ }
+ #endif
+ 
+ 
+ int isgraph(int c) {
+-	return _isgraph(c);
++	return (_ctype_[(int)(c)] & (_P | _U | _L | _N));
+ }
+ 
+ 
+ int ispunct(int c) {
+-	return _ispunct(c);
++	return (_ctype_[(int)(c)] & (_P));
+ }
+ 
+ 
+ int isxdigit(int c) {
+-	return _isxdigit(c);
++	return (_ctype_[(int)(c)] & (_N | _X));
+ }
+ #endif
+ 
