@@ -43,6 +43,12 @@ class Painter {
 public:
     explicit Painter(Gfx::Bitmap&);
     ~Painter();
+
+    enum class LineStyle {
+        Solid,
+        Dotted,
+    };
+
     void clear_rect(const Rect&, Color);
     void fill_rect(const Rect&, Color);
     void fill_rect_with_dither_pattern(const Rect&, Color, Color);
@@ -55,8 +61,8 @@ public:
     void draw_triangle(const Point&, const Point&, const Point&, Color);
     void draw_ellipse_intersecting(const Rect&, Color, int thickness = 1);
     void set_pixel(const Point&, Color);
-    void draw_line(const Point&, const Point&, Color, int thickness = 1, bool dotted = false);
-    void draw_quadratic_bezier_curve(const Point& control_point, const Point&, const Point&, Color, int thickness = 1, bool dotted = false);
+    void draw_line(const Point&, const Point&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
+    void draw_quadratic_bezier_curve(const Point& control_point, const Point&, const Point&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void draw_scaled_bitmap(const Rect& dst_rect, const Gfx::Bitmap&, const Rect& src_rect);
     void blit(const Point&, const Gfx::Bitmap&, const Rect& src_rect, float opacity = 1.0f);
     void blit_dimmed(const Point&, const Gfx::Bitmap&, const Rect& src_rect);
