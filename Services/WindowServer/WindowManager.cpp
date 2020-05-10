@@ -1252,6 +1252,10 @@ Gfx::Rect WindowManager::maximized_window_rect(const Window& window) const
         return IterationDecision::Break;
     });
 
+    constexpr int tasteful_space_above_maximized_window = 2;
+    rect.set_y(rect.y() + tasteful_space_above_maximized_window);
+    rect.set_height(rect.height() - tasteful_space_above_maximized_window);
+
     return rect;
 }
 
