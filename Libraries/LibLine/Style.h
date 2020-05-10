@@ -25,13 +25,15 @@
  */
 
 #pragma once
+#include <AK/Types.h>
+#include <AK/Vector.h>
 #include <stdlib.h>
 
 namespace Line {
 
 class Style {
 public:
-    enum class Color : int {
+    enum class XtermColor : int {
         Default = 9,
         Black = 0,
         Red,
@@ -41,15 +43,6 @@ public:
         Magenta,
         Cyan,
         White,
-        // TODO: it appears that we do not support these SGR options
-        BrightBlack = 60,
-        BrightRed,
-        BrightGreen,
-        BrightYellow,
-        BrightBlue,
-        BrightMagenta,
-        BrightCyan,
-        BrightWhite,
     };
 
     struct UnderlineTag {
@@ -58,19 +51,46 @@ public:
     };
     struct ItalicTag {
     };
-    struct Background {
-        explicit Background(Color color)
-            : m_color(color)
+    struct Color {
+        explicit Color(XtermColor color)
+            : m_xterm_color(color)
+            , m_is_rgb(false)
         {
         }
-        Color m_color;
+        Color(u8 r, u8 g, u8 b)
+            : m_rgb_color({ r, g, b })
+            , m_is_rgb(true)
+        {
+        }
+
+        XtermColor m_xterm_color { XtermColor::Default };
+        Vector<u8, 3> m_rgb_color;
+        bool m_is_rgb { false };
     };
-    struct Foreground {
-        explicit Foreground(Color color)
-            : m_color(color)
+
+    struct Background : public Color {
+        explicit Background(XtermColor color)
+            : Color(color)
         {
         }
-        Color m_color;
+        Background(u8 r, u8 g, u8 b)
+            : Color(r, g, b)
+        {
+        }
+        String to_vt_escape() const;
+    };
+
+    struct Foreground : public Color {
+        explicit Foreground(XtermColor color)
+            : Color(color)
+        {
+        }
+        Foreground(u8 r, u8 g, u8 b)
+            : Color(r, g, b)
+        {
+        }
+
+        String to_vt_escape() const;
     };
 
     static constexpr UnderlineTag Underline {};
@@ -78,31 +98,31 @@ public:
     static constexpr ItalicTag Italic {};
 
     // prepare for the horror of templates
-    template <typename T, typename... Rest>
+    template<typename T, typename... Rest>
     Style(const T& style_arg, Rest... rest)
         : Style(rest...)
     {
         set(style_arg);
     }
-    Style() {}
+    Style() { }
 
     bool underline() const { return m_underline; }
     bool bold() const { return m_bold; }
     bool italic() const { return m_italic; }
-    Color background() const { return m_background; }
-    Color foreground() const { return m_foreground; }
+    Background background() const { return m_background; }
+    Foreground foreground() const { return m_foreground; }
 
     void set(const ItalicTag&) { m_italic = true; }
     void set(const BoldTag&) { m_bold = true; }
     void set(const UnderlineTag&) { m_underline = true; }
-    void set(const Background& bg) { m_background = bg.m_color; }
-    void set(const Foreground& fg) { m_foreground = fg.m_color; }
+    void set(const Background& bg) { m_background = bg; }
+    void set(const Foreground& fg) { m_foreground = fg; }
 
 private:
     bool m_underline { false };
     bool m_bold { false };
     bool m_italic { false };
-    Color m_background { Color::Default };
-    Color m_foreground { Color::Default };
+    Background m_background { XtermColor::Default };
+    Foreground m_foreground { XtermColor::Default };
 };
 }

@@ -541,10 +541,10 @@ int main(int argc, char** argv)
                 switch (token.type()) {
                 case JS::TokenType::Invalid:
                 case JS::TokenType::Eof:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Red), Line::Style::Underline });
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Underline });
                     break;
                 case JS::TokenType::NumericLiteral:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Magenta) });
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta) });
                     break;
                 case JS::TokenType::StringLiteral:
                 case JS::TokenType::TemplateLiteralStart:
@@ -552,7 +552,7 @@ int main(int argc, char** argv)
                 case JS::TokenType::TemplateLiteralString:
                 case JS::TokenType::RegexLiteral:
                 case JS::TokenType::UnterminatedStringLiteral:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Green), Line::Style::Bold });
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
                     break;
                 case JS::TokenType::BracketClose:
                 case JS::TokenType::BracketOpen:
@@ -609,7 +609,7 @@ int main(int argc, char** argv)
                     break;
                 case JS::TokenType::BoolLiteral:
                 case JS::TokenType::NullLiteral:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Yellow), Line::Style::Bold });
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow), Line::Style::Bold });
                     break;
                 case JS::TokenType::Class:
                 case JS::TokenType::Const:
@@ -627,7 +627,7 @@ int main(int argc, char** argv)
                 case JS::TokenType::Typeof:
                 case JS::TokenType::Var:
                 case JS::TokenType::Void:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Blue), Line::Style::Bold });
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Bold });
                     break;
                 case JS::TokenType::Await:
                 case JS::TokenType::Case:
@@ -642,10 +642,10 @@ int main(int argc, char** argv)
                 case JS::TokenType::Try:
                 case JS::TokenType::While:
                 case JS::TokenType::Yield:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Cyan), Line::Style::Italic });
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan), Line::Style::Italic });
                     break;
                 case JS::TokenType::Identifier:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::White), Line::Style::Bold });
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
                 default:
                     break;
                 }

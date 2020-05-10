@@ -545,7 +545,7 @@ String Editor::get_line(const String& prompt)
 
                         // only apply colour to the selection if something is *actually* added to the buffer
                         if (m_last_shown_suggestion_was_complete && index == current_suggestion_index) {
-                            vt_apply_style({ Style::Foreground(Style::Color::Blue) });
+                            vt_apply_style({ Style::Foreground(Style::XtermColor::Blue) });
                             fflush(stdout);
                         }
 
@@ -973,15 +973,33 @@ Style Editor::find_applicable_style(size_t offset) const
     return {};
 }
 
+String Style::Background::to_vt_escape() const
+{
+    if (m_is_rgb) {
+        return String::format("\033[48;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
+    } else {
+        return String::format("\033[%dm", (u8)m_xterm_color + 40);
+    }
+}
+
+String Style::Foreground::to_vt_escape() const
+{
+    if (m_is_rgb) {
+        return String::format("\033[38;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
+    } else {
+        return String::format("\033[%dm", (u8)m_xterm_color + 30);
+    }
+}
+
 void Editor::vt_apply_style(const Style& style)
 {
     printf(
-        "\033[%d;%d;%d;%d;%dm",
+        "\033[%d;%d;%dm%s%s",
         style.bold() ? 1 : 22,
         style.underline() ? 4 : 24,
         style.italic() ? 3 : 23,
-        (int)style.foreground() + 30,
-        (int)style.background() + 40);
+        style.background().to_vt_escape().characters(),
+        style.foreground().to_vt_escape().characters());
 }
 
 void Editor::vt_clear_lines(size_t count_above, size_t count_below)
