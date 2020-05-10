@@ -1,0 +1,4 @@
+[App]
+Name=LibGfx Demo
+Executable=/bin/LibGfxDemo
+Category=Demos
