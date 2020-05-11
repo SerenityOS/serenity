@@ -215,12 +215,16 @@ private:
 
     void reset()
     {
+        m_cached_buffer_size = 0;
+        m_cached_prompt_valid = false;
+        m_cursor = 0;
+        m_drawn_cursor = 0;
+        m_inline_search_cursor = 0;
+        m_old_prompt_length = m_cached_prompt_length;
         m_origin_x = 0;
         m_origin_y = 0;
-        m_old_prompt_length = m_cached_prompt_length;
+        m_prompt_lines_at_suggestion_initiation = 0;
         m_refresh_needed = true;
-        m_cursor = 0;
-        m_inline_search_cursor = 0;
     }
 
     void refresh_display();
@@ -300,6 +304,7 @@ private:
     size_t m_next_suggestion_index { 0 };
     size_t m_next_suggestion_invariant_offset { 0 };
     size_t m_largest_common_suggestion_prefix_length { 0 };
+    size_t m_last_displayed_suggestion_index { 0 };
 
     bool m_always_refresh { false };
 

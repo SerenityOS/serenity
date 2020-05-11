@@ -503,8 +503,11 @@ String Editor::get_line(const String& prompt)
 
                 if (m_times_tab_pressed > 1 && !m_suggestions.is_empty()) {
                     size_t longest_suggestion_length = 0;
+                    size_t start_index = 0;
 
                     for (auto& suggestion : m_suggestions) {
+                        if (start_index++ <= m_last_displayed_suggestion_index)
+                            continue;
                         longest_suggestion_length = max(longest_suggestion_length, suggestion.text.length());
                     }
 
@@ -529,6 +532,10 @@ String Editor::get_line(const String& prompt)
                     }
                     vt_move_absolute(max_line_count + m_origin_x, 1);
                     for (auto& suggestion : m_suggestions) {
+                        if (index < m_last_displayed_suggestion_index) {
+                            ++index;
+                            continue;
+                        }
                         size_t next_column = num_printed + suggestion.text.length() + longest_suggestion_length + 2;
 
                         if (next_column > m_num_columns) {
@@ -560,15 +567,23 @@ String Editor::get_line(const String& prompt)
                             vt_apply_style({});
                             fflush(stdout);
                         }
+
                         ++index;
                     }
                     m_lines_used_for_last_suggestions = lines_used;
 
-                    // adjust for the case that we scroll up after writing the suggestions
+                    // if we filled the screen, move back the origin
                     if (m_origin_x + lines_used >= m_num_lines) {
                         m_origin_x = m_num_lines - lines_used;
                     }
-                    reposition_cursor();
+
+                    --index;
+                    // cycle pages of suggestions
+                    if (index == current_suggestion_index)
+                        m_last_displayed_suggestion_index = index;
+
+                    if (m_last_displayed_suggestion_index >= m_suggestions.size() - 1)
+                        m_last_displayed_suggestion_index = 0;
                 }
                 if (m_suggestions.size() < 2) {
                     // we have none, or just one suggestion
@@ -579,6 +594,7 @@ String Editor::get_line(const String& prompt)
                     m_last_shown_suggestion_display_length = 0;
                     m_suggestions.clear();
                     m_times_tab_pressed = 0;
+                    m_last_displayed_suggestion_index = 0;
                 }
                 continue;
             }
@@ -594,6 +610,7 @@ String Editor::get_line(const String& prompt)
                 }
                 m_last_shown_suggestion_display_length = 0;
                 m_last_shown_suggestion = String::empty();
+                m_last_displayed_suggestion_index = 0;
                 m_suggestions.clear();
                 suggest(0, 0);
             }
