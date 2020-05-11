@@ -506,7 +506,7 @@ String Editor::get_line(const String& prompt)
                     size_t start_index = 0;
 
                     for (auto& suggestion : m_suggestions) {
-                        if (start_index++ <= m_last_displayed_suggestion_index)
+                        if (start_index++ < m_last_displayed_suggestion_index)
                             continue;
                         longest_suggestion_length = max(longest_suggestion_length, suggestion.text.length());
                     }
