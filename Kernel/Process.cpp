@@ -4610,13 +4610,14 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_
             u64 time_to_wake = (requested_sleep.tv_sec * 1000 + requested_sleep.tv_nsec / 1000000);
             wakeup_time = Thread::current()->sleep_until(time_to_wake);
         } else {
-            u32 ticks_to_sleep = (requested_sleep.tv_sec * 1000 + requested_sleep.tv_nsec / 1000000);
+            u64 ticks_to_sleep = requested_sleep.tv_sec * TimeManagement::the().ticks_per_second();
+            ticks_to_sleep += requested_sleep.tv_nsec * TimeManagement::the().ticks_per_second() / 1000000000;
             if (!ticks_to_sleep)
                 return 0;
             wakeup_time = Thread::current()->sleep(ticks_to_sleep);
         }
         if (wakeup_time > g_uptime) {
-            u32 ticks_left = wakeup_time - g_uptime;
+            u64 ticks_left = wakeup_time - g_uptime;
             if (!is_absolute && params.remaining_sleep) {
                 if (!validate_write_typed(params.remaining_sleep)) {
                     // This can happen because the lock is dropped while
@@ -4629,7 +4630,7 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_
                 memset(&remaining_sleep, 0, sizeof(timespec));
                 remaining_sleep.tv_sec = ticks_left / TimeManagement::the().ticks_per_second();
                 ticks_left -= remaining_sleep.tv_sec * TimeManagement::the().ticks_per_second();
-                remaining_sleep.tv_nsec = ticks_left * 1000000;
+                remaining_sleep.tv_nsec = ticks_left * 1000000000 / TimeManagement::the().ticks_per_second();
                 copy_to_user(params.remaining_sleep, &remaining_sleep);
             }
             return -EINTR;
