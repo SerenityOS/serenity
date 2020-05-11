@@ -2436,7 +2436,7 @@ int Process::sys$usleep(useconds_t usec)
     REQUIRE_PROMISE(stdio);
     if (!usec)
         return 0;
-    u64 wakeup_time = Thread::current()->sleep(usec / 1000);
+    u64 wakeup_time = Thread::current()->sleep(usec * TimeManagement::the().ticks_per_second() / 1000000);
     if (wakeup_time > g_uptime)
         return -EINTR;
     return 0;
