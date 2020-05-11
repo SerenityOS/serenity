@@ -18,6 +18,10 @@ MAKE="make"
 MD5SUM="md5sum"
 NPROC="nproc"
 
+# Each cache entry is 260 MB. 8 entries are 4 GiB.
+# It seems that Travis starts having trouble at 35 entries, so I think this is a good amount.
+KEEP_CACHE_COUNT=8
+
 if [ "$(uname -s)" = "OpenBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
@@ -88,6 +92,16 @@ pushd "$DIR"
         else
             echo "Cache at Cache/ToolchainLocal_${DEPS_HASH}.tar.gz does not exist."
             echo "Will rebuild toolchain from scratch, and save the result."
+            echo "But first, getting rid of old, outdated caches. Current caches:"
+            pushd "Cache/"
+                ls -l
+                # Travis preserves timestamps. Don't ask me why, but it does.
+                # We can exploit this to get an easy approximation of recent-ness.
+                # Our purging algorithm is simple: keep only the newest X entries.
+                ls -t | tail "-n+${KEEP_CACHE_COUNT}" | xargs -r rm -v
+                echo "After deletion:"
+                ls -l
+            popd
         fi
 
     fi
