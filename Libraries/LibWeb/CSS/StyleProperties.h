@@ -55,6 +55,7 @@ public:
     Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
 
     Length length_or_fallback(CSS::PropertyID, const Length& fallback) const;
+    Length length_or_fallback(CSS::PropertyID, const Length& fallback, float reference_for_percentages) const;
     String string_or_fallback(CSS::PropertyID, const StringView& fallback) const;
     Color color_or_fallback(CSS::PropertyID, const Document&, Color fallback) const;
 

@@ -70,6 +70,7 @@ public:
         Initial,
         String,
         Length,
+        Percentage,
         Color,
         Identifier,
         Image,
@@ -85,6 +86,7 @@ public:
     bool is_image() const { return type() == Type::Image; }
     bool is_string() const { return type() == Type::String; }
     bool is_length() const { return type() == Type::Length; }
+    bool is_percentage() const { return type() == Type::Percentage; }
     bool is_position() const { return type() == Type::Position; }
 
     virtual String to_string() const = 0;
@@ -143,6 +145,31 @@ private:
     }
 
     Length m_length;
+};
+
+class PercentageStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<PercentageStyleValue> create(float percentage)
+    {
+        return adopt(*new PercentageStyleValue(percentage));
+    }
+    virtual ~PercentageStyleValue() override {}
+
+    virtual String to_string() const override { return String::format("%g%%", m_percentage); }
+
+    Length to_length(float reference) const { return Length((m_percentage / 100.0f) * reference, Length::Type::Absolute); }
+
+private:
+    virtual Length to_length() const override { return {}; }
+    virtual bool is_auto() const override { return false; }
+
+    explicit PercentageStyleValue(float percentage)
+        : StyleValue(Type::Percentage)
+        , m_percentage(percentage)
+    {
+    }
+
+    float m_percentage { 0 };
 };
 
 class InitialStyleValue final : public StyleValue {

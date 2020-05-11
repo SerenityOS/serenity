@@ -71,6 +71,16 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fal
     return value.value()->to_length();
 }
 
+Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fallback, float reference_for_percentages) const
+{
+    auto value = property(id);
+    if (!value.has_value())
+        return fallback;
+    if (value.value()->is_percentage())
+        return static_cast<const PercentageStyleValue&>(*value.value()).to_length(reference_for_percentages);
+    return value.value()->to_length();
+}
+
 String StyleProperties::string_or_fallback(CSS::PropertyID id, const StringView& fallback) const
 {
     auto value = property(id);
