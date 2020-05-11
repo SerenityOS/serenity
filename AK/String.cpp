@@ -369,6 +369,20 @@ int String::replace(const String& needle, const String& replacement, bool all_oc
     return positions.size();
 }
 
+String String::trim_spaces() const
+{
+    size_t start = 0;
+    size_t end = length();
+    while (characters()[start] == ' ')
+        ++start;
+    while (characters()[end] == ' ') {
+        if (end <= start)
+            return "";
+        --end;
+    }
+    return substring(start, end - start);
+}
+
 String escape_html_entities(const StringView& html)
 {
     StringBuilder builder;
