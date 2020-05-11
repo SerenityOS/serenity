@@ -465,9 +465,9 @@ void TerminalWidget::flush_dirty_lines()
     }
     Gfx::Rect rect;
     for (int i = 0; i < m_terminal.rows(); ++i) {
-        if (m_terminal.line(i).dirty) {
+        if (m_terminal.visible_line(i).dirty) {
             rect = rect.united(row_rect(i));
-            m_terminal.line(i).dirty = false;
+            m_terminal.visible_line(i).dirty = false;
         }
     }
     update(rect);
