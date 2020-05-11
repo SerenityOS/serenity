@@ -70,14 +70,13 @@ int main(int argc, char* argv[])
     dbg() << "Read size " << buffer.size();
 
     auto input = String::copy(buffer);
-    Markdown::Document document;
-    success = document.parse(input);
+    auto document = Markdown::Document::parse(input);
 
-    if (!success) {
+    if (!document) {
         fprintf(stderr, "Error parsing\n");
         return 1;
     }
 
-    String res = html ? document.render_to_html() : document.render_for_terminal();
+    String res = html ? document->render_to_html() : document->render_for_terminal();
     printf("%s", res.characters());
 }
