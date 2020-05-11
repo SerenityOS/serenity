@@ -332,11 +332,11 @@ void PageView::reload()
 
 static RefPtr<Document> create_markdown_document(const ByteBuffer& data, const URL& url)
 {
-    Markdown::Document markdown_document;
-    if (!markdown_document.parse(data))
+    auto markdown_document = Markdown::Document::parse(data);
+    if (!markdown_document)
         return nullptr;
 
-    return parse_html_document(markdown_document.render_to_html(), url);
+    return parse_html_document(markdown_document->render_to_html(), url);
 }
 
 static RefPtr<Document> create_text_document(const ByteBuffer& data, const URL& url)

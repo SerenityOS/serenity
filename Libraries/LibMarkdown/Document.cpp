@@ -75,25 +75,29 @@ static bool helper(Vector<StringView>::ConstIterator& lines, NonnullOwnPtrVector
     return true;
 }
 
-bool Document::parse(const StringView& str)
+RefPtr<Document> Document::parse(const StringView& str)
 {
     const Vector<StringView> lines_vec = str.lines();
     auto lines = lines_vec.begin();
+    auto document = adopt(*new Document);
+    auto& blocks = document->m_blocks;
 
     while (true) {
         if (lines.is_end())
-            return true;
+            break;
 
         if ((*lines).is_empty()) {
             ++lines;
             continue;
         }
 
-        bool any = helper<List>(lines, m_blocks) || helper<Paragraph>(lines, m_blocks) || helper<CodeBlock>(lines, m_blocks) || helper<Heading>(lines, m_blocks);
+        bool any = helper<List>(lines, blocks) || helper<Paragraph>(lines, blocks) || helper<CodeBlock>(lines, blocks) || helper<Heading>(lines, blocks);
 
         if (!any)
-            return false;
+            return nullptr;
     }
+
+    return document;
 }
 
 }
