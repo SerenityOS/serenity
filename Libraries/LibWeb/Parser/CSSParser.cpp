@@ -125,7 +125,10 @@ static Optional<float> try_parse_float(const StringView& string)
 
 static Optional<float> parse_number(const StringView& view)
 {
-    if (view.length() >= 2 && view[view.length() - 2] == 'p' && view[view.length() - 1] == 'x')
+    if (view.ends_with('%'))
+        return parse_number(view.substring_view(0, view.length() - 1));
+
+    if (view.ends_with("px"))
         return parse_number(view.substring_view(0, view.length() - 2));
 
     return try_parse_float(view);
@@ -134,8 +137,11 @@ static Optional<float> parse_number(const StringView& view)
 NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
 {
     auto number = parse_number(string);
-    if (number.has_value())
+    if (number.has_value()) {
+        if (string.ends_with('%'))
+            return PercentageStyleValue::create(number.value());
         return LengthStyleValue::create(Length(number.value(), Length::Type::Absolute));
+    }
     if (string == "inherit")
         return InheritStyleValue::create();
     if (string == "initial")
