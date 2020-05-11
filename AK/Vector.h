@@ -268,12 +268,12 @@ public:
 
     ALWAYS_INLINE const T& at(size_t i) const
     {
-        ASSERT(i >= 0 && i < m_size);
+        ASSERT(i < m_size);
         return data()[i];
     }
     ALWAYS_INLINE T& at(size_t i)
     {
-        ASSERT(i >= 0 && i < m_size);
+        ASSERT(i < m_size);
         return data()[i];
     }
 
