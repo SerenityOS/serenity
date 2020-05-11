@@ -299,7 +299,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
             if (expect_parens && match(TokenType::Equals)) {
                 consume(TokenType::Equals);
                 function_length = parameters.size();
-                default_value = parse_expression(0);
+                default_value = parse_expression(2);
             }
             parameters.append({ parameter_name, default_value });
         } else if (match(TokenType::TripleDot)) {
@@ -340,7 +340,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     if (parse_failed)
         return nullptr;
 
-    if (function_length == -1) 
+    if (function_length == -1)
         function_length = parameters.size();
 
     auto function_body_result = [this]() -> RefPtr<BlockStatement> {
@@ -504,7 +504,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             consume(TokenType::BracketClose);
         } else if (match(TokenType::TripleDot)) {
             consume(TokenType::TripleDot);
-            property_key = create_ast_node<SpreadExpression>(parse_expression(0));
+            property_key = create_ast_node<SpreadExpression>(parse_expression(2));
             property_value = property_key;
             need_colon = false;
             is_spread = true;
@@ -518,7 +518,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             property_value = parse_function_node<FunctionExpression>(false);
         } else if (need_colon || match(TokenType::Colon)) {
             consume(TokenType::Colon);
-            property_value = parse_expression(0);
+            property_value = parse_expression(2);
         }
         auto property = create_ast_node<ObjectProperty>(*property_key, *property_value);
         properties.append(property);
@@ -545,9 +545,9 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
 
         if (match(TokenType::TripleDot)) {
             consume(TokenType::TripleDot);
-            expression = create_ast_node<SpreadExpression>(parse_expression(0));
+            expression = create_ast_node<SpreadExpression>(parse_expression(2));
         } else if (match_expression()) {
-            expression = parse_expression(0);
+            expression = parse_expression(2);
         }
 
         elements.append(expression);
@@ -633,6 +633,15 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
             auto template_literal = parse_template_literal(true);
             expression = create_ast_node<TaggedTemplateLiteral>(move(expression), move(template_literal));
         }
+    }
+    if (match(TokenType::Comma) && min_precedence <= 1) {
+        NonnullRefPtrVector<Expression> expressions;
+        expressions.append(expression);
+        while (match(TokenType::Comma)) {
+            consume();
+            expressions.append(parse_expression(2));
+        }
+        expression = create_ast_node<SequenceExpression>(move(expressions));
     }
     return expression;
 }
@@ -795,9 +804,9 @@ NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expres
     while (match_expression() || match(TokenType::TripleDot)) {
         if (match(TokenType::TripleDot)) {
             consume();
-            arguments.append({ parse_expression(0), true });
+            arguments.append({ parse_expression(2), true });
         } else {
-            arguments.append({ parse_expression(0), false });
+            arguments.append({ parse_expression(2), false });
         }
         if (!match(TokenType::Comma))
             break;
@@ -823,9 +832,9 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
         while (match_expression() || match(TokenType::TripleDot)) {
             if (match(TokenType::TripleDot)) {
                 consume();
-                arguments.append({ parse_expression(0), true });
+                arguments.append({ parse_expression(2), true });
             } else {
-                arguments.append({ parse_expression(0), false });
+                arguments.append({ parse_expression(2), false });
             }
             if (!match(TokenType::Comma))
                 break;
@@ -906,7 +915,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
         if (match(TokenType::Equals)) {
             consume(TokenType::Equals);
             function_length = parameters.size();
-            default_value = parse_expression(0);
+            default_value = parse_expression(2);
         }
         parameters.append({ parameter_name, default_value });
         if (match(TokenType::ParenClose))
@@ -917,7 +926,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
 
     if (function_length == -1)
         function_length = parameters.size();
-        
+
     auto body = parse_block_statement();
     body->add_variables(m_parser_state.m_var_scopes.last());
     return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>());
@@ -950,7 +959,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
         RefPtr<Expression> init;
         if (match(TokenType::Equals)) {
             consume();
-            init = parse_expression(0);
+            init = parse_expression(2);
         }
         declarations.append(create_ast_node<VariableDeclarator>(create_ast_node<Identifier>(move(id)), move(init)));
         if (match(TokenType::Comma)) {
