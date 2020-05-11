@@ -101,10 +101,9 @@ int main(int argc, char* argv[])
 
     printf("%s(%s)\t\tSerenityOS manual\n", name, section);
 
-    Markdown::Document document;
-    bool success = document.parse(source);
-    ASSERT(success);
+    auto document = Markdown::Document::parse(source);
+    ASSERT(document);
 
-    String rendered = document.render_for_terminal();
+    String rendered = document->render_for_terminal();
     printf("%s", rendered.characters());
 }

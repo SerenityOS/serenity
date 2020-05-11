@@ -169,15 +169,14 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-    Markdown::Document man_document;
-    bool success = man_document.parse(file->read_all());
+    auto man_document = Markdown::Document::parse(file->read_all());
 
-    if (!success) {
+    if (!man_document) {
         dbg() << "failed to parse markdown";
         return;
     }
 
-    auto html_text = man_document.render_to_html();
+    auto html_text = man_document->render_to_html();
 
     auto html_document = Web::parse_html_document(html_text);
     if (!html_document) {
