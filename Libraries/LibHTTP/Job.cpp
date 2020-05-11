@@ -117,7 +117,7 @@ void Job::on_socket_connected()
             m_state = State::InHeaders;
             return;
         }
-        if (m_state == State::InHeaders) {
+        if (m_state == State::InHeaders || m_state == State::AfterChunkedEncodingTrailer) {
             if (!can_read_line())
                 return;
             auto line = read_line(PAGE_SIZE);
@@ -127,7 +127,11 @@ void Job::on_socket_connected()
             }
             auto chomped_line = String::copy(line, Chomp);
             if (chomped_line.is_empty()) {
-                m_state = State::InBody;
+                if (m_state == State::AfterChunkedEncodingTrailer) {
+                    return finish_up();
+                } else {
+                    m_state = State::InBody;
+                }
                 return;
             }
             auto parts = chomped_line.split(':');
@@ -151,7 +155,69 @@ void Job::on_socket_connected()
         ASSERT(can_read());
 
         read_while_data_available([&] {
-            auto payload = receive(64 * KB);
+            auto read_size = 64 * KB;
+            if (m_current_chunk_remaining_size.has_value()) {
+            read_chunk_size:;
+                auto remaining = m_current_chunk_remaining_size.value();
+                if (remaining == -1) {
+                    // read size
+                    auto size_data = read_line(PAGE_SIZE);
+                    auto size_lines = StringView { size_data.data(), size_data.size() }.lines();
+                    if (size_lines.size() == 0) {
+                        dbg() << "Job: Reached end of stream";
+                        m_state = State::AfterChunkedEncodingTrailer;
+                        return IterationDecision::Break;
+                    } else {
+                        String size_string = size_lines[0];
+                        if (size_string.starts_with('0')) {
+                            // This is the last chunk
+                            // '0' *[; chunk-ext-name = chunk-ext-value]
+                            // We're going to ignore _all_ chunk extensions
+                            read_size = 0;
+                            m_current_chunk_total_size = 0;
+                            m_current_chunk_remaining_size = 0;
+#ifdef JOB_DEBUG
+                            dbg() << "Job: Received the last chunk with extensions _" << size_string.substring_view(1, size_string.length() - 1) << "_";
+#endif
+                        } else {
+                            char* endptr;
+                            auto size = strtoul(size_string.characters(), &endptr, 16);
+                            if (*endptr) {
+                                // invalid number
+                                deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
+                                return IterationDecision::Break;
+                            }
+                            m_current_chunk_total_size = size;
+                            m_current_chunk_remaining_size = size;
+                            read_size = size;
+#ifdef JOB_DEBUG
+                            dbg() << "Job: Chunk of size _" << size << "_ started";
+#endif
+                        }
+                    }
+                } else {
+                    read_size = remaining;
+#ifdef JOB_DEBUG
+                    dbg() << "Job: Resuming chunk with _" << remaining << "_ bytes left over";
+#endif
+                }
+            } else {
+                auto transfer_encoding = m_headers.get("Transfer-Encoding");
+                if (transfer_encoding.has_value()) {
+                    auto encoding = transfer_encoding.value();
+#ifdef JOB_DEBUG
+                    dbg() << "Job: This content has transfer encoding '" << encoding << "'";
+#endif
+                    if (encoding.equals_ignoring_case("chunked")) {
+                        m_current_chunk_remaining_size = -1;
+                        goto read_chunk_size;
+                    } else {
+                        dbg() << "Job: Unknown transfer encoding _" << encoding << "_, the result will likely be wrong!";
+                    }
+                }
+            }
+
+            auto payload = receive(read_size);
             if (!payload) {
                 if (eof()) {
                     finish_up();
@@ -163,8 +229,34 @@ void Job::on_socket_connected()
                     return IterationDecision::Break;
                 }
             }
+
             m_received_buffers.append(payload);
             m_received_size += payload.size();
+
+            if (m_current_chunk_remaining_size.has_value()) {
+                auto size = m_current_chunk_remaining_size.value() - payload.size();
+#ifdef JOB_DEBUG
+                dbg() << "Job: We have " << size << " bytes left over in this chunk";
+#endif
+                if (size == 0) {
+#ifdef JOB_DEBUG
+                    dbg() << "Job: Finished a chunk of " << m_current_chunk_total_size.value() << " bytes";
+#endif
+                    // we've read everything, now let's get the next chunk
+                    size = -1;
+                    auto line = read_line(PAGE_SIZE);
+#ifdef JOB_DEBUG
+                    dbg() << "Line following (should be empty): _" << line << "_";
+#endif
+                    (void)line;
+
+                    if (m_current_chunk_total_size.value() == 0) {
+                        m_state = State::AfterChunkedEncodingTrailer;
+                        return IterationDecision::Break;
+                    }
+                }
+                m_current_chunk_remaining_size = size;
+            }
 
             auto content_length_header = m_headers.get("Content-Length");
             Optional<u32> content_length {};
