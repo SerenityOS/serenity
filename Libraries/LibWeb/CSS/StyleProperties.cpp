@@ -132,26 +132,34 @@ void StyleProperties::load_font() const
         return {};
     };
 
-    String file_name = look_for_file(String::format("%s%s", font_family.characters(), weight.characters()));
-    if (file_name.is_null() && weight == "")
-        file_name = look_for_file(String::format("%sRegular", font_family.characters()));
+    // FIXME: Do this properly, with quote handling etc.
+    for (auto& font_name : font_family.split(',')) {
+        font_name = font_name.trim_spaces();
+        if (font_name == "monospace")
+            font_name = "Csilla";
 
-    if (file_name.is_null()) {
-        dbg() << "Failed to find a font for family " << font_family << " weight " << font_weight;
+        auto file_name = look_for_file(String::format("%s%s", font_name.characters(), weight.characters()));
+        if (file_name.is_null() && weight == "")
+            file_name = look_for_file(String::format("%sRegular", font_name.characters()));
+        if (file_name.is_null())
+            continue;
 
-        if (font_weight == "bold")
-            m_font = Gfx::Font::default_bold_font();
-        else
-            m_font = Gfx::Font::default_font();
+#ifdef HTML_DEBUG
+        dbg() << "Found font " << file_name << " for family " << font_family << " weight " << font_weight;
+#endif
+        m_font = Gfx::Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
+        FontCache::the().set({ font_name, font_weight }, *m_font);
         return;
     }
 
 #ifdef HTML_DEBUG
-    dbg() << "Found font " << file_name << " for family " << font_family << " weight " << font_weight;
+    dbg() << "Failed to find a font for family " << font_family << " weight " << font_weight;
 #endif
-
-    m_font = Gfx::Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
-    FontCache::the().set({ font_family, font_weight }, *m_font);
+    if (font_weight == "bold")
+        m_font = Gfx::Font::default_bold_font();
+    else
+        m_font = Gfx::Font::default_font();
+    return;
 }
 
 float StyleProperties::line_height() const
