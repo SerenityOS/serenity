@@ -144,6 +144,15 @@ public:
         return m_lines[index - m_history.size()];
     }
 
+    Line& visible_line(size_t index)
+    {
+        return m_lines[index];
+    }
+    const Line& visible_line(size_t index) const
+    {
+        return m_lines[index];
+    }
+
     size_t max_history_size() const { return 500; }
     const NonnullOwnPtrVector<Line>& history() const { return m_history; }
 
