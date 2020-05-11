@@ -24,6 +24,10 @@ if [ "$(uname -s)" = "OpenBSD" ] || [ "$(uname -s)" = "FreeBSD" ]; then
 	MAKE="gmake"
 fi
 
+if [ "$fast_mode" = 1 ] || [ "$(nproc)" -gt 2 ]; then
+    MAKE="$MAKE -j$(nproc)"
+fi
+
 if [ "$fast_mode" = "1" ]; then
     $MAKE -C ../ && \
         $MAKE -C ../ install &&
