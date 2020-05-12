@@ -755,6 +755,10 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
         consume();
+        if (!lhs->is_identifier() && !lhs->is_member_expression() && !lhs->is_call_expression()) {
+            syntax_error("Invalid left-hand side in assignment");
+            return create_ast_node<ErrorExpression>();
+        }
         return create_ast_node<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Period:
         consume();
