@@ -26,11 +26,13 @@
 
 #include "TerminalWidget.h"
 #include "XtermColors.h"
+#include <AK/FileSystemPath.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <Kernel/KeyCode.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -131,17 +133,6 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(copy_action());
     m_context_menu->add_action(paste_action());
-
-    m_context_menu_for_hyperlink = GUI::Menu::construct();
-    m_context_menu_for_hyperlink->add_action(GUI::Action::create("Open URL", [this](auto&) {
-        Desktop::Launcher::open(m_context_menu_href);
-    }));
-    m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
-        GUI::Clipboard::the().set_data(m_context_menu_href);
-    }));
-    m_context_menu_for_hyperlink->add_separator();
-    m_context_menu_for_hyperlink->add_action(copy_action());
-    m_context_menu_for_hyperlink->add_action(paste_action());
 }
 
 TerminalWidget::~TerminalWidget()
@@ -849,6 +840,38 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         m_context_menu->popup(event.screen_position());
     } else {
         m_context_menu_href = m_hovered_href;
+
+        // Ask LaunchServer for a list of programs that can handle the right-clicked URL.
+        auto handlers = Desktop::Launcher::get_handlers_for_url(m_hovered_href);
+        if (handlers.is_empty()) {
+            m_context_menu->popup(event.screen_position());
+            return;
+        }
+
+        m_context_menu_for_hyperlink = GUI::Menu::construct();
+
+        // Go through the list of handlers and see if we can find a nice display name + icon for them.
+        // Then add them to the context menu.
+        // FIXME: Adapt this code when we actually support calling LaunchServer with a specific handler in mind.
+        for (auto& handler : handlers) {
+            auto af_path = String::format("/res/apps/%s.af", FileSystemPath(handler).basename().characters());
+            auto af = Core::ConfigFile::open(af_path);
+            auto handler_name = af->read_entry("App", "Name", handler);
+            auto handler_icon = af->read_entry("Icons", "16x16", {});
+
+            auto icon = Gfx::Bitmap::load_from_file(handler_icon);
+
+            m_context_menu_for_hyperlink->add_action(GUI::Action::create(String::format("Open in %s", handler_name.characters()), move(icon), [this](auto&) {
+                Desktop::Launcher::open(m_context_menu_href);
+            }));
+        }
+        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
+            GUI::Clipboard::the().set_data(m_context_menu_href);
+        }));
+        m_context_menu_for_hyperlink->add_separator();
+        m_context_menu_for_hyperlink->add_action(copy_action());
+        m_context_menu_for_hyperlink->add_action(paste_action());
+
         m_context_menu_for_hyperlink->popup(event.screen_position());
     }
 }
