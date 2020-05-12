@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Vector.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/Event.h>
 #include <LibGUI/WindowType.h>
