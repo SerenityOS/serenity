@@ -29,6 +29,8 @@
 #include "LayerModel.h"
 #include <LibGUI/Painter.h>
 
+//#define PAINT_DEBUG
+
 namespace PaintBrush {
 
 RefPtr<Image> Image::create_with_size(const Gfx::Size& size)
@@ -51,7 +53,9 @@ void Image::paint_into(GUI::Painter& painter, const Gfx::Rect& dest_rect, const 
 {
     for (auto& layer : m_layers) {
         auto target = dest_rect.translated(layer.location());
+#ifdef IMAGE_DEBUG
         dbg() << "Composite layer " << layer.name() << " target: " << target << ", src_rect: " << src_rect;
+#endif
         painter.draw_scaled_bitmap(target, layer.bitmap(), src_rect);
     }
 }
