@@ -59,7 +59,7 @@ void MoveTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& original_
         return;
     auto delta = original_event.position() - m_event_origin;
     m_layer_being_moved->set_location(m_layer_origin.translated(delta));
-    m_editor->update();
+    m_editor->layers_did_change();
 }
 
 void MoveTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)

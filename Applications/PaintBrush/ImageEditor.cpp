@@ -120,4 +120,10 @@ void ImageEditor::set_active_tool(Tool* tool)
         m_active_tool->setup(*this);
 }
 
+void ImageEditor::layers_did_change()
+{
+    static_cast<LayerModel&>(m_image->layer_model()).update_without_invalidating_indexes();
+    update();
+}
+
 }
