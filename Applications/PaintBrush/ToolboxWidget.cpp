@@ -29,6 +29,7 @@
 #include "EllipseTool.h"
 #include "EraseTool.h"
 #include "LineTool.h"
+#include "MoveTool.h"
 #include "PaintableWidget.h"
 #include "PenTool.h"
 #include "PickerTool.h"
@@ -92,6 +93,7 @@ ToolboxWidget::ToolboxWidget()
         };
     };
 
+    add_tool("Move", "move", make<MoveTool>());
     add_tool("Pen", "pen", make<PenTool>());
     add_tool("Bucket Fill", "bucket", make<BucketTool>());
     add_tool("Spray", "spray", make<SprayTool>());

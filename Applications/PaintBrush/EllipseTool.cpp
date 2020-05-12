@@ -56,7 +56,7 @@ void EllipseTool::draw_using(GUI::Painter& painter)
     }
 }
 
-void EllipseTool::on_mousedown(Layer&, GUI::MouseEvent& event)
+void EllipseTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
@@ -70,7 +70,7 @@ void EllipseTool::on_mousedown(Layer&, GUI::MouseEvent& event)
     m_editor->update();
 }
 
-void EllipseTool::on_mouseup(Layer& layer, GUI::MouseEvent& event)
+void EllipseTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() == m_drawing_button) {
         GUI::Painter painter(layer.bitmap());
@@ -80,7 +80,7 @@ void EllipseTool::on_mouseup(Layer& layer, GUI::MouseEvent& event)
     }
 }
 
-void EllipseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event)
+void EllipseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;

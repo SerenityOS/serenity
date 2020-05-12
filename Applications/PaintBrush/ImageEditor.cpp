@@ -79,7 +79,7 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
     if (!m_active_layer || !m_active_tool)
         return;
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
-    m_active_tool->on_mousedown(*m_active_layer, layer_event);
+    m_active_tool->on_mousedown(*m_active_layer, layer_event, event);
 }
 
 void ImageEditor::mousemove_event(GUI::MouseEvent& event)
@@ -87,7 +87,7 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
     if (!m_active_layer || !m_active_tool)
         return;
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
-    m_active_tool->on_mousemove(*m_active_layer, layer_event);
+    m_active_tool->on_mousemove(*m_active_layer, layer_event, event);
 }
 
 void ImageEditor::mouseup_event(GUI::MouseEvent& event)
@@ -95,7 +95,7 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
     if (!m_active_layer || !m_active_tool)
         return;
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
-    m_active_tool->on_mouseup(*m_active_layer, layer_event);
+    m_active_tool->on_mouseup(*m_active_layer, layer_event, event);
 }
 
 void ImageEditor::set_active_layer(Layer* layer)

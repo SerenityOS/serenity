@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,42 +24,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "Tool.h"
-#include <LibGfx/Point.h>
-#include <LibGUI/ActionGroup.h>
+#include "MoveTool.h"
+#include "ImageEditor.h"
+#include "Layer.h"
+#include "PaintableWidget.h"
+#include <LibGfx/Bitmap.h>
 
 namespace PaintBrush {
 
-class EllipseTool final : public Tool {
-public:
-    EllipseTool();
-    virtual ~EllipseTool() override;
+MoveTool::MoveTool()
+{
+}
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
-    virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
-    virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
-    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
-    virtual void on_second_paint(GUI::PaintEvent&) override;
-    virtual void on_keydown(GUI::KeyEvent&) override;
+MoveTool::~MoveTool()
+{
+}
 
-private:
-    enum class Mode {
-        Outline,
-        // FIXME: Add Mode::Fill
-    };
+void MoveTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent& original_event)
+{
+    if (event.button() != GUI::MouseButton::Left)
+        return;
+    if (!layer.rect().contains(event.position()))
+        return;
+    m_layer_being_moved = layer;
+    m_event_origin = original_event.position();
+    m_layer_origin = layer.location();
+}
 
-    virtual const char* class_name() const override { return "EllipseTool"; }
-    void draw_using(GUI::Painter& painter);
+void MoveTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& original_event)
+{
+    if (!m_layer_being_moved)
+        return;
+    auto delta = original_event.position() - m_event_origin;
+    m_layer_being_moved->set_location(m_layer_origin.translated(delta));
+    m_editor->update();
+}
 
-    GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
-    Gfx::Point m_ellipse_start_position;
-    Gfx::Point m_ellipse_end_position;
-    RefPtr<GUI::Menu> m_context_menu;
-    int m_thickness { 1 };
-    GUI::ActionGroup m_thickness_actions;
-    Mode m_mode { Mode::Outline };
-};
+void MoveTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
+{
+    if (event.button() != GUI::MouseButton::Left)
+        return;
+    m_layer_being_moved = nullptr;
+}
 
 }

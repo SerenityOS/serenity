@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,39 +27,24 @@
 #pragma once
 
 #include "Tool.h"
-#include <LibGfx/Point.h>
-#include <LibGUI/ActionGroup.h>
 
 namespace PaintBrush {
 
-class EllipseTool final : public Tool {
+class MoveTool final : public Tool {
 public:
-    EllipseTool();
-    virtual ~EllipseTool() override;
+    MoveTool();
+    virtual ~MoveTool() override;
 
     virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
-    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
-    virtual void on_second_paint(GUI::PaintEvent&) override;
-    virtual void on_keydown(GUI::KeyEvent&) override;
 
 private:
-    enum class Mode {
-        Outline,
-        // FIXME: Add Mode::Fill
-    };
+    virtual const char* class_name() const override { return "MoveTool"; }
 
-    virtual const char* class_name() const override { return "EllipseTool"; }
-    void draw_using(GUI::Painter& painter);
-
-    GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
-    Gfx::Point m_ellipse_start_position;
-    Gfx::Point m_ellipse_end_position;
-    RefPtr<GUI::Menu> m_context_menu;
-    int m_thickness { 1 };
-    GUI::ActionGroup m_thickness_actions;
-    Mode m_mode { Mode::Outline };
+    RefPtr<Layer> m_layer_being_moved;
+    Gfx::Point m_event_origin;
+    Gfx::Point m_layer_origin;
 };
 
 }

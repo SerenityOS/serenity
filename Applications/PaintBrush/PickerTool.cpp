@@ -39,7 +39,7 @@ PickerTool::~PickerTool()
 {
 }
 
-void PickerTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
+void PickerTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (!layer.rect().contains(event.position()))
         return;

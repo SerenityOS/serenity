@@ -53,7 +53,7 @@ Gfx::Rect EraseTool::build_rect(const Gfx::Point& pos, const Gfx::Rect& widget_r
     return Gfx::Rect(ex - eraser_radius, ey - eraser_radius, eraser_size, eraser_size).intersected(widget_rect);
 }
 
-void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
+void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
@@ -63,7 +63,7 @@ void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
     m_editor->update();
 }
 
-void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event)
+void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (!m_editor->rect().contains(event.position()))
         return;

@@ -78,7 +78,7 @@ static void flood_fill(Gfx::Bitmap& bitmap, const Gfx::Point& start_position, Co
     }
 }
 
-void BucketTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
+void BucketTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (!layer.rect().contains(event.position()))
         return;
