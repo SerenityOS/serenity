@@ -60,6 +60,7 @@ public:
     virtual bool is_scope_node() const { return false; }
     virtual bool is_program() const { return false; }
     virtual bool is_variable_declaration() const { return false; }
+    virtual bool is_call_expression() const { return false; }
     virtual bool is_new_expression() const { return false; }
 
 protected:
@@ -583,6 +584,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "CallExpression"; }
+    virtual bool is_call_expression() const override { return true; }
 
     struct ThisAndCallee {
         Value this_value;
@@ -603,6 +605,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "NewExpression"; }
+    virtual bool is_call_expression() const override { return false; }
     virtual bool is_new_expression() const override { return true; }
 };
 
