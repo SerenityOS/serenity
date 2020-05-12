@@ -35,19 +35,19 @@ namespace HTTP {
 class HttpResponse : public Core::NetworkResponse {
 public:
     virtual ~HttpResponse() override;
-    static NonnullRefPtr<HttpResponse> create(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
+    static NonnullRefPtr<HttpResponse> create(int code, HashMap<String, String, CaseInsensitiveStringTraits>&& headers, ByteBuffer&& payload)
     {
         return adopt(*new HttpResponse(code, move(headers), move(payload)));
     }
 
     int code() const { return m_code; }
-    const HashMap<String, String>& headers() const { return m_headers; }
+    const HashMap<String, String, CaseInsensitiveStringTraits>& headers() const { return m_headers; }
 
 private:
-    HttpResponse(int code, HashMap<String, String>&&, ByteBuffer&&);
+    HttpResponse(int code, HashMap<String, String, CaseInsensitiveStringTraits>&&, ByteBuffer&&);
 
     int m_code { 0 };
-    HashMap<String, String> m_headers;
+    HashMap<String, String, CaseInsensitiveStringTraits> m_headers;
 };
 
 }
