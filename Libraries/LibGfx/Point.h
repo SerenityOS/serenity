@@ -179,5 +179,6 @@ const LogStream& operator<<(const LogStream&, const Point&);
 }
 
 namespace IPC {
+bool encode(Encoder&, const Gfx::Point&);
 bool decode(Decoder&, Gfx::Point&);
 }

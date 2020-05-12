@@ -28,6 +28,7 @@
 #include <AK/String.h>
 #include <LibGfx/Size.h>
 #include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 
 namespace Gfx {
 
@@ -44,6 +45,12 @@ const LogStream& operator<<(const LogStream& stream, const Size& value)
 }
 
 namespace IPC {
+
+bool encode(Encoder& encoder, const Gfx::Size& size)
+{
+    encoder << size.width() << size.height();
+    return true;
+}
 
 bool decode(Decoder& decoder, Gfx::Size& size)
 {

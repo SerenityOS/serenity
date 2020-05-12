@@ -28,6 +28,7 @@
 #include <AK/String.h>
 #include <LibGfx/Point.h>
 #include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 
 namespace Gfx {
 
@@ -44,6 +45,12 @@ const LogStream& operator<<(const LogStream& stream, const Point& value)
 }
 
 namespace IPC {
+
+bool encode(Encoder& encoder, const Gfx::Point& point)
+{
+    encoder << point.x() << point.y();
+    return true;
+}
 
 bool decode(Decoder& decoder, Gfx::Point& point)
 {

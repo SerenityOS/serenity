@@ -311,26 +311,7 @@ int main(int argc, char** argv)
                     initial_value = "false";
                 out() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
 
-                if (parameter.type == "Vector<Gfx::Rect>") {
-                    out() << "        u64 " << parameter.name << "_size = 0;";
-                    out() << "        stream >> " << parameter.name << "_size;";
-                    out() << "        for (size_t i = 0; i < " << parameter.name << "_size; ++i) {";
-                    out() << "            Gfx::Rect rect;";
-                    out() << "            if (!decoder.decode(rect))";
-                    out() << "                return nullptr;";
-                    out() << "            " << parameter.name << ".append(move(rect));";
-                    out() << "        }";
-                } else if (parameter.type == "Vector<i32>") {
-                    out() << "        u64 " << parameter.name << "_size = 0;";
-                    out() << "        stream >> " << parameter.name << "_size;";
-                    out() << "        for (size_t i = 0; i < " << parameter.name << "_size; ++i) {";
-                    out() << "            i32 value;";
-                    out() << "            stream >> value;";
-                    out() << "            if (stream.handle_read_failure())";
-                    out() << "                return nullptr;";
-                    out() << "            " << parameter.name << ".append(value);";
-                    out() << "        }";
-                } else if (parameter.type.starts_with("Optional<")) {
+                if (parameter.type.starts_with("Optional<")) {
                     out() << "        bool has_value = false;";
                     out() << "        stream >> has_value;";
                     out() << "        if (has_value) {";
@@ -364,30 +345,6 @@ int main(int argc, char** argv)
             for (auto& parameter : parameters) {
                 if (parameter.type == "Gfx::Color") {
                     out() << "        stream << m_" << parameter.name << ".value();";
-                } else if (parameter.type == "Gfx::Size") {
-                    out() << "        stream << m_" << parameter.name << ".width();";
-                    out() << "        stream << m_" << parameter.name << ".height();";
-                } else if (parameter.type == "Gfx::Point") {
-                    out() << "        stream << m_" << parameter.name << ".x();";
-                    out() << "        stream << m_" << parameter.name << ".y();";
-                } else if (parameter.type == "Gfx::Rect") {
-                    out() << "        stream << m_" << parameter.name << ".x();";
-                    out() << "        stream << m_" << parameter.name << ".y();";
-                    out() << "        stream << m_" << parameter.name << ".width();";
-                    out() << "        stream << m_" << parameter.name << ".height();";
-                } else if (parameter.type == "Vector<Gfx::Rect>") {
-                    out() << "        stream << (u64)m_" << parameter.name << ".size();";
-                    out() << "        for (auto& rect : m_" << parameter.name << ") {";
-                    out() << "            stream << rect.x();";
-                    out() << "            stream << rect.y();";
-                    out() << "            stream << rect.width();";
-                    out() << "            stream << rect.height();";
-                    out() << "        }";
-                } else if (parameter.type == "Vector<i32>") {
-                    out() << "        stream << (u64)m_" << parameter.name << ".size();";
-                    out() << "        for (auto value : m_" << parameter.name << ") {";
-                    out() << "            stream << value;";
-                    out() << "        }";
                 } else if (parameter.type == "Gfx::ShareableBitmap") {
                     out() << "        stream << m_" << parameter.name << ".shbuf_id();";
                     out() << "        stream << m_" << parameter.name << ".width();";

@@ -26,15 +26,19 @@
 
 #pragma once
 
+#include <AK/BufferStream.h>
 #include <AK/Forward.h>
+#include <AK/NumericLimits.h>
+#include <AK/String.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
 
 namespace IPC {
 
 template<typename T>
-bool decode(BufferStream&, T&)
+inline bool decode(Decoder&, T&)
 {
+    ASSERT_NOT_REACHED();
     return false;
 }
 
@@ -62,6 +66,21 @@ public:
     bool decode(T& value)
     {
         return IPC::decode(*this, value);
+    }
+
+    template<typename T>
+    bool decode(Vector<T>& vector)
+    {
+        u64 size;
+        if (!decode(size) || size > NumericLimits<i32>::max())
+            return false;
+        for (size_t i = 0; i < size; ++i) {
+            T value;
+            if (!decode(value))
+                return false;
+            vector.append(move(value));
+        }
+        return true;
     }
 
 private:
