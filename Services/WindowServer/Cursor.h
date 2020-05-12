@@ -40,6 +40,7 @@ enum class StandardCursor {
     ResizeDiagonalBLTR,
     Hand,
     Drag,
+    Move,
 };
 
 class Cursor : public RefCounted<Cursor> {

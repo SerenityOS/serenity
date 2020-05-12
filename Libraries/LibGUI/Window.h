@@ -47,6 +47,8 @@ enum class StandardCursor {
     ResizeDiagonalTLBR,
     ResizeDiagonalBLTR,
     Hand,
+    Drag,
+    Move,
 };
 
 class Window : public Core::Object {
