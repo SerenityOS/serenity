@@ -26,7 +26,12 @@
 
 #pragma once
 
-#include "PaintableWidget.h"
+#include <LibGUI/Event.h>
+
+namespace PaintBrush {
+
+class ImageEditor;
+class Layer;
 
 class Tool {
 public:
@@ -34,18 +39,20 @@ public:
 
     virtual const char* class_name() const = 0;
 
-    virtual void on_mousedown(GUI::MouseEvent&) {}
-    virtual void on_mousemove(GUI::MouseEvent&) {}
-    virtual void on_mouseup(GUI::MouseEvent&) {}
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&) {}
+    virtual void on_mousemove(Layer&, GUI::MouseEvent&) {}
+    virtual void on_mouseup(Layer&, GUI::MouseEvent&) {}
     virtual void on_contextmenu(GUI::ContextMenuEvent&) {}
     virtual void on_second_paint(GUI::PaintEvent&) {}
     virtual void on_keydown(GUI::KeyEvent&) {}
     virtual void on_keyup(GUI::KeyEvent&) {}
 
-    void clear() { m_widget = nullptr; }
-    void setup(PaintableWidget& widget) { m_widget = widget.make_weak_ptr(); }
+    void clear() { m_editor = nullptr; }
+    void setup(ImageEditor&);
 
 protected:
     Tool();
-    WeakPtr<PaintableWidget> m_widget;
+    WeakPtr<ImageEditor> m_editor;
 };
+
+}

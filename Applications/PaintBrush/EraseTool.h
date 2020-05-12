@@ -29,18 +29,21 @@
 #include "Tool.h"
 #include <LibGUI/ActionGroup.h>
 #include <LibGfx/Point.h>
+#include <LibGfx/Forward.h>
+
+namespace PaintBrush {
 
 class EraseTool final : public Tool {
 public:
     EraseTool();
     virtual ~EraseTool() override;
 
-    virtual void on_mousedown(GUI::MouseEvent&) override;
-    virtual void on_mousemove(GUI::MouseEvent&) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mousemove(Layer&, GUI::MouseEvent&) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
 
 private:
-    Color get_color() const;
+    Gfx::Color get_color() const;
     virtual const char* class_name() const override { return "EraseTool"; }
     Gfx::Rect build_rect(const Gfx::Point& pos, const Gfx::Rect& widget_rect);
     RefPtr<GUI::Menu> m_context_menu;
@@ -49,3 +52,5 @@ private:
     int m_thickness { 1 };
     GUI::ActionGroup m_thickness_actions;
 };
+
+}

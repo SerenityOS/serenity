@@ -25,12 +25,16 @@
  */
 
 #include "BucketTool.h"
+#include "ImageEditor.h"
+#include "Layer.h"
 #include "PaintableWidget.h"
 #include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <stdio.h>
+#include <LibGfx/Rect.h>
+
+namespace PaintBrush {
 
 BucketTool::BucketTool()
 {
@@ -57,7 +61,7 @@ static void flood_fill(Gfx::Bitmap& bitmap, const Gfx::Point& start_position, Co
 
         if (bitmap.get_pixel<Gfx::BitmapFormat::RGBA32>(position.x(), position.y()) != target_color)
             continue;
-        
+
         bitmap.set_pixel<Gfx::BitmapFormat::RGBA32>(position.x(), position.y(), fill_color);
 
         if (position.x() != 0)
@@ -74,15 +78,17 @@ static void flood_fill(Gfx::Bitmap& bitmap, const Gfx::Point& start_position, Co
     }
 }
 
-void BucketTool::on_mousedown(GUI::MouseEvent& event)
+void BucketTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
 {
-    if (!m_widget->rect().contains(event.position()))
+    if (!layer.rect().contains(event.position()))
         return;
 
-    GUI::Painter painter(m_widget->bitmap());
-    auto target_color = m_widget->bitmap().get_pixel(event.x(), event.y());
+    GUI::Painter painter(layer.bitmap());
+    auto target_color = layer.bitmap().get_pixel(event.x(), event.y());
 
-    flood_fill(m_widget->bitmap(), event.position(), target_color, m_widget->color_for(event));
+    flood_fill(layer.bitmap(), event.position(), target_color, PaintableWidget::the().color_for(event));
 
-    m_widget->update();
+    m_editor->update();
+}
+
 }

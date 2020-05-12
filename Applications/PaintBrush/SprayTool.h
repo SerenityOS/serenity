@@ -31,14 +31,16 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Painter.h>
 
+namespace PaintBrush {
+
 class SprayTool final : public Tool {
 public:
     SprayTool();
     virtual ~SprayTool() override;
 
-    virtual void on_mousedown(GUI::MouseEvent&) override;
-    virtual void on_mouseup(GUI::MouseEvent&) override;
-    virtual void on_mousemove(GUI::MouseEvent&) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mouseup(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mousemove(Layer&, GUI::MouseEvent&) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
 
 private:
@@ -51,3 +53,5 @@ private:
     GUI::ActionGroup m_thickness_actions;
     int m_thickness { 1 };
 };
+
+}

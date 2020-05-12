@@ -30,14 +30,16 @@
 #include <LibGfx/Point.h>
 #include <LibGUI/ActionGroup.h>
 
+namespace PaintBrush {
+
 class PenTool final : public Tool {
 public:
     PenTool();
     virtual ~PenTool() override;
 
-    virtual void on_mousedown(GUI::MouseEvent&) override;
-    virtual void on_mousemove(GUI::MouseEvent&) override;
-    virtual void on_mouseup(GUI::MouseEvent&) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mousemove(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mouseup(Layer&, GUI::MouseEvent&) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
 
 private:
@@ -48,3 +50,5 @@ private:
     int m_thickness { 1 };
     GUI::ActionGroup m_thickness_actions;
 };
+
+}

@@ -27,17 +27,19 @@
 #pragma once
 
 #include "Tool.h"
-#include <LibGfx/Point.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGfx/Point.h>
+
+namespace PaintBrush {
 
 class LineTool final : public Tool {
 public:
     LineTool();
     virtual ~LineTool() override;
 
-    virtual void on_mousedown(GUI::MouseEvent&) override;
-    virtual void on_mousemove(GUI::MouseEvent&) override;
-    virtual void on_mouseup(GUI::MouseEvent&) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mousemove(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mouseup(Layer&, GUI::MouseEvent&) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
     virtual void on_second_paint(GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
@@ -54,3 +56,5 @@ private:
     int m_thickness { 1 };
     bool m_constrain_angle { false };
 };
+
+}

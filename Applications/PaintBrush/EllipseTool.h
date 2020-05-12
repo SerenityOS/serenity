@@ -30,14 +30,16 @@
 #include <LibGfx/Point.h>
 #include <LibGUI/ActionGroup.h>
 
+namespace PaintBrush {
+
 class EllipseTool final : public Tool {
 public:
     EllipseTool();
     virtual ~EllipseTool() override;
 
-    virtual void on_mousedown(GUI::MouseEvent&) override;
-    virtual void on_mousemove(GUI::MouseEvent&) override;
-    virtual void on_mouseup(GUI::MouseEvent&) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mousemove(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mouseup(Layer&, GUI::MouseEvent&) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
     virtual void on_second_paint(GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
@@ -59,3 +61,5 @@ private:
     GUI::ActionGroup m_thickness_actions;
     Mode m_mode { Mode::Outline };
 };
+
+}

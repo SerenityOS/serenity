@@ -25,10 +25,14 @@
  */
 
 #include "PenTool.h"
+#include "ImageEditor.h"
+#include "Layer.h"
 #include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+
+namespace PaintBrush {
 
 PenTool::PenTool()
 {
@@ -38,36 +42,36 @@ PenTool::~PenTool()
 {
 }
 
-void PenTool::on_mousedown(GUI::MouseEvent& event)
+void PenTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
 
-    GUI::Painter painter(m_widget->bitmap());
-    painter.draw_line(event.position(), event.position(), m_widget->color_for(event), m_thickness);
-    m_widget->update();
+    GUI::Painter painter(layer.bitmap());
+    painter.draw_line(event.position(), event.position(), PaintableWidget::the().color_for(event), m_thickness);
+    m_editor->update();
     m_last_drawing_event_position = event.position();
 }
 
-void PenTool::on_mouseup(GUI::MouseEvent& event)
+void PenTool::on_mouseup(Layer&, GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right)
         m_last_drawing_event_position = { -1, -1 };
 }
 
-void PenTool::on_mousemove(GUI::MouseEvent& event)
+void PenTool::on_mousemove(Layer& layer, GUI::MouseEvent& event)
 {
-    if (!m_widget->rect().contains(event.position()))
+    if (!layer.rect().contains(event.position()))
         return;
 
     if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
-        GUI::Painter painter(m_widget->bitmap());
+        GUI::Painter painter(layer.bitmap());
 
         if (m_last_drawing_event_position != Gfx::Point(-1, -1))
-            painter.draw_line(m_last_drawing_event_position, event.position(), m_widget->color_for(event), m_thickness);
+            painter.draw_line(m_last_drawing_event_position, event.position(), PaintableWidget::the().color_for(event), m_thickness);
         else
-            painter.draw_line(event.position(), event.position(), m_widget->color_for(event), m_thickness);
-        m_widget->update();
+            painter.draw_line(event.position(), event.position(), PaintableWidget::the().color_for(event), m_thickness);
+        m_editor->update();
 
         m_last_drawing_event_position = event.position();
     }
@@ -92,4 +96,6 @@ void PenTool::on_contextmenu(GUI::ContextMenuEvent& event)
         insert_action(4);
     }
     m_context_menu->popup(event.screen_position());
+}
+
 }

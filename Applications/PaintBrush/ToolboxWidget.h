@@ -28,9 +28,19 @@
 
 #include <LibGUI/Frame.h>
 
+namespace PaintBrush {
+
+class Tool;
+
 class ToolboxWidget final : public GUI::Frame {
     C_OBJECT(ToolboxWidget)
 public:
-    explicit ToolboxWidget();
     virtual ~ToolboxWidget() override;
+
+    Function<void(Tool*)> on_tool_selection;
+
+private:
+    explicit ToolboxWidget();
 };
+
+}

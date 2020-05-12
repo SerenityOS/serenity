@@ -28,13 +28,17 @@
 
 #include "Tool.h"
 
+namespace PaintBrush {
+
 class BucketTool final : public Tool {
 public:
     BucketTool();
     virtual ~BucketTool() override;
 
-    virtual void on_mousedown(GUI::MouseEvent&) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "BucketTool"; }
 };
+
+}

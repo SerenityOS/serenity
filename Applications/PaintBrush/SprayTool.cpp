@@ -25,15 +25,19 @@
  */
 
 #include "SprayTool.h"
+#include "ImageEditor.h"
+#include "Layer.h"
 #include "PaintableWidget.h"
 #include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <stdio.h>
 #include <LibM/math.h>
+#include <stdio.h>
+
+namespace PaintBrush {
 
 SprayTool::SprayTool()
 {
@@ -55,10 +59,14 @@ static double nrand()
 
 void SprayTool::paint_it()
 {
-    GUI::Painter painter(m_widget->bitmap());
-    auto& bitmap = m_widget->bitmap();
+    auto* layer = m_editor->active_layer();
+    if (!layer)
+        return;
+
+    auto& bitmap = layer->bitmap();
+    GUI::Painter painter(bitmap);
     ASSERT(bitmap.bpp() == 32);
-    m_widget->update();
+    m_editor->update();
     const double minimal_radius = 10;
     const double base_radius = minimal_radius * m_thickness;
     for (int i = 0; i < 100 + (nrand() * 800); i++) {
@@ -74,18 +82,18 @@ void SprayTool::paint_it()
     }
 }
 
-void SprayTool::on_mousedown(GUI::MouseEvent& event)
+void SprayTool::on_mousedown(Layer&, GUI::MouseEvent& event)
 {
-    if (!m_widget->rect().contains(event.position()))
+    if (!m_editor->rect().contains(event.position()))
         return;
 
-    m_color = m_widget->color_for(event);
+    m_color = PaintableWidget::the().color_for(event);
     m_last_pos = event.position();
     m_timer->start();
     paint_it();
 }
 
-void SprayTool::on_mousemove(GUI::MouseEvent& event)
+void SprayTool::on_mousemove(Layer&, GUI::MouseEvent& event)
 {
     m_last_pos = event.position();
     if (m_timer->is_active()) {
@@ -94,7 +102,7 @@ void SprayTool::on_mousemove(GUI::MouseEvent& event)
     }
 }
 
-void SprayTool::on_mouseup(GUI::MouseEvent&)
+void SprayTool::on_mouseup(Layer&, GUI::MouseEvent&)
 {
     m_timer->stop();
 }
@@ -120,3 +128,4 @@ void SprayTool::on_contextmenu(GUI::ContextMenuEvent& event)
     m_context_menu->popup(event.screen_position());
 }
 
+}
