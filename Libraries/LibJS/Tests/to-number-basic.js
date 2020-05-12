@@ -27,9 +27,8 @@ try {
     assert(-42 === -42);
     assert(+1.23 === 1.23);
     assert(-1.23 === -1.23);
-    // FIXME: returns NaN
-    // assert(+"1.23" === 1.23)
-    // assert(-"1.23" === -1.23)
+    assert(+"1.23" === 1.23)
+    assert(-"1.23" === -1.23)
     assert(+"Infinity" === Infinity);
     assert(+"+Infinity" === Infinity);
     assert(+"-Infinity" === -Infinity);
