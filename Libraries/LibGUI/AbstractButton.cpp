@@ -134,7 +134,7 @@ void AbstractButton::mouseup_event(MouseEvent& event)
         m_being_pressed = false;
         update();
         if (was_being_pressed && !was_auto_repeating)
-            click();
+            click(event.modifiers());
     }
     Widget::mouseup_event(event);
 }
@@ -154,7 +154,7 @@ void AbstractButton::leave_event(Core::Event&)
 void AbstractButton::keydown_event(KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Return) {
-        click();
+        click(event.modifiers());
         event.accept();
         return;
     }

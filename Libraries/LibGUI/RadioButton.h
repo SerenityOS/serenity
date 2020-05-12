@@ -35,7 +35,7 @@ class RadioButton : public AbstractButton {
 public:
     virtual ~RadioButton() override;
 
-    virtual void click() override;
+    virtual void click(unsigned modifiers = 0) override;
 
 protected:
     explicit RadioButton(const StringView& text = {});

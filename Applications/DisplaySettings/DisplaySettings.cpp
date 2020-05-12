@@ -146,7 +146,7 @@ void DisplaySettingsWidget::create_frame()
     button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     button.set_preferred_size(22, 22);
-    button.on_click = [this]() {
+    button.on_click = [this](auto) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath("Select wallpaper from file system.");
 
         if (!open_path.has_value())
@@ -240,7 +240,7 @@ void DisplaySettingsWidget::create_frame()
     ok_button.set_text("OK");
     ok_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     ok_button.set_preferred_size(60, 22);
-    ok_button.on_click = [this] {
+    ok_button.on_click = [this](auto) {
         send_settings_to_window_server();
         GUI::Application::the().quit();
     };
@@ -249,7 +249,7 @@ void DisplaySettingsWidget::create_frame()
     cancel_button.set_text("Cancel");
     cancel_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     cancel_button.set_preferred_size(60, 22);
-    cancel_button.on_click = [] {
+    cancel_button.on_click = [](auto) {
         GUI::Application::the().quit();
     };
 
@@ -257,7 +257,7 @@ void DisplaySettingsWidget::create_frame()
     apply_button.set_text("Apply");
     apply_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     apply_button.set_preferred_size(60, 22);
-    apply_button.on_click = [this] {
+    apply_button.on_click = [this](auto) {
         send_settings_to_window_server();
     };
 }

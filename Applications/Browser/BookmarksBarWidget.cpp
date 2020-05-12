@@ -62,7 +62,7 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
     m_additional->set_text(">");
     m_additional->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_additional->set_preferred_size(14, 20);
-    m_additional->on_click = [&] {
+    m_additional->on_click = [this](auto) {
         if (m_additional_menu) {
             m_additional_menu->popup(m_additional->relative_position().translated(relative_position().translated(m_additional->window()->position())));
         }
@@ -123,7 +123,7 @@ void BookmarksBarWidget::did_update_model()
         button.set_preferred_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
 
-        button.on_click = [title, url, this] {
+        button.on_click = [title, url, this](auto) {
             if (on_bookmark_click)
                 on_bookmark_click(title, url);
         };
@@ -166,7 +166,7 @@ void BookmarksBarWidget::update_content_size()
             m_additional_menu->add_action(GUI::Action::create(bookmark.text(),
                 Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"),
                 [&](auto&) {
-                    bookmark.on_click();
+                    bookmark.on_click(0);
                 }));
         }
     }

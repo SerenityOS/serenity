@@ -149,16 +149,16 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
 
     button_widget.layout()->add_spacer();
 
-    make_button("OK", button_widget).on_click = [this] {
+    make_button("OK", button_widget).on_click = [this](auto) {
         if (apply_changes())
             close();
     };
-    make_button("Cancel", button_widget).on_click = [this] {
+    make_button("Cancel", button_widget).on_click = [this](auto) {
         close();
     };
 
     m_apply_button = make_button("Apply", button_widget);
-    m_apply_button->on_click = [this] { apply_changes(); };
+    m_apply_button->on_click = [this](auto) { apply_changes(); };
     m_apply_button->set_enabled(false);
 
     update();

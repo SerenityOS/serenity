@@ -52,7 +52,7 @@ public:
     bool is_hovered() const { return m_hovered; }
     bool is_being_pressed() const { return m_being_pressed; }
 
-    virtual void click() = 0;
+    virtual void click(unsigned modifiers = 0) = 0;
     virtual bool accepts_focus() const override { return true; }
     virtual bool is_uncheckable() const { return true; }
 

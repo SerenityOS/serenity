@@ -64,7 +64,7 @@ CalendarWidget::CalendarWidget()
     m_prev_month_button->set_font(Gfx::Font::default_bold_font());
     m_prev_month_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_prev_month_button->set_preferred_size(40, 40);
-    m_prev_month_button->on_click = [this] {
+    m_prev_month_button->on_click = [this](auto) {
         int m_target_month = m_calendar->selected_month() - 1;
         int m_target_year = m_calendar->selected_year();
 
@@ -79,7 +79,7 @@ CalendarWidget::CalendarWidget()
     m_next_month_button->set_font(Gfx::Font::default_bold_font());
     m_next_month_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_next_month_button->set_preferred_size(40, 40);
-    m_next_month_button->on_click = [this] {
+    m_next_month_button->on_click = [this](auto) {
         int m_target_month = m_calendar->selected_month() + 1;
         int m_target_year = m_calendar->selected_year();
 
@@ -100,7 +100,7 @@ CalendarWidget::CalendarWidget()
     m_add_event_button = top_right_container.add<GUI::Button>("Add Event");
     m_add_event_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_add_event_button->set_preferred_size(100, 25);
-    m_add_event_button->on_click = [this] {
+    m_add_event_button->on_click = [this](auto) {
         show_add_event_window();
     };
 

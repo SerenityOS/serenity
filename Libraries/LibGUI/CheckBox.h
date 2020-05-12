@@ -35,7 +35,7 @@ class CheckBox : public AbstractButton {
 public:
     virtual ~CheckBox() override;
 
-    virtual void click() override;
+    virtual void click(unsigned modifiers = 0) override;
 
 private:
     explicit CheckBox(const StringView& = {});

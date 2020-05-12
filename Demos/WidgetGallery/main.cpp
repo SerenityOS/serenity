@@ -220,7 +220,7 @@ int main(int argc, char** argv)
     auto& show_buton = tab_msgbox.add<GUI::Button>("Show");
     show_buton.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     show_buton.set_preferred_size(0, 20);
-    show_buton.on_click = [&]() {
+    show_buton.on_click = [&](auto) {
         GUI::MessageBox::show(content_textbox.text(), title_textbox.text(), msg_box_type, msg_box_input_type, window);
     };
 

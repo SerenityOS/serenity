@@ -134,7 +134,7 @@ void MessageBox::build()
         button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
         button.set_preferred_size(96, 0);
         button.set_text(label);
-        button.on_click = [this, label, result] {
+        button.on_click = [this, label, result](auto) {
             done(result);
         };
     };
