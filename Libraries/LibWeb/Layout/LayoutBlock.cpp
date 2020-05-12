@@ -315,12 +315,12 @@ void LayoutBlock::compute_position()
         box_model().offset().left = style.length_or_fallback(CSS::PropertyID::Left, zero_value, containing_block.width());
     }
 
-    box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.height());
-    box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.height());
+    box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
+    box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
     box_model().border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
     box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
-    box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.height());
-    box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.height());
+    box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
+    box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
 
     float position_x = box_model().margin().left.to_px()
         + box_model().border().left.to_px()
