@@ -26,41 +26,33 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/Vector.h>
-#include <LibGUI/Forward.h>
-#include <LibGfx/Forward.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/Size.h>
+#include <LibGUI/Model.h>
 
 namespace PaintBrush {
 
-class Layer;
+class Image;
 
-class Image : public RefCounted<Image> {
+class LayerModel final : public GUI::Model {
 public:
-    static RefPtr<Image> create_with_size(const Gfx::Size&);
+    enum Column {
+        Name,
+        Size,
+        Location,
+        __Count
+    };
 
-    size_t layer_count() const { return m_layers.size(); }
-    const Layer& layer(size_t index) const { return m_layers.at(index); }
+    static NonnullRefPtr<LayerModel> create(Image&);
 
-    const Gfx::Size& size() const { return m_size; }
-    Gfx::Rect rect() const { return { {}, m_size }; }
-
-    void add_layer(NonnullRefPtr<Layer>);
-
-    void paint_into(GUI::Painter&, const Gfx::Rect& dest_rect, const Gfx::Rect& src_rect);
-
-    GUI::Model& layer_model();
+    virtual int row_count(const GUI::ModelIndex&) const override;
+    virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
+    virtual String column_name(int) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
+    virtual void update() override { did_update(); }
 
 private:
-    explicit Image(const Gfx::Size&);
+    explicit LayerModel(Image&);
 
-    Gfx::Size m_size;
-    NonnullRefPtrVector<Layer> m_layers;
-    RefPtr<GUI::Model> m_layer_model;
+    Image& m_image;
 };
 
 }

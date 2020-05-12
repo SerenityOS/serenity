@@ -26,6 +26,7 @@
 
 #include "Image.h"
 #include "Layer.h"
+#include "LayerModel.h"
 #include <LibGUI/Painter.h>
 
 namespace PaintBrush {
@@ -61,6 +62,13 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
         ASSERT(&existing_layer != layer.ptr());
     }
     m_layers.append(move(layer));
+}
+
+GUI::Model& Image::layer_model()
+{
+    if (!m_layer_model)
+        m_layer_model = LayerModel::create(*this);
+    return *m_layer_model;
 }
 
 }

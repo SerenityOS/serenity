@@ -38,6 +38,8 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Model.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
@@ -78,6 +80,14 @@ int main(int argc, char** argv)
     paintable_widget.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     paintable_widget.set_preferred_size(0, 0);
     vertical_container.add<PaletteWidget>(paintable_widget);
+
+    auto& right_panel = horizontal_container.add<GUI::Widget>();
+    right_panel.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    right_panel.set_preferred_size(230, 0);
+    right_panel.set_layout<GUI::VerticalBoxLayout>();
+
+    auto& layer_table_view = right_panel.add<GUI::TableView>();
+    layer_table_view.set_size_columns_to_fit_content(true);
 
     window->show();
 
@@ -127,6 +137,15 @@ int main(int argc, char** argv)
     image->add_layer(*fg_layer_2);
     fg_layer_2->set_location({ 300, 350 });
     fg_layer_2->bitmap().fill(Color::Yellow);
+
+    layer_table_view.set_model(image->layer_model());
+    layer_table_view.on_selection_change = [&] {
+        auto index = layer_table_view.selection().first();
+        if (index.is_valid())
+            image_editor.set_active_layer(const_cast<PaintBrush::Layer*>(&image->layer(index.row())));
+        else
+            image_editor.set_active_layer(nullptr);
+    };
 
     image_editor.set_image(image);
 
