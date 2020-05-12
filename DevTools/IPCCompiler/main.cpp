@@ -343,13 +343,7 @@ int main(int argc, char** argv)
             out() << "        stream << endpoint_magic();";
             out() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
-                if (parameter.type == "Gfx::Color") {
-                    out() << "        stream << m_" << parameter.name << ".value();";
-                } else if (parameter.type == "Gfx::ShareableBitmap") {
-                    out() << "        stream << m_" << parameter.name << ".shbuf_id();";
-                    out() << "        stream << m_" << parameter.name << ".width();";
-                    out() << "        stream << m_" << parameter.name << ".height();";
-                } else if (parameter.type.starts_with("Optional<")) {
+                if (parameter.type.starts_with("Optional<")) {
                     out() << "        stream << m_" << parameter.name << ".has_value();";
                     out() << "        if (m_" << parameter.name << ".has_value())";
                     out() << "            stream << m_" << parameter.name << ".value();";
