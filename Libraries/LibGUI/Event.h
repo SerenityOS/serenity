@@ -278,6 +278,8 @@ public:
     u8 modifiers() const { return m_modifiers; }
     String text() const { return m_text; }
 
+    String to_string() const;
+
 private:
     friend class WindowServerConnection;
     int m_key { 0 };
