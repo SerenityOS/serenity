@@ -54,18 +54,22 @@ Lexer::Lexer(StringView source)
         s_keywords.set("delete", TokenType::Delete);
         s_keywords.set("do", TokenType::Do);
         s_keywords.set("else", TokenType::Else);
+        s_keywords.set("enum", TokenType::Enum);
+        s_keywords.set("export", TokenType::Export);
+        s_keywords.set("extends", TokenType::Extends);
         s_keywords.set("false", TokenType::BoolLiteral);
         s_keywords.set("finally", TokenType::Finally);
         s_keywords.set("for", TokenType::For);
         s_keywords.set("function", TokenType::Function);
         s_keywords.set("if", TokenType::If);
+        s_keywords.set("import", TokenType::Import);
         s_keywords.set("in", TokenType::In);
         s_keywords.set("instanceof", TokenType::Instanceof);
-        s_keywords.set("interface", TokenType::Interface);
         s_keywords.set("let", TokenType::Let);
         s_keywords.set("new", TokenType::New);
         s_keywords.set("null", TokenType::NullLiteral);
         s_keywords.set("return", TokenType::Return);
+        s_keywords.set("super", TokenType::Super);
         s_keywords.set("switch", TokenType::Switch);
         s_keywords.set("this", TokenType::This);
         s_keywords.set("throw", TokenType::Throw);
@@ -75,6 +79,7 @@ Lexer::Lexer(StringView source)
         s_keywords.set("var", TokenType::Var);
         s_keywords.set("void", TokenType::Void);
         s_keywords.set("while", TokenType::While);
+        s_keywords.set("with", TokenType::With);
         s_keywords.set("yield", TokenType::Yield);
     }
 
