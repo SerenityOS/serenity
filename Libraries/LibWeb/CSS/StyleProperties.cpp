@@ -144,7 +144,7 @@ void StyleProperties::load_font() const
 
     // FIXME: Do this properly, with quote handling etc.
     for (auto& font_name : font_family.split(',')) {
-        font_name = font_name.trim_spaces();
+        font_name = font_name.trim_whitespace();
         if (font_name == "monospace")
             font_name = "Csilla";
 
