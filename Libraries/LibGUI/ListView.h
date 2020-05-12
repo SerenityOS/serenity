@@ -53,6 +53,9 @@ public:
     void set_model_column(int column) { m_model_column = column; }
 
     virtual void select_all() override;
+
+    void move_selection(int steps);
+
 private:
     ListView();
 

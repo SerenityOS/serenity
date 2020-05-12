@@ -35,9 +35,28 @@
 
 namespace GUI {
 
+class ComboBoxEditor final : public TextEditor {
+    C_OBJECT(ComboBoxEditor);
+
+public:
+    Function<void(int delta)> on_mousewheel;
+
+private:
+    ComboBoxEditor()
+        : TextEditor(TextEditor::SingleLine)
+    {
+    }
+
+    virtual void mousewheel_event(MouseEvent& event) override
+    {
+        if (on_mousewheel)
+            on_mousewheel(event.wheel_delta());
+    }
+};
+
 ComboBox::ComboBox()
 {
-    m_editor = add<TextBox>();
+    m_editor = add<ComboBoxEditor>();
     m_editor->on_change = [this] {
         if (on_change)
             on_change(m_editor->text(), m_list_view->selection().first());
@@ -73,6 +92,10 @@ ComboBox::ComboBox()
             if (on_change)
                 on_change(m_editor->text(), index);
         });
+    };
+
+    m_editor->on_mousewheel = [this](int delta) {
+        m_list_view->move_selection(delta);
     };
 }
 

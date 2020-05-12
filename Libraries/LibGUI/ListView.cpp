@@ -182,6 +182,25 @@ int ListView::item_count() const
     return model()->row_count();
 }
 
+void ListView::move_selection(int steps)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+    ModelIndex new_index;
+    if (!selection().is_empty()) {
+        auto old_index = selection().first();
+        new_index = model.index(old_index.row() + steps, old_index.column());
+    } else {
+        new_index = model.index(0, 0);
+    }
+    if (model.is_valid(new_index)) {
+        selection().set(new_index);
+        scroll_into_view(new_index, Orientation::Vertical);
+        update();
+    }
+}
+
 void ListView::keydown_event(KeyEvent& event)
 {
     if (!model())
@@ -192,33 +211,11 @@ void ListView::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            new_index = model.index(old_index.row() - 1, old_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_selection(-1);
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            new_index = model.index(old_index.row() + 1, old_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_selection(1);
         return;
     }
     if (event.key() == KeyCode::Key_PageUp) {

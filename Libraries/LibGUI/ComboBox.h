@@ -30,6 +30,8 @@
 
 namespace GUI {
 
+class ComboBoxEditor;
+
 class ComboBox : public Widget {
     C_OBJECT(ComboBox)
 public:
@@ -62,7 +64,7 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
 
 private:
-    RefPtr<TextBox> m_editor;
+    RefPtr<ComboBoxEditor> m_editor;
     RefPtr<Button> m_open_button;
     RefPtr<Window> m_list_window;
     RefPtr<ListView> m_list_view;
