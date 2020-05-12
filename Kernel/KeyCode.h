@@ -28,115 +28,121 @@
 
 #include <AK/Types.h>
 
-enum KeyCode : u8 {
-    Key_Invalid = 0,
-    Key_Escape,
-    Key_Tab,
-    Key_Backspace,
-    Key_Return,
-    Key_Insert,
-    Key_Delete,
-    Key_PrintScreen,
-    Key_SysRq,
-    Key_Home,
-    Key_End,
-    Key_Left,
-    Key_Up,
-    Key_Right,
-    Key_Down,
-    Key_PageUp,
-    Key_PageDown,
-    Key_LeftShift,
-    Key_RightShift,
-    Key_Control,
-    Key_Alt,
-    Key_CapsLock,
-    Key_NumLock,
-    Key_ScrollLock,
-    Key_F1,
-    Key_F2,
-    Key_F3,
-    Key_F4,
-    Key_F5,
-    Key_F6,
-    Key_F7,
-    Key_F8,
-    Key_F9,
-    Key_F10,
-    Key_F11,
-    Key_F12,
-    Key_Space,
-    Key_ExclamationPoint,
-    Key_DoubleQuote,
-    Key_Hashtag,
-    Key_Dollar,
-    Key_Percent,
-    Key_Ampersand,
-    Key_Apostrophe,
-    Key_LeftParen,
-    Key_RightParen,
-    Key_Asterisk,
-    Key_Plus,
-    Key_Comma,
-    Key_Minus,
-    Key_Period,
-    Key_Slash,
-    Key_0,
-    Key_1,
-    Key_2,
-    Key_3,
-    Key_4,
-    Key_5,
-    Key_6,
-    Key_7,
-    Key_8,
-    Key_9,
-    Key_Colon,
-    Key_Semicolon,
-    Key_LessThan,
-    Key_Equal,
-    Key_GreaterThan,
-    Key_QuestionMark,
-    Key_AtSign,
-    Key_A,
-    Key_B,
-    Key_C,
-    Key_D,
-    Key_E,
-    Key_F,
-    Key_G,
-    Key_H,
-    Key_I,
-    Key_J,
-    Key_K,
-    Key_L,
-    Key_M,
-    Key_N,
-    Key_O,
-    Key_P,
-    Key_Q,
-    Key_R,
-    Key_S,
-    Key_T,
-    Key_U,
-    Key_V,
-    Key_W,
-    Key_X,
-    Key_Y,
-    Key_Z,
-    Key_LeftBracket,
-    Key_RightBracket,
-    Key_Backslash,
-    Key_Circumflex,
-    Key_Underscore,
-    Key_LeftBrace,
-    Key_RightBrace,
-    Key_Pipe,
-    Key_Tilde,
-    Key_Backtick,
-    Key_Logo,
+#define ENUMERATE_KEY_CODES                          \
+    __ENUMERATE_KEY_CODE(Invalid, "Invalid")         \
+    __ENUMERATE_KEY_CODE(Escape, "Escape")           \
+    __ENUMERATE_KEY_CODE(Tab, "Tab")                 \
+    __ENUMERATE_KEY_CODE(Backspace, "Backspace")     \
+    __ENUMERATE_KEY_CODE(Return, "Return")           \
+    __ENUMERATE_KEY_CODE(Insert, "Insert")           \
+    __ENUMERATE_KEY_CODE(Delete, "Delete")           \
+    __ENUMERATE_KEY_CODE(PrintScreen, "PrintScreen") \
+    __ENUMERATE_KEY_CODE(SysRq, "SysRq")             \
+    __ENUMERATE_KEY_CODE(Home, "Home")               \
+    __ENUMERATE_KEY_CODE(End, "End")                 \
+    __ENUMERATE_KEY_CODE(Left, "Left")               \
+    __ENUMERATE_KEY_CODE(Up, "Up")                   \
+    __ENUMERATE_KEY_CODE(Right, "Right")             \
+    __ENUMERATE_KEY_CODE(Down, "Down")               \
+    __ENUMERATE_KEY_CODE(PageUp, "PageUp")           \
+    __ENUMERATE_KEY_CODE(PageDown, "PageDown")       \
+    __ENUMERATE_KEY_CODE(LeftShift, "LeftShift")     \
+    __ENUMERATE_KEY_CODE(RightShift, "RightShift")   \
+    __ENUMERATE_KEY_CODE(Control, "Ctrl")            \
+    __ENUMERATE_KEY_CODE(Alt, "Alt")                 \
+    __ENUMERATE_KEY_CODE(CapsLock, "CapsLock")       \
+    __ENUMERATE_KEY_CODE(NumLock, "NumLock")         \
+    __ENUMERATE_KEY_CODE(ScrollLock, "ScrollLock")   \
+    __ENUMERATE_KEY_CODE(F1, "F1")                   \
+    __ENUMERATE_KEY_CODE(F2, "F2")                   \
+    __ENUMERATE_KEY_CODE(F3, "F3")                   \
+    __ENUMERATE_KEY_CODE(F4, "F4")                   \
+    __ENUMERATE_KEY_CODE(F5, "F5")                   \
+    __ENUMERATE_KEY_CODE(F6, "F6")                   \
+    __ENUMERATE_KEY_CODE(F7, "F7")                   \
+    __ENUMERATE_KEY_CODE(F8, "F8")                   \
+    __ENUMERATE_KEY_CODE(F9, "F9")                   \
+    __ENUMERATE_KEY_CODE(F10, "F10")                 \
+    __ENUMERATE_KEY_CODE(F11, "F11")                 \
+    __ENUMERATE_KEY_CODE(F12, "F12")                 \
+    __ENUMERATE_KEY_CODE(Space, "Space")             \
+    __ENUMERATE_KEY_CODE(ExclamationPoint, "!")      \
+    __ENUMERATE_KEY_CODE(DoubleQuote, "\"")          \
+    __ENUMERATE_KEY_CODE(Hashtag, "#")               \
+    __ENUMERATE_KEY_CODE(Dollar, "$")                \
+    __ENUMERATE_KEY_CODE(Percent, "%")               \
+    __ENUMERATE_KEY_CODE(Ampersand, "&")             \
+    __ENUMERATE_KEY_CODE(Apostrophe, "'")            \
+    __ENUMERATE_KEY_CODE(LeftParen, "(")             \
+    __ENUMERATE_KEY_CODE(RightParen, ")")            \
+    __ENUMERATE_KEY_CODE(Asterisk, "*")              \
+    __ENUMERATE_KEY_CODE(Plus, "+")                  \
+    __ENUMERATE_KEY_CODE(Comma, ",")                 \
+    __ENUMERATE_KEY_CODE(Minus, "-")                 \
+    __ENUMERATE_KEY_CODE(Period, ".")                \
+    __ENUMERATE_KEY_CODE(Slash, "/")                 \
+    __ENUMERATE_KEY_CODE(0, "0")                     \
+    __ENUMERATE_KEY_CODE(1, "1")                     \
+    __ENUMERATE_KEY_CODE(2, "2")                     \
+    __ENUMERATE_KEY_CODE(3, "3")                     \
+    __ENUMERATE_KEY_CODE(4, "4")                     \
+    __ENUMERATE_KEY_CODE(5, "5")                     \
+    __ENUMERATE_KEY_CODE(6, "6")                     \
+    __ENUMERATE_KEY_CODE(7, "7")                     \
+    __ENUMERATE_KEY_CODE(8, "8")                     \
+    __ENUMERATE_KEY_CODE(9, "9")                     \
+    __ENUMERATE_KEY_CODE(Colon, ":")                 \
+    __ENUMERATE_KEY_CODE(Semicolon, ";")             \
+    __ENUMERATE_KEY_CODE(LessThan, "<")              \
+    __ENUMERATE_KEY_CODE(Equal, "=")                 \
+    __ENUMERATE_KEY_CODE(GreaterThan, ">")           \
+    __ENUMERATE_KEY_CODE(QuestionMark, "?")          \
+    __ENUMERATE_KEY_CODE(AtSign, "@")                \
+    __ENUMERATE_KEY_CODE(A, "A")                     \
+    __ENUMERATE_KEY_CODE(B, "B")                     \
+    __ENUMERATE_KEY_CODE(C, "C")                     \
+    __ENUMERATE_KEY_CODE(D, "D")                     \
+    __ENUMERATE_KEY_CODE(E, "E")                     \
+    __ENUMERATE_KEY_CODE(F, "F")                     \
+    __ENUMERATE_KEY_CODE(G, "G")                     \
+    __ENUMERATE_KEY_CODE(H, "H")                     \
+    __ENUMERATE_KEY_CODE(I, "I")                     \
+    __ENUMERATE_KEY_CODE(J, "J")                     \
+    __ENUMERATE_KEY_CODE(K, "K")                     \
+    __ENUMERATE_KEY_CODE(L, "L")                     \
+    __ENUMERATE_KEY_CODE(M, "M")                     \
+    __ENUMERATE_KEY_CODE(N, "N")                     \
+    __ENUMERATE_KEY_CODE(O, "O")                     \
+    __ENUMERATE_KEY_CODE(P, "P")                     \
+    __ENUMERATE_KEY_CODE(Q, "Q")                     \
+    __ENUMERATE_KEY_CODE(R, "R")                     \
+    __ENUMERATE_KEY_CODE(S, "S")                     \
+    __ENUMERATE_KEY_CODE(T, "T")                     \
+    __ENUMERATE_KEY_CODE(U, "U")                     \
+    __ENUMERATE_KEY_CODE(V, "V")                     \
+    __ENUMERATE_KEY_CODE(W, "W")                     \
+    __ENUMERATE_KEY_CODE(X, "X")                     \
+    __ENUMERATE_KEY_CODE(Y, "Y")                     \
+    __ENUMERATE_KEY_CODE(Z, "Z")                     \
+    __ENUMERATE_KEY_CODE(LeftBracket, "[")           \
+    __ENUMERATE_KEY_CODE(RightBracket, "]")          \
+    __ENUMERATE_KEY_CODE(Backslash, "\\")            \
+    __ENUMERATE_KEY_CODE(Circumflex, "^")            \
+    __ENUMERATE_KEY_CODE(Underscore, "_")            \
+    __ENUMERATE_KEY_CODE(LeftBrace, "{")             \
+    __ENUMERATE_KEY_CODE(RightBrace, "}")            \
+    __ENUMERATE_KEY_CODE(Pipe, "|")                  \
+    __ENUMERATE_KEY_CODE(Tilde, "~")                 \
+    __ENUMERATE_KEY_CODE(Backtick, "`")              \
+    __ENUMERATE_KEY_CODE(Logo, "Logo")
 
-    Key_Shift = Key_LeftShift,
+enum KeyCode : u8 {
+#define __ENUMERATE_KEY_CODE(name, ui_name) Key_##name,
+    ENUMERATE_KEY_CODES
+#undef __ENUMERATE_KEY_CODE
+
+        Key_Shift
+    = Key_LeftShift,
 };
 const int key_code_count = Key_Logo;
 
@@ -164,3 +170,16 @@ struct KeyEvent {
     unsigned modifiers() const { return flags & Mod_Mask; }
     bool is_press() const { return flags & Is_Press; }
 };
+
+inline const char* key_code_to_string(KeyCode key)
+{
+    switch (key) {
+#define __ENUMERATE_KEY_CODE(name, ui_name) \
+    case Key_##name:                        \
+        return ui_name;
+        ENUMERATE_KEY_CODES
+#undef __ENUMERATE_KEY_CODE
+    default:
+        return nullptr;
+    }
+}
