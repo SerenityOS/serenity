@@ -25,6 +25,7 @@
  */
 
 #include "Launcher.h"
+#include <AK/FileSystemPath.h>
 #include <LibCore/ConfigFile.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -55,6 +56,14 @@ void Launcher::load_config(const Core::ConfigFile& cfg)
     for (auto key : cfg.keys("Protocol")) {
         m_protocol_handlers.set(key.to_lowercase(), cfg.read_entry("Protocol", key));
     }
+}
+
+Vector<String> Launcher::handlers_for_url(const URL& url)
+{
+    if (url.protocol() == "file")
+        return handlers_for_path(url.path());
+
+    return { m_protocol_handlers.get(url.protocol()).value_or(m_protocol_handlers.get("*").value_or({})) };
 }
 
 bool Launcher::open_url(const URL& url)
@@ -96,6 +105,22 @@ bool Launcher::open_with_handlers(const HashMap<String, String>& handlers, const
     // Absolute worst case, try the provided default
 
     return spawn(default_program, argument);
+}
+
+Vector<String> Launcher::handlers_for_path(const String& path)
+{
+    struct stat st;
+    if (stat(path.characters(), &st) < 0) {
+        perror("stat");
+        return {};
+    }
+
+    // TODO: Make directory opening configurable
+    if (S_ISDIR(st.st_mode))
+        return { "/bin/FileManager" };
+
+    auto extension = FileSystemPath(path).extension().to_lowercase();
+    return { m_file_handlers.get(extension).value_or(m_file_handlers.get("*").value_or({})) };
 }
 
 bool Launcher::open_file_url(const URL& url)

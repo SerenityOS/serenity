@@ -39,11 +39,13 @@ public:
 
     void load_config(const Core::ConfigFile&);
     bool open_url(const URL&);
+    Vector<String> handlers_for_url(const URL&);
 
 private:
     HashMap<String, String> m_protocol_handlers;
     HashMap<String, String> m_file_handlers;
 
+    Vector<String> handlers_for_path(const String&);
     bool open_file_url(const URL&);
     bool open_with_handlers(const HashMap<String, String>& handlers, const String key, const String argument, const String default_program);
 };

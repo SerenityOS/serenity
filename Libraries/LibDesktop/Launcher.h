@@ -30,9 +30,14 @@
 
 namespace Desktop {
 
+struct Opener {
+
+};
+
 class Launcher {
 public:
     static bool open(const URL&);
+    static Vector<String> get_handlers_for_url(const URL&);
 };
 
 }
