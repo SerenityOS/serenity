@@ -77,6 +77,15 @@ public:
     }
 
     template<typename T>
+    Encoder& operator<<(const Optional<T>& optional)
+    {
+        *this << optional.has_value();
+        if (optional.has_value())
+            *this << optional.value();
+        return *this;
+    }
+
+    template<typename T>
     void encode(const T& value)
     {
         IPC::encode(*this, value);

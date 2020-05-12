@@ -83,6 +83,23 @@ public:
         return true;
     }
 
+    template<typename T>
+    bool decode(Optional<T>& optional)
+    {
+        bool has_value;
+        if (!decode(has_value))
+            return false;
+        if (!has_value) {
+            optional = {};
+            return true;
+        }
+        T value;
+        if (!decode(value))
+            return false;
+        optional = move(value);
+        return true;
+    }
+
 private:
     BufferStream& m_stream;
 };
