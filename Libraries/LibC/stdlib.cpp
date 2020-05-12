@@ -929,6 +929,9 @@ long long strtoll(const char* str, char** endptr, int base)
         return 0;
     }
 
+    if (endptr)
+        *endptr = parse_ptr;
+
     if (overflow) {
         errno = ERANGE;
         if (sign != Sign::Negative) {
@@ -1002,6 +1005,9 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
             *endptr = const_cast<char*>(str);
         return 0;
     }
+
+    if (endptr)
+        *endptr = parse_ptr;
 
     if (overflow) {
         errno = ERANGE;
