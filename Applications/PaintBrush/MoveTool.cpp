@@ -28,6 +28,7 @@
 #include "ImageEditor.h"
 #include "Layer.h"
 #include "PaintableWidget.h"
+#include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
 namespace PaintBrush {
@@ -49,6 +50,7 @@ void MoveTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEven
     m_layer_being_moved = layer;
     m_event_origin = original_event.position();
     m_layer_origin = layer.location();
+    m_editor->window()->set_override_cursor(GUI::StandardCursor::Move);
 }
 
 void MoveTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& original_event)
@@ -65,6 +67,7 @@ void MoveTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
     if (event.button() != GUI::MouseButton::Left)
         return;
     m_layer_being_moved = nullptr;
+    m_editor->window()->set_override_cursor(GUI::StandardCursor::None);
 }
 
 }
