@@ -42,6 +42,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
+//#define KEYBOARD_SHORTCUTS_DEBUG
+
 namespace GUI {
 
 WindowServerConnection& WindowServerConnection::the()
@@ -134,16 +136,32 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
 
     Action* action = nullptr;
 
+#ifdef KEYBOARD_SHORTCUTS_DEBUG
+    dbg() << "Looking up action for " << key_event->to_string();
+#endif
+
     if (auto* focused_widget = window->focused_widget()) {
-        for (auto* widget = focused_widget; widget && !action; widget = widget->parent_widget())
-            action = focused_widget->action_for_key_event(*key_event);
+        for (auto* widget = focused_widget; widget && !action; widget = widget->parent_widget()) {
+            action = widget->action_for_key_event(*key_event);
+#ifdef KEYBOARD_SHORTCUTS_DEBUG
+            dbg() << "  > Focused widget " << *widget << " gave action: " << action;
+#endif
+        }
     }
 
-    if (!action)
+    if (!action) {
         action = window->action_for_key_event(*key_event);
+#ifdef KEYBOARD_SHORTCUTS_DEBUG
+        dbg() << "  > Asked window " << *window << ", got action: " << action;
+#endif
+    }
 
-    if (!action)
+    if (!action) {
         action = Application::the().action_for_key_event(*key_event);
+#ifdef KEYBOARD_SHORTCUTS_DEBUG
+        dbg() << "  > Asked application, got action: " << action;
+#endif
+    }
 
     if (action && action->is_enabled()) {
         action->activate();
