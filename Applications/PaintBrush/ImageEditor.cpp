@@ -58,14 +58,13 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     }
 
     if (m_active_layer) {
-        painter.draw_rect(m_active_layer->rect().inflated(2, 2), Color::Black);
+        painter.draw_rect(m_active_layer->relative_rect().inflated(2, 2), Color::Black);
     }
 }
 
 static GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent& original_event, const Layer& layer)
 {
     auto position_in_active_layer_coordinates = original_event.position().translated(-layer.location());
-    dbg() << "adjusted: " << position_in_active_layer_coordinates;
     return {
         static_cast<GUI::Event::Type>(original_event.type()),
         position_in_active_layer_coordinates, original_event.buttons(),
