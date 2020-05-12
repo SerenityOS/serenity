@@ -32,6 +32,7 @@ namespace PaintBrush {
 
 class Image;
 class Layer;
+class Tool;
 
 class ImageEditor final : public GUI::Frame {
     C_OBJECT(ImageEditor);
@@ -45,13 +46,21 @@ public:
     Layer* active_layer() { return m_active_layer; }
     void set_active_layer(Layer*);
 
+    Tool* active_tool() { return m_active_tool; }
+    void set_active_tool(Tool*);
+
 private:
     ImageEditor();
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
 
     RefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
+
+    Tool* m_active_tool { nullptr };
 };
 
 }

@@ -54,29 +54,6 @@ PaintableWidget::~PaintableWidget()
 {
 }
 
-void PaintableWidget::paint_event(GUI::PaintEvent& event)
-{
-    GUI::Painter painter(*this);
-
-    painter.add_clip_rect(event.rect());
-    painter.fill_rect_with_checkerboard(m_bitmap->rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
-    painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
-}
-
-void PaintableWidget::set_tool(Tool* tool)
-{
-    if (m_tool)
-        m_tool->clear();
-    m_tool = tool;
-    if (m_tool)
-        m_tool->setup(*this);
-}
-
-Tool* PaintableWidget::tool()
-{
-    return m_tool;
-}
-
 Color PaintableWidget::color_for(GUI::MouseButton button) const
 {
     if (button == GUI::MouseButton::Left)
@@ -93,52 +70,6 @@ Color PaintableWidget::color_for(const GUI::MouseEvent& event) const
     if (event.buttons() & GUI::MouseButton::Right)
         return m_secondary_color;
     ASSERT_NOT_REACHED();
-}
-
-void PaintableWidget::mousedown_event(GUI::MouseEvent& event)
-{
-    if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
-        if (m_tool)
-            m_tool->on_mousedown(event);
-    }
-    GUI::Widget::mousedown_event(event);
-}
-
-void PaintableWidget::mouseup_event(GUI::MouseEvent& event)
-{
-    if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
-        if (m_tool)
-            m_tool->on_mouseup(event);
-    }
-    GUI::Widget::mouseup_event(event);
-}
-
-void PaintableWidget::mousemove_event(GUI::MouseEvent& event)
-{
-    if (m_tool)
-        m_tool->on_mousemove(event);
-    GUI::Widget::mousemove_event(event);
-}
-
-void PaintableWidget::second_paint_event(GUI::PaintEvent& event)
-{
-    if (m_tool)
-        m_tool->on_second_paint(event);
-    GUI::Widget::second_paint_event(event);
-}
-
-void PaintableWidget::keydown_event(GUI::KeyEvent& event)
-{
-    if (m_tool)
-        m_tool->on_keydown(event);
-    GUI::Widget::keydown_event(event);
-}
-
-void PaintableWidget::keyup_event(GUI::KeyEvent& event)
-{
-    if (m_tool)
-        m_tool->on_keyup(event);
-    GUI::Widget::keyup_event(event);
 }
 
 void PaintableWidget::set_primary_color(Color color)

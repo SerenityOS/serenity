@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
     horizontal_container.layout()->set_spacing(0);
 
-    horizontal_container.add<ToolboxWidget>();
+    auto& toolbox = horizontal_container.add<PaintBrush::ToolboxWidget>();
 
     auto& vertical_container = horizontal_container.add<GUI::Widget>();
     vertical_container.set_layout<GUI::VerticalBoxLayout>();
@@ -75,6 +75,10 @@ int main(int argc, char** argv)
 
     auto& image_editor = vertical_container.add<PaintBrush::ImageEditor>();
     image_editor.set_focus(true);
+
+    toolbox.on_tool_selection = [&](auto* tool) {
+        image_editor.set_active_tool(tool);
+    };
 
     auto& paintable_widget = vertical_container.add<PaintableWidget>();
     paintable_widget.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);

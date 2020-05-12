@@ -28,15 +28,18 @@
 
 #include "Tool.h"
 #include <LibGfx/Point.h>
+#include <LibGUI/Forward.h>
+
+namespace PaintBrush {
 
 class RectangleTool final : public Tool {
 public:
     RectangleTool();
     virtual ~RectangleTool() override;
 
-    virtual void on_mousedown(GUI::MouseEvent&) override;
-    virtual void on_mousemove(GUI::MouseEvent&) override;
-    virtual void on_mouseup(GUI::MouseEvent&) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mousemove(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mouseup(Layer&, GUI::MouseEvent&) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
     virtual void on_second_paint(GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
@@ -57,3 +60,5 @@ private:
     RefPtr<GUI::Menu> m_context_menu;
     Mode m_mode { Mode::Outline };
 };
+
+}

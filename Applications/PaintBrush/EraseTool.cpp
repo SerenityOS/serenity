@@ -25,11 +25,15 @@
  */
 
 #include "EraseTool.h"
+#include "ImageEditor.h"
+#include "Layer.h"
 #include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
+
+namespace PaintBrush {
 
 EraseTool::EraseTool()
 {
@@ -49,26 +53,26 @@ Gfx::Rect EraseTool::build_rect(const Gfx::Point& pos, const Gfx::Rect& widget_r
     return Gfx::Rect(ex - eraser_radius, ey - eraser_radius, eraser_size, eraser_size).intersected(widget_rect);
 }
 
-void EraseTool::on_mousedown(GUI::MouseEvent& event)
+void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
-    Gfx::Rect r = build_rect(event.position(), m_widget->bitmap().rect());
-    GUI::Painter painter(m_widget->bitmap());
+    Gfx::Rect r = build_rect(event.position(), layer.rect());
+    GUI::Painter painter(layer.bitmap());
     painter.clear_rect(r, get_color());
-    m_widget->update();
+    m_editor->update();
 }
 
-void EraseTool::on_mousemove(GUI::MouseEvent& event)
+void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event)
 {
-    if (!m_widget->rect().contains(event.position()))
+    if (!m_editor->rect().contains(event.position()))
         return;
 
     if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
-        Gfx::Rect r = build_rect(event.position(), m_widget->bitmap().rect());
-        GUI::Painter painter(m_widget->bitmap());
+        Gfx::Rect r = build_rect(event.position(), layer.rect());
+        GUI::Painter painter(layer.bitmap());
         painter.clear_rect(r, get_color());
-        m_widget->update();
+        m_editor->update();
     }
 }
 
@@ -106,6 +110,8 @@ void EraseTool::on_contextmenu(GUI::ContextMenuEvent& event)
 Color EraseTool::get_color() const
 {
     if (m_use_secondary_color)
-        return m_widget->secondary_color();
+        return PaintableWidget::the().secondary_color();
     return Color(255, 255, 255, 0);
+}
+
 }

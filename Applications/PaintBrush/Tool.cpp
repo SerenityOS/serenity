@@ -25,6 +25,9 @@
  */
 
 #include "Tool.h"
+#include "ImageEditor.h"
+
+namespace PaintBrush {
 
 Tool::Tool()
 {
@@ -32,4 +35,11 @@ Tool::Tool()
 
 Tool::~Tool()
 {
+}
+
+void Tool::setup(ImageEditor& editor)
+{
+    m_editor = editor.make_weak_ptr();
+}
+
 }

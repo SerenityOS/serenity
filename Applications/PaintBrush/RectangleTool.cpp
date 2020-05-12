@@ -25,12 +25,16 @@
  */
 
 #include "RectangleTool.h"
+#include "ImageEditor.h"
+#include "Layer.h"
 #include "PaintableWidget.h"
-#include <LibGfx/Rect.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Rect.h>
 #include <LibM/math.h>
+
+namespace PaintBrush {
 
 RectangleTool::RectangleTool()
 {
@@ -45,20 +49,20 @@ void RectangleTool::draw_using(GUI::Painter& painter)
     auto rect_to_draw = Gfx::Rect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
     switch (m_mode) {
     case Mode::Fill:
-        painter.fill_rect(rect_to_draw, m_widget->color_for(m_drawing_button));
+        painter.fill_rect(rect_to_draw, PaintableWidget::the().color_for(m_drawing_button));
         break;
     case Mode::Outline:
-        painter.draw_rect(rect_to_draw, m_widget->color_for(m_drawing_button));
+        painter.draw_rect(rect_to_draw, PaintableWidget::the().color_for(m_drawing_button));
         break;
     case Mode::Gradient:
-        painter.fill_rect_with_gradient(rect_to_draw, m_widget->primary_color(), m_widget->secondary_color());
+        painter.fill_rect_with_gradient(rect_to_draw, PaintableWidget::the().primary_color(), PaintableWidget::the().secondary_color());
         break;
     default:
         ASSERT_NOT_REACHED();
     }
 }
 
-void RectangleTool::on_mousedown(GUI::MouseEvent& event)
+void RectangleTool::on_mousedown(Layer&, GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
@@ -69,29 +73,29 @@ void RectangleTool::on_mousedown(GUI::MouseEvent& event)
     m_drawing_button = event.button();
     m_rectangle_start_position = event.position();
     m_rectangle_end_position = event.position();
-    m_widget->update();
+    m_editor->update();
 }
 
-void RectangleTool::on_mouseup(GUI::MouseEvent& event)
+void RectangleTool::on_mouseup(Layer& layer, GUI::MouseEvent& event)
 {
     if (event.button() == m_drawing_button) {
-        GUI::Painter painter(m_widget->bitmap());
+        GUI::Painter painter(layer.bitmap());
         draw_using(painter);
         m_drawing_button = GUI::MouseButton::None;
-        m_widget->update();
+        m_editor->update();
     }
 }
 
-void RectangleTool::on_mousemove(GUI::MouseEvent& event)
+void RectangleTool::on_mousemove(Layer&, GUI::MouseEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    if (!m_widget->rect().contains(event.position()))
+    if (!m_editor->rect().contains(event.position()))
         return;
 
     m_rectangle_end_position = event.position();
-    m_widget->update();
+    m_editor->update();
 }
 
 void RectangleTool::on_second_paint(GUI::PaintEvent& event)
@@ -99,16 +103,19 @@ void RectangleTool::on_second_paint(GUI::PaintEvent& event)
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
+    (void)event;
+#if 0
     GUI::Painter painter(*m_widget);
     painter.add_clip_rect(event.rect());
     draw_using(painter);
+#endif
 }
 
 void RectangleTool::on_keydown(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
-        m_widget->update();
+        m_editor->update();
         event.accept();
     }
 }
@@ -128,4 +135,6 @@ void RectangleTool::on_contextmenu(GUI::ContextMenuEvent& event)
         }));
     }
     m_context_menu->popup(event.screen_position());
+}
+
 }

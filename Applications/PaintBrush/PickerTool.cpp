@@ -25,7 +25,11 @@
  */
 
 #include "PickerTool.h"
+#include "Layer.h"
+#include "PaintableWidget.h"
 #include <LibGfx/Bitmap.h>
+
+namespace PaintBrush {
 
 PickerTool::PickerTool()
 {
@@ -35,14 +39,15 @@ PickerTool::~PickerTool()
 {
 }
 
-void PickerTool::on_mousedown(GUI::MouseEvent& event)
+void PickerTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
 {
-    ASSERT(m_widget);
-    if (!m_widget->bitmap().rect().contains(event.position()))
+    if (!layer.rect().contains(event.position()))
         return;
-    auto color = m_widget->bitmap().get_pixel(event.position());
+    auto color = layer.bitmap().get_pixel(event.position());
     if (event.button() == GUI::MouseButton::Left)
-        m_widget->set_primary_color(color);
+        PaintableWidget::the().set_primary_color(color);
     else if (event.button() == GUI::MouseButton::Right)
-        m_widget->set_secondary_color(color);
+        PaintableWidget::the().set_secondary_color(color);
+}
+
 }

@@ -25,12 +25,16 @@
  */
 
 #include "EllipseTool.h"
+#include "ImageEditor.h"
+#include "Layer.h"
 #include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Rect.h>
 #include <LibM/math.h>
+
+namespace PaintBrush {
 
 EllipseTool::EllipseTool()
 {
@@ -45,14 +49,14 @@ void EllipseTool::draw_using(GUI::Painter& painter)
     auto ellipse_intersecting_rect = Gfx::Rect::from_two_points(m_ellipse_start_position, m_ellipse_end_position);
     switch (m_mode) {
     case Mode::Outline:
-        painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_widget->color_for(m_drawing_button), m_thickness);
+        painter.draw_ellipse_intersecting(ellipse_intersecting_rect, PaintableWidget::the().color_for(m_drawing_button), m_thickness);
         break;
     default:
         ASSERT_NOT_REACHED();
     }
 }
 
-void EllipseTool::on_mousedown(GUI::MouseEvent& event)
+void EllipseTool::on_mousedown(Layer&, GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
@@ -63,29 +67,29 @@ void EllipseTool::on_mousedown(GUI::MouseEvent& event)
     m_drawing_button = event.button();
     m_ellipse_start_position = event.position();
     m_ellipse_end_position = event.position();
-    m_widget->update();
+    m_editor->update();
 }
 
-void EllipseTool::on_mouseup(GUI::MouseEvent& event)
+void EllipseTool::on_mouseup(Layer& layer, GUI::MouseEvent& event)
 {
     if (event.button() == m_drawing_button) {
-        GUI::Painter painter(m_widget->bitmap());
+        GUI::Painter painter(layer.bitmap());
         draw_using(painter);
         m_drawing_button = GUI::MouseButton::None;
-        m_widget->update();
+        m_editor->update();
     }
 }
 
-void EllipseTool::on_mousemove(GUI::MouseEvent& event)
+void EllipseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    if (!m_widget->rect().contains(event.position()))
+    if (!layer.rect().contains(event.position()))
         return;
 
     m_ellipse_end_position = event.position();
-    m_widget->update();
+    m_editor->update();
 }
 
 void EllipseTool::on_second_paint(GUI::PaintEvent& event)
@@ -93,7 +97,7 @@ void EllipseTool::on_second_paint(GUI::PaintEvent& event)
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    GUI::Painter painter(*m_widget);
+    GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
     draw_using(painter);
 }
@@ -102,7 +106,7 @@ void EllipseTool::on_keydown(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
-        m_widget->update();
+        m_editor->update();
         event.accept();
     }
 }
@@ -130,4 +134,6 @@ void EllipseTool::on_contextmenu(GUI::ContextMenuEvent& event)
         insert_action(4);
     }
     m_context_menu->popup(event.screen_position());
+}
+
 }

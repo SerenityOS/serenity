@@ -25,11 +25,15 @@
  */
 
 #include "LineTool.h"
+#include "ImageEditor.h"
+#include "Layer.h"
 #include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibM/math.h>
+
+namespace PaintBrush {
 
 static Gfx::Point constrain_line_angle(const Gfx::Point& start_pos, const Gfx::Point& end_pos, float angle_increment)
 {
@@ -52,7 +56,7 @@ LineTool::~LineTool()
 {
 }
 
-void LineTool::on_mousedown(GUI::MouseEvent& event)
+void LineTool::on_mousedown(Layer&, GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
@@ -63,25 +67,25 @@ void LineTool::on_mousedown(GUI::MouseEvent& event)
     m_drawing_button = event.button();
     m_line_start_position = event.position();
     m_line_end_position = event.position();
-    m_widget->update();
+    m_editor->update();
 }
 
-void LineTool::on_mouseup(GUI::MouseEvent& event)
+void LineTool::on_mouseup(Layer& layer, GUI::MouseEvent& event)
 {
     if (event.button() == m_drawing_button) {
-        GUI::Painter painter(m_widget->bitmap());
-        painter.draw_line(m_line_start_position, m_line_end_position, m_widget->color_for(m_drawing_button), m_thickness);
+        GUI::Painter painter(layer.bitmap());
+        painter.draw_line(m_line_start_position, m_line_end_position, PaintableWidget::the().color_for(m_drawing_button), m_thickness);
         m_drawing_button = GUI::MouseButton::None;
-        m_widget->update();
+        m_editor->update();
     }
 }
 
-void LineTool::on_mousemove(GUI::MouseEvent& event)
+void LineTool::on_mousemove(Layer&, GUI::MouseEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    if (!m_widget->rect().contains(event.position()))
+    if (!m_editor->rect().contains(event.position()))
         return;
 
     if (!m_constrain_angle) {
@@ -90,7 +94,7 @@ void LineTool::on_mousemove(GUI::MouseEvent& event)
         const float ANGLE_STEP = M_PI / 8.0f;
         m_line_end_position = constrain_line_angle(m_line_start_position, event.position(), ANGLE_STEP);
     }
-    m_widget->update();
+    m_editor->update();
 }
 
 void LineTool::on_second_paint(GUI::PaintEvent& event)
@@ -98,22 +102,26 @@ void LineTool::on_second_paint(GUI::PaintEvent& event)
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
+    (void)event;
+
+#if 0
     GUI::Painter painter(*m_widget);
     painter.add_clip_rect(event.rect());
-    painter.draw_line(m_line_start_position, m_line_end_position, m_widget->color_for(m_drawing_button), m_thickness);
+    painter.draw_line(m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
+#endif
 }
 
 void LineTool::on_keydown(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
-        m_widget->update();
+        m_editor->update();
         event.accept();
     }
 
     if (event.key() == Key_Shift) {
         m_constrain_angle = true;
-        m_widget->update();
+        m_editor->update();
         event.accept();
     }
 }
@@ -122,7 +130,7 @@ void LineTool::on_keyup(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Shift) {
         m_constrain_angle = false;
-        m_widget->update();
+        m_editor->update();
         event.accept();
     }
 }
@@ -146,4 +154,6 @@ void LineTool::on_contextmenu(GUI::ContextMenuEvent& event)
         insert_action(4);
     }
     m_context_menu->popup(event.screen_position());
+}
+
 }

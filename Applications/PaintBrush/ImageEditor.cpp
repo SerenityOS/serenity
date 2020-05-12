@@ -28,6 +28,7 @@
 #include "Image.h"
 #include "Layer.h"
 #include "LayerModel.h"
+#include "Tool.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
@@ -61,12 +62,63 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     }
 }
 
+static GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent& original_event, const Layer& layer)
+{
+    auto position_in_active_layer_coordinates = original_event.position().translated(-layer.location());
+    dbg() << "adjusted: " << position_in_active_layer_coordinates;
+    return {
+        static_cast<GUI::Event::Type>(original_event.type()),
+        position_in_active_layer_coordinates, original_event.buttons(),
+        original_event.button(),
+        original_event.modifiers(),
+        original_event.wheel_delta()
+    };
+}
+
+void ImageEditor::mousedown_event(GUI::MouseEvent& event)
+{
+    if (!m_active_layer || !m_active_tool)
+        return;
+    auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
+    m_active_tool->on_mousedown(*m_active_layer, layer_event);
+}
+
+void ImageEditor::mousemove_event(GUI::MouseEvent& event)
+{
+    if (!m_active_layer || !m_active_tool)
+        return;
+    auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
+    m_active_tool->on_mousemove(*m_active_layer, layer_event);
+}
+
+void ImageEditor::mouseup_event(GUI::MouseEvent& event)
+{
+    if (!m_active_layer || !m_active_tool)
+        return;
+    auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
+    m_active_tool->on_mouseup(*m_active_layer, layer_event);
+}
+
 void ImageEditor::set_active_layer(Layer* layer)
 {
     if (m_active_layer == layer)
         return;
     m_active_layer = layer;
     update();
+}
+
+void ImageEditor::set_active_tool(Tool* tool)
+{
+    if (m_active_tool == tool)
+        return;
+
+    if (m_active_tool)
+        m_active_tool->clear();
+
+    m_active_tool = tool;
+
+    if (m_active_tool)
+        m_active_tool->setup(*this);
 }
 
 }

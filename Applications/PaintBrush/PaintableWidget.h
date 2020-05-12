@@ -27,7 +27,6 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
-class Tool;
 
 class PaintableWidget final : public GUI::Widget {
     C_OBJECT(PaintableWidget)
@@ -41,9 +40,6 @@ public:
 
     void set_primary_color(Color);
     void set_secondary_color(Color);
-
-    void set_tool(Tool* tool);
-    Tool* tool();
 
     Color color_for(const GUI::MouseEvent&) const;
     Color color_for(GUI::MouseButton) const;
@@ -59,19 +55,8 @@ public:
 private:
     PaintableWidget();
 
-    virtual bool accepts_focus() const override { return true; }
-    virtual void paint_event(GUI::PaintEvent&) override;
-    virtual void second_paint_event(GUI::PaintEvent&) override;
-    virtual void mousedown_event(GUI::MouseEvent&) override;
-    virtual void mouseup_event(GUI::MouseEvent&) override;
-    virtual void mousemove_event(GUI::MouseEvent&) override;
-    virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void keyup_event(GUI::KeyEvent&) override;
-
     RefPtr<Gfx::Bitmap> m_bitmap;
 
     Color m_primary_color { Color::Black };
     Color m_secondary_color { Color::White };
-
-    Tool* m_tool { nullptr };
 };

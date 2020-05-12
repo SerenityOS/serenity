@@ -37,6 +37,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 
+namespace PaintBrush {
+
 class ToolButton final : public GUI::Button {
     C_OBJECT(ToolButton)
 public:
@@ -82,11 +84,11 @@ ToolboxWidget::ToolboxWidget()
 
         button.set_icon(Gfx::Bitmap::load_from_file(String::format("/res/icons/paintbrush/%s.png", icon_name.to_string().characters())));
 
-        button.on_checked = [button = &button](auto checked) {
+        button.on_checked = [this, button = &button](auto checked) {
             if (checked)
-                PaintableWidget::the().set_tool(&button->tool());
+                on_tool_selection(&button->tool());
             else
-                PaintableWidget::the().set_tool(nullptr);
+                on_tool_selection(nullptr);
         };
     };
 
@@ -102,4 +104,6 @@ ToolboxWidget::ToolboxWidget()
 
 ToolboxWidget::~ToolboxWidget()
 {
+}
+
 }
