@@ -1,16 +1,19 @@
 OBJS = \
-    PaintableWidget.o \
-    PaletteWidget.o \
-    ToolboxWidget.o \
-    Tool.o \
-    PenTool.o \
-    LineTool.o \
-    RectangleTool.o \
+    BucketTool.o \
     EllipseTool.o \
     EraseTool.o \
-    BucketTool.o \
-    SprayTool.o \
+    Image.o \
+    ImageEditor.o \
+    Layer.o \
+    LineTool.o \
+    PaintableWidget.o \
+    PaletteWidget.o \
+    PenTool.o \
     PickerTool.o \
+    RectangleTool.o \
+    SprayTool.o \
+    Tool.o \
+    ToolboxWidget.o \
     main.o
 
 PROGRAM = PaintBrush

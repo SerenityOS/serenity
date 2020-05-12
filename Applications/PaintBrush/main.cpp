@@ -24,6 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "Image.h"
+#include "ImageEditor.h"
+#include "Layer.h"
 #include "PaintableWidget.h"
 #include "PaletteWidget.h"
 #include "ToolboxWidget.h"
@@ -68,8 +71,12 @@ int main(int argc, char** argv)
     vertical_container.set_layout<GUI::VerticalBoxLayout>();
     vertical_container.layout()->set_spacing(0);
 
+    auto& image_editor = vertical_container.add<PaintBrush::ImageEditor>();
+    image_editor.set_focus(true);
+
     auto& paintable_widget = vertical_container.add<PaintableWidget>();
-    paintable_widget.set_focus(true);
+    paintable_widget.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    paintable_widget.set_preferred_size(0, 0);
     vertical_container.add<PaletteWidget>(paintable_widget);
 
     window->show();
@@ -104,6 +111,24 @@ int main(int argc, char** argv)
     }));
 
     app.set_menubar(move(menubar));
+
+    auto image = PaintBrush::Image::create_with_size({ 640, 480 });
+
+    auto bg_layer = PaintBrush::Layer::create_with_size({ 640, 480 }, "Background");
+    image->add_layer(*bg_layer);
+    bg_layer->bitmap().fill(Color::Magenta);
+
+    auto fg_layer_1 = PaintBrush::Layer::create_with_size({ 200, 100 }, "Foreground 1");
+    image->add_layer(*fg_layer_1);
+    fg_layer_1->set_location({ 20, 10 });
+    fg_layer_1->bitmap().fill(Color::Green);
+
+    auto fg_layer_2 = PaintBrush::Layer::create_with_size({ 64, 64 }, "Foreground 2");
+    image->add_layer(*fg_layer_2);
+    fg_layer_2->set_location({ 300, 350 });
+    fg_layer_2->bitmap().fill(Color::Yellow);
+
+    image_editor.set_image(image);
 
     return app.exec();
 }
