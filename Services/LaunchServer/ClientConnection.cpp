@@ -59,4 +59,12 @@ OwnPtr<Messages::LaunchServer::OpenUrlResponse> ClientConnection::handle(const M
     auto result = Launcher::the().open_url(url);
     return make<Messages::LaunchServer::OpenUrlResponse>(result);
 }
+
+OwnPtr<Messages::LaunchServer::GetHandlersForURLResponse> ClientConnection::handle(const Messages::LaunchServer::GetHandlersForURL& request)
+{
+    URL url(request.url());
+    auto result = Launcher::the().handlers_for_url(url);
+    return make<Messages::LaunchServer::GetHandlersForURLResponse>(result);
+}
+
 }

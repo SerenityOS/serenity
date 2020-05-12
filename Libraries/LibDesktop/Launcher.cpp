@@ -57,4 +57,10 @@ bool Launcher::open(const URL& url)
     return connection->send_sync<Messages::LaunchServer::OpenUrl>(url.to_string())->response();
 }
 
+Vector<String> Launcher::get_handlers_for_url(const URL& url)
+{
+    auto connection = LaunchServerConnection::construct();
+    return connection->send_sync<Messages::LaunchServer::GetHandlersForURL>(url.to_string())->handlers();
+}
+
 }
