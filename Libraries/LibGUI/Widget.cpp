@@ -242,6 +242,13 @@ void Widget::handle_paint_event(PaintEvent& event)
         Painter painter(*this);
         painter.draw_rect(rect(), Color::Magenta);
     }
+
+    if (Application::the().focus_debugging_enabled()) {
+        if (is_focused()) {
+            Painter painter(*this);
+            painter.draw_rect(rect(), Color::Cyan);
+        }
+    }
 }
 
 void Widget::set_layout(NonnullRefPtr<Layout> layout)
