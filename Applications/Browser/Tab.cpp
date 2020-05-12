@@ -332,8 +332,11 @@ void Tab::did_become_active()
         m_statusbar->set_text(String::format("Loading (%d pending resources...)", Web::ResourceLoader::the().pending_loads()));
     };
 
-    BookmarksBarWidget::the().on_bookmark_click = [this](auto&, auto& url) {
-        m_html_widget->load(url);
+    BookmarksBarWidget::the().on_bookmark_click = [this](auto&, auto& url, unsigned modifiers) {
+        if (modifiers & Mod_Ctrl)
+            on_tab_open_request(url);
+        else
+            m_html_widget->load(url);
     };
 
     BookmarksBarWidget::the().on_bookmark_hover = [this](auto&, auto& url) {

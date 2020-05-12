@@ -42,7 +42,7 @@ public:
     GUI::Model* model() { return m_model.ptr(); }
     const GUI::Model* model() const { return m_model.ptr(); }
 
-    Function<void(const String&, const String&)> on_bookmark_click;
+    Function<void(const String&, const String&, unsigned modifiers)> on_bookmark_click;
     Function<void(const String&, const String&)> on_bookmark_hover;
 
     bool contains_bookmark(const String& url);
