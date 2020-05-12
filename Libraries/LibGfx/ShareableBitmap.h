@@ -57,5 +57,6 @@ private:
 }
 
 namespace IPC {
+bool encode(Encoder&, const Gfx::ShareableBitmap&);
 bool decode(Decoder&, Gfx::ShareableBitmap&);
 }

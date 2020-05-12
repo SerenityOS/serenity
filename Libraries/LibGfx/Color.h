@@ -282,5 +282,6 @@ const LogStream& operator<<(const LogStream&, Color);
 using Gfx::Color;
 
 namespace IPC {
+bool encode(Encoder&, const Gfx::Color&);
 bool decode(Decoder&, Gfx::Color&);
 }

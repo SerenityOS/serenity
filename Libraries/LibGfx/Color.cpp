@@ -32,6 +32,7 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -431,6 +432,12 @@ Optional<Color> Color::from_string(const StringView& string)
 const LogStream& operator<<(const LogStream& stream, Color value)
 {
     return stream << value.to_string();
+}
+
+bool IPC::encode(IPC::Encoder& encoder, const Color& color)
+{
+    encoder << color.value();
+    return true;
 }
 
 bool IPC::decode(IPC::Decoder& decoder, Color& color)
