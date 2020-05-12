@@ -56,8 +56,14 @@ Application::Application(int argc, char** argv)
     WindowServerConnection::the();
     if (argc > 0)
         m_invoked_as = argv[0];
-    for (int i = 1; i < argc; i++)
-        m_args.append(argv[i]);
+    for (int i = 1; i < argc; i++) {
+        String arg(argv[i]);
+
+        if (arg == "--gui-focus-debug")
+            m_focus_debugging_enabled = true;
+
+        m_args.append(move(arg));
+    }
 }
 
 Application::~Application()

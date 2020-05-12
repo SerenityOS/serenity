@@ -68,6 +68,8 @@ public:
 
     void set_system_palette(SharedBuffer&);
 
+    bool focus_debugging_enabled() const { return m_focus_debugging_enabled; }
+
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
     RefPtr<MenuBar> m_menubar;
@@ -77,6 +79,7 @@ private:
     class TooltipWindow;
     RefPtr<TooltipWindow> m_tooltip_window;
     bool m_quit_when_last_window_deleted { true };
+    bool m_focus_debugging_enabled { false };
     String m_invoked_as;
     Vector<String> m_args;
 };
