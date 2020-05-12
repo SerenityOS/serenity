@@ -42,7 +42,7 @@ PenTool::~PenTool()
 {
 }
 
-void PenTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
+void PenTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
@@ -53,13 +53,13 @@ void PenTool::on_mousedown(Layer& layer, GUI::MouseEvent& event)
     m_last_drawing_event_position = event.position();
 }
 
-void PenTool::on_mouseup(Layer&, GUI::MouseEvent& event)
+void PenTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right)
         m_last_drawing_event_position = { -1, -1 };
 }
 
-void PenTool::on_mousemove(Layer& layer, GUI::MouseEvent& event)
+void PenTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (!layer.rect().contains(event.position()))
         return;

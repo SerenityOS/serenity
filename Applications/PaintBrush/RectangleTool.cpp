@@ -62,7 +62,7 @@ void RectangleTool::draw_using(GUI::Painter& painter)
     }
 }
 
-void RectangleTool::on_mousedown(Layer&, GUI::MouseEvent& event)
+void RectangleTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
@@ -76,7 +76,7 @@ void RectangleTool::on_mousedown(Layer&, GUI::MouseEvent& event)
     m_editor->update();
 }
 
-void RectangleTool::on_mouseup(Layer& layer, GUI::MouseEvent& event)
+void RectangleTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() == m_drawing_button) {
         GUI::Painter painter(layer.bitmap());
@@ -86,7 +86,7 @@ void RectangleTool::on_mouseup(Layer& layer, GUI::MouseEvent& event)
     }
 }
 
-void RectangleTool::on_mousemove(Layer&, GUI::MouseEvent& event)
+void RectangleTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;

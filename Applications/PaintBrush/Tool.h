@@ -39,9 +39,9 @@ public:
 
     virtual const char* class_name() const = 0;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent&) {}
-    virtual void on_mousemove(Layer&, GUI::MouseEvent&) {}
-    virtual void on_mouseup(Layer&, GUI::MouseEvent&) {}
+    virtual void on_mousedown(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) {}
+    virtual void on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) {}
+    virtual void on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) {}
     virtual void on_contextmenu(GUI::ContextMenuEvent&) {}
     virtual void on_second_paint(GUI::PaintEvent&) {}
     virtual void on_keydown(GUI::KeyEvent&) {}

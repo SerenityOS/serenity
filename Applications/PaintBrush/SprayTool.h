@@ -38,9 +38,9 @@ public:
     SprayTool();
     virtual ~SprayTool() override;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent&) override;
-    virtual void on_mouseup(Layer&, GUI::MouseEvent&) override;
-    virtual void on_mousemove(Layer&, GUI::MouseEvent&) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
+    virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
+    virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
 
 private:

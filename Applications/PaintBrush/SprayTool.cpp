@@ -82,7 +82,7 @@ void SprayTool::paint_it()
     }
 }
 
-void SprayTool::on_mousedown(Layer&, GUI::MouseEvent& event)
+void SprayTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (!m_editor->rect().contains(event.position()))
         return;
@@ -93,7 +93,7 @@ void SprayTool::on_mousedown(Layer&, GUI::MouseEvent& event)
     paint_it();
 }
 
-void SprayTool::on_mousemove(Layer&, GUI::MouseEvent& event)
+void SprayTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     m_last_pos = event.position();
     if (m_timer->is_active()) {
@@ -102,7 +102,7 @@ void SprayTool::on_mousemove(Layer&, GUI::MouseEvent& event)
     }
 }
 
-void SprayTool::on_mouseup(Layer&, GUI::MouseEvent&)
+void SprayTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
 {
     m_timer->stop();
 }
