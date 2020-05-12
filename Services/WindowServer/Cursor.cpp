@@ -70,6 +70,8 @@ RefPtr<Cursor> Cursor::create(StandardCursor standard_cursor)
         return WindowManager::the().hand_cursor();
     case StandardCursor::Drag:
         return WindowManager::the().drag_cursor();
+    case StandardCursor::Move:
+        return WindowManager::the().move_cursor();
     }
     ASSERT_NOT_REACHED();
 }
