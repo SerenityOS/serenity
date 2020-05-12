@@ -49,6 +49,8 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override { did_update(); }
 
+    void update_without_invalidating_indexes() { did_update(0); }
+
 private:
     explicit LayerModel(Image&);
 

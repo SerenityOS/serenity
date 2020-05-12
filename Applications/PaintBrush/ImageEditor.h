@@ -49,6 +49,8 @@ public:
     Tool* active_tool() { return m_active_tool; }
     void set_active_tool(Tool*);
 
+    void layers_did_change();
+
 private:
     ImageEditor();
 
