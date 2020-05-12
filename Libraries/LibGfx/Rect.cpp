@@ -29,6 +29,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Rect.h>
 #include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 
 namespace Gfx {
 
@@ -145,6 +146,12 @@ const LogStream& operator<<(const LogStream& stream, const Rect& value)
 }
 
 namespace IPC {
+
+bool encode(Encoder& encoder, const Gfx::Rect& rect)
+{
+    encoder << rect.location() << rect.size();
+    return true;
+}
 
 bool decode(Decoder& decoder, Gfx::Rect& rect)
 {

@@ -136,4 +136,13 @@ bool Decoder::decode(Dictionary& dictionary)
     return true;
 }
 
+void dongle() {
+    ByteBuffer buffer;
+    BufferStream stream(buffer);
+    Decoder d(stream);
+    Vector<String> x;
+    d.decode(x);
+}
+
+
 }

@@ -114,5 +114,6 @@ const LogStream& operator<<(const LogStream&, const Size&);
 }
 
 namespace IPC {
+bool encode(Encoder&, const Gfx::Size&);
 bool decode(Decoder&, Gfx::Size&);
 }
