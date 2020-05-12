@@ -47,7 +47,7 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override;
 
     virtual void update() override {}
-    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override { return create_index(row, column, &m_frames.at(row)); }
+    virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex&) const override;
 
     struct FrameInfo {
         String function_name;

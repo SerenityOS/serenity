@@ -41,6 +41,13 @@ GUI::Variant BacktraceModel::data(const GUI::ModelIndex& index, Role role) const
     return {};
 }
 
+GUI::ModelIndex BacktraceModel::index(int row, int column, const GUI::ModelIndex&) const
+{
+    if (row < 0 || row >= static_cast<int>(m_frames.size()))
+        return {};
+    return create_index(row, column, &m_frames.at(row));
+}
+
 Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const DebugSession& debug_session, const PtraceRegisters& regs)
 {
     u32 current_ebp = regs.ebp;
