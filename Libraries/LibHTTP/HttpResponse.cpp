@@ -28,7 +28,7 @@
 
 namespace HTTP {
 
-HttpResponse::HttpResponse(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
+HttpResponse::HttpResponse(int code, HashMap<String, String, CaseInsensitiveStringTraits>&& headers, ByteBuffer&& payload)
     : Core::NetworkResponse(move(payload))
     , m_code(code)
     , m_headers(move(headers))
