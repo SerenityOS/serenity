@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
+#include <Kernel/KeyCode.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Event.h>
 
@@ -39,6 +41,33 @@ DropEvent::DropEvent(const Gfx::Point& position, const String& text, NonnullRefP
 
 DropEvent::~DropEvent()
 {
+}
+
+String KeyEvent::to_string() const
+{
+    Vector<String, 8> parts;
+
+    if (m_modifiers & Mod_Ctrl)
+        parts.append("Ctrl");
+    if (m_modifiers & Mod_Shift)
+        parts.append("Shift");
+    if (m_modifiers & Mod_Alt)
+        parts.append("Alt");
+    if (m_modifiers & Mod_Logo)
+        parts.append("Logo");
+
+    if (auto* key_name = key_code_to_string(static_cast<KeyCode>(m_key)))
+        parts.append(key_name);
+    else
+        parts.append("(Invalid)");
+
+    StringBuilder builder;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        builder.append(parts[i]);
+        if (i != parts.size() - 1)
+            builder.append('+');
+    }
+    return builder.to_string();
 }
 
 }
