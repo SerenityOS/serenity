@@ -31,9 +31,9 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/ProgressBar.h>
 #include <LibGUI/Window.h>
 #include <LibProtocol/Client.h>
@@ -106,7 +106,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_cancel_button = button_container.add<GUI::Button>("Cancel");
     m_cancel_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_cancel_button->set_preferred_size(100, 22);
-    m_cancel_button->on_click = [this] {
+    m_cancel_button->on_click = [this](auto) {
         bool success = m_download->stop();
         ASSERT(success);
         window()->close();
@@ -116,7 +116,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_close_button->set_enabled(false);
     m_close_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_close_button->set_preferred_size(100, 22);
-    m_close_button->on_click = [this] {
+    m_close_button->on_click = [this](auto) {
         window()->close();
     };
 }

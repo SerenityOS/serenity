@@ -83,7 +83,7 @@ void InputBox::build()
     m_ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_ok_button->set_preferred_size(0, 20);
     m_ok_button->set_text("OK");
-    m_ok_button->on_click = [this] {
+    m_ok_button->on_click = [this](auto) {
         dbgprintf("GUI::InputBox: OK button clicked\n");
         m_text_value = m_text_editor->text();
         done(ExecOK);
@@ -93,7 +93,7 @@ void InputBox::build()
     m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_cancel_button->set_preferred_size(0, 20);
     m_cancel_button->set_text("Cancel");
-    m_cancel_button->on_click = [this] {
+    m_cancel_button->on_click = [this](auto) {
         dbgprintf("GUI::InputBox: Cancel button clicked\n");
         done(ExecCancel);
     };

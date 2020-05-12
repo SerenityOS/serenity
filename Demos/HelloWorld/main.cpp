@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     button.set_text("Good-bye");
     button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button.set_preferred_size(0, 20);
-    button.on_click = [&] {
+    button.on_click = [&](auto) {
         app.quit();
     };
 

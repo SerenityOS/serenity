@@ -248,7 +248,7 @@ int main(int argc, char** argv)
         if (first)
             menu_option.set_checked(true);
 
-        menu_option.on_click = [content = &content, &stack] {
+        menu_option.on_click = [content = &content, &stack](auto) {
             stack.set_active_widget(content);
             content->invalidate_layout();
         };

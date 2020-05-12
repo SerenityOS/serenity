@@ -116,7 +116,7 @@ void TaskbarWindow::create_quick_launch_bar()
 
         button.set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
         button.set_tooltip(name);
-        button.on_click = [app_executable] {
+        button.on_click = [app_executable](auto) {
             pid_t pid = fork();
             if (pid < 0) {
                 perror("fork");

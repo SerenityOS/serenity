@@ -97,7 +97,7 @@ void CheckBox::paint_event(PaintEvent& event)
     paint_text(painter, text_rect, font(), Gfx::TextAlignment::TopLeft);
 }
 
-void CheckBox::click()
+void CheckBox::click(unsigned)
 {
     if (!is_enabled())
         return;

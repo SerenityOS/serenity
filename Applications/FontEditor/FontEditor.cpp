@@ -219,7 +219,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     save_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     save_button.set_preferred_size(80, 0);
     save_button.set_text("Save");
-    save_button.on_click = [this] {
+    save_button.on_click = [this](auto) {
         auto ret_val = m_edited_font->write_to_file(m_path);
         if (!ret_val) {
             GUI::MessageBox::show("The font file could not be saved.", "Save failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
@@ -230,7 +230,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     quit_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     quit_button.set_preferred_size(80, 0);
     quit_button.set_text("Quit");
-    quit_button.on_click = [this] {
+    quit_button.on_click = [](auto) {
         exit(0);
     };
 

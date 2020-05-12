@@ -49,7 +49,7 @@ public:
     Function<void(const Color)> on_click;
 
 protected:
-    virtual void click() override;
+    virtual void click(unsigned modifiers = 0) override;
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
 
@@ -136,7 +136,7 @@ void ColorPicker::build_ui()
     ok_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button.set_preferred_size(80, 0);
     ok_button.set_text("OK");
-    ok_button.on_click = [this] {
+    ok_button.on_click = [this](auto) {
         done(ExecOK);
     };
 
@@ -144,7 +144,7 @@ void ColorPicker::build_ui()
     cancel_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     cancel_button.set_preferred_size(80, 0);
     cancel_button.set_text("Cancel");
-    cancel_button.on_click = [this] {
+    cancel_button.on_click = [this](auto) {
         done(ExecCancel);
     };
 }
@@ -368,7 +368,7 @@ void ColorButton::paint_event(PaintEvent& event)
     }
 }
 
-void ColorButton::click()
+void ColorButton::click(unsigned)
 {
     if (on_click)
         on_click(m_color);

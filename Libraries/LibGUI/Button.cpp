@@ -86,7 +86,7 @@ void Button::paint_event(PaintEvent& event)
     paint_text(painter, text_rect, font, text_alignment());
 }
 
-void Button::click()
+void Button::click(unsigned modifiers)
 {
     if (!is_enabled())
         return;
@@ -96,7 +96,7 @@ void Button::click()
         set_checked(!is_checked());
     }
     if (on_click)
-        on_click();
+        on_click(modifiers);
     if (m_action)
         m_action->activate(this);
 }

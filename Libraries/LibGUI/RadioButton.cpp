@@ -78,7 +78,7 @@ void RadioButton::for_each_in_group(Callback callback)
     });
 }
 
-void RadioButton::click()
+void RadioButton::click(unsigned)
 {
     if (!is_enabled())
         return;

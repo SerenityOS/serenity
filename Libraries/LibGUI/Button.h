@@ -47,12 +47,12 @@ public:
     void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
 
-    Function<void()> on_click;
+    Function<void(unsigned modifiers)> on_click;
 
     void set_button_style(Gfx::ButtonStyle style) { m_button_style = style; }
     Gfx::ButtonStyle button_style() const { return m_button_style; }
 
-    virtual void click() override;
+    virtual void click(unsigned modifiers = 0) override;
 
     void set_action(Action&);
 
