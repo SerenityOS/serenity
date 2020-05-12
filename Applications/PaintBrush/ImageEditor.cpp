@@ -27,6 +27,7 @@
 #include "ImageEditor.h"
 #include "Image.h"
 #include "Layer.h"
+#include "LayerModel.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
@@ -54,6 +55,18 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     if (m_image) {
         m_image->paint_into(painter, m_image->rect(), m_image->rect());
     }
+
+    if (m_active_layer) {
+        painter.draw_rect(m_active_layer->rect().inflated(2, 2), Color::Black);
+    }
+}
+
+void ImageEditor::set_active_layer(Layer* layer)
+{
+    if (m_active_layer == layer)
+        return;
+    m_active_layer = layer;
+    update();
 }
 
 }

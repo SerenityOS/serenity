@@ -24,43 +24,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/Vector.h>
-#include <LibGUI/Forward.h>
-#include <LibGfx/Forward.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/Size.h>
+#include "LayerModel.h"
+#include "Image.h"
+#include "Layer.h"
 
 namespace PaintBrush {
 
-class Layer;
+NonnullRefPtr<LayerModel> LayerModel::create(Image& image)
+{
+    return adopt(*new LayerModel(image));
+}
 
-class Image : public RefCounted<Image> {
-public:
-    static RefPtr<Image> create_with_size(const Gfx::Size&);
+LayerModel::LayerModel(Image& image)
+    : m_image(image)
+{
+}
 
-    size_t layer_count() const { return m_layers.size(); }
-    const Layer& layer(size_t index) const { return m_layers.at(index); }
+int LayerModel::row_count(const GUI::ModelIndex&) const
+{
+    return m_image.layer_count();
+}
 
-    const Gfx::Size& size() const { return m_size; }
-    Gfx::Rect rect() const { return { {}, m_size }; }
+String LayerModel::column_name(int column) const
+{
+    switch (column) {
+    case Column::Name:
+        return "Name";
+    case Column::Size:
+        return "Size";
+    case Column::Location:
+        return "Location";
+    }
+    ASSERT_NOT_REACHED();
+}
 
-    void add_layer(NonnullRefPtr<Layer>);
-
-    void paint_into(GUI::Painter&, const Gfx::Rect& dest_rect, const Gfx::Rect& src_rect);
-
-    GUI::Model& layer_model();
-
-private:
-    explicit Image(const Gfx::Size&);
-
-    Gfx::Size m_size;
-    NonnullRefPtrVector<Layer> m_layers;
-    RefPtr<GUI::Model> m_layer_model;
-};
+GUI::Variant LayerModel::data(const GUI::ModelIndex& index, Role role) const
+{
+    auto& layer = m_image.layer(index.row());
+    if (role == Role::Display) {
+        switch (index.column()) {
+        case Column::Name:
+            return layer.name();
+        case Column::Size:
+            return layer.size();
+        case Column::Location:
+            return layer.location();
+        }
+    }
+    return {};
+}
 
 }

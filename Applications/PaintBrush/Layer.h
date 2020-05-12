@@ -49,6 +49,8 @@ public:
     Gfx::Bitmap& bitmap() { return *m_bitmap; }
     Gfx::Size size() const { return bitmap().size(); }
 
+    Gfx::Rect rect() const { return { location(), size() }; }
+
     const String& name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
 

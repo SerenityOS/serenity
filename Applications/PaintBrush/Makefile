@@ -5,6 +5,7 @@ OBJS = \
     Image.o \
     ImageEditor.o \
     Layer.o \
+    LayerModel.o \
     LineTool.o \
     PaintableWidget.o \
     PaletteWidget.o \
