@@ -16,9 +16,7 @@ while [ "$1" != "" ]; do
     shift
 done
 
-if ! (command -v genext2fs 1>/dev/null && command -v fakeroot 1>/dev/null); then
-	sudo id
-fi
+sudo id
 
 MAKE="make"
 
@@ -29,11 +27,11 @@ fi
 if [ "$fast_mode" = "1" ]; then
     $MAKE -C ../ && \
         $MAKE -C ../ install &&
-        ./sync.sh
+        sudo -E PATH="$PATH" ./build-image-qemu.sh
 else
     $MAKE -C ../ clean && \
         $MAKE -C ../ && \
         $MAKE -C ../ test && \
         $MAKE -C ../ install &&
-        ./sync.sh
+        sudo -E PATH="$PATH" ./build-image-qemu.sh
 fi
