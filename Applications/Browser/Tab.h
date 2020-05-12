@@ -45,7 +45,7 @@ public:
     void did_become_active();
 
     Function<void(String)> on_title_change;
-    Function<void(URL&)> on_tab_open_request;
+    Function<void(const URL&)> on_tab_open_request;
     Function<void(Tab&)> on_tab_close_request;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
 

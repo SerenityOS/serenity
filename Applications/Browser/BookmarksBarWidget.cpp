@@ -123,9 +123,9 @@ void BookmarksBarWidget::did_update_model()
         button.set_preferred_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
 
-        button.on_click = [title, url, this](auto) {
+        button.on_click = [title, url, this](auto modifiers) {
             if (on_bookmark_click)
-                on_bookmark_click(title, url);
+                on_bookmark_click(title, url, modifiers);
         };
 
         width += rect.width();
