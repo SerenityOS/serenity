@@ -38,6 +38,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Asterisk)                    \
     __ENUMERATE_JS_TOKEN(DoubleAsteriskEquals)        \
     __ENUMERATE_JS_TOKEN(AsteriskEquals)              \
+    __ENUMERATE_JS_TOKEN(Async)                       \
     __ENUMERATE_JS_TOKEN(Await)                       \
     __ENUMERATE_JS_TOKEN(BoolLiteral)                 \
     __ENUMERATE_JS_TOKEN(BracketClose)                \
@@ -63,6 +64,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(DoublePipe)                  \
     __ENUMERATE_JS_TOKEN(DoubleQuestionMark)          \
     __ENUMERATE_JS_TOKEN(Else)                        \
+    __ENUMERATE_JS_TOKEN(Enum)                        \
     __ENUMERATE_JS_TOKEN(Eof)                         \
     __ENUMERATE_JS_TOKEN(Equals)                      \
     __ENUMERATE_JS_TOKEN(EqualsEquals)                \
@@ -70,6 +72,8 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(ExclamationMark)             \
     __ENUMERATE_JS_TOKEN(ExclamationMarkEquals)       \
     __ENUMERATE_JS_TOKEN(ExclamationMarkEqualsEquals) \
+    __ENUMERATE_JS_TOKEN(Export)                      \
+    __ENUMERATE_JS_TOKEN(Extends)                     \
     __ENUMERATE_JS_TOKEN(Finally)                     \
     __ENUMERATE_JS_TOKEN(For)                         \
     __ENUMERATE_JS_TOKEN(Function)                    \
@@ -77,6 +81,8 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(GreaterThanEquals)           \
     __ENUMERATE_JS_TOKEN(Identifier)                  \
     __ENUMERATE_JS_TOKEN(If)                          \
+    __ENUMERATE_JS_TOKEN(Implements)                  \
+    __ENUMERATE_JS_TOKEN(Import)                      \
     __ENUMERATE_JS_TOKEN(In)                          \
     __ENUMERATE_JS_TOKEN(Instanceof)                  \
     __ENUMERATE_JS_TOKEN(Interface)                   \
@@ -90,6 +96,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(New)                         \
     __ENUMERATE_JS_TOKEN(NullLiteral)                 \
     __ENUMERATE_JS_TOKEN(NumericLiteral)              \
+    __ENUMERATE_JS_TOKEN(Package)                     \
     __ENUMERATE_JS_TOKEN(ParenClose)                  \
     __ENUMERATE_JS_TOKEN(ParenOpen)                   \
     __ENUMERATE_JS_TOKEN(Percent)                     \
@@ -100,6 +107,9 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Plus)                        \
     __ENUMERATE_JS_TOKEN(PlusEquals)                  \
     __ENUMERATE_JS_TOKEN(PlusPlus)                    \
+    __ENUMERATE_JS_TOKEN(Private)                     \
+    __ENUMERATE_JS_TOKEN(Protected)                   \
+    __ENUMERATE_JS_TOKEN(Public)                      \
     __ENUMERATE_JS_TOKEN(QuestionMark)                \
     __ENUMERATE_JS_TOKEN(QuestionMarkPeriod)          \
     __ENUMERATE_JS_TOKEN(RegexLiteral)                \
@@ -111,7 +121,9 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(ShiftRightEquals)            \
     __ENUMERATE_JS_TOKEN(Slash)                       \
     __ENUMERATE_JS_TOKEN(SlashEquals)                 \
+    __ENUMERATE_JS_TOKEN(Static)                      \
     __ENUMERATE_JS_TOKEN(StringLiteral)               \
+    __ENUMERATE_JS_TOKEN(Super)                       \
     __ENUMERATE_JS_TOKEN(Switch)                      \
     __ENUMERATE_JS_TOKEN(TemplateLiteralEnd)          \
     __ENUMERATE_JS_TOKEN(TemplateLiteralExprEnd)      \
@@ -131,6 +143,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Var)                         \
     __ENUMERATE_JS_TOKEN(Void)                        \
     __ENUMERATE_JS_TOKEN(While)                       \
+    __ENUMERATE_JS_TOKEN(With)                        \
     __ENUMERATE_JS_TOKEN(Yield)
 
 enum class TokenType {
