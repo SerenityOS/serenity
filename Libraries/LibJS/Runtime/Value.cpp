@@ -173,13 +173,11 @@ Value Value::to_number() const
             return js_infinity();
         if (string == "-Infinity")
             return js_negative_infinity();
-        bool ok;
-        //FIXME: Parse in a better way
-        auto parsed_int = string.to_int(ok);
-        if (ok)
-            return Value(parsed_int);
-
-        return js_nan();
+        char* endptr;
+        auto parsed_double = strtod(string.characters(), &endptr);
+        if (*endptr)
+            return js_nan();
+        return Value(parsed_double);
     }
     case Type::Object:
         return m_value.as_object->to_primitive(Object::PreferredType::Number).to_number();
