@@ -237,54 +237,12 @@ Value StringPrototype::pad_end(Interpreter& interpreter)
     return pad_string(interpreter, string, PadPlacement::End);
 }
 
-enum class TrimMode {
-    Left,
-    Right,
-    Both
-};
-
-static Value trim_string(Interpreter& interpreter, const String& string, TrimMode mode)
-{
-    size_t substring_start = 0;
-    size_t substring_length = string.length();
-
-    auto is_white_space_character = [](char character) -> bool {
-        return character == 0x9 || character == 0xa || character == 0xb || character == 0xc || character == 0xd || character == 0x20;
-    };
-
-    if (mode == TrimMode::Left || mode == TrimMode::Both) {
-        for (size_t i = 0; i < string.length(); ++i) {
-            if (!is_white_space_character(string[i])) {
-                substring_start = i;
-                substring_length -= substring_start;
-                break;
-            }
-        }
-    }
-
-    if (substring_length == 0)
-        return js_string(interpreter, "");
-
-    if (mode == TrimMode::Right || mode == TrimMode::Both) {
-        size_t count = 0;
-        for (size_t i = string.length() - 1; i > 0; --i) {
-            if (!is_white_space_character(string[i])) {
-                substring_length -= count;
-                break;
-            }
-            count++;
-        }
-    }
-
-    return js_string(interpreter, string.substring(substring_start, substring_length));
-}
-
 Value StringPrototype::trim(Interpreter& interpreter)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
         return {};
-    return trim_string(interpreter, string, TrimMode::Both);
+    return js_string(interpreter, string.trim_whitespace(String::TrimMode::Both));
 }
 
 Value StringPrototype::trim_start(Interpreter& interpreter)
@@ -292,7 +250,7 @@ Value StringPrototype::trim_start(Interpreter& interpreter)
     auto string = string_from(interpreter);
     if (string.is_null())
         return {};
-    return trim_string(interpreter, string, TrimMode::Left);
+    return js_string(interpreter, string.trim_whitespace(String::TrimMode::Left));
 }
 
 Value StringPrototype::trim_end(Interpreter& interpreter)
@@ -300,7 +258,7 @@ Value StringPrototype::trim_end(Interpreter& interpreter)
     auto string = string_from(interpreter);
     if (string.is_null())
         return {};
-    return trim_string(interpreter, string, TrimMode::Right);
+    return js_string(interpreter, string.trim_whitespace(String::TrimMode::Right));
 }
 
 Value StringPrototype::concat(Interpreter& interpreter)
