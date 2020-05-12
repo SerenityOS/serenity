@@ -114,7 +114,12 @@ public:
     String to_lowercase() const;
     String to_uppercase() const;
 
-    String trim_spaces() const;
+    enum class TrimMode {
+        Left,
+        Right,
+        Both
+    };
+    String trim_whitespace(TrimMode mode = TrimMode::Both) const;
 
     bool equals_ignoring_case(const StringView&) const;
 
