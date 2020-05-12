@@ -310,20 +310,8 @@ int main(int argc, char** argv)
                 if (parameter.type == "bool")
                     initial_value = "false";
                 out() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
-
-                if (parameter.type.starts_with("Optional<")) {
-                    out() << "        bool has_value = false;";
-                    out() << "        stream >> has_value;";
-                    out() << "        if (has_value) {";
-                    out() << "            " << parameter.type.substring_view(9, parameter.type.length() - 10) << " value;";
-                    out() << "            if (!decoder.decode(value))";
-                    out() << "                return nullptr;";
-                    out() << "            " << parameter.name << " = value;";
-                    out() << "        }";
-                } else {
-                    out() << "        if (!decoder.decode(" << parameter.name << "))";
-                    out() << "            return nullptr;";
-                }
+                out() << "        if (!decoder.decode(" << parameter.name << "))";
+                out() << "            return nullptr;";
             }
 
             StringBuilder builder;
@@ -343,13 +331,7 @@ int main(int argc, char** argv)
             out() << "        stream << endpoint_magic();";
             out() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
-                if (parameter.type.starts_with("Optional<")) {
-                    out() << "        stream << m_" << parameter.name << ".has_value();";
-                    out() << "        if (m_" << parameter.name << ".has_value())";
-                    out() << "            stream << m_" << parameter.name << ".value();";
-                } else {
-                    out() << "        stream << m_" << parameter.name << ";";
-                }
+                out() << "        stream << m_" << parameter.name << ";";
             }
             out() << "        return buffer;";
             out() << "    }";
