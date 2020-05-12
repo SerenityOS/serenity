@@ -370,7 +370,7 @@ Value instance_of(Interpreter&, Value lhs, Value rhs)
 
 const LogStream& operator<<(const LogStream& stream, const Value& value)
 {
-    return stream << value.to_string();
+    return stream << (value.is_empty() ? "<empty>" : value.to_string());
 }
 
 bool same_value(Interpreter& interpreter, Value lhs, Value rhs)
