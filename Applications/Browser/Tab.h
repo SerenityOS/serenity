@@ -62,6 +62,7 @@ private:
     RefPtr<Web::HtmlView> m_html_widget;
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
+    RefPtr<GUI::Action> m_reload_action;
     RefPtr<GUI::TextBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<GUI::Window> m_dom_inspector_window;

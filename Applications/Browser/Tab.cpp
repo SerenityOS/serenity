@@ -75,26 +75,28 @@ Tab::Tab()
         update_actions();
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
         m_html_widget->load(m_history.current());
-    });
+    }, this);
 
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) {
         m_history.go_forward();
         update_actions();
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
         m_html_widget->load(m_history.current());
-    });
+    }, this);
 
     toolbar.add_action(*m_go_back_action);
     toolbar.add_action(*m_go_forward_action);
 
     toolbar.add_action(GUI::CommonActions::make_go_home_action([this](auto&) {
         m_html_widget->load(g_home_url);
-    }));
+    }, this));
 
-    toolbar.add_action(GUI::CommonActions::make_reload_action([this](auto&) {
+    m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) {
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
         m_html_widget->reload();
-    }));
+    }, this);
+
+    toolbar.add_action(*m_reload_action);
 
     m_location_box = toolbar.add<GUI::TextBox>();
 
@@ -221,12 +223,7 @@ Tab::Tab()
         },
         this));
 
-    app_menu.add_action(GUI::Action::create(
-        "Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [this](auto&) {
-            TemporaryChange<bool> change(m_should_push_loads_to_history, false);
-            m_html_widget->reload();
-        },
-        this));
+    app_menu.add_action(*m_reload_action);
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit();
