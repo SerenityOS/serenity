@@ -30,10 +30,6 @@
 
 namespace Desktop {
 
-struct Opener {
-
-};
-
 class Launcher {
 public:
     static bool open(const URL&);
