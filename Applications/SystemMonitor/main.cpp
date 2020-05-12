@@ -157,6 +157,7 @@ int main(int argc, char** argv)
     auto& tabwidget = keeper.add<GUI::TabWidget>();
 
     auto& process_container_splitter = tabwidget.add_tab<GUI::VerticalSplitter>("Processes");
+    process_container_splitter.layout()->set_margins({ 4, 4, 4, 4 });
 
     auto& process_table_container = process_container_splitter.add<GUI::Widget>();
 
@@ -172,11 +173,8 @@ int main(int argc, char** argv)
     tabwidget.add_widget("Network", network_stats_widget);
 
     process_table_container.set_layout<GUI::VerticalBoxLayout>();
-    process_table_container.layout()->set_margins({ 4, 0, 4, 0 });
     process_table_container.layout()->set_spacing(0);
 
-    auto& toolbar = process_table_container.add<GUI::ToolBar>();
-    toolbar.set_has_frame(false);
     auto& process_table_view = process_table_container.add<ProcessTableView>();
 
     auto& refresh_timer = window->add<Core::Timer>(
@@ -203,10 +201,6 @@ int main(int argc, char** argv)
         if (pid != -1)
             kill(pid, SIGCONT);
     });
-
-    toolbar.add_action(kill_action);
-    toolbar.add_action(stop_action);
-    toolbar.add_action(continue_action);
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("System Monitor");
