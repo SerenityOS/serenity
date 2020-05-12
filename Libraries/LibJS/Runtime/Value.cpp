@@ -165,8 +165,7 @@ Value Value::to_number() const
     case Type::Number:
         return Value(m_value.as_double);
     case Type::String: {
-        // FIXME: Trim whitespace beforehand
-        auto& string = as_string().string();
+        auto string = as_string().string().trim_whitespace();
         if (string.is_empty())
             return Value(0);
         if (string == "Infinity" || string == "+Infinity")
