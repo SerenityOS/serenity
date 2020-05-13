@@ -38,6 +38,7 @@ public:
     virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
+    virtual void on_keydown(GUI::KeyEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "MoveTool"; }
