@@ -169,17 +169,7 @@ int main(int argc, char** argv)
 
     auto bg_layer = PaintBrush::Layer::create_with_size({ 640, 480 }, "Background");
     image->add_layer(*bg_layer);
-    bg_layer->bitmap().fill(Color::Magenta);
-
-    auto fg_layer_1 = PaintBrush::Layer::create_with_size({ 200, 100 }, "Foreground 1");
-    image->add_layer(*fg_layer_1);
-    fg_layer_1->set_location({ 20, 10 });
-    fg_layer_1->bitmap().fill(Color::Green);
-
-    auto fg_layer_2 = PaintBrush::Layer::create_with_size({ 64, 64 }, "Foreground 2");
-    image->add_layer(*fg_layer_2);
-    fg_layer_2->set_location({ 300, 350 });
-    fg_layer_2->bitmap().fill(Color::Yellow);
+    bg_layer->bitmap().fill(Color::White);
 
     layer_table_view.set_model(image->layer_model());
     layer_table_view.on_selection_change = [&] {
@@ -191,6 +181,7 @@ int main(int argc, char** argv)
     };
 
     image_editor.set_image(image);
+    image_editor.set_active_layer(bg_layer);
 
     return app.exec();
 }
