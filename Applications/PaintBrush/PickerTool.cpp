@@ -25,8 +25,8 @@
  */
 
 #include "PickerTool.h"
+#include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <LibGfx/Bitmap.h>
 
 namespace PaintBrush {
@@ -45,9 +45,9 @@ void PickerTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEv
         return;
     auto color = layer.bitmap().get_pixel(event.position());
     if (event.button() == GUI::MouseButton::Left)
-        PaintableWidget::the().set_primary_color(color);
+        m_editor->set_primary_color(color);
     else if (event.button() == GUI::MouseButton::Right)
-        PaintableWidget::the().set_secondary_color(color);
+        m_editor->set_secondary_color(color);
 }
 
 }

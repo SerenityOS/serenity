@@ -27,7 +27,6 @@
 #include "Image.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include "PaletteWidget.h"
 #include "ToolboxWidget.h"
 #include <LibGUI/AboutDialog.h>
@@ -80,10 +79,7 @@ int main(int argc, char** argv)
         image_editor.set_active_tool(tool);
     };
 
-    auto& paintable_widget = vertical_container.add<PaintableWidget>();
-    paintable_widget.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    paintable_widget.set_preferred_size(0, 0);
-    vertical_container.add<PaletteWidget>(paintable_widget);
+    vertical_container.add<PaintBrush::PaletteWidget>(image_editor);
 
     auto& right_panel = horizontal_container.add<GUI::Widget>();
     right_panel.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
@@ -109,7 +105,6 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(String::format("Failed to load '%s'", open_path.value().characters()), "Open failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
             return;
         }
-        paintable_widget.set_bitmap(*bitmap);
     }));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {

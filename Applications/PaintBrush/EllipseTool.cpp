@@ -27,7 +27,6 @@
 #include "EllipseTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -49,7 +48,7 @@ void EllipseTool::draw_using(GUI::Painter& painter)
     auto ellipse_intersecting_rect = Gfx::Rect::from_two_points(m_ellipse_start_position, m_ellipse_end_position);
     switch (m_mode) {
     case Mode::Outline:
-        painter.draw_ellipse_intersecting(ellipse_intersecting_rect, PaintableWidget::the().color_for(m_drawing_button), m_thickness);
+        painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), m_thickness);
         break;
     default:
         ASSERT_NOT_REACHED();

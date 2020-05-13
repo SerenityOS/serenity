@@ -30,7 +30,6 @@
 #include "EraseTool.h"
 #include "LineTool.h"
 #include "MoveTool.h"
-#include "PaintableWidget.h"
 #include "PenTool.h"
 #include "PickerTool.h"
 #include "RectangleTool.h"

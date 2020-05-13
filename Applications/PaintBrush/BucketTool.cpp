@@ -27,7 +27,6 @@
 #include "BucketTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibGUI/Painter.h>
@@ -86,7 +85,7 @@ void BucketTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEv
     GUI::Painter painter(layer.bitmap());
     auto target_color = layer.bitmap().get_pixel(event.x(), event.y());
 
-    flood_fill(layer.bitmap(), event.position(), target_color, PaintableWidget::the().color_for(event));
+    flood_fill(layer.bitmap(), event.position(), target_color, m_editor->color_for(event));
 
     m_editor->update();
 }

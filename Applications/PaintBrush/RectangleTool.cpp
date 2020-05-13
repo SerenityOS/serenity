@@ -27,7 +27,6 @@
 #include "RectangleTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -49,13 +48,13 @@ void RectangleTool::draw_using(GUI::Painter& painter)
     auto rect_to_draw = Gfx::Rect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
     switch (m_mode) {
     case Mode::Fill:
-        painter.fill_rect(rect_to_draw, PaintableWidget::the().color_for(m_drawing_button));
+        painter.fill_rect(rect_to_draw, m_editor->color_for(m_drawing_button));
         break;
     case Mode::Outline:
-        painter.draw_rect(rect_to_draw, PaintableWidget::the().color_for(m_drawing_button));
+        painter.draw_rect(rect_to_draw, m_editor->color_for(m_drawing_button));
         break;
     case Mode::Gradient:
-        painter.fill_rect_with_gradient(rect_to_draw, PaintableWidget::the().primary_color(), PaintableWidget::the().secondary_color());
+        painter.fill_rect_with_gradient(rect_to_draw, m_editor->primary_color(), m_editor->secondary_color());
         break;
     default:
         ASSERT_NOT_REACHED();

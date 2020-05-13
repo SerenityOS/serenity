@@ -27,7 +27,6 @@
 #include "SprayTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibGUI/Action.h>
@@ -87,7 +86,7 @@ void SprayTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
     if (!m_editor->rect().contains(event.position()))
         return;
 
-    m_color = PaintableWidget::the().color_for(event);
+    m_color = m_editor->color_for(event);
     m_last_pos = event.position();
     m_timer->start();
     paint_it();

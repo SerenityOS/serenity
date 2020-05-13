@@ -126,4 +126,41 @@ void ImageEditor::layers_did_change()
     update();
 }
 
+Color ImageEditor::color_for(GUI::MouseButton button) const
+{
+    if (button == GUI::MouseButton::Left)
+        return m_primary_color;
+    if (button == GUI::MouseButton::Right)
+        return m_secondary_color;
+    ASSERT_NOT_REACHED();
+}
+
+Color ImageEditor::color_for(const GUI::MouseEvent& event) const
+{
+    if (event.buttons() & GUI::MouseButton::Left)
+        return m_primary_color;
+    if (event.buttons() & GUI::MouseButton::Right)
+        return m_secondary_color;
+    ASSERT_NOT_REACHED();
+}
+
+void ImageEditor::set_primary_color(Color color)
+{
+    if (m_primary_color == color)
+        return;
+    m_primary_color = color;
+    if (on_primary_color_change)
+        on_primary_color_change(color);
+}
+
+void ImageEditor::set_secondary_color(Color color)
+{
+    if (m_secondary_color == color)
+        return;
+    m_secondary_color = color;
+    if (on_secondary_color_change)
+        on_secondary_color_change(color);
+}
+
+
 }
