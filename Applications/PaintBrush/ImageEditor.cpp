@@ -56,6 +56,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     painter.fill_rect_with_checkerboard(rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
 
     if (m_image) {
+        painter.draw_rect(m_image->rect().inflated(2, 2), Color::Black);
         m_image->paint_into(painter, m_image->rect(), m_image->rect());
     }
 
