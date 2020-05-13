@@ -134,6 +134,7 @@ public:
 
     Function<Vector<CompletionSuggestion>(const String&)> on_tab_complete_first_token;
     Function<Vector<CompletionSuggestion>(const String&)> on_tab_complete_other_token;
+    Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
 
     // FIXME: we will have to kindly ask our instantiators to set our signal handlers
