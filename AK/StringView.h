@@ -78,6 +78,7 @@ public:
     bool ends_with(char) const;
     bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
     bool contains(char) const;
+    bool equals_ignoring_case(const StringView& other) const;
 
     Optional<size_t> find_first_of(char) const;
     Optional<size_t> find_first_of(const StringView&) const;
