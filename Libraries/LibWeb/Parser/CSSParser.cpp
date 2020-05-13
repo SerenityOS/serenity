@@ -414,6 +414,8 @@ public:
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::OnlyChild;
             else if (pseudo_name.equals_ignoring_case("empty"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Empty;
+            else if (pseudo_name.equals_ignoring_case("root"))
+                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Root;
         }
 
         if (index == index_at_start) {

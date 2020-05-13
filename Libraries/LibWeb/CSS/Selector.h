@@ -53,6 +53,7 @@ public:
             LastChild,
             OnlyChild,
             Empty,
+            Root,
         };
         PseudoClass pseudo_class { PseudoClass::None };
 
