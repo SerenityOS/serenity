@@ -72,6 +72,8 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void keyup_event(GUI::KeyEvent&) override;
 
     RefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;

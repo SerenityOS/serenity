@@ -98,6 +98,18 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
     m_active_tool->on_mouseup(*m_active_layer, layer_event, event);
 }
 
+void ImageEditor::keydown_event(GUI::KeyEvent& event)
+{
+    if (m_active_tool)
+        m_active_tool->on_keydown(event);
+}
+
+void ImageEditor::keyup_event(GUI::KeyEvent& event)
+{
+    if (m_active_tool)
+        m_active_tool->on_keydown(event);
+}
+
 void ImageEditor::set_active_layer(Layer* layer)
 {
     if (m_active_layer == layer)
@@ -161,6 +173,5 @@ void ImageEditor::set_secondary_color(Color color)
     if (on_secondary_color_change)
         on_secondary_color_change(color);
 }
-
 
 }
