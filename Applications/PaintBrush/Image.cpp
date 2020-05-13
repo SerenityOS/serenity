@@ -104,4 +104,11 @@ void Image::move_layer_to_front(Layer& layer)
     m_layers.append(layer);
 }
 
+void Image::remove_layer(Layer& layer)
+{
+    NonnullRefPtr<Layer> protector(layer);
+    auto index = index_of(layer);
+    m_layers.remove(index);
+}
+
 }
