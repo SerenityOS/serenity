@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "CreateNewLayerDialog.h"
 #include "Image.h"
 #include "ImageEditor.h"
 #include "Layer.h"
@@ -121,6 +122,20 @@ int main(int argc, char** argv)
             tool_menu.add_action(*tool.action());
         return IterationDecision::Continue;
     });
+
+    auto& layer_menu = menubar->add_menu("Layer");
+    layer_menu.add_action(GUI::Action::create("Create new layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
+        auto dialog = PaintBrush::CreateNewLayerDialog::construct(image_editor.image()->size(), window);
+        if (dialog->exec() == GUI::Dialog::ExecOK) {
+            auto layer = PaintBrush::Layer::create_with_size(dialog->layer_size(), dialog->layer_name());
+            if (!layer) {
+                GUI::MessageBox::show_error(String::format("Unable to create layer with size %s", dialog->size().to_string().characters()));
+                return;
+            }
+            image_editor.image()->add_layer(layer.release_nonnull());
+            image_editor.layers_did_change();
+        }
+    }, window));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {

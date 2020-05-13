@@ -1,5 +1,6 @@
 OBJS = \
     BucketTool.o \
+    CreateNewLayerDialog.o \
     EllipseTool.o \
     EraseTool.o \
     Image.o \
