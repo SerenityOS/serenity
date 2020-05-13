@@ -137,6 +137,20 @@ int main(int argc, char** argv)
         }
     }, window));
 
+    layer_menu.add_separator();
+    layer_menu.add_action(GUI::Action::create("Select previous layer", { 0, Key_PageUp }, [&](auto&) {
+        layer_table_view.move_selection(1);
+    }, window));
+    layer_menu.add_action(GUI::Action::create("Select next layer", { 0, Key_PageDown }, [&](auto&) {
+        layer_table_view.move_selection(-1);
+    }, window));
+    layer_menu.add_action(GUI::Action::create("Select top layer", { 0, Key_Home }, [&](auto&) {
+        layer_table_view.selection().set(layer_table_view.model()->index(image_editor.image()->layer_count() - 1));
+    }, window));
+    layer_menu.add_action(GUI::Action::create("Select bottom layer", { 0, Key_End }, [&](auto&) {
+        layer_table_view.selection().set(layer_table_view.model()->index(0));
+    }, window));
+
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("PaintBrush", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-paintbrush.png"), window);
