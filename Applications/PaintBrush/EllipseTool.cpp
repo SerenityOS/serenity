@@ -79,12 +79,9 @@ void EllipseTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
     }
 }
 
-void EllipseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
+void EllipseTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (m_drawing_button == GUI::MouseButton::None)
-        return;
-
-    if (!layer.rect().contains(event.position()))
         return;
 
     m_ellipse_end_position = event.position();

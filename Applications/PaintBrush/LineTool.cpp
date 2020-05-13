@@ -84,9 +84,6 @@ void LineTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    if (!m_editor->rect().contains(event.position()))
-        return;
-
     if (!m_constrain_angle) {
         m_line_end_position = event.position();
     } else {

@@ -60,20 +60,17 @@ void PenTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 
 void PenTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
-    if (!layer.rect().contains(event.position()))
+    if (!(event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right))
         return;
+    GUI::Painter painter(layer.bitmap());
 
-    if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
-        GUI::Painter painter(layer.bitmap());
+    if (m_last_drawing_event_position != Gfx::Point(-1, -1))
+        painter.draw_line(m_last_drawing_event_position, event.position(), m_editor->color_for(event), m_thickness);
+    else
+        painter.draw_line(event.position(), event.position(), m_editor->color_for(event), m_thickness);
+    m_editor->update();
 
-        if (m_last_drawing_event_position != Gfx::Point(-1, -1))
-            painter.draw_line(m_last_drawing_event_position, event.position(), m_editor->color_for(event), m_thickness);
-        else
-            painter.draw_line(event.position(), event.position(), m_editor->color_for(event), m_thickness);
-        m_editor->update();
-
-        m_last_drawing_event_position = event.position();
-    }
+    m_last_drawing_event_position = event.position();
 }
 
 void PenTool::on_contextmenu(GUI::ContextMenuEvent& event)

@@ -64,9 +64,6 @@ void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
 
 void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
-    if (!m_editor->rect().contains(event.position()))
-        return;
-
     if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
         Gfx::Rect r = build_rect(event.position(), layer.rect());
         GUI::Painter painter(layer.bitmap());
