@@ -55,8 +55,13 @@ public:
 
     GUI::Model& layer_model();
 
+    void move_layer_to_front(Layer&);
+    void move_layer_to_back(Layer&);
+
 private:
     explicit Image(const Gfx::Size&);
+
+    size_t index_of(const Layer&) const;
 
     Gfx::Size m_size;
     NonnullRefPtrVector<Layer> m_layers;
