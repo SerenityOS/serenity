@@ -113,7 +113,7 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
 void ImageEditor::keyup_event(GUI::KeyEvent& event)
 {
     if (m_active_tool)
-        m_active_tool->on_keydown(event);
+        m_active_tool->on_keyup(event);
 }
 
 void ImageEditor::set_active_layer(Layer* layer)
