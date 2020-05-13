@@ -27,7 +27,6 @@
 #include "MoveTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 

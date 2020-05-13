@@ -27,7 +27,6 @@
 #include "EraseTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -110,7 +109,7 @@ void EraseTool::on_contextmenu(GUI::ContextMenuEvent& event)
 Color EraseTool::get_color() const
 {
     if (m_use_secondary_color)
-        return PaintableWidget::the().secondary_color();
+        return m_editor->secondary_color();
     return Color(255, 255, 255, 0);
 }
 

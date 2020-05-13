@@ -8,7 +8,6 @@ OBJS = \
     LayerModel.o \
     LineTool.o \
     MoveTool.o \
-    PaintableWidget.o \
     PaletteWidget.o \
     PenTool.o \
     PickerTool.o \

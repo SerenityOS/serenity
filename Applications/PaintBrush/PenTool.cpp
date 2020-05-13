@@ -27,7 +27,6 @@
 #include "PenTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -48,7 +47,7 @@ void PenTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent
         return;
 
     GUI::Painter painter(layer.bitmap());
-    painter.draw_line(event.position(), event.position(), PaintableWidget::the().color_for(event), m_thickness);
+    painter.draw_line(event.position(), event.position(), m_editor->color_for(event), m_thickness);
     m_editor->update();
     m_last_drawing_event_position = event.position();
 }
@@ -68,9 +67,9 @@ void PenTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent
         GUI::Painter painter(layer.bitmap());
 
         if (m_last_drawing_event_position != Gfx::Point(-1, -1))
-            painter.draw_line(m_last_drawing_event_position, event.position(), PaintableWidget::the().color_for(event), m_thickness);
+            painter.draw_line(m_last_drawing_event_position, event.position(), m_editor->color_for(event), m_thickness);
         else
-            painter.draw_line(event.position(), event.position(), PaintableWidget::the().color_for(event), m_thickness);
+            painter.draw_line(event.position(), event.position(), m_editor->color_for(event), m_thickness);
         m_editor->update();
 
         m_last_drawing_event_position = event.position();

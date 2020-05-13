@@ -25,13 +25,16 @@
  */
 
 #include "PaletteWidget.h"
-#include "PaintableWidget.h"
+#include "ImageEditor.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ColorPicker.h>
 #include <LibGfx/Palette.h>
 
+namespace PaintBrush {
+
 class ColorWidget : public GUI::Frame {
-    C_OBJECT(ColorWidget)
+    C_OBJECT(ColorWidget);
+
 public:
     explicit ColorWidget(Color color, PaletteWidget& palette_widget)
         : m_palette_widget(palette_widget)
@@ -68,8 +71,8 @@ private:
     Color m_color;
 };
 
-PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget)
-    : m_paintable_widget(paintable_widget)
+PaletteWidget::PaletteWidget(ImageEditor& editor)
+    : m_editor(editor)
 {
     set_frame_shape(Gfx::FrameShape::Panel);
     set_frame_shadow(Gfx::FrameShadow::Raised);
@@ -82,20 +85,20 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget)
     m_secondary_color_widget = add<GUI::Frame>();
     m_secondary_color_widget->set_relative_rect({ 2, 2, 60, 31 });
     m_secondary_color_widget->set_fill_with_background_color(true);
-    set_secondary_color(paintable_widget.secondary_color());
+    set_secondary_color(m_editor.secondary_color());
 
     m_primary_color_widget = add<GUI::Frame>();
     Gfx::Rect rect { 0, 0, 38, 15 };
     rect.center_within(m_secondary_color_widget->relative_rect());
     m_primary_color_widget->set_relative_rect(rect);
     m_primary_color_widget->set_fill_with_background_color(true);
-    set_primary_color(paintable_widget.primary_color());
+    set_primary_color(m_editor.primary_color());
 
-    paintable_widget.on_primary_color_change = [this](Color color) {
+    m_editor.on_primary_color_change = [this](Color color) {
         set_primary_color(color);
     };
 
-    paintable_widget.on_secondary_color_change = [this](Color color) {
+    m_editor.on_secondary_color_change = [this](Color color) {
         set_secondary_color(color);
     };
 
@@ -157,7 +160,7 @@ PaletteWidget::~PaletteWidget()
 
 void PaletteWidget::set_primary_color(Color color)
 {
-    m_paintable_widget.set_primary_color(color);
+    m_editor.set_primary_color(color);
     auto pal = m_primary_color_widget->palette();
     pal.set_color(ColorRole::Background, color);
     m_primary_color_widget->set_palette(pal);
@@ -166,9 +169,11 @@ void PaletteWidget::set_primary_color(Color color)
 
 void PaletteWidget::set_secondary_color(Color color)
 {
-    m_paintable_widget.set_secondary_color(color);
+    m_editor.set_secondary_color(color);
     auto pal = m_secondary_color_widget->palette();
     pal.set_color(ColorRole::Background, color);
     m_secondary_color_widget->set_palette(pal);
     m_secondary_color_widget->update();
+}
+
 }

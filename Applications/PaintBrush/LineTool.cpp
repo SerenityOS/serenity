@@ -27,7 +27,6 @@
 #include "LineTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include "PaintableWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -74,7 +73,7 @@ void LineTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&
 {
     if (event.button() == m_drawing_button) {
         GUI::Painter painter(layer.bitmap());
-        painter.draw_line(m_line_start_position, m_line_end_position, PaintableWidget::the().color_for(m_drawing_button), m_thickness);
+        painter.draw_line(m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
     }

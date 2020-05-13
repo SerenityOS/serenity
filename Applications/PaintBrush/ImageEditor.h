@@ -51,6 +51,18 @@ public:
 
     void layers_did_change();
 
+    Color primary_color() const { return m_primary_color; }
+    void set_primary_color(Color);
+
+    Color secondary_color() const { return m_secondary_color; }
+    void set_secondary_color(Color);
+
+    Color color_for(const GUI::MouseEvent&) const;
+    Color color_for(GUI::MouseButton) const;
+
+    Function<void(Color)> on_primary_color_change;
+    Function<void(Color)> on_secondary_color_change;
+
 private:
     ImageEditor();
 
@@ -63,6 +75,9 @@ private:
     RefPtr<Layer> m_active_layer;
 
     Tool* m_active_tool { nullptr };
+
+    Color m_primary_color { Color::Black };
+    Color m_secondary_color { Color::White };
 };
 
 }
