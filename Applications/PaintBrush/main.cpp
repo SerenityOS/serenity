@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("PaintBrush");
-    window->set_rect(100, 100, 640, 480);
+    window->set_rect(40, 100, 950, 570);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-paintbrush.png"));
 
     auto& horizontal_container = window->set_main_widget<GUI::Widget>();
