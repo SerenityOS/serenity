@@ -26,6 +26,12 @@ try {
     assert(new Function().name === "anonymous");
     assert(new Function().toString() === "function anonymous() {\n  ???\n}");
 
+    assertThrowsError(() => {
+        new Function("[");
+    }, {
+        error: SyntaxError
+    });
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e.message);
