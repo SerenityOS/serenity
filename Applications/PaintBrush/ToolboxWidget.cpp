@@ -34,6 +34,8 @@
 #include "PickerTool.h"
 #include "RectangleTool.h"
 #include "SprayTool.h"
+#include <AK/StringBuilder.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 
@@ -42,14 +44,31 @@ namespace PaintBrush {
 class ToolButton final : public GUI::Button {
     C_OBJECT(ToolButton)
 public:
-    ToolButton(const String& name, OwnPtr<Tool>&& tool)
-        : m_tool(move(tool))
+    ToolButton(ToolboxWidget& toolbox, const String& name, const GUI::Shortcut& shortcut, OwnPtr<Tool>&& tool)
+        : m_toolbox(toolbox)
+        , m_tool(move(tool))
     {
-        set_tooltip(name);
+        StringBuilder builder;
+        builder.append(name);
+        builder.append(" (");
+        builder.append(shortcut.to_string());
+        builder.append(")");
+        set_tooltip(builder.to_string());
+
+        m_action = GUI::Action::create_checkable(name, shortcut, [this](auto& action) {
+            if (action.is_checked())
+                m_toolbox.on_tool_selection(m_tool);
+            else
+                m_toolbox.on_tool_selection(nullptr);
+        });
+
+        set_action(*m_action);
     }
 
     const Tool& tool() const { return *m_tool; }
     Tool& tool() { return *m_tool; }
+
+    virtual bool is_uncheckable() const override { return false; }
 
     virtual void context_menu_event(GUI::ContextMenuEvent& event) override
     {
@@ -58,7 +77,9 @@ public:
     }
 
 private:
+    ToolboxWidget& m_toolbox;
     OwnPtr<Tool> m_tool;
+    RefPtr<GUI::Action> m_action;
 };
 
 ToolboxWidget::ToolboxWidget()
@@ -75,13 +96,12 @@ ToolboxWidget::ToolboxWidget()
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto add_tool = [&](const StringView& name, const StringView& icon_name, OwnPtr<Tool>&& tool) {
-        auto& button = add<ToolButton>(name, move(tool));
+    auto add_tool = [&](const StringView& name, const StringView& icon_name, const GUI::Shortcut& shortcut, NonnullOwnPtr<Tool> tool) {
+        auto& button = add<ToolButton>(*this, name, shortcut, move(tool));
         button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         button.set_preferred_size(0, 32);
         button.set_checkable(true);
         button.set_exclusive(true);
-
         button.set_icon(Gfx::Bitmap::load_from_file(String::format("/res/icons/paintbrush/%s.png", icon_name.to_string().characters())));
 
         button.on_checked = [this, button = &button](auto checked) {
@@ -92,15 +112,15 @@ ToolboxWidget::ToolboxWidget()
         };
     };
 
-    add_tool("Move", "move", make<MoveTool>());
-    add_tool("Pen", "pen", make<PenTool>());
-    add_tool("Bucket Fill", "bucket", make<BucketTool>());
-    add_tool("Spray", "spray", make<SprayTool>());
-    add_tool("Color Picker", "picker", make<PickerTool>());
-    add_tool("Erase", "eraser", make<EraseTool>());
-    add_tool("Line", "line", make<LineTool>());
-    add_tool("Rectangle", "rectangle", make<RectangleTool>());
-    add_tool("Ellipse", "circle", make<EllipseTool>());
+    add_tool("Move", "move", { 0, Key_M }, make<MoveTool>());
+    add_tool("Pen", "pen", { 0, Key_N }, make<PenTool>());
+    add_tool("Bucket Fill", "bucket", { Mod_Shift, Key_B }, make<BucketTool>());
+    add_tool("Spray", "spray", { Mod_Shift, Key_S }, make<SprayTool>());
+    add_tool("Color Picker", "picker", { 0, Key_O }, make<PickerTool>());
+    add_tool("Erase", "eraser", { Mod_Shift, Key_E }, make<EraseTool>());
+    add_tool("Line", "line", { Mod_Ctrl | Mod_Shift, Key_L }, make<LineTool>());
+    add_tool("Rectangle", "rectangle", { Mod_Ctrl | Mod_Shift, Key_R }, make<RectangleTool>());
+    add_tool("Ellipse", "circle", { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()
