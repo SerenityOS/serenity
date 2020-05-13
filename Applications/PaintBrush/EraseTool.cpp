@@ -72,7 +72,7 @@ void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
     }
 }
 
-void EraseTool::on_contextmenu(GUI::ContextMenuEvent& event)
+void EraseTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();

@@ -103,7 +103,7 @@ void SprayTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
     m_timer->stop();
 }
 
-void SprayTool::on_contextmenu(GUI::ContextMenuEvent& event)
+void SprayTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();

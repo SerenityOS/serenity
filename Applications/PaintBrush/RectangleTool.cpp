@@ -114,7 +114,7 @@ void RectangleTool::on_keydown(GUI::KeyEvent& event)
     }
 }
 
-void RectangleTool::on_contextmenu(GUI::ContextMenuEvent& event)
+void RectangleTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();
