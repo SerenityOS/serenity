@@ -69,4 +69,36 @@ void MoveTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
     m_editor->window()->set_override_cursor(GUI::StandardCursor::None);
 }
 
+void MoveTool::on_keydown(GUI::KeyEvent& event)
+{
+    if (event.modifiers() != 0)
+        return;
+
+    auto* layer = m_editor->active_layer();
+    if (!layer)
+        return;
+
+    auto new_location = layer->location();
+
+    switch (event.key()) {
+    case Key_Up:
+        new_location.move_by(0, -1);
+        break;
+    case Key_Down:
+        new_location.move_by(0, 1);
+        break;
+    case Key_Left:
+        new_location.move_by(-1, 0);
+        break;
+    case Key_Right:
+        new_location.move_by(1, 0);
+        break;
+    default:
+        return;
+    }
+
+    layer->set_location(new_location);
+    m_editor->layers_did_change();
+}
+
 }
