@@ -166,6 +166,11 @@ bool StringView::contains(char needle) const
     return false;
 }
 
+bool StringView::equals_ignoring_case(const StringView& other) const
+{
+    return StringUtils::equals_ignoring_case(*this, other);
+}
+
 StringView StringView::substring_view(size_t start, size_t length) const
 {
     ASSERT(start + length <= m_length);
