@@ -74,7 +74,7 @@ public:
 
     virtual void context_menu_event(GUI::ContextMenuEvent& event) override
     {
-        set_checked(true);
+        m_action->activate();
         m_tool->on_contextmenu(event);
     }
 
