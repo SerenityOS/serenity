@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibGUI/Event.h>
+#include <LibGUI/Forward.h>
 
 namespace PaintBrush {
 
@@ -50,9 +51,13 @@ public:
     void clear() { m_editor = nullptr; }
     void setup(ImageEditor&);
 
+    GUI::Action* action() { return m_action; }
+    void set_action(GUI::Action*);
+
 protected:
     Tool();
     WeakPtr<ImageEditor> m_editor;
+    RefPtr<GUI::Action> m_action;
 };
 
 }

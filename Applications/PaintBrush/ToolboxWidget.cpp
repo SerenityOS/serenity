@@ -44,7 +44,7 @@ namespace PaintBrush {
 class ToolButton final : public GUI::Button {
     C_OBJECT(ToolButton)
 public:
-    ToolButton(ToolboxWidget& toolbox, const String& name, const GUI::Shortcut& shortcut, OwnPtr<Tool>&& tool)
+    ToolButton(ToolboxWidget& toolbox, const String& name, const GUI::Shortcut& shortcut, OwnPtr<Tool> tool)
         : m_toolbox(toolbox)
         , m_tool(move(tool))
     {
@@ -62,6 +62,7 @@ public:
                 m_toolbox.on_tool_selection(nullptr);
         });
 
+        m_tool->set_action(m_action);
         set_action(*m_action);
         m_toolbox.m_action_group.add_action(*m_action);
     }
@@ -101,6 +102,7 @@ ToolboxWidget::ToolboxWidget()
     m_action_group.set_unchecking_allowed(false);
 
     auto add_tool = [&](const StringView& name, const StringView& icon_name, const GUI::Shortcut& shortcut, NonnullOwnPtr<Tool> tool) -> ToolButton& {
+        m_tools.append(tool.ptr());
         auto& button = add<ToolButton>(*this, name, shortcut, move(tool));
         button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         button.set_preferred_size(0, 32);
@@ -110,7 +112,7 @@ ToolboxWidget::ToolboxWidget()
     };
 
     add_tool("Move", "move", { 0, Key_M }, make<MoveTool>());
-    add_tool("Pen", "pen", { 0, Key_N }, make<PenTool>()).set_checked(true);
+    add_tool("Pen", "pen", { 0, Key_N }, make<PenTool>());
     add_tool("Bucket Fill", "bucket", { Mod_Shift, Key_B }, make<BucketTool>());
     add_tool("Spray", "spray", { Mod_Shift, Key_S }, make<SprayTool>());
     add_tool("Color Picker", "picker", { 0, Key_O }, make<PickerTool>());

@@ -26,6 +26,7 @@
 
 #include "Tool.h"
 #include "ImageEditor.h"
+#include <LibGUI/Action.h>
 
 namespace PaintBrush {
 
@@ -40,6 +41,11 @@ Tool::~Tool()
 void Tool::setup(ImageEditor& editor)
 {
     m_editor = editor.make_weak_ptr();
+}
+
+void Tool::set_action(GUI::Action* action)
+{
+    m_action = action;
 }
 
 }

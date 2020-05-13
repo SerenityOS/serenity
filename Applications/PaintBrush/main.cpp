@@ -28,6 +28,7 @@
 #include "ImageEditor.h"
 #include "Layer.h"
 #include "PaletteWidget.h"
+#include "Tool.h"
 #include "ToolboxWidget.h"
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -113,6 +114,13 @@ int main(int argc, char** argv)
     }));
 
     menubar->add_menu("Edit");
+
+    auto& tool_menu = menubar->add_menu("Tool");
+    toolbox.for_each_tool([&](auto& tool) {
+        if (tool.action())
+            tool_menu.add_action(*tool.action());
+        return IterationDecision::Continue;
+    });
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
