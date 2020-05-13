@@ -75,6 +75,10 @@ bool matches(const Selector::SimpleSelector& component, const Element& element)
         if (element.first_child_of_type<Element>() || element.first_child_of_type<Text>())
             return false;
         break;
+    case Selector::SimpleSelector::PseudoClass::Root:
+        if (!element.is_html_element())
+            return false;
+        break;
     }
 
     switch (component.attribute_match_type) {
