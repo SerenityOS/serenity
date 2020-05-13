@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
     json.as_object().for_each_member([&](auto& name, auto& value) {
         ASSERT(value.is_object());
-        out() << "    if (string == \"" << name << "\")";
+        out() << "    if (string.equals_ignoring_case(\"" << name << "\"))";
         out() << "        return PropertyID::" << title_casify(name) << ";";
     });
 
