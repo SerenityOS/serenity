@@ -57,6 +57,7 @@ public:
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
+    void remove_layer(Layer&);
 
 private:
     explicit Image(const Gfx::Size&);
