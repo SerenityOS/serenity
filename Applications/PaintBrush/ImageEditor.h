@@ -69,6 +69,7 @@ private:
     virtual bool accepts_focus() const override { return true; }
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void second_paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;

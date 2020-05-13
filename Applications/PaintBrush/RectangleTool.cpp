@@ -97,17 +97,15 @@ void RectangleTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent
     m_editor->update();
 }
 
-void RectangleTool::on_second_paint(GUI::PaintEvent& event)
+void RectangleTool::on_second_paint(const Layer& layer, GUI::PaintEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    (void)event;
-#if 0
-    GUI::Painter painter(*m_widget);
+    GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
+    painter.translate(layer.location());
     draw_using(painter);
-#endif
 }
 
 void RectangleTool::on_keydown(GUI::KeyEvent& event)

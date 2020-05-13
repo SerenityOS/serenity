@@ -91,13 +91,14 @@ void EllipseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseE
     m_editor->update();
 }
 
-void EllipseTool::on_second_paint(GUI::PaintEvent& event)
+void EllipseTool::on_second_paint(const Layer& layer, GUI::PaintEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
+    painter.translate(layer.location());
     draw_using(painter);
 }
 
