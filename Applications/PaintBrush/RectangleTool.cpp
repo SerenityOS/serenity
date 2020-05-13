@@ -90,9 +90,6 @@ void RectangleTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    if (!m_editor->rect().contains(event.position()))
-        return;
-
     m_rectangle_end_position = event.position();
     m_editor->update();
 }
