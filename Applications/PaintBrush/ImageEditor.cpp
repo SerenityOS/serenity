@@ -85,8 +85,18 @@ static GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent& original_
 
 void ImageEditor::mousedown_event(GUI::MouseEvent& event)
 {
-    if (!m_active_layer || !m_active_tool)
+    if (!m_active_tool)
         return;
+
+    if (m_active_tool->is_move_tool()) {
+        if (auto* other_layer = layer_at(event.position())) {
+            set_active_layer(other_layer);
+        }
+    }
+
+    if (!m_active_layer)
+        return;
+
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
     m_active_tool->on_mousedown(*m_active_layer, layer_event, event);
 }
@@ -124,7 +134,21 @@ void ImageEditor::set_active_layer(Layer* layer)
     if (m_active_layer == layer)
         return;
     m_active_layer = layer;
-    update();
+
+    if (m_active_layer) {
+        size_t index = 0;
+        for (; index < m_image->layer_count(); ++index) {
+            if (&m_image->layer(index) == layer)
+                break;
+        }
+        if (on_active_layer_change)
+            on_active_layer_change(m_image->layer_model().index(index));
+    } else {
+        if (on_active_layer_change)
+            on_active_layer_change({});
+    }
+
+    layers_did_change();
 }
 
 void ImageEditor::set_active_tool(Tool* tool)
@@ -181,6 +205,18 @@ void ImageEditor::set_secondary_color(Color color)
     m_secondary_color = color;
     if (on_secondary_color_change)
         on_secondary_color_change(color);
+}
+
+Layer* ImageEditor::layer_at(const Gfx::Point& position)
+{
+    if (!m_image)
+        return nullptr;
+    for (ssize_t i = m_image->layer_count() - 1; i >= 0; --i) {
+        auto& layer = m_image->layer(i);
+        if (layer.relative_rect().contains(position))
+            return const_cast<Layer*>(&layer);
+    }
+    return nullptr;
 }
 
 }

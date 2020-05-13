@@ -158,6 +158,13 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
+    image_editor.on_active_layer_change = [&](auto& index) {
+        if (index.is_valid())
+            layer_table_view.selection().set(index);
+        else
+            layer_table_view.selection().clear();
+    };
+
     auto image = PaintBrush::Image::create_with_size({ 640, 480 });
 
     auto bg_layer = PaintBrush::Layer::create_with_size({ 640, 480 }, "Background");

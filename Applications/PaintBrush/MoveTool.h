@@ -42,6 +42,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "MoveTool"; }
+    virtual bool is_move_tool() const override { return true; }
 
     RefPtr<Layer> m_layer_being_moved;
     Gfx::Point m_event_origin;
