@@ -51,6 +51,8 @@ public:
 
     void layers_did_change();
 
+    Layer* layer_at(const Gfx::Point&);
+
     Color primary_color() const { return m_primary_color; }
     void set_primary_color(Color);
 
@@ -62,6 +64,8 @@ public:
 
     Function<void(Color)> on_primary_color_change;
     Function<void(Color)> on_secondary_color_change;
+
+    Function<void(const GUI::ModelIndex&)> on_active_layer_change;
 
 private:
     ImageEditor();

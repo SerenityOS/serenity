@@ -48,6 +48,8 @@ public:
     virtual void on_keydown(GUI::KeyEvent&) {}
     virtual void on_keyup(GUI::KeyEvent&) {}
 
+    virtual bool is_move_tool() const { return false; }
+
     void clear() { m_editor = nullptr; }
     void setup(ImageEditor&);
 
