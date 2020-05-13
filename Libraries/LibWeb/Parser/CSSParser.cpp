@@ -43,6 +43,9 @@ namespace Web {
 
 static Optional<Color> parse_css_color(const StringView& view)
 {
+    if (view.equals_ignoring_case("transparent"))
+        return Color::from_rgba(0x00000000);
+
     auto color = Color::from_string(view.to_string().to_lowercase());
     if (color.has_value())
         return color;
