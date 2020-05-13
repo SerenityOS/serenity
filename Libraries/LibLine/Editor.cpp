@@ -171,6 +171,10 @@ String Editor::get_line(const String& prompt)
 
                 m_buffer.clear();
                 m_cursor = 0;
+
+                if (on_interrupt_handled)
+                    on_interrupt_handled();
+
                 m_refresh_needed = true;
                 continue;
             }
