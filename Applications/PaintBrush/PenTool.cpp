@@ -73,7 +73,7 @@ void PenTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent
     m_last_drawing_event_position = event.position();
 }
 
-void PenTool::on_contextmenu(GUI::ContextMenuEvent& event)
+void PenTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();

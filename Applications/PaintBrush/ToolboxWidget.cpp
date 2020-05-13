@@ -75,7 +75,7 @@ public:
     virtual void context_menu_event(GUI::ContextMenuEvent& event) override
     {
         m_action->activate();
-        m_tool->on_contextmenu(event);
+        m_tool->on_tool_button_contextmenu(event);
     }
 
 private:

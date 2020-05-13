@@ -40,7 +40,7 @@ public:
     virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
-    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
+    virtual void on_tool_button_contextmenu(GUI::ContextMenuEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "PenTool"; }

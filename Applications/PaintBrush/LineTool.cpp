@@ -128,7 +128,7 @@ void LineTool::on_keyup(GUI::KeyEvent& event)
     }
 }
 
-void LineTool::on_contextmenu(GUI::ContextMenuEvent& event)
+void LineTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();
