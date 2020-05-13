@@ -41,7 +41,7 @@ public:
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
-    virtual void on_second_paint(GUI::PaintEvent&) override;
+    virtual void on_second_paint(const Layer&, GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
 
 private:
@@ -52,7 +52,7 @@ private:
     };
 
     virtual const char* class_name() const override { return "RectangleTool"; }
-    void draw_using(GUI::Painter& painter);
+    void draw_using(GUI::Painter&);
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::Point m_rectangle_start_position;

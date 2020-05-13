@@ -62,6 +62,12 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     }
 }
 
+void ImageEditor::second_paint_event(GUI::PaintEvent& event)
+{
+    if (m_active_tool && m_active_layer)
+        m_active_tool->on_second_paint(*m_active_layer, event);
+}
+
 static GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent& original_event, const Layer& layer)
 {
     auto position_in_active_layer_coordinates = original_event.position().translated(-layer.location());

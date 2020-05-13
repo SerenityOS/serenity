@@ -41,7 +41,7 @@ public:
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
-    virtual void on_second_paint(GUI::PaintEvent&) override;
+    virtual void on_second_paint(const Layer&, GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
 
 private:

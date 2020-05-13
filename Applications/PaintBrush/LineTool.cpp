@@ -96,18 +96,15 @@ void LineTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
     m_editor->update();
 }
 
-void LineTool::on_second_paint(GUI::PaintEvent& event)
+void LineTool::on_second_paint(const Layer& layer, GUI::PaintEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    (void)event;
-
-#if 0
-    GUI::Painter painter(*m_widget);
+    GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
+    painter.translate(layer.location());
     painter.draw_line(m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
-#endif
 }
 
 void LineTool::on_keydown(GUI::KeyEvent& event)
