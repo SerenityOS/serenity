@@ -50,6 +50,7 @@ public:
     virtual ~MessageBox() override;
 
     static int show(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Window* parent_window = nullptr);
+    static int show_error(const StringView& text, Window* parent_window = nullptr);
 
 private:
     explicit MessageBox(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Window* parent_window = nullptr);

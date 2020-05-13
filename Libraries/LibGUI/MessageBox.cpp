@@ -43,6 +43,11 @@ int MessageBox::show(const StringView& text, const StringView& title, Type type,
     return box->exec();
 }
 
+int MessageBox::show_error(const StringView& text, Window* parent_window)
+{
+    return show(text, "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, parent_window);
+}
+
 MessageBox::MessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, Window* parent_window)
     : Dialog(parent_window)
     , m_text(text)
