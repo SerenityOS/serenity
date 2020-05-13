@@ -614,6 +614,7 @@ OwnPtr<Messages::WindowServer::SetWindowOverrideCursorResponse> ClientConnection
     }
     auto& window = *(*it).value;
     window.set_override_cursor(Cursor::create((StandardCursor)message.cursor_type()));
+    Compositor::the().invalidate_cursor();
     return make<Messages::WindowServer::SetWindowOverrideCursorResponse>();
 }
 
