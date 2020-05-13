@@ -50,7 +50,9 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(frame_inner_rect());
 
+    painter.translate(frame_thickness(), frame_thickness());
     painter.fill_rect_with_checkerboard(rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
 
     if (m_image) {
