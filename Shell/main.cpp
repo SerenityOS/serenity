@@ -1540,8 +1540,25 @@ int main(int argc, char** argv)
 
     StringBuilder complete_line_builder;
 
+    bool should_break_current_command { false };
+
+    editor.on_interrupt_handled = [&] {
+        if (s_should_continue != ExitCodeOrContinuationRequest::ContinuationRequest::Nothing) {
+            should_break_current_command = true;
+            editor.finish();
+        }
+    };
+
     for (;;) {
         auto line = editor.get_line(prompt());
+
+        if (should_break_current_command) {
+            complete_line_builder.clear();
+            s_should_continue = ExitCodeOrContinuationRequest::ContinuationRequest::Nothing;
+            should_break_current_command = false;
+            continue;
+        }
+
         if (line.is_empty())
             continue;
 
