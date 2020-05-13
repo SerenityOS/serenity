@@ -400,19 +400,19 @@ public:
             if (is_pseudo_element)
                 return {};
 
-            if (pseudo_name == "link")
+            if (pseudo_name.equals_ignoring_case("link"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Link;
-            else if (pseudo_name == "hover")
+            else if (pseudo_name.equals_ignoring_case("hover"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Hover;
-            else if (pseudo_name == "focus")
+            else if (pseudo_name.equals_ignoring_case("focus"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Focus;
-            else if (pseudo_name == "first-child")
+            else if (pseudo_name.equals_ignoring_case("first-child"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::FirstChild;
-            else if (pseudo_name == "last-child")
+            else if (pseudo_name.equals_ignoring_case("last-child"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::LastChild;
-            else if (pseudo_name == "only-child")
+            else if (pseudo_name.equals_ignoring_case("only-child"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::OnlyChild;
-            else if (pseudo_name == "empty")
+            else if (pseudo_name.equals_ignoring_case("empty"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Empty;
         }
 
