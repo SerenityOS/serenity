@@ -79,4 +79,29 @@ GUI::Model& Image::layer_model()
     return *m_layer_model;
 }
 
+size_t Image::index_of(const Layer& layer) const
+{
+    for (size_t i = 0; i < m_layers.size(); ++i) {
+        if (&m_layers.at(i) == &layer)
+            return i;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+void Image::move_layer_to_back(Layer& layer)
+{
+    NonnullRefPtr<Layer> protector(layer);
+    auto index = index_of(layer);
+    m_layers.remove(index);
+    m_layers.prepend(layer);
+}
+
+void Image::move_layer_to_front(Layer& layer)
+{
+    NonnullRefPtr<Layer> protector(layer);
+    auto index = index_of(layer);
+    m_layers.remove(index);
+    m_layers.append(layer);
+}
+
 }

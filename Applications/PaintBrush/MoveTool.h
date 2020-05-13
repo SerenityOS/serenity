@@ -39,6 +39,7 @@ public:
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
+    virtual void on_context_menu(Layer&, GUI::ContextMenuEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "MoveTool"; }
@@ -47,6 +48,8 @@ private:
     RefPtr<Layer> m_layer_being_moved;
     Gfx::Point m_event_origin;
     Gfx::Point m_layer_origin;
+    RefPtr<GUI::Menu> m_context_menu;
+    RefPtr<Layer> m_context_menu_layer;
 };
 
 }

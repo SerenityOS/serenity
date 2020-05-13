@@ -117,6 +117,13 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
     m_active_tool->on_mouseup(*m_active_layer, layer_event, event);
 }
 
+void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    if (!m_active_layer || !m_active_tool)
+        return;
+    m_active_tool->on_context_menu(*m_active_layer, event);
+}
+
 void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
     if (m_active_tool)

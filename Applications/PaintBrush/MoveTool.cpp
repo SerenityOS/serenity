@@ -25,8 +25,11 @@
  */
 
 #include "MoveTool.h"
+#include "Image.h"
 #include "ImageEditor.h"
 #include "Layer.h"
+#include <LibGUI/Action.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
@@ -99,6 +102,23 @@ void MoveTool::on_keydown(GUI::KeyEvent& event)
 
     layer->set_location(new_location);
     m_editor->layers_did_change();
+}
+
+void MoveTool::on_context_menu(Layer& layer, GUI::ContextMenuEvent& event)
+{
+    if (!m_context_menu) {
+        m_context_menu = GUI::Menu::construct();
+        m_context_menu->add_action(GUI::CommonActions::make_move_to_front_action([this](auto&) {
+            m_editor->image()->move_layer_to_front(*m_context_menu_layer);
+            m_editor->layers_did_change();
+        }));
+        m_context_menu->add_action(GUI::CommonActions::make_move_to_back_action([this](auto&) {
+            m_editor->image()->move_layer_to_back(*m_context_menu_layer);
+            m_editor->layers_did_change();
+        }));
+    }
+    m_context_menu_layer = layer;
+    m_context_menu->popup(event.screen_position());
 }
 
 }
