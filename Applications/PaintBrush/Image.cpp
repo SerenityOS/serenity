@@ -51,12 +51,16 @@ Image::Image(const Gfx::Size& size)
 
 void Image::paint_into(GUI::Painter& painter, const Gfx::Rect& dest_rect, const Gfx::Rect& src_rect)
 {
+    (void) src_rect;
+    Gfx::PainterStateSaver saver(painter);
+    painter.add_clip_rect(dest_rect);
     for (auto& layer : m_layers) {
         auto target = dest_rect.translated(layer.location());
+        target.set_size(layer.size());
 #ifdef IMAGE_DEBUG
-        dbg() << "Composite layer " << layer.name() << " target: " << target << ", src_rect: " << src_rect;
+        dbg() << "Composite layer " << layer.name() << " target: " << target << ", layer.rect: " << layer.rect();
 #endif
-        painter.draw_scaled_bitmap(target, layer.bitmap(), src_rect);
+        painter.draw_scaled_bitmap(target, layer.bitmap(), layer.rect());
     }
 }
 
