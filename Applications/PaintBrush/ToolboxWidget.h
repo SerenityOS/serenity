@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Frame.h>
 
 namespace PaintBrush {
@@ -40,7 +41,11 @@ public:
     Function<void(Tool*)> on_tool_selection;
 
 private:
+    friend class ToolButton;
+
     explicit ToolboxWidget();
+
+    GUI::ActionGroup m_action_group;
 };
 
 }

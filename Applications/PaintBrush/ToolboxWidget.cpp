@@ -63,6 +63,7 @@ public:
         });
 
         set_action(*m_action);
+        m_toolbox.m_action_group.add_action(*m_action);
     }
 
     const Tool& tool() const { return *m_tool; }
@@ -95,6 +96,9 @@ ToolboxWidget::ToolboxWidget()
 
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 4, 4, 4, 4 });
+
+    m_action_group.set_exclusive(true);
+    m_action_group.set_unchecking_allowed(false);
 
     auto add_tool = [&](const StringView& name, const StringView& icon_name, const GUI::Shortcut& shortcut, NonnullOwnPtr<Tool> tool) {
         auto& button = add<ToolButton>(*this, name, shortcut, move(tool));
