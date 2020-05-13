@@ -43,7 +43,7 @@ namespace Web {
 
 static Optional<Color> parse_css_color(const StringView& view)
 {
-    auto color = Color::from_string(view);
+    auto color = Color::from_string(view.to_string().to_lowercase());
     if (color.has_value())
         return color;
 
@@ -128,7 +128,8 @@ static Optional<float> parse_number(const StringView& view)
     if (view.ends_with('%'))
         return parse_number(view.substring_view(0, view.length() - 1));
 
-    if (view.ends_with("px"))
+    // FIXME: Maybe we should have "ends_with_ignoring_case()" ?
+    if (view.to_string().to_lowercase().ends_with("px"))
         return parse_number(view.substring_view(0, view.length() - 2));
 
     return try_parse_float(view);
@@ -142,11 +143,12 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
             return PercentageStyleValue::create(number.value());
         return LengthStyleValue::create(Length(number.value(), Length::Type::Absolute));
     }
-    if (string == "inherit")
+
+    if (string.equals_ignoring_case("inherit"))
         return InheritStyleValue::create();
-    if (string == "initial")
+    if (string.equals_ignoring_case("initial"))
         return InitialStyleValue::create();
-    if (string == "auto")
+    if (string.equals_ignoring_case("auto"))
         return LengthStyleValue::create(Length());
 
     auto color = parse_css_color(string);
