@@ -40,12 +40,19 @@ public:
 
     Function<void(Tool*)> on_tool_selection;
 
+    template<typename Callback>
+    void for_each_tool(Callback callback)
+    {
+        for (auto& tool : m_tools)
+            callback(*tool);
+    }
+
 private:
     friend class ToolButton;
 
     explicit ToolboxWidget();
-
     GUI::ActionGroup m_action_group;
+    Vector<Tool*> m_tools;
 };
 
 }
