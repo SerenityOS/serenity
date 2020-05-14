@@ -61,9 +61,10 @@ void HTMLScriptElement::children_changed()
 
     auto parser = JS::Parser(JS::Lexer(source));
     auto program = parser.parse_program();
-    if (parser.has_errors())
+    if (parser.has_errors()) {
+        parser.print_errors();
         return;
-
+    }
     document().interpreter().run(*program);
 }
 
@@ -96,9 +97,10 @@ void HTMLScriptElement::inserted_into(Node& new_parent)
 
     auto parser = JS::Parser(JS::Lexer(source));
     auto program = parser.parse_program();
-    if (parser.has_errors())
+    if (parser.has_errors()) {
+        parser.print_errors();
         return;
-
+    }
     document().interpreter().run(*program);
 }
 

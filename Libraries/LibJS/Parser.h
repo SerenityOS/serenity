@@ -29,6 +29,7 @@
 #include "AST.h"
 #include "Lexer.h"
 #include <AK/NonnullRefPtr.h>
+#include <stdio.h>
 
 namespace JS {
 
@@ -75,7 +76,26 @@ public:
     NonnullRefPtr<NewExpression> parse_new_expression();
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
 
-    bool has_errors() const { m_parser_state.m_has_errors; }
+    struct Error {
+        String message;
+        size_t line;
+        size_t column;
+
+        String to_string() const
+        {
+            if (line == 0 || column == 0)
+                return message;
+            return String::format("%s (line: %zu, column: %zu)", message.characters(), line, column);
+        }
+    };
+
+    bool has_errors() const { return m_parser_state.m_errors.size(); }
+    const Vector<Error>& errors() const { return m_parser_state.m_errors; }
+    void print_errors() const
+    {
+        for (auto& error : m_parser_state.m_errors)
+            fprintf(stderr, "SyntaxError: %s\n", error.to_string().characters());
+    }
 
 private:
     friend class ScopePusher;
@@ -101,7 +121,7 @@ private:
     struct ParserState {
         Lexer m_lexer;
         Token m_current_token;
-        bool m_has_errors = false;
+        Vector<Error> m_errors;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_var_scopes;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
 
