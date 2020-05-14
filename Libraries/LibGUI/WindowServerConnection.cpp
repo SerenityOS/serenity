@@ -280,11 +280,6 @@ void WindowServerConnection::handle(const Messages::WindowClient::ScreenRectChan
     Desktop::the().did_receive_screen_rect({}, message.rect());
 }
 
-void WindowServerConnection::handle(const Messages::WindowClient::ClipboardContentsChanged& message)
-{
-    Clipboard::the().did_receive_clipboard_contents_changed({}, message.content_type());
-}
-
 void WindowServerConnection::handle(const Messages::WindowClient::AsyncSetWallpaperFinished&)
 {
     // This is handled manually by Desktop::set_wallpaper().

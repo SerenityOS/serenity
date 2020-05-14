@@ -1,0 +1,7 @@
+endpoint ClipboardServer = 802
+{
+    Greet() => (i32 client_id)
+
+    GetClipboardData() => (i32 shbuf_id, i32 data_size, String mime_type)
+    SetClipboardData(i32 shbuf_id, i32 data_size, String mime_type) => ()
+}

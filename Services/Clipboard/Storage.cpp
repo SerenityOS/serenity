@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,39 +24,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <Clipboard/Storage.h>
 
-#include <AK/Function.h>
-#include <AK/SharedBuffer.h>
-#include <AK/String.h>
+namespace Clipboard {
 
-namespace WindowServer {
+Storage& Storage::the()
+{
+    static Storage* s_the;
+    if (!s_the)
+        s_the = new Storage;
+    return *s_the;
+}
 
-class Clipboard {
-public:
-    static Clipboard& the();
-    ~Clipboard();
+Storage::Storage()
+{
+}
 
-    bool has_data() const
-    {
-        return m_shared_buffer;
-    }
+Storage::~Storage()
+{
+}
 
-    const String& data_type() const { return m_data_type; }
-    const u8* data() const;
-    int size() const;
+void Storage::set_data(NonnullRefPtr<SharedBuffer> data, size_t data_size, const String& mime_type)
+{
+    dbg() << "Storage::set_data <- [" << mime_type << "] " << data->data() << " (" << data_size << " bytes)";
+    m_shared_buffer = move(data);
+    m_data_size = data_size;
+    m_mime_type = mime_type;
 
-    void clear();
-    void set_data(NonnullRefPtr<SharedBuffer>&&, int contents_size, const String& data_type);
-
-    Function<void()> on_content_change;
-
-private:
-    Clipboard();
-
-    String m_data_type;
-    RefPtr<SharedBuffer> m_shared_buffer;
-    int m_contents_size { 0 };
-};
+    if (on_content_change)
+        on_content_change();
+}
 
 }

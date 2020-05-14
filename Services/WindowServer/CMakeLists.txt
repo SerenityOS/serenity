@@ -5,7 +5,6 @@ set(SOURCES
     AppletManager.cpp
     Button.cpp
     ClientConnection.cpp
-    Clipboard.cpp
     Compositor.cpp
     Cursor.cpp
     EventLoop.cpp

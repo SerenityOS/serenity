@@ -27,6 +27,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MenuBar.h>
@@ -54,6 +55,7 @@ Application::Application(int argc, char** argv)
     s_the = this;
     m_event_loop = make<Core::EventLoop>();
     WindowServerConnection::the();
+    Clipboard::initialize({});
     if (argc > 0)
         m_invoked_as = argv[0];
     for (int i = 1; i < argc; i++) {

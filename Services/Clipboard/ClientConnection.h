@@ -24,55 +24,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <WindowServer/Clipboard.h>
+#pragma once
 
-namespace WindowServer {
+#include <AK/HashMap.h>
+#include <Clipboard/ClipboardServerEndpoint.h>
+#include <LibIPC/ClientConnection.h>
 
-Clipboard& Clipboard::the()
-{
-    static Clipboard* s_the;
-    if (!s_the)
-        s_the = new Clipboard;
-    return *s_the;
-}
+namespace Clipboard {
 
-Clipboard::Clipboard()
-{
-}
+class ClientConnection final : public IPC::ClientConnection<ClipboardServerEndpoint>
+    , public ClipboardServerEndpoint {
+    C_OBJECT(ClientConnection);
 
-Clipboard::~Clipboard()
-{
-}
+public:
+    explicit ClientConnection(Core::LocalSocket&, int client_id);
+    virtual ~ClientConnection() override;
 
-const u8* Clipboard::data() const
-{
-    if (!m_shared_buffer)
-        return nullptr;
-    return (const u8*)m_shared_buffer->data();
-}
+    virtual void die() override;
 
-int Clipboard::size() const
-{
-    if (!m_shared_buffer)
-        return 0;
-    return m_contents_size;
-}
+    static void for_each_client(Function<void(ClientConnection&)>);
 
-void Clipboard::clear()
-{
-    m_shared_buffer = nullptr;
-    m_contents_size = 0;
-}
+    void notify_about_clipboard_change();
 
-void Clipboard::set_data(NonnullRefPtr<SharedBuffer>&& data, int contents_size, const String& data_type)
-{
-    dbg() << "Clipboard::set_data <- [" << data_type << "] " << data->data() << " (" << contents_size << " bytes)";
-    m_shared_buffer = move(data);
-    m_contents_size = contents_size;
-    m_data_type = data_type;
+private:
+    virtual OwnPtr<Messages::ClipboardServer::GreetResponse> handle(const Messages::ClipboardServer::Greet&) override;
+    virtual OwnPtr<Messages::ClipboardServer::GetClipboardDataResponse> handle(const Messages::ClipboardServer::GetClipboardData&) override;
+    virtual OwnPtr<Messages::ClipboardServer::SetClipboardDataResponse> handle(const Messages::ClipboardServer::SetClipboardData&) override;
 
-    if (on_content_change)
-        on_content_change();
-}
+    RefPtr<SharedBuffer> m_last_sent_buffer;
+};
 
 }
