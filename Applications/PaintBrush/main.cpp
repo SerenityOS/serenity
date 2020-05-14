@@ -150,6 +150,15 @@ int main(int argc, char** argv)
     layer_menu.add_action(GUI::Action::create("Select bottom layer", { 0, Key_End }, [&](auto&) {
         layer_table_view.selection().set(layer_table_view.model()->index(0));
     }, window));
+    layer_menu.add_separator();
+    layer_menu.add_action(GUI::Action::create("Remove active layer", { Mod_Ctrl , Key_D }, [&](auto&) {
+        auto active_layer = image_editor.active_layer();
+        if(!active_layer)
+            return;
+        image_editor.image()->remove_layer(*active_layer);
+        image_editor.set_active_layer(nullptr);
+        image_editor.layers_did_change();
+    }, window));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
