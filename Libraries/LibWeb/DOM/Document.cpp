@@ -378,6 +378,7 @@ JS::Value Document::run_javascript(const StringView& source)
     auto parser = JS::Parser(JS::Lexer(source));
     auto program = parser.parse_program();
     if (parser.has_errors()) {
+        parser.print_errors();
         return JS::js_undefined();
     }
     dbg() << "Document::run_javascript('" << source << "') will run:";

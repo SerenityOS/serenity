@@ -70,8 +70,8 @@ Value FunctionConstructor::construct(Interpreter& interpreter)
     auto parser = Parser(Lexer(source));
     auto function_expression = parser.parse_function_node<FunctionExpression>();
     if (parser.has_errors()) {
-        // FIXME: The parser should expose parsing error strings rather than just fprintf()'ing them
-        interpreter.throw_exception<SyntaxError>("");
+        auto error = parser.errors()[0];
+        interpreter.throw_exception<SyntaxError>(error.to_string());
         return {};
     }
     return function_expression->execute(interpreter);

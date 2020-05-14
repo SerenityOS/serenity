@@ -29,7 +29,6 @@
 #include <AK/HashMap.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
-#include <stdio.h>
 
 namespace JS {
 
@@ -1385,12 +1384,11 @@ void Parser::expected(const char* what)
 
 void Parser::syntax_error(const String& message, size_t line, size_t column)
 {
-    m_parser_state.m_has_errors = true;
     if (line == 0 || column == 0) {
         line = m_parser_state.m_current_token.line_number();
         column = m_parser_state.m_current_token.line_column();
     }
-    fprintf(stderr, "Syntax Error: %s (line: %zu, column: %zu)\n", message.characters(), line, column);
+    m_parser_state.m_errors.append({ message, line, column });
 }
 
 void Parser::save_state()
