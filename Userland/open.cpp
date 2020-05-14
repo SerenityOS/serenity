@@ -27,11 +27,13 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/EventLoop.h>
 #include <LibDesktop/Launcher.h>
 #include <string.h>
 
 int main(int argc, char* argv[])
 {
+    Core::EventLoop loop;
     Vector<const char*> urls_or_paths;
     Core::ArgsParser parser;
     parser.add_positional_argument(urls_or_paths, "URL or file path to open", "url-or-path");
