@@ -36,5 +36,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     auto lexer = JS::Lexer(js);
     auto parser = JS::Parser(lexer);
     parser.parse_program();
+    if (parser.has_errors())
+        parser.print_errors();
     return 0;
 }

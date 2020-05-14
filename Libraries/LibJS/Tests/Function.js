@@ -29,7 +29,11 @@ try {
     assertThrowsError(() => {
         new Function("[");
     }, {
-        error: SyntaxError
+        error: SyntaxError,
+        // This might be confusing at first but keep in mind it's actually parsing
+        // function anonymous() { [ }
+        // This is in line with what other engines are reporting.
+        message: "Unexpected token CurlyClose. Expected BracketClose (line: 1, column: 26)"
     });
 
     console.log("PASS");
