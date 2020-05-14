@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Clipboard.h"
 #include <Kernel/KeyCode.h>
 #include <Kernel/MousePacket.h>
 #include <LibCore/LocalSocket.h>
@@ -76,12 +75,6 @@ EventLoop::EventLoop()
 
     m_mouse_notifier = Core::Notifier::construct(m_mouse_fd, Core::Notifier::Read);
     m_mouse_notifier->on_ready_to_read = [this] { drain_mouse(); };
-
-    Clipboard::the().on_content_change = [&] {
-        ClientConnection::for_each_client([&](auto& client) {
-            client.notify_about_clipboard_contents_changed();
-        });
-    };
 }
 
 EventLoop::~EventLoop()

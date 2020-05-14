@@ -63,7 +63,6 @@ public:
     bool is_showing_modal_window() const;
 
     void notify_about_new_screen_rect(const Gfx::Rect&);
-    void notify_about_clipboard_contents_changed();
     void post_paint_message(Window&, bool ignore_occlusion = false);
 
     Menu* find_menu_by_id(int menu_id)
@@ -102,8 +101,6 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> handle(const Messages::WindowServer::SetGlobalCursorTracking&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowOpacityResponse> handle(const Messages::WindowServer::SetWindowOpacity&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> handle(const Messages::WindowServer::SetWindowBackingStore&) override;
-    virtual OwnPtr<Messages::WindowServer::GetClipboardContentsResponse> handle(const Messages::WindowServer::GetClipboardContents&) override;
-    virtual OwnPtr<Messages::WindowServer::SetClipboardContentsResponse> handle(const Messages::WindowServer::SetClipboardContents&) override;
     virtual void handle(const Messages::WindowServer::WM_SetActiveWindow&) override;
     virtual void handle(const Messages::WindowServer::WM_SetWindowMinimized&) override;
     virtual void handle(const Messages::WindowServer::WM_StartWindowResize&) override;
@@ -141,8 +138,6 @@ private:
     int m_next_window_id { 1982 };
 
     bool m_has_display_link { false };
-
-    RefPtr<SharedBuffer> m_last_sent_clipboard_content;
 };
 
 }

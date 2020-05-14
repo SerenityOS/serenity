@@ -607,7 +607,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         },
         window);
 
-    GUI::Clipboard::the().on_content_change = [&](const String& data_type) {
+    GUI::Clipboard::the().on_change = [&](const String& data_type) {
         auto current_location = directory_view.path();
         paste_action->set_enabled(data_type == "file-list" && access(current_location.characters(), W_OK) == 0);
     };

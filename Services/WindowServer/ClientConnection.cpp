@@ -30,7 +30,6 @@
 #include <LibGfx/SystemTheme.h>
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/ClientConnection.h>
-#include <WindowServer/Clipboard.h>
 #include <WindowServer/Compositor.h>
 #include <WindowServer/EventLoop.h>
 #include <WindowServer/Menu.h>
@@ -110,11 +109,6 @@ void ClientConnection::die()
 void ClientConnection::notify_about_new_screen_rect(const Gfx::Rect& rect)
 {
     post_message(Messages::WindowClient::ScreenRectChanged(rect));
-}
-
-void ClientConnection::notify_about_clipboard_contents_changed()
-{
-    post_message(Messages::WindowClient::ClipboardContentsChanged(Clipboard::the().data_type()));
 }
 
 OwnPtr<Messages::WindowServer::CreateMenubarResponse> ClientConnection::handle(const Messages::WindowServer::CreateMenubar&)
@@ -415,40 +409,6 @@ OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(c
         return nullptr;
     }
     return make<Messages::WindowServer::GetWindowRectResponse>(it->value->rect());
-}
-
-OwnPtr<Messages::WindowServer::SetClipboardContentsResponse> ClientConnection::handle(const Messages::WindowServer::SetClipboardContents& message)
-{
-    auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
-    if (!shared_buffer) {
-        did_misbehave("SetClipboardContents: Bad shared buffer ID");
-        return nullptr;
-    }
-    Clipboard::the().set_data(*shared_buffer, message.content_size(), message.content_type());
-    return make<Messages::WindowServer::SetClipboardContentsResponse>();
-}
-
-OwnPtr<Messages::WindowServer::GetClipboardContentsResponse> ClientConnection::handle(const Messages::WindowServer::GetClipboardContents&)
-{
-    auto& clipboard = Clipboard::the();
-
-    i32 shbuf_id = -1;
-    if (clipboard.size()) {
-        // FIXME: Optimize case where an app is copy/pasting within itself.
-        //        We can just reuse the SharedBuffer then, since it will have the same peer PID.
-        //        It would be even nicer if a SharedBuffer could have an arbitrary number of clients..
-        RefPtr<SharedBuffer> shared_buffer = SharedBuffer::create_with_size(clipboard.size());
-        ASSERT(shared_buffer);
-        memcpy(shared_buffer->data(), clipboard.data(), clipboard.size());
-        shared_buffer->seal();
-        shared_buffer->share_with(client_pid());
-        shbuf_id = shared_buffer->shbuf_id();
-
-        // FIXME: This is a workaround for the fact that SharedBuffers will go away if neither side is retaining them.
-        //        After we respond to GetClipboardContents, we have to wait for the client to ref the buffer on his side.
-        m_last_sent_clipboard_content = move(shared_buffer);
-    }
-    return make<Messages::WindowServer::GetClipboardContentsResponse>(shbuf_id, clipboard.size(), clipboard.data_type());
 }
 
 Window* ClientConnection::window_from_id(i32 window_id)
