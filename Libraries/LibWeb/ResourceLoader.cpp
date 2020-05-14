@@ -113,7 +113,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         return;
     }
 
-    if (url.protocol() == "http" || url.protocol() == "https") {
+    if (url.protocol() == "http" || url.protocol() == "https" || url.protocol() == "gemini") {
         auto download = protocol_client().start_download(url.to_string());
         if (!download) {
             if (error_callback)
