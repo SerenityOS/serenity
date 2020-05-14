@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     };
 
     if (full_format_flag) {
-        uid_column = add_column("UID", Alignment::Left, 8);
+        uid_column = add_column("UID", Alignment::Left, 9);
         pid_column = add_column("PID", Alignment::Right, 5);
         ppid_column = add_column("PPID", Alignment::Right, 5);
         state_column = add_column("STATE", Alignment::Left, 12);
