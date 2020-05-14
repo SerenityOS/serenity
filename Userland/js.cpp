@@ -269,6 +269,32 @@ bool write_to_file(const StringView& path)
     return true;
 }
 
+bool parse_and_run(JS::Interpreter& interpreter, const StringView& source)
+{
+    auto parser = JS::Parser(JS::Lexer(source));
+    auto program = parser.parse_program();
+
+    if (s_dump_ast)
+        program->dump(0);
+
+    if (parser.has_errors()) {
+        auto error = parser.errors()[0];
+        interpreter.throw_exception<JS::SyntaxError>(error.to_string());
+    } else {
+        interpreter.run(*program);
+    }
+
+    if (interpreter.exception()) {
+        printf("Uncaught exception: ");
+        print(interpreter.exception()->value());
+        interpreter.clear_exception();
+        return false;
+    }
+    if (s_print_last_result)
+        print(interpreter.last_value());
+    return true;
+}
+
 ReplObject::ReplObject()
 {
 }
@@ -335,17 +361,7 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
         } else {
             source = file_contents;
         }
-        auto parser = JS::Parser(JS::Lexer(source));
-        auto program = parser.parse_program();
-        if (s_dump_ast)
-            program->dump(0);
-
-        if (parser.has_errors())
-            continue;
-
-        interpreter.run(*program);
-        if (s_print_last_result)
-            print(interpreter.last_value());
+        parse_and_run(interpreter, source);
     }
     return JS::Value(true);
 }
@@ -357,24 +373,7 @@ void repl(JS::Interpreter& interpreter)
         if (piece.is_empty())
             continue;
         repl_statements.append(piece);
-        auto parser = JS::Parser(JS::Lexer(piece));
-        auto program = parser.parse_program();
-        if (s_dump_ast)
-            program->dump(0);
-
-        if (parser.has_errors()) {
-            printf("Parse error\n");
-            continue;
-        }
-
-        interpreter.run(*program);
-        if (interpreter.exception()) {
-            printf("Uncaught exception: ");
-            print(interpreter.exception()->value());
-            interpreter.clear_exception();
-        } else {
-            print(interpreter.last_value());
-        }
+        parse_and_run(interpreter, piece);
     }
 }
 
@@ -491,6 +490,7 @@ int main(int argc, char** argv)
     };
 
     if (script_path == nullptr) {
+        s_print_last_result = true;
         interpreter = JS::Interpreter::create<ReplObject>();
         ReplConsoleClient console_client(interpreter->console());
         interpreter->console().set_client(console_client);
@@ -742,27 +742,9 @@ int main(int argc, char** argv)
         } else {
             source = file_contents;
         }
-        auto parser = JS::Parser(JS::Lexer(source));
-        auto program = parser.parse_program();
 
-        if (s_dump_ast)
-            program->dump(0);
-
-        if (parser.has_errors()) {
-            printf("Parse Error\n");
+        if (!parse_and_run(*interpreter, source))
             return 1;
-        }
-
-        auto result = interpreter->run(*program);
-
-        if (interpreter->exception()) {
-            printf("Uncaught exception: ");
-            print(interpreter->exception()->value());
-            interpreter->clear_exception();
-            return 1;
-        }
-        if (s_print_last_result)
-            print(result);
     }
 
     return 0;
