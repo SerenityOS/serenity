@@ -37,14 +37,8 @@ namespace JS {
 class Lexer {
 public:
     explicit Lexer(StringView source);
-    Lexer(StringView source, bool log_errors)
-        : Lexer(source)
-    {
-        m_log_errors = log_errors;
-    }
 
     Token next();
-    bool has_errors() const { return m_has_errors; }
 
 private:
     void consume();
@@ -60,16 +54,12 @@ private:
     bool match(char, char, char) const;
     bool match(char, char, char, char) const;
 
-    void syntax_error(const char*);
-
     StringView m_source;
     size_t m_position = 0;
     Token m_current_token;
     int m_current_char = 0;
-    bool m_has_errors = false;
     size_t m_line_number = 1;
     size_t m_line_column = 1;
-    bool m_log_errors = true;
 
     struct TemplateState {
         bool in_expr;
