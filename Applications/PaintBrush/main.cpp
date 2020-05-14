@@ -151,6 +151,23 @@ int main(int argc, char** argv)
         layer_table_view.selection().set(layer_table_view.model()->index(0));
     }, window));
     layer_menu.add_separator();
+    layer_menu.add_action(GUI::Action::create("Move active layer up", { Mod_Ctrl, Key_PageUp }, [&](auto&) {
+        auto active_layer = image_editor.active_layer();
+        if(!active_layer)
+            return;
+        image_editor.image()->move_layer_up(*active_layer);
+        layer_table_view.move_selection(1);
+        image_editor.layers_did_change();
+    }, window));
+    layer_menu.add_action(GUI::Action::create("Move active layer down", { Mod_Ctrl, Key_PageDown }, [&](auto&) {
+        auto active_layer = image_editor.active_layer();
+        if(!active_layer)
+            return;
+        image_editor.image()->move_layer_down(*active_layer);
+        layer_table_view.move_selection(-1);
+        image_editor.layers_did_change();
+    }, window));
+    layer_menu.add_separator();
     layer_menu.add_action(GUI::Action::create("Remove active layer", { Mod_Ctrl , Key_D }, [&](auto&) {
         auto active_layer = image_editor.active_layer();
         if(!active_layer)

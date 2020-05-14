@@ -57,6 +57,8 @@ public:
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
+    void move_layer_up(Layer&);
+    void move_layer_down(Layer&);
     void remove_layer(Layer&);
 
 private:
