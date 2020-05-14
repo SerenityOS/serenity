@@ -240,13 +240,6 @@ bool Lexer::is_numeric_literal_start() const
     return isdigit(m_current_char) || (m_current_char == '.' && m_position < m_source.length() && isdigit(m_source[m_position]));
 }
 
-void Lexer::syntax_error(const char* msg)
-{
-    m_has_errors = true;
-    if (m_log_errors)
-        fprintf(stderr, "Syntax Error: %s (line: %zu, column: %zu)\n", msg, m_line_number, m_line_column);
-}
-
 Token Lexer::next()
 {
     size_t trivia_start = m_position;
@@ -395,7 +388,6 @@ Token Lexer::next()
             consume();
         }
         if (m_current_char != stop_char) {
-            syntax_error("unterminated string literal");
             token_type = TokenType::UnterminatedStringLiteral;
         } else {
             consume();
