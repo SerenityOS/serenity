@@ -27,6 +27,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
+#include <ProtocolServer/GeminiProtocol.h>
 #include <ProtocolServer/HttpProtocol.h>
 #include <ProtocolServer/HttpsProtocol.h>
 #include <ProtocolServer/PSClientConnection.h>
@@ -52,6 +53,7 @@ int main(int, char**)
         return 1;
     }
 
+    (void)*new GeminiProtocol;
     (void)*new HttpProtocol;
     (void)*new HttpsProtocol;
     auto server = Core::LocalServer::construct();
