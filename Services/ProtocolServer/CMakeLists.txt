@@ -3,6 +3,8 @@ compile_ipc(ProtocolClient.ipc ProtocolClientEndpoint.h)
 
 set(SOURCES
     Download.cpp
+    GeminiDownload.cpp
+    GeminiProtocol.cpp
     HttpDownload.cpp
     HttpProtocol.cpp
     HttpsDownload.cpp
@@ -15,4 +17,4 @@ set(SOURCES
 )
 
 serenity_bin(ProtocolServer)
-target_link_libraries(ProtocolServer LibCore LibIPC LibHTTP)
+target_link_libraries(ProtocolServer LibCore LibIPC LibGemini LibHTTP)
