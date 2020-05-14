@@ -524,7 +524,7 @@ int main(int argc, char** argv)
 
             size_t open_indents = s_repl_line_level;
 
-            JS::Lexer lexer(str, false);
+            JS::Lexer lexer(str);
             bool indenters_starting_line = true;
             for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
                 auto length = token.value().length();
