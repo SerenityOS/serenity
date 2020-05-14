@@ -104,6 +104,26 @@ void Image::move_layer_to_front(Layer& layer)
     m_layers.append(layer);
 }
 
+void Image::move_layer_down(Layer& layer)
+{
+    NonnullRefPtr<Layer> protector(layer);
+    auto index = index_of(layer);
+    if (!index)
+        return;
+    m_layers.remove(index);
+    m_layers.insert(index - 1, layer);
+}
+
+void Image::move_layer_up(Layer& layer)
+{
+    NonnullRefPtr<Layer> protector(layer);
+    auto index = index_of(layer);
+    if (index == m_layers.size() - 1)
+        return;
+    m_layers.remove(index);
+    m_layers.insert(index + 1, layer);
+}
+
 void Image::remove_layer(Layer& layer)
 {
     NonnullRefPtr<Layer> protector(layer);
