@@ -1,4 +1,5 @@
 set(SOURCES
+    Line.cpp
     Terminal.cpp
     TerminalWidget.cpp
 )

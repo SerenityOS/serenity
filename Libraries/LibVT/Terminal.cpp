@@ -41,68 +41,6 @@ Terminal::~Terminal()
 {
 }
 
-Terminal::Line::Line(u16 length)
-{
-    set_length(length);
-}
-
-Terminal::Line::~Line()
-{
-    delete[] characters;
-    delete[] attributes;
-}
-
-void Terminal::Line::set_length(u16 new_length)
-{
-    if (m_length == new_length)
-        return;
-    auto* new_characters = new u8[new_length];
-    auto* new_attributes = new Attribute[new_length];
-    memset(new_characters, ' ', new_length);
-    if (characters && attributes) {
-        memcpy(new_characters, characters, min(m_length, new_length));
-        for (size_t i = 0; i < min(m_length, new_length); ++i)
-            new_attributes[i] = attributes[i];
-    }
-    delete[] characters;
-    delete[] attributes;
-    characters = new_characters;
-    attributes = new_attributes;
-    m_length = new_length;
-}
-
-void Terminal::Line::clear(Attribute attribute)
-{
-    if (dirty) {
-        memset(characters, ' ', m_length);
-        for (u16 i = 0; i < m_length; ++i)
-            attributes[i] = attribute;
-        return;
-    }
-    for (unsigned i = 0; i < m_length; ++i) {
-        if (characters[i] != ' ')
-            dirty = true;
-        characters[i] = ' ';
-    }
-    for (unsigned i = 0; i < m_length; ++i) {
-        if (attributes[i] != attribute)
-            dirty = true;
-        attributes[i] = attribute;
-    }
-}
-
-bool Terminal::Line::has_only_one_background_color() const
-{
-    if (!m_length)
-        return true;
-    // FIXME: Cache this result?
-    auto color = attributes[0].background_color;
-    for (size_t i = 1; i < m_length; ++i) {
-        if (attributes[i].background_color != color)
-            return false;
-    }
-    return true;
-}
 
 void Terminal::clear()
 {
@@ -590,14 +528,14 @@ void Terminal::escape$P(const ParamVector& params)
     auto& line = m_lines[m_cursor_row];
 
     // Move n characters of line to the left
-    for (int i = m_cursor_column; i < line.m_length - num; i++)
-        line.characters[i] = line.characters[i + num];
+    for (int i = m_cursor_column; i < line.length() - num; i++)
+        line.characters()[i] = line.characters()[i + num];
 
     // Fill remainder of line with blanks
-    for (int i = line.m_length - num; i < line.m_length; i++)
-        line.characters[i] = ' ';
+    for (int i = line.length() - num; i < line.length(); i++)
+        line.characters()[i] = ' ';
 
-    line.dirty = true;
+    line.set_dirty(true);
 }
 
 void Terminal::execute_xterm_command()
@@ -828,10 +766,10 @@ void Terminal::put_character_at(unsigned row, unsigned column, u8 ch)
     ASSERT(row < rows());
     ASSERT(column < columns());
     auto& line = m_lines[row];
-    line.characters[column] = ch;
-    line.attributes[column] = m_current_attribute;
-    line.attributes[column].flags |= Attribute::Touched;
-    line.dirty = true;
+    line.characters()[column] = ch;
+    line.attributes()[column] = m_current_attribute;
+    line.attributes()[column].flags |= Attribute::Touched;
+    line.set_dirty(true);
 
     m_last_char = ch;
 }
@@ -1087,7 +1025,7 @@ void Terminal::set_size(u16 columns, u16 rows)
 
 void Terminal::invalidate_cursor()
 {
-    m_lines[m_cursor_row].dirty = true;
+    m_lines[m_cursor_row].set_dirty(true);
 }
 
 void Terminal::execute_hashtag(u8 hashtag)
@@ -1113,9 +1051,9 @@ Attribute Terminal::attribute_at(const Position& position) const
     if (position.row() >= static_cast<int>(line_count()))
         return {};
     auto& line = this->line(position.row());
-    if (position.column() >= line.m_length)
+    if (position.column() >= line.length())
         return {};
-    return line.attributes[position.column()];
+    return line.attributes()[position.column()];
 }
 
 }

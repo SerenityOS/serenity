@@ -336,7 +336,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (m_visual_beep_timer->is_active())
             painter.clear_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
-            painter.clear_rect(row_rect, color_from_rgb(line.attributes[0].background_color).with_alpha(m_opacity));
+            painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].background_color).with_alpha(m_opacity));
 
         // The terminal insists on thinking characters and
         // bytes are the same thing. We want to still draw
@@ -369,7 +369,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                     && visual_row == row_with_cursor
                     && column == m_terminal.cursor_column();
                 should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, column });
-                attribute = line.attributes[column];
+                attribute = line.attributes()[column];
                 text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
                 auto character_rect = glyph_rect(visual_row, column);
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
@@ -430,7 +430,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         auto& cursor_line = m_terminal.line(first_row_from_history + row_with_cursor);
         if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
             auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
-            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes[m_terminal.cursor_column()].foreground_color));
+            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes()[m_terminal.cursor_column()].foreground_color));
         }
     }
 }
@@ -456,9 +456,9 @@ void TerminalWidget::flush_dirty_lines()
     }
     Gfx::Rect rect;
     for (int i = 0; i < m_terminal.rows(); ++i) {
-        if (m_terminal.visible_line(i).dirty) {
+        if (m_terminal.visible_line(i).is_dirty()) {
             rect = rect.united(row_rect(i));
-            m_terminal.visible_line(i).dirty = false;
+            m_terminal.visible_line(i).set_dirty(false);
         }
     }
     update(rect);
@@ -583,16 +583,16 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 
         auto position = buffer_position_at(event.position());
         auto& line = m_terminal.line(position.row());
-        bool want_whitespace = line.characters[position.column()] == ' ';
+        bool want_whitespace = line.characters()[position.column()] == ' ';
 
         int start_column = 0;
         int end_column = 0;
 
-        for (int column = position.column(); column >= 0 && (line.characters[column] == ' ') == want_whitespace; --column) {
+        for (int column = position.column(); column >= 0 && (line.characters()[column] == ' ') == want_whitespace; --column) {
             start_column = column;
         }
 
-        for (int column = position.column(); column < m_terminal.columns() && (line.characters[column] == ' ') == want_whitespace; ++column) {
+        for (int column = position.column(); column < m_terminal.columns() && (line.characters()[column] == ' ') == want_whitespace; ++column) {
             end_column = column;
         }
 
@@ -758,12 +758,12 @@ String TerminalWidget::selected_text() const
         int last_column = last_selection_column_on_row(row);
         for (int column = first_column; column <= last_column; ++column) {
             auto& line = m_terminal.line(row);
-            if (line.attributes[column].is_untouched()) {
+            if (line.attributes()[column].is_untouched()) {
                 builder.append('\n');
                 break;
             }
-            builder.append(line.characters[column]);
-            if (column == line.m_length - 1 || (m_rectangle_selection && column == last_column)) {
+            builder.append(line.characters()[column]);
+            if (column == line.length() - 1 || (m_rectangle_selection && column == last_column)) {
                 builder.append('\n');
             }
         }
