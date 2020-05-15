@@ -34,6 +34,7 @@
 #include <AK/Types.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Console.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/NullDevice.h>
@@ -49,6 +50,7 @@
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/IO.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
@@ -62,6 +64,7 @@
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/SharedBuffer.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
@@ -73,9 +76,6 @@
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
-#include <Kernel/IO.h>
-#include <Kernel/Console.h>
-#include <Kernel/StdLib.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
 #include <LibC/signal_numbers.h>
@@ -2429,31 +2429,6 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
             return KResult(-ECHILD);
     }
 
-    if (options & WNOHANG) {
-        // FIXME: Figure out what WNOHANG should do with stopped children.
-        if (idtype == P_ALL) {
-            InterruptDisabler disabler;
-            siginfo_t siginfo;
-            memset(&siginfo, 0, sizeof(siginfo));
-            for_each_child([&siginfo](Process& process) {
-                if (process.is_dead())
-                    siginfo = reap(process);
-                return IterationDecision::Continue;
-            });
-            return siginfo;
-        } else if (idtype == P_PID) {
-            InterruptDisabler disabler;
-            auto* waitee_process = Process::from_pid(id);
-            if (!waitee_process)
-                return KResult(-ECHILD);
-            if (waitee_process->is_dead())
-                return reap(*waitee_process);
-        } else {
-            // FIXME: Implement other PID specs.
-            return KResult(-EINVAL);
-        }
-    }
-
     pid_t waitee_pid;
 
     // FIXME: WaitBlocker should support idtype/id specs directly.
@@ -2466,9 +2441,8 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         return KResult(-EINVAL);
     }
 
-    if (!(options & WNOHANG))
-        if (Thread::current->block<Thread::WaitBlocker>(options, waitee_pid) != Thread::BlockResult::WokeNormally)
-            return KResult(-EINTR);
+    if (Thread::current->block<Thread::WaitBlocker>(options, waitee_pid) != Thread::BlockResult::WokeNormally)
+        return KResult(-EINTR);
 
     InterruptDisabler disabler;
 
@@ -2484,13 +2458,29 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         auto* waitee_thread = Thread::from_tid(waitee_pid);
         if (!waitee_thread)
             return KResult(-ECHILD);
-        ASSERT(waitee_thread->state() == Thread::State::Stopped);
+        ASSERT((options & WNOHANG) || waitee_thread->state() == Thread::State::Stopped);
         siginfo_t siginfo;
         memset(&siginfo, 0, sizeof(siginfo));
         siginfo.si_signo = SIGCHLD;
         siginfo.si_pid = waitee_process->pid();
         siginfo.si_uid = waitee_process->uid();
-        siginfo.si_code = CLD_STOPPED;
+
+        switch (waitee_thread->state()) {
+        case Thread::State::Stopped:
+            siginfo.si_code = CLD_STOPPED;
+            break;
+        case Thread::State::Running:
+        case Thread::State::Runnable:
+        case Thread::State::Blocked:
+        case Thread::State::Dying:
+        case Thread::State::Queued:
+            siginfo.si_code = CLD_CONTINUED;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+            break;
+        }
+
         siginfo.si_status = waitee_thread->m_stop_signal;
         return siginfo;
     }

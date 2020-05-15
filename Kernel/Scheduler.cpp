@@ -274,7 +274,8 @@ bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
         }
 
         bool wait_finished = ((m_wait_options & WEXITED) && child_exited)
-            || ((m_wait_options & WSTOPPED) && child_stopped);
+            || ((m_wait_options & WSTOPPED) && child_stopped)
+            || (m_wait_options & WNOHANG);
 
         if (!wait_finished)
             return IterationDecision::Continue;

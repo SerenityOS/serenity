@@ -72,6 +72,9 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
         case CLD_STOPPED:
             *wstatus = siginfo.si_status << 8 | 0x7f;
             break;
+        case CLD_CONTINUED:
+            *wstatus = 0;
+            return 0; // return 0 if running
         default:
             ASSERT_NOT_REACHED();
         }
