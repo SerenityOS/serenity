@@ -73,7 +73,7 @@ void HttpJob::register_on_ready_to_write(Function<void()> callback)
     callback();
 }
 
-bool HttpJob::can_read_line()
+bool HttpJob::can_read_line() const
 {
     return m_socket->can_read_line();
 }
