@@ -66,7 +66,7 @@ public:
         Function<bool(const char*)> accept_value;
     };
 
-    void parse(int argc, char** argv);
+    bool parse(int argc, char** argv, bool exit_on_failure = true);
     void print_usage(FILE*, const char* argv0);
 
     void add_option(Option&&);
