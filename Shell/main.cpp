@@ -655,7 +655,7 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
 
 class FileDescriptionCollector {
 public:
-    FileDescriptionCollector() {}
+    FileDescriptionCollector() { }
     ~FileDescriptionCollector() { collect(); }
 
     void collect()
@@ -1074,7 +1074,7 @@ static ExitCodeOrContinuationRequest run_command(const StringView& cmd)
         for (size_t i = 0; i < children.size(); ++i) {
             auto& child = children[i];
             do {
-                int rc = waitpid(child.pid, &wstatus, 0);
+                int rc = waitpid(child.pid, &wstatus, WSTOPPED);
                 if (rc < 0 && errno != EINTR) {
                     if (errno != ECHILD)
                         perror("waitpid");
