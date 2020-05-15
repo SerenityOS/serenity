@@ -188,7 +188,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
 
     auto elf_loader = ELF::Loader::create(static_cast<const u8*>(elf_file.data()), elf_file.size());
 
-    MappedFile kernel_elf_file("/boot/kernel");
+    MappedFile kernel_elf_file("/boot/Kernel");
     RefPtr<ELF::Loader> kernel_elf_loader;
     if (kernel_elf_file.is_valid())
         kernel_elf_loader = ELF::Loader::create(static_cast<const u8*>(kernel_elf_file.data()), kernel_elf_file.size());
