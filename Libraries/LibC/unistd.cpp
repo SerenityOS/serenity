@@ -135,7 +135,9 @@ int execvpe(const char* filename, char* const argv[], char* const envp[])
 int execvp(const char* filename, char* const argv[])
 {
     int rc = execvpe(filename, argv, environ);
-    dbg() << "execvp() about to return " << rc << " with errno=" << errno;
+    int saved_errno = errno;
+    dbg() << "execvp() about to return " << rc << " with errno=" << saved_errno;
+    errno = saved_errno;
     return rc;
 }
 
