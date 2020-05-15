@@ -2082,6 +2082,10 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     if (result.is_error())
         return result.error();
     auto description = result.value();
+
+    if (description->inode() && description->inode()->socket())
+        return -ENXIO;
+
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(description), fd_flags);
     return fd;
