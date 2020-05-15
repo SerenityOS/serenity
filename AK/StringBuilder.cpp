@@ -91,6 +91,8 @@ ByteBuffer StringBuilder::to_byte_buffer() const
 
 String StringBuilder::to_string() const
 {
+    if (is_empty())
+        return String::empty();
     return String((const char*)m_buffer.data(), m_length);
 }
 
