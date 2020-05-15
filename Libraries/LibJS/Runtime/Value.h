@@ -159,9 +159,12 @@ public:
         return m_value.as_cell;
     }
 
+    String to_string_without_side_effects() const;
+
     Function& as_function();
 
-    String to_string() const;
+    String to_string(Interpreter&) const;
+    PrimitiveString* to_primitive_string(Interpreter&);
     bool to_boolean() const;
     Value to_number() const;
     i32 to_i32() const;

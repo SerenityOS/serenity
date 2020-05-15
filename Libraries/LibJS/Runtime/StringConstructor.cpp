@@ -51,7 +51,10 @@ Value StringConstructor::call(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
         return js_string(interpreter, "");
-    return js_string(interpreter, interpreter.argument(0).to_string());
+    auto* string = interpreter.argument(0).to_primitive_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    return string;
 }
 
 Value StringConstructor::construct(Interpreter& interpreter)
@@ -60,7 +63,7 @@ Value StringConstructor::construct(Interpreter& interpreter)
     if (!interpreter.argument_count())
         primitive_string = js_string(interpreter, "");
     else
-        primitive_string = js_string(interpreter, interpreter.argument(0).to_string());
+        primitive_string = interpreter.argument(0).to_primitive_string(interpreter);
     if (!primitive_string)
         return {};
     return StringObject::create(interpreter.global_object(), *primitive_string);
@@ -84,9 +87,14 @@ Value StringConstructor::raw(Interpreter& interpreter)
     StringBuilder builder;
 
     for (size_t i = 0; i < raw_array_elements.size(); ++i) {
-        builder.append(raw_array_elements.at(i).to_string());
-        if (i + 1 < interpreter.argument_count() && i < raw_array_elements.size() - 1)
-            builder.append(interpreter.argument(i + 1).to_string());
+        builder.append(raw_array_elements.at(i).to_string(interpreter));
+        if (interpreter.exception())
+            return {};
+        if (i + 1 < interpreter.argument_count() && i < raw_array_elements.size() - 1) {
+            builder.append(interpreter.argument(i + 1).to_string(interpreter));
+            if (interpreter.exception())
+                return {};
+        }
     }
 
     return js_string(interpreter, builder.build());

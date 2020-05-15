@@ -26,6 +26,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
@@ -60,7 +61,7 @@ Function& Value::as_function()
     return static_cast<Function&>(as_object());
 }
 
-String Value::to_string() const
+String Value::to_string_without_side_effects() const
 {
     if (is_boolean())
         return as_bool() ? "true" : "false";
@@ -78,8 +79,47 @@ String Value::to_string() const
         if (is_infinity())
             return as_double() < 0 ? "-Infinity" : "Infinity";
 
-        // FIXME: This needs improvement.
-        if ((double)to_i32() == as_double())
+        if (is_integer())
+            return String::number(to_i32());
+        return String::format("%.4f", as_double());
+    }
+
+    if (is_string())
+        return m_value.as_string->string();
+
+    ASSERT(is_object());
+    return String::format("[object %s]", as_object().class_name());
+}
+
+PrimitiveString* Value::to_primitive_string(Interpreter & interpreter)
+{
+    if (is_string())
+        return &as_string();
+    auto string = to_string(interpreter);
+    if (interpreter.exception())
+        return nullptr;
+    return js_string(interpreter, string);
+}
+
+String Value::to_string(Interpreter& interpreter) const
+{
+    if (is_boolean())
+        return as_bool() ? "true" : "false";
+
+    if (is_null())
+        return "null";
+
+    if (is_undefined())
+        return "undefined";
+
+    if (is_number()) {
+        if (is_nan())
+            return "NaN";
+
+        if (is_infinity())
+            return as_double() < 0 ? "-Infinity" : "Infinity";
+
+        if (is_integer())
             return String::number(to_i32());
         return String::format("%.4f", as_double());
     }
@@ -89,13 +129,11 @@ String Value::to_string() const
         // FIXME: Maybe we should pass in the Interpreter& and call interpreter.exception() instead?
         if (primitive_value.is_empty())
             return {};
-        return primitive_value.to_string();
+        return primitive_value.to_string(interpreter);
     }
 
-    if (is_string())
-        return m_value.as_string->string();
-
-    ASSERT_NOT_REACHED();
+    ASSERT(is_string());
+    return m_value.as_string->string();
 }
 
 bool Value::to_boolean() const
@@ -305,10 +343,24 @@ Value unsigned_right_shift(Interpreter&, Value lhs, Value rhs)
 Value add(Interpreter& interpreter, Value lhs, Value rhs)
 {
     auto lhs_primitive = lhs.to_primitive(interpreter);
+    if (interpreter.exception())
+        return {};
     auto rhs_primitive = rhs.to_primitive(interpreter);
+    if (interpreter.exception())
+        return {};
 
-    if (lhs_primitive.is_string() || rhs_primitive.is_string())
-        return js_string(interpreter.heap(), String::format("%s%s", lhs_primitive.to_string().characters(), rhs_primitive.to_string().characters()));
+    if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
+        auto lhs_string = lhs_primitive.to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto rhs_string = rhs_primitive.to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+        StringBuilder builder(lhs_string.length() + rhs_string.length());
+        builder.append(lhs_string);
+        builder.append(rhs_string);
+        return js_string(interpreter, builder.to_string());
+    }
 
     return Value(lhs_primitive.to_number().as_double() + rhs_primitive.to_number().as_double());
 }
@@ -350,7 +402,11 @@ Value in(Interpreter& interpreter, Value lhs, Value rhs)
     if (!rhs.is_object())
         return interpreter.throw_exception<TypeError>("'in' operator must be used on object");
 
-    return Value(!rhs.as_object().get(lhs.to_string()).is_empty());
+    auto lhs_string = lhs.to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    return Value(!rhs.as_object().get(lhs_string).is_empty());
 }
 
 Value instance_of(Interpreter&, Value lhs, Value rhs)
@@ -367,7 +423,7 @@ Value instance_of(Interpreter&, Value lhs, Value rhs)
 
 const LogStream& operator<<(const LogStream& stream, const Value& value)
 {
-    return stream << (value.is_empty() ? "<empty>" : value.to_string());
+    return stream << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects());
 }
 
 bool same_value(Interpreter& interpreter, Value lhs, Value rhs)

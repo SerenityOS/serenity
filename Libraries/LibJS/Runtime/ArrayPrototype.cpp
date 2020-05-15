@@ -77,7 +77,7 @@ static Function* callback_from_args(Interpreter& interpreter, const String& name
     }
     auto callback = interpreter.argument(0);
     if (!callback.is_function()) {
-        interpreter.throw_exception<TypeError>(String::format("%s is not a function", callback.to_string().characters()));
+        interpreter.throw_exception<TypeError>(String::format("%s is not a function", callback.to_string_without_side_effects().characters()));
         return nullptr;
     }
     return &callback.as_function();
@@ -227,8 +227,12 @@ static Value join_array_with_separator(Interpreter& interpreter, const Array& ar
         if (i != 0)
             builder.append(separator);
         auto value = array.elements()[i];
-        if (!value.is_empty() && !value.is_undefined() && !value.is_null())
-            builder.append(value.to_string());
+        if (!value.is_empty() && !value.is_undefined() && !value.is_null()) {
+            auto string = value.to_string(interpreter);
+            if (interpreter.exception())
+                return {};
+            builder.append(string);
+        }
     }
     return js_string(interpreter, builder.to_string());
 }
@@ -249,8 +253,11 @@ Value ArrayPrototype::join(Interpreter& interpreter)
         return {};
 
     String separator = ",";
-    if (interpreter.argument_count() == 1)
-        separator = interpreter.argument(0).to_string();
+    if (interpreter.argument_count() == 1) {
+        separator = interpreter.argument(0).to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
 
     return join_array_with_separator(interpreter, *array, separator);
 }

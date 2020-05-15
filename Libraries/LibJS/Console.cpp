@@ -116,7 +116,7 @@ Value Console::count()
     if (m_client)
         return m_client->count();
 
-    auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string() : "default";
+    auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string_without_side_effects() : "default";
 
     auto counter_value = counter_increment(label);
     dbg() << "log: " << label << ": " << counter_value;
@@ -129,7 +129,7 @@ Value Console::count_reset()
     if (m_client)
         return m_client->count_reset();
 
-    auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string() : "default";
+    auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string_without_side_effects() : "default";
 
     if (counter_reset(label))
         dbg() << "log: " << label << ": 0";

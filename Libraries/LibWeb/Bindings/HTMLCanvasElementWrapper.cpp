@@ -76,7 +76,10 @@ JS::Value HTMLCanvasElementWrapper::get_context(JS::Interpreter& interpreter)
         return {};
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 1) {
-        auto* context = impl->get_context(arguments[0].to_string());
+        auto string = arguments[0].to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto* context = impl->get_context(string);
         return wrap(interpreter.heap(), *context);
     }
     return JS::js_undefined();

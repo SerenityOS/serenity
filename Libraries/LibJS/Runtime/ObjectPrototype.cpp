@@ -57,7 +57,10 @@ Value ObjectPrototype::has_own_property(Interpreter& interpreter)
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object)
         return {};
-    return Value(this_object->has_own_property(interpreter.argument(0).to_string()));
+    auto name = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(this_object->has_own_property(name));
 }
 
 Value ObjectPrototype::to_string(Interpreter& interpreter)

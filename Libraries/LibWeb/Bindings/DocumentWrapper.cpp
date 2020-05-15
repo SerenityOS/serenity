@@ -78,7 +78,9 @@ JS::Value DocumentWrapper::get_element_by_id(JS::Interpreter& interpreter)
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.is_empty())
         return JS::js_null();
-    auto id = arguments[0].to_string();
+    auto id = arguments[0].to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     auto* element = document->get_element_by_id(id);
     if (!element)
         return JS::js_null();
@@ -93,7 +95,9 @@ JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.is_empty())
         return JS::js_null();
-    auto selector = arguments[0].to_string();
+    auto selector = arguments[0].to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     auto elements = document->query_selector_all(selector);
     // FIXME: This should be a static NodeList, not a plain JS::Array.
     auto* node_list = JS::Array::create(interpreter.global_object());

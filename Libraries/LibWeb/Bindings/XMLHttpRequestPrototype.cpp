@@ -71,7 +71,13 @@ JS::Value XMLHttpRequestPrototype::open(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    impl->open(interpreter.argument(0).to_string(), interpreter.argument(1).to_string());
+    auto arg0 = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto arg1 = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    impl->open(arg0, arg1);
     return JS::js_undefined();
 }
 

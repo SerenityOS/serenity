@@ -112,7 +112,9 @@ Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
     auto* object = interpreter.argument(0).to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
-    auto property_key = interpreter.argument(1).to_string();
+    auto property_key = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     return object->get_own_property_descriptor(property_key);
 }
 
@@ -123,7 +125,9 @@ Value ObjectConstructor::define_property(Interpreter& interpreter)
     if (!interpreter.argument(2).is_object())
         return interpreter.throw_exception<TypeError>("Descriptor argument is not an object");
     auto& object = interpreter.argument(0).as_object();
-    auto property_key = interpreter.argument(1).to_string();
+    auto property_key = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     auto& descriptor = interpreter.argument(2).as_object();
     object.define_property(property_key, descriptor);
     return &object;

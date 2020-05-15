@@ -485,7 +485,10 @@ Value Object::to_string() const
             interpreter.throw_exception<TypeError>("Cannot convert object to string");
         if (interpreter.exception())
             return {};
-        return js_string(heap(), to_string_result.to_string());
+        auto* string = to_string_result.to_primitive_string(interpreter);
+        if (interpreter.exception())
+            return {};
+        return string;
     }
     return js_string(heap(), String::format("[object %s]", class_name()));
 }

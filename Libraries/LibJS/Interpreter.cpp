@@ -266,7 +266,7 @@ String Interpreter::join_arguments() const
 {
     StringBuilder joined_arguments;
     for (size_t i = 0; i < argument_count(); ++i) {
-        joined_arguments.append(argument(i).to_string().characters());
+        joined_arguments.append(argument(i).to_string_without_side_effects().characters());
         if (i != argument_count() - 1)
             joined_arguments.append(' ');
     }

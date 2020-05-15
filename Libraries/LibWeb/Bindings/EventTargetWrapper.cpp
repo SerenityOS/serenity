@@ -56,7 +56,9 @@ JS::Value EventTargetWrapper::add_event_listener(JS::Interpreter& interpreter)
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() < 2)
         return JS::js_undefined();
-    auto event_name = arguments[0].to_string();
+    auto event_name = arguments[0].to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     ASSERT(arguments[1].is_object());
     ASSERT(arguments[1].as_object().is_function());
     auto& function = static_cast<JS::Function&>(const_cast<Object&>(arguments[1].as_object()));

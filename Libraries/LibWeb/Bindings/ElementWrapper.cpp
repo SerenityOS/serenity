@@ -74,8 +74,12 @@ JS::Value ElementWrapper::inner_html_getter(JS::Interpreter& interpreter)
 
 void ElementWrapper::inner_html_setter(JS::Interpreter& interpreter, JS::Value value)
 {
-    if (auto* impl = impl_from(interpreter))
-        impl->set_inner_html(value.to_string());
+    if (auto* impl = impl_from(interpreter)) {
+        auto string = value.to_string(interpreter);
+        if (interpreter.exception())
+            return;
+        impl->set_inner_html(string);
+    }
 }
 
 JS::Value ElementWrapper::id_getter(JS::Interpreter& interpreter)
@@ -87,8 +91,12 @@ JS::Value ElementWrapper::id_getter(JS::Interpreter& interpreter)
 
 void ElementWrapper::id_setter(JS::Interpreter& interpreter, JS::Value value)
 {
-    if (auto* impl = impl_from(interpreter))
-        impl->set_attribute("id", value.to_string());
+    if (auto* impl = impl_from(interpreter)) {
+        auto string = value.to_string(interpreter);
+        if (interpreter.exception())
+            return;
+        impl->set_attribute("id", string);
+    }
 }
 
 }
