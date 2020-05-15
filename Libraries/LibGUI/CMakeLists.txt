@@ -81,6 +81,8 @@ set(GENERATED_SOURCES
     ../../Services/WindowServer/WindowServerEndpoint.h
     ../../Services/NotificationServer/NotificationClientEndpoint.h
     ../../Services/NotificationServer/NotificationServerEndpoint.h
+    ../../Services/Clipboard/ClipboardClientEndpoint.h
+    ../../Services/Clipboard/ClipboardServerEndpoint.h
 )
 
 serenity_lib(LibGUI gui)
