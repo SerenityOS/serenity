@@ -2,7 +2,7 @@
 
 For low-level styling (spaces, parentheses, brace placement, etc), all code should follow the format specified in `.clang-format` in the project root.
 
-**Important: Make sure you use `clang-format` version 8 or later!**
+**Important: Make sure you use `clang-format` version 10 or later!**
 
 This document describes the coding style used for C++ code in the Serenity Operating System project. All new code should conform to this style.
 
