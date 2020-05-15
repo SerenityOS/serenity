@@ -28,7 +28,7 @@
 #include <LibGemini/GeminiJob.h>
 #include <ProtocolServer/GeminiDownload.h>
 
-GeminiDownload::GeminiDownload(PSClientConnection& client, NonnullRefPtr<Gemini::GeminiJob>&& job)
+GeminiDownload::GeminiDownload(PSClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
     : Download(client)
     , m_job(job)
 {
@@ -55,9 +55,12 @@ GeminiDownload::GeminiDownload(PSClientConnection& client, NonnullRefPtr<Gemini:
 
 GeminiDownload::~GeminiDownload()
 {
+    m_job->on_finish = nullptr;
+    m_job->on_progress = nullptr;
+    m_job->shutdown();
 }
 
-NonnullRefPtr<GeminiDownload> GeminiDownload::create_with_job(Badge<GeminiProtocol>, PSClientConnection& client, NonnullRefPtr<Gemini::GeminiJob>&& job)
+NonnullOwnPtr<GeminiDownload> GeminiDownload::create_with_job(Badge<GeminiProtocol>, PSClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
 {
-    return adopt(*new GeminiDownload(client, move(job)));
+    return adopt_own(*new GeminiDownload(client, move(job)));
 }

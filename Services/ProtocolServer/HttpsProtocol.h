@@ -33,5 +33,5 @@ public:
     HttpsProtocol();
     virtual ~HttpsProtocol() override;
 
-    virtual RefPtr<Download> start_download(PSClientConnection&, const URL&) override;
+    virtual OwnPtr<Download> start_download(PSClientConnection&, const URL&) override;
 };
