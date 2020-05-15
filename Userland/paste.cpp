@@ -46,11 +46,16 @@ int main(int argc, char* argv[])
     auto& clipboard = GUI::Clipboard::the();
     auto data_and_type = clipboard.data_and_type();
 
+    if (data_and_type.type.is_null()) {
+        fprintf(stderr, "Nothing copied\n");
+        return 1;
+    }
+
     if (!print_type) {
         printf("%s", data_and_type.data.characters());
         // Append a newline to text contents, but
         // only if we're not asked not to do this.
-        if (data_and_type.type == "text" && !no_newline)
+        if (data_and_type.type == "text/plain" && !no_newline)
             putchar('\n');
     } else {
         printf("%s\n", data_and_type.type.characters());

@@ -36,12 +36,12 @@
 
 struct Options {
     String data;
-    StringView type { "text" };
+    StringView type;
 };
 
 Options parse_options(int argc, char* argv[])
 {
-    const char* type = nullptr;
+    const char* type = "text/plain";
     Vector<const char*> text;
 
     Core::ArgsParser args_parser;
