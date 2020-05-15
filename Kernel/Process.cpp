@@ -2466,8 +2466,9 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         return KResult(-EINVAL);
     }
 
-    if (Thread::current->block<Thread::WaitBlocker>(options, waitee_pid) != Thread::BlockResult::WokeNormally)
-        return KResult(-EINTR);
+    if (!(options & WNOHANG))
+        if (Thread::current->block<Thread::WaitBlocker>(options, waitee_pid) != Thread::BlockResult::WokeNormally)
+            return KResult(-EINTR);
 
     InterruptDisabler disabler;
 
