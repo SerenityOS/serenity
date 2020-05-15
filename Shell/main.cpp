@@ -194,33 +194,57 @@ static int sh_exit(int, const char**)
 
 static int sh_export(int argc, const char** argv)
 {
-    if (argc == 1) {
+    Vector<const char*> vars;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (vars.size() == 0) {
         for (int i = 0; environ[i]; ++i)
             puts(environ[i]);
         return 0;
     }
-    auto parts = String(argv[1]).split('=');
-    if (parts.size() != 2) {
-        fprintf(stderr, "usage: export variable=value\n");
-        return 1;
+
+    int return_value = 0;
+
+    for (auto& value : vars) {
+        auto parts = String { value }.split_limit('=', 2);
+
+        if (parts.size() == 1) {
+            parts.append("");
+        }
+
+        int setenv_return = setenv(parts[0].characters(), parts[1].characters(), 1);
+
+        if (setenv_return != 0) {
+            perror("setenv");
+            return_value = 1;
+            break;
+        }
+
+        if (parts[0] == "PATH")
+            cache_path();
     }
 
-    int setenv_return = setenv(parts[0].characters(), parts[1].characters(), 1);
-
-    if (setenv_return == 0 && parts[0] == "PATH")
-        cache_path();
-
-    return setenv_return;
+    return return_value;
 }
 
 static int sh_unset(int argc, const char** argv)
 {
-    if (argc != 2) {
-        fprintf(stderr, "usage: unset variable\n");
-        return 1;
-    }
+    Vector<const char*> vars;
 
-    unsetenv(argv[1]);
+    Core::ArgsParser parser;
+    parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    for (auto& value : vars)
+        unsetenv(value);
+
     return 0;
 }
 
@@ -262,32 +286,35 @@ static String expand_tilde(const String& expression)
 
 static int sh_cd(int argc, const char** argv)
 {
-    if (argc > 2) {
-        fprintf(stderr, "cd: too many arguments\n");
+    const char* arg_path = nullptr;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
-    }
 
     String new_path;
 
-    if (argc == 1) {
+    if (!arg_path) {
         new_path = g.home;
         if (g.cd_history.is_empty() || g.cd_history.last() != g.home)
             g.cd_history.enqueue(g.home);
     } else {
-        if (g.cd_history.is_empty() || g.cd_history.last() != argv[1])
-            g.cd_history.enqueue(argv[1]);
+        if (g.cd_history.is_empty() || g.cd_history.last() != arg_path)
+            g.cd_history.enqueue(arg_path);
         if (strcmp(argv[1], "-") == 0) {
             char* oldpwd = getenv("OLDPWD");
             if (oldpwd == nullptr)
                 return 1;
             new_path = oldpwd;
-        } else if (argv[1][0] == '/') {
+        } else if (arg_path[0] == '/') {
             new_path = argv[1];
         } else {
             StringBuilder builder;
             builder.append(g.cwd);
             builder.append('/');
-            builder.append(argv[1]);
+            builder.append(arg_path);
             new_path = builder.to_string();
         }
     }
@@ -322,12 +349,15 @@ static int sh_cd(int argc, const char** argv)
 
 static int sh_cdh(int argc, const char** argv)
 {
-    if (argc > 2) {
-        fprintf(stderr, "usage: cdh [index]\n");
-        return 1;
-    }
+    int index = -1;
 
-    if (argc == 1) {
+    Core::ArgsParser parser;
+    parser.add_positional_argument(index, "Index of the cd history entry (leave out for a list)", "index", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (index == -1) {
         if (g.cd_history.size() == 0) {
             printf("cdh: no history available\n");
             return 0;
@@ -338,15 +368,12 @@ static int sh_cdh(int argc, const char** argv)
         return 0;
     }
 
-    bool ok;
-    size_t cd_history_index = String(argv[1]).to_uint(ok);
-
-    if (!ok || cd_history_index < 1 || cd_history_index > g.cd_history.size()) {
-        fprintf(stderr, "usage: cdh [index]\n");
+    if (index < 1 || (size_t)index > g.cd_history.size()) {
+        fprintf(stderr, "cdh: history index out of bounds: %d not in (0, %zu)\n", index, g.cd_history.size());
         return 1;
     }
 
-    const char* path = g.cd_history.at(g.cd_history.size() - cd_history_index).characters();
+    const char* path = g.cd_history.at(g.cd_history.size() - index).characters();
     const char* cd_args[] = { "cd", path };
     return sh_cd(2, cd_args);
 }
@@ -361,16 +388,17 @@ static int sh_history(int, const char**)
 
 static int sh_time(int argc, const char** argv)
 {
-    if (argc == 1) {
-        printf("usage: time <command>\n");
-        return 0;
-    }
+    Vector<const char*> args;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
     StringBuilder builder;
-    for (int i = 1; i < argc; ++i) {
-        builder.append(argv[i]);
-        if (i != argc - 1)
-            builder.append(' ');
-    }
+    builder.join(' ', args);
+
     Core::ElapsedTimer timer;
     timer.start();
     auto exit_code = run_command(builder.string_view());
@@ -447,7 +475,7 @@ static int sh_fg(int argc, const char** argv)
     int job_id = -1;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(job_id, "job id to bring to foreground", "job_id", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(job_id, "Job id to bring to foreground", "job_id", Core::ArgsParser::Required::No);
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
@@ -504,7 +532,7 @@ static int sh_bg(int argc, const char** argv)
     int job_id = -1;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(job_id, "job id to run in background", "job_id", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(job_id, "Job id to run in background", "job_id", Core::ArgsParser::Required::No);
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
@@ -542,21 +570,28 @@ static int sh_bg(int argc, const char** argv)
 
 static int sh_umask(int argc, const char** argv)
 {
-    if (argc == 1) {
+    const char* mask_text = nullptr;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (!mask_text) {
         mode_t old_mask = umask(0);
         printf("%#o\n", old_mask);
         umask(old_mask);
         return 0;
     }
-    if (argc == 2) {
-        unsigned mask;
-        int matches = sscanf(argv[1], "%o", &mask);
-        if (matches == 1) {
-            umask(mask);
-            return 0;
-        }
+
+    unsigned mask;
+    int matches = sscanf(mask_text, "%o", &mask);
+    if (matches == 1) {
+        umask(mask);
+        return 0;
     }
-    printf("usage: umask <octal-mask>\n");
+
     return 0;
 }
 
@@ -567,26 +602,27 @@ static int sh_popd(int argc, const char** argv)
         return 1;
     }
 
-    bool should_switch = true;
+    bool should_not_switch = false;
     String path = g.directory_stack.take_last();
+
+    Core::ArgsParser parser;
+    parser.add_option(should_not_switch, "Do not switch dirs", "no-switch", 'n');
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    bool should_switch = !should_not_switch;
 
     // When no arguments are given, popd removes the top directory from the stack and performs a cd to the new top directory.
     if (argc == 1) {
         int rc = chdir(path.characters());
         if (rc < 0) {
-            fprintf(stderr, "chdir(%s) failed: %s", path.characters(), strerror(errno));
+            fprintf(stderr, "chdir(%s) failed: %s\n", path.characters(), strerror(errno));
             return 1;
         }
 
         g.cwd = path;
         return 0;
-    }
-
-    for (int i = 1; i < argc; i++) {
-        const char* arg = argv[i];
-        if (!strcmp(arg, "-n")) {
-            should_switch = false;
-        }
     }
 
     FileSystemPath canonical_path(path.characters());
@@ -642,7 +678,7 @@ static int sh_pushd(int argc, const char** argv)
 
         int rc = chdir(dir2.characters());
         if (rc < 0) {
-            fprintf(stderr, "chdir(%s) failed: %s", dir2.characters(), strerror(errno));
+            fprintf(stderr, "chdir(%s) failed: %s\n", dir2.characters(), strerror(errno));
             return 1;
         }
 
@@ -724,35 +760,39 @@ static int sh_dirs(int argc, const char** argv)
         return 0;
     }
 
-    bool printed = false;
-    for (int i = 0; i < argc; i++) {
-        const char* arg = argv[i];
-        if (!strcmp(arg, "-c")) {
-            for (size_t i = 1; i < g.directory_stack.size(); i++)
-                g.directory_stack.remove(i);
+    bool clear = false;
+    bool print = false;
+    bool number_when_printing = false;
 
-            printed = true;
-            continue;
-        }
-        if (!strcmp(arg, "-p") && !printed) {
-            for (auto& directory : g.directory_stack) {
-                print_path(directory);
-                fputc('\n', stdout);
-            }
+    Vector<const char*> paths;
 
-            printed = true;
-            continue;
-        }
-        if (!strcmp(arg, "-v") && !printed) {
-            int idx = 0;
-            for (auto& directory : g.directory_stack) {
+    Core::ArgsParser parser;
+    parser.add_option(clear, "Clear the directory stack", "clear", 'c');
+    parser.add_option(print, "Print directory entries", "print", 'p');
+    parser.add_option(number_when_printing, "Number the directories in the stack when printing", "number", 'v');
+    parser.add_positional_argument(paths, "Extra paths to put on the stack", "paths", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    // -v implies -p
+    print = print || number_when_printing;
+
+    if (clear) {
+        for (size_t i = 1; i < g.directory_stack.size(); i++)
+            g.directory_stack.remove(i);
+    }
+
+    for (auto& path : paths)
+        g.directory_stack.append(path);
+
+    if (print) {
+        auto idx = 0;
+        for (auto& directory : g.directory_stack) {
+            if (number_when_printing)
                 printf("%d ", idx++);
-                print_path(directory);
-                fputc('\n', stdout);
-            }
-
-            printed = true;
-            continue;
+            print_path(directory);
+            fputc('\n', stdout);
         }
     }
 
