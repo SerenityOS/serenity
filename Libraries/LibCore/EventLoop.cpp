@@ -415,14 +415,14 @@ void EventLoop::wait_for_event(WaitMode mode)
     timeval now;
     struct timeval timeout = { 0, 0 };
     bool should_wait_forever = false;
-    if (mode == WaitMode::WaitForEvents) {
-        if (!s_timers->is_empty() && queued_events_is_empty) {
+    if (mode == WaitMode::WaitForEvents && queued_events_is_empty) {
+        auto next_timer_expiration = get_next_timer_expiration();
+        if (next_timer_expiration.has_value()) {
             timespec now_spec;
             clock_gettime(CLOCK_MONOTONIC, &now_spec);
             now.tv_sec = now_spec.tv_sec;
             now.tv_usec = now_spec.tv_nsec / 1000;
-            get_next_timer_expiration(timeout);
-            timeval_sub(timeout, now, timeout);
+            timeval_sub(next_timer_expiration.value(), now, timeout);
             if (timeout.tv_sec < 0) {
                 timeout.tv_sec = 0;
                 timeout.tv_usec = 0;
@@ -430,8 +430,6 @@ void EventLoop::wait_for_event(WaitMode mode)
         } else {
             should_wait_forever = true;
         }
-    } else {
-        should_wait_forever = false;
     }
 
     int marked_fd_count = Core::safe_syscall(select, max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
@@ -500,10 +498,9 @@ void EventLoopTimer::reload(const timeval& now)
     fire_time.tv_usec += (interval % 1000) * 1000;
 }
 
-void EventLoop::get_next_timer_expiration(timeval& soonest)
+Optional<struct timeval> EventLoop::get_next_timer_expiration()
 {
-    ASSERT(!s_timers->is_empty());
-    bool has_checked_any = false;
+    Optional<struct timeval> soonest {};
     for (auto& it : *s_timers) {
         auto& fire_time = it.value->fire_time;
         if (it.value->fire_when_not_visible == TimerShouldFireWhenNotVisible::No
@@ -511,10 +508,10 @@ void EventLoop::get_next_timer_expiration(timeval& soonest)
             && !it.value->owner->is_visible_for_timer_purposes()) {
             continue;
         }
-        if (!has_checked_any || fire_time.tv_sec < soonest.tv_sec || (fire_time.tv_sec == soonest.tv_sec && fire_time.tv_usec < soonest.tv_usec))
+        if (!soonest.has_value() || fire_time.tv_sec < soonest.value().tv_sec || (fire_time.tv_sec == soonest.value().tv_sec && fire_time.tv_usec < soonest.value().tv_usec))
             soonest = fire_time;
-        has_checked_any = true;
     }
+    return soonest;
 }
 
 int EventLoop::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
