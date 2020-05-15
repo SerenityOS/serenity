@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,30 @@
 
 #pragma once
 
-#include "Job.h"
-#include <AK/CircularQueue.h>
-#include <AK/HashMap.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
-#include <termios.h>
 
-struct GlobalState {
-    String cwd;
-    String username;
-    String home;
-    char ttyname[32];
-    char hostname[64];
-    uid_t uid;
-    struct termios termios;
-    struct termios default_termios;
-    bool was_interrupted { false };
-    bool was_resized { false };
-    int last_return_code { 0 };
-    Vector<String> directory_stack;
-    CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
-    HashMap<u64, Job> jobs;
+class Job {
+public:
+    explicit Job()
+    {
+    }
+
+    Job(pid_t pid, unsigned pgid, String cmd, u64 job_id)
+        : m_pgid(pgid)
+        , m_pid(pid)
+        , m_job_id(job_id)
+        , m_cmd(move(cmd))
+    {
+    }
+
+    unsigned pgid() const { return m_pgid; }
+    pid_t pid() const { return m_pid; }
+    const String& cmd() const { return m_cmd; }
+    u64 job_id() const { return m_job_id; }
+
+private:
+    unsigned m_pgid { 0 };
+    pid_t m_pid { 0 };
+    u64 m_job_id { 0 };
+    String m_cmd;
 };
-
-extern GlobalState g;
