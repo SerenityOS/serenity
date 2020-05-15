@@ -1044,12 +1044,13 @@ static ExitCodeOrContinuationRequest run_command(const StringView& cmd)
                         } else
                             fprintf(stderr, "%s: Command not found.\n", argv[0]);
                     } else {
+                        int saved_errno = errno;
                         struct stat st;
                         if (stat(argv[0], &st) == 0 && S_ISDIR(st.st_mode)) {
                             fprintf(stderr, "Shell: %s: Is a directory\n", argv[0]);
                             _exit(126);
                         }
-                        fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(errno));
+                        fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(saved_errno));
                     }
                     _exit(126);
                 }
