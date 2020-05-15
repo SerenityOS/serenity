@@ -49,6 +49,8 @@ void ArgsParser::parse(int argc, char** argv)
 
     int index_of_found_long_option = -1;
 
+    optind = 0;
+
     for (size_t i = 0; i < m_options.size(); i++) {
         auto& opt = m_options[i];
         if (opt.long_name) {
