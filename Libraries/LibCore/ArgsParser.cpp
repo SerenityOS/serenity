@@ -38,12 +38,14 @@ ArgsParser::ArgsParser()
     add_option(m_show_help, "Display this message", "help", 0);
 }
 
-void ArgsParser::parse(int argc, char** argv)
+bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
 {
-    auto print_usage_and_exit = [this, argv] {
+    auto print_usage_and_exit = [this, argv, exit_on_failure] {
         print_usage(stderr, argv[0]);
-        exit(1);
+        if (exit_on_failure)
+            exit(1);
     };
+
     Vector<option> long_options;
     StringBuilder short_options_builder;
 
@@ -81,6 +83,7 @@ void ArgsParser::parse(int argc, char** argv)
             // There was an error, and getopt() has already
             // printed its error message.
             print_usage_and_exit();
+            return false;
         }
 
         // Let's see what option we just found.
@@ -102,6 +105,7 @@ void ArgsParser::parse(int argc, char** argv)
         if (!found_option->accept_value(arg)) {
             fprintf(stderr, "Invalid value for option %s\n", found_option->name_for_display().characters());
             print_usage_and_exit();
+            return false;
         }
     }
 
@@ -116,8 +120,10 @@ void ArgsParser::parse(int argc, char** argv)
         total_values_required += arg.min_values;
     }
 
-    if (total_values_required > values_left)
+    if (total_values_required > values_left) {
         print_usage_and_exit();
+        return false;
+    }
     int extra_values_to_distribute = values_left - total_values_required;
 
     for (size_t i = 0; i < m_positional_args.size(); i++) {
@@ -132,6 +138,7 @@ void ArgsParser::parse(int argc, char** argv)
     if (extra_values_to_distribute > 0) {
         // We still have too many values :(
         print_usage_and_exit();
+        return false;
     }
 
     for (size_t i = 0; i < m_positional_args.size(); i++) {
@@ -141,6 +148,7 @@ void ArgsParser::parse(int argc, char** argv)
             if (!arg.accept_value(value)) {
                 fprintf(stderr, "Invalid value for argument %s\n", arg.name);
                 print_usage_and_exit();
+                return false;
             }
         }
     }
@@ -149,8 +157,12 @@ void ArgsParser::parse(int argc, char** argv)
     // Now let's show help if requested.
     if (m_show_help) {
         print_usage(stdout, argv[0]);
-        exit(0);
+        if (exit_on_failure)
+            exit(0);
+        return false;
     }
+
+    return true;
 }
 
 void ArgsParser::print_usage(FILE* file, const char* argv0)
