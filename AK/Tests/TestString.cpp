@@ -199,4 +199,13 @@ TEST_CASE(split)
     EXPECT_EQ(parts[2].characters()[3], '\0');
 }
 
+TEST_CASE(builder_zero_initial_capacity)
+{
+   StringBuilder builder(0);
+   builder.append("");
+   auto built = builder.build();
+   EXPECT_EQ(built.is_null(), false);
+   EXPECT_EQ(built.length(), 0u);
+}
+
 TEST_MAIN(String)
