@@ -72,7 +72,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
 {
     String path;
     if (m_node.address() >= 0xc0000000)
-        path = "/boot/kernel";
+        path = "/boot/Kernel";
     else
         path = profile.executable_path();
     m_file = make<MappedFile>(path);
