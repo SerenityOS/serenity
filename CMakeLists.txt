@@ -14,7 +14,7 @@ add_custom_target(run
     USES_TERMINAL
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++2a")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++2a -fdiagnostics-color=always")
 
 include_directories(Libraries)
 include_directories(.)
