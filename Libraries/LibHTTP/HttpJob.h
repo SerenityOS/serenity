@@ -53,7 +53,7 @@ public:
 protected:
     virtual void register_on_ready_to_read(Function<void()>) override;
     virtual void register_on_ready_to_write(Function<void()>) override;
-    virtual bool can_read_line() override;
+    virtual bool can_read_line() const override;
     virtual ByteBuffer read_line(size_t) override;
     virtual bool can_read() const override;
     virtual ByteBuffer receive(size_t) override;

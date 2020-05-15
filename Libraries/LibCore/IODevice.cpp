@@ -121,7 +121,7 @@ bool IODevice::can_read_from_fd() const
     return FD_ISSET(m_fd, &rfds);
 }
 
-bool IODevice::can_read_line()
+bool IODevice::can_read_line() const
 {
     if (m_eof && !m_buffered_data.is_empty())
         return true;
@@ -206,7 +206,7 @@ ByteBuffer IODevice::read_line(size_t max_size)
     return {};
 }
 
-bool IODevice::populate_read_buffer()
+bool IODevice::populate_read_buffer() const
 {
     if (m_fd < 0)
         return false;

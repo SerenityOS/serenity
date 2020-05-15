@@ -51,8 +51,7 @@ protected:
     void on_socket_connected();
     virtual void register_on_ready_to_read(Function<void()>) = 0;
     virtual void register_on_ready_to_write(Function<void()>) = 0;
-    // FIXME: I want const but Core::IODevice::can_read_line populates a cache with this
-    virtual bool can_read_line() = 0;
+    virtual bool can_read_line() const = 0;
     virtual ByteBuffer read_line(size_t) = 0;
     virtual bool can_read() const = 0;
     virtual ByteBuffer receive(size_t) = 0;

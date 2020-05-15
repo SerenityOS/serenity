@@ -104,7 +104,7 @@ void HttpsJob::register_on_ready_to_write(Function<void()> callback)
     };
 }
 
-bool HttpsJob::can_read_line()
+bool HttpsJob::can_read_line() const
 {
     return m_socket->can_read_line();
 }

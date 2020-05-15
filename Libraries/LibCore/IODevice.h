@@ -65,8 +65,7 @@ public:
     bool write(const u8*, int size);
     bool write(const StringView&);
 
-    // FIXME: I would like this to be const but currently it needs to call populate_read_buffer().
-    bool can_read_line();
+    bool can_read_line() const;
 
     bool can_read() const;
 
@@ -88,20 +87,20 @@ protected:
 
     void set_fd(int);
     void set_mode(OpenMode mode) { m_mode = mode; }
-    void set_error(int error) { m_error = error; }
-    void set_eof(bool eof) { m_eof = eof; }
+    void set_error(int error) const { m_error = error; }
+    void set_eof(bool eof) const { m_eof = eof; }
 
-    virtual void did_update_fd(int) {}
+    virtual void did_update_fd(int) { }
 
 private:
-    bool populate_read_buffer();
+    bool populate_read_buffer() const;
     bool can_read_from_fd() const;
 
     int m_fd { -1 };
-    int m_error { 0 };
-    bool m_eof { false };
     OpenMode m_mode { NotOpen };
-    Vector<u8> m_buffered_data;
+    mutable int m_error { 0 };
+    mutable bool m_eof { false };
+    mutable Vector<u8> m_buffered_data;
 };
 
 }
