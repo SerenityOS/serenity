@@ -38,7 +38,7 @@ public:
 
     String data() const { return data_and_type().data; }
     String type() const { return data_and_type().type; }
-    void set_data(const StringView&, const String& data_type = "text");
+    void set_data(const StringView&, const String& data_type = "text/plain");
 
     struct DataAndType {
         String data;
