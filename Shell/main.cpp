@@ -30,6 +30,7 @@
 #include <AK/Function.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
@@ -56,6 +57,8 @@ static Line::Editor editor { Line::Configuration { Line::Configuration::Unescape
 //        if we want to be more sh-like, we should do that some day
 static constexpr bool HighlightVariablesInsideStrings = false;
 static bool s_disable_hyperlinks = false;
+
+static IterationDecision wait_for_pid(pid_t pid, const String& name, bool is_first_command_in_chain, int& return_value);
 
 static void print_path(const String& path)
 {
@@ -379,6 +382,164 @@ static int sh_time(int argc, const char** argv)
     return exit_code.value();
 }
 
+static int sh_jobs(int argc, const char** argv)
+{
+    bool list = false, show_pid = false;
+
+    Core::ArgsParser parser;
+    parser.add_option(list, "List all information about jobs", "list", 'l');
+    parser.add_option(show_pid, "Display the PID of the jobs", "pid", 'p');
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    enum {
+        Basic,
+        OnlyPID,
+        ListAll,
+    } mode { Basic };
+
+    if (show_pid)
+        mode = OnlyPID;
+
+    if (list)
+        mode = ListAll;
+
+    for (auto& job : g.jobs) {
+        auto pid = job.value.pid();
+        int wstatus;
+        auto rc = waitpid(pid, &wstatus, WNOHANG);
+        if (rc == -1) {
+            perror("waitpid");
+            return 1;
+        }
+        auto status = "running";
+
+        if (rc != 0) {
+            if (WIFEXITED(wstatus))
+                status = "exited";
+
+            if (WIFSTOPPED(wstatus))
+                status = "stopped";
+
+            if (WIFSIGNALED(wstatus))
+                status = "signaled";
+        }
+
+        switch (mode) {
+        case Basic:
+            printf("[%llu] %s %s\n", job.value.job_id(), status, job.value.cmd().characters());
+            break;
+        case OnlyPID:
+            printf("[%llu] %d %s %s\n", job.value.job_id(), pid, status, job.value.cmd().characters());
+            break;
+        case ListAll:
+            printf("[%llu] %d %d %s %s\n", job.value.job_id(), pid, job.value.pgid(), status, job.value.cmd().characters());
+            break;
+        }
+    }
+
+    return 0;
+}
+
+static int sh_fg(int argc, const char** argv)
+{
+    int job_id = -1;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(job_id, "job id to bring to foreground", "job_id", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (job_id == -1)
+        job_id = g.jobs.size() - 1;
+
+    Job* job = nullptr;
+
+    for (auto& entry : g.jobs) {
+        if (entry.value.job_id() == (u64)job_id) {
+            job = &entry.value;
+            break;
+        }
+    }
+    if (!job) {
+        if (job_id == -1) {
+            printf("fg: no current job\n");
+        } else {
+            printf("fg: job with id %d not found\n", job_id);
+        }
+        return 1;
+    }
+
+    dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
+    printf("Resuming job %llu - %s\n", job->job_id(), job->cmd().characters());
+
+    if (killpg(job->pgid(), SIGCONT) < 0) {
+        perror("killpg");
+        return 1;
+    }
+
+    int return_value = 0;
+
+    auto current_pid = getpid();
+    auto current_pgid = getpgid(current_pid);
+
+    setpgid(job->pid(), job->pgid());
+    tcsetpgrp(0, job->pgid());
+
+    do {
+        if (wait_for_pid(job->pid(), job->cmd(), true, return_value) == IterationDecision::Break)
+            break;
+    } while (errno == EINTR);
+
+    setpgid(current_pid, current_pgid);
+    tcsetpgrp(0, current_pgid);
+
+    return return_value;
+}
+
+static int sh_bg(int argc, const char** argv)
+{
+    int job_id = -1;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(job_id, "job id to run in background", "job_id", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (job_id == -1)
+        job_id = g.jobs.size() - 1;
+
+    Job* job = nullptr;
+
+    for (auto& entry : g.jobs) {
+        if (entry.value.job_id() == (u64)job_id) {
+            job = &entry.value;
+            break;
+        }
+    }
+    if (!job) {
+        if (job_id == -1) {
+            printf("bg: no current job\n");
+        } else {
+            printf("bg: job with id %d not found\n", job_id);
+        }
+        return 1;
+    }
+
+    dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
+    printf("Resuming job %llu - %s\n", job->job_id(), job->cmd().characters());
+
+    if (killpg(job->pgid(), SIGCONT) < 0) {
+        perror("killpg");
+        return 1;
+    }
+
+    return 0;
+}
+
 static int sh_umask(int argc, const char** argv)
 {
     if (argc == 1) {
@@ -650,6 +811,18 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
         retval = sh_time(argc, argv);
         return true;
     }
+    if (!strcmp(argv[0], "jobs")) {
+        retval = sh_jobs(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "fg")) {
+        retval = sh_fg(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "bg")) {
+        retval = sh_bg(argc, argv);
+        return true;
+    }
     return false;
 }
 
@@ -845,6 +1018,53 @@ static ExitCodeOrContinuationRequest::ContinuationRequest is_complete(const Vect
         return ExitCodeOrContinuationRequest::DoubleQuotedString;
 
     return ExitCodeOrContinuationRequest::Nothing;
+}
+
+static IterationDecision wait_for_pid(pid_t pid, const String& name, bool is_first_command_in_chain, int& return_value)
+{
+    // disable the child signal handler
+    auto* sigchld_handler = signal(SIGCHLD, nullptr);
+
+    int wstatus = 0;
+    int rc = waitpid(pid, &wstatus, WSTOPPED);
+    auto errno_save = errno;
+
+    // reenable the signal handler
+    signal(SIGCHLD, sigchld_handler);
+
+    errno = errno_save;
+    if (rc < 0 && errno != EINTR) {
+        if (errno != ECHILD)
+            perror("waitpid");
+        return IterationDecision::Break;
+    }
+
+    auto job_id = g.jobs.get(pid).value_or(Job {}).job_id();
+
+    if (WIFEXITED(wstatus)) {
+        if (WEXITSTATUS(wstatus) != 0)
+            dbg() << "Shell: " << name << ":" << pid << " exited with status " << WEXITSTATUS(wstatus);
+
+        if (is_first_command_in_chain)
+            return_value = WEXITSTATUS(wstatus);
+
+        g.jobs.remove(pid);
+        return IterationDecision::Break;
+    }
+
+    if (WIFSTOPPED(wstatus)) {
+        fprintf(stderr, "Shell: [%llu] %s(%d) %s\n", job_id, name.characters(), pid, strsignal(WSTOPSIG(wstatus)));
+        return IterationDecision::Continue;
+    }
+
+    if (WIFSIGNALED(wstatus)) {
+        printf("Shell: [%llu] %s(%d) exited due to signal '%s'\n", job_id, name.characters(), pid, strsignal(WTERMSIG(wstatus)));
+    } else {
+        printf("Shell: [%llu] %s(%d) exited abnormally\n", job_id, name.characters(), pid);
+    }
+
+    g.jobs.remove(pid);
+    return IterationDecision::Break;
 }
 
 static ExitCodeOrContinuationRequest run_command(const StringView& cmd)
@@ -1060,6 +1280,11 @@ static ExitCodeOrContinuationRequest run_command(const StringView& cmd)
                 ASSERT_NOT_REACHED();
             }
             children.append({ argv[0], child });
+
+            StringBuilder cmd;
+            cmd.join(" ", argv_string);
+
+            g.jobs.set((u64)child, { child, (unsigned)child, cmd.build(), g.jobs.size() });
         }
 
 #ifdef SH_DEBUG
@@ -1073,31 +1298,11 @@ static ExitCodeOrContinuationRequest run_command(const StringView& cmd)
             dbgprintf("  %d (%s)\n", child.pid, child.name.characters());
 #endif
 
-        int wstatus = 0;
-
         for (size_t i = 0; i < children.size(); ++i) {
             auto& child = children[i];
             do {
-                int rc = waitpid(child.pid, &wstatus, WSTOPPED);
-                if (rc < 0 && errno != EINTR) {
-                    if (errno != ECHILD)
-                        perror("waitpid");
+                if (wait_for_pid(child.pid, child.name, i == 0, return_value) == IterationDecision::Break)
                     break;
-                }
-                if (WIFEXITED(wstatus)) {
-                    if (WEXITSTATUS(wstatus) != 0)
-                        dbg() << "Shell: " << child.name << ":" << child.pid << " exited with status " << WEXITSTATUS(wstatus);
-                    if (i == 0)
-                        return_value = WEXITSTATUS(wstatus);
-                } else if (WIFSTOPPED(wstatus)) {
-                    fprintf(stderr, "Shell: %s(%d) %s\n", child.name.characters(), child.pid, strsignal(WSTOPSIG(wstatus)));
-                } else {
-                    if (WIFSIGNALED(wstatus)) {
-                        printf("Shell: %s(%d) exited due to signal '%s'\n", child.name.characters(), child.pid, strsignal(WTERMSIG(wstatus)));
-                    } else {
-                        printf("Shell: %s(%d) exited abnormally\n", child.name.characters(), child.pid);
-                    }
-                }
             } while (errno == EINTR);
         }
     }
@@ -1482,6 +1687,22 @@ int main(int argc, char** argv)
 
     signal(SIGHUP, [](int) {
         save_history();
+    });
+
+    signal(SIGCHLD, [](int) {
+        int wstatus = 0;
+        auto child_pid = waitpid(-1, &wstatus, WNOHANG);
+        dbg() << "SIGCHLD " << child_pid << " - " << WIFEXITED(wstatus) << " " << WIFSTOPPED(wstatus);
+        if (child_pid != -1) {
+            if (WIFEXITED(wstatus) || WIFSIGNALED(wstatus)) {
+                // FIXME: We should switch to using Core::EventLoop and defer this stuff
+                auto entry = g.jobs.find(child_pid);
+                if (entry != g.jobs.end()) {
+                    fprintf(stderr, "Shell: Job %d(%s) exited\n", entry->value.pid(), entry->value.cmd().characters());
+                    g.jobs.remove(entry);
+                }
+            }
+        }
     });
 
     int rc = gethostname(g.hostname, sizeof(g.hostname));
