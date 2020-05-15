@@ -36,10 +36,10 @@ class GeminiProtocol;
 class GeminiDownload final : public Download {
 public:
     virtual ~GeminiDownload() override;
-    static NonnullRefPtr<GeminiDownload> create_with_job(Badge<GeminiProtocol>, PSClientConnection&, NonnullRefPtr<Gemini::GeminiJob>&&);
+    static NonnullOwnPtr<GeminiDownload> create_with_job(Badge<GeminiProtocol>, PSClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
 
 private:
-    explicit GeminiDownload(PSClientConnection&, NonnullRefPtr<Gemini::GeminiJob>&&);
+    explicit GeminiDownload(PSClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
 
     NonnullRefPtr<Gemini::GeminiJob> m_job;
 };

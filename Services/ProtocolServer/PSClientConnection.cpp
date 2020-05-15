@@ -63,12 +63,16 @@ OwnPtr<Messages::ProtocolServer::StartDownloadResponse> PSClientConnection::hand
     if (!protocol)
         return make<Messages::ProtocolServer::StartDownloadResponse>(-1);
     auto download = protocol->start_download(*this, url);
-    return make<Messages::ProtocolServer::StartDownloadResponse>(download->id());
+    if (!download)
+        return make<Messages::ProtocolServer::StartDownloadResponse>(-1);
+    auto id = download->id();
+    m_downloads.set(id, move(download));
+    return make<Messages::ProtocolServer::StartDownloadResponse>(id);
 }
 
 OwnPtr<Messages::ProtocolServer::StopDownloadResponse> PSClientConnection::handle(const Messages::ProtocolServer::StopDownload& message)
 {
-    auto* download = Download::find_by_id(message.download_id());
+    auto* download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr));
     bool success = false;
     if (download) {
         download->stop();
@@ -93,6 +97,8 @@ void PSClientConnection::did_finish_download(Badge<Download>, Download& download
     for (auto& it : download.response_headers())
         response_headers.add(it.key, it.value);
     post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size().value(), buffer ? buffer->shbuf_id() : -1, response_headers));
+
+    m_downloads.remove(download.id());
 }
 
 void PSClientConnection::did_progress_download(Badge<Download>, Download& download)

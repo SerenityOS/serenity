@@ -31,22 +31,10 @@
 // FIXME: What about rollover?
 static i32 s_next_id = 1;
 
-static HashMap<i32, RefPtr<Download>>& all_downloads()
-{
-    static HashMap<i32, RefPtr<Download>> map;
-    return map;
-}
-
-Download* Download::find_by_id(i32 id)
-{
-    return const_cast<Download*>(all_downloads().get(id).value_or(nullptr));
-}
-
 Download::Download(PSClientConnection& client)
-    : m_id(s_next_id++)
-    , m_client(client.make_weak_ptr())
+    : m_client(client)
+    , m_id(s_next_id++)
 {
-    all_downloads().set(m_id, this);
 }
 
 Download::~Download()
@@ -55,7 +43,7 @@ Download::~Download()
 
 void Download::stop()
 {
-    all_downloads().remove(m_id);
+    m_client.did_finish_download({}, *this, false);
 }
 
 void Download::set_payload(const ByteBuffer& payload)
@@ -71,22 +59,12 @@ void Download::set_response_headers(const HashMap<String, String, CaseInsensitiv
 
 void Download::did_finish(bool success)
 {
-    if (!m_client) {
-        dbg() << "Download::did_finish() after the client already disconnected.";
-        return;
-    }
-    m_client->did_finish_download({}, *this, success);
-    all_downloads().remove(m_id);
+    m_client.did_finish_download({}, *this, success);
 }
 
 void Download::did_progress(Optional<u32> total_size, u32 downloaded_size)
 {
-    if (!m_client) {
-        // FIXME: We should also abort the download in this situation, I guess!
-        dbg() << "Download::did_progress() after the client already disconnected.";
-        return;
-    }
     m_total_size = total_size;
     m_downloaded_size = downloaded_size;
-    m_client->did_progress_download({}, *this);
+    m_client.did_progress_download({}, *this);
 }

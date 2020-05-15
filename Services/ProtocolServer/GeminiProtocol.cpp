@@ -38,7 +38,7 @@ GeminiProtocol::~GeminiProtocol()
 {
 }
 
-RefPtr<Download> GeminiProtocol::start_download(PSClientConnection& client, const URL& url)
+OwnPtr<Download> GeminiProtocol::start_download(PSClientConnection& client, const URL& url)
 {
     Gemini::GeminiRequest request;
     request.set_url(url);
