@@ -412,12 +412,18 @@ float roundf(float value)
 
 float floorf(float value)
 {
-    return (int)value;
+    if (value >= 0)
+        return (int)value;
+    int intvalue = (int)value;
+    return ((float)intvalue == value) ? intvalue : intvalue - 1;
 }
 
 double floor(double value)
 {
-    return (int)value;
+    if (value >= 0)
+        return (int)value;
+    int intvalue = (int)value;
+    return ((double)intvalue == value) ? intvalue : intvalue - 1;
 }
 
 double rint(double value)
