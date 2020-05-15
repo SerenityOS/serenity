@@ -410,6 +410,11 @@ float roundf(float value)
     return (float)(int)(value - 0.5f);
 }
 
+float floorf(float value)
+{
+    return (int)value;
+}
+
 double floor(double value)
 {
     return (int)value;
