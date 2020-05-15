@@ -213,6 +213,8 @@ public:
     VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset); }
     VirtualAddress base_address() const { return m_base_address; }
 
+    const char* soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : nullptr; }
+
 private:
     const char* symbol_string_table_string(Elf32_Word) const;
     void parse();
@@ -259,6 +261,9 @@ private:
 
     // DT_FLAGS
     Elf32_Word m_dt_flags { 0 };
+
+    bool m_has_soname { false };
+    Elf32_Word m_soname_index { 0 }; // Index into dynstr table for SONAME
     // End Section information from DT_* entries
 };
 

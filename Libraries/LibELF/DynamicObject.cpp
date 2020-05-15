@@ -59,6 +59,9 @@ void DynamicObject::dump() const
         return IterationDecision::Continue;
     });
 
+    if (m_has_soname)
+        builder.appendf("DT_SONAME: %s\n", soname()); // FIXME: Valdidate that this string is null terminated?
+
     dbgprintf("Dynamic section at address 0x%x contains %zu entries:\n", m_dynamic_address.as_ptr(), num_dynamic_sections);
     dbgprintf(builder.to_string().characters());
 }
@@ -134,6 +137,10 @@ void DynamicObject::parse()
             break;
         case DT_TEXTREL:
             m_dt_flags |= DF_TEXTREL; // This tag seems to exist for legacy reasons only?
+            break;
+        case DT_SONAME:
+            m_soname_index = entry.val();
+            m_has_soname = true;
             break;
         default:
             dbgprintf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
