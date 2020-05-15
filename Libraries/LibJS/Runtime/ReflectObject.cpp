@@ -138,7 +138,9 @@ Value ReflectObject::define_property(Interpreter& interpreter)
         return {};
     if (!interpreter.argument(2).is_object())
         return interpreter.throw_exception<TypeError>("Descriptor argument is not an object");
-    auto property_key = interpreter.argument(1).to_string();
+    auto property_key = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     auto& descriptor = interpreter.argument(2).as_object();
     auto success = target->define_property(property_key, descriptor, false);
     return Value(success);
@@ -151,13 +153,15 @@ Value ReflectObject::delete_property(Interpreter& interpreter)
         return {};
 
     auto property_key = interpreter.argument(1);
-    PropertyName property = PropertyName(property_key.to_string());
+    auto property_name = PropertyName(property_key.to_string(interpreter));
+    if (interpreter.exception())
+        return {};
     if (property_key.to_number().is_finite_number()) {
         auto property_key_as_double = property_key.to_double();
         if (property_key_as_double >= 0 && (i32)property_key_as_double == property_key_as_double)
-            property = PropertyName(property_key_as_double);
+            property_name = PropertyName(property_key_as_double);
     }
-    return target->delete_property(property);
+    return target->delete_property(property_name);
 }
 
 Value ReflectObject::get(Interpreter& interpreter)
@@ -166,7 +170,9 @@ Value ReflectObject::get(Interpreter& interpreter)
     auto* target = get_target_object_from(interpreter, "get");
     if (!target)
         return {};
-    auto property_key = interpreter.argument(1).to_string();
+    auto property_key = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     return target->get(property_key).value_or(js_undefined());
 }
 
@@ -175,7 +181,9 @@ Value ReflectObject::get_own_property_descriptor(Interpreter& interpreter)
     auto* target = get_target_object_from(interpreter, "getOwnPropertyDescriptor");
     if (!target)
         return {};
-    auto property_key = interpreter.argument(1).to_string();
+    auto property_key = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     return target->get_own_property_descriptor(property_key);
 }
 
@@ -192,7 +200,9 @@ Value ReflectObject::has(Interpreter& interpreter)
     auto* target = get_target_object_from(interpreter, "has");
     if (!target)
         return {};
-    auto property_key = interpreter.argument(1).to_string();
+    auto property_key = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     return Value(target->has_property(property_key));
 }
 
@@ -224,7 +234,9 @@ Value ReflectObject::set(Interpreter& interpreter)
     auto* target = get_target_object_from(interpreter, "set");
     if (!target)
         return {};
-    auto property_key = interpreter.argument(1).to_string();
+    auto property_key = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     auto value = interpreter.argument(2);
     return Value(target->put(property_key, value));
 }

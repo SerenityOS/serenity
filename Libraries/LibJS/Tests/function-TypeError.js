@@ -43,7 +43,7 @@ try {
         new isNaN();
     }, {
         error: TypeError,
-        message: "function isNaN() {\n  [NativeFunction]\n} is not a constructor (evaluated from 'isNaN')"
+        message: "[object NativeFunction] is not a constructor (evaluated from 'isNaN')"
     });
 
     console.log("PASS");

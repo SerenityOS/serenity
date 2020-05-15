@@ -161,8 +161,12 @@ JS::Value CanvasRenderingContext2DWrapper::fill_style_getter(JS::Interpreter& in
 
 void CanvasRenderingContext2DWrapper::fill_style_setter(JS::Interpreter& interpreter, JS::Value value)
 {
-    if (auto* impl = impl_from(interpreter))
-        impl->set_fill_style(value.to_string());
+    if (auto* impl = impl_from(interpreter)) {
+        auto string = value.to_string(interpreter);
+        if (interpreter.exception())
+            return;
+        impl->set_fill_style(string);
+    }
 }
 
 JS::Value CanvasRenderingContext2DWrapper::stroke_style_getter(JS::Interpreter& interpreter)
@@ -175,8 +179,12 @@ JS::Value CanvasRenderingContext2DWrapper::stroke_style_getter(JS::Interpreter& 
 
 void CanvasRenderingContext2DWrapper::stroke_style_setter(JS::Interpreter& interpreter, JS::Value value)
 {
-    if (auto* impl = impl_from(interpreter))
-        impl->set_stroke_style(value.to_string());
+    if (auto* impl = impl_from(interpreter)){
+        auto string = value.to_string(interpreter);
+        if (interpreter.exception())
+            return;
+        impl->set_stroke_style(string);
+    }
 }
 
 JS::Value CanvasRenderingContext2DWrapper::line_width_getter(JS::Interpreter& interpreter)

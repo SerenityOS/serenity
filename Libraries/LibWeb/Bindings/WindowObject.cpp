@@ -98,8 +98,11 @@ JS::Value WindowObject::alert(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     String message = "";
-    if (interpreter.argument_count())
-        message = interpreter.argument(0).to_string();
+    if (interpreter.argument_count()) {
+        message = interpreter.argument(0).to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
     impl->alert(message);
     return JS::js_undefined();
 }
@@ -110,8 +113,11 @@ JS::Value WindowObject::confirm(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     String message = "";
-    if (interpreter.argument_count())
-        message = interpreter.argument(0).to_string();
+    if (interpreter.argument_count()) {
+        message = interpreter.argument(0).to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
     return JS::Value(impl->confirm(message));
 }
 

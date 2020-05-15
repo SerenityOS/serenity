@@ -30,6 +30,7 @@ try {
         message: "1 is not iterable",
     });
 
+
     assertThrowsError(() => {
         [...{}];
     }, {

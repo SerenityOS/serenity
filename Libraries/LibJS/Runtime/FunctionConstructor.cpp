@@ -55,16 +55,24 @@ Value FunctionConstructor::construct(Interpreter& interpreter)
 {
     String parameters_source = "";
     String body_source = "";
-    if (interpreter.argument_count() == 1)
-        body_source = interpreter.argument(0).to_string();
+    if (interpreter.argument_count() == 1) {
+        body_source = interpreter.argument(0).to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
     if (interpreter.argument_count() > 1) {
         Vector<String> parameters;
-        for (size_t i = 0; i < interpreter.argument_count() - 1; ++i)
-            parameters.append(interpreter.argument(i).to_string());
+        for (size_t i = 0; i < interpreter.argument_count() - 1; ++i) {
+            parameters.append(interpreter.argument(i).to_string(interpreter));
+            if (interpreter.exception())
+                return {};
+        }
         StringBuilder parameters_builder;
         parameters_builder.join(',', parameters);
         parameters_source = parameters_builder.build();
-        body_source = interpreter.argument(interpreter.argument_count() - 1).to_string();
+        body_source = interpreter.argument(interpreter.argument_count() - 1).to_string(interpreter);
+        if (interpreter.exception())
+            return {};
     }
     auto source = String::format("function anonymous(%s) { %s }", parameters_source.characters(), body_source.characters());
     auto parser = Parser(Lexer(source));

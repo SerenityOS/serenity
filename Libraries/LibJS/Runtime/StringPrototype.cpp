@@ -56,7 +56,7 @@ static String string_from(Interpreter& interpreter)
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object)
         return {};
-    return Value(this_object).to_string();
+    return Value(this_object).to_string(interpreter);
 }
 
 StringPrototype::StringPrototype()
@@ -127,7 +127,9 @@ Value StringPrototype::starts_with(Interpreter& interpreter)
         return {};
     if (!interpreter.argument_count())
         return Value(false);
-    auto search_string = interpreter.argument(0).to_string();
+    auto search_string = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     auto search_string_length = static_cast<i32>(search_string.length());
     i32 position = 0;
     if (interpreter.argument_count() > 1) {
@@ -152,7 +154,9 @@ Value StringPrototype::index_of(Interpreter& interpreter)
     Value needle_value = js_undefined();
     if (interpreter.argument_count() >= 1)
         needle_value = interpreter.argument(0);
-    auto needle = needle_value.to_string();
+    auto needle = needle_value.to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     return Value((i32)string.index_of(needle).value_or(-1));
 }
 
@@ -204,8 +208,11 @@ static Value pad_string(Interpreter& interpreter, const String& string, PadPlace
         return js_string(interpreter, string);
 
     String fill_string = " ";
-    if (!interpreter.argument(1).is_undefined())
-        fill_string = interpreter.argument(1).to_string();
+    if (!interpreter.argument(1).is_undefined()) {
+        fill_string = interpreter.argument(1).to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
     if (fill_string.is_empty())
         return js_string(interpreter, string);
 
@@ -269,7 +276,9 @@ Value StringPrototype::concat(Interpreter& interpreter)
     StringBuilder builder;
     builder.append(string);
     for (size_t i = 0; i < interpreter.argument_count(); ++i) {
-        auto string_argument = interpreter.argument(i).to_string();
+        auto string_argument = interpreter.argument(i).to_string(interpreter);
+        if (interpreter.exception())
+            return {};
         builder.append(string_argument);
     }
     return js_string(interpreter, builder.to_string());
@@ -324,7 +333,9 @@ Value StringPrototype::includes(Interpreter& interpreter)
     auto string = string_from(interpreter);
     if (string.is_null())
         return {};
-    auto search_string = interpreter.argument(0).to_string();
+    auto search_string = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     i32 position = 0;
 
     if (interpreter.argument_count() >= 2) {
@@ -393,7 +404,9 @@ Value StringPrototype::last_index_of(Interpreter& interpreter)
     if (interpreter.argument_count() == 0)
         return Value(-1);
 
-    auto search_string = interpreter.argument(0).to_string();
+    auto search_string = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
     if (search_string.length() > string.length())
         return Value(-1);
 

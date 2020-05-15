@@ -123,9 +123,9 @@ Value CallExpression::execute(Interpreter& interpreter) const
                 expression_string = static_cast<const Identifier&>(*m_callee).string();
             else
                 expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
-            error_message = String::format("%s is not a %s (evaluated from '%s')", callee.to_string().characters(), call_type, expression_string.characters());
+            error_message = String::format("%s is not a %s (evaluated from '%s')", callee.to_string_without_side_effects().characters(), call_type, expression_string.characters());
         } else {
-            error_message = String::format("%s is not a %s", callee.to_string().characters(), call_type);
+            error_message = String::format("%s is not a %s", callee.to_string_without_side_effects().characters(), call_type);
         }
         return interpreter.throw_exception<TypeError>(error_message);
     }
@@ -151,7 +151,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
                 for (auto ch : static_cast<const StringObject&>(value.as_object()).primitive_string().string())
                     iterables.append(Value(js_string(interpreter, String::format("%c", ch))));
             } else {
-                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string().characters()));
+                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string_without_side_effects().characters()));
             }
             for (auto& value : iterables)
                 arguments.append(value);
@@ -1154,7 +1154,9 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
             continue;
         }
 
-        auto key = key_result.to_string();
+        auto key = key_result.to_string(interpreter);
+        if (interpreter.exception())
+            return {};
         auto value = property.value().execute(interpreter);
         if (interpreter.exception())
             return {};
@@ -1184,14 +1186,13 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
 
     ASSERT(!index.is_empty());
 
-    if (!index.to_number().is_finite_number())
-        return PropertyName(index.to_string());
+    if (index.is_integer() && index.to_i32() >= 0)
+        return PropertyName(index.to_i32());
 
-    auto index_as_double = index.to_double();
-    if (index_as_double < 0 || (i32)index_as_double != index_as_double)
-        return PropertyName(index.to_string());
-
-    return PropertyName(index.to_i32());
+    auto index_string = index.to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    return PropertyName(index_string);
 }
 
 String MemberExpression::to_string_approximation() const
@@ -1283,7 +1284,7 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
                         array->elements().append(js_string(interpreter, string_to_spread.substring(i, 1)));
                     continue;
                 }
-                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string().characters()));
+                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string_without_side_effects().characters()));
                 return {};
             }
         }
@@ -1307,7 +1308,10 @@ Value TemplateLiteral::execute(Interpreter& interpreter) const
         auto expr = expression.execute(interpreter);
         if (interpreter.exception())
             return {};
-        string_builder.append(expr.to_string());
+        auto string = expr.to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+        string_builder.append(string);
     }
 
     return js_string(interpreter, string_builder.build());
@@ -1330,7 +1334,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter) const
     if (interpreter.exception())
         return {};
     if (!tag.is_function()) {
-        interpreter.throw_exception<TypeError>(String::format("%s is not a function", tag.to_string().characters()));
+        interpreter.throw_exception<TypeError>(String::format("%s is not a function", tag.to_string_without_side_effects().characters()));
         return {};
     }
     auto& tag_function = tag.as_function();

@@ -213,7 +213,7 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         printf("\033[34;1m");
     if (value.is_string())
         putchar('"');
-    printf("%s", value.to_string().characters());
+    printf("%s", value.to_string_without_side_effects().characters());
     if (value.is_string())
         putchar('"');
     printf("\033[0m");
@@ -316,7 +316,7 @@ JS::Value ReplObject::save_to_file(JS::Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
         return JS::Value(false);
-    String save_path = interpreter.argument(0).to_string();
+    String save_path = interpreter.argument(0).to_string_without_side_effects();
     StringView path = StringView(save_path.characters());
     if (write_to_file(path)) {
         return JS::Value(true);
@@ -445,14 +445,14 @@ public:
     }
     virtual JS::Value count() override
     {
-        auto label = interpreter().argument_count() ? interpreter().argument(0).to_string() : "default";
+        auto label = interpreter().argument_count() ? interpreter().argument(0).to_string_without_side_effects() : "default";
         auto counter_value = m_console.counter_increment(label);
         printf("%s: %u\n", label.characters(), counter_value);
         return JS::js_undefined();
     }
     virtual JS::Value count_reset() override
     {
-        auto label = interpreter().argument_count() ? interpreter().argument(0).to_string() : "default";
+        auto label = interpreter().argument_count() ? interpreter().argument(0).to_string_without_side_effects() : "default";
         if (m_console.counter_reset(label)) {
             printf("%s: 0\n", label.characters());
         } else {
