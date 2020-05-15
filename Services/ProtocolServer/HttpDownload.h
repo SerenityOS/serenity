@@ -36,10 +36,10 @@ class HttpProtocol;
 class HttpDownload final : public Download {
 public:
     virtual ~HttpDownload() override;
-    static NonnullRefPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, PSClientConnection&, NonnullRefPtr<HTTP::HttpJob>&&);
+    static NonnullOwnPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, PSClientConnection&, NonnullRefPtr<HTTP::HttpJob>);
 
 private:
-    explicit HttpDownload(PSClientConnection&, NonnullRefPtr<HTTP::HttpJob>&&);
+    explicit HttpDownload(PSClientConnection&, NonnullRefPtr<HTTP::HttpJob>);
 
     NonnullRefPtr<HTTP::HttpJob> m_job;
 };

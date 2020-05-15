@@ -33,5 +33,5 @@ public:
     GeminiProtocol();
     virtual ~GeminiProtocol() override;
 
-    virtual RefPtr<Download> start_download(PSClientConnection&, const URL&) override;
+    virtual OwnPtr<Download> start_download(PSClientConnection&, const URL&) override;
 };

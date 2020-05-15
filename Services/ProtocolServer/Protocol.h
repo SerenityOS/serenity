@@ -37,7 +37,7 @@ public:
     virtual ~Protocol();
 
     const String& name() const { return m_name; }
-    virtual RefPtr<Download> start_download(PSClientConnection&, const URL&) = 0;
+    virtual OwnPtr<Download> start_download(PSClientConnection&, const URL&) = 0;
 
     static Protocol* find_by_name(const String&);
 

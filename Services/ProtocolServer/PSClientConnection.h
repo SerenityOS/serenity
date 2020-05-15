@@ -51,5 +51,6 @@ private:
     virtual OwnPtr<Messages::ProtocolServer::StopDownloadResponse> handle(const Messages::ProtocolServer::StopDownload&) override;
     virtual OwnPtr<Messages::ProtocolServer::DisownSharedBufferResponse> handle(const Messages::ProtocolServer::DisownSharedBuffer&) override;
 
+    HashMap<i32, OwnPtr<Download>> m_downloads;
     HashMap<i32, RefPtr<AK::SharedBuffer>> m_shared_buffers;
 };

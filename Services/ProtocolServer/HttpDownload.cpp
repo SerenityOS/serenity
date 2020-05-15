@@ -28,7 +28,7 @@
 #include <LibHTTP/HttpResponse.h>
 #include <ProtocolServer/HttpDownload.h>
 
-HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<HTTP::HttpJob>&& job)
+HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<HTTP::HttpJob> job)
     : Download(client)
     , m_job(job)
 {
@@ -52,9 +52,12 @@ HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<HTTP::HttpJ
 
 HttpDownload::~HttpDownload()
 {
+    m_job->on_finish = nullptr;
+    m_job->on_progress = nullptr;
+    m_job->shutdown();
 }
 
-NonnullRefPtr<HttpDownload> HttpDownload::create_with_job(Badge<HttpProtocol>, PSClientConnection& client, NonnullRefPtr<HTTP::HttpJob>&& job)
+NonnullOwnPtr<HttpDownload> HttpDownload::create_with_job(Badge<HttpProtocol>, PSClientConnection& client, NonnullRefPtr<HTTP::HttpJob> job)
 {
-    return adopt(*new HttpDownload(client, move(job)));
+    return adopt_own(*new HttpDownload(client, move(job)));
 }

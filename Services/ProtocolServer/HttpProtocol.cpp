@@ -38,7 +38,7 @@ HttpProtocol::~HttpProtocol()
 {
 }
 
-RefPtr<Download> HttpProtocol::start_download(PSClientConnection& client, const URL& url)
+OwnPtr<Download> HttpProtocol::start_download(PSClientConnection& client, const URL& url)
 {
     HTTP::HttpRequest request;
     request.set_method(HTTP::HttpRequest::Method::GET);
