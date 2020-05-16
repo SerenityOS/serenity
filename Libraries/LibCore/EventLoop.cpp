@@ -320,8 +320,7 @@ int EventLoop::exec()
 
 void EventLoop::pump(WaitMode mode)
 {
-    if (m_queued_events.is_empty())
-        wait_for_event(mode);
+    wait_for_event(mode);
 
     decltype(m_queued_events) events;
     {
