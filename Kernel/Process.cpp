@@ -2179,7 +2179,7 @@ KResult Process::do_kill(Process& process, int signal)
         return KResult(-EPERM);
     }
     if (signal != 0)
-        process.send_signal(signal, this);
+        return process.send_signal(signal, this);
     return KSuccess;
 }
 
@@ -3781,15 +3781,14 @@ void Process::terminate_due_to_signal(u8 signal)
     die();
 }
 
-void Process::send_signal(u8 signal, Process* sender)
+KResult Process::send_signal(u8 signal, Process* sender)
 {
     InterruptDisabler disabler;
-    if (!m_thread_count)
-        return;
-    auto* thread = Thread::from_tid(m_pid);
-    if (!thread)
-        thread = &any_thread();
-    thread->send_signal(signal, sender);
+    if (auto* thread = Thread::from_tid(m_pid)) {
+        thread->send_signal(signal, sender);
+        return KSuccess;
+    }
+    return KResult(-ESRCH);
 }
 
 int Process::sys$create_thread(void* (*entry)(void*), const Syscall::SC_create_thread_params* user_params)
