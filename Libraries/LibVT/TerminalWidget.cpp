@@ -838,8 +838,8 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
             auto icon = Gfx::Bitmap::load_from_file(handler_icon);
 
-            m_context_menu_for_hyperlink->add_action(GUI::Action::create(String::format("Open in %s", handler_name.characters()), move(icon), [this](auto&) {
-                Desktop::Launcher::open(m_context_menu_href);
+            m_context_menu_for_hyperlink->add_action(GUI::Action::create(String::format("Open in %s", handler_name.characters()), move(icon), [this, handler](auto&) {
+                Desktop::Launcher::open(m_context_menu_href, handler);
             }));
         }
         m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
