@@ -88,12 +88,10 @@ public:
     bool has_only_one_background_color() const;
     void set_length(u16);
 
-    StringView text() const { return { m_characters, m_length }; }
-
     u16 length() const { return m_length; }
 
-    const u8* characters() const { return m_characters; }
-    u8* characters() { return m_characters; }
+    const u32* codepoints() const { return m_codepoints; }
+    u32* codepoints() { return m_codepoints; }
 
     bool is_dirty() const { return m_dirty; }
     void set_dirty(bool b) { m_dirty = b; }
@@ -102,7 +100,7 @@ public:
     Attribute* attributes() { return m_attributes; }
 
 private:
-    u8* m_characters { nullptr };
+    u32* m_codepoints { nullptr };
     Attribute* m_attributes { nullptr };
     bool m_dirty { false };
     u16 m_length { 0 };

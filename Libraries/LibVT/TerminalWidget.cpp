@@ -30,7 +30,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/Utf8View.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
@@ -338,86 +337,58 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         else if (has_only_one_background_color)
             painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].background_color).with_alpha(m_opacity));
 
-        // The terminal insists on thinking characters and
-        // bytes are the same thing. We want to still draw
-        // emojis in *some* way, but it won't be completely
-        // perfect. So what we do is we make multi-byte
-        // characters take up multiple columns, and render
-        // the character itself in the center of the columns
-        // its bytes take up as far as the terminal is concerned.
+        for (size_t column = 0; column < line.length(); ++column) {
+            u32 codepoint = line.codepoints()[column];
+            bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
+                && m_has_logical_focus
+                && visual_row == row_with_cursor
+                && column == m_terminal.cursor_column();
+            should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, (int)column });
+            auto attribute = line.attributes()[column];
+            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
+            auto character_rect = glyph_rect(visual_row, column);
+            auto cell_rect = character_rect.inflated(0, m_line_spacing);
+            if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
+                painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
+            }
 
-        Utf8View utf8_view { line.text() };
+            enum class UnderlineStyle {
+                None,
+                Dotted,
+                Solid,
+            };
 
-        for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
-            u32 codepoint = *it;
-            int this_char_column = utf8_view.byte_offset_of(it);
-            AK::Utf8CodepointIterator it_copy = it;
-            int next_char_column = utf8_view.byte_offset_of(++it_copy);
+            auto underline_style = UnderlineStyle::None;
 
-            // Columns from this_char_column up until next_char_column
-            // are logically taken up by this (possibly multi-byte)
-            // character. Iterate over these columns and draw background
-            // for each one of them separately.
-
-            bool should_reverse_fill_for_cursor_or_selection = false;
-            VT::Attribute attribute;
-            Color text_color;
-
-            for (u16 column = this_char_column; column < next_char_column; ++column) {
-                should_reverse_fill_for_cursor_or_selection |= m_cursor_blink_state
-                    && m_has_logical_focus
-                    && visual_row == row_with_cursor
-                    && column == m_terminal.cursor_column();
-                should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, column });
-                attribute = line.attributes()[column];
-                text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
-                auto character_rect = glyph_rect(visual_row, column);
-                auto cell_rect = character_rect.inflated(0, m_line_spacing);
-                if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
-                    painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
-                }
-
-                enum class UnderlineStyle {
-                    None,
-                    Dotted,
-                    Solid,
-                };
-
-                auto underline_style = UnderlineStyle::None;
-
-                if (attribute.flags & VT::Attribute::Underline) {
-                    // Content has specified underline
+            if (attribute.flags & VT::Attribute::Underline) {
+                // Content has specified underline
+                underline_style = UnderlineStyle::Solid;
+            } else if (!attribute.href.is_empty()) {
+                // We're hovering a hyperlink
+                if (m_hovered_href_id == attribute.href_id || m_active_href_id == attribute.href_id)
                     underline_style = UnderlineStyle::Solid;
-                } else if (!attribute.href.is_empty()) {
-                    // We're hovering a hyperlink
-                    if (m_hovered_href_id == attribute.href_id || m_active_href_id == attribute.href_id)
-                        underline_style = UnderlineStyle::Solid;
-                    else
-                        underline_style = UnderlineStyle::Dotted;
-                }
+                else
+                    underline_style = UnderlineStyle::Dotted;
+            }
 
-                if (underline_style == UnderlineStyle::Solid) {
-                    if (attribute.href_id == m_active_href_id && m_hovered_href_id == m_active_href_id)
-                        text_color = palette().active_link();
-                    painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), text_color);
-                } else if (underline_style == UnderlineStyle::Dotted) {
-                    auto dotted_line_color = text_color.darkened(0.6f);
-                    int x1 = cell_rect.bottom_left().x();
-                    int x2 = cell_rect.bottom_right().x();
-                    int y = cell_rect.bottom_left().y();
-                    for (int x = x1; x <= x2; ++x) {
-                        if ((x % 3) == 0)
-                            painter.set_pixel({ x, y }, dotted_line_color);
-                    }
+            if (underline_style == UnderlineStyle::Solid) {
+                if (attribute.href_id == m_active_href_id && m_hovered_href_id == m_active_href_id)
+                    text_color = palette().active_link();
+                painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), text_color);
+            } else if (underline_style == UnderlineStyle::Dotted) {
+                auto dotted_line_color = text_color.darkened(0.6f);
+                int x1 = cell_rect.bottom_left().x();
+                int x2 = cell_rect.bottom_right().x();
+                int y = cell_rect.bottom_left().y();
+                for (int x = x1; x <= x2; ++x) {
+                    if ((x % 3) == 0)
+                        painter.set_pixel({ x, y }, dotted_line_color);
                 }
             }
 
             if (codepoint == ' ')
                 continue;
 
-            auto character_rect = glyph_rect(visual_row, this_char_column);
-            auto num_columns = next_char_column - this_char_column;
-            character_rect.move_by((num_columns - 1) * font().glyph_width('x') / 2, 0);
             painter.draw_glyph_or_emoji(
                 character_rect.location(),
                 codepoint,
@@ -583,16 +554,16 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 
         auto position = buffer_position_at(event.position());
         auto& line = m_terminal.line(position.row());
-        bool want_whitespace = line.characters()[position.column()] == ' ';
+        bool want_whitespace = line.codepoints()[position.column()] == ' ';
 
         int start_column = 0;
         int end_column = 0;
 
-        for (int column = position.column(); column >= 0 && (line.characters()[column] == ' ') == want_whitespace; --column) {
+        for (int column = position.column(); column >= 0 && (line.codepoints()[column] == ' ') == want_whitespace; --column) {
             start_column = column;
         }
 
-        for (int column = position.column(); column < m_terminal.columns() && (line.characters()[column] == ' ') == want_whitespace; ++column) {
+        for (int column = position.column(); column < m_terminal.columns() && (line.codepoints()[column] == ' ') == want_whitespace; ++column) {
             end_column = column;
         }
 
@@ -762,7 +733,7 @@ String TerminalWidget::selected_text() const
                 builder.append('\n');
                 break;
             }
-            builder.append(line.characters()[column]);
+            builder.append(line.codepoints()[column]);
             if (column == line.length() - 1 || (m_rectangle_selection && column == last_column)) {
                 builder.append('\n');
             }
