@@ -6,3 +6,6 @@ Category=Sound
 [Icons]
 16x16=/res/icons/16x16/app-sound-player.png
 32x32=/res/icons/32x32/app-sound-player.png
+
+[Launcher]
+FileTypes=wav
