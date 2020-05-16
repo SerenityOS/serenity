@@ -857,6 +857,9 @@ static ExitCodeOrContinuationRequest run_command(const StringView& cmd)
 
     auto commands = Parser(cmd).parse();
 
+    if (!commands.size())
+        return 1;
+
     auto needs_more = is_complete(commands);
     if (needs_more != ExitCodeOrContinuationRequest::Nothing)
         return needs_more;
