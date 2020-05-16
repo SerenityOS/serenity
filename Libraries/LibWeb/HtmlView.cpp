@@ -32,6 +32,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
+#include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibMarkdown/Document.h>
@@ -387,6 +388,13 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
     return document;
 }
 
+static RefPtr<Document> create_gemini_document(const ByteBuffer& data, const URL& url)
+{
+    auto markdown_document = Gemini::Document::parse({ (const char*)data.data(), data.size() }, url);
+
+    return parse_html_document(markdown_document->render_to_html(), url);
+}
+
 String encoding_from_content_type(const String& content_type)
 {
     auto offset = content_type.index_of("charset=");
@@ -426,6 +434,8 @@ static RefPtr<Document> create_document_from_mime_type(const ByteBuffer& data, c
         return create_text_document(data, url);
     if (mime_type == "text/markdown")
         return create_markdown_document(data, url);
+    if (mime_type == "text/gemini")
+        return create_gemini_document(data, url);
     if (mime_type == "text/html")
         return parse_html_document(data, url, encoding);
     return nullptr;
