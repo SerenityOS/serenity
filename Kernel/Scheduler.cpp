@@ -597,8 +597,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
 
     ++g_uptime;
 
-    g_timeofday.tv_sec = TimeManagement::the().epoch_time();
-    g_timeofday.tv_usec = TimeManagement::the().ticks_this_second() * 1000;
+    g_timeofday = TimeManagement::now_as_timeval();
 
     if (Process::current->is_profiling()) {
         SmapDisabler disabler;

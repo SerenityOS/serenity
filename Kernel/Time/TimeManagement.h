@@ -60,6 +60,8 @@ public:
 
     static bool is_hpet_periodic_mode_allowed();
 
+    static timeval now_as_timeval();
+
 private:
     explicit TimeManagement(bool probe_non_legacy_hardware_timers);
     bool probe_and_set_legacy_hardware_timers();
