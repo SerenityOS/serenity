@@ -30,7 +30,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <cstring>
+#include <string.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
