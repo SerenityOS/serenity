@@ -293,6 +293,12 @@ URL URL::complete_url(const String& string) const
     if (url.is_valid())
         return url;
 
+    if (string.starts_with("//")) {
+        URL url(String::format("%s:%s", m_protocol.characters(), string.characters()));
+        if (url.is_valid())
+            return url;
+    }
+
     if (string.starts_with("/")) {
         url = *this;
         url.set_path(string);
