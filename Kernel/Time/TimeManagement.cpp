@@ -115,6 +115,11 @@ TimeManagement::TimeManagement(bool probe_non_legacy_hardware_timers)
     ASSERT_NOT_REACHED();
 }
 
+timeval TimeManagement::now_as_timeval()
+{
+    return { s_time_management->epoch_time(), (suseconds_t)s_time_management->ticks_this_second() * (suseconds_t)1000 };
+}
+
 Vector<HardwareTimer*> TimeManagement::scan_and_initialize_periodic_timers()
 {
     bool should_enable = is_hpet_periodic_mode_allowed();
