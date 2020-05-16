@@ -42,12 +42,11 @@ void* krealloc(void*, size_t);
 void kfree(void*);
 void kfree_aligned(void*);
 
-extern volatile size_t sum_alloc;
-extern volatile size_t sum_free;
-extern volatile size_t kmalloc_sum_eternal;
-extern volatile size_t kmalloc_sum_page_aligned;
-extern u32 g_kmalloc_call_count;
-extern u32 g_kfree_call_count;
+extern size_t g_kmalloc_bytes_allocated;
+extern size_t g_kmalloc_bytes_free;
+extern size_t g_kmalloc_bytes_eternal;
+extern size_t g_kmalloc_call_count;
+extern size_t g_kfree_call_count;
 extern bool g_dump_kmalloc_stacks;
 
 inline void* operator new(size_t, void* p) { return p; }
