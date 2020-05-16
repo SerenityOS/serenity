@@ -79,7 +79,16 @@ TEST_CASE(assign_copy_self)
 {
     RefPtr<Object> object = adopt(*new Object);
     EXPECT_EQ(object->ref_count(), 1);
-    object = object;
+
+    #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wself-assign-overloaded"
+    #endif
+        object = object;
+    #ifdef __clang__
+    #pragma clang diagnostic pop
+    #endif
+
     EXPECT_EQ(object->ref_count(), 1);
 }
 
