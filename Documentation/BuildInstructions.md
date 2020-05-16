@@ -65,6 +65,12 @@ Notes:
 pkg_add bash gmp gcc git flock gmake sudo
 ```
 
+#### FreeBSD prerequisites
+```
+$ pkg add coreutils gmake bash sudo git
+$ ln -s /usr/local/bin/ginstall /usr/local/bin/install
+```
+
 ### Build
 > Before starting, make sure that you have configured your global identity for git, or the first script will fail after running for a bit.
 
