@@ -101,6 +101,8 @@ public:
 private:
     typedef Vector<unsigned, 4> ParamVector;
 
+    void on_codepoint(u32);
+
     void scroll_up();
     void scroll_down();
     void newline();
@@ -171,7 +173,7 @@ private:
     void execute_xterm_command();
     void execute_hashtag(u8);
 
-    enum EscapeState {
+    enum ParserState {
         Normal,
         GotEscape,
         ExpectParameter,
@@ -180,9 +182,13 @@ private:
         ExpectHashtagDigit,
         ExpectXtermParameter,
         ExpectStringTerminator,
+        UTF8Needs3Bytes,
+        UTF8Needs2Bytes,
+        UTF8Needs1Byte,
     };
 
-    EscapeState m_parser_state { Normal };
+    ParserState m_parser_state { Normal };
+    u32 m_parser_codepoint { 0 };
     Vector<u8> m_parameters;
     Vector<u8> m_intermediates;
     Vector<u8> m_xterm_parameters;
