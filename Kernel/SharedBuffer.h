@@ -64,7 +64,7 @@ public:
     }
 
     void sanity_check(const char* what);
-    bool is_shared_with(pid_t peer_pid);
+    bool is_shared_with(pid_t peer_pid) const;
     void* ref_for_process_and_get_address(Process& process);
     void share_with(pid_t peer_pid);
     void share_globally() { m_global = true; }
@@ -77,6 +77,7 @@ public:
     const PurgeableVMObject& vmobject() const { return m_vmobject; }
     int id() const { return m_shbuf_id; }
 
+private:
     int m_shbuf_id { -1 };
     bool m_writable { true };
     bool m_global { false };

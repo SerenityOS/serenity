@@ -54,7 +54,7 @@ void SharedBuffer::sanity_check(const char* what)
     }
 }
 
-bool SharedBuffer::is_shared_with(pid_t peer_pid)
+bool SharedBuffer::is_shared_with(pid_t peer_pid) const
 {
     LOCKER(shared_buffers().lock(), Lock::Mode::Shared);
     if (m_global)
