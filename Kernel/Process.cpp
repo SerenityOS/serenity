@@ -51,7 +51,6 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/KernelInfoPage.h>
 #include <Kernel/Module.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
