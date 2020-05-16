@@ -5,7 +5,7 @@ endpoint WindowServer = 2
     CreateMenubar() => (i32 menubar_id)
     DestroyMenubar(i32 menubar_id) => ()
 
-    CreateMenu(String menu_title) => (i32 menu_id)
+    CreateMenu([UTF8] String menu_title) => (i32 menu_id)
     DestroyMenu(i32 menu_id) => ()
 
     AddMenuToMenubar(i32 menubar_id, i32 menu_id) => ()
@@ -17,17 +17,17 @@ endpoint WindowServer = 2
         i32 menu_id,
         i32 identifier,
         i32 submenu_id,
-        String text,
+        [UTF8] String text,
         bool enabled,
         bool checkable,
         bool checked,
-        String shortcut,
+        [UTF8] String shortcut,
         i32 icon_buffer_id,
         bool exclusive) => ()
 
     AddMenuSeparator(i32 menu_id) => ()
 
-    UpdateMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, String text, bool enabled, bool checkable, bool checked, String shortcut) => ()
+    UpdateMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, [UTF8] String text, bool enabled, bool checkable, bool checked, [UTF8] String shortcut) => ()
 
     CreateWindow(
         Gfx::Rect rect,
@@ -41,13 +41,13 @@ endpoint WindowServer = 2
         Gfx::Size base_size,
         Gfx::Size size_increment,
         i32 type,
-        String title,
+        [UTF8] String title,
         i32 parent_window_id) => (i32 window_id)
 
     DestroyWindow(i32 window_id) => (Vector<i32> destroyed_window_ids)
 
-    SetWindowTitle(i32 window_id, String title) => ()
-    GetWindowTitle(i32 window_id) => (String title)
+    SetWindowTitle(i32 window_id, [UTF8] String title) => ()
+    GetWindowTitle(i32 window_id) => ([UTF8] String title)
 
     SetWindowRect(i32 window_id, Gfx::Rect rect) => (Gfx::Rect rect)
     GetWindowRect(i32 window_id) => (Gfx::Rect rect)
@@ -84,10 +84,10 @@ endpoint WindowServer = 2
     SetWindowOverrideCursor(i32 window_id, i32 cursor_type) => ()
     SetWindowCustomOverrideCursor(i32 window_id, Gfx::ShareableBitmap cursor) => ()
 
-    StartDrag(String text, String data_type, String data, i32 bitmap_id, Gfx::Size bitmap_size) => (bool started)
+    StartDrag([UTF8] String text, String data_type, String data, i32 bitmap_id, Gfx::Size bitmap_size) => (bool started)
 
-    SetSystemTheme(String theme_path, String theme_name) => (bool success)
-    GetSystemTheme() => (String theme_name)
+    SetSystemTheme(String theme_path, [UTF8] String theme_name) => (bool success)
+    GetSystemTheme() => ([UTF8] String theme_name)
 
     SetWindowBaseSizeAndSizeIncrement(i32 window_id, Gfx::Size base_size, Gfx::Size size_increment) => ()
 

@@ -21,7 +21,7 @@ endpoint WindowClient = 4
     ScreenRectChanged(Gfx::Rect rect) =|
 
     WM_WindowRemoved(i32 wm_id, i32 client_id, i32 window_id) =|
-    WM_WindowStateChanged(i32 wm_id, i32 client_id, i32 window_id, bool is_active, bool is_minimized, bool is_frameless, i32 window_type, String title, Gfx::Rect rect) =|
+    WM_WindowStateChanged(i32 wm_id, i32 client_id, i32 window_id, bool is_active, bool is_minimized, bool is_frameless, i32 window_type, [UTF8] String title, Gfx::Rect rect) =|
     WM_WindowIconBitmapChanged(i32 wm_id, i32 client_id, i32 window_id, i32 icon_buffer_id, Gfx::Size icon_size) =|
     WM_WindowRectChanged(i32 wm_id, i32 client_id, i32 window_id, Gfx::Rect rect) =|
 
@@ -30,7 +30,7 @@ endpoint WindowClient = 4
     DragAccepted() =|
     DragCancelled() =|
 
-    DragDropped(i32 window_id, Gfx::Point mouse_position, String text, String data_type, String data) =|
+    DragDropped(i32 window_id, Gfx::Point mouse_position, [UTF8] String text, String data_type, String data) =|
 
     UpdateSystemTheme(i32 system_theme_buffer_id) =|
 

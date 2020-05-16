@@ -35,6 +35,7 @@
 //#define GENERATE_DEBUG_CODE
 
 struct Parameter {
+    Vector<String> attributes;
     String type;
     String name;
 };
@@ -127,6 +128,23 @@ int main(int argc, char** argv)
             consume_whitespace();
             if (peek() == ')')
                 break;
+            if (peek() == '[') {
+                consume_one();
+                for (;;) {
+                    if (peek() == ']') {
+                        consume_one();
+                        consume_whitespace();
+                        break;
+                    }
+                    if (peek() == ',') {
+                        consume_one();
+                        consume_whitespace();
+                    }
+                    auto attribute = extract_while([](char ch) { return ch != ']' && ch != ','; });
+                    parameter.attributes.append(attribute);
+                    consume_whitespace();
+                }
+            }
             parameter.type = extract_while([](char ch) { return !isspace(ch); });
             consume_whitespace();
             parameter.name = extract_while([](char ch) { return !isspace(ch) && ch != ',' && ch != ')'; });
@@ -226,6 +244,7 @@ int main(int argc, char** argv)
     out() << "#pragma once";
     out() << "#include <AK/BufferStream.h>";
     out() << "#include <AK/OwnPtr.h>";
+    out() << "#include <AK/Utf8View.h>";
     out() << "#include <LibGfx/Color.h>";
     out() << "#include <LibGfx/Rect.h>";
     out() << "#include <LibGfx/ShareableBitmap.h>";
@@ -312,6 +331,10 @@ int main(int argc, char** argv)
                 out() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
                 out() << "        if (!decoder.decode(" << parameter.name << "))";
                 out() << "            return nullptr;";
+                if (parameter.attributes.contains_slow("UTF8")) {
+                    out() << "        if (!Utf8View(" << parameter.name << ").validate())";
+                    out() << "            return nullptr;";
+                }
             }
 
             StringBuilder builder;
