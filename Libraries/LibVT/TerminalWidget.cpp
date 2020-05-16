@@ -82,7 +82,7 @@ void TerminalWidget::set_pty_master_fd(int fd)
             return;
         }
         for (ssize_t i = 0; i < nread; ++i)
-            m_terminal.on_char(buffer[i]);
+            m_terminal.on_input(buffer[i]);
         flush_dirty_lines();
     };
 }

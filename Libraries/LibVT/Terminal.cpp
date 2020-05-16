@@ -41,7 +41,6 @@ Terminal::~Terminal()
 {
 }
 
-
 void Terminal::clear()
 {
     for (size_t i = 0; i < rows(); ++i)
@@ -805,54 +804,54 @@ void Terminal::DSR(const ParamVector& params)
     }
 }
 
-void Terminal::on_char(u8 ch)
+void Terminal::on_input(u8 ch)
 {
 #ifdef TERMINAL_DEBUG
     dbgprintf("Terminal::on_char: %b (%c), fg=%u, bg=%u\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
 #endif
-    switch (m_escape_state) {
+    switch (m_parser_state) {
     case GotEscape:
         if (ch == '[') {
-            m_escape_state = ExpectParameter;
+            m_parser_state = ExpectParameter;
         } else if (ch == '(') {
             m_swallow_current = true;
-            m_escape_state = ExpectParameter;
+            m_parser_state = ExpectParameter;
         } else if (ch == ']') {
-            m_escape_state = ExpectXtermParameter;
+            m_parser_state = ExpectXtermParameter;
             m_xterm_parameters.clear_with_capacity();
         } else if (ch == '#') {
-            m_escape_state = ExpectHashtagDigit;
+            m_parser_state = ExpectHashtagDigit;
         } else if (ch == 'D') {
             IND();
-            m_escape_state = Normal;
+            m_parser_state = Normal;
             return;
         } else if (ch == 'M') {
             RI();
-            m_escape_state = Normal;
+            m_parser_state = Normal;
             return;
         } else if (ch == 'E') {
             NEL();
-            m_escape_state = Normal;
+            m_parser_state = Normal;
             return;
         } else {
             dbg() << "Unexpected character in GotEscape '" << (char)ch << "'";
-            m_escape_state = Normal;
+            m_parser_state = Normal;
         }
         return;
     case ExpectHashtagDigit:
         if (ch >= '0' && ch <= '9') {
             execute_hashtag(ch);
-            m_escape_state = Normal;
+            m_parser_state = Normal;
         }
         return;
     case ExpectXtermParameter:
         if (ch == 27) {
-            m_escape_state = ExpectStringTerminator;
+            m_parser_state = ExpectStringTerminator;
             return;
         }
         if (ch == 7) {
             execute_xterm_command();
-            m_escape_state = Normal;
+            m_parser_state = Normal;
             return;
         }
         m_xterm_parameters.append(ch);
@@ -862,31 +861,31 @@ void Terminal::on_char(u8 ch)
             execute_xterm_command();
         else
             dbg() << "Unexpected string terminator: " << String::format("%02x", ch);
-        m_escape_state = Normal;
+        m_parser_state = Normal;
         return;
     case ExpectParameter:
         if (is_valid_parameter_character(ch)) {
             m_parameters.append(ch);
             return;
         }
-        m_escape_state = ExpectIntermediate;
+        m_parser_state = ExpectIntermediate;
         [[fallthrough]];
     case ExpectIntermediate:
         if (is_valid_intermediate_character(ch)) {
             m_intermediates.append(ch);
             return;
         }
-        m_escape_state = ExpectFinal;
+        m_parser_state = ExpectFinal;
         [[fallthrough]];
     case ExpectFinal:
         if (is_valid_final_character(ch)) {
-            m_escape_state = Normal;
+            m_parser_state = Normal;
             if (!m_swallow_current)
                 execute_escape_sequence(ch);
             m_swallow_current = false;
             return;
         }
-        m_escape_state = Normal;
+        m_parser_state = Normal;
         m_swallow_current = false;
         return;
     case Normal:
@@ -897,7 +896,7 @@ void Terminal::on_char(u8 ch)
     case '\0':
         return;
     case '\033':
-        m_escape_state = GotEscape;
+        m_parser_state = GotEscape;
         m_swallow_current = false;
         return;
     case 8: // Backspace
@@ -947,7 +946,7 @@ void Terminal::on_char(u8 ch)
 void Terminal::inject_string(const StringView& str)
 {
     for (size_t i = 0; i < str.length(); ++i)
-        on_char(str[i]);
+        on_input(str[i]);
 }
 
 void Terminal::emit_string(const StringView& string)
