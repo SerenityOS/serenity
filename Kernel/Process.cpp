@@ -2331,12 +2331,13 @@ void kgettimeofday(timeval& tv)
     tv = kgettimeofday();
 }
 
-int Process::sys$gettimeofday(timeval* tv)
+int Process::sys$gettimeofday(timeval* user_tv)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(tv))
+    if (!validate_write_typed(user_tv))
         return -EFAULT;
-    *tv = kgettimeofday();
+    auto tv = kgettimeofday();
+    copy_to_user(user_tv, &tv);
     return 0;
 }
 
