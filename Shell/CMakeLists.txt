@@ -1,6 +1,7 @@
 set(SOURCES
     main.cpp
     Parser.cpp
+    Shell.cpp
 )
 
 serenity_bin(Shell)

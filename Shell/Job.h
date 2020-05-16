@@ -26,12 +26,24 @@
 
 #pragma once
 
+#include "Execution.h"
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <LibCore/ElapsedTimer.h>
+#include <LibCore/Object.h>
 
 class Job {
 public:
     explicit Job()
     {
+    }
+
+    ~Job()
+    {
+        auto elapsed = m_command_timer.elapsed();
+        dbg() << "Command \"" << m_cmd << "\" finished in " << elapsed << " ms";
     }
 
     Job(pid_t pid, unsigned pgid, String cmd, u64 job_id)
@@ -40,16 +52,40 @@ public:
         , m_job_id(job_id)
         , m_cmd(move(cmd))
     {
+        set_running_in_background(false);
+        m_command_timer.start();
     }
 
     unsigned pgid() const { return m_pgid; }
     pid_t pid() const { return m_pid; }
     const String& cmd() const { return m_cmd; }
     u64 job_id() const { return m_job_id; }
+    bool exited() const { return m_exited; }
+    int exit_code() const { return m_exit_code; }
+    bool is_running_in_background() const { return m_running_in_background; }
+
+    Core::ElapsedTimer& timer() { return m_command_timer; }
+
+    void set_has_exit(int exit_code)
+    {
+        if (m_exited)
+            return;
+        m_exit_code = exit_code;
+        m_exited = true;
+    }
+
+    void set_running_in_background(bool running_in_background)
+    {
+        m_running_in_background = running_in_background;
+    }
 
 private:
     unsigned m_pgid { 0 };
     pid_t m_pid { 0 };
     u64 m_job_id { 0 };
     String m_cmd;
+    bool m_exited { false };
+    bool m_running_in_background { false };
+    int m_exit_code { -1 };
+    Core::ElapsedTimer m_command_timer;
 };
