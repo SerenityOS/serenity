@@ -42,25 +42,22 @@ template<typename T>
 class WeakPtr;
 
 template<typename T>
-class CONSUMABLE(unconsumed) NonnullOwnPtr {
+class NonnullOwnPtr {
 public:
     typedef T ElementType;
 
     enum AdoptTag { Adopt };
 
-    RETURN_TYPESTATE(unconsumed)
     NonnullOwnPtr(AdoptTag, T& ptr)
         : m_ptr(&ptr)
     {
     }
-    RETURN_TYPESTATE(unconsumed)
     NonnullOwnPtr(NonnullOwnPtr&& other)
         : m_ptr(other.leak_ptr())
     {
         ASSERT(m_ptr);
     }
     template<typename U>
-    RETURN_TYPESTATE(unconsumed)
     NonnullOwnPtr(NonnullOwnPtr<U>&& other)
         : m_ptr(other.leak_ptr())
     {
@@ -97,7 +94,6 @@ public:
     template<typename U>
     NonnullOwnPtr& operator=(const WeakPtr<U>&) = delete;
 
-    RETURN_TYPESTATE(unconsumed)
     NonnullOwnPtr& operator=(NonnullOwnPtr&& other)
     {
         NonnullOwnPtr ptr(move(other));
@@ -106,7 +102,6 @@ public:
     }
 
     template<typename U>
-    RETURN_TYPESTATE(unconsumed)
     NonnullOwnPtr& operator=(NonnullOwnPtr<U>&& other)
     {
         NonnullOwnPtr ptr(move(other));
@@ -114,31 +109,21 @@ public:
         return *this;
     }
 
-    CALLABLE_WHEN(unconsumed)
-    SET_TYPESTATE(consumed)
     T* leak_ptr()
     {
         return exchange(m_ptr, nullptr);
     }
 
-    CALLABLE_WHEN(unconsumed)
     T* ptr() { return m_ptr; }
-    CALLABLE_WHEN(unconsumed)
     const T* ptr() const { return m_ptr; }
 
-    CALLABLE_WHEN(unconsumed)
     T* operator->() { return m_ptr; }
-    CALLABLE_WHEN(unconsumed)
     const T* operator->() const { return m_ptr; }
 
-    CALLABLE_WHEN(unconsumed)
     T& operator*() { return *m_ptr; }
-    CALLABLE_WHEN(unconsumed)
     const T& operator*() const { return *m_ptr; }
 
-    CALLABLE_WHEN(unconsumed)
     operator const T*() const { return m_ptr; }
-    CALLABLE_WHEN(unconsumed)
     operator T*() { return m_ptr; }
 
     operator bool() const = delete;

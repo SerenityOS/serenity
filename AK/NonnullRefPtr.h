@@ -53,49 +53,42 @@ inline void unref_if_not_null(T* ptr)
 }
 
 template<typename T>
-class CONSUMABLE(unconsumed) NonnullRefPtr {
+class NonnullRefPtr {
 public:
     typedef T ElementType;
 
     enum AdoptTag { Adopt };
 
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(const T& object)
         : m_ptr(const_cast<T*>(&object))
     {
         m_ptr->ref();
     }
     template<typename U>
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(const U& object)
         : m_ptr(&const_cast<U&>(object))
     {
         m_ptr->ref();
     }
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(AdoptTag, T& object)
         : m_ptr(&object)
     {
     }
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(NonnullRefPtr&& other)
         : m_ptr(&other.leak_ref())
     {
     }
     template<typename U>
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(NonnullRefPtr<U>&& other)
         : m_ptr(&other.leak_ref())
     {
     }
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(const NonnullRefPtr& other)
         : m_ptr(const_cast<T*>(other.ptr()))
     {
         m_ptr->ref();
     }
     template<typename U>
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(const NonnullRefPtr<U>& other)
         : m_ptr(const_cast<U*>(other.ptr()))
     {
@@ -162,73 +155,61 @@ public:
         return *this;
     }
 
-    [[nodiscard]] CALLABLE_WHEN(unconsumed)
-        SET_TYPESTATE(consumed)
-            T& leak_ref()
+    [[nodiscard]] T& leak_ref()
     {
         ASSERT(m_ptr);
         return *exchange(m_ptr, nullptr);
     }
 
-    CALLABLE_WHEN("unconsumed", "unknown")
     T* ptr()
     {
         ASSERT(m_ptr);
         return m_ptr;
     }
-    CALLABLE_WHEN("unconsumed", "unknown")
     const T* ptr() const
     {
         ASSERT(m_ptr);
         return m_ptr;
     }
 
-    CALLABLE_WHEN(unconsumed)
     T* operator->()
     {
         ASSERT(m_ptr);
         return m_ptr;
     }
-    CALLABLE_WHEN(unconsumed)
     const T* operator->() const
     {
         ASSERT(m_ptr);
         return m_ptr;
     }
 
-    CALLABLE_WHEN(unconsumed)
     T& operator*()
     {
         ASSERT(m_ptr);
         return *m_ptr;
     }
-    CALLABLE_WHEN(unconsumed)
     const T& operator*() const
     {
         ASSERT(m_ptr);
         return *m_ptr;
     }
 
-    CALLABLE_WHEN(unconsumed)
     operator T*()
     {
         ASSERT(m_ptr);
         return m_ptr;
     }
-    CALLABLE_WHEN(unconsumed)
     operator const T*() const
     {
         ASSERT(m_ptr);
         return m_ptr;
     }
 
-    CALLABLE_WHEN(unconsumed)
     operator T&()
     {
         ASSERT(m_ptr);
         return *m_ptr;
     }
-    CALLABLE_WHEN(unconsumed)
     operator const T&() const
     {
         ASSERT(m_ptr);
