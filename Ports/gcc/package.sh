@@ -1,6 +1,6 @@
 #!/bin/bash ../.port_include.sh
 port=gcc
-version=9.3.0
+version=10.1.0
 useconfigure=true
 configopts="--target=i686-pc-serenity --with-sysroot=/ --with-build-sysroot=$SERENITY_ROOT/Build/Root --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls"
 files="https://ftp.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz gcc-${version}.tar.xz

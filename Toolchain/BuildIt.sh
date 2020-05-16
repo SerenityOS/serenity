@@ -58,8 +58,8 @@ BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="http://ftp.gnu.org/gnu/binutils"
 
-GCC_VERSION="9.3.0"
-GCC_MD5SUM="9b7e8f6cfad96114e726c752935af58a"
+GCC_VERSION="10.1.0"
+GCC_MD5SUM="8a9fbd7e24d04c5d36e96bc894d3cd6b"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
@@ -152,7 +152,6 @@ pushd "$DIR/Tarballs"
     if [ ! -d $GCC_NAME ]; then
         echo "Extracting gcc..."
         tar -xzf $GCC_PKG
-
         pushd $GCC_NAME
             if [ "$git_patch" = "1" ]; then
                 git init > /dev/null
@@ -160,7 +159,7 @@ pushd "$DIR/Tarballs"
                 git commit -am "BASE" > /dev/null
                 git apply "$DIR"/Patches/gcc.patch > /dev/null
             else
-                patch -p1 < "$DIR"/Patches/gcc.patch > /dev/null
+                patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
             fi
         popd
     else

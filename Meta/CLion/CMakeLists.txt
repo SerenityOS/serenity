@@ -25,7 +25,7 @@ set(INCLUDE_DIRS
     "serenity/Libraries/LibC"
     "serenity/Libraries/LibPthread"
     "serenity/Services"
-    "serenity/Toolchain/Local/i686-pc-serenity/include/c++/9.3.0")
+    "serenity/Toolchain/Local/i686-pc-serenity/include/c++/10.1.0")
 
 add_library(serenity
     ${AK_SOURCES}
