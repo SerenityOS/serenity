@@ -73,7 +73,7 @@ inline void GlobalObject::add_constructor(const FlyString& property_name, Constr
 {
     constructor = heap().allocate<ConstructorType>();
     constructor->put("name", js_string(heap(), property_name), Attribute::Configurable);
-    prototype.put("constructor", constructor);
+    prototype.put("constructor", constructor, Attribute::Writable | Attribute::Configurable);
     put(property_name, constructor, Attribute::Writable | Attribute::Configurable);
 }
 
