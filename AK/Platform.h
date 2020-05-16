@@ -51,19 +51,6 @@
 #endif
 #define FLATTEN [[gnu::flatten]]
 
-// FIXME: Re-enable this when we can figure out why Clang gets confused about "unknown"
-#if 0
-#    define CONSUMABLE(initial_state) __attribute__((consumable(initial_state)))
-#    define CALLABLE_WHEN(...) __attribute__((callable_when(__VA_ARGS__)))
-#    define SET_TYPESTATE(state) __attribute__((set_typestate(state)))
-#    define RETURN_TYPESTATE(state) __attribute__((return_typestate(state)))
-#else
-#    define CONSUMABLE(initial_state)
-#    define CALLABLE_WHEN(...)
-#    define SET_TYPESTATE(state)
-#    define RETURN_TYPESTATE(state)
-#endif
-
 #ifndef __serenity__
 #    define PAGE_SIZE sysconf(_SC_PAGESIZE)
 

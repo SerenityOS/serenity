@@ -101,9 +101,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -Wno-sized-deallocation -fno-sized-d
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -DSANITIZE_PTRS")
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconsumed")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-expansion-to-defined")
 endif()
 
