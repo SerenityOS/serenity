@@ -228,7 +228,7 @@ pushd "$DIR/Build/"
         echo "XXX serenity libc and libm"
         mkdir -p "$BUILD"
         pushd "$BUILD"
-            CXXFLAGS="-DBUILDING_SERENITY_TOOLCHAIN" cmake ..
+            cmake ..
             "$MAKE" LibC
             install -D Libraries/LibC/libc.a Libraries/LibM/libm.a Root/usr/lib/
             SRC_ROOT=$(realpath "$DIR"/..)
