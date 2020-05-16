@@ -113,7 +113,6 @@ int link(const char* oldpath, const char* newpath);
 int unlink(const char* pathname);
 int symlink(const char* target, const char* linkpath);
 int rmdir(const char* pathname);
-int getdtablesize();
 int dup(int old_fd);
 int dup2(int old_fd, int new_fd);
 int pipe(int pipefd[2]);

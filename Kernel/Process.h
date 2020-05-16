@@ -229,7 +229,6 @@ public:
     int sys$ptsname_r(int fd, char*, ssize_t);
     pid_t sys$fork(RegisterState&);
     int sys$execve(const Syscall::SC_execve_params*);
-    int sys$getdtablesize();
     int sys$dup(int oldfd);
     int sys$dup2(int oldfd, int newfd);
     int sys$sigaction(int signum, const sigaction* act, sigaction* old_act);

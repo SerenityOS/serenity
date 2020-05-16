@@ -2653,12 +2653,6 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
     return description->file().ioctl(*description, request, arg);
 }
 
-int Process::sys$getdtablesize()
-{
-    REQUIRE_PROMISE(stdio);
-    return m_max_open_file_descriptors;
-}
-
 int Process::sys$dup(int old_fd)
 {
     REQUIRE_PROMISE(stdio);
