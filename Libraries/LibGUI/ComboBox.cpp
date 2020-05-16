@@ -67,7 +67,7 @@ ComboBox::ComboBox()
     };
     m_open_button = add<Button>();
     m_open_button->set_focusable(false);
-    m_open_button->set_text("\xc3\xb7");
+    m_open_button->set_text("\xE2\xAC\x87"); // DOWNWARDS BLACK ARROW
     m_open_button->on_click = [this](auto) {
         if (m_list_window->is_visible())
             close();

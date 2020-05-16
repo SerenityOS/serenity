@@ -75,7 +75,7 @@ void AbstractTableView::update_column_sizes()
             continue;
         int header_width = header_font().width(model.column_name(column));
         if (column == key_column)
-            header_width += font().width(" \xc3\xb6");
+            header_width += font().width(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
         int column_width = header_width;
         for (int row = 0; row < row_count; ++row) {
             auto cell_data = model.data(model.index(row, column));
@@ -158,9 +158,9 @@ void AbstractTableView::paint_headers(Painter& painter)
             builder.append(model()->column_name(column_index));
             auto sort_order = model()->sort_order();
             if (sort_order == SortOrder::Ascending)
-                builder.append(" \xc3\xb6");
+                builder.append(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
             else if (sort_order == SortOrder::Descending)
-                builder.append(" \xc3\xb7");
+                builder.append(" \xE2\xAC\x87"); // DOWNWARDS BLACK ARROW
             text = builder.to_string();
         } else {
             text = model()->column_name(column_index);
