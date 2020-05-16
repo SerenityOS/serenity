@@ -95,7 +95,6 @@
 namespace Kernel {
 
 static void create_signal_trampolines();
-static void create_kernel_info_page();
 
 Process* Process::current;
 
@@ -103,8 +102,6 @@ static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
 static String* s_hostname;
 static Lock* s_hostname_lock;
-static VirtualAddress s_info_page_address_for_userspace;
-static VirtualAddress s_info_page_address_for_kernel;
 VirtualAddress g_return_to_ring3_from_signal_trampoline;
 HashMap<String, OwnPtr<Module>>* g_modules;
 
@@ -124,14 +121,6 @@ void Process::initialize()
     s_hostname_lock = new Lock;
 
     create_signal_trampolines();
-    create_kernel_info_page();
-}
-
-void Process::update_info_page_timestamp(const timeval& tv)
-{
-    auto* info_page = (KernelInfoPage*)s_info_page_address_for_kernel.as_ptr();
-    info_page->serial++;
-    const_cast<timeval&>(info_page->now) = tv;
 }
 
 Vector<pid_t> Process::all_pids()
@@ -1500,15 +1489,6 @@ void create_signal_trampolines()
     trampoline_region->remap();
 }
 
-void create_kernel_info_page()
-{
-    auto* info_page_region_for_userspace = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Kernel info page", Region::Access::Read).leak_ptr();
-    auto* info_page_region_for_kernel = MM.allocate_kernel_region_with_vmobject(info_page_region_for_userspace->vmobject(), PAGE_SIZE, "Kernel info page", Region::Access::Read | Region::Access::Write).leak_ptr();
-    s_info_page_address_for_userspace = info_page_region_for_userspace->vaddr();
-    s_info_page_address_for_kernel = info_page_region_for_kernel->vaddr();
-    memset(s_info_page_address_for_kernel.as_ptr(), 0, PAGE_SIZE);
-}
-
 int Process::sys$sigreturn(RegisterState& registers)
 {
     REQUIRE_PROMISE(stdio);
@@ -2330,7 +2310,7 @@ int Process::sys$sleep(unsigned seconds)
 
 timeval kgettimeofday()
 {
-    return const_cast<const timeval&>(((KernelInfoPage*)s_info_page_address_for_kernel.as_ptr())->now);
+    return g_timeofday;
 }
 
 void compute_relative_timeout_from_absolute(const timeval& absolute_time, timeval& relative_time)
@@ -4637,12 +4617,6 @@ int Process::sys$profiling_disable(pid_t pid)
     process->set_profiling(false);
     Profiling::stop();
     return 0;
-}
-
-void* Process::sys$get_kernel_info_page()
-{
-    REQUIRE_PROMISE(stdio);
-    return s_info_page_address_for_userspace.as_ptr();
 }
 
 Thread& Process::any_thread()

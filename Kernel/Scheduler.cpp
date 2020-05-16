@@ -42,6 +42,7 @@
 namespace Kernel {
 
 SchedulerData* g_scheduler_data;
+timeval g_timeofday;
 
 void Scheduler::init_thread(Thread& thread)
 {
@@ -596,10 +597,8 @@ void Scheduler::timer_tick(const RegisterState& regs)
 
     ++g_uptime;
 
-    timeval tv;
-    tv.tv_sec = TimeManagement::the().epoch_time();
-    tv.tv_usec = TimeManagement::the().ticks_this_second() * 1000;
-    Process::update_info_page_timestamp(tv);
+    g_timeofday.tv_sec = TimeManagement::the().epoch_time();
+    g_timeofday.tv_usec = TimeManagement::the().ticks_this_second() * 1000;
 
     if (Process::current->is_profiling()) {
         SmapDisabler disabler;

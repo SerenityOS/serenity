@@ -46,6 +46,7 @@ extern WaitQueue* g_finalizer_wait_queue;
 extern bool g_finalizer_has_work;
 extern u64 g_uptime;
 extern SchedulerData* g_scheduler_data;
+extern timeval g_timeofday;
 
 class Scheduler {
 public:
