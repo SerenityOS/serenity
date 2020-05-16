@@ -209,10 +209,21 @@ void Window::set_override_cursor(StandardCursor cursor)
 {
     if (!is_visible())
         return;
-    if (m_override_cursor == cursor)
+    if (!m_custom_cursor && m_override_cursor == cursor)
         return;
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
     m_override_cursor = cursor;
+    m_custom_cursor = nullptr;
+}
+
+void Window::set_override_cursor(const Gfx::Bitmap& cursor)
+{
+    if (!is_visible())
+        return;
+    if (&cursor == m_custom_cursor.ptr())
+        return;
+    m_custom_cursor = &cursor;
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomOverrideCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
 }
 
 void Window::event(Core::Event& event)

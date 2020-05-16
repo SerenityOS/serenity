@@ -73,7 +73,7 @@ endpoint WindowServer = 2
     DismissMenu(i32 menu_id) => ()
 
     AsyncSetWallpaper(String path) =|
-    
+
     SetBackgroundColor(String background_color)  => ()
     SetWallpaperMode(String mode)  => ()
 
@@ -82,6 +82,7 @@ endpoint WindowServer = 2
 
     GetWallpaper() => (String path)
     SetWindowOverrideCursor(i32 window_id, i32 cursor_type) => ()
+    SetWindowCustomOverrideCursor(i32 window_id, Gfx::ShareableBitmap cursor) => ()
 
     StartDrag(String text, String data_type, String data, i32 bitmap_id, Gfx::Size bitmap_size) => (bool started)
 

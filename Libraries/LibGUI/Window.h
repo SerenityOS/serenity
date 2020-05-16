@@ -163,6 +163,7 @@ public:
     void set_base_size(const Gfx::Size&);
 
     void set_override_cursor(StandardCursor);
+    void set_override_cursor(const Gfx::Bitmap&);
 
     void set_icon(const Gfx::Bitmap*);
     void apply_icon();
@@ -204,6 +205,7 @@ private:
     RefPtr<Gfx::Bitmap> m_front_bitmap;
     RefPtr<Gfx::Bitmap> m_back_bitmap;
     RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap> m_custom_cursor;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
     RefPtr<Widget> m_main_widget;

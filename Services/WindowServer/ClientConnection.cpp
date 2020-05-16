@@ -578,6 +578,25 @@ OwnPtr<Messages::WindowServer::SetWindowOverrideCursorResponse> ClientConnection
     return make<Messages::WindowServer::SetWindowOverrideCursorResponse>();
 }
 
+OwnPtr<Messages::WindowServer::SetWindowCustomOverrideCursorResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowCustomOverrideCursor& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowCustomOverrideCursor: Bad window ID");
+        return nullptr;
+    }
+
+    auto& window = *(*it).value;
+    if (!message.cursor().is_valid()) {
+        did_misbehave("SetWindowCustomOverrideCursor: Bad cursor");
+        return nullptr;
+    }
+
+    window.set_override_cursor(Cursor::create(*message.cursor().bitmap()));
+    Compositor::the().invalidate_cursor();
+    return make<Messages::WindowServer::SetWindowCustomOverrideCursorResponse>();
+}
+
 OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowHasAlphaChannel& message)
 {
     auto it = m_windows.find(message.window_id());
