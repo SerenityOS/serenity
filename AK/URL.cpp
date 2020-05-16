@@ -109,6 +109,8 @@ bool URL::parse(const StringView& string)
                 m_port = 80;
             else if (m_protocol == "https")
                 m_port = 443;
+            else if (m_protocol == "gemini")
+                m_port = 1965;
             state = State::InHostname;
             buffer.clear();
             continue;
@@ -270,7 +272,7 @@ String URL::to_string() const
     builder.append("://");
     builder.append(m_host);
     if (protocol() != "file") {
-        if (!(protocol() == "http" && port() == 80) && !(protocol() == "https" && port() == 443)) {
+        if (!(protocol() == "http" && port() == 80) && !(protocol() == "https" && port() == 443) && !(protocol() == "gemini" && port() == 1965)) {
             builder.append(':');
             builder.append(String::number(m_port));
         }
