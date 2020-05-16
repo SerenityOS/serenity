@@ -30,6 +30,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
@@ -408,6 +409,11 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
 void TerminalWidget::set_window_title(const StringView& title)
 {
+    if (!Utf8View(title).validate()) {
+        dbg() << "TerminalWidget: Attempted to set window title to invalid UTF-8 string";
+        return;
+    }
+
     if (on_title_change)
         on_title_change(title);
 }
