@@ -40,6 +40,12 @@ GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::G
             if (!response->meta().is_empty()) {
                 HashMap<String, String, CaseInsensitiveStringTraits> headers;
                 headers.set("meta", response->meta());
+                // Note: We're setting content-type to meta only on status==SUCCESS
+                //       we should prehaps have a better mechanism for this, since we
+                //       are already shoehorning the concept of "headers" here
+                if (response->status() >= 20 && response->status() < 30) {
+                    headers.set("content-type", response->meta());
+                }
                 set_response_headers(headers);
             }
         }
