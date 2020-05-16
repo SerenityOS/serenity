@@ -32,7 +32,7 @@ namespace Desktop {
 
 class Launcher {
 public:
-    static bool open(const URL&);
+    static bool open(const URL&, const String& handler_name = {});
     static Vector<String> get_handlers_for_url(const URL&);
 };
 

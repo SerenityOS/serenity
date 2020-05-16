@@ -27,26 +27,38 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/HashTable.h>
 #include <AK/URL.h>
 #include <LibCore/ConfigFile.h>
 
 namespace LaunchServer {
+
+struct Handler {
+    String name;
+    String executable;
+    HashTable<String> file_types;
+    HashTable<String> protocols;
+};
 
 class Launcher {
 public:
     Launcher();
     static Launcher& the();
 
+    void load_handlers(const String& af_dir);
     void load_config(const Core::ConfigFile&);
-    bool open_url(const URL&);
+    bool open_url(const URL&, const String& handler_name);
     Vector<String> handlers_for_url(const URL&);
 
 private:
+    HashMap<String, Handler> m_handlers;
     HashMap<String, String> m_protocol_handlers;
     HashMap<String, String> m_file_handlers;
 
+    Vector<String> handlers_for(const String& key, HashMap<String, String>& user_preferences, Function<bool(Handler&, const String&)> handler_matches);
     Vector<String> handlers_for_path(const String&);
     bool open_file_url(const URL&);
-    bool open_with_handlers(const HashMap<String, String>& handlers, const String key, const String argument, const String default_program);
+    bool open_with_user_preferences(const HashMap<String, String>& user_preferences, const String key, const String argument, const String default_program);
+    bool open_with_handler_name(const URL&, const String& handler_name);
 };
 }
