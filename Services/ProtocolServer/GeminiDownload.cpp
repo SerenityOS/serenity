@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGemini/GeminiResponse.h>
 #include <LibGemini/GeminiJob.h>
+#include <LibGemini/GeminiResponse.h>
 #include <ProtocolServer/GeminiDownload.h>
 
 GeminiDownload::GeminiDownload(PSClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
@@ -38,6 +38,12 @@ GeminiDownload::GeminiDownload(PSClientConnection& client, NonnullRefPtr<Gemini:
             if (!response->meta().is_empty()) {
                 HashMap<String, String, CaseInsensitiveStringTraits> headers;
                 headers.set("meta", response->meta());
+                // Note: We're setting content-type to meta only on status==SUCCESS
+                //       we should prehaps have a better mechanism for this, since we
+                //       are already shoehorning the concept of "headers" here
+                if (response->status() >= 20 && response->status() < 30) {
+                    headers.set("content-type", response->meta());
+                }
                 set_response_headers(headers);
             }
         }
