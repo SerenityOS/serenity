@@ -386,8 +386,6 @@ public:
 
     u16 thread_count() const { return m_thread_count; }
 
-    Thread& any_thread();
-
     Lock& big_lock() { return m_big_lock; }
 
     struct ELFBundle {

@@ -4612,17 +4612,6 @@ int Process::sys$profiling_disable(pid_t pid)
     return 0;
 }
 
-Thread& Process::any_thread()
-{
-    Thread* found_thread = nullptr;
-    for_each_thread([&](auto& thread) {
-        found_thread = &thread;
-        return IterationDecision::Break;
-    });
-    ASSERT(found_thread);
-    return *found_thread;
-}
-
 WaitQueue& Process::futex_queue(i32* userspace_address)
 {
     auto& queue = m_futex_queues.ensure((FlatPtr)userspace_address);
