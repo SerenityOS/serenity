@@ -38,8 +38,6 @@ void set_serial_debug(bool on_or_off);
 int get_serial_debug();
 }
 
-#define printf dbgprintf
-
 #ifdef __cplusplus
 
 template<size_t N>
