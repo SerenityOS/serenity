@@ -8,5 +8,5 @@ Category=Internet
 32x32=/res/icons/32x32/app-browser.png
 
 [Launcher]
-FileTypes=html,md
+FileTypes=html,htm,md
 Protocols=http,https

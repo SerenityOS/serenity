@@ -6,3 +6,6 @@ Category=Internet
 [Icons]
 16x16=/res/icons/16x16/app-irc-client.png
 32x32=/res/icons/32x32/app-irc-client.png
+
+[Launcher]
+Protocols=irc

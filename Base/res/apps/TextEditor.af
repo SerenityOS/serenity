@@ -8,4 +8,4 @@ Category=Utilities
 32x32=/res/icons/32x32/app-texteditor.png
 
 [Launcher]
-FileTypes=txt,md,html
+FileTypes=txt,md,html,htm,js,json,ini
