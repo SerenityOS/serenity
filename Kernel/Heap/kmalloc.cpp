@@ -56,12 +56,11 @@ struct AllocationHeader {
 
 static u8 alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
-volatile size_t sum_alloc = 0;
-volatile size_t sum_free = POOL_SIZE;
-volatile size_t kmalloc_sum_eternal = 0;
-
-u32 g_kmalloc_call_count;
-u32 g_kfree_call_count;
+size_t g_kmalloc_bytes_allocated = 0;
+size_t g_kmalloc_bytes_free = POOL_SIZE;
+size_t g_kmalloc_bytes_eternal = 0;
+size_t g_kmalloc_call_count;
+size_t g_kfree_call_count;
 bool g_dump_kmalloc_stacks;
 
 static u8* s_next_eternal_ptr;
@@ -72,9 +71,9 @@ void kmalloc_init()
     memset(&alloc_map, 0, sizeof(alloc_map));
     memset((void*)BASE_PHYSICAL, 0, POOL_SIZE);
 
-    kmalloc_sum_eternal = 0;
-    sum_alloc = 0;
-    sum_free = POOL_SIZE;
+    g_kmalloc_bytes_eternal = 0;
+    g_kmalloc_bytes_allocated = 0;
+    g_kmalloc_bytes_free = POOL_SIZE;
 
     s_next_eternal_ptr = (u8*)ETERNAL_BASE_PHYSICAL;
     s_end_of_eternal_range = s_next_eternal_ptr + ETERNAL_RANGE_SIZE;
@@ -85,7 +84,7 @@ void* kmalloc_eternal(size_t size)
     void* ptr = s_next_eternal_ptr;
     s_next_eternal_ptr += size;
     ASSERT(s_next_eternal_ptr < s_end_of_eternal_range);
-    kmalloc_sum_eternal += size;
+    g_kmalloc_bytes_eternal += size;
     return ptr;
 }
 
@@ -120,8 +119,8 @@ inline void* kmalloc_allocate(size_t first_chunk, size_t chunks_needed)
     Bitmap bitmap_wrapper = Bitmap::wrap(alloc_map, POOL_SIZE / CHUNK_SIZE);
     bitmap_wrapper.set_range(first_chunk, chunks_needed, true);
 
-    sum_alloc += a->allocation_size_in_chunks * CHUNK_SIZE;
-    sum_free -= a->allocation_size_in_chunks * CHUNK_SIZE;
+    g_kmalloc_bytes_allocated += a->allocation_size_in_chunks * CHUNK_SIZE;
+    g_kmalloc_bytes_free -= a->allocation_size_in_chunks * CHUNK_SIZE;
 #ifdef SANITIZE_KMALLOC
     memset(ptr, KMALLOC_SCRUB_BYTE, (a->allocation_size_in_chunks * CHUNK_SIZE) - sizeof(AllocationHeader));
 #endif
@@ -141,9 +140,9 @@ void* kmalloc_impl(size_t size)
     // We need space for the AllocationHeader at the head of the block.
     size_t real_size = size + sizeof(AllocationHeader);
 
-    if (sum_free < real_size) {
+    if (g_kmalloc_bytes_free < real_size) {
         Kernel::dump_backtrace();
-        klog() << "kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=" << sum_free << ", real_size=" << real_size;
+        klog() << "kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=" << g_kmalloc_bytes_free << ", real_size=" << real_size;
         Kernel::hang();
     }
 
@@ -183,8 +182,8 @@ void kfree(void* ptr)
     Bitmap bitmap_wrapper = Bitmap::wrap(alloc_map, POOL_SIZE / CHUNK_SIZE);
     bitmap_wrapper.set_range(start, a->allocation_size_in_chunks, false);
 
-    sum_alloc -= a->allocation_size_in_chunks * CHUNK_SIZE;
-    sum_free += a->allocation_size_in_chunks * CHUNK_SIZE;
+    g_kmalloc_bytes_allocated -= a->allocation_size_in_chunks * CHUNK_SIZE;
+    g_kmalloc_bytes_free += a->allocation_size_in_chunks * CHUNK_SIZE;
 
 #ifdef SANITIZE_KMALLOC
     memset(a, KFREE_SCRUB_BYTE, a->allocation_size_in_chunks * CHUNK_SIZE);
