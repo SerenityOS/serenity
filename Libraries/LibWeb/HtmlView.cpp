@@ -433,7 +433,7 @@ static RefPtr<Document> create_document_from_mime_type(const ByteBuffer& data, c
 
 void HtmlView::load(const URL& url)
 {
-    dbg() << "HtmlView::load: " << url.to_string();
+    dbg() << "HtmlView::load: " << url;
 
     if (!url.is_valid()) {
         load_error_page(url, "Invalid URL");
@@ -495,11 +495,11 @@ void HtmlView::load(const URL& url)
         ResourceLoader::the().load(
             favicon_url,
             [this, favicon_url](auto data, auto&) {
-                dbg() << "Favicon downloaded, " << data.size() << " bytes from " << favicon_url.to_string();
+                dbg() << "Favicon downloaded, " << data.size() << " bytes from " << favicon_url;
                 auto decoder = Gfx::ImageDecoder::create(data.data(), data.size());
                 auto bitmap = decoder->bitmap();
                 if (!bitmap) {
-                    dbg() << "Could not decode favicon " << favicon_url.to_string();
+                    dbg() << "Could not decode favicon " << favicon_url;
                     return;
                 }
                 dbg() << "Decoded favicon, " << bitmap->size();
