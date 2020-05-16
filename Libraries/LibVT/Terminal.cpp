@@ -809,6 +809,23 @@ void Terminal::on_input(u8 ch)
 #ifdef TERMINAL_DEBUG
     dbgprintf("Terminal::on_char: %b (%c), fg=%u, bg=%u\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
 #endif
+
+    auto fail_utf8_parse = [this] {
+        m_parser_state = Normal;
+        on_codepoint('%');
+    };
+
+    auto advance_utf8_parse = [this, ch] {
+        m_parser_codepoint <<= 6;
+        m_parser_codepoint |= ch & 0x3f;
+        if (m_parser_state == UTF8Needs1Byte) {
+            on_codepoint(m_parser_codepoint);
+            m_parser_state = Normal;
+        } else {
+            m_parser_state = (ParserState)(m_parser_state + 1);
+        }
+    };
+
     switch (m_parser_state) {
     case GotEscape:
         if (ch == '[') {
@@ -888,8 +905,36 @@ void Terminal::on_input(u8 ch)
         m_parser_state = Normal;
         m_swallow_current = false;
         return;
+    case UTF8Needs1Byte:
+    case UTF8Needs2Bytes:
+    case UTF8Needs3Bytes:
+        if ((ch & 0xc0) != 0x80) {
+            fail_utf8_parse();
+        } else {
+            advance_utf8_parse();
+        }
+        return;
+
     case Normal:
-        break;
+        if (!(ch & 0x80))
+            break;
+        if ((ch & 0xe0) == 0xc0) {
+            m_parser_state = UTF8Needs1Byte;
+            m_parser_codepoint = ch & 0x1f;
+            return;
+        }
+        if ((ch & 0xf0) == 0xe0) {
+            m_parser_state = UTF8Needs2Bytes;
+            m_parser_codepoint = ch & 0x0f;
+            return;
+        }
+        if ((ch & 0xf8) == 0xf0) {
+            m_parser_state = UTF8Needs3Bytes;
+            m_parser_codepoint = ch & 0x07;
+            return;
+        }
+        fail_utf8_parse();
+        return;
     }
 
     switch (ch) {
@@ -925,21 +970,26 @@ void Terminal::on_input(u8 ch)
         return;
     }
 
+    on_codepoint(ch);
+}
+
+void Terminal::on_codepoint(u32 codepoint)
+{
     auto new_column = m_cursor_column + 1;
     if (new_column < columns()) {
-        put_character_at(m_cursor_row, m_cursor_column, ch);
+        put_character_at(m_cursor_row, m_cursor_column, codepoint);
         set_cursor(m_cursor_row, new_column);
+        return;
+    }
+    if (m_stomp) {
+        m_stomp = false;
+        newline();
+        put_character_at(m_cursor_row, m_cursor_column, codepoint);
+        set_cursor(m_cursor_row, 1);
     } else {
-        if (m_stomp) {
-            m_stomp = false;
-            newline();
-            put_character_at(m_cursor_row, m_cursor_column, ch);
-            set_cursor(m_cursor_row, 1);
-        } else {
-            // Curious: We wait once on the right-hand side
-            m_stomp = true;
-            put_character_at(m_cursor_row, m_cursor_column, ch);
-        }
+        // Curious: We wait once on the right-hand side
+        m_stomp = true;
+        put_character_at(m_cursor_row, m_cursor_column, codepoint);
     }
 }
 
