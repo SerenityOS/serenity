@@ -382,7 +382,7 @@ public:
     bool is_being_inspected() const { return m_inspector_count; }
 
     void terminate_due_to_signal(u8 signal);
-    void send_signal(u8, Process* sender);
+    KResult send_signal(u8 signal, Process* sender);
 
     u16 thread_count() const { return m_thread_count; }
 
