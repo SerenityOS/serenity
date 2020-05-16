@@ -51,17 +51,8 @@ time_t time(time_t* tloc)
 
 int gettimeofday(struct timeval* __restrict__ tv, void* __restrict__)
 {
-    static volatile KernelInfoPage* kernel_info;
-    if (!kernel_info)
-        kernel_info = (volatile KernelInfoPage*)syscall(SC_get_kernel_info_page);
-
-    for (;;) {
-        auto serial = kernel_info->serial;
-        *tv = const_cast<struct timeval&>(kernel_info->now);
-        if (serial == kernel_info->serial)
-            break;
-    }
-    return 0;
+    int rc = syscall(SC_gettimeofday, tv);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 char* ctime(const time_t* t)
