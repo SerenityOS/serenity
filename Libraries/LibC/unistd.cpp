@@ -417,12 +417,6 @@ int isatty(int fd)
     return tcgetattr(fd, &dummy) == 0;
 }
 
-int getdtablesize()
-{
-    int rc = syscall(SC_getdtablesize);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int dup(int old_fd)
 {
     int rc = syscall(SC_dup, old_fd);

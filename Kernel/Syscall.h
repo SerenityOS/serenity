@@ -80,7 +80,6 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(execve)               \
     __ENUMERATE_SYSCALL(geteuid)              \
     __ENUMERATE_SYSCALL(getegid)              \
-    __ENUMERATE_SYSCALL(getdtablesize)        \
     __ENUMERATE_SYSCALL(dup)                  \
     __ENUMERATE_SYSCALL(dup2)                 \
     __ENUMERATE_SYSCALL(sigaction)            \
