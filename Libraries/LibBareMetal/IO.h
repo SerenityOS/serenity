@@ -94,12 +94,10 @@ inline void repeated_out16(u16 port, const u16* data, int data_size)
                  : "d"(port));
 }
 
-inline void delay()
+inline void delay(size_t microseconds)
 {
-    // ~3 microsecs
-    for (auto i = 0; i < 32; i++) {
+    for (size_t i = 0; i < microseconds; ++i)
         IO::in8(0x80);
-    }
 }
 
 }
