@@ -54,7 +54,7 @@ public:
     bool m_need_full_flush { false };
 
     void invalidate_cursor();
-    void on_char(u8);
+    void on_input(u8);
 
     void clear();
     void set_size(u16 columns, u16 rows);
@@ -182,7 +182,7 @@ private:
         ExpectStringTerminator,
     };
 
-    EscapeState m_escape_state { Normal };
+    EscapeState m_parser_state { Normal };
     Vector<u8> m_parameters;
     Vector<u8> m_intermediates;
     Vector<u8> m_xterm_parameters;
