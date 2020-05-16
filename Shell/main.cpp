@@ -1369,13 +1369,10 @@ int main(int argc, char** argv)
 
             // only suggest dot-files if path starts with a dot
             Core::DirIterator files(path,
-                token.starts_with('.') ? Core::DirIterator::NoFlags : Core::DirIterator::SkipDots);
+                token.starts_with('.') ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
 
             while (files.has_next()) {
                 auto file = files.next_path();
-                // manually skip `.' and `..'
-                if (file == "." || file == "..")
-                    continue;
                 auto trivia = " ";
                 if (file.starts_with(token)) {
                     String file_path = String::format("%s/%s", path.characters(), file.characters());
@@ -1450,13 +1447,10 @@ int main(int argc, char** argv)
 
         // only suggest dot-files if path starts with a dot
         Core::DirIterator files(path,
-            token.starts_with('.') ? Core::DirIterator::NoFlags : Core::DirIterator::SkipDots);
+            token.starts_with('.') ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
 
         while (files.has_next()) {
             auto file = files.next_path();
-            // manually skip `.' and `..'
-            if (file == "." || file == "..")
-                continue;
             if (file.starts_with(token)) {
                 struct stat program_status;
                 String file_path = String::format("%s/%s", path.characters(), file.characters());
