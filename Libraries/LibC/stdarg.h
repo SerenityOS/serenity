@@ -26,7 +26,7 @@
 
 #pragma once
 
-#if defined(KERNEL) || defined(BOOTSTRAPPER)
+#if defined(KERNEL)
 #    define __BEGIN_DECLS
 #    define __END_DECLS
 #else

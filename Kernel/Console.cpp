@@ -24,19 +24,70 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <Kernel/Console.h>
+#include <Kernel/IO.h>
+#include <Kernel/kstdio.h>
 
-#ifndef AK_TEST_SUITE
+// Bytes output to 0xE9 end up on the Bochs console. It's very handy.
+#define CONSOLE_OUT_TO_E9
 
-#    if defined(KERNEL)
-#        include <Kernel/Assertions.h>
-#    else
-#        include <assert.h>
-#        ifndef __serenity__
-#            define ASSERT assert
-#            define ASSERT_NOT_REACHED() assert(false)
-#            define RELEASE_ASSERT assert
-#        endif
-#    endif
+static Console* s_the;
 
+Console& Console::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
+
+bool Console::is_initialized()
+{
+    return s_the != nullptr;
+}
+
+Console::Console()
+    : CharacterDevice(5, 1)
+{
+    s_the = this;
+}
+
+Console::~Console()
+{
+}
+
+bool Console::can_read(const Kernel::FileDescription&, size_t) const
+{
+    return false;
+}
+
+ssize_t Console::read(Kernel::FileDescription&, size_t, u8*, ssize_t)
+{
+    // FIXME: Implement reading from the console.
+    //        Maybe we could use a ring buffer for this device?
+    return 0;
+}
+
+ssize_t Console::write(Kernel::FileDescription&, size_t, const u8* data, ssize_t size)
+{
+    if (!size)
+        return 0;
+    if (!m_implementation)
+        return 0;
+    for (ssize_t i = 0; i < size; ++i)
+        put_char(data[i]);
+    return size;
+}
+
+void Console::put_char(char ch)
+{
+#ifdef CONSOLE_OUT_TO_E9
+    //if (ch != 27)
+    IO::out8(0xe9, ch);
 #endif
+    m_logbuffer.enqueue(ch);
+    if (m_implementation)
+        m_implementation->on_sysconsole_receive(ch);
+}
+
+ConsoleImplementation::~ConsoleImplementation()
+{
+}

@@ -54,8 +54,8 @@
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
-#include <LibBareMetal/Output/Console.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/Console.h>
+#include <Kernel/StdLib.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {

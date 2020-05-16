@@ -73,9 +73,9 @@
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
-#include <LibBareMetal/IO.h>
-#include <LibBareMetal/Output/Console.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/IO.h>
+#include <Kernel/Console.h>
+#include <Kernel/StdLib.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
 #include <LibC/signal_numbers.h>

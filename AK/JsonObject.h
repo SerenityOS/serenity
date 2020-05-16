@@ -148,7 +148,7 @@ inline void JsonValue::serialize(Builder& builder) const
     case Type::Bool:
         builder.append(m_value.as_bool ? "true" : "false");
         break;
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
     case Type::Double:
         builder.appendf("%g", m_value.as_double);
         break;

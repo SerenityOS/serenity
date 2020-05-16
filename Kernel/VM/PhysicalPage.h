@@ -29,7 +29,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Heap/SlabAllocator.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 

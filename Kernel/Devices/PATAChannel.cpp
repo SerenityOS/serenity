@@ -31,7 +31,7 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 namespace Kernel {
 

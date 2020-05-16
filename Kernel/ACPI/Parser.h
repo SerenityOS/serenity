@@ -31,8 +31,8 @@
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/VM/Region.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
-#include <LibBareMetal/Memory/VirtualAddress.h>
+#include <Kernel/PhysicalAddress.h>
+#include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 namespace ACPI {

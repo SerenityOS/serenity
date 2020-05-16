@@ -33,7 +33,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
-#include <LibBareMetal/Memory/VirtualAddress.h>
+#include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 

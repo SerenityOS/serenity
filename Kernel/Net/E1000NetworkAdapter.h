@@ -32,7 +32,7 @@
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 namespace Kernel {
 

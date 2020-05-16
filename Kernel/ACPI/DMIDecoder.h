@@ -30,8 +30,8 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/VM/Region.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
-#include <LibBareMetal/Memory/VirtualAddress.h>
+#include <Kernel/PhysicalAddress.h>
+#include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 

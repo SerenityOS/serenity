@@ -31,7 +31,7 @@
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 #define IRQ_APIC_SPURIOUS 0x7f
 

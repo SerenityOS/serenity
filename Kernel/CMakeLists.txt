@@ -7,8 +7,9 @@ set(KERNEL_SOURCES
     Arch/i386/CPU.cpp
     CMOS.cpp
     CommandLine.cpp
-    Devices/BlockDevice.cpp
+    Console.cpp
     Devices/BXVGADevice.cpp
+    Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
     Devices/DiskPartition.cpp
@@ -33,8 +34,8 @@ set(KERNEL_SOURCES
     FileSystem/DevPtsFS.cpp
     FileSystem/Ext2FileSystem.cpp
     FileSystem/FIFO.cpp
-    FileSystem/FileBackedFileSystem.cpp
     FileSystem/File.cpp
+    FileSystem/FileBackedFileSystem.cpp
     FileSystem/FileDescription.cpp
     FileSystem/FileSystem.cpp
     FileSystem/Inode.cpp
@@ -43,14 +44,13 @@ set(KERNEL_SOURCES
     FileSystem/ProcFS.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
-    Heap/kmalloc.cpp
     Heap/SlabAllocator.cpp
-    init.cpp
+    Heap/kmalloc.cpp
     Interrupts/APIC.cpp
     Interrupts/GenericInterruptHandler.cpp
-    Interrupts/InterruptManagement.cpp
     Interrupts/IOAPIC.cpp
     Interrupts/IRQHandler.cpp
+    Interrupts/InterruptManagement.cpp
     Interrupts/PIC.cpp
     Interrupts/SharedIRQHandler.cpp
     Interrupts/SpuriousInterruptHandler.cpp
@@ -64,41 +64,42 @@ set(KERNEL_SOURCES
     Net/LoopbackAdapter.cpp
     Net/NetworkAdapter.cpp
     Net/NetworkTask.cpp
-    Net/Routing.cpp
     Net/RTL8139NetworkAdapter.cpp
+    Net/Routing.cpp
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
     PCI/Access.cpp
     PCI/Device.cpp
-    PCI/Initializer.cpp
     PCI/IOAccess.cpp
+    PCI/Initializer.cpp
     PCI/MMIOAccess.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
     Profiling.cpp
     Ptrace.cpp
-    Random.cpp
     RTC.cpp
+    Random.cpp
     Scheduler.cpp
     SharedBuffer.cpp
+    StdLib.cpp
     Syscall.cpp
-    Tasks/FinalizerTask.cpp
-    Tasks/SyncTask.cpp
-    Thread.cpp
-    ThreadTracer.cpp
-    Time/HardwareTimer.cpp
-    Time/HPETComparator.cpp
-    Time/HPET.cpp
-    Time/PIT.cpp
-    TimerQueue.cpp
-    Time/RTC.cpp
-    Time/TimeManagement.cpp
     TTY/MasterPTY.cpp
     TTY/PTYMultiplexer.cpp
     TTY/SlavePTY.cpp
     TTY/TTY.cpp
     TTY/VirtualConsole.cpp
+    Tasks/FinalizerTask.cpp
+    Tasks/SyncTask.cpp
+    Thread.cpp
+    ThreadTracer.cpp
+    Time/HPET.cpp
+    Time/HPETComparator.cpp
+    Time/HardwareTimer.cpp
+    Time/PIT.cpp
+    Time/RTC.cpp
+    Time/TimeManagement.cpp
+    TimerQueue.cpp
     VM/AnonymousVMObject.cpp
     VM/ContiguousVMObject.cpp
     VM/InodeVMObject.cpp
@@ -114,6 +115,8 @@ set(KERNEL_SOURCES
     VM/SharedInodeVMObject.cpp
     VM/VMObject.cpp
     WaitQueue.cpp
+    init.cpp
+    kprintf.cpp
 )
 
 set(AK_SOURCES
@@ -135,17 +138,10 @@ set(ELF_SOURCES
     ../Libraries/LibELF/Validation.cpp
 )
 
-set(BARE_METAL_SOURCES
-    ../Libraries/LibBareMetal/Output/Console.cpp
-    ../Libraries/LibBareMetal/Output/kprintf.cpp
-    ../Libraries/LibBareMetal/StdLib.cpp
-)
-
 set(SOURCES
     ${KERNEL_SOURCES}
     ${AK_SOURCES}
     ${ELF_SOURCES}
-    ${BARE_METAL_SOURCES}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKERNEL")

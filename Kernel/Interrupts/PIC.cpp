@@ -29,7 +29,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/PIC.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 namespace Kernel {
 

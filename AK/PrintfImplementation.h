@@ -388,7 +388,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 ret += print_hex(putch, bufptr, va_arg(ap, u64), false, false, left_pad, zero_pad, 16);
                 break;
 
-#if !defined(BOOTSTRAPPER) && !defined(KERNEL)
+#if !defined(KERNEL)
             case 'g':
             case 'f':
                 ret += print_double(putch, bufptr, va_arg(ap, double), left_pad, zero_pad, field_width, fraction_length);

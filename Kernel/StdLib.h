@@ -26,32 +26,48 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <AK/Forward.h>
+
+namespace Syscall {
+struct StringArgument;
+}
+
+String copy_string_from_user(const char*, size_t);
 
 extern "C" {
-int dbgprintf(const char* fmt, ...);
-int dbgputstr(const char*, int);
-int kernelputstr(const char*, int);
-int kprintf(const char* fmt, ...);
-int sprintf(char* buf, const char* fmt, ...);
-void set_serial_debug(bool on_or_off);
-int get_serial_debug();
+
+static_assert(sizeof(size_t) == 4);
+
+void copy_to_user(void*, const void*, size_t);
+void copy_from_user(void*, const void*, size_t);
+void memset_user(void*, int, size_t);
+
+void* memcpy(void*, const void*, size_t);
+char* strcpy(char*, const char*);
+char* strncpy(char*, const char*, size_t);
+int strncmp(const char* s1, const char* s2, size_t n);
+char* strstr(const char* haystack, const char* needle);
+int strcmp(char const*, const char*);
+size_t strlen(const char*);
+size_t strnlen(const char*, size_t);
+void* memset(void*, int, size_t);
+char* strdup(const char*);
+int memcmp(const void*, const void*, size_t);
+char* strrchr(const char* str, int ch);
+void* memmove(void* dest, const void* src, size_t n);
+
+inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
+inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 }
 
-#if defined(KERNEL) || defined(BOOTSTRAPPER)
-#    define printf dbgprintf
-#endif
-
-#ifndef __serenity__
-#    define dbgprintf printf
-#endif
-
-#ifdef __cplusplus
-
-template<size_t N>
-inline int dbgputstr(const char (&array)[N])
+template<typename T>
+inline void copy_from_user(T* dest, const T* src)
 {
-    return ::dbgputstr(array, N);
+    copy_from_user(dest, src, sizeof(T));
 }
 
-#endif
+template<typename T>
+inline void copy_to_user(T* dest, const T* src)
+{
+    copy_to_user(dest, src, sizeof(T));
+}

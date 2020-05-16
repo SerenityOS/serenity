@@ -30,7 +30,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/MousePacket.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 namespace Kernel {
 

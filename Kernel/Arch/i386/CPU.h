@@ -28,8 +28,8 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
-#include <LibBareMetal/Memory/VirtualAddress.h>
+#include <Kernel/PhysicalAddress.h>
+#include <Kernel/VirtualAddress.h>
 
 #define PAGE_SIZE 4096
 #define GENERIC_INTERRUPT_HANDLERS_COUNT 128

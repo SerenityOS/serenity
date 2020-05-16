@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 //#define RTL8139_DEBUG
 

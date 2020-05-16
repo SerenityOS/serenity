@@ -26,7 +26,7 @@
 
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Thread.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 //#define E1000_DEBUG
 

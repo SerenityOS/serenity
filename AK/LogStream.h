@@ -30,7 +30,7 @@
 #include <AK/Types.h>
 #include <AK/kstdio.h>
 
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
 #    include <AK/ScopedValueRollback.h>
 #    include <AK/StringView.h>
 #    include <errno.h>
@@ -42,7 +42,7 @@ namespace AK {
 class LogStream {
 public:
     LogStream()
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
         : m_errno_restorer(errno)
 #endif
     {
@@ -52,7 +52,7 @@ public:
     virtual void write(const char*, int) const = 0;
 
 private:
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
     ScopedValueRollback<int> m_errno_restorer;
 #endif
 };
@@ -68,7 +68,7 @@ public:
     }
 };
 
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
 class StdLogStream final : public LogStream {
 public:
     StdLogStream(int fd)
@@ -86,7 +86,7 @@ inline StdLogStream out() { return StdLogStream(STDOUT_FILENO); }
 inline StdLogStream warn() { return StdLogStream(STDERR_FILENO); }
 #endif
 
-#if !defined(BOOTSTRAPPER) && defined(KERNEL)
+#ifdef KERNEL
 class KernelLogStream final : public LogStream {
 public:
     KernelLogStream() {}
@@ -121,7 +121,7 @@ const LogStream& operator<<(const LogStream&, long long);
 const LogStream& operator<<(const LogStream&, unsigned long);
 const LogStream& operator<<(const LogStream&, unsigned long long);
 
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
 const LogStream& operator<<(const LogStream&, double);
 const LogStream& operator<<(const LogStream&, float);
 #endif
@@ -141,9 +141,9 @@ inline const LogStream& operator<<(const LogStream& stream, bool value)
 
 DebugLogStream dbg();
 
-#if defined(KERNEL)
+#ifdef KERNEL
 KernelLogStream klog();
-#elif !defined(BOOTSTRAPPER)
+#else
 DebugLogStream klog();
 #endif
 
@@ -153,7 +153,7 @@ using AK::dbg;
 using AK::klog;
 using AK::LogStream;
 
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
 using AK::out;
 using AK::warn;
 #endif

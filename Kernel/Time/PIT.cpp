@@ -30,7 +30,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/Time/PIT.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 #define IRQ_TIMER 0
 namespace Kernel {

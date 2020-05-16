@@ -27,8 +27,8 @@
 #pragma once
 
 #ifdef __serenity__
-#    if defined(KERNEL) || defined(BOOTSTRAPPER)
-#        include <LibBareMetal/Output/kstdio.h>
+#    ifdef KERNEL
+#        include <Kernel/kstdio.h>
 #    else
 #        include <AK/Types.h>
 extern "C" {

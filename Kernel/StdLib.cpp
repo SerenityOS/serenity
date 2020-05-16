@@ -27,26 +27,20 @@
 #include <AK/Assertions.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Heap/kmalloc.h>
+#include <Kernel/StdLib.h>
+#include <Kernel/VM/MemoryManager.h>
 
-#ifdef KERNEL
-#    include <Kernel/Arch/i386/CPU.h>
-#    include <Kernel/Heap/kmalloc.h>
-#    include <Kernel/VM/MemoryManager.h>
-#endif
-
-#ifdef KERNEL
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {
     Kernel::SmapDisabler disabler;
     size_t length = strnlen(user_str, user_str_size);
     return String(user_str, length);
 }
-#endif
 
 extern "C" {
 
-#ifdef KERNEL
 void copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
     ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));
@@ -62,7 +56,6 @@ void copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
     Kernel::SmapDisabler disabler;
     memcpy(dest_ptr, src_ptr, n);
 }
-#endif
 
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
@@ -117,14 +110,12 @@ char* strncpy(char* dest, const char* src, size_t n)
     return dest;
 }
 
-#ifdef KERNEL
 void memset_user(void* dest_ptr, int c, size_t n)
 {
     ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));
     Kernel::SmapDisabler disabler;
     memset(dest_ptr, c, n);
 }
-#endif
 
 void* memset(void* dest_ptr, int c, size_t n)
 {
@@ -243,12 +234,10 @@ char* strstr(const char* haystack, const char* needle)
     ASSERT_NOT_REACHED();
 }
 
-#ifdef KERNEL
 void* realloc(void* p, size_t s)
 {
     return krealloc(p, s);
 }
-#endif
 
 void free(void* p)
 {

@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/Devices/SerialDevice.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 namespace Kernel {
 

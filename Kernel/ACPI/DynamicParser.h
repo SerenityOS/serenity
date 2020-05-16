@@ -31,7 +31,7 @@
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/VM/PhysicalPage.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 namespace ACPI {
