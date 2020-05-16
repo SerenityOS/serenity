@@ -95,6 +95,7 @@ void HTMLScriptElement::inserted_into(Node& new_parent)
         return;
     }
 
+    dbg() << "Parsing and running script from " << src_url;
     auto parser = JS::Parser(JS::Lexer(source));
     auto program = parser.parse_program();
     if (parser.has_errors()) {
