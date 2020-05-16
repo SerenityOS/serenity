@@ -105,7 +105,7 @@ private:
     void scroll_down();
     void newline();
     void set_cursor(unsigned row, unsigned column);
-    void put_character_at(unsigned row, unsigned column, u8 ch);
+    void put_character_at(unsigned row, unsigned column, u32 ch);
     void set_window_title(const String&);
 
     void unimplemented_escape();
@@ -188,8 +188,7 @@ private:
     Vector<u8> m_xterm_parameters;
     Vector<bool> m_horizontal_tabs;
     u8 m_final { 0 };
-
-    u8 m_last_char { 0 };
+    u32 m_last_codepoint { 0 };
 };
 
 }

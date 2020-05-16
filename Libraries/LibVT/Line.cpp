@@ -36,7 +36,7 @@ Line::Line(u16 length)
 
 Line::~Line()
 {
-    delete[] m_characters;
+    delete[] m_codepoints;
     delete[] m_attributes;
 }
 
@@ -44,17 +44,19 @@ void Line::set_length(u16 new_length)
 {
     if (m_length == new_length)
         return;
-    auto* new_characters = new u8[new_length];
+    auto* new_codepoints = new u32[new_length];
     auto* new_attributes = new Attribute[new_length];
-    memset(new_characters, ' ', new_length);
-    if (m_characters && m_attributes) {
-        memcpy(new_characters, m_characters, min(m_length, new_length));
-        for (size_t i = 0; i < min(m_length, new_length); ++i)
+    for (size_t i = 0; i < new_length; ++i)
+        new_codepoints[i] = ' ';
+    if (m_codepoints && m_attributes) {
+        for (size_t i = 0; i < min(m_length, new_length); ++i) {
+            new_codepoints[i] = m_codepoints[i];
             new_attributes[i] = m_attributes[i];
+        }
     }
-    delete[] m_characters;
+    delete[] m_codepoints;
     delete[] m_attributes;
-    m_characters = new_characters;
+    m_codepoints = new_codepoints;
     m_attributes = new_attributes;
     m_length = new_length;
 }
@@ -62,15 +64,16 @@ void Line::set_length(u16 new_length)
 void Line::clear(Attribute attribute)
 {
     if (m_dirty) {
-        memset(m_characters, ' ', m_length);
-        for (u16 i = 0; i < m_length; ++i)
+        for (u16 i = 0; i < m_length; ++i) {
+            m_codepoints[i] = ' ';
             m_attributes[i] = attribute;
+        }
         return;
     }
     for (unsigned i = 0; i < m_length; ++i) {
-        if (m_characters[i] != ' ')
+        if (m_codepoints[i] != ' ')
             m_dirty = true;
-        m_characters[i] = ' ';
+        m_codepoints[i] = ' ';
     }
     for (unsigned i = 0; i < m_length; ++i) {
         if (m_attributes[i] != attribute)
