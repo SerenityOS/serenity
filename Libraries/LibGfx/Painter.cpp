@@ -764,14 +764,14 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const Gfx::Bitmap& sour
     }
 }
 
-FLATTEN void Painter::draw_glyph(const Point& point, char ch, Color color)
+FLATTEN void Painter::draw_glyph(const Point& point, u32 codepoint, Color color)
 {
-    draw_glyph(point, ch, font(), color);
+    draw_glyph(point, codepoint, font(), color);
 }
 
-FLATTEN void Painter::draw_glyph(const Point& point, char ch, const Font& font, Color color)
+FLATTEN void Painter::draw_glyph(const Point& point, u32 codepoint, const Font& font, Color color)
 {
-    draw_bitmap(point, font.glyph_bitmap(ch), color);
+    draw_bitmap(point, font.glyph_bitmap(codepoint), color);
 }
 
 void Painter::draw_emoji(const Point& point, const Gfx::Bitmap& emoji, const Font& font)
@@ -791,9 +791,9 @@ void Painter::draw_emoji(const Point& point, const Gfx::Bitmap& emoji, const Fon
 
 void Painter::draw_glyph_or_emoji(const Point& point, u32 codepoint, const Font& font, Color color)
 {
-    if (codepoint < 256) {
+    if (codepoint < (u32)font.glyph_count()) {
         // This looks like a regular character.
-        draw_glyph(point, (char)codepoint, font, color);
+        draw_glyph(point, (size_t)codepoint, font, color);
         return;
     }
 
