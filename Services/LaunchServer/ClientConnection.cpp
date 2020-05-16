@@ -56,7 +56,7 @@ OwnPtr<Messages::LaunchServer::GreetResponse> ClientConnection::handle(const Mes
 OwnPtr<Messages::LaunchServer::OpenUrlResponse> ClientConnection::handle(const Messages::LaunchServer::OpenUrl& request)
 {
     URL url(request.url());
-    auto result = Launcher::the().open_url(url);
+    auto result = Launcher::the().open_url(url, request.handler_name());
     return make<Messages::LaunchServer::OpenUrlResponse>(result);
 }
 
