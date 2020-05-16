@@ -26,28 +26,19 @@
 
 #pragma once
 
-#include "Job.h"
-#include <AK/CircularQueue.h>
-#include <AK/HashMap.h>
+#include <AK/Forward.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <termios.h>
+#include <LibCore/ElapsedTimer.h>
 
-struct GlobalState {
-    String cwd;
-    String username;
-    String home;
-    char ttyname[32];
-    char hostname[64];
-    uid_t uid;
-    struct termios termios;
-    struct termios default_termios;
-    bool was_interrupted { false };
-    bool was_resized { false };
-    int last_return_code { 0 };
-    Vector<String> directory_stack;
-    CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
-    HashMap<u64, Job> jobs;
+class FileDescriptionCollector {
+public:
+    FileDescriptionCollector() { }
+    ~FileDescriptionCollector();
+
+    void collect();
+    void add(int fd);
+
+private:
+    Vector<int, 32> m_fds;
 };
-
-extern GlobalState g;
