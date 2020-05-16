@@ -29,8 +29,8 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Heap/kmalloc.h>
-#include <LibBareMetal/IO.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/IO.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel {
 

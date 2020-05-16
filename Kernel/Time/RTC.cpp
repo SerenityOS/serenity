@@ -28,7 +28,7 @@
 #include <Kernel/CMOS.h>
 #include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 namespace Kernel {
 #define IRQ_TIMER 8

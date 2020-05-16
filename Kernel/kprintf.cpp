@@ -26,15 +26,12 @@
 
 #include <AK/PrintfImplementation.h>
 #include <AK/Types.h>
-#include <LibBareMetal/IO.h>
-#include <LibBareMetal/Output/Console.h>
-#include <LibBareMetal/Output/kstdio.h>
+#include <Kernel/Console.h>
+#include <Kernel/IO.h>
+#include <Kernel/Process.h>
+#include <Kernel/kstdio.h>
 
 #include <LibC/stdarg.h>
-
-#if defined(KERNEL)
-#    include <Kernel/Process.h>
-#endif
 
 static bool serial_debug;
 

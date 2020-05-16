@@ -29,7 +29,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 

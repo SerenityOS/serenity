@@ -28,20 +28,20 @@
 
 #include <AK/Types.h>
 
-#if defined(KERNEL) || defined(BOOTSTRAPPER)
-#    include <LibBareMetal/StdLib.h>
+#if defined(KERNEL)
+#    include <Kernel/StdLib.h>
 #else
 #    include <stdlib.h>
 #    include <string.h>
 #endif
 
-#if defined(__serenity__) && !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if defined(__serenity__) && !defined(KERNEL)
 extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
 #endif
 
 ALWAYS_INLINE void fast_u32_copy(u32* dest, const u32* src, size_t count)
 {
-#if defined(__serenity__) && !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if defined(__serenity__) && !defined(KERNEL)
     if (count >= 256) {
         mmx_memcpy(dest, src, count * sizeof(count));
         return;

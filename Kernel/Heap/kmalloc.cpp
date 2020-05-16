@@ -38,7 +38,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/StdLib.h>
 
 #define SANITIZE_KMALLOC
 

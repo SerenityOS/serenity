@@ -30,10 +30,7 @@
 #include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-
-#if defined(KERNEL)
-#    include <Kernel/Arch/i386/CPU.h>
-#endif
+#include <Kernel/Arch/i386/CPU.h>
 
 namespace IO {
 
@@ -104,7 +101,7 @@ inline void delay(size_t microseconds)
 
 class IOAddress {
 public:
-    IOAddress() {}
+    IOAddress() { }
     explicit IOAddress(u16 address)
         : m_address(address)
     {

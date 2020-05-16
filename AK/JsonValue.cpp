@@ -100,7 +100,7 @@ bool JsonValue::equals(const JsonValue& other) const
     if (is_string() && other.is_string() && as_string() == other.as_string())
         return true;
 
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
     if (is_number() && other.is_number() && to_number<double>() == other.to_number<double>()) {
         return true;
     }
@@ -158,7 +158,7 @@ JsonValue::JsonValue(const char* cstring)
 {
 }
 
-#if !defined(BOOTSTRAPPER) && !defined(KERNEL)
+#if !defined(KERNEL)
 JsonValue::JsonValue(double value)
     : m_type(Type::Double)
 {

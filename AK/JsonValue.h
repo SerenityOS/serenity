@@ -43,7 +43,7 @@ public:
         UnsignedInt32,
         Int64,
         UnsignedInt64,
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
         Double,
 #endif
         Bool,
@@ -68,7 +68,7 @@ public:
     JsonValue(i64);
     JsonValue(u64);
 
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
     JsonValue(double);
 #endif
     JsonValue(bool);
@@ -172,7 +172,7 @@ public:
         return *m_value.as_array;
     }
 
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
     double as_double() const
     {
         ASSERT(is_double());
@@ -193,7 +193,7 @@ public:
     bool is_u32() const { return m_type == Type::UnsignedInt32; }
     bool is_i64() const { return m_type == Type::Int64; }
     bool is_u64() const { return m_type == Type::UnsignedInt64; }
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
     bool is_double() const
     {
         return m_type == Type::Double;
@@ -211,7 +211,7 @@ public:
         case Type::UnsignedInt32:
         case Type::Int64:
         case Type::UnsignedInt64:
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
         case Type::Double:
 #endif
             return true;
@@ -223,7 +223,7 @@ public:
     template<typename T>
     T to_number(T default_value = 0) const
     {
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
         if (is_double())
             return (T)as_double();
 #endif
@@ -250,7 +250,7 @@ private:
         StringImpl* as_string { nullptr };
         JsonArray* as_array;
         JsonObject* as_object;
-#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#if !defined(KERNEL)
         double as_double;
 #endif
         i32 as_i32;

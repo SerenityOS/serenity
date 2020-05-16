@@ -35,7 +35,7 @@
 #include <LibELF/Image.h>
 
 #ifdef KERNEL
-#    include <LibBareMetal/Memory/VirtualAddress.h>
+#    include <Kernel/VirtualAddress.h>
 namespace Kernel {
 class Region;
 }

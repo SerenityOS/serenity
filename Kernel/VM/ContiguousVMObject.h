@@ -27,7 +27,7 @@
 #pragma once
 
 #include <Kernel/VM/VMObject.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 

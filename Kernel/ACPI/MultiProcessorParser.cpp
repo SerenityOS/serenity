@@ -28,7 +28,7 @@
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/StdLib.h>
 
 //#define MULTIPROCESSOR_DEBUG
 

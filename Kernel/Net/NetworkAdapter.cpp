@@ -33,7 +33,7 @@
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Random.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel {
 

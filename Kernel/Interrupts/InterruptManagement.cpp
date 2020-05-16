@@ -37,7 +37,7 @@
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 #define PCAT_COMPAT_FLAG 0x1
 

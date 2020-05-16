@@ -26,62 +26,42 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <AK/CircularQueue.h>
+#include <AK/Vector.h>
+#include <Kernel/Devices/CharacterDevice.h>
 
-#if defined(KERNEL)
+class ConsoleImplementation {
+public:
+    virtual ~ConsoleImplementation();
+    virtual void on_sysconsole_receive(u8) = 0;
+};
 
-namespace AK {
-class String;
-}
+class Console final : public Kernel::CharacterDevice {
+    AK_MAKE_ETERNAL
+public:
+    static Console& the();
+    static bool is_initialized();
 
-namespace Syscall {
-struct StringArgument;
-}
+    Console();
+    virtual ~Console() override;
 
-AK::String copy_string_from_user(const char*, size_t);
+    // ^CharacterDevice
+    virtual bool can_read(const Kernel::FileDescription&, size_t) const override;
+    virtual bool can_write(const Kernel::FileDescription&, size_t) const override { return true; }
+    virtual ssize_t read(Kernel::FileDescription&, size_t, u8*, ssize_t) override;
+    virtual ssize_t write(Kernel::FileDescription&, size_t, const u8*, ssize_t) override;
+    virtual const char* class_name() const override { return "Console"; }
 
-#endif
+    void set_implementation(ConsoleImplementation* implementation)
+    {
+        m_implementation = implementation;
+    }
 
-extern "C" {
+    void put_char(char);
 
-static_assert(sizeof(size_t) == 4);
+    const CircularQueue<char, 16384>& logbuffer() const { return m_logbuffer; }
 
-#if defined(KERNEL)
-void copy_to_user(void*, const void*, size_t);
-void copy_from_user(void*, const void*, size_t);
-void memset_user(void*, int, size_t);
-#endif
-
-void* memcpy(void*, const void*, size_t);
-char* strcpy(char*, const char*);
-char* strncpy(char*, const char*, size_t);
-int strncmp(const char* s1, const char* s2, size_t n);
-char* strstr(const char* haystack, const char* needle);
-int strcmp(char const*, const char*);
-size_t strlen(const char*);
-size_t strnlen(const char*, size_t);
-void* memset(void*, int, size_t);
-char* strdup(const char*);
-int memcmp(const void*, const void*, size_t);
-char* strrchr(const char* str, int ch);
-void* memmove(void* dest, const void* src, size_t n);
-
-inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
-inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
-}
-
-#if defined(KERNEL)
-
-template<typename T>
-inline void copy_from_user(T* dest, const T* src)
-{
-    copy_from_user(dest, src, sizeof(T));
-}
-
-template<typename T>
-inline void copy_to_user(T* dest, const T* src)
-{
-    copy_to_user(dest, src, sizeof(T));
-}
-
-#endif
+private:
+    ConsoleImplementation* m_implementation { nullptr };
+    CircularQueue<char, 16384> m_logbuffer;
+};

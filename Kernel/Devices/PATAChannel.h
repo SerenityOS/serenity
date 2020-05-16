@@ -43,8 +43,8 @@
 #include <Kernel/PCI/Device.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
-#include <LibBareMetal/IO.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <Kernel/IO.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 

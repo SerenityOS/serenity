@@ -24,74 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibBareMetal/IO.h>
-#include <LibBareMetal/Output/Console.h>
-#include <LibBareMetal/Output/kstdio.h>
+#pragma once
 
-// Bytes output to 0xE9 end up on the Bochs console. It's very handy.
-#define CONSOLE_OUT_TO_E9
+#include <AK/Types.h>
 
-static Console* s_the;
-
-Console& Console::the()
-{
-    ASSERT(s_the);
-    return *s_the;
+extern "C" {
+int dbgprintf(const char* fmt, ...);
+int dbgputstr(const char*, int);
+int kernelputstr(const char*, int);
+int kprintf(const char* fmt, ...);
+int sprintf(char* buf, const char* fmt, ...);
+void set_serial_debug(bool on_or_off);
+int get_serial_debug();
 }
 
-bool Console::is_initialized()
+#define printf dbgprintf
+
+#ifdef __cplusplus
+
+template<size_t N>
+inline int dbgputstr(const char (&array)[N])
 {
-    return s_the != nullptr;
+    return ::dbgputstr(array, N);
 }
 
-Console::Console()
-#if defined(KERNEL)
-    : CharacterDevice(5, 1)
 #endif
-{
-    s_the = this;
-}
-
-Console::~Console()
-{
-}
-
-#if defined(KERNEL)
-bool Console::can_read(const Kernel::FileDescription&, size_t) const
-{
-    return false;
-}
-
-ssize_t Console::read(Kernel::FileDescription&, size_t, u8*, ssize_t)
-{
-    // FIXME: Implement reading from the console.
-    //        Maybe we could use a ring buffer for this device?
-    return 0;
-}
-
-ssize_t Console::write(Kernel::FileDescription&, size_t, const u8* data, ssize_t size)
-{
-    if (!size)
-        return 0;
-    if (!m_implementation)
-        return 0;
-    for (ssize_t i = 0; i < size; ++i)
-        put_char(data[i]);
-    return size;
-}
-#endif
-
-void Console::put_char(char ch)
-{
-#ifdef CONSOLE_OUT_TO_E9
-    //if (ch != 27)
-    IO::out8(0xe9, ch);
-#endif
-    m_logbuffer.enqueue(ch);
-    if (m_implementation)
-        m_implementation->on_sysconsole_receive(ch);
-}
-
-ConsoleImplementation::~ConsoleImplementation()
-{
-}

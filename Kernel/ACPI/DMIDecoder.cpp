@@ -27,7 +27,7 @@
 #include <AK/StringView.h>
 #include <Kernel/ACPI/DMIDecoder.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel {
 

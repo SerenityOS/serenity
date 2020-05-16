@@ -28,7 +28,7 @@
 
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/TTY/TTY.h>
-#include <LibBareMetal/Output/Console.h>
+#include <Kernel/Console.h>
 
 namespace Kernel {
 

@@ -39,7 +39,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 #include <LibC/mallocdefs.h>
 
 //#define PAGE_FAULT_DEBUG

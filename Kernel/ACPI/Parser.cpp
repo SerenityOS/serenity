@@ -30,8 +30,8 @@
 #include <Kernel/PCI/Access.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
-#include <LibBareMetal/IO.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/IO.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel {
 namespace ACPI {

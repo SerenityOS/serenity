@@ -31,8 +31,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/Region.h>
-#include <LibBareMetal/Memory/PhysicalAddress.h>
 
 namespace Kernel {
 

@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/PCI/IOAccess.h>
-#include <LibBareMetal/IO.h>
+#include <Kernel/IO.h>
 
 namespace Kernel {
 namespace PCI {

@@ -39,7 +39,7 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
-#include <LibBareMetal/StdLib.h>
+#include <Kernel/StdLib.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
