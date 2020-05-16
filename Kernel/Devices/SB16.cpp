@@ -100,7 +100,7 @@ void SB16::initialize()
     disable_irq();
 
     IO::out8(0x226, 1);
-    IO::delay();
+    IO::delay(32);
     IO::out8(0x226, 0);
 
     auto data = dsp_read();

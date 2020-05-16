@@ -215,20 +215,16 @@ void enable(u32 cpu)
     write_register(APIC_REG_TPR, 0);
 
     if (cpu != 0) {
-        static volatile u32 foo = 0;
-
         // INIT
         write_icr(ICRReg(0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
 
-        for (foo = 0; foo < 0x800000; foo++)
-            ; // TODO: 10 millisecond delay
+        IO::delay(10 * 1000);
 
         for (int i = 0; i < 2; i++) {
             // SIPI
             write_icr(ICRReg(0x08, ICRReg::StartUp, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf)); // start execution at P8000
 
-            for (foo = 0; foo < 0x80000; foo++)
-                ; // TODO: 200 microsecond delay
+            IO::delay(200);
         }
     }
 }
