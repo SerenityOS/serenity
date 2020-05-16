@@ -39,7 +39,7 @@ public:
 
     virtual void handle_interrupt(const RegisterState&) override;
 
-    virtual bool eoi() override;
+    [[noreturn]] virtual bool eoi() override;
 
     virtual HandlerType type() const override { return HandlerType::UnhandledInterruptHandler; }
     virtual const char* purpose() const override { return "Unhandled Interrupt Handler"; }
