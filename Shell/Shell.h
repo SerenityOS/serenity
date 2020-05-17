@@ -174,6 +174,14 @@ private:
 
 #undef __ENUMERATE_SHELL_BUILTIN
 
+    constexpr static const char* builtin_names[] = {
+#define __ENUMERATE_SHELL_BUILTIN(builtin) #builtin,
+
+        ENUMERATE_SHELL_BUILTINS()
+
+#undef __ENUMERATE_SHELL_BUILTIN
+    };
+
     ExitCodeOrContinuationRequest::ContinuationRequest m_should_continue { ExitCodeOrContinuationRequest::Nothing };
     StringBuilder m_complete_line_builder;
     bool m_should_break_current_command { false };
