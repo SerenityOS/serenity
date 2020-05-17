@@ -45,7 +45,7 @@ NumberConstructor::NumberConstructor()
     put_native_function("isInteger", is_integer, 1, attr);
     put_native_function("isNaN", is_nan, 1, attr);
     put_native_function("isSafeInteger", is_safe_integer, 1, attr);
-
+    put("parseFloat", interpreter().global_object().get("parseFloat"));
     put("prototype", interpreter().global_object().number_prototype(), 0);
     put("length", Value(1), Attribute::Configurable);
     put("EPSILON", Value(EPSILON), 0);
