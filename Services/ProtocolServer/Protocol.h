@@ -28,16 +28,16 @@
 
 #include <AK/RefPtr.h>
 #include <AK/URL.h>
+#include <ProtocolServer/Forward.h>
 
-class Download;
-class PSClientConnection;
+namespace ProtocolServer {
 
 class Protocol {
 public:
     virtual ~Protocol();
 
     const String& name() const { return m_name; }
-    virtual OwnPtr<Download> start_download(PSClientConnection&, const URL&) = 0;
+    virtual OwnPtr<Download> start_download(ClientConnection&, const URL&) = 0;
 
     static Protocol* find_by_name(const String&);
 
@@ -47,3 +47,5 @@ protected:
 private:
     String m_name;
 };
+
+}

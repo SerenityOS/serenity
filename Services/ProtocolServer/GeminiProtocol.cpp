@@ -24,10 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGemini/GeminiRequest.h>
 #include <LibGemini/GeminiJob.h>
+#include <LibGemini/GeminiRequest.h>
 #include <ProtocolServer/GeminiDownload.h>
 #include <ProtocolServer/GeminiProtocol.h>
+
+namespace ProtocolServer {
 
 GeminiProtocol::GeminiProtocol()
     : Protocol("gemini")
@@ -38,7 +40,7 @@ GeminiProtocol::~GeminiProtocol()
 {
 }
 
-OwnPtr<Download> GeminiProtocol::start_download(PSClientConnection& client, const URL& url)
+OwnPtr<Download> GeminiProtocol::start_download(ClientConnection& client, const URL& url)
 {
     Gemini::GeminiRequest request;
     request.set_url(url);
@@ -46,4 +48,6 @@ OwnPtr<Download> GeminiProtocol::start_download(PSClientConnection& client, cons
     auto download = GeminiDownload::create_with_job({}, client, (Gemini::GeminiJob&)*job);
     job->start();
     return download;
+}
+
 }

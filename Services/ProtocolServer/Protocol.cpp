@@ -27,6 +27,8 @@
 #include <AK/HashMap.h>
 #include <ProtocolServer/Protocol.h>
 
+namespace ProtocolServer {
+
 static HashMap<String, Protocol*>& all_protocols()
 {
     static HashMap<String, Protocol*> map;
@@ -46,4 +48,6 @@ Protocol::Protocol(const String& name)
 Protocol::~Protocol()
 {
     ASSERT_NOT_REACHED();
+}
+
 }

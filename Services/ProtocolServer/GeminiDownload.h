@@ -28,18 +28,20 @@
 
 #include <AK/Badge.h>
 #include <LibCore/Forward.h>
-#include <LibGemini/GeminiJob.h>
+#include <LibGemini/Forward.h>
 #include <ProtocolServer/Download.h>
 
-class GeminiProtocol;
+namespace ProtocolServer {
 
 class GeminiDownload final : public Download {
 public:
     virtual ~GeminiDownload() override;
-    static NonnullOwnPtr<GeminiDownload> create_with_job(Badge<GeminiProtocol>, PSClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
+    static NonnullOwnPtr<GeminiDownload> create_with_job(Badge<GeminiProtocol>, ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
 
 private:
-    explicit GeminiDownload(PSClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
+    explicit GeminiDownload(ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
 
     NonnullRefPtr<Gemini::GeminiJob> m_job;
 };
+
+}

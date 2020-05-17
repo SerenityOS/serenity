@@ -24,11 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGemini/GeminiResponse.h>
 #include <LibGemini/GeminiJob.h>
+#include <LibGemini/GeminiResponse.h>
 #include <ProtocolServer/GeminiDownload.h>
 
-GeminiDownload::GeminiDownload(PSClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
+namespace ProtocolServer {
+
+GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
     : Download(client)
     , m_job(job)
 {
@@ -60,7 +62,9 @@ GeminiDownload::~GeminiDownload()
     m_job->shutdown();
 }
 
-NonnullOwnPtr<GeminiDownload> GeminiDownload::create_with_job(Badge<GeminiProtocol>, PSClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
+NonnullOwnPtr<GeminiDownload> GeminiDownload::create_with_job(Badge<GeminiProtocol>, ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
 {
     return adopt_own(*new GeminiDownload(client, move(job)));
+}
+
 }
