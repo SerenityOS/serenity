@@ -1373,6 +1373,10 @@ void Shell::cache_path()
         }
     }
 
+    // add shell builtins to the cache
+    for (const auto& builtin_name : builtin_names)
+        cached_path.append(escape_token(builtin_name));
+
     quick_sort(cached_path);
 }
 
