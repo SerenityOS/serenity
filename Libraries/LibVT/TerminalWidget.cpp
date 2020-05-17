@@ -260,8 +260,9 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 
     // Key event was not one of the above special cases,
     // attempt to treat it as a character...
-    char ch = !event.text().is_empty() ? event.text()[0] : 0;
-    if (ch) {
+    if (event.text().length() == 1) {
+        // 1 byte input == ASCII
+        char ch = !event.text().is_empty() ? event.text()[0] : 0;
         if (event.ctrl()) {
             if (ch >= 'a' && ch <= 'z') {
                 ch = ch - 'a' + 1;
@@ -285,6 +286,9 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         }
 
         write(m_ptm_fd, &ch, 1);
+    } else if (event.text().length() > 1) {
+        // 2+ byte input == Unicode
+        write(m_ptm_fd, event.text().characters(), event.text().length());
     }
 
     if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_Shift && event.key() != Key_Logo)
