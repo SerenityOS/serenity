@@ -255,4 +255,14 @@ int Font::width(const Utf8View& utf8) const
     return width;
 }
 
+int Font::width(const u32* codepoints, size_t length) const
+{
+    if (length == 0)
+        return 0;
+    int width = (length - 1) * glyph_spacing();
+    for (size_t i = 0; i < length; ++i)
+        width += glyph_or_emoji_width(codepoints[i]);
+    return width;
+}
+
 }
