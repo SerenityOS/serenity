@@ -297,7 +297,9 @@ Value ArrayPrototype::slice(Interpreter& interpreter)
     }
 
     ssize_t array_size = static_cast<ssize_t>(array->elements().size());
-    auto start_slice = interpreter.argument(0).to_i32();
+    auto start_slice = interpreter.argument(0).to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
     auto end_slice = array_size;
 
     if (start_slice > array_size)
@@ -307,8 +309,9 @@ Value ArrayPrototype::slice(Interpreter& interpreter)
         start_slice = end_slice + start_slice;
 
     if (interpreter.argument_count() >= 2) {
-        end_slice = interpreter.argument(1).to_i32();
-
+        end_slice = interpreter.argument(1).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
         if (end_slice < 0)
             end_slice = array_size + end_slice;
         else if (end_slice > array_size)
@@ -336,11 +339,11 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
 
     i32 from_index = 0;
     if (interpreter.argument_count() >= 2) {
-        from_index = interpreter.argument(1).to_number().to_i32();
-
+        from_index = interpreter.argument(1).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
         if (from_index >= array_size)
             return Value(-1);
-
         auto negative_min_index = ((array_size - 1) * -1);
         if (from_index < negative_min_index)
             from_index = 0;
@@ -390,11 +393,11 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
 
     i32 from_index = 0;
     if (interpreter.argument_count() >= 2) {
-        from_index = interpreter.argument(1).to_number().to_i32();
-
+        from_index = interpreter.argument(1).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
         if (from_index >= array_size)
             return Value(-1);
-
         auto negative_min_index = ((array_size - 1) * -1);
         if (from_index < negative_min_index)
             from_index = 0;
@@ -424,11 +427,11 @@ Value ArrayPrototype::includes(Interpreter& interpreter)
 
     i32 from_index = 0;
     if (interpreter.argument_count() >= 2) {
-        from_index = interpreter.argument(1).to_i32();
-
+        from_index = interpreter.argument(1).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
         if (from_index >= array_size)
             return Value(false);
-
         auto negative_min_index = ((array_size - 1) * -1);
         if (from_index < negative_min_index)
             from_index = 0;

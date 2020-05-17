@@ -90,17 +90,17 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
     auto& this_object = interpreter.this_value().as_object();
 
     String name = "Error";
-    auto object_name_property = this_object.get("name");
-    if (!object_name_property.is_empty() && !object_name_property.is_undefined()) {
-        name = object_name_property.to_string(interpreter);
+    auto name_property = this_object.get("name");
+    if (!name_property.is_empty() && !name_property.is_undefined()) {
+        name = name_property.to_string(interpreter);
         if (interpreter.exception())
             return {};
     }
 
     String message = "";
-    auto object_message_property = this_object.get("message");
-    if (!object_message_property.is_empty() && !object_message_property.is_undefined()) {
-        message = object_message_property.to_string(interpreter);
+    auto message_property = this_object.get("message");
+    if (!message_property.is_empty() && !message_property.is_undefined()) {
+        message = message_property.to_string(interpreter);
         if (interpreter.exception())
             return {};
     }

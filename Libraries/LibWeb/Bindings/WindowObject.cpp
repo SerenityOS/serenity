@@ -134,7 +134,10 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
         return {};
     if (!callback_object->is_function())
         return interpreter.throw_exception<JS::TypeError>("Not a function");
-    impl->set_interval(*static_cast<JS::Function*>(callback_object), arguments[1].to_i32());
+    auto interval = arguments[1].to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
+    impl->set_interval(*static_cast<JS::Function*>(callback_object), interval);
     return JS::js_undefined();
 }
 
@@ -153,8 +156,11 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
         return interpreter.throw_exception<JS::TypeError>("Not a function");
 
     i32 interval = 0;
-    if (interpreter.argument_count() >= 2)
-        interval = arguments[1].to_i32();
+    if (interpreter.argument_count() >= 2) {
+        interval = arguments[1].to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
 
     impl->set_timeout(*static_cast<JS::Function*>(callback_object), interval);
     return JS::js_undefined();
@@ -184,7 +190,10 @@ JS::Value WindowObject::cancel_animation_frame(JS::Interpreter& interpreter)
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() < 1)
         return {};
-    impl->cancel_animation_frame(arguments[0].to_i32());
+    auto id = arguments[0].to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
+    impl->cancel_animation_frame(id);
     return JS::js_undefined();
 }
 
