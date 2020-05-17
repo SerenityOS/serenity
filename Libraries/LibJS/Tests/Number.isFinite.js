@@ -1,6 +1,7 @@
 load("test-common.js");
 
 try {
+    assert(Number.isFinite !== isFinite);
     assert(Number.isFinite.length === 1);
 
     assert(Number.isFinite(0) === true);
