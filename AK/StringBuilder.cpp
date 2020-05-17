@@ -30,6 +30,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <AK/Utf32View.h>
 
 namespace AK {
 
@@ -110,6 +111,32 @@ void StringBuilder::clear()
 {
     m_buffer.clear();
     m_length = 0;
+}
+
+void StringBuilder::append(const Utf32View& utf32_view)
+{
+    for (size_t i = 0; i < utf32_view.length(); ++i) {
+        auto codepoint = utf32_view.codepoints()[i];
+        if (codepoint <= 0x7f) {
+            append((char)codepoint);
+        } else if (codepoint <= 0x07ff) {
+            append((char)(((codepoint >> 6) & 0x1f) | 0xc0));
+            append((char)(((codepoint >> 0) & 0x3f) | 0x80));
+        } else if (codepoint <= 0xffff) {
+            append((char)(((codepoint >> 12) & 0x0f) | 0xe0));
+            append((char)(((codepoint >> 6) & 0x3f) | 0x80));
+            append((char)(((codepoint >> 0) & 0x3f) | 0x80));
+        } else if (codepoint <= 0x10ffff) {
+            append((char)(((codepoint >> 18) & 0x07) | 0xf0));
+            append((char)(((codepoint >> 12) & 0x3f) | 0x80));
+            append((char)(((codepoint >> 6) & 0x3f) | 0x80));
+            append((char)(((codepoint >> 0) & 0x3f) | 0x80));
+        } else {
+            append(0xef);
+            append(0xbf);
+            append(0xbd);
+        }
+    }
 }
 
 }
