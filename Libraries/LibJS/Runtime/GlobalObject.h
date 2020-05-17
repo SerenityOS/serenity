@@ -58,6 +58,7 @@ private:
     static Value gc(Interpreter&);
     static Value is_nan(Interpreter&);
     static Value is_finite(Interpreter&);
+    static Value parse_float(Interpreter&);
 
     Shape* m_empty_object_shape { nullptr };
 
