@@ -36,8 +36,8 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
-#include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <math.h>
@@ -96,7 +96,7 @@ String Value::to_string_without_side_effects() const
     return String::format("[object %s]", as_object().class_name());
 }
 
-PrimitiveString* Value::to_primitive_string(Interpreter & interpreter)
+PrimitiveString* Value::to_primitive_string(Interpreter& interpreter)
 {
     if (is_string())
         return &as_string();
@@ -202,7 +202,7 @@ Object* Value::to_object(Interpreter& interpreter) const
     ASSERT_NOT_REACHED();
 }
 
-Value Value::to_number() const
+Value Value::to_number(Interpreter& interpreter) const
 {
     switch (m_type) {
     case Type::Empty:
@@ -234,58 +234,110 @@ Value Value::to_number() const
         // FIXME: Get access to the interpreter and throw a TypeError
         ASSERT_NOT_REACHED();
     case Type::Object:
-        return m_value.as_object->to_primitive(Object::PreferredType::Number).to_number();
+        auto primitive = m_value.as_object->to_primitive(Object::PreferredType::Number);
+        if (interpreter.exception())
+            return {};
+        return primitive.to_number(interpreter);
     }
 
     ASSERT_NOT_REACHED();
 }
 
-i32 Value::to_i32() const
+double Value::to_double(Interpreter& interpreter) const
 {
-    return static_cast<i32>(to_number().as_double());
+    auto number = to_number(interpreter);
+    if (interpreter.exception())
+        return 0;
+    return number.as_double();
 }
 
-double Value::to_double() const
+i32 Value::to_i32() const
 {
-    return to_number().as_double();
+    return static_cast<i32>(as_double());
+}
+
+i32 Value::to_i32(Interpreter& interpreter) const
+{
+    auto number = to_number(interpreter);
+    if (interpreter.exception())
+        return 0;
+    return number.to_i32();
 }
 
 size_t Value::to_size_t() const
 {
+    ASSERT(type() == Type::Number);
+    if (is_nan() || as_double() <= 0)
+        return 0;
+    return min((double)(i32)as_double(), MAX_ARRAY_LIKE_INDEX);
+}
+
+size_t Value::to_size_t(Interpreter& interpreter) const
+{
     if (is_empty())
         return 0;
-    auto number = to_number();
-    if (number.is_nan() || number.as_double() <= 0)
+    auto number = to_number(interpreter);
+    if (interpreter.exception())
         return 0;
-    return min((double)number.to_i32(), MAX_ARRAY_LIKE_INDEX);
+    return number.to_size_t();
 }
 
-Value greater_than(Interpreter&, Value lhs, Value rhs)
+Value greater_than(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value(lhs.to_number().as_double() > rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(lhs_number.as_double() > rhs_number.as_double());
 }
 
-Value greater_than_equals(Interpreter&, Value lhs, Value rhs)
+Value greater_than_equals(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value(lhs.to_number().as_double() >= rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(lhs_number.as_double() >= rhs_number.as_double());
 }
 
-Value less_than(Interpreter&, Value lhs, Value rhs)
+Value less_than(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value(lhs.to_number().as_double() < rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(lhs_number.as_double() < rhs_number.as_double());
 }
 
-Value less_than_equals(Interpreter&, Value lhs, Value rhs)
+Value less_than_equals(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value(lhs.to_number().as_double() <= rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(lhs_number.as_double() <= rhs_number.as_double());
 }
 
-Value bitwise_and(Interpreter&, Value lhs, Value rhs)
+Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value((i32)lhs.to_number().as_double() & (i32)rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value((i32)lhs_number.as_double() & (i32)rhs_number.as_double());
 }
 
-Value bitwise_or(Interpreter&, Value lhs, Value rhs)
+Value bitwise_or(Interpreter& interpreter, Value lhs, Value rhs)
 {
     bool lhs_invalid = lhs.is_undefined() || lhs.is_null() || lhs.is_nan() || lhs.is_infinity();
     bool rhs_invalid = rhs.is_undefined() || rhs.is_null() || rhs.is_nan() || rhs.is_infinity();
@@ -294,64 +346,94 @@ Value bitwise_or(Interpreter&, Value lhs, Value rhs)
         return Value(0);
 
     if (lhs_invalid || rhs_invalid)
-        return lhs_invalid ? rhs.to_number() : lhs.to_number();
+        return lhs_invalid ? rhs.to_number(interpreter) : lhs.to_number(interpreter);
 
     if (!rhs.is_number() && !lhs.is_number())
         return Value(0);
 
-    return Value((i32)lhs.to_number().as_double() | (i32)rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value((i32)lhs_number.as_double() | (i32)rhs_number.as_double());
 }
 
-Value bitwise_xor(Interpreter&, Value lhs, Value rhs)
+Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value((i32)lhs.to_number().as_double() ^ (i32)rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value((i32)lhs_number.as_double() ^ (i32)rhs_number.as_double());
 }
 
-Value bitwise_not(Interpreter&, Value lhs)
+Value bitwise_not(Interpreter& interpreter, Value lhs)
 {
-    return Value(~(i32)lhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(~(i32)lhs_number.as_double());
 }
 
-Value unary_plus(Interpreter&, Value lhs)
+Value unary_plus(Interpreter& interpreter, Value lhs)
 {
-    return lhs.to_number();
+    return lhs.to_number(interpreter);
 }
 
-Value unary_minus(Interpreter&, Value lhs)
+Value unary_minus(Interpreter& interpreter, Value lhs)
 {
-    if (lhs.to_number().is_nan())
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (lhs_number.is_nan())
         return js_nan();
-    return Value(-lhs.to_number().as_double());
+    return Value(-lhs_number.as_double());
 }
 
-Value left_shift(Interpreter&, Value lhs, Value rhs)
+Value left_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number();
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
     if (!lhs_number.is_finite_number())
         return Value(0);
-    auto rhs_number = rhs.to_number();
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
     if (!rhs_number.is_finite_number())
         return lhs_number;
     return Value((i32)lhs_number.as_double() << (i32)rhs_number.as_double());
 }
 
-Value right_shift(Interpreter&, Value lhs, Value rhs)
+Value right_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number();
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
     if (!lhs_number.is_finite_number())
         return Value(0);
-    auto rhs_number = rhs.to_number();
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
     if (!rhs_number.is_finite_number())
         return lhs_number;
     return Value((i32)lhs_number.as_double() >> (i32)rhs_number.as_double());
 }
 
-Value unsigned_right_shift(Interpreter&, Value lhs, Value rhs)
+Value unsigned_right_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number();
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
     if (!lhs_number.is_finite_number())
         return Value(0);
-    auto rhs_number = rhs.to_number();
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
     if (!rhs_number.is_finite_number())
         return lhs_number;
     return Value((unsigned)lhs_number.as_double() >> (i32)rhs_number.as_double());
@@ -379,50 +461,82 @@ Value add(Interpreter& interpreter, Value lhs, Value rhs)
         return js_string(interpreter, builder.to_string());
     }
 
-    return Value(lhs_primitive.to_number().as_double() + rhs_primitive.to_number().as_double());
+    auto lhs_number = lhs_primitive.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs_primitive.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(lhs_number.as_double() + rhs_number.as_double());
 }
 
-Value sub(Interpreter&, Value lhs, Value rhs)
+Value sub(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value(lhs.to_number().as_double() - rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(lhs_number.as_double() - rhs_number.as_double());
 }
 
-Value mul(Interpreter&, Value lhs, Value rhs)
+Value mul(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value(lhs.to_number().as_double() * rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(lhs_number.as_double() * rhs_number.as_double());
 }
 
-Value div(Interpreter&, Value lhs, Value rhs)
+Value div(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value(lhs.to_number().as_double() / rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(lhs_number.as_double() / rhs_number.as_double());
 }
 
-Value mod(Interpreter&, Value lhs, Value rhs)
+Value mod(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    if (lhs.to_number().is_nan() || rhs.to_number().is_nan())
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (lhs_number.is_nan() || rhs_number.is_nan())
         return js_nan();
-
-    double index = lhs.to_number().as_double();
-    double period = rhs.to_number().as_double();
-    double trunc = (double)(i32)(index / period);
-
+    auto index = lhs_number.as_double();
+    auto period = rhs_number.as_double();
+    auto trunc = (double)(i32)(index / period);
     return Value(index - trunc * period);
 }
 
-Value exp(Interpreter&, Value lhs, Value rhs)
+Value exp(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    return Value(pow(lhs.to_number().as_double(), rhs.to_number().as_double()));
+    auto lhs_number = lhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto rhs_number = rhs.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(pow(lhs_number.as_double(), rhs_number.as_double()));
 }
 
 Value in(Interpreter& interpreter, Value lhs, Value rhs)
 {
     if (!rhs.is_object())
         return interpreter.throw_exception<TypeError>("'in' operator must be used on object");
-
     auto lhs_string = lhs.to_string(interpreter);
     if (interpreter.exception())
         return {};
-
     return Value(!rhs.as_object().get(lhs_string).is_empty());
 }
 
@@ -430,11 +544,9 @@ Value instance_of(Interpreter&, Value lhs, Value rhs)
 {
     if (!lhs.is_object() || !rhs.is_object())
         return Value(false);
-
     auto constructor_prototype_property = rhs.as_object().get("prototype");
     if (!constructor_prototype_property.is_object())
         return Value(false);
-
     return Value(lhs.as_object().has_prototype(&constructor_prototype_property.as_object()));
 }
 
@@ -455,7 +567,7 @@ bool same_value(Interpreter& interpreter, Value lhs, Value rhs)
             return false;
         if (lhs.is_negative_zero() && rhs.is_positive_zero())
             return false;
-        return lhs.to_double() == rhs.to_double();
+        return lhs.as_double() == rhs.as_double();
     }
 
     return same_value_non_numeric(interpreter, lhs, rhs);
@@ -471,7 +583,7 @@ bool same_value_zero(Interpreter& interpreter, Value lhs, Value rhs)
             return true;
         if ((lhs.is_positive_zero() || lhs.is_negative_zero()) && (rhs.is_positive_zero() || rhs.is_negative_zero()))
             return true;
-        return lhs.to_double() == rhs.to_double();
+        return lhs.as_double() == rhs.as_double();
     }
 
     return same_value_non_numeric(interpreter, lhs, rhs);
@@ -509,7 +621,7 @@ bool strict_eq(Interpreter& interpreter, Value lhs, Value rhs)
     if (lhs.is_number()) {
         if (lhs.is_nan() || rhs.is_nan())
             return false;
-        if (lhs.to_double() == rhs.to_double())
+        if (lhs.as_double() == rhs.as_double())
             return true;
         if ((lhs.is_positive_zero() || lhs.is_negative_zero()) && (rhs.is_positive_zero() || rhs.is_negative_zero()))
             return true;
@@ -528,16 +640,16 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
         return true;
 
     if (lhs.is_number() && rhs.is_string())
-        return abstract_eq(interpreter, lhs, rhs.to_number());
+        return abstract_eq(interpreter, lhs, rhs.to_number(interpreter));
 
     if (lhs.is_string() && rhs.is_number())
-        return abstract_eq(interpreter, lhs.to_number(), rhs);
+        return abstract_eq(interpreter, lhs.to_number(interpreter), rhs);
 
     if (lhs.is_boolean())
-        return abstract_eq(interpreter, lhs.to_number(), rhs);
+        return abstract_eq(interpreter, lhs.to_number(interpreter), rhs);
 
     if (rhs.is_boolean())
-        return abstract_eq(interpreter, lhs, rhs.to_number());
+        return abstract_eq(interpreter, lhs, rhs.to_number(interpreter));
 
     if ((lhs.is_string() || lhs.is_number() || lhs.is_symbol()) && rhs.is_object())
         return abstract_eq(interpreter, lhs, rhs.to_primitive(interpreter));

@@ -941,11 +941,12 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
     auto reference = m_argument->to_reference(interpreter);
     if (interpreter.exception())
         return {};
-
     auto old_value = reference.get(interpreter);
     if (interpreter.exception())
         return {};
-    old_value = old_value.to_number();
+    old_value = old_value.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
 
     int op_result = 0;
     switch (m_op) {

@@ -137,12 +137,18 @@ Value GlobalObject::gc(Interpreter& interpreter)
 
 Value GlobalObject::is_nan(Interpreter& interpreter)
 {
-    return Value(interpreter.argument(0).to_number().is_nan());
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(number.is_nan());
 }
 
 Value GlobalObject::is_finite(Interpreter& interpreter)
 {
-    return Value(interpreter.argument(0).to_number().is_finite_number());
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(number.is_finite_number());
 }
 
 Value GlobalObject::parse_float(Interpreter& interpreter)
@@ -151,7 +157,8 @@ Value GlobalObject::parse_float(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     for (size_t length = string.length(); length > 0; --length) {
-        auto number = Value(js_string(interpreter, string.substring(0, length))).to_number();
+        // This can't throw, so no exception check is fine.
+        auto number = Value(js_string(interpreter, string.substring(0, length))).to_number(interpreter);
         if (!number.is_nan())
             return number;
     }

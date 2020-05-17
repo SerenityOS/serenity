@@ -64,16 +64,17 @@ Value NumberConstructor::call(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
         return Value(0);
-    return interpreter.argument(0).to_number();
+    return interpreter.argument(0).to_number(interpreter);
 }
 
 Value NumberConstructor::construct(Interpreter& interpreter)
 {
-    double number;
-    if (!interpreter.argument_count())
-        number = 0;
-    else
-        number = interpreter.argument(0).to_number().as_double();
+    double number = 0;
+    if (interpreter.argument_count()) {
+        number = interpreter.argument(0).to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
     return NumberObject::create(interpreter.global_object(), number);
 }
 
@@ -96,7 +97,7 @@ Value NumberConstructor::is_safe_integer(Interpreter& interpreter)
 {
     if (!interpreter.argument(0).is_number())
         return Value(false);
-    auto value = interpreter.argument(0).to_number().as_double();
+    auto value = interpreter.argument(0).as_double();
     return Value((int64_t)value == value && value >= MIN_SAFE_INTEGER && value <= MAX_SAFE_INTEGER);
 }
 

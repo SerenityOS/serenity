@@ -91,8 +91,21 @@ JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interprete
     if (!impl)
         return {};
     auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 4)
-        impl->fill_rect(arguments[0].to_double(), arguments[1].to_double(), arguments[2].to_double(), arguments[3].to_double());
+    if (arguments.size() >= 4) {
+        auto x = arguments[0].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto y = arguments[1].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto width = arguments[2].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto height = arguments[3].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        impl->fill_rect(x, y, width, height);
+    }
     return JS::js_undefined();
 }
 
@@ -102,8 +115,22 @@ JS::Value CanvasRenderingContext2DWrapper::stroke_rect(JS::Interpreter& interpre
     if (!impl)
         return {};
     auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 4)
-        impl->stroke_rect(arguments[0].to_double(), arguments[1].to_double(), arguments[2].to_double(), arguments[3].to_double());
+    if (arguments.size() >= 4) {
+
+        auto x = arguments[0].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto y = arguments[1].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto width = arguments[2].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto height = arguments[3].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        impl->stroke_rect(x, y, width, height);
+    }
     return JS::js_undefined();
 }
 
@@ -122,9 +149,12 @@ JS::Value CanvasRenderingContext2DWrapper::draw_image(JS::Interpreter& interpret
     if (StringView(image_argument->class_name()) != "HTMLImageElementWrapper")
         return interpreter.throw_exception<JS::TypeError>(String::format("Image is not an HTMLImageElement, it's an %s", image_argument->class_name()));
 
-    auto x = arguments[1].to_double();
-    auto y = arguments[2].to_double();
-
+    auto x = arguments[1].to_double(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto y = arguments[2].to_double(interpreter);
+    if (interpreter.exception())
+        return {};
     impl->draw_image(static_cast<const HTMLImageElementWrapper&>(*image_argument).node(), x, y);
     return JS::js_undefined();
 }
@@ -135,8 +165,15 @@ JS::Value CanvasRenderingContext2DWrapper::scale(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 2)
-        impl->scale(arguments[0].to_double(), arguments[1].to_double());
+    if (arguments.size() >= 2) {
+        auto sx = arguments[0].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto sy = arguments[1].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        impl->scale(sx, sy);
+    }
     return JS::js_undefined();
 }
 
@@ -146,8 +183,15 @@ JS::Value CanvasRenderingContext2DWrapper::translate(JS::Interpreter& interprete
     if (!impl)
         return {};
     auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 2)
-        impl->translate(arguments[0].to_double(), arguments[1].to_double());
+    if (arguments.size() >= 2) {
+        auto tx = arguments[0].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto ty = arguments[1].to_double(interpreter);
+        if (interpreter.exception())
+            return {};
+        impl->translate(tx, ty);
+    }
     return JS::js_undefined();
 }
 
@@ -161,12 +205,13 @@ JS::Value CanvasRenderingContext2DWrapper::fill_style_getter(JS::Interpreter& in
 
 void CanvasRenderingContext2DWrapper::fill_style_setter(JS::Interpreter& interpreter, JS::Value value)
 {
-    if (auto* impl = impl_from(interpreter)) {
-        auto string = value.to_string(interpreter);
-        if (interpreter.exception())
-            return;
-        impl->set_fill_style(string);
-    }
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return;
+    auto string = value.to_string(interpreter);
+    if (interpreter.exception())
+        return;
+    impl->set_fill_style(string);
 }
 
 JS::Value CanvasRenderingContext2DWrapper::stroke_style_getter(JS::Interpreter& interpreter)
@@ -179,12 +224,13 @@ JS::Value CanvasRenderingContext2DWrapper::stroke_style_getter(JS::Interpreter& 
 
 void CanvasRenderingContext2DWrapper::stroke_style_setter(JS::Interpreter& interpreter, JS::Value value)
 {
-    if (auto* impl = impl_from(interpreter)){
-        auto string = value.to_string(interpreter);
-        if (interpreter.exception())
-            return;
-        impl->set_stroke_style(string);
-    }
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return;
+    auto string = value.to_string(interpreter);
+    if (interpreter.exception())
+        return;
+    impl->set_stroke_style(string);
 }
 
 JS::Value CanvasRenderingContext2DWrapper::line_width_getter(JS::Interpreter& interpreter)
@@ -197,8 +243,13 @@ JS::Value CanvasRenderingContext2DWrapper::line_width_getter(JS::Interpreter& in
 
 void CanvasRenderingContext2DWrapper::line_width_setter(JS::Interpreter& interpreter, JS::Value value)
 {
-    if (auto* impl = impl_from(interpreter))
-        impl->set_line_width(value.to_double());
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return;
+    auto line_width = value.to_double(interpreter);
+    if (interpreter.exception())
+        return;
+    impl->set_line_width(line_width);
 }
 
 JS::Value CanvasRenderingContext2DWrapper::begin_path(JS::Interpreter& interpreter)
@@ -260,8 +311,12 @@ JS::Value CanvasRenderingContext2DWrapper::move_to(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    double x = interpreter.argument(0).to_double();
-    double y = interpreter.argument(1).to_double();
+    auto x = interpreter.argument(0).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto y = interpreter.argument(1).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
     impl->move_to(x, y);
     return JS::js_undefined();
 }
@@ -271,8 +326,12 @@ JS::Value CanvasRenderingContext2DWrapper::line_to(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    double x = interpreter.argument(0).to_double();
-    double y = interpreter.argument(1).to_double();
+    auto x = interpreter.argument(0).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto y = interpreter.argument(1).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
     impl->line_to(x, y);
     return JS::js_undefined();
 }
@@ -282,10 +341,18 @@ JS::Value CanvasRenderingContext2DWrapper::quadratic_curve_to(JS::Interpreter& i
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    double cx = interpreter.argument(0).to_double();
-    double cy = interpreter.argument(1).to_double();
-    double x = interpreter.argument(2).to_double();
-    double y = interpreter.argument(3).to_double();
+    auto cx = interpreter.argument(0).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto cy = interpreter.argument(1).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto x = interpreter.argument(2).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto y = interpreter.argument(3).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
     impl->quadratic_curve_to(cx, cy, x, y);
     return JS::js_undefined();
 }
@@ -295,8 +362,12 @@ JS::Value CanvasRenderingContext2DWrapper::create_image_data(JS::Interpreter& in
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    i32 width = interpreter.argument(0).to_i32();
-    i32 height = interpreter.argument(1).to_i32();
+    auto width = interpreter.argument(0).to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto height = interpreter.argument(1).to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
     auto image_data = impl->create_image_data(interpreter.global_object(), width, height);
     return wrap(interpreter.heap(), *image_data);
 }
@@ -316,8 +387,12 @@ JS::Value CanvasRenderingContext2DWrapper::put_image_data(JS::Interpreter& inter
     }
 
     auto& image_data = static_cast<ImageDataWrapper*>(image_data_object)->impl();
-    auto x = interpreter.argument(1).to_double();
-    auto y = interpreter.argument(2).to_double();
+    auto x = interpreter.argument(1).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto y = interpreter.argument(2).to_double(interpreter);
+    if (interpreter.exception())
+        return {};
     impl->put_image_data(image_data, x, y);
     return JS::js_undefined();
 }

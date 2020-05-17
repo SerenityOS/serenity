@@ -94,8 +94,11 @@ Value StringPrototype::char_at(Interpreter& interpreter)
     if (string.is_null())
         return {};
     i32 index = 0;
-    if (interpreter.argument_count())
-        index = interpreter.argument(0).to_i32();
+    if (interpreter.argument_count()) {
+        index = interpreter.argument(0).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
     if (index < 0 || index >= static_cast<i32>(string.length()))
         return js_string(interpreter, String::empty());
     return js_string(interpreter, string.substring(index, 1));
@@ -108,7 +111,9 @@ Value StringPrototype::repeat(Interpreter& interpreter)
         return {};
     if (!interpreter.argument_count())
         return js_string(interpreter, String::empty());
-    auto count_value = interpreter.argument(0).to_number();
+    auto count_value = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
     if (count_value.as_double() < 0)
         return interpreter.throw_exception<RangeError>("repeat count must be a positive number");
     if (count_value.is_infinity())
@@ -134,9 +139,11 @@ Value StringPrototype::starts_with(Interpreter& interpreter)
     auto search_string_length = search_string.length();
     size_t start = 0;
     if (interpreter.argument_count() > 1) {
-        auto number = interpreter.argument(1).to_number();
+        auto number = interpreter.argument(1).to_number(interpreter);
+        if (interpreter.exception())
+            return {};
         if (!number.is_nan())
-            start = min(number.to_size_t(), string_length);
+            start = min(number.to_size_t(interpreter), string_length);
     }
     if (start + search_string_length > string_length)
         return Value(false);
@@ -195,7 +202,9 @@ enum class PadPlacement {
 
 static Value pad_string(Interpreter& interpreter, const String& string, PadPlacement placement)
 {
-    auto max_length = interpreter.argument(0).to_size_t();
+    auto max_length = interpreter.argument(0).to_size_t(interpreter);
+    if (interpreter.exception())
+        return {};
     if (max_length <= string.length())
         return js_string(interpreter, string);
 
@@ -285,11 +294,15 @@ Value StringPrototype::substring(Interpreter& interpreter)
         return js_string(interpreter, string);
 
     auto string_length = string.length();
-    auto index_start = min(interpreter.argument(0).to_size_t(), string_length);
+    auto index_start = min(interpreter.argument(0).to_size_t(interpreter), string_length);
+    if (interpreter.exception())
+        return {};
     auto index_end = string_length;
-
-    if (interpreter.argument_count() >= 2)
-        index_end = min(interpreter.argument(1).to_size_t(), string_length);
+    if (interpreter.argument_count() >= 2) {
+        index_end = min(interpreter.argument(1).to_size_t(interpreter), string_length);
+        if (interpreter.exception())
+            return {};
+    }
 
     if (index_start == index_end)
         return js_string(interpreter, String(""));
@@ -318,7 +331,9 @@ Value StringPrototype::includes(Interpreter& interpreter)
 
     size_t position = 0;
     if (interpreter.argument_count() >= 2) {
-        position = interpreter.argument(1).to_size_t();
+        position = interpreter.argument(1).to_size_t(interpreter);
+        if (interpreter.exception())
+            return {};
         if (position >= string.length())
             return Value(false);
     }
@@ -341,7 +356,9 @@ Value StringPrototype::slice(Interpreter& interpreter)
         return js_string(interpreter, string);
 
     auto string_length = static_cast<i32>(string.length());
-    auto index_start = interpreter.argument(0).to_i32();
+    auto index_start = interpreter.argument(0).to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
     auto index_end = string_length;
 
     auto negative_min_index = -(string_length - 1);
@@ -351,7 +368,9 @@ Value StringPrototype::slice(Interpreter& interpreter)
         index_start = string_length + index_start;
 
     if (interpreter.argument_count() >= 2) {
-        index_end = interpreter.argument(1).to_i32();
+        index_end = interpreter.argument(1).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
 
         if (index_end < negative_min_index)
             return js_string(interpreter, String::empty());
@@ -387,8 +406,11 @@ Value StringPrototype::last_index_of(Interpreter& interpreter)
 
     auto max_index = string.length() - search_string.length();
     auto from_index = max_index;
-    if (interpreter.argument_count() >= 2)
-        from_index = min(interpreter.argument(1).to_size_t(), max_index);
+    if (interpreter.argument_count() >= 2) {
+        from_index = min(interpreter.argument(1).to_size_t(interpreter), max_index);
+        if (interpreter.exception())
+            return {};
+    }
 
     for (i32 i = from_index; i >= 0; --i) {
         auto part_view = string.substring_view(i, search_string.length());

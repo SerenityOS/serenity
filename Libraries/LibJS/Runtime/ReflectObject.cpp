@@ -64,7 +64,9 @@ static void prepare_arguments_list(Interpreter& interpreter, Value value, Marked
     auto length_property = arguments_list.get("length");
     if (interpreter.exception())
         return;
-    auto length = length_property.to_size_t();
+    auto length = length_property.to_size_t(interpreter);
+    if (interpreter.exception())
+        return;
     for (size_t i = 0; i < length; ++i) {
         auto element = arguments_list.get(String::number(i));
         if (interpreter.exception())
@@ -156,8 +158,11 @@ Value ReflectObject::delete_property(Interpreter& interpreter)
     auto property_name = PropertyName(property_key.to_string(interpreter));
     if (interpreter.exception())
         return {};
-    if (property_key.to_number().is_finite_number()) {
-        auto property_key_as_double = property_key.to_double();
+    auto property_key_number = property_key.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (property_key_number.is_finite_number()) {
+        auto property_key_as_double = property_key_number.as_double();
         if (property_key_as_double >= 0 && (i32)property_key_as_double == property_key_as_double)
             property_name = PropertyName(property_key_as_double);
     }

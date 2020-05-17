@@ -328,9 +328,10 @@ JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
         exit(0);
-    int exit_code = interpreter.argument(0).to_number().as_double();
-    exit(exit_code);
-    return JS::js_undefined();
+    auto exit_code = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    exit(exit_code.as_double());
 }
 
 JS::Value ReplObject::repl_help(JS::Interpreter&)

@@ -188,11 +188,13 @@ public:
     PrimitiveString* to_primitive_string(Interpreter&);
     Value to_primitive(Interpreter&) const;
     Object* to_object(Interpreter&) const;
-    bool to_boolean() const;
-    Value to_number() const;
+    Value to_number(Interpreter&) const;
+    double to_double(Interpreter&) const;
     i32 to_i32() const;
-    double to_double() const;
+    i32 to_i32(Interpreter&) const;
     size_t to_size_t() const;
+    size_t to_size_t(Interpreter&) const;
+    bool to_boolean() const;
 
     Value value_or(Value fallback) const
     {
