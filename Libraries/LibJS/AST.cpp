@@ -96,7 +96,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         auto object_value = member_expression.object().execute(interpreter);
         if (interpreter.exception())
             return {};
-        auto* this_value = object_value.to_object(interpreter.heap());
+        auto* this_value = object_value.to_object(interpreter);
         if (interpreter.exception())
             return {};
         auto callee = this_value->get(member_expression.computed_property_name(interpreter)).value_or(js_undefined());
@@ -431,7 +431,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter) const
     auto object_value = m_object->execute(interpreter);
     if (object_value.is_empty())
         return {};
-    auto* object = object_value.to_object(interpreter.heap());
+    auto* object = object_value.to_object(interpreter);
     if (!object)
         return {};
     auto property_name = computed_property_name(interpreter);
@@ -452,7 +452,7 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         ASSERT(!reference.is_local_variable());
         if (reference.is_global_variable())
             return interpreter.global_object().delete_property(reference.name());
-        auto* base_object = reference.base().to_object(interpreter.heap());
+        auto* base_object = reference.base().to_object(interpreter);
         if (!base_object)
             return {};
         return base_object->delete_property(reference.name());
@@ -1213,7 +1213,7 @@ Value MemberExpression::execute(Interpreter& interpreter) const
     auto object_value = m_object->execute(interpreter);
     if (interpreter.exception())
         return {};
-    auto* object_result = object_value.to_object(interpreter.heap());
+    auto* object_result = object_value.to_object(interpreter);
     if (interpreter.exception())
         return {};
     return object_result->get(computed_property_name(interpreter)).value_or(js_undefined());

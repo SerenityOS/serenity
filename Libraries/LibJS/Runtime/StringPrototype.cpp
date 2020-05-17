@@ -41,7 +41,7 @@ namespace JS {
 
 static StringObject* string_object_from(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return nullptr;
     if (!this_object->is_string_object()) {
@@ -53,7 +53,7 @@ static StringObject* string_object_from(Interpreter& interpreter)
 
 static String string_from(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     return Value(this_object).to_string(interpreter);

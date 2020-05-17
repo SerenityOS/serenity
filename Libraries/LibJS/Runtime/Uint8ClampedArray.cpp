@@ -57,7 +57,7 @@ Uint8ClampedArray::~Uint8ClampedArray()
 
 Value Uint8ClampedArray::length_getter(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     if (StringView(this_object->class_name()) != "Uint8ClampedArray")

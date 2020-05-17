@@ -58,7 +58,7 @@ const Element& ElementWrapper::node() const
 
 static Element* impl_from(JS::Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return nullptr;
     // FIXME: Verify that it's an ElementWrapper somehow!

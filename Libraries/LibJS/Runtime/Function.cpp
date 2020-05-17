@@ -60,7 +60,7 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
             // FIXME: Null or undefined should be passed through in strict mode.
             return &interpreter().global_object();
         default:
-            return bound_this_value.to_object(interpreter().heap());
+            return bound_this_value.to_object(interpreter());
         }
     }();
 

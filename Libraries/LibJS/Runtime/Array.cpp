@@ -51,7 +51,7 @@ Array::~Array()
 
 Array* array_from(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_array()) {

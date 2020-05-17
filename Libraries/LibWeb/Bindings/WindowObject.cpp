@@ -80,7 +80,7 @@ void WindowObject::visit_children(Visitor& visitor)
 
 static Window* impl_from(JS::Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object) {
         ASSERT_NOT_REACHED();
         return nullptr;
@@ -129,7 +129,7 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() < 2)
         return {};
-    auto* callback_object = arguments[0].to_object(interpreter.heap());
+    auto* callback_object = arguments[0].to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
@@ -146,7 +146,7 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() < 1)
         return {};
-    auto* callback_object = arguments[0].to_object(interpreter.heap());
+    auto* callback_object = arguments[0].to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
@@ -168,7 +168,7 @@ JS::Value WindowObject::request_animation_frame(JS::Interpreter& interpreter)
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() < 1)
         return {};
-    auto* callback_object = arguments[0].to_object(interpreter.heap());
+    auto* callback_object = arguments[0].to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())

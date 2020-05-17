@@ -186,14 +186,13 @@ public:
 
     String to_string(Interpreter&) const;
     PrimitiveString* to_primitive_string(Interpreter&);
+    Value to_primitive(Interpreter&) const;
+    Object* to_object(Interpreter&) const;
     bool to_boolean() const;
     Value to_number() const;
     i32 to_i32() const;
     double to_double() const;
     size_t to_size_t() const;
-    Value to_primitive(Interpreter&) const;
-
-    Object* to_object(Heap&) const;
 
     Value value_or(Value fallback) const
     {

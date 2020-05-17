@@ -62,7 +62,7 @@ const HTMLCanvasElement& HTMLCanvasElementWrapper::node() const
 
 static HTMLCanvasElement* impl_from(JS::Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return nullptr;
     // FIXME: Verify that it's a HTMLCanvasElementWrapper somehow!

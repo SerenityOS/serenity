@@ -71,7 +71,7 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
         return {};
-    auto* object = interpreter.argument(0).to_object(interpreter.heap());
+    auto* object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
     auto* result = Array::create(interpreter.global_object());
@@ -90,7 +90,7 @@ Value ObjectConstructor::get_prototype_of(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
         return {};
-    auto* object = interpreter.argument(0).to_object(interpreter.heap());
+    auto* object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
     return object->prototype();
@@ -100,7 +100,7 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 {
     if (interpreter.argument_count() < 2)
         return {};
-    auto* object = interpreter.argument(0).to_object(interpreter.heap());
+    auto* object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
     object->set_prototype(&const_cast<Object&>(interpreter.argument(1).as_object()));
@@ -109,7 +109,7 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 
 Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
 {
-    auto* object = interpreter.argument(0).to_object(interpreter.heap());
+    auto* object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
     auto property_key = interpreter.argument(1).to_string(interpreter);
@@ -143,7 +143,7 @@ Value ObjectConstructor::keys(Interpreter& interpreter)
     if (!interpreter.argument_count())
         return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
 
-    auto* obj_arg = interpreter.argument(0).to_object(interpreter.heap());
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
 
@@ -155,7 +155,7 @@ Value ObjectConstructor::values(Interpreter& interpreter)
     if (!interpreter.argument_count())
         return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
 
-    auto* obj_arg = interpreter.argument(0).to_object(interpreter.heap());
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
 
@@ -167,7 +167,7 @@ Value ObjectConstructor::entries(Interpreter& interpreter)
     if (!interpreter.argument_count())
         return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
 
-    auto* obj_arg = interpreter.argument(0).to_object(interpreter.heap());
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
 
