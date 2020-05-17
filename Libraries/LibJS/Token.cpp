@@ -27,6 +27,7 @@
 #include "Token.h"
 #include <AK/Assertions.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf32View.h>
 #include <ctype.h>
 
 namespace JS {
@@ -72,12 +73,25 @@ double Token::double_value() const
     return strtod(value_string.characters(), nullptr);
 }
 
-String Token::string_value() const
+static u32 hex2int(char x)
+{
+    ASSERT(isxdigit(x));
+    if (x >= '0' && x <= '9')
+        return x - '0';
+    return 10u + (tolower(x) - 'a');
+}
+
+String Token::string_value(StringValueStatus& status) const
 {
     ASSERT(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteralString);
     auto is_template = type() == TokenType::TemplateLiteralString;
 
     auto offset = type() == TokenType::TemplateLiteralString ? 0 : 1;
+
+    auto encoding_failure = [&status](StringValueStatus parse_status) -> String {
+        status = parse_status;
+        return {};
+    };
 
     StringBuilder builder;
     for (size_t i = offset; i < m_value.length() - offset; ++i) {
@@ -114,14 +128,62 @@ String Token::string_value() const
             case '\\':
                 builder.append('\\');
                 break;
+            case 'x': {
+                if (i + 2 >= m_value.length() - offset)
+                    return encoding_failure(StringValueStatus::MalformedHexEscape);
+
+                auto digit1 = m_value[++i];
+                auto digit2 = m_value[++i];
+                if (!isxdigit(digit1) || !isxdigit(digit2))
+                    return encoding_failure(StringValueStatus::MalformedHexEscape);
+                builder.append(static_cast<char>(hex2int(digit1) * 16 + hex2int(digit2)));
+                break;
+            }
+            case 'u': {
+                if (i + 1 >= m_value.length() - offset)
+                    return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+                u32 code_point = m_value[++i];
+
+                if (code_point == '{') {
+                    code_point = 0;
+                    do {
+                        if (i + 1 >= m_value.length() - offset)
+                            return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+
+                        auto ch = m_value[++i];
+                        if (!isxdigit(ch))
+                            return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+
+                        auto new_code_point = (code_point << 4u) | hex2int(ch);
+                        if (new_code_point < code_point)
+                            return encoding_failure(StringValueStatus::UnicodeEscapeOverflow);
+                        code_point = new_code_point;
+                    } while (m_value[i + 1] != '}');
+                    ++i;
+                } else {
+                    if (i + 3 >= m_value.length() - offset || !isxdigit(code_point))
+                        return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+
+                    code_point = hex2int(code_point);
+                    for (int j = 0; j < 3; ++j) {
+                        auto ch = m_value[++i];
+                        if (!isxdigit(ch))
+                            return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+                        code_point = (code_point << 4u) | hex2int(ch);
+                    }
+                }
+
+                builder.append({ &code_point, 1 });
+                break;
+            }
             default:
                 if (is_template && (m_value[i] == '$' || m_value[i] == '`')) {
                     builder.append(m_value[i]);
-                } else {
-                    // FIXME: Also parse octal, hex and unicode sequences
-                    // should anything else generate a syntax error?
-                    builder.append(m_value[i]);
+                    break;
                 }
+
+                // FIXME: Also parse octal. Should anything else generate a syntax error?
+                builder.append(m_value[i]);
             }
         } else {
             builder.append(m_value[i]);

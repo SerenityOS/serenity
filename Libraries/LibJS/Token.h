@@ -172,8 +172,15 @@ public:
     size_t line_number() const { return m_line_number; }
     size_t line_column() const { return m_line_column; }
     double double_value() const;
-    String string_value() const;
     bool bool_value() const;
+
+    enum class StringValueStatus {
+        Ok,
+        MalformedHexEscape,
+        MalformedUnicodeEscape,
+        UnicodeEscapeOverflow,
+    };
+    String string_value(StringValueStatus& status) const;
 
     bool is_identifier_name() const;
 
