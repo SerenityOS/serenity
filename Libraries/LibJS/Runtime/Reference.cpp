@@ -50,7 +50,7 @@ void Reference::put(Interpreter& interpreter, Value value)
         return;
     }
 
-    auto* object = base().to_object(interpreter.heap());
+    auto* object = base().to_object(interpreter);
     if (!object)
         return;
 
@@ -92,7 +92,7 @@ Value Reference::get(Interpreter& interpreter)
         return value;
     }
 
-    auto* object = base().to_object(interpreter.heap());
+    auto* object = base().to_object(interpreter);
     if (!object)
         return {};
 

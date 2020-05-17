@@ -55,7 +55,7 @@ ImageDataWrapper::~ImageDataWrapper()
 
 static ImageData* impl_from(JS::Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object) {
         ASSERT_NOT_REACHED();
         return nullptr;

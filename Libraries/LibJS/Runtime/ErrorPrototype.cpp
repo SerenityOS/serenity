@@ -50,7 +50,7 @@ ErrorPrototype::~ErrorPrototype()
 
 Value ErrorPrototype::name_getter(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_error())
@@ -60,7 +60,7 @@ Value ErrorPrototype::name_getter(Interpreter& interpreter)
 
 void ErrorPrototype::name_setter(Interpreter& interpreter, Value value)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return;
     if (!this_object->is_error()) {
@@ -75,7 +75,7 @@ void ErrorPrototype::name_setter(Interpreter& interpreter, Value value)
 
 Value ErrorPrototype::message_getter(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_error())
