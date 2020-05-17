@@ -231,8 +231,8 @@ Value Value::to_number(Interpreter& interpreter) const
         return Value(parsed_double);
     }
     case Type::Symbol:
-        // FIXME: Get access to the interpreter and throw a TypeError
-        ASSERT_NOT_REACHED();
+        interpreter.throw_exception<TypeError>("Can't convert symbol to number");
+        return {};
     case Type::Object:
         auto primitive = m_value.as_object->to_primitive(Object::PreferredType::Number);
         if (interpreter.exception())
