@@ -33,6 +33,7 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/DisplayLink.h>
 #include <LibGUI/DragOperation.h>
+#include <LibGUI/EmojiInputDialog.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Widget.h>
@@ -167,6 +168,17 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
         action->activate();
         return;
     }
+
+    bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->accepts_emoji_input();
+    if (focused_widget_accepts_emoji_input && (message.modifiers() == (Mod_Ctrl | Mod_Alt)) && message.key() == Key_Space) {
+        auto emoji_input_dialog = EmojiInputDialog::construct(window);
+        if (emoji_input_dialog->exec() != EmojiInputDialog::ExecOK)
+            return;
+        key_event->m_key = Key_Invalid;
+        key_event->m_modifiers = 0;
+        key_event->m_text = emoji_input_dialog->selected_emoji_text();
+    }
+
     Core::EventLoop::current().post_event(*window, move(key_event));
 }
 
