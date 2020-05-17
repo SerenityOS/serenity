@@ -73,7 +73,11 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
     if (!arg_array.is_object())
         return interpreter.throw_exception<TypeError>("argument array must be an object");
     auto length_property = arg_array.as_object().get("length");
-    auto length = length_property.to_size_t();
+    if (interpreter.exception())
+        return {};
+    auto length = length_property.to_size_t(interpreter);
+    if (interpreter.exception())
+        return {};
     MarkedValueList arguments(interpreter.heap());
     for (size_t i = 0; i < length; ++i) {
         auto element = arg_array.as_object().get(String::number(i));

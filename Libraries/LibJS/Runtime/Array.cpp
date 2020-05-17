@@ -74,7 +74,9 @@ void Array::length_setter(Interpreter& interpreter, Value value)
     auto* array = array_from(interpreter);
     if (!array)
         return;
-    auto length = value.to_number();
+    auto length = value.to_number(interpreter);
+    if (interpreter.exception())
+        return;
     if (length.is_nan() || length.is_infinity() || length.as_double() < 0) {
         interpreter.throw_exception<RangeError>("Invalid array length");
         return;
