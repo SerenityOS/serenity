@@ -31,6 +31,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
+#include <AK/Utf32View.h>
 #include <LibCore/Forward.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
@@ -112,7 +113,7 @@ public:
     TextPosition next_position_after(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
     TextPosition previous_position_before(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
 
-    char character_at(const TextPosition&) const;
+    u32 codepoint_at(const TextPosition&) const;
 
     TextRange range_for_entire_line(size_t line_index) const;
 
@@ -129,7 +130,7 @@ public:
     void notify_did_change();
     void set_all_cursors(const TextPosition&);
 
-    TextPosition insert_at(const TextPosition&, char, const Client* = nullptr);
+    TextPosition insert_at(const TextPosition&, u32, const Client* = nullptr);
     TextPosition insert_at(const TextPosition&, const StringView&, const Client* = nullptr);
     void remove(const TextRange&);
 
@@ -153,22 +154,26 @@ public:
     explicit TextDocumentLine(TextDocument&);
     explicit TextDocumentLine(TextDocument&, const StringView&);
 
-    StringView view() const { return { characters(), (size_t)length() }; }
-    const char* characters() const { return m_text.data(); }
-    size_t length() const { return m_text.size() - 1; }
+    String to_utf8() const;
+
+    Utf32View view() const { return { codepoints(), length() }; }
+    const u32* codepoints() const { return m_text.data(); }
+    size_t length() const { return m_text.size(); }
     void set_text(TextDocument&, const StringView&);
-    void append(TextDocument&, char);
-    void prepend(TextDocument&, char);
-    void insert(TextDocument&, size_t index, char);
+    void append(TextDocument&, u32);
+    void prepend(TextDocument&, u32);
+    void insert(TextDocument&, size_t index, u32);
     void remove(TextDocument&, size_t index);
-    void append(TextDocument&, const char*, size_t);
+    void append(TextDocument&, const u32*, size_t);
     void truncate(TextDocument&, size_t length);
     void clear(TextDocument&);
+    void remove_range(TextDocument&, size_t start, size_t length);
+
     size_t first_non_whitespace_column() const;
 
 private:
     // NOTE: This vector is null terminated.
-    Vector<char> m_text;
+    Vector<u32> m_text;
 };
 
 class TextDocumentUndoCommand : public Command {
