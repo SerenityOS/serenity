@@ -103,8 +103,11 @@ Come hang out with us in `#serenityos` on the Freenode IRC network.
 * **Conrad Pankoff** - [deoxxa](https://github.com/deoxxa)
 * **Sergey Bugaev** - [bugaevc](https://github.com/bugaevc)
 * **Liav A** - [supercomputer7](https://github.com/supercomputer7)
+* **Linus Groh** - [linusg](https://github.com/linusg)
+* **Ali Mohammad Pur** - [alimpfard](https://github.com/alimpfard)
+* **Shannon Booth** - [shannonbooth](https://github.com/shannonbooth)
 
-(And many more!) Feel free to append yourself here if you've made some sweet contributions. :)
+(And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
 ## License
 
