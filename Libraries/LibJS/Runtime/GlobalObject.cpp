@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,6 +83,7 @@ void GlobalObject::initialize()
     put_native_function("gc", gc, 0, attr);
     put_native_function("isNaN", is_nan, 1, attr);
     put_native_function("isFinite", is_finite, 1, attr);
+    put_native_function("parseFloat", parse_float, 1, attr);
 
     put("NaN", js_nan(), 0);
     put("Infinity", js_infinity(), 0);
@@ -138,6 +140,19 @@ Value GlobalObject::is_nan(Interpreter& interpreter)
 Value GlobalObject::is_finite(Interpreter& interpreter)
 {
     return Value(interpreter.argument(0).to_number().is_finite_number());
+}
+
+Value GlobalObject::parse_float(Interpreter& interpreter)
+{
+    auto string = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    for (size_t length = string.length(); length > 0; --length) {
+        auto number = Value(js_string(interpreter, string.substring(0, length))).to_number();
+        if (!number.is_nan())
+            return number;
+    }
+    return js_nan();
 }
 
 }
