@@ -1209,7 +1209,7 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
                         if ((shebang_fd >= 0) && ((num_read = read(shebang_fd, shebang, sizeof(shebang))) >= 2) && (StringView(shebang).starts_with("#!"))) {
                             StringView shebang_path_view(&shebang[2], num_read - 2);
                             Optional<size_t> newline_pos = shebang_path_view.find_first_of("\n\r");
-                            shebang[newline_pos.has_value() ? newline_pos.value() : num_read] = '\0';
+                            shebang[newline_pos.has_value() ? (newline_pos.value() + 2) : num_read] = '\0';
                             fprintf(stderr, "%s: Invalid interpreter \"%s\": %s\n", argv[0], &shebang[2], strerror(ENOENT));
                         } else
                             fprintf(stderr, "%s: Command not found.\n", argv[0]);
