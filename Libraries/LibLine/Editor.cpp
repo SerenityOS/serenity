@@ -89,6 +89,8 @@ void Editor::insert(const u32 cp)
     auto str = builder.build();
     m_pending_chars.append(str.characters(), str.length());
 
+    readjust_anchored_styles(m_cursor, ModificationKind::Insertion);
+
     if (m_cursor == m_buffer.size()) {
         m_buffer.append(cp);
         m_cursor = m_buffer.size();
@@ -126,6 +128,9 @@ static size_t codepoint_length_in_utf8(u32 codepoint)
 
 void Editor::stylize(const Span& span, const Style& style)
 {
+    if (style.is_empty())
+        return;
+
     auto start = span.beginning();
     auto end = span.end();
 
@@ -153,22 +158,25 @@ void Editor::stylize(const Span& span, const Style& style)
         end = end_codepoint_offset;
     }
 
-    auto starting_map = m_spans_starting.get(start).value_or({});
+    auto& spans_starting = style.is_anchored() ? m_anchored_spans_starting : m_spans_starting;
+    auto& spans_ending = style.is_anchored() ? m_anchored_spans_ending : m_spans_ending;
+
+    auto starting_map = spans_starting.get(start).value_or({});
 
     if (!starting_map.contains(end))
         m_refresh_needed = true;
 
     starting_map.set(end, style);
 
-    m_spans_starting.set(start, starting_map);
+    spans_starting.set(start, starting_map);
 
-    auto ending_map = m_spans_ending.get(end).value_or({});
+    auto ending_map = spans_ending.get(end).value_or({});
 
     if (!ending_map.contains(start))
         m_refresh_needed = true;
     ending_map.set(start, style);
 
-    m_spans_ending.set(end, ending_map);
+    spans_ending.set(end, ending_map);
 }
 
 String Editor::get_line(const String& prompt)
@@ -179,6 +187,7 @@ String Editor::get_line(const String& prompt)
     set_prompt(prompt);
     reset();
     set_origin();
+    strip_styles(true);
 
     m_history_cursor = m_history.size();
     for (;;) {
@@ -396,7 +405,7 @@ String Editor::get_line(const String& prompt)
                         fflush(stdout);
                         continue;
                     }
-                    m_buffer.remove(m_cursor);
+                    remove_at_index(m_cursor);
                     m_refresh_needed = true;
                     m_search_offset = 0;
                     m_state = InputState::ExpectTerminator;
@@ -435,6 +444,8 @@ String Editor::get_line(const String& prompt)
 
                 // reverse tab can count as regular tab here
                 m_times_tab_pressed++;
+
+                int token_start = m_cursor - 1 - m_last_shown_suggestion_display_length;
 
                 // ask for completions only on the first tab
                 // and scan for the largest common prefix to display
@@ -506,12 +517,13 @@ String Editor::get_line(const String& prompt)
                         }
 
                         for (size_t i = m_next_suggestion_invariant_offset; i < shown_length; ++i)
-                            m_buffer.remove(actual_offset);
+                            remove_at_index(actual_offset);
                         m_cursor = actual_offset;
                         m_inline_search_cursor = m_cursor;
                         m_refresh_needed = true;
                     }
                     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
+                    m_last_shown_suggestion.token_start_index = token_start - m_next_suggestion_invariant_offset - m_last_shown_suggestion.trailing_trivia.length();
                     m_last_shown_suggestion_display_length = m_last_shown_suggestion.text.length();
                     m_last_shown_suggestion_was_complete = true;
                     if (m_times_tab_pressed == 1) {
@@ -526,6 +538,7 @@ String Editor::get_line(const String& prompt)
                                 // add in the trivia of the last selected suggestion
                                 insert(m_last_shown_suggestion.trailing_trivia);
                                 m_last_shown_suggestion_display_length += m_last_shown_suggestion.trailing_trivia.length();
+                                stylize({ m_last_shown_suggestion.token_start_index, m_cursor, Span::Mode::CodepointOriented }, m_last_shown_suggestion.style);
                             }
                         } else {
                             m_last_shown_suggestion_display_length = 0;
@@ -609,7 +622,7 @@ String Editor::get_line(const String& prompt)
                         }
 
                         if (m_last_shown_suggestion_was_complete && index == current_suggestion_index) {
-                            vt_apply_style({});
+                            vt_apply_style(Style::reset_style());
                             fflush(stdout);
                         }
 
@@ -645,6 +658,8 @@ String Editor::get_line(const String& prompt)
             }
 
             if (m_times_tab_pressed) {
+                // Apply the style of the last suggestion
+                stylize({ m_last_shown_suggestion.token_start_index, m_cursor, Span::Mode::CodepointOriented }, m_last_shown_suggestion.style);
                 // we probably have some suggestions drawn
                 // let's clean them up
                 if (m_lines_used_for_last_suggestions) {
@@ -670,7 +685,7 @@ String Editor::get_line(const String& prompt)
                     fflush(stdout);
                     return;
                 }
-                m_buffer.remove(m_cursor - 1);
+                remove_at_index(m_cursor - 1);
                 --m_cursor;
                 m_inline_search_cursor = m_cursor;
                 // we will have to redraw :(
@@ -696,7 +711,7 @@ String Editor::get_line(const String& prompt)
             }
             if (codepoint == m_termios.c_cc[VKILL]) {
                 for (size_t i = 0; i < m_cursor; ++i)
-                    m_buffer.remove(0);
+                    remove_at_index(0);
                 m_cursor = 0;
                 m_refresh_needed = true;
                 continue;
@@ -972,19 +987,45 @@ void Editor::refresh_display()
     for (size_t i = 0; i < m_buffer.size(); ++i) {
         auto ends = m_spans_ending.get(i).value_or(empty_styles);
         auto starts = m_spans_starting.get(i).value_or(empty_styles);
-        if (ends.size()) {
+
+        auto anchored_ends = m_anchored_spans_ending.get(i).value_or(empty_styles);
+        auto anchored_starts = m_anchored_spans_starting.get(i).value_or(empty_styles);
+
+        if (ends.size() || anchored_ends.size()) {
+            Style style;
+
+            for (auto& applicable_style : ends)
+                style.unify_with(applicable_style.value);
+
+            for (auto& applicable_style : anchored_ends)
+                style.unify_with(applicable_style.value);
+
+            // Disable any style that should be turned off
+            vt_apply_style(style, false);
+
             // go back to defaults
-            vt_apply_style(find_applicable_style(i));
+            style = find_applicable_style(i);
+            vt_apply_style(style, true);
         }
-        if (starts.size()) {
+        if (starts.size() || anchored_starts.size()) {
+            Style style;
+
+            for (auto& applicable_style : starts)
+                style.unify_with(applicable_style.value);
+
+            for (auto& applicable_style : anchored_starts)
+                style.unify_with(applicable_style.value);
+
             // set new options
-            vt_apply_style(starts.begin()->value); // apply some random style that starts here
+            vt_apply_style(style, true);
         }
         builder.clear();
         builder.append(Utf32View { &m_buffer[i], 1 });
         fputs(builder.to_string().characters(), stdout);
     }
-    vt_apply_style({}); // don't bleed to EOL
+
+    vt_apply_style(Style::reset_style()); // don't bleed to EOL
+
     m_pending_chars.clear();
     m_refresh_needed = false;
     m_cached_buffer_size = m_buffer.size();
@@ -995,6 +1036,19 @@ void Editor::refresh_display()
 
     reposition_cursor();
     fflush(stdout);
+}
+
+void Editor::strip_styles(bool strip_anchored)
+{
+    m_spans_starting.clear();
+    m_spans_ending.clear();
+
+    if (strip_anchored) {
+        m_anchored_spans_starting.clear();
+        m_anchored_spans_ending.clear();
+    }
+
+    m_refresh_needed = true;
 }
 
 void Editor::reposition_cursor()
@@ -1034,21 +1088,34 @@ void Editor::vt_move_relative(int x, int y)
 
 Style Editor::find_applicable_style(size_t offset) const
 {
-    // walk through our styles and find one that fits in the offset
-    for (auto& entry : m_spans_starting) {
-        if (entry.key > offset)
-            continue;
+    // walk through our styles and merge all that fit in the offset
+    Style style;
+    auto unify = [&](auto& entry) {
+        if (entry.key >= offset)
+            return;
         for (auto& style_value : entry.value) {
             if (style_value.key <= offset)
-                continue;
-            return style_value.value;
+                return;
+            style.unify_with(style_value.value);
         }
+    };
+
+    for (auto& entry : m_spans_starting) {
+        unify(entry);
     }
-    return {};
+
+    for (auto& entry : m_anchored_spans_starting) {
+        unify(entry);
+    }
+
+    return style;
 }
 
 String Style::Background::to_vt_escape() const
 {
+    if (is_default())
+        return "";
+
     if (m_is_rgb) {
         return String::format("\033[48;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
@@ -1058,6 +1125,9 @@ String Style::Background::to_vt_escape() const
 
 String Style::Foreground::to_vt_escape() const
 {
+    if (is_default())
+        return "";
+
     if (m_is_rgb) {
         return String::format("\033[38;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
@@ -1065,15 +1135,94 @@ String Style::Foreground::to_vt_escape() const
     }
 }
 
-void Editor::vt_apply_style(const Style& style)
+String Style::Hyperlink::to_vt_escape(bool starting) const
 {
-    printf(
-        "\033[%d;%d;%dm%s%s",
-        style.bold() ? 1 : 22,
-        style.underline() ? 4 : 24,
-        style.italic() ? 3 : 23,
-        style.background().to_vt_escape().characters(),
-        style.foreground().to_vt_escape().characters());
+    if (is_empty())
+        return "";
+
+    return String::format("\033]8;;%s\033\\", starting ? m_link.characters() : "");
+}
+
+void Style::unify_with(const Style& other, bool prefer_other)
+{
+    // unify colors
+    if (prefer_other || m_background.is_default())
+        m_background = other.background();
+
+    if (prefer_other || m_foreground.is_default())
+        m_foreground = other.foreground();
+
+    // unify graphic renditions
+    if (other.bold())
+        set(Bold);
+
+    if (other.italic())
+        set(Italic);
+
+    if (other.underline())
+        set(Underline);
+
+    // unify links
+    if (prefer_other || m_hyperlink.is_empty())
+        m_hyperlink = other.hyperlink();
+}
+
+String Style::to_string() const
+{
+    StringBuilder builder;
+    builder.append("Style { ");
+
+    if (!m_foreground.is_default()) {
+        builder.append("Foreground(");
+        if (m_foreground.m_is_rgb) {
+            builder.join(", ", m_foreground.m_rgb_color);
+        } else {
+            builder.appendf("(XtermColor) %d", m_foreground.m_xterm_color);
+        }
+        builder.append("), ");
+    }
+
+    if (!m_background.is_default()) {
+        builder.append("Background(");
+        if (m_background.m_is_rgb) {
+            builder.join(' ', m_background.m_rgb_color);
+        } else {
+            builder.appendf("(XtermColor) %d", m_background.m_xterm_color);
+        }
+        builder.append("), ");
+    }
+
+    if (bold())
+        builder.append("Bold, ");
+
+    if (underline())
+        builder.append("Underline, ");
+
+    if (italic())
+        builder.append("Italic, ");
+
+    if (!m_hyperlink.is_empty())
+        builder.appendf("Hyperlink(\"%s\"), ", m_hyperlink.m_link.characters());
+
+    builder.append("}");
+
+    return builder.build();
+}
+
+void Editor::vt_apply_style(const Style& style, bool is_starting)
+{
+    if (is_starting) {
+        printf(
+            "\033[%d;%d;%dm%s%s%s",
+            style.bold() ? 1 : 22,
+            style.underline() ? 4 : 24,
+            style.italic() ? 3 : 23,
+            style.background().to_vt_escape().characters(),
+            style.foreground().to_vt_escape().characters(),
+            style.hyperlink().to_vt_escape(true).characters());
+    } else {
+        printf("%s", style.hyperlink().to_vt_escape(false).characters());
+    }
 }
 
 void Editor::vt_clear_lines(size_t count_above, size_t count_below)
@@ -1249,5 +1398,50 @@ bool Editor::should_break_token(Vector<u32, 1024>& buffer, size_t index)
     ASSERT_NOT_REACHED();
     return true;
 };
+
+void Editor::remove_at_index(size_t index)
+{
+    // see if we have any anchored styles, and reposition them if needed
+    readjust_anchored_styles(index, ModificationKind::Removal);
+    m_buffer.remove(index);
+}
+
+void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modification)
+{
+    struct Anchor {
+        Span old_span;
+        Span new_span;
+        Style style;
+    };
+    Vector<Anchor> anchors_to_relocate;
+    auto index_shift = modification == ModificationKind::Insertion ? 1 : -1;
+
+    for (auto& start_entry : m_anchored_spans_starting) {
+        for (auto& end_entry : start_entry.value) {
+            if (start_entry.key >= hint_index) {
+                if (start_entry.key == hint_index && end_entry.key == hint_index + 1 && modification == ModificationKind::Removal) {
+                    // remove the anchor, as all its text was wiped
+                    continue;
+                }
+                // shift everything
+                anchors_to_relocate.append({ { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, { start_entry.key + index_shift, end_entry.key + index_shift, Span::Mode::CodepointOriented }, end_entry.value });
+                continue;
+            }
+            if (end_entry.key > hint_index) {
+                // shift just the end
+                anchors_to_relocate.append({ { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, { start_entry.key, end_entry.key + index_shift, Span::Mode::CodepointOriented }, end_entry.value });
+                continue;
+            }
+            anchors_to_relocate.append({ { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, end_entry.value });
+        }
+    }
+
+    m_anchored_spans_ending.clear();
+    m_anchored_spans_starting.clear();
+    // pass over the relocations and update the stale entries
+    for (auto& relocation : anchors_to_relocate) {
+        stylize(relocation.new_span, relocation.style);
+    }
+}
 
 }
