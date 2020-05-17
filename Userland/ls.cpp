@@ -28,6 +28,7 @@
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
@@ -133,6 +134,12 @@ int main(int argc, char** argv)
 int print_escaped(const char* name)
 {
     int printed = 0;
+
+    Utf8View utf8_name(name);
+    if (utf8_name.validate()) {
+        printf("%s", name);
+        return utf8_name.length_in_codepoints();
+    }
 
     for (int i = 0; name[i] != '\0'; i++) {
         if (isprint(name[i])) {
