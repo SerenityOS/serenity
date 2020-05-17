@@ -53,6 +53,7 @@ namespace GUI {
 TextEditor::TextEditor(Type type)
     : m_type(type)
 {
+    set_accepts_emoji_input(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     set_document(TextDocument::create());
