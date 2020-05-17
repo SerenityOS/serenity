@@ -74,6 +74,8 @@ public:
     void blit_scaled(const Rect&, const Gfx::Bitmap&, const Rect&, float, float);
     void draw_text(const Rect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const Rect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
+    void draw_text(const Rect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
+    void draw_text(const Rect&, const Utf32View&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_glyph(const Point&, char, Color);
     void draw_glyph(const Point&, char, const Font&, Color);
     void draw_emoji(const Point&, const Gfx::Bitmap&, const Font&);
@@ -126,6 +128,7 @@ protected:
     void draw_pixel(const Point&, Color, int thickness = 1);
 
     void draw_text_line(const Rect&, const Utf8View&, const Font&, TextAlignment, Color, TextElision);
+    void draw_text_line(const Rect&, const Utf32View&, const Font&, TextAlignment, Color, TextElision);
 
     struct State {
         const Font* font;
