@@ -50,11 +50,19 @@ struct CompletionSuggestion {
     CompletionSuggestion(const String& completion)
         : text(completion)
         , trailing_trivia("")
+        , style()
     {
     }
     CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia)
         : text(completion)
         , trailing_trivia(trailing_trivia)
+        , style()
+    {
+    }
+    CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia, Style style)
+        : text(completion)
+        , trailing_trivia(trailing_trivia)
+        , style(style)
     {
     }
 
@@ -65,6 +73,8 @@ struct CompletionSuggestion {
 
     String text;
     String trailing_trivia;
+    Style style;
+    size_t token_start_index { 0 };
 };
 
 struct Configuration {
@@ -157,12 +167,8 @@ public:
     void insert(const String&);
     void insert(const u32);
     void stylize(const Span&, const Style&);
-    void strip_styles()
-    {
-        m_spans_starting.clear();
-        m_spans_ending.clear();
-        m_refresh_needed = true;
-    }
+    void strip_styles(bool strip_anchored = false);
+
     void suggest(size_t invariant_offset = 0, size_t index = 0) const
     {
         m_next_suggestion_index = index;
@@ -194,8 +200,15 @@ private:
     void vt_clear_lines(size_t count_above, size_t count_below = 0);
     void vt_move_relative(int x, int y);
     void vt_move_absolute(u32 x, u32 y);
-    void vt_apply_style(const Style&);
+    void vt_apply_style(const Style&, bool is_starting = true);
     Vector<size_t, 2> vt_dsr();
+    void remove_at_index(size_t);
+
+    enum class ModificationKind {
+        Insertion,
+        Removal,
+    };
+    void readjust_anchored_styles(size_t hint_index, ModificationKind);
 
     Style find_applicable_style(size_t offset) const;
 
@@ -342,6 +355,9 @@ private:
 
     HashMap<u32, HashMap<u32, Style>> m_spans_starting;
     HashMap<u32, HashMap<u32, Style>> m_spans_ending;
+
+    HashMap<u32, HashMap<u32, Style>> m_anchored_spans_starting;
+    HashMap<u32, HashMap<u32, Style>> m_anchored_spans_ending;
 
     bool m_initialized { false };
     bool m_refresh_needed { false };
