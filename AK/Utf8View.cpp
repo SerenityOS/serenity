@@ -132,6 +132,16 @@ bool Utf8View::validate() const
     return true;
 }
 
+size_t Utf8View::length_in_codepoints() const
+{
+    size_t length = 0;
+    for (auto codepoint : *this) {
+        (void)codepoint;
+        ++length;
+    }
+    return length;
+}
+
 Utf8CodepointIterator::Utf8CodepointIterator(const unsigned char* ptr, int length)
     : m_ptr(ptr)
     , m_length(length)

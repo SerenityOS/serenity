@@ -72,6 +72,8 @@ public:
 
     bool validate() const;
 
+    size_t length_in_codepoints() const;
+
 private:
     const unsigned char* begin_ptr() const;
     const unsigned char* end_ptr() const;
