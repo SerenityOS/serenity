@@ -90,8 +90,23 @@ public:
 
     u16 length() const { return m_length; }
 
-    const u32* codepoints() const { return m_codepoints; }
-    u32* codepoints() { return m_codepoints; }
+    u32 codepoint(size_t index) const
+    {
+        if (m_utf32)
+            return m_codepoints.as_u32[index];
+        return m_codepoints.as_u8[index];
+    }
+
+    void set_codepoint(size_t index, u32 codepoint)
+    {
+        if (!m_utf32 && codepoint & 0xffffff80u)
+            convert_to_utf32();
+
+        if (m_utf32)
+            m_codepoints.as_u32[index] = codepoint;
+        else
+            m_codepoints.as_u8[index] = codepoint;
+    }
 
     bool is_dirty() const { return m_dirty; }
     void set_dirty(bool b) { m_dirty = b; }
@@ -99,10 +114,18 @@ public:
     const Attribute* attributes() const { return m_attributes; }
     Attribute* attributes() { return m_attributes; }
 
+    void convert_to_utf32();
+
+    bool is_utf32() const { return m_utf32; }
+
 private:
-    u32* m_codepoints { nullptr };
+    union {
+        u8* as_u8;
+        u32* as_u32;
+    } m_codepoints { nullptr };
     Attribute* m_attributes { nullptr };
     bool m_dirty { false };
+    bool m_utf32 { false };
     u16 m_length { 0 };
 };
 
