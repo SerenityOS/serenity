@@ -30,6 +30,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/ConfigFile.h>
@@ -739,7 +740,13 @@ String TerminalWidget::selected_text() const
                 builder.append('\n');
                 break;
             }
-            builder.append(line.codepoint(column));
+            // FIXME: This is a bit hackish.
+            if (line.is_utf32()) {
+                u32 codepoint = line.codepoint(column);
+                builder.append(Utf32View(&codepoint, 1));
+            } else {
+                builder.append(line.codepoint(column));
+            }
             if (column == line.length() - 1 || (m_rectangle_selection && column == last_column)) {
                 builder.append('\n');
             }
