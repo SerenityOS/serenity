@@ -127,7 +127,7 @@ void Job::on_socket_connected()
             m_received_buffers.append(payload);
             m_received_size += payload.size();
 
-            did_progress({}, m_received_size);
+            deferred_invoke([this](auto&) { did_progress({}, m_received_size); });
 
             return IterationDecision::Continue;
         });
