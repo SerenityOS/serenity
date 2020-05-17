@@ -21,6 +21,7 @@ set(SOURCES
     Dialog.cpp
     DisplayLink.cpp
     DragOperation.cpp
+    EmojiInputDialog.cpp
     Event.cpp
     FilePicker.cpp
     FileSystemModel.cpp

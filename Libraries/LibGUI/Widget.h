@@ -272,6 +272,9 @@ public:
 
     Gfx::Rect content_rect() const;
 
+    void set_accepts_emoji_input(bool b) { m_accepts_emoji_input = b; }
+    bool accepts_emoji_input() const { return m_accepts_emoji_input; }
+
 protected:
     Widget();
 
@@ -337,6 +340,7 @@ private:
     bool m_greedy_for_hits { false };
     bool m_enabled { true };
     bool m_updates_enabled { true };
+    bool m_accepts_emoji_input { false };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 };
