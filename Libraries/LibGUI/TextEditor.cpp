@@ -104,9 +104,6 @@ void TextEditor::create_actions()
 
 void TextEditor::set_text(const StringView& text)
 {
-    if (is_single_line() && text.length() == line(0).length() && !memcmp(text.characters_without_null_termination(), line(0).characters(), text.length()))
-        return;
-
     m_selection.clear();
 
     document().set_text(text);
@@ -170,7 +167,7 @@ TextPosition TextEditor::text_position_at(const Gfx::Point& a_position) const
         else
             column_index = (position.x() + glyph_width() / 2) / glyph_width();
         if (is_line_wrapping_enabled()) {
-            for_each_visual_line(line_index, [&](const Gfx::Rect& rect, const StringView&, size_t start_of_line) {
+            for_each_visual_line(line_index, [&](const Gfx::Rect& rect, auto&, size_t start_of_line) {
                 if (rect.contains_vertically(position.y())) {
                     column_index += start_of_line;
                     return IterationDecision::Break;
@@ -209,13 +206,13 @@ void TextEditor::doubleclick_event(MouseEvent& event)
 
     if (!document().has_spans()) {
         while (start.column() > 0) {
-            if (isspace(line.characters()[start.column() - 1]))
+            if (isspace(line.codepoints()[start.column() - 1]))
                 break;
             start.set_column(start.column() - 1);
         }
 
         while (end.column() < line.length()) {
-            if (isspace(line.characters()[end.column()]))
+            if (isspace(line.codepoints()[end.column()]))
                 break;
             end.set_column(end.column() + 1);
         }
@@ -432,7 +429,7 @@ void TextEditor::paint_event(PaintEvent& event)
         size_t selection_end_column_within_line = selection.end().line() == line_index ? selection.end().column() : line.length();
 
         size_t visual_line_index = 0;
-        for_each_visual_line(line_index, [&](const Gfx::Rect& visual_line_rect, const StringView& visual_line_text, size_t start_of_visual_line) {
+        for_each_visual_line(line_index, [&](const Gfx::Rect& visual_line_rect, auto& visual_line_text, size_t start_of_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
                 painter.fill_rect(visual_line_rect, widget_background_color.darkened(0.9f));
 #ifdef DEBUG_TEXTEDITOR
@@ -503,8 +500,8 @@ void TextEditor::paint_event(PaintEvent& event)
 
                     painter.fill_rect(selection_rect, background_color);
 
-                    StringView visual_selected_text {
-                        visual_line_text.characters_without_null_termination() + start_of_selection_within_visual_line,
+                    Utf32View visual_selected_text {
+                        visual_line_text.codepoints() + start_of_selection_within_visual_line,
                         end_of_selection_within_visual_line - start_of_selection_within_visual_line
                     };
 
@@ -605,6 +602,15 @@ void TextEditor::move_selected_lines_down()
     update();
 }
 
+int strcmp_utf32(const u32* s1, const u32* s2, size_t n)
+{
+    while (n-- > 0) {
+        if (*s1++ != *s2++)
+            return s1[-1] < s2[-1] ? -1 : 1;
+    }
+    return 0;
+}
+
 void TextEditor::sort_selected_lines()
 {
     if (is_readonly())
@@ -623,7 +629,7 @@ void TextEditor::sort_selected_lines()
     auto end = lines.begin() + (int)last_line + 1;
 
     quick_sort(start, end, [](auto& a, auto& b) {
-        return strcmp(a.characters(), b.characters()) < 0;
+        return strcmp_utf32(a.codepoints(), b.codepoints(), min(a.length(), b.length())) < 0;
     });
 
     did_change();
@@ -925,7 +931,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
     int x_offset = -1;
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
-        for_each_visual_line(position.line(), [&](const Gfx::Rect&, const StringView& view, size_t start_of_visual_line) {
+        for_each_visual_line(position.line(), [&](const Gfx::Rect&, auto& view, size_t start_of_visual_line) {
             if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
                 x_offset = (position.column() - start_of_visual_line) * glyph_width();
                 return IterationDecision::Break;
@@ -958,7 +964,7 @@ Gfx::Rect TextEditor::content_rect_for_position(const TextPosition& position) co
     }
 
     Gfx::Rect rect;
-    for_each_visual_line(position.line(), [&](const Gfx::Rect& visual_line_rect, const StringView& view, size_t start_of_visual_line) {
+    for_each_visual_line(position.line(), [&](const Gfx::Rect& visual_line_rect, auto& view, size_t start_of_visual_line) {
         if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
             // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
             //       *and* included in what we get from content_x_for_position().
@@ -1106,7 +1112,8 @@ bool TextEditor::write_to_file(const StringView& path)
     for (size_t i = 0; i < line_count(); ++i) {
         auto& line = this->line(i);
         if (line.length()) {
-            ssize_t nwritten = write(fd, line.characters(), line.length());
+            auto line_as_utf8 = line.to_utf8();
+            ssize_t nwritten = write(fd, line_as_utf8.characters(), line_as_utf8.length());
             if (nwritten < 0) {
                 perror("write");
                 close(fd);
@@ -1133,7 +1140,7 @@ String TextEditor::text() const
     StringBuilder builder;
     for (size_t i = 0; i < line_count(); ++i) {
         auto& line = this->line(i);
-        builder.append(line.characters(), line.length());
+        builder.append(line.view());
         if (i != line_count() - 1)
             builder.append('\n');
     }
@@ -1357,7 +1364,7 @@ void TextEditor::ensure_cursor_is_valid()
 size_t TextEditor::visual_line_containing(size_t line_index, size_t column) const
 {
     size_t visual_line_index = 0;
-    for_each_visual_line(line_index, [&](const Gfx::Rect&, const StringView& view, size_t start_of_visual_line) {
+    for_each_visual_line(line_index, [&](const Gfx::Rect&, auto& view, size_t start_of_visual_line) {
         if (column >= start_of_visual_line && ((column - start_of_visual_line) < view.length()))
             return IterationDecision::Break;
         ++visual_line_index;
@@ -1379,8 +1386,8 @@ void TextEditor::recompute_visual_lines(size_t line_index)
         int line_width_so_far = 0;
 
         for (size_t i = 0; i < line.length(); ++i) {
-            auto ch = line.characters()[i];
-            auto glyph_width = font().glyph_width(ch);
+            auto codepoint = line.codepoints()[i];
+            auto glyph_width = font().glyph_or_emoji_width(codepoint);
             if ((line_width_so_far + glyph_width) > available_width) {
                 visual_data.visual_line_breaks.append(i);
                 line_width_so_far = glyph_width;
@@ -1409,7 +1416,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
     auto& visual_data = m_line_visual_data[line_index];
 
     for (auto visual_line_break : visual_data.visual_line_breaks) {
-        auto visual_line_view = StringView(line.characters() + start_of_line, visual_line_break - start_of_line);
+        auto visual_line_view = Utf32View(line.codepoints() + start_of_line, visual_line_break - start_of_line);
         Gfx::Rect visual_line_rect {
             visual_data.visual_rect.x(),
             visual_data.visual_rect.y() + ((int)visual_line_index * line_height()),
