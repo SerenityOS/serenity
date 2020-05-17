@@ -57,17 +57,17 @@ int isgraph(int);
 int islower(int);
 int isupper(int);
 
-#define isalnum(c) (_ctype_[(int)(c)] & (_U | _L | _N))
-#define isalpha(c) (_ctype_[(int)(c)] & (_U | _L))
-#define iscntrl(c) (_ctype_[(int)(c)] & (_C))
-#define isdigit(c) (_ctype_[(int)(c)] & (_N))
-#define isxdigit(c) (_ctype_[(int)(c)] & (_N | _X))
-#define isspace(c) (_ctype_[(int)(c)] & (_S))
-#define ispunct(c) (_ctype_[(int)(c)] & (_P))
-#define isprint(c) (_ctype_[(int)(c)] & (_P | _U | _L | _N | _B))
-#define isgraph(c) (_ctype_[(int)(c)] & (_P | _U | _L | _N))
-#define islower(c) ((_ctype_[(int)(c)] & (_U | _L)) == _L)
-#define isupper(c) ((_ctype_[(int)(c)] & (_U | _L)) == _U)
+#define isalnum(c) (_ctype_[(unsigned char)(c)] & (_U | _L | _N))
+#define isalpha(c) (_ctype_[(unsigned char)(c)] & (_U | _L))
+#define iscntrl(c) (_ctype_[(unsigned char)(c)] & (_C))
+#define isdigit(c) (_ctype_[(unsigned char)(c)] & (_N))
+#define isxdigit(c) (_ctype_[(unsigned char)(c)] & (_N | _X))
+#define isspace(c) (_ctype_[(unsigned char)(c)] & (_S))
+#define ispunct(c) (_ctype_[(unsigned char)(c)] & (_P))
+#define isprint(c) (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N | _B))
+#define isgraph(c) (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N))
+#define islower(c) ((_ctype_[(unsigned char)(c)] & (_U | _L)) == _L)
+#define isupper(c) ((_ctype_[(unsigned char)(c)] & (_U | _L)) == _U)
 
 #define isascii(c) ((unsigned)c <= 127)
 #define toascii(c) ((c)&127)
