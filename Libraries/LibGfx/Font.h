@@ -95,7 +95,7 @@ public:
 
     int width(const StringView&) const;
     int width(const Utf8View&) const;
-    int width(const u32* codepoints, size_t) const;
+    int width(const Utf32View&) const;
 
     String name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }

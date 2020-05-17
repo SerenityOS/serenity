@@ -30,6 +30,7 @@
 #include <AK/BufferStream.h>
 #include <AK/MappedFile.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <AK/kmalloc.h>
 #include <errno.h>
@@ -255,13 +256,13 @@ int Font::width(const Utf8View& utf8) const
     return width;
 }
 
-int Font::width(const u32* codepoints, size_t length) const
+int Font::width(const Utf32View& view) const
 {
-    if (length == 0)
+    if (view.length() == 0)
         return 0;
-    int width = (length - 1) * glyph_spacing();
-    for (size_t i = 0; i < length; ++i)
-        width += glyph_or_emoji_width(codepoints[i]);
+    int width = (view.length() - 1) * glyph_spacing();
+    for (size_t i = 0; i < view.length(); ++i)
+        width += glyph_or_emoji_width(view.codepoints()[i]);
     return width;
 }
 
