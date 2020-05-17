@@ -1578,9 +1578,9 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
             if (!stat_error) {
                 if (S_ISDIR(program_status.st_mode)) {
                     if (!should_suggest_only_executables)
-                        suggestions.append({ escape_token(file), "/" });
+                        suggestions.append({ escape_token(file), "/", { Line::Style::Hyperlink(String::format("file://%s", file_path.characters())), Line::Style::Anchored } });
                 } else {
-                    suggestions.append({ escape_token(file), " " });
+                    suggestions.append({ escape_token(file), " ", { Line::Style::Hyperlink(String::format("file://%s", file_path.characters())), Line::Style::Anchored } });
                 }
             }
         }
