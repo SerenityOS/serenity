@@ -117,6 +117,12 @@ void TextDocumentLine::clear(TextDocument& document)
     document.update_views({});
 }
 
+void TextDocumentLine::set_text(TextDocument& document, const Vector<u32> text)
+{
+    m_text = move(text);
+    document.update_views({});
+}
+
 void TextDocumentLine::set_text(TextDocument& document, const StringView& text)
 {
     if (text.is_empty()) {
@@ -132,6 +138,8 @@ void TextDocumentLine::set_text(TextDocument& document, const StringView& text)
 
 void TextDocumentLine::append(TextDocument& document, const u32* codepoints, size_t length)
 {
+    if (length == 0)
+        return;
     m_text.append(codepoints, length);
     document.update_views({});
 }
@@ -588,9 +596,10 @@ void TextDocument::remove(const TextRange& unnormalized_range)
         ASSERT(range.start().line() == range.end().line() - 1);
         auto& first_line = line(range.start().line());
         auto& second_line = line(range.end().line());
-        first_line.clear(*this);
-        first_line.append(*this, first_line.codepoints(), range.start().column());
-        first_line.append(*this, second_line.codepoints() + range.end().column(), second_line.length() - range.end().column());
+        Vector<u32> codepoints;
+        codepoints.append(first_line.codepoints(), range.start().column());
+        codepoints.append(second_line.codepoints() + range.end().column(), second_line.length() - range.end().column());
+        first_line.set_text(*this, move(codepoints));
         remove_line(range.end().line());
     }
 
