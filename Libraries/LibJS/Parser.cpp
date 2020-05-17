@@ -405,7 +405,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     case TokenType::BoolLiteral:
         return create_ast_node<BooleanLiteral>(consume().bool_value());
     case TokenType::StringLiteral:
-        return create_ast_node<StringLiteral>(consume().string_value());
+        return parse_string_literal(consume());
     case TokenType::NullLiteral:
         consume();
         return create_ast_node<NullLiteral>();
@@ -494,7 +494,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             property_value = create_ast_node<Identifier>(identifier);
             need_colon = false;
         } else if (match(TokenType::StringLiteral)) {
-            property_key = create_ast_node<StringLiteral>(consume(TokenType::StringLiteral).string_value());
+            property_key = parse_string_literal(consume());
         } else if (match(TokenType::NumericLiteral)) {
             property_key = create_ast_node<StringLiteral>(consume(TokenType::NumericLiteral).value());
         } else if (match(TokenType::BracketOpen)) {
@@ -559,6 +559,28 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
     return create_ast_node<ArrayExpression>(move(elements));
 }
 
+NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token)
+{
+    auto status = Token::StringValueStatus::Ok;
+    auto string = token.string_value(status);
+    if (status != Token::StringValueStatus::Ok) {
+        String message;
+        if (status == Token::StringValueStatus::MalformedHexEscape || status == Token::StringValueStatus::MalformedUnicodeEscape) {
+            auto type = status == Token::StringValueStatus::MalformedUnicodeEscape ? "unicode" : "hexadecimal";
+            message = String::format("Malformed %s escape sequence", type);
+        } else if (status == Token::StringValueStatus::UnicodeEscapeOverflow) {
+            message = "Unicode codepoint must not be greater than 0x10ffff in escape sequence";
+        }
+
+        syntax_error(
+            message,
+            m_parser_state.m_current_token.line_number(),
+            m_parser_state.m_current_token.line_column()
+        );
+    }
+    return create_ast_node<StringLiteral>(string);
+}
+
 NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
 {
     consume(TokenType::TemplateLiteralStart);
@@ -579,7 +601,7 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
     while (!match(TokenType::TemplateLiteralEnd) && !match(TokenType::UnterminatedTemplateLiteral)) {
         if (match(TokenType::TemplateLiteralString)) {
             auto token = consume();
-            expressions.append(create_ast_node<StringLiteral>(token.string_value()));
+            expressions.append(parse_string_literal(token));
             if (is_tagged)
                 raw_strings.append(create_ast_node<StringLiteral>(token.value()));
         } else if (match(TokenType::TemplateLiteralExprStart)) {
