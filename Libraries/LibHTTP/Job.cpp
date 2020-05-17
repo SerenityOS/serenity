@@ -268,7 +268,7 @@ void Job::on_socket_connected()
                     content_length = length;
             }
 
-            did_progress(content_length, m_received_size);
+            deferred_invoke([this, content_length](auto&) { did_progress(content_length, m_received_size); });
 
             if (content_length.has_value()) {
                 auto length = content_length.value();
