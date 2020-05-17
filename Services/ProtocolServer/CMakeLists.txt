@@ -2,6 +2,7 @@ compile_ipc(ProtocolServer.ipc ProtocolServerEndpoint.h)
 compile_ipc(ProtocolClient.ipc ProtocolClientEndpoint.h)
 
 set(SOURCES
+    ClientConnection.cpp
     Download.cpp
     GeminiDownload.cpp
     GeminiProtocol.cpp
@@ -11,7 +12,6 @@ set(SOURCES
     HttpsProtocol.cpp
     main.cpp
     Protocol.cpp
-    PSClientConnection.cpp
     ProtocolServerEndpoint.h
     ProtocolClientEndpoint.h
 )

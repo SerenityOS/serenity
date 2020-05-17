@@ -30,7 +30,7 @@
 #include <ProtocolServer/GeminiProtocol.h>
 #include <ProtocolServer/HttpProtocol.h>
 #include <ProtocolServer/HttpsProtocol.h>
-#include <ProtocolServer/PSClientConnection.h>
+#include <ProtocolServer/ClientConnection.h>
 
 int main(int, char**)
 {
@@ -53,9 +53,9 @@ int main(int, char**)
         return 1;
     }
 
-    (void)*new GeminiProtocol;
-    (void)*new HttpProtocol;
-    (void)*new HttpsProtocol;
+    (void)*new ProtocolServer::GeminiProtocol;
+    (void)*new ProtocolServer::HttpProtocol;
+    (void)*new ProtocolServer::HttpsProtocol;
     auto server = Core::LocalServer::construct();
     bool ok = server->take_over_from_system_server();
     ASSERT(ok);
@@ -67,7 +67,7 @@ int main(int, char**)
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<PSClientConnection>(*client_socket, client_id);
+        IPC::new_client_connection<ProtocolServer::ClientConnection>(*client_socket, client_id);
     };
     return event_loop.exec();
 }

@@ -28,10 +28,14 @@
 
 #include <ProtocolServer/Protocol.h>
 
+namespace ProtocolServer {
+
 class HttpsProtocol final : public Protocol {
 public:
     HttpsProtocol();
     virtual ~HttpsProtocol() override;
 
-    virtual OwnPtr<Download> start_download(PSClientConnection&, const URL&) override;
+    virtual OwnPtr<Download> start_download(ClientConnection&, const URL&) override;
 };
+
+}

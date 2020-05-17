@@ -31,8 +31,9 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
+#include <ProtocolServer/Forward.h>
 
-class PSClientConnection;
+namespace ProtocolServer {
 
 class Download {
 public:
@@ -49,7 +50,7 @@ public:
     void stop();
 
 protected:
-    explicit Download(PSClientConnection&);
+    explicit Download(ClientConnection&);
 
     void did_finish(bool success);
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
@@ -57,7 +58,7 @@ protected:
     void set_response_headers(const HashMap<String, String, CaseInsensitiveStringTraits>&);
 
 private:
-    PSClientConnection& m_client;
+    ClientConnection& m_client;
     i32 m_id { 0 };
     URL m_url;
     Optional<u32> m_total_size {};
@@ -65,3 +66,5 @@ private:
     ByteBuffer m_payload;
     HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
 };
+
+}

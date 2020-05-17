@@ -28,7 +28,9 @@
 #include <LibHTTP/HttpResponse.h>
 #include <ProtocolServer/HttpDownload.h>
 
-HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<HTTP::HttpJob> job)
+namespace ProtocolServer {
+
+HttpDownload::HttpDownload(ClientConnection& client, NonnullRefPtr<HTTP::HttpJob> job)
     : Download(client)
     , m_job(job)
 {
@@ -57,7 +59,9 @@ HttpDownload::~HttpDownload()
     m_job->shutdown();
 }
 
-NonnullOwnPtr<HttpDownload> HttpDownload::create_with_job(Badge<HttpProtocol>, PSClientConnection& client, NonnullRefPtr<HTTP::HttpJob> job)
+NonnullOwnPtr<HttpDownload> HttpDownload::create_with_job(Badge<HttpProtocol>, ClientConnection& client, NonnullRefPtr<HTTP::HttpJob> job)
 {
     return adopt_own(*new HttpDownload(client, move(job)));
+}
+
 }

@@ -28,10 +28,14 @@
 
 #include <ProtocolServer/Protocol.h>
 
+namespace ProtocolServer {
+
 class GeminiProtocol final : public Protocol {
 public:
     GeminiProtocol();
     virtual ~GeminiProtocol() override;
 
-    virtual OwnPtr<Download> start_download(PSClientConnection&, const URL&) override;
+    virtual OwnPtr<Download> start_download(ClientConnection&, const URL&) override;
 };
+
+}

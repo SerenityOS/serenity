@@ -28,18 +28,20 @@
 
 #include <AK/Badge.h>
 #include <LibCore/Forward.h>
-#include <LibHTTP/HttpJob.h>
+#include <LibHTTP/Forward.h>
 #include <ProtocolServer/Download.h>
 
-class HttpProtocol;
+namespace ProtocolServer {
 
 class HttpDownload final : public Download {
 public:
     virtual ~HttpDownload() override;
-    static NonnullOwnPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, PSClientConnection&, NonnullRefPtr<HTTP::HttpJob>);
+    static NonnullOwnPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, ClientConnection&, NonnullRefPtr<HTTP::HttpJob>);
 
 private:
-    explicit HttpDownload(PSClientConnection&, NonnullRefPtr<HTTP::HttpJob>);
+    explicit HttpDownload(ClientConnection&, NonnullRefPtr<HTTP::HttpJob>);
 
     NonnullRefPtr<HTTP::HttpJob> m_job;
 };
+
+}

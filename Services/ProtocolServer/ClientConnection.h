@@ -29,15 +29,18 @@
 #include <AK/HashMap.h>
 #include <LibIPC/ClientConnection.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
+#include <ProtocolServer/Forward.h>
 
-class Download;
+namespace ProtocolServer {
 
-class PSClientConnection final : public IPC::ClientConnection<ProtocolServerEndpoint>
+class ClientConnection final
+    : public IPC::ClientConnection<ProtocolServerEndpoint>
     , public ProtocolServerEndpoint {
-    C_OBJECT(PSClientConnection)
+    C_OBJECT(ClientConnection);
+
 public:
-    explicit PSClientConnection(Core::LocalSocket&, int client_id);
-    ~PSClientConnection() override;
+    explicit ClientConnection(Core::LocalSocket&, int client_id);
+    ~ClientConnection() override;
 
     virtual void die() override;
 
@@ -54,3 +57,5 @@ private:
     HashMap<i32, OwnPtr<Download>> m_downloads;
     HashMap<i32, RefPtr<AK::SharedBuffer>> m_shared_buffers;
 };
+
+}
