@@ -36,27 +36,44 @@ Line::Line(u16 length)
 
 Line::~Line()
 {
-    delete[] m_codepoints;
+    if (m_utf32)
+        delete[] m_codepoints.as_u32;
+    else
+        delete[] m_codepoints.as_u8;
     delete[] m_attributes;
+}
+
+template<typename CodepointType>
+static CodepointType* create_new_codepoint_array(size_t new_length, const CodepointType* old_codepoints, size_t old_length)
+{
+    auto* new_codepoints = new CodepointType[new_length];
+    for (size_t i = 0; i < new_length; ++i)
+        new_codepoints[i] = ' ';
+    if (old_codepoints) {
+        for (size_t i = 0; i < min(old_length, new_length); ++i) {
+            new_codepoints[i] = old_codepoints[i];
+        }
+    }
+    delete[] old_codepoints;
+    return new_codepoints;
 }
 
 void Line::set_length(u16 new_length)
 {
     if (m_length == new_length)
         return;
-    auto* new_codepoints = new u32[new_length];
+
+    if (m_utf32)
+        m_codepoints.as_u32 = create_new_codepoint_array<u32>(new_length, m_codepoints.as_u32, m_length);
+    else
+        m_codepoints.as_u8 = create_new_codepoint_array<u8>(new_length, m_codepoints.as_u8, m_length);
+
     auto* new_attributes = new Attribute[new_length];
-    for (size_t i = 0; i < new_length; ++i)
-        new_codepoints[i] = ' ';
-    if (m_codepoints && m_attributes) {
-        for (size_t i = 0; i < min(m_length, new_length); ++i) {
-            new_codepoints[i] = m_codepoints[i];
+    if (m_attributes) {
+        for (size_t i = 0; i < min(m_length, new_length); ++i)
             new_attributes[i] = m_attributes[i];
-        }
     }
-    delete[] m_codepoints;
     delete[] m_attributes;
-    m_codepoints = new_codepoints;
     m_attributes = new_attributes;
     m_length = new_length;
 }
@@ -65,15 +82,15 @@ void Line::clear(Attribute attribute)
 {
     if (m_dirty) {
         for (u16 i = 0; i < m_length; ++i) {
-            m_codepoints[i] = ' ';
+            set_codepoint(i, ' ');
             m_attributes[i] = attribute;
         }
         return;
     }
     for (unsigned i = 0; i < m_length; ++i) {
-        if (m_codepoints[i] != ' ')
+        if (codepoint(i) != ' ')
             m_dirty = true;
-        m_codepoints[i] = ' ';
+        set_codepoint(i, ' ');
     }
     for (unsigned i = 0; i < m_length; ++i) {
         if (m_attributes[i] != attribute)
@@ -93,6 +110,18 @@ bool Line::has_only_one_background_color() const
             return false;
     }
     return true;
+}
+
+void Line::convert_to_utf32()
+{
+    ASSERT(!m_utf32);
+    auto* new_codepoints = new u32[m_length];
+    for (size_t i = 0; i < m_length; ++i) {
+        new_codepoints[i] = m_codepoints.as_u8[i];
+    }
+    delete m_codepoints.as_u8;
+    m_codepoints.as_u32 = new_codepoints;
+    m_utf32 = true;
 }
 
 }

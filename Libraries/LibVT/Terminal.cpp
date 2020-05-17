@@ -528,11 +528,11 @@ void Terminal::escape$P(const ParamVector& params)
 
     // Move n characters of line to the left
     for (int i = m_cursor_column; i < line.length() - num; i++)
-        line.codepoints()[i] = line.codepoints()[i + num];
+        line.set_codepoint(i, line.codepoint(i + num));
 
     // Fill remainder of line with blanks
     for (int i = line.length() - num; i < line.length(); i++)
-        line.codepoints()[i] = ' ';
+        line.set_codepoint(i, ' ');
 
     line.set_dirty(true);
 }
@@ -760,17 +760,17 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
     invalidate_cursor();
 }
 
-void Terminal::put_character_at(unsigned row, unsigned column, u32 ch)
+void Terminal::put_character_at(unsigned row, unsigned column, u32 codepoint)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
     auto& line = m_lines[row];
-    line.codepoints()[column] = ch;
+    line.set_codepoint(column, codepoint);
     line.attributes()[column] = m_current_attribute;
     line.attributes()[column].flags |= Attribute::Touched;
     line.set_dirty(true);
 
-    m_last_codepoint = ch;
+    m_last_codepoint = codepoint;
 }
 
 void Terminal::NEL()
