@@ -136,8 +136,7 @@ String Value::to_string(Interpreter& interpreter) const
 
     if (is_object()) {
         auto primitive_value = as_object().to_primitive(Object::PreferredType::String);
-        // FIXME: Maybe we should pass in the Interpreter& and call interpreter.exception() instead?
-        if (primitive_value.is_empty())
+        if (interpreter.exception())
             return {};
         return primitive_value.to_string(interpreter);
     }
