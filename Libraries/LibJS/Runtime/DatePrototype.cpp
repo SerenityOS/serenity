@@ -38,7 +38,7 @@ namespace JS {
 
 static Date* this_date_from_interpreter(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return nullptr;
     if (!this_object->is_date()) {

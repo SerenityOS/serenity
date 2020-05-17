@@ -60,7 +60,7 @@ const Document& DocumentWrapper::node() const
 
 static Document* document_from(JS::Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     if (StringView("DocumentWrapper") != this_object->class_name()) {

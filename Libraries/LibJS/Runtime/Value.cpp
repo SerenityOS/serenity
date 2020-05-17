@@ -176,25 +176,25 @@ Value Value::to_primitive(Interpreter&) const
     return *this;
 }
 
-Object* Value::to_object(Heap& heap) const
+Object* Value::to_object(Interpreter& interpreter) const
 {
     if (is_object())
         return &const_cast<Object&>(as_object());
 
     if (is_string())
-        return StringObject::create(heap.interpreter().global_object(), *m_value.as_string);
+        return StringObject::create(interpreter.global_object(), *m_value.as_string);
 
     if (is_symbol())
-        return SymbolObject::create(heap.interpreter().global_object(), *m_value.as_symbol);
+        return SymbolObject::create(interpreter.global_object(), *m_value.as_symbol);
 
     if (is_number())
-        return NumberObject::create(heap.interpreter().global_object(), m_value.as_double);
+        return NumberObject::create(interpreter.global_object(), m_value.as_double);
 
     if (is_boolean())
-        return BooleanObject::create(heap.interpreter().global_object(), m_value.as_bool);
+        return BooleanObject::create(interpreter.global_object(), m_value.as_bool);
 
     if (is_null() || is_undefined()) {
-        heap.interpreter().throw_exception<TypeError>("ToObject on null or undefined.");
+        interpreter.throw_exception<TypeError>("ToObject on null or undefined.");
         return nullptr;
     }
 

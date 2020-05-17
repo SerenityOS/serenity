@@ -78,7 +78,7 @@ CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()
 
 static CanvasRenderingContext2D* impl_from(JS::Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return nullptr;
     // FIXME: Verify that it's a CanvasRenderingContext2DWrapper somehow!
@@ -116,7 +116,7 @@ JS::Value CanvasRenderingContext2DWrapper::draw_image(JS::Interpreter& interpret
     if (arguments.size() < 3)
         return interpreter.throw_exception<JS::TypeError>("drawImage() needs more arguments");
 
-    auto* image_argument = arguments[0].to_object(interpreter.heap());
+    auto* image_argument = arguments[0].to_object(interpreter);
     if (!image_argument)
         return {};
     if (StringView(image_argument->class_name()) != "HTMLImageElementWrapper")
@@ -307,7 +307,7 @@ JS::Value CanvasRenderingContext2DWrapper::put_image_data(JS::Interpreter& inter
     if (!impl)
         return {};
 
-    auto* image_data_object = interpreter.argument(0).to_object(interpreter.heap());
+    auto* image_data_object = interpreter.argument(0).to_object(interpreter);
     if (!image_data_object)
         return {};
 

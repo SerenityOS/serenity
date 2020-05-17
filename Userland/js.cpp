@@ -701,7 +701,7 @@ int main(int argc, char** argv)
                 if (!variable.is_object())
                     return {};
 
-                const auto* object = variable.to_object(interpreter->heap());
+                const auto* object = variable.to_object(*interpreter);
                 const auto& shape = object->shape();
                 list_all_properties(shape, property_pattern);
                 if (results.size())

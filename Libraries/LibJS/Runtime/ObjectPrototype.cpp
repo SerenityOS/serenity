@@ -54,7 +54,7 @@ ObjectPrototype::~ObjectPrototype()
 
 Value ObjectPrototype::has_own_property(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     auto name = interpreter.argument(0).to_string(interpreter);
@@ -65,7 +65,7 @@ Value ObjectPrototype::has_own_property(Interpreter& interpreter)
 
 Value ObjectPrototype::to_string(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     return js_string(interpreter, String::format("[object %s]", this_object->class_name()));
@@ -73,7 +73,7 @@ Value ObjectPrototype::to_string(Interpreter& interpreter)
 
 Value ObjectPrototype::value_of(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
     return this_object->value_of();

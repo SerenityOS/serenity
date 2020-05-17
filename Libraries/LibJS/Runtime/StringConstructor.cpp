@@ -71,7 +71,7 @@ Value StringConstructor::construct(Interpreter& interpreter)
 
 Value StringConstructor::raw(Interpreter& interpreter)
 {
-    auto* template_object = interpreter.argument(0).to_object(interpreter.heap());
+    auto* template_object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
 
@@ -83,7 +83,7 @@ Value StringConstructor::raw(Interpreter& interpreter)
     if (!raw.is_array())
         return js_string(interpreter, "");
 
-    auto& raw_array_elements = static_cast<Array*>(raw.to_object(interpreter.heap()))->elements();
+    auto& raw_array_elements = static_cast<Array*>(raw.to_object(interpreter))->elements();
     StringBuilder builder;
 
     for (size_t i = 0; i < raw_array_elements.size(); ++i) {
