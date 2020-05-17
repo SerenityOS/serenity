@@ -160,6 +160,7 @@ public:
     const u32* codepoints() const { return m_text.data(); }
     size_t length() const { return m_text.size(); }
     void set_text(TextDocument&, const StringView&);
+    void set_text(TextDocument&, Vector<u32>);
     void append(TextDocument&, u32);
     void prepend(TextDocument&, u32);
     void insert(TextDocument&, size_t index, u32);
