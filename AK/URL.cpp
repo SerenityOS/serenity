@@ -323,8 +323,16 @@ URL URL::complete_url(const String& string) const
     auto built = builder.to_string();
     fspath = FileSystemPath(built);
 
+    built = fspath.string();
+    if (string.ends_with('/') && !built.ends_with('/')) {
+        builder.clear();
+        builder.append(built);
+        builder.append('/');
+        built = builder.to_string();
+    }
+
     url = *this;
-    url.set_path(fspath.string());
+    url.set_path(built);
     return url;
 }
 
