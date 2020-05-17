@@ -40,6 +40,7 @@ public:
     ~StringBuilder() {}
 
     void append(const StringView&);
+    void append(const Utf32View&);
     void append(char);
     void append(const char*, size_t);
     void appendf(const char*, ...);
