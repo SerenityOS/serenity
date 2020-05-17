@@ -157,4 +157,12 @@ TEST_CASE(about_url)
     EXPECT_EQ(url.to_string(), "about:blank");
 }
 
+TEST_CASE(trailing_slash_with_complete_url)
+{
+    EXPECT_EQ(URL("http://a/b/").complete_url("c/").to_string(), "http://a/b/c/");
+    EXPECT_EQ(URL("http://a/b/").complete_url("c").to_string(), "http://a/b/c");
+    EXPECT_EQ(URL("http://a/b").complete_url("c/").to_string(), "http://a/c/");
+    EXPECT_EQ(URL("http://a/b").complete_url("c").to_string(), "http://a/c");
+}
+
 TEST_MAIN(URL)
