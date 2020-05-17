@@ -1,6 +1,7 @@
 load("test-common.js");
 
 try {
+    assert(Number.isNaN !== isNaN);
     assert(Number.isNaN.length === 1);
 
     assert(Number.isNaN(0) === false);
