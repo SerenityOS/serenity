@@ -46,6 +46,7 @@ class StringImpl;
 class StringView;
 class URL;
 class FlyString;
+class Utf32View;
 class Utf8View;
 
 template<typename T>
@@ -116,6 +117,7 @@ using AK::CircularQueue;
 using AK::DebugLogStream;
 using AK::DoublyLinkedList;
 using AK::FixedArray;
+using AK::FlyString;
 using AK::Function;
 using AK::HashMap;
 using AK::HashTable;
@@ -138,6 +140,6 @@ using AK::StringImpl;
 using AK::StringView;
 using AK::Traits;
 using AK::URL;
-using AK::FlyString;
+using AK::Utf32View;
 using AK::Utf8View;
 using AK::Vector;
