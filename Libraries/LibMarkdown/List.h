@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #include <LibMarkdown/Block.h>
 #include <LibMarkdown/Text.h>
@@ -34,11 +35,17 @@ namespace Markdown {
 
 class List final : public Block {
 public:
+    List(Vector<Text>&& text, bool is_ordered)
+        : m_items(move(text))
+        , m_is_ordered(is_ordered)
+    {
+    }
     virtual ~List() override {}
 
     virtual String render_to_html() const override;
     virtual String render_for_terminal() const override;
-    virtual bool parse(Vector<StringView>::ConstIterator& lines) override;
+
+    static OwnPtr<List> parse(Vector<StringView>::ConstIterator& lines);
 
 private:
     // TODO: List items should be considered blocks of their own kind.

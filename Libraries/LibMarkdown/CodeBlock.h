@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <LibMarkdown/Block.h>
 #include <LibMarkdown/Text.h>
 
@@ -33,11 +34,16 @@ namespace Markdown {
 
 class CodeBlock final : public Block {
 public:
-    virtual ~CodeBlock() override {}
+    CodeBlock(Text&& style_spec, const String& code)
+        : m_code(move(code))
+        , m_style_spec(move(style_spec))
+    {
+    }
+    virtual ~CodeBlock() override { }
 
     virtual String render_to_html() const override;
     virtual String render_for_terminal() const override;
-    virtual bool parse(Vector<StringView>::ConstIterator& lines) override;
+    static OwnPtr<CodeBlock> parse(Vector<StringView>::ConstIterator& lines);
 
 private:
     String style_language() const;

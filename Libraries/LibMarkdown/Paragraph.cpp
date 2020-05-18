@@ -46,10 +46,10 @@ String Paragraph::render_for_terminal() const
     return builder.build();
 }
 
-bool Paragraph::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<Paragraph> Paragraph::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
-        return false;
+        return nullptr;
 
     bool first = true;
     StringBuilder builder;
@@ -86,11 +86,13 @@ bool Paragraph::parse(Vector<StringView>::ConstIterator& lines)
     }
 
     if (first)
-        return false;
+        return nullptr;
 
-    bool success = m_text.parse(builder.build());
-    ASSERT(success);
-    return true;
+    auto text = Text::parse(builder.build());
+    if (!text.has_value())
+        return nullptr;
+
+    return make<Paragraph>(move(text.value()));
 }
 
 }

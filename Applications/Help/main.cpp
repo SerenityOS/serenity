@@ -128,10 +128,13 @@ int main(int argc, char* argv[])
         auto buffer = file->read_all();
         StringView source { (const char*)buffer.data(), buffer.size() };
 
-        auto md_document = Markdown::Document::parse(source);
-        ASSERT(md_document);
+        String html;
+        {
+            auto md_document = Markdown::Document::parse(source);
+            ASSERT(md_document);
+            html = md_document->render_to_html();
+        }
 
-        String html = md_document->render_to_html();
         auto html_document = Web::parse_html_document(html);
         page_view.set_document(html_document);
 

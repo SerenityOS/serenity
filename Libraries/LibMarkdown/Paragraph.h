@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <LibMarkdown/Block.h>
 #include <LibMarkdown/Text.h>
 
@@ -33,11 +34,12 @@ namespace Markdown {
 
 class Paragraph final : public Block {
 public:
+    explicit Paragraph(Text&& text) : m_text(move(text)) {}
     virtual ~Paragraph() override {}
 
     virtual String render_to_html() const override;
     virtual String render_for_terminal() const override;
-    virtual bool parse(Vector<StringView>::ConstIterator& lines) override;
+    static OwnPtr<Paragraph> parse(Vector<StringView>::ConstIterator& lines);
 
 private:
     Text m_text;

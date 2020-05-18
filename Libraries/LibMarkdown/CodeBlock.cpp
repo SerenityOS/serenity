@@ -105,16 +105,16 @@ String CodeBlock::render_for_terminal() const
     return builder.build();
 }
 
-bool CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<CodeBlock> CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
-        return false;
+        return nullptr;
 
     constexpr auto tick_tick_tick = "```";
 
     StringView line = *lines;
     if (!line.starts_with(tick_tick_tick))
-        return false;
+        return nullptr;
 
     // Our Markdown extension: we allow
     // specifying a style and a language
@@ -128,8 +128,9 @@ bool CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
     // and if possible syntax-highlighted
     // as appropriate for a shell script.
     StringView style_spec = line.substring_view(3, line.length() - 3);
-    bool success = m_style_spec.parse(style_spec);
-    ASSERT(success);
+    auto spec = Text::parse(style_spec);
+    if (!spec.has_value())
+        return nullptr;
 
     ++lines;
 
@@ -149,8 +150,7 @@ bool CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
         first = false;
     }
 
-    m_code = builder.build();
-    return true;
+    return make<CodeBlock>(move(spec.value()), builder.build());
 }
 
 }

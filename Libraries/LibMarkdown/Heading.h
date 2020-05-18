@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibMarkdown/Block.h>
@@ -35,15 +36,20 @@ namespace Markdown {
 
 class Heading final : public Block {
 public:
-    virtual ~Heading() override {}
+    Heading(Text&& text, size_t level)
+        : m_text(move(text))
+        , m_level(level)
+    {
+    }
+    virtual ~Heading() override { }
 
     virtual String render_to_html() const override;
     virtual String render_for_terminal() const override;
-    virtual bool parse(Vector<StringView>::ConstIterator& lines) override;
+    static OwnPtr<Heading> parse(Vector<StringView>::ConstIterator& lines);
 
 private:
     Text m_text;
-    int m_level { -1 };
+    size_t m_level { 0 };
 };
 
 }

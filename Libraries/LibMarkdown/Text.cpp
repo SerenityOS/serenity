@@ -181,12 +181,13 @@ String Text::render_for_terminal() const
     return builder.build();
 }
 
-bool Text::parse(const StringView& str)
+Optional<Text> Text::parse(const StringView& str)
 {
     Style current_style;
     size_t current_span_start = 0;
     int first_span_in_the_current_link = -1;
     bool current_link_is_actually_img = false;
+    Vector<Span> spans;
 
     auto append_span_if_needed = [&](size_t offset) {
         ASSERT(current_span_start <= offset);
@@ -195,7 +196,7 @@ bool Text::parse(const StringView& str)
                 unescape(str.substring_view(current_span_start, offset - current_span_start)),
                 current_style
             };
-            m_spans.append(move(span));
+            spans.append(move(span));
             current_span_start = offset;
         }
     };
@@ -239,7 +240,7 @@ bool Text::parse(const StringView& str)
         case '[':
             if (first_span_in_the_current_link != -1)
                 dbg() << "Dropping the outer link";
-            first_span_in_the_current_link = m_spans.size();
+            first_span_in_the_current_link = spans.size();
             break;
         case ']': {
             if (first_span_in_the_current_link == -1) {
@@ -262,11 +263,11 @@ bool Text::parse(const StringView& str)
                 offset--;
 
             const StringView href = str.substring_view(start_of_href, offset - start_of_href);
-            for (size_t i = first_span_in_the_current_link; i < m_spans.size(); i++) {
+            for (size_t i = first_span_in_the_current_link; i < spans.size(); i++) {
                 if (current_link_is_actually_img)
-                    m_spans[i].style.img = href;
+                    spans[i].style.img = href;
                 else
-                    m_spans[i].style.href = href;
+                    spans[i].style.href = href;
             }
             break;
         }
@@ -282,7 +283,7 @@ bool Text::parse(const StringView& str)
 
     append_span_if_needed(str.length());
 
-    return true;
+    return Text(move(spans));
 }
 
 }

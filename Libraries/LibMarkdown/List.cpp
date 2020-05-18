@@ -66,21 +66,26 @@ String List::render_for_terminal() const
     return builder.build();
 }
 
-bool List::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
 {
+    Vector<Text> items;
+    bool is_ordered = false;
+
     bool first = true;
     size_t offset = 0;
     StringBuilder item_builder;
     auto flush_item_if_needed = [&] {
         if (first)
-            return;
+            return true;
 
-        Text text;
-        bool success = text.parse(item_builder.string_view());
-        ASSERT(success);
-        m_items.append(move(text));
+        auto text = Text::parse(item_builder.string_view());
+        if (!text.has_value())
+            return false;
+
+        items.append(move(text.value()));
 
         item_builder.clear();
+        return true;
     };
 
     while (true) {
@@ -115,21 +120,22 @@ bool List::parse(Vector<StringView>::ConstIterator& lines)
 
         if (appears_unordered || appears_ordered) {
             if (first)
-                m_is_ordered = appears_ordered;
-            else if (m_is_ordered != appears_ordered)
-                return false;
+                is_ordered = appears_ordered;
+            else if (is_ordered != appears_ordered)
+                return nullptr;
 
-            flush_item_if_needed();
+            if (!flush_item_if_needed())
+                return nullptr;
 
             while (offset + 1 < line.length() && line[offset + 1] == ' ')
                 offset++;
 
         } else {
             if (first)
-                return false;
+                return nullptr;
             for (size_t i = 0; i < offset; i++) {
                 if (line[i] != ' ')
-                    return false;
+                    return nullptr;
             }
         }
 
@@ -140,8 +146,9 @@ bool List::parse(Vector<StringView>::ConstIterator& lines)
         ++lines;
     }
 
-    flush_item_if_needed();
-    return !first;
+    if (!flush_item_if_needed() || first)
+        return nullptr;
+    return make<List>(move(items), is_ordered);
 }
 
 }

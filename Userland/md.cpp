@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <LibCore/File.h>
 #include <LibMarkdown/Document.h>

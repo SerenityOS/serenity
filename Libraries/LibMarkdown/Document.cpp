@@ -67,19 +67,18 @@ String Document::render_for_terminal() const
 template<typename BlockType>
 static bool helper(Vector<StringView>::ConstIterator& lines, NonnullOwnPtrVector<Block>& blocks)
 {
-    NonnullOwnPtr<BlockType> block = make<BlockType>();
-    bool success = block->parse(lines);
-    if (!success)
+    OwnPtr<BlockType> block = BlockType::parse(lines);
+    if (!block)
         return false;
-    blocks.append(move(block));
+    blocks.append(block.release_nonnull());
     return true;
 }
 
-RefPtr<Document> Document::parse(const StringView& str)
+OwnPtr<Document> Document::parse(const StringView& str)
 {
     const Vector<StringView> lines_vec = str.lines();
     auto lines = lines_vec.begin();
-    auto document = adopt(*new Document);
+    auto document = make<Document>();
     auto& blocks = document->m_blocks;
 
     while (true) {
