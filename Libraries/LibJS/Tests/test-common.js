@@ -50,3 +50,11 @@ function assertThrowsError(testFunction, options) {
     }
 }
 
+/**
+ * Check whether the difference between two numbers is less than 0.000001.
+ * @param {Number} a First number
+ * @param {Number} b Second number
+ */
+function isClose(a, b) {
+    return Math.abs(a - b) < 0.000001;
+}
