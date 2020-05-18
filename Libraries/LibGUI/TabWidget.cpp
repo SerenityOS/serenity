@@ -147,6 +147,9 @@ Gfx::Rect TabWidget::container_rect() const
 
 void TabWidget::paint_event(PaintEvent& event)
 {
+    if (!m_bar_visible)
+        return;
+
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
@@ -204,6 +207,14 @@ int TabWidget::uniform_tab_width() const
     if (total_tab_width > width())
         tab_width = width() / m_tabs.size();
     return max(tab_width, minimum_tab_width);
+}
+
+void TabWidget::set_bar_visible(bool bar_visible)
+{
+    m_bar_visible = bar_visible;
+    if (m_active_widget)
+        m_active_widget->set_relative_rect(child_rect_for_size(size()));
+    update_bar();
 }
 
 Gfx::Rect TabWidget::button_rect(int index) const
@@ -346,7 +357,7 @@ void TabWidget::activate_previous_tab()
     set_active_widget(m_tabs.at(index).widget);
 }
 
-void TabWidget::keydown_event(KeyEvent & event)
+void TabWidget::keydown_event(KeyEvent& event)
 {
     if (event.ctrl() && event.key() == Key_Tab) {
         if (event.shift())
