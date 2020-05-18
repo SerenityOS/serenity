@@ -212,7 +212,7 @@ void WindowSwitcher::draw()
 void WindowSwitcher::refresh()
 {
     auto& wm = WindowManager::the();
-    Window* selected_window = nullptr;
+    const Window* selected_window = nullptr;
     if (m_selected_index > 0 && m_windows[m_selected_index])
         selected_window = m_windows[m_selected_index].ptr();
     if (!selected_window)
