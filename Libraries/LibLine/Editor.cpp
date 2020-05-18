@@ -222,14 +222,20 @@ String Editor::get_line(const String& prompt)
         }
 
         Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
+        size_t consumed_codepoints = 0;
 
-        for (auto ch : input_view) {
-            if (ch == 0)
+        for (auto codepoint : input_view) {
+            if (m_finish)
+                break;
+
+            ++consumed_codepoints;
+
+            if (codepoint == 0)
                 continue;
 
             switch (m_state) {
             case InputState::ExpectBracket:
-                if (ch == '[') {
+                if (codepoint == '[') {
                     m_state = InputState::ExpectFinal;
                     continue;
                 } else {
@@ -237,7 +243,7 @@ String Editor::get_line(const String& prompt)
                     break;
                 }
             case InputState::ExpectFinal:
-                switch (ch) {
+                switch (codepoint) {
                 case 'O': // mod_ctrl
                     ctrl_held = true;
                     continue;
@@ -357,7 +363,7 @@ String Editor::get_line(const String& prompt)
                     ctrl_held = false;
                     continue;
                 default:
-                    dbgprintf("Shell: Unhandled final: %02x (%c)\r\n", ch, ch);
+                    dbgprintf("Shell: Unhandled final: %02x (%c)\r\n", codepoint, codepoint);
                     m_state = InputState::Free;
                     ctrl_held = false;
                     continue;
@@ -367,14 +373,14 @@ String Editor::get_line(const String& prompt)
                 m_state = InputState::Free;
                 continue;
             case InputState::Free:
-                if (ch == 27) {
+                if (codepoint == 27) {
                     m_state = InputState::ExpectBracket;
                     continue;
                 }
                 break;
             }
 
-            auto cb = m_key_callbacks.get(ch);
+            auto cb = m_key_callbacks.get(codepoint);
             if (cb.has_value()) {
                 if (!cb.value()->callback(*this)) {
                     continue;
@@ -383,7 +389,7 @@ String Editor::get_line(const String& prompt)
 
             m_search_offset = 0; // reset search offset on any key
 
-            if (ch == '\t' || reverse_tab) {
+            if (codepoint == '\t' || reverse_tab) {
                 if (!on_tab_complete_first_token || !on_tab_complete_other_token)
                     continue;
 
@@ -668,11 +674,11 @@ String Editor::get_line(const String& prompt)
                 m_refresh_needed = true;
             };
 
-            if (ch == 8 || ch == m_termios.c_cc[VERASE]) {
+            if (codepoint == 8 || codepoint == m_termios.c_cc[VERASE]) {
                 do_backspace();
                 continue;
             }
-            if (ch == m_termios.c_cc[VWERASE]) {
+            if (codepoint == m_termios.c_cc[VWERASE]) {
                 bool has_seen_nonspace = false;
                 while (m_cursor > 0) {
                     if (isspace(m_buffer[m_cursor - 1])) {
@@ -685,7 +691,7 @@ String Editor::get_line(const String& prompt)
                 }
                 continue;
             }
-            if (ch == m_termios.c_cc[VKILL]) {
+            if (codepoint == m_termios.c_cc[VKILL]) {
                 for (size_t i = 0; i < m_cursor; ++i)
                     m_buffer.remove(0);
                 m_cursor = 0;
@@ -693,7 +699,7 @@ String Editor::get_line(const String& prompt)
                 continue;
             }
             // ^L
-            if (ch == 0xc) {
+            if (codepoint == 0xc) {
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 vt_move_absolute(1, 1);
                 m_origin_x = 1;
@@ -702,12 +708,12 @@ String Editor::get_line(const String& prompt)
                 continue;
             }
             // ^A
-            if (ch == 0x01) {
+            if (codepoint == 0x01) {
                 m_cursor = 0;
                 continue;
             }
             // ^R
-            if (ch == 0x12) {
+            if (codepoint == 0x12) {
                 if (m_is_searching) {
                     // how did we get here?
                     ASSERT_NOT_REACHED();
@@ -715,8 +721,8 @@ String Editor::get_line(const String& prompt)
                     m_is_searching = true;
                     m_search_offset = 0;
                     m_pre_search_buffer.clear();
-                    for (auto ch : m_buffer)
-                        m_pre_search_buffer.append(ch);
+                    for (auto codepoint : m_buffer)
+                        m_pre_search_buffer.append(codepoint);
                     m_pre_search_cursor = m_cursor;
                     m_search_editor = make<Editor>(Configuration { Configuration::Eager, m_configuration.split_mechanism }); // Has anyone seen 'Inception'?
                     m_search_editor->on_display_refresh = [this](Editor& search_editor) {
@@ -805,7 +811,7 @@ String Editor::get_line(const String& prompt)
                 continue;
             }
             // Normally ^D
-            if (ch == m_termios.c_cc[VEOF]) {
+            if (codepoint == m_termios.c_cc[VEOF]) {
                 if (m_buffer.is_empty()) {
                     printf("<EOF>\n");
                     if (!m_always_refresh) // this is a little off, but it'll do for now
@@ -814,24 +820,23 @@ String Editor::get_line(const String& prompt)
                 continue;
             }
             // ^E
-            if (ch == 0x05) {
+            if (codepoint == 0x05) {
 
                 m_cursor = m_buffer.size();
                 continue;
             }
-            if (ch == '\n') {
+            if (codepoint == '\n') {
                 finish();
                 continue;
             }
 
-            insert(ch);
+            insert(codepoint);
         }
 
-        if (valid_bytes == m_incomplete_data.size()) {
+        if (consumed_codepoints == m_incomplete_data.size()) {
             m_incomplete_data.clear();
         } else {
-            ASSERT_NOT_REACHED();
-            for (size_t i = 0; i < valid_bytes; ++i)
+            for (size_t i = 0; i < consumed_codepoints; ++i)
                 m_incomplete_data.take_first();
         }
     }
