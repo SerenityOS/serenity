@@ -1,0 +1,21 @@
+--- bash-5.0/lib/readline/terminal.c.orig	2020-05-18 09:39:55.104000000 +0100
++++ bash-5.0/lib/readline/terminal.c	2020-05-18 09:40:42.409654415 +0100
+@@ -102,12 +102,12 @@
+ 
+ static int tcap_initialized;
+ 
+-#if !defined (__linux__) && !defined (NCURSES_VERSION)
+-#  if defined (__EMX__) || defined (NEED_EXTERN_PC)
+-extern 
+-#  endif /* __EMX__ || NEED_EXTERN_PC */
+-char PC, *BC, *UP;
+-#endif /* !__linux__ && !NCURSES_VERSION */
++// #if !defined (__linux__) && !defined (NCURSES_VERSION)
++// #  if defined (__EMX__) || defined (NEED_EXTERN_PC)
++// extern 
++// #  endif /* __EMX__ || NEED_EXTERN_PC */
++// char PC, *BC, *UP;
++// #endif /* !__linux__ && !NCURSES_VERSION */
+ 
+ /* Some strings to control terminal actions.  These are output by tputs (). */
+ char *_rl_term_clreol;
