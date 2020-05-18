@@ -70,7 +70,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     auto codepoints = supported_emoji_codepoints();
 
     size_t index = 0;
-    size_t columns = 5;
+    size_t columns = 6;
     size_t rows = ceil_div(codepoints.size(), columns);
 
     for (size_t row = 0; row < rows && index < codepoints.size(); ++row) {
@@ -78,18 +78,18 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
         auto& horizontal_layout = horizontal_container.set_layout<HorizontalBoxLayout>();
         horizontal_layout.set_spacing(0);
         for (size_t column = 0; column < columns; ++column) {
-            StringBuilder builder;
-            builder.append(Utf32View(&codepoints[index++], 1));
-            auto emoji_text = builder.to_string();
-            auto& button = horizontal_container.add<Button>(emoji_text);
-            button.set_button_style(Gfx::ButtonStyle::CoolBar);
-            button.on_click = [this, button = &button](auto) {
-                m_selected_emoji_text = button->text();
-                done(ExecOK);
-            };
-            if (index >= codepoints.size()) {
-                horizontal_layout.add_spacer();
-                break;
+            if (index < codepoints.size()) {
+                StringBuilder builder;
+                builder.append(Utf32View(&codepoints[index++], 1));
+                auto emoji_text = builder.to_string();
+                auto& button = horizontal_container.add<Button>(emoji_text);
+                button.set_button_style(Gfx::ButtonStyle::CoolBar);
+                button.on_click = [this, button = &button](auto) {
+                    m_selected_emoji_text = button->text();
+                    done(ExecOK);
+                };
+            } else {
+                horizontal_container.add<Widget>();
             }
         }
     }
