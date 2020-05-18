@@ -77,6 +77,7 @@ public:
     void set_submenu_id(int submenu_id) { m_submenu_id = submenu_id; }
 
     Menu* submenu();
+    const Menu* submenu() const;
 
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool exclusive) { m_exclusive = exclusive; }
