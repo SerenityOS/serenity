@@ -118,7 +118,7 @@ Value StringPrototype::repeat(Interpreter& interpreter)
         return interpreter.throw_exception<RangeError>("repeat count must be a positive number");
     if (count_value.is_infinity())
         return interpreter.throw_exception<RangeError>("repeat count must be a finite number");
-    auto count = count_value.to_size_t();
+    auto count = count_value.as_size_t();
     StringBuilder builder;
     for (size_t i = 0; i < count; ++i)
         builder.append(string);

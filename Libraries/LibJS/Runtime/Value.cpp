@@ -82,7 +82,7 @@ String Value::to_string_without_side_effects() const
             return as_double() < 0 ? "-Infinity" : "Infinity";
 
         if (is_integer())
-            return String::number(to_i32());
+            return String::number(as_i32());
         return String::format("%.4f", as_double());
     }
 
@@ -125,7 +125,7 @@ String Value::to_string(Interpreter& interpreter) const
             return as_double() < 0 ? "-Infinity" : "Infinity";
 
         if (is_integer())
-            return String::number(to_i32());
+            return String::number(as_i32());
         return String::format("%.4f", as_double());
     }
 
@@ -242,6 +242,19 @@ Value Value::to_number(Interpreter& interpreter) const
     ASSERT_NOT_REACHED();
 }
 
+i32 Value::as_i32() const
+{
+    return static_cast<i32>(as_double());
+}
+
+size_t Value::as_size_t() const
+{
+    ASSERT(as_double() >= 0);
+    if (is_nan())
+        return 0;
+    return min((double)(i32)as_double(), MAX_ARRAY_LIKE_INDEX);
+}
+
 double Value::to_double(Interpreter& interpreter) const
 {
     auto number = to_number(interpreter);
@@ -250,25 +263,12 @@ double Value::to_double(Interpreter& interpreter) const
     return number.as_double();
 }
 
-i32 Value::to_i32() const
-{
-    return static_cast<i32>(as_double());
-}
-
 i32 Value::to_i32(Interpreter& interpreter) const
 {
     auto number = to_number(interpreter);
     if (interpreter.exception())
         return 0;
-    return number.to_i32();
-}
-
-size_t Value::to_size_t() const
-{
-    ASSERT(type() == Type::Number);
-    if (is_nan() || as_double() <= 0)
-        return 0;
-    return min((double)(i32)as_double(), MAX_ARRAY_LIKE_INDEX);
+    return number.as_i32();
 }
 
 size_t Value::to_size_t(Interpreter& interpreter) const
@@ -278,7 +278,9 @@ size_t Value::to_size_t(Interpreter& interpreter) const
     auto number = to_number(interpreter);
     if (interpreter.exception())
         return 0;
-    return number.to_size_t();
+    if (as_double() <= 0)
+        return 0;
+    return number.as_size_t();
 }
 
 Value greater_than(Interpreter& interpreter, Value lhs, Value rhs)
