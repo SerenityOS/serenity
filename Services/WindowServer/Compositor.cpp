@@ -108,7 +108,7 @@ void Compositor::compose()
 {
     auto& wm = WindowManager::the();
     if (m_wallpaper_mode == WallpaperMode::Unchecked)
-        m_wallpaper_mode = mode_to_enum(wm.wm_config()->read_entry("Background", "Mode", "simple"));
+        m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "simple"));
     auto& ws = Screen::the();
 
     auto dirty_rects = move(m_dirty_rects);
@@ -133,7 +133,7 @@ void Compositor::compose()
     };
 
     Color background_color = wm.palette().desktop_background();
-    String background_color_entry = wm.wm_config()->read_entry("Background", "Color", "");
+    String background_color_entry = wm.config()->read_entry("Background", "Color", "");
     if (!background_color_entry.is_empty()) {
         background_color = Color::from_string(background_color_entry).value_or(background_color);
     }
@@ -320,8 +320,8 @@ void Compositor::invalidate(const Gfx::Rect& a_rect)
 bool Compositor::set_background_color(const String& background_color)
 {
     auto& wm = WindowManager::the();
-    wm.wm_config()->write_entry("Background", "Color", background_color);
-    bool ret_val = wm.wm_config()->sync();
+    wm.config()->write_entry("Background", "Color", background_color);
+    bool ret_val = wm.config()->sync();
 
     if (ret_val)
         Compositor::invalidate();
@@ -332,8 +332,8 @@ bool Compositor::set_background_color(const String& background_color)
 bool Compositor::set_wallpaper_mode(const String& mode)
 {
     auto& wm = WindowManager::the();
-    wm.wm_config()->write_entry("Background", "Mode", mode);
-    bool ret_val = wm.wm_config()->sync();
+    wm.config()->write_entry("Background", "Mode", mode);
+    bool ret_val = wm.config()->sync();
 
     if (ret_val) {
         m_wallpaper_mode = mode_to_enum(mode);

@@ -81,10 +81,7 @@ public:
 
     Palette palette() const { return Palette(*m_palette); }
 
-    RefPtr<Core::ConfigFile> wm_config() const
-    {
-        return m_wm_config;
-    }
+    RefPtr<Core::ConfigFile> config() const { return m_config; }
     void reload_config(bool);
 
     void add_window(Window&);
@@ -279,7 +276,7 @@ private:
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 
-    RefPtr<Core::ConfigFile> m_wm_config;
+    RefPtr<Core::ConfigFile> m_config;
 
     WeakPtr<ClientConnection> m_dnd_client;
     String m_dnd_text;
