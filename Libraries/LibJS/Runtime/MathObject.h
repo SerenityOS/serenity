@@ -51,6 +51,7 @@ private:
     static Value cos(Interpreter&);
     static Value tan(Interpreter&);
     static Value pow(Interpreter&);
+    static Value sign(Interpreter&);
 };
 
 }
