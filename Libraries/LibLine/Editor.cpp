@@ -111,24 +111,64 @@ void Editor::register_character_input_callback(char ch, Function<bool(Editor&)> 
     m_key_callbacks.set(ch, make<KeyCallback>(move(callback)));
 }
 
+static size_t codepoint_length_in_utf8(u32 codepoint)
+{
+    if (codepoint <= 0x7f)
+        return 1;
+    if (codepoint <= 0x07ff)
+        return 2;
+    if (codepoint <= 0xffff)
+        return 3;
+    if (codepoint <= 0x10ffff)
+        return 4;
+    return 3;
+}
+
 void Editor::stylize(const Span& span, const Style& style)
 {
-    auto starting_map = m_spans_starting.get(span.beginning()).value_or({});
+    auto start = span.beginning();
+    auto end = span.end();
 
-    if (!starting_map.contains(span.end()))
+    if (span.mode() == Span::ByteOriented) {
+        size_t byte_offset = 0;
+        size_t codepoint_offset = 0;
+        size_t start_codepoint_offset = 0, end_codepoint_offset = 0;
+
+        for (;;) {
+            if (codepoint_offset >= m_buffer.size())
+                break;
+
+            if (byte_offset > end)
+                break;
+
+            if (byte_offset < start)
+                ++start_codepoint_offset;
+
+            ++end_codepoint_offset;
+
+            byte_offset += codepoint_length_in_utf8(m_buffer[codepoint_offset++]);
+        }
+
+        start = start_codepoint_offset;
+        end = end_codepoint_offset;
+    }
+
+    auto starting_map = m_spans_starting.get(start).value_or({});
+
+    if (!starting_map.contains(end))
         m_refresh_needed = true;
 
-    starting_map.set(span.end(), style);
+    starting_map.set(end, style);
 
-    m_spans_starting.set(span.beginning(), starting_map);
+    m_spans_starting.set(start, starting_map);
 
-    auto ending_map = m_spans_ending.get(span.end()).value_or({});
+    auto ending_map = m_spans_ending.get(end).value_or({});
 
-    if (!ending_map.contains(span.beginning()))
+    if (!ending_map.contains(start))
         m_refresh_needed = true;
-    ending_map.set(span.beginning(), style);
+    ending_map.set(start, style);
 
-    m_spans_ending.set(span.end(), ending_map);
+    m_spans_ending.set(end, ending_map);
 }
 
 String Editor::get_line(const String& prompt)

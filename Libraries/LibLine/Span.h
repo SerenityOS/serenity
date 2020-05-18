@@ -30,17 +30,25 @@
 namespace Line {
 class Span {
 public:
-    Span(size_t start, size_t end)
+    enum Mode {
+        ByteOriented,
+        CodepointOriented,
+    };
+
+    Span(size_t start, size_t end, Mode mode = ByteOriented)
         : m_beginning(start)
         , m_end(end)
+        , m_mode(mode)
     {
     }
 
     size_t beginning() const { return m_beginning; }
     size_t end() const { return m_end; }
+    Mode mode() const { return m_mode; }
 
 private:
     size_t m_beginning { 0 };
     size_t m_end { 0 };
+    Mode m_mode { CodepointOriented };
 };
 }
