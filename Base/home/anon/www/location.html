@@ -2,9 +2,13 @@
 <html>
     <head>
         <title>window.location test</title>
+        <style>
+            #clickme { background-color: red; color: yellow; }
+        </style>
     </head>
     <body>
-        <pre></pre>
+    <pre></pre>
+    <div id="clickme">Click me to navigate away!</div>
     <script>
         var pre = document.querySelectorAll("pre")[0];
         pre.innerHTML += "href: " + location.href + '\n';
@@ -12,6 +16,10 @@
         pre.innerHTML += "pathname: " + location.pathname+ '\n';
         pre.innerHTML += "hash: " + location.hash + '\n';
         pre.innerHTML += "search: " + location.search + '\n';
+
+        document.getElementById("clickme").addEventListener("mousedown", function() {
+            window.location.href = 'http://serenityos.org/';
+        });
     </script>
     </body>
 </html>
