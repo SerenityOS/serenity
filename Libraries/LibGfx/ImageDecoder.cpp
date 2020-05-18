@@ -28,6 +28,7 @@
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibGfx/JPGLoader.h>
 #include <LibGfx/PBMLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PPMLoader.h>
@@ -60,7 +61,12 @@ ImageDecoder::ImageDecoder(const u8* data, size_t size)
     if (m_plugin->sniff())
         return;
 
+    m_plugin = make<JPGImageDecoderPlugin>(data, size);
+    if (m_plugin->sniff())
+        return;
+
     m_plugin = nullptr;
+    return;
 }
 
 ImageDecoder::~ImageDecoder()

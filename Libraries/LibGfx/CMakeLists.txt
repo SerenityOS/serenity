@@ -11,6 +11,7 @@ set(SOURCES
     GIFLoader.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
+    JPGLoader.cpp
     Painter.cpp
     Palette.cpp
     Path.cpp
