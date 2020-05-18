@@ -54,6 +54,7 @@ private:
     static Value exp(Interpreter&);
     static Value expm1(Interpreter&);
     static Value sign(Interpreter&);
+    static Value clz32(Interpreter&);
 };
 
 }
