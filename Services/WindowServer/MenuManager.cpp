@@ -351,7 +351,7 @@ static void collect_menu_subtree(Menu& menu, Vector<Menu*>& menus)
         auto& item = menu.item(i);
         if (!item.is_submenu())
             continue;
-        collect_menu_subtree(*const_cast<MenuItem&>(item).submenu(), menus);
+        collect_menu_subtree(*item.submenu(), menus);
     }
 }
 

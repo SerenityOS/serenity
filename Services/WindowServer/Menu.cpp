@@ -523,7 +523,7 @@ bool Menu::is_menu_ancestor_of(const Menu& other) const
     for (auto& item : m_items) {
         if (!item.is_submenu())
             continue;
-        auto& submenu = *const_cast<MenuItem&>(item).submenu();
+        auto& submenu = *item.submenu();
         if (&submenu == &other)
             return true;
         if (submenu.is_menu_ancestor_of(other))
