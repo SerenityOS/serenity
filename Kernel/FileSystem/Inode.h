@@ -54,7 +54,7 @@ public:
 
     FS& fs() { return m_fs; }
     const FS& fs() const { return m_fs; }
-    unsigned fsid() const;
+    unsigned fsid() const { return m_fs.fsid(); }
     unsigned index() const { return m_index; }
 
     size_t size() const { return metadata().size; }
