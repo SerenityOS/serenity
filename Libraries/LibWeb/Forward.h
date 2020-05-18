@@ -67,6 +67,7 @@ class EventTargetWrapper;
 class HTMLCanvasElementWrapper;
 class HTMLImageElementWrapper;
 class ImageDataWrapper;
+class LocationObject;
 class MouseEventWrapper;
 class NodeWrapper;
 class WindowObject;

@@ -54,9 +54,13 @@ JS::Value LocationObject::href_getter(JS::Interpreter& interpreter)
     return JS::js_string(interpreter, window.impl().document().url().to_string());
 }
 
-void LocationObject::href_setter(JS::Interpreter&, JS::Value)
+void LocationObject::href_setter(JS::Interpreter& interpreter, JS::Value value)
 {
-    // FIXME: Navigate to a new URL
+    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto new_href = value.to_string(interpreter);
+    if (interpreter.exception())
+        return;
+    window.impl().did_set_location_href({}, new_href);
 }
 
 JS::Value LocationObject::pathname_getter(JS::Interpreter& interpreter)

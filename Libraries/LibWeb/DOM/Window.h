@@ -49,6 +49,8 @@ public:
     void set_interval(JS::Function&, i32);
     void set_timeout(JS::Function&, i32);
 
+    void did_set_location_href(Badge<Bindings::LocationObject>, const String& new_href);
+
 private:
     explicit Window(Document&);
 

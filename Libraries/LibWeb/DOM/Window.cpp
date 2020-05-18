@@ -30,7 +30,10 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/Frame.h>
+#include <LibWeb/HtmlView.h>
 
 namespace Web {
 
@@ -103,6 +106,17 @@ void Window::cancel_animation_frame(i32 id)
 {
     // FIXME: We should not be passing untrusted numbers to DisplayLink::unregister_callback()!
     GUI::DisplayLink::unregister_callback(id);
+}
+
+void Window::did_set_location_href(Badge<Bindings::LocationObject>, const String& new_href)
+{
+    auto* frame = document().frame();
+    if (!frame)
+        return;
+    auto* view = frame->html_view();
+    if (!view)
+        return;
+    view->load(new_href);
 }
 
 }
