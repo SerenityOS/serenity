@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>window.location test</title>
+    </head>
+    <body>
+        <pre></pre>
+    <script>
+        var pre = document.querySelectorAll("pre")[0];
+        pre.innerHTML += "href: " + location.href + '\n';
+        pre.innerHTML += "hostname: " + location.hostname + '\n';
+        pre.innerHTML += "pathname: " + location.pathname+ '\n';
+        pre.innerHTML += "hash: " + location.hash + '\n';
+        pre.innerHTML += "search: " + location.search + '\n';
+    </script>
+    </body>
+</html>
