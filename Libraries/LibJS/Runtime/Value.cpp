@@ -250,8 +250,6 @@ i32 Value::as_i32() const
 size_t Value::as_size_t() const
 {
     ASSERT(as_double() >= 0);
-    if (is_nan())
-        return 0;
     return min((double)(i32)as_double(), MAX_ARRAY_LIKE_INDEX);
 }
 
@@ -278,7 +276,9 @@ size_t Value::to_size_t(Interpreter& interpreter) const
     auto number = to_number(interpreter);
     if (interpreter.exception())
         return 0;
-    if (as_double() <= 0)
+    if (number.is_nan())
+        return 0;
+    if (number.as_double() <= 0)
         return 0;
     return number.as_size_t();
 }
