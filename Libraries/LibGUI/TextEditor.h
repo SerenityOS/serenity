@@ -85,8 +85,6 @@ public:
     int line_height() const;
     TextPosition cursor() const { return m_cursor; }
     TextRange normalized_selection() const { return m_selection.normalized(); }
-    // FIXME: This should take glyph spacing into account, no?
-    int glyph_width() const;
 
     void insert_at_cursor_or_replace_selection(const StringView&);
     bool write_to_file(const StringView& path);
@@ -172,6 +170,7 @@ private:
     void paint_ruler(Painter&);
     void update_content_size();
     void did_change();
+    int fixed_glyph_width() const;
 
     Gfx::Rect line_content_rect(size_t item_index) const;
     Gfx::Rect line_widget_rect(size_t line_index) const;
