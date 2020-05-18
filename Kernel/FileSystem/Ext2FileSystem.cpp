@@ -155,7 +155,7 @@ InodeIdentifier Ext2FS::root_inode() const
     return { fsid(), EXT2_ROOT_INO };
 }
 
-bool Ext2FS::read_block_containing_inode(unsigned inode, unsigned& block_index, unsigned& offset, u8* buffer) const
+bool Ext2FS::find_block_containing_inode(unsigned inode, unsigned& block_index, unsigned& offset) const
 {
     LOCKER(m_lock);
     auto& super_block = this->super_block();
@@ -172,7 +172,7 @@ bool Ext2FS::read_block_containing_inode(unsigned inode, unsigned& block_index, 
     block_index = bgd.bg_inode_table + (offset >> EXT2_BLOCK_SIZE_BITS(&super_block));
     offset &= block_size() - 1;
 
-    return read_block(block_index, buffer);
+    return true;
 }
 
 Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks)
@@ -285,7 +285,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
             --remaining_blocks;
         }
         stream.fill_to_end(0);
-        bool success = write_block(e2inode.i_block[EXT2_IND_BLOCK], block_contents.data());
+        bool success = write_block(e2inode.i_block[EXT2_IND_BLOCK], block_contents.data(), block_size());
         ASSERT(success);
     }
 
@@ -319,10 +319,11 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
             indirect_block_count++;
 
         auto dind_block_contents = ByteBuffer::create_uninitialized(block_size());
-        read_block(e2inode.i_block[EXT2_DIND_BLOCK], dind_block_contents.data());
         if (dind_block_new) {
             memset(dind_block_contents.data(), 0, dind_block_contents.size());
             dind_block_dirty = true;
+        } else {
+            read_block(e2inode.i_block[EXT2_DIND_BLOCK], dind_block_contents.data(), block_size());
         }
         auto* dind_block_as_pointers = (unsigned*)dind_block_contents.data();
 
@@ -340,10 +341,11 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
             }
 
             auto ind_block_contents = ByteBuffer::create_uninitialized(block_size());
-            read_block(indirect_block_index, ind_block_contents.data());
             if (ind_block_new) {
                 memset(ind_block_contents.data(), 0, dind_block_contents.size());
                 ind_block_dirty = true;
+            } else {
+                read_block(indirect_block_index, ind_block_contents.data(), block_size());
             }
             auto* ind_block_as_pointers = (unsigned*)ind_block_contents.data();
 
@@ -368,7 +370,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
             }
 
             if (ind_block_dirty) {
-                bool success = write_block(indirect_block_index, ind_block_contents.data());
+                bool success = write_block(indirect_block_index, ind_block_contents.data(), block_size());
                 ASSERT(success);
             }
         }
@@ -380,7 +382,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
         }
 
         if (dind_block_dirty) {
-            bool success = write_block(e2inode.i_block[EXT2_DIND_BLOCK], dind_block_contents.data());
+            bool success = write_block(e2inode.i_block[EXT2_DIND_BLOCK], dind_block_contents.data(), block_size());
             ASSERT(success);
         }
     }
@@ -449,11 +451,12 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
     auto process_block_array = [&](unsigned array_block_index, auto&& callback) {
         if (include_block_list_blocks)
             callback(array_block_index);
-        auto array_block = ByteBuffer::create_uninitialized(block_size());
-        read_block(array_block_index, array_block.data());
+        unsigned count = min(blocks_remaining, entries_per_block);
+        size_t read_size = count * sizeof(__u32);
+        auto array_block = ByteBuffer::create_uninitialized(read_size);
+        read_block(array_block_index, array_block.data(), read_size, 0);
         ASSERT(array_block);
         auto* array = reinterpret_cast<const __u32*>(array_block.data());
-        unsigned count = min(blocks_remaining, entries_per_block);
         for (BlockIndex i = 0; i < count; ++i)
             callback(array[i]);
     };
@@ -537,7 +540,7 @@ void Ext2FS::flush_writes()
     }
     for (auto& cached_bitmap : m_cached_bitmaps) {
         if (cached_bitmap->dirty) {
-            write_block(cached_bitmap->bitmap_block_index, cached_bitmap->buffer.data());
+            write_block(cached_bitmap->bitmap_block_index, cached_bitmap->buffer.data(), block_size());
             cached_bitmap->dirty = false;
 #ifdef EXT2_DEBUG
             dbg() << "Flushed bitmap block " << cached_bitmap->bitmap_block_index;
@@ -638,12 +641,11 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 
     unsigned block_index;
     unsigned offset;
-    u8 block[max_block_size];
-    if (!read_block_containing_inode(inode.index(), block_index, offset, block))
+    if (!find_block_containing_inode(inode.index(), block_index, offset))
         return {};
 
     auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
-    memcpy(&new_inode->m_raw_inode, reinterpret_cast<ext2_inode*>(block + offset), sizeof(ext2_inode));
+    read_block(block_index, reinterpret_cast<u8*>(&new_inode->m_raw_inode), sizeof(ext2_inode), offset);
     m_inode_cache.set(inode.index(), new_inode);
     return new_inode;
 }
@@ -674,6 +676,8 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
         return -EIO;
     }
 
+    bool allow_cache = !description || !description->is_direct();
+
     const int block_size = fs().block_size();
 
     size_t first_block_logical_index = offset / block_size;
@@ -691,20 +695,16 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     dbg() << "Ext2FS: Reading up to " << count << " bytes " << offset << " bytes into inode " << identifier() << " to " << (const void*)buffer;
 #endif
 
-    u8 block[max_block_size];
-
     for (size_t bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
         auto block_index = m_block_list[bi];
         ASSERT(block_index);
-        bool success = fs().read_block(block_index, block, description);
+        size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+        size_t num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
+        bool success = fs().read_block(block_index, out, num_bytes_to_copy, offset_into_block, allow_cache);
         if (!success) {
             klog() << "ext2fs: read_bytes: read_block(" << block_index << ") failed (lbi: " << bi << ")";
             return -EIO;
         }
-
-        size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
-        size_t num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
-        memcpy(out, block + offset_into_block, num_bytes_to_copy);
         remaining_count -= num_bytes_to_copy;
         nread += num_bytes_to_copy;
         out += num_bytes_to_copy;
@@ -789,6 +789,8 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
         }
     }
 
+    bool allow_cache = !description || !description->is_direct();
+
     const size_t block_size = fs().block_size();
     u64 old_size = size();
     u64 new_size = max(static_cast<u64>(offset) + count, (u64)size());
@@ -812,8 +814,6 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
 
     size_t offset_into_first_block = offset % block_size;
 
-    size_t last_logical_block_index_in_file = new_size / block_size;
-
     ssize_t nwritten = 0;
     size_t remaining_count = min((off_t)count, (off_t)new_size - offset);
     const u8* in = data;
@@ -822,35 +822,13 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     dbg() << "Ext2FS: Writing " << count << " bytes " << offset << " bytes into inode " << identifier() << " from " << (const void*)data;
 #endif
 
-    auto buffer_block = ByteBuffer::create_uninitialized(block_size);
     for (size_t bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
-
-        ByteBuffer block;
-        if (offset_into_block != 0 || num_bytes_to_copy != block_size) {
-            block = ByteBuffer::create_uninitialized(block_size);
-            bool success = fs().read_block(m_block_list[bi], block.data(), description);
-            if (!success) {
-                dbg() << "Ext2FS: In write_bytes, read_block(" << m_block_list[bi] << ") failed (bi: " << bi << ")";
-                return -EIO;
-            }
-        } else
-            block = buffer_block;
-
-        memcpy(block.data() + offset_into_block, in, num_bytes_to_copy);
-        if (bi == last_logical_block_index_in_file && num_bytes_to_copy < block_size) {
-            size_t padding_start = new_size % block_size;
-            size_t padding_bytes = block_size - padding_start;
-#ifdef EXT2_DEBUG
-            dbg() << "Ext2FS: Padding last block of file with zero x " << padding_bytes << " (new_size=" << new_size << ", offset_into_block=" << offset_into_block << ", num_bytes_to_copy=" << num_bytes_to_copy << ")";
-#endif
-            memset(block.data() + padding_start, 0, padding_bytes);
-        }
 #ifdef EXT2_DEBUG
         dbg() << "Ext2FS: Writing block " << m_block_list[bi] << " (offset_into_block: " << offset_into_block << ")";
 #endif
-        bool success = fs().write_block(m_block_list[bi], block.data(), description);
+        bool success = fs().write_block(m_block_list[bi], in, num_bytes_to_copy, offset_into_block, allow_cache);
         if (!success) {
             dbg() << "Ext2FS: write_block(" << m_block_list[bi] << ") failed (bi: " << bi << ")";
             ASSERT_NOT_REACHED();
@@ -1056,13 +1034,9 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
     LOCKER(m_lock);
     unsigned block_index;
     unsigned offset;
-    u8 block[max_block_size];
-    if (!read_block_containing_inode(inode, block_index, offset, block))
+    if (!find_block_containing_inode(inode, block_index, offset))
         return false;
-    memcpy(reinterpret_cast<ext2_inode*>(block + offset), &e2inode, inode_size());
-    bool success = write_block(block_index, block);
-    ASSERT(success);
-    return success;
+    return write_block(block_index, reinterpret_cast<const u8*>(&e2inode), inode_size(), offset);
 }
 
 Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count)
@@ -1287,7 +1261,7 @@ Ext2FS::CachedBitmap& Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
     }
 
     auto block = KBuffer::create_with_size(block_size(), Region::Access::Read | Region::Access::Write, "Ext2FS: Cached bitmap block");
-    bool success = read_block(bitmap_block_index, block.data());
+    bool success = read_block(bitmap_block_index, block.data(), block_size());
     ASSERT(success);
     m_cached_bitmaps.append(make<CachedBitmap>(bitmap_block_index, move(block)));
     return *m_cached_bitmaps.last();
