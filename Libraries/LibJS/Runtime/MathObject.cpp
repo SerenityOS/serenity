@@ -51,6 +51,7 @@ MathObject::MathObject()
     put_native_function("tan", tan, 1, attr);
     put_native_function("pow", pow, 2, attr);
     put_native_function("exp", exp, 1, attr);
+    put_native_function("expm1", expm1, 1, attr);
     put_native_function("sign", sign, 1, attr);
 
     put("E", Value(M_E), 0);
@@ -216,6 +217,16 @@ Value MathObject::exp(Interpreter& interpreter)
     if (number.is_nan())
         return js_nan();
     return Value(::pow(M_E, number.as_double()));
+}
+
+Value MathObject::expm1(Interpreter& interpreter)
+{
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (number.is_nan())
+        return js_nan();
+    return Value(::pow(M_E, number.as_double()) - 1);
 }
 
 Value MathObject::sign(Interpreter& interpreter)
