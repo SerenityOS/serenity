@@ -39,7 +39,6 @@ private:
     virtual const char* class_name() const override { return "SymbolPrototype"; }
 
     static Value description_getter(Interpreter&);
-    static void description_setter(Interpreter&, Value);
 
     static Value to_string(Interpreter&);
     static Value value_of(Interpreter&);
