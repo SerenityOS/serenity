@@ -142,7 +142,8 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
                 if (on_tls_ready_to_read)
                     on_tls_ready_to_read(*this);
         };
-        Core::Socket::on_ready_to_write = [this] {
+        m_write_notifier = Core::Notifier::construct(fd(), Core::Notifier::Event::Write);
+        m_write_notifier->on_ready_to_write = [this] {
             if (!Core::Socket::is_open() || !Core::Socket::is_connected() || Core::Socket::eof()) {
                 // an abrupt closure (the server is a jerk)
                 dbg() << "Socket not open, assuming abrupt closure";

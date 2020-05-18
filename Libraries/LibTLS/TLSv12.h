@@ -298,22 +298,6 @@ struct Context {
 class TLSv12 : public Core::Socket {
     C_OBJECT(TLSv12)
 public:
-    explicit TLSv12(Core::Object* parent, Version version = Version::V12)
-        : Core::Socket(Core::Socket::Type::TCP, parent)
-    {
-        m_context.version = version;
-        m_context.is_server = false;
-        m_context.tls_buffer = ByteBuffer::create_uninitialized(0);
-        int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-        if (fd < 0) {
-            set_error(errno);
-        } else {
-            set_fd(fd);
-            set_mode(IODevice::ReadWrite);
-            set_error(0);
-        }
-    }
-
     ByteBuffer& write_buffer() { return m_context.tls_buffer; }
     bool is_established() const { return m_context.connection_status == ConnectionStatus::Established; }
     virtual bool connect(const String&, int) override;
@@ -364,6 +348,8 @@ public:
     Function<void()> on_tls_finished;
 
 private:
+    explicit TLSv12(Core::Object* parent, Version version = Version::V12);
+
     virtual bool common_connect(const struct sockaddr*, socklen_t) override;
 
     void consume(const ByteBuffer& record);
@@ -476,6 +462,8 @@ private:
 
     OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_local;
     OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_remote;
+
+    RefPtr<Core::Notifier> m_write_notifier;
 };
 
 namespace Constants {

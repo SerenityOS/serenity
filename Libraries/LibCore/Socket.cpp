@@ -127,11 +127,13 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
         if (!m_connected) {
             m_connected = true;
             ensure_read_notifier();
+            if (m_notifier) {
+                m_notifier->remove_from_parent();
+                m_notifier = nullptr;
+            }
             if (on_connected)
                 on_connected();
         }
-        if (on_ready_to_write)
-            on_ready_to_write();
     };
     int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
