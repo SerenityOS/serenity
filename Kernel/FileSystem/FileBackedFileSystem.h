@@ -36,8 +36,6 @@ class FileBackedFS : public FS {
 public:
     virtual ~FileBackedFS() override;
 
-    virtual bool is_file_backed() const override { return true; }
-
     File& file() { return m_file_description->file(); }
     FileDescription& file_description() { return *m_file_description; }
     const File& file() const { return m_file_description->file(); }
@@ -52,8 +50,8 @@ public:
 protected:
     explicit FileBackedFS(FileDescription&);
 
-    bool read_block(unsigned index, u8* buffer, FileDescription* = nullptr) const;
-    bool read_blocks(unsigned index, unsigned count, u8* buffer, FileDescription* = nullptr) const;
+    bool read_block(unsigned index, u8* buffer, size_t count, size_t offset = 0, bool allow_cache = true) const;
+    bool read_blocks(unsigned index, unsigned count, u8* buffer, bool allow_cache = true) const;
 
     bool raw_read(unsigned index, u8* buffer);
     bool raw_write(unsigned index, const u8* buffer);
@@ -61,16 +59,18 @@ protected:
     bool raw_read_blocks(unsigned index, size_t count, u8* buffer);
     bool raw_write_blocks(unsigned index, size_t count, const u8* buffer);
 
-    bool write_block(unsigned index, const u8*, FileDescription* = nullptr);
-    bool write_blocks(unsigned index, unsigned count, const u8*, FileDescription* = nullptr);
+    bool write_block(unsigned index, const u8* buffer, size_t count, size_t offset = 0, bool allow_cache = true);
+    bool write_blocks(unsigned index, unsigned count, const u8*, bool allow_cache = true);
 
     size_t m_logical_block_size { 512 };
 
 private:
+    virtual bool is_file_backed() const override { return true; }
+
     DiskCache& cache() const;
     void flush_specific_block_if_needed(unsigned index);
 
-    NonnullRefPtr<FileDescription> m_file_description;
+    mutable NonnullRefPtr<FileDescription> m_file_description;
     mutable OwnPtr<DiskCache> m_cache;
 };
 

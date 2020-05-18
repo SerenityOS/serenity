@@ -123,7 +123,7 @@ private:
     unsigned inode_size() const;
 
     bool write_ext2_inode(InodeIndex, const ext2_inode&);
-    bool read_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset, u8* buffer) const;
+    bool find_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset) const;
 
     bool flush_super_block();
 

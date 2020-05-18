@@ -56,7 +56,7 @@ public:
         }
     }
 
-    ~DiskCache() {}
+    ~DiskCache() { }
 
     bool is_dirty() const { return m_dirty; }
     void set_dirty(bool b) { m_dirty = b; }
@@ -124,26 +124,31 @@ FileBackedFS::~FileBackedFS()
 {
 }
 
-bool FileBackedFS::write_block(unsigned index, const u8* data, FileDescription* description)
+bool FileBackedFS::write_block(unsigned index, const u8* data, size_t count, size_t offset, bool allow_cache)
 {
     ASSERT(m_logical_block_size);
+    ASSERT(offset + count <= block_size());
 #ifdef FBFS_DEBUG
     klog() << "FileBackedFileSystem::write_block " << index << ", size=" << data.size();
 #endif
 
-    bool allow_cache = !description || !description->is_direct();
-
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
-        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size()) + offset;
         m_file_description->seek(base_offset, SEEK_SET);
-        auto nwritten = m_file_description->write(data, block_size());
-        ASSERT(nwritten == block_size());
+        auto nwritten = m_file_description->write(data, count);
+        if (nwritten < 0)
+            return false;
+        ASSERT(static_cast<size_t>(nwritten) == count);
         return true;
     }
 
     auto& entry = cache().get(index);
-    memcpy(entry.data, data, block_size());
+    if (count < block_size()) {
+        // Fill the cache first.
+        read_block(index, nullptr, block_size());
+    }
+    memcpy(entry.data + offset, data, count);
     entry.is_dirty = true;
     entry.has_data = true;
 
@@ -187,58 +192,62 @@ bool FileBackedFS::raw_write_blocks(unsigned index, size_t count, const u8* buff
     return true;
 }
 
-bool FileBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, FileDescription* description)
+bool FileBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, bool allow_cache)
 {
     ASSERT(m_logical_block_size);
 #ifdef FBFS_DEBUG
     klog() << "FileBackedFileSystem::write_blocks " << index << " x" << count;
 #endif
     for (unsigned i = 0; i < count; ++i)
-        write_block(index + i, data + i * block_size(), description);
+        write_block(index + i, data + i * block_size(), block_size(), 0, allow_cache);
     return true;
 }
 
-bool FileBackedFS::read_block(unsigned index, u8* buffer, FileDescription* description) const
+bool FileBackedFS::read_block(unsigned index, u8* buffer, size_t count, size_t offset, bool allow_cache) const
 {
     ASSERT(m_logical_block_size);
+    ASSERT(offset + count <= block_size());
 #ifdef FBFS_DEBUG
     klog() << "FileBackedFileSystem::read_block " << index;
 #endif
 
-    bool allow_cache = !description || !description->is_direct();
-
     if (!allow_cache) {
         const_cast<FileBackedFS*>(this)->flush_specific_block_if_needed(index);
-        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
-        const_cast<FileDescription&>(*m_file_description).seek(base_offset, SEEK_SET);
-        auto nread = const_cast<FileDescription&>(*m_file_description).read(buffer, block_size());
-        ASSERT(nread == block_size());
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size()) + static_cast<u32>(offset);
+        m_file_description->seek(base_offset, SEEK_SET);
+        auto nread = m_file_description->read(buffer, count);
+        if (nread < 0)
+            return false;
+        ASSERT(static_cast<size_t>(nread) == count);
         return true;
     }
 
     auto& entry = cache().get(index);
     if (!entry.has_data) {
         u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
-        const_cast<FileDescription&>(*m_file_description).seek(base_offset, SEEK_SET);
-        auto nread = const_cast<FileDescription&>(*m_file_description).read(entry.data, block_size());
+        m_file_description->seek(base_offset, SEEK_SET);
+        auto nread = m_file_description->read(entry.data, block_size());
+        if (nread < 0)
+            return false;
+        ASSERT(static_cast<size_t>(nread) == block_size());
         entry.has_data = true;
-        ASSERT(nread == block_size());
     }
-    memcpy(buffer, entry.data, block_size());
+    if (buffer)
+        memcpy(buffer, entry.data + offset, count);
     return true;
 }
 
-bool FileBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer, FileDescription* description) const
+bool FileBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer, bool allow_cache) const
 {
     ASSERT(m_logical_block_size);
     if (!count)
         return false;
     if (count == 1)
-        return read_block(index, buffer, description);
+        return read_block(index, buffer, block_size(), 0, allow_cache);
     u8* out = buffer;
 
     for (unsigned i = 0; i < count; ++i) {
-        if (!read_block(index + i, out, description))
+        if (!read_block(index + i, out, block_size(), 0, allow_cache))
             return false;
         out += block_size();
     }
