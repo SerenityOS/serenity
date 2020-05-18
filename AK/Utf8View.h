@@ -37,7 +37,7 @@ class Utf8CodepointIterator {
     friend class Utf8View;
 
 public:
-    ~Utf8CodepointIterator() {}
+    ~Utf8CodepointIterator() { }
 
     bool operator==(const Utf8CodepointIterator&) const;
     bool operator!=(const Utf8CodepointIterator&) const;
@@ -57,7 +57,7 @@ public:
     explicit Utf8View(const String&);
     explicit Utf8View(const StringView&);
     explicit Utf8View(const char*);
-    ~Utf8View() {}
+    ~Utf8View() { }
 
     const StringView& as_string() const { return m_string; }
 
@@ -70,7 +70,12 @@ public:
     Utf8View substring_view(int byte_offset, int byte_length) const;
     bool is_empty() const { return m_string.is_empty(); }
 
-    bool validate() const;
+    bool validate(size_t& valid_bytes) const;
+    bool validate() const
+    {
+        size_t valid_bytes;
+        return validate(valid_bytes);
+    }
 
     size_t length_in_codepoints() const;
 

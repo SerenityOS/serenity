@@ -111,8 +111,9 @@ static inline bool decode_first_byte(
     return false;
 }
 
-bool Utf8View::validate() const
+bool Utf8View::validate(size_t& valid_bytes) const
 {
+    valid_bytes = 0;
     for (auto ptr = begin_ptr(); ptr < end_ptr(); ptr++) {
         int codepoint_length_in_bytes;
         u32 value;
@@ -127,6 +128,8 @@ bool Utf8View::validate() const
             if (*ptr >> 6 != 2)
                 return false;
         }
+
+        valid_bytes += codepoint_length_in_bytes;
     }
 
     return true;
