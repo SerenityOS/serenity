@@ -518,7 +518,7 @@ int main(int argc, char** argv)
             };
             editor.strip_styles();
             StringBuilder builder;
-            builder.append({ editor.buffer().data(), editor.buffer().size() });
+            builder.append(editor.line());
             // FIXME: The lexer returns weird position information without this
             builder.append(" ");
             String str = builder.build();
@@ -659,7 +659,7 @@ int main(int argc, char** argv)
             if (token.length() == 0)
                 return {}; // nyeh
 
-            StringView line { editor.buffer().data(), editor.cursor() };
+            auto line = editor.line();
             // we're only going to complete either
             //    - <N>
             //        where N is part of the name of a variable
