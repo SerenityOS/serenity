@@ -96,6 +96,7 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 640, 480);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"));
     window->set_title("Browser");
+    window->set_accepts_emoji_input(true);
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
