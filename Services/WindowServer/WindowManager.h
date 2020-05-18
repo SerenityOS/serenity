@@ -99,7 +99,7 @@ public:
 
     Gfx::Rect maximized_window_rect(const Window&) const;
 
-    ClientConnection* dnd_client() { return m_dnd_client.ptr(); }
+    const ClientConnection* dnd_client() const { return m_dnd_client.ptr(); }
     const String& dnd_text() const { return m_dnd_text; }
     const String& dnd_data_type() const { return m_dnd_data_type; }
     const String& dnd_data() const { return m_dnd_data; }
@@ -109,11 +109,11 @@ public:
     void start_dnd_drag(ClientConnection&, const String& text, Gfx::Bitmap*, const String& data_type, const String& data);
     void end_dnd_drag();
 
-    Window* active_window() { return m_active_window.ptr(); }
+    const Window* active_window() const { return m_active_window.ptr(); }
     const ClientConnection* active_client() const;
     bool active_window_is_modal() const { return m_active_window && m_active_window->is_modal(); }
 
-    Window* highlight_window() { return m_highlight_window.ptr(); }
+    const Window* highlight_window() const { return m_highlight_window.ptr(); }
     void set_highlight_window(Window*);
 
     void move_to_front_and_make_active(Window&);
@@ -148,7 +148,7 @@ public:
     void set_active_window(Window*);
     void set_hovered_button(Button*);
 
-    Button* cursor_tracking_button() { return m_cursor_tracking_button.ptr(); }
+    const Button* cursor_tracking_button() const { return m_cursor_tracking_button.ptr(); }
     void set_cursor_tracking_button(Button*);
 
     void set_resize_candidate(Window&, ResizeDirection);
