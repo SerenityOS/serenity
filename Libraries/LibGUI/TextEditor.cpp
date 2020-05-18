@@ -164,24 +164,23 @@ TextPosition TextEditor::text_position_at(const Gfx::Point& a_position) const
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
         for_each_visual_line(line_index, [&](const Gfx::Rect& rect, auto& view, size_t start_of_line) {
-            if (rect.contains_vertically(position.y())) {
-                column_index = start_of_line;
-                if (position.x() <= 0) {
-                    // We're outside the text on the left side, put cursor at column 0 on this visual line.
-                } else {
-                    int glyph_x = 0;
-                    size_t i = 0;
-                    for (; i < view.length(); ++i) {
-                        int advance = font().glyph_width(view.codepoints()[i]) + font().glyph_spacing();
-                        if ((glyph_x + (advance / 2)) >= position.x())
-                            break;
-                        glyph_x += advance;
-                    }
-                    column_index += i;
+            if (is_multi_line() && !rect.contains_vertically(position.y()))
+                return IterationDecision::Continue;
+            column_index = start_of_line;
+            if (position.x() <= 0) {
+                // We're outside the text on the left side, put cursor at column 0 on this visual line.
+            } else {
+                int glyph_x = 0;
+                size_t i = 0;
+                for (; i < view.length(); ++i) {
+                    int advance = font().glyph_width(view.codepoints()[i]) + font().glyph_spacing();
+                    if ((glyph_x + (advance / 2)) >= position.x())
+                        break;
+                    glyph_x += advance;
                 }
-                return IterationDecision::Break;
+                column_index += i;
             }
-            return IterationDecision::Continue;
+            return IterationDecision::Break;
         });
         break;
     case Gfx::TextAlignment::CenterRight:
