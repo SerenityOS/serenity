@@ -742,7 +742,7 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         fs_object.add("total_inode_count", fs.total_inode_count());
         fs_object.add("free_inode_count", fs.free_inode_count());
         fs_object.add("mount_point", mount.absolute_path());
-        fs_object.add("block_size", fs.block_size());
+        fs_object.add("block_size", static_cast<u64>(fs.block_size()));
         fs_object.add("readonly", fs.is_readonly());
         fs_object.add("mount_flags", mount.flags());
 
