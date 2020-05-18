@@ -31,7 +31,7 @@ namespace FTP {
 FTPResponse::FTPResponse(ByteBuffer&& payload)
     : Core::NetworkResponse(move(payload))
 {
-    if(!parse())
+    if (!parse())
         dbg() << "Failed to parse FTP response :(";
 }
 
@@ -45,8 +45,7 @@ bool FTPResponse::parse()
     String data((const char*)(buffer.data()), buffer.size());
 
     auto space_pos = data.index_of(" ");
-    if(!space_pos.has_value())
-    {
+    if (!space_pos.has_value()) {
         dbg() << "FTPResponse::parse(): expected space (' ') in response";
         ASSERT_NOT_REACHED();
         return false;
@@ -54,8 +53,7 @@ bool FTPResponse::parse()
 
     bool ok = false;
     unsigned result_code = data.substring(0, space_pos.value()).to_uint(ok);
-    if(!ok)
-    {
+    if (!ok) {
         dbg() << "FTPResponse::parse(): expected result code";
         ASSERT_NOT_REACHED();
         return false;
@@ -65,5 +63,4 @@ bool FTPResponse::parse()
     m_message = message;
     return true;
 }
-
 }

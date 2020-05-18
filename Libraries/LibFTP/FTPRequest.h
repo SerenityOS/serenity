@@ -36,8 +36,7 @@ namespace FTP {
 
 class FTPRequest {
 public:
-    enum Command
-    {
+    enum Command {
         AbortFileTransfer,
         ChangeWorkingDirectory,
         Delete,
@@ -69,9 +68,9 @@ public:
     const Vector<String>& args() const { return m_args; }
 
     ByteBuffer to_raw_request() const;
+
 private:
     Command m_command;
     Vector<String> m_args;
 };
-
 }

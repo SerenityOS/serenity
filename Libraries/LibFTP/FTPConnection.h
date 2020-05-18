@@ -31,22 +31,19 @@
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
 
-#include "FTPResponse.h"
 #include "FTPRequest.h"
+#include "FTPResponse.h"
 
-namespace FTP
-{
+namespace FTP {
 class FTPConnection : public RefCounted<FTPConnection> {
 public:
     // FIXME: passive/active connections
 
-    enum DataRepresentation
-    {
+    enum DataRepresentation {
         ASCII,
         Binary
     };
-    enum TransferMode
-    {
+    enum TransferMode {
         Stream,
         Block,
         Compressed

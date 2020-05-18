@@ -44,12 +44,11 @@ public:
     int code() const { return m_code; }
     const String& message() const { return m_message; }
 
-private:    
+private:
     FTPResponse(ByteBuffer&&);
     bool parse();
 
-    int m_code { 0 };
+    int m_code{ 0 };
     String m_message;
 };
-
 }
