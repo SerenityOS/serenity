@@ -34,6 +34,7 @@ namespace AK {
 
 class Utf32View {
 public:
+    Utf32View() { }
     Utf32View(const u32* codepoints, size_t length)
         : m_codepoints(codepoints)
         , m_length(length)
@@ -46,6 +47,8 @@ public:
 
     Utf32View substring_view(size_t offset, size_t length) const
     {
+        if (length == 0)
+            return {};
         ASSERT(offset < m_length);
         ASSERT(!Checked<size_t>::addition_would_overflow(offset, length));
         ASSERT((offset + length) <= m_length);
