@@ -32,55 +32,54 @@ namespace FTP {
 
 #define __ENUMERATE_FTP_COMMAND
 
-#define ENUMERATE_FTP_COMMANDS \
-    __ENUMERATE_FTP_COMMAND(AbortFileTransfer, "ABOR") \
+#define ENUMERATE_FTP_COMMANDS                             \
+    __ENUMERATE_FTP_COMMAND(AbortFileTransfer, "ABOR")     \
     __ENUMERATE_FTP_COMMAND(ChangeWorkingDirectory, "CWD") \
-    __ENUMERATE_FTP_COMMAND(Delete, "DELE") \
-    __ENUMERATE_FTP_COMMAND(ListFiles, "LIST") \
-    __ENUMERATE_FTP_COMMAND(MakeDirectory, "MKD") \
-    __ENUMERATE_FTP_COMMAND(ModifyTimeFile, "MDTM") \
-    __ENUMERATE_FTP_COMMAND(TransferMode, "MODE") \
-    __ENUMERATE_FTP_COMMAND(Password, "PASS") \
-    __ENUMERATE_FTP_COMMAND(Port, "PORT") \
-    __ENUMERATE_FTP_COMMAND(PrintWorkingDirectory, "PWD") \
-    __ENUMERATE_FTP_COMMAND(QuitConnection, "QUIT") \
-    __ENUMERATE_FTP_COMMAND(RemoveDirectory, "RMD") \
-    __ENUMERATE_FTP_COMMAND(RenameFileFrom, "RNFR") \
-    __ENUMERATE_FTP_COMMAND(RenameFileTo, "RNTO") \
-    __ENUMERATE_FTP_COMMAND(RetrieveFile, "RETR") \
-    __ENUMERATE_FTP_COMMAND(SizeFile, "SIZE") \
-    __ENUMERATE_FTP_COMMAND(StoreFile, "STOR") \
-    __ENUMERATE_FTP_COMMAND(TransferType, "TYPE") \
+    __ENUMERATE_FTP_COMMAND(Delete, "DELE")                \
+    __ENUMERATE_FTP_COMMAND(ListFiles, "LIST")             \
+    __ENUMERATE_FTP_COMMAND(MakeDirectory, "MKD")          \
+    __ENUMERATE_FTP_COMMAND(ModifyTimeFile, "MDTM")        \
+    __ENUMERATE_FTP_COMMAND(TransferMode, "MODE")          \
+    __ENUMERATE_FTP_COMMAND(Password, "PASS")              \
+    __ENUMERATE_FTP_COMMAND(Port, "PORT")                  \
+    __ENUMERATE_FTP_COMMAND(PrintWorkingDirectory, "PWD")  \
+    __ENUMERATE_FTP_COMMAND(QuitConnection, "QUIT")        \
+    __ENUMERATE_FTP_COMMAND(RemoveDirectory, "RMD")        \
+    __ENUMERATE_FTP_COMMAND(RenameFileFrom, "RNFR")        \
+    __ENUMERATE_FTP_COMMAND(RenameFileTo, "RNTO")          \
+    __ENUMERATE_FTP_COMMAND(RetrieveFile, "RETR")          \
+    __ENUMERATE_FTP_COMMAND(SizeFile, "SIZE")              \
+    __ENUMERATE_FTP_COMMAND(StoreFile, "STOR")             \
+    __ENUMERATE_FTP_COMMAND(TransferType, "TYPE")          \
     __ENUMERATE_FTP_COMMAND(Username, "USER")
 
 #undef __ENUMERATE_FTP_COMMAND
 
-struct FtpCommand
-{
+struct FtpCommand {
     String log_name;
     String ftp_name;
 };
 
 FtpCommand command_to_string(FTPRequest::Command command)
 {
-    #define __ENUMERATE_FTP_COMMAND(cmd,str) case FTPRequest::Command::cmd: return FtpCommand{#cmd, str};
-    switch(command)
-    {
+#define __ENUMERATE_FTP_COMMAND(cmd, str) \
+    case FTPRequest::Command::cmd:        \
+        return FtpCommand{ #cmd, str };
+    switch (command) {
         ENUMERATE_FTP_COMMANDS
-        default: return FtpCommand{"Unknown", "NOOP"};
+    default:
+        return FtpCommand{ "Unknown", "NOOP" };
     }
-    #undef __ENUMERATE_FTP_COMMAND
+#undef __ENUMERATE_FTP_COMMAND
 }
 
 FTPRequest::FTPRequest()
 {
-
 }
 
 FTPRequest::~FTPRequest()
 {
 }
-
 
 void FTPRequest::set_command(Command command)
 {
@@ -98,13 +97,11 @@ ByteBuffer FTPRequest::to_raw_request() const
     StringBuilder builder;
     builder.append(command_name);
     builder.append(" ");
-    for(auto& arg: m_args)
-    {
+    for (auto& arg : m_args) {
         builder.append(arg);
         builder.append(" ");
     }
     dbg() << "FTPRequest::to_raw_request(): " << command_to_string(m_command).log_name << ": " << builder.to_string();
     return builder.to_byte_buffer();
 }
-
 }
