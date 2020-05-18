@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +54,7 @@ MathObject::MathObject()
     put_native_function("exp", exp, 1, attr);
     put_native_function("expm1", expm1, 1, attr);
     put_native_function("sign", sign, 1, attr);
+    put_native_function("clz32", clz32, 1, attr);
 
     put("E", Value(M_E), 0);
     put("LN2", Value(M_LN2), 0);
@@ -243,6 +245,16 @@ Value MathObject::sign(Interpreter& interpreter)
     if (number.as_double() < 0)
         return Value(-1);
     return js_nan();
+}
+
+Value MathObject::clz32(Interpreter& interpreter)
+{
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (!number.is_finite_number() || (unsigned)number.as_double() == 0)
+        return Value(32);
+    return Value(__builtin_clz((unsigned)number.as_double()));
 }
 
 }
