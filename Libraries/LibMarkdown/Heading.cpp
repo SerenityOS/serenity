@@ -59,26 +59,30 @@ String Heading::render_for_terminal() const
     return builder.build();
 }
 
-bool Heading::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<Heading> Heading::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
-        return false;
+        return nullptr;
 
     const StringView& line = *lines;
+    size_t level;
 
-    for (m_level = 0; m_level < (int)line.length(); m_level++)
-        if (line[(size_t)m_level] != '#')
+    for (level = 0; level < line.length(); level++)
+        if (line[level] != '#')
             break;
 
-    if (m_level >= (int)line.length() || line[(size_t)m_level] != ' ')
-        return false;
+    if (level >= line.length() || line[level] != ' ')
+        return nullptr;
 
-    StringView title_view = line.substring_view((size_t)m_level + 1, line.length() - (size_t)m_level - 1);
-    bool success = m_text.parse(title_view);
-    ASSERT(success);
+    StringView title_view = line.substring_view(level + 1, line.length() - level - 1);
+    auto text = Text::parse(title_view);
+    if (!text.has_value())
+        return nullptr;
+
+    auto heading = make<Heading>(move(text.value()), level);
 
     ++lines;
-    return true;
+    return heading;
 }
 
 }

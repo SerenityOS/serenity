@@ -26,12 +26,14 @@
 
 #pragma once
 
+#include <AK/Noncopyable.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace Markdown {
 
 class Text final {
+    AK_MAKE_NONCOPYABLE(Text);
 public:
     struct Style {
         bool emph { false };
@@ -46,14 +48,21 @@ public:
         Style style;
     };
 
+    Text(Text&& text) = default;
+
     const Vector<Span>& spans() const { return m_spans; }
 
     String render_to_html() const;
     String render_for_terminal() const;
 
-    bool parse(const StringView&);
+    static Optional<Text> parse(const StringView&);
 
 private:
+    Text(Vector<Span>&& spans)
+        : m_spans(move(spans))
+    {
+    }
+
     Vector<Span> m_spans;
 };
 
