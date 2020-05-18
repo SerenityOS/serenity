@@ -72,6 +72,13 @@ public:
             return nullptr;
         return const_cast<Menu*>(menu.value().ptr());
     }
+    const Menu* find_menu_by_id(int menu_id) const
+    {
+        auto menu = m_menus.get(menu_id);
+        if (!menu.has_value())
+            return nullptr;
+        return menu.value().ptr();
+    }
 
     void notify_display_link(Badge<Compositor>);
 
