@@ -104,11 +104,6 @@ KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<C
     return VFS::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
 }
 
-unsigned Inode::fsid() const
-{
-    return m_fs.fsid();
-}
-
 Inode::Inode(FS& fs, unsigned index)
     : m_fs(fs)
     , m_index(index)
