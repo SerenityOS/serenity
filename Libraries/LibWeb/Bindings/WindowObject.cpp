@@ -31,6 +31,7 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
@@ -60,6 +61,7 @@ void WindowObject::initialize()
     put_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
 
     put("navigator", heap().allocate<NavigatorObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    put("location", heap().allocate<LocationObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>();
     m_xhr_constructor = heap().allocate<XMLHttpRequestConstructor>();

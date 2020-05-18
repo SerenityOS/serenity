@@ -8,6 +8,7 @@ set(SOURCES
     Bindings/HTMLCanvasElementWrapper.cpp
     Bindings/HTMLImageElementWrapper.cpp
     Bindings/ImageDataWrapper.cpp
+    Bindings/LocationObject.cpp
     Bindings/MouseEventWrapper.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapper.cpp
