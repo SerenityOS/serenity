@@ -25,6 +25,8 @@
  */
 
 #include "Parser.h"
+#include <AK/StringBuilder.h>
+#include <AK/Utf32View.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -33,12 +35,15 @@ void Parser::commit_token(Token::Type type, AllowEmptyToken allow_empty)
 {
     if (allow_empty == AllowEmptyToken::No && m_token.is_empty())
         return;
+    StringBuilder builder;
+    builder.append(Utf32View { m_token.data(), m_token.size() });
+    auto token = builder.build();
     if (state() == InRedirectionPath) {
-        m_redirections.last().path = String::copy(m_token);
+        m_redirections.last().path = token;
         m_token.clear_with_capacity();
         return;
     }
-    m_tokens.append({ String::copy(m_token), m_position, m_token.size(), type });
+    m_tokens.append({ token, m_position, m_token.size(), type });
     m_token.clear_with_capacity();
 };
 
@@ -82,15 +87,18 @@ bool Parser::in_state(State state) const
 
 Vector<Command> Parser::parse()
 {
-    for (size_t i = 0; i < m_input.length(); ++i, m_position = i) {
-        char ch = m_input.characters()[i];
+    auto it = m_input.begin();
+    auto length = m_input.length_in_codepoints();
+    for (size_t i = 0; i < length; ++i, ++it, m_position = i) {
+        auto ch = *it;
         switch (state()) {
         case State::Free:
             if (ch == '#') {
                 commit_token(Token::Bare);
 
-                while (i < m_input.length()) {
-                    ch = m_input.characters()[++i];
+                while (i < length) {
+                    ch = *++it;
+                    ++i;
                     ++m_position;
                     if (ch == '\n')
                         break;
@@ -133,11 +141,11 @@ Vector<Command> Parser::parse()
                 break;
             }
             if (ch == '\\') {
-                if (i == m_input.length() - 1) {
+                if (i == length - 1) {
                     fprintf(stderr, "Syntax error: Nothing to escape (\\)\n");
                     return {};
                 }
-                char next_ch = m_input.characters()[i + 1];
+                char next_ch = *++it;
                 m_token.append(next_ch);
                 ++i;
                 break;
@@ -155,20 +163,24 @@ Vector<Command> Parser::parse()
             if (ch == '{') {
                 bool is_multi_fd_redirection = false;
                 size_t redir_end = i + 1;
+                auto lookahead_it = it;
+                ++lookahead_it;
 
-                while (redir_end < m_input.length()) {
-                    char lookahead_ch = m_input.characters()[redir_end];
+                while (redir_end < length) {
+                    char lookahead_ch = *lookahead_it;
                     if (isdigit(lookahead_ch)) {
                         ++redir_end;
+                        ++lookahead_it;
                         continue;
                     }
-                    if (lookahead_ch == '}' && redir_end + 1 != m_input.length()) {
+                    if (lookahead_ch == '}' && redir_end + 1 != length) {
                         // Disallow {}> and {}<
                         if (redir_end == i + 1)
                             break;
 
                         ++redir_end;
-                        if (m_input.characters()[redir_end] == '>' || m_input.characters()[redir_end] == '<')
+                        auto ch = *++lookahead_it;
+                        if (ch == '>' || ch == '<')
                             is_multi_fd_redirection = true;
                         break;
                     }
@@ -178,14 +190,14 @@ Vector<Command> Parser::parse()
                 if (is_multi_fd_redirection) {
                     commit_token(Token::Special);
 
-                    int fd = atoi(&m_input.characters()[i + 1]);
+                    int fd = atoi((const char*)m_input.bytes() + m_input.byte_offset_of(++it));
 
-                    if (m_input.characters()[redir_end] == '>') {
+                    if (*it == '>') {
                         begin_redirect_write(fd);
                         // Search for another > for append.
                         push_state(State::InWriteAppendOrRedirectionPath);
                     }
-                    if (m_input.characters()[redir_end] == '<') {
+                    if (*it == '<') {
                         begin_redirect_read(fd);
                         push_state(State::InRedirectionPath);
                     }
@@ -196,12 +208,14 @@ Vector<Command> Parser::parse()
                 }
             }
             if (isdigit(ch)) {
-                if (i != m_input.length() - 1) {
-                    char next_ch = m_input.characters()[i + 1];
+                if (i != length - 1) {
+                    auto next_it = it;
+                    char next_ch = *next_it;
                     if (next_ch == '>') {
                         commit_token(Token::Special);
                         begin_redirect_write(ch - '0');
                         ++i;
+                        ++it;
 
                         // Search for another > for append.
                         push_state(State::InWriteAppendOrRedirectionPath);
@@ -211,6 +225,7 @@ Vector<Command> Parser::parse()
                         commit_token(Token::Special);
                         begin_redirect_read(ch - '0');
                         ++i;
+                        ++it;
 
                         push_state(State::InRedirectionPath);
                         break;
@@ -287,15 +302,18 @@ Vector<Command> Parser::parse()
                 break;
             }
             if (ch == '\\') {
-                if (i == m_input.length() - 1) {
+                if (i == length - 1) {
                     fprintf(stderr, "Syntax error: Nothing to escape (\\)\n");
                     return {};
                 }
-                char next_ch = m_input.characters()[i + 1];
+                auto next_it = it;
+                ++next_it;
+                char next_ch = *next_it;
                 if (next_ch == '$' || next_ch == '`'
                     || next_ch == '"' || next_ch == '\\') {
                     m_token.append(next_ch);
                     ++i;
+                    ++it;
                     continue;
                 }
                 m_token.append('\\');

@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 
 struct Token {
@@ -117,12 +118,12 @@ private:
     bool in_state(State) const;
 
     Vector<State> m_state_stack { Free };
-    String m_input;
+    Utf8View m_input;
 
     Vector<Command> m_commands;
     Vector<Subcommand> m_subcommands;
     Vector<Token> m_tokens;
     Vector<Redirection> m_redirections;
-    Vector<char> m_token;
+    Vector<u32> m_token;
     size_t m_position { 0 };
 };
