@@ -310,6 +310,14 @@ Tab::Tab()
 
     auto& help_menu = m_menubar->add_menu("Help");
     help_menu.add_action(WindowActions::the().about_action());
+
+    m_tab_context_menu = GUI::Menu::construct();
+    m_tab_context_menu->add_action(GUI::Action::create("Reload Tab", [this](auto&) {
+        m_reload_action->activate();
+    }));
+    m_tab_context_menu->add_action(GUI::Action::create("Close Tab", [this](auto&) {
+        on_tab_close_request(*this);
+    }));
 }
 
 Tab::~Tab()
@@ -367,6 +375,11 @@ void Tab::did_become_active()
     m_statusbar->set_visible(!is_fullscreen);
 
     GUI::Application::the().set_menubar(m_menubar);
+}
+
+void Tab::context_menu_requested(const Gfx::Point& screen_position)
+{
+    m_tab_context_menu->popup(screen_position);
 }
 
 }

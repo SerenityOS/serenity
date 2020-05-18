@@ -43,6 +43,7 @@ public:
     void load(const URL&);
 
     void did_become_active();
+    void context_menu_requested(const Gfx::Point& screen_position);
 
     Function<void(String)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
@@ -72,6 +73,8 @@ private:
 
     RefPtr<GUI::Menu> m_link_context_menu;
     String m_link_context_menu_href;
+
+    RefPtr<GUI::Menu> m_tab_context_menu;
 
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;
