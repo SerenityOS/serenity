@@ -12,6 +12,8 @@
     <script>
         var pre = document.querySelectorAll("pre")[0];
         pre.innerHTML += "href: " + location.href + '\n';
+        pre.innerHTML += "protocol: " + location.protocol + '\n';
+        pre.innerHTML += "host: " + location.host + '\n';
         pre.innerHTML += "hostname: " + location.hostname + '\n';
         pre.innerHTML += "pathname: " + location.pathname+ '\n';
         pre.innerHTML += "hash: " + location.hash + '\n';
