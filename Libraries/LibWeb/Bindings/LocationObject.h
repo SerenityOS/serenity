@@ -40,6 +40,8 @@ public:
 private:
     virtual const char* class_name() const override { return "LocationObject"; }
 
+    static JS::Value reload(JS::Interpreter&);
+
     static JS::Value href_getter(JS::Interpreter&);
     static void href_setter(JS::Interpreter&, JS::Value);
 

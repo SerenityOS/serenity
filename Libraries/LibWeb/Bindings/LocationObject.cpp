@@ -45,6 +45,8 @@ LocationObject::LocationObject()
     put_native_property("hash", hash_getter, nullptr);
     put_native_property("search", search_getter, nullptr);
     put_native_property("protocol", protocol_getter, nullptr);
+
+    put_native_function("reload", reload);
 }
 
 LocationObject::~LocationObject()
@@ -108,6 +110,13 @@ JS::Value LocationObject::protocol_getter(JS::Interpreter& interpreter)
     builder.append(window.impl().document().url().protocol());
     builder.append(':');
     return JS::js_string(interpreter, builder.to_string());
+}
+
+JS::Value LocationObject::reload(JS::Interpreter& interpreter)
+{
+    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    window.impl().did_call_location_reload({});
+    return JS::js_undefined();
 }
 
 }
