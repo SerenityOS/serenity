@@ -26,6 +26,8 @@
 
 #include "Editor.h"
 #include <AK/StringBuilder.h>
+#include <AK/Utf32View.h>
+#include <AK/Utf8View.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -76,21 +78,25 @@ void Editor::clear_line()
 
 void Editor::insert(const String& string)
 {
-    for (auto ch : string)
+    for (auto ch : Utf8View { string })
         insert(ch);
 }
 
-void Editor::insert(const char ch)
+void Editor::insert(const u32 cp)
 {
-    m_pending_chars.append(&ch, 1);
+    StringBuilder builder;
+    builder.append(Utf32View(&cp, 1));
+    auto str = builder.build();
+    m_pending_chars.append(str.characters(), str.length());
+
     if (m_cursor == m_buffer.size()) {
-        m_buffer.append(ch);
+        m_buffer.append(cp);
         m_cursor = m_buffer.size();
         m_inline_search_cursor = m_cursor;
         return;
     }
 
-    m_buffer.insert(m_cursor, ch);
+    m_buffer.insert(m_cursor, cp);
     ++m_chars_inserted_in_the_middle;
     ++m_cursor;
     m_inline_search_cursor = m_cursor;
@@ -143,17 +149,18 @@ String Editor::get_line(const String& prompt)
             m_finish = false;
             printf("\n");
             fflush(stdout);
-            auto string = String::copy(m_buffer);
+            auto string = line();
             m_buffer.clear();
             m_is_editing = false;
             restore();
             return string;
         }
         char keybuf[16];
-        ssize_t nread = read(0, keybuf, sizeof(keybuf));
-        // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
-        if (nread == 0)
-            exit(0);
+        ssize_t nread = 0;
+
+        if (!m_incomplete_data.size())
+            nread = read(0, keybuf, sizeof(keybuf));
+
         if (nread < 0) {
             if (errno == EINTR) {
                 if (!m_was_interrupted) {
@@ -183,6 +190,13 @@ String Editor::get_line(const String& prompt)
             exit(2);
         }
 
+        m_incomplete_data.append(keybuf, nread);
+        nread = m_incomplete_data.size();
+
+        // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
+        if (nread == 0)
+            exit(0);
+
         auto reverse_tab = false;
         auto increment_suggestion_index = [&] {
             if (m_suggestions.size())
@@ -196,8 +210,20 @@ String Editor::get_line(const String& prompt)
             m_next_suggestion_index--;
         };
         auto ctrl_held = false;
-        for (ssize_t i = 0; i < nread; ++i) {
-            char ch = keybuf[i];
+
+        // discard starting bytes until they make sense as utf-8
+        size_t valid_bytes = 0;
+        while (nread) {
+            Utf8View { StringView { m_incomplete_data.data(), (size_t)nread } }.validate(valid_bytes);
+            if (valid_bytes)
+                break;
+            m_incomplete_data.take_first();
+            --nread;
+        }
+
+        Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
+
+        for (auto ch : input_view) {
             if (ch == 0)
                 continue;
 
@@ -219,7 +245,9 @@ String Editor::get_line(const String& prompt)
                 {
                     m_searching_backwards = true;
                     auto inline_search_cursor = m_inline_search_cursor;
-                    String search_phrase { m_buffer.data(), inline_search_cursor };
+                    StringBuilder builder;
+                    builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
+                    String search_phrase = builder.to_string();
                     if (search(search_phrase, true, true)) {
                         ++m_search_offset;
                     } else {
@@ -233,7 +261,9 @@ String Editor::get_line(const String& prompt)
                 case 'B': // down
                 {
                     auto inline_search_cursor = m_inline_search_cursor;
-                    String search_phrase { m_buffer.data(), inline_search_cursor };
+                    StringBuilder builder;
+                    builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
+                    String search_phrase = builder.to_string();
                     auto search_changed_directions = m_searching_backwards;
                     m_searching_backwards = false;
                     if (m_search_offset > 0) {
@@ -390,7 +420,9 @@ String Editor::get_line(const String& prompt)
                     }
                 }
 
-                String token = is_empty_token ? String() : String(&m_buffer[token_start], m_cursor - token_start);
+                StringBuilder builder;
+                builder.append(Utf32View { m_buffer.data() + token_start, m_cursor - token_start });
+                String token = is_empty_token ? String() : builder.to_string();
 
                 // ask for completions only on the first tab
                 // and scan for the largest common prefix to display
@@ -688,7 +720,9 @@ String Editor::get_line(const String& prompt)
                     m_pre_search_cursor = m_cursor;
                     m_search_editor = make<Editor>(Configuration { Configuration::Eager, m_configuration.split_mechanism }); // Has anyone seen 'Inception'?
                     m_search_editor->on_display_refresh = [this](Editor& search_editor) {
-                        search(StringView { search_editor.buffer().data(), search_editor.buffer().size() });
+                        StringBuilder builder;
+                        builder.append(Utf32View { search_editor.buffer().data(), search_editor.buffer().size() });
+                        search(builder.build());
                         refresh_display();
                         return;
                     };
@@ -791,6 +825,14 @@ String Editor::get_line(const String& prompt)
             }
 
             insert(ch);
+        }
+
+        if (valid_bytes == m_incomplete_data.size()) {
+            m_incomplete_data.clear();
+        } else {
+            ASSERT_NOT_REACHED();
+            for (size_t i = 0; i < valid_bytes; ++i)
+                m_incomplete_data.take_first();
         }
     }
 }
@@ -918,6 +960,7 @@ void Editor::refresh_display()
 
     vt_clear_to_end_of_line();
     HashMap<u32, Style> empty_styles {};
+    StringBuilder builder;
     for (size_t i = 0; i < m_buffer.size(); ++i) {
         auto ends = m_spans_ending.get(i).value_or(empty_styles);
         auto starts = m_spans_starting.get(i).value_or(empty_styles);
@@ -929,7 +972,9 @@ void Editor::refresh_display()
             // set new options
             vt_apply_style(starts.begin()->value); // apply some random style that starts here
         }
-        fputc(m_buffer[i], stdout);
+        builder.clear();
+        builder.append(Utf32View { &m_buffer[i], 1 });
+        fputs(builder.to_string().characters(), stdout);
     }
     vt_apply_style({}); // don't bleed to EOL
     m_pending_chars.clear();
@@ -1061,8 +1106,11 @@ size_t Editor::actual_rendered_string_length(const StringView& string) const
         BracketArgsSemi = 7,
         Title = 9,
     } state { Free };
-    for (size_t i = 0; i < string.length(); ++i) {
-        auto c = string[i];
+    Utf8View view { string };
+    auto it = view.begin();
+
+    for (size_t i = 0; i < view.length_in_codepoints(); ++i, ++it) {
+        auto c = *it;
         switch (state) {
         case Free:
             if (c == '\x1b') {
@@ -1080,7 +1128,9 @@ size_t Editor::actual_rendered_string_length(const StringView& string) const
             break;
         case Escape:
             if (c == ']') {
-                if (string.length() > i && string[i + 1] == '0')
+                ++i;
+                ++it;
+                if (*it == '0')
                     state = Title;
                 continue;
             }
@@ -1119,6 +1169,7 @@ Vector<size_t, 2> Editor::vt_dsr()
     u32 length { 0 };
 
     // read whatever junk there is before talking to the terminal
+    // and insert them later when we're reading user input
     bool more_junk_to_read { false };
     timeval timeout { 0, 0 };
     fd_set readfds;
@@ -1130,7 +1181,7 @@ Vector<size_t, 2> Editor::vt_dsr()
         (void)select(1, &readfds, nullptr, nullptr, &timeout);
         if (FD_ISSET(0, &readfds)) {
             auto nread = read(0, buf, 16);
-            (void)nread;
+            m_incomplete_data.append(buf, nread);
             more_junk_to_read = true;
         }
     } while (more_junk_to_read);
@@ -1170,4 +1221,12 @@ Vector<size_t, 2> Editor::vt_dsr()
     }
     return { x, y };
 }
+
+String Editor::line() const
+{
+    StringBuilder builder;
+    builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
+    return builder.build();
+}
+
 }

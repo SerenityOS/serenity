@@ -1389,7 +1389,7 @@ void Shell::highlight(Line::Editor&) const
     if (m_should_continue == ExitCodeOrContinuationRequest::SingleQuotedString) {
         builder.append('\'');
     }
-    builder.append(StringView { editor.buffer().data(), editor.buffer().size() });
+    builder.append(editor.line());
     auto commands = Parser { builder.string_view() }.parse();
     auto first_command { true };
     for (auto& command : commands) {
