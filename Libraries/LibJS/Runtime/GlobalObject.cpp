@@ -153,6 +153,8 @@ Value GlobalObject::is_finite(Interpreter& interpreter)
 
 Value GlobalObject::parse_float(Interpreter& interpreter)
 {
+    if (interpreter.argument(0).is_number())
+        return interpreter.argument(0);
     auto string = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
