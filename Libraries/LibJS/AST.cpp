@@ -1189,8 +1189,8 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
 
     ASSERT(!index.is_empty());
 
-    if (index.is_integer() && index.to_i32() >= 0)
-        return PropertyName(index.to_i32());
+    if (index.is_integer() && index.as_i32() >= 0)
+        return PropertyName(index.as_i32());
 
     auto index_string = index.to_string(interpreter);
     if (interpreter.exception())
