@@ -50,6 +50,7 @@ MathObject::MathObject()
     put_native_function("cos", cos, 1, attr);
     put_native_function("tan", tan, 1, attr);
     put_native_function("pow", pow, 2, attr);
+    put_native_function("exp", exp, 1, attr);
     put_native_function("sign", sign, 1, attr);
 
     put("E", Value(M_E), 0);
@@ -204,7 +205,17 @@ Value MathObject::tan(Interpreter& interpreter)
 
 Value MathObject::pow(Interpreter& interpreter)
 {
-    return exp(interpreter, interpreter.argument(0), interpreter.argument(1));
+    return JS::exp(interpreter, interpreter.argument(0), interpreter.argument(1));
+}
+
+Value MathObject::exp(Interpreter& interpreter)
+{
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (number.is_nan())
+        return js_nan();
+    return Value(::pow(M_E, number.as_double()));
 }
 
 Value MathObject::sign(Interpreter& interpreter)
