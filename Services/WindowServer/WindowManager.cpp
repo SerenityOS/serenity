@@ -84,7 +84,7 @@ WindowManager::~WindowManager()
 
 NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name, const Gfx::Point& hotspot)
 {
-    auto path = m_wm_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
+    auto path = m_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
     auto gb = Gfx::Bitmap::load_from_file(path);
     if (gb)
         return Cursor::create(*gb, hotspot);
@@ -93,7 +93,7 @@ NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name, const Gfx::P
 
 NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
 {
-    auto path = m_wm_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
+    auto path = m_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
     auto gb = Gfx::Bitmap::load_from_file(path);
 
     if (gb)
@@ -103,12 +103,12 @@ NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
 
 void WindowManager::reload_config(bool set_screen)
 {
-    m_wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
+    m_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
 
-    m_double_click_speed = m_wm_config->read_num_entry("Input", "DoubleClickSpeed", 250);
+    m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
 
     if (set_screen) {
-        set_resolution(m_wm_config->read_num_entry("Screen", "Width", 1920), m_wm_config->read_num_entry("Screen", "Height", 1080));
+        set_resolution(m_config->read_num_entry("Screen", "Width", 1920), m_config->read_num_entry("Screen", "Height", 1080));
     }
 
     m_arrow_cursor = get_cursor("Arrow", { 2, 2 });
@@ -148,17 +148,17 @@ bool WindowManager::set_resolution(int width, int height)
             return IterationDecision::Continue;
         });
     }
-    if (m_wm_config) {
+    if (m_config) {
         if (success) {
-            dbg() << "Saving resolution: " << Gfx::Size(width, height) << " to config file at " << m_wm_config->file_name();
-            m_wm_config->write_num_entry("Screen", "Width", width);
-            m_wm_config->write_num_entry("Screen", "Height", height);
-            m_wm_config->sync();
+            dbg() << "Saving resolution: " << Gfx::Size(width, height) << " to config file at " << m_config->file_name();
+            m_config->write_num_entry("Screen", "Width", width);
+            m_config->write_num_entry("Screen", "Height", height);
+            m_config->sync();
         } else {
-            dbg() << "Saving fallback resolution: " << resolution() << " to config file at " << m_wm_config->file_name();
-            m_wm_config->write_num_entry("Screen", "Width", resolution().width());
-            m_wm_config->write_num_entry("Screen", "Height", resolution().height());
-            m_wm_config->sync();
+            dbg() << "Saving fallback resolution: " << resolution() << " to config file at " << m_config->file_name();
+            m_config->write_num_entry("Screen", "Width", resolution().width());
+            m_config->write_num_entry("Screen", "Height", resolution().height());
+            m_config->sync();
         }
     }
     return success;
