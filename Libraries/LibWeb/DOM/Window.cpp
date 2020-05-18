@@ -119,4 +119,15 @@ void Window::did_set_location_href(Badge<Bindings::LocationObject>, const String
     view->load(new_href);
 }
 
+void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
+{
+    auto* frame = document().frame();
+    if (!frame)
+        return;
+    auto* view = frame->html_view();
+    if (!view)
+        return;
+    view->reload();
+}
+
 }

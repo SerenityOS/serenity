@@ -3,12 +3,14 @@
     <head>
         <title>window.location test</title>
         <style>
-            #clickme { background-color: red; color: yellow; }
+            #set_href { background-color: red; color: yellow; }
+            #reload { background-color: blue; color: #ccc; }
         </style>
     </head>
     <body>
     <pre></pre>
-    <div id="clickme">Click me to navigate away!</div>
+    <div id="set_href">Click me to set location.href!</div>
+    <div id="reload">Click me to call location.reload()!</div>
     <script>
         var pre = document.querySelectorAll("pre")[0];
         pre.innerHTML += "href: " + location.href + '\n';
@@ -19,8 +21,12 @@
         pre.innerHTML += "hash: " + location.hash + '\n';
         pre.innerHTML += "search: " + location.search + '\n';
 
-        document.getElementById("clickme").addEventListener("mousedown", function() {
+        document.getElementById("set_href").addEventListener("mousedown", function() {
             window.location.href = 'http://serenityos.org/';
+        });
+
+        document.getElementById("reload").addEventListener("mousedown", function() {
+            window.location.reload();
         });
     </script>
     </body>
