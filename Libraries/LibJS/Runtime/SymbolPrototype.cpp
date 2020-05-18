@@ -42,8 +42,7 @@ namespace JS {
 SymbolPrototype::SymbolPrototype()
     : Object(interpreter().global_object().object_prototype())
 {
-    // FIXME: description has no setter, eventually remove
-    put_native_property("description", description_getter, description_setter, Attribute::Configurable);
+    put_native_property("description", description_getter, nullptr, Attribute::Configurable);
 
     put_native_function("toString", to_string, 0, Attribute::Writable | Attribute::Configurable);
     put_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
@@ -71,11 +70,6 @@ Value SymbolPrototype::description_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     return js_string(interpreter, this_object->description());
-}
-
-void SymbolPrototype::description_setter(Interpreter&, Value)
-{
-    // No-op, remove eventually
 }
 
 Value SymbolPrototype::to_string(Interpreter& interpreter)
