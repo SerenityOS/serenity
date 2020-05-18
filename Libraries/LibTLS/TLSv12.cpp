@@ -641,4 +641,21 @@ void TLSv12::try_disambiguate_error() const
         break;
     }
 }
+
+TLSv12::TLSv12(Core::Object* parent, Version version)
+    : Core::Socket(Core::Socket::Type::TCP, parent)
+{
+    m_context.version = version;
+    m_context.is_server = false;
+    m_context.tls_buffer = ByteBuffer::create_uninitialized(0);
+    int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    if (fd < 0) {
+        set_error(errno);
+    } else {
+        set_fd(fd);
+        set_mode(IODevice::ReadWrite);
+        set_error(0);
+    }
+}
+
 }

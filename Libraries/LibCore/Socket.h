@@ -63,7 +63,6 @@ public:
 
     Function<void()> on_connected;
     Function<void()> on_ready_to_read;
-    Function<void()> on_ready_to_write;
 
 protected:
     Socket(Type, Object* parent);
