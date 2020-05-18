@@ -99,6 +99,8 @@ Tab::Tab()
     toolbar.add_action(*m_reload_action);
 
     m_location_box = toolbar.add<GUI::TextBox>();
+    m_location_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    m_location_box->set_preferred_size(0, 22);
 
     m_location_box->on_return_pressed = [this] {
         String location = m_location_box->text();
