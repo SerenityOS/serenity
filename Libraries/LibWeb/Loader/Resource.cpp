@@ -79,21 +79,24 @@ String mime_type_from_content_type(const String& content_type)
 
 static String guess_mime_type_based_on_filename(const URL& url)
 {
-    if (url.path().ends_with(".pbm"))
+    String lowercase_url = url.path().to_lowercase();
+    if (lowercase_url.ends_with(".pbm"))
         return "image/x‑portable‑bitmap";
-    if (url.path().ends_with(".png"))
+    if (lowercase_url.ends_with(".png"))
         return "image/png";
-    if (url.path().ends_with(".ppm"))
+    if (lowercase_url.ends_with(".ppm"))
         return "image/x‑portable‑pixmap";
-    if (url.path().ends_with(".gif"))
+    if (lowercase_url.ends_with(".gif"))
         return "image/gif";
-    if (url.path().ends_with(".bmp"))
+    if (lowercase_url.ends_with(".bmp"))
         return "image/bmp";
-    if (url.path().ends_with(".md"))
+    if (lowercase_url.ends_with(".jpg") || lowercase_url.ends_with(".jpeg"))
+        return "image/jpeg";
+    if (lowercase_url.ends_with(".md"))
         return "text/markdown";
-    if (url.path().ends_with(".html") || url.path().ends_with(".htm"))
+    if (lowercase_url.ends_with(".html") || lowercase_url.ends_with(".htm"))
         return "text/html";
-    if (url.path().ends_with("/"))
+    if (lowercase_url.ends_with("/"))
         return "text/html";
     return "text/plain";
 }
