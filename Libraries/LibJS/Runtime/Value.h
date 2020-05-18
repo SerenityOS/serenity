@@ -184,15 +184,16 @@ public:
 
     Function& as_function();
 
+    i32 as_i32() const;
+    size_t as_size_t() const;
+
     String to_string(Interpreter&) const;
     PrimitiveString* to_primitive_string(Interpreter&);
     Value to_primitive(Interpreter&) const;
     Object* to_object(Interpreter&) const;
     Value to_number(Interpreter&) const;
     double to_double(Interpreter&) const;
-    i32 to_i32() const;
     i32 to_i32(Interpreter&) const;
-    size_t to_size_t() const;
     size_t to_size_t(Interpreter&) const;
     bool to_boolean() const;
 

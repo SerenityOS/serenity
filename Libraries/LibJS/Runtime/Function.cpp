@@ -69,7 +69,7 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
     if (interpreter().exception())
         return nullptr;
     if (length_property.is_number())
-        computed_length = max(0, length_property.to_i32() - static_cast<i32>(arguments.size()));
+        computed_length = max(0, length_property.as_i32() - static_cast<i32>(arguments.size()));
 
     Object* constructor_prototype = nullptr;
     auto prototype_property = target_function.get("prototype");
