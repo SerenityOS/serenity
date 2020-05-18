@@ -25,6 +25,7 @@
  */
 
 #include <AK/FlyString.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -38,10 +39,12 @@ LocationObject::LocationObject()
     : Object(interpreter().global_object().object_prototype())
 {
     put_native_property("href", href_getter, href_setter);
+    put_native_property("host", host_getter, nullptr);
     put_native_property("hostname", hostname_getter, nullptr);
     put_native_property("pathname", pathname_getter, nullptr);
     put_native_property("hash", hash_getter, nullptr);
     put_native_property("search", search_getter, nullptr);
+    put_native_property("protocol", protocol_getter, nullptr);
 }
 
 LocationObject::~LocationObject()
@@ -75,6 +78,17 @@ JS::Value LocationObject::hostname_getter(JS::Interpreter& interpreter)
     return JS::js_string(interpreter, window.impl().document().url().host());
 }
 
+JS::Value LocationObject::host_getter(JS::Interpreter& interpreter)
+{
+    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& url = window.impl().document().url();
+    StringBuilder builder;
+    builder.append(url.host());
+    builder.append(':');
+    builder.appendf("%u", url.port());
+    return JS::js_string(interpreter, builder.to_string());
+}
+
 JS::Value LocationObject::hash_getter(JS::Interpreter& interpreter)
 {
     auto& window = static_cast<WindowObject&>(interpreter.global_object());
@@ -85,6 +99,15 @@ JS::Value LocationObject::search_getter(JS::Interpreter& interpreter)
 {
     auto& window = static_cast<WindowObject&>(interpreter.global_object());
     return JS::js_string(interpreter, window.impl().document().url().query());
+}
+
+JS::Value LocationObject::protocol_getter(JS::Interpreter& interpreter)
+{
+    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    StringBuilder builder;
+    builder.append(window.impl().document().url().protocol());
+    builder.append(':');
+    return JS::js_string(interpreter, builder.to_string());
 }
 
 }

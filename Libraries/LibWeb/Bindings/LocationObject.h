@@ -43,10 +43,12 @@ private:
     static JS::Value href_getter(JS::Interpreter&);
     static void href_setter(JS::Interpreter&, JS::Value);
 
+    static JS::Value host_getter(JS::Interpreter&);
     static JS::Value hostname_getter(JS::Interpreter&);
     static JS::Value pathname_getter(JS::Interpreter&);
     static JS::Value hash_getter(JS::Interpreter&);
     static JS::Value search_getter(JS::Interpreter&);
+    static JS::Value protocol_getter(JS::Interpreter&);
 };
 
 }
