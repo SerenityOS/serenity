@@ -234,7 +234,8 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
 
         if (span.range.contains(text_position)) {
             auto adjusted_range = span.range;
-            adjusted_range.end().set_column(adjusted_range.end().column() + 1);
+            auto end_line_length = document().line(span.range.end().line()).length();
+            adjusted_range.end().set_column(min(end_line_length, adjusted_range.end().column() + 1));
             auto hovered_span_text = document().text_in_range(adjusted_range);
 #ifdef EDITOR_DEBUG
             dbg() << "Hovering: " << adjusted_range << " \"" << hovered_span_text << "\"";
