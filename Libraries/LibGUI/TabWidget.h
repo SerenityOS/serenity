@@ -84,6 +84,7 @@ public:
 
     Function<void(Widget&)> on_change;
     Function<void(Widget&)> on_middle_click;
+    Function<void(Widget&, const ContextMenuEvent&)> on_context_menu_request;
 
 protected:
     TabWidget();
@@ -95,6 +96,7 @@ protected:
     virtual void mousemove_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(KeyEvent&) override;
+    virtual void context_menu_event(ContextMenuEvent&) override;
 
 private:
     Gfx::Rect child_rect_for_size(const Gfx::Size&) const;
