@@ -224,7 +224,7 @@ private:
     bool m_readonly { false };
     int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
-    int m_horizontal_content_padding { 2 };
+    int m_horizontal_content_padding { 3 };
     TextRange m_selection;
     RefPtr<Menu> m_context_menu;
     RefPtr<Action> m_undo_action;
