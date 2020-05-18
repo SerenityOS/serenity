@@ -254,6 +254,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     location_label.size_to_fit();
 
     auto& location_textbox = location_toolbar.add<GUI::TextBox>();
+    location_textbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    location_textbox.set_preferred_size(0, 22);
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
     auto& tree_view = splitter.add<GUI::TreeView>();
