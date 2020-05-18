@@ -144,10 +144,10 @@ int run(Function<void(const char*, size_t)> fn)
 
 void tls(const char* message, size_t len)
 {
-    static OwnPtr<TLS::TLSv12> tls;
+    static RefPtr<TLS::TLSv12> tls;
     static ByteBuffer write {};
     if (!tls) {
-        tls = make<TLS::TLSv12>(nullptr);
+        tls = TLS::TLSv12::construct(nullptr);
         tls->connect(server ?: DEFAULT_SERVER, port);
         tls->on_tls_ready_to_read = [](auto& tls) {
             auto buffer = tls.read();
