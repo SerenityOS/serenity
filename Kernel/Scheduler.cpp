@@ -251,7 +251,7 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, pid_t& waitee_pid)
 
 bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
 {
-    bool should_unblock = false;
+    bool should_unblock = m_wait_options & WNOHANG;
     if (m_waitee_pid != -1) {
         auto* peer = Process::from_pid(m_waitee_pid);
         if (!peer)
