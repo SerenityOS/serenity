@@ -147,8 +147,9 @@ public:
     void resized() { m_was_resized = true; }
 
     size_t cursor() const { return m_cursor; }
-    const Vector<char, 1024>& buffer() const { return m_buffer; }
-    char buffer_at(size_t pos) const { return m_buffer.at(pos); }
+    const Vector<u32, 1024>& buffer() const { return m_buffer; }
+    u32 buffer_at(size_t pos) const { return m_buffer.at(pos); }
+    String line() const;
 
     // only makes sense inside a char_input callback or on_* callback
     void set_prompt(const String& prompt)
@@ -162,7 +163,7 @@ public:
 
     void clear_line();
     void insert(const String&);
-    void insert(const char);
+    void insert(const u32);
     void stylize(const Span&, const Style&);
     void strip_styles()
     {
@@ -275,9 +276,10 @@ private:
     size_t m_search_offset { 0 };
     bool m_searching_backwards { true };
     size_t m_pre_search_cursor { 0 };
-    Vector<char, 1024> m_pre_search_buffer;
+    Vector<u32, 1024> m_pre_search_buffer;
 
-    Vector<char, 1024> m_buffer;
+    Vector<u32, 1024> m_buffer;
+    Vector<char, 512> m_incomplete_data;
     ByteBuffer m_pending_chars;
     size_t m_cursor { 0 };
     size_t m_drawn_cursor { 0 };
