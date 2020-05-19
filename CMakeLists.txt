@@ -52,6 +52,7 @@ function(serenity_libc target_name fs_name)
     add_library(${target_name} ${SOURCES})
     install(TARGETS ${target_name} ARCHIVE DESTINATION usr/lib)
     set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
+    target_include_directories(${target_name} SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_directories(LibC PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
 
@@ -101,8 +102,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -Wno-sized-deallocation -fno-sized-d
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -DSANITIZE_PTRS")
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
-include_directories(Libraries/LibC)
+# Source directory relative service headers
 include_directories(Services)
+# Generated Service/Library Headers
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Libraries)
 
