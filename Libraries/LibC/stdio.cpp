@@ -28,6 +28,7 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
+#include <AK/kmalloc.h>
 #include <Kernel/Syscall.h>
 #include <assert.h>
 #include <errno.h>
@@ -40,54 +41,510 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+struct FILE {
+public:
+    FILE(int fd, int mode)
+        : m_fd(fd)
+        , m_mode(mode)
+    {
+    }
+    ~FILE();
+
+    static FILE* create(int fd, int mode);
+
+    void setbuf(u8* data, int mode, size_t size) { m_buffer.setbuf(data, mode, size); }
+
+    bool flush();
+    bool close();
+
+    int fileno() const { return m_fd; }
+    bool eof() const { return m_eof; }
+
+    int error() const { return m_error; }
+    void clear_err() { m_error = 0; }
+
+    size_t read(u8*, size_t);
+    size_t write(const u8*, size_t);
+
+    bool gets(u8*, size_t);
+    bool ungetc(u8 byte) { return m_buffer.enqueue_front(byte); }
+
+    int seek(long offset, int whence);
+    long tell();
+
+    pid_t popen_child() { return m_popen_child; }
+    void set_popen_child(pid_t child_pid) { m_popen_child = child_pid; }
+
+private:
+
+    struct Buffer {
+        // A ringbuffer that also transparently implements ungetc().
+    public:
+        ~Buffer();
+
+        int mode() const { return m_mode; }
+        void setbuf(u8* data, int mode, size_t size);
+        // Make sure to call realize() before enqueuing any data.
+        // Dequeuing can be attempted without it.
+        void realize(int fd);
+        void drop();
+
+        bool may_use() const { return m_ungotten || m_mode != _IONBF; }
+        bool is_not_empty() const { return m_ungotten || !m_empty; }
+
+        const u8* begin_dequeue(size_t& available_size) const;
+        void did_dequeue(size_t actual_size);
+
+        u8* begin_enqueue(size_t& available_size) const;
+        void did_enqueue(size_t actual_size);
+
+        bool enqueue_front(u8 byte);
+
+    private:
+        // Note: the fields here are arranged this way
+        // to make sizeof(Buffer) smaller.
+        u8* m_data { nullptr };
+        size_t m_capacity { BUFSIZ };
+        size_t m_begin { 0 };
+        size_t m_end { 0 };
+
+        int m_mode { -1 };
+        u8 m_unget_buffer { 0 };
+        bool m_ungotten : 1 { false };
+        bool m_data_is_malloced : 1 { false };
+        // When m_begin == m_end, we want to distinguish whether
+        // the buffer is full or empty.
+        bool m_empty : 1 { true };
+    };
+
+    // Read or write using the underlying fd, bypassing the buffer.
+    ssize_t do_read(u8*, size_t);
+    ssize_t do_write(const u8*, size_t);
+
+    // Read some data into the buffer.
+    bool read_into_buffer();
+    // Flush *some* data from the buffer.
+    bool write_from_buffer();
+
+    int m_fd { -1 };
+    int m_mode { 0 };
+    int m_error { 0 };
+    bool m_eof { false };
+    pid_t m_popen_child { -1 };
+    Buffer m_buffer;
+};
+
+FILE::~FILE()
+{
+    bool already_closed = m_fd == -1;
+    ASSERT(already_closed);
+}
+
+FILE* FILE::create(int fd, int mode)
+{
+    void* file = calloc(1, sizeof(FILE));
+    new (file) FILE(fd, mode);
+    return (FILE*)file;
+}
+
+bool FILE::close()
+{
+    bool flush_ok = flush();
+    int rc = ::close(m_fd);
+    m_fd = -1;
+    if (!flush_ok) {
+        // Restore the original error from flush().
+        errno = m_error;
+    }
+    return flush_ok && rc == 0;
+}
+
+bool FILE::flush()
+{
+    if (m_mode & O_WRONLY && m_buffer.may_use()) {
+        // When open for writing, write out all the buffered data.
+        while (m_buffer.is_not_empty()) {
+            bool ok = write_from_buffer();
+            if (!ok)
+                return false;
+        }
+    }
+    if (m_mode & O_RDONLY) {
+        // When open for reading, just drop the buffered data.
+        m_buffer.drop();
+    }
+
+    return true;
+}
+
+ssize_t FILE::do_read(u8* data, size_t size)
+{
+    int nread = ::read(m_fd, data, size);
+
+    if (nread < 0) {
+        m_error = errno;
+    } else if (nread == 0) {
+        m_eof = true;
+    }
+    return nread;
+}
+
+ssize_t FILE::do_write(const u8* data, size_t size)
+{
+    int nwritten = ::write(m_fd, data, size);
+
+    if (nwritten < 0)
+        m_error = errno;
+    return nwritten;
+}
+
+bool FILE::read_into_buffer()
+{
+    m_buffer.realize(m_fd);
+
+    size_t available_size;
+    u8* data = m_buffer.begin_enqueue(available_size);
+    // If we want to read, the buffer must have some space!
+    ASSERT(available_size);
+
+    ssize_t nread = do_read(data, available_size);
+
+    if (nread <= 0)
+        return false;
+
+    m_buffer.did_enqueue(nread);
+    return true;
+}
+
+bool FILE::write_from_buffer()
+{
+    size_t size;
+    const u8* data = m_buffer.begin_dequeue(size);
+    // If we want to write, the buffer must have something in it!
+    ASSERT(size);
+
+    ssize_t nwritten = do_write(data, size);
+
+    if (nwritten < 0)
+        return false;
+
+    m_buffer.did_dequeue(nwritten);
+    return true;
+}
+
+size_t FILE::read(u8* data, size_t size)
+{
+    size_t total_read = 0;
+
+    while (size > 0) {
+        size_t actual_size;
+
+        if (m_buffer.may_use()) {
+            // Let's see if the buffer has something queued for us.
+            size_t queued_size;
+            const u8* queued_data = m_buffer.begin_dequeue(queued_size);
+            if (queued_size == 0) {
+                // Nothing buffered; we're going to have to read some.
+                bool read_some_more = read_into_buffer();
+                if (read_some_more) {
+                    // Great, now try this again.
+                    continue;
+                }
+                return total_read;
+            }
+            actual_size = min(size, queued_size);
+            memcpy(data, queued_data, actual_size);
+            m_buffer.did_dequeue(actual_size);
+        } else {
+            // Read directly into the user buffer.
+            ssize_t nread = do_read(data, size);
+            if (nread <= 0)
+                return total_read;
+            actual_size = nread;
+        }
+
+        total_read += actual_size;
+        data += actual_size;
+        size -= actual_size;
+    }
+
+    return total_read;
+}
+
+size_t FILE::write(const u8* data, size_t size)
+{
+    size_t total_written = 0;
+
+    while (size > 0) {
+        size_t actual_size;
+
+        if (m_buffer.may_use()) {
+            m_buffer.realize(m_fd);
+            // Try writing into the buffer.
+            size_t available_size;
+            u8* buffer_data = m_buffer.begin_enqueue(available_size);
+            if (available_size == 0) {
+                // There's no space in the buffer; we're going to free some.
+                bool freed_some_space = write_from_buffer();
+                if (freed_some_space) {
+                    // Great, now try this again.
+                    continue;
+                }
+                return total_written;
+            }
+            actual_size = min(size, available_size);
+            memcpy(buffer_data, data, actual_size);
+            m_buffer.did_enqueue(actual_size);
+            // See if we have to flush it.
+            if (m_buffer.mode() == _IOLBF) {
+                bool includes_newline = memchr(data, '\n', actual_size);
+                if (includes_newline)
+                    flush();
+            }
+        } else {
+            // Write directly from the user buffer.
+            ssize_t nwritten = do_write(data, size);
+            if (nwritten < 0)
+                return total_written;
+            actual_size = nwritten;
+        }
+
+        total_written += actual_size;
+        data += actual_size;
+        size -= actual_size;
+    }
+
+    return total_written;
+}
+
+bool FILE::gets(u8* data, size_t size)
+{
+    // gets() is a lot like read(), but it is different enough in how it
+    // processes newlines and null-terminates the buffer that it deserves a
+    // separate implementation.
+    size_t total_read = 0;
+
+    while (size > 1) {
+        if (m_buffer.may_use()) {
+            // Let's see if the buffer has something queued for us.
+            size_t queued_size;
+            const u8* queued_data = m_buffer.begin_dequeue(queued_size);
+            if (queued_size == 0) {
+                // Nothing buffered; we're going to have to read some.
+                bool read_some_more = read_into_buffer();
+                if (read_some_more) {
+                    // Great, now try this again.
+                    continue;
+                }
+                *data = 0;
+                return total_read > 0;
+            }
+            size_t actual_size = min(size - 1, queued_size);
+            u8* newline = reinterpret_cast<u8*>(memchr(queued_data, '\n', actual_size));
+            if (newline)
+                actual_size = newline - queued_data + 1;
+            memcpy(data, queued_data, actual_size);
+            m_buffer.did_dequeue(actual_size);
+            total_read += actual_size;
+            data += actual_size;
+            size -= actual_size;
+            if (newline)
+                break;
+        } else {
+            // Sadly, we have to actually read these characters one by one.
+            u8 byte;
+            ssize_t nread = do_read(&byte, 1);
+            if (nread <= 0) {
+                *data = 0;
+                return total_read > 0;
+            }
+            ASSERT(nread == 1);
+            *data = byte;
+            total_read++;
+            data++;
+            size--;
+            if (byte == '\n')
+                break;
+        }
+    }
+
+    *data = 0;
+    return total_read > 0;
+}
+
+int FILE::seek(long offset, int whence)
+{
+    bool ok = flush();
+    if (!ok)
+        return -1;
+
+    off_t off = lseek(m_fd, offset, whence);
+    if (off < 0) {
+        // Note: do not set m_error.
+        return off;
+    }
+
+    m_eof = false;
+    return 0;
+}
+
+long FILE::tell()
+{
+    bool ok = flush();
+    if (!ok)
+        return -1;
+
+    return lseek(m_fd, 0, SEEK_CUR);
+}
+
+FILE::Buffer::~Buffer()
+{
+    if (m_data_is_malloced)
+        free(m_data);
+}
+
+void FILE::Buffer::realize(int fd)
+{
+    if (m_mode == -1)
+        m_mode = isatty(fd) ? _IOLBF : _IOFBF;
+
+    if (m_mode != _IONBF && m_data == nullptr) {
+        m_data = reinterpret_cast<u8*>(malloc(m_capacity));
+        m_data_is_malloced = true;
+    }
+}
+
+void FILE::Buffer::setbuf(u8* data, int mode, size_t size)
+{
+    drop();
+    m_mode = mode;
+    if (data != nullptr) {
+        m_data = data;
+        m_capacity = size;
+    }
+}
+
+void FILE::Buffer::drop()
+{
+    if (m_data_is_malloced) {
+        free(m_data);
+        m_data = nullptr;
+        m_data_is_malloced = false;
+    }
+    m_begin = m_end = 0;
+    m_empty = true;
+    m_ungotten = false;
+}
+
+const u8* FILE::Buffer::begin_dequeue(size_t& available_size) const
+{
+    if (m_ungotten) {
+        available_size = 1;
+        return &m_unget_buffer;
+    }
+
+    if (m_empty) {
+        available_size = 0;
+        return nullptr;
+    }
+
+    if (m_begin < m_end)
+        available_size = m_end - m_begin;
+    else
+        available_size = m_capacity - m_begin;
+
+    return &m_data[m_begin];
+}
+
+void FILE::Buffer::did_dequeue(size_t actual_size)
+{
+    ASSERT(actual_size > 0);
+
+    if (m_ungotten) {
+        ASSERT(actual_size == 1);
+        m_ungotten = false;
+        return;
+    }
+
+    m_begin += actual_size;
+
+    ASSERT(m_begin <= m_capacity);
+    if (m_begin == m_capacity) {
+        // Wrap around.
+        m_begin = 0;
+    }
+
+    if (m_begin == m_end) {
+        m_empty = true;
+        // As an optimization, move both pointers to the beginning of the
+        // buffer, so that more consecutive space is available next time.
+        m_begin = m_end = 0;
+    }
+}
+
+u8* FILE::Buffer::begin_enqueue(size_t& available_size) const
+{
+    ASSERT(m_data != nullptr);
+
+    if (m_begin < m_end || m_empty)
+        available_size = m_capacity - m_end;
+    else
+        available_size = m_begin - m_end;
+
+    return const_cast<u8*>(&m_data[m_end]);
+}
+
+void FILE::Buffer::did_enqueue(size_t actual_size)
+{
+    ASSERT(m_data != nullptr);
+    ASSERT(actual_size > 0);
+
+    m_end += actual_size;
+
+    ASSERT(m_end <= m_capacity);
+    if (m_end == m_capacity) {
+        // Wrap around.
+        m_end = 0;
+    }
+
+    m_empty = false;
+}
+
+bool FILE::Buffer::enqueue_front(u8 byte)
+{
+    if (m_ungotten) {
+        // Sorry, the place is already taken!
+        return false;
+    }
+
+    m_ungotten = true;
+    m_unget_buffer = byte;
+    return true;
+}
+
 extern "C" {
 
-static FILE __default_streams[3];
-FILE* stdin;
-FILE* stdout;
-FILE* stderr;
-
-void init_FILE(FILE& fp, int fd, int mode)
-{
-    fp.fd = fd;
-    fp.buffer = fp.default_buffer;
-    fp.buffer_size = BUFSIZ;
-    fp.mode = mode;
-}
-
-static FILE* make_FILE(int fd)
-{
-    auto* fp = (FILE*)malloc(sizeof(FILE));
-    memset(fp, 0, sizeof(FILE));
-    init_FILE(*fp, fd, isatty(fd));
-    return fp;
-}
+static u8 default_streams[3][sizeof(FILE)];
+FILE* stdin = reinterpret_cast<FILE*>(&default_streams[0]);
+FILE* stdout = reinterpret_cast<FILE*>(&default_streams[1]);
+FILE* stderr = reinterpret_cast<FILE*>(&default_streams[2]);
 
 void __stdio_init()
 {
-    stdin = &__default_streams[0];
-    stdout = &__default_streams[1];
-    stderr = &__default_streams[2];
-    init_FILE(*stdin, 0, isatty(0) ? _IOLBF : _IOFBF);
-    init_FILE(*stdout, 1, isatty(1) ? _IOLBF : _IOFBF);
-    init_FILE(*stderr, 2, _IONBF);
+    new (stdin) FILE(0, O_RDONLY);
+    new (stdout) FILE(1, O_WRONLY);
+    new (stderr) FILE(2, O_WRONLY);
+    stderr->setbuf(nullptr, _IONBF, 0);
 }
 
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
 {
+    ASSERT(stream);
     if (mode != _IONBF && mode != _IOLBF && mode != _IOFBF) {
         errno = EINVAL;
         return -1;
     }
-    stream->mode = mode;
-    if (buf) {
-        stream->buffer = buf;
-        stream->buffer_size = size;
-    } else {
-        stream->buffer = stream->default_buffer;
-        stream->buffer_size = BUFSIZ;
-    }
-    stream->buffer_index = 0;
+    stream->setbuf(reinterpret_cast<u8*>(buf), mode, size);
     return 0;
 }
 
@@ -103,14 +560,14 @@ void setlinebuf(FILE* stream)
 
 int fileno(FILE* stream)
 {
-    assert(stream);
-    return stream->fd;
+    ASSERT(stream);
+    return stream->fileno();
 }
 
 int feof(FILE* stream)
 {
-    assert(stream);
-    return stream->eof;
+    ASSERT(stream);
+    return stream->eof();
 }
 
 int fflush(FILE* stream)
@@ -119,47 +576,19 @@ int fflush(FILE* stream)
         dbg() << "FIXME: fflush(nullptr) should flush all open streams";
         return 0;
     }
-    if (!stream->buffer_index)
-        return 0;
-    int rc = write(stream->fd, stream->buffer, stream->buffer_index);
-    stream->buffer_index = 0;
-    stream->error = 0;
-    stream->eof = 0;
-    stream->have_ungotten = false;
-    stream->ungotten = 0;
-    if (rc < 0) {
-        stream->error = errno;
-        return EOF;
-    }
-    return 0;
+    return stream->flush() ? 0 : EOF;
 }
 
 char* fgets(char* buffer, int size, FILE* stream)
 {
     ASSERT(stream);
-    if (size == 0) {
-        return nullptr;
-    }
-
-    ssize_t nread = 0;
-    while (nread < (size - 1)) {
-        int ch = fgetc(stream);
-        if (ch == EOF)
-            break;
-        buffer[nread++] = ch;
-        if (ch == '\n')
-            break;
-    }
-    if (nread) {
-        buffer[nread] = '\0';
-        return buffer;
-    }
-    return nullptr;
+    bool ok = stream->gets(reinterpret_cast<u8*>(buffer), size);
+    return ok ? buffer : nullptr;
 }
 
 int fgetc(FILE* stream)
 {
-    assert(stream);
+    ASSERT(stream);
     char ch;
     size_t nread = fread(&ch, sizeof(char), 1, stream);
     if (nread == 1)
@@ -230,28 +659,19 @@ ssize_t getline(char** lineptr, size_t* n, FILE* stream)
 int ungetc(int c, FILE* stream)
 {
     ASSERT(stream);
-    if (c == EOF)
-        return EOF;
-    if (stream->have_ungotten)
-        return EOF;
-    stream->have_ungotten = true;
-    stream->ungotten = c;
-    stream->eof = false;
-    return c;
+    bool ok = stream->ungetc(c);
+    return ok ? c : EOF;
 }
 
 int fputc(int ch, FILE* stream)
 {
-    assert(stream);
-    assert(stream->buffer_index < stream->buffer_size);
-    stream->buffer[stream->buffer_index++] = ch;
-    if (stream->buffer_index >= stream->buffer_size)
-        fflush(stream);
-    else if (stream->mode == _IONBF || (stream->mode == _IOLBF && ch == '\n'))
-        fflush(stream);
-    if (stream->eof || stream->error)
+    ASSERT(stream);
+    u8 byte = ch;
+    size_t nwritten = stream->write(&byte, 1);
+    if (nwritten == 0)
         return EOF;
-    return (u8)ch;
+    ASSERT(nwritten == 1);
+    return byte;
 }
 
 int putc(int ch, FILE* stream)
@@ -266,11 +686,11 @@ int putchar(int ch)
 
 int fputs(const char* s, FILE* stream)
 {
-    for (; *s; ++s) {
-        int rc = putc(*s, stream);
-        if (rc == EOF)
-            return EOF;
-    }
+    ASSERT(stream);
+    size_t len = strlen(s);
+    size_t nwritten = stream->write(reinterpret_cast<const u8*>(s), len);
+    if (nwritten < len)
+        return EOF;
     return 1;
 }
 
@@ -284,88 +704,52 @@ int puts(const char* s)
 
 void clearerr(FILE* stream)
 {
-    assert(stream);
-    stream->eof = false;
-    stream->error = 0;
+    ASSERT(stream);
+    stream->clear_err();
 }
 
 int ferror(FILE* stream)
 {
-    return stream->error;
+    ASSERT(stream);
+    return stream->error();
 }
 
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
-    assert(stream);
-    if (!size)
-        return 0;
+    ASSERT(stream);
+    ASSERT(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
-    ssize_t nread = 0;
-
-    if (stream->have_ungotten) {
-        // FIXME: Support ungotten character even if size != 1.
-        ASSERT(size == 1);
-        ((char*)ptr)[0] = stream->ungotten;
-        stream->have_ungotten = false;
-        --nmemb;
-        if (!nmemb)
-            return 1;
-        ptr = &((char*)ptr)[1];
-        ++nread;
-    }
-
-    ssize_t rc = read(stream->fd, ptr, nmemb * size);
-    if (rc < 0) {
-        stream->error = errno;
-        return 0;
-    }
-    if (rc == 0)
-        stream->eof = true;
-    nread += rc;
+    size_t nread = stream->read(reinterpret_cast<u8*>(ptr), size * nmemb);
     return nread / size;
 }
 
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
-    assert(stream);
-    auto* bytes = (const u8*)ptr;
-    ssize_t nwritten = 0;
-    for (size_t i = 0; i < (size * nmemb); ++i) {
-        int rc = fputc(bytes[i], stream);
-        if (rc == EOF)
-            break;
-        ++nwritten;
-    }
+    ASSERT(stream);
+    ASSERT(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
+
+    size_t nwritten = stream->write(reinterpret_cast<const u8*>(ptr), size * nmemb);
     return nwritten / size;
 }
 
 int fseek(FILE* stream, long offset, int whence)
 {
-    assert(stream);
-    fflush(stream);
-    off_t off = lseek(stream->fd, offset, whence);
-    if (off < 0)
-        return off;
-    stream->eof = false;
-    stream->error = 0;
-    stream->have_ungotten = false;
-    stream->ungotten = 0;
-    return 0;
+    ASSERT(stream);
+    return stream->seek(offset, whence);
 }
 
 long ftell(FILE* stream)
 {
-    assert(stream);
-    fflush(stream);
-    return lseek(stream->fd, 0, SEEK_CUR);
+    ASSERT(stream);
+    return stream->tell();
 }
 
 int fgetpos(FILE* stream, fpos_t* pos)
 {
-    assert(stream);
-    assert(pos);
+    ASSERT(stream);
+    ASSERT(pos);
 
-    long val = ftell(stream);
+    long val = stream->tell();
     if (val == -1L)
         return 1;
 
@@ -375,15 +759,16 @@ int fgetpos(FILE* stream, fpos_t* pos)
 
 int fsetpos(FILE* stream, const fpos_t* pos)
 {
-    assert(stream);
-    assert(pos);
-    return fseek(stream, (long) *pos, SEEK_SET);
+    ASSERT(stream);
+    ASSERT(pos);
+
+    return stream->seek((long)*pos, SEEK_SET);
 }
 
 void rewind(FILE* stream)
 {
     ASSERT(stream);
-    int rc = fseek(stream, 0, SEEK_SET);
+    int rc = stream->seek(0, SEEK_SET);
     ASSERT(rc == 0);
 }
 
@@ -492,7 +877,7 @@ void perror(const char* s)
     fprintf(stderr, "%s: %s\n", s, strerror(saved_errno));
 }
 
-FILE* fopen(const char* pathname, const char* mode)
+static int parse_mode(const char* mode)
 {
     int flags = 0;
     // NOTE: rt is a non-standard mode which opens a file for read, explicitly
@@ -510,13 +895,20 @@ FILE* fopen(const char* pathname, const char* mode)
     else if (!strcmp(mode, "a+") || !strcmp(mode, "ab+"))
         flags = O_RDWR | O_APPEND | O_CREAT;
     else {
-        fprintf(stderr, "FIXME(LibC): fopen('%s', '%s')\n", pathname, mode);
+        dbg() << "Unexpected mode _" << mode << "_";
         ASSERT_NOT_REACHED();
     }
+
+    return flags;
+}
+
+FILE* fopen(const char* pathname, const char* mode)
+{
+    int flags = parse_mode(mode);
     int fd = open(pathname, flags, 0666);
     if (fd < 0)
         return nullptr;
-    return make_FILE(fd);
+    return FILE::create(fd, flags);
 }
 
 FILE* freopen(const char* pathname, const char* mode, FILE* stream)
@@ -529,20 +921,29 @@ FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 
 FILE* fdopen(int fd, const char* mode)
 {
-    UNUSED_PARAM(mode);
+    int flags = parse_mode(mode);
     // FIXME: Verify that the mode matches how fd is already open.
     if (fd < 0)
         return nullptr;
-    return make_FILE(fd);
+    return FILE::create(fd, flags);
+}
+
+static inline bool is_default_stream(FILE* stream)
+{
+    return stream == stdin || stream == stdout || stream == stderr;
 }
 
 int fclose(FILE* stream)
 {
-    fflush(stream);
-    int rc = close(stream->fd);
-    if (stream != &__default_streams[0] && stream != &__default_streams[1] && stream != &__default_streams[2])
+    ASSERT(stream);
+    bool ok = stream->close();
+    ScopedValueRollback errno_restorer(errno);
+
+    stream->~FILE();
+    if (!is_default_stream(stream))
         free(stream);
-    return rc;
+
+    return ok ? 0 : EOF;
 }
 
 int rename(const char* oldpath, const char* newpath)
@@ -589,7 +990,13 @@ FILE* popen(const char* command, const char* type)
     }
 
     pid_t child_pid = fork();
-    if (!child_pid) {
+    if (child_pid < 0) {
+        ScopedValueRollback rollback(errno);
+        perror("fork");
+        close(pipe_fds[0]);
+        close(pipe_fds[1]);
+        return nullptr;
+    } else if (child_pid == 0) {
         if (*type == 'r') {
             int rc = dup2(pipe_fds[1], STDOUT_FILENO);
             if (rc < 0) {
@@ -614,26 +1021,26 @@ FILE* popen(const char* command, const char* type)
         exit(1);
     }
 
-    FILE* fp = nullptr;
+    FILE* file = nullptr;
     if (*type == 'r') {
-        fp = make_FILE(pipe_fds[0]);
+        file = FILE::create(pipe_fds[0], O_RDONLY);
         close(pipe_fds[1]);
     } else if (*type == 'w') {
-        fp = make_FILE(pipe_fds[1]);
+        file = FILE::create(pipe_fds[1], O_WRONLY);
         close(pipe_fds[0]);
     }
 
-    fp->popen_child = child_pid;
-    return fp;
+    file->set_popen_child(child_pid);
+    return file;
 }
 
-int pclose(FILE* fp)
+int pclose(FILE* stream)
 {
-    ASSERT(fp);
-    ASSERT(fp->popen_child != 0);
+    ASSERT(stream);
+    ASSERT(stream->popen_child() != 0);
 
     int wstatus = 0;
-    int rc = waitpid(fp->popen_child, &wstatus, 0);
+    int rc = waitpid(stream->popen_child(), &wstatus, 0);
     if (rc < 0)
         return rc;
 
@@ -708,6 +1115,6 @@ FILE* tmpfile()
     // FIXME: instead of using this hack, implement with O_TMPFILE or similar
     unlink(tmp_path);
 
-    return make_FILE(fd);
+    return fdopen(fd, "rw");
 }
 }
