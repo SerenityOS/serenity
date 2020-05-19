@@ -106,7 +106,13 @@ JS::Value LocationObject::hash_getter(JS::Interpreter& interpreter)
 JS::Value LocationObject::search_getter(JS::Interpreter& interpreter)
 {
     auto& window = static_cast<WindowObject&>(interpreter.global_object());
-    return JS::js_string(interpreter, window.impl().document().url().query());
+    auto query = window.impl().document().url().query();
+    if (!query.length())
+        return JS::js_string(interpreter, "");
+    StringBuilder builder;
+    builder.append('?');
+    builder.append(query);
+    return JS::js_string(interpreter, builder.to_string());
 }
 
 JS::Value LocationObject::protocol_getter(JS::Interpreter& interpreter)
