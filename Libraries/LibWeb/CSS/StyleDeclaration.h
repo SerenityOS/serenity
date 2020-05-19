@@ -49,7 +49,7 @@ public:
 
     const Vector<StyleProperty>& properties() const { return m_properties; }
 
-public:
+private:
     explicit StyleDeclaration(Vector<StyleProperty>&&);
 
     Vector<StyleProperty> m_properties;
