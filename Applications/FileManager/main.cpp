@@ -118,7 +118,6 @@ int main(int argc, char** argv)
 class DesktopWidget final : public GUI::Widget {
     C_OBJECT(DesktopWidget);
 
-public:
 private:
     virtual void paint_event(GUI::PaintEvent& event) override
     {
