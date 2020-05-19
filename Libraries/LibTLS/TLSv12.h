@@ -375,6 +375,9 @@ private:
     void build_random(PacketBuilder&);
 
     bool flush();
+    void write_into_socket();
+
+    bool check_connection_state(bool read);
 
     ssize_t handle_hello(const ByteBuffer& buffer, WritePacketStage&);
     ssize_t handle_finished(const ByteBuffer& buffer, WritePacketStage&);
@@ -463,7 +466,7 @@ private:
     OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_local;
     OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_remote;
 
-    RefPtr<Core::Notifier> m_write_notifier;
+    bool m_has_scheduled_write_flush = false;
 };
 
 namespace Constants {
