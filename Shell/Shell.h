@@ -112,8 +112,7 @@ public:
     static ContinuationRequest is_complete(const Vector<Command>&);
 
     void highlight(Line::Editor&) const;
-    Vector<Line::CompletionSuggestion> complete_first(const String&);
-    Vector<Line::CompletionSuggestion> complete_other(const String&);
+    Vector<Line::CompletionSuggestion> complete(const Line::Editor&);
 
     String get_history_path();
     void load_history();

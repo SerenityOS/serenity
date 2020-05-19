@@ -1470,102 +1470,76 @@ void Shell::highlight(Line::Editor&) const
     }
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_first(const String& token_to_complete)
+Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
 {
-    auto token = unescape_token(token_to_complete);
+    auto line = editor.line(editor.cursor());
 
-    auto match = binary_search(cached_path.data(), cached_path.size(), token, [](const String& token, const String& program) -> int {
-        return strncmp(token.characters(), program.characters(), token.length());
-    });
+    Parser parser(line);
 
-    if (!match) {
-        // There is no executable in the $PATH starting with $token
-        // Suggest local executables and directories
-        String path;
-        Vector<Line::CompletionSuggestion> local_suggestions;
-        bool suggest_executables = true;
+    auto commands = parser.parse();
 
-        ssize_t last_slash = token.length() - 1;
-        while (last_slash >= 0 && token[last_slash] != '/')
-            --last_slash;
+    if (commands.size() == 0)
+        return {};
 
-        if (last_slash >= 0) {
-            // Split on the last slash. We'll use the first part as the directory
-            // to search and the second part as the token to complete.
-            path = token.substring(0, last_slash + 1);
-            if (path[0] != '/')
-                path = String::format("%s/%s", cwd.characters(), path.characters());
-            path = canonicalized_path(path);
-            token = token.substring(last_slash + 1, token.length() - last_slash - 1);
+    // get the last token and whether it's the first in its subcommand
+    String token;
+    bool is_first_in_subcommand = false;
+    auto& subcommand = commands.last().subcommands;
+
+    if (subcommand.size() == 0) {
+        // foo bar; <tab>
+        token = "";
+        is_first_in_subcommand = true;
+    } else {
+        auto& last_command = subcommand.last();
+        if (last_command.args.size() == 0) {
+            // foo bar | <tab>
+            token = "";
+            is_first_in_subcommand = true;
         } else {
-            // We have no slashes, so the directory to search is the current
-            // directory and the token to complete is just the original token.
-            // In this case, do not suggest executables but directories only.
-            path = cwd;
-            suggest_executables = false;
+            auto& args = last_command.args;
+            if (args.last().type == Token::Comment) // we cannot complete comments
+                return {};
+
+            is_first_in_subcommand = args.size() == 1;
+            token = last_command.args.last().text;
         }
+    }
 
-        // the invariant part of the token is actually just the last segment
-        // e. in `cd /foo/bar', 'bar' is the invariant
-        //      since we are not suggesting anything starting with
-        //      `/foo/', but rather just `bar...'
-        editor.suggest(escape_token(token).length(), 0);
+    Vector<Line::CompletionSuggestion> suggestions;
 
-        // only suggest dot-files if path starts with a dot
-        Core::DirIterator files(path,
-            token.starts_with('.') ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
+    bool should_suggest_only_executables = false;
 
-        while (files.has_next()) {
-            auto file = files.next_path();
-            auto trivia = " ";
-            if (file.starts_with(token)) {
-                String file_path = String::format("%s/%s", path.characters(), file.characters());
-                struct stat program_status;
-                int stat_error = stat(file_path.characters(), &program_status);
-                if (stat_error)
-                    continue;
-                if (access(file_path.characters(), X_OK) != 0)
-                    continue;
-                if (S_ISDIR(program_status.st_mode)) {
-                    if (!suggest_executables)
-                        continue;
-                    else
-                        trivia = "/";
-                }
+    if (is_first_in_subcommand) {
+        auto match = binary_search(cached_path.data(), cached_path.size(), token, [](const String& token, const String& program) -> int {
+            return strncmp(token.characters(), program.characters(), token.length());
+        });
 
-                local_suggestions.append({ escape_token(file), trivia });
+        if (match) {
+            String completion = *match;
+            editor.suggest(escape_token(token).length(), 0);
+
+            // Now that we have a program name starting with our token, we look at
+            // other program names starting with our token and cut off any mismatching
+            // characters.
+
+            int index = match - cached_path.data();
+            for (int i = index - 1; i >= 0 && cached_path[i].starts_with(token); --i) {
+                suggestions.append({ cached_path[i], " " });
             }
+            for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(token); ++i) {
+                suggestions.append({ cached_path[i], " " });
+            }
+            suggestions.append({ cached_path[index], " " });
+
+            return suggestions;
         }
 
-        return local_suggestions;
+        // fallthrough to suggesting local files, but make sure to only suggest executables
+        should_suggest_only_executables = true;
     }
 
-    String completion = *match;
-    Vector<Line::CompletionSuggestion> suggestions;
-
-    // Now that we have a program name starting with our token, we look at
-    // other program names starting with our token and cut off any mismatching
-    // characters.
-
-    int index = match - cached_path.data();
-    for (int i = index - 1; i >= 0 && cached_path[i].starts_with(token); --i) {
-        suggestions.append({ cached_path[i], " " });
-    }
-    for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(token); ++i) {
-        suggestions.append({ cached_path[i], " " });
-    }
-    suggestions.append({ cached_path[index], " " });
-
-    editor.suggest(escape_token(token).length(), 0);
-
-    return suggestions;
-}
-
-Vector<Line::CompletionSuggestion> Shell::complete_other(const String& token_to_complete)
-{
-    auto token = unescape_token(token_to_complete);
     String path;
-    Vector<Line::CompletionSuggestion> suggestions;
 
     ssize_t last_slash = token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
@@ -1602,10 +1576,12 @@ Vector<Line::CompletionSuggestion> Shell::complete_other(const String& token_to_
             String file_path = String::format("%s/%s", path.characters(), file.characters());
             int stat_error = stat(file_path.characters(), &program_status);
             if (!stat_error) {
-                if (S_ISDIR(program_status.st_mode))
-                    suggestions.append({ escape_token(file), "/" });
-                else
+                if (S_ISDIR(program_status.st_mode)) {
+                    if (!should_suggest_only_executables)
+                        suggestions.append({ escape_token(file), "/" });
+                } else {
                     suggestions.append({ escape_token(file), " " });
+                }
             }
         }
     }

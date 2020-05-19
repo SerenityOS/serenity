@@ -75,11 +75,8 @@ int main(int argc, char** argv)
         editor.strip_styles();
         shell->highlight(editor);
     };
-    editor.on_tab_complete_first_token = [&](const String& token_to_complete) -> Vector<Line::CompletionSuggestion> {
-        return shell->complete_first(token_to_complete);
-    };
-    editor.on_tab_complete_other_token = [&](const String& token_to_complete) -> Vector<Line::CompletionSuggestion> {
-        return shell->complete_other(token_to_complete);
+    editor.on_tab_complete = [&](const Line::Editor& editor) {
+        return shell->complete(editor);
     };
 
     signal(SIGINT, [](int) {

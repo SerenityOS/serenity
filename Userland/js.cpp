@@ -655,17 +655,75 @@ int main(int argc, char** argv)
             editor.set_prompt(prompt_for_level(open_indents));
         };
 
-        auto complete = [&interpreter, &editor = *s_editor](const String& token) -> Vector<Line::CompletionSuggestion> {
-            if (token.length() == 0)
-                return {}; // nyeh
+        auto complete = [&interpreter](const Line::Editor& editor) -> Vector<Line::CompletionSuggestion> {
+            auto line = editor.line(editor.cursor());
 
-            auto line = editor.line();
+            JS::Lexer lexer { line };
+            enum {
+                Initial,
+                CompleteVariable,
+                CompleteNullProperty,
+                CompleteProperty,
+            } mode { Initial };
+
+            StringView variable_name;
+            StringView property_name;
+
             // we're only going to complete either
             //    - <N>
             //        where N is part of the name of a variable
             //    - <N>.<P>
             //        where N is the complete name of a variable and
             //        P is part of the name of one of its properties
+            auto js_token = lexer.next();
+            for (; js_token.type() != JS::TokenType::Eof; js_token = lexer.next()) {
+                switch (mode) {
+                case CompleteVariable:
+                    switch (js_token.type()) {
+                    case JS::TokenType::Period:
+                        // ...<name> <dot>
+                        mode = CompleteNullProperty;
+                        break;
+                    default:
+                        // not a dot, reset back to initial
+                        mode = Initial;
+                        break;
+                    }
+                    break;
+                case CompleteNullProperty:
+                    if (js_token.is_identifier_name()) {
+                        // ...<name> <dot> <name>
+                        mode = CompleteProperty;
+                        property_name = js_token.value();
+                    } else {
+                        mode = Initial;
+                    }
+                    break;
+                case CompleteProperty:
+                    // something came after the property access, reset to initial
+                case Initial:
+                    if (js_token.is_identifier_name()) {
+                        // ...<name>...
+                        mode = CompleteVariable;
+                        variable_name = js_token.value();
+                    } else {
+                        mode = Initial;
+                    }
+                    break;
+                }
+            }
+
+            bool last_token_has_trivia = js_token.trivia().length() > 0;
+
+            if (mode == CompleteNullProperty) {
+                mode = CompleteProperty;
+                property_name = "";
+                last_token_has_trivia = false; // <name> <dot> [tab] is sensible to complete.
+            }
+
+            if (mode == Initial || last_token_has_trivia)
+                return {}; // we do not know how to complete this
+
             Vector<Line::CompletionSuggestion> results;
 
             Function<void(const JS::Shape&, const StringView&)> list_all_properties = [&results, &list_all_properties](const JS::Shape& shape, auto& property_pattern) {
@@ -682,41 +740,40 @@ int main(int argc, char** argv)
                 }
             };
 
-            if (token.contains(".")) {
-                auto parts = token.split('.', true);
-                // refuse either `.` or `a.b.c`
-                if (parts.size() > 2 || parts.size() == 0)
-                    return {};
-
-                auto name = parts[0];
-                auto property_pattern = parts[1];
-
-                auto maybe_variable = interpreter->get_variable(name);
+            switch (mode) {
+            case CompleteProperty: {
+                auto maybe_variable = interpreter->get_variable(variable_name);
                 if (maybe_variable.is_empty()) {
-                    maybe_variable = interpreter->global_object().get(name);
+                    maybe_variable = interpreter->global_object().get(variable_name);
                     if (maybe_variable.is_empty())
-                        return {};
+                        break;
                 }
 
                 auto variable = maybe_variable;
                 if (!variable.is_object())
-                    return {};
+                    break;
 
                 const auto* object = variable.to_object(*interpreter);
                 const auto& shape = object->shape();
-                list_all_properties(shape, property_pattern);
+                list_all_properties(shape, property_name);
                 if (results.size())
-                    editor.suggest(property_pattern.length());
-                return results;
+                    editor.suggest(property_name.length());
+                break;
             }
-            const auto& variable = interpreter->global_object();
-            list_all_properties(variable.shape(), token);
-            if (results.size())
-                editor.suggest(token.length());
+            case CompleteVariable: {
+                const auto& variable = interpreter->global_object();
+                list_all_properties(variable.shape(), variable_name);
+                if (results.size())
+                    editor.suggest(variable_name.length());
+                break;
+            }
+            default:
+                ASSERT_NOT_REACHED();
+            }
+
             return results;
         };
-        s_editor->on_tab_complete_first_token = [complete](auto& value) { return complete(value); };
-        s_editor->on_tab_complete_other_token = [complete](auto& value) { return complete(value); };
+        s_editor->on_tab_complete = move(complete);
         repl(*interpreter);
     } else {
         interpreter = JS::Interpreter::create<JS::GlobalObject>();
