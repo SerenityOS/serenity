@@ -186,7 +186,7 @@ void WindowManager::add_window(Window& window)
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    recompute_occlusions();
+    Compositor::the().recompute_occlusions();
 
     if (window.listens_to_wm_events()) {
         for_each_window([&](Window& other_window) {
@@ -211,7 +211,7 @@ void WindowManager::move_to_front_and_make_active(Window& window)
     m_windows_in_order.remove(&window);
     m_windows_in_order.append(&window);
 
-    recompute_occlusions();
+    Compositor::the().recompute_occlusions();
 
     set_active_window(&window);
 
@@ -236,7 +236,7 @@ void WindowManager::remove_window(Window& window)
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    recompute_occlusions();
+    Compositor::the().recompute_occlusions();
 
     for_each_window_listening_to_wm_events([&window](Window& listener) {
         if (!(listener.wm_event_mask() & WMEventMask::WindowRemovals))
@@ -330,31 +330,16 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::Rect& old_rec
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    recompute_occlusions();
+    Compositor::the().recompute_occlusions();
 
     tell_wm_listeners_window_rect_changed(window);
 
     MenuManager::the().refresh();
 }
 
-void WindowManager::recompute_occlusions()
-{
-    for_each_visible_window_from_back_to_front([&](Window& window) {
-        if (m_switcher.is_visible()) {
-            window.set_occluded(false);
-        } else {
-            if (any_opaque_window_above_this_one_contains_rect(window, window.frame().rect()))
-                window.set_occluded(true);
-            else
-                window.set_occluded(false);
-        }
-        return IterationDecision::Continue;
-    });
-}
-
 void WindowManager::notify_opacity_changed(Window&)
 {
-    recompute_occlusions();
+    Compositor::the().recompute_occlusions();
 }
 
 void WindowManager::notify_minimization_state_changed(Window& window)
@@ -903,56 +888,6 @@ void WindowManager::clear_resize_candidate()
         Compositor::the().invalidate_cursor();
     m_resize_candidate = nullptr;
 }
-
-bool WindowManager::any_opaque_window_contains_rect(const Gfx::Rect& rect)
-{
-    bool found_containing_window = false;
-    for_each_visible_window_from_back_to_front([&](Window& window) {
-        if (window.is_minimized())
-            return IterationDecision::Continue;
-        if (window.opacity() < 1.0f)
-            return IterationDecision::Continue;
-        if (window.has_alpha_channel()) {
-            // FIXME: Just because the window has an alpha channel doesn't mean it's not opaque.
-            //        Maybe there's some way we could know this?
-            return IterationDecision::Continue;
-        }
-        if (window.frame().rect().contains(rect)) {
-            found_containing_window = true;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    return found_containing_window;
-};
-
-bool WindowManager::any_opaque_window_above_this_one_contains_rect(const Window& a_window, const Gfx::Rect& rect)
-{
-    bool found_containing_window = false;
-    bool checking = false;
-    for_each_visible_window_from_back_to_front([&](Window& window) {
-        if (&window == &a_window) {
-            checking = true;
-            return IterationDecision::Continue;
-        }
-        if (!checking)
-            return IterationDecision::Continue;
-        if (!window.is_visible())
-            return IterationDecision::Continue;
-        if (window.is_minimized())
-            return IterationDecision::Continue;
-        if (window.opacity() < 1.0f)
-            return IterationDecision::Continue;
-        if (window.has_alpha_channel())
-            return IterationDecision::Continue;
-        if (window.frame().rect().contains(rect)) {
-            found_containing_window = true;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    return found_containing_window;
-};
 
 Gfx::Rect WindowManager::menubar_rect() const
 {

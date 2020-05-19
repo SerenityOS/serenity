@@ -36,6 +36,7 @@ namespace WindowServer {
 
 class ClientConnection;
 class Cursor;
+class Window;
 
 enum class WallpaperMode {
     Simple,
@@ -69,6 +70,8 @@ public:
     void increment_display_link_count(Badge<ClientConnection>);
     void decrement_display_link_count(Badge<ClientConnection>);
 
+    void recompute_occlusions();
+
 private:
     Compositor();
     void init_bitmaps();
@@ -79,6 +82,8 @@ private:
     void draw_menubar();
     void run_animations();
     void notify_display_links();
+    bool any_opaque_window_contains_rect(const Gfx::Rect&);
+    bool any_opaque_window_above_this_one_contains_rect(const Window&, const Gfx::Rect&);
 
     RefPtr<Core::Timer> m_compose_timer;
     RefPtr<Core::Timer> m_immediate_compose_timer;

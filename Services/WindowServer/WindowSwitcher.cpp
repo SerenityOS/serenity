@@ -27,6 +27,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/StylePainter.h>
+#include <WindowServer/Compositor.h>
 #include <WindowServer/Event.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
@@ -56,7 +57,7 @@ void WindowSwitcher::set_visible(bool visible)
     if (m_visible == visible)
         return;
     m_visible = visible;
-    WindowManager::the().recompute_occlusions();
+    Compositor::the().recompute_occlusions();
     if (m_switcher_window)
         m_switcher_window->set_visible(visible);
     if (!m_visible)
