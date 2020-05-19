@@ -152,9 +152,6 @@ public:
     void clear_resize_candidate();
     ResizeDirection resize_direction_of_window(const Window&);
 
-    bool any_opaque_window_contains_rect(const Gfx::Rect&);
-    bool any_opaque_window_above_this_one_contains_rect(const Window&, const Gfx::Rect&);
-
     void tell_wm_listeners_window_state_changed(Window&);
     void tell_wm_listeners_window_icon_changed(Window&);
     void tell_wm_listeners_window_rect_changed(Window&);
@@ -203,8 +200,6 @@ private:
     void tell_wm_listener_about_window_icon(Window& listener, Window&);
     void tell_wm_listener_about_window_rect(Window& listener, Window&);
     void pick_new_active_window();
-
-    void recompute_occlusions();
 
     RefPtr<Cursor> m_arrow_cursor;
     RefPtr<Cursor> m_hand_cursor;
