@@ -47,7 +47,7 @@ LocationObject::LocationObject()
     put_native_property("search", search_getter, nullptr, attr);
     put_native_property("protocol", protocol_getter, nullptr, attr);
 
-    put_native_function("reload", reload);
+    put_native_function("reload", reload, JS::Attribute::Enumerable);
 }
 
 LocationObject::~LocationObject()
