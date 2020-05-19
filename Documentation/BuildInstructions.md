@@ -80,12 +80,15 @@ $ cd Toolchain
 $ ./BuildIt.sh
 ```
 
-Building the toolchain will also automatically create a `Build/` directory for the build to live in, and build cmake inside that directory.
-
-Once the toolchain and cmake have been built, go into the `Build/` directory and run the `make` and `make install` commands:
+Once you've built the toolchain, create a directory for the build to live in (for example, `Build/`), and run the CMake build:
 ```bash
-$ cd ..
-$ cd Build
+cd ..
+mkdir Build && cd Build
+cmake ..
+```
+
+Once the toolchain and cmake have been built, run the `make` and `make install` commands:
+```bash
 $ make
 $ make install
 ```
