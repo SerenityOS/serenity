@@ -38,13 +38,14 @@ namespace Bindings {
 LocationObject::LocationObject()
     : Object(interpreter().global_object().object_prototype())
 {
-    put_native_property("href", href_getter, href_setter);
-    put_native_property("host", host_getter, nullptr);
-    put_native_property("hostname", hostname_getter, nullptr);
-    put_native_property("pathname", pathname_getter, nullptr);
-    put_native_property("hash", hash_getter, nullptr);
-    put_native_property("search", search_getter, nullptr);
-    put_native_property("protocol", protocol_getter, nullptr);
+    u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
+    put_native_property("href", href_getter, href_setter, attr);
+    put_native_property("host", host_getter, nullptr, attr);
+    put_native_property("hostname", hostname_getter, nullptr, attr);
+    put_native_property("pathname", pathname_getter, nullptr, attr);
+    put_native_property("hash", hash_getter, nullptr, attr);
+    put_native_property("search", search_getter, nullptr, attr);
+    put_native_property("protocol", protocol_getter, nullptr, attr);
 
     put_native_function("reload", reload);
 }
