@@ -413,8 +413,7 @@ int rmdir(const char* pathname)
 
 int isatty(int fd)
 {
-    struct termios dummy;
-    return tcgetattr(fd, &dummy) == 0;
+    return fcntl(fd, F_ISTTY);
 }
 
 int dup(int old_fd)

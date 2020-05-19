@@ -1845,6 +1845,8 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
     case F_SETFL:
         description->set_file_flags(arg);
         break;
+    case F_ISTTY:
+        return description->is_tty();
     default:
         return -EINVAL;
     }
