@@ -52,6 +52,8 @@ file(GLOB ELF_SOURCES "../LibELF/*.cpp")
 set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
 
 add_library(crt0 STATIC crt0.cpp)
+# We need include headers from LibC in crt0. namely, <assert.h>
+target_include_directories(crt0 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 add_custom_command(
     TARGET crt0
     COMMAND install -D $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
