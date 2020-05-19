@@ -45,14 +45,6 @@ namespace Line {
 
 class Editor;
 
-struct KeyCallback {
-    KeyCallback(Function<bool(Editor&)> cb)
-        : callback(move(cb))
-    {
-    }
-    Function<bool(Editor&)> callback;
-};
-
 struct CompletionSuggestion {
     // intentionally not explicit (allows suggesting bare strings)
     CompletionSuggestion(const String& completion)
@@ -132,8 +124,7 @@ public:
     void register_character_input_callback(char ch, Function<bool(Editor&)> callback);
     size_t actual_rendered_string_length(const StringView& string) const;
 
-    Function<Vector<CompletionSuggestion>(const String&)> on_tab_complete_first_token;
-    Function<Vector<CompletionSuggestion>(const String&)> on_tab_complete_other_token;
+    Function<Vector<CompletionSuggestion>(const Editor&)> on_tab_complete;
     Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
 
@@ -149,7 +140,8 @@ public:
     size_t cursor() const { return m_cursor; }
     const Vector<u32, 1024>& buffer() const { return m_buffer; }
     u32 buffer_at(size_t pos) const { return m_buffer.at(pos); }
-    String line() const;
+    String line() const { return line(m_buffer.size()); }
+    String line(size_t up_to_index) const;
 
     // only makes sense inside a char_input callback or on_* callback
     void set_prompt(const String& prompt)
@@ -171,7 +163,7 @@ public:
         m_spans_ending.clear();
         m_refresh_needed = true;
     }
-    void suggest(size_t invariant_offset = 0, size_t index = 0)
+    void suggest(size_t invariant_offset = 0, size_t index = 0) const
     {
         m_next_suggestion_index = index;
         m_next_suggestion_invariant_offset = invariant_offset;
@@ -188,6 +180,14 @@ public:
     bool is_editing() const { return m_is_editing; }
 
 private:
+    struct KeyCallback {
+        KeyCallback(Function<bool(Editor&)> cb)
+            : callback(move(cb))
+        {
+        }
+        Function<bool(Editor&)> callback;
+    };
+
     void vt_save_cursor();
     void vt_restore_cursor();
     void vt_clear_to_end_of_line();
@@ -265,6 +265,9 @@ private:
         m_origin_x = position[0];
         m_origin_y = position[1];
     }
+
+    bool should_break_token(Vector<u32, 1024>& buffer, size_t index);
+
     void recalculate_origin();
     void reposition_cursor();
 
@@ -304,8 +307,8 @@ private:
     CompletionSuggestion m_last_shown_suggestion { String::empty() };
     size_t m_last_shown_suggestion_display_length { 0 };
     bool m_last_shown_suggestion_was_complete { false };
-    size_t m_next_suggestion_index { 0 };
-    size_t m_next_suggestion_invariant_offset { 0 };
+    mutable size_t m_next_suggestion_index { 0 };
+    mutable size_t m_next_suggestion_invariant_offset { 0 };
     size_t m_largest_common_suggestion_prefix_length { 0 };
     size_t m_last_displayed_suggestion_index { 0 };
 
