@@ -34,11 +34,22 @@ namespace TLS {
 void TLSv12::write_packet(ByteBuffer& packet)
 {
     m_context.tls_buffer.append(packet.data(), packet.size());
-    if (!m_has_scheduled_write_flush && m_context.connection_status > ConnectionStatus::Disconnected) {
+    if (m_context.connection_status > ConnectionStatus::Disconnected) {
+        if (!m_has_scheduled_write_flush) {
 #ifdef TLS_DEBUG
-        dbg() << "Scheduling write of " << m_context.tls_buffer.size();
+            dbg() << "Scheduling write of " << m_context.tls_buffer.size();
 #endif
-        deferred_invoke([this](auto&) { write_into_socket(); });
+            deferred_invoke([this](auto&) { write_into_socket(); });
+            m_has_scheduled_write_flush = true;
+        } else {
+            // multiple packet are available, let's flush some out
+#ifdef TLS_DEBUG
+            dbg() << "Flushing scheduled write of " << m_context.tls_buffer.size();
+#endif
+            write_into_socket();
+            // the deferred invoke is still in place
+            m_has_scheduled_write_flush = true;
+        }
     }
 }
 
