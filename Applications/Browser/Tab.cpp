@@ -239,7 +239,7 @@ Tab::Tab()
 
             auto is_fullscreen = window()->is_fullscreen();
             auto* tab_widget = static_cast<GUI::TabWidget*>(parent_widget());
-            tab_widget->set_bar_visible(!is_fullscreen);
+            tab_widget->set_bar_visible(!is_fullscreen && tab_widget->children().size() > 1);
             m_toolbar_container->set_visible(!is_fullscreen);
             m_statusbar->set_visible(!is_fullscreen);
         },
