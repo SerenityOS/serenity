@@ -34,6 +34,12 @@ namespace TLS {
 void TLSv12::write_packet(ByteBuffer& packet)
 {
     m_context.tls_buffer.append(packet.data(), packet.size());
+    if (!m_has_scheduled_write_flush && m_context.connection_status > ConnectionStatus::Disconnected) {
+#ifdef TLS_DEBUG
+        dbg() << "Scheduling write of " << m_context.tls_buffer.size();
+#endif
+        deferred_invoke([this](auto&) { write_into_socket(); });
+    }
 }
 
 void TLSv12::update_packet(ByteBuffer& packet)
