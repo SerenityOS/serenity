@@ -107,9 +107,6 @@ void AbstractButton::mousemove_event(MouseEvent& event)
 
 void AbstractButton::mousedown_event(MouseEvent& event)
 {
-#ifdef GABSTRACTBUTTON_DEBUG
-    dbgprintf("AbstractButton::mouse_down_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
-#endif
     if (event.button() == MouseButton::Left) {
         m_being_pressed = true;
         update();
@@ -124,9 +121,6 @@ void AbstractButton::mousedown_event(MouseEvent& event)
 
 void AbstractButton::mouseup_event(MouseEvent& event)
 {
-#ifdef GABSTRACTBUTTON_DEBUG
-    dbgprintf("AbstractButton::mouse_up_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
-#endif
     if (event.button() == MouseButton::Left) {
         bool was_auto_repeating = m_auto_repeat_timer->is_active();
         m_auto_repeat_timer->stop();
