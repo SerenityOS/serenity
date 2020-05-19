@@ -172,7 +172,7 @@ void Compositor::compose()
         m_back_painter->add_clip_rect(window.frame().rect());
         RefPtr<Gfx::Bitmap> backing_store = window.backing_store();
         for (auto& dirty_rect : dirty_rects.rects()) {
-            if (wm.any_opaque_window_above_this_one_contains_rect(window, dirty_rect))
+            if (!window.is_fullscreen() && wm.any_opaque_window_above_this_one_contains_rect(window, dirty_rect))
                 continue;
             Gfx::PainterStateSaver saver(*m_back_painter);
             m_back_painter->add_clip_rect(dirty_rect);
