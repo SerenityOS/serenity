@@ -71,6 +71,8 @@ RefPtr<Gfx::Bitmap> MessageBox::icon() const
         return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-warning.png");
     case Type::Error:
         return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-error.png");
+    case Type::Question:
+        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-question.png");
     default:
         return nullptr;
     }
