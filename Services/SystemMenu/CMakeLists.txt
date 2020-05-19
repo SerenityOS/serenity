@@ -1,6 +1,6 @@
 set(SOURCES
     main.cpp
-    PowerDialog.cpp
+    ShutdownDialog.cpp
 )
 
 serenity_bin(SystemMenu)
