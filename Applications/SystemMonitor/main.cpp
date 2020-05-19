@@ -34,6 +34,7 @@
 #include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
 #include "ProcessUnveiledPathsWidget.h"
+#include <AK/NumberFormat.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -58,17 +59,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
-
-static String human_readable_size(u32 size)
-{
-    if (size < (64 * KB))
-        return String::format("%u", size);
-    if (size < MB)
-        return String::format("%u KB", size / KB);
-    if (size < GB)
-        return String::format("%u MB", size / MB);
-    return String::format("%u GB", size / GB);
-}
 
 static NonnullRefPtr<GUI::Widget> build_file_systems_tab();
 static NonnullRefPtr<GUI::Widget> build_pci_devices_tab();
