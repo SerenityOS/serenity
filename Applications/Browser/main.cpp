@@ -127,6 +127,7 @@ int main(int argc, char** argv)
     create_new_tab = [&](auto url, auto activate) {
         auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab");
 
+        tab_widget.set_bar_visible(!window->is_fullscreen() && tab_widget.children().size() > 1);
         tab_widget.set_tab_icon(new_tab, default_favicon);
 
         new_tab.on_title_change = [&](auto title) {
@@ -146,6 +147,7 @@ int main(int argc, char** argv)
         new_tab.on_tab_close_request = [&](auto& tab) {
             tab_widget.deferred_invoke([&](auto&) {
                 tab_widget.remove_tab(tab);
+                tab_widget.set_bar_visible(!window->is_fullscreen() && tab_widget.children().size() > 1);
                 if (tab_widget.children().is_empty())
                     app.quit();
             });
