@@ -65,6 +65,7 @@ static NonnullRefPtr<GUI::Menu> build_system_menu();
 int main(int argc, char** argv)
 {
     GUI::Application app(argc, argv);
+    app.set_quit_when_last_window_deleted(false);
 
     auto menu = build_system_menu();
     menu->realize_menu_if_needed();
