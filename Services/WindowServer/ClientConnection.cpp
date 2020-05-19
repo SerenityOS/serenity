@@ -471,7 +471,7 @@ void ClientConnection::destroy_window(Window& window, Vector<i32>& destroyed_win
     if (window.type() == WindowType::MenuApplet)
         AppletManager::the().remove_applet(window);
 
-    WindowManager::the().invalidate(window);
+    window.invalidate();
     remove_child(window);
     m_windows.remove(window.window_id());
 }
@@ -520,7 +520,7 @@ void ClientConnection::handle(const Messages::WindowServer::DidFinishPainting& m
     }
     auto& window = *(*it).value;
     for (auto& rect : message.rects())
-        WindowManager::the().invalidate(window, rect);
+        window.invalidate(rect);
 
     WindowSwitcher::the().refresh_if_needed();
 }

@@ -130,8 +130,6 @@ public:
     const Cursor& move_cursor() const { return *m_move_cursor; }
     const Cursor& drag_cursor() const { return *m_drag_cursor; }
 
-    void invalidate(const Window&);
-    void invalidate(const Window&, const Gfx::Rect&);
     void invalidate(const Gfx::Rect&);
     void invalidate();
     void flush(const Gfx::Rect&);
