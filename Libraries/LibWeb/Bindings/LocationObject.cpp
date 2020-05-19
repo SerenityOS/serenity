@@ -94,7 +94,13 @@ JS::Value LocationObject::host_getter(JS::Interpreter& interpreter)
 JS::Value LocationObject::hash_getter(JS::Interpreter& interpreter)
 {
     auto& window = static_cast<WindowObject&>(interpreter.global_object());
-    return JS::js_string(interpreter, window.impl().document().url().fragment());
+    auto fragment = window.impl().document().url().fragment();
+    if (!fragment.length())
+        return JS::js_string(interpreter, "");
+    StringBuilder builder;
+    builder.append('#');
+    builder.append(fragment);
+    return JS::js_string(interpreter, builder.to_string());
 }
 
 JS::Value LocationObject::search_getter(JS::Interpreter& interpreter)
