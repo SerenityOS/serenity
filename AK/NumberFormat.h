@@ -31,21 +31,15 @@
 
 namespace AK {
 
-static String number_string_with_one_decimal(float number, const char* suffix)
-{
-    float decimals = number - (int)number;
-    return String::format("%d.%d %s", (int)number, (int)(decimals * 10), suffix);
-}
-
 static String human_readable_size(size_t size)
 {
     if (size < 1 * KB)
         return String::format("%zu bytes", size);
     if (size < 1 * MB)
-        return number_string_with_one_decimal((float)size / (float)KB, "KB");
+        return String::format("%.1f %s", (float)size / (float)KB, "KB");
     if (size < 1 * GB)
-        return number_string_with_one_decimal((float)size / (float)MB, "MB");
-    return number_string_with_one_decimal((float)size / (float)GB, "GB");
+        return String::format("%.1f %s", (float)size / (float)MB, "MB");
+    return String::format("%.1f %s", (float)size / (float)GB, "GB");
 }
 
 }
