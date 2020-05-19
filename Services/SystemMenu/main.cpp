@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "PowerDialog.h"
+#include "ShutdownDialog.h"
 #include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
@@ -203,7 +203,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     }));
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("Exit...", [](auto&) {
-        Vector<char const*> command = PowerDialog::show();
+        auto command = ShutdownDialog::show();
 
         if (command.size() == 0)
             return;

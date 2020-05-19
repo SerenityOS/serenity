@@ -25,17 +25,17 @@
  */
 
 #include <AK/Vector.h>
-#include <LibCore/Object.h>
 #include <LibGUI/Dialog.h>
 
-class PowerDialog : public GUI::Dialog {
-    C_OBJECT(PowerDialog)
+class ShutdownDialog : public GUI::Dialog {
+    C_OBJECT(ShutdownDialog);
+
 public:
     static Vector<char const*> show();
 
 private:
-    PowerDialog();
-    ~PowerDialog();
+    ShutdownDialog();
+    virtual ~ShutdownDialog() override;
 
     int m_selected_option { -1 };
 };

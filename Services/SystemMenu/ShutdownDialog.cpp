@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "ShutdownDialog.h"
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
@@ -34,33 +35,31 @@
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font.h>
 
-#include "PowerDialog.h"
-
-struct PowerOption {
+struct Option {
     String title;
     Vector<char const*> cmd;
     bool enabled;
     bool default_action;
 };
 
-static const Vector<PowerOption> options = {
+static const Vector<Option> options = {
     { "Shut down", { "/bin/shutdown", "--now", nullptr }, true, true },
     { "Restart", { "/bin/reboot", nullptr }, true, false },
     { "Log out", {}, false, false },
     { "Sleep", {}, false, false },
 };
 
-Vector<char const*> PowerDialog::show()
+Vector<char const*> ShutdownDialog::show()
 {
-    auto rc = PowerDialog::construct()->exec();
-    if(rc == ExecResult::ExecOK)
+    auto rc = ShutdownDialog::construct()->exec();
+    if (rc == ExecResult::ExecOK)
         return options[rc].cmd;
 
     return {};
 }
 
-PowerDialog::PowerDialog()
-	: GUI::Dialog(nullptr)
+ShutdownDialog::ShutdownDialog()
+    : Dialog(nullptr)
 {
     Gfx::Rect rect({ 0, 0, 180, 180 + ((static_cast<int>(options.size()) - 3) * 16) });
     rect.center_within(GUI::Desktop::the().rect());
@@ -114,6 +113,6 @@ PowerDialog::PowerDialog()
     cancel_button.set_text("Cancel");
 }
 
-PowerDialog::~PowerDialog()
+ShutdownDialog::~ShutdownDialog()
 {
 }
