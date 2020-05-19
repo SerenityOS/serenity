@@ -161,7 +161,7 @@ int main(int argc, char** argv)
     icon_group_box.set_layout<GUI::VerticalBoxLayout>();
     icon_group_box.layout()->set_margins({ 5, 15, 5, 5 });
     icon_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    icon_group_box.set_preferred_size(0, 120);
+    icon_group_box.set_preferred_size(0, 150);
 
     auto& radio_none = icon_group_box.add<GUI::RadioButton>("None");
     radio_none.on_checked = [&](bool) {
@@ -170,6 +170,10 @@ int main(int argc, char** argv)
     auto& radio_information = icon_group_box.add<GUI::RadioButton>("Information");
     radio_information.on_checked = [&](bool) {
         msg_box_type = GUI::MessageBox::Type::Information;
+    };
+    auto& question_information = icon_group_box.add<GUI::RadioButton>("Question");
+    question_information.on_checked = [&](bool) {
+        msg_box_type = GUI::MessageBox::Type::Question;
     };
     auto& radio_warning = icon_group_box.add<GUI::RadioButton>("Warning");
     radio_warning.on_checked = [&](bool) {
