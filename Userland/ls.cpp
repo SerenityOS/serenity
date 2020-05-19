@@ -25,6 +25,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -227,25 +228,6 @@ size_t print_name(const struct stat& st, const String& name, const char* path_fo
     return nprinted;
 }
 
-// FIXME: Remove this hackery once printf() supports floats.
-// FIXME: Also, we should probably round the sizes in ls -lh output.
-static String number_string_with_one_decimal(float number, const char* suffix)
-{
-    float decimals = number - (int)number;
-    return String::format("%d.%d%s", (int)number, (int)(decimals * 10), suffix);
-}
-
-static String human_readable_size(size_t size)
-{
-    if (size < 1 * KB)
-        return String::number(size);
-    if (size < 1 * MB)
-        return number_string_with_one_decimal((float)size / (float)KB, "K");
-    if (size < 1 * GB)
-        return number_string_with_one_decimal((float)size / (float)MB, "M");
-    return number_string_with_one_decimal((float)size / (float)GB, "G");
-}
-
 bool print_filesystem_object(const String& path, const String& name, const struct stat& st)
 {
     if (flag_show_inode)
@@ -301,6 +283,7 @@ bool print_filesystem_object(const String& path, const String& name, const struc
     } else {
         if (flag_human_readable) {
             ASSERT(st.st_size > 0);
+            // FIXME: Also, we should probably round the sizes in ls -lh output.
             printf(" %10s ", human_readable_size((size_t)st.st_size).characters());
         } else {
             printf(" %10u ", st.st_size);

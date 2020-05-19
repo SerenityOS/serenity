@@ -24,9 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/NumberFormat.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -47,25 +48,6 @@ struct FileSystem {
     size_t block_size { 0 };
     String mount_point;
 };
-
-// FIXME: Remove this hackery once printf() supports floats.
-// FIXME: Also, we should probably round the sizes in df -h output.
-static String number_string_with_one_decimal(float number, const char* suffix)
-{
-    float decimals = number - (int)number;
-    return String::format("%d.%d%s", (int)number, (int)(decimals * 10), suffix);
-}
-
-static String human_readable_size(size_t size)
-{
-    if (size < 1 * KB)
-        return String::number(size);
-    if (size < 1 * MB)
-        return number_string_with_one_decimal((float)size / (float)KB, "K");
-    if (size < 1 * GB)
-        return number_string_with_one_decimal((float)size / (float)MB, "M");
-    return number_string_with_one_decimal((float)size / (float)GB, "G");
-}
 
 int main(int argc, char** argv)
 {
@@ -103,6 +85,7 @@ int main(int argc, char** argv)
         printf("%-10s", fs.characters());
 
         if (flag_human_readable) {
+            // FIXME: Also, we should probably round the sizes in df -h output.
             printf("%10s  ", human_readable_size(total_block_count * block_size).characters());
             printf("%10s   ", human_readable_size((total_block_count - free_block_count) * block_size).characters());
             printf("%10s   ", human_readable_size(free_block_count * block_size).characters());

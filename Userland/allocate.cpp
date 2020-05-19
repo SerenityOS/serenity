@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/NumberFormat.h>
 #include <LibCore/ElapsedTimer.h>
 #include <stdio.h>
 #include <string.h>
@@ -102,7 +103,7 @@ int main(int argc, char** argv)
 
             auto bps = double(step * 4096) / (double(ms) / 1000);
 
-            printf("step took %dms (%fMB/s)\n", ms, bps / 1024 / 1024);
+            printf("step took %dms (%s/s)\n", ms, human_readable_size(bps).characters());
 
             timer2.start();
         }
