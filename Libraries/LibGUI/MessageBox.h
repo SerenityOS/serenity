@@ -38,6 +38,7 @@ public:
         Information,
         Warning,
         Error,
+        Question
     };
 
     enum class InputType {
