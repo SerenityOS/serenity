@@ -162,7 +162,7 @@ void WindowSwitcher::select_window_at_index(int index)
 void WindowSwitcher::redraw()
 {
     draw();
-    WindowManager::the().invalidate(m_rect);
+    Compositor::the().invalidate(m_rect);
 }
 
 Gfx::Rect WindowSwitcher::item_rect(int index) const

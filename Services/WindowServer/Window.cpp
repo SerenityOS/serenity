@@ -25,7 +25,9 @@
  */
 
 #include "Window.h"
+#include "AppletManager.h"
 #include "ClientConnection.h"
+#include "Compositor.h"
 #include "Event.h"
 #include "EventLoop.h"
 #include "Screen.h"
@@ -347,12 +349,26 @@ void Window::set_visible(bool b)
 
 void Window::invalidate()
 {
-    WindowManager::the().invalidate(*this);
+    Compositor::the().invalidate(frame().rect());
 }
 
 void Window::invalidate(const Gfx::Rect& rect)
 {
-    WindowManager::the().invalidate(*this, rect);
+    if (type() == WindowType::MenuApplet) {
+        AppletManager::the().invalidate_applet(*this, rect);
+        return;
+    }
+
+    if (rect.is_empty()) {
+        invalidate();
+        return;
+    }
+    auto outer_rect = frame().rect();
+    auto inner_rect = rect;
+    inner_rect.move_by(position());
+    // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
+    inner_rect.intersect(outer_rect);
+    Compositor::the().invalidate(inner_rect);
 }
 
 bool Window::is_active() const

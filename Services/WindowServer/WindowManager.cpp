@@ -207,7 +207,7 @@ void WindowManager::move_to_front_and_make_active(Window& window)
         return;
 
     if (m_windows_in_order.tail() != &window)
-        invalidate(window);
+        window.invalidate();
     m_windows_in_order.remove(&window);
     m_windows_in_order.append(&window);
 
@@ -229,7 +229,7 @@ void WindowManager::move_to_front_and_make_active(Window& window)
 
 void WindowManager::remove_window(Window& window)
 {
-    invalidate(window);
+    window.invalidate();
     m_windows_in_order.remove(&window);
     if (window.is_active())
         pick_new_active_window();
@@ -380,7 +380,7 @@ void WindowManager::start_window_move(Window& window, const MouseEvent& event)
     m_move_window = window.make_weak_ptr();
     m_move_origin = event.position();
     m_move_window_origin = window.position();
-    invalidate(window);
+    window.invalidate();
 }
 
 void WindowManager::start_window_resize(Window& window, const Gfx::Point& position, MouseButton button)
@@ -411,7 +411,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::Point& positi
     m_resize_origin = position;
     m_resize_window_original_rect = window.rect();
 
-    invalidate(window);
+    window.invalidate();
 }
 
 void WindowManager::start_window_resize(Window& window, const MouseEvent& event)
@@ -428,7 +428,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
         dbg() << "[WM] Finish moving Window{" << m_move_window << "}";
 #endif
 
-        invalidate(*m_move_window);
+        m_move_window->invalidate();
         if (m_move_window->rect().contains(event.position()))
             hovered_window = m_move_window;
         if (m_move_window->is_resizable()) {
@@ -505,7 +505,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
         dbg() << "[WM] Finish resizing Window{" << m_resize_window << "}";
 #endif
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
-        invalidate(*m_resize_window);
+        m_resize_window->invalidate();
         if (m_resize_window->rect().contains(event.position()))
             hovered_window = m_resize_window;
         m_resize_window = nullptr;
@@ -1006,10 +1006,10 @@ void WindowManager::set_highlight_window(Window* window)
     if (window == m_highlight_window)
         return;
     if (auto* previous_highlight_window = m_highlight_window.ptr())
-        invalidate(*previous_highlight_window);
+        previous_highlight_window->invalidate();
     m_highlight_window = window ? window->make_weak_ptr() : nullptr;
     if (m_highlight_window)
-        invalidate(*m_highlight_window);
+        m_highlight_window->invalidate();
 }
 
 static bool window_type_can_become_active(WindowType type)
@@ -1036,7 +1036,7 @@ void WindowManager::set_active_window(Window* window)
     if (previously_active_window) {
         previously_active_client = previously_active_window->client();
         Core::EventLoop::current().post_event(*previously_active_window, make<Event>(Event::WindowDeactivated));
-        invalidate(*previously_active_window);
+        previously_active_window->invalidate();
         m_active_window = nullptr;
         m_active_input_window = nullptr;
         tell_wm_listeners_window_state_changed(*previously_active_window);
@@ -1046,7 +1046,7 @@ void WindowManager::set_active_window(Window* window)
         m_active_window = window->make_weak_ptr();
         active_client = m_active_window->client();
         Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
-        invalidate(*m_active_window);
+        m_active_window->invalidate();
 
         auto* client = window->client();
         ASSERT(client);
@@ -1086,30 +1086,6 @@ void WindowManager::invalidate()
 void WindowManager::invalidate(const Gfx::Rect& rect)
 {
     Compositor::the().invalidate(rect);
-}
-
-void WindowManager::invalidate(const Window& window)
-{
-    invalidate(window.frame().rect());
-}
-
-void WindowManager::invalidate(const Window& window, const Gfx::Rect& rect)
-{
-    if (window.type() == WindowType::MenuApplet) {
-        AppletManager::the().invalidate_applet(window, rect);
-        return;
-    }
-
-    if (rect.is_empty()) {
-        invalidate(window);
-        return;
-    }
-    auto outer_rect = window.frame().rect();
-    auto inner_rect = rect;
-    inner_rect.move_by(window.position());
-    // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
-    inner_rect.intersect(outer_rect);
-    invalidate(inner_rect);
 }
 
 const ClientConnection* WindowManager::active_client() const

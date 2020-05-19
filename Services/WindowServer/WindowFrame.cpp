@@ -314,7 +314,7 @@ Gfx::Rect WindowFrame::rect() const
 
 void WindowFrame::invalidate_title_bar()
 {
-    WindowManager::the().invalidate(title_bar_rect().translated(rect().location()));
+    Compositor::the().invalidate(title_bar_rect().translated(rect().location()));
 }
 
 void WindowFrame::notify_window_rect_changed(const Gfx::Rect& old_rect, const Gfx::Rect& new_rect)
