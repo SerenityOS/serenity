@@ -35,12 +35,12 @@ namespace Protocol {
 
 class Download;
 
-class Client : public IPC::ServerConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>
+class Client
+    : public IPC::ServerConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>
     , public ProtocolClientEndpoint {
-    C_OBJECT(Client)
-public:
-    Client();
+    C_OBJECT(Client);
 
+public:
     virtual void handshake() override;
 
     bool is_supported_protocol(const String&);
@@ -49,6 +49,8 @@ public:
     bool stop_download(Badge<Download>, Download&);
 
 private:
+    Client();
+
     virtual void handle(const Messages::ProtocolClient::DownloadProgress&) override;
     virtual void handle(const Messages::ProtocolClient::DownloadFinished&) override;
 
