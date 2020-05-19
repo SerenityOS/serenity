@@ -818,11 +818,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             return IterationDecision::Continue;
         });
     } else {
-        for_each_visible_window_from_front_to_back([&](Window& window) {
-            auto window_frame_rect = window.frame().rect();
-            if (!window_frame_rect.contains(event.position()))
-                return IterationDecision::Continue;
-
+        auto process_mouse_event_for_window = [&](Window& window) {
             if (&window != m_resize_candidate.ptr())
                 clear_resize_candidate();
 
@@ -833,13 +829,13 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                     hovered_window = &window;
                     start_window_move(window, event);
                     m_moved_or_resized_since_logo_keydown = true;
-                    return IterationDecision::Break;
+                    return;
                 }
                 if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
                     hovered_window = &window;
                     start_window_resize(window, event);
                     m_moved_or_resized_since_logo_keydown = true;
-                    return IterationDecision::Break;
+                    return;
                 }
             }
 
@@ -852,7 +848,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                     new_opacity = 1.0f;
                 window.set_opacity(new_opacity);
                 window.invalidate();
-                return IterationDecision::Break;
+                return;
             }
 
             // Well okay, let's see if we're hitting the frame or the window inside the frame.
@@ -872,14 +868,25 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                         m_active_input_window = window.make_weak_ptr();
                     }
                 }
-                return IterationDecision::Break;
+                return;
             }
 
             // We are hitting the frame, pass the event along to WindowFrame.
-            window.frame().on_mouse_event(event.translated(-window_frame_rect.location()));
+            window.frame().on_mouse_event(event.translated(-window.frame().rect().location()));
             event_window_with_frame = &window;
-            return IterationDecision::Break;
-        });
+        };
+
+        if (auto* fullscreen_window = active_fullscreen_window()) {
+            process_mouse_event_for_window(*fullscreen_window);
+        } else {
+            for_each_visible_window_from_front_to_back([&](Window& window) {
+                auto window_frame_rect = window.frame().rect();
+                if (!window_frame_rect.contains(event.position()))
+                    return IterationDecision::Continue;
+                process_mouse_event_for_window(window);
+                return IterationDecision::Break;
+            });
+        }
 
         // Clicked outside of any window
         if (!hovered_window && !event_window_with_frame && event.type() == Event::MouseDown)
