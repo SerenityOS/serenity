@@ -34,20 +34,6 @@
 
 __BEGIN_DECLS
 
-struct __STDIO_FILE {
-    int fd;
-    int eof;
-    int error;
-    int mode;
-    pid_t popen_child;
-    char* buffer;
-    size_t buffer_size;
-    size_t buffer_index;
-    int have_ungotten;
-    char ungotten;
-    char default_buffer[BUFSIZ];
-};
-
-typedef struct __STDIO_FILE FILE;
+typedef struct FILE FILE;
 
 __END_DECLS
