@@ -38,7 +38,7 @@
 namespace Line {
 
 Editor::Editor(Configuration configuration)
-    : m_configuration(configuration)
+    : m_configuration(move(configuration))
 {
     m_always_refresh = configuration.refresh_behaviour == Configuration::RefreshBehaviour::Eager;
     m_pending_chars = ByteBuffer::create_uninitialized(0);
@@ -430,54 +430,17 @@ String Editor::get_line(const String& prompt)
             m_search_offset = 0; // reset search offset on any key
 
             if (codepoint == '\t' || reverse_tab) {
-                if (!on_tab_complete_first_token || !on_tab_complete_other_token)
+                if (!on_tab_complete)
                     continue;
-
-                auto should_break_token = [mode = m_configuration.split_mechanism](auto& buffer, size_t index) {
-                    switch (mode) {
-                    case Configuration::TokenSplitMechanism::Spaces:
-                        return buffer[index] == ' ';
-                    case Configuration::TokenSplitMechanism::UnescapedSpaces:
-                        return buffer[index] == ' ' && (index == 0 || buffer[index - 1] != '\\');
-                    }
-
-                    ASSERT_NOT_REACHED();
-                    return true;
-                };
-
-                bool is_empty_token = m_cursor == 0 || should_break_token(m_buffer, m_cursor - 1);
 
                 // reverse tab can count as regular tab here
                 m_times_tab_pressed++;
-
-                int token_start = m_cursor - 1;
-
-                if (!is_empty_token) {
-                    while (token_start >= 0 && !should_break_token(m_buffer, token_start))
-                        --token_start;
-                    ++token_start;
-                }
-
-                bool is_first_token = true;
-                for (int i = token_start - 1; i >= 0; --i) {
-                    if (should_break_token(m_buffer, i)) {
-                        is_first_token = false;
-                        break;
-                    }
-                }
-
-                StringBuilder builder;
-                builder.append(Utf32View { m_buffer.data() + token_start, m_cursor - token_start });
-                String token = is_empty_token ? String() : builder.to_string();
 
                 // ask for completions only on the first tab
                 // and scan for the largest common prefix to display
                 // further tabs simply show the cached completions
                 if (m_times_tab_pressed == 1) {
-                    if (is_first_token)
-                        m_suggestions = on_tab_complete_first_token(token);
-                    else
-                        m_suggestions = on_tab_complete_other_token(token);
+                    m_suggestions = on_tab_complete(*this);
                     size_t common_suggestion_prefix { 0 };
                     if (m_suggestions.size() == 1) {
                         m_largest_common_suggestion_prefix_length = m_suggestions[0].text.length();
@@ -1267,11 +1230,24 @@ Vector<size_t, 2> Editor::vt_dsr()
     return { x, y };
 }
 
-String Editor::line() const
+String Editor::line(size_t up_to_index) const
 {
     StringBuilder builder;
-    builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
+    builder.append(Utf32View { m_buffer.data(), min(m_buffer.size(), up_to_index) });
     return builder.build();
 }
+
+bool Editor::should_break_token(Vector<u32, 1024>& buffer, size_t index)
+{
+    switch (m_configuration.split_mechanism) {
+    case Configuration::TokenSplitMechanism::Spaces:
+        return buffer[index] == ' ';
+    case Configuration::TokenSplitMechanism::UnescapedSpaces:
+        return buffer[index] == ' ' && (index == 0 || buffer[index - 1] != '\\');
+    }
+
+    ASSERT_NOT_REACHED();
+    return true;
+};
 
 }
