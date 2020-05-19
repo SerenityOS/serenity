@@ -39,6 +39,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/StatusBar.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
@@ -231,6 +232,19 @@ Tab::Tab()
         GUI::Application::the().quit();
     }));
 
+    auto& view_menu = m_menubar->add_menu("View");
+    view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
+        [this](auto&) {
+            window()->set_fullscreen(!window()->is_fullscreen());
+
+            auto is_fullscreen = window()->is_fullscreen();
+            auto* tab_widget = static_cast<GUI::TabWidget*>(parent_widget());
+            tab_widget->set_bar_visible(!is_fullscreen);
+            m_toolbar_container->set_visible(!is_fullscreen);
+            m_statusbar->set_visible(!is_fullscreen);
+        },
+        this));
+
     auto& inspect_menu = m_menubar->add_menu("Inspect");
     inspect_menu.add_action(GUI::Action::create(
         "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
@@ -347,6 +361,10 @@ void Tab::did_become_active()
 
     BookmarksBarWidget::the().remove_from_parent();
     m_toolbar_container->add_child(BookmarksBarWidget::the());
+
+    auto is_fullscreen = window()->is_fullscreen();
+    m_toolbar_container->set_visible(!is_fullscreen);
+    m_statusbar->set_visible(!is_fullscreen);
 
     GUI::Application::the().set_menubar(m_menubar);
 }
