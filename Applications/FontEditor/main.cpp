@@ -70,6 +70,10 @@ int main(int argc, char** argv)
         }
     }
 
+    // Convert 256 char font to 384 char font.
+    if (edited_font->type() == Gfx::FontTypes::Default)
+        edited_font->set_type(Gfx::FontTypes::LatinExtendedA);
+
     auto app_icon = GUI::Icon::default_icon("app-font-editor");
 
     auto window = GUI::Window::construct();
