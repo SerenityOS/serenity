@@ -3,7 +3,7 @@ set(LIBC_SOURCES
     assert.cpp
     crt0.cpp
     ctype.cpp
-    cxaatexit.cpp
+    cxxabi.cpp
     dirent.cpp
     dlfcn.cpp
     fcntl.cpp
@@ -51,6 +51,8 @@ file(GLOB AK_SOURCES "../../AK/*.cpp")
 file(GLOB ELF_SOURCES "../LibELF/*.cpp")
 set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSERENITY_LIBC_BUILD")
+
 add_library(crt0 STATIC crt0.cpp)
 add_custom_command(
     TARGET crt0
@@ -60,4 +62,4 @@ add_custom_command(
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES})
 serenity_libc(LibC c)
 target_link_libraries(LibC crt0)
-add_dependencies(LibC LibM LibCxx)
+add_dependencies(LibC LibM)
