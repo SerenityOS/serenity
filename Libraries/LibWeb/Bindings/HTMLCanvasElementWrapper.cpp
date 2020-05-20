@@ -74,7 +74,7 @@ JS::Value HTMLCanvasElementWrapper::get_context(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto context_type = interpreter.call_frame().arguments[0].to_string(interpreter);
+    auto context_type = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
     if (context_type != "2d")

@@ -90,18 +90,17 @@ JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interprete
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 4) {
-        auto x = arguments[0].to_double(interpreter);
+    if (interpreter.argument_count() >= 4) {
+        auto x = interpreter.argument(0).to_double(interpreter);
         if (interpreter.exception())
             return {};
-        auto y = arguments[1].to_double(interpreter);
+        auto y = interpreter.argument(1).to_double(interpreter);
         if (interpreter.exception())
             return {};
-        auto width = arguments[2].to_double(interpreter);
+        auto width = interpreter.argument(2).to_double(interpreter);
         if (interpreter.exception())
             return {};
-        auto height = arguments[3].to_double(interpreter);
+        auto height = interpreter.argument(3).to_double(interpreter);
         if (interpreter.exception())
             return {};
         impl->fill_rect(x, y, width, height);
@@ -114,19 +113,17 @@ JS::Value CanvasRenderingContext2DWrapper::stroke_rect(JS::Interpreter& interpre
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 4) {
-
-        auto x = arguments[0].to_double(interpreter);
+    if (interpreter.argument_count() >= 4) {
+        auto x = interpreter.argument(0).to_double(interpreter);
         if (interpreter.exception())
             return {};
-        auto y = arguments[1].to_double(interpreter);
+        auto y = interpreter.argument(1).to_double(interpreter);
         if (interpreter.exception())
             return {};
-        auto width = arguments[2].to_double(interpreter);
+        auto width = interpreter.argument(2).to_double(interpreter);
         if (interpreter.exception())
             return {};
-        auto height = arguments[3].to_double(interpreter);
+        auto height = interpreter.argument(3).to_double(interpreter);
         if (interpreter.exception())
             return {};
         impl->stroke_rect(x, y, width, height);
@@ -139,20 +136,18 @@ JS::Value CanvasRenderingContext2DWrapper::draw_image(JS::Interpreter& interpret
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 3)
-        return interpreter.throw_exception<JS::TypeError>("drawImage() needs more arguments");
-
-    auto* image_argument = arguments[0].to_object(interpreter);
+    if (interpreter.argument_count() < 3)
+        return interpreter.throw_exception<JS::TypeError>("drawImage() needs three arguments");
+    auto* image_argument = interpreter.argument(0).to_object(interpreter);
     if (!image_argument)
         return {};
     if (StringView(image_argument->class_name()) != "HTMLImageElementWrapper")
         return interpreter.throw_exception<JS::TypeError>(String::format("Image is not an HTMLImageElement, it's an %s", image_argument->class_name()));
 
-    auto x = arguments[1].to_double(interpreter);
+    auto x = interpreter.argument(1).to_double(interpreter);
     if (interpreter.exception())
         return {};
-    auto y = arguments[2].to_double(interpreter);
+    auto y = interpreter.argument(2).to_double(interpreter);
     if (interpreter.exception())
         return {};
     impl->draw_image(static_cast<const HTMLImageElementWrapper&>(*image_argument).node(), x, y);
@@ -164,12 +159,11 @@ JS::Value CanvasRenderingContext2DWrapper::scale(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 2) {
-        auto sx = arguments[0].to_double(interpreter);
+    if (interpreter.argument_count() >= 2) {
+        auto sx = interpreter.argument(0).to_double(interpreter);
         if (interpreter.exception())
             return {};
-        auto sy = arguments[1].to_double(interpreter);
+        auto sy = interpreter.argument(1).to_double(interpreter);
         if (interpreter.exception())
             return {};
         impl->scale(sx, sy);
@@ -182,12 +176,11 @@ JS::Value CanvasRenderingContext2DWrapper::translate(JS::Interpreter& interprete
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 2) {
-        auto tx = arguments[0].to_double(interpreter);
+    if (interpreter.argument_count() >= 2) {
+        auto tx = interpreter.argument(0).to_double(interpreter);
         if (interpreter.exception())
             return {};
-        auto ty = arguments[1].to_double(interpreter);
+        auto ty = interpreter.argument(1).to_double(interpreter);
         if (interpreter.exception())
             return {};
         impl->translate(tx, ty);
