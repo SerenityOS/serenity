@@ -31,8 +31,8 @@
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <stdio.h>
@@ -42,17 +42,17 @@ enum class GraphType {
     Memory,
 };
 
-class GraphWidget final : public GUI::Widget {
-    C_OBJECT(GraphWidget)
+class GraphWidget final : public GUI::Frame {
+    C_OBJECT(GraphWidget);
+
 public:
     GraphWidget(GraphType graph_type, Optional<Gfx::Color> graph_color)
         : m_graph_type(graph_type)
     {
+        set_frame_thickness(1);
         m_graph_color = graph_color.value_or(palette().menu_selection());
         start_timer(1000);
     }
-
-    virtual ~GraphWidget() override {}
 
 private:
     virtual void timer_event(Core::TimerEvent&) override
@@ -86,14 +86,17 @@ private:
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
+        GUI::Frame::paint_event(event);
         GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
+        painter.add_clip_rect(frame_inner_rect());
         painter.fill_rect(event.rect(), Color::Black);
         int i = m_history.capacity() - m_history.size();
+        auto rect = frame_inner_rect();
         for (auto value : m_history) {
             painter.draw_line(
-                { i, rect().bottom() },
-                { i, (int)(height() - (value * (float)height())) },
+                { i, rect.bottom() },
+                { i, (int)(rect.height() - (value * (float)rect.height())) },
                 m_graph_color);
             ++i;
         }
