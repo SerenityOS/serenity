@@ -134,7 +134,7 @@ ln -s VisualBuilder mnt/bin/vb
 ln -s WidgetGallery mnt/bin/wg
 ln -s TextEditor mnt/bin/te
 ln -s HexEditor mnt/bin/he
-ln -s PaintBrush mnt/bin/pb
+ln -s PixelPaint mnt/bin/pp
 ln -s QuickShow mnt/bin/qs
 ln -s Piano mnt/bin/pi
 ln -s SystemDialog mnt/bin/sd
