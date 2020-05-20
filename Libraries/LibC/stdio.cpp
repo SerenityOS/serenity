@@ -324,6 +324,9 @@ bool FILE::gets(u8* data, size_t size)
     // separate implementation.
     size_t total_read = 0;
 
+    if (size == 0)
+        return false;
+
     while (size > 1) {
         if (m_buffer.may_use()) {
             // Let's see if the buffer has something queued for us.
