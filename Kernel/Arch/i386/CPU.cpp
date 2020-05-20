@@ -734,22 +734,6 @@ void cpu_detect()
     g_cpu_supports_umip = (extended_features.ecx() & (1 << 2));
 }
 
-void stac()
-{
-    if (!g_cpu_supports_smap)
-        return;
-    asm volatile("stac" ::
-                     : "cc");
-}
-
-void clac()
-{
-    if (!g_cpu_supports_smap)
-        return;
-    asm volatile("clac" ::
-                     : "cc");
-}
-
 void cpu_setup()
 {
     cpu_detect();
