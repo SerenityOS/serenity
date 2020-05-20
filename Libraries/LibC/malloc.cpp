@@ -439,33 +439,3 @@ void __malloc_init()
     new (&big_allocators()[0])(BigAllocator);
 }
 }
-
-void* operator new(size_t size)
-{
-    return malloc(size);
-}
-
-void* operator new[](size_t size)
-{
-    return malloc(size);
-}
-
-void operator delete(void* ptr)
-{
-    return free(ptr);
-}
-
-void operator delete(void* ptr, size_t)
-{
-    return free(ptr);
-}
-
-void operator delete[](void* ptr)
-{
-    return free(ptr);
-}
-
-void operator delete[](void* ptr, size_t)
-{
-    return free(ptr);
-}
