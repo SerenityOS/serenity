@@ -164,7 +164,7 @@ else()
 endif()
 
 add_executable(Kernel ${SOURCES})
-target_link_libraries(Kernel gcc)
+target_link_libraries(Kernel gcc stdc++)
 add_dependencies(Kernel boot)
 install(TARGETS Kernel RUNTIME DESTINATION boot)
 
