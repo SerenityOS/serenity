@@ -27,6 +27,7 @@
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringUtils.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/DocumentFragment.h>
@@ -62,6 +63,23 @@ static bool is_void_element(const StringView& tag_name)
         || tag_name == "source"
         || tag_name == "track"
         || tag_name == "wbr";
+}
+
+static Vector<char> codepoint_to_bytes(const u32 codepoint)
+{
+    Vector<char, 0> bytes;
+
+    if (codepoint < 0x80) {
+        bytes.insert(0, (char)codepoint);
+    } else if (codepoint < 0x800) {
+        char b2 = (codepoint & 0x3F) + 0x80;
+        char b1 = ((codepoint >> 6) & 0x1F) + +0xC0;
+
+        bytes.insert(0, b1);
+        bytes.insert(1, b2);
+    }
+
+    return bytes;
 }
 
 static bool parse_html_document(const StringView& html, Document& document, ParentNode& root)
@@ -213,6 +231,7 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                 };
                 auto rest_of_html = html.substring_view(i, html.length() - i);
                 bool found = false;
+
                 for (auto& escape : escapes) {
                     if (rest_of_html.starts_with(escape.code)) {
                         text_buffer.append(escape.value);
@@ -221,8 +240,43 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                         break;
                     }
                 }
-                if (!found)
-                    dbg() << "Unhandled escape sequence";
+
+                if (!found) {
+                    char num_sign = html[i + 1];
+                    if (num_sign && num_sign == '#') {
+                        int j = 2; // spip '&#' and search for ';'
+                        while (html[i + j] != ';' && j < 7) {
+                            j++;
+                        }
+
+                        if (j < 7) { // We found ; char
+                            bool ok;
+                            u32 codepoint;
+                            String str_code_point = html.substring_view(i + 2, j - 2);
+                            if (str_code_point.starts_with('x')) {
+                                String str = str_code_point.substring(1, str_code_point.length() - 1);
+                                codepoint = AK::StringUtils::convert_to_uint_from_hex(str, ok);
+                            } else {
+                                codepoint = str_code_point.to_uint(ok);
+                            }
+
+                            if (ok) {
+                                Vector<char> bytes = codepoint_to_bytes(codepoint);
+                                if (bytes.size() > 0) {
+                                    for (size_t i = 0; i < bytes.size(); i++) {
+                                        text_buffer.append(bytes.at(i));
+                                    }
+                                    found = true;
+                                    i = i + j;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!found) {
+                    dbg() << "Unhandled escape sequence:" << html.substring_view(i, min((size_t)5, html.length()));
+                }
             }
             break;
         case State::BeforeTagName:
