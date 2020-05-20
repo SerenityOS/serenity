@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibGUI/Frame.h>
+#include <LibGfx/FloatPoint.h>
 
 namespace PixelPaint {
 
@@ -51,7 +52,7 @@ public:
 
     void layers_did_change();
 
-    Layer* layer_at(const Gfx::Point&);
+    Layer* layer_at_editor_position(const Gfx::Point&);
 
     Color primary_color() const { return m_primary_color; }
     void set_primary_color(Color);
@@ -77,9 +78,21 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
+
+    Gfx::FloatRect image_rect_to_editor_rect(const Gfx::Rect&) const;
+    Gfx::FloatRect editor_rect_to_image_rect(const Gfx::Rect&) const;
+    Gfx::FloatPoint image_position_to_editor_position(const Gfx::Point&) const;
+    Gfx::FloatPoint editor_position_to_image_position(const Gfx::Point&) const;
+
+    GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent&, const Layer&) const;
+    GUI::MouseEvent event_with_pan_and_scale_applied(const GUI::MouseEvent&) const;
+
+    void relayout();
 
     RefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
@@ -88,6 +101,12 @@ private:
 
     Color m_primary_color { Color::Black };
     Color m_secondary_color { Color::White };
+
+    Gfx::Rect m_editor_image_rect;
+    float m_scale { 1 };
+    Gfx::FloatPoint m_pan_origin;
+    Gfx::FloatPoint m_saved_pan_origin;
+    Gfx::Point m_click_position;
 };
 
 }

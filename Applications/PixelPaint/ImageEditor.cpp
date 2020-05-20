@@ -30,6 +30,7 @@
 #include "LayerModel.h"
 #include "Tool.h"
 #include <LibGUI/Painter.h>
+#include <LibGfx/FloatRect.h>
 #include <LibGfx/Palette.h>
 
 namespace PixelPaint {
@@ -52,17 +53,50 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(frame_inner_rect());
 
-    painter.translate(frame_thickness(), frame_thickness());
     painter.fill_rect_with_checkerboard(rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
 
     if (m_image) {
-        painter.draw_rect(m_image->rect().inflated(2, 2), Color::Black);
-        m_image->paint_into(painter, m_image->rect(), m_image->rect());
+        painter.draw_rect(m_editor_image_rect.inflated(2, 2), Color::Black);
+        m_image->paint_into(painter, m_editor_image_rect);
     }
 
     if (m_active_layer) {
-        painter.draw_rect(m_active_layer->relative_rect().inflated(2, 2), Color::Black);
+        painter.draw_rect(enclosing_int_rect(image_rect_to_editor_rect(m_active_layer->relative_rect())).inflated(2, 2), Color::Black);
     }
+}
+
+Gfx::FloatRect ImageEditor::image_rect_to_editor_rect(const Gfx::Rect& image_rect) const
+{
+    Gfx::FloatRect editor_rect;
+    editor_rect.set_location(image_position_to_editor_position(image_rect.location()));
+    editor_rect.set_width((float)image_rect.width() * m_scale);
+    editor_rect.set_height((float)image_rect.height() * m_scale);
+    return editor_rect;
+}
+
+Gfx::FloatRect ImageEditor::editor_rect_to_image_rect(const Gfx::Rect& editor_rect) const
+{
+    Gfx::FloatRect image_rect;
+    image_rect.set_location(editor_position_to_image_position(editor_rect.location()));
+    image_rect.set_width((float)editor_rect.width() / m_scale);
+    image_rect.set_height((float)editor_rect.height() / m_scale);
+    return image_rect;
+}
+
+Gfx::FloatPoint ImageEditor::image_position_to_editor_position(const Gfx::Point& image_position) const
+{
+    Gfx::FloatPoint editor_position;
+    editor_position.set_x(m_editor_image_rect.x() + ((float)image_position.x() * m_scale));
+    editor_position.set_y(m_editor_image_rect.y() + ((float)image_position.y() * m_scale));
+    return editor_position;
+}
+
+Gfx::FloatPoint ImageEditor::editor_position_to_image_position(const Gfx::Point& editor_position) const
+{
+    Gfx::FloatPoint image_position;
+    image_position.set_x(((float)editor_position.x() - m_editor_image_rect.x()) / m_scale);
+    image_position.set_y(((float)editor_position.y() - m_editor_image_rect.y()) / m_scale);
+    return image_position;
 }
 
 void ImageEditor::second_paint_event(GUI::PaintEvent& event)
@@ -71,25 +105,46 @@ void ImageEditor::second_paint_event(GUI::PaintEvent& event)
         m_active_tool->on_second_paint(*m_active_layer, event);
 }
 
-static GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent& original_event, const Layer& layer)
+GUI::MouseEvent ImageEditor::event_with_pan_and_scale_applied(const GUI::MouseEvent& event) const
 {
-    auto position_in_active_layer_coordinates = original_event.position().translated(-layer.location());
+    auto image_position = editor_position_to_image_position(event.position());
     return {
-        static_cast<GUI::Event::Type>(original_event.type()),
-        position_in_active_layer_coordinates, original_event.buttons(),
-        original_event.button(),
-        original_event.modifiers(),
-        original_event.wheel_delta()
+        static_cast<GUI::Event::Type>(event.type()),
+        Gfx::Point(image_position.x(), image_position.y()),
+        event.buttons(),
+        event.button(),
+        event.modifiers(),
+        event.wheel_delta()
+    };
+}
+
+GUI::MouseEvent ImageEditor::event_adjusted_for_layer(const GUI::MouseEvent& event, const Layer& layer) const
+{
+    auto image_position = editor_position_to_image_position(event.position());
+    image_position.move_by(-layer.location().x(), -layer.location().y());
+    return {
+        static_cast<GUI::Event::Type>(event.type()),
+        Gfx::Point(image_position.x(), image_position.y()),
+        event.buttons(),
+        event.button(),
+        event.modifiers(),
+        event.wheel_delta()
     };
 }
 
 void ImageEditor::mousedown_event(GUI::MouseEvent& event)
 {
+    if (event.button() == GUI::MouseButton::Middle) {
+        m_click_position = event.position();
+        m_saved_pan_origin = m_pan_origin;
+        return;
+    }
+
     if (!m_active_tool)
         return;
 
     if (m_active_tool->is_move_tool()) {
-        if (auto* other_layer = layer_at(event.position())) {
+        if (auto* other_layer = layer_at_editor_position(event.position())) {
             set_active_layer(other_layer);
         }
     }
@@ -98,15 +153,28 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
         return;
 
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
-    m_active_tool->on_mousedown(*m_active_layer, layer_event, event);
+    auto original_event = event_with_pan_and_scale_applied(event);
+    m_active_tool->on_mousedown(*m_active_layer, layer_event, original_event);
 }
 
 void ImageEditor::mousemove_event(GUI::MouseEvent& event)
 {
+    if (event.buttons() & GUI::MouseButton::Middle) {
+        auto delta = event.position() - m_click_position;
+        m_pan_origin = m_saved_pan_origin.translated(
+            -delta.x() / m_scale,
+            -delta.y() / m_scale);
+
+        relayout();
+        return;
+    }
+
     if (!m_active_layer || !m_active_tool)
         return;
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
-    m_active_tool->on_mousemove(*m_active_layer, layer_event, event);
+    auto original_event = event_with_pan_and_scale_applied(event);
+
+    m_active_tool->on_mousemove(*m_active_layer, layer_event, original_event);
 }
 
 void ImageEditor::mouseup_event(GUI::MouseEvent& event)
@@ -114,7 +182,30 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
     if (!m_active_layer || !m_active_tool)
         return;
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
-    m_active_tool->on_mouseup(*m_active_layer, layer_event, event);
+    auto original_event = event_with_pan_and_scale_applied(event);
+    m_active_tool->on_mouseup(*m_active_layer, layer_event, original_event);
+}
+
+void ImageEditor::mousewheel_event(GUI::MouseEvent& event)
+{
+    auto old_scale = m_scale;
+
+    m_scale += -event.wheel_delta() * 0.1f;
+    if (m_scale < 0.1f)
+        m_scale = 0.1f;
+    if (m_scale > 100.0f)
+        m_scale = 100.0f;
+
+    auto focus_point = Gfx::FloatPoint(
+        m_pan_origin.x() - ((float)event.x() - (float)width() / 2.0) / old_scale,
+        m_pan_origin.y() - ((float)event.y() - (float)height() / 2.0) / old_scale);
+
+    m_pan_origin = Gfx::FloatPoint(
+        focus_point.x() - m_scale / old_scale * (focus_point.x() - m_pan_origin.x()),
+        focus_point.y() - m_scale / old_scale * (focus_point.y() - m_pan_origin.y()));
+
+    if (old_scale != m_scale)
+        relayout();
 }
 
 void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
@@ -122,6 +213,12 @@ void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
     if (!m_active_layer || !m_active_tool)
         return;
     m_active_tool->on_context_menu(*m_active_layer, event);
+}
+
+void ImageEditor::resize_event(GUI::ResizeEvent& event)
+{
+    relayout();
+    GUI::Frame::resize_event(event);
 }
 
 void ImageEditor::keydown_event(GUI::KeyEvent& event)
@@ -214,16 +311,36 @@ void ImageEditor::set_secondary_color(Color color)
         on_secondary_color_change(color);
 }
 
-Layer* ImageEditor::layer_at(const Gfx::Point& position)
+Layer* ImageEditor::layer_at_editor_position(const Gfx::Point& editor_position)
 {
     if (!m_image)
         return nullptr;
+    auto image_position = editor_position_to_image_position(editor_position);
     for (ssize_t i = m_image->layer_count() - 1; i >= 0; --i) {
         auto& layer = m_image->layer(i);
-        if (layer.relative_rect().contains(position))
+        if (layer.relative_rect().contains(Gfx::Point(image_position.x(), image_position.y())))
             return const_cast<Layer*>(&layer);
     }
     return nullptr;
+}
+
+void ImageEditor::relayout()
+{
+    if (!image())
+        return;
+    auto& image = *this->image();
+
+    Gfx::Size new_size;
+    new_size.set_width(image.size().width() * m_scale);
+    new_size.set_height(image.size().height() * m_scale);
+    m_editor_image_rect.set_size(new_size);
+
+    Gfx::Point new_location;
+    new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x() * m_scale));
+    new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * m_scale));
+    m_editor_image_rect.set_location(new_location);
+
+    update();
 }
 
 }
