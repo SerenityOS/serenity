@@ -362,7 +362,7 @@ public:
 
     ShouldUnblockThread dispatch_one_pending_signal();
     ShouldUnblockThread dispatch_signal(u8 signal);
-    bool has_unmasked_pending_signals() const;
+    bool has_unmasked_pending_signals() const {  return m_pending_signals & ~m_signal_mask; }
     void terminate_due_to_signal(u8 signal);
     bool should_ignore_signal(u8 signal) const;
     bool has_signal_handler(u8 signal) const;
