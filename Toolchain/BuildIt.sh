@@ -225,6 +225,20 @@ pushd "$DIR/Build/"
         echo "XXX install gcc and libgcc"
         "$MAKE" install-gcc install-target-libgcc || exit 1
 
+        echo "XXX serenity libc and libm"
+        mkdir -p "$BUILD"
+        pushd "$BUILD"
+            cmake ..
+            "$MAKE" LibC
+            install -D Libraries/LibC/libc.a Libraries/LibM/libm.a Libraries/LibCxx/libstdc++.a Root/usr/lib/
+            SRC_ROOT=$(realpath "$DIR"/..)
+            for header in "$SRC_ROOT"/Libraries/Lib{C,M}/**/*.h; do
+                target=$(echo "$header" | sed -e "s@$SRC_ROOT/Libraries/LibC@@" -e "s@$SRC_ROOT/Libraries/LibM@@")
+                install -D "$header" "Root/usr/include/$target"
+            done
+            unset SRC_ROOT
+        popd
+
         if [ "$(uname -s)" = "OpenBSD" ]; then
             cd "$DIR/Local/libexec/gcc/i686-pc-serenity/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
         fi
