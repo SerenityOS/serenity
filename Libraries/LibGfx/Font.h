@@ -35,6 +35,11 @@
 
 namespace Gfx {
 
+enum FontTypes {
+    Default = 0,
+    LatinExtendedA = 1
+};
+
 // FIXME: Make a MutableGlyphBitmap buddy class for FontEditor instead?
 class GlyphBitmap {
     friend class Font;
@@ -77,16 +82,16 @@ public:
     static Font& default_bold_fixed_width_font();
 
     NonnullRefPtr<Font> clone() const;
-    static NonnullRefPtr<Font> create(u8 glyph_height, u8 glyph_width, bool fixed);
+    static NonnullRefPtr<Font> create(u8 glyph_height, u8 glyph_width, bool fixed, FontTypes type);
 
     static RefPtr<Font> load_from_file(const StringView& path);
     bool write_to_file(const StringView& path);
 
     ~Font();
 
-    GlyphBitmap glyph_bitmap(char ch) const { return GlyphBitmap(&m_rows[(u8)ch * m_glyph_height], { glyph_width(ch), m_glyph_height }); }
+    GlyphBitmap glyph_bitmap(u32 codepoint) const;
 
-    u8 glyph_width(char ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[(u8)ch]; }
+    u8 glyph_width(size_t ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[ch]; }
     int glyph_or_emoji_width(u32 codepoint) const;
     u8 glyph_height() const { return m_glyph_height; }
     u8 min_glyph_width() const { return m_min_glyph_width; }
@@ -106,20 +111,24 @@ public:
     u8 glyph_spacing() const { return m_glyph_spacing; }
     void set_glyph_spacing(u8 spacing) { m_glyph_spacing = spacing; }
 
-    void set_glyph_width(char ch, u8 width)
+    void set_glyph_width(size_t ch, u8 width)
     {
         ASSERT(m_glyph_widths);
-        m_glyph_widths[(u8)ch] = width;
+        m_glyph_widths[ch] = width;
     }
 
-    int glyph_count() { return m_glyph_count; }
+    int glyph_count() const { return m_glyph_count; }
 
+    FontTypes type() { return m_type; }
+    void set_type(FontTypes type);
 private:
-    Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing);
+    Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type);
 
     static RefPtr<Font> load_from_memory(const u8*);
+    static size_t glyph_count_by_type(FontTypes type);
 
     String m_name;
+    FontTypes m_type;
     size_t m_glyph_count { 256 };
 
     unsigned* m_rows { nullptr };
