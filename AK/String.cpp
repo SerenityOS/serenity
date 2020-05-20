@@ -250,6 +250,18 @@ String String::number(int value)
     return String(buffer, size);
 }
 
+String String::number(double value, int scale)
+{
+    char buffer[64];
+    String str_scale = number(scale);
+    StringBuilder format_builder = StringBuilder();
+    format_builder.append("%0.");
+    format_builder.append(str_scale);
+    format_builder.append("f");
+    int size = sprintf(buffer, format_builder.to_string().characters(), value);
+    return String(buffer, size);
+}
+
 String String::format(const char* fmt, ...)
 {
     StringBuilder builder;

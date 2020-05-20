@@ -26,117 +26,89 @@
 
 #include "Calculator.h"
 #include <AK/Assertions.h>
-#include <math.h>
 
-Calculator::Calculator()
+Calculator::Calculator(const String& input)
 {
+    m_token_stream = new TokenStream(input);
 }
 
-Calculator::~Calculator()
+double Calculator::evaluate()
 {
+    return expression();
 }
 
-double Calculator::begin_operation(Operation operation, double argument)
+double Calculator::expression()
 {
-    double res = 0.0;
+    double left = term();
 
-    switch (operation) {
-    case Operation::None:
-        ASSERT_NOT_REACHED();
+    if (m_has_error)
+        return -1;
 
-    case Operation::Add:
-    case Operation::Subtract:
-    case Operation::Multiply:
-    case Operation::Divide:
-        m_saved_argument = argument;
-        m_operation_in_progress = operation;
-        return argument;
+    Token t = m_token_stream->get();
 
-    case Operation::Sqrt:
-        if (argument < 0.0) {
-            m_has_error = true;
-            return argument;
+    while (true) {
+        switch (t.kind()) {
+        case Token::Kind::PLUS:
+            left += term();
+            t = m_token_stream->get();
+            break;
+        case Token::Kind::MINUS:
+            left -= term();
+            t = m_token_stream->get();
+            break;
+        default:
+            m_token_stream->putback(t);
+            return left;
         }
-        res = sqrt(argument);
-        clear_operation();
-        break;
-    case Operation::Inverse:
-        if (argument == 0.0) {
-            m_has_error = true;
-            return argument;
-        }
-        res = 1 / argument;
-        clear_operation();
-        break;
-    case Operation::Percent:
-        res = argument * 0.01;
-        break;
-    case Operation::ToggleSign:
-        res = -argument;
-        break;
-
-    case Operation::MemClear:
-        m_mem = 0.0;
-        res = argument;
-        break;
-    case Operation::MemRecall:
-        res = m_mem;
-        break;
-    case Operation::MemSave:
-        m_mem = argument;
-        res = argument;
-        break;
-    case Operation::MemAdd:
-        m_mem += argument;
-        res = m_mem;
-        break;
     }
-
-    return res;
 }
 
-double Calculator::finish_operation(double argument)
+double Calculator::term()
 {
-    double res = 0.0;
+    double left = primary();
 
-    switch (m_operation_in_progress) {
-    case Operation::None:
-        return argument;
+    if (m_has_error)
+        return -1;
 
-    case Operation::Add:
-        res = m_saved_argument + argument;
-        break;
-    case Operation::Subtract:
-        res = m_saved_argument - argument;
-        break;
-    case Operation::Multiply:
-        res = m_saved_argument * argument;
-        break;
-    case Operation::Divide:
-        if (argument == 0.0) {
-            m_has_error = true;
-            return argument;
+    Token t = m_token_stream->get();
+
+    while (true) {
+        switch (t.kind()) {
+        case Token::Kind::MULTIPLY:
+            left *= primary();
+            t = m_token_stream->get();
+            break;
+        case Token::Kind::DIVIDE:
+            left /= primary();
+            t = m_token_stream->get();
+            break;
+        default:
+            m_token_stream->putback(t);
+            return left;
         }
-        res = m_saved_argument / argument;
-        break;
-
-    case Operation::Sqrt:
-    case Operation::Inverse:
-    case Operation::Percent:
-    case Operation::ToggleSign:
-    case Operation::MemClear:
-    case Operation::MemRecall:
-    case Operation::MemSave:
-    case Operation::MemAdd:
-        ASSERT_NOT_REACHED();
     }
-
-    clear_operation();
-    return res;
 }
 
-void Calculator::clear_operation()
+double Calculator::primary()
 {
-    m_operation_in_progress = Operation::None;
-    m_saved_argument = 0.0;
+    Token t = m_token_stream->get();
+
+    switch (t.kind()) {
+    case Token::Kind::OPEN_PARENTHESIS: {
+        double d = expression();
+        t = m_token_stream->get();
+        ASSERT(t.kind() == Token::Kind::CLOSE_PARENTHESIS);
+        return d;
+    }
+    case Token::Kind::NUMBER:
+        return t.value();
+    default:
+        m_has_error = true;
+        return -1;
+    }
+}
+
+bool Calculator::has_error() const
+{
+    return m_has_error;
 }

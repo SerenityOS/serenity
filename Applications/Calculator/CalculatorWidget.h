@@ -27,10 +27,11 @@
 #pragma once
 
 #include "Calculator.h"
-#include "Keypad.h"
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGUI/Widget.h>
 
+// Handles the GUI and operation of the calculator. This is basically the main brains of the calculator.
 class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:
@@ -38,16 +39,19 @@ public:
 
 private:
     CalculatorWidget();
-    void add_button(GUI::Button&, Calculator::Operation);
-    void add_button(GUI::Button&, int);
     void add_button(GUI::Button&);
+    void add_button(GUI::Button&, String symbol);
+    void add_button(GUI::Button&, int digit);
 
-    void update_display();
+    void on_backspace_pressed();
+    void append_text_to_entry(String text);
+
+    void on_equals_pressed();
 
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    Calculator m_calculator;
-    Keypad m_keypad;
+    double m_memory { 0.0 };
+    unsigned int m_memory_scale { 0 };
 
     RefPtr<GUI::TextBox> m_entry;
     RefPtr<GUI::Label> m_label;

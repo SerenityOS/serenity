@@ -219,6 +219,7 @@ public:
     static String number(int);
     static String number(long);
     static String number(long long);
+    static String number(double, int scale = 10);
 
     StringView view() const;
 
