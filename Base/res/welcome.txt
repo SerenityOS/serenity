@@ -61,5 +61,5 @@ Serenity includes the Piano, which allows you to create your own tunes by
 simply pressing keys on the keyboard. You can pick the wavetype, octave, and
 more! Serenity also has SoundPlayer, which lets you play WAV files.
 
-Serenity also has PaintBrush, which is a simple bitmap editor. Draw with the
+Serenity also has PixelPaint, which is a layered bitmap editor. Draw with the
 pencil and change colors. Try drawing shapes! Can't do that in GIMP!
