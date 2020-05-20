@@ -53,15 +53,15 @@ JS::Value EventTargetWrapper::add_event_listener(JS::Interpreter& interpreter)
     auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 2)
+    if (interpreter.argument_count() < 2)
         return JS::js_undefined();
-    auto event_name = arguments[0].to_string(interpreter);
+    auto event_name = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
-    ASSERT(arguments[1].is_object());
-    ASSERT(arguments[1].as_object().is_function());
-    auto& function = static_cast<JS::Function&>(const_cast<Object&>(arguments[1].as_object()));
+    auto callback = interpreter.argument(1);
+    ASSERT(callback.is_object());
+    ASSERT(callback.as_object().is_function());
+    auto& function = callback.as_function();
     auto listener = adopt(*new EventListener(JS::make_handle(&function)));
     static_cast<EventTargetWrapper*>(this_object)->impl().add_event_listener(event_name, move(listener));
     return JS::js_undefined();

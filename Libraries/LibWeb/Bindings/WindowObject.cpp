@@ -128,15 +128,14 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 2)
+    if (interpreter.argument_count() < 2)
         return {};
-    auto* callback_object = arguments[0].to_object(interpreter);
+    auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
         return interpreter.throw_exception<JS::TypeError>("Not a function");
-    auto interval = arguments[1].to_i32(interpreter);
+    auto interval = interpreter.argument(1).to_i32(interpreter);
     if (interpreter.exception())
         return {};
     impl->set_interval(*static_cast<JS::Function*>(callback_object), interval);
@@ -148,10 +147,9 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 1)
+    if (!interpreter.argument_count())
         return {};
-    auto* callback_object = arguments[0].to_object(interpreter);
+    auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
@@ -159,7 +157,7 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
 
     i32 interval = 0;
     if (interpreter.argument_count() >= 2) {
-        interval = arguments[1].to_i32(interpreter);
+        interval = interpreter.argument(1).to_i32(interpreter);
         if (interpreter.exception())
             return {};
     }
@@ -173,10 +171,9 @@ JS::Value WindowObject::request_animation_frame(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 1)
+    if (!interpreter.argument_count())
         return {};
-    auto* callback_object = arguments[0].to_object(interpreter);
+    auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
@@ -189,10 +186,9 @@ JS::Value WindowObject::cancel_animation_frame(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 1)
+    if (!interpreter.argument_count())
         return {};
-    auto id = arguments[0].to_i32(interpreter);
+    auto id = interpreter.argument(0).to_i32(interpreter);
     if (interpreter.exception())
         return {};
     impl->cancel_animation_frame(id);
