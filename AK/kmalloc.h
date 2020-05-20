@@ -52,6 +52,36 @@
 
 #    ifdef __serenity__
 
+inline void* operator new(size_t size)
+{
+    return kmalloc(size);
+}
+
+inline void operator delete(void* ptr)
+{
+    return kfree(ptr);
+}
+
+inline void operator delete(void* ptr, size_t)
+{
+    return kfree(ptr);
+}
+
+inline void* operator new[](size_t size)
+{
+    return kmalloc(size);
+}
+
+inline void operator delete[](void* ptr)
+{
+    return kfree(ptr);
+}
+
+inline void operator delete[](void* ptr, size_t)
+{
+    return kfree(ptr);
+}
+
 inline void* operator new(size_t, void* ptr)
 {
     return ptr;
