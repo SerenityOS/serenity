@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     };
 
     auto applet_window = GUI::Window::construct();
-    applet_window->set_title("Clipboard history");
+    applet_window->set_title("ClipboardHistory");
     applet_window->set_window_type(GUI::WindowType::MenuApplet);
     auto& icon = applet_window->set_main_widget<IconWidget>();
     icon.on_click = [&main_window = *main_window] {
