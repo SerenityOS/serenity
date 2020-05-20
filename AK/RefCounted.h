@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 
 namespace AK {
