@@ -75,10 +75,9 @@ JS::Value DocumentWrapper::get_element_by_id(JS::Interpreter& interpreter)
     auto* document = document_from(interpreter);
     if (!document)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.is_empty())
+    if (!interpreter.argument_count())
         return JS::js_null();
-    auto id = arguments[0].to_string(interpreter);
+    auto id = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
     auto* element = document->get_element_by_id(id);
@@ -92,10 +91,9 @@ JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
     auto* document = document_from(interpreter);
     if (!document)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.is_empty())
+    if (!interpreter.argument_count())
         return JS::js_null();
-    auto selector = arguments[0].to_string(interpreter);
+    auto selector = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
     auto elements = document->query_selector_all(selector);
