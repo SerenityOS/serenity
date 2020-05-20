@@ -49,17 +49,14 @@ Image::Image(const Gfx::Size& size)
 {
 }
 
-void Image::paint_into(GUI::Painter& painter, const Gfx::Rect& dest_rect, const Gfx::Rect& src_rect)
+void Image::paint_into(GUI::Painter& painter, const Gfx::Rect& dest_rect)
 {
-    (void) src_rect;
+    float scale = (float)dest_rect.width() / (float)rect().width();
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(dest_rect);
     for (auto& layer : m_layers) {
-        auto target = dest_rect.translated(layer.location());
-        target.set_size(layer.size());
-#ifdef IMAGE_DEBUG
-        dbg() << "Composite layer " << layer.name() << " target: " << target << ", layer.rect: " << layer.rect();
-#endif
+        auto target = dest_rect.translated(layer.location().x() * scale, layer.location().y() * scale);
+        target.set_size(layer.size().width() * scale, layer.size().height() * scale);
         painter.draw_scaled_bitmap(target, layer.bitmap(), layer.rect());
     }
 }

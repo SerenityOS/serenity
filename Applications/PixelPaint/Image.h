@@ -51,7 +51,7 @@ public:
 
     void add_layer(NonnullRefPtr<Layer>);
 
-    void paint_into(GUI::Painter&, const Gfx::Rect& dest_rect, const Gfx::Rect& src_rect);
+    void paint_into(GUI::Painter&, const Gfx::Rect& dest_rect);
 
     GUI::Model& layer_model();
 
