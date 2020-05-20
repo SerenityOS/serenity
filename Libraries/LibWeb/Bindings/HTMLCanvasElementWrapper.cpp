@@ -74,15 +74,13 @@ JS::Value HTMLCanvasElementWrapper::get_context(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() >= 1) {
-        auto string = arguments[0].to_string(interpreter);
-        if (interpreter.exception())
-            return {};
-        auto* context = impl->get_context(string);
-        return wrap(interpreter.heap(), *context);
-    }
-    return JS::js_undefined();
+    auto context_type = interpreter.call_frame().arguments[0].to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (context_type != "2d")
+        return JS::js_null();
+    auto* context = impl->get_context(context_type);
+    return wrap(interpreter.heap(), *context);
 }
 
 JS::Value HTMLCanvasElementWrapper::width_getter(JS::Interpreter& interpreter)
