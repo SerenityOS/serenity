@@ -163,13 +163,24 @@ void Job::on_socket_connected()
                     // read size
                     auto size_data = read_line(PAGE_SIZE);
                     auto size_lines = StringView { size_data.data(), size_data.size() }.lines();
+#ifdef JOB_DEBUG
+                    dbg() << "Job: Received a chunk with size _" << size_data << "_";
+#endif
                     if (size_lines.size() == 0) {
                         dbg() << "Job: Reached end of stream";
                         m_state = State::AfterChunkedEncodingTrailer;
                         return IterationDecision::Break;
                     } else {
-                        String size_string = size_lines[0];
-                        if (size_string.starts_with('0')) {
+                        auto chunk = size_lines[0].split_view(';', true);
+                        String size_string = chunk[0];
+                        char* endptr;
+                        auto size = strtoul(size_string.characters(), &endptr, 16);
+                        if (*endptr) {
+                            // invalid number
+                            deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
+                            return IterationDecision::Break;
+                        }
+                        if (size == 0) {
                             // This is the last chunk
                             // '0' *[; chunk-ext-name = chunk-ext-value]
                             // We're going to ignore _all_ chunk extensions
@@ -180,13 +191,6 @@ void Job::on_socket_connected()
                             dbg() << "Job: Received the last chunk with extensions _" << size_string.substring_view(1, size_string.length() - 1) << "_";
 #endif
                         } else {
-                            char* endptr;
-                            auto size = strtoul(size_string.characters(), &endptr, 16);
-                            if (*endptr) {
-                                // invalid number
-                                deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-                                return IterationDecision::Break;
-                            }
                             m_current_chunk_total_size = size;
                             m_current_chunk_remaining_size = size;
                             read_size = size;
