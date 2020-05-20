@@ -128,8 +128,8 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    if (interpreter.argument_count() < 2)
-        return {};
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<JS::TypeError>("setInterval() needs at least one argument");
     auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
@@ -148,7 +148,7 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     if (!interpreter.argument_count())
-        return {};
+        return interpreter.throw_exception<JS::TypeError>("setTimeout() needs at least one argument");
     auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
@@ -172,7 +172,7 @@ JS::Value WindowObject::request_animation_frame(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     if (!interpreter.argument_count())
-        return {};
+        return interpreter.throw_exception<JS::TypeError>("requestAnimationFrame() needs one argument");
     auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
@@ -187,7 +187,7 @@ JS::Value WindowObject::cancel_animation_frame(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     if (!interpreter.argument_count())
-        return {};
+        return interpreter.throw_exception<JS::TypeError>("cancelAnimationFrame() needs one argument");
     auto id = interpreter.argument(0).to_i32(interpreter);
     if (interpreter.exception())
         return {};

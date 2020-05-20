@@ -76,7 +76,7 @@ JS::Value DocumentWrapper::get_element_by_id(JS::Interpreter& interpreter)
     if (!document)
         return {};
     if (!interpreter.argument_count())
-        return JS::js_null();
+        return interpreter.throw_exception<JS::TypeError>("getElementById() needs one argument");
     auto id = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
@@ -92,7 +92,7 @@ JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
     if (!document)
         return {};
     if (!interpreter.argument_count())
-        return JS::js_null();
+        return interpreter.throw_exception<JS::TypeError>("querySelectorAll() needs one argument");
     auto selector = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
