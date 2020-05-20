@@ -43,12 +43,13 @@
     __ENUMERATE_FILETYPE(java, ".java")        \
     __ENUMERATE_FILETYPE(javascript, ".js")    \
     __ENUMERATE_FILETYPE(library, ".so", ".a") \
+    __ENUMERATE_FILETYPE(markdown, ".md")      \
     __ENUMERATE_FILETYPE(object, ".o", ".obj") \
     __ENUMERATE_FILETYPE(pdf, ".pdf")          \
     __ENUMERATE_FILETYPE(python, ".py")        \
     __ENUMERATE_FILETYPE(sound, ".wav")        \
     __ENUMERATE_FILETYPE(ini, ".ini")          \
-    __ENUMERATE_FILETYPE(text, ".txt", ".md")
+    __ENUMERATE_FILETYPE(text, ".txt")
 namespace GUI {
 
 class FileSystemModel
