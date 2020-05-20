@@ -27,6 +27,7 @@
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/EventListenerWrapper.h>
@@ -54,7 +55,7 @@ JS::Value EventTargetWrapper::add_event_listener(JS::Interpreter& interpreter)
     if (!this_object)
         return {};
     if (interpreter.argument_count() < 2)
-        return JS::js_undefined();
+        return interpreter.throw_exception<JS::TypeError>("addEventListener() needs two arguments");
     auto event_name = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
