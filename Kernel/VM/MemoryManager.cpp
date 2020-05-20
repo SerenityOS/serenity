@@ -295,16 +295,16 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
 
 Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
 {
-    if (auto* region = kernel_region_from_vaddr(vaddr))
+    if (auto* region = user_region_from_vaddr(process, vaddr))
         return region;
-    return user_region_from_vaddr(process, vaddr);
+    return kernel_region_from_vaddr(vaddr);
 }
 
 const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAddress vaddr)
 {
-    if (auto* region = kernel_region_from_vaddr(vaddr))
+    if (auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr))
         return region;
-    return user_region_from_vaddr(const_cast<Process&>(process), vaddr);
+    return kernel_region_from_vaddr(vaddr);
 }
 
 Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
