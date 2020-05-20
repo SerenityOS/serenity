@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <assert.h>
-#include <math.h>
+#include <LibC/assert.h>
+#include <LibM/math.h>
 #include <stdint.h>
 #include <stdlib.h>
 

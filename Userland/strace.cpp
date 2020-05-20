@@ -28,11 +28,11 @@
 #include <AK/LogStream.h>
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
+#include <LibC/sys/arch/i386/regs.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/arch/i386/regs.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <unistd.h>

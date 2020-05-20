@@ -161,9 +161,6 @@ if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
 else()
     include_directories(../Toolchain/Local/i686-pc-serenity/include/c++/10.1.0/)
     include_directories(../Toolchain/Local/i686-pc-serenity/include/c++/10.1.0/i686-pc-serenity/)
-    # FIXME: Many files include <LibC/sys/ioctl_numbers.h> and <LibC/errno_numbers.h>
-    #     With -nostdinc, this makes it interesting to include these headers properly
-    include_directories(../Libraries/LibC)
 endif()
 
 add_executable(Kernel ${SOURCES})

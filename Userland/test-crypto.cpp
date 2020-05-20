@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibC/limits.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -36,7 +37,6 @@
 #include <LibCrypto/PK/RSA.h>
 #include <LibLine/Editor.h>
 #include <LibTLS/TLSv12.h>
-#include <limits.h>
 #include <stdio.h>
 #include <time.h>
 

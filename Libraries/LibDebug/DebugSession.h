@@ -33,11 +33,11 @@
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <LibC/sys/arch/i386/regs.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Loader.h>
 #include <signal.h>
 #include <stdio.h>
-#include <sys/arch/i386/regs.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <unistd.h>
