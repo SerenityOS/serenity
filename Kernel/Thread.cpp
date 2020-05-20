@@ -384,11 +384,6 @@ void Thread::send_urgent_signal_to_self(u8 signal)
     (void)block<SemiPermanentBlocker>(SemiPermanentBlocker::Reason::Signal);
 }
 
-bool Thread::has_unmasked_pending_signals() const
-{
-    return m_pending_signals & ~m_signal_mask;
-}
-
 ShouldUnblockThread Thread::dispatch_one_pending_signal()
 {
     ASSERT_INTERRUPTS_DISABLED();

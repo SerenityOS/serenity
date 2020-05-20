@@ -69,13 +69,13 @@ public:
     {
     }
 
-    KResultOr(T&& value)
+    ALWAYS_INLINE KResultOr(T&& value)
     {
         new (&m_storage) T(move(value));
     }
 
     template<typename U>
-    KResultOr(U&& value)
+    ALWAYS_INLINE KResultOr(U&& value)
     {
         new (&m_storage) T(move(value));
     }
