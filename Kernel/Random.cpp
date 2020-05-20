@@ -35,9 +35,9 @@ static u32 random32()
     if (g_cpu_supports_rdrand) {
         u32 value = 0;
         asm volatile(
-            "1%=:\n"
+            "1:\n"
             "rdrand %0\n"
-            "jnc 1%=\n"
+            "jnc 1b\n"
             : "=r"(value));
         return value;
     }
