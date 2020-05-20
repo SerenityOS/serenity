@@ -584,18 +584,31 @@ extern bool g_cpu_supports_sse;
 extern bool g_cpu_supports_tsc;
 extern bool g_cpu_supports_umip;
 
-void stac();
-void clac();
+ALWAYS_INLINE void stac()
+{
+    if (!g_cpu_supports_smap)
+        return;
+    asm volatile("stac" ::
+                     : "cc");
+}
+
+ALWAYS_INLINE void clac()
+{
+    if (!g_cpu_supports_smap)
+        return;
+    asm volatile("clac" ::
+                     : "cc");
+}
 
 class SmapDisabler {
 public:
-    SmapDisabler()
+    ALWAYS_INLINE SmapDisabler()
     {
         m_flags = cpu_flags();
         stac();
     }
 
-    ~SmapDisabler()
+    ALWAYS_INLINE ~SmapDisabler()
     {
         if (!(m_flags & 0x40000))
             clac();
