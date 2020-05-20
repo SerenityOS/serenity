@@ -143,6 +143,38 @@ unsigned convert_to_uint(const StringView& str, bool& ok)
     return value;
 }
 
+unsigned convert_to_uint_from_hex(const StringView& str, bool& ok)
+{
+    if (str.is_empty()) {
+        ok = false;
+        return 0;
+    }
+
+    unsigned value = 0;
+    const auto count = str.length();
+
+    for (size_t i = 0; i < count; i++) {
+        char digit = str[i];
+        u8 digit_val;
+
+        if (digit >= '0' && digit <= '9') {
+            digit_val = digit - '0';
+        } else if (digit >= 'a' && digit <= 'f') {
+            digit_val = 10 + (digit - 'a');
+        } else if (digit >= 'A' && digit <= 'F') {
+            digit_val = 10 + (digit - 'A');
+        } else {
+            ok = false;
+            return 0;
+        }
+
+        value = (value << 4) + digit_val;
+    }
+
+    ok = true;
+    return value;
+}
+
 static inline char to_lowercase(char c)
 {
     if (c >= 'A' && c <= 'Z')
