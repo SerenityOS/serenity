@@ -668,7 +668,7 @@ bool MemoryManager::validate_range(const Process& process, VirtualAddress base_v
                 return false;
             }
         }
-        vaddr = vaddr.offset(PAGE_SIZE);
+        vaddr = region->range().end();
     }
     return true;
 }
