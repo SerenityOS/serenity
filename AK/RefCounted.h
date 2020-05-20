@@ -57,25 +57,25 @@ constexpr auto call_one_ref_left_if_present(...) -> FalseType
 
 class RefCountedBase {
 public:
-    void ref() const
+    ALWAYS_INLINE void ref() const
     {
         ASSERT(m_ref_count);
         ++m_ref_count;
     }
 
-    int ref_count() const
+    ALWAYS_INLINE int ref_count() const
     {
         return m_ref_count;
     }
 
 protected:
     RefCountedBase() {}
-    ~RefCountedBase()
+    ALWAYS_INLINE ~RefCountedBase()
     {
         ASSERT(!m_ref_count);
     }
 
-    void deref_base() const
+    ALWAYS_INLINE void deref_base() const
     {
         ASSERT(m_ref_count);
         --m_ref_count;
