@@ -155,4 +155,47 @@ void TableView::paint_event(PaintEvent& event)
         paint_headers(painter);
 }
 
+void TableView::keydown_event(KeyEvent& event)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+    if (event.key() == KeyCode::Key_Return) {
+        activate_selected();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Up) {
+        move_selection(-1);
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        move_selection(1);
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageUp) {
+        int items_per_page = visible_content_rect().height() / item_height();
+        auto old_index = selection().first();
+        auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
+        if (model.is_valid(new_index)) {
+            selection().set(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageDown) {
+        int items_per_page = visible_content_rect().height() / item_height();
+        auto old_index = selection().first();
+        auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
+        if (model.is_valid(new_index)) {
+            selection().set(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    return Widget::keydown_event(event);
+}
+
+
 }
