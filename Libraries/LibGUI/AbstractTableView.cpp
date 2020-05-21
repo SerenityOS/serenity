@@ -71,15 +71,17 @@ void AbstractTableView::update_column_sizes()
         if (is_column_hidden(column))
             continue;
         int header_width = header_font().width(model.column_name(column));
-        if (column == key_column)
+        if (column == key_column && model.is_column_sortable(column))
             header_width += font().width(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
         int column_width = header_width;
         for (int row = 0; row < row_count; ++row) {
             auto cell_data = model.data(model.index(row, column));
             int cell_width = 0;
-            if (cell_data.is_bitmap()) {
+            if (cell_data.is_icon()) {
+                cell_width = item_height();
+            } else if (cell_data.is_bitmap()) {
                 cell_width = cell_data.as_bitmap().width();
-            } else {
+            } else if (cell_data.is_valid()) {
                 cell_width = font().width(cell_data.to_string());
             }
             column_width = max(column_width, cell_width);
