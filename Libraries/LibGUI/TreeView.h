@@ -41,6 +41,9 @@ public:
     virtual int item_count() const override;
     virtual void toggle_index(const ModelIndex&) override;
 
+    void expand_tree(const ModelIndex& root = {});
+    void collapse_tree(const ModelIndex& root = {});
+
 protected:
     TreeView();
 
@@ -69,6 +72,7 @@ private:
     struct MetadataForIndex;
 
     MetadataForIndex& ensure_metadata_for_index(const ModelIndex&) const;
+    void set_open_state_of_all_in_subtree(const ModelIndex& root, bool open);
 
     mutable HashMap<void*, NonnullOwnPtr<MetadataForIndex>> m_view_metadata;
 
