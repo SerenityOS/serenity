@@ -64,11 +64,6 @@ ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
     return target().index(m_row_mappings[index.row()], index.column());
 }
 
-String SortingProxyModel::row_name(int index) const
-{
-    return target().row_name(index);
-}
-
 String SortingProxyModel::column_name(int index) const
 {
     return target().column_name(index);

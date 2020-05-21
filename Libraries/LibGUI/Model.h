@@ -67,7 +67,6 @@ public:
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const = 0;
     virtual int column_count(const ModelIndex& = ModelIndex()) const = 0;
-    virtual String row_name(int) const { return {}; }
     virtual String column_name(int) const { return {}; }
     virtual Variant data(const ModelIndex&, Role = Role::Display) const = 0;
     virtual void update() = 0;
