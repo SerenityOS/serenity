@@ -422,8 +422,8 @@ Value ArrayPrototype::includes(Interpreter& interpreter)
     if (!array)
         return {};
 
-    i32 array_size = static_cast<i32>(array->elements().size());
-    if (interpreter.argument_count() == 0 || array_size == 0)
+    i32 array_size = array->elements().size();
+    if (array_size == 0)
         return Value(false);
 
     i32 from_index = 0;
