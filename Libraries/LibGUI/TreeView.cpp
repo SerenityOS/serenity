@@ -109,6 +109,38 @@ void TreeView::doubleclick_event(MouseEvent& event)
     }
 }
 
+void TreeView::set_open_state_of_all_in_subtree(const ModelIndex& root, bool open)
+{
+    if (root.is_valid())
+        ensure_metadata_for_index(root).open = open;
+    int row_count = model()->row_count(root);
+    int column = model()->tree_column();
+    for (int row = 0; row < row_count; ++row) {
+        auto index = model()->index(row, column, root);
+        set_open_state_of_all_in_subtree(index, open);
+    }
+}
+
+void TreeView::expand_tree(const ModelIndex& root)
+{
+    if (!model())
+        return;
+    set_open_state_of_all_in_subtree(root, true);
+    update_column_sizes();
+    update_content_size();
+    update();
+}
+
+void TreeView::collapse_tree(const ModelIndex& root)
+{
+    if (!model())
+        return;
+    set_open_state_of_all_in_subtree(root, false);
+    update_column_sizes();
+    update_content_size();
+    update();
+}
+
 void TreeView::toggle_index(const ModelIndex& index)
 {
     ASSERT(model()->row_count(index));
@@ -426,6 +458,11 @@ void TreeView::keydown_event(KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Left) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
+            if (event.alt()) {
+                collapse_tree(cursor_index);
+                return;
+            }
+
             auto& metadata = ensure_metadata_for_index(cursor_index);
             if (metadata.open) {
                 open_tree_node(false, metadata);
@@ -441,6 +478,11 @@ void TreeView::keydown_event(KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Right) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
+            if (event.alt()) {
+                expand_tree(cursor_index);
+                return;
+            }
+
             auto& metadata = ensure_metadata_for_index(cursor_index);
             if (!metadata.open) {
                 open_tree_node(true, metadata);
