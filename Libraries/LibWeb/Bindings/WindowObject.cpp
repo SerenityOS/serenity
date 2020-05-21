@@ -141,6 +141,8 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
         interval = interpreter.argument(1).to_i32(interpreter);
         if (interpreter.exception())
             return {};
+        if (interval < 0)
+            interval = 0;
     }
 
     impl->set_interval(*static_cast<JS::Function*>(callback_object), interval);
@@ -165,6 +167,8 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
         interval = interpreter.argument(1).to_i32(interpreter);
         if (interpreter.exception())
             return {};
+        if (interval < 0)
+            interval = 0;
     }
 
     impl->set_timeout(*static_cast<JS::Function*>(callback_object), interval);
