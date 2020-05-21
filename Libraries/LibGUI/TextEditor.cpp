@@ -1086,6 +1086,7 @@ void TextEditor::set_cursor(const TextPosition& a_position)
 
 void TextEditor::focusin_event(Core::Event&)
 {
+    m_cursor_state = true;
     update_cursor();
     start_timer(500);
 }
