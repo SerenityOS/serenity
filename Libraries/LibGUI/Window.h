@@ -183,7 +183,8 @@ public:
 
     Action* action_for_key_event(const KeyEvent&);
 
-    void did_remove_widget(Badge<Widget>, const Widget&);
+    void did_add_widget(Badge<Widget>, Widget&);
+    void did_remove_widget(Badge<Widget>, Widget&);
 
     Window* find_parent_window();
 
