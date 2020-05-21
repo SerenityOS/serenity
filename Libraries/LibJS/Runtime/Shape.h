@@ -40,6 +40,8 @@ struct Attribute {
         Configurable = 1 << 0,
         Enumerable = 1 << 1,
         Writable = 1 << 2,
+        HasGet = 1 << 3,
+        HasSet = 1 << 4,
     };
 };
 
