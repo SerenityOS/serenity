@@ -62,8 +62,11 @@ cleanup() {
         if [ $use_genext2fs = 0 ] ; then
             printf "unmounting filesystem... "
             umount mnt || ( sleep 1 && sync && umount mnt )
+            rmdir mnt
+        else
+            rm -rf mnt
         fi
-        rmdir mnt
+
         if [ "$(uname -s)" = "OpenBSD" ]; then
             vnconfig -u "$VND"
         elif [ "$(uname -s)" = "FreeBSD" ]; then
