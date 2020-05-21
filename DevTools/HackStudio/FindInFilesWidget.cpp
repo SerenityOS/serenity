@@ -75,6 +75,8 @@ public:
 
     virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
+        if (role == Role::TextAlignment)
+            return Gfx::TextAlignment::CenterLeft;
         if (role == Role::Font) {
             if (index.column() == Column::MatchedText)
                 return Gfx::Font::default_fixed_width_font();
@@ -90,14 +92,6 @@ public:
             case Column::MatchedText:
                 return match.text;
             }
-        }
-        return {};
-    }
-
-    virtual ColumnMetadata column_metadata(int column) const override
-    {
-        if (column == Column::MatchedText) {
-            return { 0, Gfx::TextAlignment::CenterLeft };
         }
         return {};
     }

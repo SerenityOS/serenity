@@ -132,59 +132,59 @@ GUI::Model::ColumnMetadata ProcessModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return { 16, Gfx::TextAlignment::CenterLeft };
+        return { 16 };
     case Column::PID:
-        return { 32, Gfx::TextAlignment::CenterRight };
+        return { 32 };
     case Column::TID:
-        return { 32, Gfx::TextAlignment::CenterRight };
+        return { 32 };
     case Column::State:
-        return { 75, Gfx::TextAlignment::CenterLeft };
+        return { 75 };
     case Column::Priority:
-        return { 16, Gfx::TextAlignment::CenterRight };
+        return { 16 };
     case Column::EffectivePriority:
-        return { 16, Gfx::TextAlignment::CenterRight };
+        return { 16 };
     case Column::User:
-        return { 50, Gfx::TextAlignment::CenterLeft };
+        return { 50 };
     case Column::Virtual:
-        return { 65, Gfx::TextAlignment::CenterRight };
+        return { 65 };
     case Column::Physical:
-        return { 65, Gfx::TextAlignment::CenterRight };
+        return { 65 };
     case Column::DirtyPrivate:
-        return { 65, Gfx::TextAlignment::CenterRight };
+        return { 65 };
     case Column::CleanInode:
-        return { 65, Gfx::TextAlignment::CenterRight };
+        return { 65 };
     case Column::PurgeableVolatile:
-        return { 65, Gfx::TextAlignment::CenterRight };
+        return { 65 };
     case Column::PurgeableNonvolatile:
-        return { 65, Gfx::TextAlignment::CenterRight };
+        return { 65 };
     case Column::CPU:
-        return { 32, Gfx::TextAlignment::CenterRight };
+        return { 32 };
     case Column::Name:
-        return { 140, Gfx::TextAlignment::CenterLeft };
+        return { 140 };
     case Column::Syscalls:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::InodeFaults:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::ZeroFaults:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::CowFaults:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::FileReadBytes:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::FileWriteBytes:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::UnixSocketReadBytes:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::UnixSocketWriteBytes:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::IPv4SocketReadBytes:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::IPv4SocketWriteBytes:
-        return { 60, Gfx::TextAlignment::CenterRight };
+        return { 60 };
     case Column::Pledge:
-        return { 60, Gfx::TextAlignment::CenterLeft };
+        return { 60 };
     case Column::Veil:
-        return { 60, Gfx::TextAlignment::CenterLeft };
+        return { 60 };
     default:
         ASSERT_NOT_REACHED();
     }
@@ -198,6 +198,42 @@ static String pretty_byte_size(size_t size)
 GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
+
+    if (role == Role::TextAlignment) {
+        switch (index.column()) {
+        case Column::Icon:
+        case Column::Name:
+        case Column::State:
+        case Column::User:
+        case Column::Pledge:
+        case Column::Veil:
+            return Gfx::TextAlignment::CenterLeft;
+        case Column::PID:
+        case Column::TID:
+        case Column::Priority:
+        case Column::EffectivePriority:
+        case Column::Virtual:
+        case Column::Physical:
+        case Column::DirtyPrivate:
+        case Column::CleanInode:
+        case Column::PurgeableVolatile:
+        case Column::PurgeableNonvolatile:
+        case Column::CPU:
+        case Column::Syscalls:
+        case Column::InodeFaults:
+        case Column::ZeroFaults:
+        case Column::CowFaults:
+        case Column::FileReadBytes:
+        case Column::FileWriteBytes:
+        case Column::UnixSocketReadBytes:
+        case Column::UnixSocketWriteBytes:
+        case Column::IPv4SocketReadBytes:
+        case Column::IPv4SocketWriteBytes:
+            return Gfx::TextAlignment::CenterRight;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
 
     auto it = m_threads.find(m_pids[index.row()]);
     auto& thread = *(*it).value;
