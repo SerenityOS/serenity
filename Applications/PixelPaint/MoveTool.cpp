@@ -43,23 +43,23 @@ MoveTool::~MoveTool()
 {
 }
 
-void MoveTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent& original_event)
+void MoveTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent& image_event)
 {
     if (event.button() != GUI::MouseButton::Left)
         return;
     if (!layer.rect().contains(event.position()))
         return;
     m_layer_being_moved = layer;
-    m_event_origin = original_event.position();
+    m_event_origin = image_event.position();
     m_layer_origin = layer.location();
     m_editor->window()->set_override_cursor(GUI::StandardCursor::Move);
 }
 
-void MoveTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& original_event)
+void MoveTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& image_event)
 {
     if (!m_layer_being_moved)
         return;
-    auto delta = original_event.position() - m_event_origin;
+    auto delta = image_event.position() - m_event_origin;
     m_layer_being_moved->set_location(m_layer_origin.translated(delta));
     m_editor->layers_did_change();
 }
