@@ -226,6 +226,7 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                     { "&amp;", "&" },
                     { "&mdash;", "-" },
                     { "&nbsp;", " " }, // FIXME: Should actually be *non-breaking*
+                    { "&quot;", "\"" },
                     { "&raquo;", ">>" },
                     { "&laquo;", "<<" },
                 };
