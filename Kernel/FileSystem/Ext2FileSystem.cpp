@@ -450,7 +450,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
 
     auto process_block_array = [&](unsigned array_block_index, auto&& callback) {
         if (include_block_list_blocks)
-            callback(array_block_index);
+            add_block(array_block_index);
         unsigned count = min(blocks_remaining, entries_per_block);
         size_t read_size = count * sizeof(__u32);
         auto array_block = ByteBuffer::create_uninitialized(read_size);
