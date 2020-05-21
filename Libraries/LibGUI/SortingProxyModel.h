@@ -39,7 +39,6 @@ public:
     virtual int column_count(const ModelIndex& = ModelIndex()) const override;
     virtual String row_name(int) const override;
     virtual String column_name(int) const override;
-    virtual ColumnMetadata column_metadata(int) const override;
     virtual Variant data(const ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
     virtual StringView drag_data_type() const override;

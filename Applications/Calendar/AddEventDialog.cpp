@@ -146,11 +146,6 @@ String AddEventDialog::MonthListModel::column_name(int column) const
     }
 }
 
-GUI::Model::ColumnMetadata AddEventDialog::MonthListModel::column_metadata([[maybe_unused]] int column) const
-{
-    return {};
-}
-
 GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto& month = Calendar::name_of_month(index.row() + 1);

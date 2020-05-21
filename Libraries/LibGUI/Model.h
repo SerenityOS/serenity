@@ -46,10 +46,6 @@ enum class SortOrder {
 
 class Model : public RefCounted<Model> {
 public:
-    struct ColumnMetadata {
-        int preferred_width { 0 };
-    };
-
     enum UpdateFlag {
         DontInvalidateIndexes = 0,
         InvalidateAllIndexes = 1 << 0,
@@ -73,7 +69,6 @@ public:
     virtual int column_count(const ModelIndex& = ModelIndex()) const = 0;
     virtual String row_name(int) const { return {}; }
     virtual String column_name(int) const { return {}; }
-    virtual ColumnMetadata column_metadata(int) const { return {}; }
     virtual Variant data(const ModelIndex&, Role = Role::Display) const = 0;
     virtual void update() = 0;
     virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }

@@ -59,9 +59,6 @@ void AbstractTableView::select_all()
 
 void AbstractTableView::update_column_sizes()
 {
-    if (!m_size_columns_to_fit_content)
-        return;
-
     if (!model())
         return;
 
@@ -249,13 +246,7 @@ int AbstractTableView::column_width(int column_index) const
 {
     if (!model())
         return 0;
-    auto& column_data = this->column_data(column_index);
-    if (!column_data.has_initialized_width) {
-        ASSERT(!m_size_columns_to_fit_content);
-        column_data.has_initialized_width = true;
-        column_data.width = model()->column_metadata(column_index).preferred_width;
-    }
-    return column_data.width;
+    return column_data(column_index).width;
 }
 
 void AbstractTableView::mousemove_event(MouseEvent& event)

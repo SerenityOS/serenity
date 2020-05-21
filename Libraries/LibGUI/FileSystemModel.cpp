@@ -568,31 +568,6 @@ String FileSystemModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-Model::ColumnMetadata FileSystemModel::column_metadata(int column) const
-{
-    switch (column) {
-    case Column::Icon:
-        return { 16 };
-    case Column::Name:
-        return { 120 };
-    case Column::Size:
-        return { 80 };
-    case Column::Owner:
-        return { 50 };
-    case Column::Group:
-        return { 50 };
-    case Column::ModificationTime:
-        return { 110 };
-    case Column::Permissions:
-        return { 65 };
-    case Column::Inode:
-        return { 60 };
-    case Column::SymlinkTarget:
-        return { 120 };
-    }
-    ASSERT_NOT_REACHED();
-}
-
 bool FileSystemModel::accepts_drag(const ModelIndex& index, const StringView& data_type)
 {
     if (!index.is_valid())

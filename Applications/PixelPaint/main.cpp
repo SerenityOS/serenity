@@ -89,7 +89,6 @@ int main(int argc, char** argv)
     right_panel.set_layout<GUI::VerticalBoxLayout>();
 
     auto& layer_table_view = right_panel.add<GUI::TableView>();
-    layer_table_view.set_size_columns_to_fit_content(true);
 
     window->show();
 

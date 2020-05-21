@@ -69,11 +69,9 @@ int main(int argc, char** argv)
 
     auto& tree_view = bottom_splitter.add<GUI::TreeView>();
     tree_view.set_headers_visible(true);
-    tree_view.set_size_columns_to_fit_content(true);
     tree_view.set_model(profile->model());
 
     auto& disassembly_view = bottom_splitter.add<GUI::TableView>();
-    disassembly_view.set_size_columns_to_fit_content(true);
 
     tree_view.on_selection = [&](auto& index) {
         profile->set_disassembly_index(index);

@@ -143,7 +143,6 @@ FindInFilesWidget::FindInFilesWidget()
     m_button->set_preferred_size(100, 0);
 
     m_result_view = add<GUI::TableView>();
-    m_result_view->set_size_columns_to_fit_content(true);
 
     m_result_view->on_activation = [](auto& index) {
         auto& match = *(const Match*)index.internal_data();

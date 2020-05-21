@@ -52,9 +52,6 @@ public:
     bool is_column_hidden(int) const;
     void set_column_hidden(int, bool);
 
-    void set_size_columns_to_fit_content(bool b) { m_size_columns_to_fit_content = b; }
-    bool size_columns_to_fit_content() const { return m_size_columns_to_fit_content; }
-
     void set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>&&);
 
     int horizontal_padding() const { return m_horizontal_padding; }
@@ -117,7 +114,6 @@ protected:
 
 private:
     bool m_headers_visible { true };
-    bool m_size_columns_to_fit_content { false };
     bool m_in_column_resize { false };
     bool m_alternating_row_colors { true };
     int m_horizontal_padding { 5 };

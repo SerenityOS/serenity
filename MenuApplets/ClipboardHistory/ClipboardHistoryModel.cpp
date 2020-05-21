@@ -47,18 +47,6 @@ String ClipboardHistoryModel::column_name(int column) const
     }
 }
 
-GUI::Model::ColumnMetadata ClipboardHistoryModel::column_metadata(int column) const
-{
-    switch (column) {
-    case Column::Data:
-        return { 200 };
-    case Column::Type:
-        return { 100 };
-    default:
-        ASSERT_NOT_REACHED();
-    }
-}
-
 GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, Role) const
 {
     auto& data_and_type = m_history_items[index.row()];

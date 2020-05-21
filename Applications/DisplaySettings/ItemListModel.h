@@ -52,11 +52,6 @@ public:
         return "Data";
     }
 
-    virtual ColumnMetadata column_metadata(int) const override
-    {
-        return { 70 };
-    }
-
     virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
         if (role == Role::TextAlignment)

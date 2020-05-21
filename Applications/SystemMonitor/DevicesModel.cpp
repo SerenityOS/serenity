@@ -73,24 +73,6 @@ String DevicesModel::column_name(int column) const
     }
 }
 
-GUI::Model::ColumnMetadata DevicesModel::column_metadata(int column) const
-{
-    switch (column) {
-    case Column::Device:
-        return { 70 };
-    case Column::Major:
-        return { 32 };
-    case Column::Minor:
-        return { 32 };
-    case Column::ClassName:
-        return { 120 };
-    case Column::Type:
-        return { 120 };
-    default:
-        ASSERT_NOT_REACHED();
-    }
-}
-
 GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
