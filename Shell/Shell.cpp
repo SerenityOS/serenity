@@ -1501,8 +1501,14 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
             if (args.last().type == Token::Comment) // we cannot complete comments
                 return {};
 
-            is_first_in_subcommand = args.size() == 1;
-            token = last_command.args.last().text;
+            if (args.last().end != line.length()) {
+                // There was a token separator at the end
+                is_first_in_subcommand = false;
+                token = "";
+            } else {
+                is_first_in_subcommand = args.size() == 1;
+                token = last_command.args.last().text;
+            }
         }
     }
 
