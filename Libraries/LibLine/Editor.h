@@ -169,9 +169,17 @@ public:
     void stylize(const Span&, const Style&);
     void strip_styles(bool strip_anchored = false);
 
-    void suggest(size_t invariant_offset = 0, size_t index = 0) const
+    // Invariant Offset is an offset into the suggested data, hinting the editor what parts of the suggestion will not change
+    // Static Offset is an offset into the token, signifying where the suggestions start
+    // e.g.
+    //    foobar<suggestion initiated>, on_tab_complete returns "barx", "bary", "barz"
+    //       ^ ^
+    //       +-|- static offset: the suggestions start here
+    //         +- invariant offset: the suggestions do not change up to here
+    void suggest(size_t invariant_offset = 0, size_t static_offset = 0) const
     {
-        m_next_suggestion_index = index;
+        m_next_suggestion_index = 0;
+        m_next_suggestion_static_offset = static_offset;
         m_next_suggestion_invariant_offset = invariant_offset;
     }
 
@@ -207,6 +215,7 @@ private:
     enum class ModificationKind {
         Insertion,
         Removal,
+        ForcedOverlapRemoval,
     };
     void readjust_anchored_styles(size_t hint_index, ModificationKind);
 
@@ -322,6 +331,7 @@ private:
     bool m_last_shown_suggestion_was_complete { false };
     mutable size_t m_next_suggestion_index { 0 };
     mutable size_t m_next_suggestion_invariant_offset { 0 };
+    mutable size_t m_next_suggestion_static_offset { 0 };
     size_t m_largest_common_suggestion_prefix_length { 0 };
     size_t m_last_displayed_suggestion_index { 0 };
 

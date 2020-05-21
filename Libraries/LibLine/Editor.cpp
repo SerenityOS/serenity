@@ -445,7 +445,7 @@ String Editor::get_line(const String& prompt)
                 // reverse tab can count as regular tab here
                 m_times_tab_pressed++;
 
-                int token_start = m_cursor - 1 - m_last_shown_suggestion_display_length;
+                int token_start = m_cursor;
 
                 // ask for completions only on the first tab
                 // and scan for the largest common prefix to display
@@ -523,7 +523,8 @@ String Editor::get_line(const String& prompt)
                         m_refresh_needed = true;
                     }
                     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
-                    m_last_shown_suggestion.token_start_index = token_start - m_next_suggestion_invariant_offset - m_last_shown_suggestion.trailing_trivia.length();
+                    m_last_shown_suggestion.token_start_index = token_start - m_next_suggestion_invariant_offset - m_next_suggestion_static_offset;
+                    dbg() << "Last shown suggestion token start index: " << m_last_shown_suggestion.token_start_index << " Token Start " << token_start << " invariant offset " << m_next_suggestion_invariant_offset;
                     m_last_shown_suggestion_display_length = m_last_shown_suggestion.text.length();
                     m_last_shown_suggestion_was_complete = true;
                     if (m_times_tab_pressed == 1) {
@@ -537,7 +538,8 @@ String Editor::get_line(const String& prompt)
                                 m_times_tab_pressed = 0;
                                 // add in the trivia of the last selected suggestion
                                 insert(m_last_shown_suggestion.trailing_trivia);
-                                m_last_shown_suggestion_display_length += m_last_shown_suggestion.trailing_trivia.length();
+                                m_last_shown_suggestion_display_length = 0;
+                                readjust_anchored_styles(m_last_shown_suggestion.token_start_index, ModificationKind::ForcedOverlapRemoval);
                                 stylize({ m_last_shown_suggestion.token_start_index, m_cursor, Span::Mode::CodepointOriented }, m_last_shown_suggestion.style);
                             }
                         } else {
@@ -659,6 +661,8 @@ String Editor::get_line(const String& prompt)
 
             if (m_times_tab_pressed) {
                 // Apply the style of the last suggestion
+                dbg() << "Last shown suggestion token start index: " << m_last_shown_suggestion.token_start_index << " invariant offset " << m_next_suggestion_invariant_offset << " static offset " << m_next_suggestion_static_offset;
+                readjust_anchored_styles(m_last_shown_suggestion.token_start_index, ModificationKind::ForcedOverlapRemoval);
                 stylize({ m_last_shown_suggestion.token_start_index, m_cursor, Span::Mode::CodepointOriented }, m_last_shown_suggestion.style);
                 // we probably have some suggestions drawn
                 // let's clean them up
@@ -1415,9 +1419,16 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
     };
     Vector<Anchor> anchors_to_relocate;
     auto index_shift = modification == ModificationKind::Insertion ? 1 : -1;
+    auto forced_removal = modification == ModificationKind::ForcedOverlapRemoval;
 
     for (auto& start_entry : m_anchored_spans_starting) {
         for (auto& end_entry : start_entry.value) {
+            if (forced_removal) {
+                if (start_entry.key <= hint_index && end_entry.key >= hint_index) {
+                    // remove any overlapping regions
+                    continue;
+                }
+            }
             if (start_entry.key >= hint_index) {
                 if (start_entry.key == hint_index && end_entry.key == hint_index + 1 && modification == ModificationKind::Removal) {
                     // remove the anchor, as all its text was wiped
@@ -1443,5 +1454,4 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
         stylize(relocation.new_span, relocation.style);
     }
 }
-
 }

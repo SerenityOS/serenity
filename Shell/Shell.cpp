@@ -1540,6 +1540,7 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
     }
 
     String path;
+    String original_token = token;
 
     ssize_t last_slash = token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
@@ -1563,7 +1564,8 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
     // e. in `cd /foo/bar', 'bar' is the invariant
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
-    editor.suggest(escape_token(token).length(), 0);
+    auto token_length = escape_token(token).length();
+    editor.suggest(token_length, original_token.length() - token_length);
 
     // only suggest dot-files if path starts with a dot
     Core::DirIterator files(path,
