@@ -135,9 +135,14 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
         return {};
     if (!callback_object->is_function())
         return interpreter.throw_exception<JS::TypeError>("Not a function");
-    auto interval = interpreter.argument(1).to_i32(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    i32 interval = 0;
+    if (interpreter.argument_count() >= 2) {
+        interval = interpreter.argument(1).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
+
     impl->set_interval(*static_cast<JS::Function*>(callback_object), interval);
     return JS::js_undefined();
 }
