@@ -135,7 +135,7 @@ void TableView::paint_event(PaintEvent& event)
                         if (cell_background_color.is_valid())
                             painter.fill_rect(cell_rect_for_fill, cell_background_color.to_color(background_color));
                     }
-                    auto text_alignment = model()->data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::Center);
+                    auto text_alignment = model()->data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
                     painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                 }
             }

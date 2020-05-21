@@ -293,7 +293,7 @@ void TreeView::paint_event(PaintEvent& event)
                     } else {
                         if (!is_selected_row)
                             text_color = model.data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-                        auto text_alignment = model.data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::Center);
+                        auto text_alignment = model.data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
                         painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                     }
                 }
