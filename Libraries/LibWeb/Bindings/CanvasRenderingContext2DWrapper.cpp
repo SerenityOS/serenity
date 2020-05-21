@@ -160,13 +160,14 @@ JS::Value CanvasRenderingContext2DWrapper::scale(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     if (interpreter.argument_count() >= 2) {
-        auto sx = interpreter.argument(0).to_double(interpreter);
+        auto sx = interpreter.argument(0).to_number(interpreter);
         if (interpreter.exception())
             return {};
-        auto sy = interpreter.argument(1).to_double(interpreter);
+        auto sy = interpreter.argument(1).to_number(interpreter);
         if (interpreter.exception())
             return {};
-        impl->scale(sx, sy);
+        if (sx.is_finite_number() && sy.is_finite_number())
+            impl->scale(sx.as_double(), sy.as_double());
     }
     return JS::js_undefined();
 }
@@ -177,13 +178,14 @@ JS::Value CanvasRenderingContext2DWrapper::translate(JS::Interpreter& interprete
     if (!impl)
         return {};
     if (interpreter.argument_count() >= 2) {
-        auto tx = interpreter.argument(0).to_double(interpreter);
+        auto tx = interpreter.argument(0).to_number(interpreter);
         if (interpreter.exception())
             return {};
-        auto ty = interpreter.argument(1).to_double(interpreter);
+        auto ty = interpreter.argument(1).to_number(interpreter);
         if (interpreter.exception())
             return {};
-        impl->translate(tx, ty);
+        if (tx.is_finite_number() && ty.is_finite_number())
+            impl->translate(tx.as_double(), ty.as_double());
     }
     return JS::js_undefined();
 }
