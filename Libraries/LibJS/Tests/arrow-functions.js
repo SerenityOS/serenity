@@ -55,6 +55,11 @@ try {
     })(10);
     assert(half === 5);
 
+    var foo, bar;
+    foo = bar, baz => {};
+    assert(foo === undefined);
+    assert(bar === undefined);
+
     console.log("PASS");
 } catch {
     console.log("FAIL");

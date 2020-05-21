@@ -287,7 +287,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     i32 function_length = -1;
     while (true) {
         if (match(TokenType::Comma)) {
-            if (has_rest_parameter) {
+            if (has_rest_parameter || !expect_parens) {
                 parse_failed = true;
                 break;
             }
