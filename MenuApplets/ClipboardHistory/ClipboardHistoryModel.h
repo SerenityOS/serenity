@@ -48,7 +48,6 @@ public:
 private:
     virtual int row_count(const GUI::ModelIndex&) const override { return m_history_items.size(); }
     virtual String column_name(int) const override;
-    virtual GUI::Model::ColumnMetadata column_metadata(int column) const override;
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
     virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;

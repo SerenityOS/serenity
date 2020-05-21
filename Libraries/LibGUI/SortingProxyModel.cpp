@@ -74,11 +74,6 @@ String SortingProxyModel::column_name(int index) const
     return target().column_name(index);
 }
 
-Model::ColumnMetadata SortingProxyModel::column_metadata(int index) const
-{
-    return target().column_metadata(index);
-}
-
 Variant SortingProxyModel::data(const ModelIndex& index, Role role) const
 {
     auto target_index = map_to_target(index);

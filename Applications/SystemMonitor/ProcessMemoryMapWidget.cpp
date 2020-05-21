@@ -69,7 +69,6 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 4, 4, 4, 4 });
     m_table_view = add<GUI::TableView>();
-    m_table_view->set_size_columns_to_fit_content(true);
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
     pid_vm_fields.empend("Address", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         return String::format("%#x", object.get("address").to_u32());

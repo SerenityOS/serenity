@@ -34,7 +34,6 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget()
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 4, 4, 4, 4 });
     m_table_view = add<GUI::TableView>();
-    m_table_view->set_size_columns_to_fit_content(true);
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_fds_fields;
     pid_fds_fields.empend("fd", "FD", Gfx::TextAlignment::CenterRight);

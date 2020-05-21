@@ -56,7 +56,6 @@ TreeView::TreeView()
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_size_columns_to_fit_content(true);
     set_headers_visible(false);
     m_expand_bitmap = Gfx::Bitmap::load_from_file("/res/icons/treeview-expand.png");
     m_collapse_bitmap = Gfx::Bitmap::load_from_file("/res/icons/treeview-collapse.png");
@@ -515,9 +514,6 @@ int TreeView::item_count() const
 
 void TreeView::update_column_sizes()
 {
-    if (!size_columns_to_fit_content())
-        return;
-
     if (!model())
         return;
 

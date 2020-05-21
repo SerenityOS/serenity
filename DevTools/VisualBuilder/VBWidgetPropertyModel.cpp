@@ -57,14 +57,6 @@ String VBWidgetPropertyModel::column_name(int column) const
     }
 }
 
-GUI::Model::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) const
-{
-    UNUSED_PARAM(column);
-    if (column == Column::Name)
-        return { 110 };
-    return { 90 };
-}
-
 GUI::Variant VBWidgetPropertyModel::data(const GUI::ModelIndex& index, Role role) const
 {
     if (role == Role::TextAlignment) {

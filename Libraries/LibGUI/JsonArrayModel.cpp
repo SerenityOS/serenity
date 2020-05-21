@@ -91,12 +91,6 @@ bool JsonArrayModel::remove(int row)
     return true;
 }
 
-Model::ColumnMetadata JsonArrayModel::column_metadata(int column) const
-{
-    ASSERT(column < static_cast<int>(m_fields.size()));
-    return { 100 };
-}
-
 Variant JsonArrayModel::data(const ModelIndex& index, Role role) const
 {
     auto& field_spec = m_fields[index.column()];
