@@ -104,7 +104,7 @@ public:
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType);
     void exit_scope(const ScopeNode&);
 
-    Value call(Function&, Value this_value = {}, Optional<MarkedValueList> arguments = {});
+    Value call(Function&, Value this_value, Optional<MarkedValueList> arguments = {});
     Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments = {});
 
     CallFrame& push_call_frame()
