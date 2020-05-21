@@ -35,7 +35,7 @@ class ItemListModel final : public GUI::Model {
 public:
     static NonnullRefPtr<ItemListModel> create(Vector<T>& data) { return adopt(*new ItemListModel<T>(data)); }
 
-    virtual ~ItemListModel() override {}
+    virtual ~ItemListModel() override { }
 
     virtual int row_count(const GUI::ModelIndex&) const override
     {
@@ -54,11 +54,13 @@ public:
 
     virtual ColumnMetadata column_metadata(int) const override
     {
-        return { 70, Gfx::TextAlignment::CenterLeft };
+        return { 70 };
     }
 
     virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
+        if (role == Role::TextAlignment)
+            return Gfx::TextAlignment::CenterLeft;
         if (role == Role::Display)
             return m_data.at(index.row());
 

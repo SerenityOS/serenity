@@ -143,8 +143,6 @@ void ListView::paint_event(PaintEvent& event)
             }
         }
 
-        auto column_metadata = model()->column_metadata(m_model_column);
-
         Gfx::Rect row_rect(0, y, content_width(), item_height());
         painter.fill_rect(row_rect, background_color);
         auto index = model()->index(row_index, m_model_column);
@@ -164,7 +162,8 @@ void ListView::paint_event(PaintEvent& event)
             auto text_rect = row_rect;
             text_rect.move_by(horizontal_padding(), 0);
             text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
-            painter.draw_text(text_rect, data.to_string(), font, column_metadata.text_alignment, text_color);
+            auto text_alignment = model()->data(index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::Center);
+            painter.draw_text(text_rect, data.to_string(), font, text_alignment, text_color);
         }
 
         ++painted_item_index;

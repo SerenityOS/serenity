@@ -77,46 +77,66 @@ GUI::Model::ColumnMetadata DevicesModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Device:
-        return { 70, Gfx::TextAlignment::CenterLeft };
+        return { 70 };
     case Column::Major:
-        return { 32, Gfx::TextAlignment::CenterRight };
+        return { 32 };
     case Column::Minor:
-        return { 32, Gfx::TextAlignment::CenterRight };
+        return { 32 };
     case Column::ClassName:
-        return { 120, Gfx::TextAlignment::CenterLeft };
+        return { 120 };
     case Column::Type:
-        return { 120, Gfx::TextAlignment::CenterLeft };
+        return { 120 };
     default:
         ASSERT_NOT_REACHED();
     }
 }
 
-GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, Role) const
+GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
 
-    const DeviceInfo& device = m_devices[index.row()];
-    switch (index.column()) {
-    case Column::Device:
-        return device.path;
-    case Column::Major:
-        return device.major;
-    case Column::Minor:
-        return device.minor;
-    case Column::ClassName:
-        return device.class_name;
-    case Column::Type:
-        switch (device.type) {
-        case DeviceInfo::Type::Block:
-            return "Block";
-        case DeviceInfo::Type::Character:
-            return "Character";
+    if (role == Role::TextAlignment) {
+        switch (index.column()) {
+        case Column::Device:
+            return Gfx::TextAlignment::CenterLeft;
+        case Column::Major:
+            return Gfx::TextAlignment::CenterRight;
+        case Column::Minor:
+            return Gfx::TextAlignment::CenterRight;
+        case Column::ClassName:
+            return Gfx::TextAlignment::CenterLeft;
+        case Column::Type:
+            return Gfx::TextAlignment::CenterLeft;
+        }
+        return {};
+    }
+
+    if (role == Role::Display) {
+        const DeviceInfo& device = m_devices[index.row()];
+        switch (index.column()) {
+        case Column::Device:
+            return device.path;
+        case Column::Major:
+            return device.major;
+        case Column::Minor:
+            return device.minor;
+        case Column::ClassName:
+            return device.class_name;
+        case Column::Type:
+            switch (device.type) {
+            case DeviceInfo::Type::Block:
+                return "Block";
+            case DeviceInfo::Type::Character:
+                return "Character";
+            default:
+                ASSERT_NOT_REACHED();
+            }
         default:
             ASSERT_NOT_REACHED();
         }
-    default:
-        ASSERT_NOT_REACHED();
     }
+
+    return {};
 }
 
 void DevicesModel::update()

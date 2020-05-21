@@ -48,7 +48,6 @@ class Model : public RefCounted<Model> {
 public:
     struct ColumnMetadata {
         int preferred_width { 0 };
-        Gfx::TextAlignment text_alignment { Gfx::TextAlignment::CenterLeft };
         enum class Sortable {
             False,
             True,
@@ -70,6 +69,7 @@ public:
         Icon,
         Font,
         DragData,
+        TextAlignment,
     };
 
     virtual ~Model();

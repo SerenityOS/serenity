@@ -273,7 +273,6 @@ void TreeView::paint_event(PaintEvent& event)
         for (int column_index = 0; column_index < model.column_count(); ++column_index) {
             if (is_column_hidden(column_index))
                 continue;
-            auto column_metadata = model.column_metadata(column_index);
             int column_width = this->column_width(column_index);
 
             painter.draw_rect(toggle_rect, text_color);
@@ -295,7 +294,8 @@ void TreeView::paint_event(PaintEvent& event)
                     } else {
                         if (!is_selected_row)
                             text_color = model.data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-                        painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
+                        auto text_alignment = model.data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::Center);
+                        painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                     }
                 }
             } else {
