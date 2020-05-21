@@ -40,6 +40,81 @@ try {
     assert(d.writable === true);
     assert(d.value === 9);
 
+    Object.defineProperty(o, "qux", {
+        configurable: true,
+        get() {
+            return o.secret_qux + 1;
+        },
+        set(value) {
+            this.secret_qux = value + 1;
+        },
+    });
+
+    o.qux = 10;
+    assert(o.qux === 12);
+    o.qux = 20;
+    assert(o.qux = 22);
+
+    Object.defineProperty(o, "qux", { configurable: true, value: 4 });
+
+    assert(o.qux === 4);
+    o.qux = 5;
+    assert(o.qux = 4);
+
+    Object.defineProperty(o, "qux", {
+        configurable: false,
+        get() {
+            return this.secret_qux + 2;
+        },
+        set(value) {
+            o.secret_qux = value + 2;
+        },
+    });
+
+    o.qux = 10;
+    assert(o.qux === 14);
+    o.qux = 20;
+    assert(o.qux = 24);
+
+    assertThrowsError(() => {
+        Object.defineProperty(o, "qux", {
+            configurable: false,
+            get() {
+                return this.secret_qux + 2;
+            },
+        });
+    }, {
+        error: TypeError,
+        message: "Cannot change attributes of non-configurable property 'qux'",
+    });
+
+    assertThrowsError(() => {
+        Object.defineProperty(o, "qux", { value: 2 });
+    }, {
+        error: TypeError,
+        message: "Cannot change attributes of non-configurable property 'qux'",
+    });
+
+    assertThrowsError(() => {
+        Object.defineProperty(o, "a", {
+            get() {},
+            value: 9,
+        });
+    }, {
+        error: TypeError,
+        message: "Accessor property descriptors cannot specify a value or writable key",
+    });
+
+    assertThrowsError(() => {
+        Object.defineProperty(o, "a", {
+            set() {},
+            writable: true,
+        });
+    }, {
+        error: TypeError,
+        message: "Accessor property descriptors cannot specify a value or writable key",
+    });
+
     console.log("PASS");
 } catch (e) {
     console.log(e)

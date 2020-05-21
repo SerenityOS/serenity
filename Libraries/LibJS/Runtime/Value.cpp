@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Error.h>
@@ -63,6 +64,12 @@ Function& Value::as_function()
     return static_cast<Function&>(as_object());
 }
 
+Accessor& Value::as_accessor()
+{
+    ASSERT(is_accessor());
+    return static_cast<Accessor&>(*m_value.as_accessor);
+}
+
 String Value::to_string_without_side_effects() const
 {
     if (is_boolean())
@@ -91,6 +98,9 @@ String Value::to_string_without_side_effects() const
 
     if (is_symbol())
         return as_symbol().to_string();
+
+    if (is_accessor())
+        return "<accessor>";
 
     ASSERT(is_object());
     return String::format("[object %s]", as_object().class_name());
@@ -205,6 +215,7 @@ Value Value::to_number(Interpreter& interpreter) const
 {
     switch (m_type) {
     case Type::Empty:
+    case Type::Accessor:
         ASSERT_NOT_REACHED();
         return {};
     case Type::Undefined:
