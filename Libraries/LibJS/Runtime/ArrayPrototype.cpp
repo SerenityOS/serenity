@@ -84,100 +84,85 @@ static Function* callback_from_args(Interpreter& interpreter, const String& name
     return &callback.as_function();
 }
 
-Value ArrayPrototype::filter(Interpreter& interpreter)
+static size_t get_length(Interpreter& interpreter, Object& object)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
-        return {};
-    auto* callback = callback_from_args(interpreter, "filter");
-    if (!callback)
-        return {};
-    auto this_value = interpreter.argument(1);
-    auto initial_array_size = array->elements().size();
-    auto* new_array = Array::create(interpreter.global_object());
+    auto length_property = object.get("length");
+    if (interpreter.exception())
+        return 0;
+    return length_property.to_size_t(interpreter);
+}
 
-    for (size_t i = 0; i < initial_array_size; ++i) {
-        if (i >= array->elements().size())
-            break;
-        auto value = array->elements()[i];
-        if (value.is_empty())
-            continue;
+static void for_each_item(Interpreter& interpreter, const String& name, AK::Function<IterationDecision(size_t index, Value value, Value callback_result)> callback, bool skip_empty = true)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
+        return;
+
+    auto initial_length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return;
+
+    auto* callback_function = callback_from_args(interpreter, name);
+    if (!callback_function)
+        return;
+
+    auto this_value = interpreter.argument(1);
+
+    for (size_t i = 0; i < initial_length; ++i) {
+        auto value = this_object->get_by_index(i);
+        if (value.is_empty()) {
+            if (skip_empty)
+                continue;
+            value = js_undefined();
+        }
+
         MarkedValueList arguments(interpreter.heap());
         arguments.append(value);
         arguments.append(Value((i32)i));
-        arguments.append(array);
-        auto result = interpreter.call(*callback, this_value, move(arguments));
+        arguments.append(this_object);
+
+        auto callback_result = interpreter.call(*callback_function, this_value, move(arguments));
         if (interpreter.exception())
-            return {};
-        if (result.to_boolean())
-            new_array->elements().append(value);
+            return;
+
+        if (callback(i, value, callback_result) == IterationDecision::Break)
+            break;
     }
+}
+
+Value ArrayPrototype::filter(Interpreter& interpreter)
+{
+    auto* new_array = Array::create(interpreter.global_object());
+    for_each_item(interpreter, "filter", [&](auto, auto value, auto callback_result) {
+        if (callback_result.to_boolean())
+            new_array->elements().append(value);
+        return IterationDecision::Continue;
+    });
     return Value(new_array);
 }
 
 Value ArrayPrototype::for_each(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
-        return {};
-    auto* callback = callback_from_args(interpreter, "forEach");
-    if (!callback)
-        return {};
-    auto this_value = interpreter.argument(1);
-    auto initial_array_size = array->elements().size();
-    for (size_t i = 0; i < initial_array_size; ++i) {
-        if (i >= array->elements().size())
-            break;
-        auto value = array->elements()[i];
-        if (value.is_empty())
-            continue;
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(value);
-        arguments.append(Value((i32)i));
-        arguments.append(array);
-        interpreter.call(*callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
-    }
+    for_each_item(interpreter, "forEach", [](auto, auto, auto) {
+        return IterationDecision::Continue;
+    });
     return js_undefined();
 }
 
 Value ArrayPrototype::map(Interpreter& interpreter)
 {
-    // FIXME: Make generic, i.e. work with length and numeric properties only
-    // This should work: Array.prototype.map.call("abc", ch => ...)
-    auto* array = array_from(interpreter);
-    if (!array)
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
         return {};
-
-    auto* callback = callback_from_args(interpreter, "map");
-    if (!callback)
+    auto initial_length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
         return {};
-
-    auto this_value = interpreter.argument(1);
-    auto initial_array_size = array->elements().size();
     auto* new_array = Array::create(interpreter.global_object());
-    new_array->elements().resize(initial_array_size);
-
-    for (size_t i = 0; i < initial_array_size; ++i) {
-        if (i >= array->elements().size())
-            break;
-
-        auto value = array->elements()[i];
-        if (value.is_empty())
-            continue;
-
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(value);
-        arguments.append(Value((i32)i));
-        arguments.append(array);
-
-        auto result = interpreter.call(*callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
-
-        new_array->elements()[i] = result;
-    }
+    new_array->elements().resize(initial_length);
+    for_each_item(interpreter, "map", [&](auto index, auto, auto callback_result) {
+        new_array->elements()[index] = callback_result;
+        return IterationDecision::Continue;
+    });
     return Value(new_array);
 }
 
@@ -452,150 +437,58 @@ Value ArrayPrototype::includes(Interpreter& interpreter)
 
 Value ArrayPrototype::find(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
-        return {};
-
-    auto* callback = callback_from_args(interpreter, "find");
-    if (!callback)
-        return {};
-
-    auto this_value = interpreter.argument(1);
-    auto array_size = array->elements().size();
-
-    for (size_t i = 0; i < array_size; ++i) {
-        auto value = js_undefined();
-        if (i < array->elements().size()) {
-            value = array->elements().at(i);
-            if (value.is_empty())
-                value = js_undefined();
-        }
-
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(value);
-        arguments.append(Value((i32)i));
-        arguments.append(array);
-
-        auto result = interpreter.call(*callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
-
-        if (result.to_boolean())
-            return value;
-    }
-
-    return js_undefined();
+    auto result = js_undefined();
+    for_each_item(
+        interpreter, "find", [&](auto, auto value, auto callback_result) {
+            if (callback_result.to_boolean()) {
+                result = value;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        },
+        false);
+    return result;
 }
 
 Value ArrayPrototype::find_index(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
-        return {};
-
-    auto* callback = callback_from_args(interpreter, "findIndex");
-    if (!callback)
-        return {};
-
-    auto this_value = interpreter.argument(1);
-    auto array_size = array->elements().size();
-
-    for (size_t i = 0; i < array_size; ++i) {
-        auto value = js_undefined();
-        if (i < array->elements().size()) {
-            value = array->elements().at(i);
-            if (value.is_empty())
-                value = js_undefined();
-        }
-
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(value);
-        arguments.append(Value((i32)i));
-        arguments.append(array);
-
-        auto result = interpreter.call(*callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
-
-        if (result.to_boolean())
-            return Value((i32)i);
-    }
-
-    return Value(-1);
+    auto result_index = -1;
+    for_each_item(
+        interpreter, "findIndex", [&](auto index, auto, auto callback_result) {
+            if (callback_result.to_boolean()) {
+                result_index = index;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        },
+        false);
+    return Value(result_index);
 }
 
 Value ArrayPrototype::some(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
-        return {};
-
-    auto* callback = callback_from_args(interpreter, "some");
-    if (!callback)
-        return {};
-
-    auto this_value = interpreter.argument(1);
-    auto array_size = array->elements().size();
-
-    for (size_t i = 0; i < array_size; ++i) {
-        if (i >= array->elements().size())
-            break;
-
-        auto value = array->elements().at(i);
-        if (value.is_empty())
-            continue;
-
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(value);
-        arguments.append(Value((i32)i));
-        arguments.append(array);
-
-        auto result = interpreter.call(*callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
-
-        if (result.to_boolean())
-            return Value(true);
-    }
-
-    return Value(false);
+    auto result = false;
+    for_each_item(interpreter, "some", [&](auto, auto, auto callback_result) {
+        if (callback_result.to_boolean()) {
+            result = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return Value(result);
 }
 
 Value ArrayPrototype::every(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
-        return {};
-
-    auto* callback = callback_from_args(interpreter, "every");
-    if (!callback)
-        return {};
-
-    auto this_value = interpreter.argument(1);
-    auto array_size = array->elements().size();
-
-    for (size_t i = 0; i < array_size; ++i) {
-        if (i >= array->elements().size())
-            break;
-
-        auto value = array->elements().at(i);
-        if (value.is_empty())
-            continue;
-
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(value);
-        arguments.append(Value((i32)i));
-        arguments.append(array);
-
-        auto result = interpreter.call(*callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
-
-        if (!result.to_boolean())
-            return Value(false);
-    }
-
-    return Value(true);
+    auto result = true;
+    for_each_item(interpreter, "every", [&](auto, auto, auto callback_result) {
+        if (!callback_result.to_boolean()) {
+            result = false;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return Value(result);
 }
 
 }
