@@ -35,7 +35,7 @@ public:
     HttpsProtocol();
     virtual ~HttpsProtocol() override;
 
-    virtual OwnPtr<Download> start_download(ClientConnection&, const URL&) override;
+    virtual OwnPtr<Download> start_download(ClientConnection&, const URL&, const HashMap<String, String>& headers) override;
 };
 
 }

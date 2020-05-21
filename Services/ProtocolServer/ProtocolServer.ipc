@@ -10,6 +10,6 @@ endpoint ProtocolServer = 9
     IsSupportedProtocol(String protocol) => (bool supported)
 
     // Download API
-    StartDownload(String url) => (i32 download_id)
+    StartDownload(String url, IPC::Dictionary request_headers) => (i32 download_id)
     StopDownload(i32 download_id) => (bool success)
 }
