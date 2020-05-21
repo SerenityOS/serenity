@@ -34,6 +34,8 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
+#include <AK/Utf32View.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibLine/Span.h>
@@ -45,25 +47,34 @@ namespace Line {
 
 class Editor;
 
+// FIXME: These objects are pretty heavy since they store two copies of text
+//        somehow get rid of one
 struct CompletionSuggestion {
+    friend class Editor;
     // intentionally not explicit (allows suggesting bare strings)
     CompletionSuggestion(const String& completion)
-        : text(completion)
-        , trailing_trivia("")
-        , style()
+        : CompletionSuggestion(completion, "", {})
     {
     }
     CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia)
-        : text(completion)
-        , trailing_trivia(trailing_trivia)
-        , style()
+        : CompletionSuggestion(completion, trailing_trivia, {})
     {
     }
     CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia, Style style)
-        : text(completion)
-        , trailing_trivia(trailing_trivia)
-        , style(style)
+        : style(style)
+        , text_string(completion)
     {
+        Utf8View text_u8 { completion };
+        Utf8View trivia_u8 { trailing_trivia };
+
+        for (auto cp : text_u8)
+            text.append(cp);
+
+        for (auto cp : trivia_u8)
+            this->trailing_trivia.append(cp);
+
+        text_view = Utf32View { text.data(), text.size() };
+        trivia_view = Utf32View { this->trailing_trivia.data(), this->trailing_trivia.size() };
     }
 
     bool operator==(const CompletionSuggestion& suggestion) const
@@ -71,10 +82,15 @@ struct CompletionSuggestion {
         return suggestion.text == text;
     }
 
-    String text;
-    String trailing_trivia;
+    Vector<u32> text;
+    Vector<u32> trailing_trivia;
     Style style;
     size_t token_start_index { 0 };
+
+private:
+    Utf32View text_view;
+    Utf32View trivia_view;
+    String text_string;
 };
 
 struct Configuration {
@@ -165,6 +181,7 @@ public:
 
     void clear_line();
     void insert(const String&);
+    void insert(const Utf32View&);
     void insert(const u32);
     void stylize(const Span&, const Style&);
     void strip_styles(bool strip_anchored = false);

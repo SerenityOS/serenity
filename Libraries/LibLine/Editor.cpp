@@ -78,6 +78,12 @@ void Editor::clear_line()
     m_inline_search_cursor = m_cursor;
 }
 
+void Editor::insert(const Utf32View& string)
+{
+    for (size_t i = 0; i < string.length(); ++i)
+        insert(string.codepoints()[i]);
+}
+
 void Editor::insert(const String& string)
 {
     for (auto ch : Utf8View { string })
@@ -494,17 +500,18 @@ String Editor::get_line(const String& prompt)
                     m_suggestions = on_tab_complete(*this);
                     size_t common_suggestion_prefix { 0 };
                     if (m_suggestions.size() == 1) {
-                        m_largest_common_suggestion_prefix_length = m_suggestions[0].text.length();
+                        m_largest_common_suggestion_prefix_length = m_suggestions[0].text_view.length();
                     } else if (m_suggestions.size()) {
-                        char last_valid_suggestion_char;
+                        u32 last_valid_suggestion_codepoint;
+
                         for (;; ++common_suggestion_prefix) {
-                            if (m_suggestions[0].text.length() <= common_suggestion_prefix)
+                            if (m_suggestions[0].text_view.length() <= common_suggestion_prefix)
                                 goto no_more_commons;
 
-                            last_valid_suggestion_char = m_suggestions[0].text[common_suggestion_prefix];
+                            last_valid_suggestion_codepoint = m_suggestions[0].text_view.codepoints()[common_suggestion_prefix];
 
-                            for (const auto& suggestion : m_suggestions) {
-                                if (suggestion.text.length() <= common_suggestion_prefix || suggestion.text[common_suggestion_prefix] != last_valid_suggestion_char) {
+                            for (auto& suggestion : m_suggestions) {
+                                if (suggestion.text_view.length() <= common_suggestion_prefix || suggestion.text_view.codepoints()[common_suggestion_prefix] != last_valid_suggestion_codepoint) {
                                     goto no_more_commons;
                                 }
                             }
@@ -546,7 +553,7 @@ String Editor::get_line(const String& prompt)
                         case 2:
                             actual_offset = m_cursor - m_largest_common_suggestion_prefix_length + m_next_suggestion_invariant_offset;
                             if (can_complete)
-                                shown_length = m_largest_common_suggestion_prefix_length + m_last_shown_suggestion.trailing_trivia.length();
+                                shown_length = m_largest_common_suggestion_prefix_length + m_last_shown_suggestion.trivia_view.length();
                             break;
                         default:
                             if (m_last_shown_suggestion_display_length == 0)
@@ -558,28 +565,31 @@ String Editor::get_line(const String& prompt)
 
                         for (size_t i = m_next_suggestion_invariant_offset; i < shown_length; ++i)
                             remove_at_index(actual_offset);
+
                         m_cursor = actual_offset;
                         m_inline_search_cursor = m_cursor;
                         m_refresh_needed = true;
                     }
                     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
-                    m_last_shown_suggestion.token_start_index = token_start - m_next_suggestion_invariant_offset - m_next_suggestion_static_offset;
-#ifdef SUGGESTIONS_DEBUG
-                    dbg() << "Last shown suggestion token start index: " << m_last_shown_suggestion.token_start_index << " Token Start " << token_start << " invariant offset " << m_next_suggestion_invariant_offset;
-#endif
-                    m_last_shown_suggestion_display_length = m_last_shown_suggestion.text.length();
+
+                    if (m_last_shown_suggestion_display_length)
+                        m_last_shown_suggestion.token_start_index = token_start - m_next_suggestion_static_offset - m_last_shown_suggestion_display_length;
+                    else
+                        m_last_shown_suggestion.token_start_index = token_start - m_next_suggestion_static_offset - m_next_suggestion_invariant_offset;
+
+                    m_last_shown_suggestion_display_length = m_last_shown_suggestion.text_view.length();
                     m_last_shown_suggestion_was_complete = true;
                     if (m_times_tab_pressed == 1) {
                         // This is the first time, so only auto-complete *if possible*
                         if (can_complete) {
-                            insert(m_last_shown_suggestion.text.substring_view(m_next_suggestion_invariant_offset, m_largest_common_suggestion_prefix_length - m_next_suggestion_invariant_offset));
+                            insert(m_last_shown_suggestion.text_view.substring_view(m_next_suggestion_invariant_offset, m_largest_common_suggestion_prefix_length - m_next_suggestion_invariant_offset));
                             m_last_shown_suggestion_display_length = m_largest_common_suggestion_prefix_length;
                             // do not increment the suggestion index, as the first tab should only be a *peek*
                             if (m_suggestions.size() == 1) {
                                 // if there's one suggestion, commit and forget
                                 m_times_tab_pressed = 0;
                                 // add in the trivia of the last selected suggestion
-                                insert(m_last_shown_suggestion.trailing_trivia);
+                                insert(m_last_shown_suggestion.trivia_view);
                                 m_last_shown_suggestion_display_length = 0;
                                 readjust_anchored_styles(m_last_shown_suggestion.token_start_index, ModificationKind::ForcedOverlapRemoval);
                                 stylize({ m_last_shown_suggestion.token_start_index, m_cursor, Span::Mode::CodepointOriented }, m_last_shown_suggestion.style);
@@ -590,10 +600,10 @@ String Editor::get_line(const String& prompt)
                         ++m_times_tab_pressed;
                         m_last_shown_suggestion_was_complete = false;
                     } else {
-                        insert(m_last_shown_suggestion.text.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.text.length() - m_next_suggestion_invariant_offset));
+                        insert(m_last_shown_suggestion.text_view.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.text_view.length() - m_next_suggestion_invariant_offset));
                         // add in the trivia of the last selected suggestion
-                        insert(m_last_shown_suggestion.trailing_trivia);
-                        m_last_shown_suggestion_display_length += m_last_shown_suggestion.trailing_trivia.length();
+                        insert(m_last_shown_suggestion.trivia_view);
+                        m_last_shown_suggestion_display_length += m_last_shown_suggestion.trivia_view.length();
                         if (m_tab_direction == TabDirection::Forward)
                             increment_suggestion_index();
                         else
@@ -605,12 +615,14 @@ String Editor::get_line(const String& prompt)
 
                 if (m_times_tab_pressed > 1 && !m_suggestions.is_empty()) {
                     size_t longest_suggestion_length = 0;
+                    size_t longest_suggestion_byte_length = 0;
                     size_t start_index = 0;
 
                     for (auto& suggestion : m_suggestions) {
                         if (start_index++ < m_last_displayed_suggestion_index)
                             continue;
-                        longest_suggestion_length = max(longest_suggestion_length, suggestion.text.length());
+                        longest_suggestion_length = max(longest_suggestion_length, suggestion.text_view.length());
+                        longest_suggestion_byte_length = max(longest_suggestion_byte_length, suggestion.text_string.length());
                     }
 
                     size_t num_printed = 0;
@@ -638,10 +650,10 @@ String Editor::get_line(const String& prompt)
                             ++index;
                             continue;
                         }
-                        size_t next_column = num_printed + suggestion.text.length() + longest_suggestion_length + 2;
+                        size_t next_column = num_printed + suggestion.text_view.length() + longest_suggestion_length + 2;
 
                         if (next_column > m_num_columns) {
-                            auto lines = (suggestion.text.length() + m_num_columns - 1) / m_num_columns;
+                            auto lines = (suggestion.text_view.length() + m_num_columns - 1) / m_num_columns;
                             lines_used += lines;
                             putchar('\n');
                             num_printed = 0;
@@ -660,9 +672,10 @@ String Editor::get_line(const String& prompt)
 
                         if (spans_entire_line) {
                             num_printed += m_num_columns;
-                            fprintf(stderr, "%s", suggestion.text.characters());
+                            fprintf(stderr, "%s", suggestion.text_string.characters());
                         } else {
-                            num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.text.characters());
+                            fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_byte_length) + 2, suggestion.text_string.characters());
+                            num_printed += longest_suggestion_length + 2;
                         }
 
                         if (m_last_shown_suggestion_was_complete && index == current_suggestion_index) {
@@ -703,9 +716,6 @@ String Editor::get_line(const String& prompt)
 
             if (m_times_tab_pressed) {
                 // Apply the style of the last suggestion
-#ifdef SUGGESTIONS_DEBUG
-                dbg() << "Last shown suggestion token start index: " << m_last_shown_suggestion.token_start_index << " invariant offset " << m_next_suggestion_invariant_offset << " static offset " << m_next_suggestion_static_offset;
-#endif
                 readjust_anchored_styles(m_last_shown_suggestion.token_start_index, ModificationKind::ForcedOverlapRemoval);
                 stylize({ m_last_shown_suggestion.token_start_index, m_cursor, Span::Mode::CodepointOriented }, m_last_shown_suggestion.style);
                 // we probably have some suggestions drawn
@@ -858,11 +868,12 @@ String Editor::get_line(const String& prompt)
 
                     // manually cleanup the search line
                     reposition_cursor();
-                    vt_clear_lines(0, (search_string.length() + actual_rendered_string_length(search_prompt) + m_num_columns - 1) / m_num_columns);
+                    auto search_string_codepoint_length = Utf8View { search_string }.length_in_codepoints();
+                    vt_clear_lines(0, (search_string_codepoint_length + actual_rendered_string_length(search_prompt) + m_num_columns - 1) / m_num_columns);
 
                     reposition_cursor();
 
-                    if (!m_reset_buffer_on_search_end || search_string.length() == 0) {
+                    if (!m_reset_buffer_on_search_end || search_string_codepoint_length == 0) {
                         // if the entry was empty, or we purposely quit without a newline,
                         // do not return anything
                         // instead, just end the search
