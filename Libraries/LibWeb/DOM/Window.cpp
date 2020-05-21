@@ -68,7 +68,8 @@ void Window::set_interval(JS::Function& callback, i32 interval)
     (void)Core::Timer::construct(interval, [handle = make_handle(&callback)] {
         auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
         auto& interpreter = function.interpreter();
-        interpreter.call(function);
+        auto& window = static_cast<Bindings::WindowObject&>(interpreter.global_object());
+        interpreter.call(function, &window);
     }).leak_ref();
 }
 
@@ -78,7 +79,8 @@ void Window::set_timeout(JS::Function& callback, i32 interval)
     auto& timer = Core::Timer::construct(interval, [handle = make_handle(&callback)] {
         auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
         auto& interpreter = function.interpreter();
-        interpreter.call(function);
+        auto& window = static_cast<Bindings::WindowObject&>(interpreter.global_object());
+        interpreter.call(function, &window);
     }).leak_ref();
     timer.set_single_shot(true);
 }
