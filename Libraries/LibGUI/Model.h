@@ -49,7 +49,6 @@ public:
     struct ColumnMetadata {
         int preferred_width { 0 };
         Gfx::TextAlignment text_alignment { Gfx::TextAlignment::CenterLeft };
-        const Gfx::Font* font { nullptr };
         enum class Sortable {
             False,
             True,

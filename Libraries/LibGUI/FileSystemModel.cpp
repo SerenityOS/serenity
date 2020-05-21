@@ -552,7 +552,7 @@ Model::ColumnMetadata FileSystemModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return { 16, Gfx::TextAlignment::Center, nullptr, Model::ColumnMetadata::Sortable::False };
+        return { 16, Gfx::TextAlignment::Center, Model::ColumnMetadata::Sortable::False };
     case Column::Name:
         return { 120, Gfx::TextAlignment::CenterLeft };
     case Column::Size:

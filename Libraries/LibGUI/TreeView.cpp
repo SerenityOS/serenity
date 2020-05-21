@@ -275,7 +275,6 @@ void TreeView::paint_event(PaintEvent& event)
                 continue;
             auto column_metadata = model.column_metadata(column_index);
             int column_width = this->column_width(column_index);
-            auto& font = column_metadata.font ? *column_metadata.font : this->font();
 
             painter.draw_rect(toggle_rect, text_color);
 
@@ -296,7 +295,7 @@ void TreeView::paint_event(PaintEvent& event)
                     } else {
                         if (!is_selected_row)
                             text_color = model.data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-                        painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
+                        painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
                     }
                 }
             } else {
@@ -316,7 +315,7 @@ void TreeView::paint_event(PaintEvent& event)
                     rect.width() - icon_size() - icon_spacing(), rect.height()
                 };
                 auto node_text = model.data(index, Model::Role::Display).to_string();
-                painter.draw_text(text_rect, node_text, Gfx::TextAlignment::Center, text_color);
+                painter.draw_text(text_rect, node_text, font_for_index(index), Gfx::TextAlignment::Center, text_color);
                 auto index_at_indent = index;
                 for (int i = indent_level; i > 0; --i) {
                     auto parent_of_index_at_indent = index_at_indent.parent();
