@@ -105,7 +105,6 @@ void TableView::paint_event(PaintEvent& event)
                 continue;
             auto column_metadata = model()->column_metadata(column_index);
             int column_width = this->column_width(column_index);
-            const Gfx::Font& font = column_metadata.font ? *column_metadata.font : this->font();
             bool is_key_column = model()->key_column() == column_index;
             Gfx::Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
@@ -137,7 +136,7 @@ void TableView::paint_event(PaintEvent& event)
                         if (cell_background_color.is_valid())
                             painter.fill_rect(cell_rect_for_fill, cell_background_color.to_color(background_color));
                     }
-                    painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
+                    painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
                 }
             }
             x_offset += column_width + horizontal_padding() * 2;
@@ -196,6 +195,5 @@ void TableView::keydown_event(KeyEvent& event)
     }
     return Widget::keydown_event(event);
 }
-
 
 }

@@ -75,6 +75,11 @@ public:
 
     virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
+        if (role == Role::Font) {
+            if (index.column() == Column::MatchedText)
+                return Gfx::Font::default_fixed_width_font();
+            return {};
+        }
         if (role == Role::Display) {
             auto& match = m_matches.at(index.row());
             switch (index.column()) {
@@ -92,12 +97,12 @@ public:
     virtual ColumnMetadata column_metadata(int column) const override
     {
         if (column == Column::MatchedText) {
-            return { 0, Gfx::TextAlignment::CenterLeft, &Gfx::Font::default_fixed_width_font() };
+            return { 0, Gfx::TextAlignment::CenterLeft };
         }
         return {};
     }
 
-    virtual void update() override {}
+    virtual void update() override { }
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override { return create_index(row, column, &m_matches.at(row)); }
 
 private:
