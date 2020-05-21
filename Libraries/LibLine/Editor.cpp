@@ -35,6 +35,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+// #define SUGGESTIONS_DEBUG
+
 namespace Line {
 
 Editor::Editor(Configuration configuration)
@@ -524,7 +526,9 @@ String Editor::get_line(const String& prompt)
                     }
                     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
                     m_last_shown_suggestion.token_start_index = token_start - m_next_suggestion_invariant_offset - m_next_suggestion_static_offset;
+#ifdef SUGGESTIONS_DEBUG
                     dbg() << "Last shown suggestion token start index: " << m_last_shown_suggestion.token_start_index << " Token Start " << token_start << " invariant offset " << m_next_suggestion_invariant_offset;
+#endif
                     m_last_shown_suggestion_display_length = m_last_shown_suggestion.text.length();
                     m_last_shown_suggestion_was_complete = true;
                     if (m_times_tab_pressed == 1) {
@@ -661,7 +665,9 @@ String Editor::get_line(const String& prompt)
 
             if (m_times_tab_pressed) {
                 // Apply the style of the last suggestion
+#ifdef SUGGESTIONS_DEBUG
                 dbg() << "Last shown suggestion token start index: " << m_last_shown_suggestion.token_start_index << " invariant offset " << m_next_suggestion_invariant_offset << " static offset " << m_next_suggestion_static_offset;
+#endif
                 readjust_anchored_styles(m_last_shown_suggestion.token_start_index, ModificationKind::ForcedOverlapRemoval);
                 stylize({ m_last_shown_suggestion.token_start_index, m_cursor, Span::Mode::CodepointOriented }, m_last_shown_suggestion.style);
                 // we probably have some suggestions drawn
