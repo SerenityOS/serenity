@@ -176,12 +176,8 @@ public:
     //       ^ ^
     //       +-|- static offset: the suggestions start here
     //         +- invariant offset: the suggestions do not change up to here
-    void suggest(size_t invariant_offset = 0, size_t static_offset = 0) const
-    {
-        m_next_suggestion_index = 0;
-        m_next_suggestion_static_offset = static_offset;
-        m_next_suggestion_invariant_offset = invariant_offset;
-    }
+    //
+    void suggest(size_t invariant_offset = 0, size_t static_offset = 0, Span::Mode offset_mode = Span::ByteOriented) const;
 
     const struct termios& termios() const { return m_termios; }
     const struct termios& default_termios() const { return m_default_termios; }
@@ -292,6 +288,12 @@ private:
 
     void recalculate_origin();
     void reposition_cursor();
+
+    struct CodepointRange {
+        size_t start { 0 };
+        size_t end { 0 };
+    };
+    CodepointRange byte_offset_range_to_codepoint_offset_range(size_t byte_start, size_t byte_end, size_t codepoint_scan_offset, bool reverse = false) const;
 
     bool m_finish { false };
 
