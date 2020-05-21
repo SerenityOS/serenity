@@ -128,6 +128,44 @@ static size_t codepoint_length_in_utf8(u32 codepoint)
     return 3;
 }
 
+// buffer [ 0 1 2 3 . . . A . . . B . . . M . . . N ]
+//                        ^       ^       ^       ^
+//                        |       |       |       +- end of buffer
+//                        |       |       +- scan offset = M
+//                        |       +- range end = M - B
+//                        +- range start = M - A
+// This method converts a byte range defined by [start_byte_offset, end_byte_offset] to a codepoint range [M - A, M - B] as shown in the diagram above.
+// If `reverse' is true, A and B are before M, if not, A and B are after M.
+Editor::CodepointRange Editor::byte_offset_range_to_codepoint_offset_range(size_t start_byte_offset, size_t end_byte_offset, size_t scan_codepoint_offset, bool reverse) const
+{
+    size_t byte_offset = 0;
+    size_t codepoint_offset = scan_codepoint_offset + (reverse ? 1 : 0);
+    CodepointRange range;
+
+    for (;;) {
+        if (!reverse) {
+            if (codepoint_offset >= m_buffer.size())
+                break;
+        } else {
+            if (codepoint_offset == 0)
+                break;
+        }
+
+        if (byte_offset > end_byte_offset)
+            break;
+
+        if (byte_offset < start_byte_offset)
+            ++range.start;
+
+        if (byte_offset < end_byte_offset)
+            ++range.end;
+
+        byte_offset += codepoint_length_in_utf8(m_buffer[reverse ? --codepoint_offset : codepoint_offset++]);
+    }
+
+    return range;
+}
+
 void Editor::stylize(const Span& span, const Style& style)
 {
     if (style.is_empty())
@@ -137,27 +175,10 @@ void Editor::stylize(const Span& span, const Style& style)
     auto end = span.end();
 
     if (span.mode() == Span::ByteOriented) {
-        size_t byte_offset = 0;
-        size_t codepoint_offset = 0;
-        size_t start_codepoint_offset = 0, end_codepoint_offset = 0;
+        auto offsets = byte_offset_range_to_codepoint_offset_range(start, end, 0);
 
-        for (;;) {
-            if (codepoint_offset >= m_buffer.size())
-                break;
-
-            if (byte_offset > end)
-                break;
-
-            if (byte_offset < start)
-                ++start_codepoint_offset;
-
-            ++end_codepoint_offset;
-
-            byte_offset += codepoint_length_in_utf8(m_buffer[codepoint_offset++]);
-        }
-
-        start = start_codepoint_offset;
-        end = end_codepoint_offset;
+        start = offsets.start;
+        end = offsets.end;
     }
 
     auto& spans_starting = style.is_anchored() ? m_anchored_spans_starting : m_spans_starting;
@@ -179,6 +200,23 @@ void Editor::stylize(const Span& span, const Style& style)
     ending_map.set(start, style);
 
     spans_ending.set(end, ending_map);
+}
+
+void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode offset_mode) const
+{
+    m_next_suggestion_index = 0;
+    auto internal_static_offset = static_offset;
+    auto internal_invariant_offset = invariant_offset;
+    if (offset_mode == Span::Mode::ByteOriented) {
+        // FIXME: We're assuming that invariant_offset points to the end of the available data
+        //        this is not necessarily true, but is true in most cases.
+        auto offsets = byte_offset_range_to_codepoint_offset_range(internal_static_offset, internal_invariant_offset + internal_static_offset, m_cursor - 1, true);
+
+        internal_static_offset = offsets.start;
+        internal_invariant_offset = offsets.end - offsets.start;
+    }
+    m_next_suggestion_static_offset = internal_static_offset;
+    m_next_suggestion_invariant_offset = internal_invariant_offset;
 }
 
 String Editor::get_line(const String& prompt)
@@ -653,7 +691,7 @@ String Editor::get_line(const String& prompt)
                     // we have none, or just one suggestion
                     // we should just commit that and continue
                     // after it, as if it were auto-completed
-                    suggest(0, 0);
+                    suggest(0, 0, Span::CodepointOriented);
                     m_last_shown_suggestion = String::empty();
                     m_last_shown_suggestion_display_length = 0;
                     m_suggestions.clear();
@@ -682,7 +720,7 @@ String Editor::get_line(const String& prompt)
                 m_last_shown_suggestion = String::empty();
                 m_last_displayed_suggestion_index = 0;
                 m_suggestions.clear();
-                suggest(0, 0);
+                suggest(0, 0, Span::CodepointOriented);
             }
             m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
@@ -1430,7 +1468,7 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
     for (auto& start_entry : m_anchored_spans_starting) {
         for (auto& end_entry : start_entry.value) {
             if (forced_removal) {
-                if (start_entry.key <= hint_index && end_entry.key >= hint_index) {
+                if (start_entry.key <= hint_index && end_entry.key > hint_index) {
                     // remove any overlapping regions
                     continue;
                 }
