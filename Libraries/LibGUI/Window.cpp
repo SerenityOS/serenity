@@ -761,7 +761,13 @@ void Window::set_size_increment(const Gfx::Size& size_increment)
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
 }
 
-void Window::did_remove_widget(Badge<Widget>, const Widget& widget)
+void Window::did_add_widget(Badge<Widget>, Widget& widget)
+{
+    if (!m_focused_widget && widget.accepts_focus())
+        set_focused_widget(&widget);
+}
+
+void Window::did_remove_widget(Badge<Widget>, Widget& widget)
 {
     if (m_focused_widget == &widget)
         m_focused_widget = nullptr;
