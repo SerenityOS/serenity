@@ -28,6 +28,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
+#include <LibWeb/ResourceLoader.h>
 
 namespace Web {
 namespace Bindings {
@@ -40,12 +41,19 @@ NavigatorObject::NavigatorObject()
     put("appVersion", js_string(heap(), "4.0"));
     put("platform", js_string(heap(), "SerenityOS"));
     put("product", js_string(heap(), "Gecko"));
-    put("userAgent", js_string(heap(), "Mozilla/4.0 (SerenityOS; x86) LibWeb+LibJS (Not KHTML, nor Gecko) LibWeb"));
+
+    put_native_property("userAgent", user_agent_getter, nullptr);
 }
 
 NavigatorObject::~NavigatorObject()
 {
 }
 
+JS::Value NavigatorObject::user_agent_getter(JS::Interpreter& interpreter)
+{
+    return JS::js_string(interpreter, ResourceLoader::the().user_agent());
 }
+
+}
+
 }

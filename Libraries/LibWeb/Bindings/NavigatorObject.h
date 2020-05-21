@@ -39,6 +39,8 @@ public:
 
 private:
     virtual const char* class_name() const override { return "NavigatorObject"; }
+
+    static JS::Value user_agent_getter(JS::Interpreter&);
 };
 
 }
