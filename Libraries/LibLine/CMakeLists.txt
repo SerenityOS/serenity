@@ -1,5 +1,7 @@
 set(SOURCES
     Editor.cpp
+    SuggestionManager.cpp
+    XtermSuggestionDisplay.cpp
 )
 
 serenity_lib(LibLine line)
