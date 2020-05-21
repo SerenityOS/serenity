@@ -49,7 +49,7 @@ String IdentifierStyleValue::to_string() const
     case CSS::ValueID::Invalid:
         return "(invalid)";
     case CSS::ValueID::VendorSpecificLink:
-        return "-libhtml-link";
+        return "-libweb-link";
     default:
         ASSERT_NOT_REACHED();
     }
