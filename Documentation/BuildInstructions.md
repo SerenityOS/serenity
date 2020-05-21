@@ -10,11 +10,6 @@ Make sure you have all the dependencies installed:
 sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
 ```
 
-On Docker, install these as well:
-```bash
-sudo apt install wget genext2fs
-```
-
 **Fedora**
 ```bash
 sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Development Tools and Libraries" @Virtualization
