@@ -57,6 +57,7 @@ private:
     static Value find(Interpreter&);
     static Value find_index(Interpreter&);
     static Value some(Interpreter&);
+    static Value every(Interpreter&);
 };
 
 }
