@@ -572,7 +572,7 @@ Model::ColumnMetadata FileSystemModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return { 16, Model::ColumnMetadata::Sortable::False };
+        return { 16 };
     case Column::Name:
         return { 120 };
     case Column::Size:

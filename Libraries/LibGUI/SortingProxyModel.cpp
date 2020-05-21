@@ -153,4 +153,9 @@ void SortingProxyModel::resort()
     });
 }
 
+bool SortingProxyModel::is_column_sortable(int column_index) const
+{
+    return target().is_column_sortable(column_index);
+}
+
 }

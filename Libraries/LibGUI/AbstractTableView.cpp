@@ -150,7 +150,7 @@ void AbstractTableView::paint_headers(Painter& painter)
         bool is_key_column = model()->key_column() == column_index;
         Gfx::Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
-        bool hovered = column_index == m_hovered_column_header_index && model()->column_metadata(column_index).sortable == Model::ColumnMetadata::Sortable::True;
+        bool hovered = column_index == m_hovered_column_header_index && model()->is_column_sortable(column_index);
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
         String text;
         if (is_key_column) {
@@ -372,8 +372,7 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
                 return;
             }
             auto header_rect = this->header_rect(i);
-            auto column_metadata = model()->column_metadata(i);
-            if (header_rect.contains(horizontally_adjusted_position) && column_metadata.sortable == Model::ColumnMetadata::Sortable::True) {
+            if (header_rect.contains(horizontally_adjusted_position) && model()->is_column_sortable(i)) {
                 m_pressed_column_header_index = i;
                 m_pressed_column_header_is_pressed = true;
                 update_headers();
