@@ -48,11 +48,6 @@ class Model : public RefCounted<Model> {
 public:
     struct ColumnMetadata {
         int preferred_width { 0 };
-        enum class Sortable {
-            False,
-            True,
-        };
-        Sortable sortable { Sortable::True };
     };
 
     enum UpdateFlag {
@@ -88,6 +83,8 @@ public:
     virtual void set_data(const ModelIndex&, const Variant&) {}
     virtual int tree_column() const { return 0; }
     virtual bool accepts_drag(const ModelIndex&, const StringView& data_type);
+
+    virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
 
     bool is_valid(const ModelIndex& index) const
     {

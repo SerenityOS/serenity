@@ -148,6 +148,7 @@ public:
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
     virtual StringView drag_data_type() const override { return "text/uri-list"; }
     virtual bool accepts_drag(const ModelIndex&, const StringView& data_type) override;
+    virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
 
     static String timestamp_string(time_t timestamp)
     {
