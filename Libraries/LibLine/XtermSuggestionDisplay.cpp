@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/BinarySearch.h>
 #include <AK/Function.h>
+#include <AK/StringBuilder.h>
 #include <LibLine/SuggestionDisplay.h>
 #include <LibLine/VT.h>
 #include <stdio.h>
@@ -43,7 +45,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     });
 
     size_t num_printed = 0;
-    size_t lines_used { 1 };
+    size_t lines_used = 1;
 
     VT::save_cursor();
     VT::clear_lines(0, m_lines_used_for_last_suggestions);
@@ -62,7 +64,44 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         lines_used += max_line_count;
         longest_suggestion_length = 0;
     }
+
     VT::move_absolute(max_line_count + m_origin_x, 1);
+
+    if (m_pages.is_empty()) {
+        size_t num_printed = 0;
+        size_t lines_used = 1;
+        // cache the pages
+        manager.set_start_index(0);
+        size_t page_start = 0;
+        manager.for_each_suggestion([&](auto& suggestion, auto index) {
+            size_t next_column = num_printed + suggestion.text_view.length() + longest_suggestion_length + 2;
+            if (next_column > m_num_columns) {
+                auto lines = (suggestion.text_view.length() + m_num_columns - 1) / m_num_columns;
+                lines_used += lines;
+                num_printed = 0;
+            }
+
+            if (lines_used + m_prompt_lines_at_suggestion_initiation >= m_num_lines) {
+                m_pages.append({ page_start, index });
+                page_start = index;
+                lines_used = 1;
+                num_printed = 0;
+            }
+
+            if (spans_entire_line)
+                num_printed += m_num_columns;
+            else
+                num_printed += longest_suggestion_length + 2;
+
+            return IterationDecision::Continue;
+        });
+        // last page
+        m_pages.append({ page_start, manager.count() });
+    }
+
+    auto page_index = fit_to_page_boundary(manager.next_index());
+
+    manager.set_start_index(m_pages[page_index].start);
 
     manager.for_each_suggestion([&](auto& suggestion, auto index) {
         size_t next_column = num_printed + suggestion.text_view.length() + longest_suggestion_length + 2;
@@ -106,6 +145,23 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     if (m_origin_x + lines_used >= m_num_lines) {
         m_origin_x = m_num_lines - lines_used;
     }
+
+    if (m_pages.size() > 1) {
+        auto left_arrow = page_index > 0 ? '<' : ' ';
+        auto right_arrow = page_index < m_pages.size() - 1 ? '>' : ' ';
+        auto string = String::format("%c page %d of %d %c", left_arrow, page_index + 1, m_pages.size(), right_arrow);
+
+        if (string.length() > m_num_columns - 1) {
+            // this would overflow into the next line, so just don't print an indicator
+            return;
+        }
+
+        VT::move_absolute(m_origin_x + lines_used, m_num_columns - string.length() - 1);
+        VT::apply_style({ Style::Background(Style::XtermColor::Green) });
+        fputs(string.characters(), stdout);
+        VT::apply_style(Style::reset_style());
+        fflush(stdout);
+    }
 }
 
 bool XtermSuggestionDisplay::cleanup()
@@ -117,6 +173,25 @@ bool XtermSuggestionDisplay::cleanup()
     }
 
     return false;
+}
+
+size_t XtermSuggestionDisplay::fit_to_page_boundary(size_t selection_index)
+{
+    ASSERT(m_pages.size() > 0);
+    int index = 0;
+
+    auto* match = binary_search(
+        m_pages.data(), m_pages.size(), { selection_index, selection_index }, [](auto& a, auto& b) -> int {
+            if (a.start >= b.start && a.start < b.end)
+                return 0;
+            return a.start - b.start;
+        },
+        &index);
+
+    if (!match)
+        return m_pages.size() - 1;
+
+    return index;
 }
 
 }
