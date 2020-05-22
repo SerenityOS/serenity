@@ -43,6 +43,15 @@ try {
         assert(Array.prototype.toString.call({ join: () => "foo" }) === "foo");
     }
 
+    {
+        assert(Array.prototype.indexOf.call({}) === -1);
+        assert(Array.prototype.indexOf.call({ 0: undefined }) === -1);
+        assert(Array.prototype.indexOf.call({ length: 1, 0: undefined }) === 0);
+        assert(Array.prototype.indexOf.call({ length: 1, 2: "foo" }, "foo") === -1);
+        assert(Array.prototype.indexOf.call({ length: 5, 2: "foo" }, "foo") === 2);
+        assert(Array.prototype.indexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo", 3) === 4);
+    }
+
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
     {

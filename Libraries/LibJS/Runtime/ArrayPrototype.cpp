@@ -357,35 +357,32 @@ Value ArrayPrototype::slice(Interpreter& interpreter)
 
 Value ArrayPrototype::index_of(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
         return {};
-
-    i32 array_size = static_cast<i32>(array->elements().size());
-    if (array_size == 0)
+    i32 length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+    if (length == 0)
         return Value(-1);
-
     i32 from_index = 0;
     if (interpreter.argument_count() >= 2) {
         from_index = interpreter.argument(1).to_i32(interpreter);
         if (interpreter.exception())
             return {};
-        if (from_index >= array_size)
+        if (from_index >= length)
             return Value(-1);
-        auto negative_min_index = ((array_size - 1) * -1);
-        if (from_index < negative_min_index)
-            from_index = 0;
-        else if (from_index < 0)
-            from_index = array_size + from_index;
+        if (from_index < 0)
+            from_index = max(length + from_index, 0);
     }
-
     auto search_element = interpreter.argument(0);
-    for (i32 i = from_index; i < array_size; ++i) {
-        auto& element = array->elements().at(i);
+    for (i32 i = from_index; i < length; ++i) {
+        auto element = this_object->get_by_index(i);
+        if (interpreter.exception())
+            return {};
         if (strict_eq(interpreter, element, search_element))
             return Value(i);
     }
-
     return Value(-1);
 }
 
