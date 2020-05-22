@@ -206,7 +206,7 @@ protected:
     Vector<u8> get_pci_bus_ids() const;
 
     PhysicalAddress search_floating_pointer();
-    PhysicalAddress search_floating_pointer_in_ebda(u16 ebda_segment);
+    PhysicalAddress search_floating_pointer_in_ebda();
     PhysicalAddress search_floating_pointer_in_bios_area();
 
     PhysicalAddress m_floating_pointer;

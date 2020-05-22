@@ -5,6 +5,7 @@ set(KERNEL_SOURCES
     ACPI/MultiProcessorParser.cpp
     ACPI/Parser.cpp
     Arch/i386/CPU.cpp
+    Arch/PC/BIOS.cpp
     CMOS.cpp
     CommandLine.cpp
     Console.cpp
