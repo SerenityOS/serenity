@@ -32,6 +32,7 @@ namespace Line {
 CompletionSuggestion::CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia, Style style)
     : style(style)
     , text_string(completion)
+    , is_valid(true)
 {
     Utf8View text_u8 { completion };
     Utf8View trivia_u8 { trailing_trivia };
@@ -49,6 +50,11 @@ CompletionSuggestion::CompletionSuggestion(const StringView& completion, const S
 void SuggestionManager::set_suggestions(Vector<CompletionSuggestion>&& suggestions)
 {
     m_suggestions = move(suggestions);
+
+    // make sure we were not given invalid suggestions
+    for (auto& suggestion : m_suggestions)
+        ASSERT(suggestion.is_valid);
+
     size_t common_suggestion_prefix { 0 };
     if (m_suggestions.size() == 1) {
         m_largest_common_suggestion_prefix_length = m_suggestions[0].text_view.length();
