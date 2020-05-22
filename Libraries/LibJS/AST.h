@@ -722,17 +722,24 @@ private:
 
 class ObjectProperty final : public ASTNode {
 public:
-    ObjectProperty(NonnullRefPtr<Expression> key, NonnullRefPtr<Expression> value)
+    enum class Type {
+        KeyValue,
+        Getter,
+        Setter,
+        Spread,
+    };
+
+    ObjectProperty(NonnullRefPtr<Expression> key, NonnullRefPtr<Expression> value, Type property_type)
         : m_key(move(key))
         , m_value(move(value))
+        , m_property_type(property_type)
     {
     }
 
     const Expression& key() const { return m_key; }
     const Expression& value() const { return m_value; }
 
-    bool is_spread() const { return m_is_spread; }
-    void set_is_spread() { m_is_spread = true; }
+    Type type() const { return m_property_type; }
 
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&) const override;
@@ -742,7 +749,7 @@ private:
 
     NonnullRefPtr<Expression> m_key;
     NonnullRefPtr<Expression> m_value;
-    bool m_is_spread { false };
+    Type m_property_type;
 };
 
 class ObjectExpression : public Expression {

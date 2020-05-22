@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -1129,7 +1130,7 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
         if (interpreter.exception())
             return {};
 
-        if (property.is_spread()) {
+        if (property.type() == ObjectProperty::Type::Spread) {
             if (key_result.is_array()) {
                 auto& array_to_spread = static_cast<Array&>(key_result.as_object());
                 auto& elements = array_to_spread.elements();
@@ -1163,8 +1164,34 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
         auto value = property.value().execute(interpreter);
         if (interpreter.exception())
             return {};
-        update_function_name(value, key);
-        object->put(key, value);
+
+        String name = key;
+        if (property.type() == ObjectProperty::Type::Getter) {
+            name = String::format("get %s", key.characters());
+        } else if (property.type() == ObjectProperty::Type::Setter) {
+            name = String::format("set %s", key.characters());
+        }
+
+        update_function_name(value, name);
+
+        if (property.type() == ObjectProperty::Type::Getter || property.type() == ObjectProperty::Type::Setter) {
+            Value getter;
+            Value setter;
+            auto existing_property_metadata = object->shape().lookup(key);
+            Value existing_property;
+            if (existing_property_metadata.has_value())
+                existing_property = object->get_direct(existing_property_metadata.value().offset);
+            if (property.type() == ObjectProperty::Type::Getter) {
+                getter = value;
+                setter = existing_property.is_accessor() ? existing_property.as_accessor().setter() : Value();
+            } else {
+                getter = existing_property.is_accessor() ? existing_property.as_accessor().getter() : Value();
+                setter = value;
+            }
+            object->put_own_property(*object, key, Attribute::Configurable | Attribute::Enumerable, Accessor::create(interpreter, getter, setter), Object::PutOwnPropertyMode::DefineProperty);
+        } else {
+            object->put(key, value);
+        }
     }
     return object;
 }
