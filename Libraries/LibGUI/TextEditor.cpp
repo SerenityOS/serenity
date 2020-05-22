@@ -210,16 +210,19 @@ void TextEditor::doubleclick_event(MouseEvent& event)
     auto start = text_position_at(event.position());
     auto end = start;
     auto& line = this->line(start.line());
+    auto clicked_on_alphanumeric = isalnum(line.codepoints()[start.column()]);
 
     if (!document().has_spans()) {
         while (start.column() > 0) {
-            if (isspace(line.codepoints()[start.column() - 1]))
+            auto next_codepoint = line.codepoints()[start.column() - 1];
+            if ((clicked_on_alphanumeric && !isalnum(next_codepoint)) || (!clicked_on_alphanumeric && isalnum(next_codepoint)))
                 break;
             start.set_column(start.column() - 1);
         }
 
         while (end.column() < line.length()) {
-            if (isspace(line.codepoints()[end.column()]))
+            auto next_codepoint = line.codepoints()[end.column()];
+            if ((clicked_on_alphanumeric && !isalnum(next_codepoint)) || (!clicked_on_alphanumeric && isalnum(next_codepoint)))
                 break;
             end.set_column(end.column() + 1);
         }
