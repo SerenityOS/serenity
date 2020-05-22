@@ -83,12 +83,13 @@ class SuggestionManager {
 
 public:
     void set_suggestions(Vector<CompletionSuggestion>&& suggestions);
-    void set_current_suggestion_initiation_index(size_t index);
+    void set_current_suggestion_initiation_index(size_t start_index);
 
     size_t count() const { return m_suggestions.size(); }
     size_t display_length() const { return m_last_shown_suggestion_display_length; }
-    size_t index() const { return m_last_displayed_suggestion_index; }
+    size_t start_index() const { return m_last_displayed_suggestion_index; }
     size_t next_index() const { return m_next_suggestion_index; }
+    void set_start_index(size_t index) const { m_last_displayed_suggestion_index = index; }
 
     size_t for_each_suggestion(Function<IterationDecision(const CompletionSuggestion&, size_t)>) const;
 
@@ -151,7 +152,7 @@ private:
     mutable size_t m_next_suggestion_invariant_offset { 0 };
     mutable size_t m_next_suggestion_static_offset { 0 };
     size_t m_largest_common_suggestion_prefix_length { 0 };
-    size_t m_last_displayed_suggestion_index { 0 };
+    mutable size_t m_last_displayed_suggestion_index { 0 };
     size_t m_selected_suggestion_index { 0 };
 };
 
