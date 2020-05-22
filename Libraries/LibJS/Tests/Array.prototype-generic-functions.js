@@ -1,11 +1,24 @@
 load("test-common.js");
 
 try {
+    [undefined, "foo", -42, 0].forEach(length => {
+        const o = { length };
+
+        assert(Array.prototype.push.call(o, "foo") === 1);
+        assert(o.length === 1);
+        assert(o[0] === "foo");
+        assert(Array.prototype.push.call(o, "bar", "baz") === 3);
+        assert(o.length === 3);
+        assert(o[0] === "foo");
+        assert(o[1] === "bar");
+        assert(o[2] === "baz");
+    });
+
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
-    ["every"].forEach(name => {
+    {
         const visited = [];
-        Array.prototype[name].call(o, function (value) {
+        Array.prototype.every.call(o, function (value) {
             visited.push(value);
             return true;
         });
@@ -13,7 +26,7 @@ try {
         assert(visited[0] === "foo");
         assert(visited[1] === "bar");
         assert(visited[2] === "baz");
-    });
+    }
 
     ["find", "findIndex"].forEach(name => {
         const visited = [];

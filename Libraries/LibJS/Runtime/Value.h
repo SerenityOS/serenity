@@ -32,6 +32,9 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Symbol.h>
 
+// 2 ** 53 - 1
+static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
+
 namespace JS {
 
 class Value {
