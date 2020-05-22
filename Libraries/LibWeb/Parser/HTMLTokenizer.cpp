@@ -171,6 +171,11 @@ void HTMLTokenizer::run()
             BEGIN_STATE(MarkupDeclarationOpen)
             {
                 DONT_CONSUME_NEXT_INPUT_CHARACTER;
+                if (next_few_characters_are("--")) {
+                    consume("--");
+                    create_new_token(HTMLToken::Type::Comment);
+                    SWITCH_TO(CommentStart);
+                }
                 if (next_few_characters_are("DOCTYPE")) {
                     consume("DOCTYPE");
                     SWITCH_TO(DOCTYPE);
@@ -416,6 +421,197 @@ void HTMLTokenizer::run()
                 ON_EOF
                 {
                     TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CommentStart)
+            {
+                ON('-')
+                {
+                    SWITCH_TO(CommentStartDash);
+                }
+                ON('>')
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(Comment);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CommentStartDash)
+            {
+                ON('-')
+                {
+                    SWITCH_TO(CommentEnd);
+                }
+                ON('>')
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_comment_or_character.data.append('-');
+                    RECONSUME_IN(Comment);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(Comment)
+            {
+                ON('<')
+                {
+                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
+                    SWITCH_TO(CommentLessThanSign);
+                }
+                ON('-')
+                {
+                    SWITCH_TO(CommentEndDash);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
+                    continue;
+                }
+            }
+
+            BEGIN_STATE(CommentEnd)
+            {
+                ON('>')
+                {
+                    emit_current_token();
+                    SWITCH_TO(Data);
+                }
+                ON('!')
+                {
+                    SWITCH_TO(CommentEndBang);
+                }
+                ON('-')
+                {
+                    m_current_token.m_comment_or_character.data.append('-');
+                    continue;
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_comment_or_character.data.append('-');
+                    RECONSUME_IN(Comment);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CommentEndBang)
+            {
+                ON('-')
+                {
+                    m_current_token.m_comment_or_character.data.append("--!");
+                    SWITCH_TO(CommentEndDash);
+                }
+                ON('>')
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_comment_or_character.data.append("--!");
+                    RECONSUME_IN(Comment);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CommentEndDash)
+            {
+                ON('-')
+                {
+                    SWITCH_TO(CommentEnd);
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_comment_or_character.data.append('-');
+                    RECONSUME_IN(Comment);
+                }
+            }
+
+            BEGIN_STATE(CommentLessThanSign)
+            {
+                ON('!')
+                {
+                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
+                    SWITCH_TO(CommentLessThanSignBang);
+                }
+                ON('<')
+                {
+                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
+                    continue;
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(Comment);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CommentLessThanSignBang)
+            {
+                ON('-')
+                {
+                    SWITCH_TO(CommentLessThanSignBangDash);
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(Comment);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CommentLessThanSignBangDash)
+            {
+                ON('-')
+                {
+                    SWITCH_TO(CommentLessThanSignBangDashDash);
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(Comment);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CommentLessThanSignBangDashDash)
+            {
+                ON('>')
+                {
+                    SWITCH_TO(CommentEnd);
                 }
                 ANYTHING_ELSE
                 {
