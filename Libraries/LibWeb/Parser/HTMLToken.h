@@ -30,7 +30,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibWeb/DOM/Attribute.h>
 
 namespace Web {
 
@@ -50,6 +49,11 @@ public:
     Type type() const { return m_type; }
 
 private:
+    struct AttributeBuilder {
+        StringBuilder name_builder;
+        StringBuilder value_builder;
+    };
+
     Type m_type;
 
     // Type::DOCTYPE
@@ -65,7 +69,7 @@ private:
     struct {
         StringBuilder tag_name;
         bool self_closing { false };
-        Vector<Attribute> attributes;
+        Vector<AttributeBuilder> attributes;
     } m_tag;
 
     // Type::Comment
