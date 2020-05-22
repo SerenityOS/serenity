@@ -20,6 +20,8 @@ try {
     assert([].indexOf('serenity') === -1);
     assert([].indexOf('serenity', 10) === -1);
     assert([].indexOf('serenity', -10) === -1);
+    assert([].indexOf() === -1);
+    assert([undefined].indexOf() === 0);
 
     console.log("PASS");
 } catch (e) {
