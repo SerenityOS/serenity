@@ -109,8 +109,8 @@ public:
     Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
 
-    // FIXME: we will have to kindly ask our instantiators to set our signal handlers
-    // since we can not do this cleanly ourselves (signal() limitation: cannot give member functions)
+    // FIXME: we will have to kindly ask our instantiators to set our signal handlers,
+    // since we can not do this cleanly ourselves. (signal() limitation: cannot give member functions)
     void interrupted()
     {
         if (m_is_editing)
@@ -124,7 +124,7 @@ public:
     String line() const { return line(m_buffer.size()); }
     String line(size_t up_to_index) const;
 
-    // only makes sense inside a char_input callback or on_* callback
+    // Only makes sense inside a character_input callback or on_* callback.
     void set_prompt(const String& prompt)
     {
         if (m_cached_prompt_valid)
@@ -291,7 +291,7 @@ private:
     size_t m_prompt_lines_at_suggestion_initiation { 0 };
     bool m_cached_prompt_valid { false };
 
-    // exact position before our prompt in the terminal
+    // Exact position before our prompt in the terminal.
     size_t m_origin_x { 0 };
     size_t m_origin_y { 0 };
 
@@ -311,7 +311,7 @@ private:
 
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
-    // TODO: handle signals internally
+    // TODO: handle signals internally.
     struct termios m_termios, m_default_termios;
     bool m_was_interrupted { false };
     bool m_was_resized { false };

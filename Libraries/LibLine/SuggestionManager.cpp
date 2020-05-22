@@ -148,15 +148,15 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
         set_current_suggestion_initiation_index(initiation_start_index);
 
         if (mode == CompletePrefix) {
-            // only auto-complete *if possible*
+            // Only auto-complete *if possible*.
             if (can_complete) {
                 result.insert.append(suggestion.text_view.substring_view(m_next_suggestion_invariant_offset, m_largest_common_suggestion_prefix_length - m_next_suggestion_invariant_offset));
                 m_last_shown_suggestion_display_length = m_largest_common_suggestion_prefix_length;
-                // do not increment the suggestion index, as the first tab should only be a *peek*
+                // Do not increment the suggestion index, as the first tab should only be a *peek*.
                 if (m_suggestions.size() == 1) {
-                    // if there's one suggestion, commit and forget
+                    // If there's one suggestion, commit and forget.
                     result.new_completion_mode = DontComplete;
-                    // add in the trivia of the last selected suggestion
+                    // Add in the trivia of the last selected suggestion.
                     result.insert.append(suggestion.trivia_view);
                     m_last_shown_suggestion_display_length = 0;
                     result.style_to_apply = suggestion.style;
@@ -171,7 +171,7 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
             m_last_shown_suggestion = String::empty();
         } else {
             result.insert.append(suggestion.text_view.substring_view(m_next_suggestion_invariant_offset, suggestion.text_view.length() - m_next_suggestion_invariant_offset));
-            // add in the trivia of the last selected suggestion
+            // Add in the trivia of the last selected suggestion.
             result.insert.append(suggestion.trivia_view);
             m_last_shown_suggestion_display_length += suggestion.trivia_view.length();
         }
