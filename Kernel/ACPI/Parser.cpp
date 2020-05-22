@@ -345,7 +345,6 @@ Optional<PhysicalAddress> StaticParsing::find_rsdp()
 PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
-    // FIXME: Don't blindly use PAGE_SIZE here, but probe the actual length.
     ASSERT(signature.length() == 4);
 
     auto rsdp = map_typed<Structures::RSDPDescriptor20>(rsdp_address);
@@ -364,7 +363,6 @@ PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_address, const St
 static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
-    // FIXME: Don't blindly use PAGE_SIZE here, but probe the actual length.
     ASSERT(signature.length() == 4);
 
     auto xsdt = map_typed<Structures::XSDT>(xsdt_address);
@@ -379,7 +377,6 @@ static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt_address, const 
 static bool match_table_signature(PhysicalAddress table_header, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
-    // FIXME: Don't blindly use PAGE_SIZE here, but probe the actual length.
     ASSERT(signature.length() == 4);
 
     auto table = map_typed<Structures::RSDT>(table_header);
@@ -389,7 +386,6 @@ static bool match_table_signature(PhysicalAddress table_header, const StringView
 static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
-    // FIXME: Don't blindly use PAGE_SIZE here, but probe the actual length.
     ASSERT(signature.length() == 4);
 
     auto rsdt = map_typed<Structures::RSDT>(rsdt_address);
