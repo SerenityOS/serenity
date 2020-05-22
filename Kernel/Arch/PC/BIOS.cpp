@@ -24,49 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/StringView.h>
+#include <Kernel/Arch/PC/BIOS.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {
 
-class BlockDevice;
-class CharacterDevice;
-class Custody;
-class Device;
-class DiskCache;
-class DoubleBuffer;
-class File;
-class FileDescription;
-class IPv4Socket;
-class Inode;
-class InodeIdentifier;
-class SharedInodeVMObject;
-class InodeWatcher;
-class KBuffer;
-class KResult;
-class LocalSocket;
-class MappedROM;
-class PageDirectory;
-class PerformanceEventBuffer;
-class PhysicalPage;
-class PhysicalRegion;
-class Process;
-class ProcessInspectionHandle;
-class ThreadTracer;
-class Range;
-class RangeAllocator;
-class Region;
-class Scheduler;
-class SharedBuffer;
-class Socket;
-class TCPSocket;
-class TTY;
-class Thread;
-class UDPSocket;
-class VFS;
-class VMObject;
-class WaitQueue;
+MappedROM map_bios()
+{
+    MappedROM mapping;
+    mapping.size = 128 * KB;
+    mapping.paddr = PhysicalAddress(0xe0000);
+    mapping.region = MM.allocate_kernel_region(mapping.paddr, PAGE_ROUND_UP(mapping.size), {}, Region::Access::Read);
+    return mapping;
+}
 
-template<typename T>
-class KResultOr;
+MappedROM map_ebda()
+{
+    auto ebda_segment_ptr = map_typed<u16>(PhysicalAddress(0x40e));
+    auto ebda_length_ptr = map_typed<u16>(PhysicalAddress(0x413));
+
+    PhysicalAddress ebda_paddr(*ebda_segment_ptr << 4);
+    size_t ebda_size = *ebda_length_ptr;
+
+    MappedROM mapping;
+    mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), PAGE_ROUND_UP(ebda_size), {}, Region::Access::Read);
+    mapping.offset = ebda_paddr.offset_in_page();
+    mapping.size = ebda_size;
+    mapping.paddr = ebda_paddr;
+    return mapping;
+}
 
 }

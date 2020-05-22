@@ -27,11 +27,12 @@
 
 #include <AK/StringView.h>
 #include <Kernel/ACPI/Parser.h>
+#include <Kernel/Arch/PC/BIOS.h>
+#include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
-#include <Kernel/IO.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel {
 namespace ACPI {
@@ -321,32 +322,25 @@ Parser::Parser(PhysicalAddress rsdp)
     locate_static_data();
 }
 
-static PhysicalAddress find_rsdp_in_ebda(u16 ebda_segment)
+static PhysicalAddress find_rsdp_in_ebda()
 {
-    auto rsdp_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)(ebda_segment << 4))), PAGE_ROUND_UP(1024), "ACPI Static Parser RSDP Finding #1", Region::Access::Read, false, true);
-    char* p_rsdp_str = (char*)(PhysicalAddress(ebda_segment << 4).as_ptr());
-    for (char* rsdp_str = (char*)rsdp_region->vaddr().offset(offset_in_page((u32)(ebda_segment << 4))).as_ptr(); rsdp_str < (char*)(rsdp_region->vaddr().offset(offset_in_page((u32)(ebda_segment << 4))).get() + 1024); rsdp_str += 16) {
+    auto ebda = map_ebda();
+    for (auto* rsdp_str = ebda.base(); rsdp_str < ebda.end(); rsdp_str += 16) {
 #ifdef ACPI_DEBUG
         dbg() << "ACPI: Looking for RSDP in EBDA @ V " << (void*)rsdp_str << ", P " << (void*)p_rsdp_str;
 #endif
-        if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
-            return PhysicalAddress((FlatPtr)p_rsdp_str);
-        p_rsdp_str += 16;
+        if (!strncmp("RSD PTR ", (const char*)rsdp_str, strlen("RSD PTR ")))
+            return ebda.paddr_of(rsdp_str);
     }
     return {};
 }
 
 static PhysicalAddress find_rsdp_in_bios_area()
 {
-    auto rsdp_region = MM.allocate_kernel_region(PhysicalAddress(0xE0000), PAGE_ROUND_UP(0xFFFFF - 0xE0000), "ACPI Static Parser RSDP Finding #2", Region::Access::Read, false, true);
-    char* p_rsdp_str = (char*)(PhysicalAddress(0xE0000).as_ptr());
-    for (char* rsdp_str = (char*)rsdp_region->vaddr().offset(offset_in_page((u32)(0xE0000))).as_ptr(); rsdp_str < (char*)(rsdp_region->vaddr().offset(offset_in_page((u32)(0xE0000))).get() + (0xFFFFF - 0xE0000)); rsdp_str += 16) {
-#ifdef ACPI_DEBUG
-        dbg() << "ACPI: Looking for RSDP in BIOS ROM area @ V " << (void*)rsdp_str << ", P " << (void*)p_rsdp_str;
-#endif
-        if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
-            return PhysicalAddress((FlatPtr)p_rsdp_str);
-        p_rsdp_str += 16;
+    auto bios = map_bios();
+    for (auto* rsdp_str = bios.base(); rsdp_str < bios.end(); rsdp_str += 16) {
+        if (!strncmp("RSD PTR ", (const char*)rsdp_str, strlen("RSD PTR ")))
+            return bios.paddr_of(rsdp_str);
     }
     return {};
 }
@@ -364,9 +358,8 @@ static bool validate_table(const Structures::SDTHeader& v_header, size_t length)
 
 PhysicalAddress StaticParsing::find_rsdp()
 {
-    auto ebda_seg_ptr = map_typed<u16>(PhysicalAddress(0x40e));
-    klog() << "ACPI: Probing EBDA, Segment 0x" << String::format("%x", *ebda_seg_ptr);
-    auto rsdp = find_rsdp_in_ebda(*ebda_seg_ptr);
+    klog() << "ACPI: Probing EBDA";
+    auto rsdp = find_rsdp_in_ebda();
     if (!rsdp.is_null())
         return rsdp;
     return find_rsdp_in_bios_area();

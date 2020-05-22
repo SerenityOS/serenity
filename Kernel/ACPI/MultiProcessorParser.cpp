@@ -27,6 +27,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
+#include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -115,42 +116,28 @@ void MultiProcessorParser::parse_configuration_table()
 
 PhysicalAddress MultiProcessorParser::search_floating_pointer()
 {
-    PhysicalAddress mp_floating_pointer;
-    auto region = MM.allocate_kernel_region(PhysicalAddress(0), PAGE_SIZE, "MultiProcessor Parser Floating Pointer Structure Finding", Region::Access::Read);
-    u16 ebda_seg = (u16) * ((uint16_t*)((region->vaddr().get() & PAGE_MASK) + 0x40e));
-    klog() << "MultiProcessor: Probing EBDA, Segment 0x" << String::format("%x", ebda_seg);
-
-    mp_floating_pointer = search_floating_pointer_in_ebda(ebda_seg);
+    auto mp_floating_pointer = search_floating_pointer_in_ebda();
     if (!mp_floating_pointer.is_null())
         return mp_floating_pointer;
     return search_floating_pointer_in_bios_area();
 }
 
-PhysicalAddress MultiProcessorParser::search_floating_pointer_in_ebda(u16 ebda_segment)
+PhysicalAddress MultiProcessorParser::search_floating_pointer_in_ebda()
 {
-    auto floating_pointer_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)(ebda_segment << 4))), PAGE_ROUND_UP(1024), "MultiProcessor Parser floating_pointer Finding #1", Region::Access::Read, false, true);
-    char* p_floating_pointer_str = (char*)(PhysicalAddress(ebda_segment << 4).as_ptr());
-    for (char* floating_pointer_str = (char*)floating_pointer_region->vaddr().offset(offset_in_page((u32)(ebda_segment << 4))).as_ptr(); floating_pointer_str < (char*)(floating_pointer_region->vaddr().offset(offset_in_page((u32)(ebda_segment << 4))).get() + 1024); floating_pointer_str += 16) {
-#ifdef MULTIPROCESSOR_DEBUG
-        //dbg() << "MultiProcessor: Looking for floating pointer structure in EBDA @ V0x " << String::format("%x", floating_pointer_str) << ", P0x" << String::format("%x", p_floating_pointer_str);
-#endif
-        if (!strncmp("_MP_", floating_pointer_str, strlen("_MP_")))
-            return PhysicalAddress((FlatPtr)p_floating_pointer_str);
-        p_floating_pointer_str += 16;
+    klog() << "MultiProcessor: Probing EBDA";
+    auto ebda = map_ebda();
+    for (auto* floating_pointer_str = ebda.base(); floating_pointer_str < ebda.end(); floating_pointer_str += 16) {
+        if (!strncmp("_MP_", (const char*)floating_pointer_str, strlen("_MP_")))
+            return ebda.paddr_of(floating_pointer_str);
     }
     return {};
 }
 PhysicalAddress MultiProcessorParser::search_floating_pointer_in_bios_area()
 {
-    auto floating_pointer_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)0xE0000)), PAGE_ROUND_UP(0xFFFFF - 0xE0000), "MultiProcessor Parser floating_pointer Finding #2", Region::Access::Read, false, true);
-    char* p_floating_pointer_str = (char*)(PhysicalAddress(0xE0000).as_ptr());
-    for (char* floating_pointer_str = (char*)floating_pointer_region->vaddr().offset(offset_in_page((u32)(0xE0000))).as_ptr(); floating_pointer_str < (char*)(floating_pointer_region->vaddr().offset(offset_in_page((u32)(0xE0000))).get() + (0xFFFFF - 0xE0000)); floating_pointer_str += 16) {
-#ifdef MULTIPROCESSOR_DEBUG
-        //dbg() << "MultiProcessor: Looking for floating pointer structure in BIOS area @ V0x " << String::format("%x", floating_pointer_str) << ", P0x" << String::format("%x", p_floating_pointer_str);
-#endif
-        if (!strncmp("_MP_", floating_pointer_str, strlen("_MP_")))
-            return PhysicalAddress((FlatPtr)p_floating_pointer_str);
-        p_floating_pointer_str += 16;
+    auto bios = map_bios();
+    for (auto* floating_pointer_str = bios.base(); floating_pointer_str < bios.end(); floating_pointer_str += 16) {
+        if (!strncmp("_MP_", (const char*)floating_pointer_str, strlen("_MP_")))
+            return bios.paddr_of(floating_pointer_str);
     }
     return {};
 }

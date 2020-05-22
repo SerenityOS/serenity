@@ -26,47 +26,20 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
+#include <Kernel/VM/Region.h>
+
 namespace Kernel {
 
-class BlockDevice;
-class CharacterDevice;
-class Custody;
-class Device;
-class DiskCache;
-class DoubleBuffer;
-class File;
-class FileDescription;
-class IPv4Socket;
-class Inode;
-class InodeIdentifier;
-class SharedInodeVMObject;
-class InodeWatcher;
-class KBuffer;
-class KResult;
-class LocalSocket;
-class MappedROM;
-class PageDirectory;
-class PerformanceEventBuffer;
-class PhysicalPage;
-class PhysicalRegion;
-class Process;
-class ProcessInspectionHandle;
-class ThreadTracer;
-class Range;
-class RangeAllocator;
-class Region;
-class Scheduler;
-class SharedBuffer;
-class Socket;
-class TCPSocket;
-class TTY;
-class Thread;
-class UDPSocket;
-class VFS;
-class VMObject;
-class WaitQueue;
+struct MappedROM {
+    const u8* base() const { return region->vaddr().offset(offset).as_ptr(); }
+    const u8* end() const { return base() + size; }
+    OwnPtr<Region> region;
+    size_t size { 0 };
+    size_t offset { 0 };
+    PhysicalAddress paddr;
 
-template<typename T>
-class KResultOr;
+    PhysicalAddress paddr_of(const u8* ptr) const { return paddr.offset(ptr - this->base()); }
+};
 
 }
