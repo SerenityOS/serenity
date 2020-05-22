@@ -168,12 +168,29 @@ Value ArrayPrototype::map(Interpreter& interpreter)
 
 Value ArrayPrototype::push(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
         return {};
-    for (size_t i = 0; i < interpreter.argument_count(); ++i)
-        array->elements().append(interpreter.argument(i));
-    return Value(array->length());
+    if (this_object->is_array()) {
+        auto* array = static_cast<Array*>(this_object);
+        for (size_t i = 0; i < interpreter.argument_count(); ++i)
+            array->elements().append(interpreter.argument(i));
+        return Value(array->length());
+    }
+    auto length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+    auto argument_count = interpreter.argument_count();
+    auto new_length = length + argument_count;
+    if (new_length > MAX_ARRAY_LIKE_INDEX)
+        return interpreter.throw_exception<TypeError>("Maximum array size exceeded");
+    for (size_t i = 0; i < argument_count; ++i)
+        this_object->put_by_index(length + i, interpreter.argument(i));
+    auto new_length_value = Value((i32)new_length);
+    this_object->put("length", new_length_value);
+    if (interpreter.exception())
+        return {};
+    return new_length_value;
 }
 
 Value ArrayPrototype::unshift(Interpreter& interpreter)
