@@ -51,6 +51,7 @@ private:
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::Point m_line_start_position;
     Gfx::Point m_line_end_position;
+
     RefPtr<GUI::Menu> m_context_menu;
     GUI::ActionGroup m_thickness_actions;
     int m_thickness { 1 };

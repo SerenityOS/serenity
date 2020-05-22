@@ -65,6 +65,11 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     }
 }
 
+Gfx::FloatRect ImageEditor::layer_rect_to_editor_rect(const Layer& layer, const Gfx::Rect& layer_rect) const
+{
+    return image_rect_to_editor_rect(layer_rect.translated(layer.location()));
+}
+
 Gfx::FloatRect ImageEditor::image_rect_to_editor_rect(const Gfx::Rect& image_rect) const
 {
     Gfx::FloatRect editor_rect;
@@ -81,6 +86,11 @@ Gfx::FloatRect ImageEditor::editor_rect_to_image_rect(const Gfx::Rect& editor_re
     image_rect.set_width((float)editor_rect.width() / m_scale);
     image_rect.set_height((float)editor_rect.height() / m_scale);
     return image_rect;
+}
+
+Gfx::FloatPoint ImageEditor::layer_position_to_editor_position(const Layer& layer, const Gfx::Point& layer_position) const
+{
+    return image_position_to_editor_position(layer_position.translated(layer.location()));
 }
 
 Gfx::FloatPoint ImageEditor::image_position_to_editor_position(const Gfx::Point& image_position) const
