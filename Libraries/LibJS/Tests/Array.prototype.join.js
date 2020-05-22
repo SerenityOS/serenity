@@ -5,6 +5,7 @@ try {
 
     assert(["hello", "friends"].join() === "hello,friends");
     assert(["hello", "friends"].join(" ") === "hello friends");
+    assert(["hello", "friends", "foo"].join("~", "#") === "hello~friends~foo");
     assert([].join() === "");
     assert([null].join() === "");
     assert([undefined].join() === "");
