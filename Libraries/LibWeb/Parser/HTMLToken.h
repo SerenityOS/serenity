@@ -56,7 +56,7 @@ private:
     struct {
         StringBuilder name;
         StringBuilder public_identifier;
-        StringBuilder system_public_identifier;
+        StringBuilder system_identifier;
         bool force_quirks { false };
     } m_doctype;
 
@@ -68,6 +68,8 @@ private:
         Vector<Attribute> attributes;
     } m_tag;
 
+    // Type::Comment
+    // Type::Character
     struct {
         StringBuilder data;
     } m_comment_or_character;
