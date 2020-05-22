@@ -482,14 +482,25 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
     NonnullRefPtrVector<ObjectProperty> properties;
     consume(TokenType::CurlyOpen);
 
+    auto property_type = ObjectProperty::Type::KeyValue;
+
     while (!done() && !match(TokenType::CurlyClose)) {
         RefPtr<Expression> property_key;
         RefPtr<Expression> property_value;
         auto need_colon = true;
-        auto is_spread = false;
 
         if (match_identifier_name()) {
             auto identifier = consume().value();
+            if (property_type == ObjectProperty::Type::KeyValue) {
+                if (identifier == "get" && !match(TokenType::ParenOpen)) {
+                    property_type = ObjectProperty::Type::Getter;
+                    continue;
+                }
+                if (identifier == "set" && !match(TokenType::ParenOpen)) {
+                    property_type = ObjectProperty::Type::Setter;
+                    continue;
+                }
+            }
             property_key = create_ast_node<StringLiteral>(identifier);
             property_value = create_ast_node<Identifier>(identifier);
             need_colon = false;
@@ -506,23 +517,29 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             property_key = create_ast_node<SpreadExpression>(parse_expression(2));
             property_value = property_key;
             need_colon = false;
-            is_spread = true;
+            property_type = ObjectProperty::Type::Spread;
         } else {
-            syntax_error(String::format("Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier", m_parser_state.m_current_token.name()));
-            consume();
-            continue;
+            if (property_type != ObjectProperty::Type::Getter && property_type != ObjectProperty::Type::Setter) {
+                syntax_error(String::format("Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier", m_parser_state.m_current_token.name()));
+                consume();
+                continue;
+            }
+
+            auto name = property_type == ObjectProperty::Type::Getter ? "get" : "set";
+            property_key = create_ast_node<StringLiteral>(name);
+            property_value = create_ast_node<Identifier>(name);
+            need_colon = false;
         }
 
-        if (!is_spread && match(TokenType::ParenOpen)) {
+        if (property_type != ObjectProperty::Type::Spread && match(TokenType::ParenOpen)) {
             property_value = parse_function_node<FunctionExpression>(false);
         } else if (need_colon || match(TokenType::Colon)) {
             consume(TokenType::Colon);
             property_value = parse_expression(2);
         }
-        auto property = create_ast_node<ObjectProperty>(*property_key, *property_value);
+        auto property = create_ast_node<ObjectProperty>(*property_key, *property_value, property_type);
         properties.append(property);
-        if (is_spread)
-            property->set_is_spread();
+        property_type = ObjectProperty::Type::KeyValue;
 
         if (!match(TokenType::Comma))
             break;
