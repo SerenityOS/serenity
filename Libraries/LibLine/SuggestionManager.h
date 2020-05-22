@@ -37,9 +37,21 @@ namespace Line {
 // FIXME: These objects are pretty heavy since they store two copies of text
 //        somehow get rid of one
 struct CompletionSuggestion {
+private:
+    struct ForSearchTag {
+    };
+
+public:
+    static constexpr ForSearchTag ForSearch {};
+
     // intentionally not explicit (allows suggesting bare strings)
     CompletionSuggestion(const String& completion)
         : CompletionSuggestion(completion, "", {})
+    {
+    }
+
+    CompletionSuggestion(const String& completion, ForSearchTag)
+        : text_string(completion)
     {
     }
 
@@ -52,7 +64,7 @@ struct CompletionSuggestion {
 
     bool operator==(const CompletionSuggestion& suggestion) const
     {
-        return suggestion.text == text;
+        return suggestion.text_string == text_string;
     }
 
     Vector<u32> text;
@@ -63,6 +75,7 @@ struct CompletionSuggestion {
     Utf32View text_view;
     Utf32View trivia_view;
     String text_string;
+    bool is_valid { false };
 };
 
 class SuggestionManager {
