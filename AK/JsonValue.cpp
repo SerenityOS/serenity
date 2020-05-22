@@ -129,27 +129,47 @@ bool JsonValue::equals(const JsonValue& other) const
     return false;
 }
 
-JsonValue::JsonValue(i32 value)
+JsonValue::JsonValue(int value)
     : m_type(Type::Int32)
 {
     m_value.as_i32 = value;
 }
 
-JsonValue::JsonValue(u32 value)
+JsonValue::JsonValue(unsigned value)
     : m_type(Type::UnsignedInt32)
 {
     m_value.as_u32 = value;
 }
 
-JsonValue::JsonValue(i64 value)
+JsonValue::JsonValue(long value)
+    : m_type(sizeof(long) == 8 ? Type::Int64 : Type::Int32)
+{
+    if constexpr (sizeof(long) == 8)
+        m_value.as_i64 = value;
+    else
+        m_value.as_i32 = value;
+}
+
+JsonValue::JsonValue(unsigned long value)
+    : m_type(sizeof(long) == 8 ? Type::UnsignedInt64 : Type::UnsignedInt32)
+{
+    if constexpr (sizeof(long) == 8)
+        m_value.as_u64 = value;
+    else
+        m_value.as_u32 = value;
+}
+
+JsonValue::JsonValue(long long value)
     : m_type(Type::Int64)
 {
+    static_assert(sizeof(long long unsigned) == 8);
     m_value.as_i64 = value;
 }
 
-JsonValue::JsonValue(u64 value)
+JsonValue::JsonValue(long long unsigned value)
     : m_type(Type::UnsignedInt64)
 {
+    static_assert(sizeof(long long unsigned) == 8);
     m_value.as_u64 = value;
 }
 
