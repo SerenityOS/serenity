@@ -52,7 +52,7 @@ private:
     };
 
     virtual const char* class_name() const override { return "RectangleTool"; }
-    void draw_using(GUI::Painter&);
+    void draw_using(GUI::Painter&, const Gfx::Rect&);
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::Point m_rectangle_start_position;
