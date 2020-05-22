@@ -30,6 +30,8 @@
 
 //#define TOKENIZER_TRACE
 
+#define TODO ASSERT_NOT_REACHED
+
 #define SWITCH_TO(new_state)                    \
     will_switch_to(State::new_state);           \
     m_state = State::new_state;                 \
@@ -42,8 +44,6 @@
     goto new_state;
 
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER --m_cursor;
-
-#define IGNORE_CHARACTER_AND_CONTINUE_IN(x) SWITCH_TO(x)
 
 #define ON(codepoint) \
     if (current_input_character.has_value() && current_input_character.value() == codepoint)
@@ -138,6 +138,14 @@ void HTMLTokenizer::run()
 
             BEGIN_STATE(TagName)
             {
+                ON_WHITESPACE
+                {
+                    SWITCH_TO(BeforeAttributeName);
+                }
+                ON('/')
+                {
+                    SWITCH_TO(SelfClosingStartTag);
+                }
                 ON('>')
                 {
                     emit_current_token();
@@ -209,6 +217,213 @@ void HTMLTokenizer::run()
             }
             END_STATE
 
+            BEGIN_STATE(BeforeAttributeName)
+            {
+                ON_WHITESPACE
+                {
+                    continue;
+                }
+                ON('/')
+                {
+                    RECONSUME_IN(AfterAttributeName);
+                }
+                ON('>')
+                {
+                    RECONSUME_IN(AfterAttributeName);
+                }
+                ON_EOF
+                {
+                    RECONSUME_IN(AfterAttributeName);
+                }
+                ON('=')
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_tag.attributes.append(HTMLToken::AttributeBuilder());
+                    RECONSUME_IN(AttributeName);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(SelfClosingStartTag)
+            {
+            }
+            END_STATE
+
+            BEGIN_STATE(AttributeName)
+            {
+                ON_WHITESPACE
+                {
+                    RECONSUME_IN(AfterAttributeName);
+                }
+                ON('/')
+                {
+                    RECONSUME_IN(AfterAttributeName);
+                }
+                ON('>')
+                {
+                    RECONSUME_IN(AfterAttributeName);
+                }
+                ON_EOF
+                {
+                    RECONSUME_IN(AfterAttributeName);
+                }
+                ON('=')
+                {
+                    SWITCH_TO(BeforeAttributeValue);
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_tag.attributes.last().name_builder.append(current_input_character.value());
+                    continue;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(AfterAttributeName)
+            {
+            }
+            END_STATE
+
+            BEGIN_STATE(BeforeAttributeValue)
+            {
+                ON_WHITESPACE
+                {
+                    continue;
+                }
+                ON('"')
+                {
+                    SWITCH_TO(AttributeValueDoubleQuoted);
+                }
+                ON('\'')
+                {
+                    SWITCH_TO(AttributeValueSingleQuoted);
+                }
+                ON('>')
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(AttributeValueUnquoted);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(AttributeValueDoubleQuoted)
+            {
+                ON('"')
+                {
+                    SWITCH_TO(AfterAttributeValueQuoted);
+                }
+                ON('&')
+                {
+                    m_return_state = State::AttributeValueDoubleQuoted;
+                    SWITCH_TO(CharacterReference);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_tag.attributes.last().value_builder.append(current_input_character.value());
+                    continue;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(AttributeValueSingleQuoted)
+            {
+                ON('\'')
+                {
+                    SWITCH_TO(AfterAttributeValueQuoted);
+                }
+                ON('&')
+                {
+                    m_return_state = State::AttributeValueSingleQuoted;
+                    SWITCH_TO(CharacterReference);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_tag.attributes.last().value_builder.append(current_input_character.value());
+                    continue;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(AttributeValueUnquoted)
+            {
+                ON_WHITESPACE
+                {
+                    SWITCH_TO(BeforeAttributeName);
+                }
+                ON('&')
+                {
+                    m_return_state = State::AttributeValueUnquoted;
+                    SWITCH_TO(CharacterReference);
+                }
+                ON('>')
+                {
+                    emit_current_token();
+                    SWITCH_TO(Data);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_tag.attributes.last().value_builder.append(current_input_character.value());
+                    continue;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(AfterAttributeValueQuoted)
+            {
+                ON_WHITESPACE
+                {
+                    SWITCH_TO(BeforeAttributeName);
+                }
+                ON('/')
+                {
+                    SWITCH_TO(SelfClosingStartTag);
+                }
+                ON('>')
+                {
+                    emit_current_token();
+                    SWITCH_TO(Data);
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
             BEGIN_STATE(CharacterReference)
             {
             }
@@ -270,7 +485,14 @@ void HTMLTokenizer::emit_current_token()
     if (m_current_token.type() == HTMLToken::Type::StartTag || m_current_token.type() == HTMLToken::Type::EndTag) {
         builder.append(" { name: '");
         builder.append(m_current_token.m_tag.tag_name.to_string());
-        builder.append("' }");
+        builder.append("', { ");
+        for (auto& attribute : m_current_token.m_tag.attributes) {
+            builder.append(attribute.name_builder.to_string());
+            builder.append("=\"");
+            builder.append(attribute.value_builder.to_string());
+            builder.append("\" ");
+        }
+        builder.append("} }");
     }
 
     dbg() << "[" << String::format("%42s", state_name(m_state)) << "] " << builder.to_string();
