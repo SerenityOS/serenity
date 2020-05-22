@@ -52,6 +52,16 @@ try {
         assert(Array.prototype.indexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo", 3) === 4);
     }
 
+    {
+        assert(Array.prototype.lastIndexOf.call({}) === -1);
+        assert(Array.prototype.lastIndexOf.call({ 0: undefined }) === -1);
+        assert(Array.prototype.lastIndexOf.call({ length: 1, 0: undefined }) === 0);
+        assert(Array.prototype.lastIndexOf.call({ length: 1, 2: "foo" }, "foo") === -1);
+        assert(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo" }, "foo") === 2);
+        assert(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo") === 4);
+        assert(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo", -2) === 2);
+    }
+
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
     {
