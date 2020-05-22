@@ -310,9 +310,9 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         }
         region_object.add("purgeable", region.vmobject().is_purgeable());
         region_object.add("address", region.vaddr().get());
-        region_object.add("size", (u32)region.size());
-        region_object.add("amount_resident", (u32)region.amount_resident());
-        region_object.add("amount_dirty", (u32)region.amount_dirty());
+        region_object.add("size", region.size());
+        region_object.add("amount_resident", region.amount_resident());
+        region_object.add("amount_dirty", region.amount_dirty());
         region_object.add("cow_pages", region.cow_pages());
         region_object.add("name", region.name());
         region_object.add("vmobject", region.vmobject().class_name());
@@ -396,7 +396,7 @@ Optional<KBuffer> procfs$devices(InodeIdentifier)
 Optional<KBuffer> procfs$uptime(InodeIdentifier)
 {
     KBufferBuilder builder;
-    builder.appendf("%u\n", (u32)(g_uptime / 1000));
+    builder.appendf("%u\n", (g_uptime / 1000));
     return builder.build();
 }
 
@@ -416,8 +416,8 @@ Optional<KBuffer> procfs$modules(InodeIdentifier)
     for (auto& it : *g_modules) {
         auto obj = array.add_object();
         obj.add("name", it.value->name);
-        obj.add("module_init", (u32)it.value->module_init);
-        obj.add("module_fini", (u32)it.value->module_fini);
+        obj.add("module_init", it.value->module_init);
+        obj.add("module_fini", it.value->module_fini);
         u32 size = 0;
         for (auto& section : it.value->sections) {
             size += section.capacity();
@@ -823,19 +823,19 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     InterruptDisabler disabler;
     KBufferBuilder builder;
     JsonObjectSerializer<KBufferBuilder> json { builder };
-    json.add("kmalloc_allocated", (u32)g_kmalloc_bytes_allocated);
-    json.add("kmalloc_available", (u32)g_kmalloc_bytes_free);
-    json.add("kmalloc_eternal_allocated", (u32)g_kmalloc_bytes_eternal);
+    json.add("kmalloc_allocated", g_kmalloc_bytes_allocated);
+    json.add("kmalloc_available", g_kmalloc_bytes_free);
+    json.add("kmalloc_eternal_allocated", g_kmalloc_bytes_eternal);
     json.add("user_physical_allocated", MM.user_physical_pages_used());
     json.add("user_physical_available", MM.user_physical_pages() - MM.user_physical_pages_used());
     json.add("super_physical_allocated", MM.super_physical_pages_used());
     json.add("super_physical_available", MM.super_physical_pages() - MM.super_physical_pages_used());
-    json.add("kmalloc_call_count", (u32)g_kmalloc_call_count);
-    json.add("kfree_call_count", (u32)g_kfree_call_count);
+    json.add("kmalloc_call_count", g_kmalloc_call_count);
+    json.add("kfree_call_count", g_kfree_call_count);
     slab_alloc_stats([&json](size_t slab_size, size_t num_allocated, size_t num_free) {
         auto prefix = String::format("slab_%zu", slab_size);
-        json.add(String::format("%s_num_allocated", prefix.characters()), (u32)num_allocated);
-        json.add(String::format("%s_num_free", prefix.characters()), (u32)num_free);
+        json.add(String::format("%s_num_allocated", prefix.characters()), num_allocated);
+        json.add(String::format("%s_num_free", prefix.characters()), num_free);
     });
     json.finish();
     return builder.build();
@@ -884,13 +884,13 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("nfds", process.number_of_open_file_descriptors());
         process_object.add("name", process.name());
         process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
-        process_object.add("amount_virtual", (u32)process.amount_virtual());
-        process_object.add("amount_resident", (u32)process.amount_resident());
-        process_object.add("amount_dirty_private", (u32)process.amount_dirty_private());
-        process_object.add("amount_clean_inode", (u32)process.amount_clean_inode());
-        process_object.add("amount_shared", (u32)process.amount_shared());
-        process_object.add("amount_purgeable_volatile", (u32)process.amount_purgeable_volatile());
-        process_object.add("amount_purgeable_nonvolatile", (u32)process.amount_purgeable_nonvolatile());
+        process_object.add("amount_virtual", process.amount_virtual());
+        process_object.add("amount_resident", process.amount_resident());
+        process_object.add("amount_dirty_private", process.amount_dirty_private());
+        process_object.add("amount_clean_inode", process.amount_clean_inode());
+        process_object.add("amount_shared", process.amount_shared());
+        process_object.add("amount_purgeable_volatile", process.amount_purgeable_volatile());
+        process_object.add("amount_purgeable_nonvolatile", process.amount_purgeable_nonvolatile());
         process_object.add("icon_id", process.icon_id());
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {
