@@ -54,13 +54,13 @@ void initialize()
         return;
 
     auto rsdp = StaticParsing::find_rsdp();
-    if (rsdp.is_null())
+    if (!rsdp.has_value())
         return;
 
     if (feature_level == FeatureLevel::Enabled)
-        Parser::initialize<DynamicParser>(rsdp);
+        Parser::initialize<DynamicParser>(rsdp.value());
     else
-        Parser::initialize<Parser>(rsdp);
+        Parser::initialize<Parser>(rsdp.value());
 }
 
 bool is_enabled()

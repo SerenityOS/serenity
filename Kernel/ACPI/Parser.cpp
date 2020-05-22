@@ -322,29 +322,6 @@ Parser::Parser(PhysicalAddress rsdp)
     locate_static_data();
 }
 
-static PhysicalAddress find_rsdp_in_ebda()
-{
-    auto ebda = map_ebda();
-    for (auto* rsdp_str = ebda.base(); rsdp_str < ebda.end(); rsdp_str += 16) {
-#ifdef ACPI_DEBUG
-        dbg() << "ACPI: Looking for RSDP in EBDA @ V " << (void*)rsdp_str << ", P " << (void*)p_rsdp_str;
-#endif
-        if (!strncmp("RSD PTR ", (const char*)rsdp_str, strlen("RSD PTR ")))
-            return ebda.paddr_of(rsdp_str);
-    }
-    return {};
-}
-
-static PhysicalAddress find_rsdp_in_bios_area()
-{
-    auto bios = map_bios();
-    for (auto* rsdp_str = bios.base(); rsdp_str < bios.end(); rsdp_str += 16) {
-        if (!strncmp("RSD PTR ", (const char*)rsdp_str, strlen("RSD PTR ")))
-            return bios.paddr_of(rsdp_str);
-    }
-    return {};
-}
-
 static bool validate_table(const Structures::SDTHeader& v_header, size_t length)
 {
     u8 checksum = 0;
@@ -356,13 +333,13 @@ static bool validate_table(const Structures::SDTHeader& v_header, size_t length)
     return false;
 }
 
-PhysicalAddress StaticParsing::find_rsdp()
+Optional<PhysicalAddress> StaticParsing::find_rsdp()
 {
-    klog() << "ACPI: Probing EBDA";
-    auto rsdp = find_rsdp_in_ebda();
-    if (!rsdp.is_null())
+    StringView signature("RSD PTR ");
+    auto rsdp = map_ebda().find_chunk_starting_with(signature, 16);
+    if (rsdp.has_value())
         return rsdp;
-    return find_rsdp_in_bios_area();
+    return map_bios().find_chunk_starting_with(signature, 16);
 }
 
 PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_address, const StringView& signature)

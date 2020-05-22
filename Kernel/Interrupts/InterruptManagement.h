@@ -88,7 +88,6 @@ private:
     InterruptManagement();
     PhysicalAddress search_for_madt();
     void locate_apic_data();
-    void locate_pci_interrupt_overrides();
     bool m_smp_enabled { false };
     FixedArray<RefPtr<IRQController>> m_interrupt_controllers { 1 };
     Vector<ISAInterruptOverrideMetadata> m_isa_interrupt_overrides;

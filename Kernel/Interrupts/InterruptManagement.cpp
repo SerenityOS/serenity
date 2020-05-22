@@ -129,9 +129,9 @@ PhysicalAddress InterruptManagement::search_for_madt()
 {
     dbg() << "Early access to ACPI tables for interrupt setup";
     auto rsdp = ACPI::StaticParsing::find_rsdp();
-    if (rsdp.is_null())
+    if (!rsdp.has_value())
         return {};
-    return ACPI::StaticParsing::find_table(rsdp, "APIC");
+    return ACPI::StaticParsing::find_table(rsdp.value(), "APIC");
 }
 
 InterruptManagement::InterruptManagement()
@@ -189,8 +189,10 @@ void InterruptManagement::switch_to_ioapic_mode()
     }
     APIC::init();
     APIC::enable_bsp();
-    MultiProcessorParser::initialize();
-    locate_pci_interrupt_overrides();
+
+    if (auto mp_parser = MultiProcessorParser::autodetect()) {
+        m_pci_interrupt_overrides = mp_parser->get_pci_interrupt_redirections();
+    }
 }
 
 void InterruptManagement::locate_apic_data()
@@ -229,11 +231,6 @@ void InterruptManagement::locate_apic_data()
         entries_length -= entry_length;
         entry_index++;
     }
-}
-
-void InterruptManagement::locate_pci_interrupt_overrides()
-{
-    m_pci_interrupt_overrides = MultiProcessorParser::the().get_pci_interrupt_redirections();
 }
 
 }

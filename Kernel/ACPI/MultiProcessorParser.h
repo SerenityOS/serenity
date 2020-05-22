@@ -189,25 +189,21 @@ struct [[gnu::packed]] CompatibilityBusAddressSpaceModifierEntry
 
 class PCIInterruptOverrideMetadata;
 
-class MultiProcessorParser {
+class MultiProcessorParser final {
 public:
-    static MultiProcessorParser& the();
+    static OwnPtr<MultiProcessorParser> autodetect();
 
-    static bool is_initialized();
-    static void initialize();
     Vector<PCIInterruptOverrideMetadata> get_pci_interrupt_redirections();
 
-protected:
-    MultiProcessorParser();
+private:
+    explicit MultiProcessorParser(PhysicalAddress floating_pointer);
 
     void parse_configuration_table();
     void parse_floating_pointer_data();
 
     Vector<u8> get_pci_bus_ids() const;
 
-    PhysicalAddress search_floating_pointer();
-    PhysicalAddress search_floating_pointer_in_ebda();
-    PhysicalAddress search_floating_pointer_in_bios_area();
+    static Optional<PhysicalAddress> find_floating_pointer();
 
     PhysicalAddress m_floating_pointer;
     PhysicalAddress m_configuration_table;

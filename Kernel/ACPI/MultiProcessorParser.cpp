@@ -37,29 +37,20 @@
 
 namespace Kernel {
 
-static MultiProcessorParser* s_parser;
-
-bool MultiProcessorParser::is_initialized()
+OwnPtr<MultiProcessorParser> MultiProcessorParser::autodetect()
 {
-    return s_parser != nullptr;
+    auto floating_pointer = find_floating_pointer();
+    if (!floating_pointer.has_value())
+        return nullptr;
+    return adopt_own(*new MultiProcessorParser(floating_pointer.value()));
 }
 
-void MultiProcessorParser::initialize()
+MultiProcessorParser::MultiProcessorParser(PhysicalAddress floating_pointer)
+    : m_floating_pointer(floating_pointer)
 {
-    ASSERT(!is_initialized());
-    s_parser = new MultiProcessorParser;
-}
-
-MultiProcessorParser::MultiProcessorParser()
-    : m_floating_pointer(search_floating_pointer())
-{
-    if (!m_floating_pointer.is_null()) {
-        klog() << "MultiProcessor: Floating Pointer Structure @ " << PhysicalAddress(m_floating_pointer);
-        parse_floating_pointer_data();
-        parse_configuration_table();
-    } else {
-        klog() << "MultiProcessor: Can't Locate Floating Pointer Structure, disabled.";
-    }
+    klog() << "MultiProcessor: Floating Pointer Structure @ " << m_floating_pointer;
+    parse_floating_pointer_data();
+    parse_configuration_table();
 }
 
 void MultiProcessorParser::parse_floating_pointer_data()
@@ -114,32 +105,13 @@ void MultiProcessorParser::parse_configuration_table()
     }
 }
 
-PhysicalAddress MultiProcessorParser::search_floating_pointer()
+Optional<PhysicalAddress> MultiProcessorParser::find_floating_pointer()
 {
-    auto mp_floating_pointer = search_floating_pointer_in_ebda();
-    if (!mp_floating_pointer.is_null())
+    StringView signature("_MP_");
+    auto mp_floating_pointer = map_ebda().find_chunk_starting_with(signature, 16);
+    if (mp_floating_pointer.has_value())
         return mp_floating_pointer;
-    return search_floating_pointer_in_bios_area();
-}
-
-PhysicalAddress MultiProcessorParser::search_floating_pointer_in_ebda()
-{
-    klog() << "MultiProcessor: Probing EBDA";
-    auto ebda = map_ebda();
-    for (auto* floating_pointer_str = ebda.base(); floating_pointer_str < ebda.end(); floating_pointer_str += 16) {
-        if (!strncmp("_MP_", (const char*)floating_pointer_str, strlen("_MP_")))
-            return ebda.paddr_of(floating_pointer_str);
-    }
-    return {};
-}
-PhysicalAddress MultiProcessorParser::search_floating_pointer_in_bios_area()
-{
-    auto bios = map_bios();
-    for (auto* floating_pointer_str = bios.base(); floating_pointer_str < bios.end(); floating_pointer_str += 16) {
-        if (!strncmp("_MP_", (const char*)floating_pointer_str, strlen("_MP_")))
-            return bios.paddr_of(floating_pointer_str);
-    }
-    return {};
+    return map_bios().find_chunk_starting_with(signature, 16);
 }
 
 Vector<u8> MultiProcessorParser::get_pci_bus_ids() const
@@ -150,12 +122,6 @@ Vector<u8> MultiProcessorParser::get_pci_bus_ids() const
             pci_bus_ids.append(entry.bus_id);
     }
     return pci_bus_ids;
-}
-
-MultiProcessorParser& MultiProcessorParser::the()
-{
-    ASSERT(is_initialized());
-    return *s_parser;
 }
 
 Vector<PCIInterruptOverrideMetadata> MultiProcessorParser::get_pci_interrupt_redirections()
