@@ -51,6 +51,7 @@ private:
     static Value concat(Interpreter&);
     static Value slice(Interpreter&);
     static Value index_of(Interpreter&);
+    static Value reduce(Interpreter&);
     static Value reverse(Interpreter&);
     static Value last_index_of(Interpreter&);
     static Value includes(Interpreter&);
