@@ -294,7 +294,7 @@ String Editor::get_line(const String& prompt)
         auto reverse_tab = false;
         auto ctrl_held = false;
 
-        // discard starting bytes until they make sense as utf-8
+        // Discard starting bytes until they make sense as utf-8.
         size_t valid_bytes = 0;
         while (nread) {
             Utf8View { StringView { m_incomplete_data.data(), (size_t)nread } }.validate(valid_bytes);
@@ -395,8 +395,8 @@ String Editor::get_line(const String& prompt)
                 case 'C': // right
                     if (m_cursor < m_buffer.size()) {
                         if (ctrl_held) {
-                            // temporarily put a space at the end of our buffer
-                            // this greatly simplifies the logic below
+                            // Temporarily put a space at the end of our buffer,
+                            // doing this greatly simplifies the logic below.
                             m_buffer.append(' ');
                             for (;;) {
                                 if (m_cursor >= m_buffer.size())
@@ -476,25 +476,25 @@ String Editor::get_line(const String& prompt)
                 if (!on_tab_complete)
                     continue;
 
-                // reverse tab can count as regular tab here
+                // Reverse tab can count as regular tab here.
                 m_times_tab_pressed++;
 
                 int token_start = m_cursor;
 
-                // ask for completions only on the first tab
-                // and scan for the largest common prefix to display
-                // further tabs simply show the cached completions
+                // Ask for completions only on the first tab
+                // and scan for the largest common prefix to display,
+                // further tabs simply show the cached completions.
                 if (m_times_tab_pressed == 1) {
                     m_suggestion_manager.set_suggestions(on_tab_complete(*this));
                     m_prompt_lines_at_suggestion_initiation = num_lines();
                     if (m_suggestion_manager.count() == 0) {
-                        // there are no suggestions, beep~
+                        // There are no suggestions, beep.
                         putchar('\a');
                         fflush(stdout);
                     }
                 }
 
-                // Adjust already incremented / decremented index when switching tab direction
+                // Adjust already incremented / decremented index when switching tab direction.
                 if (reverse_tab && m_tab_direction != TabDirection::Backward) {
                     m_suggestion_manager.previous();
                     m_suggestion_manager.previous();
@@ -523,7 +523,7 @@ String Editor::get_line(const String& prompt)
                     insert(view);
 
                 if (completion_result.style_to_apply.has_value()) {
-                    // Apply the style of the last suggestion
+                    // Apply the style of the last suggestion.
                     readjust_anchored_styles(m_suggestion_manager.current_suggestion().start_index, ModificationKind::ForcedOverlapRemoval);
                     stylize({ m_suggestion_manager.current_suggestion().start_index, m_cursor, Span::Mode::CodepointOriented }, completion_result.style_to_apply.value());
                 }
@@ -560,9 +560,9 @@ String Editor::get_line(const String& prompt)
                 }
 
                 if (m_suggestion_manager.count() < 2) {
-                    // we have none, or just one suggestion
+                    // We have none, or just one suggestion,
                     // we should just commit that and continue
-                    // after it, as if it were auto-completed
+                    // after it, as if it were auto-completed.
                     suggest(0, 0, Span::CodepointOriented);
                     m_times_tab_pressed = 0;
                     m_suggestion_manager.reset();
@@ -572,11 +572,11 @@ String Editor::get_line(const String& prompt)
             }
 
             if (m_times_tab_pressed) {
-                // Apply the style of the last suggestion
+                // Apply the style of the last suggestion.
                 readjust_anchored_styles(m_suggestion_manager.current_suggestion().start_index, ModificationKind::ForcedOverlapRemoval);
                 stylize({ m_suggestion_manager.current_suggestion().start_index, m_cursor, Span::Mode::CodepointOriented }, m_suggestion_manager.current_suggestion().style);
-                // we probably have some suggestions drawn
-                // let's clean them up
+                // We probably have some suggestions drawn,
+                // let's clean them up.
                 if (m_suggestion_display->cleanup()) {
                     reposition_cursor();
                     m_refresh_needed = true;
@@ -599,7 +599,7 @@ String Editor::get_line(const String& prompt)
                 remove_at_index(m_cursor - 1);
                 --m_cursor;
                 m_inline_search_cursor = m_cursor;
-                // we will have to redraw :(
+                // We will have to redraw :(
                 m_refresh_needed = true;
             };
 
@@ -661,15 +661,15 @@ String Editor::get_line(const String& prompt)
                         return;
                     };
 
-                    // whenever the search editor gets a ^R, cycle between history entries
+                    // Whenever the search editor gets a ^R, cycle between history entries.
                     m_search_editor->register_character_input_callback(0x12, [this](Editor& search_editor) {
                         ++m_search_offset;
                         search_editor.m_refresh_needed = true;
                         return false; // Do not process this key event
                     });
 
-                    // whenever the search editor gets a backspace, cycle back between history entries
-                    // unless we're at the zeroth entry, in which case, allow the deletion
+                    // Whenever the search editor gets a backspace, cycle back between history entries
+                    // unless we're at the zeroth entry, in which case, allow the deletion.
                     m_search_editor->register_character_input_callback(m_termios.c_cc[VERASE], [this](Editor& search_editor) {
                         if (m_search_offset > 0) {
                             --m_search_offset;
@@ -682,7 +682,7 @@ String Editor::get_line(const String& prompt)
                     // ^L - This is a source of issues, as the search editor refreshes first,
                     // and we end up with the wrong order of prompts, so we will first refresh
                     // ourselves, then refresh the search editor, and then tell him not to process
-                    // this event
+                    // this event.
                     m_search_editor->register_character_input_callback(0x0c, [this](auto& search_editor) {
                         printf("\033[3J\033[H\033[2J"); // Clear screen.
 
@@ -716,7 +716,7 @@ String Editor::get_line(const String& prompt)
                     m_is_searching = false;
                     m_search_offset = 0;
 
-                    // manually cleanup the search line
+                    // Manually cleanup the search line.
                     reposition_cursor();
                     auto search_string_codepoint_length = Utf8View { search_string }.length_in_codepoints();
                     VT::clear_lines(0, (search_string_codepoint_length + actual_rendered_string_length(search_prompt) + m_num_columns - 1) / m_num_columns);
@@ -724,14 +724,13 @@ String Editor::get_line(const String& prompt)
                     reposition_cursor();
 
                     if (!m_reset_buffer_on_search_end || search_string_codepoint_length == 0) {
-                        // if the entry was empty, or we purposely quit without a newline,
-                        // do not return anything
-                        // instead, just end the search
+                        // If the entry was empty, or we purposely quit without a newline,
+                        // do not return anything; instead, just end the search.
                         end_search();
                         continue;
                     }
 
-                    // return the string
+                    // Return the string,
                     finish();
                     continue;
                 }
@@ -741,7 +740,7 @@ String Editor::get_line(const String& prompt)
             if (codepoint == m_termios.c_cc[VEOF]) {
                 if (m_buffer.is_empty()) {
                     printf("<EOF>\n");
-                    if (!m_always_refresh) // this is a little off, but it'll do for now
+                    if (!m_always_refresh) // This is a little off, but it'll do for now
                         exit(0);
                 }
                 continue;
@@ -774,7 +773,7 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
 
     int last_matching_offset = -1;
 
-    // do not search for empty strings
+    // Do not search for empty strings.
     if (allow_empty || phrase.length() > 0) {
         size_t search_offset = m_search_offset;
         for (size_t i = m_history_cursor; i > 0; --i) {
@@ -798,25 +797,25 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
     if (last_matching_offset >= 0) {
         insert(m_history[last_matching_offset]);
     }
-    // always needed
+    // Always needed, as we have cleared the buffer above.
     m_refresh_needed = true;
     return last_matching_offset >= 0;
 }
 
 void Editor::recalculate_origin()
 {
-    // changing the columns can affect our origin if
+    // Changing the columns can affect our origin if
     // the new size is smaller than our prompt, which would
     // cause said prompt to take up more space, so we should
-    // compensate for that
+    // compensate for that.
     if (m_cached_prompt_length >= m_num_columns) {
         auto added_lines = (m_cached_prompt_length + 1) / m_num_columns - 1;
         m_origin_x += added_lines;
     }
 
-    // we also need to recalculate our cursor position
+    // We also need to recalculate our cursor position,
     // but that will be calculated and applied at the next
-    // refresh cycle
+    // refresh cycle.
 }
 void Editor::cleanup()
 {
@@ -830,8 +829,8 @@ void Editor::cleanup()
 void Editor::refresh_display()
 {
     auto has_cleaned_up = false;
-    // someone changed the window size, figure it out
-    // and react to it, we might need to redraw
+    // Someone changed the window size, figure it out
+    // and react to it, we might need to redraw.
     if (m_was_resized) {
         auto previous_num_columns = m_num_columns;
 
@@ -846,7 +845,7 @@ void Editor::refresh_display()
         m_suggestion_display->set_vt_size(m_num_lines, m_num_columns);
 
         if (previous_num_columns != m_num_columns) {
-            // we need to cleanup and redo everything
+            // We need to cleanup and redo everything.
             m_cached_prompt_valid = false;
             m_refresh_needed = true;
             swap(previous_num_columns, m_num_columns);
@@ -856,9 +855,9 @@ void Editor::refresh_display()
             has_cleaned_up = true;
         }
     }
-    // do not call hook on pure cursor movement
+    // Do not call hook on pure cursor movement.
     if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
-        // probably just moving around
+        // Probably just moving around.
         reposition_cursor();
         m_cached_buffer_size = m_buffer.size();
         return;
@@ -869,8 +868,8 @@ void Editor::refresh_display()
 
     if (m_cached_prompt_valid) {
         if (!m_refresh_needed && m_cursor == m_buffer.size()) {
-            // just write the characters out and continue
-            // no need to refresh the entire line
+            // Just write the characters out and continue,
+            // no need to refresh the entire line.
             char null = 0;
             m_pending_chars.append(&null, 1);
             fputs((char*)m_pending_chars.data(), stdout);
@@ -882,7 +881,7 @@ void Editor::refresh_display()
         }
     }
 
-    // ouch, reflow entire line
+    // Ouch, reflow entire line.
     // FIXME: handle multiline stuff
     if (!has_cleaned_up) {
         cleanup();
@@ -910,10 +909,10 @@ void Editor::refresh_display()
             for (auto& applicable_style : anchored_ends)
                 style.unify_with(applicable_style.value);
 
-            // Disable any style that should be turned off
+            // Disable any style that should be turned off.
             VT::apply_style(style, false);
 
-            // go back to defaults
+            // Reapply styles for overlapping spans that include this one.
             style = find_applicable_style(i);
             VT::apply_style(style, true);
         }
@@ -926,7 +925,7 @@ void Editor::refresh_display()
             for (auto& applicable_style : anchored_starts)
                 style.unify_with(applicable_style.value);
 
-            // set new options
+            // Set new styles.
             VT::apply_style(style, true);
         }
         builder.clear();
@@ -998,7 +997,7 @@ void VT::move_relative(int x, int y)
 
 Style Editor::find_applicable_style(size_t offset) const
 {
-    // walk through our styles and merge all that fit in the offset
+    // Walk through our styles and merge all that fit in the offset.
     Style style;
     auto unify = [&](auto& entry) {
         if (entry.key >= offset)
@@ -1055,14 +1054,14 @@ String Style::Hyperlink::to_vt_escape(bool starting) const
 
 void Style::unify_with(const Style& other, bool prefer_other)
 {
-    // unify colors
+    // Unify colors.
     if (prefer_other || m_background.is_default())
         m_background = other.background();
 
     if (prefer_other || m_foreground.is_default())
         m_foreground = other.foreground();
 
-    // unify graphic renditions
+    // Unify graphic renditions.
     if (other.bold())
         set(Bold);
 
@@ -1072,7 +1071,7 @@ void Style::unify_with(const Style& other, bool prefer_other)
     if (other.underline())
         set(Underline);
 
-    // unify links
+    // Unify links.
     if (prefer_other || m_hyperlink.is_empty())
         m_hyperlink = other.hyperlink();
 }
@@ -1137,10 +1136,10 @@ void VT::apply_style(const Style& style, bool is_starting)
 
 void VT::clear_lines(size_t count_above, size_t count_below)
 {
-    // go down count_below lines
+    // Go down count_below lines.
     if (count_below > 0)
         printf("\033[%dB", (int)count_below);
-    // then clear lines going upwards
+    // Then clear lines going upwards.
     for (size_t i = count_below + count_above; i > 0; --i)
         fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stdout);
 }
@@ -1180,13 +1179,12 @@ size_t Editor::actual_rendered_string_length(const StringView& string) const
         auto c = *it;
         switch (state) {
         case Free:
-            if (c == '\x1b') {
-                // escape
+            if (c == '\x1b') { // escape
                 state = Escape;
                 continue;
             }
-            if (c == '\r' || c == '\n') {
-                // reset length to 0, since we either overwrite, or are on a newline
+            if (c == '\r' || c == '\n') { // return or carriage return
+                // Reset length to 0, since we either overwrite, or are on a newline.
                 length = 0;
                 continue;
             }
@@ -1235,8 +1233,8 @@ Vector<size_t, 2> Editor::vt_dsr()
     char buf[16];
     u32 length { 0 };
 
-    // read whatever junk there is before talking to the terminal
-    // and insert them later when we're reading user input
+    // Read whatever junk there is before talking to the terminal
+    // and insert them later when we're reading user input.
     bool more_junk_to_read { false };
     timeval timeout { 0, 0 };
     fd_set readfds;
@@ -1311,7 +1309,7 @@ bool Editor::should_break_token(Vector<u32, 1024>& buffer, size_t index)
 
 void Editor::remove_at_index(size_t index)
 {
-    // see if we have any anchored styles, and reposition them if needed
+    // See if we have any anchored styles, and reposition them if needed.
     readjust_anchored_styles(index, ModificationKind::Removal);
     m_buffer.remove(index);
 }
@@ -1331,21 +1329,21 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
         for (auto& end_entry : start_entry.value) {
             if (forced_removal) {
                 if (start_entry.key <= hint_index && end_entry.key > hint_index) {
-                    // remove any overlapping regions
+                    // Remove any overlapping regions.
                     continue;
                 }
             }
             if (start_entry.key >= hint_index) {
                 if (start_entry.key == hint_index && end_entry.key == hint_index + 1 && modification == ModificationKind::Removal) {
-                    // remove the anchor, as all its text was wiped
+                    // Remove the anchor, as all its text was wiped.
                     continue;
                 }
-                // shift everything
+                // Shift everything.
                 anchors_to_relocate.append({ { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, { start_entry.key + index_shift, end_entry.key + index_shift, Span::Mode::CodepointOriented }, end_entry.value });
                 continue;
             }
             if (end_entry.key > hint_index) {
-                // shift just the end
+                // Shift just the end.
                 anchors_to_relocate.append({ { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, { start_entry.key, end_entry.key + index_shift, Span::Mode::CodepointOriented }, end_entry.value });
                 continue;
             }
@@ -1355,7 +1353,7 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
 
     m_anchored_spans_ending.clear();
     m_anchored_spans_starting.clear();
-    // pass over the relocations and update the stale entries
+    // Pass over the relocations and update the stale entries.
     for (auto& relocation : anchors_to_relocate) {
         stylize(relocation.new_span, relocation.style);
     }
