@@ -357,7 +357,7 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
         return {};
 
     i32 array_size = static_cast<i32>(array->elements().size());
-    if (interpreter.argument_count() == 0 || array_size == 0)
+    if (array_size == 0)
         return Value(-1);
 
     i32 from_index = 0;
@@ -411,7 +411,7 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
         return {};
 
     i32 array_size = static_cast<i32>(array->elements().size());
-    if (interpreter.argument_count() == 0 || array_size == 0)
+    if (array_size == 0)
         return Value(-1);
 
     i32 from_index = 0;

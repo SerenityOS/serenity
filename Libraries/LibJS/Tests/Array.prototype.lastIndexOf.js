@@ -15,6 +15,9 @@ try {
     assert([].lastIndexOf('hello') === -1);
     assert([].lastIndexOf('hello', 10) === -1);
     assert([].lastIndexOf('hello', -10) === -1);
+    assert([].lastIndexOf() === -1);
+    assert([undefined].lastIndexOf() === 0);
+    assert([undefined, undefined, undefined].lastIndexOf() === 2);
 
     console.log("PASS");
 } catch (e) {
