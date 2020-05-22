@@ -239,7 +239,7 @@ Value ArrayPrototype::join(Interpreter& interpreter)
         return {};
 
     String separator = ",";
-    if (interpreter.argument_count() == 1) {
+    if (interpreter.argument_count()) {
         separator = interpreter.argument(0).to_string(interpreter);
         if (interpreter.exception())
             return {};
