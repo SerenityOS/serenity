@@ -205,12 +205,29 @@ Value ArrayPrototype::unshift(Interpreter& interpreter)
 
 Value ArrayPrototype::pop(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
         return {};
-    if (array->elements().is_empty())
+    if (this_object->is_array()) {
+        auto* array = static_cast<Array*>(this_object);
+        if (array->elements().is_empty())
+            return js_undefined();
+        return array->elements().take_last().value_or(js_undefined());
+    }
+    auto length = get_length(interpreter, *this_object);
+    if (length == 0) {
+        this_object->put("length", Value(0));
         return js_undefined();
-    return array->elements().take_last().value_or(js_undefined());
+    }
+    auto index = length - 1;
+    auto element = this_object->get_by_index(index).value_or(js_undefined());
+    if (interpreter.exception())
+        return {};
+    this_object->delete_property(PropertyName(index));
+    this_object->put("length", Value((i32)index));
+    if (interpreter.exception())
+        return {};
+    return element;
 }
 
 Value ArrayPrototype::shift(Interpreter& interpreter)

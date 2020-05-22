@@ -12,6 +12,19 @@ try {
         assert(o[0] === "foo");
         assert(o[1] === "bar");
         assert(o[2] === "baz");
+
+        assert(Array.prototype.pop.call(o) === "baz");
+        assert(o.length === 2);
+        assert(Array.prototype.pop.call(o) === "bar");
+        assert(o.length === 1);
+        assert(Array.prototype.pop.call(o) === "foo");
+        assert(o.length === 0);
+        assert(Array.prototype.pop.call(o) === undefined);
+        assert(o.length === 0);
+
+        o.length = length;
+        assert(Array.prototype.pop.call(o) === undefined);
+        assert(o.length === 0);
     });
 
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
