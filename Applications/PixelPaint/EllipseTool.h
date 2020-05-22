@@ -51,7 +51,7 @@ private:
     };
 
     virtual const char* class_name() const override { return "EllipseTool"; }
-    void draw_using(GUI::Painter& painter);
+    void draw_using(GUI::Painter&, const Gfx::Rect&);
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::Point m_ellipse_start_position;
