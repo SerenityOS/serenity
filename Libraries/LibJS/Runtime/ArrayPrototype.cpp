@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -240,46 +241,48 @@ Value ArrayPrototype::shift(Interpreter& interpreter)
     return array->elements().take_first().value_or(js_undefined());
 }
 
-static Value join_array_with_separator(Interpreter& interpreter, const Array& array, StringView separator)
-{
-    StringBuilder builder;
-    for (size_t i = 0; i < array.elements().size(); ++i) {
-        if (i != 0)
-            builder.append(separator);
-        auto value = array.elements()[i];
-        if (!value.is_empty() && !value.is_undefined() && !value.is_null()) {
-            auto string = value.to_string(interpreter);
-            if (interpreter.exception())
-                return {};
-            builder.append(string);
-        }
-    }
-    return js_string(interpreter, builder.to_string());
-}
-
 Value ArrayPrototype::to_string(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
         return {};
-
-    return join_array_with_separator(interpreter, *array, ",");
+    auto join_function = this_object->get("join");
+    if (interpreter.exception())
+        return {};
+    if (!join_function.is_function())
+        return ObjectPrototype::to_string(interpreter);
+    return interpreter.call(join_function.as_function(), this_object);
 }
 
 Value ArrayPrototype::join(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
         return {};
-
     String separator = ",";
     if (interpreter.argument_count()) {
         separator = interpreter.argument(0).to_string(interpreter);
         if (interpreter.exception())
             return {};
     }
-
-    return join_array_with_separator(interpreter, *array, separator);
+    auto length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+    StringBuilder builder;
+    for (size_t i = 0; i < length; ++i) {
+        if (i > 0)
+            builder.append(separator);
+        auto value = this_object->get_by_index(i).value_or(js_undefined());
+        if (interpreter.exception())
+            return {};
+        if (value.is_undefined() || value.is_null())
+            continue;
+        auto string = value.to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+        builder.append(string);
+    }
+    return js_string(interpreter, builder.to_string());
 }
 
 Value ArrayPrototype::concat(Interpreter& interpreter)
