@@ -92,6 +92,7 @@ private:
 
         bool may_use() const { return m_ungotten || m_mode != _IONBF; }
         bool is_not_empty() const { return m_ungotten || !m_empty; }
+        size_t buffered_size() const;
 
         const u8* begin_dequeue(size_t& available_size) const;
         void did_dequeue(size_t actual_size);
@@ -172,7 +173,20 @@ bool FILE::flush()
     }
     if (m_mode & O_RDONLY) {
         // When open for reading, just drop the buffered data.
+        size_t had_buffered = m_buffer.buffered_size();
         m_buffer.drop();
+        // Attempt to reset the underlying file position to what the user
+        // expects.
+        int rc = lseek(m_fd, -had_buffered, SEEK_CUR);
+        if (rc < 0) {
+            if (errno == ESPIPE) {
+                // We can't set offset on this file; oh well, the user will just
+                // have to cope.
+                errno = 0;
+            } else {
+                return false;
+            }
+        }
     }
 
     return true;
@@ -438,6 +452,19 @@ void FILE::Buffer::drop()
     m_begin = m_end = 0;
     m_empty = true;
     m_ungotten = false;
+}
+
+size_t FILE::Buffer::buffered_size() const
+{
+    // Note: does not include the ungetc() buffer.
+
+    if (m_empty)
+        return 0;
+
+    if (m_begin < m_end)
+        return m_end - m_begin;
+    else
+        return m_capacity - (m_begin - m_end);
 }
 
 const u8* FILE::Buffer::begin_dequeue(size_t& available_size) const
