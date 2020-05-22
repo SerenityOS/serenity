@@ -43,9 +43,6 @@
 #include <LibJS/Runtime/Value.h>
 #include <math.h>
 
-// 2 ** 53 - 1
-#define MAX_ARRAY_LIKE_INDEX 9007199254740991.0
-
 namespace JS {
 
 bool Value::is_array() const
@@ -261,7 +258,7 @@ i32 Value::as_i32() const
 size_t Value::as_size_t() const
 {
     ASSERT(as_double() >= 0);
-    return min((double)(i32)as_double(), MAX_ARRAY_LIKE_INDEX);
+    return min((double)as_i32(), MAX_ARRAY_LIKE_INDEX);
 }
 
 double Value::to_double(Interpreter& interpreter) const
