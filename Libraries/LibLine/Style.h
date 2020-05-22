@@ -124,7 +124,7 @@ public:
     static constexpr ItalicTag Italic {};
     static constexpr AnchoredTag Anchored {};
 
-    // prepare for the horror of templates
+    // Prepare for the horror of templates.
     template<typename T, typename... Rest>
     Style(const T& style_arg, Rest... rest)
         : Style(rest...)

@@ -55,8 +55,8 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     auto max_line_count = (m_prompt_length + longest_suggestion_length + m_num_columns - 1) / m_num_columns;
     if (longest_suggestion_length >= m_num_columns - 2) {
         spans_entire_line = true;
-        // we should make enough space for the biggest entry in
-        // the suggestion list to fit in the prompt line
+        // We should make enough space for the biggest entry in
+        // the suggestion list to fit in the prompt line.
         auto start = max_line_count - m_prompt_lines_at_suggestion_initiation;
         for (size_t i = start; i < max_line_count; ++i) {
             putchar('\n');
@@ -70,7 +70,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     if (m_pages.is_empty()) {
         size_t num_printed = 0;
         size_t lines_used = 1;
-        // cache the pages
+        // Cache the pages.
         manager.set_start_index(0);
         size_t page_start = 0;
         manager.for_each_suggestion([&](auto& suggestion, auto index) {
@@ -95,7 +95,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
             return IterationDecision::Continue;
         });
-        // last page
+        // Append the last page.
         m_pages.append({ page_start, manager.count() });
     }
 
@@ -113,12 +113,12 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
             num_printed = 0;
         }
 
-        // show just enough suggestions to fill up the screen
-        // without moving the prompt out of view
+        // Show just enough suggestions to fill up the screen
+        // without moving the prompt out of view.
         if (lines_used + m_prompt_lines_at_suggestion_initiation >= m_num_lines)
             return IterationDecision::Break;
 
-        // only apply colour to the selection if something is *actually* added to the buffer
+        // Only apply colour to the selection if something is *actually* added to the buffer.
         if (manager.is_current_suggestion_complete() && index == manager.next_index()) {
             VT::apply_style({ Style::Foreground(Style::XtermColor::Blue) });
             fflush(stdout);
@@ -141,7 +141,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
     m_lines_used_for_last_suggestions = lines_used;
 
-    // if we filled the screen, move back the origin
+    // If we filled the screen, move back the origin.
     if (m_origin_x + lines_used >= m_num_lines) {
         m_origin_x = m_num_lines - lines_used;
     }
@@ -152,7 +152,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         auto string = String::format("%c page %d of %d %c", left_arrow, page_index + 1, m_pages.size(), right_arrow);
 
         if (string.length() > m_num_columns - 1) {
-            // this would overflow into the next line, so just don't print an indicator
+            // This would overflow into the next line, so just don't print an indicator.
             return;
         }
 

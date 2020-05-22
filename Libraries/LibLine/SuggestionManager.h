@@ -35,7 +35,7 @@
 namespace Line {
 
 // FIXME: These objects are pretty heavy since they store two copies of text
-//        somehow get rid of one
+//        somehow get rid of one.
 struct CompletionSuggestion {
 private:
     struct ForSearchTag {
@@ -44,7 +44,7 @@ private:
 public:
     static constexpr ForSearchTag ForSearch {};
 
-    // intentionally not explicit (allows suggesting bare strings)
+    // Intentionally not explicit. (To allow suggesting bare strings)
     CompletionSuggestion(const String& completion)
         : CompletionSuggestion(completion, "", {})
     {
