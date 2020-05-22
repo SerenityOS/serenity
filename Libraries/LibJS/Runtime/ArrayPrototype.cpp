@@ -111,6 +111,8 @@ static void for_each_item(Interpreter& interpreter, const String& name, AK::Func
 
     for (size_t i = 0; i < initial_length; ++i) {
         auto value = this_object->get_by_index(i);
+        if (interpreter.exception())
+            return;
         if (value.is_empty()) {
             if (skip_empty)
                 continue;
