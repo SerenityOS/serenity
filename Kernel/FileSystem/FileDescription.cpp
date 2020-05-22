@@ -96,7 +96,7 @@ off_t FileDescription::seek(off_t offset, int whence)
 {
     LOCKER(m_lock);
     if (!m_file->is_seekable())
-        return -EINVAL;
+        return -ESPIPE;
 
     off_t new_offset;
 
