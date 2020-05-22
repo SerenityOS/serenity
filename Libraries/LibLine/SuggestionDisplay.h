@@ -39,6 +39,7 @@ public:
     virtual ~SuggestionDisplay() { }
     virtual void display(const SuggestionManager&) = 0;
     virtual bool cleanup() = 0;
+    virtual void finish() = 0;
     virtual void set_initial_prompt_lines(size_t) = 0;
 
     virtual void set_vt_size(size_t lines, size_t columns) = 0;
@@ -67,6 +68,10 @@ public:
     virtual ~XtermSuggestionDisplay() override { }
     virtual void display(const SuggestionManager&) override;
     virtual bool cleanup() override;
+    virtual void finish() override
+    {
+        m_pages.clear();
+    }
 
     virtual void set_initial_prompt_lines(size_t lines) override
     {
@@ -77,14 +82,22 @@ public:
     {
         m_num_lines = lines;
         m_num_columns = columns;
+        m_pages.clear();
     }
 
 private:
+    size_t fit_to_page_boundary(size_t selection_index);
     size_t m_lines_used_for_last_suggestions { 0 };
     size_t m_num_lines { 0 };
     size_t m_num_columns { 0 };
     size_t m_prompt_lines_at_suggestion_initiation { 0 };
     size_t m_prompt_length { 0 };
+
+    struct PageRange {
+        size_t start;
+        size_t end;
+    };
+    Vector<PageRange> m_pages;
 };
 
 }

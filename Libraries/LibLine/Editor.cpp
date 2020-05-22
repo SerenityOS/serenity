@@ -566,6 +566,7 @@ String Editor::get_line(const String& prompt)
                     suggest(0, 0, Span::CodepointOriented);
                     m_times_tab_pressed = 0;
                     m_suggestion_manager.reset();
+                    m_suggestion_display->finish();
                 }
                 continue;
             }
@@ -582,6 +583,7 @@ String Editor::get_line(const String& prompt)
                 }
                 m_suggestion_manager.reset();
                 suggest(0, 0, Span::CodepointOriented);
+                m_suggestion_display->finish();
             }
             m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
