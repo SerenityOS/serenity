@@ -729,9 +729,9 @@ int main(int argc, char** argv)
             Function<void(const JS::Shape&, const StringView&)> list_all_properties = [&results, &list_all_properties](const JS::Shape& shape, auto& property_pattern) {
                 for (const auto& descriptor : shape.property_table()) {
                     if (descriptor.key.view().starts_with(property_pattern)) {
-                        Line::CompletionSuggestion completion { descriptor.key };
+                        Line::CompletionSuggestion completion { descriptor.key, Line::CompletionSuggestion::ForSearch };
                         if (!results.contains_slow(completion)) { // hide duplicates
-                            results.append(completion);
+                            results.append({ descriptor.key });
                         }
                     }
                 }
