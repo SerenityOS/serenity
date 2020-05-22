@@ -414,22 +414,19 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
     if (array_size == 0)
         return Value(-1);
 
-    i32 from_index = 0;
+    i32 from_index = array_size - 1;
     if (interpreter.argument_count() >= 2) {
         from_index = interpreter.argument(1).to_i32(interpreter);
         if (interpreter.exception())
             return {};
-        if (from_index >= array_size)
-            return Value(-1);
-        auto negative_min_index = ((array_size - 1) * -1);
-        if (from_index < negative_min_index)
-            from_index = 0;
-        else if (from_index < 0)
+        if (from_index >= 0)
+            from_index = min(from_index, array_size - 1);
+        else
             from_index = array_size + from_index;
     }
 
     auto search_element = interpreter.argument(0);
-    for (i32 i = array_size - 1; i >= from_index; --i) {
+    for (i32 i = from_index; i >= 0; --i) {
         auto& element = array->elements().at(i);
         if (strict_eq(interpreter, element, search_element))
             return Value(i);
