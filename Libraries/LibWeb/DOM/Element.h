@@ -28,30 +28,13 @@
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
+#include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/Layout/LayoutNode.h>
 
 namespace Web {
 
 class LayoutNodeWithStyle;
-
-class Attribute {
-public:
-    Attribute(const FlyString& name, const String& value)
-        : m_name(name)
-        , m_value(value)
-    {
-    }
-
-    const FlyString& name() const { return m_name; }
-    const String& value() const { return m_value; }
-
-    void set_value(const String& value) { m_value = value; }
-
-private:
-    FlyString m_name;
-    String m_value;
-};
 
 class Element : public ParentNode {
 public:
@@ -77,7 +60,7 @@ public:
 
     bool has_class(const StringView&) const;
 
-    virtual void apply_presentational_hints(StyleProperties&) const {}
+    virtual void apply_presentational_hints(StyleProperties&) const { }
     virtual void parse_attribute(const FlyString& name, const String& value);
 
     void recompute_style();
