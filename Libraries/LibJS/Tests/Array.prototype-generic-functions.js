@@ -27,6 +27,22 @@ try {
         assert(o.length === 0);
     });
 
+    {
+        assert(Array.prototype.join.call({}) === "");
+        assert(Array.prototype.join.call({ length: "foo" }) === "");
+        assert(Array.prototype.join.call({ length: 3 }) === ",,");
+        assert(Array.prototype.join.call({ length: 2, 0: "foo", 1: "bar" }) === "foo,bar");
+        assert(Array.prototype.join.call({ length: 2, 0: "foo", 1: "bar", 2: "baz" }) === "foo,bar");
+        assert(Array.prototype.join.call({ length: 3, 1: "bar" }, "~") === "~bar~");
+        assert(Array.prototype.join.call({ length: 3, 0: "foo", 1: "bar", 2: "baz" }, "~") === "foo~bar~baz");
+    }
+
+    {
+        assert(Array.prototype.toString.call({}) === "[object Object]");
+        assert(Array.prototype.toString.call({ join: "foo" }) === "[object Object]");
+        assert(Array.prototype.toString.call({ join: () => "foo" }) === "foo");
+    }
+
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
     {
