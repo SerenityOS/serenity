@@ -29,10 +29,14 @@
 #include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
     // This is a temporary test program to aid with bringing up the new HTML parser. :^)
-    auto file_or_error = Core::File::open("/home/anon/www/simple.html", Core::File::ReadOnly);
+    const char* input_path = "/home/anon/www/simple.html";
+    if (argc > 1)
+        input_path = argv[1];
+
+    auto file_or_error = Core::File::open(input_path, Core::File::ReadOnly);
     if (file_or_error.is_error())
         return 1;
     auto contents = file_or_error.value()->read_all();
