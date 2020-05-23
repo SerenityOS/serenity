@@ -13,6 +13,11 @@ try {
     assert(s.charAt(5) === 'r');
     assert(s.charAt(6) === '');
 
+    assert(s.charAt() === 'f');
+    assert(s.charAt(NaN) === 'f');
+    assert(s.charAt("foo") === 'f');
+    assert(s.charAt(undefined) === 'f');
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);

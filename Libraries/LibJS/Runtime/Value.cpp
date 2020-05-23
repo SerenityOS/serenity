@@ -274,6 +274,10 @@ i32 Value::to_i32(Interpreter& interpreter) const
     auto number = to_number(interpreter);
     if (interpreter.exception())
         return 0;
+    if (number.is_nan())
+        return 0;
+    // FIXME: What about infinity though - that's UB...
+    // Maybe NumericLimits<i32>::max() for +Infinity and NumericLimits<i32>::min() for -Infinity?
     return number.as_i32();
 }
 
