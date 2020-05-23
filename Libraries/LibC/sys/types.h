@@ -32,6 +32,11 @@
 
 __BEGIN_DECLS
 
+/* There is no __SSIZE_TYPE__ but we can trick the preprocessor into defining it for us anyway! */
+#define unsigned signed
+typedef __SIZE_TYPE__ ssize_t;
+#undef unsigned
+
 typedef unsigned char u_char;
 typedef unsigned short u_short;
 typedef unsigned int u_int;
