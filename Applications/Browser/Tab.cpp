@@ -146,15 +146,17 @@ Tab::Tab()
     };
 
     m_html_widget->on_link_click = [this](auto& href, auto& target, unsigned modifiers) {
-        if (href.starts_with("#")) {
-            auto anchor = href.substring_view(1, href.length() - 1);
-            m_html_widget->scroll_to_anchor(anchor);
-        } else {
+        if (target == "_blank" || modifiers == Mod_Ctrl) {
             auto url = m_html_widget->document()->complete_url(href);
-            if (target == "_blank" || modifiers == Mod_Ctrl)
-                on_tab_open_request(url);
-            else
+            on_tab_open_request(url);
+        } else {
+            if (href.starts_with("#")) {
+                auto anchor = href.substring_view(1, href.length() - 1);
+                m_html_widget->scroll_to_anchor(anchor);
+            } else {
+                auto url = m_html_widget->document()->complete_url(href);
                 m_html_widget->load(url);
+            }
         }
     };
 
