@@ -30,7 +30,11 @@
 
 //#define TOKENIZER_TRACE
 
-#define TODO ASSERT_NOT_REACHED
+#define TODO()                                                                                              \
+    do {                                                                                                    \
+        dbg() << "[TODO: " << state_name(m_state) << "] '" << (char)current_input_character.value() << "'"; \
+        ASSERT_NOT_REACHED();                                                                               \
+    } while (0)
 
 #define SWITCH_TO(new_state)                    \
     will_switch_to(State::new_state);           \
@@ -115,9 +119,9 @@ void HTMLTokenizer::run()
                 }
                 ANYTHING_ELSE
                 {
-                    create_new_token(HTMLToken::Type::Character);
+                    if (m_current_token.type() != HTMLToken::Type::Character)
+                        create_new_token(HTMLToken::Type::Character);
                     m_current_token.m_comment_or_character.data.append(current_input_character.value());
-                    emit_current_token();
                     continue;
                 }
             }
@@ -137,6 +141,14 @@ void HTMLTokenizer::run()
                 {
                     create_new_token(HTMLToken::Type::StartTag);
                     RECONSUME_IN(TagName);
+                }
+                ON('?')
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
                 }
             }
             END_STATE
@@ -699,12 +711,19 @@ void HTMLTokenizer::emit_current_token()
         builder.append("} }");
     }
 
+    if (m_current_token.type() == HTMLToken::Type::Comment || m_current_token.type() == HTMLToken::Type::Character) {
+        builder.append(" { data: '");
+        builder.append(m_current_token.m_comment_or_character.data.to_string());
+        builder.append(" }");
+    }
+
     dbg() << "[" << String::format("%42s", state_name(m_state)) << "] " << builder.to_string();
     m_current_token = {};
 }
 
 void HTMLTokenizer::create_new_token(HTMLToken::Type type)
 {
+    flush_current_character_or_comment_if_needed();
     m_current_token = {};
     m_current_token.m_type = type;
 }
@@ -716,6 +735,7 @@ HTMLTokenizer::HTMLTokenizer(const StringView& input)
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)
 {
+    flush_current_character_or_comment_if_needed();
 #ifdef TOKENIZER_TRACE
     dbg() << "[" << state_name(m_state) << "] Switch to " << state_name(new_state);
 #endif
@@ -723,9 +743,16 @@ void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)
 
 void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
 {
+    flush_current_character_or_comment_if_needed();
 #ifdef TOKENIZER_TRACE
     dbg() << "[" << state_name(m_state) << "] Reconsume in " << state_name(new_state);
 #endif
+}
+
+void HTMLTokenizer::flush_current_character_or_comment_if_needed()
+{
+    if (m_current_token.type() == HTMLToken::Type::Character || m_current_token.type() == HTMLToken::Type::Comment)
+        emit_current_token();
 }
 
 }
