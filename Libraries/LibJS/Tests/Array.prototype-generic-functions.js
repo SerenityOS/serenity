@@ -62,6 +62,14 @@ try {
         assert(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo", -2) === 2);
     }
 
+    {
+        assert(Array.prototype.includes.call({}) === false);
+        assert(Array.prototype.includes.call({ 0: undefined }) === false);
+        assert(Array.prototype.includes.call({ length: 1, 0: undefined }) === true);
+        assert(Array.prototype.includes.call({ length: 1, 2: "foo" }, "foo") === false);
+        assert(Array.prototype.includes.call({ length: 5, 2: "foo" }, "foo") === true);
+    }
+
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
     {
