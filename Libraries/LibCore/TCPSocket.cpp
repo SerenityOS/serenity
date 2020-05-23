@@ -28,6 +28,11 @@
 #include <errno.h>
 #include <sys/socket.h>
 
+#ifndef SOCK_NONBLOCK
+#    include <fcntl.h>
+#    define SOCK_NONBLOCK O_NONBLOCK
+#endif
+
 namespace Core {
 
 TCPSocket::TCPSocket(int fd, Object* parent)

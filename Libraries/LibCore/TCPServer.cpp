@@ -32,6 +32,12 @@
 #include <stdio.h>
 #include <sys/socket.h>
 
+#ifndef SOCK_NONBLOCK
+#    include <fcntl.h>
+#    define SOCK_NONBLOCK O_NONBLOCK
+#    define SOCK_CLOEXEC O_CLOEXEC
+#endif
+
 namespace Core {
 
 TCPServer::TCPServer(Object* parent)

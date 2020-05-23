@@ -31,6 +31,12 @@
 #include <LibCore/UDPSocket.h>
 #include <stdio.h>
 
+#ifndef SOCK_NONBLOCK
+#    include <fcntl.h>
+#    define SOCK_NONBLOCK O_NONBLOCK
+#    define SOCK_CLOEXEC O_CLOEXEC
+#endif
+
 namespace Core {
 
 UDPServer::UDPServer(Object* parent)

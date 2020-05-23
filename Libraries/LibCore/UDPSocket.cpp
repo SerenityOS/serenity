@@ -28,6 +28,11 @@
 #include <errno.h>
 #include <sys/socket.h>
 
+#ifndef SOCK_NONBLOCK
+#    include <fcntl.h>
+#    define SOCK_NONBLOCK O_NONBLOCK
+#endif
+
 namespace Core {
 
 UDPSocket::UDPSocket(int fd, Object* parent)
