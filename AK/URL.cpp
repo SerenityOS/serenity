@@ -307,6 +307,12 @@ URL URL::complete_url(const String& string) const
         return url;
     }
 
+    if (string.starts_with("#")) {
+        url = *this;
+        url.set_fragment(string.substring(1, string.length() - 1));
+        return url;
+    }
+
     StringBuilder builder;
     FileSystemPath fspath(path());
     builder.append('/');
