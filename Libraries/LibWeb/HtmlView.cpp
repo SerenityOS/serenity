@@ -488,6 +488,10 @@ void HtmlView::load(const URL& url)
             auto document = create_document_from_mime_type(data, url, mime_type, encoding);
             ASSERT(document);
             set_document(document);
+
+            if (!url.fragment().is_empty())
+                scroll_to_anchor(url.fragment());
+
             if (on_title_change)
                 on_title_change(document->title());
         },
