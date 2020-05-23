@@ -69,6 +69,10 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
         if (name.has_value())
             scope.name = name.value().data.as_string;
 
+        if (!child.get_attribute(Dwarf::Attribute::LowPc).has_value()) {
+            dbg() << "DWARF: Couldn't find attribtue LowPc for scope";
+            return;
+        }
         scope.address_low = child.get_attribute(Dwarf::Attribute::LowPc).value().data.as_u32;
         // The attribute name HighPc is confusing. In this context, it seems to actually be a positive offset from LowPc
         scope.address_high = scope.address_low + child.get_attribute(Dwarf::Attribute::HighPc).value().data.as_u32;
@@ -88,9 +92,10 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
 void DebugInfo::prepare_lines()
 {
     auto section = m_elf->image().lookup_section(".debug_line");
-    ASSERT(!section.is_undefined());
+    if (section.is_undefined())
+        return;
 
-    auto buffer = ByteBuffer::wrap(reinterpret_cast<const u8*>(section.raw_data()), section.size());
+    auto buffer = section.wrapping_byte_buffer();
     BufferStream stream(buffer);
 
     Vector<LineProgram::LineInfo> all_lines;
