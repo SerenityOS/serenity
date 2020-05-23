@@ -156,5 +156,7 @@ private:
     size_t m_cursor { 0 };
 
     HTMLToken m_current_token;
+
+    bool m_has_emitted_eof { false };
 };
 }
