@@ -173,13 +173,20 @@ void DebugSession::run(Callback callback)
         }
 
         if (current_breakpoint.has_value()) {
-            // We want to make the breakpoint transparrent to the user of the debugger
+            // We want to make the breakpoint transparrent to the user of the debugger.
+            // To achieive this, we perform two rollbacks:
+            // 1. Set regs.eip to point at the actual address of the instruction we breaked on.
+            //    regs.eip currently points to one byte after the address of the original instruction,
+            //    because the cpu has just executed the INT3 we patched into the instruction.
+            // 2. We restore the original first byte of the instruction,
+            //    because it was patched with INT3.
             regs.eip = reinterpret_cast<u32>(current_breakpoint.value().address);
             set_registers(regs);
             disable_breakpoint(current_breakpoint.value().address);
         }
 
         DebugBreakReason reason = (state == State::Syscall && !current_breakpoint.has_value()) ? DebugBreakReason::Syscall : DebugBreakReason::Breakpoint;
+
         DebugDecision decision = callback(reason, regs);
 
         if (reason == DebugBreakReason::Syscall) {
@@ -194,10 +201,17 @@ void DebugSession::run(Callback callback)
             state = State::Syscall;
         }
 
+        bool did_single_step = false;
+
         // Re-enable the breakpoint if it wasn't removed by the user
         if (current_breakpoint.has_value() && m_breakpoints.contains(current_breakpoint.value().address)) {
+            // The current breakpoint was removed in order to make it transparrent to the user.
+            // We now want to re-enable it - the code execution flow could hit it again.
+            // To re-enable the breakpoint, we first perform a single step and execute the
+            // instruction of the breakpoint, and then redo the INT3 patch in its first byte.
             auto stopped_address = single_step();
             enable_breakpoint(current_breakpoint.value().address);
+            did_single_step = true;
             // If there is another breakpoint after the current one,
             // Then we are already on it (because of single_step)
             auto breakpoint_at_next_instruction = m_breakpoints.get(stopped_address);
@@ -215,7 +229,7 @@ void DebugSession::run(Callback callback)
             ASSERT_NOT_REACHED(); // TODO: implement
         }
 
-        if (state == State::SingleStep) {
+        if (state == State::SingleStep && !did_single_step) {
             single_step();
         }
     }
