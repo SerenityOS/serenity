@@ -33,7 +33,7 @@
 #        include <AK/Types.h>
 extern "C" {
 int dbgprintf(const char* fmt, ...);
-int dbgputstr(const char*, int);
+int dbgputstr(const char*, ssize_t);
 int sprintf(char* buf, const char* fmt, ...);
 }
 template<size_t N>
