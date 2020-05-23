@@ -34,6 +34,7 @@
 namespace Web {
 
 class HTMLToken {
+    friend class HTMLDocumentParser;
     friend class HTMLTokenizer;
 
 public:
@@ -46,7 +47,28 @@ public:
         EndOfFile,
     };
 
+    bool is_doctype() const { return m_type == Type::DOCTYPE; }
+    bool is_start_tag() const { return m_type == Type::StartTag; }
+    bool is_end_tag() const { return m_type == Type::EndTag; }
+    bool is_comment() const { return m_type == Type::Comment; }
+    bool is_character() const { return m_type == Type::Character; }
+    bool is_end_of_file() const { return m_type == Type::EndOfFile; }
+
+    String tag_name() const
+    {
+        ASSERT(is_start_tag() || is_end_tag());
+        return m_tag.tag_name.to_string();
+    }
+
+    bool is_self_closing() const
+    {
+        ASSERT(is_start_tag() || is_end_tag());
+        return m_tag.self_closing;
+    }
+
     Type type() const { return m_type; }
+
+    String to_string() const;
 
 private:
     struct AttributeBuilder {

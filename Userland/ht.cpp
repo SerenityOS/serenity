@@ -24,13 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/Parser/HTMLTokenizer.h>
-#include <LibCore/File.h>
 #include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/Dump.h>
+#include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/Parser/HTMLTokenizer.h>
 
 int main(int argc, char** argv)
 {
+    Core::EventLoop loop;
+
     // This is a temporary test program to aid with bringing up the new HTML parser. :^)
     const char* input_path = "/home/anon/www/simple.html";
     if (argc > 1)
@@ -40,7 +46,12 @@ int main(int argc, char** argv)
     if (file_or_error.is_error())
         return 1;
     auto contents = file_or_error.value()->read_all();
-    Web::HTMLTokenizer tokenizer(contents);
-    tokenizer.run();
+
+    Web::HTMLDocumentParser parser(contents);
+    parser.run();
+
+    auto& document = parser.document();
+    Web::dump_tree(document);
+
     return 0;
 }
