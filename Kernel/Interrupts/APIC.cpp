@@ -116,7 +116,7 @@ static void set_base(const PhysicalAddress& base)
 
 static void write_register(u32 offset, u32 value)
 {
-    *map_typed<u32>(g_apic_base.offset(offset)) = value;
+    *map_typed_writable<u32>(g_apic_base.offset(offset)) = value;
 }
 
 static u32 read_register(u32 offset)
