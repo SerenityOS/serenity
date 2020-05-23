@@ -215,7 +215,8 @@ void InterruptManagement::locate_apic_data()
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
             dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ Px" << String::format("%x", ioapic_entry->ioapic_address);
             m_interrupt_controllers.resize(1 + irq_controller_count);
-            m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(*(ioapic_mmio_regs*)ioapic_entry->ioapic_address, ioapic_entry->gsi_base));
+            // FIXME: Casting ioapic_entry->ioapic_address below looks suspicious!
+            m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(*(ioapic_mmio_regs*)(FlatPtr)ioapic_entry->ioapic_address, ioapic_entry->gsi_base));
             irq_controller_count++;
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
@@ -227,7 +228,7 @@ void InterruptManagement::locate_apic_data()
                 interrupt_override_entry->flags);
             dbg() << "Interrupts: Overriding INT 0x" << String::format("%x", interrupt_override_entry->source) << " with GSI " << interrupt_override_entry->global_system_interrupt << ", for bus 0x" << String::format("%x", interrupt_override_entry->bus);
         }
-        madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress((u32)madt_entry).offset(entry_length).get());
+        madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
         entries_length -= entry_length;
         entry_index++;
     }
