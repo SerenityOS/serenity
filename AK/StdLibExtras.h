@@ -362,6 +362,60 @@ struct MakeUnsigned<unsigned long long> {
     typedef unsigned long long type;
 };
 
+template<typename T>
+struct MakeSigned {
+};
+
+template<>
+struct MakeSigned<char> {
+    typedef char type;
+};
+
+template<>
+struct MakeSigned<short> {
+    typedef short type;
+};
+
+template<>
+struct MakeSigned<int> {
+    typedef int type;
+};
+
+template<>
+struct MakeSigned<long> {
+    typedef long type;
+};
+
+template<>
+struct MakeSigned<long long> {
+    typedef long long type;
+};
+
+template<>
+struct MakeSigned<unsigned char> {
+    typedef char type;
+};
+
+template<>
+struct MakeSigned<unsigned short> {
+    typedef short type;
+};
+
+template<>
+struct MakeSigned<unsigned int> {
+    typedef int type;
+};
+
+template<>
+struct MakeSigned<unsigned long> {
+    typedef long type;
+};
+
+template<>
+struct MakeSigned<unsigned long long> {
+    typedef long long type;
+};
+
 template<typename T, typename U = T>
 inline constexpr T exchange(T& slot, U&& value)
 {
@@ -378,6 +432,7 @@ using AK::Conditional;
 using AK::exchange;
 using AK::forward;
 using AK::IsSame;
+using AK::MakeSigned;
 using AK::MakeUnsigned;
 using AK::max;
 using AK::min;
