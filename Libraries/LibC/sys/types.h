@@ -48,7 +48,7 @@ typedef int id_t;
 typedef __WINT_TYPE__ wint_t;
 
 typedef uint32_t ino_t;
-typedef int32_t off_t;
+typedef ssize_t off_t;
 
 typedef uint32_t dev_t;
 typedef uint16_t mode_t;
