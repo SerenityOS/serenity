@@ -130,7 +130,7 @@ bool Ext2FS::initialize()
         return false;
     }
 
-    unsigned blocks_to_read = ceil_div(m_block_group_count * (unsigned)sizeof(ext2_group_desc), block_size());
+    unsigned blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
     m_cached_group_descriptor_table = KBuffer::create_with_size(block_size() * blocks_to_read, Region::Access::Read | Region::Access::Write, "Ext2FS: Block group descriptors");
     read_blocks(first_block_of_bgdt, blocks_to_read, m_cached_group_descriptor_table.value().data());
@@ -219,7 +219,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     LOCKER(m_lock);
 
     // NOTE: There is a mismatch between i_blocks and blocks.size() since i_blocks includes meta blocks and blocks.size() does not.
-    auto old_block_count = ceil_div(e2inode.i_size, block_size());
+    auto old_block_count = ceil_div(static_cast<size_t>(e2inode.i_size), block_size());
 
     auto old_shape = compute_block_list_shape(old_block_count);
     auto new_shape = compute_block_list_shape(blocks.size());
@@ -408,7 +408,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
     LOCKER(m_lock);
     unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
 
-    unsigned block_count = ceil_div(e2inode.i_size, block_size());
+    unsigned block_count = ceil_div(static_cast<size_t>(e2inode.i_size), block_size());
 
     // If we are handling a symbolic link, the path is stored in the 60 bytes in
     // the inode that are used for the 12 direct and 3 indirect block pointers,
@@ -522,7 +522,7 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
 void Ext2FS::flush_block_group_descriptor_table()
 {
     LOCKER(m_lock);
-    unsigned blocks_to_write = ceil_div(m_block_group_count * (unsigned)sizeof(ext2_group_desc), block_size());
+    unsigned blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     unsigned first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
     write_blocks(first_block_of_bgdt, blocks_to_write, (const u8*)block_group_descriptors());
 }
@@ -885,7 +885,7 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
 
     auto block_size = fs().block_size();
 
-    int blocks_needed = ceil_div(directory_size, block_size);
+    int blocks_needed = ceil_div(static_cast<size_t>(directory_size), block_size);
     int occupied_size = blocks_needed * block_size;
 
 #ifdef EXT2_DEBUG
@@ -1106,12 +1106,14 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
 
 unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_size)
 {
+    ASSERT(expected_size >= 0);
+
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbg() << "Ext2FS: find_a_free_inode(preferred_group: " << preferred_group << ", expected_size: " << String::format("%ld", expected_size) << ")";
+    dbg() << "Ext2FS: find_a_free_inode(preferred_group: " << preferred_group << ", expected_size: " << expected_size) << ")";
 #endif
 
-    unsigned needed_blocks = ceil_div(expected_size, block_size());
+    unsigned needed_blocks = ceil_div(static_cast<size_t>(expected_size), block_size());
 
 #ifdef EXT2_DEBUG
     dbg() << "Ext2FS: minimum needed blocks: " << needed_blocks;
@@ -1367,6 +1369,7 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
 KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
+    ASSERT(size >= 0);
     ASSERT(parent_id.fsid() == fsid());
     auto parent_inode = get_inode(parent_id);
     ASSERT(parent_inode);
@@ -1378,7 +1381,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     dbg() << "Ext2FS: Adding inode '" << name << "' (mode " << String::format("%o", mode) << ") to parent directory " << parent_inode->identifier();
 #endif
 
-    size_t needed_blocks = ceil_div(size, block_size());
+    size_t needed_blocks = ceil_div(static_cast<size_t>(size), block_size());
     if ((size_t)needed_blocks > super_block().s_free_blocks_count) {
         dbg() << "Ext2FS: create_inode: not enough free blocks";
         return KResult(-ENOSPC);
