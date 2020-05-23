@@ -30,6 +30,7 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <AK/Weakable.h>
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Heap.h>
@@ -69,7 +70,7 @@ struct Argument {
 
 typedef Vector<Argument, 8> ArgumentVector;
 
-class Interpreter {
+class Interpreter : public Weakable<Interpreter> {
 public:
     template<typename GlobalObjectType, typename... Args>
     static NonnullOwnPtr<Interpreter> create(Args&&... args)
