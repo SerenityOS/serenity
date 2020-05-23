@@ -84,8 +84,12 @@ private:
     void handle_in_head_noscript(HTMLToken&);
     void handle_after_head(HTMLToken&);
     void handle_in_body(HTMLToken&);
+    void handle_after_body(HTMLToken&);
+    void handle_after_after_body(HTMLToken&);
     void handle_text(HTMLToken&);
 
+    void generate_implied_end_tags();
+    bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
     NonnullRefPtr<Element> create_element_for(HTMLToken&);
     RefPtr<Node> find_appropriate_place_for_inserting_node();
     RefPtr<Element> insert_html_element(HTMLToken&);
@@ -97,6 +101,8 @@ private:
     HTMLTokenizer m_tokenizer;
 
     bool m_foster_parenting { false };
+    bool m_frameset_ok { true };
+    bool m_parsing_fragment { false };
 
     RefPtr<Document> m_document;
     RefPtr<HTMLHeadElement> m_head_element;

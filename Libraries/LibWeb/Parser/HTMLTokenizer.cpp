@@ -74,6 +74,9 @@
 #define ANYTHING_ELSE if (1)
 
 #define EMIT_EOF                                  \
+    if (m_has_emitted_eof)                        \
+        return {};                                \
+    m_has_emitted_eof = true;                     \
     create_new_token(HTMLToken::Type::EndOfFile); \
     return m_current_token;
 
@@ -775,7 +778,7 @@ void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
 void HTMLTokenizer::flush_current_character_or_comment_if_needed()
 {
     //if (m_current_token.type() == HTMLToken::Type::Character || m_current_token.type() == HTMLToken::Type::Comment)
-//        emit_current_token();
+    //        emit_current_token();
 }
 
 }

@@ -55,9 +55,6 @@ void HTMLDocumentParser::run()
 
         dbg() << "[" << insertion_mode_name() << "] " << token.to_string();
 
-        if (token.type() == HTMLToken::Type::EndOfFile)
-            return;
-
         switch (m_insertion_mode) {
         case InsertionMode::Initial:
             handle_initial(token);
@@ -79,6 +76,12 @@ void HTMLDocumentParser::run()
             break;
         case InsertionMode::InBody:
             handle_in_body(token);
+            break;
+        case InsertionMode::AfterBody:
+            handle_after_body(token);
+            break;
+        case InsertionMode::AfterAfterBody:
+            handle_after_after_body(token);
             break;
         case InsertionMode::Text:
             handle_text(token);
@@ -199,7 +202,10 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "body") {
-        ASSERT_NOT_REACHED();
+        insert_html_element(token);
+        m_frameset_ok = false;
+        m_insertion_mode = InsertionMode::InBody;
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "frameset") {
@@ -231,10 +237,94 @@ AnythingElse:
     fake_body_token.m_tag.tag_name.append("body");
     insert_html_element(fake_body_token);
     m_insertion_mode = InsertionMode::InBody;
+    // FIXME: Reprocess the current token in InBody!
 }
 
-void HTMLDocumentParser::handle_in_body(HTMLToken&)
+void HTMLDocumentParser::generate_implied_end_tags()
 {
+    Vector<String> names { "dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc" };
+    while (names.contains_slow(current_node()->tag_name()))
+        m_stack_of_open_elements.take_last();
+}
+
+bool HTMLDocumentParser::stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name)
+{
+    Vector<String> list { "applet", "caption", "html", "table", "td", "th", "marquee", "object", "template" };
+    for (ssize_t i = m_stack_of_open_elements.size() - 1; i >= 0; --i) {
+        auto& node = m_stack_of_open_elements.at(i);
+        if (node.tag_name() == tag_name)
+            return true;
+        if (list.contains_slow(node.tag_name()))
+            return false;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+void HTMLDocumentParser::handle_after_body(HTMLToken& token)
+{
+    if (token.is_end_tag() && token.tag_name() == "html") {
+        if (m_parsing_fragment) {
+            ASSERT_NOT_REACHED();
+        }
+        m_insertion_mode = InsertionMode::AfterAfterBody;
+        return;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
+{
+    if (token.is_end_of_file()) {
+        dbg() << "Stop parsing! :^)";
+        return;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+void HTMLDocumentParser::handle_in_body(HTMLToken& token)
+{
+    if (token.is_end_tag() && token.tag_name() == "body") {
+        if (!stack_of_open_elements_has_element_with_tag_name_in_scope("body")) {
+            ASSERT_NOT_REACHED();
+        }
+
+        // FIXME: Otherwise, if there is a node in the stack of open elements that is
+        // not either a dd element, a dt element, an li element, an optgroup element,
+        // an option element, a p element, an rb element, an rp element, an rt element,
+        // an rtc element, a tbody element, a td element, a tfoot element, a th element,
+        // a thead element, a tr element, the body element, or the html element,
+        // then this is a parse error.
+
+        m_insertion_mode = InsertionMode::AfterBody;
+        return;
+    }
+
+    {
+        Vector<String> names { "address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul" };
+        if (token.is_start_tag() && names.contains_slow(token.tag_name())) {
+            // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
+            insert_html_element(token);
+            return;
+        }
+
+        if (token.is_end_tag() && names.contains_slow(token.tag_name())) {
+            // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
+
+            if (!stack_of_open_elements_has_element_with_tag_name_in_scope(token.tag_name())) {
+                ASSERT_NOT_REACHED();
+            }
+
+            generate_implied_end_tags();
+
+            if (current_node()->tag_name() != token.tag_name()) {
+                ASSERT_NOT_REACHED();
+            }
+
+            m_stack_of_open_elements.take_last();
+            return;
+        }
+    }
+
     ASSERT_NOT_REACHED();
 }
 
