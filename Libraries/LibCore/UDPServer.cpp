@@ -31,12 +31,23 @@
 #include <LibCore/UDPSocket.h>
 #include <stdio.h>
 
+#ifndef SOCK_NONBLOCK
+#    include <sys/ioctl.h>
+#endif
+
 namespace Core {
 
 UDPServer::UDPServer(Object* parent)
     : Object(parent)
 {
+#ifdef SOCK_NONBLOCK
     m_fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+#else
+    m_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    int option = 1;
+    ioctl(m_fd, FIONBIO, &option);
+    fcntl(m_fd, F_SETFD, FD_CLOEXEC);
+#endif
     ASSERT(m_fd >= 0);
 }
 
