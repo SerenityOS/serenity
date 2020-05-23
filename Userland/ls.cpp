@@ -303,7 +303,7 @@ bool print_filesystem_object(const String& path, const String& name, const struc
             ASSERT(st.st_size > 0);
             printf(" %10s ", human_readable_size((size_t)st.st_size).characters());
         } else {
-            printf(" %10u ", st.st_size);
+            printf(" %10zd ", st.st_size);
         }
     }
 
