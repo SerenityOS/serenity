@@ -38,6 +38,7 @@ class Frame;
 class HTMLBodyElement;
 class HTMLCanvasElement;
 class HTMLElement;
+class HTMLFormElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
 class HTMLImageElement;
