@@ -998,14 +998,14 @@ void VT::move_relative(int x, int y)
 Style Editor::find_applicable_style(size_t offset) const
 {
     // Walk through our styles and merge all that fit in the offset.
-    Style style;
+    auto style = Style::reset_style();
     auto unify = [&](auto& entry) {
         if (entry.key >= offset)
             return;
         for (auto& style_value : entry.value) {
             if (style_value.key <= offset)
                 return;
-            style.unify_with(style_value.value);
+            style.unify_with(style_value.value, true);
         }
     };
 
