@@ -1175,20 +1175,22 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
         update_function_name(value, name);
 
         if (property.type() == ObjectProperty::Type::Getter || property.type() == ObjectProperty::Type::Setter) {
-            Value getter;
-            Value setter;
-            auto existing_property_metadata = object->shape().lookup(key);
-            Value existing_property;
-            if (existing_property_metadata.has_value())
-                existing_property = object->get_direct(existing_property_metadata.value().offset);
-            if (property.type() == ObjectProperty::Type::Getter) {
-                getter = value;
-                setter = existing_property.is_accessor() ? existing_property.as_accessor().setter() : Value();
-            } else {
-                getter = existing_property.is_accessor() ? existing_property.as_accessor().getter() : Value();
-                setter = value;
+            ASSERT(value.is_function());
+            Accessor* accessor { nullptr };
+            auto property_metadata = object->shape().lookup(key);
+            if (property_metadata.has_value()) {
+                auto existing_property = object->get_direct(property_metadata.value().offset);
+                if (existing_property.is_accessor())
+                    accessor = &existing_property.as_accessor();
             }
-            object->put_own_property(*object, key, Attribute::Configurable | Attribute::Enumerable, Accessor::create(interpreter, getter, setter), Object::PutOwnPropertyMode::DefineProperty);
+            if (!accessor) {
+                accessor = Accessor::create(interpreter, nullptr, nullptr);
+                object->put_own_property(*object, key, Attribute::Configurable | Attribute::Enumerable, accessor, Object::PutOwnPropertyMode::DefineProperty);
+            }
+            if (property.type() == ObjectProperty::Type::Getter)
+                accessor->set_getter(&value.as_function());
+            else
+                accessor->set_setter(&value.as_function());
         } else {
             object->put(key, value);
         }
