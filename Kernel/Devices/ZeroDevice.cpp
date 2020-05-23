@@ -46,14 +46,14 @@ bool ZeroDevice::can_read(const FileDescription&, size_t) const
 
 ssize_t ZeroDevice::read(FileDescription&, size_t, u8* buffer, ssize_t size)
 {
-    ssize_t count = min(PAGE_SIZE, size);
+    ssize_t count = min(static_cast<ssize_t>(PAGE_SIZE), size);
     memset(buffer, 0, (size_t)count);
     return count;
 }
 
 ssize_t ZeroDevice::write(FileDescription&, size_t, const u8*, ssize_t size)
 {
-    return min(PAGE_SIZE, size);
+    return min(static_cast<ssize_t>(PAGE_SIZE), size);
 }
 
 }

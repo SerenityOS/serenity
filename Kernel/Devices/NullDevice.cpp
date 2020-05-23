@@ -59,7 +59,7 @@ ssize_t NullDevice::read(FileDescription&, size_t, u8*, ssize_t)
 
 ssize_t NullDevice::write(FileDescription&, size_t, const u8*, ssize_t buffer_size)
 {
-    return min(PAGE_SIZE, buffer_size);
+    return min(static_cast<ssize_t>(PAGE_SIZE), buffer_size);
 }
 
 }

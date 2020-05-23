@@ -179,7 +179,7 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
     if (size < 0)
         return -EINVAL;
 
-    size_t size_to_allocate = max(PAGE_SIZE, metadata.size);
+    size_t size_to_allocate = max(static_cast<size_t>(PAGE_SIZE), static_cast<size_t>(metadata.size));
 
     auto temp_buffer = ByteBuffer::create_uninitialized(size_to_allocate);
     BufferStream stream(temp_buffer);

@@ -29,7 +29,6 @@
 #ifndef KERNEL
 
 #include <sys/cdefs.h>
-#include <sys/types.h>
 
 #ifdef __cplusplus
 #    define NULL nullptr
