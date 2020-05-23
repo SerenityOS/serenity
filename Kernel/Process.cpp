@@ -2636,7 +2636,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     return 0;
 }
 
-int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
+int Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
 {
     auto description = file_description(fd);
     if (!description)
