@@ -28,10 +28,11 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/IO.h>
+#include <Kernel/VM/TypedMapping.h>
 
 #define IRQ_APIC_SPURIOUS 0x7f
 
@@ -95,7 +96,7 @@ public:
     u32 high() const { return 0; }
 };
 
-static volatile u8* g_apic_base = nullptr;
+static PhysicalAddress g_apic_base;
 
 static PhysicalAddress get_base()
 {
@@ -115,16 +116,12 @@ static void set_base(const PhysicalAddress& base)
 
 static void write_register(u32 offset, u32 value)
 {
-    auto lapic_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)g_apic_base)), PAGE_SIZE, "LAPIC Write Access", Region::Access::Read | Region::Access::Write, false, true);
-    auto* lapic = (volatile u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
-    *lapic = value;
+    *map_typed<u32>(g_apic_base.offset(offset)) = value;
 }
 
 static u32 read_register(u32 offset)
 {
-    auto lapic_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)g_apic_base)), PAGE_SIZE, "LAPIC Read Access", Region::Access::Read, false, true);
-    auto* lapic = (volatile u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
-    return *lapic;
+    return *map_typed<u32>(g_apic_base.offset(offset));
 }
 
 static void write_icr(const ICRReg& icr)
@@ -177,7 +174,7 @@ bool init()
     klog() << "Initializing APIC, base: " << apic_base;
     set_base(apic_base);
 
-    g_apic_base = apic_base.as_ptr();
+    g_apic_base = apic_base;
 
     return true;
 }
