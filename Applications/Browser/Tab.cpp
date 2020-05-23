@@ -206,6 +206,13 @@ Tab::Tab()
             on_favicon_change(icon);
     };
 
+    m_html_widget->on_set_document = [this](auto* document) {
+        if (document && m_console_window) {
+            auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
+            console_widget->set_interpreter(document->interpreter().make_weak_ptr());
+        }
+    };
+
     auto focus_location_box_action = GUI::Action::create(
         "Focus location box", { Mod_Ctrl, Key_L }, [this](auto&) {
             m_location_box->select_all();
