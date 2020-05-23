@@ -26,8 +26,8 @@
 
 #include "Tab.h"
 #include "BookmarksBarWidget.h"
+#include "ConsoleWidget.h"
 #include "DownloadWidget.h"
-#include "History.h"
 #include "InspectorWidget.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
@@ -44,7 +44,7 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibJS/Interpreter.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
@@ -55,7 +55,6 @@
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Parser/CSSParser.h>
-#include <LibWeb/Parser/HTMLParser.h>
 #include <LibWeb/ResourceLoader.h>
 
 namespace Browser {
@@ -282,6 +281,21 @@ Tab::Tab()
             inspector_widget->set_document(m_html_widget->document());
             m_dom_inspector_window->show();
             m_dom_inspector_window->move_to_front();
+        },
+        this));
+
+    inspect_menu.add_action(GUI::Action::create(
+        "Open JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
+            if (!m_console_window) {
+                m_console_window = GUI::Window::construct();
+                m_console_window->set_rect(100, 100, 500, 300);
+                m_console_window->set_title("JS Console");
+                m_console_window->set_main_widget<ConsoleWidget>();
+            }
+            auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
+            console_widget->set_interpreter(m_html_widget->document()->interpreter().make_weak_ptr());
+            m_console_window->show();
+            m_console_window->move_to_front();
         },
         this));
 
