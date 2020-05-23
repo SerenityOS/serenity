@@ -555,6 +555,46 @@ int main(int argc, char** argv)
                 case JS::TokenType::UnterminatedStringLiteral:
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
                     break;
+                case JS::TokenType::BoolLiteral:
+                case JS::TokenType::NullLiteral:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow), Line::Style::Bold });
+                    break;
+                case JS::TokenType::Class:
+                case JS::TokenType::Const:
+                case JS::TokenType::Debugger:
+                case JS::TokenType::Delete:
+                case JS::TokenType::Function:
+                case JS::TokenType::In:
+                case JS::TokenType::Instanceof:
+                case JS::TokenType::Interface:
+                case JS::TokenType::Let:
+                case JS::TokenType::New:
+                case JS::TokenType::TemplateLiteralExprStart:
+                case JS::TokenType::TemplateLiteralExprEnd:
+                case JS::TokenType::Throw:
+                case JS::TokenType::Typeof:
+                case JS::TokenType::Var:
+                case JS::TokenType::Void:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Bold });
+                    break;
+                case JS::TokenType::Await:
+                case JS::TokenType::Case:
+                case JS::TokenType::Catch:
+                case JS::TokenType::Do:
+                case JS::TokenType::Else:
+                case JS::TokenType::Finally:
+                case JS::TokenType::For:
+                case JS::TokenType::If:
+                case JS::TokenType::Return:
+                case JS::TokenType::Switch:
+                case JS::TokenType::Try:
+                case JS::TokenType::While:
+                case JS::TokenType::Yield:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan), Line::Style::Italic });
+                    break;
+                case JS::TokenType::Identifier:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
+                    break;
                 case JS::TokenType::BracketClose:
                 case JS::TokenType::BracketOpen:
                 case JS::TokenType::Comma:
@@ -564,7 +604,6 @@ int main(int argc, char** argv)
                 case JS::TokenType::ParenOpen:
                 case JS::TokenType::Semicolon:
                 case JS::TokenType::Period:
-                    break;
                 case JS::TokenType::Ampersand:
                 case JS::TokenType::AmpersandEquals:
                 case JS::TokenType::Asterisk:
@@ -607,47 +646,8 @@ int main(int argc, char** argv)
                 case JS::TokenType::Tilde:
                 case JS::TokenType::UnsignedShiftRight:
                 case JS::TokenType::UnsignedShiftRightEquals:
-                    break;
-                case JS::TokenType::BoolLiteral:
-                case JS::TokenType::NullLiteral:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow), Line::Style::Bold });
-                    break;
-                case JS::TokenType::Class:
-                case JS::TokenType::Const:
-                case JS::TokenType::Debugger:
-                case JS::TokenType::Delete:
-                case JS::TokenType::Function:
-                case JS::TokenType::In:
-                case JS::TokenType::Instanceof:
-                case JS::TokenType::Interface:
-                case JS::TokenType::Let:
-                case JS::TokenType::New:
-                case JS::TokenType::TemplateLiteralExprStart:
-                case JS::TokenType::TemplateLiteralExprEnd:
-                case JS::TokenType::Throw:
-                case JS::TokenType::Typeof:
-                case JS::TokenType::Var:
-                case JS::TokenType::Void:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Bold });
-                    break;
-                case JS::TokenType::Await:
-                case JS::TokenType::Case:
-                case JS::TokenType::Catch:
-                case JS::TokenType::Do:
-                case JS::TokenType::Else:
-                case JS::TokenType::Finally:
-                case JS::TokenType::For:
-                case JS::TokenType::If:
-                case JS::TokenType::Return:
-                case JS::TokenType::Switch:
-                case JS::TokenType::Try:
-                case JS::TokenType::While:
-                case JS::TokenType::Yield:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan), Line::Style::Italic });
-                    break;
-                case JS::TokenType::Identifier:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
                 default:
+                    stylize({ start, end }, Line::Style::reset_style());
                     break;
                 }
             }
