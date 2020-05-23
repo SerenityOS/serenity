@@ -37,6 +37,12 @@ public:
     virtual ~DocumentType() override;
 
     virtual FlyString tag_name() const override { return "#doctype"; }
+
+    const String& name() const { return m_name; }
+    void set_name(const String& name) { m_name = name; }
+
+private:
+    String m_name;
 };
 
 template<>
