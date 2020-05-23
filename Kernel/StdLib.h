@@ -36,8 +36,6 @@ String copy_string_from_user(const char*, size_t);
 
 extern "C" {
 
-static_assert(sizeof(size_t) == 4);
-
 void copy_to_user(void*, const void*, size_t);
 void copy_from_user(void*, const void*, size_t);
 void memset_user(void*, int, size_t);
