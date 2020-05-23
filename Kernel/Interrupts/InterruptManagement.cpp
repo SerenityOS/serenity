@@ -29,6 +29,7 @@
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
@@ -37,7 +38,7 @@
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/IO.h>
+#include <Kernel/VM/TypedMapping.h>
 
 #define PCAT_COMPAT_FLAG 0x1
 
@@ -198,22 +199,21 @@ void InterruptManagement::switch_to_ioapic_mode()
 void InterruptManagement::locate_apic_data()
 {
     ASSERT(!m_madt.is_null());
-    auto region = MM.allocate_kernel_region(m_madt.page_base(), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
-    auto& madt = *(const ACPI::Structures::MADT*)region->vaddr().offset(m_madt.offset_in_page()).as_ptr();
+    auto madt = map_typed<ACPI::Structures::MADT>(m_madt);
 
     int irq_controller_count = 0;
-    if (madt.flags & PCAT_COMPAT_FLAG) {
+    if (madt->flags & PCAT_COMPAT_FLAG) {
         m_interrupt_controllers[0] = adopt(*new PIC());
         irq_controller_count++;
     }
     size_t entry_index = 0;
-    size_t entries_length = madt.h.length - sizeof(ACPI::Structures::MADT);
-    auto* madt_entry = madt.entries;
+    size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
+    auto* madt_entry = madt->entries;
     while (entries_length > 0) {
         size_t entry_length = madt_entry->length;
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::IOAPIC) {
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
-            dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ Px" << String::format("%x", ioapic_entry->ioapic_address);
+            dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ " << PhysicalAddress(ioapic_entry->ioapic_address);
             m_interrupt_controllers.resize(1 + irq_controller_count);
             // FIXME: Casting ioapic_entry->ioapic_address below looks suspicious!
             m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(*(ioapic_mmio_regs*)(FlatPtr)ioapic_entry->ioapic_address, ioapic_entry->gsi_base));
