@@ -78,17 +78,6 @@ enum class ConfigurationTableEntryType {
     CompatibilityBusAddressSpaceModifier = 130
 };
 
-enum class ConfigurationTableEntryLength {
-    Processor = 20,
-    Bus = 8,
-    IOAPIC = 8,
-    IO_Interrupt_Assignment = 8,
-    Local_Interrupt_Assignment = 8,
-    SystemAddressSpaceMapping = 20,
-    BusHierarchyDescriptor = 8,
-    CompatibilityBusAddressSpaceModifier = 8
-};
-
 struct [[gnu::packed]] ExtEntryHeader
 {
     u8 entry_type;
