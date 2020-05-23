@@ -73,30 +73,30 @@ void MultiProcessorParser::parse_configuration_table()
 #endif
         switch (entry->entry_type) {
         case ((u8)MultiProcessor::ConfigurationTableEntryType::Processor):
-            entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::Processor;
+            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::ProcessorEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::Bus):
             m_bus_entries.append(*(const MultiProcessor::BusEntry*)entry);
-            entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::Bus;
+            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::BusEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::IOAPIC):
-            entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::IOAPIC;
+            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::IOAPICEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::IO_Interrupt_Assignment):
             m_io_interrupt_assignment_entries.append(*(const MultiProcessor::IOInterruptAssignmentEntry*)entry);
-            entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::IO_Interrupt_Assignment;
+            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::IOInterruptAssignmentEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::Local_Interrupt_Assignment):
-            entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::Local_Interrupt_Assignment;
+            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::LocalInterruptAssignmentEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::SystemAddressSpaceMapping):
-            entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::SystemAddressSpaceMapping;
+            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::SystemAddressSpaceMappingEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::BusHierarchyDescriptor):
-            entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::BusHierarchyDescriptor;
+            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::BusHierarchyDescriptorEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::CompatibilityBusAddressSpaceModifier):
-            entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::CompatibilityBusAddressSpaceModifier;
+            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::CompatibilityBusAddressSpaceModifierEntry);
             break;
         default:
             ASSERT_NOT_REACHED();
