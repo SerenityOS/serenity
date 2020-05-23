@@ -83,6 +83,18 @@ try {
         assert(visited[2] === "baz");
     });
 
+    ["reduce"].forEach(name => {
+        const visited = [];
+        Array.prototype[name].call(o, function (_, value) {
+            visited.push(value);
+            return false;
+        }, "initial");
+        assert(visited.length === 3);
+        assert(visited[0] === "foo");
+        assert(visited[1] === "bar");
+        assert(visited[2] === "baz");
+    });
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020, Marcin Gasperowicz <xnooga@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,6 +58,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("concat", concat, 1, attr);
     put_native_function("slice", slice, 2, attr);
     put_native_function("indexOf", index_of, 1, attr);
+    put_native_function("reduce", reduce, 1, attr);
     put_native_function("reverse", reverse, 0, attr);
     put_native_function("lastIndexOf", last_index_of, 1, attr);
     put_native_function("includes", includes, 1, attr);
@@ -384,6 +386,65 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
     }
 
     return Value(-1);
+}
+
+Value ArrayPrototype::reduce(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
+        return {};
+
+    auto initial_length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+
+    size_t start = 0;
+
+    auto accumulator = js_undefined();
+    if (interpreter.argument_count() > 1) {
+        accumulator = interpreter.argument(1);
+    } else {
+        bool start_found = false;
+        while (!start_found && start < initial_length) {
+            auto value = this_object->get_by_index(start);
+            if (interpreter.exception())
+                return {};
+            start_found = !value.is_empty();
+            if (start_found)
+                accumulator = value;
+            start += 1;
+        }
+        if (!start_found) {
+            interpreter.throw_exception<TypeError>("Reduce of empty array with no initial value");
+            return {};
+        }
+    }
+
+    auto* callback_function = callback_from_args(interpreter, "reduce");
+    if (!callback_function)
+        return {};
+
+    auto this_value = js_undefined();
+
+    for (size_t i = start; i < initial_length; ++i) {
+        auto value = this_object->get_by_index(i);
+        if (interpreter.exception())
+            return {};
+        if (value.is_empty())
+            continue;
+
+        MarkedValueList arguments(interpreter.heap());
+        arguments.append(accumulator);
+        arguments.append(value);
+        arguments.append(Value((i32)i));
+        arguments.append(this_object);
+
+        accumulator = interpreter.call(*callback_function, this_value, move(arguments));
+        if (interpreter.exception())
+            return {};
+    }
+
+    return accumulator;
 }
 
 Value ArrayPrototype::reverse(Interpreter& interpreter)
