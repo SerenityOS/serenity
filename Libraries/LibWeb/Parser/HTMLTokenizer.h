@@ -118,14 +118,13 @@ class HTMLTokenizer {
 public:
     explicit HTMLTokenizer(const StringView& input);
 
-    void run();
+    Optional<HTMLToken> next_token();
 
 private:
     Optional<u32> next_codepoint();
     Optional<u32> peek_codepoint(size_t offset) const;
     bool next_few_characters_are(const StringView&) const;
     void consume(const StringView&);
-    void emit_current_token();
     void create_new_token(HTMLToken::Type);
 
     enum class State {

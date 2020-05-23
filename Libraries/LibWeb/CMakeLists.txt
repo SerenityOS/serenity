@@ -84,7 +84,9 @@ set(SOURCES
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
     Parser/CSSParser.cpp
+    Parser/HTMLDocumentParser.cpp
     Parser/HTMLParser.cpp
+    Parser/HTMLToken.cpp
     Parser/HTMLTokenizer.cpp
     ResourceLoader.cpp
     StylePropertiesModel.cpp

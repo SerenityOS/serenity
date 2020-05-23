@@ -28,6 +28,8 @@
 #include <LibWeb/Parser/HTMLTokenizer.h>
 #include <ctype.h>
 
+#pragma GCC diagnostic ignored "-Wunused-label"
+
 //#define TOKENIZER_TRACE
 
 #define TODO()                                                                                              \
@@ -46,6 +48,11 @@
     will_reconsume_in(State::new_state); \
     m_state = State::new_state;          \
     goto new_state;
+
+#define SWITCH_TO_AND_EMIT_CURRENT_TOKEN(new_state) \
+    will_switch_to(State::new_state);               \
+    m_state = State::new_state;                     \
+    return m_current_token;
 
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER --m_cursor;
 
@@ -66,10 +73,12 @@
 
 #define ANYTHING_ELSE if (1)
 
-#define EMIT_EOF_AND_RETURN                       \
+#define EMIT_EOF                                  \
     create_new_token(HTMLToken::Type::EndOfFile); \
-    emit_current_token();                         \
-    return;
+    return m_current_token;
+
+#define EMIT_CURRENT_TOKEN \
+    return m_current_token;
 
 #define BEGIN_STATE(state) \
     state:                 \
@@ -100,7 +109,7 @@ Optional<u32> HTMLTokenizer::peek_codepoint(size_t offset) const
     return m_input[m_cursor + offset];
 }
 
-void HTMLTokenizer::run()
+Optional<HTMLToken> HTMLTokenizer::next_token()
 {
     for (;;) {
         auto current_input_character = next_codepoint();
@@ -118,7 +127,7 @@ void HTMLTokenizer::run()
                 }
                 ON_EOF
                 {
-                    EMIT_EOF_AND_RETURN;
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -168,8 +177,7 @@ void HTMLTokenizer::run()
                 }
                 ON('>')
                 {
-                    emit_current_token();
-                    SWITCH_TO(Data);
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ANYTHING_ELSE
                 {
@@ -266,8 +274,7 @@ void HTMLTokenizer::run()
                 }
                 ON('>')
                 {
-                    emit_current_token();
-                    SWITCH_TO(Data);
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
@@ -297,8 +304,7 @@ void HTMLTokenizer::run()
                 }
                 ON('>')
                 {
-                    emit_current_token();
-                    SWITCH_TO(Data);
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
@@ -473,8 +479,7 @@ void HTMLTokenizer::run()
                 }
                 ON('>')
                 {
-                    emit_current_token();
-                    SWITCH_TO(Data);
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON(0)
                 {
@@ -504,8 +509,7 @@ void HTMLTokenizer::run()
                 }
                 ON('>')
                 {
-                    emit_current_token();
-                    SWITCH_TO(Data);
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
@@ -588,8 +592,7 @@ void HTMLTokenizer::run()
             {
                 ON('>')
                 {
-                    emit_current_token();
-                    SWITCH_TO(Data);
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON('!')
                 {
@@ -741,57 +744,6 @@ bool HTMLTokenizer::next_few_characters_are(const StringView& string) const
     return true;
 }
 
-void HTMLTokenizer::emit_current_token()
-{
-    StringBuilder builder;
-
-    switch (m_current_token.type()) {
-    case HTMLToken::Type::DOCTYPE:
-        builder.append("DOCTYPE");
-        builder.append(" { name: '");
-        builder.append(m_current_token.m_doctype.name.to_string());
-        builder.append("' }");
-        break;
-    case HTMLToken::Type::StartTag:
-        builder.append("StartTag");
-        break;
-    case HTMLToken::Type::EndTag:
-        builder.append("EndTag");
-        break;
-    case HTMLToken::Type::Comment:
-        builder.append("Comment");
-        break;
-    case HTMLToken::Type::Character:
-        builder.append("Character");
-        break;
-    case HTMLToken::Type::EndOfFile:
-        builder.append("EndOfFile");
-        break;
-    }
-
-    if (m_current_token.type() == HTMLToken::Type::StartTag || m_current_token.type() == HTMLToken::Type::EndTag) {
-        builder.append(" { name: '");
-        builder.append(m_current_token.m_tag.tag_name.to_string());
-        builder.append("', { ");
-        for (auto& attribute : m_current_token.m_tag.attributes) {
-            builder.append(attribute.name_builder.to_string());
-            builder.append("=\"");
-            builder.append(attribute.value_builder.to_string());
-            builder.append("\" ");
-        }
-        builder.append("} }");
-    }
-
-    if (m_current_token.type() == HTMLToken::Type::Comment || m_current_token.type() == HTMLToken::Type::Character) {
-        builder.append(" { data: '");
-        builder.append(m_current_token.m_comment_or_character.data.to_string());
-        builder.append(" }");
-    }
-
-    dbg() << "[" << String::format("%42s", state_name(m_state)) << "] " << builder.to_string();
-    m_current_token = {};
-}
-
 void HTMLTokenizer::create_new_token(HTMLToken::Type type)
 {
     flush_current_character_or_comment_if_needed();
@@ -822,8 +774,8 @@ void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
 
 void HTMLTokenizer::flush_current_character_or_comment_if_needed()
 {
-    if (m_current_token.type() == HTMLToken::Type::Character || m_current_token.type() == HTMLToken::Type::Comment)
-        emit_current_token();
+    //if (m_current_token.type() == HTMLToken::Type::Character || m_current_token.type() == HTMLToken::Type::Comment)
+//        emit_current_token();
 }
 
 }
