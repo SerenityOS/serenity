@@ -30,30 +30,19 @@
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 
-#ifdef __serenity__
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef unsigned long long int u64;
-static_assert(sizeof(u8) == 1);
-static_assert(sizeof(u16) == 2);
-static_assert(sizeof(u32) == 4);
-static_assert(sizeof(u64) == 8);
+typedef __UINT64_TYPE__ u64;
+typedef __UINT32_TYPE__ u32;
+typedef __UINT16_TYPE__ u16;
+typedef __UINT8_TYPE__ u8;
+typedef __INT64_TYPE__ i64;
+typedef __INT32_TYPE__ i32;
+typedef __INT16_TYPE__ i16;
+typedef __INT8_TYPE__ i8;
 
-typedef signed char i8;
-typedef signed short i16;
-typedef signed int i32;
-typedef signed long long int i64;
-static_assert(sizeof(i8) == 1);
-static_assert(sizeof(i16) == 2);
-static_assert(sizeof(i32) == 4);
-static_assert(sizeof(i64) == 8);
+#ifdef __serenity__
 
 typedef __SIZE_TYPE__ size_t;
-typedef i32 ssize_t;
-
-static_assert(sizeof(size_t) == sizeof(u32));
-static_assert(sizeof(ssize_t) == sizeof(i32));
+typedef MakeSigned<size_t>::type ssize_t;
 
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 
@@ -75,16 +64,6 @@ typedef int pid_t;
 #else
 #    include <stdint.h>
 #    include <sys/types.h>
-
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
 
 #    ifdef __ptrdiff_t
 typedef __PTRDIFF_TYPE__ __ptrdiff_t;
