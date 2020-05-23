@@ -557,35 +557,32 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
 
 Value ArrayPrototype::includes(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
-    if (!array)
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
         return {};
-
-    i32 array_size = array->elements().size();
-    if (array_size == 0)
+    i32 length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+    if (length == 0)
         return Value(false);
-
     i32 from_index = 0;
     if (interpreter.argument_count() >= 2) {
         from_index = interpreter.argument(1).to_i32(interpreter);
         if (interpreter.exception())
             return {};
-        if (from_index >= array_size)
+        if (from_index >= length)
             return Value(false);
-        auto negative_min_index = ((array_size - 1) * -1);
-        if (from_index < negative_min_index)
-            from_index = 0;
-        else if (from_index < 0)
-            from_index = array_size + from_index;
+        if (from_index < 0)
+            from_index = max(length + from_index, 0);
     }
-
     auto value_to_find = interpreter.argument(0);
-    for (i32 i = from_index; i < array_size; ++i) {
-        auto& element = array->elements().at(i);
+    for (i32 i = from_index; i < length; ++i) {
+        auto element = this_object->get_by_index(i).value_or(js_undefined());
+        if (interpreter.exception())
+            return {};
         if (same_value_zero(interpreter, element, value_to_find))
             return Value(true);
     }
-
     return Value(false);
 }
 
