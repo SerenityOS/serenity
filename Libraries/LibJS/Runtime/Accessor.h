@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,41 +27,43 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Cell.h>
-#include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/Function.h>
 
 namespace JS {
 
 class Accessor final : public Cell {
 public:
-    static Accessor* create(Interpreter& interpreter, Value getter, Value setter)
+    static Accessor* create(Interpreter& interpreter, Function* getter, Function* setter)
     {
         return interpreter.heap().allocate<Accessor>(getter, setter);
     }
 
-    Accessor(Value getter, Value setter)
+    Accessor(Function* getter, Function* setter)
         : m_getter(getter)
         , m_setter(setter)
     {
     }
 
-    Value getter() { return m_getter; }
-    Value setter() { return m_setter; }
+    Function* getter() const { return m_getter; }
+    void set_getter(Function* getter) { m_getter = getter; }
 
-    Value call_getter(Value this_object)
+    Function* setter() const { return m_setter; }
+    void set_setter(Function* setter) { m_setter = setter; }
+
+    Value call_getter(Value this_value)
     {
-        if (!getter().is_function())
+        if (!m_getter)
             return js_undefined();
-        return interpreter().call(getter().as_function(), this_object);
+        return interpreter().call(*m_getter, this_value);
     }
 
-    void call_setter(Value this_object, Value setter_value)
+    void call_setter(Value this_value, Value setter_value)
     {
-        if (!setter().is_function())
+        if (!m_setter)
             return;
         MarkedValueList arguments(interpreter().heap());
         arguments.values().append(setter_value);
-        interpreter().call(setter().as_function(), this_object, move(arguments));
+        interpreter().call(*m_setter, this_value, move(arguments));
     }
 
     void visit_children(Cell::Visitor& visitor) override
@@ -72,8 +75,8 @@ public:
 private:
     const char* class_name() const override { return "Accessor"; };
 
-    Value m_getter;
-    Value m_setter;
+    Function* m_getter { nullptr };
+    Function* m_setter { nullptr };
 };
 
 }
