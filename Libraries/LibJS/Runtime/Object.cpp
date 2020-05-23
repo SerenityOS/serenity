@@ -221,30 +221,35 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
             return false;
         }
 
-        auto getter = descriptor.get("get");
+        auto getter = descriptor.get("get").value_or(js_undefined());
         if (interpreter().exception())
             return {};
-        auto setter = descriptor.get("set");
+        auto setter = descriptor.get("set").value_or(js_undefined());
         if (interpreter().exception())
             return {};
 
-        if (!(getter.is_empty() || getter.is_undefined() || getter.is_function())) {
+        Function* getter_function { nullptr };
+        Function* setter_function { nullptr };
+
+        if (getter.is_function()) {
+            getter_function = &getter.as_function();
+        } else if (!getter.is_undefined()) {
             interpreter().throw_exception<TypeError>("Accessor descriptor's 'get' field must be a function or undefined");
             return false;
         }
 
-        if (!(setter.is_empty() || setter.is_undefined() || setter.is_function())) {
+        if (setter.is_function()) {
+            setter_function = &setter.as_function();
+        } else if (!setter.is_undefined()) {
             interpreter().throw_exception<TypeError>("Accessor descriptor's 'set' field must be a function or undefined");
             return false;
         }
 
-        // FIXME: Throw a TypeError if the setter does not take any arguments
+        dbg() << "Defining new property " << property_name << " with accessor descriptor { attributes=" << attributes << ", "
+              << "getter=" << getter.to_string_without_side_effects() << ", "
+              << "setter=" << setter.to_string_without_side_effects() << "}";
 
-        dbg() << "Defining new property " << property_name << " with accessor descriptor { attributes=" << attributes
-              << " , getter=" << (getter.is_empty() ? "<empty>" : getter.to_string_without_side_effects())
-              << ", setter=" << (setter.is_empty() ? "<empty>" : setter.to_string_without_side_effects()) << "}";
-
-        return put_own_property(*this, property_name, attributes, Accessor::create(interpreter(), getter, setter), PutOwnPropertyMode::DefineProperty, throw_exceptions);
+        return put_own_property(*this, property_name, attributes, Accessor::create(interpreter(), getter_function, setter_function), PutOwnPropertyMode::DefineProperty, throw_exceptions);
     }
 
     auto value = descriptor.get("value");
@@ -267,9 +272,9 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
 
     if (value.is_accessor()) {
         auto& accessor = value.as_accessor();
-        if (accessor.getter().is_function())
+        if (accessor.getter())
             attributes |= Attribute::HasGet;
-        if (accessor.setter().is_function())
+        if (accessor.setter())
             attributes |= Attribute::HasSet;
     }
 
