@@ -29,8 +29,8 @@
 #include "History.h"
 #include <AK/URL.h>
 #include <LibGUI/Widget.h>
-#include <LibWeb/Forward.h>
 #include <LibHTTP/HttpJob.h>
+#include <LibWeb/Forward.h>
 
 namespace Browser {
 
@@ -67,6 +67,7 @@ private:
     RefPtr<GUI::TextBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<GUI::Window> m_dom_inspector_window;
+    RefPtr<GUI::Window> m_console_window;
     RefPtr<GUI::StatusBar> m_statusbar;
     RefPtr<GUI::MenuBar> m_menubar;
     RefPtr<GUI::ToolBarContainer> m_toolbar_container;
