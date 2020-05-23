@@ -157,6 +157,7 @@ void HTMLTokenizer::run()
                     continue;
                 }
             }
+            END_STATE
 
             BEGIN_STATE(EndTagOpen)
             {
