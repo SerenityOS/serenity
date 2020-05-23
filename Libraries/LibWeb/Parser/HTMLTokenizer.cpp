@@ -66,11 +66,16 @@
 
 #define BEGIN_STATE(state) \
     state:                 \
-    case State::state:
+    case State::state: {   \
+        {                  \
+            {
 
 #define END_STATE         \
     ASSERT_NOT_REACHED(); \
-    break;
+    break;                \
+    }                     \
+    }                     \
+    }
 
 namespace Web {
 
@@ -494,6 +499,7 @@ void HTMLTokenizer::run()
                     continue;
                 }
             }
+            END_STATE
 
             BEGIN_STATE(CommentEnd)
             {
@@ -562,6 +568,7 @@ void HTMLTokenizer::run()
                     RECONSUME_IN(Comment);
                 }
             }
+            END_STATE
 
             BEGIN_STATE(CommentLessThanSign)
             {
