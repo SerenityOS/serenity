@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/kmalloc.h>
 #include <LibC/sys/arch/i386/regs.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibDebug/DebugSession.h>
@@ -44,12 +45,6 @@
 #include <unistd.h>
 
 static Line::Editor editor {};
-
-static int usage()
-{
-    printf("usage: sdb [command...]\n");
-    return 1;
-}
 
 OwnPtr<DebugSession> g_debug_session;
 
@@ -183,18 +178,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc == 1)
-        return usage();
+    const char* command = nullptr;
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(command,
+        "The program to be debugged, along with its arguments",
+        "program", Core::ArgsParser::Required::Yes);
+    args_parser.parse(argc, argv);
 
-    StringBuilder command;
-    command.append(argv[1]);
-    for (int i = 2; i < argc; ++i) {
-        command.appendf("%s ", argv[i]);
-    }
-
-    auto result = DebugSession::exec_and_attach(command.to_string());
+    auto result = DebugSession::exec_and_attach(command);
     if (!result) {
-        fprintf(stderr, "Failed to start debugging session for: \"%s\"\n", command.to_string().characters());
+        fprintf(stderr, "Failed to start debugging session for: \"%s\"\n", command);
         exit(1);
     }
     g_debug_session = result.release_nonnull();
