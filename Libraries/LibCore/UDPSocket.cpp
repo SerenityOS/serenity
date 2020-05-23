@@ -29,8 +29,7 @@
 #include <sys/socket.h>
 
 #ifndef SOCK_NONBLOCK
-#    include <fcntl.h>
-#    define SOCK_NONBLOCK O_NONBLOCK
+#    include <sys/ioctl.h>
 #endif
 
 namespace Core {
@@ -48,7 +47,14 @@ UDPSocket::UDPSocket(int fd, Object* parent)
 UDPSocket::UDPSocket(Object* parent)
     : Socket(Socket::Type::UDP, parent)
 {
+#ifdef SOCK_NONBLOCK
     int fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0);
+#else
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    int option = 1;
+    ioctl(fd, FIONBIO, &option);
+#endif
+
     if (fd < 0) {
         set_error(errno);
     } else {

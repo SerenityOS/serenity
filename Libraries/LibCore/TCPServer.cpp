@@ -33,17 +33,21 @@
 #include <sys/socket.h>
 
 #ifndef SOCK_NONBLOCK
-#    include <fcntl.h>
-#    define SOCK_NONBLOCK O_NONBLOCK
-#    define SOCK_CLOEXEC O_CLOEXEC
+#    include <sys/ioctl.h>
 #endif
-
 namespace Core {
 
 TCPServer::TCPServer(Object* parent)
     : Object(parent)
 {
+#ifdef SOCK_NONBLOCK
     m_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+#else
+    m_fd = socket(AF_INET, SOCK_STREAM, 0);
+    int option = 1;
+    ioctl(m_fd, FIONBIO, &option);
+    fcntl(m_fd, F_SETFD, FD_CLOEXEC);
+#endif
     ASSERT(m_fd >= 0);
 }
 
