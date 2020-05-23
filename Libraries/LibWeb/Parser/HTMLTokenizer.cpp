@@ -58,6 +58,9 @@
 #define ON_ASCII_ALPHA \
     if (current_input_character.has_value() && isalpha(current_input_character.value()))
 
+#define ON_ASCII_UPPER_ALPHA \
+    if (current_input_character.has_value() && current_input_character.value() >= 'A' && current_input_character.value() <= 'Z')
+
 #define ON_WHITESPACE \
     if (current_input_character.has_value() && (current_input_character.value() == '\t' || current_input_character.value() == '\a' || current_input_character.value() == '\f' || current_input_character.value() == ' '))
 
@@ -207,6 +210,18 @@ void HTMLTokenizer::run()
                 {
                     SWITCH_TO(BeforeDOCTYPEName);
                 }
+                ON('>')
+                {
+                    RECONSUME_IN(BeforeDOCTYPEName);
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
             }
             END_STATE
 
@@ -215,6 +230,24 @@ void HTMLTokenizer::run()
                 ON_WHITESPACE
                 {
                     continue;
+                }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    create_new_token(HTMLToken::Type::DOCTYPE);
+                    m_current_token.m_doctype.name.append(tolower(current_input_character.value()));
+                    SWITCH_TO(DOCTYPEName);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON('>')
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
                 }
                 ANYTHING_ELSE
                 {
@@ -227,15 +260,53 @@ void HTMLTokenizer::run()
 
             BEGIN_STATE(DOCTYPEName)
             {
+                ON_WHITESPACE
+                {
+                    SWITCH_TO(AfterDOCTYPEName);
+                }
                 ON('>')
                 {
                     emit_current_token();
                     SWITCH_TO(Data);
                 }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_current_token.m_doctype.name.append(tolower(current_input_character.value()));
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
                 ANYTHING_ELSE
                 {
                     m_current_token.m_doctype.name.append(current_input_character.value());
                     continue;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(AfterDOCTYPEName)
+            {
+                ON_WHITESPACE
+                {
+                    continue;
+                }
+                ON('>')
+                {
+                    emit_current_token();
+                    SWITCH_TO(Data);
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
                 }
             }
             END_STATE
