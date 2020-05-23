@@ -209,23 +209,10 @@ void TextEditor::doubleclick_event(MouseEvent& event)
 
     auto start = text_position_at(event.position());
     auto end = start;
-    auto& line = this->line(start.line());
-    auto clicked_on_alphanumeric = isalnum(line.codepoints()[start.column()]);
 
     if (!document().has_spans()) {
-        while (start.column() > 0) {
-            auto next_codepoint = line.codepoints()[start.column() - 1];
-            if ((clicked_on_alphanumeric && !isalnum(next_codepoint)) || (!clicked_on_alphanumeric && isalnum(next_codepoint)))
-                break;
-            start.set_column(start.column() - 1);
-        }
-
-        while (end.column() < line.length()) {
-            auto next_codepoint = line.codepoints()[end.column()];
-            if ((clicked_on_alphanumeric && !isalnum(next_codepoint)) || (!clicked_on_alphanumeric && isalnum(next_codepoint)))
-                break;
-            end.set_column(end.column() + 1);
-        }
+        start = document().first_word_break_before(start);
+        end = document().first_word_break_after(end);
     } else {
         for (auto& span : document().spans()) {
             if (!span.range.contains(start))
@@ -725,12 +712,19 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
-        if (event.ctrl() && document().has_spans()) {
-            // FIXME: Do something nice when the document has no spans.
-            auto span = document().first_non_skippable_span_before(m_cursor);
-            TextPosition new_cursor = !span.has_value()
-                ? TextPosition(0, 0)
-                : span.value().range.start();
+        if (event.ctrl()) {
+            TextPosition new_cursor;
+            if (document().has_spans()) {
+                auto span = document().first_non_skippable_span_before(m_cursor);
+                if (span.has_value()) {
+                    new_cursor = span.value().range.start();
+                } else {
+                    // No remaining spans, just use word break calculation
+                    new_cursor = document().first_word_break_before(m_cursor);
+                }
+            } else {
+                new_cursor = document().first_word_break_before(m_cursor);
+            }
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_cursor);
             if (event.shift() && m_selection.start().is_valid()) {
@@ -760,12 +754,19 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Right) {
-        if (event.ctrl() && document().has_spans()) {
-            // FIXME: Do something nice when the document has no spans.
-            auto span = document().first_non_skippable_span_after(m_cursor);
-            TextPosition new_cursor = !span.has_value()
-                ? document().spans().last().range.end()
-                : span.value().range.start();
+        if (event.ctrl()) {
+            TextPosition new_cursor;
+            if (document().has_spans()) {
+                auto span = document().first_non_skippable_span_after(m_cursor);
+                if (span.has_value()) {
+                    new_cursor = span.value().range.start();
+                } else {
+                    // No remaining spans, just use word break calculation
+                    new_cursor = document().first_word_break_after(m_cursor);
+                }
+            } else {
+                new_cursor = document().first_word_break_after(m_cursor);
+            }
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_cursor);
             if (event.shift() && m_selection.start().is_valid()) {
