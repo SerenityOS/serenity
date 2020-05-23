@@ -37,7 +37,7 @@
 
 #ifdef __serenity__
 #    include <serenity.h>
-#elif __linux__ or __MACH__
+#elif __linux__ or __APPLE__
 #    include <pthread.h>
 #endif
 
@@ -157,7 +157,7 @@ void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
         ASSERT_NOT_REACHED();
     }
     pthread_attr_destroy(&attr);
-#elif __MACH__
+#elif __APPLE__
     stack_base = (FlatPtr)pthread_get_stackaddr_np(pthread_self());
     pthread_attr_t attr = {};
     if (int rc = pthread_attr_getstacksize(&attr, &stack_size) != 0) {
