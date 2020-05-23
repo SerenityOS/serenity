@@ -39,9 +39,4 @@
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 typedef __SIZE_TYPE__ size_t;
 
-/* There is no __SSIZE_TYPE__ but we can trick the preprocessor into defining it for us anyway! */
-#define unsigned signed
-typedef __SIZE_TYPE__ ssize_t;
-#undef unsigned
-
 #endif
