@@ -225,6 +225,12 @@ int DebugSession::continue_debugee_and_wait(ContinueType type)
 
 void* DebugSession::single_step()
 {
+    // Single stepping works by setting the x86 TRAP flag bit in the eflags register.
+    // This flag causes the cpu to enter single-stepping mode, which causes
+    // Interupt 1 (debug interrupt) to be emitted after every instruction.
+    // To single step the program, we set the TRAP flag and continue the debugee.
+    // After the debugee has stopped, we clear the TRAP flag.
+
     auto regs = get_registers();
     constexpr u32 TRAP_FLAG = 0x100;
     regs.eflags |= TRAP_FLAG;
