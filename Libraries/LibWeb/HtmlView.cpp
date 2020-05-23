@@ -89,6 +89,9 @@ void HtmlView::set_document(Document* new_document)
 
     main_frame().set_document(new_document);
 
+    if (on_set_document)
+        on_set_document(new_document);
+
     if (new_document) {
         new_document->on_layout_updated = [this] {
             layout_and_sync_size();
