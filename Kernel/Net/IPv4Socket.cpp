@@ -462,7 +462,7 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
     }
 }
 
-int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
+int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(inet);
 

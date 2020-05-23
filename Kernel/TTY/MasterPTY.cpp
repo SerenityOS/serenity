@@ -124,7 +124,7 @@ void MasterPTY::close()
     }
 }
 
-int MasterPTY::ioctl(FileDescription& description, unsigned request, unsigned arg)
+int MasterPTY::ioctl(FileDescription& description, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(tty);
     if (!m_slave)

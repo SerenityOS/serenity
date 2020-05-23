@@ -43,7 +43,7 @@ public:
     virtual ssize_t write(FileDescription&, size_t, const u8*, ssize_t) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override final;
+    virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override final;
     virtual String absolute_path(const FileDescription&) const override { return tty_name(); }
 
     virtual StringView tty_name() const = 0;

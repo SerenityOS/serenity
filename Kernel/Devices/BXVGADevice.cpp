@@ -192,7 +192,7 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
     return region;
 }
 
-int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
+int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {

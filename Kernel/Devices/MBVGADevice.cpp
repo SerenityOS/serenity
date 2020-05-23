@@ -73,7 +73,7 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, Virtual
     return region;
 }
 
-int MBVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
+int MBVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {

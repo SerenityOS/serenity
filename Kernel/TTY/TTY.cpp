@@ -279,7 +279,7 @@ void TTY::set_termios(const termios& t)
 #endif
 }
 
-int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)
+int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(tty);
     auto& process = *Process::current;

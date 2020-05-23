@@ -56,7 +56,7 @@ private:
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual void close() override;
     virtual bool is_master_pty() const override { return true; }
-    virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
+    virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
     virtual const char* class_name() const override { return "MasterPTY"; }
 
     RefPtr<SlavePTY> m_slave;
