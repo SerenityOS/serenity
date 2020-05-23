@@ -59,7 +59,7 @@ private:
 
 class IOAPIC final : public IRQController {
 public:
-    IOAPIC(ioapic_mmio_regs& regs, u32 gsi_base);
+    IOAPIC(PhysicalAddress, u32 gsi_base);
     virtual void enable(const GenericInterruptHandler&) override;
     virtual void disable(const GenericInterruptHandler&) override;
     virtual void hard_disable() override;
@@ -97,7 +97,7 @@ private:
     void map_pci_interrupts();
     void isa_identity_map(int index);
 
-    ioapic_mmio_regs& m_physical_access_registers;
+    PhysicalAddress m_address;
     u32 m_gsi_base;
     u8 m_id;
     u8 m_version;
