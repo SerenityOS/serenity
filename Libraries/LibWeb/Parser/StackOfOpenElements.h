@@ -45,8 +45,11 @@ public:
     Element& current_node() { return m_elements.last(); }
 
     bool has_in_scope(const FlyString& tag_name) const;
+    bool has_in_button_scope(const FlyString& tag_name) const;
 
 private:
+    bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
+
     NonnullRefPtrVector<Element> m_elements;
 };
 

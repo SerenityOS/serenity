@@ -89,7 +89,7 @@ private:
     void handle_after_after_body(HTMLToken&);
     void handle_text(HTMLToken&);
 
-    void generate_implied_end_tags();
+    void generate_implied_end_tags(const FlyString& exception = {});
     bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
     NonnullRefPtr<Element> create_element_for(HTMLToken&);
     RefPtr<Node> find_appropriate_place_for_inserting_node();
@@ -98,6 +98,7 @@ private:
     void insert_character(u32 data);
     void insert_comment(HTMLToken&);
     void reconstruct_the_active_formatting_elements();
+    void close_a_p_element();
     void process_using_the_rules_for(InsertionMode, HTMLToken&);
     void parse_generic_raw_text_element(HTMLToken&);
     void increment_script_nesting_level();
