@@ -122,7 +122,7 @@ Tab::Tab()
 
     m_bookmark_button = toolbar.add<GUI::Button>();
     m_bookmark_button->set_button_style(Gfx::ButtonStyle::CoolBar);
-    m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-black.png"));
+    m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-contour.png"));
     m_bookmark_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_bookmark_button->set_preferred_size(22, 22);
 
@@ -367,10 +367,10 @@ void Tab::update_actions()
 void Tab::update_bookmark_button(const String& url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
-        m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-yellow.png"));
+        m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-filled.png"));
         m_bookmark_button->set_tooltip("Remove Bookmark");
     } else {
-        m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-contour.png"));
+        m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-contour.png"));
         m_bookmark_button->set_tooltip("Add Bookmark");
     }
 }
