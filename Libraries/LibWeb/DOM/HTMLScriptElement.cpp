@@ -43,6 +43,16 @@ HTMLScriptElement::~HTMLScriptElement()
 {
 }
 
+void HTMLScriptElement::set_parser_document(Badge<HTMLDocumentParser>, Document& document)
+{
+    m_parser_document = document.make_weak_ptr();
+}
+
+void HTMLScriptElement::set_non_blocking(Badge<HTMLDocumentParser>, bool non_blocking)
+{
+    m_non_blocking = non_blocking;
+}
+
 void HTMLScriptElement::children_changed()
 {
     HTMLElement::children_changed();
@@ -103,6 +113,127 @@ void HTMLScriptElement::inserted_into(Node& new_parent)
         return;
     }
     document().interpreter().run(*program);
+}
+
+void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
+{
+    if (m_already_started)
+        return;
+    RefPtr<Document> parser_document = m_parser_document.ptr();
+    m_parser_document = nullptr;
+
+    if (parser_document && !has_attribute("async")) {
+        m_non_blocking = true;
+    }
+
+    auto source_text = child_text_content();
+    if (!has_attribute("src") && source_text.is_empty())
+        return;
+
+    if (!is_connected())
+        return;
+
+    // FIXME: Check the "type" and "language" attributes
+
+    if (parser_document) {
+        m_parser_document = parser_document->make_weak_ptr();
+        m_non_blocking = false;
+    }
+
+    m_already_started = true;
+    m_preparation_time_document = document().make_weak_ptr();
+
+    if (parser_document && parser_document.ptr() != m_preparation_time_document.ptr()) {
+        return;
+    }
+
+    // FIXME: Check if scripting is disabled, if so return
+    // FIXME: Check the "nomodule" content attribute
+    // FIXME: Check CSP
+    // FIXME: Check "event" and "for" attributes
+    // FIXME: Check "charset" attribute
+    // FIXME: Check CORS
+    // FIXME: Module script credentials mode
+    // FIXME: Cryptographic nonce
+    // FIXME: Check "integrity" attribute
+    // FIXME: Check "referrerpolicy" attribute
+
+    m_parser_inserted = !!m_parser_document;
+
+    // FIXME: Check fetch options
+
+    if (has_attribute("src")) {
+        auto src = attribute("src");
+        if (src.is_empty()) {
+            // FIXME: Fire an "error" event at the element and return
+            ASSERT_NOT_REACHED();
+        }
+        m_from_an_external_file = true;
+
+        auto url = document().complete_url(src);
+        if (!url.is_valid()) {
+            // FIXME: Fire an "error" event at the element and return
+            ASSERT_NOT_REACHED();
+        }
+
+        // FIXME: Check classic vs. module script type
+
+        ResourceLoader::the().load(url, [this, url](auto& data, auto&) {
+            if (data.is_null()) {
+                dbg() << "HTMLScriptElement: Failed to load " << url;
+                return;
+            }
+            m_script_source = String::copy(data);
+            script_became_ready();
+        });
+    } else {
+        // FIXME: Check classic vs. module script type
+        m_script_source = source_text;
+        script_became_ready();
+    }
+
+    // FIXME: Check classic vs. module
+    if (has_attribute("src") && has_attribute("defer") && m_parser_inserted && !has_attribute("async")) {
+        // FIXME: Add the element to the end of the list of scripts that will execute
+        //        when the document has finished parsing associated with the Document
+        //        of the parser that created the element.
+        ASSERT_NOT_REACHED();
+    }
+
+    else if (has_attribute("src") && m_parser_inserted && !has_attribute("async")) {
+        document().set_pending_parsing_blocking_script({}, this);
+        when_the_script_is_ready([this] {
+            m_ready_to_be_parser_executed = true;
+        });
+    }
+
+    else if (has_attribute("src") && !has_attribute("async") && !m_non_blocking) {
+        ASSERT_NOT_REACHED();
+    }
+
+    else if (has_attribute("src")) {
+        ASSERT_NOT_REACHED();
+    }
+
+    else {
+        ASSERT_NOT_REACHED();
+    }
+}
+
+void HTMLScriptElement::script_became_ready()
+{
+    ASSERT(m_script_ready_callback);
+    m_script_ready_callback();
+    m_script_ready_callback = nullptr;
+}
+
+void HTMLScriptElement::when_the_script_is_ready(Function<void()> callback)
+{
+    if (m_script_ready) {
+        callback();
+        return;
+    }
+    m_script_ready_callback = move(callback);
 }
 
 }
