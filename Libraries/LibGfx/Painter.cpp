@@ -232,6 +232,25 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
     return fill_rect_with_gradient(Orientation::Horizontal, a_rect, gradient_start, gradient_end);
 }
 
+void Painter::fill_ellipse(const Rect& a_rect, Color color)
+{
+    auto rect = a_rect.translated(translation()).intersected(clip_rect());
+    if (rect.is_empty())
+        return;
+
+    ASSERT(m_target->rect().contains(rect));
+
+    RGBA32* dst = m_target->scanline(rect.top()) + rect.left() + rect.width() / 2;
+    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
+
+    for (int i = 0; i < rect.height(); i++) {
+        double y = rect.height() * 0.5 - i;
+        double x = rect.width() * sqrt(0.25 - y * y / rect.height() / rect.height());
+        fast_u32_fill(dst - (int)x, color.value(), 2 * (int)x);
+        dst += dst_skip;
+    }
+}
+
 void Painter::draw_ellipse_intersecting(const Rect& rect, Color color, int thickness)
 {
     constexpr int number_samples = 100; // FIXME: dynamically work out the number of samples based upon the rect size
