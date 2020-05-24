@@ -109,7 +109,7 @@ public:
     bool is_ancestor_of(const TreeNode&) const;
 
     void prepend_child(NonnullRefPtr<T> node);
-    void append_child(NonnullRefPtr<T> node);
+    void append_child(NonnullRefPtr<T> node, bool notify = true);
     NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node);
     void donate_all_children_to(T& node);
 
@@ -188,7 +188,7 @@ public:
     }
 
 protected:
-    TreeNode() {}
+    TreeNode() { }
 
 private:
     int m_ref_count { 1 };
@@ -230,7 +230,7 @@ inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)
 }
 
 template<typename T>
-inline void TreeNode<T>::append_child(NonnullRefPtr<T> node)
+inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool notify)
 {
     ASSERT(!node->m_parent);
 
@@ -244,10 +244,12 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node)
     m_last_child = node.ptr();
     if (!m_first_child)
         m_first_child = m_last_child;
-    node->inserted_into(static_cast<T&>(*this));
+    if (notify)
+        node->inserted_into(static_cast<T&>(*this));
     (void)node.leak_ref();
 
-    static_cast<T*>(this)->children_changed();
+    if (notify)
+        static_cast<T*>(this)->children_changed();
 }
 
 template<typename T>
