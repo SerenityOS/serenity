@@ -54,6 +54,31 @@ public:
     bool is_character() const { return m_type == Type::Character; }
     bool is_end_of_file() const { return m_type == Type::EndOfFile; }
 
+    u32 codepoint() const
+    {
+        ASSERT(is_character());
+        // FIXME: Handle non-ASCII codepoints properly.
+        ASSERT(m_comment_or_character.data.length() == 1);
+        return m_comment_or_character.data.string_view()[0];
+    }
+
+    bool is_parser_whitespace() const
+    {
+        // NOTE: The parser considers '\r' to be whitespace, while the tokenizer does not.
+        if (!is_character())
+            return false;
+        switch (codepoint()) {
+        case '\t':
+        case '\n':
+        case '\f':
+        case '\r':
+        case ' ':
+            return true;
+        default:
+            return false;
+        }
+    }
+
     String tag_name() const
     {
         ASSERT(is_start_tag() || is_end_tag());

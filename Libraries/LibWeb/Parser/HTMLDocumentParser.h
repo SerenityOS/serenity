@@ -95,9 +95,15 @@ private:
     RefPtr<Node> find_appropriate_place_for_inserting_node();
     RefPtr<Element> insert_html_element(HTMLToken&);
     Element& current_node();
+    void insert_character(u32 data);
+    void reconstruct_the_active_formatting_elements();
+    void process_using_the_rules_for(InsertionMode, HTMLToken&);
 
     InsertionMode m_insertion_mode { InsertionMode::Initial };
+
     StackOfOpenElements m_stack_of_open_elements;
+
+    NonnullRefPtrVector<Element> m_list_of_active_formatting_elements;
 
     HTMLTokenizer m_tokenizer;
 
