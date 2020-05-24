@@ -42,8 +42,10 @@ public:
 
     ~Job()
     {
-        auto elapsed = m_command_timer.elapsed();
-        dbg() << "Command \"" << m_cmd << "\" finished in " << elapsed << " ms";
+        if (m_active) {
+            auto elapsed = m_command_timer.elapsed();
+            dbg() << "Command \"" << m_cmd << "\" finished in " << elapsed << " ms";
+        }
     }
 
     Job(pid_t pid, unsigned pgid, String cmd, u64 job_id)
@@ -79,6 +81,8 @@ public:
         m_running_in_background = running_in_background;
     }
 
+    void deactivate() const { m_active = false; }
+
 private:
     unsigned m_pgid { 0 };
     pid_t m_pid { 0 };
@@ -88,4 +92,5 @@ private:
     bool m_running_in_background { false };
     int m_exit_code { -1 };
     Core::ElapsedTimer m_command_timer;
+    mutable bool m_active { true };
 };
