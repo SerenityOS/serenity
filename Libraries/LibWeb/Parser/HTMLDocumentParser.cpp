@@ -400,10 +400,43 @@ void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
 
 void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
 {
+    // FIXME: This needs to care about "markers"
+
     if (m_list_of_active_formatting_elements.is_empty())
         return;
 
-    ASSERT_NOT_REACHED();
+    if (m_stack_of_open_elements.contains(m_list_of_active_formatting_elements.last()))
+        return;
+
+    ssize_t index = m_list_of_active_formatting_elements.size() - 1;
+    RefPtr<Element> entry = m_list_of_active_formatting_elements.at(index);
+
+Rewind:
+    if (m_list_of_active_formatting_elements.size() == 1) {
+        goto Create;
+    }
+
+    --index;
+    entry = m_list_of_active_formatting_elements.at(index);
+
+    if (!m_stack_of_open_elements.contains(*entry))
+        goto Rewind;
+
+Advance:
+    ++index;
+    entry = m_list_of_active_formatting_elements.at(index);
+
+Create:
+    // FIXME: Hold on to the real token!
+    HTMLToken fake_token;
+    fake_token.m_type = HTMLToken::Type::StartTag;
+    fake_token.m_tag.tag_name.append(entry->tag_name());
+    auto new_element = insert_html_element(fake_token);
+
+    m_list_of_active_formatting_elements.ptr_at(index) = *new_element;
+
+    if (index != (ssize_t)m_list_of_active_formatting_elements.size() - 1)
+        goto Advance;
 }
 
 void HTMLDocumentParser::handle_in_body(HTMLToken& token)
@@ -532,6 +565,27 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag()) {
         reconstruct_the_active_formatting_elements();
         insert_html_element(token);
+        return;
+    }
+
+    if (token.is_end_tag()) {
+        RefPtr<Element> node;
+        for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
+            node = m_stack_of_open_elements.elements()[i];
+            if (node->tag_name() == token.tag_name()) {
+                generate_implied_end_tags(token.tag_name());
+                if (node != current_node()) {
+                    // It's a parse error
+                    TODO();
+                }
+                while (&current_node() != node) {
+                    m_stack_of_open_elements.pop();
+                }
+                m_stack_of_open_elements.pop();
+                break;
+            }
+            // FIXME: Handle special elements!
+        }
         return;
     }
 

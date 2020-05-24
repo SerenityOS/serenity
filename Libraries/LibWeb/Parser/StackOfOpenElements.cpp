@@ -33,4 +33,13 @@ bool StackOfOpenElements::has_in_button_scope(const FlyString& tag_name) const
     return has_in_scope_impl(tag_name, list);
 }
 
+bool StackOfOpenElements::contains(const Element& element) const
+{
+    for (auto& element_on_stack : m_elements) {
+        if (&element == &element_on_stack)
+            return true;
+    }
+    return false;
+}
+
 }
