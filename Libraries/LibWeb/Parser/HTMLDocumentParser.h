@@ -29,6 +29,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Parser/HTMLTokenizer.h>
+#include <LibWeb/Parser/StackOfOpenElements.h>
 
 #define ENUMERATE_INSERTION_MODES               \
     __ENUMERATE_INSERTION_MODE(Initial)         \
@@ -93,10 +94,10 @@ private:
     NonnullRefPtr<Element> create_element_for(HTMLToken&);
     RefPtr<Node> find_appropriate_place_for_inserting_node();
     RefPtr<Element> insert_html_element(HTMLToken&);
-    NonnullRefPtr<Node> current_node();
+    Element& current_node();
 
     InsertionMode m_insertion_mode { InsertionMode::Initial };
-    NonnullRefPtrVector<Node> m_stack_of_open_elements;
+    StackOfOpenElements m_stack_of_open_elements;
 
     HTMLTokenizer m_tokenizer;
 

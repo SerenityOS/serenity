@@ -88,6 +88,7 @@ set(SOURCES
     Parser/HTMLParser.cpp
     Parser/HTMLToken.cpp
     Parser/HTMLTokenizer.cpp
+    Parser/StackOfOpenElements.cpp
     ResourceLoader.cpp
     StylePropertiesModel.cpp
     URLEncoder.cpp
