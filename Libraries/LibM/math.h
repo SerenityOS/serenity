@@ -37,6 +37,8 @@ __BEGIN_DECLS
 #define M_TAU (M_PI * 2)
 #define M_LN2 0.69314718055995
 #define M_LN10 2.30258509299405
+#define M_SQRT2 1.4142135623730951
+#define M_SQRT1_2 0.7071067811865475
 
 double acos(double);
 float acosf(float);
