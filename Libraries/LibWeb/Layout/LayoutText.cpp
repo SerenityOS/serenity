@@ -134,6 +134,8 @@ void LayoutText::for_each_chunk(Callback callback, bool do_wrap_lines, bool do_w
         }
         ++it;
     }
+    if (last_was_newline)
+        commit_chunk(view.end(), true);
     if (start_of_chunk != view.end())
         commit_chunk(view.end(), false);
 }
