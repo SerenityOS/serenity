@@ -54,6 +54,8 @@ String HTMLToken::to_string() const
     case HTMLToken::Type::EndOfFile:
         builder.append("EndOfFile");
         break;
+    case HTMLToken::Type::Invalid:
+        ASSERT_NOT_REACHED();
     }
 
     if (type() == HTMLToken::Type::StartTag || type() == HTMLToken::Type::EndTag) {
@@ -72,7 +74,7 @@ String HTMLToken::to_string() const
     if (type() == HTMLToken::Type::Comment || type() == HTMLToken::Type::Character) {
         builder.append(" { data: '");
         builder.append(m_comment_or_character.data.to_string());
-        builder.append(" }");
+        builder.append("' }");
     }
 
     return builder.to_string();

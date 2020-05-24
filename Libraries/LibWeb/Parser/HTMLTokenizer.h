@@ -28,6 +28,7 @@
 
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/Parser/HTMLToken.h>
 
 #define ENUMERATE_TOKENIZER_STATES                                        \
@@ -118,7 +119,15 @@ class HTMLTokenizer {
 public:
     explicit HTMLTokenizer(const StringView& input);
 
+    enum class State {
+#define __ENUMERATE_TOKENIZER_STATE(state) state,
+        ENUMERATE_TOKENIZER_STATES
+#undef __ENUMERATE_TOKENIZER_STATE
+    };
+
     Optional<HTMLToken> next_token();
+
+    void switch_to(Badge<HTMLDocumentParser>, State new_state);
 
 private:
     Optional<u32> next_codepoint();
@@ -126,12 +135,7 @@ private:
     bool next_few_characters_are(const StringView&) const;
     void consume(const StringView&);
     void create_new_token(HTMLToken::Type);
-
-    enum class State {
-#define __ENUMERATE_TOKENIZER_STATE(state) state,
-        ENUMERATE_TOKENIZER_STATES
-#undef __ENUMERATE_TOKENIZER_STATE
-    };
+    bool current_end_tag_token_is_appropriate() const;
 
     static const char* state_name(State state)
     {
@@ -145,16 +149,21 @@ private:
         ASSERT_NOT_REACHED();
     }
 
+    void will_emit(HTMLToken&);
     void will_switch_to(State);
     void will_reconsume_in(State);
 
     State m_state { State::Data };
     State m_return_state { State::Data };
 
+    StringBuilder m_temporary_buffer;
+
     StringView m_input;
     size_t m_cursor { 0 };
 
     HTMLToken m_current_token;
+
+    HTMLToken m_last_emitted_start_tag;
 
     bool m_has_emitted_eof { false };
 };

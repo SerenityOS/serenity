@@ -52,6 +52,7 @@
 #define SWITCH_TO_AND_EMIT_CURRENT_TOKEN(new_state) \
     will_switch_to(State::new_state);               \
     m_state = State::new_state;                     \
+    will_emit(m_current_token);                     \
     return m_current_token;
 
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER --m_cursor;
@@ -68,6 +69,9 @@
 #define ON_ASCII_UPPER_ALPHA \
     if (current_input_character.has_value() && current_input_character.value() >= 'A' && current_input_character.value() <= 'Z')
 
+#define ON_ASCII_LOWER_ALPHA \
+    if (current_input_character.has_value() && current_input_character.value() >= 'a' && current_input_character.value() <= 'z')
+
 #define ON_WHITESPACE \
     if (current_input_character.has_value() && (current_input_character.value() == '\t' || current_input_character.value() == '\n' || current_input_character.value() == '\f' || current_input_character.value() == ' '))
 
@@ -78,10 +82,21 @@
         return {};                                \
     m_has_emitted_eof = true;                     \
     create_new_token(HTMLToken::Type::EndOfFile); \
+    will_emit(m_current_token);                   \
     return m_current_token;
 
-#define EMIT_CURRENT_TOKEN \
+#define EMIT_CURRENT_TOKEN      \
+    will_emit(m_current_token); \
     return m_current_token;
+
+#define EMIT_CHARACTER(codepoint)                                  \
+    create_new_token(HTMLToken::Type::Character);                  \
+    m_current_token.m_comment_or_character.data.append(codepoint); \
+    will_emit(m_current_token);                                    \
+    return m_current_token;
+
+#define EMIT_CURRENT_CHARACTER \
+    EMIT_CHARACTER(current_input_character.value());
 
 #define BEGIN_STATE(state) \
     state:                 \
@@ -134,9 +149,7 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
                 }
                 ANYTHING_ELSE
                 {
-                    create_new_token(HTMLToken::Type::Character);
-                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
-                    return m_current_token;
+                    EMIT_CURRENT_CHARACTER;
                 }
             }
             END_STATE
@@ -721,6 +734,99 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
             }
             END_STATE
 
+            BEGIN_STATE(RCDATA)
+            {
+                ON('&')
+                {
+                    m_return_state = State::RCDATA;
+                    SWITCH_TO(CharacterReference);
+                }
+                ON('<')
+                {
+                    SWITCH_TO(RCDATALessThanSign);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CURRENT_CHARACTER;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(RCDATALessThanSign)
+            {
+                ON('/')
+                {
+                    m_temporary_buffer.clear();
+                    SWITCH_TO(RCDATAEndTagOpen);
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CHARACTER('<');
+                    RECONSUME_IN(RCDATA);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(RCDATAEndTagOpen)
+            {
+                ON_ASCII_ALPHA
+                {
+                    create_new_token(HTMLToken::Type::EndTag);
+                    RECONSUME_IN(RCDATAEndTagName);
+                }
+                ANYTHING_ELSE
+                {
+                    // FIXME: Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS character token. Reconsume in the RCDATA state.
+                    TODO();
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(RCDATAEndTagName)
+            {
+                ON_WHITESPACE
+                {
+                    TODO();
+                }
+                ON('/')
+                {
+                    TODO();
+                }
+                ON('>')
+                {
+                    if (!current_end_tag_token_is_appropriate()) {
+                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                        TODO();
+                    }
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
+                }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_temporary_buffer.append(current_input_character.value());
+                    continue;
+                }
+                ON_ASCII_LOWER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(current_input_character.value());
+                    m_temporary_buffer.append(current_input_character.value());
+                    continue;
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
         default:
             ASSERT_NOT_REACHED();
         }
@@ -769,6 +875,28 @@ void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
 #ifdef TOKENIZER_TRACE
     dbg() << "[" << state_name(m_state) << "] Reconsume in " << state_name(new_state);
 #endif
+}
+
+void HTMLTokenizer::switch_to(Badge<HTMLDocumentParser>, State new_state)
+{
+#ifdef TOKENIZER_TRACE
+    dbg() << "[" << state_name(m_state) << "] Parser switches tokenizer state to " << state_name(new_state);
+#endif
+    m_state = new_state;
+}
+
+void HTMLTokenizer::will_emit(HTMLToken& token)
+{
+    if (token.is_start_tag())
+        m_last_emitted_start_tag = token;
+}
+
+bool HTMLTokenizer::current_end_tag_token_is_appropriate() const
+{
+    ASSERT(m_current_token.is_end_tag());
+    if (!m_last_emitted_start_tag.is_start_tag())
+        return false;
+    return m_current_token.tag_name() == m_last_emitted_start_tag.tag_name();
 }
 
 }

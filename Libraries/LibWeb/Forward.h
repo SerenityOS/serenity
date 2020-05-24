@@ -37,6 +37,7 @@ class EventTarget;
 class Frame;
 class HTMLBodyElement;
 class HTMLCanvasElement;
+class HTMLDocumentParser;
 class HTMLElement;
 class HTMLFormElement;
 class HTMLHeadElement;

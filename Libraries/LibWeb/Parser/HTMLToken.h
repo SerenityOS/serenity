@@ -39,6 +39,7 @@ class HTMLToken {
 
 public:
     enum class Type {
+        Invalid,
         DOCTYPE,
         StartTag,
         EndTag,
@@ -101,7 +102,7 @@ private:
         StringBuilder value_builder;
     };
 
-    Type m_type;
+    Type m_type { Type::Invalid };
 
     // Type::DOCTYPE
     struct {

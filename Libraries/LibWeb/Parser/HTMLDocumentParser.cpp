@@ -34,6 +34,11 @@
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLToken.h>
 
+#define TODO()                                                                                              \
+    do {                                                                                                    \
+        ASSERT_NOT_REACHED();                                                                               \
+    } while (0)
+
 namespace Web {
 
 HTMLDocumentParser::HTMLDocumentParser(const StringView& input)
@@ -176,6 +181,19 @@ void HTMLDocumentParser::handle_before_head(HTMLToken& token)
 
 void HTMLDocumentParser::handle_in_head(HTMLToken& token)
 {
+    if (token.is_parser_whitespace()) {
+        insert_character(token.codepoint());
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "title") {
+        insert_html_element(token);
+        m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);
+        m_original_insertion_mode = m_insertion_mode;
+        m_insertion_mode = InsertionMode::Text;
+        return;
+    }
+
     if (token.is_start_tag() && token.tag_name() == "meta") {
         auto element = insert_html_element(token);
         m_stack_of_open_elements.pop();
@@ -381,8 +399,20 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     ASSERT_NOT_REACHED();
 }
 
-void HTMLDocumentParser::handle_text(HTMLToken&)
+void HTMLDocumentParser::handle_text(HTMLToken& token)
 {
+    if (token.is_character()) {
+        insert_character(token.codepoint());
+        return;
+    }
+    if (token.is_end_tag() && token.tag_name() == "script") {
+        ASSERT_NOT_REACHED();
+    }
+    if (token.is_end_tag()) {
+        m_stack_of_open_elements.pop();
+        m_insertion_mode = m_original_insertion_mode;
+        return;
+    }
     ASSERT_NOT_REACHED();
 }
 
