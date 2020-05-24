@@ -84,6 +84,7 @@ using ContinuationRequest = ExitCodeOrContinuationRequest::ContinuationRequest;
     __ENUMERATE_SHELL_BUILTIN(popd)    \
     __ENUMERATE_SHELL_BUILTIN(time)    \
     __ENUMERATE_SHELL_BUILTIN(jobs)    \
+    __ENUMERATE_SHELL_BUILTIN(disown)  \
     __ENUMERATE_SHELL_BUILTIN(fg)      \
     __ENUMERATE_SHELL_BUILTIN(bg)
 

@@ -442,6 +442,65 @@ int Shell::builtin_fg(int argc, const char** argv)
     return return_value;
 }
 
+int Shell::builtin_disown(int argc, const char** argv)
+{
+    Vector<const char*> str_job_ids;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(str_job_ids, "Id of the jobs to disown (omit for current job)", "job_ids", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    Vector<size_t> job_ids;
+    for (auto& job_id : str_job_ids) {
+        bool ok;
+        auto id = StringView { job_id }.to_uint(ok);
+        if (ok)
+            job_ids.append(id);
+        else
+            printf("Invalid job id: %s\n", job_id);
+    }
+
+    if (job_ids.is_empty())
+        job_ids.append(jobs.size() - 1);
+
+    Vector<size_t> keys_of_jobs_to_disown;
+
+    for (auto id : job_ids) {
+        bool found = false;
+        for (auto& entry : jobs) {
+            if (entry.value->job_id() == id) {
+                keys_of_jobs_to_disown.append(entry.key);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            printf("job with id %zu not found\n", id);
+        }
+    }
+    if (keys_of_jobs_to_disown.is_empty()) {
+        if (str_job_ids.is_empty()) {
+            printf("disown: no current job\n");
+        }
+        // An error message has already been printed about the nonexistence of each listed job.
+        return 1;
+    }
+    for (auto job_index : keys_of_jobs_to_disown) {
+        auto job = jobs.get(job_index).value();
+
+        job->deactivate();
+
+        if (!job->is_running_in_background())
+            printf("disown warning: job %llu is currently not running, 'kill -%d %d' to make it continue\n", job->job_id(), SIGCONT, job->pid());
+
+        jobs.remove(job_index);
+    }
+
+    return 0;
+}
+
 int Shell::builtin_history(int, const char**)
 {
     for (size_t i = 0; i < editor.history().size(); ++i) {
