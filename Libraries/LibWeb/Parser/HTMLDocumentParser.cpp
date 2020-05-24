@@ -214,7 +214,7 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
 
     {
         Vector<String> names = { "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title" };
-        if (token.is_end_tag() && names.contains_slow(token.tag_name())) {
+        if (token.is_start_tag() && names.contains_slow(token.tag_name())) {
             ASSERT_NOT_REACHED();
         }
     }
