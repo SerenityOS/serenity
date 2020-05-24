@@ -827,6 +827,94 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
             }
             END_STATE
 
+            BEGIN_STATE(RAWTEXT)
+            {
+                ON('<')
+                {
+                    SWITCH_TO(RAWTEXTLessThanSign);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CURRENT_CHARACTER;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(RAWTEXTLessThanSign)
+            {
+                ON('/')
+                {
+                    m_temporary_buffer.clear();
+                    SWITCH_TO(RAWTEXTEndTagOpen);
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CHARACTER('<');
+                    RECONSUME_IN(RAWTEXT);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(RAWTEXTEndTagOpen)
+            {
+                ON_ASCII_ALPHA
+                {
+                    create_new_token(HTMLToken::Type::EndTag);
+                    RECONSUME_IN(RAWTEXTEndTagName);
+                }
+                ANYTHING_ELSE
+                {
+                    // FIXME: Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS character token. Reconsume in the RAWTEXT state.
+                    TODO();
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(RAWTEXTEndTagName)
+            {
+                ON_WHITESPACE
+                {
+                    TODO();
+                }
+                ON('/')
+                {
+                    TODO();
+                }
+                ON('>')
+                {
+                    if (!current_end_tag_token_is_appropriate()) {
+                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                        TODO();
+                    }
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
+                }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_temporary_buffer.append(current_input_character.value());
+                    continue;
+                }
+                ON_ASCII_LOWER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(current_input_character.value());
+                    m_temporary_buffer.append(current_input_character.value());
+                    continue;
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
         default:
             ASSERT_NOT_REACHED();
         }

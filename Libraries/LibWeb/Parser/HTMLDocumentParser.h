@@ -99,6 +99,7 @@ private:
     void insert_comment(HTMLToken&);
     void reconstruct_the_active_formatting_elements();
     void process_using_the_rules_for(InsertionMode, HTMLToken&);
+    void parse_generic_raw_text_element(HTMLToken&);
 
     InsertionMode m_insertion_mode { InsertionMode::Initial };
     InsertionMode m_original_insertion_mode { InsertionMode::Initial };
@@ -112,6 +113,7 @@ private:
     bool m_foster_parenting { false };
     bool m_frameset_ok { true };
     bool m_parsing_fragment { false };
+    bool m_scripting_enabled { true };
 
     RefPtr<Document> m_document;
     RefPtr<HTMLHeadElement> m_head_element;
