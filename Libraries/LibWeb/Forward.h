@@ -43,6 +43,7 @@ class HTMLFormElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
 class HTMLImageElement;
+class HTMLScriptElement;
 class HtmlView;
 class ImageData;
 class LayoutDocument;
