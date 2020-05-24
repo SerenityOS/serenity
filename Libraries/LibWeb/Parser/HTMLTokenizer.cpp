@@ -69,7 +69,7 @@
     if (current_input_character.has_value() && current_input_character.value() >= 'A' && current_input_character.value() <= 'Z')
 
 #define ON_WHITESPACE \
-    if (current_input_character.has_value() && (current_input_character.value() == '\t' || current_input_character.value() == '\a' || current_input_character.value() == '\f' || current_input_character.value() == ' '))
+    if (current_input_character.has_value() && (current_input_character.value() == '\t' || current_input_character.value() == '\n' || current_input_character.value() == '\f' || current_input_character.value() == ' '))
 
 #define ANYTHING_ELSE if (1)
 
