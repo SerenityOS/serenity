@@ -337,6 +337,7 @@ int Shell::builtin_dirs(int argc, const char** argv)
 
 int Shell::builtin_exit(int, const char**)
 {
+    stop_all_jobs();
     printf("Good-bye!\n");
     exit(0);
     return 0;
@@ -1744,5 +1745,44 @@ Shell::Shell()
 
 Shell::~Shell()
 {
+    stop_all_jobs();
     save_history();
+}
+
+void Shell::stop_all_jobs()
+{
+    if (!jobs.is_empty()) {
+        printf("Killing active jobs\n");
+        for (auto& entry : jobs) {
+            if (!entry.value->is_running_in_background()) {
+#ifdef SH_DEBUG
+                dbg() << "Job " << entry.value->pid() << " is not running in background";
+#endif
+                if (killpg(entry.value->pgid(), SIGCONT) < 0) {
+                    perror("killpg(CONT)");
+                }
+            }
+
+            if (killpg(entry.value->pgid(), SIGHUP) < 0) {
+                perror("killpg(HUP)");
+            }
+
+            if (killpg(entry.value->pgid(), SIGTERM) < 0) {
+                perror("killpg(TERM)");
+            }
+        }
+
+        usleep(10000); // Wait for a bit before killing the job
+
+        for (auto& entry : jobs) {
+#ifdef SH_DEBUG
+            dbg() << "Actively killing " << entry.value->pid() << "(" << entry.value->cmd() << ")";
+#endif
+            if (killpg(entry.value->pgid(), SIGKILL) < 0) {
+                if (errno == ESRCH)
+                    continue; // The process has exited all by itself.
+                perror("killpg(KILL)");
+            }
+        }
+    }
 }
