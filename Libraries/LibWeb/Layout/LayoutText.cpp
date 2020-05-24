@@ -27,8 +27,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/DirIterator.h>
-#include <LibGfx/Font.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutText.h>
@@ -95,80 +95,52 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
 }
 
 template<typename Callback>
-void LayoutText::for_each_word(Callback callback) const
+void LayoutText::for_each_chunk(Callback callback, bool do_wrap_lines, bool do_wrap_breaks) const
 {
     Utf8View view(m_text_for_rendering);
     if (view.is_empty())
         return;
 
-    auto start_of_word = view.begin();
+    auto start_of_chunk = view.begin();
 
-    auto commit_word = [&](auto it) {
-        int start = view.byte_offset_of(start_of_word);
-        int length = view.byte_offset_of(it) - view.byte_offset_of(start_of_word);
+    auto commit_chunk = [&](auto it, bool has_breaking_newline) {
+        int start = view.byte_offset_of(start_of_chunk);
+        int length = view.byte_offset_of(it) - view.byte_offset_of(start_of_chunk);
 
-        if (length > 0) {
-            callback(view.substring_view(start, length), start, length);
+        if (has_breaking_newline || length > 0) {
+            callback(view.substring_view(start, length), start, length, has_breaking_newline);
         }
 
-        start_of_word = it;
+        start_of_chunk = it;
     };
 
     bool last_was_space = isspace(*view.begin());
-
-    for (auto it = view.begin(); it != view.end();) {
-        bool is_space = isspace(*it);
-        if (is_space == last_was_space) {
-            ++it;
-            continue;
-        }
-        last_was_space = is_space;
-        commit_word(it);
-        ++it;
-    }
-    if (start_of_word != view.end())
-        commit_word(view.end());
-}
-
-void LayoutText::split_preformatted_into_lines(LayoutBlock& container)
-{
-    auto& font = style().font();
-    auto& line_boxes = container.line_boxes();
-    m_text_for_rendering = node().data();
-
-    Utf8View view(m_text_for_rendering);
-    if (view.is_empty())
-        return;
-
-    auto start_of_line = view.begin();
-
-    auto commit_line = [&](auto it) {
-        int start = view.byte_offset_of(start_of_line);
-        int length = view.byte_offset_of(it) - view.byte_offset_of(start_of_line);
-        if (length > 0)
-            line_boxes.last().add_fragment(*this, start, length, font.width(view), font.glyph_height());
-    };
-
     bool last_was_newline = false;
     for (auto it = view.begin(); it != view.end();) {
-        bool did_commit = false;
-        if (*it == '\n') {
-            commit_line(it);
-            line_boxes.append(LineBox());
-            did_commit = true;
-            last_was_newline = true;
-        } else {
+        if (last_was_newline) {
             last_was_newline = false;
+            commit_chunk(it, true);
+        }
+        if (do_wrap_breaks && *it == '\n') {
+            last_was_newline = true;
+            commit_chunk(it, false);
+        }
+        if (do_wrap_lines) {
+            bool is_space = isspace(*it);
+            if (is_space != last_was_space) {
+                last_was_space = is_space;
+                commit_chunk(it, false);
+            }
         }
         ++it;
-        if (did_commit)
-            start_of_line = it;
     }
-    if (start_of_line != view.end() || last_was_newline)
-        commit_line(view.end());
+    if (last_was_newline)
+        commit_chunk(view.end(), true);
+    if (start_of_chunk != view.end())
+        commit_chunk(view.end(), false);
 }
 
-void LayoutText::split_into_lines(LayoutBlock& container)
+void LayoutText::split_into_lines_by_rules(LayoutBlock& container, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
 {
     auto& font = style().font();
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
@@ -178,67 +150,111 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         line_boxes.append(LineBox());
     float available_width = container.width() - line_boxes.last().width();
 
-    if (style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre") {
-        split_preformatted_into_lines(container);
-        return;
-    }
-
     // Collapse whitespace into single spaces
-    auto utf8_view = Utf8View(node().data());
-    StringBuilder builder(node().data().length());
-    for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
-        if (!isspace(*it)) {
-            builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.codepoint_length_in_bytes());
-        } else {
-            builder.append(' ');
-            auto prev = it;
-            while (it != utf8_view.end() && isspace(*it)) {
-                prev = it;
-                ++it;
+    if (do_collapse) {
+        auto utf8_view = Utf8View(node().data());
+        StringBuilder builder(node().data().length());
+        for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
+            if (!isspace(*it)) {
+                builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.codepoint_length_in_bytes());
+            } else {
+                builder.append(' ');
+                auto prev = it;
+                while (it != utf8_view.end() && isspace(*it)) {
+                    prev = it;
+                    ++it;
+                }
+                it = prev;
             }
-            it = prev;
         }
+        m_text_for_rendering = builder.to_string();
+    } else {
+        m_text_for_rendering = node().data();
     }
-    m_text_for_rendering = builder.to_string();
 
-    struct Word {
+    // do_wrap_lines  => chunks_are_words
+    // !do_wrap_lines => chunks_are_lines
+    struct Chunk {
         Utf8View view;
         int start;
         int length;
+        bool is_break;
     };
-    Vector<Word> words;
+    Vector<Chunk> chunks;
 
-    for_each_word([&](const Utf8View& view, int start, int length) {
-        words.append({ Utf8View(view), start, length });
-    });
+    for_each_chunk([&](const Utf8View& view, int start, int length, bool is_break) {
+        chunks.append({ Utf8View(view), start, length, is_break });
+    },
+        do_wrap_lines, do_wrap_breaks);
 
-    for (size_t i = 0; i < words.size(); ++i) {
-        auto& word = words[i];
+    for (size_t i = 0; i < chunks.size(); ++i) {
+        auto& chunk = chunks[i];
 
-        float word_width;
-        bool is_whitespace = isspace(*word.view.begin());
+        float chunk_width;
+        bool need_collapse = false;
+        if (do_wrap_lines) {
+            bool need_collapse = do_collapse && isspace(*chunk.view.begin());
 
-        if (is_whitespace)
-            word_width = space_width;
-        else
-            word_width = font.width(word.view) + font.glyph_spacing();
+            if (need_collapse)
+                chunk_width = space_width;
+            else
+                chunk_width = font.width(chunk.view) + font.glyph_spacing();
 
-        if (line_boxes.last().width() > 0 && word_width > available_width) {
-            line_boxes.append(LineBox());
-            available_width = container.width();
+            if (line_boxes.last().width() > 0 && chunk_width > available_width) {
+                line_boxes.append(LineBox());
+                available_width = container.width();
+            }
+            if (need_collapse & line_boxes.last().fragments().is_empty())
+                continue;
+        } else {
+            chunk_width = font.width(chunk.view);
         }
 
-        if (is_whitespace && line_boxes.last().fragments().is_empty())
-            continue;
+        line_boxes.last().add_fragment(*this, chunk.start, need_collapse ? 1 : chunk.length, chunk_width, font.glyph_height());
+        available_width -= chunk_width;
 
-        line_boxes.last().add_fragment(*this, word.start, is_whitespace ? 1 : word.length, word_width, font.glyph_height());
-        available_width -= word_width;
+        if (do_wrap_lines) {
+            if (available_width < 0) {
+                line_boxes.append(LineBox());
+                available_width = container.width();
+            }
+        }
 
-        if (available_width < 0) {
-            line_boxes.append(LineBox());
-            available_width = container.width();
+        if (do_wrap_breaks) {
+            if (chunk.is_break) {
+                line_boxes.append(LineBox());
+                available_width = container.width();
+            }
         }
     }
+}
+
+void LayoutText::split_into_lines(LayoutBlock& container)
+{
+    bool do_collapse = true;
+    bool do_wrap_lines = true;
+    bool do_wrap_breaks = false;
+    auto white_space_prop = style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal");
+
+    if (white_space_prop == "nowrap") {
+        do_collapse = true;
+        do_wrap_lines = false;
+        do_wrap_breaks = false;
+    } else if (white_space_prop == "pre") {
+        do_collapse = false;
+        do_wrap_lines = false;
+        do_wrap_breaks = true;
+    } else if (white_space_prop == "pre-line") {
+        do_collapse = true;
+        do_wrap_lines = true;
+        do_wrap_breaks = true;
+    } else if (white_space_prop == "pre-wrap") {
+        do_collapse = false;
+        do_wrap_lines = true;
+        do_wrap_breaks = true;
+    }
+
+    split_into_lines_by_rules(container, do_collapse, do_wrap_lines, do_wrap_breaks);
 }
 
 }
