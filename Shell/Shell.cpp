@@ -1052,8 +1052,7 @@ IterationDecision Shell::wait_for_pid(const Shell::SpawnedProcess& process, bool
         if (WEXITSTATUS(wstatus) != 0)
             dbg() << "Shell: " << process.name << ":" << process.pid << " exited with status " << WEXITSTATUS(wstatus);
 
-        if (is_first_command_in_chain)
-            return_value = WEXITSTATUS(wstatus);
+        return_value = WEXITSTATUS(wstatus);
 
         if (job) {
             auto* mutable_job = const_cast<Job*>(job);
@@ -1128,6 +1127,7 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
                     break;
                 }
             }
+
             dbgprintf("\n");
             for (auto& redirecton : command.subcommands[i].redirections) {
                 for (size_t j = 0; j < i; ++j)
@@ -1151,6 +1151,13 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
                 }
             }
         }
+        if (auto attributes = command.attributes) {
+            dbgprintf("\n ");
+            if (attributes & Attributes::InBackground)
+                dbgprintf("InBackground ");
+            if (attributes & Attributes::ShortCircuitOnFailure)
+                dbgprintf("ShortCircuitOnFailure ");
+        }
         dbgprintf("\n");
     }
 #endif
@@ -1159,8 +1166,20 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
     tcgetattr(0, &trm);
 
     int return_value = 0;
+    bool fail_short_circuits = false;
 
     for (auto& command : commands) {
+        if (fail_short_circuits) {
+            if (command.attributes & Attributes::ShortCircuitOnFailure)
+                continue;
+
+            // Do not fail any command after this one, as we've reached the end of a short-circuit chain,
+            // e.g. foo && bar && baz ; foobar
+            //                    ^ we reached this command.
+            fail_short_circuits = false;
+            continue;
+        }
+
         if (command.subcommands.is_empty())
             continue;
 
@@ -1306,6 +1325,14 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
             dbgprintf("  %d (%s)\n", child.pid, child.name.characters());
 #endif
 
+        if (command.attributes & Attributes::InBackground) {
+            // Set the jobs as running in background and continue without waiting.
+            for (auto& child : children)
+                const_cast<Job*>(jobs.get(child.pid).value())->set_running_in_background(true);
+
+            continue;
+        }
+
         for (size_t i = 0; i < children.size(); ++i) {
             auto& child = children[i];
             dbg() << "Now waiting for " << child.name << " (" << child.pid << ")";
@@ -1313,6 +1340,12 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
                 if (wait_for_pid(child, i != children.size() - 1, return_value) == IterationDecision::Break)
                     break;
             } while (errno == EINTR);
+        }
+
+        if (command.attributes & Attributes::ShortCircuitOnFailure) {
+            if (return_value != 0) {
+                fail_short_circuits = true;
+            }
         }
     }
 
