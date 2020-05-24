@@ -162,6 +162,7 @@ private:
     };
 
     void cache_path();
+    void stop_all_jobs();
 
     IterationDecision wait_for_pid(const SpawnedProcess&, bool is_first_command_in_chain, int& return_value);
 
