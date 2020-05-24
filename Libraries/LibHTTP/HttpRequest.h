@@ -65,6 +65,8 @@ public:
 
     RefPtr<Core::NetworkJob> schedule();
 
+    void set_headers(const HashMap<String, String>&);
+
     static Optional<HttpRequest> from_raw_request(const ByteBuffer&);
 
 private:

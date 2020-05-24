@@ -35,6 +35,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+// #define SUGGESTIONS_DEBUG
+
 namespace Line {
 
 Editor::Editor(Configuration configuration)
@@ -50,6 +52,7 @@ Editor::Editor(Configuration configuration)
         m_num_columns = ws.ws_col;
         m_num_lines = ws.ws_row;
     }
+    m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns);
 }
 
 Editor::~Editor()
@@ -76,6 +79,12 @@ void Editor::clear_line()
     m_inline_search_cursor = m_cursor;
 }
 
+void Editor::insert(const Utf32View& string)
+{
+    for (size_t i = 0; i < string.length(); ++i)
+        insert(string.codepoints()[i]);
+}
+
 void Editor::insert(const String& string)
 {
     for (auto ch : Utf8View { string })
@@ -88,6 +97,8 @@ void Editor::insert(const u32 cp)
     builder.append(Utf32View(&cp, 1));
     auto str = builder.build();
     m_pending_chars.append(str.characters(), str.length());
+
+    readjust_anchored_styles(m_cursor, ModificationKind::Insertion);
 
     if (m_cursor == m_buffer.size()) {
         m_buffer.append(cp);
@@ -124,51 +135,93 @@ static size_t codepoint_length_in_utf8(u32 codepoint)
     return 3;
 }
 
+// buffer [ 0 1 2 3 . . . A . . . B . . . M . . . N ]
+//                        ^       ^       ^       ^
+//                        |       |       |       +- end of buffer
+//                        |       |       +- scan offset = M
+//                        |       +- range end = M - B
+//                        +- range start = M - A
+// This method converts a byte range defined by [start_byte_offset, end_byte_offset] to a codepoint range [M - A, M - B] as shown in the diagram above.
+// If `reverse' is true, A and B are before M, if not, A and B are after M.
+Editor::CodepointRange Editor::byte_offset_range_to_codepoint_offset_range(size_t start_byte_offset, size_t end_byte_offset, size_t scan_codepoint_offset, bool reverse) const
+{
+    size_t byte_offset = 0;
+    size_t codepoint_offset = scan_codepoint_offset + (reverse ? 1 : 0);
+    CodepointRange range;
+
+    for (;;) {
+        if (!reverse) {
+            if (codepoint_offset >= m_buffer.size())
+                break;
+        } else {
+            if (codepoint_offset == 0)
+                break;
+        }
+
+        if (byte_offset > end_byte_offset)
+            break;
+
+        if (byte_offset < start_byte_offset)
+            ++range.start;
+
+        if (byte_offset < end_byte_offset)
+            ++range.end;
+
+        byte_offset += codepoint_length_in_utf8(m_buffer[reverse ? --codepoint_offset : codepoint_offset++]);
+    }
+
+    return range;
+}
+
 void Editor::stylize(const Span& span, const Style& style)
 {
+    if (style.is_empty())
+        return;
+
     auto start = span.beginning();
     auto end = span.end();
 
     if (span.mode() == Span::ByteOriented) {
-        size_t byte_offset = 0;
-        size_t codepoint_offset = 0;
-        size_t start_codepoint_offset = 0, end_codepoint_offset = 0;
+        auto offsets = byte_offset_range_to_codepoint_offset_range(start, end, 0);
 
-        for (;;) {
-            if (codepoint_offset >= m_buffer.size())
-                break;
-
-            if (byte_offset > end)
-                break;
-
-            if (byte_offset < start)
-                ++start_codepoint_offset;
-
-            ++end_codepoint_offset;
-
-            byte_offset += codepoint_length_in_utf8(m_buffer[codepoint_offset++]);
-        }
-
-        start = start_codepoint_offset;
-        end = end_codepoint_offset;
+        start = offsets.start;
+        end = offsets.end;
     }
 
-    auto starting_map = m_spans_starting.get(start).value_or({});
+    auto& spans_starting = style.is_anchored() ? m_anchored_spans_starting : m_spans_starting;
+    auto& spans_ending = style.is_anchored() ? m_anchored_spans_ending : m_spans_ending;
+
+    auto starting_map = spans_starting.get(start).value_or({});
 
     if (!starting_map.contains(end))
         m_refresh_needed = true;
 
     starting_map.set(end, style);
 
-    m_spans_starting.set(start, starting_map);
+    spans_starting.set(start, starting_map);
 
-    auto ending_map = m_spans_ending.get(end).value_or({});
+    auto ending_map = spans_ending.get(end).value_or({});
 
     if (!ending_map.contains(start))
         m_refresh_needed = true;
     ending_map.set(start, style);
 
-    m_spans_ending.set(end, ending_map);
+    spans_ending.set(end, ending_map);
+}
+
+void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode offset_mode) const
+{
+    auto internal_static_offset = static_offset;
+    auto internal_invariant_offset = invariant_offset;
+    if (offset_mode == Span::Mode::ByteOriented) {
+        // FIXME: We're assuming that invariant_offset points to the end of the available data
+        //        this is not necessarily true, but is true in most cases.
+        auto offsets = byte_offset_range_to_codepoint_offset_range(internal_static_offset, internal_invariant_offset + internal_static_offset, m_cursor - 1, true);
+
+        internal_static_offset = offsets.start;
+        internal_invariant_offset = offsets.end - offsets.start;
+    }
+    m_suggestion_manager.set_suggestion_variants(internal_static_offset, internal_invariant_offset, 0);
 }
 
 String Editor::get_line(const String& prompt)
@@ -179,6 +232,7 @@ String Editor::get_line(const String& prompt)
     set_prompt(prompt);
     reset();
     set_origin();
+    strip_styles(true);
 
     m_history_cursor = m_history.size();
     for (;;) {
@@ -238,20 +292,9 @@ String Editor::get_line(const String& prompt)
             exit(0);
 
         auto reverse_tab = false;
-        auto increment_suggestion_index = [&] {
-            if (m_suggestions.size())
-                m_next_suggestion_index = (m_next_suggestion_index + 1) % m_suggestions.size();
-            else
-                m_next_suggestion_index = 0;
-        };
-        auto decrement_suggestion_index = [&] {
-            if (m_next_suggestion_index == 0)
-                m_next_suggestion_index = m_suggestions.size();
-            m_next_suggestion_index--;
-        };
         auto ctrl_held = false;
 
-        // discard starting bytes until they make sense as utf-8
+        // Discard starting bytes until they make sense as utf-8.
         size_t valid_bytes = 0;
         while (nread) {
             Utf8View { StringView { m_incomplete_data.data(), (size_t)nread } }.validate(valid_bytes);
@@ -352,8 +395,8 @@ String Editor::get_line(const String& prompt)
                 case 'C': // right
                     if (m_cursor < m_buffer.size()) {
                         if (ctrl_held) {
-                            // temporarily put a space at the end of our buffer
-                            // this greatly simplifies the logic below
+                            // Temporarily put a space at the end of our buffer,
+                            // doing this greatly simplifies the logic below.
                             m_buffer.append(' ');
                             for (;;) {
                                 if (m_cursor >= m_buffer.size())
@@ -396,7 +439,7 @@ String Editor::get_line(const String& prompt)
                         fflush(stdout);
                         continue;
                     }
-                    m_buffer.remove(m_cursor);
+                    remove_at_index(m_cursor);
                     m_refresh_needed = true;
                     m_search_offset = 0;
                     m_state = InputState::ExpectTerminator;
@@ -433,231 +476,114 @@ String Editor::get_line(const String& prompt)
                 if (!on_tab_complete)
                     continue;
 
-                // reverse tab can count as regular tab here
+                // Reverse tab can count as regular tab here.
                 m_times_tab_pressed++;
 
-                // ask for completions only on the first tab
-                // and scan for the largest common prefix to display
-                // further tabs simply show the cached completions
+                int token_start = m_cursor;
+
+                // Ask for completions only on the first tab
+                // and scan for the largest common prefix to display,
+                // further tabs simply show the cached completions.
                 if (m_times_tab_pressed == 1) {
-                    m_suggestions = on_tab_complete(*this);
-                    size_t common_suggestion_prefix { 0 };
-                    if (m_suggestions.size() == 1) {
-                        m_largest_common_suggestion_prefix_length = m_suggestions[0].text.length();
-                    } else if (m_suggestions.size()) {
-                        char last_valid_suggestion_char;
-                        for (;; ++common_suggestion_prefix) {
-                            if (m_suggestions[0].text.length() <= common_suggestion_prefix)
-                                goto no_more_commons;
-
-                            last_valid_suggestion_char = m_suggestions[0].text[common_suggestion_prefix];
-
-                            for (const auto& suggestion : m_suggestions) {
-                                if (suggestion.text.length() <= common_suggestion_prefix || suggestion.text[common_suggestion_prefix] != last_valid_suggestion_char) {
-                                    goto no_more_commons;
-                                }
-                            }
-                        }
-                    no_more_commons:;
-                        m_largest_common_suggestion_prefix_length = common_suggestion_prefix;
-                    } else {
-                        m_largest_common_suggestion_prefix_length = 0;
-                        // there are no suggestions, beep~
+                    m_suggestion_manager.set_suggestions(on_tab_complete(*this));
+                    m_prompt_lines_at_suggestion_initiation = num_lines();
+                    if (m_suggestion_manager.count() == 0) {
+                        // There are no suggestions, beep.
                         putchar('\a');
                         fflush(stdout);
                     }
-                    m_prompt_lines_at_suggestion_initiation = num_lines();
                 }
 
-                // Adjust already incremented / decremented index when switching tab direction
+                // Adjust already incremented / decremented index when switching tab direction.
                 if (reverse_tab && m_tab_direction != TabDirection::Backward) {
-                    decrement_suggestion_index();
-                    decrement_suggestion_index();
+                    m_suggestion_manager.previous();
+                    m_suggestion_manager.previous();
                     m_tab_direction = TabDirection::Backward;
                 }
                 if (!reverse_tab && m_tab_direction != TabDirection::Forward) {
-                    increment_suggestion_index();
-                    increment_suggestion_index();
+                    m_suggestion_manager.next();
+                    m_suggestion_manager.next();
                     m_tab_direction = TabDirection::Forward;
                 }
                 reverse_tab = false;
 
-                auto current_suggestion_index = m_next_suggestion_index;
-                if (m_next_suggestion_index < m_suggestions.size()) {
-                    auto can_complete = m_next_suggestion_invariant_offset <= m_largest_common_suggestion_prefix_length;
-                    if (!m_last_shown_suggestion.text.is_null()) {
-                        size_t actual_offset;
-                        size_t shown_length = m_last_shown_suggestion_display_length;
-                        switch (m_times_tab_pressed) {
-                        case 1:
-                            actual_offset = m_cursor;
-                            break;
-                        case 2:
-                            actual_offset = m_cursor - m_largest_common_suggestion_prefix_length + m_next_suggestion_invariant_offset;
-                            if (can_complete)
-                                shown_length = m_largest_common_suggestion_prefix_length + m_last_shown_suggestion.trailing_trivia.length();
-                            break;
-                        default:
-                            if (m_last_shown_suggestion_display_length == 0)
-                                actual_offset = m_cursor;
-                            else
-                                actual_offset = m_cursor - m_last_shown_suggestion_display_length + m_next_suggestion_invariant_offset;
-                            break;
-                        }
+                auto completion_mode = m_times_tab_pressed == 1 ? SuggestionManager::CompletePrefix : m_times_tab_pressed == 2 ? SuggestionManager::ShowSuggestions : SuggestionManager::CycleSuggestions;
 
-                        for (size_t i = m_next_suggestion_invariant_offset; i < shown_length; ++i)
-                            m_buffer.remove(actual_offset);
-                        m_cursor = actual_offset;
-                        m_inline_search_cursor = m_cursor;
-                        m_refresh_needed = true;
-                    }
-                    m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
-                    m_last_shown_suggestion_display_length = m_last_shown_suggestion.text.length();
-                    m_last_shown_suggestion_was_complete = true;
-                    if (m_times_tab_pressed == 1) {
-                        // This is the first time, so only auto-complete *if possible*
-                        if (can_complete) {
-                            insert(m_last_shown_suggestion.text.substring_view(m_next_suggestion_invariant_offset, m_largest_common_suggestion_prefix_length - m_next_suggestion_invariant_offset));
-                            m_last_shown_suggestion_display_length = m_largest_common_suggestion_prefix_length;
-                            // do not increment the suggestion index, as the first tab should only be a *peek*
-                            if (m_suggestions.size() == 1) {
-                                // if there's one suggestion, commit and forget
-                                m_times_tab_pressed = 0;
-                                // add in the trivia of the last selected suggestion
-                                insert(m_last_shown_suggestion.trailing_trivia);
-                                m_last_shown_suggestion_display_length += m_last_shown_suggestion.trailing_trivia.length();
-                            }
-                        } else {
-                            m_last_shown_suggestion_display_length = 0;
-                        }
-                        ++m_times_tab_pressed;
-                        m_last_shown_suggestion_was_complete = false;
-                    } else {
-                        insert(m_last_shown_suggestion.text.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.text.length() - m_next_suggestion_invariant_offset));
-                        // add in the trivia of the last selected suggestion
-                        insert(m_last_shown_suggestion.trailing_trivia);
-                        m_last_shown_suggestion_display_length += m_last_shown_suggestion.trailing_trivia.length();
-                        if (m_tab_direction == TabDirection::Forward)
-                            increment_suggestion_index();
-                        else
-                            decrement_suggestion_index();
-                    }
-                } else {
-                    m_next_suggestion_index = 0;
+                auto completion_result = m_suggestion_manager.attempt_completion(completion_mode, token_start);
+
+                auto new_cursor = m_cursor + completion_result.new_cursor_offset;
+                for (size_t i = completion_result.offset_region_to_remove.start; i < completion_result.offset_region_to_remove.end; ++i)
+                    remove_at_index(new_cursor);
+
+                m_cursor = new_cursor;
+                m_inline_search_cursor = new_cursor;
+                m_refresh_needed = true;
+
+                for (auto& view : completion_result.insert)
+                    insert(view);
+
+                if (completion_result.style_to_apply.has_value()) {
+                    // Apply the style of the last suggestion.
+                    readjust_anchored_styles(m_suggestion_manager.current_suggestion().start_index, ModificationKind::ForcedOverlapRemoval);
+                    stylize({ m_suggestion_manager.current_suggestion().start_index, m_cursor, Span::Mode::CodepointOriented }, completion_result.style_to_apply.value());
                 }
 
-                if (m_times_tab_pressed > 1 && !m_suggestions.is_empty()) {
-                    size_t longest_suggestion_length = 0;
-                    size_t start_index = 0;
-
-                    for (auto& suggestion : m_suggestions) {
-                        if (start_index++ < m_last_displayed_suggestion_index)
-                            continue;
-                        longest_suggestion_length = max(longest_suggestion_length, suggestion.text.length());
-                    }
-
-                    size_t num_printed = 0;
-                    size_t lines_used { 1 };
-                    size_t index { 0 };
-                    vt_save_cursor();
-                    vt_clear_lines(0, m_lines_used_for_last_suggestions);
-                    vt_restore_cursor();
-                    auto spans_entire_line { false };
-                    auto max_line_count = (m_cached_prompt_length + longest_suggestion_length + m_num_columns - 1) / m_num_columns;
-                    if (longest_suggestion_length >= m_num_columns - 2) {
-                        spans_entire_line = true;
-                        // we should make enough space for the biggest entry in
-                        // the suggestion list to fit in the prompt line
-                        auto start = max_line_count - m_prompt_lines_at_suggestion_initiation;
-                        for (size_t i = start; i < max_line_count; ++i) {
-                            putchar('\n');
-                        }
-                        lines_used += max_line_count;
-                        longest_suggestion_length = 0;
-                    }
-                    vt_move_absolute(max_line_count + m_origin_x, 1);
-                    for (auto& suggestion : m_suggestions) {
-                        if (index < m_last_displayed_suggestion_index) {
-                            ++index;
-                            continue;
-                        }
-                        size_t next_column = num_printed + suggestion.text.length() + longest_suggestion_length + 2;
-
-                        if (next_column > m_num_columns) {
-                            auto lines = (suggestion.text.length() + m_num_columns - 1) / m_num_columns;
-                            lines_used += lines;
-                            putchar('\n');
-                            num_printed = 0;
-                        }
-
-                        // show just enough suggestions to fill up the screen
-                        // without moving the prompt out of view
-                        if (lines_used + m_prompt_lines_at_suggestion_initiation >= m_num_lines)
-                            break;
-
-                        // only apply colour to the selection if something is *actually* added to the buffer
-                        if (m_last_shown_suggestion_was_complete && index == current_suggestion_index) {
-                            vt_apply_style({ Style::Foreground(Style::XtermColor::Blue) });
-                            fflush(stdout);
-                        }
-
-                        if (spans_entire_line) {
-                            num_printed += m_num_columns;
-                            fprintf(stderr, "%s", suggestion.text.characters());
-                        } else {
-                            num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.text.characters());
-                        }
-
-                        if (m_last_shown_suggestion_was_complete && index == current_suggestion_index) {
-                            vt_apply_style({});
-                            fflush(stdout);
-                        }
-
-                        ++index;
-                    }
-                    m_lines_used_for_last_suggestions = lines_used;
-
-                    // if we filled the screen, move back the origin
-                    if (m_origin_x + lines_used >= m_num_lines) {
-                        m_origin_x = m_num_lines - lines_used;
-                    }
-
-                    --index;
-                    // cycle pages of suggestions
-                    if (index == current_suggestion_index)
-                        m_last_displayed_suggestion_index = index;
-
-                    if (m_last_displayed_suggestion_index >= m_suggestions.size() - 1)
-                        m_last_displayed_suggestion_index = 0;
-                }
-                if (m_suggestions.size() < 2) {
-                    // we have none, or just one suggestion
-                    // we should just commit that and continue
-                    // after it, as if it were auto-completed
-                    suggest(0, 0);
-                    m_last_shown_suggestion = String::empty();
-                    m_last_shown_suggestion_display_length = 0;
-                    m_suggestions.clear();
+                switch (completion_result.new_completion_mode) {
+                case SuggestionManager::DontComplete:
                     m_times_tab_pressed = 0;
-                    m_last_displayed_suggestion_index = 0;
+                    break;
+                case SuggestionManager::CompletePrefix:
+                    break;
+                default:
+                    ++m_times_tab_pressed;
+                    break;
+                }
+
+                if (m_times_tab_pressed > 1) {
+                    if (m_suggestion_manager.count() > 0) {
+                        if (m_suggestion_display->cleanup())
+                            reposition_cursor();
+
+                        m_suggestion_display->set_initial_prompt_lines(m_prompt_lines_at_suggestion_initiation);
+
+                        m_suggestion_display->display(m_suggestion_manager);
+
+                        m_origin_x = m_suggestion_display->origin_x();
+                    }
+                }
+
+                if (m_times_tab_pressed > 2) {
+                    if (m_tab_direction == TabDirection::Forward)
+                        m_suggestion_manager.next();
+                    else
+                        m_suggestion_manager.previous();
+                }
+
+                if (m_suggestion_manager.count() < 2) {
+                    // We have none, or just one suggestion,
+                    // we should just commit that and continue
+                    // after it, as if it were auto-completed.
+                    suggest(0, 0, Span::CodepointOriented);
+                    m_times_tab_pressed = 0;
+                    m_suggestion_manager.reset();
+                    m_suggestion_display->finish();
                 }
                 continue;
             }
 
             if (m_times_tab_pressed) {
-                // we probably have some suggestions drawn
-                // let's clean them up
-                if (m_lines_used_for_last_suggestions) {
-                    vt_clear_lines(0, m_lines_used_for_last_suggestions);
+                // Apply the style of the last suggestion.
+                readjust_anchored_styles(m_suggestion_manager.current_suggestion().start_index, ModificationKind::ForcedOverlapRemoval);
+                stylize({ m_suggestion_manager.current_suggestion().start_index, m_cursor, Span::Mode::CodepointOriented }, m_suggestion_manager.current_suggestion().style);
+                // We probably have some suggestions drawn,
+                // let's clean them up.
+                if (m_suggestion_display->cleanup()) {
                     reposition_cursor();
                     m_refresh_needed = true;
-                    m_lines_used_for_last_suggestions = 0;
                 }
-                m_last_shown_suggestion_display_length = 0;
-                m_last_shown_suggestion = String::empty();
-                m_last_displayed_suggestion_index = 0;
-                m_suggestions.clear();
-                suggest(0, 0);
+                m_suggestion_manager.reset();
+                suggest(0, 0, Span::CodepointOriented);
+                m_suggestion_display->finish();
             }
             m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
@@ -670,10 +596,10 @@ String Editor::get_line(const String& prompt)
                     fflush(stdout);
                     return;
                 }
-                m_buffer.remove(m_cursor - 1);
+                remove_at_index(m_cursor - 1);
                 --m_cursor;
                 m_inline_search_cursor = m_cursor;
-                // we will have to redraw :(
+                // We will have to redraw :(
                 m_refresh_needed = true;
             };
 
@@ -696,7 +622,7 @@ String Editor::get_line(const String& prompt)
             }
             if (codepoint == m_termios.c_cc[VKILL]) {
                 for (size_t i = 0; i < m_cursor; ++i)
-                    m_buffer.remove(0);
+                    remove_at_index(0);
                 m_cursor = 0;
                 m_refresh_needed = true;
                 continue;
@@ -704,9 +630,8 @@ String Editor::get_line(const String& prompt)
             // ^L
             if (codepoint == 0xc) {
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
-                vt_move_absolute(1, 1);
-                m_origin_x = 1;
-                m_origin_y = 1;
+                VT::move_absolute(1, 1);
+                set_origin(1, 1);
                 m_refresh_needed = true;
                 continue;
             }
@@ -736,15 +661,15 @@ String Editor::get_line(const String& prompt)
                         return;
                     };
 
-                    // whenever the search editor gets a ^R, cycle between history entries
+                    // Whenever the search editor gets a ^R, cycle between history entries.
                     m_search_editor->register_character_input_callback(0x12, [this](Editor& search_editor) {
                         ++m_search_offset;
                         search_editor.m_refresh_needed = true;
                         return false; // Do not process this key event
                     });
 
-                    // whenever the search editor gets a backspace, cycle back between history entries
-                    // unless we're at the zeroth entry, in which case, allow the deletion
+                    // Whenever the search editor gets a backspace, cycle back between history entries
+                    // unless we're at the zeroth entry, in which case, allow the deletion.
                     m_search_editor->register_character_input_callback(m_termios.c_cc[VERASE], [this](Editor& search_editor) {
                         if (m_search_offset > 0) {
                             --m_search_offset;
@@ -757,20 +682,18 @@ String Editor::get_line(const String& prompt)
                     // ^L - This is a source of issues, as the search editor refreshes first,
                     // and we end up with the wrong order of prompts, so we will first refresh
                     // ourselves, then refresh the search editor, and then tell him not to process
-                    // this event
+                    // this event.
                     m_search_editor->register_character_input_callback(0x0c, [this](auto& search_editor) {
                         printf("\033[3J\033[H\033[2J"); // Clear screen.
 
                         // refresh our own prompt
-                        m_origin_x = 1;
-                        m_origin_y = 1;
+                        set_origin(1, 1);
                         m_refresh_needed = true;
                         refresh_display();
 
                         // move the search prompt below ours
                         // and tell it to redraw itself
-                        search_editor.m_origin_x = 2;
-                        search_editor.m_origin_y = 1;
+                        search_editor.set_origin(2, 1);
                         search_editor.m_refresh_needed = true;
 
                         return false;
@@ -793,21 +716,21 @@ String Editor::get_line(const String& prompt)
                     m_is_searching = false;
                     m_search_offset = 0;
 
-                    // manually cleanup the search line
+                    // Manually cleanup the search line.
                     reposition_cursor();
-                    vt_clear_lines(0, (search_string.length() + actual_rendered_string_length(search_prompt) + m_num_columns - 1) / m_num_columns);
+                    auto search_string_codepoint_length = Utf8View { search_string }.length_in_codepoints();
+                    VT::clear_lines(0, (search_string_codepoint_length + actual_rendered_string_length(search_prompt) + m_num_columns - 1) / m_num_columns);
 
                     reposition_cursor();
 
-                    if (!m_reset_buffer_on_search_end || search_string.length() == 0) {
-                        // if the entry was empty, or we purposely quit without a newline,
-                        // do not return anything
-                        // instead, just end the search
+                    if (!m_reset_buffer_on_search_end || search_string_codepoint_length == 0) {
+                        // If the entry was empty, or we purposely quit without a newline,
+                        // do not return anything; instead, just end the search.
                         end_search();
                         continue;
                     }
 
-                    // return the string
+                    // Return the string,
                     finish();
                     continue;
                 }
@@ -817,7 +740,7 @@ String Editor::get_line(const String& prompt)
             if (codepoint == m_termios.c_cc[VEOF]) {
                 if (m_buffer.is_empty()) {
                     printf("<EOF>\n");
-                    if (!m_always_refresh) // this is a little off, but it'll do for now
+                    if (!m_always_refresh) // This is a little off, but it'll do for now
                         exit(0);
                 }
                 continue;
@@ -850,7 +773,7 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
 
     int last_matching_offset = -1;
 
-    // do not search for empty strings
+    // Do not search for empty strings.
     if (allow_empty || phrase.length() > 0) {
         size_t search_offset = m_search_offset;
         for (size_t i = m_history_cursor; i > 0; --i) {
@@ -874,40 +797,40 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
     if (last_matching_offset >= 0) {
         insert(m_history[last_matching_offset]);
     }
-    // always needed
+    // Always needed, as we have cleared the buffer above.
     m_refresh_needed = true;
     return last_matching_offset >= 0;
 }
 
 void Editor::recalculate_origin()
 {
-    // changing the columns can affect our origin if
+    // Changing the columns can affect our origin if
     // the new size is smaller than our prompt, which would
     // cause said prompt to take up more space, so we should
-    // compensate for that
+    // compensate for that.
     if (m_cached_prompt_length >= m_num_columns) {
         auto added_lines = (m_cached_prompt_length + 1) / m_num_columns - 1;
         m_origin_x += added_lines;
     }
 
-    // we also need to recalculate our cursor position
+    // We also need to recalculate our cursor position,
     // but that will be calculated and applied at the next
-    // refresh cycle
+    // refresh cycle.
 }
 void Editor::cleanup()
 {
-    vt_move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
+    VT::move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
     auto current_line = cursor_line();
 
-    vt_clear_lines(current_line - 1, num_lines() - current_line);
-    vt_move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length - m_pending_chars.size() + m_chars_inserted_in_the_middle);
+    VT::clear_lines(current_line - 1, num_lines() - current_line);
+    VT::move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length - m_pending_chars.size() + m_chars_inserted_in_the_middle);
 };
 
 void Editor::refresh_display()
 {
     auto has_cleaned_up = false;
-    // someone changed the window size, figure it out
-    // and react to it, we might need to redraw
+    // Someone changed the window size, figure it out
+    // and react to it, we might need to redraw.
     if (m_was_resized) {
         auto previous_num_columns = m_num_columns;
 
@@ -919,9 +842,10 @@ void Editor::refresh_display()
             m_num_columns = ws.ws_col;
             m_num_lines = ws.ws_row;
         }
+        m_suggestion_display->set_vt_size(m_num_lines, m_num_columns);
 
         if (previous_num_columns != m_num_columns) {
-            // we need to cleanup and redo everything
+            // We need to cleanup and redo everything.
             m_cached_prompt_valid = false;
             m_refresh_needed = true;
             swap(previous_num_columns, m_num_columns);
@@ -931,9 +855,9 @@ void Editor::refresh_display()
             has_cleaned_up = true;
         }
     }
-    // do not call hook on pure cursor movement
+    // Do not call hook on pure cursor movement.
     if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
-        // probably just moving around
+        // Probably just moving around.
         reposition_cursor();
         m_cached_buffer_size = m_buffer.size();
         return;
@@ -944,8 +868,8 @@ void Editor::refresh_display()
 
     if (m_cached_prompt_valid) {
         if (!m_refresh_needed && m_cursor == m_buffer.size()) {
-            // just write the characters out and continue
-            // no need to refresh the entire line
+            // Just write the characters out and continue,
+            // no need to refresh the entire line.
             char null = 0;
             m_pending_chars.append(&null, 1);
             fputs((char*)m_pending_chars.data(), stdout);
@@ -957,34 +881,60 @@ void Editor::refresh_display()
         }
     }
 
-    // ouch, reflow entire line
+    // Ouch, reflow entire line.
     // FIXME: handle multiline stuff
     if (!has_cleaned_up) {
         cleanup();
     }
-    vt_move_absolute(m_origin_x, m_origin_y);
+    VT::move_absolute(m_origin_x, m_origin_y);
 
     fputs(m_new_prompt.characters(), stdout);
 
-    vt_clear_to_end_of_line();
+    VT::clear_to_end_of_line();
     HashMap<u32, Style> empty_styles {};
     StringBuilder builder;
     for (size_t i = 0; i < m_buffer.size(); ++i) {
         auto ends = m_spans_ending.get(i).value_or(empty_styles);
         auto starts = m_spans_starting.get(i).value_or(empty_styles);
-        if (ends.size()) {
-            // go back to defaults
-            vt_apply_style(find_applicable_style(i));
+
+        auto anchored_ends = m_anchored_spans_ending.get(i).value_or(empty_styles);
+        auto anchored_starts = m_anchored_spans_starting.get(i).value_or(empty_styles);
+
+        if (ends.size() || anchored_ends.size()) {
+            Style style;
+
+            for (auto& applicable_style : ends)
+                style.unify_with(applicable_style.value);
+
+            for (auto& applicable_style : anchored_ends)
+                style.unify_with(applicable_style.value);
+
+            // Disable any style that should be turned off.
+            VT::apply_style(style, false);
+
+            // Reapply styles for overlapping spans that include this one.
+            style = find_applicable_style(i);
+            VT::apply_style(style, true);
         }
-        if (starts.size()) {
-            // set new options
-            vt_apply_style(starts.begin()->value); // apply some random style that starts here
+        if (starts.size() || anchored_starts.size()) {
+            Style style;
+
+            for (auto& applicable_style : starts)
+                style.unify_with(applicable_style.value);
+
+            for (auto& applicable_style : anchored_starts)
+                style.unify_with(applicable_style.value);
+
+            // Set new styles.
+            VT::apply_style(style, true);
         }
         builder.clear();
         builder.append(Utf32View { &m_buffer[i], 1 });
         fputs(builder.to_string().characters(), stdout);
     }
-    vt_apply_style({}); // don't bleed to EOL
+
+    VT::apply_style(Style::reset_style()); // don't bleed to EOL
+
     m_pending_chars.clear();
     m_refresh_needed = false;
     m_cached_buffer_size = m_buffer.size();
@@ -997,6 +947,19 @@ void Editor::refresh_display()
     fflush(stdout);
 }
 
+void Editor::strip_styles(bool strip_anchored)
+{
+    m_spans_starting.clear();
+    m_spans_ending.clear();
+
+    if (strip_anchored) {
+        m_anchored_spans_starting.clear();
+        m_anchored_spans_ending.clear();
+    }
+
+    m_refresh_needed = true;
+}
+
 void Editor::reposition_cursor()
 {
     m_drawn_cursor = m_cursor;
@@ -1004,16 +967,16 @@ void Editor::reposition_cursor()
     auto line = cursor_line() - 1;
     auto column = offset_in_line();
 
-    vt_move_absolute(line + m_origin_x, column + m_origin_y);
+    VT::move_absolute(line + m_origin_x, column + m_origin_y);
 }
 
-void Editor::vt_move_absolute(u32 x, u32 y)
+void VT::move_absolute(u32 x, u32 y)
 {
     printf("\033[%d;%dH", x, y);
     fflush(stdout);
 }
 
-void Editor::vt_move_relative(int x, int y)
+void VT::move_relative(int x, int y)
 {
     char x_op = 'A', y_op = 'D';
 
@@ -1034,21 +997,34 @@ void Editor::vt_move_relative(int x, int y)
 
 Style Editor::find_applicable_style(size_t offset) const
 {
-    // walk through our styles and find one that fits in the offset
-    for (auto& entry : m_spans_starting) {
-        if (entry.key > offset)
-            continue;
+    // Walk through our styles and merge all that fit in the offset.
+    auto style = Style::reset_style();
+    auto unify = [&](auto& entry) {
+        if (entry.key >= offset)
+            return;
         for (auto& style_value : entry.value) {
             if (style_value.key <= offset)
-                continue;
-            return style_value.value;
+                return;
+            style.unify_with(style_value.value, true);
         }
+    };
+
+    for (auto& entry : m_spans_starting) {
+        unify(entry);
     }
-    return {};
+
+    for (auto& entry : m_anchored_spans_starting) {
+        unify(entry);
+    }
+
+    return style;
 }
 
 String Style::Background::to_vt_escape() const
 {
+    if (is_default())
+        return "";
+
     if (m_is_rgb) {
         return String::format("\033[48;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
@@ -1058,6 +1034,9 @@ String Style::Background::to_vt_escape() const
 
 String Style::Foreground::to_vt_escape() const
 {
+    if (is_default())
+        return "";
+
     if (m_is_rgb) {
         return String::format("\033[38;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
@@ -1065,40 +1044,119 @@ String Style::Foreground::to_vt_escape() const
     }
 }
 
-void Editor::vt_apply_style(const Style& style)
+String Style::Hyperlink::to_vt_escape(bool starting) const
 {
-    printf(
-        "\033[%d;%d;%dm%s%s",
-        style.bold() ? 1 : 22,
-        style.underline() ? 4 : 24,
-        style.italic() ? 3 : 23,
-        style.background().to_vt_escape().characters(),
-        style.foreground().to_vt_escape().characters());
+    if (is_empty())
+        return "";
+
+    return String::format("\033]8;;%s\033\\", starting ? m_link.characters() : "");
 }
 
-void Editor::vt_clear_lines(size_t count_above, size_t count_below)
+void Style::unify_with(const Style& other, bool prefer_other)
 {
-    // go down count_below lines
+    // Unify colors.
+    if (prefer_other || m_background.is_default())
+        m_background = other.background();
+
+    if (prefer_other || m_foreground.is_default())
+        m_foreground = other.foreground();
+
+    // Unify graphic renditions.
+    if (other.bold())
+        set(Bold);
+
+    if (other.italic())
+        set(Italic);
+
+    if (other.underline())
+        set(Underline);
+
+    // Unify links.
+    if (prefer_other || m_hyperlink.is_empty())
+        m_hyperlink = other.hyperlink();
+}
+
+String Style::to_string() const
+{
+    StringBuilder builder;
+    builder.append("Style { ");
+
+    if (!m_foreground.is_default()) {
+        builder.append("Foreground(");
+        if (m_foreground.m_is_rgb) {
+            builder.join(", ", m_foreground.m_rgb_color);
+        } else {
+            builder.appendf("(XtermColor) %d", m_foreground.m_xterm_color);
+        }
+        builder.append("), ");
+    }
+
+    if (!m_background.is_default()) {
+        builder.append("Background(");
+        if (m_background.m_is_rgb) {
+            builder.join(' ', m_background.m_rgb_color);
+        } else {
+            builder.appendf("(XtermColor) %d", m_background.m_xterm_color);
+        }
+        builder.append("), ");
+    }
+
+    if (bold())
+        builder.append("Bold, ");
+
+    if (underline())
+        builder.append("Underline, ");
+
+    if (italic())
+        builder.append("Italic, ");
+
+    if (!m_hyperlink.is_empty())
+        builder.appendf("Hyperlink(\"%s\"), ", m_hyperlink.m_link.characters());
+
+    builder.append("}");
+
+    return builder.build();
+}
+
+void VT::apply_style(const Style& style, bool is_starting)
+{
+    if (is_starting) {
+        printf(
+            "\033[%d;%d;%dm%s%s%s",
+            style.bold() ? 1 : 22,
+            style.underline() ? 4 : 24,
+            style.italic() ? 3 : 23,
+            style.background().to_vt_escape().characters(),
+            style.foreground().to_vt_escape().characters(),
+            style.hyperlink().to_vt_escape(true).characters());
+    } else {
+        printf("%s", style.hyperlink().to_vt_escape(false).characters());
+    }
+}
+
+void VT::clear_lines(size_t count_above, size_t count_below)
+{
+    // Go down count_below lines.
     if (count_below > 0)
         printf("\033[%dB", (int)count_below);
-    // then clear lines going upwards
+    // Then clear lines going upwards.
     for (size_t i = count_below + count_above; i > 0; --i)
         fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stdout);
 }
 
-void Editor::vt_save_cursor()
+void VT::save_cursor()
 {
     fputs("\033[s", stdout);
     fflush(stdout);
 }
 
-void Editor::vt_restore_cursor()
+void VT::restore_cursor()
 {
     fputs("\033[u", stdout);
     fflush(stdout);
 }
 
-void Editor::vt_clear_to_end_of_line()
+void VT::clear_to_end_of_line()
 {
     fputs("\033[K", stdout);
     fflush(stdout);
@@ -1121,13 +1179,12 @@ size_t Editor::actual_rendered_string_length(const StringView& string) const
         auto c = *it;
         switch (state) {
         case Free:
-            if (c == '\x1b') {
-                // escape
+            if (c == '\x1b') { // escape
                 state = Escape;
                 continue;
             }
-            if (c == '\r' || c == '\n') {
-                // reset length to 0, since we either overwrite, or are on a newline
+            if (c == '\r' || c == '\n') { // return or carriage return
+                // Reset length to 0, since we either overwrite, or are on a newline.
                 length = 0;
                 continue;
             }
@@ -1176,8 +1233,8 @@ Vector<size_t, 2> Editor::vt_dsr()
     char buf[16];
     u32 length { 0 };
 
-    // read whatever junk there is before talking to the terminal
-    // and insert them later when we're reading user input
+    // Read whatever junk there is before talking to the terminal
+    // and insert them later when we're reading user input.
     bool more_junk_to_read { false };
     timeval timeout { 0, 0 };
     fd_set readfds;
@@ -1250,4 +1307,55 @@ bool Editor::should_break_token(Vector<u32, 1024>& buffer, size_t index)
     return true;
 };
 
+void Editor::remove_at_index(size_t index)
+{
+    // See if we have any anchored styles, and reposition them if needed.
+    readjust_anchored_styles(index, ModificationKind::Removal);
+    m_buffer.remove(index);
+}
+
+void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modification)
+{
+    struct Anchor {
+        Span old_span;
+        Span new_span;
+        Style style;
+    };
+    Vector<Anchor> anchors_to_relocate;
+    auto index_shift = modification == ModificationKind::Insertion ? 1 : -1;
+    auto forced_removal = modification == ModificationKind::ForcedOverlapRemoval;
+
+    for (auto& start_entry : m_anchored_spans_starting) {
+        for (auto& end_entry : start_entry.value) {
+            if (forced_removal) {
+                if (start_entry.key <= hint_index && end_entry.key > hint_index) {
+                    // Remove any overlapping regions.
+                    continue;
+                }
+            }
+            if (start_entry.key >= hint_index) {
+                if (start_entry.key == hint_index && end_entry.key == hint_index + 1 && modification == ModificationKind::Removal) {
+                    // Remove the anchor, as all its text was wiped.
+                    continue;
+                }
+                // Shift everything.
+                anchors_to_relocate.append({ { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, { start_entry.key + index_shift, end_entry.key + index_shift, Span::Mode::CodepointOriented }, end_entry.value });
+                continue;
+            }
+            if (end_entry.key > hint_index) {
+                // Shift just the end.
+                anchors_to_relocate.append({ { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, { start_entry.key, end_entry.key + index_shift, Span::Mode::CodepointOriented }, end_entry.value });
+                continue;
+            }
+            anchors_to_relocate.append({ { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, { start_entry.key, end_entry.key, Span::Mode::CodepointOriented }, end_entry.value });
+        }
+    }
+
+    m_anchored_spans_ending.clear();
+    m_anchored_spans_starting.clear();
+    // Pass over the relocations and update the stale entries.
+    for (auto& relocation : anchors_to_relocate) {
+        stylize(relocation.new_span, relocation.style);
+    }
+}
 }

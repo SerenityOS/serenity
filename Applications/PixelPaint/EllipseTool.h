@@ -37,9 +37,9 @@ public:
     EllipseTool();
     virtual ~EllipseTool() override;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
-    virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
-    virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& original_event) override;
+    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
+    virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
+    virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_tool_button_contextmenu(GUI::ContextMenuEvent&) override;
     virtual void on_second_paint(const Layer&, GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
@@ -51,7 +51,7 @@ private:
     };
 
     virtual const char* class_name() const override { return "EllipseTool"; }
-    void draw_using(GUI::Painter& painter);
+    void draw_using(GUI::Painter&, const Gfx::Rect&);
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::Point m_ellipse_start_position;

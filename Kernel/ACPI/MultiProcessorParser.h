@@ -27,8 +27,8 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/VM/Region.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/Region.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
@@ -76,17 +76,6 @@ enum class ConfigurationTableEntryType {
     SystemAddressSpaceMapping = 128,
     BusHierarchyDescriptor = 129,
     CompatibilityBusAddressSpaceModifier = 130
-};
-
-enum class ConfigurationTableEntryLength {
-    Processor = 20,
-    Bus = 8,
-    IOAPIC = 8,
-    IO_Interrupt_Assignment = 8,
-    Local_Interrupt_Assignment = 8,
-    SystemAddressSpaceMapping = 20,
-    BusHierarchyDescriptor = 8,
-    CompatibilityBusAddressSpaceModifier = 8
 };
 
 struct [[gnu::packed]] ExtEntryHeader
@@ -189,34 +178,25 @@ struct [[gnu::packed]] CompatibilityBusAddressSpaceModifierEntry
 
 class PCIInterruptOverrideMetadata;
 
-class MultiProcessorParser {
+class MultiProcessorParser final {
 public:
-    static MultiProcessorParser& the();
+    static OwnPtr<MultiProcessorParser> autodetect();
 
-    static bool is_initialized();
-    static void initialize();
     Vector<PCIInterruptOverrideMetadata> get_pci_interrupt_redirections();
 
-protected:
-    MultiProcessorParser();
+private:
+    explicit MultiProcessorParser(PhysicalAddress floating_pointer);
 
     void parse_configuration_table();
-    size_t get_configuration_table_length();
     void parse_floating_pointer_data();
 
-    Vector<unsigned> get_pci_bus_ids();
+    Vector<u8> get_pci_bus_ids() const;
 
-    FlatPtr search_floating_pointer();
-    FlatPtr search_floating_pointer_in_ebda(u16 ebda_segment);
-    FlatPtr search_floating_pointer_in_bios_area();
+    static Optional<PhysicalAddress> find_floating_pointer();
 
-    FlatPtr m_floating_pointer;
-    FlatPtr m_configuration_table;
-    Vector<FlatPtr> m_io_interrupt_redirection_entries;
-    Vector<FlatPtr> m_bus_entries;
-    bool m_operable;
-
-    size_t m_configuration_table_length;
-    u8 m_specification_revision;
+    PhysicalAddress m_floating_pointer;
+    PhysicalAddress m_configuration_table;
+    Vector<MultiProcessor::IOInterruptAssignmentEntry> m_io_interrupt_assignment_entries;
+    Vector<MultiProcessor::BusEntry> m_bus_entries;
 };
 }

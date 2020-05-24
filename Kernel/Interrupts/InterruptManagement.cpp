@@ -29,6 +29,7 @@
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
@@ -37,7 +38,7 @@
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/IO.h>
+#include <Kernel/VM/TypedMapping.h>
 
 #define PCAT_COMPAT_FLAG 0x1
 
@@ -129,9 +130,9 @@ PhysicalAddress InterruptManagement::search_for_madt()
 {
     dbg() << "Early access to ACPI tables for interrupt setup";
     auto rsdp = ACPI::StaticParsing::find_rsdp();
-    if (rsdp.is_null())
+    if (!rsdp.has_value())
         return {};
-    return ACPI::StaticParsing::find_table(rsdp, "APIC");
+    return ACPI::StaticParsing::find_table(rsdp.value(), "APIC");
 }
 
 InterruptManagement::InterruptManagement()
@@ -189,31 +190,33 @@ void InterruptManagement::switch_to_ioapic_mode()
     }
     APIC::init();
     APIC::enable_bsp();
-    MultiProcessorParser::initialize();
-    locate_pci_interrupt_overrides();
+
+    if (auto mp_parser = MultiProcessorParser::autodetect()) {
+        m_pci_interrupt_overrides = mp_parser->get_pci_interrupt_redirections();
+    }
 }
 
 void InterruptManagement::locate_apic_data()
 {
     ASSERT(!m_madt.is_null());
-    auto region = MM.allocate_kernel_region(m_madt.page_base(), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
-    auto& madt = *(const ACPI::Structures::MADT*)region->vaddr().offset(m_madt.offset_in_page()).as_ptr();
+    auto madt = map_typed<ACPI::Structures::MADT>(m_madt);
 
     int irq_controller_count = 0;
-    if (madt.flags & PCAT_COMPAT_FLAG) {
+    if (madt->flags & PCAT_COMPAT_FLAG) {
         m_interrupt_controllers[0] = adopt(*new PIC());
         irq_controller_count++;
     }
     size_t entry_index = 0;
-    size_t entries_length = madt.h.length - sizeof(ACPI::Structures::MADT);
-    auto* madt_entry = madt.entries;
+    size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
+    auto* madt_entry = madt->entries;
     while (entries_length > 0) {
         size_t entry_length = madt_entry->length;
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::IOAPIC) {
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
-            dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ Px" << String::format("%x", ioapic_entry->ioapic_address);
+            dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ " << PhysicalAddress(ioapic_entry->ioapic_address);
             m_interrupt_controllers.resize(1 + irq_controller_count);
-            m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(*(ioapic_mmio_regs*)ioapic_entry->ioapic_address, ioapic_entry->gsi_base));
+            // FIXME: Casting ioapic_entry->ioapic_address below looks suspicious!
+            m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base));
             irq_controller_count++;
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
@@ -225,15 +228,10 @@ void InterruptManagement::locate_apic_data()
                 interrupt_override_entry->flags);
             dbg() << "Interrupts: Overriding INT 0x" << String::format("%x", interrupt_override_entry->source) << " with GSI " << interrupt_override_entry->global_system_interrupt << ", for bus 0x" << String::format("%x", interrupt_override_entry->bus);
         }
-        madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress((u32)madt_entry).offset(entry_length).get());
+        madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
         entries_length -= entry_length;
         entry_index++;
     }
-}
-
-void InterruptManagement::locate_pci_interrupt_overrides()
-{
-    m_pci_interrupt_overrides = MultiProcessorParser::the().get_pci_interrupt_redirections();
 }
 
 }

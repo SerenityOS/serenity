@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Error.h>
@@ -41,9 +42,6 @@
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <math.h>
-
-// 2 ** 53 - 1
-#define MAX_ARRAY_LIKE_INDEX 9007199254740991.0
 
 namespace JS {
 
@@ -61,6 +59,12 @@ Function& Value::as_function()
 {
     ASSERT(is_function());
     return static_cast<Function&>(as_object());
+}
+
+Accessor& Value::as_accessor()
+{
+    ASSERT(is_accessor());
+    return static_cast<Accessor&>(*m_value.as_accessor);
 }
 
 String Value::to_string_without_side_effects() const
@@ -91,6 +95,9 @@ String Value::to_string_without_side_effects() const
 
     if (is_symbol())
         return as_symbol().to_string();
+
+    if (is_accessor())
+        return "<accessor>";
 
     ASSERT(is_object());
     return String::format("[object %s]", as_object().class_name());
@@ -205,6 +212,7 @@ Value Value::to_number(Interpreter& interpreter) const
 {
     switch (m_type) {
     case Type::Empty:
+    case Type::Accessor:
         ASSERT_NOT_REACHED();
         return {};
     case Type::Undefined:
@@ -250,7 +258,7 @@ i32 Value::as_i32() const
 size_t Value::as_size_t() const
 {
     ASSERT(as_double() >= 0);
-    return min((double)(i32)as_double(), MAX_ARRAY_LIKE_INDEX);
+    return min((double)as_i32(), MAX_ARRAY_LIKE_INDEX);
 }
 
 double Value::to_double(Interpreter& interpreter) const
@@ -266,6 +274,10 @@ i32 Value::to_i32(Interpreter& interpreter) const
     auto number = to_number(interpreter);
     if (interpreter.exception())
         return 0;
+    if (number.is_nan())
+        return 0;
+    // FIXME: What about infinity though - that's UB...
+    // Maybe NumericLimits<i32>::max() for +Infinity and NumericLimits<i32>::min() for -Infinity?
     return number.as_i32();
 }
 

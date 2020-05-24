@@ -427,6 +427,54 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const Te
     return {};
 }
 
+TextPosition TextDocument::first_word_break_before(const TextPosition& position) const
+{
+    if (position.column() == 0) {
+        if (position.line() == 0) {
+            return TextPosition(0, 0);
+        }
+        auto previous_line = this->line(position.line() - 1);
+        return TextPosition(position.line() - 1, previous_line.length());
+    }
+
+    auto target = position;
+    auto line = this->line(target.line());
+    auto is_start_alphanumeric = isalnum(line.codepoints()[target.column() - 1]);
+
+    while (target.column() > 0) {
+        auto next_codepoint = line.codepoints()[target.column() - 1];
+        if ((is_start_alphanumeric && !isalnum(next_codepoint)) || (!is_start_alphanumeric && isalnum(next_codepoint)))
+            break;
+        target.set_column(target.column() - 1);
+    }
+
+    return target;
+}
+
+TextPosition TextDocument::first_word_break_after(const TextPosition& position) const
+{
+    auto target = position;
+    auto line = this->line(target.line());
+
+    if (position.column() >= line.length()) {
+        if (position.line() >= this->line_count() - 1) {
+            return position;
+        }
+        return TextPosition(position.line() + 1, 0);
+    }
+
+    auto is_start_alphanumeric = isalnum(line.codepoints()[target.column()]);
+
+    while (target.column() < line.length()) {
+        auto next_codepoint = line.codepoints()[target.column()];
+        if ((is_start_alphanumeric && !isalnum(next_codepoint)) || (!is_start_alphanumeric && isalnum(next_codepoint)))
+            break;
+        target.set_column(target.column() + 1);
+    }
+
+    return target;
+}
+
 void TextDocument::undo()
 {
     if (!can_undo())

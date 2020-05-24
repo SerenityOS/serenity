@@ -64,7 +64,7 @@ OwnPtr<Messages::ProtocolServer::StartDownloadResponse> ClientConnection::handle
     auto* protocol = Protocol::find_by_name(url.protocol());
     if (!protocol)
         return make<Messages::ProtocolServer::StartDownloadResponse>(-1);
-    auto download = protocol->start_download(*this, url);
+    auto download = protocol->start_download(*this, url, message.request_headers().entries());
     if (!download)
         return make<Messages::ProtocolServer::StartDownloadResponse>(-1);
     auto id = download->id();

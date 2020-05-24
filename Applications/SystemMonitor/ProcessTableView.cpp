@@ -31,7 +31,6 @@
 
 ProcessTableView::ProcessTableView()
 {
-    set_size_columns_to_fit_content(true);
     set_model(GUI::SortingProxyModel::create(ProcessModel::create()));
     model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     refresh();

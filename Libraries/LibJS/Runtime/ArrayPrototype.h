@@ -51,12 +51,15 @@ private:
     static Value concat(Interpreter&);
     static Value slice(Interpreter&);
     static Value index_of(Interpreter&);
+    static Value reduce(Interpreter&);
+    static Value reduce_right(Interpreter&);
     static Value reverse(Interpreter&);
     static Value last_index_of(Interpreter&);
     static Value includes(Interpreter&);
     static Value find(Interpreter&);
     static Value find_index(Interpreter&);
     static Value some(Interpreter&);
+    static Value every(Interpreter&);
 };
 
 }

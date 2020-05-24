@@ -59,9 +59,6 @@ void AbstractTableView::select_all()
 
 void AbstractTableView::update_column_sizes()
 {
-    if (!m_size_columns_to_fit_content)
-        return;
-
     if (!model())
         return;
 
@@ -74,15 +71,17 @@ void AbstractTableView::update_column_sizes()
         if (is_column_hidden(column))
             continue;
         int header_width = header_font().width(model.column_name(column));
-        if (column == key_column)
+        if (column == key_column && model.is_column_sortable(column))
             header_width += font().width(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
         int column_width = header_width;
         for (int row = 0; row < row_count; ++row) {
             auto cell_data = model.data(model.index(row, column));
             int cell_width = 0;
-            if (cell_data.is_bitmap()) {
+            if (cell_data.is_icon()) {
+                cell_width = item_height();
+            } else if (cell_data.is_bitmap()) {
                 cell_width = cell_data.as_bitmap().width();
-            } else {
+            } else if (cell_data.is_valid()) {
                 cell_width = font().width(cell_data.to_string());
             }
             column_width = max(column_width, cell_width);
@@ -150,7 +149,7 @@ void AbstractTableView::paint_headers(Painter& painter)
         bool is_key_column = model()->key_column() == column_index;
         Gfx::Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
-        bool hovered = column_index == m_hovered_column_header_index && model()->column_metadata(column_index).sortable == Model::ColumnMetadata::Sortable::True;
+        bool hovered = column_index == m_hovered_column_header_index && model()->is_column_sortable(column_index);
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
         String text;
         if (is_key_column) {
@@ -249,13 +248,7 @@ int AbstractTableView::column_width(int column_index) const
 {
     if (!model())
         return 0;
-    auto& column_data = this->column_data(column_index);
-    if (!column_data.has_initialized_width) {
-        ASSERT(!m_size_columns_to_fit_content);
-        column_data.has_initialized_width = true;
-        column_data.width = model()->column_metadata(column_index).preferred_width;
-    }
-    return column_data.width;
+    return column_data(column_index).width;
 }
 
 void AbstractTableView::mousemove_event(MouseEvent& event)
@@ -372,8 +365,7 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
                 return;
             }
             auto header_rect = this->header_rect(i);
-            auto column_metadata = model()->column_metadata(i);
-            if (header_rect.contains(horizontally_adjusted_position) && column_metadata.sortable == Model::ColumnMetadata::Sortable::True) {
+            if (header_rect.contains(horizontally_adjusted_position) && model()->is_column_sortable(i)) {
                 m_pressed_column_header_index = i;
                 m_pressed_column_header_is_pressed = true;
                 update_headers();
@@ -445,48 +437,6 @@ void AbstractTableView::move_selection(int steps)
         scroll_into_view(new_index, Orientation::Vertical);
         update();
     }
-}
-
-void AbstractTableView::keydown_event(KeyEvent& event)
-{
-    if (!model())
-        return;
-    auto& model = *this->model();
-    if (event.key() == KeyCode::Key_Return) {
-        activate_selected();
-        return;
-    }
-    if (event.key() == KeyCode::Key_Up) {
-        move_selection(-1);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Down) {
-        move_selection(1);
-        return;
-    }
-    if (event.key() == KeyCode::Key_PageUp) {
-        int items_per_page = visible_content_rect().height() / item_height();
-        auto old_index = selection().first();
-        auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
-        return;
-    }
-    if (event.key() == KeyCode::Key_PageDown) {
-        int items_per_page = visible_content_rect().height() / item_height();
-        auto old_index = selection().first();
-        auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
-        return;
-    }
-    return Widget::keydown_event(event);
 }
 
 void AbstractTableView::scroll_into_view(const ModelIndex& index, Orientation orientation)

@@ -68,6 +68,13 @@ public:
 
     Function<void(const GUI::ModelIndex&)> on_active_layer_change;
 
+    Gfx::FloatRect layer_rect_to_editor_rect(const Layer&, const Gfx::Rect&) const;
+    Gfx::FloatRect image_rect_to_editor_rect(const Gfx::Rect&) const;
+    Gfx::FloatRect editor_rect_to_image_rect(const Gfx::Rect&) const;
+    Gfx::FloatPoint layer_position_to_editor_position(const Layer&, const Gfx::Point&) const;
+    Gfx::FloatPoint image_position_to_editor_position(const Gfx::Point&) const;
+    Gfx::FloatPoint editor_position_to_image_position(const Gfx::Point&) const;
+
 private:
     ImageEditor();
 
@@ -83,11 +90,6 @@ private:
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
-
-    Gfx::FloatRect image_rect_to_editor_rect(const Gfx::Rect&) const;
-    Gfx::FloatRect editor_rect_to_image_rect(const Gfx::Rect&) const;
-    Gfx::FloatPoint image_position_to_editor_position(const Gfx::Point&) const;
-    Gfx::FloatPoint editor_position_to_image_position(const Gfx::Point&) const;
 
     GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent&, const Layer&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(const GUI::MouseEvent&) const;

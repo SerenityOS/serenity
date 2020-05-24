@@ -27,6 +27,7 @@
 #include <AK/String.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -96,6 +97,9 @@ Value Object::get_own_property(const Object& this_object, const FlyString& prope
 
     auto value_here = m_storage[metadata.value().offset];
     ASSERT(!value_here.is_empty());
+    if (value_here.is_accessor()) {
+        return value_here.as_accessor().call_getter(Value(const_cast<Object*>(this)));
+    }
     if (value_here.is_object() && value_here.as_object().is_native_property()) {
         auto& native_property = static_cast<const NativeProperty&>(value_here.as_object());
         auto& interpreter = const_cast<Object*>(this)->interpreter();
@@ -180,10 +184,16 @@ Value Object::get_own_property_descriptor(const FlyString& property_name) const
     if (interpreter().exception())
         return {};
     auto* descriptor = Object::create_empty(interpreter(), interpreter().global_object());
-    descriptor->put("value", value.value_or(js_undefined()));
-    descriptor->put("writable", Value(!!(metadata.value().attributes & Attribute::Writable)));
-    descriptor->put("enumerable", Value(!!(metadata.value().attributes & Attribute::Enumerable)));
-    descriptor->put("configurable", Value(!!(metadata.value().attributes & Attribute::Configurable)));
+    descriptor->put("enumerable", Value((metadata.value().attributes & Attribute::Enumerable) != 0));
+    descriptor->put("configurable", Value((metadata.value().attributes & Attribute::Configurable) != 0));
+    if (value.is_accessor()) {
+        auto& pair = value.as_accessor();
+        descriptor->put("get", pair.getter());
+        descriptor->put("set", pair.setter());
+    } else {
+        descriptor->put("value", value.value_or(js_undefined()));
+        descriptor->put("writable", Value((metadata.value().attributes & Attribute::Writable) != 0));
+    }
     return descriptor;
 }
 
@@ -195,19 +205,79 @@ void Object::set_shape(Shape& new_shape)
 
 bool Object::define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions)
 {
-    auto value = descriptor.get("value");
+    bool is_accessor_property = descriptor.has_property("get") || descriptor.has_property("set");
     u8 configurable = descriptor.get("configurable").value_or(Value(false)).to_boolean() * Attribute::Configurable;
+    if (interpreter().exception())
+        return {};
     u8 enumerable = descriptor.get("enumerable").value_or(Value(false)).to_boolean() * Attribute::Enumerable;
-    u8 writable = descriptor.get("writable").value_or(Value(false)).to_boolean() * Attribute::Writable;
-    u8 attributes = configurable | enumerable | writable;
+    if (interpreter().exception())
+        return {};
+    u8 attributes = configurable | enumerable;
 
-    dbg() << "Defining new property " << property_name << " with descriptor { " << configurable << ", " << enumerable << ", " << writable << ", attributes=" << attributes << " }";
+    if (is_accessor_property) {
+        if (descriptor.has_property("value") || descriptor.has_property("writable")) {
+            if (throw_exceptions)
+                interpreter().throw_exception<TypeError>("Accessor property descriptors cannot specify a value or writable key");
+            return false;
+        }
+
+        auto getter = descriptor.get("get").value_or(js_undefined());
+        if (interpreter().exception())
+            return {};
+        auto setter = descriptor.get("set").value_or(js_undefined());
+        if (interpreter().exception())
+            return {};
+
+        Function* getter_function { nullptr };
+        Function* setter_function { nullptr };
+
+        if (getter.is_function()) {
+            getter_function = &getter.as_function();
+        } else if (!getter.is_undefined()) {
+            interpreter().throw_exception<TypeError>("Accessor descriptor's 'get' field must be a function or undefined");
+            return false;
+        }
+
+        if (setter.is_function()) {
+            setter_function = &setter.as_function();
+        } else if (!setter.is_undefined()) {
+            interpreter().throw_exception<TypeError>("Accessor descriptor's 'set' field must be a function or undefined");
+            return false;
+        }
+
+        dbg() << "Defining new property " << property_name << " with accessor descriptor { attributes=" << attributes << ", "
+              << "getter=" << getter.to_string_without_side_effects() << ", "
+              << "setter=" << setter.to_string_without_side_effects() << "}";
+
+        return put_own_property(*this, property_name, attributes, Accessor::create(interpreter(), getter_function, setter_function), PutOwnPropertyMode::DefineProperty, throw_exceptions);
+    }
+
+    auto value = descriptor.get("value");
+    if (interpreter().exception())
+        return {};
+    u8 writable = descriptor.get("writable").value_or(Value(false)).to_boolean() * Attribute::Writable;
+    if (interpreter().exception())
+        return {};
+    attributes |= writable;
+
+    dbg() << "Defining new property " << property_name << " with data descriptor { attributes=" << attributes
+          << ", value=" << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects()) << " }";
 
     return put_own_property(*this, property_name, attributes, value, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
 bool Object::put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value value, PutOwnPropertyMode mode, bool throw_exceptions)
 {
+    ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
+
+    if (value.is_accessor()) {
+        auto& accessor = value.as_accessor();
+        if (accessor.getter())
+            attributes |= Attribute::HasGet;
+        if (accessor.setter())
+            attributes |= Attribute::HasSet;
+    }
+
     auto metadata = shape().lookup(property_name);
     bool new_property = !metadata.has_value();
 
@@ -231,7 +301,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !(metadata.value().attributes & Attribute::Configurable) && attributes != metadata.value().attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
         if (throw_exceptions)
-            interpreter().throw_exception<TypeError>(String::format("Cannot redefine property '%s'", property_name.characters()));
+            interpreter().throw_exception<TypeError>(String::format("Cannot change attributes of non-configurable property '%s'", property_name.characters()));
         return false;
     }
 
@@ -246,7 +316,8 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
         dbg() << "Reconfigured property " << property_name << ", new shape says offset is " << metadata.value().offset << " and my storage capacity is " << m_storage.size();
     }
 
-    if (!new_property && mode == PutOwnPropertyMode::Put && !(metadata.value().attributes & Attribute::Writable)) {
+    auto value_here = m_storage[metadata.value().offset];
+    if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !(metadata.value().attributes & Attribute::Writable)) {
         dbg() << "Disallow write to non-writable property";
         return false;
     }
@@ -254,7 +325,6 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     if (value.is_empty())
         return true;
 
-    auto value_here = m_storage[metadata.value().offset];
     if (value_here.is_object() && value_here.as_object().is_native_property()) {
         auto& native_property = static_cast<NativeProperty&>(value_here.as_object());
         auto& interpreter = const_cast<Object*>(this)->interpreter();
@@ -377,6 +447,10 @@ bool Object::put(const FlyString& property_name, Value value, u8 attributes)
         auto metadata = object->shape().lookup(property_name);
         if (metadata.has_value()) {
             auto value_here = object->m_storage[metadata.value().offset];
+            if (value_here.is_accessor()) {
+                value_here.as_accessor().call_setter(Value(this), value);
+                return true;
+            }
             if (value_here.is_object() && value_here.as_object().is_native_property()) {
                 auto& native_property = static_cast<NativeProperty&>(value_here.as_object());
                 auto& interpreter = const_cast<Object*>(this)->interpreter();

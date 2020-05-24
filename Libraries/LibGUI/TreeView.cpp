@@ -56,7 +56,6 @@ TreeView::TreeView()
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_size_columns_to_fit_content(true);
     set_headers_visible(false);
     m_expand_bitmap = Gfx::Bitmap::load_from_file("/res/icons/treeview-expand.png");
     m_collapse_bitmap = Gfx::Bitmap::load_from_file("/res/icons/treeview-collapse.png");
@@ -107,6 +106,38 @@ void TreeView::doubleclick_event(MouseEvent& event)
         else
             activate(index);
     }
+}
+
+void TreeView::set_open_state_of_all_in_subtree(const ModelIndex& root, bool open)
+{
+    if (root.is_valid())
+        ensure_metadata_for_index(root).open = open;
+    int row_count = model()->row_count(root);
+    int column = model()->tree_column();
+    for (int row = 0; row < row_count; ++row) {
+        auto index = model()->index(row, column, root);
+        set_open_state_of_all_in_subtree(index, open);
+    }
+}
+
+void TreeView::expand_tree(const ModelIndex& root)
+{
+    if (!model())
+        return;
+    set_open_state_of_all_in_subtree(root, true);
+    update_column_sizes();
+    update_content_size();
+    update();
+}
+
+void TreeView::collapse_tree(const ModelIndex& root)
+{
+    if (!model())
+        return;
+    set_open_state_of_all_in_subtree(root, false);
+    update_column_sizes();
+    update_content_size();
+    update();
 }
 
 void TreeView::toggle_index(const ModelIndex& index)
@@ -241,9 +272,7 @@ void TreeView::paint_event(PaintEvent& event)
         for (int column_index = 0; column_index < model.column_count(); ++column_index) {
             if (is_column_hidden(column_index))
                 continue;
-            auto column_metadata = model.column_metadata(column_index);
             int column_width = this->column_width(column_index);
-            auto& font = column_metadata.font ? *column_metadata.font : this->font();
 
             painter.draw_rect(toggle_rect, text_color);
 
@@ -264,7 +293,8 @@ void TreeView::paint_event(PaintEvent& event)
                     } else {
                         if (!is_selected_row)
                             text_color = model.data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-                        painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
+                        auto text_alignment = model.data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
+                        painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                     }
                 }
             } else {
@@ -284,7 +314,7 @@ void TreeView::paint_event(PaintEvent& event)
                     rect.width() - icon_size() - icon_spacing(), rect.height()
                 };
                 auto node_text = model.data(index, Model::Role::Display).to_string();
-                painter.draw_text(text_rect, node_text, Gfx::TextAlignment::Center, text_color);
+                painter.draw_text(text_rect, node_text, font_for_index(index), Gfx::TextAlignment::Center, text_color);
                 auto index_at_indent = index;
                 for (int i = indent_level; i > 0; --i) {
                     auto parent_of_index_at_indent = index_at_indent.parent();
@@ -426,6 +456,11 @@ void TreeView::keydown_event(KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Left) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
+            if (event.alt()) {
+                collapse_tree(cursor_index);
+                return;
+            }
+
             auto& metadata = ensure_metadata_for_index(cursor_index);
             if (metadata.open) {
                 open_tree_node(false, metadata);
@@ -441,6 +476,11 @@ void TreeView::keydown_event(KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Right) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
+            if (event.alt()) {
+                expand_tree(cursor_index);
+                return;
+            }
+
             auto& metadata = ensure_metadata_for_index(cursor_index);
             if (!metadata.open) {
                 open_tree_node(true, metadata);
@@ -474,9 +514,6 @@ int TreeView::item_count() const
 
 void TreeView::update_column_sizes()
 {
-    if (!size_columns_to_fit_content())
-        return;
-
     if (!model())
         return;
 

@@ -42,7 +42,7 @@ public:
     GUI::Model* model() { return m_model.ptr(); }
     const GUI::Model* model() const { return m_model.ptr(); }
 
-    Function<void(const String&, const String&, unsigned modifiers)> on_bookmark_click;
+    Function<void(const String& url, unsigned modifiers)> on_bookmark_click;
     Function<void(const String&, const String&)> on_bookmark_hover;
 
     bool contains_bookmark(const String& url);
@@ -61,6 +61,9 @@ private:
     RefPtr<GUI::Button> m_additional;
     RefPtr<GUI::Widget> m_separator;
     RefPtr<GUI::Menu> m_additional_menu;
+
+    RefPtr<GUI::Menu> m_context_menu;
+    String m_context_menu_url;
 
     NonnullRefPtrVector<GUI::Button> m_bookmarks;
 

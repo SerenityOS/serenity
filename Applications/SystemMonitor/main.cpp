@@ -309,7 +309,6 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
         self.set_layout<GUI::VerticalBoxLayout>();
         self.layout()->set_margins({ 4, 4, 4, 4 });
         auto& fs_table_view = self.add<GUI::TableView>();
-        fs_table_view.set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
         df_fields.empend("mount_point", "Mount point", Gfx::TextAlignment::CenterLeft);
@@ -402,7 +401,6 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
         self.set_layout<GUI::VerticalBoxLayout>();
         self.layout()->set_margins({ 4, 4, 4, 4 });
         auto& pci_table_view = self.add<GUI::TableView>();
-        pci_table_view.set_size_columns_to_fit_content(true);
 
         auto db = PCIDB::Database::open();
 
@@ -461,7 +459,6 @@ NonnullRefPtr<GUI::Widget> build_devices_tab()
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
         auto& devices_table_view = self.add<GUI::TableView>();
-        devices_table_view.set_size_columns_to_fit_content(true);
         devices_table_view.set_model(GUI::SortingProxyModel::create(DevicesModel::create()));
         devices_table_view.model()->update();
     };

@@ -40,11 +40,12 @@ HttpProtocol::~HttpProtocol()
 {
 }
 
-OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const URL& url)
+OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const URL& url, const HashMap<String, String>& headers)
 {
     HTTP::HttpRequest request;
     request.set_method(HTTP::HttpRequest::Method::GET);
     request.set_url(url);
+    request.set_headers(headers);
     auto job = request.schedule();
     if (!job)
         return nullptr;

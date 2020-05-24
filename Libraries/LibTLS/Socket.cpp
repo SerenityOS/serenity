@@ -113,13 +113,7 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
 
     Core::Socket::on_connected = [this] {
         Core::Socket::on_ready_to_read = [this] {
-            if (!check_connection_state(true))
-                return;
-            flush();
-            consume(Core::Socket::read(4096));
-            if (is_established() && m_context.application_buffer.size())
-                if (on_tls_ready_to_read)
-                    on_tls_ready_to_read(*this);
+            read_from_socket();
         };
         write_into_socket();
         if (on_tls_connected)
@@ -130,6 +124,20 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
         return false;
 
     return true;
+}
+
+void TLSv12::read_from_socket()
+{
+    if (m_context.application_buffer.size() > 0) {
+        deferred_invoke([&](auto&) { read_from_socket(); });
+        if (on_tls_ready_to_read)
+            on_tls_ready_to_read(*this);
+    }
+
+    if (!check_connection_state(true))
+        return;
+    flush();
+    consume(Core::Socket::read(4096));
 }
 
 void TLSv12::write_into_socket()
@@ -161,16 +169,18 @@ bool TLSv12::check_connection_state(bool read)
         m_context.connection_finished = true;
     }
     if (m_context.critical_error) {
-        dbg() << "WRITE CRITICAL ERROR " << m_context.critical_error << " :(";
+        dbg() << "CRITICAL ERROR " << m_context.critical_error << " :(";
         if (on_tls_error)
             on_tls_error((AlertDescription)m_context.critical_error);
         return false;
     }
     if (((read && m_context.application_buffer.size() == 0) || !read) && m_context.connection_finished) {
-        if (on_tls_finished)
-            on_tls_finished();
+        if (m_context.application_buffer.size() == 0) {
+            if (on_tls_finished)
+                on_tls_finished();
+        }
         if (m_context.tls_buffer.size()) {
-            dbg() << "connection closed without finishing data transfer, " << m_context.tls_buffer.size() << " bytes still in buffer";
+            dbg() << "connection closed without finishing data transfer, " << m_context.tls_buffer.size() << " bytes still in buffer & " << m_context.application_buffer.size() << " bytes in application buffer";
         } else {
             m_context.connection_finished = false;
             dbg() << "FINISHED";

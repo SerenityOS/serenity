@@ -63,10 +63,12 @@ public:
     JsonValue& operator=(const JsonValue&);
     JsonValue& operator=(JsonValue&&);
 
-    JsonValue(i32);
-    JsonValue(u32);
-    JsonValue(i64);
-    JsonValue(u64);
+    JsonValue(int);
+    JsonValue(unsigned);
+    JsonValue(long);
+    JsonValue(long unsigned);
+    JsonValue(long long);
+    JsonValue(long long unsigned);
 
 #if !defined(KERNEL)
     JsonValue(double);

@@ -32,6 +32,9 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Symbol.h>
 
+// 2 ** 53 - 1
+static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
+
 namespace JS {
 
 class Value {
@@ -45,6 +48,7 @@ public:
         Object,
         Boolean,
         Symbol,
+        Accessor,
     };
 
     bool is_empty() const { return m_type == Type::Empty; }
@@ -55,7 +59,8 @@ public:
     bool is_object() const { return m_type == Type::Object; }
     bool is_boolean() const { return m_type == Type::Boolean; }
     bool is_symbol() const { return m_type == Type::Symbol; }
-    bool is_cell() const { return is_string() || is_object(); }
+    bool is_accessor() const { return m_type == Type::Accessor; };
+    bool is_cell() const { return is_string() || is_accessor() || is_object(); }
     bool is_array() const;
     bool is_function() const;
 
@@ -117,6 +122,12 @@ public:
         : m_type(Type::Symbol)
     {
         m_value.as_symbol = symbol;
+    }
+
+    Value(Accessor* accessor)
+        : m_type(Type::Accessor)
+    {
+        m_value.as_accessor = accessor;
     }
 
     explicit Value(Type type)
@@ -183,6 +194,7 @@ public:
     String to_string_without_side_effects() const;
 
     Function& as_function();
+    Accessor& as_accessor();
 
     i32 as_i32() const;
     size_t as_size_t() const;
@@ -214,6 +226,7 @@ private:
         Symbol* as_symbol;
         Object* as_object;
         Cell* as_cell;
+        Accessor* as_accessor;
     } m_value;
 };
 

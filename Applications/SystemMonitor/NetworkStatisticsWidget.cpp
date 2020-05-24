@@ -44,7 +44,6 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         adapters_group_box.set_preferred_size(0, 120);
 
         m_adapter_table_view = adapters_group_box.add<GUI::TableView>();
-        m_adapter_table_view->set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_adapters_fields;
         net_adapters_fields.empend("name", "Name", Gfx::TextAlignment::CenterLeft);
@@ -64,7 +63,6 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         sockets_group_box.set_preferred_size(0, 0);
 
         m_socket_table_view = sockets_group_box.add<GUI::TableView>();
-        m_socket_table_view->set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_tcp_fields;
         net_tcp_fields.empend("peer_address", "Peer", Gfx::TextAlignment::CenterLeft);

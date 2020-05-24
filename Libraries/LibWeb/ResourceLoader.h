@@ -50,13 +50,16 @@ public:
 
     Protocol::Client& protocol_client() { return *m_protocol_client; }
 
+    const String& user_agent() const { return m_user_agent; }
+
 private:
     ResourceLoader();
+    static bool is_port_blocked(int port);
 
     int m_pending_loads { 0 };
 
     RefPtr<Protocol::Client> m_protocol_client;
-    bool is_port_blocked(int port);
+    String m_user_agent;
 };
 
 }

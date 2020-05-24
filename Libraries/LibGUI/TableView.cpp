@@ -103,9 +103,7 @@ void TableView::paint_event(PaintEvent& event)
         for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
             if (is_column_hidden(column_index))
                 continue;
-            auto column_metadata = model()->column_metadata(column_index);
             int column_width = this->column_width(column_index);
-            const Gfx::Font& font = column_metadata.font ? *column_metadata.font : this->font();
             bool is_key_column = model()->key_column() == column_index;
             Gfx::Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
@@ -137,7 +135,8 @@ void TableView::paint_event(PaintEvent& event)
                         if (cell_background_color.is_valid())
                             painter.fill_rect(cell_rect_for_fill, cell_background_color.to_color(background_color));
                     }
-                    painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
+                    auto text_alignment = model()->data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
+                    painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                 }
             }
             x_offset += column_width + horizontal_padding() * 2;
@@ -153,6 +152,48 @@ void TableView::paint_event(PaintEvent& event)
     painter.translate(0, vertical_scrollbar().value());
     if (headers_visible())
         paint_headers(painter);
+}
+
+void TableView::keydown_event(KeyEvent& event)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+    if (event.key() == KeyCode::Key_Return) {
+        activate_selected();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Up) {
+        move_selection(-1);
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        move_selection(1);
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageUp) {
+        int items_per_page = visible_content_rect().height() / item_height();
+        auto old_index = selection().first();
+        auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
+        if (model.is_valid(new_index)) {
+            selection().set(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageDown) {
+        int items_per_page = visible_content_rect().height() / item_height();
+        auto old_index = selection().first();
+        auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
+        if (model.is_valid(new_index)) {
+            selection().set(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    return Widget::keydown_event(event);
 }
 
 }

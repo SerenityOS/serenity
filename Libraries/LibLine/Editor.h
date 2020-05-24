@@ -34,38 +34,19 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
+#include <AK/Utf32View.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibLine/Span.h>
 #include <LibLine/Style.h>
+#include <LibLine/SuggestionDisplay.h>
+#include <LibLine/SuggestionManager.h>
+#include <LibLine/VT.h>
 #include <sys/stat.h>
 #include <termios.h>
 
 namespace Line {
-
-class Editor;
-
-struct CompletionSuggestion {
-    // intentionally not explicit (allows suggesting bare strings)
-    CompletionSuggestion(const String& completion)
-        : text(completion)
-        , trailing_trivia("")
-    {
-    }
-    CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia)
-        : text(completion)
-        , trailing_trivia(trailing_trivia)
-    {
-    }
-
-    bool operator==(const CompletionSuggestion& suggestion) const
-    {
-        return suggestion.text == text;
-    }
-
-    String text;
-    String trailing_trivia;
-};
 
 struct Configuration {
     enum TokenSplitMechanism {
@@ -128,8 +109,8 @@ public:
     Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
 
-    // FIXME: we will have to kindly ask our instantiators to set our signal handlers
-    // since we can not do this cleanly ourselves (signal() limitation: cannot give member functions)
+    // FIXME: we will have to kindly ask our instantiators to set our signal handlers,
+    // since we can not do this cleanly ourselves. (signal() limitation: cannot give member functions)
     void interrupted()
     {
         if (m_is_editing)
@@ -143,7 +124,7 @@ public:
     String line() const { return line(m_buffer.size()); }
     String line(size_t up_to_index) const;
 
-    // only makes sense inside a char_input callback or on_* callback
+    // Only makes sense inside a character_input callback or on_* callback.
     void set_prompt(const String& prompt)
     {
         if (m_cached_prompt_valid)
@@ -155,19 +136,20 @@ public:
 
     void clear_line();
     void insert(const String&);
+    void insert(const Utf32View&);
     void insert(const u32);
     void stylize(const Span&, const Style&);
-    void strip_styles()
-    {
-        m_spans_starting.clear();
-        m_spans_ending.clear();
-        m_refresh_needed = true;
-    }
-    void suggest(size_t invariant_offset = 0, size_t index = 0) const
-    {
-        m_next_suggestion_index = index;
-        m_next_suggestion_invariant_offset = invariant_offset;
-    }
+    void strip_styles(bool strip_anchored = false);
+
+    // Invariant Offset is an offset into the suggested data, hinting the editor what parts of the suggestion will not change
+    // Static Offset is an offset into the token, signifying where the suggestions start
+    // e.g.
+    //    foobar<suggestion initiated>, on_tab_complete returns "barx", "bary", "barz"
+    //       ^ ^
+    //       +-|- static offset: the suggestions start here
+    //         +- invariant offset: the suggestions do not change up to here
+    //
+    void suggest(size_t invariant_offset = 0, size_t static_offset = 0, Span::Mode offset_mode = Span::ByteOriented) const;
 
     const struct termios& termios() const { return m_termios; }
     const struct termios& default_termios() const { return m_default_termios; }
@@ -188,14 +170,15 @@ private:
         Function<bool(Editor&)> callback;
     };
 
-    void vt_save_cursor();
-    void vt_restore_cursor();
-    void vt_clear_to_end_of_line();
-    void vt_clear_lines(size_t count_above, size_t count_below = 0);
-    void vt_move_relative(int x, int y);
-    void vt_move_absolute(u32 x, u32 y);
-    void vt_apply_style(const Style&);
     Vector<size_t, 2> vt_dsr();
+    void remove_at_index(size_t);
+
+    enum class ModificationKind {
+        Insertion,
+        Removal,
+        ForcedOverlapRemoval,
+    };
+    void readjust_anchored_styles(size_t hint_index, ModificationKind);
 
     Style find_applicable_style(size_t offset) const;
 
@@ -223,8 +206,7 @@ private:
         m_drawn_cursor = 0;
         m_inline_search_cursor = 0;
         m_old_prompt_length = m_cached_prompt_length;
-        m_origin_x = 0;
-        m_origin_y = 0;
+        set_origin(0, 0);
         m_prompt_lines_at_suggestion_initiation = 0;
         m_refresh_needed = true;
     }
@@ -262,14 +244,26 @@ private:
     void set_origin()
     {
         auto position = vt_dsr();
-        m_origin_x = position[0];
-        m_origin_y = position[1];
+        set_origin(position[0], position[1]);
+    }
+
+    void set_origin(int x, int y)
+    {
+        m_origin_x = x;
+        m_origin_y = y;
+        m_suggestion_display->set_origin(x, y, {});
     }
 
     bool should_break_token(Vector<u32, 1024>& buffer, size_t index);
 
     void recalculate_origin();
     void reposition_cursor();
+
+    struct CodepointRange {
+        size_t start { 0 };
+        size_t end { 0 };
+    };
+    CodepointRange byte_offset_range_to_codepoint_offset_range(size_t byte_start, size_t byte_end, size_t codepoint_scan_offset, bool reverse = false) const;
 
     bool m_finish { false };
 
@@ -294,23 +288,18 @@ private:
     size_t m_cached_prompt_length { 0 };
     size_t m_old_prompt_length { 0 };
     size_t m_cached_buffer_size { 0 };
-    size_t m_lines_used_for_last_suggestions { 0 };
     size_t m_prompt_lines_at_suggestion_initiation { 0 };
     bool m_cached_prompt_valid { false };
 
-    // exact position before our prompt in the terminal
+    // Exact position before our prompt in the terminal.
     size_t m_origin_x { 0 };
     size_t m_origin_y { 0 };
 
+    OwnPtr<SuggestionDisplay> m_suggestion_display;
+
     String m_new_prompt;
-    Vector<CompletionSuggestion> m_suggestions;
-    CompletionSuggestion m_last_shown_suggestion { String::empty() };
-    size_t m_last_shown_suggestion_display_length { 0 };
-    bool m_last_shown_suggestion_was_complete { false };
-    mutable size_t m_next_suggestion_index { 0 };
-    mutable size_t m_next_suggestion_invariant_offset { 0 };
-    size_t m_largest_common_suggestion_prefix_length { 0 };
-    size_t m_last_displayed_suggestion_index { 0 };
+
+    SuggestionManager m_suggestion_manager;
 
     bool m_always_refresh { false };
 
@@ -322,7 +311,7 @@ private:
 
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
-    // TODO: handle signals internally
+    // TODO: handle signals internally.
     struct termios m_termios, m_default_termios;
     bool m_was_interrupted { false };
     bool m_was_resized { false };
@@ -342,6 +331,9 @@ private:
 
     HashMap<u32, HashMap<u32, Style>> m_spans_starting;
     HashMap<u32, HashMap<u32, Style>> m_spans_ending;
+
+    HashMap<u32, HashMap<u32, Style>> m_anchored_spans_starting;
+    HashMap<u32, HashMap<u32, Style>> m_anchored_spans_ending;
 
     bool m_initialized { false };
     bool m_refresh_needed { false };

@@ -64,19 +64,9 @@ ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
     return target().index(m_row_mappings[index.row()], index.column());
 }
 
-String SortingProxyModel::row_name(int index) const
-{
-    return target().row_name(index);
-}
-
 String SortingProxyModel::column_name(int index) const
 {
     return target().column_name(index);
-}
-
-Model::ColumnMetadata SortingProxyModel::column_metadata(int index) const
-{
-    return target().column_metadata(index);
 }
 
 Variant SortingProxyModel::data(const ModelIndex& index, Role role) const
@@ -151,6 +141,11 @@ void SortingProxyModel::resort()
             }
         }
     });
+}
+
+bool SortingProxyModel::is_column_sortable(int column_index) const
+{
+    return target().is_column_sortable(column_index);
 }
 
 }

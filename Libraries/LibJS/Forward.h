@@ -59,6 +59,7 @@ class DeferGC;
 class Error;
 class Exception;
 class Expression;
+class Accessor;
 class GlobalObject;
 class HandleImpl;
 class Heap;

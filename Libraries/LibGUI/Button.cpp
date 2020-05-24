@@ -101,6 +101,14 @@ void Button::click(unsigned modifiers)
         m_action->activate(this);
 }
 
+void Button::context_menu_event(ContextMenuEvent& context_menu_event)
+{
+    if (!is_enabled())
+        return;
+    if (on_context_menu_request)
+        on_context_menu_request(context_menu_event);
+}
+
 void Button::set_action(Action& action)
 {
     m_action = action.make_weak_ptr();

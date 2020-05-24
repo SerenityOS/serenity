@@ -110,15 +110,14 @@ Gfx::Rect IconView::item_rect(int item_index) const
 Vector<int> IconView::items_intersecting_rect(const Gfx::Rect& rect) const
 {
     ASSERT(model());
-    const auto& column_metadata = model()->column_metadata(model_column());
-    const auto& font = column_metadata.font ? *column_metadata.font : this->font();
     Vector<int> item_indexes;
     for (int item_index = 0; item_index < item_count(); ++item_index) {
         Gfx::Rect item_rect;
         Gfx::Rect icon_rect;
         Gfx::Rect text_rect;
-        auto item_text = model()->data(model()->index(item_index, model_column()));
-        get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
+        auto index = model()->index(item_index, model_column());
+        auto item_text = model()->data(index);
+        get_item_rects(item_index, font_for_index(index), item_text, item_rect, icon_rect, text_rect);
         if (icon_rect.intersects(rect) || text_rect.intersects(rect))
             item_indexes.append(item_index);
     }
@@ -131,15 +130,13 @@ ModelIndex IconView::index_at_event_position(const Gfx::Point& position) const
     // FIXME: Since all items are the same size, just compute the clicked item index
     //        instead of iterating over everything.
     auto adjusted_position = this->adjusted_position(position);
-    const auto& column_metadata = model()->column_metadata(model_column());
-    const auto& font = column_metadata.font ? *column_metadata.font : this->font();
     for (int item_index = 0; item_index < item_count(); ++item_index) {
         Gfx::Rect item_rect;
         Gfx::Rect icon_rect;
         Gfx::Rect text_rect;
         auto index = model()->index(item_index, model_column());
         auto item_text = model()->data(index);
-        get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
+        get_item_rects(item_index, font_for_index(index), item_text, item_rect, icon_rect, text_rect);
         if (icon_rect.contains(adjusted_position) || text_rect.contains(adjusted_position))
             return index;
     }
@@ -279,9 +276,6 @@ void IconView::paint_event(PaintEvent& event)
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    auto column_metadata = model()->column_metadata(m_model_column);
-    const Gfx::Font& font = column_metadata.font ? *column_metadata.font : this->font();
-
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
         auto model_index = model()->index(item_index, m_model_column);
         bool is_selected_item = selection().contains(model_index);
@@ -298,7 +292,7 @@ void IconView::paint_event(PaintEvent& event)
         Gfx::Rect item_rect;
         Gfx::Rect icon_rect;
         Gfx::Rect text_rect;
-        get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
+        get_item_rects(item_index, font_for_index(model_index), item_text, item_rect, icon_rect, text_rect);
 
         if (icon.is_icon()) {
             if (auto bitmap = icon.as_icon().bitmap_for_size(icon_rect.width())) {
@@ -319,7 +313,7 @@ void IconView::paint_event(PaintEvent& event)
         else
             text_color = model()->data(model_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(text_rect, background_color);
-        painter.draw_text(text_rect, item_text.to_string(), font, Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
+        painter.draw_text(text_rect, item_text.to_string(), font_for_index(model_index), Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
 
         if (model_index == m_drop_candidate_index) {
             // FIXME: This visualization is not great, as it's also possible to drop things on the text label..

@@ -108,16 +108,13 @@ String ProfileModel::column_name(int column) const
     }
 }
 
-GUI::Model::ColumnMetadata ProfileModel::column_metadata(int column) const
-{
-    if (column == Column::SampleCount || column == Column::SelfCount)
-        return ColumnMetadata { 0, Gfx::TextAlignment::CenterRight };
-    return {};
-}
-
 GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto* node = static_cast<ProfileNode*>(index.internal_data());
+    if (role == Role::TextAlignment) {
+        if (index.column() == Column::SampleCount || index.column() == Column::SelfCount)
+            return Gfx::TextAlignment::CenterRight;
+    }
     if (role == Role::Icon) {
         if (index.column() == Column::StackFrame) {
             if (node->address() >= 0xc0000000)

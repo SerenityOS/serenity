@@ -43,12 +43,13 @@
     __ENUMERATE_FILETYPE(java, ".java")        \
     __ENUMERATE_FILETYPE(javascript, ".js")    \
     __ENUMERATE_FILETYPE(library, ".so", ".a") \
+    __ENUMERATE_FILETYPE(markdown, ".md")      \
     __ENUMERATE_FILETYPE(object, ".o", ".obj") \
     __ENUMERATE_FILETYPE(pdf, ".pdf")          \
     __ENUMERATE_FILETYPE(python, ".py")        \
     __ENUMERATE_FILETYPE(sound, ".wav")        \
     __ENUMERATE_FILETYPE(ini, ".ini")          \
-    __ENUMERATE_FILETYPE(text, ".txt", ".md")
+    __ENUMERATE_FILETYPE(text, ".txt")
 namespace GUI {
 
 class FileSystemModel
@@ -140,13 +141,13 @@ public:
     virtual int row_count(const ModelIndex& = ModelIndex()) const override;
     virtual int column_count(const ModelIndex& = ModelIndex()) const override;
     virtual String column_name(int column) const override;
-    virtual ColumnMetadata column_metadata(int column) const override;
     virtual Variant data(const ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
     virtual ModelIndex parent_index(const ModelIndex&) const override;
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
     virtual StringView drag_data_type() const override { return "text/uri-list"; }
     virtual bool accepts_drag(const ModelIndex&, const StringView& data_type) override;
+    virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
 
     static String timestamp_string(time_t timestamp)
     {

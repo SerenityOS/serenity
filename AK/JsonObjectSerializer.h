@@ -85,25 +85,37 @@ public:
         m_builder.append(value ? "true" : "false");
     }
 
-    void add(const StringView& key, i32 value)
+    void add(const StringView& key, int value)
     {
         begin_item(key);
         m_builder.appendf("%d", value);
     }
 
-    void add(const StringView& key, u32 value)
+    void add(const StringView& key, unsigned value)
     {
         begin_item(key);
         m_builder.appendf("%u", value);
     }
 
-    void add(const StringView& key, i64 value)
+    void add(const StringView& key, long value)
+    {
+        begin_item(key);
+        m_builder.appendf("%ld", value);
+    }
+
+    void add(const StringView& key, long unsigned value)
+    {
+        begin_item(key);
+        m_builder.appendf("%lu", value);
+    }
+
+    void add(const StringView& key, long long value)
     {
         begin_item(key);
         m_builder.appendf("%lld", value);
     }
 
-    void add(const StringView& key, u64 value)
+    void add(const StringView& key, long long unsigned value)
     {
         begin_item(key);
         m_builder.appendf("%llu", value);

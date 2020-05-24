@@ -76,8 +76,8 @@ public:
     void draw_text(const Rect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const Rect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const Rect&, const Utf32View&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_glyph(const Point&, char, Color);
-    void draw_glyph(const Point&, char, const Font&, Color);
+    void draw_glyph(const Point&, u32, Color);
+    void draw_glyph(const Point&, u32, const Font&, Color);
     void draw_emoji(const Point&, const Gfx::Bitmap&, const Font&);
     void draw_glyph_or_emoji(const Point&, u32 codepoint, const Font&, Color);
 

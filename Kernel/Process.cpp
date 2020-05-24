@@ -2636,7 +2636,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     return 0;
 }
 
-int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
+int Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
 {
     auto description = file_description(fd);
     if (!description)
@@ -4259,7 +4259,7 @@ int Process::sys$get_process_name(char* buffer, int buffer_size)
 // We don't use the flag yet, but we could use it for distinguishing
 // random source like Linux, unlike the OpenBSD equivalent. However, if we
 // do, we should be able of the caveats that Linux has dealt with.
-int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags __attribute__((unused)))
+ssize_t Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags __attribute__((unused)))
 {
     REQUIRE_PROMISE(stdio);
     if (buffer_size <= 0)

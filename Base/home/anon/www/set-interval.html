@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>setInterval() test</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var output = document.getElementById("output");
+            var counter = 0;
+            function updateOutput () {
+                output.innerHTML = `setInterval() was called ${counter} times!`;
+            }
+            updateOutput();
+            setInterval(function () {
+                counter++;
+                updateOutput();
+            }, 1000);
+        });
+    </script>
+</head>
+<body>
+    <div id="output"></div>
+</body>
+</html>

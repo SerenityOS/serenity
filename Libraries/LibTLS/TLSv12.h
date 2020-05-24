@@ -376,6 +376,7 @@ private:
 
     bool flush();
     void write_into_socket();
+    void read_from_socket();
 
     bool check_connection_state(bool read);
 

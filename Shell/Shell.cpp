@@ -1501,8 +1501,14 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
             if (args.last().type == Token::Comment) // we cannot complete comments
                 return {};
 
-            is_first_in_subcommand = args.size() == 1;
-            token = last_command.args.last().text;
+            if (args.last().end != line.length()) {
+                // There was a token separator at the end
+                is_first_in_subcommand = false;
+                token = "";
+            } else {
+                is_first_in_subcommand = args.size() == 1;
+                token = last_command.args.last().text;
+            }
         }
     }
 
@@ -1540,6 +1546,7 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
     }
 
     String path;
+    String original_token = token;
 
     ssize_t last_slash = token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
@@ -1563,7 +1570,8 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
     // e. in `cd /foo/bar', 'bar' is the invariant
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
-    editor.suggest(escape_token(token).length(), 0);
+    auto token_length = escape_token(token).length();
+    editor.suggest(token_length, original_token.length() - token_length);
 
     // only suggest dot-files if path starts with a dot
     Core::DirIterator files(path,
@@ -1578,9 +1586,9 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
             if (!stat_error) {
                 if (S_ISDIR(program_status.st_mode)) {
                     if (!should_suggest_only_executables)
-                        suggestions.append({ escape_token(file), "/" });
+                        suggestions.append({ escape_token(file), "/", { Line::Style::Hyperlink(String::format("file://%s", file_path.characters())), Line::Style::Anchored } });
                 } else {
-                    suggestions.append({ escape_token(file), " " });
+                    suggestions.append({ escape_token(file), " ", { Line::Style::Hyperlink(String::format("file://%s", file_path.characters())), Line::Style::Anchored } });
                 }
             }
         }

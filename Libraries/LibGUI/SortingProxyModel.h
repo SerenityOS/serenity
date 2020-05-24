@@ -37,9 +37,7 @@ public:
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const override;
     virtual int column_count(const ModelIndex& = ModelIndex()) const override;
-    virtual String row_name(int) const override;
     virtual String column_name(int) const override;
-    virtual ColumnMetadata column_metadata(int) const override;
     virtual Variant data(const ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
     virtual StringView drag_data_type() const override;
@@ -47,6 +45,7 @@ public:
     virtual int key_column() const override { return m_key_column; }
     virtual SortOrder sort_order() const override { return m_sort_order; }
     virtual void set_key_column_and_sort_order(int, SortOrder) override;
+    virtual bool is_column_sortable(int column_index) const override;
 
     ModelIndex map_to_target(const ModelIndex&) const;
 

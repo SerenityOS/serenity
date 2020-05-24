@@ -61,6 +61,8 @@ const char* to_string(Variant::Type type)
         return "Rect";
     case Variant::Type::Font:
         return "Font";
+    case Variant::Type::TextAlignment:
+        return "TextAlignment";
     }
     ASSERT_NOT_REACHED();
 }
@@ -92,6 +94,12 @@ void Variant::clear()
     }
     m_type = Type::Invalid;
     m_value.as_string = nullptr;
+}
+
+Variant::Variant(Gfx::TextAlignment value)
+    : m_type(Type::TextAlignment)
+{
+    m_value.as_text_alignment = value;
 }
 
 Variant::Variant(i32 value)
@@ -307,6 +315,9 @@ void Variant::copy_from(const Variant& other)
     case Type::Rect:
         m_value.as_rect = other.m_value.as_rect;
         break;
+    case Type::TextAlignment:
+        m_value.as_text_alignment = other.m_value.as_text_alignment;
+        break;
     case Type::Invalid:
         break;
     }
@@ -343,6 +354,8 @@ bool Variant::operator==(const Variant& other) const
         return as_rect() == other.as_rect();
     case Type::Font:
         return &as_font() == &other.as_font();
+    case Type::TextAlignment:
+        return m_value.as_text_alignment == other.m_value.as_text_alignment;
     case Type::Invalid:
         return true;
     }
@@ -378,6 +391,7 @@ bool Variant::operator<(const Variant& other) const
     case Type::Size:
     case Type::Rect:
     case Type::Font:
+    case Type::TextAlignment:
         // FIXME: Figure out how to compare these.
         ASSERT_NOT_REACHED();
     case Type::Invalid:
@@ -415,9 +429,25 @@ String Variant::to_string() const
         return as_rect().to_string();
     case Type::Font:
         return String::format("[Font: %s]", as_font().name().characters());
+    case Type::TextAlignment: {
+        switch (m_value.as_text_alignment) {
+        case Gfx::TextAlignment::Center:
+            return "Gfx::TextAlignment::Center";
+        case Gfx::TextAlignment::CenterLeft:
+            return "Gfx::TextAlignment::CenterLeft";
+        case Gfx::TextAlignment::CenterRight:
+            return "Gfx::TextAlignment::CenterRight";
+        case Gfx::TextAlignment::TopLeft:
+            return "Gfx::TextAlignment::TopLeft";
+        case Gfx::TextAlignment::TopRight:
+            return "Gfx::TextAlignment::TopRight";
+        default:
+            ASSERT_NOT_REACHED();
+        }
+        return "";
+    }
     case Type::Invalid:
         return "[null]";
-        break;
     }
     ASSERT_NOT_REACHED();
 }

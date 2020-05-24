@@ -115,6 +115,8 @@ void Widget::child_event(Core::ChildEvent& event)
             else
                 layout()->add_widget(Core::to<Widget>(*event.child()));
         }
+        if (window() && event.child() && Core::is<Widget>(*event.child()))
+            window()->did_add_widget({}, Core::to<Widget>(*event.child()));
     }
     if (event.type() == Event::ChildRemoved) {
         if (layout()) {

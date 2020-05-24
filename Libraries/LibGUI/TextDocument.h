@@ -120,6 +120,9 @@ public:
     Optional<TextDocumentSpan> first_non_skippable_span_before(const TextPosition&) const;
     Optional<TextDocumentSpan> first_non_skippable_span_after(const TextPosition&) const;
 
+    TextPosition first_word_break_before(const TextPosition&) const;
+    TextPosition first_word_break_after(const TextPosition&) const;
+
     void add_to_undo_stack(NonnullOwnPtr<TextDocumentUndoCommand>);
 
     bool can_undo() const { return m_undo_stack.can_undo(); }

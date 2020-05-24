@@ -370,4 +370,19 @@ void TabWidget::keydown_event(KeyEvent& event)
     Widget::keydown_event(event);
 }
 
+void TabWidget::context_menu_event(ContextMenuEvent& context_menu_event)
+{
+    for (size_t i = 0; i < m_tabs.size(); ++i) {
+        auto button_rect = this->button_rect(i);
+        if (!button_rect.contains(context_menu_event.position()))
+            continue;
+        auto* widget = m_tabs[i].widget;
+        deferred_invoke([this, widget, context_menu_event](auto&) {
+            if (on_context_menu_request && widget)
+                on_context_menu_request(*widget, context_menu_event);
+        });
+        return;
+    }
+}
+
 }

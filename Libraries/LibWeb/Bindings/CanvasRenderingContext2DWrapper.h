@@ -47,12 +47,6 @@ private:
     static JS::Value draw_image(JS::Interpreter&);
     static JS::Value scale(JS::Interpreter&);
     static JS::Value translate(JS::Interpreter&);
-    static JS::Value fill_style_getter(JS::Interpreter&);
-    static void fill_style_setter(JS::Interpreter&, JS::Value);
-    static JS::Value stroke_style_getter(JS::Interpreter&);
-    static void stroke_style_setter(JS::Interpreter&, JS::Value);
-    static JS::Value line_width_getter(JS::Interpreter&);
-    static void line_width_setter(JS::Interpreter&, JS::Value);
     static JS::Value begin_path(JS::Interpreter&);
     static JS::Value close_path(JS::Interpreter&);
     static JS::Value stroke(JS::Interpreter&);
@@ -60,9 +54,19 @@ private:
     static JS::Value move_to(JS::Interpreter&);
     static JS::Value line_to(JS::Interpreter&);
     static JS::Value quadratic_curve_to(JS::Interpreter&);
-
     static JS::Value create_image_data(JS::Interpreter&);
     static JS::Value put_image_data(JS::Interpreter&);
+
+    static JS::Value fill_style_getter(JS::Interpreter&);
+    static void fill_style_setter(JS::Interpreter&, JS::Value);
+
+    static JS::Value stroke_style_getter(JS::Interpreter&);
+    static void stroke_style_setter(JS::Interpreter&, JS::Value);
+
+    static void line_width_setter(JS::Interpreter&, JS::Value);
+    static JS::Value line_width_getter(JS::Interpreter&);
+
+    static JS::Value canvas_getter(JS::Interpreter&);
 
     NonnullRefPtr<CanvasRenderingContext2D> m_impl;
 };

@@ -138,13 +138,6 @@ String DisassemblyModel::column_name(int column) const
     }
 }
 
-GUI::Model::ColumnMetadata DisassemblyModel::column_metadata(int column) const
-{
-    if (column == Column::SampleCount)
-        return ColumnMetadata { 0, Gfx::TextAlignment::CenterRight };
-    return {};
-}
-
 struct ColorPair {
     Color background;
     Color foreground;

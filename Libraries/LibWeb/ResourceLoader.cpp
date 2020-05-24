@@ -44,6 +44,7 @@ ResourceLoader& ResourceLoader::the()
 
 ResourceLoader::ResourceLoader()
     : m_protocol_client(Protocol::Client::construct())
+    , m_user_agent("Mozilla/4.0 (SerenityOS; x86) LibWeb+LibJS (Not KHTML, nor Gecko) LibWeb")
 {
 }
 
@@ -114,7 +115,9 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
     }
 
     if (url.protocol() == "http" || url.protocol() == "https" || url.protocol() == "gemini") {
-        auto download = protocol_client().start_download(url.to_string());
+        HashMap<String, String> headers;
+        headers.set("User-Agent", m_user_agent);
+        auto download = protocol_client().start_download(url.to_string(), headers);
         if (!download) {
             if (error_callback)
                 error_callback("Failed to initiate load");

@@ -50,6 +50,7 @@ public:
     Variant(const Gfx::Size&);
     Variant(const Gfx::Rect&);
     Variant(const Gfx::Font&);
+    Variant(const Gfx::TextAlignment);
     Variant(const AK::JsonValue&);
     Variant(Color);
 
@@ -77,6 +78,7 @@ public:
         Size,
         Rect,
         Font,
+        TextAlignment,
     };
 
     bool is_valid() const { return m_type != Type::Invalid; }
@@ -93,6 +95,7 @@ public:
     bool is_size() const { return m_type == Type::Size; }
     bool is_rect() const { return m_type == Type::Rect; }
     bool is_font() const { return m_type == Type::Font; }
+    bool is_text_alignment() const { return m_type == Type::TextAlignment; }
     Type type() const { return m_type; }
 
     bool as_bool() const
@@ -226,6 +229,13 @@ public:
         return *m_value.as_font;
     }
 
+    Gfx::TextAlignment to_text_alignment(Gfx::TextAlignment default_value) const
+    {
+        if (type() != Type::TextAlignment)
+            return default_value;
+        return m_value.as_text_alignment;
+    }
+
     Color to_color(Color default_value = {}) const
     {
         if (type() == Type::Color)
@@ -272,6 +282,7 @@ private:
         unsigned as_uint;
         float as_float;
         Gfx::RGBA32 as_color;
+        Gfx::TextAlignment as_text_alignment;
         RawPoint as_point;
         RawSize as_size;
         RawRect as_rect;

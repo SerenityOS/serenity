@@ -243,7 +243,7 @@ public:
     unsigned sys$alarm(unsigned seconds);
     int sys$access(const char* pathname, size_t path_length, int mode);
     int sys$fcntl(int fd, int cmd, u32 extra_arg);
-    int sys$ioctl(int fd, unsigned request, unsigned arg);
+    int sys$ioctl(int fd, unsigned request, FlatPtr arg);
     int sys$mkdir(const char* pathname, size_t path_length, mode_t mode);
     clock_t sys$times(tms*);
     int sys$utime(const char* pathname, size_t path_length, const struct utimbuf*);

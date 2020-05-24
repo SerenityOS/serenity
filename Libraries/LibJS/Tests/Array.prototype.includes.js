@@ -5,6 +5,8 @@ try {
 
     var array = ['hello', 'friends', 1, 2, false];
 
+    assert([].includes() === false);
+    assert([undefined].includes() === true);
     assert(array.includes('hello') === true);
     assert(array.includes(1) === true);
     assert(array.includes(1, -3) === true);

@@ -65,6 +65,7 @@ public:
     Function<void(const URL&)> on_load_start;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
     Function<void(const URL&)> on_url_drop;
+    Function<void(Document*)> on_set_document;
 
     virtual bool accepts_focus() const override { return true; }
 

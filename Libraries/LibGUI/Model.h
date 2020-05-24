@@ -46,17 +46,6 @@ enum class SortOrder {
 
 class Model : public RefCounted<Model> {
 public:
-    struct ColumnMetadata {
-        int preferred_width { 0 };
-        Gfx::TextAlignment text_alignment { Gfx::TextAlignment::CenterLeft };
-        const Gfx::Font* font { nullptr };
-        enum class Sortable {
-            False,
-            True,
-        };
-        Sortable sortable { Sortable::True };
-    };
-
     enum UpdateFlag {
         DontInvalidateIndexes = 0,
         InvalidateAllIndexes = 1 << 0,
@@ -71,15 +60,14 @@ public:
         Icon,
         Font,
         DragData,
+        TextAlignment,
     };
 
     virtual ~Model();
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const = 0;
     virtual int column_count(const ModelIndex& = ModelIndex()) const = 0;
-    virtual String row_name(int) const { return {}; }
     virtual String column_name(int) const { return {}; }
-    virtual ColumnMetadata column_metadata(int) const { return {}; }
     virtual Variant data(const ModelIndex&, Role = Role::Display) const = 0;
     virtual void update() = 0;
     virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }
@@ -89,6 +77,8 @@ public:
     virtual void set_data(const ModelIndex&, const Variant&) {}
     virtual int tree_column() const { return 0; }
     virtual bool accepts_drag(const ModelIndex&, const StringView& data_type);
+
+    virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
 
     bool is_valid(const ModelIndex& index) const
     {

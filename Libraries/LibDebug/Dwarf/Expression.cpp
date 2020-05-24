@@ -41,13 +41,13 @@ Value evaluate(const ByteBuffer& bytes, const PtraceRegisters& regs)
 
         switch (static_cast<Operations>(opcode)) {
         case Operations::RegEbp: {
-            int offset = 0;
+            ssize_t offset = 0;
             stream.read_LEB128_signed(offset);
             return Value { Type::UnsignedIntetger, regs.ebp + offset };
         }
 
         case Operations::FbReg: {
-            int offset = 0;
+            ssize_t offset = 0;
             stream.read_LEB128_signed(offset);
             return Value { Type::UnsignedIntetger, regs.ebp + 2 * sizeof(size_t) + offset };
         }

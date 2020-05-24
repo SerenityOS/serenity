@@ -29,8 +29,8 @@
 #include "History.h"
 #include <AK/URL.h>
 #include <LibGUI/Widget.h>
-#include <LibWeb/Forward.h>
 #include <LibHTTP/HttpJob.h>
+#include <LibWeb/Forward.h>
 
 namespace Browser {
 
@@ -43,6 +43,7 @@ public:
     void load(const URL&);
 
     void did_become_active();
+    void context_menu_requested(const Gfx::Point& screen_position);
 
     Function<void(String)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
@@ -66,12 +67,15 @@ private:
     RefPtr<GUI::TextBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<GUI::Window> m_dom_inspector_window;
+    RefPtr<GUI::Window> m_console_window;
     RefPtr<GUI::StatusBar> m_statusbar;
     RefPtr<GUI::MenuBar> m_menubar;
     RefPtr<GUI::ToolBarContainer> m_toolbar_container;
 
     RefPtr<GUI::Menu> m_link_context_menu;
     String m_link_context_menu_href;
+
+    RefPtr<GUI::Menu> m_tab_context_menu;
 
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;

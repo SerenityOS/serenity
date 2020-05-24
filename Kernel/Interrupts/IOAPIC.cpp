@@ -32,6 +32,7 @@
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/TypedMapping.h>
 
 #define IOAPIC_REDIRECTION_ENTRY_OFFSET 0x10
 namespace Kernel {
@@ -44,8 +45,8 @@ enum DeliveryMode {
     External = 7
 };
 
-IOAPIC::IOAPIC(ioapic_mmio_regs& regs, u32 gsi_base)
-    : m_physical_access_registers(regs)
+IOAPIC::IOAPIC(PhysicalAddress address, u32 gsi_base)
+    : m_address(address)
     , m_gsi_base(gsi_base)
     , m_id((read_register(0x0) >> 24) & 0xFF)
     , m_version(read_register(0x1) & 0xFF)
@@ -314,10 +315,9 @@ u16 IOAPIC::get_irr() const
 void IOAPIC::write_register(u32 index, u32 value) const
 {
     InterruptDisabler disabler;
-    auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(&m_physical_access_registers)), (PAGE_SIZE * 2), "IOAPIC Write", Region::Access::Read | Region::Access::Write);
-    auto& regs = *(volatile ioapic_mmio_regs*)region->vaddr().offset(offset_in_page(&m_physical_access_registers)).as_ptr();
-    regs.select = index;
-    regs.window = value;
+    auto regs = map_typed_writable<ioapic_mmio_regs>(m_address);
+    regs->select = index;
+    regs->window = value;
 #ifdef IOAPIC_DEBUG
     dbg() << "IOAPIC Writing, Value 0x" << String::format("%x", regs.window) << " @ offset 0x" << String::format("%x", regs.select);
 #endif
@@ -325,12 +325,11 @@ void IOAPIC::write_register(u32 index, u32 value) const
 u32 IOAPIC::read_register(u32 index) const
 {
     InterruptDisabler disabler;
-    auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(&m_physical_access_registers)), (PAGE_SIZE * 2), "IOAPIC Read", Region::Access::Read | Region::Access::Write);
-    auto& regs = *(volatile ioapic_mmio_regs*)region->vaddr().offset(offset_in_page(&m_physical_access_registers)).as_ptr();
-    regs.select = index;
+    auto regs = map_typed_writable<ioapic_mmio_regs>(m_address);
+    regs->select = index;
 #ifdef IOAPIC_DEBUG
     dbg() << "IOAPIC Reading, Value 0x" << String::format("%x", regs.window) << " @ offset 0x" << String::format("%x", regs.select);
 #endif
-    return regs.window;
+    return regs->window;
 }
 }

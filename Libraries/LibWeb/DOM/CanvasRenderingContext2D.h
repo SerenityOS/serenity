@@ -77,6 +77,8 @@ public:
     RefPtr<ImageData> create_image_data(JS::GlobalObject&, int width, int height) const;
     void put_image_data(const ImageData&, float x, float y);
 
+    HTMLCanvasElement* element() { return m_element; }
+
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 

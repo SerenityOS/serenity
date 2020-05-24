@@ -44,6 +44,7 @@ class InodeWatcher;
 class KBuffer;
 class KResult;
 class LocalSocket;
+class MappedROM;
 class PageDirectory;
 class PerformanceEventBuffer;
 class PhysicalPage;

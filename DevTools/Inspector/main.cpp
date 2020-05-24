@@ -94,7 +94,6 @@ int main(int argc, char** argv)
     tree_view.set_activates_on_selection(true);
 
     auto& properties_table_view = splitter.add<GUI::TableView>();
-    properties_table_view.set_size_columns_to_fit_content(true);
     properties_table_view.set_editable(true);
     properties_table_view.aid_create_editing_delegate = [](auto&) {
         return make<GUI::StringModelEditingDelegate>();

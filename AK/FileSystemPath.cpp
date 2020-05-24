@@ -48,22 +48,26 @@ void FileSystemPath::canonicalize()
     m_is_absolute = m_string[0] == '/';
     auto parts = m_string.split_view('/');
 
-    if (!m_is_absolute)
-        parts.prepend(".");
-
     size_t approximate_canonical_length = 0;
     Vector<String> canonical_parts;
 
     for (size_t i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];
-        if (m_is_absolute || i != 0) {
-            if (part == ".")
-                continue;
-        }
-        if (part == "..") {
-            if (!canonical_parts.is_empty())
-                canonical_parts.take_last();
+        if (part == ".")
             continue;
+        if (part == "..") {
+            if (canonical_parts.is_empty()) {
+                if (m_is_absolute) {
+                    // At the root, .. does nothing.
+                    continue;
+                }
+            } else {
+                if (canonical_parts.last() != "..") {
+                    // A .. and a previous non-.. part cancel each other.
+                    canonical_parts.take_last();
+                    continue;
+                }
+            }
         }
         if (!part.is_empty()) {
             approximate_canonical_length += part.length() + 1;

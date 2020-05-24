@@ -1,5 +1,7 @@
 set(SOURCES
     BookmarksBarWidget.cpp
+    BrowserConsoleClient.cpp
+    ConsoleWidget.cpp
     DownloadWidget.cpp
     InspectorWidget.cpp
     main.cpp

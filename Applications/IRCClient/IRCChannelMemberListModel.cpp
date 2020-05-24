@@ -57,17 +57,10 @@ String IRCChannelMemberListModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GUI::Model::ColumnMetadata IRCChannelMemberListModel::column_metadata(int column) const
-{
-    switch (column) {
-    case Column::Name:
-        return { 70, Gfx::TextAlignment::CenterLeft };
-    }
-    ASSERT_NOT_REACHED();
-}
-
 GUI::Variant IRCChannelMemberListModel::data(const GUI::ModelIndex& index, Role role) const
 {
+    if (role == Role::TextAlignment)
+        return Gfx::TextAlignment::CenterLeft;
     if (role == Role::Display) {
         switch (index.column()) {
         case Column::Name:

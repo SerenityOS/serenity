@@ -145,6 +145,7 @@ ln -s SoundPlayer mnt/bin/sp
 ln -s Help mnt/bin/help
 ln -s Browser mnt/bin/br
 ln -s HackStudio mnt/bin/hs
+ln -s Debugger mnt/bin/sdb
 ln -s SystemMonitor mnt/bin/sm
 ln -s ProfileViewer mnt/bin/pv
 ln -s WebServer mnt/bin/ws

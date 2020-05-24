@@ -345,6 +345,26 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
 Variant FileSystemModel::data(const ModelIndex& index, Role role) const
 {
     ASSERT(index.is_valid());
+
+    if (role == Role::TextAlignment) {
+        switch (index.column()) {
+        case Column::Icon:
+            return Gfx::TextAlignment::Center;
+        case Column::Size:
+        case Column::Inode:
+            return Gfx::TextAlignment::CenterRight;
+        case Column::Name:
+        case Column::Owner:
+        case Column::Group:
+        case Column::ModificationTime:
+        case Column::Permissions:
+        case Column::SymlinkTarget:
+            return Gfx::TextAlignment::CenterLeft;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
     auto& node = this->node(index);
 
     if (role == Role::Custom) {
@@ -544,31 +564,6 @@ String FileSystemModel::column_name(int column) const
         return "Inode";
     case Column::SymlinkTarget:
         return "Symlink target";
-    }
-    ASSERT_NOT_REACHED();
-}
-
-Model::ColumnMetadata FileSystemModel::column_metadata(int column) const
-{
-    switch (column) {
-    case Column::Icon:
-        return { 16, Gfx::TextAlignment::Center, nullptr, Model::ColumnMetadata::Sortable::False };
-    case Column::Name:
-        return { 120, Gfx::TextAlignment::CenterLeft };
-    case Column::Size:
-        return { 80, Gfx::TextAlignment::CenterRight };
-    case Column::Owner:
-        return { 50, Gfx::TextAlignment::CenterLeft };
-    case Column::Group:
-        return { 50, Gfx::TextAlignment::CenterLeft };
-    case Column::ModificationTime:
-        return { 110, Gfx::TextAlignment::CenterLeft };
-    case Column::Permissions:
-        return { 65, Gfx::TextAlignment::CenterLeft };
-    case Column::Inode:
-        return { 60, Gfx::TextAlignment::CenterRight };
-    case Column::SymlinkTarget:
-        return { 120, Gfx::TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
 }

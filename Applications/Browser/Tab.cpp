@@ -26,8 +26,8 @@
 
 #include "Tab.h"
 #include "BookmarksBarWidget.h"
+#include "ConsoleWidget.h"
 #include "DownloadWidget.h"
-#include "History.h"
 #include "InspectorWidget.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
@@ -44,7 +44,7 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibJS/Interpreter.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
@@ -55,7 +55,6 @@
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Parser/CSSParser.h>
-#include <LibWeb/Parser/HTMLParser.h>
 #include <LibWeb/ResourceLoader.h>
 
 namespace Browser {
@@ -113,11 +112,17 @@ Tab::Tab()
         }
 
         m_html_widget->load(location);
+        m_location_box->set_focus(false);
     };
+
+    m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste & Go", [this](auto&) {
+        m_location_box->set_text(GUI::Clipboard::the().data());
+        m_location_box->on_return_pressed();
+    }));
 
     m_bookmark_button = toolbar.add<GUI::Button>();
     m_bookmark_button->set_button_style(Gfx::ButtonStyle::CoolBar);
-    m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-black.png"));
+    m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-contour.png"));
     m_bookmark_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_bookmark_button->set_preferred_size(22, 22);
 
@@ -140,15 +145,17 @@ Tab::Tab()
     };
 
     m_html_widget->on_link_click = [this](auto& href, auto& target, unsigned modifiers) {
-        if (href.starts_with("#")) {
-            auto anchor = href.substring_view(1, href.length() - 1);
-            m_html_widget->scroll_to_anchor(anchor);
-        } else {
+        if (target == "_blank" || modifiers == Mod_Ctrl) {
             auto url = m_html_widget->document()->complete_url(href);
-            if (target == "_blank" || modifiers == Mod_Ctrl)
-                on_tab_open_request(url);
-            else
+            on_tab_open_request(url);
+        } else {
+            if (href.starts_with("#")) {
+                auto anchor = href.substring_view(1, href.length() - 1);
+                m_html_widget->scroll_to_anchor(anchor);
+            } else {
+                auto url = m_html_widget->document()->complete_url(href);
                 m_html_widget->load(url);
+            }
         }
     };
 
@@ -197,6 +204,13 @@ Tab::Tab()
         m_icon = icon;
         if (on_favicon_change)
             on_favicon_change(icon);
+    };
+
+    m_html_widget->on_set_document = [this](auto* document) {
+        if (document && m_console_window) {
+            auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
+            console_widget->set_interpreter(document->interpreter().make_weak_ptr());
+        }
     };
 
     auto focus_location_box_action = GUI::Action::create(
@@ -277,6 +291,21 @@ Tab::Tab()
         },
         this));
 
+    inspect_menu.add_action(GUI::Action::create(
+        "Open JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
+            if (!m_console_window) {
+                m_console_window = GUI::Window::construct();
+                m_console_window->set_rect(100, 100, 500, 300);
+                m_console_window->set_title("JS Console");
+                m_console_window->set_main_widget<ConsoleWidget>();
+            }
+            auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
+            console_widget->set_interpreter(m_html_widget->document()->interpreter().make_weak_ptr());
+            m_console_window->show();
+            m_console_window->move_to_front();
+        },
+        this));
+
     auto& debug_menu = m_menubar->add_menu("Debug");
     debug_menu.add_action(GUI::Action::create(
         "Dump DOM tree", [this](auto&) {
@@ -310,6 +339,14 @@ Tab::Tab()
 
     auto& help_menu = m_menubar->add_menu("Help");
     help_menu.add_action(WindowActions::the().about_action());
+
+    m_tab_context_menu = GUI::Menu::construct();
+    m_tab_context_menu->add_action(GUI::Action::create("Reload Tab", [this](auto&) {
+        m_reload_action->activate();
+    }));
+    m_tab_context_menu->add_action(GUI::Action::create("Close Tab", [this](auto&) {
+        on_tab_close_request(*this);
+    }));
 }
 
 Tab::~Tab()
@@ -330,10 +367,10 @@ void Tab::update_actions()
 void Tab::update_bookmark_button(const String& url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
-        m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-yellow.png"));
+        m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-filled.png"));
         m_bookmark_button->set_tooltip("Remove Bookmark");
     } else {
-        m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-contour.png"));
+        m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-contour.png"));
         m_bookmark_button->set_tooltip("Add Bookmark");
     }
 }
@@ -348,7 +385,7 @@ void Tab::did_become_active()
         m_statusbar->set_text(String::format("Loading (%d pending resources...)", Web::ResourceLoader::the().pending_loads()));
     };
 
-    BookmarksBarWidget::the().on_bookmark_click = [this](auto&, auto& url, unsigned modifiers) {
+    BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, unsigned modifiers) {
         if (modifiers & Mod_Ctrl)
             on_tab_open_request(url);
         else
@@ -367,6 +404,11 @@ void Tab::did_become_active()
     m_statusbar->set_visible(!is_fullscreen);
 
     GUI::Application::the().set_menubar(m_menubar);
+}
+
+void Tab::context_menu_requested(const Gfx::Point& screen_position)
+{
+    m_tab_context_menu->popup(screen_position);
 }
 
 }

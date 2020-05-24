@@ -50,7 +50,7 @@ void File::close()
 {
 }
 
-int File::ioctl(FileDescription&, unsigned, unsigned)
+int File::ioctl(FileDescription&, unsigned, FlatPtr)
 {
     return -ENOTTY;
 }

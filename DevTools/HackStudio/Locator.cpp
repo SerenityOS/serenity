@@ -151,7 +151,6 @@ Locator::Locator()
     m_popup_window->set_rect(0, 0, 500, 200);
 
     m_suggestion_view = m_popup_window->set_main_widget<GUI::TableView>();
-    m_suggestion_view->set_size_columns_to_fit_content(true);
     m_suggestion_view->set_headers_visible(false);
 
     m_suggestion_view->on_activation = [this](auto& index) {

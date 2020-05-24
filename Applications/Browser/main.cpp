@@ -121,6 +121,11 @@ int main(int argc, char** argv)
         tab.on_tab_close_request(tab);
     };
 
+    tab_widget.on_context_menu_request = [&](auto& clicked_widget, const GUI::ContextMenuEvent& context_menu_event) {
+        auto& tab = static_cast<Browser::Tab&>(clicked_widget);
+        tab.context_menu_requested(context_menu_event.screen_position());
+    };
+
     Browser::WindowActions window_actions(*window);
 
     Function<void(URL url, bool activate)> create_new_tab;

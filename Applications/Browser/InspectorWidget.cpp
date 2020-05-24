@@ -60,10 +60,7 @@ InspectorWidget::InspectorWidget()
     auto& tab_widget = splitter.add<GUI::TabWidget>();
 
     m_style_table_view = tab_widget.add_tab<GUI::TableView>("Styles");
-    m_style_table_view->set_size_columns_to_fit_content(true);
-
     m_computed_style_table_view = tab_widget.add_tab<GUI::TableView>("Computed");
-    m_computed_style_table_view->set_size_columns_to_fit_content(true);
 }
 
 InspectorWidget::~InspectorWidget()

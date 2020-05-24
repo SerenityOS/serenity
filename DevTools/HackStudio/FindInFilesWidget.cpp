@@ -75,6 +75,13 @@ public:
 
     virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
+        if (role == Role::TextAlignment)
+            return Gfx::TextAlignment::CenterLeft;
+        if (role == Role::Font) {
+            if (index.column() == Column::MatchedText)
+                return Gfx::Font::default_fixed_width_font();
+            return {};
+        }
         if (role == Role::Display) {
             auto& match = m_matches.at(index.row());
             switch (index.column()) {
@@ -89,15 +96,7 @@ public:
         return {};
     }
 
-    virtual ColumnMetadata column_metadata(int column) const override
-    {
-        if (column == Column::MatchedText) {
-            return { 0, Gfx::TextAlignment::CenterLeft, &Gfx::Font::default_fixed_width_font() };
-        }
-        return {};
-    }
-
-    virtual void update() override {}
+    virtual void update() override { }
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override { return create_index(row, column, &m_matches.at(row)); }
 
 private:
@@ -144,7 +143,6 @@ FindInFilesWidget::FindInFilesWidget()
     m_button->set_preferred_size(100, 0);
 
     m_result_view = add<GUI::TableView>();
-    m_result_view->set_size_columns_to_fit_content(true);
 
     m_result_view->on_activation = [](auto& index) {
         auto& match = *(const Match*)index.internal_data();

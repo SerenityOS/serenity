@@ -41,12 +41,15 @@ DwarfInfo::DwarfInfo(NonnullRefPtr<const ELF::Loader> elf)
 ByteBuffer DwarfInfo::section_data(const String& section_name)
 {
     auto section = m_elf->image().lookup_section(section_name);
-    ASSERT(!section.is_undefined());
+    if (section.is_undefined())
+        return {};
     return section.wrapping_byte_buffer();
 }
 
 void DwarfInfo::populate_compilation_units()
 {
+    if (m_debug_info_data.is_null())
+        return;
     // We have to const_cast here because there isn't a version of
     // BufferStream that accepts a const ByteStream
     // We take care not to use BufferStream operations that modify the underlying buffer

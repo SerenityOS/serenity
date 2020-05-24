@@ -89,6 +89,9 @@ void HtmlView::set_document(Document* new_document)
 
     main_frame().set_document(new_document);
 
+    if (on_set_document)
+        on_set_document(new_document);
+
     if (new_document) {
         new_document->on_layout_updated = [this] {
             layout_and_sync_size();
@@ -488,6 +491,10 @@ void HtmlView::load(const URL& url)
             auto document = create_document_from_mime_type(data, url, mime_type, encoding);
             ASSERT(document);
             set_document(document);
+
+            if (!url.fragment().is_empty())
+                scroll_to_anchor(url.fragment());
+
             if (on_title_change)
                 on_title_change(document->title());
         },
