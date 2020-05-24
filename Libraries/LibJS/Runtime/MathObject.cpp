@@ -62,8 +62,8 @@ MathObject::MathObject()
     put("LOG2E", Value(log2(M_E)), 0);
     put("LOG10E", Value(log10(M_E)), 0);
     put("PI", Value(M_PI), 0);
-    put("SQRT1_2", Value(::sqrt(1.0 / 2.0)), 0);
-    put("SQRT2", Value(::sqrt(2)), 0);
+    put("SQRT1_2", Value(M_SQRT1_2), 0);
+    put("SQRT2", Value(M_SQRT2), 0);
 }
 
 MathObject::~MathObject()
