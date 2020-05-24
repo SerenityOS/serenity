@@ -47,6 +47,10 @@ public:
     bool has_in_scope(const FlyString& tag_name) const;
     bool has_in_button_scope(const FlyString& tag_name) const;
 
+    bool contains(const Element&) const;
+
+    const NonnullRefPtrVector<Element>& elements() const { return m_elements; }
+
 private:
     bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
 
