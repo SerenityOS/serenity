@@ -1,5 +1,6 @@
 add_subdirectory(Cube)
 add_subdirectory(DynamicLink)
+add_subdirectory(Eyes)
 add_subdirectory(Fire)
 add_subdirectory(HelloWorld)
 add_subdirectory(LibGfxDemo)
