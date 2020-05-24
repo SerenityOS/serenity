@@ -25,6 +25,7 @@
  */
 
 #include <AK/Utf32View.h>
+#include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -34,9 +35,9 @@
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLToken.h>
 
-#define TODO()                                                                                              \
-    do {                                                                                                    \
-        ASSERT_NOT_REACHED();                                                                               \
+#define TODO()                \
+    do {                      \
+        ASSERT_NOT_REACHED(); \
     } while (0)
 
 namespace Web {
@@ -179,10 +180,22 @@ void HTMLDocumentParser::handle_before_head(HTMLToken& token)
     ASSERT_NOT_REACHED();
 }
 
+void HTMLDocumentParser::insert_comment(HTMLToken& token)
+{
+    auto data = token.m_comment_or_character.data.to_string();
+    auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
+    adjusted_insertion_location->append_child(adopt(*new Comment(document(), data)));
+}
+
 void HTMLDocumentParser::handle_in_head(HTMLToken& token)
 {
     if (token.is_parser_whitespace()) {
         insert_character(token.codepoint());
+        return;
+    }
+
+    if (token.is_comment()) {
+        insert_comment(token);
         return;
     }
 

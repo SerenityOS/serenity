@@ -96,6 +96,7 @@ private:
     RefPtr<Element> insert_html_element(HTMLToken&);
     Element& current_node();
     void insert_character(u32 data);
+    void insert_comment(HTMLToken&);
     void reconstruct_the_active_formatting_elements();
     void process_using_the_rules_for(InsertionMode, HTMLToken&);
 
