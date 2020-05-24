@@ -49,11 +49,11 @@ void Parser::commit_subcommand()
     m_subcommands.append({ move(m_tokens), move(m_redirections), {} });
 }
 
-void Parser::commit_command()
+void Parser::commit_command(Attributes attributes)
 {
     if (m_subcommands.is_empty())
         return;
-    m_commands.append({ move(m_subcommands) });
+    m_commands.append({ move(m_subcommands), attributes });
 }
 
 void Parser::do_pipe()
@@ -108,6 +108,31 @@ Vector<Command> Parser::parse()
                 commit_subcommand();
                 commit_command();
                 break;
+            }
+            if (ch == '&') {
+                commit_token(Token::Special);
+
+                if (i + 1 >= m_input.length()) {
+                in_background:;
+                    // Nothing interesting past this token, commit with InBackground
+                    commit_subcommand();
+                    commit_command(Attributes::InBackground);
+                    break;
+                }
+
+                ch = m_input.characters()[++i];
+                ++m_position;
+
+                if (ch == '&') {
+                    // This is '&&', commit with ShortCircuit
+                    commit_subcommand();
+                    commit_command(Attributes::ShortCircuitOnFailure);
+                    break;
+                }
+
+                --i;
+                --m_position;
+                goto in_background;
             }
             if (ch == '|') {
                 commit_token(Token::Special);
