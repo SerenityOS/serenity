@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -38,7 +40,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     , m_name(name)
     , m_icon(icon)
 {
-    resize(230, 120);
+    resize(413, 315);
     set_title(String::format("About %s", m_name.characters()));
     set_resizable(false);
 
@@ -47,21 +49,45 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
 
     auto& widget = set_main_widget<Widget>();
     widget.set_fill_with_background_color(true);
-    widget.set_layout<HorizontalBoxLayout>();
+    widget.set_layout<VerticalBoxLayout>();
+    widget.layout()->set_spacing(0);
 
-    auto& left_container = widget.add<Widget>();
+    auto& banner_label = widget.add<GUI::Label>();
+    banner_label.set_icon(Gfx::Bitmap::load_from_file("/res/brand-banner.png"));
+    banner_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    banner_label.set_preferred_size(banner_label.icon()->size());
+
+    auto& content_container = widget.add<Widget>();
+    content_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    content_container.set_layout<HorizontalBoxLayout>();
+
+    auto& left_container = content_container.add<Widget>();
     left_container.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    left_container.set_preferred_size(48, 0);
+    left_container.set_preferred_size(100, 0);
     left_container.set_layout<VerticalBoxLayout>();
-    auto& icon_label = left_container.add<Label>();
-    icon_label.set_icon(m_icon);
-    icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    icon_label.set_preferred_size(40, 40);
-    left_container.layout()->add_spacer();
+    left_container.layout()->set_margins({ 0, 12, 0, 0 });
 
-    auto& right_container = widget.add<Widget>();
+    if (icon) {
+        auto& icon_wrapper = left_container.add<Widget>();
+        icon_wrapper.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        icon_wrapper.set_preferred_size(32, 48);
+        icon_wrapper.set_layout<VerticalBoxLayout>();
+
+        auto& icon_label = icon_wrapper.add<Label>();
+        icon_label.set_icon(m_icon);
+        icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        icon_label.set_preferred_size(32, 32);
+    }
+
+    auto& buggie_label = left_container.add<Label>();
+    buggie_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie-about.png"));
+    buggie_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    buggie_label.set_preferred_size(48, 104);
+    buggie_label.set_tooltip("Buggie!");
+
+    auto& right_container = content_container.add<Widget>();
     right_container.set_layout<VerticalBoxLayout>();
-    right_container.layout()->set_margins({ 0, 4, 4, 4 });
+    right_container.layout()->set_margins({ 0, 12, 12, 8 });
 
     auto make_label = [&](const StringView& text, bool bold = false) {
         auto& label = right_container.add<Label>(text);
@@ -72,7 +98,10 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
             label.set_font(Gfx::Font::default_bold_font());
     };
     make_label(m_name, true);
-    make_label("SerenityOS");
+    // If we are displaying a dialog for an application, insert 'SerenityOS' below the application name
+    if (m_name != "SerenityOS")
+        make_label("SerenityOS");
+    make_label(version_string());
     make_label("\xC2\xA9 The SerenityOS developers");
 
     right_container.layout()->add_spacer();
@@ -92,6 +121,27 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
 
 AboutDialog::~AboutDialog()
 {
+}
+
+String AboutDialog::version_string() const
+{
+    auto version_config = Core::ConfigFile::open("/res/version.ini");
+    auto major_version = version_config->read_entry("Version", "Major", "0");
+    auto minor_version = version_config->read_entry("Version", "Minor", "0");
+    auto git_version = version_config->read_entry("Version", "Git", "");
+
+    StringBuilder builder;
+    builder.append("Version ");
+    builder.append(major_version);
+    builder.append('.');
+    builder.append(minor_version);
+
+    if (git_version != "") {
+        builder.append(".g");
+        builder.append(git_version);
+    }
+
+    return builder.to_string();
 }
 
 }
