@@ -207,6 +207,11 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
         return;
     }
 
+    if (token.is_start_tag() && ((token.tag_name() == "noscript" && m_scripting_enabled) || token.tag_name() == "noframes" || token.tag_name() == "style")) {
+        parse_generic_raw_text_element(token);
+        return;
+    }
+
     if (token.is_start_tag() && token.tag_name() == "meta") {
         auto element = insert_html_element(token);
         m_stack_of_open_elements.pop();
@@ -226,6 +231,14 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
 void HTMLDocumentParser::handle_in_head_noscript(HTMLToken&)
 {
     ASSERT_NOT_REACHED();
+}
+
+void HTMLDocumentParser::parse_generic_raw_text_element(HTMLToken& token)
+{
+    insert_html_element(token);
+    m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
+    m_original_insertion_mode = m_insertion_mode;
+    m_insertion_mode = InsertionMode::Text;
 }
 
 void HTMLDocumentParser::insert_character(u32 data)
