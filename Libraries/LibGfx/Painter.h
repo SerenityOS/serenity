@@ -56,6 +56,7 @@ public:
     void fill_rect_with_checkerboard(const Rect&, const Size&, Color color_dark, Color color_light);
     void fill_rect_with_gradient(Orientation, const Rect&, Color gradient_start, Color gradient_end);
     void fill_rect_with_gradient(const Rect&, Color gradient_start, Color gradient_end);
+    void fill_ellipse(const Rect&, Color);
     void draw_rect(const Rect&, Color, bool rough = false);
     void draw_bitmap(const Point&, const CharacterBitmap&, Color = Color());
     void draw_bitmap(const Point&, const GlyphBitmap&, Color = Color());
