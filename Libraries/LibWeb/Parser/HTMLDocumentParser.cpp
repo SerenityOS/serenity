@@ -109,21 +109,21 @@ void HTMLDocumentParser::handle_before_html(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == "html") {
         auto element = create_element_for(token);
         document().append_child(element);
-        m_stack_of_open_elements.append(element);
+        m_stack_of_open_elements.push(move(element));
         m_insertion_mode = InsertionMode::BeforeHead;
         return;
     }
     ASSERT_NOT_REACHED();
 }
 
-NonnullRefPtr<Node> HTMLDocumentParser::current_node()
+Element& HTMLDocumentParser::current_node()
 {
-    return m_stack_of_open_elements.last();
+    return m_stack_of_open_elements.current_node();
 }
 
 RefPtr<Node> HTMLDocumentParser::find_appropriate_place_for_inserting_node()
 {
-    auto target = current_node();
+    auto& target = current_node();
     if (m_foster_parenting) {
         ASSERT_NOT_REACHED();
     }
@@ -145,7 +145,7 @@ RefPtr<Element> HTMLDocumentParser::insert_html_element(HTMLToken& token)
     auto element = create_element_for(token);
     // FIXME: Check if it's possible to insert `element` at `adjusted_insertion_location`
     adjusted_insertion_location->append_child(element);
-    m_stack_of_open_elements.append(element);
+    m_stack_of_open_elements.push(element);
     return element;
 }
 
@@ -164,14 +164,14 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
 {
     if (token.is_start_tag() && token.tag_name() == "meta") {
         auto element = insert_html_element(token);
-        m_stack_of_open_elements.take_last();
+        m_stack_of_open_elements.pop();
         if (token.is_self_closing()) {
             ASSERT_NOT_REACHED();
         }
         return;
     }
     if (token.is_end_tag() && token.tag_name() == "head") {
-        m_stack_of_open_elements.take_last();
+        m_stack_of_open_elements.pop();
         m_insertion_mode = InsertionMode::AfterHead;
         return;
     }
@@ -243,21 +243,8 @@ AnythingElse:
 void HTMLDocumentParser::generate_implied_end_tags()
 {
     Vector<String> names { "dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc" };
-    while (names.contains_slow(current_node()->tag_name()))
-        m_stack_of_open_elements.take_last();
-}
-
-bool HTMLDocumentParser::stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name)
-{
-    Vector<String> list { "applet", "caption", "html", "table", "td", "th", "marquee", "object", "template" };
-    for (ssize_t i = m_stack_of_open_elements.size() - 1; i >= 0; --i) {
-        auto& node = m_stack_of_open_elements.at(i);
-        if (node.tag_name() == tag_name)
-            return true;
-        if (list.contains_slow(node.tag_name()))
-            return false;
-    }
-    ASSERT_NOT_REACHED();
+    while (names.contains_slow(current_node().tag_name()))
+        m_stack_of_open_elements.pop();
 }
 
 void HTMLDocumentParser::handle_after_body(HTMLToken& token)
@@ -284,7 +271,7 @@ void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
 void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 {
     if (token.is_end_tag() && token.tag_name() == "body") {
-        if (!stack_of_open_elements_has_element_with_tag_name_in_scope("body")) {
+        if (!m_stack_of_open_elements.has_in_scope("body")) {
             ASSERT_NOT_REACHED();
         }
 
@@ -310,17 +297,17 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         if (token.is_end_tag() && names.contains_slow(token.tag_name())) {
             // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
 
-            if (!stack_of_open_elements_has_element_with_tag_name_in_scope(token.tag_name())) {
+            if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
                 ASSERT_NOT_REACHED();
             }
 
             generate_implied_end_tags();
 
-            if (current_node()->tag_name() != token.tag_name()) {
+            if (current_node().tag_name() != token.tag_name()) {
                 ASSERT_NOT_REACHED();
             }
 
-            m_stack_of_open_elements.take_last();
+            m_stack_of_open_elements.pop();
             return;
         }
     }
