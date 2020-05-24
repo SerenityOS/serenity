@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     auto contents = file_or_error.value()->read_all();
 
     Web::HTMLDocumentParser parser(contents);
-    parser.run();
+    parser.run(URL::create_with_file_protocol(input_path));
 
     auto& document = parser.document();
     Web::dump_tree(document);

@@ -128,6 +128,8 @@ public:
     NonnullRefPtr<Element> create_element(const String& tag_name);
     NonnullRefPtr<Text> create_text_node(const String& data);
 
+    void set_pending_parsing_blocking_script(Badge<HTMLScriptElement>, HTMLScriptElement*);
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
@@ -151,6 +153,8 @@ private:
     String m_source;
 
     OwnPtr<JS::Interpreter> m_interpreter;
+
+    RefPtr<HTMLScriptElement> m_pending_parsing_blocking_script;
 };
 
 template<>

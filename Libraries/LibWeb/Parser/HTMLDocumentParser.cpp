@@ -31,6 +31,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLFormElement.h>
 #include <LibWeb/DOM/HTMLHeadElement.h>
+#include <LibWeb/DOM/HTMLScriptElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLToken.h>
@@ -51,9 +52,10 @@ HTMLDocumentParser::~HTMLDocumentParser()
 {
 }
 
-void HTMLDocumentParser::run()
+void HTMLDocumentParser::run(const URL& url)
 {
     m_document = adopt(*new Document);
+    m_document->set_url(url);
 
     for (;;) {
         auto optional_token = m_tokenizer.next_token();
@@ -209,6 +211,29 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
 
     if (token.is_start_tag() && ((token.tag_name() == "noscript" && m_scripting_enabled) || token.tag_name() == "noframes" || token.tag_name() == "style")) {
         parse_generic_raw_text_element(token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "script") {
+        auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
+        auto element = create_element_for(token);
+        auto& script_element = to<HTMLScriptElement>(*element);
+        script_element.set_parser_document({}, document());
+        script_element.set_non_blocking({}, false);
+
+        if (m_parsing_fragment) {
+            TODO();
+        }
+
+        if (m_invoked_via_document_write) {
+            TODO();
+        }
+
+        adjusted_insertion_location->append_child(element, false);
+        m_stack_of_open_elements.push(element);
+        m_tokenizer.switch_to({}, HTMLTokenizer::State::ScriptData);
+        m_original_insertion_mode = m_insertion_mode;
+        m_insertion_mode = InsertionMode::Text;
         return;
     }
 
@@ -425,6 +450,17 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     ASSERT_NOT_REACHED();
 }
 
+void HTMLDocumentParser::increment_script_nesting_level()
+{
+    ++m_script_nesting_level;
+}
+
+void HTMLDocumentParser::decrement_script_nesting_level()
+{
+    ASSERT(m_script_nesting_level);
+    --m_script_nesting_level;
+}
+
 void HTMLDocumentParser::handle_text(HTMLToken& token)
 {
     if (token.is_character()) {
@@ -432,7 +468,17 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         return;
     }
     if (token.is_end_tag() && token.tag_name() == "script") {
-        ASSERT_NOT_REACHED();
+        NonnullRefPtr<HTMLScriptElement> script = to<HTMLScriptElement>(current_node());
+        m_stack_of_open_elements.pop();
+        m_insertion_mode = m_original_insertion_mode;
+        // FIXME: Handle tokenizer insertion point stuff here.
+        increment_script_nesting_level();
+        script->prepare_script({});
+        decrement_script_nesting_level();
+        if (script_nesting_level() == 0)
+            m_parser_pause_flag = false;
+        // FIXME: Handle tokenizer insertion point stuff here too.
+        return;
     }
     if (token.is_end_tag()) {
         m_stack_of_open_elements.pop();

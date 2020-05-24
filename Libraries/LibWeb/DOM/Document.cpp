@@ -45,6 +45,7 @@
 #include <LibWeb/DOM/HTMLBodyElement.h>
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/HTMLHtmlElement.h>
+#include <LibWeb/DOM/HTMLScriptElement.h>
 #include <LibWeb/DOM/HTMLTitleElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
@@ -394,6 +395,11 @@ NonnullRefPtr<Element> Document::create_element(const String& tag_name)
 NonnullRefPtr<Text> Document::create_text_node(const String& data)
 {
     return adopt(*new Text(*this, data));
+}
+
+void Document::set_pending_parsing_blocking_script(Badge<HTMLScriptElement>, HTMLScriptElement* script)
+{
+    m_pending_parsing_blocking_script = script;
 }
 
 }

@@ -38,22 +38,28 @@
         ASSERT_NOT_REACHED();                                                                               \
     } while (0)
 
-#define SWITCH_TO(new_state)                    \
-    will_switch_to(State::new_state);           \
-    m_state = State::new_state;                 \
-    current_input_character = next_codepoint(); \
-    goto new_state;
+#define SWITCH_TO(new_state)                        \
+    do {                                            \
+        will_switch_to(State::new_state);           \
+        m_state = State::new_state;                 \
+        current_input_character = next_codepoint(); \
+        goto new_state;                             \
+    } while (0)
 
-#define RECONSUME_IN(new_state)          \
-    will_reconsume_in(State::new_state); \
-    m_state = State::new_state;          \
-    goto new_state;
+#define RECONSUME_IN(new_state)              \
+    do {                                     \
+        will_reconsume_in(State::new_state); \
+        m_state = State::new_state;          \
+        goto new_state;                      \
+    } while (0)
 
 #define SWITCH_TO_AND_EMIT_CURRENT_TOKEN(new_state) \
-    will_switch_to(State::new_state);               \
-    m_state = State::new_state;                     \
-    will_emit(m_current_token);                     \
-    return m_current_token;
+    do {                                            \
+        will_switch_to(State::new_state);           \
+        m_state = State::new_state;                 \
+        will_emit(m_current_token);                 \
+        return m_current_token;                     \
+    } while (0)
 
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER --m_cursor;
 
@@ -77,23 +83,29 @@
 
 #define ANYTHING_ELSE if (1)
 
-#define EMIT_EOF                                  \
-    if (m_has_emitted_eof)                        \
-        return {};                                \
-    m_has_emitted_eof = true;                     \
-    create_new_token(HTMLToken::Type::EndOfFile); \
-    will_emit(m_current_token);                   \
-    return m_current_token;
+#define EMIT_EOF                                      \
+    do {                                              \
+        if (m_has_emitted_eof)                        \
+            return {};                                \
+        m_has_emitted_eof = true;                     \
+        create_new_token(HTMLToken::Type::EndOfFile); \
+        will_emit(m_current_token);                   \
+        return m_current_token;                       \
+    } while (0)
 
-#define EMIT_CURRENT_TOKEN      \
-    will_emit(m_current_token); \
-    return m_current_token;
+#define EMIT_CURRENT_TOKEN          \
+    do {                            \
+        will_emit(m_current_token); \
+        return m_current_token;     \
+    } while (0)
 
-#define EMIT_CHARACTER(codepoint)                                  \
-    create_new_token(HTMLToken::Type::Character);                  \
-    m_current_token.m_comment_or_character.data.append(codepoint); \
-    will_emit(m_current_token);                                    \
-    return m_current_token;
+#define EMIT_CHARACTER(codepoint)                                      \
+    do {                                                               \
+        create_new_token(HTMLToken::Type::Character);                  \
+        m_current_token.m_comment_or_character.data.append(codepoint); \
+        will_emit(m_current_token);                                    \
+        return m_current_token;                                        \
+    } while (0)
 
 #define EMIT_CURRENT_CHARACTER \
     EMIT_CHARACTER(current_input_character.value());
@@ -915,8 +927,104 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
             }
             END_STATE
 
+            BEGIN_STATE(ScriptData)
+            {
+                ON('<')
+                {
+                    SWITCH_TO(ScriptDataLessThanSign);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CURRENT_CHARACTER;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataLessThanSign)
+            {
+                ON('/')
+                {
+                    m_temporary_buffer.clear();
+                    SWITCH_TO(ScriptDataEndTagOpen);
+                }
+                ON('!')
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CHARACTER('<');
+                    RECONSUME_IN(ScriptData);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEndTagOpen)
+            {
+                ON_ASCII_ALPHA
+                {
+                    create_new_token(HTMLToken::Type::EndTag);
+                    RECONSUME_IN(ScriptDataEndTagName);
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEndTagName)
+            {
+                ON_WHITESPACE
+                {
+                    if (current_end_tag_token_is_appropriate())
+                        SWITCH_TO(BeforeAttributeName);
+                    // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                    TODO();
+                }
+                ON('/')
+                {
+                    if (current_end_tag_token_is_appropriate())
+                        SWITCH_TO(SelfClosingStartTag);
+                    // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                    TODO();
+                }
+                ON('>')
+                {
+                    if (current_end_tag_token_is_appropriate())
+                        SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
+                    // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                    TODO();
+                }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_temporary_buffer.append(current_input_character.value());
+                    continue;
+                }
+                ON_ASCII_LOWER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(current_input_character.value());
+                    m_temporary_buffer.append(current_input_character.value());
+                    continue;
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
         default:
-            ASSERT_NOT_REACHED();
+            TODO();
         }
     }
 }
@@ -986,5 +1094,4 @@ bool HTMLTokenizer::current_end_tag_token_is_appropriate() const
         return false;
     return m_current_token.tag_name() == m_last_emitted_start_tag.tag_name();
 }
-
 }

@@ -63,7 +63,7 @@ public:
     explicit HTMLDocumentParser(const StringView& input);
     ~HTMLDocumentParser();
 
-    void run();
+    void run(const URL&);
 
     Document& document();
 
@@ -100,6 +100,9 @@ private:
     void reconstruct_the_active_formatting_elements();
     void process_using_the_rules_for(InsertionMode, HTMLToken&);
     void parse_generic_raw_text_element(HTMLToken&);
+    void increment_script_nesting_level();
+    void decrement_script_nesting_level();
+    size_t script_nesting_level() const { return m_script_nesting_level; }
 
     InsertionMode m_insertion_mode { InsertionMode::Initial };
     InsertionMode m_original_insertion_mode { InsertionMode::Initial };
@@ -114,6 +117,10 @@ private:
     bool m_frameset_ok { true };
     bool m_parsing_fragment { false };
     bool m_scripting_enabled { true };
+    bool m_invoked_via_document_write { false };
+
+    bool m_parser_pause_flag { false };
+    size_t m_script_nesting_level { 0 };
 
     RefPtr<Document> m_document;
     RefPtr<HTMLHeadElement> m_head_element;
