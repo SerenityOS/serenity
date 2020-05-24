@@ -427,7 +427,7 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const Te
     return {};
 }
 
-TextPosition TextDocument::first_word_break_before(const TextPosition& position) const
+TextPosition TextDocument::first_word_break_before(const TextPosition& position, bool start_at_column_before) const
 {
     if (position.column() == 0) {
         if (position.line() == 0) {
@@ -439,7 +439,7 @@ TextPosition TextDocument::first_word_break_before(const TextPosition& position)
 
     auto target = position;
     auto line = this->line(target.line());
-    auto is_start_alphanumeric = isalnum(line.codepoints()[target.column() - 1]);
+    auto is_start_alphanumeric = isalnum(line.codepoints()[target.column() - (start_at_column_before ? 1 : 0)]);
 
     while (target.column() > 0) {
         auto next_codepoint = line.codepoints()[target.column() - 1];
