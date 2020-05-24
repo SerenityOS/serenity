@@ -211,7 +211,7 @@ void TextEditor::doubleclick_event(MouseEvent& event)
     auto end = start;
 
     if (!document().has_spans()) {
-        start = document().first_word_break_before(start);
+        start = document().first_word_break_before(start, false);
         end = document().first_word_break_after(end);
     } else {
         for (auto& span : document().spans()) {
@@ -720,10 +720,10 @@ void TextEditor::keydown_event(KeyEvent& event)
                     new_cursor = span.value().range.start();
                 } else {
                     // No remaining spans, just use word break calculation
-                    new_cursor = document().first_word_break_before(m_cursor);
+                    new_cursor = document().first_word_break_before(m_cursor, true);
                 }
             } else {
-                new_cursor = document().first_word_break_before(m_cursor);
+                new_cursor = document().first_word_break_before(m_cursor, true);
             }
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_cursor);
