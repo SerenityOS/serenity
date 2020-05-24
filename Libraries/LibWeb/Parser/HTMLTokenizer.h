@@ -147,7 +147,6 @@ private:
 
     void will_switch_to(State);
     void will_reconsume_in(State);
-    void flush_current_character_or_comment_if_needed();
 
     State m_state { State::Data };
     State m_return_state { State::Data };

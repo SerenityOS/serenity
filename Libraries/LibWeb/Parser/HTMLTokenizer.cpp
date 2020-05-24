@@ -134,10 +134,9 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
                 }
                 ANYTHING_ELSE
                 {
-                    if (m_current_token.type() != HTMLToken::Type::Character)
-                        create_new_token(HTMLToken::Type::Character);
+                    create_new_token(HTMLToken::Type::Character);
                     m_current_token.m_comment_or_character.data.append(current_input_character.value());
-                    continue;
+                    return m_current_token;
                 }
             }
             END_STATE
@@ -749,7 +748,6 @@ bool HTMLTokenizer::next_few_characters_are(const StringView& string) const
 
 void HTMLTokenizer::create_new_token(HTMLToken::Type type)
 {
-    flush_current_character_or_comment_if_needed();
     m_current_token = {};
     m_current_token.m_type = type;
 }
@@ -761,7 +759,6 @@ HTMLTokenizer::HTMLTokenizer(const StringView& input)
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)
 {
-    flush_current_character_or_comment_if_needed();
 #ifdef TOKENIZER_TRACE
     dbg() << "[" << state_name(m_state) << "] Switch to " << state_name(new_state);
 #endif
@@ -769,16 +766,9 @@ void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)
 
 void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
 {
-    flush_current_character_or_comment_if_needed();
 #ifdef TOKENIZER_TRACE
     dbg() << "[" << state_name(m_state) << "] Reconsume in " << state_name(new_state);
 #endif
-}
-
-void HTMLTokenizer::flush_current_character_or_comment_if_needed()
-{
-    //if (m_current_token.type() == HTMLToken::Type::Character || m_current_token.type() == HTMLToken::Type::Comment)
-    //        emit_current_token();
 }
 
 }
