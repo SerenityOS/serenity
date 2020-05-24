@@ -186,6 +186,7 @@ private:
     ExitCodeOrContinuationRequest::ContinuationRequest m_should_continue { ExitCodeOrContinuationRequest::Nothing };
     StringBuilder m_complete_line_builder;
     bool m_should_break_current_command { false };
+    bool m_should_ignore_jobs_on_next_exit { false };
 };
 
 static constexpr bool is_word_character(char c)
