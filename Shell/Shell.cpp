@@ -337,6 +337,13 @@ int Shell::builtin_dirs(int argc, const char** argv)
 
 int Shell::builtin_exit(int, const char**)
 {
+    if (!jobs.is_empty()) {
+        if (!m_should_ignore_jobs_on_next_exit) {
+            printf("Shell: Hey dude, you have %zu active job%s, run 'exit' again to really exit.\n", jobs.size(), jobs.size() > 1 ? "s" : "");
+            m_should_ignore_jobs_on_next_exit = true;
+            return 1;
+        }
+    }
     stop_all_jobs();
     printf("Good-bye!\n");
     exit(0);
@@ -1355,6 +1362,10 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
     //        Is the terminal controlling pgrp really still the PGID of the dead process?
     tcsetpgrp(0, getpid());
     tcsetattr(0, TCSANOW, &trm);
+
+    // Clear the exit flag after any non-exit command has been executed.
+    m_should_ignore_jobs_on_next_exit = false;
+
     return return_value;
 }
 
