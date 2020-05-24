@@ -59,6 +59,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("slice", slice, 2, attr);
     put_native_function("indexOf", index_of, 1, attr);
     put_native_function("reduce", reduce, 1, attr);
+    put_native_function("reduceRight", reduce_right, 1, attr);
     put_native_function("reverse", reverse, 0, attr);
     put_native_function("lastIndexOf", last_index_of, 1, attr);
     put_native_function("includes", includes, 1, attr);
@@ -398,6 +399,10 @@ Value ArrayPrototype::reduce(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
 
+    auto* callback_function = callback_from_args(interpreter, "reduce");
+    if (!callback_function)
+        return {};
+
     size_t start = 0;
 
     auto accumulator = js_undefined();
@@ -420,10 +425,6 @@ Value ArrayPrototype::reduce(Interpreter& interpreter)
         }
     }
 
-    auto* callback_function = callback_from_args(interpreter, "reduce");
-    if (!callback_function)
-        return {};
-
     auto this_value = js_undefined();
 
     for (size_t i = start; i < initial_length; ++i) {
@@ -437,6 +438,65 @@ Value ArrayPrototype::reduce(Interpreter& interpreter)
         arguments.append(accumulator);
         arguments.append(value);
         arguments.append(Value((i32)i));
+        arguments.append(this_object);
+
+        accumulator = interpreter.call(*callback_function, this_value, move(arguments));
+        if (interpreter.exception())
+            return {};
+    }
+
+    return accumulator;
+}
+
+Value ArrayPrototype::reduce_right(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
+        return {};
+
+    auto initial_length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+
+    auto* callback_function = callback_from_args(interpreter, "reduceRight");
+    if (!callback_function)
+        return {};
+
+    int start = initial_length - 1;
+
+    auto accumulator = js_undefined();
+    if (interpreter.argument_count() > 1) {
+        accumulator = interpreter.argument(1);
+    } else {
+        bool start_found = false;
+        while (!start_found && start >= 0) {
+            auto value = this_object->get_by_index(start);
+            if (interpreter.exception())
+                return {};
+            start_found = !value.is_empty();
+            if (start_found)
+                accumulator = value;
+            start -= 1;
+        }
+        if (!start_found) {
+            interpreter.throw_exception<TypeError>("Reduce of empty array with no initial value");
+            return {};
+        }
+    }
+
+    auto this_value = js_undefined();
+
+    for (int i = start; i >= 0; --i) {
+        auto value = this_object->get_by_index(i);
+        if (interpreter.exception())
+            return {};
+        if (value.is_empty())
+            continue;
+
+        MarkedValueList arguments(interpreter.heap());
+        arguments.append(accumulator);
+        arguments.append(value);
+        arguments.append(Value(i));
         arguments.append(this_object);
 
         accumulator = interpreter.call(*callback_function, this_value, move(arguments));
