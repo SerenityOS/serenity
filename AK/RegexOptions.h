@@ -87,14 +87,17 @@ public:
     {
     }
 
+    template<class U>
+    RegexOptions(RegexOptions<U> other)
+        : m_flags((T) static_cast<FlagsUnderlyingType>(other.value()))
+    {
+    }
+
     operator bool() const { return !!*this; }
     bool operator!() const { return (FlagsUnderlyingType)m_flags == 0; }
 
     RegexOptions<T> operator|(T flag) const { return RegexOptions<T> { (T)((FlagsUnderlyingType)m_flags | (FlagsUnderlyingType)flag) }; }
     RegexOptions<T> operator&(T flag) const { return RegexOptions<T> { (T)((FlagsUnderlyingType)m_flags & (FlagsUnderlyingType)flag) }; }
-
-    RegexOptions<T> operator|(AllFlags flag) const { return RegexOptions<T> { (T)((FlagsUnderlyingType)m_flags | (FlagsUnderlyingType)flag) }; }
-    RegexOptions<T> operator&(AllFlags flag) const { return RegexOptions<T> { (T)((FlagsUnderlyingType)m_flags & (FlagsUnderlyingType)flag) }; }
 
     RegexOptions<T>& operator|=(T flag)
     {
@@ -103,18 +106,6 @@ public:
     }
 
     RegexOptions<T>& operator&=(T flag)
-    {
-        m_flags = (T)((FlagsUnderlyingType)m_flags & (FlagsUnderlyingType)flag);
-        return *this;
-    }
-
-    RegexOptions<T>& operator|=(AllFlags flag)
-    {
-        m_flags = (T)((FlagsUnderlyingType)m_flags | (FlagsUnderlyingType)flag);
-        return *this;
-    }
-
-    RegexOptions<T>& operator&=(AllFlags flag)
     {
         m_flags = (T)((FlagsUnderlyingType)m_flags & (FlagsUnderlyingType)flag);
         return *this;
@@ -147,13 +138,13 @@ inline T operator~(T flag)
     return (T) ~((FlagsUnderlyingType)flag);
 }
 
+using AllOptions = RegexOptions<AllFlags>;
 using ECMAScriptOptions = RegexOptions<ECMAScriptFlags>;
 using PosixOptions = RegexOptions<PosixFlags>;
 
 }
 }
 
-using AK::regex::AllFlags;
 using AK::regex::ECMAScriptFlags;
 using AK::regex::ECMAScriptOptions;
 using AK::regex::PosixFlags;

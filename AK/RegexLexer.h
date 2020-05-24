@@ -32,27 +32,27 @@
 namespace AK {
 namespace regex {
 
-#define ENUMERATE_REGEX_TOKENS                 \
-    __ENUMERATE_REGEX_TOKEN(Eof)               \
-    __ENUMERATE_REGEX_TOKEN(OrdinaryCharacter) \
-    __ENUMERATE_REGEX_TOKEN(Circumflex)        \
-    __ENUMERATE_REGEX_TOKEN(Period)            \
-    __ENUMERATE_REGEX_TOKEN(LeftParen)         \
-    __ENUMERATE_REGEX_TOKEN(RightParen)        \
-    __ENUMERATE_REGEX_TOKEN(LeftCurly)         \
-    __ENUMERATE_REGEX_TOKEN(RightCurly)        \
-    __ENUMERATE_REGEX_TOKEN(LeftBracket)       \
-    __ENUMERATE_REGEX_TOKEN(RightBracket)      \
-    __ENUMERATE_REGEX_TOKEN(Asterisk)          \
-    __ENUMERATE_REGEX_TOKEN(EscapeSequence)    \
-    __ENUMERATE_REGEX_TOKEN(Dollar)            \
-    __ENUMERATE_REGEX_TOKEN(Pipe)              \
-    __ENUMERATE_REGEX_TOKEN(Plus)              \
-    __ENUMERATE_REGEX_TOKEN(Comma)             \
-    __ENUMERATE_REGEX_TOKEN(Slash)             \
-    __ENUMERATE_REGEX_TOKEN(EqualSign)         \
-    __ENUMERATE_REGEX_TOKEN(HyphenMinus)       \
-    __ENUMERATE_REGEX_TOKEN(Colon)             \
+#define ENUMERATE_REGEX_TOKENS              \
+    __ENUMERATE_REGEX_TOKEN(Eof)            \
+    __ENUMERATE_REGEX_TOKEN(Char)           \
+    __ENUMERATE_REGEX_TOKEN(Circumflex)     \
+    __ENUMERATE_REGEX_TOKEN(Period)         \
+    __ENUMERATE_REGEX_TOKEN(LeftParen)      \
+    __ENUMERATE_REGEX_TOKEN(RightParen)     \
+    __ENUMERATE_REGEX_TOKEN(LeftCurly)      \
+    __ENUMERATE_REGEX_TOKEN(RightCurly)     \
+    __ENUMERATE_REGEX_TOKEN(LeftBracket)    \
+    __ENUMERATE_REGEX_TOKEN(RightBracket)   \
+    __ENUMERATE_REGEX_TOKEN(Asterisk)       \
+    __ENUMERATE_REGEX_TOKEN(EscapeSequence) \
+    __ENUMERATE_REGEX_TOKEN(Dollar)         \
+    __ENUMERATE_REGEX_TOKEN(Pipe)           \
+    __ENUMERATE_REGEX_TOKEN(Plus)           \
+    __ENUMERATE_REGEX_TOKEN(Comma)          \
+    __ENUMERATE_REGEX_TOKEN(Slash)          \
+    __ENUMERATE_REGEX_TOKEN(EqualSign)      \
+    __ENUMERATE_REGEX_TOKEN(HyphenMinus)    \
+    __ENUMERATE_REGEX_TOKEN(Colon)          \
     __ENUMERATE_REGEX_TOKEN(Questionmark)
 
 enum class TokenType {

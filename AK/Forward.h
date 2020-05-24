@@ -52,8 +52,22 @@ class Utf8View;
 namespace regex {
 enum class Error : u8;
 class Lexer;
-class ParserResult;
 class PosixExtendedParser;
+
+class ByteCode;
+class OpCode;
+class OpCode_Exit;
+class OpCode_Jump;
+class OpCode_ForkJump;
+class OpCode_ForkStay;
+class OpCode_CheckBegin;
+class OpCode_CheckEnd;
+class OpCode_SaveLeftCaptureGroup;
+class OpCode_SaveRightCaptureGroup;
+class OpCode_SaveLeftNamedCaptureGroup;
+class OpCode_SaveNamedLeftCaptureGroup;
+class OpCode_SaveRightNamedCaptureGroup;
+class OpCode_Compare;
 }
 
 template<typename T>
@@ -152,5 +166,4 @@ using AK::Utf8View;
 using AK::Vector;
 using AK::regex::Error;
 using AK::regex::Lexer;
-using AK::regex::ParserResult;
 using AK::regex::PosixExtendedParser;

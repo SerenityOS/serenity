@@ -26,11 +26,14 @@
 
 #pragma once
 
+#include "RegexByteCode.h"
+#include "RegexMatch.h"
 #include "RegexOptions.h"
 #include "RegexParser.h"
 
+#include <AK/Forward.h>
 #include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -39,34 +42,6 @@ namespace regex {
 
 static const constexpr size_t c_max_recursion = 5000;
 static const constexpr size_t c_match_preallocation_count = 20;
-
-class Match final {
-private:
-    Optional<String> string;
-
-public:
-    Match() = default;
-    ~Match() = default;
-
-    Match(const StringView view_, const size_t line_, const size_t column_)
-        : view(view_)
-        , line(line_)
-        , column(column_)
-    {
-    }
-
-    Match(const String string_, const size_t line_, const size_t column_)
-        : string(string_)
-        , view(string.value().view())
-        , line(line_)
-        , column(column_)
-    {
-    }
-
-    StringView view { nullptr };
-    size_t line { 0 };
-    size_t column { 0 };
-};
 
 struct RegexResult final {
     bool success { false };
@@ -82,6 +57,7 @@ class Regex;
 
 template<class Parser>
 class Matcher final {
+
 public:
     Matcher(const Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
         : m_pattern(pattern)
@@ -93,58 +69,8 @@ public:
     RegexResult match(const StringView&, Optional<typename ParserTraits<Parser>::OptionsType> = {});
 
 private:
-    struct IpSpTuple {
-        size_t ip { 0 };
-        size_t sp { 0 };
-    };
-
-    struct MatchState {
-        StringView view;
-        size_t ip;
-        size_t sp;
-        size_t operations;
-
-        Vector<Match> matches;
-        Vector<Vector<Match>> capture_group_matches;
-        Vector<HashMap<String, Match>> named_capture_group_matches;
-
-        size_t match_index;
-        size_t line { 0 };
-        size_t column { 0 };
-
-        typename ParserTraits<Parser>::OptionsType regex_options;
-        const Vector<ByteCodeValue>& bytecode;
-
-        MatchState(const Vector<ByteCodeValue>& bytecode)
-            : bytecode(bytecode)
-        {
-        }
-
-        const ByteCodeValue get(size_t offset = 0)
-        {
-            if (ip + offset < bytecode.size())
-                return bytecode.at(ip + offset);
-            else
-                return ByteCodeValue(OpCode::Exit);
-        }
-
-        const ByteCodeValue pop(size_t value = 1)
-        {
-            auto& current = get();
-            ip += value;
-            return current;
-        }
-
-        void reset(size_t sp, size_t match_offset)
-        {
-            this->ip = 0;
-            this->sp = sp;
-            this->column = sp;
-            this->match_index = match_offset;
-        }
-    };
-
-    bool execute(MatchState&, size_t recursion_level = 0) const;
+    bool execute(const MatchInput&, MatchState&, MatchOutput&, size_t recursion_level) const;
+    bool run_fork_low_prio(const MatchInput& input, MatchState& state, MatchOutput& output, NonnullOwnPtrVector<OpCode>& opcodes, size_t recursion_level) const;
 
     const Regex<Parser>& m_pattern;
     const typename ParserTraits<Parser>::OptionsType m_regex_options;
@@ -154,13 +80,13 @@ template<class Parser>
 class Regex final {
 public:
     String pattern_value;
-    ParserResult parser_result;
+    AK::regex::Parser::Result parser_result;
     OwnPtr<Matcher<Parser>> matcher { nullptr };
 
     Regex(StringView pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
     ~Regex() = default;
 
-    void print_bytecode() const;
+    void print_bytecode(FILE* f = stdout) const;
     String error_string() const;
 
     RegexResult match(StringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
@@ -174,7 +100,7 @@ public:
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
-        return matcher->match(view, regex_options.value_or({}) | AllFlags::Global);
+        return matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::Global);
     }
 
     bool match(StringView view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
@@ -189,7 +115,7 @@ public:
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
-        m = matcher->match(view, regex_options.value_or({}) | AllFlags::Global);
+        m = matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::Global);
         return m.success;
     }
 
@@ -197,7 +123,7 @@ public:
     {
         if (!matcher || parser_result.error != Error::NoError)
             return false;
-        RegexResult result = matcher->match(view, regex_options.value_or({}) | AllFlags::NoSubExpressions);
+        RegexResult result = matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::NoSubExpressions);
         return result.success;
     }
 };
@@ -241,9 +167,10 @@ bool has_match(const StringView view, Regex<Parser>& pattern, Optional<typename 
 {
     if (pattern.matcher == nullptr)
         return {};
-    RegexResult result = pattern.matcher->match(view, regex_options.value_or({}) | AllFlags::NoSubExpressions);
+    RegexResult result = pattern.matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::NoSubExpressions);
     return result.success;
 }
+
 }
 }
 

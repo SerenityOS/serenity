@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
  * All rights reserved.
  *
@@ -32,27 +32,7 @@
 namespace AK {
 namespace regex {
 
-const char* ByteCodeValue::name(OpCode type)
-{
-    switch (type) {
-#define __ENUMERATE_OPCODE(x) \
-    case OpCode::x:           \
-        return #x;
-        ENUMERATE_OPCODES
-#undef __ENUMERATE_OPCODE
-    default:
-        ASSERT_NOT_REACHED();
-        return "<Unknown>";
-    }
-}
-
-const char* ByteCodeValue::name() const
-{
-    return name(op_code);
-}
-
-template<typename OptionsType>
-bool Parser<OptionsType>::set_error(Error error)
+bool Parser::set_error(Error error)
 {
     if (m_parser_state.error == Error::NoError) {
         m_parser_state.error = error;
@@ -61,46 +41,37 @@ bool Parser<OptionsType>::set_error(Error error)
     return false; // always return false, that eases the API usage (return set_error(...)) :^)
 }
 
-template<typename OptionsType>
-bool Parser<OptionsType>::done() const
+bool Parser::done() const
 {
     return match(TokenType::Eof);
 }
 
-template<typename OptionsType>
-bool Parser<OptionsType>::match(TokenType type) const
+bool Parser::match(TokenType type) const
 {
     return m_parser_state.current_token.type() == type;
 }
 
-template<typename OptionsType>
-Token Parser<OptionsType>::consume()
+Token Parser::consume()
 {
     auto old_token = m_parser_state.current_token;
     m_parser_state.current_token = m_parser_state.lexer.next();
     return old_token;
 }
 
-template<typename OptionsType>
-Token Parser<OptionsType>::consume(TokenType type, Error error)
+Token Parser::consume(TokenType type, Error error)
 {
     if (m_parser_state.current_token.type() != type) {
         set_error(error);
-#ifdef __serenity__
         dbg() << "[PARSER] Error: Unexpected token " << m_parser_state.current_token.name() << ". Expected: " << Token::name(type);
-#else
-        fprintf(stderr, "[PARSER] Error: Unexpected token %s. Expected %s\n", m_parser_state.current_token.name(), Token::name(type));
-#endif
     }
     return consume();
 }
 
-template<typename OptionsType>
-bool Parser<OptionsType>::consume(const String& str)
+bool Parser::consume(const String& str)
 {
     size_t potentially_go_back { 1 };
     for (auto ch : str) {
-        if (match(TokenType::OrdinaryCharacter)) {
+        if (match(TokenType::Char)) {
             if (m_parser_state.current_token.value()[0] != ch) {
                 m_parser_state.lexer.back(potentially_go_back);
                 m_parser_state.current_token = m_parser_state.lexer.next();
@@ -111,14 +82,13 @@ bool Parser<OptionsType>::consume(const String& str)
             m_parser_state.current_token = m_parser_state.lexer.next();
             return false;
         }
-        consume(TokenType::OrdinaryCharacter, Error::NoError);
+        consume(TokenType::Char, Error::NoError);
         ++potentially_go_back;
     }
     return true;
 }
 
-template<typename OptionsType>
-void Parser<OptionsType>::reset()
+void Parser::reset()
 {
     m_parser_state.bytecode.clear();
     m_parser_state.lexer.reset();
@@ -128,8 +98,7 @@ void Parser<OptionsType>::reset()
     m_parser_state.regex_options = {};
 }
 
-template<typename OptionsType>
-ParserResult Parser<OptionsType>::parse(Optional<OptionsType> regex_options)
+Parser::Result Parser::parse(Optional<AllOptions> regex_options)
 {
     reset();
     if (regex_options.has_value())
@@ -152,190 +121,11 @@ ParserResult Parser<OptionsType>::parse(Optional<OptionsType> regex_options)
     };
 }
 
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_compare_values(Vector<ByteCodeValue>& stack, Vector<CompareTypeAndValuePair>&& pairs)
-{
-    Vector<ByteCodeValue> bytecode;
-
-    bytecode.empend(OpCode::Compare);
-    bytecode.empend(pairs.size()); // number of arguments
-
-    for (auto& value : pairs) {
-        ASSERT(value.type != CharacterCompareType::RangeExpressionDummy);
-        ASSERT(value.type != CharacterCompareType::Undefined);
-        ASSERT(value.type != CharacterCompareType::OrdinaryCharacters);
-
-        bytecode.append(move(value.type));
-        if (value.type != CharacterCompareType::Inverse && value.type != CharacterCompareType::AnySingleCharacter)
-            bytecode.append(move(value.value));
-    }
-
-    stack.append(move(bytecode));
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_group_capture_left(Vector<ByteCodeValue>& stack)
-{
-    stack.empend(OpCode::SaveLeftCaptureGroup);
-    stack.empend(m_parser_state.capture_groups_count);
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_group_capture_left(Vector<ByteCodeValue>& stack, const StringView& name)
-{
-    stack.empend(OpCode::SaveLeftNamedCaptureGroup);
-    stack.empend(name.characters_without_null_termination());
-    stack.empend(name.length());
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_group_capture_right(Vector<ByteCodeValue>& stack)
-{
-    stack.empend(OpCode::SaveRightCaptureGroup);
-    stack.empend(m_parser_state.capture_groups_count);
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_group_capture_right(Vector<ByteCodeValue>& stack, const StringView& name)
-{
-    stack.empend(OpCode::SaveRightNamedCaptureGroup);
-    stack.empend(name.characters_without_null_termination());
-    stack.empend(name.length());
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_alternation(Vector<ByteCodeValue>& stack, Vector<ByteCodeValue>&& left, Vector<ByteCodeValue>&& right)
-{
-
-    // FORKSTAY _ALT
-    // REGEXP ALT1
-    // JUMP  _END
-    // LABEL _ALT
-    // REGEXP ALT2
-    // LABEL _END
-
-    stack.empend(OpCode::ForkJump);
-    stack.empend(left.size() + 2); // Jump to the _ALT label
-
-    for (auto& op : left)
-        stack.append(move(op));
-
-    stack.empend(OpCode::Jump);
-    stack.empend(right.size()); // Jump to the _END label
-
-    // LABEL _ALT = bytecode.size() + 2
-
-    for (auto& op : right)
-        stack.append(move(op));
-
-    // LABEL _END = alterantive_bytecode.size
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_repetition_min_max(Vector<ByteCodeValue>& bytecode_to_repeat, size_t minimum, Optional<size_t> maximum)
-{
-    Vector<ByteCodeValue> new_bytecode;
-    insert_bytecode_repetition_n(new_bytecode, bytecode_to_repeat, minimum);
-
-    if (maximum.has_value()) {
-        if (maximum.value() > minimum) {
-            auto diff = maximum.value() - minimum;
-            new_bytecode.empend(OpCode::ForkStay);
-            new_bytecode.empend(diff * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
-
-            for (size_t i = 0; i < diff; ++i) {
-                new_bytecode.append(bytecode_to_repeat);
-                new_bytecode.empend(OpCode::ForkStay);
-                new_bytecode.empend((diff - i - 1) * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
-            }
-        }
-    } else {
-        // no maximum value set, repeat finding if possible
-        new_bytecode.empend(OpCode::ForkJump);
-        new_bytecode.empend(-bytecode_to_repeat.size() - 2); // Jump to the last iteration
-    }
-
-    bytecode_to_repeat = move(new_bytecode);
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_repetition_n(Vector<ByteCodeValue>& stack, Vector<ByteCodeValue>& bytecode_to_repeat, size_t n)
-{
-    for (size_t i = 0; i < n; ++i)
-        stack.append(bytecode_to_repeat);
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_repetition_min_one(Vector<ByteCodeValue>& bytecode_to_repeat, bool greedy)
-{
-    // LABEL _START = -bytecode_to_repeat.size()
-    // REGEXP
-    // FORKJUMP _START  (FORKSTAY -> Greedy)
-
-    if (greedy)
-        bytecode_to_repeat.empend(OpCode::ForkStay);
-    else
-        bytecode_to_repeat.empend(OpCode::ForkJump);
-
-    bytecode_to_repeat.empend(-bytecode_to_repeat.size() - 1); // Jump to the _START label
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_repetition_any(Vector<ByteCodeValue>& bytecode_to_repeat, bool greedy)
-{
-    // LABEL _START
-    // FORKSTAY _END  (FORKJUMP -> Greedy)
-    // REGEXP
-    // JUMP  _START
-    // LABEL _END
-
-    // LABEL _START = stack.size();
-    Vector<ByteCodeValue> bytecode;
-
-    if (greedy)
-        bytecode.empend(OpCode::ForkJump);
-    else
-        bytecode.empend(OpCode::ForkStay);
-
-    bytecode.empend(bytecode_to_repeat.size() + 2); // Jump to the _END label
-
-    for (auto& op : bytecode_to_repeat)
-        bytecode.append(move(op));
-
-    bytecode.empend(OpCode::Jump);
-    bytecode.empend(-bytecode.size() - 1); // Jump to the _START label
-    // LABEL _END = bytecode.size()
-
-    bytecode_to_repeat = move(bytecode);
-}
-
-template<typename OptionsType>
-void Parser<OptionsType>::insert_bytecode_repetition_zero_or_one(Vector<ByteCodeValue>& bytecode_to_repeat, bool greedy)
-{
-    // FORKSTAY _END (FORKJUMP -> Greedy)
-    // REGEXP
-    // LABEL _END
-    Vector<ByteCodeValue> bytecode;
-
-    if (greedy)
-        bytecode.empend(OpCode::ForkJump);
-    else
-        bytecode.empend(OpCode::ForkStay);
-
-    bytecode.empend(bytecode_to_repeat.size()); // Jump to the _END label
-
-    for (auto& op : bytecode_to_repeat)
-        bytecode.append(move(op));
-    // LABEL _END = bytecode.size()
-
-    bytecode_to_repeat = move(bytecode);
-}
-
 // =============================
 // PosixExtended Parser
 // =============================
 
-bool PosixExtendedParser::parse_internal(Vector<ByteCodeValue>& stack, size_t& match_length_minimum)
+bool PosixExtendedParser::parse_internal(ByteCode& stack, size_t& match_length_minimum)
 {
     return parse_root(stack, match_length_minimum);
 }
@@ -354,7 +144,7 @@ bool PosixExtendedParser::match_ordinary_characters()
     // NOTE: This method must not be called during bracket and repetition parsing!
     // FIXME: Add assertion for that?
     auto type = m_parser_state.current_token.type();
-    return (type == TokenType::OrdinaryCharacter
+    return (type == TokenType::Char
         || type == TokenType::Comma
         || type == TokenType::Slash
         || type == TokenType::EqualSign
@@ -362,7 +152,7 @@ bool PosixExtendedParser::match_ordinary_characters()
         || type == TokenType::Colon);
 }
 
-bool PosixExtendedParser::parse_repetition_symbol(Vector<ByteCodeValue>& bytecode_to_repeat, size_t& match_length_minimum)
+bool PosixExtendedParser::parse_repetition_symbol(ByteCode& bytecode_to_repeat, size_t& match_length_minimum)
 {
     if (match(TokenType::LeftCurly)) {
         consume();
@@ -370,7 +160,7 @@ bool PosixExtendedParser::parse_repetition_symbol(Vector<ByteCodeValue>& bytecod
         StringBuilder number_builder;
         bool ok;
 
-        while (match(TokenType::OrdinaryCharacter)) {
+        while (match(TokenType::Char)) {
             number_builder.append(consume().value());
         }
 
@@ -383,8 +173,8 @@ bool PosixExtendedParser::parse_repetition_symbol(Vector<ByteCodeValue>& bytecod
         if (match(TokenType::Comma)) {
             consume();
         } else {
-            Vector<ByteCodeValue> bytecode;
-            insert_bytecode_repetition_n(bytecode, bytecode_to_repeat, minimum);
+            ByteCode bytecode;
+            bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum);
             bytecode_to_repeat = move(bytecode);
 
             consume(TokenType::RightCurly, Error::MismatchingBrace);
@@ -393,7 +183,7 @@ bool PosixExtendedParser::parse_repetition_symbol(Vector<ByteCodeValue>& bytecod
 
         Optional<size_t> maximum {};
         number_builder.clear();
-        while (match(TokenType::OrdinaryCharacter)) {
+        while (match(TokenType::Char)) {
             number_builder.append(consume().value());
         }
         if (!number_builder.is_empty()) {
@@ -402,7 +192,7 @@ bool PosixExtendedParser::parse_repetition_symbol(Vector<ByteCodeValue>& bytecod
                 return set_error(Error::InvalidBraceContent);
         }
 
-        insert_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maximum);
+        bytecode_to_repeat.insert_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maximum);
 
         consume(TokenType::RightCurly, Error::MismatchingBrace);
         return !has_error();
@@ -415,7 +205,7 @@ bool PosixExtendedParser::parse_repetition_symbol(Vector<ByteCodeValue>& bytecod
             consume();
 
         // Note: dont touch match_length_minimum, it's already correct
-        insert_bytecode_repetition_min_one(bytecode_to_repeat, greedy);
+        bytecode_to_repeat.insert_bytecode_repetition_min_one(bytecode_to_repeat, greedy);
         return !has_error();
 
     } else if (match(TokenType::Asterisk)) {
@@ -426,7 +216,7 @@ bool PosixExtendedParser::parse_repetition_symbol(Vector<ByteCodeValue>& bytecod
         if (greedy)
             consume();
 
-        insert_bytecode_repetition_any(bytecode_to_repeat, greedy);
+        bytecode_to_repeat.insert_bytecode_repetition_any(bytecode_to_repeat, greedy);
 
         return !has_error();
 
@@ -438,14 +228,14 @@ bool PosixExtendedParser::parse_repetition_symbol(Vector<ByteCodeValue>& bytecod
         if (greedy)
             consume();
 
-        insert_bytecode_repetition_zero_or_one(bytecode_to_repeat, greedy);
+        bytecode_to_repeat.insert_bytecode_repetition_zero_or_one(bytecode_to_repeat, greedy);
         return !has_error();
     }
 
     return false;
 }
 
-bool PosixExtendedParser::parse_bracket_expression(Vector<ByteCodeValue>& stack, size_t& match_length_minimum)
+bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack, size_t& match_length_minimum)
 {
     Vector<CompareTypeAndValuePair> values;
 
@@ -456,24 +246,24 @@ bool PosixExtendedParser::parse_bracket_expression(Vector<ByteCodeValue>& stack,
 
             if (values.is_empty() || (values.size() == 1 && values.last().type == CharacterCompareType::Inverse)) {
                 // first in the bracket expression
-                values.append({ CharacterCompareType::OrdinaryCharacter, { '-' } });
+                values.append({ CharacterCompareType::Char, (ByteCodeValueType)'-' });
             } else if (match(TokenType::RightBracket)) {
                 // Last in the bracket expression
-                values.append({ CharacterCompareType::OrdinaryCharacter, { '-' } });
-            } else if (values.last().type == CharacterCompareType::OrdinaryCharacter) {
+                values.append({ CharacterCompareType::Char, (ByteCodeValueType)'-' });
+            } else if (values.last().type == CharacterCompareType::Char) {
                 values.append({ CharacterCompareType::RangeExpressionDummy, 0 });
 
                 if (match(TokenType::HyphenMinus)) {
                     consume();
                     // Valid range, add ordinary character
-                    values.append({ CharacterCompareType::OrdinaryCharacter, { '-' } });
+                    values.append({ CharacterCompareType::Char, (ByteCodeValueType)'-' });
                 }
             } else {
                 return set_error(Error::InvalidRange);
             }
 
-        } else if (match(TokenType::OrdinaryCharacter) || match(TokenType::Period) || match(TokenType::Asterisk) || match(TokenType::EscapeSequence) || match(TokenType::Plus)) {
-            values.append({ CharacterCompareType::OrdinaryCharacter, { *consume().value().characters_without_null_termination() } });
+        } else if (match(TokenType::Char) || match(TokenType::Period) || match(TokenType::Asterisk) || match(TokenType::EscapeSequence) || match(TokenType::Plus)) {
+            values.append({ CharacterCompareType::Char, (ByteCodeValueType)*consume().value().characters_without_null_termination() });
 
         } else if (match(TokenType::Circumflex)) {
             auto t = consume();
@@ -481,7 +271,7 @@ bool PosixExtendedParser::parse_bracket_expression(Vector<ByteCodeValue>& stack,
             if (values.is_empty())
                 values.append({ CharacterCompareType::Inverse, 0 });
             else
-                values.append({ CharacterCompareType::OrdinaryCharacter, { *t.value().characters_without_null_termination() } });
+                values.append({ CharacterCompareType::Char, (ByteCodeValueType)*t.value().characters_without_null_termination() });
 
         } else if (match(TokenType::LeftBracket)) {
             consume();
@@ -508,37 +298,37 @@ bool PosixExtendedParser::parse_bracket_expression(Vector<ByteCodeValue>& stack,
             } else if (match(TokenType::Colon)) {
                 consume();
 
-                CharacterClass ch_class;
+                CharClass ch_class;
                 // parse character class
-                if (match(TokenType::OrdinaryCharacter)) {
+                if (match(TokenType::Char)) {
                     if (consume("alnum"))
-                        ch_class = CharacterClass::Alnum;
+                        ch_class = CharClass::Alnum;
                     else if (consume("alpha"))
-                        ch_class = CharacterClass::Alpha;
+                        ch_class = CharClass::Alpha;
                     else if (consume("blank"))
-                        ch_class = CharacterClass::Blank;
+                        ch_class = CharClass::Blank;
                     else if (consume("cntrl"))
-                        ch_class = CharacterClass::Cntrl;
+                        ch_class = CharClass::Cntrl;
                     else if (consume("digit"))
-                        ch_class = CharacterClass::Digit;
+                        ch_class = CharClass::Digit;
                     else if (consume("graph"))
-                        ch_class = CharacterClass::Graph;
+                        ch_class = CharClass::Graph;
                     else if (consume("lower"))
-                        ch_class = CharacterClass::Lower;
+                        ch_class = CharClass::Lower;
                     else if (consume("print"))
-                        ch_class = CharacterClass::Print;
+                        ch_class = CharClass::Print;
                     else if (consume("punct"))
-                        ch_class = CharacterClass::Punct;
+                        ch_class = CharClass::Punct;
                     else if (consume("space"))
-                        ch_class = CharacterClass::Space;
+                        ch_class = CharClass::Space;
                     else if (consume("upper"))
-                        ch_class = CharacterClass::Upper;
+                        ch_class = CharClass::Upper;
                     else if (consume("xdigit"))
-                        ch_class = CharacterClass::Xdigit;
+                        ch_class = CharClass::Xdigit;
                     else
                         return set_error(Error::InvalidCharacterClass);
 
-                    values.append({ CharacterCompareType::CharacterClass, (size_t)ch_class });
+                    values.append({ CharacterCompareType::CharClass, (ByteCodeValueType)ch_class });
 
                 } else
                     return set_error(Error::InvalidCharacterClass);
@@ -552,7 +342,7 @@ bool PosixExtendedParser::parse_bracket_expression(Vector<ByteCodeValue>& stack,
 
             if (values.is_empty() || (values.size() == 1 && values.last().type == CharacterCompareType::Inverse)) {
                 // handle bracket as ordinary character
-                values.append({ CharacterCompareType::OrdinaryCharacter, { *consume().value().characters_without_null_termination() } });
+                values.append({ CharacterCompareType::Char, (ByteCodeValueType)*consume().value().characters_without_null_termination() });
             } else {
                 // closing bracket expression
                 break;
@@ -563,14 +353,14 @@ bool PosixExtendedParser::parse_bracket_expression(Vector<ByteCodeValue>& stack,
 
         // check if range expression has to be completed...
         if (values.size() >= 3 && values.at(values.size() - 2).type == CharacterCompareType::RangeExpressionDummy) {
-            if (values.last().type != CharacterCompareType::OrdinaryCharacter)
+            if (values.last().type != CharacterCompareType::Char)
                 return set_error(Error::InvalidRange);
 
             auto value2 = values.take_last();
             values.take_last(); // RangeExpressionDummy
             auto value1 = values.take_last();
 
-            values.append({ CharacterCompareType::RangeExpression, ByteCodeValue { value1.value.ch, value2.value.ch } });
+            values.append({ CharacterCompareType::CharRange, static_cast<ByteCodeValueType>(CharRange { (char)value1.value, (char)value2.value }) });
         }
     }
 
@@ -580,14 +370,14 @@ bool PosixExtendedParser::parse_bracket_expression(Vector<ByteCodeValue>& stack,
     if (values.first().type == CharacterCompareType::Inverse)
         match_length_minimum = 0;
 
-    insert_bytecode_compare_values(stack, move(values));
+    stack.insert_bytecode_compare_values(move(values));
 
     return !has_error();
 }
 
-bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, size_t& match_length_minimum)
+bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, size_t& match_length_minimum)
 {
-    Vector<ByteCodeValue> bytecode;
+    ByteCode bytecode;
     size_t length = 0;
     bool should_parse_repetition_symbol { false };
 
@@ -603,15 +393,13 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
             }
 
             if (length > 1) {
-                stack.empend(OpCode::Compare);
-                stack.empend(1ul); // number of arguments
-                stack.empend(CharacterCompareType::OrdinaryCharacters);
-                stack.empend(start_token.value().characters_without_null_termination());
-                stack.empend(length - ((match_repetition_symbol() && length > 1) ? 1 : 0)); // last character is inserted into 'bytecode' for duplication symbol handling
+                // last character is inserted into 'bytecode' for duplication symbol handling
+                auto new_length = length - ((match_repetition_symbol() && length > 1) ? 1 : 0);
+                stack.insert_bytecode_compare_string(start_token.value(), new_length);
             }
 
             if ((match_repetition_symbol() && length > 1) || length == 1) // Create own compare opcode for last character before duplication symbol
-                insert_bytecode_compare_values(bytecode, { { CharacterCompareType::OrdinaryCharacter, { last_token.value().characters_without_null_termination()[0] } } });
+                bytecode.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)last_token.value().characters_without_null_termination()[0] } });
 
             should_parse_repetition_symbol = true;
             break;
@@ -623,7 +411,7 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
         if (match(TokenType::Period)) {
             length = 1;
             consume();
-            insert_bytecode_compare_values(bytecode, { { CharacterCompareType::AnySingleCharacter, { 0 } } });
+            bytecode.insert_bytecode_compare_values({ { CharacterCompareType::AnyChar, 0 } });
             should_parse_repetition_symbol = true;
             break;
         }
@@ -635,7 +423,7 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
             printf("[PARSER] EscapeSequence with substring %s\n", String(t.value()).characters());
 #endif
 
-            insert_bytecode_compare_values(bytecode, { { CharacterCompareType::OrdinaryCharacter, { (char)t.value().characters_without_null_termination()[1] } } });
+            bytecode.insert_bytecode_compare_values({ { CharacterCompareType::Char, (u32)t.value().characters_without_null_termination()[1] } });
             should_parse_repetition_symbol = true;
             break;
         }
@@ -643,7 +431,7 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
         if (match(TokenType::LeftBracket)) {
             consume();
 
-            Vector<ByteCodeValue> sub_ops;
+            ByteCode sub_ops;
             if (!parse_bracket_expression(sub_ops, length) || !sub_ops.size())
                 return set_error(Error::InvalidBracketContent);
 
@@ -664,13 +452,13 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
 
         if (match(TokenType::Circumflex)) {
             consume();
-            bytecode.empend(OpCode::CheckBegin);
+            bytecode.empend((ByteCodeValueType)OpCodeId::CheckBegin);
             break;
         }
 
         if (match(TokenType::Dollar)) {
             consume();
-            bytecode.empend(OpCode::CheckEnd);
+            bytecode.empend((ByteCodeValueType)OpCodeId::CheckEnd);
             break;
         }
 
@@ -695,7 +483,7 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
                     for (;;) {
                         if (!match_ordinary_characters())
                             return set_error(Error::InvalidNameForCaptureGroup);
-                        if (match(TokenType::OrdinaryCharacter) && m_parser_state.current_token.value()[0] == '>') {
+                        if (match(TokenType::Char) && m_parser_state.current_token.value()[0] == '>') {
                             consume();
                             break;
                         }
@@ -723,12 +511,12 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
 
             if (!(m_parser_state.regex_options & AllFlags::NoSubExpressions || prevent_capture_group)) {
                 if (capture_group_name.has_value())
-                    insert_bytecode_group_capture_left(bytecode, capture_group_name.value());
+                    bytecode.insert_bytecode_group_capture_left(capture_group_name.value());
                 else
-                    insert_bytecode_group_capture_left(bytecode);
+                    bytecode.insert_bytecode_group_capture_left(m_parser_state.capture_groups_count);
             }
 
-            Vector<ByteCodeValue> capture_group_bytecode;
+            ByteCode capture_group_bytecode;
 
             if (!parse_root(capture_group_bytecode, length))
                 return set_error(Error::InvalidPattern);
@@ -739,10 +527,10 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
 
             if (!(m_parser_state.regex_options & AllFlags::NoSubExpressions || prevent_capture_group)) {
                 if (capture_group_name.has_value()) {
-                    insert_bytecode_group_capture_right(bytecode, capture_group_name.value());
+                    bytecode.insert_bytecode_group_capture_right(capture_group_name.value());
                     ++m_parser_state.named_capture_groups_count;
                 } else {
-                    insert_bytecode_group_capture_right(bytecode);
+                    bytecode.insert_bytecode_group_capture_right(m_parser_state.capture_groups_count);
                     ++m_parser_state.capture_groups_count;
                 }
             }
@@ -766,9 +554,9 @@ bool PosixExtendedParser::parse_sub_expression(Vector<ByteCodeValue>& stack, siz
     return true;
 }
 
-bool PosixExtendedParser::parse_root(Vector<ByteCodeValue>& stack, size_t& match_length_minimum)
+bool PosixExtendedParser::parse_root(ByteCode& stack, size_t& match_length_minimum)
 {
-    Vector<ByteCodeValue> bytecode_left;
+    ByteCode bytecode_left;
     size_t match_length_minimum_left { 0 };
 
     if (match_repetition_symbol())
@@ -781,14 +569,14 @@ bool PosixExtendedParser::parse_root(Vector<ByteCodeValue>& stack, size_t& match
         if (match(TokenType::Pipe)) {
             consume();
 
-            Vector<ByteCodeValue> bytecode_right;
+            ByteCode bytecode_right;
             size_t match_length_minimum_right { 0 };
 
             if (!parse_root(bytecode_right, match_length_minimum_right) || bytecode_right.is_empty())
                 return set_error(Error::InvalidPattern);
 
-            Vector<ByteCodeValue> new_bytecode;
-            insert_bytecode_alternation(new_bytecode, move(bytecode_left), move(bytecode_right));
+            ByteCode new_bytecode;
+            new_bytecode.insert_bytecode_alternation(move(bytecode_left), move(bytecode_right));
             bytecode_left = move(new_bytecode);
             match_length_minimum_left = min(match_length_minimum_right, match_length_minimum_left);
         }
@@ -802,6 +590,5 @@ bool PosixExtendedParser::parse_root(Vector<ByteCodeValue>& stack, size_t& match
     return !has_error();
 }
 
-template class Parser<PosixOptions>;
 }
 }

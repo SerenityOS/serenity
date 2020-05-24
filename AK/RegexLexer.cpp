@@ -201,7 +201,7 @@ Token Lexer::next()
         if (ch == EOF)
             break;
 
-        return emit_token(TokenType::OrdinaryCharacter);
+        return emit_token(TokenType::Char);
     }
 
     return Token(TokenType::Eof, m_position, m_source.substring_view(0, 0));

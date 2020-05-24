@@ -26,5 +26,65 @@
 
 #pragma once
 
-#include <AK/RegexDebug.h>
-#include <AK/RegexMatcher.h>
+#include "RegexOptions.h"
+
+#include "AK/HashMap.h"
+#include "AK/String.h"
+#include "AK/StringView.h"
+#include "AK/Vector.h"
+
+namespace AK {
+namespace regex {
+
+class Match final {
+private:
+    Optional<String> string;
+
+public:
+    Match() = default;
+    ~Match() = default;
+
+    Match(const StringView view_, const size_t line_, const size_t column_)
+        : view(view_)
+        , line(line_)
+        , column(column_)
+    {
+    }
+
+    Match(const String string_, const size_t line_, const size_t column_)
+        : string(string_)
+        , view(string.value().view())
+        , line(line_)
+        , column(column_)
+    {
+    }
+
+    StringView view { nullptr };
+    size_t line { 0 };
+    size_t column { 0 };
+};
+
+struct MatchInput {
+    StringView view { nullptr };
+    AK::regex::AllOptions regex_options {};
+
+    size_t match_index { 0 };
+    size_t line { 0 };
+    size_t column { 0 };
+};
+
+struct MatchState {
+    size_t string_position { 0 };
+    size_t instruction_position { 0 };
+    size_t fork_at_position { 0 };
+};
+
+struct MatchOutput {
+    size_t operations;
+    Vector<Match> matches;
+    Vector<Vector<Match>> capture_group_matches;
+    Vector<HashMap<String, Match>> named_capture_group_matches;
+};
+
+}
+}
