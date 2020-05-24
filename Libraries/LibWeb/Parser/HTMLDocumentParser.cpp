@@ -24,11 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Utf32View.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLFormElement.h>
 #include <LibWeb/DOM/HTMLHeadElement.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLToken.h>
 
@@ -54,41 +56,45 @@ void HTMLDocumentParser::run()
         auto& token = optional_token.value();
 
         dbg() << "[" << insertion_mode_name() << "] " << token.to_string();
+        process_using_the_rules_for(m_insertion_mode, token);
+    }
+}
 
-        switch (m_insertion_mode) {
-        case InsertionMode::Initial:
-            handle_initial(token);
-            break;
-        case InsertionMode::BeforeHTML:
-            handle_before_html(token);
-            break;
-        case InsertionMode::BeforeHead:
-            handle_before_head(token);
-            break;
-        case InsertionMode::InHead:
-            handle_in_head(token);
-            break;
-        case InsertionMode::InHeadNoscript:
-            handle_in_head_noscript(token);
-            break;
-        case InsertionMode::AfterHead:
-            handle_after_head(token);
-            break;
-        case InsertionMode::InBody:
-            handle_in_body(token);
-            break;
-        case InsertionMode::AfterBody:
-            handle_after_body(token);
-            break;
-        case InsertionMode::AfterAfterBody:
-            handle_after_after_body(token);
-            break;
-        case InsertionMode::Text:
-            handle_text(token);
-            break;
-        default:
-            ASSERT_NOT_REACHED();
-        }
+void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)
+{
+    switch (mode) {
+    case InsertionMode::Initial:
+        handle_initial(token);
+        break;
+    case InsertionMode::BeforeHTML:
+        handle_before_html(token);
+        break;
+    case InsertionMode::BeforeHead:
+        handle_before_head(token);
+        break;
+    case InsertionMode::InHead:
+        handle_in_head(token);
+        break;
+    case InsertionMode::InHeadNoscript:
+        handle_in_head_noscript(token);
+        break;
+    case InsertionMode::AfterHead:
+        handle_after_head(token);
+        break;
+    case InsertionMode::InBody:
+        handle_in_body(token);
+        break;
+    case InsertionMode::AfterBody:
+        handle_after_body(token);
+        break;
+    case InsertionMode::AfterAfterBody:
+        handle_after_after_body(token);
+        break;
+    case InsertionMode::Text:
+        handle_text(token);
+        break;
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
 
@@ -106,6 +112,10 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
 
 void HTMLDocumentParser::handle_before_html(HTMLToken& token)
 {
+    if (token.is_character() && token.is_parser_whitespace()) {
+        return;
+    }
+
     if (token.is_start_tag() && token.tag_name() == "html") {
         auto element = create_element_for(token);
         document().append_child(element);
@@ -151,6 +161,10 @@ RefPtr<Element> HTMLDocumentParser::insert_html_element(HTMLToken& token)
 
 void HTMLDocumentParser::handle_before_head(HTMLToken& token)
 {
+    if (token.is_character() && token.is_parser_whitespace()) {
+        return;
+    }
+
     if (token.is_start_tag() && token.tag_name() == "head") {
         auto element = insert_html_element(token);
         m_head_element = to<HTMLHeadElement>(element);
@@ -183,9 +197,32 @@ void HTMLDocumentParser::handle_in_head_noscript(HTMLToken&)
     ASSERT_NOT_REACHED();
 }
 
+void HTMLDocumentParser::insert_character(u32 data)
+{
+    auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
+    if (adjusted_insertion_location->is_document())
+        return;
+    if (adjusted_insertion_location->last_child() && adjusted_insertion_location->last_child()->is_text()) {
+        auto& existing_text_node = to<Text>(*adjusted_insertion_location->last_child());
+        StringBuilder builder;
+        builder.append(existing_text_node.data());
+        builder.append(Utf32View { &data, 1 });
+        existing_text_node.set_data(builder.to_string());
+        return;
+    }
+    StringBuilder builder;
+    builder.append(Utf32View { &data, 1 });
+    adjusted_insertion_location->append_child(adopt(*new Text(document(), builder.to_string())));
+}
+
 void HTMLDocumentParser::handle_after_head(HTMLToken& token)
 {
     if (token.is_character()) {
+        if (token.is_parser_whitespace()) {
+            insert_character(token.codepoint());
+            return;
+        }
+
         ASSERT_NOT_REACHED();
     }
 
@@ -249,6 +286,11 @@ void HTMLDocumentParser::generate_implied_end_tags()
 
 void HTMLDocumentParser::handle_after_body(HTMLToken& token)
 {
+    if (token.is_character() && token.is_parser_whitespace()) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
     if (token.is_end_tag() && token.tag_name() == "html") {
         if (m_parsing_fragment) {
             ASSERT_NOT_REACHED();
@@ -261,6 +303,11 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
 
 void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
 {
+    if (token.is_doctype() || token.is_parser_whitespace() || (token.is_start_tag() && token.tag_name() == "html")) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
     if (token.is_end_of_file()) {
         dbg() << "Stop parsing! :^)";
         return;
@@ -268,8 +315,27 @@ void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
     ASSERT_NOT_REACHED();
 }
 
+void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
+{
+    if (m_list_of_active_formatting_elements.is_empty())
+        return;
+
+    ASSERT_NOT_REACHED();
+}
+
 void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 {
+    if (token.is_character()) {
+        if (token.codepoint() == 0) {
+            ASSERT_NOT_REACHED();
+        }
+        if (token.is_parser_whitespace()) {
+            reconstruct_the_active_formatting_elements();
+            insert_character(token.codepoint());
+            return;
+        }
+    }
+
     if (token.is_end_tag() && token.tag_name() == "body") {
         if (!m_stack_of_open_elements.has_in_scope("body")) {
             ASSERT_NOT_REACHED();

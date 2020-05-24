@@ -36,6 +36,7 @@ public:
     virtual ~CharacterData() override;
 
     const String& data() const { return m_data; }
+    void set_data(const String& data) { m_data = data; }
 
     virtual String text_content() const override { return m_data; }
 
