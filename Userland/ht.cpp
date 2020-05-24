@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     Core::EventLoop loop;
 
     // This is a temporary test program to aid with bringing up the new HTML parser. :^)
-    const char* input_path = "/home/anon/www/simple.html";
+    const char* input_path = "/home/anon/www/welcome.html";
     if (argc > 1)
         input_path = argv[1];
 

@@ -100,6 +100,7 @@ private:
     void process_using_the_rules_for(InsertionMode, HTMLToken&);
 
     InsertionMode m_insertion_mode { InsertionMode::Initial };
+    InsertionMode m_original_insertion_mode { InsertionMode::Initial };
 
     StackOfOpenElements m_stack_of_open_elements;
 
