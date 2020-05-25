@@ -106,6 +106,9 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     case InsertionMode::Text:
         handle_text(token);
         break;
+    case InsertionMode::InTable:
+        handle_in_table(token);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -567,6 +570,16 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    if (token.is_start_tag() && token.tag_name() == "table") {
+        // FIXME: If the Document is not set to quirks mode,
+        //        and the stack of open elements has a p element in button scope, then close a p element.
+
+        insert_html_element(token);
+        m_frameset_ok = false;
+        m_insertion_mode = InsertionMode::InTable;
+        return;
+    }
+
     if (token.is_start_tag()) {
         reconstruct_the_active_formatting_elements();
         insert_html_element(token);
@@ -633,6 +646,58 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         return;
     }
     ASSERT_NOT_REACHED();
+}
+
+void HTMLDocumentParser::handle_in_table(HTMLToken& token)
+{
+    if (token.is_character() && current_node().tag_name().is_one_of("table", "tbody", "tfoot", "thead", "tr")) {
+        TODO();
+    }
+    if (token.is_comment()) {
+        insert_comment(token);
+        return;
+    }
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+    if (token.is_start_tag() && token.tag_name() == "caption") {
+        TODO();
+    }
+    if (token.is_start_tag() && token.tag_name() == "colgroup") {
+        TODO();
+    }
+    if (token.is_start_tag() && token.tag_name() == "col") {
+        TODO();
+    }
+    if (token.is_start_tag() && token.tag_name().is_one_of("tbody", "tfoot", "thead")) {
+        TODO();
+    }
+    if (token.is_start_tag() && token.tag_name().is_one_of("td", "th", "tr")) {
+        TODO();
+    }
+    if (token.is_start_tag() && token.tag_name() == "table") {
+        PARSE_ERROR();
+        TODO();
+    }
+    if (token.is_end_tag()) {
+        if (!m_stack_of_open_elements.has_in_table_scope("table")) {
+            PARSE_ERROR();
+            return;
+        }
+        while (current_node().tag_name() != "table")
+            m_stack_of_open_elements.pop();
+        m_stack_of_open_elements.pop();
+
+        reset_the_insertion_mode_appropriately();
+        return;
+    }
+    TODO();
+}
+
+void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
+{
+    TODO();
 }
 
 const char* HTMLDocumentParser::insertion_mode_name() const

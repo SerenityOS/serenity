@@ -88,6 +88,7 @@ private:
     void handle_after_body(HTMLToken&);
     void handle_after_after_body(HTMLToken&);
     void handle_text(HTMLToken&);
+    void handle_in_table(HTMLToken&);
 
     void generate_implied_end_tags(const FlyString& exception = {});
     bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
@@ -104,6 +105,7 @@ private:
     void increment_script_nesting_level();
     void decrement_script_nesting_level();
     size_t script_nesting_level() const { return m_script_nesting_level; }
+    void reset_the_insertion_mode_appropriately();
 
     InsertionMode m_insertion_mode { InsertionMode::Initial };
     InsertionMode m_original_insertion_mode { InsertionMode::Initial };

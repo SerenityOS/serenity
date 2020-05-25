@@ -35,7 +35,7 @@ StackOfOpenElements::~StackOfOpenElements()
 {
 }
 
-bool StackOfOpenElements::has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString> &list) const
+bool StackOfOpenElements::has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>& list) const
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& node = m_elements.at(i);
@@ -56,6 +56,15 @@ bool StackOfOpenElements::has_in_button_scope(const FlyString& tag_name) const
 {
     auto list = s_base_list;
     list.append("button");
+    return has_in_scope_impl(tag_name, list);
+}
+
+bool StackOfOpenElements::has_in_table_scope(const FlyString& tag_name) const
+{
+    auto list = s_base_list;
+    list.append("html");
+    list.append("table");
+    list.append("template");
     return has_in_scope_impl(tag_name, list);
 }
 

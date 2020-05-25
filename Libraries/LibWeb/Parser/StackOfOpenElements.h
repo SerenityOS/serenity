@@ -46,6 +46,7 @@ public:
 
     bool has_in_scope(const FlyString& tag_name) const;
     bool has_in_button_scope(const FlyString& tag_name) const;
+    bool has_in_table_scope(const FlyString& tag_name) const;
 
     bool contains(const Element&) const;
 
