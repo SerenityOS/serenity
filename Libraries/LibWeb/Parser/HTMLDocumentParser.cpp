@@ -206,6 +206,23 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
         return;
     }
 
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "html") {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("base", "basefont", "bgsound", "link")) {
+        insert_html_element(token);
+        m_stack_of_open_elements.pop();
+        token.acknowledge_self_closing_flag_if_set();
+        return;
+    }
+
     if (token.is_start_tag() && token.tag_name() == "title") {
         insert_html_element(token);
         m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);
@@ -245,9 +262,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == "meta") {
         auto element = insert_html_element(token);
         m_stack_of_open_elements.pop();
-        if (token.is_self_closing()) {
-            ASSERT_NOT_REACHED();
-        }
+        token.acknowledge_self_closing_flag_if_set();
         return;
     }
     if (token.is_end_tag() && token.tag_name() == "head") {
