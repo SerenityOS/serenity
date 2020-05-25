@@ -132,8 +132,7 @@ public:
 private:
     Optional<u32> next_codepoint();
     Optional<u32> peek_codepoint(size_t offset) const;
-    bool next_few_characters_are(const StringView&) const;
-    void consume(const StringView&);
+    bool consume_next_if_match(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive);
     void create_new_token(HTMLToken::Type);
     bool current_end_tag_token_is_appropriate() const;
 

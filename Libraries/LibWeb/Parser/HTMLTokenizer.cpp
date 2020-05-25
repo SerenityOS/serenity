@@ -227,13 +227,11 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
             BEGIN_STATE(MarkupDeclarationOpen)
             {
                 DONT_CONSUME_NEXT_INPUT_CHARACTER;
-                if (next_few_characters_are("--")) {
-                    consume("--");
+                if (consume_next_if_match("--")) {
                     create_new_token(HTMLToken::Type::Comment);
                     SWITCH_TO(CommentStart);
                 }
-                if (next_few_characters_are("DOCTYPE")) {
-                    consume("DOCTYPE");
+                if (consume_next_if_match("DOCTYPE", CaseSensitivity::CaseInsensitive)) {
                     SWITCH_TO(DOCTYPE);
                 }
             }
@@ -1029,22 +1027,24 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
     }
 }
 
-void HTMLTokenizer::consume(const StringView& string)
-{
-    ASSERT(next_few_characters_are(string));
-    m_cursor += string.length();
-}
-
-bool HTMLTokenizer::next_few_characters_are(const StringView& string) const
+bool HTMLTokenizer::consume_next_if_match(const StringView& string, CaseSensitivity case_sensitivity)
 {
     for (size_t i = 0; i < string.length(); ++i) {
         auto codepoint = peek_codepoint(i);
         if (!codepoint.has_value())
             return false;
         // FIXME: This should be more Unicode-aware.
+        if (case_sensitivity == CaseSensitivity::CaseInsensitive) {
+            if (codepoint.value() < 0x80) {
+                if (tolower(codepoint.value()) != tolower(string[i]))
+                    return false;
+                continue;
+            }
+        }
         if (codepoint.value() != (u32)string[i])
             return false;
     }
+    m_cursor += string.length();
     return true;
 }
 
