@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
     auto window = GUI::Window::construct();
     window->set_title("Eyes");
-    window->set_rect(350, 270, 150, 100);
+    window->set_rect(350, 270, 75 * num_eyes, 100);
     window->set_has_alpha_channel(true);
 
     auto& eyes = window->set_main_widget<EyesWidget>(num_eyes);
