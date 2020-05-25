@@ -63,6 +63,8 @@ Editor::~Editor()
 
 void Editor::add_to_history(const String& line)
 {
+    if (line.is_empty())
+        return;
     if ((m_history.size() + 1) > m_history_capacity)
         m_history.take_first();
     m_history.append(line);
