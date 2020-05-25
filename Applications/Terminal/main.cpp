@@ -57,6 +57,12 @@
 static void run_command(int ptm_fd, String command)
 {
     pid_t pid = fork();
+    if (pid < 0) {
+        perror("fork");
+        dbg() << "run_command: could not fork to run '" << command << "'";
+        return;
+    }
+
     if (pid == 0) {
         const char* tty_name = ptsname(ptm_fd);
         if (!tty_name) {
