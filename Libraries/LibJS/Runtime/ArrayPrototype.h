@@ -60,6 +60,7 @@ private:
     static Value find_index(Interpreter&);
     static Value some(Interpreter&);
     static Value every(Interpreter&);
+    static Value splice(Interpreter&);
 };
 
 }

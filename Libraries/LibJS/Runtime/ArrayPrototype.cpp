@@ -67,6 +67,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("findIndex", find_index, 1, attr);
     put_native_function("some", some, 1, attr);
     put_native_function("every", every, 1, attr);
+    put_native_function("splice", splice, 2, attr);
     put("length", Value(0), Attribute::Configurable);
 }
 
@@ -640,6 +641,106 @@ Value ArrayPrototype::every(Interpreter& interpreter)
         return IterationDecision::Continue;
     });
     return Value(result);
+}
+
+Value ArrayPrototype::splice(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
+        return {};
+
+    auto initial_length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+
+    auto relative_start = interpreter.argument(0).to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    size_t actual_start;
+
+    if (relative_start < 0)
+        actual_start = max((ssize_t)initial_length + relative_start, (ssize_t)0);
+    else
+        actual_start = min((size_t)relative_start, initial_length);
+
+    size_t insert_count = 0;
+    size_t actual_delete_count = 0;
+
+    if (interpreter.argument_count() == 1) {
+        actual_delete_count = initial_length - actual_start;
+    } else if (interpreter.argument_count() >= 2) {
+        insert_count = interpreter.argument_count() - 2;
+        i32 delete_count = interpreter.argument(1).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
+
+        actual_delete_count = min((size_t)max(delete_count, 0), initial_length - actual_start);
+    }
+
+    size_t new_length = initial_length + insert_count - actual_delete_count;
+
+    if (new_length > MAX_ARRAY_LIKE_INDEX)
+        return interpreter.throw_exception<TypeError>("Maximum array size exceeded");
+
+    auto removed_elements = Array::create(interpreter.global_object());
+
+    for (size_t i = 0; i < actual_delete_count; ++i) {
+        auto value = this_object->get_by_index(actual_start + i);
+        if (interpreter.exception())
+            return {};
+
+        removed_elements->elements().append(value);
+    }
+
+    if (insert_count < actual_delete_count) {
+        for (size_t i = actual_start; i < initial_length - actual_delete_count; ++i) {
+            auto from = this_object->get_by_index(i + actual_delete_count);
+            if (interpreter.exception())
+                return {};
+
+            auto to = i + insert_count;
+
+            if (!from.is_empty()) {
+                this_object->put_by_index(to, from);
+                if (interpreter.exception())
+                    return {};
+            }
+            else
+                this_object->delete_property(PropertyName(to));
+        }
+
+        for (size_t i = initial_length; i > new_length; --i)
+            this_object->delete_property(PropertyName(i - 1));
+    } else if (insert_count > actual_delete_count) {
+        for (size_t i = initial_length - actual_delete_count; i > actual_start; --i) {
+            auto from = this_object->get_by_index(i + actual_delete_count - 1);
+            if (interpreter.exception())
+                return {};
+
+            auto to = i + insert_count - 1;
+
+            if (!from.is_empty()) {
+                this_object->put_by_index(to, from);
+                if (interpreter.exception())
+                    return {};
+            }
+            else
+                this_object->delete_property(PropertyName(to));
+        }
+    }
+
+    for (size_t i = 0; i < insert_count; ++i) {
+        this_object->put_by_index(actual_start + i, interpreter.argument(i + 2));
+        if (interpreter.exception())
+            return {};
+    }
+
+    this_object->put("length", Value((i32)new_length));
+    if (interpreter.exception())
+        return {};
+
+    return removed_elements;
 }
 
 }

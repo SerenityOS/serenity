@@ -28,6 +28,18 @@ try {
     });
 
     {
+        const o = { length: 3, 0: "hello", 2: "serenity" };
+        const removed = Array.prototype.splice.call(o, 0, 2, "hello", "friends");
+        assert(o.length === 3);
+        assert(o[0] === "hello");
+        assert(o[1] === "friends");
+        assert(o[2] === "serenity");
+        assert(removed.length === 2);
+        assert(removed[0] === "hello");
+        assert(removed[1] === undefined);
+    }
+
+    {
         assert(Array.prototype.join.call({}) === "");
         assert(Array.prototype.join.call({ length: "foo" }) === "");
         assert(Array.prototype.join.call({ length: 3 }) === ",,");
