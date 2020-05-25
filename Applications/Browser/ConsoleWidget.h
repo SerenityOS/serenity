@@ -45,8 +45,6 @@ public:
 private:
     ConsoleWidget();
 
-    String create_document_style();
-
     RefPtr<GUI::TextBox> m_console_input;
     RefPtr<Web::HtmlView> m_console_output_view;
     RefPtr<Web::Element> m_console_output_container;
