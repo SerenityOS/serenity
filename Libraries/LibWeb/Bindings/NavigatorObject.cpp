@@ -26,6 +26,7 @@
 
 #include <AK/FlyString.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/ResourceLoader.h>
@@ -36,9 +37,14 @@ namespace Bindings {
 NavigatorObject::NavigatorObject()
     : Object(interpreter().global_object().object_prototype())
 {
+    auto* languages = JS::Array::create(interpreter().global_object());
+    languages->elements().append(js_string(heap(), "en-US"));
+
     put("appCodeName", js_string(heap(), "Mozilla"));
     put("appName", js_string(heap(), "Netscape"));
     put("appVersion", js_string(heap(), "4.0"));
+    put("language", languages->elements().first());
+    put("languages", languages);
     put("platform", js_string(heap(), "SerenityOS"));
     put("product", js_string(heap(), "Gecko"));
 
