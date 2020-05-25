@@ -44,7 +44,8 @@ class ImageClient {
 public:
     virtual void image_did_add_layer(size_t) { }
     virtual void image_did_remove_layer(size_t) { }
-    virtual void image_did_update_layer(size_t) { }
+    virtual void image_did_modify_layer(size_t) { }
+    virtual void image_did_change() { }
 };
 
 class Image : public RefCounted<Image> {
@@ -72,8 +73,12 @@ public:
     void add_client(ImageClient&);
     void remove_client(ImageClient&);
 
+    void layer_did_modify_bitmap(Badge<Layer>, const Layer&);
+
 private:
     explicit Image(const Gfx::Size&);
+
+    void did_change();
 
     size_t index_of(const Layer&) const;
 

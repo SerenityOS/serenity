@@ -146,4 +146,19 @@ void Image::remove_client(ImageClient& client)
     m_clients.remove(&client);
 }
 
+void Image::layer_did_modify_bitmap(Badge<Layer>, const Layer& layer)
+{
+    auto layer_index = index_of(layer);
+    for (auto* client : m_clients)
+        client->image_did_modify_layer(layer_index);
+
+    did_change();
+}
+
+void Image::did_change()
+{
+    for (auto* client : m_clients)
+        client->image_did_change();
+}
+
 }

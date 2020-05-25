@@ -26,16 +26,18 @@
 
 #pragma once
 
+#include "Image.h"
 #include <LibGUI/Frame.h>
 #include <LibGfx/FloatPoint.h>
 
 namespace PixelPaint {
 
-class Image;
 class Layer;
 class Tool;
 
-class ImageEditor final : public GUI::Frame {
+class ImageEditor final
+    : public GUI::Frame
+    , public ImageClient {
     C_OBJECT(ImageEditor);
 
 public:
@@ -90,6 +92,8 @@ private:
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
+
+    virtual void image_did_change() override;
 
     GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent&, const Layer&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(const GUI::MouseEvent&) const;

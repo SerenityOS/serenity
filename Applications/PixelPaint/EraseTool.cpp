@@ -59,7 +59,7 @@ void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
     Gfx::Rect r = build_rect(event.position(), layer.rect());
     GUI::Painter painter(layer.bitmap());
     painter.clear_rect(r, get_color());
-    m_editor->update();
+    layer.did_modify_bitmap(*m_editor->image());
 }
 
 void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
@@ -68,7 +68,7 @@ void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
         Gfx::Rect r = build_rect(event.position(), layer.rect());
         GUI::Painter painter(layer.bitmap());
         painter.clear_rect(r, get_color());
-        m_editor->update();
+        layer.did_modify_bitmap(*m_editor->image());
     }
 }
 
