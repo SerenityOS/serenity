@@ -65,11 +65,12 @@ void EyesWidget::render_eyeball(int index, GUI::Painter& painter) const
 {
     auto eye_width = width() / m_num_eyes;
     Gfx::Rect bounds { index * eye_width, 0, eye_width, height() };
-    auto thickness = max((width() + height()) / 15, 1);
+    auto width_thickness = max(int(eye_width / 5.5), 1);
+    auto height_thickness = max(int(height() / 5.5), 1);
 
-    bounds.shrink(width() / 25, 0);
+    bounds.shrink(int(eye_width / 12.5), 0);
     painter.fill_ellipse(bounds, palette().base_text());
-    bounds.shrink(thickness, thickness);
+    bounds.shrink(width_thickness, height_thickness);
     painter.fill_ellipse(bounds, palette().base());
 
     Gfx::Point pupil_center = this->pupil_center(bounds);
