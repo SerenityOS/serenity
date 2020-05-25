@@ -58,9 +58,9 @@ class String {
 public:
     using ConstIterator = const char*;
 
-    ~String() {}
+    ~String() { }
 
-    String() {}
+    String() { }
     String(const StringView&);
 
     String(const String& other)
@@ -223,6 +223,15 @@ public:
     StringView view() const;
 
     int replace(const String& needle, const String& replacement, bool all_occurences = false);
+
+    bool is_one_of() { return false; }
+    template<typename T, typename... Rest>
+    bool is_one_of(const T& string, Rest... rest)
+    {
+        if (string == *this)
+            return true;
+        return is_one_of(rest...);
+    }
 
 private:
     RefPtr<StringImpl> m_impl;
