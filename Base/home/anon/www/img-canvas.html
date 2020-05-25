@@ -9,10 +9,10 @@
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            img = document.querySelectorAll("img")[0];
+            img = document.querySelector("img");
 
             img.addEventListener("load", function() {
-                var ctx = document.querySelectorAll("canvas")[0].getContext("2d");
+                var ctx = document.querySelector("canvas").getContext("2d");
                 ctx.fillStyle = '#666';
                 ctx.fillRect(0, 0, 400, 400);
                 ctx.scale(2, 2);

@@ -41,6 +41,7 @@ DocumentWrapper::DocumentWrapper(Document& document)
     : NodeWrapper(document)
 {
     put_native_function("getElementById", get_element_by_id, 1);
+    put_native_function("querySelector", query_selector, 1);
     put_native_function("querySelectorAll", query_selector_all, 1);
 }
 
@@ -86,6 +87,23 @@ JS::Value DocumentWrapper::get_element_by_id(JS::Interpreter& interpreter)
     return wrap(interpreter.heap(), const_cast<Element&>(*element));
 }
 
+JS::Value DocumentWrapper::query_selector(JS::Interpreter& interpreter)
+{
+    auto* document = document_from(interpreter);
+    if (!document)
+        return {};
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<JS::TypeError>("querySelector() needs one argument");
+    auto selector = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    // FIXME: Throw if selector is invalid
+    auto element = document->query_selector(selector);
+    if (!element)
+        return JS::js_null();
+    return wrap(interpreter.heap(), *element);
+}
+
 JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
 {
     auto* document = document_from(interpreter);
@@ -96,6 +114,7 @@ JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
     auto selector = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
+    // FIXME: Throw if selector is invalid
     auto elements = document->query_selector_all(selector);
     // FIXME: This should be a static NodeList, not a plain JS::Array.
     auto* node_list = JS::Array::create(interpreter.global_object());
