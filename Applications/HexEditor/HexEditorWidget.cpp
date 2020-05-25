@@ -58,7 +58,7 @@ HexEditorWidget::HexEditorWidget()
         m_statusbar->set_text(1, String::format("Edit Mode: %s", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
         m_statusbar->set_text(2, String::format("Selection Start: %d", selection_start));
         m_statusbar->set_text(3, String::format("Selection End: %d", selection_end));
-        m_statusbar->set_text(4, String::format("Selected Bytes: %d", (selection_end - selection_start) + 1));
+        m_statusbar->set_text(4, String::format("Selected Bytes: %d", abs(selection_end - selection_start) + 1));
     };
 
     m_editor->on_change = [this] {
