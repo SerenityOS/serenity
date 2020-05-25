@@ -104,6 +104,9 @@ int main(int argc, char** argv)
         }
     });
 
+    // Ignore SIGTSTP as the shell should not be suspended with ^Z.
+    signal(SIGTSTP, [](auto) {});
+
     if (argc > 2 && !strcmp(argv[1], "-c")) {
         dbgprintf("sh -c '%s'\n", argv[2]);
         shell->run_command(argv[2]);
