@@ -41,6 +41,11 @@
         ASSERT_NOT_REACHED(); \
     } while (0)
 
+#define PARSE_ERROR()            \
+    do {                         \
+        dbg() << "Parse error!"; \
+    } while (0)
+
 namespace Web {
 
 HTMLDocumentParser::HTMLDocumentParser(const StringView& input)
@@ -353,8 +358,7 @@ void HTMLDocumentParser::close_a_p_element()
 {
     generate_implied_end_tags("p");
     if (current_node().tag_name() != "p") {
-        // Parse error.
-        TODO();
+        PARSE_ERROR();
     }
     for (;;) {
         auto popped_element = m_stack_of_open_elements.pop();
