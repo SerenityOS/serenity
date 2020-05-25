@@ -32,8 +32,6 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -54,9 +52,6 @@ ConsoleWidget::ConsoleWidget()
     base_document->append_child(html_element);
     auto head_element = create_element(base_document, "head");
     html_element->append_child(head_element);
-    auto style_element = create_element(base_document, "style");
-    style_element->append_child(adopt(*new Web::Text(base_document, create_document_style())));
-    head_element->append_child(style_element);
     auto body_element = create_element(base_document, "body");
     html_element->append_child(body_element);
     m_console_output_container = body_element;
@@ -121,45 +116,6 @@ void ConsoleWidget::set_interpreter(WeakPtr<JS::Interpreter> interpreter)
     clear_output();
 }
 
-String ConsoleWidget::create_document_style()
-{
-    StringBuilder style;
-    auto palette = this->palette();
-
-    auto add_class_and_color = [&](const StringView& class_name, Color color, bool bold = false) {
-        style.append(".");
-        style.append(class_name);
-        style.append(" { color: ");
-        style.append(color.to_string_without_alpha());
-        style.append(";");
-
-        if (bold) {
-            style.append("font-weight: bold;");
-        }
-
-        style.append(" } ");
-    };
-
-    add_class_and_color("js-string", palette.syntax_string());
-    add_class_and_color("js-number", palette.syntax_number());
-    add_class_and_color("js-boolean", palette.syntax_keyword(), true);
-    add_class_and_color("js-null", palette.syntax_keyword(), true);
-    add_class_and_color("js-undefined", palette.syntax_keyword(), true);
-    add_class_and_color("js-array-open", palette.syntax_punctuation());
-    add_class_and_color("js-array-close", palette.syntax_punctuation());
-    add_class_and_color("js-array-element-separator", palette.syntax_punctuation());
-    add_class_and_color("js-object-open", palette.syntax_punctuation());
-    add_class_and_color("js-object-close", palette.syntax_punctuation());
-    add_class_and_color("js-object-element-separator", palette.syntax_punctuation());
-    add_class_and_color("js-object-element-index", palette.syntax_number());
-    add_class_and_color("js-object-element-key", palette.syntax_string());
-
-    // FIXME: Add to palette?
-    add_class_and_color("js-error-name", Color::Red, true);
-
-    return style.to_string();
-}
-
 void ConsoleWidget::print_source_line(const StringView& source)
 {
     StringBuilder html;
@@ -167,8 +123,7 @@ void ConsoleWidget::print_source_line(const StringView& source)
     html.append("&gt; ");
     html.append("</span>");
 
-    // FIXME: Support output source highlighting
-    html.append(source);
+    html.append(JS::MarkupGenerator::html_from_source(source));
 
     print_html(html.string_view());
 }
