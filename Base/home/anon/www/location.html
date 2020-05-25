@@ -12,7 +12,7 @@
     <div id="set_href">Click me to set location.href!</div>
     <div id="reload">Click me to call location.reload()!</div>
     <script>
-        var pre = document.querySelectorAll("pre")[0];
+        var pre = document.querySelector("pre");
         pre.innerHTML += "href: " + location.href + '\n';
         pre.innerHTML += "protocol: " + location.protocol + '\n';
         pre.innerHTML += "host: " + location.host + '\n';
