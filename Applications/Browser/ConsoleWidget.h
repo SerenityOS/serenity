@@ -47,13 +47,6 @@ private:
 
     String create_document_style();
 
-    void print_value(JS::Value, StringBuilder& output_html, HashTable<JS::Object*> seen_objects = {});
-    void print_array(const JS::Array&, StringBuilder& output_html, HashTable<JS::Object*>&);
-    void print_object(const JS::Object&, StringBuilder& output_html, HashTable<JS::Object*>&);
-    void print_function(const JS::Object&, StringBuilder& output_html, HashTable<JS::Object*>&);
-    void print_date(const JS::Object&, StringBuilder& output_html, HashTable<JS::Object*>&);
-    void print_error(const JS::Object&, StringBuilder& output_html, HashTable<JS::Object*>&);
-
     RefPtr<GUI::TextBox> m_console_input;
     RefPtr<Web::HtmlView> m_console_output_view;
     RefPtr<Web::Element> m_console_output_container;
