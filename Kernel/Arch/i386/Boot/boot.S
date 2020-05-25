@@ -42,8 +42,14 @@ boot_pd0:
 .global boot_pd3
 boot_pd3:
 .skip 4096
-.global boot_pd3_pde1023_pt
-boot_pd3_pde1023_pt:
+.global boot_pd0_pt0
+boot_pd0_pt0:
+.skip 4096 * 4
+.global boot_pd3_pts
+boot_pd3_pts:
+.skip 4096 * 4
+.global boot_pd3_pt1023
+boot_pd3_pt1023:
 .skip 4096
 
 .section .text
@@ -69,18 +75,18 @@ pdpt
 
 boot_pd0 : 512 pde's
 
-    0: (0-2MB) (id 2MB page)
-    1: (2-4MB) (id 2MB page)
-    2: (4-6MB) (id 2MB page)
-    3: (6-8MB) (id 2MB page)
+    0: boot_pd0_pt0 (0-2MB) (id 512 4KB pages)
 
 boot_pd3 : 512 pde's
 
-    0: boot_pd3_pde0 (3072-3074MB) (pseudo)
-    1: boot_pd3_pde1 (3074-3076MB) (pseudo)
-    2: boot_pd3_pde2 (3076-3078MB) (pseudo)
-    3: boot_pd3_pde3 (3078-3080MB) (pseudo)
-    4: boot_pd3_pde1023_pt (4094-4096MB) (for page table mappings)
+    0: boot_pd3_pts[0] (3072-3074MB) (pseudo 512 4KB pages)
+    1: boot_pd3_pts[1] (3074-3076MB) (pseudo 512 4KB pages)
+    2: boot_pd3_pts[2] (3076-3078MB) (pseudo 512 4KB pages)
+    3: boot_pd3_pts[3] (3078-3080MB) (pseudo 512 4KB pages)
+    4: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
+
+the 9 page tables each contain 512 pte's that map individual 4KB pages
+
 */
 
 start:
@@ -104,41 +110,74 @@ start:
     xorl %eax, %eax
     rep stosl
 
-    /* identity map bottom 8MB using 2MB pages (only PDE, no PTE) */
-    movl $4, %ecx
-    xorl %eax, %eax
-    movl $(boot_pd0 - 0xc0000000), %edi
-1:
-    movl %eax, 0(%edi)
-    /* PS(2MB) + R/W + Present */
-    orl $0x83, 0(%edi)
-
-    addl $8, %edi
-    addl $(1048576 * 2), %eax
-    loop 1b
-
     /* clear pd3 */
     movl $(boot_pd3 - 0xc0000000), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
-    /* pseudo-identity map first 8MB above 3GB mark using 2MB pages again */
-    movl $4, %ecx
+    /* clear pd0's pt's */
+    movl $(boot_pd0_pt0 - 0xc0000000), %edi
+    movl $(1024 * 4), %ecx
     xorl %eax, %eax
+    rep stosl
+
+    /* clear pd3's pt's */
+    movl $(boot_pd3_pts - 0xc0000000), %edi
+    movl $(1024 * 5), %ecx
+    xorl %eax, %eax
+    rep stosl
+
+    /* add boot_pd0_pt0 to boot_pd0 */
+    movl $(boot_pd0 - 0xc0000000), %edi
+    movl $(boot_pd0_pt0 - 0xc0000000), %eax
+    movl %eax, 0(%edi)
+    /* R/W + Present */
+    orl $0x3, 0(%edi)
+
+    /* add boot_pd3_pts to boot_pd3 */
+    movl $4, %ecx
     movl $(boot_pd3 - 0xc0000000), %edi
+    movl $(boot_pd3_pts - 0xc0000000), %eax
+
 1:
     movl %eax, 0(%edi)
-    /* PS(2MB) + R/W + Present */
-    orl $0x83, 0(%edi)
-
+    /* R/W + Present */
+    orl $0x3, 0(%edi)
     addl $8, %edi
-    addl $(1048576 * 2), %eax
+    addl $4096, %eax
+    loop 1b
+
+    /* identity map the 0 to 2MB range */
+    movl $512, %ecx
+    movl $(boot_pd0_pt0 - 0xc0000000), %edi
+    /*movl $0x100000, %eax*/
+    xorl %eax, %eax
+
+1:
+    movl %eax, 0(%edi)
+    /* R/W + Present */
+    orl $0x3, 0(%edi)
+    addl $8, %edi
+    addl $4096, %eax
+    loop 1b
+
+    /* pseudo identity map the 3072-3080MB range */
+    movl $(512 * 4), %ecx
+    movl $(boot_pd3_pts - 0xc0000000), %edi
+    xorl %eax, %eax
+
+1:
+    movl %eax, 0(%edi)
+    /* R/W + Present */
+    orl $0x3, 0(%edi)
+    addl $8, %edi
+    addl $4096, %eax
     loop 1b
 
     /* create an empty page table for the top 2MB at the 4GB mark */
     movl $(boot_pd3 - 0xc0000000), %edi
-    movl $(boot_pd3_pde1023_pt - 0xc0000000), 4088(%edi)
+    movl $(boot_pd3_pt1023 - 0xc0000000), 4088(%edi)
     orl $0x3, 4088(%edi)
     movl $0, 4092(%edi)
 
@@ -158,10 +197,9 @@ start:
 
     /* jmp to an address above the 3GB mark */
     push %cs
-    push $1f
+    push $1f 
     retf
 1:
-
     movl %cr3, %eax
     movl %eax, %cr3
 
