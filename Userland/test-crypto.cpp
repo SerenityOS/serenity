@@ -113,7 +113,12 @@ int run(Function<void(const char*, size_t)> fn)
         Line::Editor editor;
         editor.initialize();
         for (;;) {
-            auto line = editor.get_line("> ");
+            auto line_result = editor.get_line("> ");
+
+            if (line_result.is_error())
+                break;
+            auto& line = line_result.value();
+
             if (line == ".wait") {
                 loop.exec();
             } else {

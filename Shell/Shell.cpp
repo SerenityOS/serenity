@@ -1701,19 +1701,29 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
     return suggestions;
 }
 
-void Shell::read_single_line()
+bool Shell::read_single_line()
 {
-    auto line = editor.get_line(prompt());
+    auto line_result = editor.get_line(prompt());
+
+    if (line_result.is_error()) {
+        m_complete_line_builder.clear();
+        m_should_continue = ContinuationRequest::Nothing;
+        m_should_break_current_command = false;
+        Core::EventLoop::current().quit(line_result.error() == Line::Editor::Error::Eof ? 0 : 1);
+        return false;
+    }
+
+    auto& line = line_result.value();
 
     if (m_should_break_current_command) {
         m_complete_line_builder.clear();
         m_should_continue = ContinuationRequest::Nothing;
         m_should_break_current_command = false;
-        return;
+        return true;
     }
 
     if (line.is_empty())
-        return;
+        return true;
 
     // FIXME: This might be a bit counter-intuitive, since we put nothing
     //        between the two lines, even though the user has pressed enter
@@ -1725,17 +1735,18 @@ void Shell::read_single_line()
     m_should_continue = complete_or_exit_code.continuation;
 
     if (!complete_or_exit_code.has_value())
-        return;
+        return true;
 
     editor.add_to_history(m_complete_line_builder.build());
     m_complete_line_builder.clear();
+    return true;
 }
 
 void Shell::custom_event(Core::CustomEvent& event)
 {
     if (event.custom_type() == ReadLine) {
-        read_single_line();
-        Core::EventLoop::current().post_event(*this, make<Core::CustomEvent>(ShellEventType::ReadLine));
+        if (read_single_line())
+            Core::EventLoop::current().post_event(*this, make<Core::CustomEvent>(ShellEventType::ReadLine));
         return;
     }
 
