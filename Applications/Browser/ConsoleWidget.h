@@ -45,6 +45,8 @@ public:
 private:
     ConsoleWidget();
 
+    String create_document_style();
+
     void print_value(JS::Value, StringBuilder& output_html, HashTable<JS::Object*> seen_objects = {});
     void print_array(const JS::Array&, StringBuilder& output_html, HashTable<JS::Object*>&);
     void print_object(const JS::Object&, StringBuilder& output_html, HashTable<JS::Object*>&);
