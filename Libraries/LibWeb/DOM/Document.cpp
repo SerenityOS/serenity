@@ -321,6 +321,26 @@ Vector<const Element*> Document::get_elements_by_name(const String& name) const
     return elements;
 }
 
+RefPtr<Element> Document::query_selector(const StringView& selector_text)
+{
+    auto selector = parse_selector(selector_text);
+    if (!selector.has_value())
+        return {};
+
+    dump_selector(selector.value());
+
+    RefPtr<Element> result;
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (SelectorEngine::matches(selector.value(), element)) {
+            result = element;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    return result;
+}
+
 NonnullRefPtrVector<Element> Document::query_selector_all(const StringView& selector_text)
 {
     auto selector = parse_selector(selector_text);
