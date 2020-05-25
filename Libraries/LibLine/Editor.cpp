@@ -224,7 +224,7 @@ void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode o
     m_suggestion_manager.set_suggestion_variants(internal_static_offset, internal_invariant_offset, 0);
 }
 
-String Editor::get_line(const String& prompt)
+Result<String, Editor::Error> Editor::get_line(const String& prompt)
 {
     initialize();
     m_is_editing = true;
@@ -239,6 +239,9 @@ String Editor::get_line(const String& prompt)
         if (m_always_refresh)
             m_refresh_needed = true;
         refresh_display();
+        if (m_input_error.has_value()) {
+            return m_input_error.value();
+        }
         if (m_finish) {
             m_finish = false;
             printf("\n");
@@ -279,17 +282,18 @@ String Editor::get_line(const String& prompt)
                 m_refresh_needed = true;
                 continue;
             }
+
+            ScopedValueRollback errno_restorer(errno);
             perror("read failed");
-            // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
-            exit(2);
+
+            return Error::ReadFailure;
         }
 
         m_incomplete_data.append(keybuf, nread);
         nread = m_incomplete_data.size();
 
-        // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
         if (nread == 0)
-            exit(0);
+            return Error::Empty;
 
         auto reverse_tab = false;
         auto ctrl_held = false;
@@ -710,11 +714,18 @@ String Editor::get_line(const String& prompt)
                     fflush(stdout);
 
                     auto search_prompt = "\x1b[32msearch:\x1b[0m ";
-                    auto search_string = m_search_editor->get_line(search_prompt);
+                    auto search_string_result = m_search_editor->get_line(search_prompt);
 
                     m_search_editor = nullptr;
                     m_is_searching = false;
                     m_search_offset = 0;
+
+                    if (search_string_result.is_error()) {
+                        // Somethine broke, fail
+                        return search_string_result;
+                    }
+
+                    auto& search_string = search_string_result.value();
 
                     // Manually cleanup the search line.
                     reposition_cursor();
@@ -740,8 +751,9 @@ String Editor::get_line(const String& prompt)
             if (codepoint == m_termios.c_cc[VEOF]) {
                 if (m_buffer.is_empty()) {
                     printf("<EOF>\n");
-                    if (!m_always_refresh) // This is a little off, but it'll do for now
-                        exit(0);
+                    if (!m_always_refresh) {
+                        return Error::Eof;
+                    }
                 }
                 continue;
             }
@@ -1246,10 +1258,21 @@ Vector<size_t, 2> Editor::vt_dsr()
         (void)select(1, &readfds, nullptr, nullptr, &timeout);
         if (FD_ISSET(0, &readfds)) {
             auto nread = read(0, buf, 16);
+            if (nread < 0) {
+                m_input_error = Error::ReadFailure;
+                break;
+            }
+
+            if (nread == 0)
+                break;
+
             m_incomplete_data.append(buf, nread);
             more_junk_to_read = true;
         }
     } while (more_junk_to_read);
+
+    if (m_input_error.has_value())
+        return { 1, 1 };
 
     fputs("\033[6n", stdout);
     fflush(stdout);
@@ -1262,9 +1285,11 @@ Vector<size_t, 2> Editor::vt_dsr()
                 continue;
             }
             dbg() << "Error while reading DSR: " << strerror(errno);
+            m_input_error = Error::ReadFailure;
             return { 1, 1 };
         }
         if (nread == 0) {
+            m_input_error = Error::Empty;
             dbg() << "Terminal DSR issue; received no response";
             return { 1, 1 };
         }
