@@ -318,18 +318,15 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
         ASSERT_NOT_REACHED();
     }
 
-    {
-        Vector<String> names = { "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title" };
-        if (token.is_start_tag() && names.contains_slow(token.tag_name())) {
-            ASSERT_NOT_REACHED();
-        }
+    if (token.is_start_tag() && token.tag_name().is_one_of("base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title")) {
+        ASSERT_NOT_REACHED();
     }
 
     if (token.is_end_tag() && token.tag_name() == "template") {
         ASSERT_NOT_REACHED();
     }
 
-    if (token.is_end_tag() && (token.tag_name() == "body" || token.tag_name() == "html" || token.tag_name() == "br")) {
+    if (token.is_end_tag() && token.tag_name().is_one_of("body", "html", "br")) {
         goto AnythingElse;
     }
 
@@ -348,8 +345,7 @@ AnythingElse:
 
 void HTMLDocumentParser::generate_implied_end_tags(const FlyString& exception)
 {
-    static Vector<FlyString> names { "dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc" };
-    while (current_node().tag_name() != exception && names.contains_slow(current_node().tag_name()))
+    while (current_node().tag_name() != exception && current_node().tag_name().is_one_of("dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc"))
         m_stack_of_open_elements.pop();
 }
 
@@ -472,50 +468,44 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
-    {
-        static Vector<FlyString> names { "h1", "h2", "h3", "h4", "h5", "h6" };
-        if (token.is_start_tag() && names.contains_slow(token.tag_name())) {
-            if (m_stack_of_open_elements.has_in_button_scope("p"))
-                close_a_p_element();
-            if (names.contains_slow(current_node().tag_name())) {
-                // FIXME: This is a parse error!
-                TODO();
-            }
-            insert_html_element(token);
-            return;
+    if (token.is_start_tag() && token.tag_name().is_one_of("h1", "h2", "h3", "h4", "h5", "h6")) {
+        if (m_stack_of_open_elements.has_in_button_scope("p"))
+            close_a_p_element();
+        if (current_node().tag_name().is_one_of("h1", "h2", "h3", "h4", "h5", "h6")) {
+            // FIXME: This is a parse error!
+            TODO();
         }
+        insert_html_element(token);
+        return;
     }
 
-    {
-        static Vector<FlyString> names { "h1", "h2", "h3", "h4", "h5", "h6" };
-        if (token.is_end_tag() && names.contains_slow(token.tag_name())) {
-            if (!m_stack_of_open_elements.has_in_scope("h1")
-                && !m_stack_of_open_elements.has_in_scope("h2")
-                && !m_stack_of_open_elements.has_in_scope("h3")
-                && !m_stack_of_open_elements.has_in_scope("h4")
-                && !m_stack_of_open_elements.has_in_scope("h5")
-                && !m_stack_of_open_elements.has_in_scope("h6")) {
-                TODO();
-            }
-
-            generate_implied_end_tags();
-            if (current_node().tag_name() != token.tag_name()) {
-                TODO();
-            }
-
-            for (;;) {
-                auto popped_element = m_stack_of_open_elements.pop();
-                if (popped_element->tag_name() == "h1"
-                    || popped_element->tag_name() == "h2"
-                    || popped_element->tag_name() == "h3"
-                    || popped_element->tag_name() == "h4"
-                    || popped_element->tag_name() == "h5"
-                    || popped_element->tag_name() == "h6") {
-                    break;
-                }
-            }
-            return;
+    if (token.is_end_tag() && token.tag_name().is_one_of("h1", "h2", "h3", "h4", "h5", "h6")) {
+        if (!m_stack_of_open_elements.has_in_scope("h1")
+            && !m_stack_of_open_elements.has_in_scope("h2")
+            && !m_stack_of_open_elements.has_in_scope("h3")
+            && !m_stack_of_open_elements.has_in_scope("h4")
+            && !m_stack_of_open_elements.has_in_scope("h5")
+            && !m_stack_of_open_elements.has_in_scope("h6")) {
+            TODO();
         }
+
+        generate_implied_end_tags();
+        if (current_node().tag_name() != token.tag_name()) {
+            TODO();
+        }
+
+        for (;;) {
+            auto popped_element = m_stack_of_open_elements.pop();
+            if (popped_element->tag_name() == "h1"
+                || popped_element->tag_name() == "h2"
+                || popped_element->tag_name() == "h3"
+                || popped_element->tag_name() == "h4"
+                || popped_element->tag_name() == "h5"
+                || popped_element->tag_name() == "h6") {
+                break;
+            }
+        }
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name() == "p") {
@@ -527,8 +517,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     {
-        static Vector<FlyString> names { "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u" };
-        if (token.is_start_tag() && names.contains_slow(token.tag_name())) {
+        if (token.is_start_tag() && token.tag_name().is_one_of("b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) {
             reconstruct_the_active_formatting_elements();
             auto element = insert_html_element(token);
             m_list_of_active_formatting_elements.append(*element);
@@ -536,30 +525,27 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
     }
 
-    {
-        Vector<String> names { "address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul" };
-        if (token.is_start_tag() && names.contains_slow(token.tag_name())) {
-            // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
-            insert_html_element(token);
-            return;
+    if (token.is_start_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
+        // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
+        insert_html_element(token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
+        // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
+
+        if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
+            ASSERT_NOT_REACHED();
         }
 
-        if (token.is_end_tag() && names.contains_slow(token.tag_name())) {
-            // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
+        generate_implied_end_tags();
 
-            if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
-                ASSERT_NOT_REACHED();
-            }
-
-            generate_implied_end_tags();
-
-            if (current_node().tag_name() != token.tag_name()) {
-                ASSERT_NOT_REACHED();
-            }
-
-            m_stack_of_open_elements.pop();
-            return;
+        if (current_node().tag_name() != token.tag_name()) {
+            ASSERT_NOT_REACHED();
         }
+
+        m_stack_of_open_elements.pop();
+        return;
     }
 
     if (token.is_start_tag()) {
