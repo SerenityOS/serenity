@@ -6,6 +6,7 @@ set(SOURCES
     Heap/Heap.cpp
     Interpreter.cpp
     Lexer.cpp
+    MarkupGenerator.cpp
     Parser.cpp
     Runtime/ArrayConstructor.cpp
     Runtime/Array.cpp

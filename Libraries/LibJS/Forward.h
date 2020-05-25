@@ -73,6 +73,7 @@ class ScopeNode;
 class Shape;
 class Statement;
 class Symbol;
+class Token;
 class Uint8ClampedArray;
 class Value;
 enum class DeclarationKind;

@@ -30,6 +30,7 @@
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextBox.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/MarkupGenerator.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Date.h>
@@ -93,16 +94,14 @@ ConsoleWidget::ConsoleWidget()
         if (m_interpreter->exception()) {
             StringBuilder output_html;
             output_html.append("Uncaught exception: ");
-            print_value(m_interpreter->exception()->value(), output_html);
+            output_html.append(JS::MarkupGenerator::html_from_value(m_interpreter->exception()->value()));
             print_html(output_html.string_view());
 
             m_interpreter->clear_exception();
             return;
         }
 
-        StringBuilder output_html;
-        print_value(m_interpreter->last_value(), output_html);
-        print_html(output_html.string_view());
+        print_html(JS::MarkupGenerator::html_from_value(m_interpreter->last_value()));
     };
 }
 
@@ -172,155 +171,6 @@ void ConsoleWidget::print_source_line(const StringView& source)
     html.append(source);
 
     print_html(html.string_view());
-}
-
-void ConsoleWidget::print_value(JS::Value value, StringBuilder& output_html, HashTable<JS::Object*> seen_objects)
-{
-    // FIXME: Support output highlighting
-
-    if (value.is_empty()) {
-        output_html.append("<span class=\"empty-object\">");
-        output_html.append("&lt;empty&gt;");
-        output_html.append("</span>");
-        return;
-    }
-
-    if (value.is_object()) {
-        if (seen_objects.contains(&value.as_object())) {
-            // FIXME: Maybe we should only do this for circular references,
-            //        not for all reoccurring objects.
-            output_html.append("<span class=\"already-printed\">");
-            output_html.appendf("&lt;already printed Object %p&gt;", &value.as_object());
-            output_html.append("</span>");
-            return;
-        }
-        seen_objects.set(&value.as_object());
-    }
-
-    if (value.is_array())
-        return print_array(static_cast<const JS::Array&>(value.as_object()), output_html, seen_objects);
-
-    if (value.is_object()) {
-        auto& object = value.as_object();
-        if (object.is_function())
-            return print_function(object, output_html, seen_objects);
-        if (object.is_date())
-            return print_date(object, output_html, seen_objects);
-        if (object.is_error())
-            return print_error(object, output_html, seen_objects);
-        return print_object(object, output_html, seen_objects);
-    }
-
-    if (value.is_string())
-        output_html.append("<span class=\"js-string\">");
-    else if (value.is_number())
-        output_html.append("<span class=\"js-number\">");
-    else if (value.is_boolean())
-        output_html.append("<span class=\"js-boolean\">");
-    else if (value.is_null())
-        output_html.append("<span class=\"js-null\">");
-    else if (value.is_undefined())
-        output_html.append("<span class=\"js-undefined\">");
-
-    if (value.is_string())
-        output_html.append('"');
-    output_html.append(value.to_string_without_side_effects());
-    if (value.is_string())
-        output_html.append('"');
-
-    output_html.append("</span>");
-}
-
-void ConsoleWidget::print_array(const JS::Array& array, StringBuilder& html_output, HashTable<JS::Object*>& seen_objects)
-{
-    html_output.append("<span class=\"js-array-open\">");
-    html_output.append("[ ");
-    html_output.append("</span>");
-    for (size_t i = 0; i < array.elements().size(); ++i) {
-        print_value(array.elements()[i], html_output, seen_objects);
-        if (i != array.elements().size() - 1) {
-            html_output.append("<span class=\"js-array-element-separator\">");
-            html_output.append(", ");
-            html_output.append("</span>");
-        }
-    }
-    html_output.append("<span class=\"js-array-close\">");
-    html_output.append(" ]");
-    html_output.append("</span>");
-}
-
-void ConsoleWidget::print_object(const JS::Object& object, StringBuilder& html_output, HashTable<JS::Object*>& seen_objects)
-{
-    html_output.append("<span class=\"js-object-open\">");
-    html_output.append("{ ");
-    html_output.append("</span>");
-
-    for (size_t i = 0; i < object.elements().size(); ++i) {
-        if (object.elements()[i].is_empty())
-            continue;
-        html_output.append("<span class=\"js-object-element-index\">");
-        html_output.appendf("%zu", i);
-        html_output.append("</span>");
-        html_output.append(": ");
-        print_value(object.elements()[i], html_output, seen_objects);
-        if (i != object.elements().size() - 1) {
-            html_output.append("<span class=\"js-object-element-separator\">");
-            html_output.append(", ");
-            html_output.append("</span>");
-        }
-    }
-
-    if (!object.elements().is_empty() && object.shape().property_count()) {
-        html_output.append("<span class=\"js-object-element-separator\">");
-        html_output.append(", ");
-        html_output.append("</span>");
-    }
-
-    size_t index = 0;
-    for (auto& it : object.shape().property_table_ordered()) {
-        html_output.append("<span class=\"js-object-element-key\">");
-        html_output.appendf("\"%s\"", it.key.characters());
-        html_output.append("</span>");
-        html_output.append(": ");
-        print_value(object.get_direct(it.value.offset), html_output, seen_objects);
-        if (index != object.shape().property_count() - 1) {
-            html_output.append("<span class=\"js-object-element-separator\">");
-            html_output.append(", ");
-            html_output.append("</span>");
-        }
-        ++index;
-    }
-
-    html_output.append("<span class=\"js-object-close\">");
-    html_output.append(" }");
-    html_output.append("</span>");
-}
-
-void ConsoleWidget::print_function(const JS::Object& function, StringBuilder& html_output, HashTable<JS::Object*>&)
-{
-    html_output.append("<span class=\"js-function\">");
-    html_output.appendf("[%s]", function.class_name());
-    html_output.append("</span>");
-}
-
-void ConsoleWidget::print_date(const JS::Object& date, StringBuilder& html_output, HashTable<JS::Object*>&)
-{
-    html_output.append("<span class=\"js-date\">");
-    html_output.appendf("Date %s", static_cast<const JS::Date&>(date).string().characters());
-    html_output.append("</span>");
-}
-
-void ConsoleWidget::print_error(const JS::Object& object, StringBuilder& html_output, HashTable<JS::Object*>&)
-{
-    auto& error = static_cast<const JS::Error&>(object);
-    html_output.append("<span class=\"js-error-name\">");
-    html_output.appendf("[%s]", error.name().characters());
-    html_output.append("</span>");
-    if (!error.message().is_empty()) {
-        html_output.append("<span class=\"js-error-message\">");
-        html_output.appendf(": %s", error.message().characters());
-        html_output.append("</span>");
-    }
 }
 
 void ConsoleWidget::print_html(const StringView& line)
