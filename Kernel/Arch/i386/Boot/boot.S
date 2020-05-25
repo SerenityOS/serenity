@@ -151,7 +151,6 @@ start:
     /* identity map the 0 to 2MB range */
     movl $512, %ecx
     movl $(boot_pd0_pt0 - 0xc0000000), %edi
-    /*movl $0x100000, %eax*/
     xorl %eax, %eax
 
 1:
@@ -202,6 +201,16 @@ start:
 1:
     movl %cr3, %eax
     movl %eax, %cr3
+
+    /* unmap the 0-1MB range, which isn't used after jmp-ing up here */
+    movl $256, %ecx
+    movl $(boot_pd0_pt0 - 0xc0000000), %edi
+    xorl %eax, %eax
+
+1:
+    movl %eax, 0(%edi)
+    addl $8, %edi
+    loop 1b
 
     /* set up initial stack and jump into C++ land */
     mov $stack_top, %esp
