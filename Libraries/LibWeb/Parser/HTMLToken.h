@@ -92,6 +92,18 @@ public:
         return m_tag.self_closing;
     }
 
+    bool has_acknowledged_self_closing_flag() const
+    {
+        ASSERT(is_self_closing());
+        return m_tag.self_closing_acknowledged;
+    }
+
+    void acknowledge_self_closing_flag_if_set()
+    {
+        if (is_self_closing())
+            m_tag.self_closing_acknowledged = true;
+    }
+
     Type type() const { return m_type; }
 
     String to_string() const;
@@ -117,6 +129,7 @@ private:
     struct {
         StringBuilder tag_name;
         bool self_closing { false };
+        bool self_closing_acknowledged { false };
         Vector<AttributeBuilder> attributes;
     } m_tag;
 
