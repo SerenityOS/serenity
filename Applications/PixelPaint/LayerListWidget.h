@@ -52,17 +52,31 @@ private:
 
     virtual void image_did_add_layer(size_t) override;
     virtual void image_did_remove_layer(size_t) override;
-    virtual void image_did_modify_layer(size_t);
+    virtual void image_did_modify_layer(size_t) override;
+    virtual void image_did_modify_layer_stack() override;
 
+    void rebuild_gadgets();
     void relayout_gadgets();
+
+    size_t hole_index_during_move() const;
 
     struct Gadget {
         size_t layer_index { 0 };
         Gfx::Rect rect;
+        Gfx::Rect temporary_rect_during_move;
+        bool is_moving { false };
+        Gfx::Point movement_delta;
     };
+
+    bool is_moving_gadget() const { return m_moving_gadget_index.has_value(); }
+
+    Optional<size_t> gadget_at(const Gfx::Point&);
 
     Vector<Gadget> m_gadgets;
     RefPtr<Image> m_image;
+
+    Optional<size_t> m_moving_gadget_index;
+    Gfx::Point m_moving_event_origin;
 };
 
 }

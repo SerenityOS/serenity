@@ -39,10 +39,22 @@ ImageEditor::ImageEditor()
 {
 }
 
+ImageEditor::~ImageEditor()
+{
+    if (m_image)
+        m_image->remove_client(*this);
+}
+
 void ImageEditor::set_image(RefPtr<Image> image)
 {
+    if (m_image)
+        m_image->remove_client(*this);
+
     m_image = move(image);
     update();
+
+    if (m_image)
+        m_image->add_client(*this);
 }
 
 void ImageEditor::paint_event(GUI::PaintEvent& event)
