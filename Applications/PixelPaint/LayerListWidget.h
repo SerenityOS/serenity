@@ -26,62 +26,43 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/Vector.h>
-#include <LibGUI/Forward.h>
-#include <LibGfx/Forward.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/Size.h>
+#include "Image.h"
+#include <LibGUI/Widget.h>
 
 namespace PixelPaint {
 
-class Layer;
+class LayerListWidget final
+    : public GUI::Widget
+    , ImageClient {
+    C_OBJECT(LayerListWidget);
 
-class ImageClient {
 public:
-    virtual void image_did_add_layer(size_t) { }
-    virtual void image_did_remove_layer(size_t) { }
-    virtual void image_did_update_layer(size_t) { }
-};
+    virtual ~LayerListWidget() override;
 
-class Image : public RefCounted<Image> {
-public:
-    static RefPtr<Image> create_with_size(const Gfx::Size&);
-
-    size_t layer_count() const { return m_layers.size(); }
-    const Layer& layer(size_t index) const { return m_layers.at(index); }
-
-    const Gfx::Size& size() const { return m_size; }
-    Gfx::Rect rect() const { return { {}, m_size }; }
-
-    void add_layer(NonnullRefPtr<Layer>);
-
-    void paint_into(GUI::Painter&, const Gfx::Rect& dest_rect);
-
-    GUI::Model& layer_model();
-
-    void move_layer_to_front(Layer&);
-    void move_layer_to_back(Layer&);
-    void move_layer_up(Layer&);
-    void move_layer_down(Layer&);
-    void remove_layer(Layer&);
-
-    void add_client(ImageClient&);
-    void remove_client(ImageClient&);
+    void set_image(Image*);
 
 private:
-    explicit Image(const Gfx::Size&);
+    explicit LayerListWidget();
 
-    size_t index_of(const Layer&) const;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
 
-    Gfx::Size m_size;
-    NonnullRefPtrVector<Layer> m_layers;
-    RefPtr<GUI::Model> m_layer_model;
+    virtual void image_did_add_layer(size_t) override;
+    virtual void image_did_remove_layer(size_t) override;
+    virtual void image_did_update_layer(size_t);
 
-    HashTable<ImageClient*> m_clients;
+    void relayout_gadgets();
+
+    struct Gadget {
+        size_t layer_index { 0 };
+        Gfx::Rect rect;
+    };
+
+    Vector<Gadget> m_gadgets;
+    RefPtr<Image> m_image;
 };
 
 }

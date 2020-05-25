@@ -28,6 +28,7 @@
 #include "Image.h"
 #include "ImageEditor.h"
 #include "Layer.h"
+#include "LayerListWidget.h"
 #include "PaletteWidget.h"
 #include "Tool.h"
 #include "ToolboxWidget.h"
@@ -84,11 +85,14 @@ int main(int argc, char** argv)
     vertical_container.add<PixelPaint::PaletteWidget>(image_editor);
 
     auto& right_panel = horizontal_container.add<GUI::Widget>();
+    right_panel.set_fill_with_background_color(true);
     right_panel.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     right_panel.set_preferred_size(230, 0);
     right_panel.set_layout<GUI::VerticalBoxLayout>();
 
     auto& layer_table_view = right_panel.add<GUI::TableView>();
+
+    auto& layer_list_widget = right_panel.add<PixelPaint::LayerListWidget>();
 
     window->show();
 
@@ -123,58 +127,74 @@ int main(int argc, char** argv)
     });
 
     auto& layer_menu = menubar->add_menu("Layer");
-    layer_menu.add_action(GUI::Action::create("Create new layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
-        auto dialog = PixelPaint::CreateNewLayerDialog::construct(image_editor.image()->size(), window);
-        if (dialog->exec() == GUI::Dialog::ExecOK) {
-            auto layer = PixelPaint::Layer::create_with_size(dialog->layer_size(), dialog->layer_name());
-            if (!layer) {
-                GUI::MessageBox::show_error(String::format("Unable to create layer with size %s", dialog->size().to_string().characters()));
-                return;
+    layer_menu.add_action(GUI::Action::create(
+        "Create new layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
+            auto dialog = PixelPaint::CreateNewLayerDialog::construct(image_editor.image()->size(), window);
+            if (dialog->exec() == GUI::Dialog::ExecOK) {
+                auto layer = PixelPaint::Layer::create_with_size(dialog->layer_size(), dialog->layer_name());
+                if (!layer) {
+                    GUI::MessageBox::show_error(String::format("Unable to create layer with size %s", dialog->size().to_string().characters()));
+                    return;
+                }
+                image_editor.image()->add_layer(layer.release_nonnull());
+                image_editor.layers_did_change();
             }
-            image_editor.image()->add_layer(layer.release_nonnull());
-            image_editor.layers_did_change();
-        }
-    }, window));
+        },
+        window));
 
     layer_menu.add_separator();
-    layer_menu.add_action(GUI::Action::create("Select previous layer", { 0, Key_PageUp }, [&](auto&) {
-        layer_table_view.move_selection(1);
-    }, window));
-    layer_menu.add_action(GUI::Action::create("Select next layer", { 0, Key_PageDown }, [&](auto&) {
-        layer_table_view.move_selection(-1);
-    }, window));
-    layer_menu.add_action(GUI::Action::create("Select top layer", { 0, Key_Home }, [&](auto&) {
-        layer_table_view.selection().set(layer_table_view.model()->index(image_editor.image()->layer_count() - 1));
-    }, window));
-    layer_menu.add_action(GUI::Action::create("Select bottom layer", { 0, Key_End }, [&](auto&) {
-        layer_table_view.selection().set(layer_table_view.model()->index(0));
-    }, window));
+    layer_menu.add_action(GUI::Action::create(
+        "Select previous layer", { 0, Key_PageUp }, [&](auto&) {
+            layer_table_view.move_selection(1);
+        },
+        window));
+    layer_menu.add_action(GUI::Action::create(
+        "Select next layer", { 0, Key_PageDown }, [&](auto&) {
+            layer_table_view.move_selection(-1);
+        },
+        window));
+    layer_menu.add_action(GUI::Action::create(
+        "Select top layer", { 0, Key_Home }, [&](auto&) {
+            layer_table_view.selection().set(layer_table_view.model()->index(image_editor.image()->layer_count() - 1));
+        },
+        window));
+    layer_menu.add_action(GUI::Action::create(
+        "Select bottom layer", { 0, Key_End }, [&](auto&) {
+            layer_table_view.selection().set(layer_table_view.model()->index(0));
+        },
+        window));
     layer_menu.add_separator();
-    layer_menu.add_action(GUI::Action::create("Move active layer up", { Mod_Ctrl, Key_PageUp }, [&](auto&) {
-        auto active_layer = image_editor.active_layer();
-        if(!active_layer)
-            return;
-        image_editor.image()->move_layer_up(*active_layer);
-        layer_table_view.move_selection(1);
-        image_editor.layers_did_change();
-    }, window));
-    layer_menu.add_action(GUI::Action::create("Move active layer down", { Mod_Ctrl, Key_PageDown }, [&](auto&) {
-        auto active_layer = image_editor.active_layer();
-        if(!active_layer)
-            return;
-        image_editor.image()->move_layer_down(*active_layer);
-        layer_table_view.move_selection(-1);
-        image_editor.layers_did_change();
-    }, window));
+    layer_menu.add_action(GUI::Action::create(
+        "Move active layer up", { Mod_Ctrl, Key_PageUp }, [&](auto&) {
+            auto active_layer = image_editor.active_layer();
+            if (!active_layer)
+                return;
+            image_editor.image()->move_layer_up(*active_layer);
+            layer_table_view.move_selection(1);
+            image_editor.layers_did_change();
+        },
+        window));
+    layer_menu.add_action(GUI::Action::create(
+        "Move active layer down", { Mod_Ctrl, Key_PageDown }, [&](auto&) {
+            auto active_layer = image_editor.active_layer();
+            if (!active_layer)
+                return;
+            image_editor.image()->move_layer_down(*active_layer);
+            layer_table_view.move_selection(-1);
+            image_editor.layers_did_change();
+        },
+        window));
     layer_menu.add_separator();
-    layer_menu.add_action(GUI::Action::create("Remove active layer", { Mod_Ctrl , Key_D }, [&](auto&) {
-        auto active_layer = image_editor.active_layer();
-        if(!active_layer)
-            return;
-        image_editor.image()->remove_layer(*active_layer);
-        image_editor.set_active_layer(nullptr);
-        image_editor.layers_did_change();
-    }, window));
+    layer_menu.add_action(GUI::Action::create(
+        "Remove active layer", { Mod_Ctrl, Key_D }, [&](auto&) {
+            auto active_layer = image_editor.active_layer();
+            if (!active_layer)
+                return;
+            image_editor.image()->remove_layer(*active_layer);
+            image_editor.set_active_layer(nullptr);
+            image_editor.layers_did_change();
+        },
+        window));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
@@ -196,6 +216,16 @@ int main(int argc, char** argv)
     image->add_layer(*bg_layer);
     bg_layer->bitmap().fill(Color::White);
 
+    auto fg_layer1 = PixelPaint::Layer::create_with_size({ 200, 200 }, "FG Layer 1");
+    fg_layer1->set_location({ 50, 50 });
+    image->add_layer(*fg_layer1);
+    fg_layer1->bitmap().fill(Color::Yellow);
+
+    auto fg_layer2 = PixelPaint::Layer::create_with_size({ 100, 100 }, "FG Layer 2");
+    fg_layer2->set_location({ 300, 300 });
+    image->add_layer(*fg_layer2);
+    fg_layer2->bitmap().fill(Color::Blue);
+
     layer_table_view.set_model(image->layer_model());
     layer_table_view.on_selection_change = [&] {
         auto index = layer_table_view.selection().first();
@@ -204,6 +234,8 @@ int main(int argc, char** argv)
         else
             image_editor.set_active_layer(nullptr);
     };
+
+    layer_list_widget.set_image(image);
 
     image_editor.set_image(image);
     image_editor.set_active_layer(bg_layer);

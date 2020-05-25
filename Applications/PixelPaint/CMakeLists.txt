@@ -6,6 +6,7 @@ set(SOURCES
     Image.cpp
     ImageEditor.cpp
     Layer.cpp
+    LayerListWidget.cpp
     LayerModel.cpp
     LineTool.cpp
     main.cpp
