@@ -41,6 +41,120 @@
 
 namespace Web {
 
+static CSS::ValueID value_id_for_palette_string(const StringView& string)
+{
+    if (string == "desktop-background")
+        return CSS::ValueID::VendorSpecificPaletteDesktopBackground;
+    else if (string == "active-window-border1")
+        return CSS::ValueID::VendorSpecificPaletteActiveWindowBorder1;
+    else if (string == "active-window-border2")
+        return CSS::ValueID::VendorSpecificPaletteActiveWindowBorder2;
+    else if (string == "active-window-title")
+        return CSS::ValueID::VendorSpecificPaletteActiveWindowTitle;
+    else if (string == "inactive-window-border1")
+        return CSS::ValueID::VendorSpecificPaletteInactiveWindowBorder1;
+    else if (string == "inactive-window-border2")
+        return CSS::ValueID::VendorSpecificPaletteInactiveWindowBorder2;
+    else if (string == "inactive-window-title")
+        return CSS::ValueID::VendorSpecificPaletteInactiveWindowTitle;
+    else if (string == "moving-window-border1")
+        return CSS::ValueID::VendorSpecificPaletteMovingWindowBorder1;
+    else if (string == "moving-window-border2")
+        return CSS::ValueID::VendorSpecificPaletteMovingWindowBorder2;
+    else if (string == "moving-window-title")
+        return CSS::ValueID::VendorSpecificPaletteMovingWindowTitle;
+    else if (string == "highlight-window-border1")
+        return CSS::ValueID::VendorSpecificPaletteHighlightWindowBorder1;
+    else if (string == "highlight-window-border2")
+        return CSS::ValueID::VendorSpecificPaletteHighlightWindowBorder2;
+    else if (string == "highlight-window-title")
+        return CSS::ValueID::VendorSpecificPaletteHighlightWindowTitle;
+    else if (string == "menu-stripe")
+        return CSS::ValueID::VendorSpecificPaletteMenuStripe;
+    else if (string == "menu-base")
+        return CSS::ValueID::VendorSpecificPaletteMenuBase;
+    else if (string == "menu-base-text")
+        return CSS::ValueID::VendorSpecificPaletteMenuBaseText;
+    else if (string == "menu-selection")
+        return CSS::ValueID::VendorSpecificPaletteMenuSelection;
+    else if (string == "menu-selection-text")
+        return CSS::ValueID::VendorSpecificPaletteMenuSelectionText;
+    else if (string == "window")
+        return CSS::ValueID::VendorSpecificPaletteWindow;
+    else if (string == "window-text")
+        return CSS::ValueID::VendorSpecificPaletteWindowText;
+    else if (string == "button")
+        return CSS::ValueID::VendorSpecificPaletteButton;
+    else if (string == "button-text")
+        return CSS::ValueID::VendorSpecificPaletteButtonText;
+    else if (string == "base")
+        return CSS::ValueID::VendorSpecificPaletteBase;
+    else if (string == "base-text")
+        return CSS::ValueID::VendorSpecificPaletteBaseText;
+    else if (string == "threed-highlight")
+        return CSS::ValueID::VendorSpecificPaletteThreedHighlight;
+    else if (string == "threed-shadow1")
+        return CSS::ValueID::VendorSpecificPaletteThreedShadow1;
+    else if (string == "threed-shadow2")
+        return CSS::ValueID::VendorSpecificPaletteThreedShadow2;
+    else if (string == "hover-highlight")
+        return CSS::ValueID::VendorSpecificPaletteHoverHighlight;
+    else if (string == "selection")
+        return CSS::ValueID::VendorSpecificPaletteSelection;
+    else if (string == "selection-text")
+        return CSS::ValueID::VendorSpecificPaletteSelectionText;
+    else if (string == "inactive-selection")
+        return CSS::ValueID::VendorSpecificPaletteInactiveSelection;
+    else if (string == "inactive-selection-text")
+        return CSS::ValueID::VendorSpecificPaletteInactiveSelectionText;
+    else if (string == "rubber-band-fill")
+        return CSS::ValueID::VendorSpecificPaletteRubberBandFill;
+    else if (string == "rubber-band-border")
+        return CSS::ValueID::VendorSpecificPaletteRubberBandBorder;
+    else if (string == "link")
+        return CSS::ValueID::VendorSpecificPaletteLink;
+    else if (string == "active-link")
+        return CSS::ValueID::VendorSpecificPaletteActiveLink;
+    else if (string == "visited-link")
+        return CSS::ValueID::VendorSpecificPaletteVisitedLink;
+    else if (string == "ruler")
+        return CSS::ValueID::VendorSpecificPaletteRuler;
+    else if (string == "ruler-border")
+        return CSS::ValueID::VendorSpecificPaletteRulerBorder;
+    else if (string == "ruler-active-text")
+        return CSS::ValueID::VendorSpecificPaletteRulerActiveText;
+    else if (string == "ruler-inactive-text")
+        return CSS::ValueID::VendorSpecificPaletteRulerInactiveText;
+    else if (string == "text-cursor")
+        return CSS::ValueID::VendorSpecificPaletteTextCursor;
+    else if (string == "focus-outline")
+        return CSS::ValueID::VendorSpecificPaletteFocusOutline;
+    else if (string == "syntax-comment")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxComment;
+    else if (string == "syntax-number")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxNumber;
+    else if (string == "syntax-string")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxString;
+    else if (string == "syntax-type")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxType;
+    else if (string == "syntax-punctuation")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxPunctuation;
+    else if (string == "syntax-operator")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxOperator;
+    else if (string == "syntax-keyword")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxKeyword;
+    else if (string == "syntax-control-keyword")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxControlKeyword;
+    else if (string == "syntax-identifier")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxIdentifier;
+    else if (string == "syntax-preprocessor-statement")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxPreprocessorStatement;
+    else if (string == "syntax-preprocessor-value")
+        return CSS::ValueID::VendorSpecificPaletteSyntaxPreprocessorValue;
+    else
+        return CSS::ValueID::Invalid;
+}
+
 static Optional<Color> parse_css_color(const StringView& view)
 {
     if (view.equals_ignoring_case("transparent"))
@@ -160,6 +274,10 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
 
     if (string == "-libweb-link")
         return IdentifierStyleValue::create(CSS::ValueID::VendorSpecificLink);
+    else if (string.starts_with("-libweb-palette-")) {
+        auto value_id = value_id_for_palette_string(string.substring_view(16, string.length() - 16));
+        return IdentifierStyleValue::create(value_id);
+    }
 
     return StringStyleValue::create(string);
 }
