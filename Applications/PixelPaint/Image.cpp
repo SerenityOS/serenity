@@ -94,6 +94,8 @@ void Image::move_layer_to_back(Layer& layer)
     auto index = index_of(layer);
     m_layers.remove(index);
     m_layers.prepend(layer);
+
+    did_modify_layer_stack();
 }
 
 void Image::move_layer_to_front(Layer& layer)
@@ -102,6 +104,8 @@ void Image::move_layer_to_front(Layer& layer)
     auto index = index_of(layer);
     m_layers.remove(index);
     m_layers.append(layer);
+
+    did_modify_layer_stack();
 }
 
 void Image::move_layer_down(Layer& layer)
@@ -112,6 +116,8 @@ void Image::move_layer_down(Layer& layer)
         return;
     m_layers.remove(index);
     m_layers.insert(index - 1, layer);
+
+    did_modify_layer_stack();
 }
 
 void Image::move_layer_up(Layer& layer)
@@ -122,6 +128,25 @@ void Image::move_layer_up(Layer& layer)
         return;
     m_layers.remove(index);
     m_layers.insert(index + 1, layer);
+
+    did_modify_layer_stack();
+}
+
+void Image::change_layer_index(size_t old_index, size_t new_index)
+{
+    ASSERT(old_index < m_layers.size());
+    ASSERT(new_index < m_layers.size());
+    auto layer = m_layers.take(old_index);
+    m_layers.insert(new_index, move(layer));
+    did_modify_layer_stack();
+}
+
+void Image::did_modify_layer_stack()
+{
+    for (auto* client : m_clients)
+        client->image_did_modify_layer_stack();
+
+    did_change();
 }
 
 void Image::remove_layer(Layer& layer)
@@ -132,6 +157,8 @@ void Image::remove_layer(Layer& layer)
 
     for (auto* client : m_clients)
         client->image_did_remove_layer(index);
+
+    did_modify_layer_stack();
 }
 
 void Image::add_client(ImageClient& client)

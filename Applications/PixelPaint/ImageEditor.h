@@ -41,6 +41,8 @@ class ImageEditor final
     C_OBJECT(ImageEditor);
 
 public:
+    virtual ~ImageEditor() override;
+
     const Image* image() const { return m_image; }
     Image* image() { return m_image; }
 

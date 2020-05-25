@@ -45,6 +45,7 @@ public:
     virtual void image_did_add_layer(size_t) { }
     virtual void image_did_remove_layer(size_t) { }
     virtual void image_did_modify_layer(size_t) { }
+    virtual void image_did_modify_layer_stack() {}
     virtual void image_did_change() { }
 };
 
@@ -68,6 +69,7 @@ public:
     void move_layer_to_back(Layer&);
     void move_layer_up(Layer&);
     void move_layer_down(Layer&);
+    void change_layer_index(size_t old_index, size_t new_index);
     void remove_layer(Layer&);
 
     void add_client(ImageClient&);
@@ -79,6 +81,7 @@ private:
     explicit Image(const Gfx::Size&);
 
     void did_change();
+    void did_modify_layer_stack();
 
     size_t index_of(const Layer&) const;
 

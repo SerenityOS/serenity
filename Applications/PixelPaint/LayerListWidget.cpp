@@ -53,14 +53,17 @@ void LayerListWidget::set_image(Image* image)
     if (m_image)
         m_image->add_client(*this);
 
-    m_gadgets.clear();
+    rebuild_gadgets();
+}
 
+void LayerListWidget::rebuild_gadgets()
+{
+    m_gadgets.clear();
     if (m_image) {
         for (size_t layer_index = 0; layer_index < m_image->layer_count(); ++layer_index) {
-            m_gadgets.append({ layer_index, {} });
+            m_gadgets.append({ layer_index, {}, {}, false, {} });
         }
     }
-
     relayout_gadgets();
 }
 
@@ -82,45 +85,112 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
 
     painter.fill_rect(event.rect(), palette().button());
 
-    for (auto& gadget : m_gadgets) {
-        painter.draw_rect(gadget.rect, Color::Black);
+    auto paint_gadget = [&](auto& gadget) {
         auto& layer = m_image->layer(gadget.layer_index);
 
-        Gfx::Rect thumbnail_rect { gadget.rect.x(), gadget.rect.y(), gadget.rect.height(), gadget.rect.height() };
+        auto adjusted_rect = gadget.rect;
+
+        if (gadget.is_moving) {
+            adjusted_rect.move_by(0, gadget.movement_delta.y());
+            painter.fill_rect(adjusted_rect, palette().threed_shadow1());
+        }
+
+        painter.draw_rect(adjusted_rect, Color::Black);
+
+        Gfx::Rect thumbnail_rect { adjusted_rect.x(), adjusted_rect.y(), adjusted_rect.height(), adjusted_rect.height() };
         thumbnail_rect.shrink(8, 8);
         painter.draw_scaled_bitmap(thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
 
-        Gfx::Rect text_rect { thumbnail_rect.right() + 10, gadget.rect.y(), gadget.rect.width(), gadget.rect.height() };
-        text_rect.intersect(gadget.rect);
+        Gfx::Rect text_rect { thumbnail_rect.right() + 10, adjusted_rect.y(), adjusted_rect.width(), adjusted_rect.height() };
+        text_rect.intersect(adjusted_rect);
 
         painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft);
+    };
+
+    for (auto& gadget : m_gadgets) {
+        if (!gadget.is_moving)
+            paint_gadget(gadget);
     }
+
+    if (m_moving_gadget_index.has_value())
+        paint_gadget(m_gadgets[m_moving_gadget_index.value()]);
+}
+
+Optional<size_t> LayerListWidget::gadget_at(const Gfx::Point& position)
+{
+    for (size_t i = 0; i < m_gadgets.size(); ++i) {
+        if (m_gadgets[i].rect.contains(position))
+            return i;
+    }
+    return {};
 }
 
 void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    (void)event;
+    if (!m_image)
+        return;
+    if (event.button() != GUI::MouseButton::Left)
+        return;
+    auto gadget_index = gadget_at(event.position());
+    if (!gadget_index.has_value())
+        return;
+    m_moving_gadget_index = gadget_index;
+    m_moving_event_origin = event.position();
+    auto& gadget = m_gadgets[m_moving_gadget_index.value()];
+    gadget.is_moving = true;
+    gadget.movement_delta = {};
+    update();
 }
 
 void LayerListWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    (void)event;
+    if (!m_image)
+        return;
+    if (!m_moving_gadget_index.has_value())
+        return;
+
+    auto delta = event.position() - m_moving_event_origin;
+    auto& gadget = m_gadgets[m_moving_gadget_index.value()];
+    ASSERT(gadget.is_moving);
+    gadget.movement_delta = delta;
+    relayout_gadgets();
 }
 
 void LayerListWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    (void)event;
+    if (!m_image)
+        return;
+    if (event.button() != GUI::MouseButton::Left)
+        return;
+    if (!m_moving_gadget_index.has_value())
+        return;
+
+    size_t old_index = m_moving_gadget_index.value();
+    size_t new_index = hole_index_during_move();
+    if (new_index >= m_image->layer_count())
+        new_index = m_image->layer_count() - 1;
+
+    m_moving_gadget_index = {};
+    m_image->change_layer_index(old_index, new_index);
 }
 
 void LayerListWidget::image_did_add_layer(size_t layer_index)
 {
-    Gadget gadget { layer_index, {} };
+    if (m_moving_gadget_index.has_value()) {
+        m_gadgets[m_moving_gadget_index.value()].is_moving = false;
+        m_moving_gadget_index = {};
+    }
+    Gadget gadget { layer_index, {}, {}, false, {} };
     m_gadgets.insert(layer_index, move(gadget));
     relayout_gadgets();
 }
 
 void LayerListWidget::image_did_remove_layer(size_t layer_index)
 {
+    if (m_moving_gadget_index.has_value()) {
+        m_gadgets[m_moving_gadget_index.value()].is_moving = false;
+        m_moving_gadget_index = {};
+    }
     m_gadgets.remove(layer_index);
     relayout_gadgets();
 }
@@ -130,15 +200,40 @@ void LayerListWidget::image_did_modify_layer(size_t layer_index)
     update(m_gadgets[layer_index].rect);
 }
 
+void LayerListWidget::image_did_modify_layer_stack()
+{
+    rebuild_gadgets();
+}
+
+static constexpr int gadget_height = 30;
+static constexpr int gadget_spacing = 1;
+static constexpr int vertical_step = gadget_height + gadget_spacing;
+
+size_t LayerListWidget::hole_index_during_move() const
+{
+    ASSERT(is_moving_gadget());
+    auto& moving_gadget = m_gadgets[m_moving_gadget_index.value()];
+    int center_y_of_moving_gadget = moving_gadget.rect.translated(0, moving_gadget.movement_delta.y()).center().y();
+    return center_y_of_moving_gadget / vertical_step;
+}
+
 void LayerListWidget::relayout_gadgets()
 {
-    constexpr int gadget_height = 30;
-    constexpr int gadget_spacing = 1;
     int y = 0;
 
+    Optional<size_t> hole_index;
+    if (is_moving_gadget())
+        hole_index = hole_index_during_move();
+
+    size_t index = 0;
     for (auto& gadget : m_gadgets) {
+        if (gadget.is_moving)
+            continue;
+        if (hole_index.has_value() && index == hole_index.value())
+            y += vertical_step;
         gadget.rect = { 0, y, width(), gadget_height };
-        y += gadget_height + gadget_spacing;
+        y += vertical_step;
+        ++index;
     }
 
     update();
