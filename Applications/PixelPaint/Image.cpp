@@ -67,6 +67,9 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
         ASSERT(&existing_layer != layer.ptr());
     }
     m_layers.append(move(layer));
+
+    for (auto* client : m_clients)
+        client->image_did_add_layer(m_layers.size() - 1);
 }
 
 GUI::Model& Image::layer_model()
@@ -126,6 +129,21 @@ void Image::remove_layer(Layer& layer)
     NonnullRefPtr<Layer> protector(layer);
     auto index = index_of(layer);
     m_layers.remove(index);
+
+    for (auto* client : m_clients)
+        client->image_did_remove_layer(index);
+}
+
+void Image::add_client(ImageClient& client)
+{
+    ASSERT(!m_clients.contains(&client));
+    m_clients.set(&client);
+}
+
+void Image::remove_client(ImageClient& client)
+{
+    ASSERT(m_clients.contains(&client));
+    m_clients.remove(&client);
 }
 
 }
