@@ -160,8 +160,6 @@ private:
     void unregister_region(Region&);
 
     void detect_cpu_features();
-    void setup_low_identity_mapping();
-    void setup_low_pseudo_identity_mapping();
     void protect_kernel_image();
     void parse_memory_map();
     void flush_entire_tlb();
