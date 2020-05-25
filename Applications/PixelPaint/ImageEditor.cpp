@@ -353,4 +353,9 @@ void ImageEditor::relayout()
     update();
 }
 
+void ImageEditor::image_did_change()
+{
+    update();
+}
+
 }

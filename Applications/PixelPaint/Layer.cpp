@@ -25,6 +25,7 @@
  */
 
 #include "Layer.h"
+#include "Image.h"
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
@@ -44,6 +45,11 @@ Layer::Layer(const Gfx::Size& size, const String& name)
     : m_name(name)
 {
     m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
+}
+
+void Layer::did_modify_bitmap(Image& image)
+{
+    image.layer_did_modify_bitmap({}, *this);
 }
 
 }

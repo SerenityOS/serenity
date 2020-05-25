@@ -52,7 +52,7 @@ private:
 
     virtual void image_did_add_layer(size_t) override;
     virtual void image_did_remove_layer(size_t) override;
-    virtual void image_did_update_layer(size_t);
+    virtual void image_did_modify_layer(size_t);
 
     void relayout_gadgets();
 

@@ -77,7 +77,7 @@ void LineTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&
         GUI::Painter painter(layer.bitmap());
         painter.draw_line(m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
         m_drawing_button = GUI::MouseButton::None;
-        m_editor->update();
+        layer.did_modify_bitmap(*m_editor->image());
     }
 }
 

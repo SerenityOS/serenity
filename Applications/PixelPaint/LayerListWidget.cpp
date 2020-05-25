@@ -125,7 +125,7 @@ void LayerListWidget::image_did_remove_layer(size_t layer_index)
     relayout_gadgets();
 }
 
-void LayerListWidget::image_did_update_layer(size_t layer_index)
+void LayerListWidget::image_did_modify_layer(size_t layer_index)
 {
     update(m_gadgets[layer_index].rect);
 }

@@ -33,6 +33,8 @@
 
 namespace PixelPaint {
 
+class Image;
+
 class Layer : public RefCounted<Layer> {
     AK_MAKE_NONCOPYABLE(Layer);
     AK_MAKE_NONMOVABLE(Layer);
@@ -54,6 +56,8 @@ public:
 
     const String& name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
+
+    void did_modify_bitmap(Image&);
 
 private:
     explicit Layer(const Gfx::Size&, const String& name);
