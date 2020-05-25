@@ -761,10 +761,8 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     HashTable<Window*> windows_who_received_mouse_event_due_to_cursor_tracking;
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->global_cursor_tracking())
+        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized())
             continue;
-        ASSERT(window->is_visible());    // Maybe this should be supported? Idk. Let's catch it and think about it later.
-        ASSERT(!window->is_minimized()); // Maybe this should also be supported? Idk.
         windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
         auto translated_event = event.translated(-window->position());
         deliver_mouse_event(*window, translated_event);
