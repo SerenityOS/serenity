@@ -123,7 +123,7 @@ public:
     bool should_read_more() const { return m_should_continue != ContinuationRequest::Nothing; }
     void finish_command() { m_should_break_current_command = true; }
 
-    void read_single_line();
+    bool read_single_line();
 
     struct termios termios;
     struct termios default_termios;

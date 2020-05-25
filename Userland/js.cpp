@@ -67,6 +67,7 @@ static bool s_dump_ast = false;
 static bool s_print_last_result = false;
 static OwnPtr<Line::Editor> s_editor;
 static int s_repl_line_level = 0;
+static bool s_fail_repl = false;
 
 static String prompt_for_level(int level)
 {
@@ -85,7 +86,14 @@ String read_next_piece()
     StringBuilder piece;
 
     do {
-        String line = s_editor->get_line(prompt_for_level(s_repl_line_level));
+        auto line_result = s_editor->get_line(prompt_for_level(s_repl_line_level));
+
+        if (line_result.is_error()) {
+            s_fail_repl = true;
+            return "";
+        }
+
+        auto& line = line_result.value();
         s_editor->add_to_history(line);
 
         piece.append(line);
@@ -369,7 +377,7 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
 
 void repl(JS::Interpreter& interpreter)
 {
-    while (true) {
+    while (!s_fail_repl) {
         String piece = read_next_piece();
         if (piece.is_empty())
             continue;

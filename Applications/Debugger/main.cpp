@@ -236,7 +236,13 @@ int main(int argc, char** argv)
         }
 
         for (;;) {
-            auto command = editor.get_line("(sdb) ");
+            auto command_result = editor.get_line("(sdb) ");
+
+            if (command_result.is_error())
+                return DebugSession::DebugDecision::Detach;
+
+            auto& command = command_result.value();
+
             bool success = false;
             Optional<DebugSession::DebugDecision> decision;
 

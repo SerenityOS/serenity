@@ -33,6 +33,7 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/QuickSort.h>
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
@@ -78,10 +79,16 @@ struct Configuration {
 
 class Editor {
 public:
+    enum class Error {
+        ReadFailure,
+        Empty,
+        Eof,
+    };
+
     explicit Editor(Configuration configuration = {});
     ~Editor();
 
-    String get_line(const String& prompt);
+    Result<String, Error> get_line(const String& prompt);
 
     void initialize()
     {
@@ -209,6 +216,7 @@ private:
         set_origin(0, 0);
         m_prompt_lines_at_suggestion_initiation = 0;
         m_refresh_needed = true;
+        m_input_error.clear();
     }
 
     void refresh_display();
@@ -276,8 +284,10 @@ private:
     Vector<u32, 1024> m_pre_search_buffer;
 
     Vector<u32, 1024> m_buffer;
-    Vector<char, 512> m_incomplete_data;
     ByteBuffer m_pending_chars;
+    Vector<char, 512> m_incomplete_data;
+    Optional<Error> m_input_error;
+
     size_t m_cursor { 0 };
     size_t m_drawn_cursor { 0 };
     size_t m_inline_search_cursor { 0 };
