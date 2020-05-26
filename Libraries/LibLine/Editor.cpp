@@ -226,10 +226,52 @@ void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode o
     m_suggestion_manager.set_suggestion_variants(internal_static_offset, internal_invariant_offset, 0);
 }
 
+void Editor::initialize()
+{
+    if (m_initialized)
+        return;
+
+    struct termios termios;
+    tcgetattr(0, &termios);
+    m_default_termios = termios; // grab a copy to restore
+
+    auto* term = getenv("TERM");
+    if (StringView { term }.starts_with("xterm"))
+        m_configuration.set(Configuration::Full);
+    else
+        m_configuration.set(Configuration::NoEscapeSequences);
+
+    // Because we use our own line discipline which includes echoing,
+    // we disable ICANON and ECHO.
+    if (m_configuration.operation_mode == Configuration::Full) {
+        termios.c_lflag &= ~(ECHO | ICANON);
+        tcsetattr(0, TCSANOW, &termios);
+    }
+
+    m_termios = termios;
+    m_initialized = true;
+}
+
 Result<String, Editor::Error> Editor::get_line(const String& prompt)
 {
     initialize();
     m_is_editing = true;
+
+    if (m_configuration.operation_mode == Configuration::NoEscapeSequences) {
+        // Do not use escape sequences, instead, use LibC's getline.
+        size_t size = 0;
+        char* line = nullptr;
+        fputs(prompt.characters(), stderr);
+        size_t line_length = getline(&line, &size, stdin);
+        restore();
+        if (line) {
+            String result { line, line_length, Chomp };
+            free(line);
+            return result;
+        }
+
+        return Error::ReadFailure;
+    }
 
     set_prompt(prompt);
     reset();
