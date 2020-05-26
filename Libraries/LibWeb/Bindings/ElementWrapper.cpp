@@ -31,6 +31,7 @@
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/ElementWrapper.h>
+#include <LibWeb/DOM/AttributeNames.h>
 #include <LibWeb/DOM/Element.h>
 
 namespace Web {
@@ -131,7 +132,7 @@ void ElementWrapper::inner_html_setter(JS::Interpreter& interpreter, JS::Value v
 JS::Value ElementWrapper::id_getter(JS::Interpreter& interpreter)
 {
     if (auto* impl = impl_from(interpreter))
-        return JS::js_string(interpreter, impl->attribute("id"));
+        return JS::js_string(interpreter, impl->attribute(HTML::AttributeNames::id));
     return {};
 }
 
@@ -141,7 +142,7 @@ void ElementWrapper::id_setter(JS::Interpreter& interpreter, JS::Value value)
         auto string = value.to_string(interpreter);
         if (interpreter.exception())
             return;
-        impl->set_attribute("id", string);
+        impl->set_attribute(HTML::AttributeNames::id, string);
     }
 }
 

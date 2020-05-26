@@ -37,6 +37,7 @@
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/DOM/AttributeNames.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
@@ -65,6 +66,8 @@ Document::Document(const URL& url)
     , m_url(url)
     , m_window(Window::create_with_document(*this))
 {
+    HTML::AttributeNames::initialize();
+
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();
     });

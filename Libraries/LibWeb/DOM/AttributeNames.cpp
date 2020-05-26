@@ -24,37 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Forward.h>
 #include <LibWeb/DOM/AttributeNames.h>
-#include <LibWeb/Forward.h>
-#include <LibWeb/TreeNode.h>
 
 namespace Web {
+namespace HTML {
+namespace AttributeNames {
 
-template<typename NodeType>
-class NonElementParentNode {
-public:
-    const Element* get_element_by_id(const FlyString& id) const
-    {
-        const Element* found_element = nullptr;
-        static_cast<const NodeType*>(this)->template for_each_in_subtree_of_type<Element>([&](auto& element) {
-            if (element.attribute(HTML::AttributeNames::id) == id) {
-                found_element = &element;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
-        return found_element;
-    }
-    Element* get_element_by_id(const FlyString& id)
-    {
-        return const_cast<Element*>(const_cast<const NonElementParentNode*>(this)->get_element_by_id(id));
-    }
+FlyString id;
+FlyString class_;
 
-protected:
-    NonElementParentNode() { }
-};
+void initialize()
+{
+    bool s_initialized = false;
+    if (s_initialized)
+        return;
+    id = "id";
+    class_ = "class";
+    s_initialized = true;
+}
 
+}
+}
 }
