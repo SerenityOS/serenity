@@ -38,14 +38,14 @@ LayoutListItem::~LayoutListItem()
 {
 }
 
-void LayoutListItem::layout()
+void LayoutListItem::layout(LayoutMode line_break_policy)
 {
     if (m_marker) {
         remove_child(*m_marker);
         m_marker = nullptr;
     }
 
-    LayoutBlock::layout();
+    LayoutBlock::layout(line_break_policy);
 
     if (!m_marker) {
         m_marker = adopt(*new LayoutListItemMarker);

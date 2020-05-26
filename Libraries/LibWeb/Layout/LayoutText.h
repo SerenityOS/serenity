@@ -48,15 +48,15 @@ public:
 
     void render_fragment(RenderingContext&, const LineBoxFragment&) const;
 
-    virtual void split_into_lines(LayoutBlock& container) override;
+    virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
 
     const StyleProperties& style() const { return parent()->style(); }
 
 private:
-    void split_into_lines_by_rules(LayoutBlock& container, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);
+    void split_into_lines_by_rules(LayoutBlock& container, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);
 
     template<typename Callback>
-    void for_each_chunk(Callback, bool do_wrap_lines, bool do_wrap_breaks) const;
+    void for_each_chunk(Callback, LayoutMode, bool do_wrap_lines, bool do_wrap_breaks) const;
 
     String m_text_for_rendering;
 };

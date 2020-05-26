@@ -39,10 +39,9 @@ LayoutTable::~LayoutTable()
 {
 }
 
-void LayoutTable::layout()
+void LayoutTable::layout(LayoutMode line_break_policy)
 {
-
-    LayoutBlock::layout();
+    LayoutBlock::layout(line_break_policy);
 }
 
 LayoutTableRow* LayoutTable::first_row()
