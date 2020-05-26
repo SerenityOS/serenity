@@ -345,6 +345,7 @@ int Shell::builtin_exit(int, const char**)
         }
     }
     stop_all_jobs();
+    save_history();
     printf("Good-bye!\n");
     exit(0);
     return 0;
