@@ -165,6 +165,9 @@ public:
 private:
     explicit Editor(Configuration configuration = {});
 
+    // ^Core::Object
+    virtual void save_to(JsonObject&) override;
+
     struct KeyCallback {
         KeyCallback(Function<bool(Editor&)> cb)
             : callback(move(cb))
