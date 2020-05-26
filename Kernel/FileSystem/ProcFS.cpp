@@ -30,6 +30,7 @@
 #include <AK/JsonValue.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/Console.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
@@ -51,11 +52,10 @@
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
-#include <Kernel/Console.h>
-#include <Kernel/StdLib.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
