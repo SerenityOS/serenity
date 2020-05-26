@@ -114,7 +114,9 @@ RSA::KeyPairType RSA::parse_rsa_key(const ByteBuffer& in)
 
 void RSA::encrypt(const ByteBuffer& in, ByteBuffer& out)
 {
+#ifdef CRYPTO_DEBUG
     dbg() << "in size: " << in.size();
+#endif
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     if (!(in_integer < m_public_key.modulus())) {
         dbg() << "value too large for key";
@@ -218,7 +220,9 @@ VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(const ByteBuffer& in)
 void RSA_PKCS1_EME::encrypt(const ByteBuffer& in, ByteBuffer& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
+#ifdef CRYPTO_DEBUG
     dbg() << "key size: " << mod_len;
+#endif
     if (in.size() > mod_len - 11) {
         dbg() << "message too long :(";
         out.trim(0);
@@ -247,7 +251,9 @@ void RSA_PKCS1_EME::encrypt(const ByteBuffer& in, ByteBuffer& out)
     out.overwrite(3 + ps_length, in.data(), in.size());
     out.trim(3 + ps_length + in.size()); // should be a single block
 
+#ifdef CRYPTO_DEBUG
     dbg() << "padded output size: " << 3 + ps_length + in.size() << " buffer size: " << out.size();
+#endif
 
     RSA::encrypt(out, out);
 }
