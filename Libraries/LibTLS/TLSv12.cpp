@@ -636,7 +636,7 @@ bool Certificate::is_valid() const
 
 void TLSv12::try_disambiguate_error() const
 {
-    dbg() << "Possible failure cause: ";
+    dbg() << "Possible failure cause(s): ";
     switch ((AlertDescription)m_context.critical_error) {
     case AlertDescription::HandshakeFailure:
         if (!m_context.cipher_spec_set) {
@@ -648,12 +648,49 @@ void TLSv12::try_disambiguate_error() const
     case AlertDescription::InsufficientSecurity:
         dbg() << "- No cipher suite in common with " << m_context.SNI << " (the server is oh so secure)";
         break;
+    case AlertDescription::ProtocolVersion:
+        dbg() << "- The server refused to negotiate with TLS 1.2 :(";
+        break;
+    case AlertDescription::UnexpectedMessage:
+        dbg() << "- We sent an invalid message for the state we're in.";
+        break;
+    case AlertDescription::BadRecordMAC:
+        dbg() << "- Bad MAC record from our side.";
+        dbg() << "- Ciphertext wasn't an even multiple of the block length.";
+        dbg() << "- Bad block cipher padding.";
+        dbg() << "- If both sides are compliant, the only cause is messages being corrupted in the network.";
+        break;
+    case AlertDescription::RecordOverflow:
+        dbg() << "- Sent a ciphertext record which has a length bigger than 18432 bytes.";
+        dbg() << "- Sent record decrypted to a compressed record that has a length bigger than 18432 bytes.";
+        dbg() << "- If both sides are compliant, the only cause is messages being corrupted in the network.";
+        break;
+    case AlertDescription::DecompressionFailure:
+        dbg() << "- We sent invalid input for decompression (e.g. data that would expand to excessive length)";
+        break;
+    case AlertDescription::IllegalParameter:
+        dbg() << "- We sent a parameter in the handshake that is out of range or inconsistent with the other parameters.";
+        break;
+    case AlertDescription::DecodeError:
+        dbg() << "- The message we sent cannot be decoded because a field was out of range or the length was incorrect.";
+        dbg() << "- If both sides are compliant, the only cause is messages being corrupted in the network.";
+        break;
+    case AlertDescription::DecryptError:
+        dbg() << "- A handshake crypto operation failed. This includes signature verification and validating Finished.";
+        break;
+    case AlertDescription::AccessDenied:
+        dbg() << "- The certificate is valid, but once access control was applied, the sender decided to stop negotiation.";
+        break;
+    case AlertDescription::InternalError:
+        dbg() << "- No one knows, but it isn't a protocol failure.";
+        break;
     case AlertDescription::DecryptionFailed:
-        dbg() << "- Bad MAC record from our side";
-        dbg() << "- Bad block cipher padding";
+    case AlertDescription::NoCertificate:
+    case AlertDescription::ExportRestriction:
+        dbg() << "- No one knows, the server sent a non-compliant alert.";
         break;
     default:
-        dbg() << "- No one knows";
+        dbg() << "- No one knows.";
         break;
     }
 }
