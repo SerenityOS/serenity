@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Memory.h>
 #include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
@@ -193,6 +194,17 @@ bool equals_ignoring_case(const StringView& a, const StringView& b)
             return false;
     }
     return true;
+}
+
+bool ends_with(const StringView& str, const StringView& end)
+{
+    if (end.is_empty())
+        return true;
+    if (str.is_empty())
+        return false;
+    if (end.length() > str.length())
+        return false;
+    return !memcmp(str.characters_without_null_termination() + (str.length() - end.length()), end.characters_without_null_termination(), end.length());
 }
 
 }

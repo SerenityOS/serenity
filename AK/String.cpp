@@ -280,13 +280,7 @@ bool String::starts_with(char ch) const
 
 bool String::ends_with(const StringView& str) const
 {
-    if (str.is_empty())
-        return true;
-    if (is_empty())
-        return false;
-    if (str.length() > length())
-        return false;
-    return !memcmp(characters() + (length() - str.length()), str.characters_without_null_termination(), str.length());
+    return StringUtils::ends_with(*this, str);
 }
 
 bool String::ends_with(char ch) const
