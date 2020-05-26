@@ -35,7 +35,7 @@
 #include <string.h>
 #include <sys/wait.h>
 
-Line::Editor editor { Line::Configuration { Line::Configuration::UnescapedSpaces } };
+RefPtr<Line::Editor> editor;
 Shell* s_shell;
 
 void FileDescriptionCollector::collect()
@@ -58,13 +58,13 @@ void FileDescriptionCollector::add(int fd)
 int main(int argc, char** argv)
 {
     Core::EventLoop loop;
-
+    
     signal(SIGINT, [](int) {
-        editor.interrupted();
+        editor->interrupted();
     });
 
     signal(SIGWINCH, [](int) {
-        editor.resized();
+        editor->resized();
     });
 
     signal(SIGHUP, [](int) {
@@ -92,18 +92,20 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    editor = Line::Editor::construct(Line::Configuration { Line::Configuration::UnescapedSpaces });
+
     auto shell = Shell::construct();
     s_shell = shell.ptr();
 
-    editor.initialize();
-    shell->termios = editor.termios();
-    shell->default_termios = editor.default_termios();
+    editor->initialize();
+    shell->termios = editor->termios();
+    shell->default_termios = editor->default_termios();
 
-    editor.on_display_refresh = [&](auto& editor) {
+    editor->on_display_refresh = [&](auto& editor) {
         editor.strip_styles();
         shell->highlight(editor);
     };
-    editor.on_tab_complete = [&](const Line::Editor& editor) {
+    editor->on_tab_complete = [&](const Line::Editor& editor) {
         return shell->complete(editor);
     };
 
@@ -128,12 +130,14 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    editor.on_interrupt_handled = [&] {
+    editor->on_interrupt_handled = [&] {
         if (!shell->should_read_more()) {
             shell->finish_command();
-            editor.finish();
+            editor->finish();
         }
     };
+
+    shell->add_child(*editor);
 
     Core::EventLoop::current().post_event(*shell, make<Core::CustomEvent>(Shell::ShellEventType::ReadLine));
 

@@ -65,7 +65,7 @@ private:
 
 static bool s_dump_ast = false;
 static bool s_print_last_result = false;
-static OwnPtr<Line::Editor> s_editor;
+static RefPtr<Line::Editor> s_editor;
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
@@ -510,7 +510,7 @@ int main(int argc, char** argv)
         if (test_mode)
             enable_test_mode(*interpreter);
 
-        s_editor = make<Line::Editor>();
+        s_editor = Line::Editor::construct();
 
         signal(SIGINT, [](int) {
             if (!s_editor->is_editing())
