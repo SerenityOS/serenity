@@ -239,6 +239,7 @@ Value Interpreter::construct(Function& function, Function& new_target, Optional<
 
 Value Interpreter::throw_exception(Exception* exception)
 {
+#ifdef __serenity__
     if (exception->value().is_object() && exception->value().as_object().is_error()) {
         auto& error = static_cast<Error&>(exception->value().as_object());
         dbg() << "Throwing JavaScript Error: " << error.name() << ", " << error.message();
@@ -250,6 +251,7 @@ Value Interpreter::throw_exception(Exception* exception)
             dbg() << "  " << function_name;
         }
     }
+#endif
     m_exception = exception;
     unwind(ScopeType::Try);
     return {};
