@@ -50,12 +50,13 @@ Priority=low
 KeepAlive=1
 User=anon
 
-# Spawn the TTYServer on /dev/tty1 once on startup with a high priority,
-# additionally passing it "tty1" as an argument.
-[TTYServer]
-Arguments=tty1
-StdIO=/dev/tty1
-Priority=high
+# Launch the Shell on /dev/tty0 on startup when booting in text mode.
+[Shell@tty0]
+Executable=/bin/Shell
+StdIO=/dev/tty0
+Environment=TERM=xterm
+KeepAlive=1
+BootModes=text
 ```
 
 ## See also
