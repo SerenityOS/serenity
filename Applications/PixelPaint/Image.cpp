@@ -26,7 +26,6 @@
 
 #include "Image.h"
 #include "Layer.h"
-#include "LayerModel.h"
 #include <LibGUI/Painter.h>
 
 //#define PAINT_DEBUG
@@ -70,13 +69,6 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
 
     for (auto* client : m_clients)
         client->image_did_add_layer(m_layers.size() - 1);
-}
-
-GUI::Model& Image::layer_model()
-{
-    if (!m_layer_model)
-        m_layer_model = LayerModel::create(*this);
-    return *m_layer_model;
 }
 
 size_t Image::index_of(const Layer& layer) const

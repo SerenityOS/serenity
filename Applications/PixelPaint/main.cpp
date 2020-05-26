@@ -40,7 +40,6 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/Model.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -89,8 +88,6 @@ int main(int argc, char** argv)
     right_panel.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     right_panel.set_preferred_size(230, 0);
     right_panel.set_layout<GUI::VerticalBoxLayout>();
-
-    auto& layer_table_view = right_panel.add<GUI::TableView>();
 
     auto& layer_list_widget = right_panel.add<PixelPaint::LayerListWidget>();
 
@@ -145,22 +142,22 @@ int main(int argc, char** argv)
     layer_menu.add_separator();
     layer_menu.add_action(GUI::Action::create(
         "Select previous layer", { 0, Key_PageUp }, [&](auto&) {
-            layer_table_view.move_selection(1);
+            layer_list_widget.move_selection(1);
         },
         window));
     layer_menu.add_action(GUI::Action::create(
         "Select next layer", { 0, Key_PageDown }, [&](auto&) {
-            layer_table_view.move_selection(-1);
+            layer_list_widget.move_selection(-1);
         },
         window));
     layer_menu.add_action(GUI::Action::create(
         "Select top layer", { 0, Key_Home }, [&](auto&) {
-            layer_table_view.selection().set(layer_table_view.model()->index(image_editor.image()->layer_count() - 1));
+            layer_list_widget.select_top_layer();
         },
         window));
     layer_menu.add_action(GUI::Action::create(
         "Select bottom layer", { 0, Key_End }, [&](auto&) {
-            layer_table_view.selection().set(layer_table_view.model()->index(0));
+            layer_list_widget.select_bottom_layer();
         },
         window));
     layer_menu.add_separator();
@@ -170,8 +167,6 @@ int main(int argc, char** argv)
             if (!active_layer)
                 return;
             image_editor.image()->move_layer_up(*active_layer);
-            layer_table_view.move_selection(1);
-            image_editor.layers_did_change();
         },
         window));
     layer_menu.add_action(GUI::Action::create(
@@ -180,8 +175,6 @@ int main(int argc, char** argv)
             if (!active_layer)
                 return;
             image_editor.image()->move_layer_down(*active_layer);
-            layer_table_view.move_selection(-1);
-            image_editor.layers_did_change();
         },
         window));
     layer_menu.add_separator();
@@ -191,8 +184,6 @@ int main(int argc, char** argv)
             if (!active_layer)
                 return;
             image_editor.image()->remove_layer(*active_layer);
-            image_editor.set_active_layer(nullptr);
-            image_editor.layers_did_change();
         },
         window));
 
@@ -203,11 +194,8 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    image_editor.on_active_layer_change = [&](auto& index) {
-        if (index.is_valid())
-            layer_table_view.selection().set(index);
-        else
-            layer_table_view.selection().clear();
+    image_editor.on_active_layer_change = [&](auto* layer) {
+        layer_list_widget.set_selected_layer(layer);
     };
 
     auto image = PixelPaint::Image::create_with_size({ 640, 480 });
@@ -226,13 +214,8 @@ int main(int argc, char** argv)
     image->add_layer(*fg_layer2);
     fg_layer2->bitmap().fill(Color::Blue);
 
-    layer_table_view.set_model(image->layer_model());
-    layer_table_view.on_selection_change = [&] {
-        auto index = layer_table_view.selection().first();
-        if (index.is_valid())
-            image_editor.set_active_layer(const_cast<PixelPaint::Layer*>(&image->layer(index.row())));
-        else
-            image_editor.set_active_layer(nullptr);
+    layer_list_widget.on_layer_select = [&](auto* layer) {
+        image_editor.set_active_layer(layer);
     };
 
     layer_list_widget.set_image(image);

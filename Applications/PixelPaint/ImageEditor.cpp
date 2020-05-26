@@ -27,7 +27,6 @@
 #include "ImageEditor.h"
 #include "Image.h"
 #include "Layer.h"
-#include "LayerModel.h"
 #include "Tool.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/FloatRect.h>
@@ -268,7 +267,7 @@ void ImageEditor::set_active_layer(Layer* layer)
                 break;
         }
         if (on_active_layer_change)
-            on_active_layer_change(m_image->layer_model().index(index));
+            on_active_layer_change(layer);
     } else {
         if (on_active_layer_change)
             on_active_layer_change({});
@@ -293,7 +292,6 @@ void ImageEditor::set_active_tool(Tool* tool)
 
 void ImageEditor::layers_did_change()
 {
-    static_cast<LayerModel&>(m_image->layer_model()).update_without_invalidating_indexes();
     update();
 }
 

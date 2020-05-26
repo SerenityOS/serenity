@@ -55,6 +55,7 @@ public:
 
     size_t layer_count() const { return m_layers.size(); }
     const Layer& layer(size_t index) const { return m_layers.at(index); }
+    Layer& layer(size_t index) { return m_layers.at(index); }
 
     const Gfx::Size& size() const { return m_size; }
     Gfx::Rect rect() const { return { {}, m_size }; }
@@ -62,8 +63,6 @@ public:
     void add_layer(NonnullRefPtr<Layer>);
 
     void paint_into(GUI::Painter&, const Gfx::Rect& dest_rect);
-
-    GUI::Model& layer_model();
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
@@ -77,17 +76,16 @@ public:
 
     void layer_did_modify_bitmap(Badge<Layer>, const Layer&);
 
+    size_t index_of(const Layer&) const;
+
 private:
     explicit Image(const Gfx::Size&);
 
     void did_change();
     void did_modify_layer_stack();
 
-    size_t index_of(const Layer&) const;
-
     Gfx::Size m_size;
     NonnullRefPtrVector<Layer> m_layers;
-    RefPtr<GUI::Model> m_layer_model;
 
     HashTable<ImageClient*> m_clients;
 };
