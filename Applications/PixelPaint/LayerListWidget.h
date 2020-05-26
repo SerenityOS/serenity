@@ -41,6 +41,13 @@ public:
 
     void set_image(Image*);
 
+    void set_selected_layer(Layer*);
+    Function<void(Layer*)> on_layer_select;
+
+    void select_bottom_layer();
+    void select_top_layer();
+    void move_selection(int delta);
+
 private:
     explicit LayerListWidget();
 
@@ -65,6 +72,7 @@ private:
         Gfx::Rect rect;
         Gfx::Rect temporary_rect_during_move;
         bool is_moving { false };
+        bool is_selected { false };
         Gfx::Point movement_delta;
     };
 

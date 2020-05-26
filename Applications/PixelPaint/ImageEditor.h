@@ -70,7 +70,7 @@ public:
     Function<void(Color)> on_primary_color_change;
     Function<void(Color)> on_secondary_color_change;
 
-    Function<void(const GUI::ModelIndex&)> on_active_layer_change;
+    Function<void(Layer*)> on_active_layer_change;
 
     Gfx::FloatRect layer_rect_to_editor_rect(const Layer&, const Gfx::Rect&) const;
     Gfx::FloatRect image_rect_to_editor_rect(const Gfx::Rect&) const;
