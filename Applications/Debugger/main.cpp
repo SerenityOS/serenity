@@ -173,7 +173,7 @@ void print_help()
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio proc exec rpath tty", nullptr) < 0) {
+    if (pledge("stdio proc exec rpath tty sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
