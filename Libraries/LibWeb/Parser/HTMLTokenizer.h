@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Queue.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibWeb/Forward.h>
@@ -165,5 +166,7 @@ private:
     HTMLToken m_last_emitted_start_tag;
 
     bool m_has_emitted_eof { false };
+
+    Queue<HTMLToken> m_queued_tokens;
 };
 }
