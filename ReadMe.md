@@ -81,6 +81,12 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Various desktop apps & games
 * Color themes
 
+## How do I read the documentation?
+
+Man pages are browsable outside of SerenityOS under [Base/usr/share/man](https://github.com/SerenityOS/serenity/tree/master/Base/usr/share/man).
+
+When running SerenityOS you can use `man` for the terminal interface, or `help` for the GUI interface.
+
 ## How do I build and run this?
 
 See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md)
