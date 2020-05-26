@@ -26,7 +26,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>

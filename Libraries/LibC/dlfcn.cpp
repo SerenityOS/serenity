@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/HashMap.h>
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
@@ -70,9 +70,9 @@ void* dlopen(const char* filename, int flags)
         ASSERT_NOT_REACHED();
     }
 
-    FileSystemPath file_path(filename);
+    auto basename = LexicalPath(filename).basename();
 
-    auto existing_elf_object = g_elf_objects.get(file_path.basename());
+    auto existing_elf_object = g_elf_objects.get(basename);
     if (existing_elf_object.has_value()) {
         return const_cast<ELF::DynamicLoader*>(existing_elf_object.value());
     }
@@ -105,11 +105,11 @@ void* dlopen(const char* filename, int flags)
         return nullptr;
     }
 
-    g_elf_objects.set(file_path.basename(), move(loader));
+    g_elf_objects.set(basename, move(loader));
     g_dlerror_msg = "Successfully loaded ELF object.";
 
     // we have one refcount already
-    return const_cast<ELF::DynamicLoader*>(g_elf_objects.get(file_path.basename()).value());
+    return const_cast<ELF::DynamicLoader*>(g_elf_objects.get(basename).value());
 }
 
 void* dlsym(void* handle, const char* symbol_name)

@@ -25,7 +25,7 @@
  */
 
 #include "FileUtils.h"
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <stdio.h>
@@ -134,7 +134,7 @@ bool copy_file(const String& src_path, const String& dst_path, const struct stat
         if (errno != EISDIR) {
             return false;
         }
-        auto dst_dir_path = String::format("%s/%s", dst_path.characters(), FileSystemPath(src_path).basename().characters());
+        auto dst_dir_path = String::format("%s/%s", dst_path.characters(), LexicalPath(src_path).basename().characters());
         dst_fd = creat(dst_dir_path.characters(), 0666);
         if (dst_fd < 0) {
             return false;
@@ -186,21 +186,21 @@ String get_duplicate_name(const String& path, int duplicate_count)
     if (duplicate_count == 0) {
         return path;
     }
-    FileSystemPath fsp(path);
+    LexicalPath lexical_path(path);
     StringBuilder duplicated_name;
     duplicated_name.append('/');
-    for (size_t i = 0; i < fsp.parts().size() - 1; ++i) {
-        duplicated_name.appendf("%s/", fsp.parts()[i].characters());
+    for (size_t i = 0; i < lexical_path.parts().size() - 1; ++i) {
+        duplicated_name.appendf("%s/", lexical_path.parts()[i].characters());
     }
     auto prev_duplicate_tag = String::format("(%d)", duplicate_count);
-    auto title = fsp.title();
+    auto title = lexical_path.title();
     if (title.ends_with(prev_duplicate_tag)) {
         // remove the previous duplicate tag "(n)" so we can add a new tag.
         title = title.substring(0, title.length() - prev_duplicate_tag.length());
     }
-    duplicated_name.appendf("%s (%d)", fsp.title().characters(), duplicate_count);
-    if (!fsp.extension().is_empty()) {
-        duplicated_name.appendf(".%s", fsp.extension().characters());
+    duplicated_name.appendf("%s (%d)", lexical_path.title().characters(), duplicate_count);
+    if (!lexical_path.extension().is_empty()) {
+        duplicated_name.appendf(".%s", lexical_path.extension().characters());
     }
     return duplicated_name.build();
 }

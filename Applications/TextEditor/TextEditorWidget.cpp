@@ -301,7 +301,7 @@ TextEditorWidget::TextEditorWidget()
 
         m_document_dirty = false;
         m_editor->set_text(StringView());
-        set_path(FileSystemPath());
+        set_path(LexicalPath());
         update_title();
     });
 
@@ -333,7 +333,7 @@ TextEditorWidget::TextEditorWidget()
         }
 
         m_document_dirty = false;
-        set_path(FileSystemPath(save_path.value()));
+        set_path(LexicalPath(save_path.value()));
         dbg() << "Wrote document to " << save_path.value();
     });
 
@@ -465,11 +465,11 @@ TextEditorWidget::~TextEditorWidget()
 {
 }
 
-void TextEditorWidget::set_path(const FileSystemPath& file)
+void TextEditorWidget::set_path(const LexicalPath& lexical_path)
 {
-    m_path = file.string();
-    m_name = file.title();
-    m_extension = file.extension();
+    m_path = lexical_path.string();
+    m_name = lexical_path.title();
+    m_extension = lexical_path.extension();
 
     if (m_extension == "cpp" || m_extension == "h") {
         m_cpp_highlight->activate();
@@ -508,7 +508,7 @@ void TextEditorWidget::open_sesame(const String& path)
     m_document_dirty = false;
     m_document_opening = true;
 
-    set_path(FileSystemPath(path));
+    set_path(LexicalPath(path));
 
     m_editor->set_focus(true);
 }

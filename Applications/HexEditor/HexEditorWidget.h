@@ -27,8 +27,8 @@
 #pragma once
 
 #include "HexEditor.h"
-#include <AK/FileSystemPath.h>
 #include <AK/Function.h>
+#include <AK/LexicalPath.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
@@ -45,7 +45,7 @@ public:
 
 private:
     HexEditorWidget();
-    void set_path(const FileSystemPath& file);
+    void set_path(const LexicalPath& file);
     void update_title();
 
     RefPtr<HexEditor> m_editor;

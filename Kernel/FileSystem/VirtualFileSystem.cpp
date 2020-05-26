@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -291,7 +291,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
     if (!parent_inode.metadata().may_write(*Process::current))
         return KResult(-EACCES);
 
-    FileSystemPath p(path);
+    LexicalPath p(path);
     dbg() << "VFS::mknod: '" << p.basename() << "' mode=" << mode << " dev=" << dev << " in " << parent_inode.identifier();
     return parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, dev, Process::current->uid(), Process::current->gid()).result();
 }
@@ -310,7 +310,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
     auto& parent_inode = parent_custody.inode();
     if (!parent_inode.metadata().may_write(*Process::current))
         return KResult(-EACCES);
-    FileSystemPath p(path);
+    LexicalPath p(path);
 #ifdef VFS_DEBUG
     dbg() << "VFS::create: '" << p.basename() << "' in " << parent_inode.identifier();
 #endif
@@ -349,7 +349,7 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
     if (!parent_inode.metadata().may_write(*Process::current))
         return KResult(-EACCES);
 
-    FileSystemPath p(path);
+    LexicalPath p(path);
 #ifdef VFS_DEBUG
     dbg() << "VFS::mkdir: '" << p.basename() << "' in " << parent_inode.identifier();
 #endif
@@ -449,7 +449,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
             return KResult(-EACCES);
     }
 
-    auto new_basename = FileSystemPath(new_path).basename();
+    auto new_basename = LexicalPath(new_path).basename();
 
     if (!new_custody_or_error.is_error()) {
         auto& new_custody = *new_custody_or_error.value();
@@ -472,7 +472,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     if (result.is_error())
         return result;
 
-    result = old_parent_inode.remove_child(FileSystemPath(old_path).basename());
+    result = old_parent_inode.remove_child(LexicalPath(old_path).basename());
     if (result.is_error())
         return result;
 
@@ -555,7 +555,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
     if (old_inode.is_directory())
         return KResult(-EPERM);
 
-    return parent_inode.add_child(old_inode.identifier(), FileSystemPath(new_path).basename(), old_inode.mode());
+    return parent_inode.add_child(old_inode.identifier(), LexicalPath(new_path).basename(), old_inode.mode());
 }
 
 KResult VFS::unlink(StringView path, Custody& base)
@@ -579,7 +579,7 @@ KResult VFS::unlink(StringView path, Custody& base)
             return KResult(-EACCES);
     }
 
-    auto result = parent_inode.remove_child(FileSystemPath(path).basename());
+    auto result = parent_inode.remove_child(LexicalPath(path).basename());
     if (result.is_error())
         return result;
 
@@ -600,7 +600,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
     if (!parent_inode.metadata().may_write(*Process::current))
         return KResult(-EACCES);
 
-    FileSystemPath p(linkpath);
+    LexicalPath p(linkpath);
     dbg() << "VFS::symlink: '" << p.basename() << "' (-> '" << target << "') in " << parent_inode.identifier();
     auto inode_or_error = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), 0120644, 0, 0, Process::current->uid(), Process::current->gid());
     if (inode_or_error.is_error())
@@ -649,7 +649,7 @@ KResult VFS::rmdir(StringView path, Custody& base)
     if (result.is_error())
         return result;
 
-    return parent_inode.remove_child(FileSystemPath(path).basename());
+    return parent_inode.remove_child(LexicalPath(path).basename());
 }
 
 RefPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)

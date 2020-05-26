@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/FileSystemPath.h>
 #include <LibCore/File.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>

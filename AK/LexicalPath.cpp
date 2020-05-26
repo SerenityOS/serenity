@@ -24,21 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
 namespace AK {
 
-FileSystemPath::FileSystemPath(const StringView& s)
+LexicalPath::LexicalPath(const StringView& s)
     : m_string(s)
 {
     canonicalize();
     m_is_valid = true;
 }
 
-void FileSystemPath::canonicalize()
+void LexicalPath::canonicalize()
 {
     if (m_string.is_empty()) {
         m_parts.clear();
@@ -105,14 +105,14 @@ void FileSystemPath::canonicalize()
     m_string = builder.to_string();
 }
 
-bool FileSystemPath::has_extension(const StringView& extension) const
+bool LexicalPath::has_extension(const StringView& extension) const
 {
     return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
 }
 
-String canonicalized_path(const StringView& path)
+String LexicalPath::canonicalized_path(const StringView& path)
 {
-    return FileSystemPath(path).string();
+    return LexicalPath(path).string();
 }
 
 }

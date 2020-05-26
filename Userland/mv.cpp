@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <stdio.h>
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
     String combined_new_path;
     if (rc == 0 && S_ISDIR(st.st_mode)) {
-        auto old_basename = FileSystemPath(old_path).basename();
+        auto old_basename = LexicalPath(old_path).basename();
         combined_new_path = String::format("%s/%s", new_path, old_basename.characters());
         new_path = combined_new_path.characters();
     }

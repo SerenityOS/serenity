@@ -25,7 +25,6 @@
  */
 
 #include <AK/Demangle.h>
-#include <AK/FileSystemPath.h>
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>

@@ -87,7 +87,7 @@ HexEditorWidget::HexEditorWidget()
             if (valid && file_size > 0) {
                 m_document_dirty = false;
                 m_editor->set_buffer(ByteBuffer::create_zeroed(file_size));
-                set_path(FileSystemPath());
+                set_path(LexicalPath());
                 update_title();
             } else {
                 GUI::MessageBox::show("Invalid file size entered.", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
@@ -129,7 +129,7 @@ HexEditorWidget::HexEditorWidget()
         }
 
         m_document_dirty = false;
-        set_path(FileSystemPath(save_path.value()));
+        set_path(LexicalPath(save_path.value()));
         dbg() << "Wrote document to " << save_path.value();
     });
 
@@ -211,11 +211,11 @@ HexEditorWidget::~HexEditorWidget()
 {
 }
 
-void HexEditorWidget::set_path(const FileSystemPath& file)
+void HexEditorWidget::set_path(const LexicalPath& lexical_path)
 {
-    m_path = file.string();
-    m_name = file.title();
-    m_extension = file.extension();
+    m_path = lexical_path.string();
+    m_name = lexical_path.title();
+    m_extension = lexical_path.extension();
     update_title();
 }
 
@@ -239,7 +239,7 @@ void HexEditorWidget::open_file(const String& path)
 
     m_document_dirty = false;
     m_editor->set_buffer(file->read_all()); // FIXME: On really huge files, this is never going to work. Should really create a framework to fetch data from the file on-demand.
-    set_path(FileSystemPath(path));
+    set_path(LexicalPath(path));
 }
 
 bool HexEditorWidget::request_close()

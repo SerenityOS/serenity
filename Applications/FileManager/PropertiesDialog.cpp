@@ -25,6 +25,7 @@
  */
 
 #include "PropertiesDialog.h"
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
@@ -42,8 +43,8 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     : Dialog(parent_window)
     , m_model(model)
 {
-    auto file_path = FileSystemPath(path);
-    ASSERT(file_path.is_valid());
+    auto lexical_path = LexicalPath(path);
+    ASSERT(lexical_path.is_valid());
 
     auto& main_widget = set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
@@ -72,8 +73,8 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     m_icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_icon->set_preferred_size(32, 32);
 
-    m_name = file_path.basename();
-    m_path = file_path.string();
+    m_name = lexical_path.basename();
+    m_path = lexical_path.string();
 
     m_name_box = file_container.add<GUI::TextBox>();
     m_name_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);

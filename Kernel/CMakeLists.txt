@@ -121,10 +121,10 @@ set(KERNEL_SOURCES
 )
 
 set(AK_SOURCES
-    ../AK/FileSystemPath.cpp
     ../AK/FlyString.cpp
     ../AK/JsonParser.cpp
     ../AK/JsonValue.cpp
+    ../AK/LexicalPath.cpp
     ../AK/LogStream.cpp
     ../AK/String.cpp
     ../AK/StringBuilder.cpp

@@ -26,7 +26,7 @@
 
 #include "TerminalWidget.h"
 #include "XtermColors.h"
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -843,7 +843,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         // Then add them to the context menu.
         // FIXME: Adapt this code when we actually support calling LaunchServer with a specific handler in mind.
         for (auto& handler : handlers) {
-            auto af_path = String::format("/res/apps/%s.af", FileSystemPath(handler).basename().characters());
+            auto af_path = String::format("/res/apps/%s.af", LexicalPath(handler).basename().characters());
             auto af = Core::ConfigFile::open(af_path);
             auto handler_name = af->read_entry("App", "Name", handler);
             auto handler_icon = af->read_entry("Icons", "16x16", {});

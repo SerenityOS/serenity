@@ -27,7 +27,7 @@
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include <AK/ByteBuffer.h>
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
@@ -137,7 +137,7 @@ static HashMap<String, String>& man_paths()
         Core::DirIterator it("/usr/share/man/man2", Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
             auto path = String::format("/usr/share/man/man2/%s", it.next_path().characters());
-            auto title = FileSystemPath(path).title();
+            auto title = LexicalPath(path).title();
             paths.set(title, path);
         }
     }

@@ -25,7 +25,7 @@
  */
 
 #include "Project.h"
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
@@ -169,7 +169,7 @@ private:
 Project::Project(const String& path, Vector<String>&& filenames)
     : m_path(path)
 {
-    m_name = FileSystemPath(m_path).basename();
+    m_name = LexicalPath(m_path).basename();
 
     m_file_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
     m_cplusplus_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"));
@@ -283,7 +283,7 @@ bool Project::save()
 ProjectFile* Project::get_file(const String& filename)
 {
     for (auto& file : m_files) {
-        if (FileSystemPath(file.name()).string() == FileSystemPath(filename).string())
+        if (LexicalPath(file.name()).string() == LexicalPath(filename).string())
             return &file;
     }
     return nullptr;
@@ -307,7 +307,7 @@ void Project::rebuild_tree()
     root->type = ProjectTreeNode::Type::Project;
 
     for (auto& file : m_files) {
-        FileSystemPath path(file.name());
+        LexicalPath path(file.name());
         ProjectTreeNode* current = root.ptr();
         StringBuilder partial_path;
 

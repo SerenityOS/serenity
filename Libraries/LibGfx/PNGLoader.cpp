@@ -25,7 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/NetworkOrdered.h>
 #include <LibCore/puff.h>
@@ -193,7 +193,7 @@ RefPtr<Gfx::Bitmap> load_png(const StringView& path)
         return nullptr;
     auto bitmap = load_png_impl((const u8*)mapped_file.data(), mapped_file.size());
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded PNG: %s", bitmap->width(), bitmap->height(), canonicalized_path(path).characters()));
+        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded PNG: %s", bitmap->width(), bitmap->height(), LexicalPath::canonicalized_path(path).characters()));
     return bitmap;
 }
 

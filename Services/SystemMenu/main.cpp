@@ -25,7 +25,7 @@
  */
 
 #include "ShutdownDialog.h"
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
@@ -171,7 +171,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         while (dt.has_next()) {
             auto theme_name = dt.next_path();
             auto theme_path = String::format("/res/themes/%s", theme_name.characters());
-            g_themes.append({ FileSystemPath(theme_name).title(), theme_path });
+            g_themes.append({ LexicalPath(theme_name).title(), theme_path });
         }
         quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });
     }

@@ -28,7 +28,6 @@
 
 #include <AK/BinarySearch.h>
 #include <AK/ByteBuffer.h>
-#include <AK/FileSystemPath.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>

@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/FileSystemModel.h>
@@ -162,24 +162,24 @@ String FileSystemModel::Node::full_path(const FileSystemModel& model) const
     }
     builder.append('/');
     builder.append(name);
-    return canonicalized_path(builder.to_string());
+    return LexicalPath::canonicalized_path(builder.to_string());
 }
 
 ModelIndex FileSystemModel::index(const StringView& path, int column) const
 {
-    FileSystemPath canonical_path(path);
+    LexicalPath lexical_path(path);
     const Node* node = m_root;
-    if (canonical_path.string() == "/")
+    if (lexical_path.string() == "/")
         return m_root->index(*this, column);
-    for (size_t i = 0; i < canonical_path.parts().size(); ++i) {
-        auto& part = canonical_path.parts()[i];
+    for (size_t i = 0; i < lexical_path.parts().size(); ++i) {
+        auto& part = lexical_path.parts()[i];
         bool found = false;
         for (auto& child : node->children) {
             if (child.name == part) {
                 const_cast<Node&>(child).reify_if_needed(*this);
                 node = &child;
                 found = true;
-                if (i == canonical_path.parts().size() - 1)
+                if (i == lexical_path.parts().size() - 1)
                     return child.index(*this, column);
                 break;
             }
@@ -198,7 +198,7 @@ String FileSystemModel::full_path(const ModelIndex& index) const
 }
 
 FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
-    : m_root_path(canonicalized_path(root_path))
+    : m_root_path(LexicalPath::canonicalized_path(root_path))
     , m_mode(mode)
 {
     m_directory_icon = Icon::default_icon("filetype-folder");
@@ -284,7 +284,7 @@ static String permission_string(mode_t mode)
 
 void FileSystemModel::set_root_path(const StringView& root_path)
 {
-    m_root_path = canonicalized_path(root_path);
+    m_root_path = LexicalPath::canonicalized_path(root_path);
     update();
 
     if (m_root->has_error()) {
