@@ -2711,7 +2711,7 @@ int Process::sys$sigpending(sigset_t* set)
 
 int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
 {
-    REQUIRE_PROMISE(stdio);
+    REQUIRE_PROMISE(sigaction);
     if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
         return -EINVAL;
     if (!validate_read_typed(act))
