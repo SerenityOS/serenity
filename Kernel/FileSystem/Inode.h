@@ -50,7 +50,7 @@ class Inode : public RefCounted<Inode>
 public:
     virtual ~Inode();
 
-    virtual void one_ref_left() {}
+    virtual void one_ref_left() { }
 
     FS& fs() { return m_fs; }
     const FS& fs() const { return m_fs; }
