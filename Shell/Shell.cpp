@@ -1024,21 +1024,15 @@ ContinuationRequest Shell::is_complete(const Vector<Command>& commands)
 
 IterationDecision Shell::wait_for_pid(const Shell::SpawnedProcess& process, bool is_first_command_in_chain, int& return_value)
 {
-    // Disable signal handler for the first command, as we actively wait for it
-    sighandler_t chld_handler = nullptr;
-    if (is_first_command_in_chain) {
-        chld_handler = signal(SIGCHLD, nullptr);
-        dbg() << "Waiting for " << process.name;
-    }
+    if (is_first_command_in_chain)
+        m_waiting_for_pid = process.pid;
 
     int wstatus = 0;
     int rc = waitpid(process.pid, &wstatus, WSTOPPED);
     auto errno_save = errno;
 
-    if (is_first_command_in_chain) {
-        signal(SIGCHLD, chld_handler);
-        dbg() << process.name << " is probably dead now (" << rc << ", " << strerror(errno_save) << ") -> exited " << WIFEXITED(wstatus) << " stopped " << WIFSTOPPED(wstatus);
-    }
+    if (is_first_command_in_chain)
+        m_waiting_for_pid = -1;
 
     errno = errno_save;
     if (rc < 0 && errno != EINTR) {

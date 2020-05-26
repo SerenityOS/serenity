@@ -115,6 +115,8 @@ public:
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete(const Line::Editor&);
 
+    bool is_waiting_for(pid_t pid) const { return m_waiting_for_pid == pid; }
+
     String get_history_path();
     void load_history();
     void save_history();
@@ -187,6 +189,7 @@ private:
     StringBuilder m_complete_line_builder;
     bool m_should_break_current_command { false };
     bool m_should_ignore_jobs_on_next_exit { false };
+    pid_t m_waiting_for_pid { -1 };
 };
 
 static constexpr bool is_word_character(char c)

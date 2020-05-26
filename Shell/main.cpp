@@ -58,7 +58,7 @@ void FileDescriptionCollector::add(int fd)
 int main(int argc, char** argv)
 {
     Core::EventLoop loop;
-    
+
     signal(SIGINT, [](int) {
         editor->interrupted();
     });
@@ -74,6 +74,8 @@ int main(int argc, char** argv)
     signal(SIGCHLD, [](int) {
         auto& jobs = s_shell->jobs;
         for (auto& job : jobs) {
+            if (s_shell->is_waiting_for(job.value->pid()))
+                continue;
             int wstatus = 0;
             auto child_pid = waitpid(job.value->pid(), &wstatus, WNOHANG);
             if (child_pid == job.value->pid()) {
