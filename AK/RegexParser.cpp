@@ -25,6 +25,7 @@
  */
 
 #include "RegexParser.h"
+#include "RegexDebug.h"
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <cstdio>
@@ -109,7 +110,7 @@ Parser::Result Parser::parse(Optional<AllOptions> regex_options)
         set_error(Error::InvalidPattern);
 
 #ifdef REGEX_DEBUG
-    printf("[PARSER] Produced bytecode with %lu entries (opcodes + arguments)\n", m_parser_state.bytecode.size());
+    fprintf(stderr, "[PARSER] Produced bytecode with %lu entries (opcodes + arguments)\n", m_parser_state.bytecode.size());
 #endif
     return {
         move(m_parser_state.bytecode),

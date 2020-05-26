@@ -185,20 +185,29 @@ RegexResult Matcher<Parser>::match(const StringView& view, Optional<typename Par
 }
 
 template<class Parser>
-bool Matcher<Parser>::execute(const MatchInput& input, MatchState& state, MatchOutput& output, size_t recursion_level) const
+bool Matcher<Parser>::execute(const MatchInput& input, MatchState& state, MatchOutput& output, size_t recursion_level)
 {
     if (recursion_level > c_max_recursion)
         return false;
 
-    NonnullOwnPtrVector<OpCode> fork_low_prio_opcodes;
+    Vector<MatchState> fork_low_prio_states;
+    MatchState fork_high_prio_state;
+
     auto& bytecode = m_pattern.parser_result.bytecode;
 
     for (;;) {
         ++output.operations;
-        auto opcode = bytecode.next(state);
+        auto* opcode = bytecode.get_opcode(state);
+
+        if (!opcode) {
+            //FIXME: How to bring this bad situation to a good end?
+            return false;
+            //fprintf(stderr, "\n[VM] Invalid opcode: %lu, stack index: %lu\n", at(state.instruction_position), state.instruction_position);
+            //exit(1);
+        }
 
 #ifdef REGEX_DEBUG
-        s_regex_dbg.print_opcode("VM", *opcode, recursion_level, false);
+        s_regex_dbg.print_opcode("VM", *opcode, state, recursion_level, false);
 #endif
 
         auto result = opcode->execute(input, state, output);
@@ -207,14 +216,17 @@ bool Matcher<Parser>::execute(const MatchInput& input, MatchState& state, MatchO
         s_regex_dbg.print_result(*opcode, bytecode, input, state, result);
 #endif
 
+        state.instruction_position += opcode->size();
+
         switch (result) {
         case ExecutionResult::Fork_PrioLow:
-            fork_low_prio_opcodes.prepend(move(opcode));
+            fork_low_prio_states.prepend(MatchState { state });
             continue;
         case ExecutionResult::Fork_PrioHigh:
-            opcode->state().instruction_position = opcode->state().fork_at_position;
-            if (execute(input, opcode->state(), output, ++recursion_level)) {
-                state = opcode->state();
+            fork_high_prio_state = state;
+            fork_high_prio_state.instruction_position = fork_high_prio_state.fork_at_position;
+            if (execute(input, fork_high_prio_state, output, ++recursion_level)) {
+                state = fork_high_prio_state;
                 return true;
             }
 
@@ -229,7 +241,7 @@ bool Matcher<Parser>::execute(const MatchInput& input, MatchState& state, MatchO
         case ExecutionResult::Exit:
             return false;
         case ExecutionResult::ExitWithFork:
-            return execute_low_prio_forks(input, state, output, fork_low_prio_opcodes, recursion_level + 1);
+            return execute_low_prio_forks(input, state, output, fork_low_prio_states, recursion_level + 1);
         }
     }
 
@@ -237,24 +249,25 @@ bool Matcher<Parser>::execute(const MatchInput& input, MatchState& state, MatchO
 }
 
 template<class Parser>
-inline bool Matcher<Parser>::execute_low_prio_forks(const MatchInput& input, MatchState& state, MatchOutput& output, NonnullOwnPtrVector<OpCode>& opcodes, size_t recursion_level) const
+inline bool Matcher<Parser>::execute_low_prio_forks(const MatchInput& input, MatchState& original_state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level)
 {
-    for (auto& opcode : opcodes) {
-#ifdef REGEX_DEBUG
-        s_regex_dbg.print_opcode("ForkStay", opcode, recursion_level);
-#endif
-        opcode.state().instruction_position = opcode.state().fork_at_position;
+    for (auto& state : states) {
 
-        if (execute(input, opcode.state(), output, recursion_level)) {
-            state = opcode.state();
+        state.instruction_position = state.fork_at_position;
+#ifdef REGEX_DEBUG
+        fprintf(stderr, "Forkstay... ip = %lu, sp = %lu\n", state.instruction_position, state.string_position);
+#endif
+
+        if (execute(input, state, output, recursion_level)) {
 #ifdef REGEX_DEBUG
             fprintf(stderr, "Forkstay succeeded... ip = %lu, sp = %lu\n", state.instruction_position, state.string_position);
 #endif
+            original_state = MatchState { state };
             return true;
         }
     }
 
-    state.string_position = 0;
+    original_state.string_position = 0;
     return false;
 };
 

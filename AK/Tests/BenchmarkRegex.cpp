@@ -32,7 +32,9 @@
 #define BENCHMARK_LOOP_ITERATIONS 100000
 
 #define REGEX_BENCHMARK_OUR
-#define REGEX_BENCHMARK_OTHER
+#ifndef __serenity__
+#    define REGEX_BENCHMARK_OTHER
+#endif
 
 #if defined(REGEX_DEBUG)
 #    error "Running benchmark with debug on is not recommended!"

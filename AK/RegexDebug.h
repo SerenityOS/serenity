@@ -63,26 +63,33 @@ public:
         auto& bytecode = regex.parser_result.bytecode;
 
         for (;;) {
-            auto opcode = bytecode.next(state);
-            print_opcode("PrintBytecode", *opcode);
+            auto* opcode = bytecode.get_opcode(state);
+            if (!opcode) {
+                //FIXME: How to bring this bad situation to a good end?
+                break;
+            }
+
+            print_opcode("PrintBytecode", *opcode, state);
             fprintf(m_file, "%s", m_debug_stripline.characters());
 
-            if (is<OpCode_Exit>(opcode))
+            if (is<OpCode_Exit>(*opcode))
                 break;
+
+            state.instruction_position += opcode->size();
         }
 
         fflush(m_file);
     }
 
-    void print_opcode(const String& system, const OpCode& opcode, size_t recursion = 0, bool newline = true) const
+    void print_opcode(const String& system, OpCode& opcode, MatchState& state, size_t recursion = 0, bool newline = true) const
     {
         fprintf(m_file, "%-15s | %-5lu | %-9lu | %-35s | %-30s | %-20s%s",
             system.characters(),
-            opcode.state().instruction_position,
+            state.instruction_position,
             recursion,
             opcode.to_string().characters(),
             opcode.arguments_string().characters(),
-            String::format("ip: %3lu,   sp: %3lu", opcode.state().instruction_position, opcode.state().string_position).characters(),
+            String::format("ip: %3lu,   sp: %3lu", state.instruction_position, state.string_position).characters(),
             newline ? "\n" : "");
 
         if (newline && is<OpCode_Compare>(opcode)) {
@@ -99,9 +106,9 @@ public:
         if (result == ExecutionResult::Done) {
             builder.appendf(", ip: %lu/%lu, sp: %lu/%lu", state.instruction_position, bytecode.size() - 1, state.string_position, input.view.length() - 1);
         } else if (result == ExecutionResult::Fork_PrioHigh) {
-            builder.appendf(", next ip: %lu", opcode.state().fork_at_position);
+            builder.appendf(", next ip: %lu", state.fork_at_position + opcode.size());
         } else if (result != ExecutionResult::Exit) {
-            builder.appendf(", next ip: %lu", state.instruction_position);
+            builder.appendf(", next ip: %lu", state.instruction_position + opcode.size());
         }
 
         fprintf(m_file, " | %-20s\n", builder.to_string().characters());

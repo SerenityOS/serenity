@@ -37,11 +37,13 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
+#include <stdio.h>
+
 namespace AK {
 namespace regex {
 
 static const constexpr size_t c_max_recursion = 5000;
-static const constexpr size_t c_match_preallocation_count = 20;
+static const constexpr size_t c_match_preallocation_count = 0;
 
 struct RegexResult final {
     bool success { false };
@@ -69,8 +71,8 @@ public:
     RegexResult match(const StringView&, Optional<typename ParserTraits<Parser>::OptionsType> = {});
 
 private:
-    bool execute(const MatchInput&, MatchState&, MatchOutput&, size_t recursion_level) const;
-    bool run_fork_low_prio(const MatchInput& input, MatchState& state, MatchOutput& output, NonnullOwnPtrVector<OpCode>& opcodes, size_t recursion_level) const;
+    bool execute(const MatchInput&, MatchState&, MatchOutput&, size_t recursion_level);
+    bool execute_low_prio_forks(const MatchInput& input, MatchState& state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level);
 
     const Regex<Parser>& m_pattern;
     const typename ParserTraits<Parser>::OptionsType m_regex_options;
