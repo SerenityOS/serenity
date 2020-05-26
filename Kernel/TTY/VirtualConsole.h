@@ -26,23 +26,19 @@
 
 #pragma once
 
+#include <Kernel/Console.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/TTY/TTY.h>
-#include <Kernel/Console.h>
+#include <LibVT/Terminal.h>
 
 namespace Kernel {
 
 class VirtualConsole final : public TTY
     , public KeyboardClient
-    , public ConsoleImplementation {
+    , public VT::TerminalClient {
     AK_MAKE_ETERNAL
 public:
-    enum InitialContents {
-        Cleared,
-        AdoptCurrentVGABuffer
-    };
-
-    VirtualConsole(unsigned index, InitialContents = Cleared);
+    VirtualConsole(unsigned index);
     virtual ~VirtualConsole() override;
 
     static void switch_to(unsigned);
@@ -55,47 +51,29 @@ private:
     // ^KeyboardClient
     virtual void on_key_pressed(KeyboardDevice::Event) override;
 
-    // ^ConsoleImplementation
-    virtual void on_sysconsole_receive(u8) override;
-
     // ^TTY
     virtual ssize_t on_tty_write(const u8*, ssize_t) override;
-    virtual StringView tty_name() const override;
+    virtual StringView tty_name() const override { return m_tty_name; }
     virtual void echo(u8) override;
+
+    // ^TerminalClient
+    virtual void beep() override;
+    virtual void set_window_title(const StringView&) override;
+    virtual void terminal_did_resize(u16 columns, u16 rows) override;
+    virtual void terminal_history_changed() override;
+    virtual void emit(const u8*, size_t) override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "VirtualConsole"; }
 
     void set_active(bool);
-    void on_char(u8);
 
-    void get_vga_cursor(u8& row, u8& column);
     void flush_vga_cursor();
+    void flush_dirty_lines();
 
-    u8* m_buffer;
     unsigned m_index;
     bool m_active { false };
     bool m_graphical { false };
-
-    void scroll_up();
-    void set_cursor(unsigned row, unsigned column);
-    void put_character_at(unsigned row, unsigned column, u8 ch);
-
-    void escape$A(const Vector<unsigned>&);
-    void escape$D(const Vector<unsigned>&);
-    void escape$H(const Vector<unsigned>&);
-    void escape$J(const Vector<unsigned>&);
-    void escape$m(const Vector<unsigned>&);
-    void escape$s(const Vector<unsigned>&);
-    void escape$u(const Vector<unsigned>&);
-
-    void clear();
-
-    u8 m_cursor_row { 0 };
-    u8 m_cursor_column { 0 };
-    u8 m_saved_cursor_row { 0 };
-    u8 m_saved_cursor_column { 0 };
-    u8 m_current_attribute { 0x07 };
 
     void clear_vga_row(u16 row);
     void set_vga_start_row(u16 row);
@@ -103,20 +81,9 @@ private:
     u16 m_current_vga_start_address { 0 };
     u8* m_current_vga_window { nullptr };
 
-    void execute_escape_sequence(u8 final);
+    VT::Terminal m_terminal;
 
-    enum EscapeState {
-        Normal,
-        ExpectBracket,
-        ExpectParameter,
-        ExpectIntermediate,
-        ExpectFinal,
-    };
-    EscapeState m_escape_state { Normal };
-    Vector<u8> m_parameters;
-    Vector<u8> m_intermediates;
-    u8* m_horizontal_tabs { nullptr };
-    char m_tty_name[32];
+    String m_tty_name;
 };
 
 }

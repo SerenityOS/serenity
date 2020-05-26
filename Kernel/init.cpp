@@ -143,7 +143,7 @@ extern "C" [[noreturn]] void init()
     new SerialDevice(SERIAL_COM4_ADDR, 67);
 
     VirtualConsole::initialize();
-    tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
+    tty0 = new VirtualConsole(0);
     new VirtualConsole(1);
     VirtualConsole::switch_to(0);
 
