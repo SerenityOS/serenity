@@ -97,6 +97,8 @@ TEST_CASE(ends_with)
     EXPECT(!test_string.ends_with('E'));
     EXPECT(test_string.ends_with("ABCDEF"));
     EXPECT(!test_string.ends_with("ABC"));
+    EXPECT(test_string.ends_with("def",  CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string.ends_with("def",  CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(copy_string)

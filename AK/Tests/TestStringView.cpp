@@ -80,6 +80,8 @@ TEST_CASE(ends_with)
     EXPECT(test_string_view.ends_with("ABCDEF"));
     EXPECT(!test_string_view.ends_with("ABCDE"));
     EXPECT(!test_string_view.ends_with("ABCDEFG"));
+    EXPECT(test_string_view.ends_with("def",  CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string_view.ends_with("def",  CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(lines)
