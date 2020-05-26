@@ -38,6 +38,8 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/Notifier.h>
+#include <LibCore/Object.h>
 #include <LibLine/Span.h>
 #include <LibLine/Style.h>
 #include <LibLine/SuggestionDisplay.h>
@@ -82,7 +84,9 @@ struct Configuration {
     OperationMode operation_mode { OperationMode::Full };
 };
 
-class Editor {
+class Editor : public Core::Object {
+    C_OBJECT(Editor);
+
 public:
     enum class Error {
         ReadFailure,
@@ -90,7 +94,6 @@ public:
         Eof,
     };
 
-    explicit Editor(Configuration configuration = {});
     ~Editor();
 
     Result<String, Error> get_line(const String& prompt);
@@ -160,6 +163,8 @@ public:
     bool is_editing() const { return m_is_editing; }
 
 private:
+    explicit Editor(Configuration configuration = {});
+
     struct KeyCallback {
         KeyCallback(Function<bool(Editor&)> cb)
             : callback(move(cb))
@@ -167,6 +172,8 @@ private:
         }
         Function<bool(Editor&)> callback;
     };
+
+    void handle_read_event();
 
     Vector<size_t, 2> vt_dsr();
     void remove_at_index(size_t);
@@ -208,6 +215,7 @@ private:
         m_prompt_lines_at_suggestion_initiation = 0;
         m_refresh_needed = true;
         m_input_error.clear();
+        m_returned_line = String::empty();
     }
 
     void refresh_display();
@@ -266,7 +274,7 @@ private:
 
     bool m_finish { false };
 
-    OwnPtr<Editor> m_search_editor;
+    RefPtr<Editor> m_search_editor;
     bool m_is_searching { false };
     bool m_reset_buffer_on_search_end { true };
     size_t m_search_offset { 0 };
@@ -278,6 +286,7 @@ private:
     ByteBuffer m_pending_chars;
     Vector<char, 512> m_incomplete_data;
     Optional<Error> m_input_error;
+    String m_returned_line;
 
     size_t m_cursor { 0 };
     size_t m_drawn_cursor { 0 };
@@ -335,6 +344,8 @@ private:
 
     HashMap<u32, HashMap<u32, Style>> m_anchored_spans_starting;
     HashMap<u32, HashMap<u32, Style>> m_anchored_spans_ending;
+
+    RefPtr<Core::Notifier> m_notifier;
 
     bool m_initialized { false };
     bool m_refresh_needed { false };

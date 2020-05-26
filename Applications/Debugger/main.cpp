@@ -44,7 +44,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static Line::Editor editor {};
+RefPtr<Line::Editor> editor;
 
 OwnPtr<DebugSession> g_debug_session;
 
@@ -173,6 +173,8 @@ void print_help()
 
 int main(int argc, char** argv)
 {
+    editor = Line::Editor::construct();
+
     if (pledge("stdio proc exec rpath tty sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -236,7 +238,7 @@ int main(int argc, char** argv)
         }
 
         for (;;) {
-            auto command_result = editor.get_line("(sdb) ");
+            auto command_result = editor->get_line("(sdb) ");
 
             if (command_result.is_error())
                 return DebugSession::DebugDecision::Detach;
@@ -246,8 +248,8 @@ int main(int argc, char** argv)
             bool success = false;
             Optional<DebugSession::DebugDecision> decision;
 
-            if (command.is_empty() && !editor.history().is_empty()) {
-                command = editor.history().last();
+            if (command.is_empty() && !editor->history().is_empty()) {
+                command = editor->history().last();
             }
             if (command == "cont") {
                 decision = DebugSession::DebugDecision::Continue;
@@ -276,8 +278,8 @@ int main(int argc, char** argv)
 
             if (success && !command.is_empty()) {
                 // Don't add repeated commands to history
-                if (editor.history().is_empty() || editor.history().last() != command)
-                    editor.add_to_history(command);
+                if (editor->history().is_empty() || editor->history().last() != command)
+                    editor->add_to_history(command);
             }
             if (!success) {
                 print_help();

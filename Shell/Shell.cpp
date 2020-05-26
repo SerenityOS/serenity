@@ -55,7 +55,7 @@
 //        if we want to be more sh-like, we should do that some day
 static constexpr bool HighlightVariablesInsideStrings = false;
 static bool s_disable_hyperlinks = false;
-extern Line::Editor editor;
+extern RefPtr<Line::Editor> editor;
 
 //#define SH_DEBUG
 
@@ -126,7 +126,7 @@ String Shell::prompt() const
     };
 
     auto the_prompt = build_prompt();
-    auto prompt_length = editor.actual_rendered_string_length(the_prompt);
+    auto prompt_length = editor->actual_rendered_string_length(the_prompt);
 
     if (m_should_continue != ExitCodeOrContinuationRequest::Nothing) {
         const auto format_string = "\033[34m%.*-s\033[m";
@@ -511,8 +511,8 @@ int Shell::builtin_disown(int argc, const char** argv)
 
 int Shell::builtin_history(int, const char**)
 {
-    for (size_t i = 0; i < editor.history().size(); ++i) {
-        printf("%6zu  %s\n", i, editor.history()[i].characters());
+    for (size_t i = 0; i < editor->history().size(); ++i) {
+        printf("%6zu  %s\n", i, editor->history()[i].characters());
     }
     return 0;
 }
@@ -1385,7 +1385,7 @@ void Shell::load_history()
     while (history_file->can_read_line()) {
         auto b = history_file->read_line(1024);
         // skip the newline and terminating bytes
-        editor.add_to_history(String(reinterpret_cast<const char*>(b.data()), b.size() - 2));
+        editor->add_to_history(String(reinterpret_cast<const char*>(b.data()), b.size() - 2));
     }
 }
 
@@ -1395,7 +1395,7 @@ void Shell::save_history()
     if (file_or_error.is_error())
         return;
     auto& file = *file_or_error.value();
-    for (const auto& line : editor.history()) {
+    for (const auto& line : editor->history()) {
         file.write(line);
         file.write("\n");
     }
@@ -1484,7 +1484,7 @@ void Shell::cache_path()
     quick_sort(cached_path);
 }
 
-void Shell::highlight(Line::Editor&) const
+void Shell::highlight(Line::Editor& editor) const
 {
     StringBuilder builder;
     if (m_should_continue == ExitCodeOrContinuationRequest::DoubleQuotedString) {
@@ -1703,7 +1703,7 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
 
 bool Shell::read_single_line()
 {
-    auto line_result = editor.get_line(prompt());
+    auto line_result = editor->get_line(prompt());
 
     if (line_result.is_error()) {
         m_complete_line_builder.clear();
@@ -1737,7 +1737,7 @@ bool Shell::read_single_line()
     if (!complete_or_exit_code.has_value())
         return true;
 
-    editor.add_to_history(m_complete_line_builder.build());
+    editor->add_to_history(m_complete_line_builder.build());
     m_complete_line_builder.clear();
     return true;
 }
