@@ -316,6 +316,8 @@ void HtmlView::keydown_event(GUI::KeyEvent& event)
         case Key_PageUp:
             vertical_scrollbar().set_value(vertical_scrollbar().value() - frame_inner_rect().height());
             break;
+        default:
+            break;
         }
     }
 
