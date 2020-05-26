@@ -166,19 +166,19 @@ InodeMetadata TmpFSInode::metadata() const
     return m_metadata;
 }
 
-bool TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
     LOCKER(m_lock, Lock::Mode::Shared);
 
     if (!is_directory())
-        return false;
+        return KResult(-ENOTDIR);
 
     callback({ ".", identifier(), 0 });
     callback({ "..", m_parent, 0 });
 
     for (auto& it : m_children)
         callback(it.value.entry);
-    return true;
+    return KSuccess;
 }
 
 ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDescription*) const

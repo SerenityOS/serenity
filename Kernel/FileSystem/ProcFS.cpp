@@ -1253,14 +1253,14 @@ InodeIdentifier ProcFS::ProcFSDirectoryEntry::identifier(unsigned fsid) const
     return to_identifier(fsid, PDI_Root, 0, (ProcFileType)proc_file_type);
 }
 
-bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
 #ifdef PROCFS_DEBUG
     dbg() << "ProcFS: traverse_as_directory " << index();
 #endif
 
     if (!Kernel::is_directory(identifier()))
-        return false;
+        return KResult(-ENOTDIR);
 
     auto pid = to_pid(identifier());
     auto proc_file_type = to_proc_file_type(identifier());
@@ -1303,7 +1303,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     case FI_PID: {
         auto handle = ProcessInspectionHandle::from_pid(pid);
         if (!handle)
-            return false;
+            return KResult(-ENOENT);
         auto& process = handle->process();
         for (auto& entry : fs().m_entries) {
             if (entry.proc_file_type > __FI_PID_Start && entry.proc_file_type < __FI_PID_End) {
@@ -1318,7 +1318,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     case FI_PID_fd: {
         auto handle = ProcessInspectionHandle::from_pid(pid);
         if (!handle)
-            return false;
+            return KResult(-ENOENT);
         auto& process = handle->process();
         for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
             auto description = process.file_description(i);
@@ -1330,10 +1330,10 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         }
     } break;
     default:
-        return true;
+        return KSuccess;
     }
 
-    return true;
+    return KSuccess;
 }
 
 RefPtr<Inode> ProcFSInode::lookup(StringView name)

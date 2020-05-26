@@ -194,8 +194,8 @@ void load_kernel_symbol_table()
     ASSERT(!result.is_error());
     auto description = result.value();
     auto buffer = description->read_entire_file();
-    ASSERT(buffer);
-    load_kernel_sybols_from_data(buffer);
+    ASSERT(!buffer.is_error());
+    load_kernel_sybols_from_data(buffer.value());
 }
 
 }

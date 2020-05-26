@@ -158,7 +158,7 @@ bool FileDescription::can_read() const
     return m_file->can_read(*this, offset());
 }
 
-ByteBuffer FileDescription::read_entire_file()
+KResultOr<ByteBuffer> FileDescription::read_entire_file()
 {
     // HACK ALERT: (This entire function)
     ASSERT(m_file->is_inode());

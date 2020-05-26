@@ -1944,10 +1944,10 @@ int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
         return -EINVAL;
 
     auto contents = description->read_entire_file();
-    if (!contents)
-        return -EIO; // FIXME: Get a more detailed error from VFS.
+    if (!contents.is_error())
+        return contents.error();
 
-    auto link_target = String::copy(contents);
+    auto link_target = String::copy(contents.value());
     if (link_target.length() > params.buffer.size)
         return -ENAMETOOLONG;
     copy_to_user(params.buffer.data, link_target.characters(), link_target.length());
@@ -4444,7 +4444,11 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
     if (description_or_error.is_error())
         return description_or_error.error();
     auto& description = description_or_error.value();
-    auto payload = description->read_entire_file();
+    auto payload_or_error = description->read_entire_file();
+    if (payload_or_error.is_error())
+        return payload_or_error.error();
+
+    auto payload = payload_or_error.value();
     auto storage = KBuffer::create_with_size(payload.size());
     memcpy(storage.data(), payload.data(), payload.size());
     payload.clear();
