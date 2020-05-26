@@ -85,4 +85,36 @@ TEST_CASE(relative_paths)
     }
 }
 
+TEST_CASE(has_extension)
+{
+    {
+        FileSystemPath path("/tmp/simple.png");
+        EXPECT(path.has_extension(".png"));
+        EXPECT(path.has_extension(".pnG"));
+        EXPECT(path.has_extension(".PNG"));
+    }
+
+    {
+        FileSystemPath path("/TMP/SIMPLE.PNG");
+        EXPECT(path.has_extension(".png"));
+        EXPECT(path.has_extension(".pnG"));
+        EXPECT(path.has_extension(".PNG"));
+    }
+
+    {
+        FileSystemPath path(".png");
+        EXPECT(path.has_extension(".png"));
+    }
+
+    {
+        FileSystemPath path;
+        EXPECT_EQ(path.has_extension(".png"), false);
+    }
+
+    {
+        FileSystemPath path("png");
+        EXPECT_EQ(path.has_extension(".png"), false);
+    }
+}
+
 TEST_MAIN(FileSystemPath)

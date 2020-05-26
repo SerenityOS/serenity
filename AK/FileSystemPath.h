@@ -47,7 +47,7 @@ public:
 
     const Vector<String>& parts() const { return m_parts; }
 
-    bool has_extension(StringView) const;
+    bool has_extension(const StringView&) const;
 
 private:
     void canonicalize();
