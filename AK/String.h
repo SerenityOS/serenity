@@ -146,7 +146,7 @@ public:
     ConstIterator end() const { return begin() + length(); }
 
     bool starts_with(const StringView&) const;
-    bool ends_with(const StringView&) const;
+    bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     bool starts_with(char) const;
     bool ends_with(char) const;
 
