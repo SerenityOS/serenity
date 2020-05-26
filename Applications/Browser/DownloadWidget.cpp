@@ -30,6 +30,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -162,8 +163,14 @@ void DownloadWidget::did_finish(bool success, const ByteBuffer& payload, RefPtr<
     (void)payload_storage;
     (void)response_headers;
     dbg() << "did_finish, success=" << success;
-    m_cancel_button->set_enabled(false);
+
     m_close_button->set_enabled(true);
+    m_cancel_button->set_text("Open in Folder");
+    m_cancel_button->on_click = [this](auto) {
+        Desktop::Launcher::open(URL::create_with_file_protocol(Core::StandardPaths::downloads_directory()));
+        window()->close();
+    };
+    m_cancel_button->update();
 
     if (!success) {
         GUI::MessageBox::show(String::format("Download failed for some reason"), "Download failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
