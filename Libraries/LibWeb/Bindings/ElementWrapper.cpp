@@ -27,6 +27,7 @@
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/ElementWrapper.h>
@@ -40,6 +41,10 @@ ElementWrapper::ElementWrapper(Element& element)
 {
     put_native_property("innerHTML", inner_html_getter, inner_html_setter);
     put_native_property("id", id_getter, id_setter);
+
+    u8 attributes = JS::Attribute::Configurable | JS::Attribute::Enumerable | JS::Attribute::Writable;
+    put_native_function("getAttribute", get_attribute, 1, attributes);
+    put_native_function("setAttribute", set_attribute, 2, attributes);
 }
 
 ElementWrapper::~ElementWrapper()
@@ -63,6 +68,47 @@ static Element* impl_from(JS::Interpreter& interpreter)
         return nullptr;
     // FIXME: Verify that it's an ElementWrapper somehow!
     return &static_cast<ElementWrapper*>(this_object)->node();
+}
+
+JS::Value ElementWrapper::get_attribute(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+
+    if (interpreter.argument_count() < 1)
+        return interpreter.throw_exception<JS::TypeError>("getAttribute() needs one argument");
+
+    auto attribute_name = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    auto attribute_value = impl->attribute(attribute_name);
+    if (attribute_value.is_null())
+        return JS::js_null();
+
+    return JS::js_string(interpreter, attribute_value);
+}
+
+JS::Value ElementWrapper::set_attribute(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+
+    if (interpreter.argument_count() < 2)
+        return interpreter.throw_exception<JS::TypeError>("setAttribute() needs two arguments");
+
+    auto attribute_name = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    auto attribute_value = interpreter.argument(1).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    impl->set_attribute(attribute_name, attribute_value);
+    return JS::js_undefined();
 }
 
 JS::Value ElementWrapper::inner_html_getter(JS::Interpreter& interpreter)

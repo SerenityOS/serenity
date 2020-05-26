@@ -47,6 +47,9 @@ private:
 
     static JS::Value id_getter(JS::Interpreter&);
     static void id_setter(JS::Interpreter&, JS::Value);
+
+    static JS::Value get_attribute(JS::Interpreter&);
+    static JS::Value set_attribute(JS::Interpreter&);
 };
 
 }
