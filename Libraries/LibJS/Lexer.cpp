@@ -149,8 +149,12 @@ Lexer::Lexer(StringView source)
 
 void Lexer::consume()
 {
-    if (m_position >= m_source.length()) {
-        m_position = m_source.length() + 1;
+    if (m_position > m_source.length())
+        return;
+
+    if (m_position == m_source.length()) {
+        m_position++;
+        m_line_column++;
         m_current_char = EOF;
         return;
     }

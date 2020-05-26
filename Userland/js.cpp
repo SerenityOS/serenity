@@ -528,19 +528,15 @@ int main(int argc, char** argv)
                     editor.stylize(span, styles);
             };
             editor.strip_styles();
-            StringBuilder builder;
-            builder.append(editor.line());
-            // FIXME: The lexer returns weird position information without this
-            builder.append(" ");
-            String str = builder.build();
 
             size_t open_indents = s_repl_line_level;
 
-            JS::Lexer lexer(str);
+            auto line = editor.line();
+            JS::Lexer lexer(line);
             bool indenters_starting_line = true;
             for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
                 auto length = token.value().length();
-                auto start = token.line_column() - 2;
+                auto start = token.line_column() - 1;
                 auto end = start + length;
                 if (indenters_starting_line) {
                     if (token.type() != JS::TokenType::ParenClose && token.type() != JS::TokenType::BracketClose && token.type() != JS::TokenType::CurlyClose) {
