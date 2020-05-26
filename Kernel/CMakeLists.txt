@@ -181,4 +181,6 @@ add_custom_command(
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/kernel.map DESTINATION res)
 
+serenity_install_headers(Kernel)
+
 add_subdirectory(Modules)
