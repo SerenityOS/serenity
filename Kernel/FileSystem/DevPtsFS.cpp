@@ -146,10 +146,10 @@ InodeMetadata DevPtsFSInode::metadata() const
     return m_metadata;
 }
 
-bool DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
     if (identifier().index() > 1)
-        return false;
+        return KResult(-ENOTDIR);
 
     callback({ ".", 1, identifier(), 0 });
     callback({ "..", 2, identifier(), 0 });
@@ -160,7 +160,7 @@ bool DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry
         callback({ name.characters(), name.length(), identifier, 0 });
     }
 
-    return true;
+    return KSuccess;
 }
 
 size_t DevPtsFSInode::directory_entry_count() const
