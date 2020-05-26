@@ -25,6 +25,7 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/JsonObject.h>
 #include <AK/SharedBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -155,6 +156,13 @@ bool ResourceLoader::is_port_blocked(int port)
         if (port == blocked_port)
             return true;
     return false;
+}
+
+void ResourceLoader::save_to(JsonObject& object)
+{
+    Object::save_to(object);
+    object.set("pending_loads", m_pending_loads);
+    object.set("user_agent", m_user_agent);
 }
 
 }
