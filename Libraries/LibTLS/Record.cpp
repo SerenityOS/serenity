@@ -199,7 +199,9 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
     buffer_position += 2;
 
     if (buffer_position + length > buffer.size()) {
+#ifdef TLS_DEBUG
         dbg() << "record length more than what we have: " << buffer.size();
+#endif
         return (i8)Error::NeedMoreData;
     }
 

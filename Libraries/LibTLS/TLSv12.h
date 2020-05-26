@@ -40,14 +40,14 @@
 
 namespace TLS {
 
-inline static void print_buffer(const ByteBuffer& buffer)
+inline void print_buffer(const ByteBuffer& buffer)
 {
     for (size_t i { 0 }; i < buffer.size(); ++i)
         dbgprintf("%02x ", buffer[i]);
     dbgprintf("\n");
 }
 
-inline static void print_buffer(const u8* buffer, size_t size)
+inline void print_buffer(const u8* buffer, size_t size)
 {
     for (size_t i { 0 }; i < size; ++i)
         dbgprintf("%02x ", buffer[i]);

@@ -183,13 +183,17 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
         size_t length = _get_asn1_length((const u8*)&buffer[position], size - position, octets);
 
         if (octets > 4 || octets > size - position) {
+#ifdef TLS_DEBUG
             dbg() << "could not read the certificate";
+#endif
             return position;
         }
 
         position += octets;
         if (size - position < length) {
+#ifdef TLS_DEBUG
             dbg() << "not enough data for sequence";
+#endif
             return (i8)Error::NeedMoreData;
         }
 
@@ -368,7 +372,9 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
             hash.initialize(Crypto::Hash::HashKind::SHA512);
             break;
         default:
+#ifdef TLS_DEBUG
             dbg() << "Unsupported hash mode " << (u32)cert.key_algorithm;
+#endif
             // fallback to md5, it will fail later
             hash.initialize(Crypto::Hash::HashKind::MD5);
             break;
@@ -410,13 +416,17 @@ ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
     ssize_t res = 0;
 
     if (buffer.size() < 3) {
+#ifdef TLS_DEBUG
         dbg() << "not enough certificate header data";
+#endif
         return (i8)Error::NeedMoreData;
     }
 
     u32 certificate_total_length = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
 
+#ifdef TLS_DEBUG
     dbg() << "total length: " << certificate_total_length;
+#endif
 
     if (certificate_total_length <= 4)
         return 3 * certificate_total_length;
@@ -424,7 +434,9 @@ ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
     res += 3;
 
     if (certificate_total_length > buffer.size() - res) {
+#ifdef TLS_DEBUG
         dbg() << "not enough data for claimed total cert length";
+#endif
         return (i8)Error::NeedMoreData;
     }
     size_t size = certificate_total_length;
@@ -435,14 +447,18 @@ ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
     while (size > 0) {
         ++index;
         if (buffer.size() - res < 3) {
+#ifdef TLS_DEBUG
             dbg() << "not enough data for certificate length";
+#endif
             return (i8)Error::NeedMoreData;
         }
         size_t certificate_size = buffer[res] * 0x10000 + buffer[res + 1] * 0x100 + buffer[res + 2];
         res += 3;
 
         if (buffer.size() - res < certificate_size) {
+#ifdef TLS_DEBUG
             dbg() << "not enough data for certificate body";
+#endif
             return (i8)Error::NeedMoreData;
         }
 
