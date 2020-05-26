@@ -112,6 +112,7 @@ include_directories(Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Libraries)
 
+add_subdirectory(AK)
 add_subdirectory(Kernel)
 add_subdirectory(Libraries)
 add_subdirectory(Services)
