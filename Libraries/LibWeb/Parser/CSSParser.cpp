@@ -39,6 +39,11 @@
         ASSERT_NOT_REACHED();                                             \
     }
 
+#define PARSE_ERROR()               \
+    do {                            \
+        dbg() << "CSS parse error"; \
+    } while (0)
+
 namespace Web {
 
 static CSS::ValueID value_id_for_palette_string(const StringView& string)
@@ -348,7 +353,9 @@ public:
         if (peek() != ch) {
             dbg() << "peek() != '" << ch << "'";
         }
-        PARSE_ASSERT(peek() == ch);
+        if (peek() != ch) {
+            PARSE_ERROR();
+        }
         PARSE_ASSERT(index < css.length());
         ++index;
         return ch;
@@ -512,7 +519,6 @@ public:
             auto pseudo_name = String::copy(buffer);
             buffer.clear();
 
-
             // Ignore for now, otherwise we produce a "false positive" selector
             // and apply styles to the element itself, not its pseudo element
             if (is_pseudo_element)
@@ -590,11 +596,15 @@ public:
         Vector<Selector::ComplexSelector> complex_selectors;
 
         for (;;) {
+            auto index_before = index;
             auto complex_selector = parse_complex_selector();
             if (complex_selector.has_value())
                 complex_selectors.append(complex_selector.value());
             consume_whitespace_or_comments();
             if (!peek() || peek() == ',' || peek() == '{')
+                break;
+            // HACK: If we didn't move forward, just let go.
+            if (index == index_before)
                 break;
         }
 
@@ -616,6 +626,7 @@ public:
     void parse_selector_list()
     {
         for (;;) {
+            auto index_before = index;
             parse_selector();
             consume_whitespace_or_comments();
             if (peek() == ',') {
@@ -623,6 +634,9 @@ public:
                 continue;
             }
             if (peek() == '{')
+                break;
+            // HACK: If we didn't move forward, just let go.
+            if (index_before == index)
                 break;
         }
     }
