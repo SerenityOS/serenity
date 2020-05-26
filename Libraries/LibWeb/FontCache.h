@@ -26,13 +26,14 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 
 struct FontSelector {
-    String family;
-    String weight;
+    FlyString family;
+    FlyString weight;
 
     bool operator==(const FontSelector& other) const
     {
@@ -54,6 +55,6 @@ public:
     void set(const FontSelector&, NonnullRefPtr<Gfx::Font>);
 
 private:
-    FontCache() {}
+    FontCache() { }
     mutable HashMap<FontSelector, NonnullRefPtr<Gfx::Font>> m_fonts;
 };
