@@ -1835,3 +1835,27 @@ void Shell::stop_all_jobs()
         }
     }
 }
+
+void Shell::save_to(JsonObject& object)
+{
+    Core::Object::save_to(object);
+    object.set("working_directory", cwd);
+    object.set("username", username);
+    object.set("user_home_path", home);
+    object.set("user_id", uid);
+    object.set("directory_stack_size", directory_stack.size());
+    object.set("cd_history_size", cd_history.size());
+
+    // Jobs.
+    JsonArray job_objects;
+    for (auto& job_entry : jobs) {
+        JsonObject job_object;
+        job_object.set("pid", job_entry.value->pid());
+        job_object.set("pgid", job_entry.value->pgid());
+        job_object.set("running_time", job_entry.value->timer().elapsed());
+        job_object.set("command", job_entry.value->cmd());
+        job_object.set("is_running_in_background", job_entry.value->is_running_in_background());
+        job_objects.append(move(job_object));
+    }
+    object.set("jobs", move(job_objects));
+}

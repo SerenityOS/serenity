@@ -158,6 +158,9 @@ private:
     Shell();
     virtual ~Shell() override;
 
+    // ^Core::Object
+    virtual void save_to(JsonObject&) override;
+
     struct SpawnedProcess {
         String name;
         pid_t pid;
