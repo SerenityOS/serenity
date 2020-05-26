@@ -61,7 +61,7 @@ void Inode::sync()
     }
 }
 
-ByteBuffer Inode::read_entire(FileDescription* descriptor) const
+KResultOr<ByteBuffer> Inode::read_entire(FileDescription* descriptor) const
 {
     size_t initial_size = metadata().size ? metadata().size : 4096;
     StringBuilder builder(initial_size);
@@ -92,8 +92,11 @@ KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<C
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
     // behaves exactly how you would expect a symlink to work.
-    auto contents = read_entire();
+    auto contents_or = read_entire();
+    if (contents_or.is_error())
+        return contents_or.error();
 
+    auto& contents = contents_or.value();
     if (!contents) {
         if (out_parent)
             *out_parent = nullptr;

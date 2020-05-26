@@ -849,7 +849,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     return nwritten;
 }
 
-bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
@@ -858,8 +858,12 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     dbg() << "Ext2FS: Traversing as directory: " << identifier();
 #endif
 
-    auto buffer = read_entire();
-    ASSERT(buffer);
+    auto buffer_or = read_entire();
+    ASSERT(!buffer_or.is_error());
+    if (buffer_or.is_error())
+        return buffer_or.error();
+
+    auto buffer = buffer_or.value();
     auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.data());
 
     while (entry < buffer.end_pointer()) {
@@ -872,7 +876,8 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         }
         entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
     }
-    return true;
+
+    return KSuccess;
 }
 
 bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
@@ -944,7 +949,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
 
     Vector<FS::DirectoryEntry> entries;
     bool name_already_exists = false;
-    traverse_as_directory([&](auto& entry) {
+    KResult result = traverse_as_directory([&](auto& entry) {
         if (name == entry.name) {
             name_already_exists = true;
             return false;
@@ -952,6 +957,10 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
         entries.append(entry);
         return true;
     });
+
+    if (result.is_error())
+        return result;
+
     if (name_already_exists) {
         dbg() << "Ext2FSInode::add_child(): Name '" << name << "' already exists in inode " << index();
         return KResult(-EEXIST);
@@ -959,7 +968,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
 
     auto child_inode = fs().get_inode(child_id);
     if (child_inode) {
-        auto result = child_inode->increment_link_count();
+        result = child_inode->increment_link_count();
         if (result.is_error())
             return result;
     }
@@ -991,11 +1000,13 @@ KResult Ext2FSInode::remove_child(const StringView& name)
 #endif
 
     Vector<FS::DirectoryEntry> entries;
-    traverse_as_directory([&](auto& entry) {
+    KResult result = traverse_as_directory([&](auto& entry) {
         if (name != entry.name)
             entries.append(entry);
         return true;
     });
+    if (result.is_error())
+        return result;
 
     bool success = write_directory(entries);
     if (!success) {
