@@ -229,7 +229,21 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                     { "&quot;", "\"" },
                     { "&raquo;", ">>" },
                     { "&laquo;", "<<" },
-                    { "&copy;", "\xC2\xA9" },
+                    { "&copy;", "©" },
+                    { "&reg;", "®" },
+                    { "&szlig;", "ß" },
+                    { "&auml;", "ä" },
+                    { "&euml;", "ë" },
+                    { "&iuml;", "ï" },
+                    { "&ouml;", "ö" },
+                    { "&uuml;", "ü" },
+                    { "&yuml;", "ÿ" },
+                    { "&Auml;", "Ä" },
+                    { "&Euml;", "Ë" },
+                    { "&Iuml;", "Ï" },
+                    { "&Ouml;", "Ö" },
+                    { "&Uuml;", "Ü" },
+                    { "&Yuml;", "Ÿ" },
                 };
                 auto rest_of_html = html.substring_view(i, html.length() - i);
                 bool found = false;
