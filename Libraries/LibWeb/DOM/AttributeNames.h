@@ -26,35 +26,17 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <LibWeb/DOM/AttributeNames.h>
-#include <LibWeb/Forward.h>
-#include <LibWeb/TreeNode.h>
+#include <AK/FlyString.h>
 
 namespace Web {
+namespace HTML {
+namespace AttributeNames {
 
-template<typename NodeType>
-class NonElementParentNode {
-public:
-    const Element* get_element_by_id(const FlyString& id) const
-    {
-        const Element* found_element = nullptr;
-        static_cast<const NodeType*>(this)->template for_each_in_subtree_of_type<Element>([&](auto& element) {
-            if (element.attribute(HTML::AttributeNames::id) == id) {
-                found_element = &element;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
-        return found_element;
-    }
-    Element* get_element_by_id(const FlyString& id)
-    {
-        return const_cast<Element*>(const_cast<const NonElementParentNode*>(this)->get_element_by_id(id));
-    }
+void initialize();
 
-protected:
-    NonElementParentNode() { }
-};
+extern FlyString id;
+extern FlyString class_;
 
+}
+}
 }

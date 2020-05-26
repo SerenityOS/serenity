@@ -25,6 +25,7 @@ set(SOURCES
     CSS/StyleRule.cpp
     CSS/StyleSheet.cpp
     CSS/StyleValue.cpp
+    DOM/AttributeNames.cpp
     DOM/CanvasRenderingContext2D.cpp
     DOM/CharacterData.cpp
     DOM/Comment.cpp
