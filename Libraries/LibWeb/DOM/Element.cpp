@@ -97,14 +97,10 @@ void Element::set_attributes(Vector<Attribute>&& attributes)
         parse_attribute(attribute.name(), attribute.value());
 }
 
-bool Element::has_class(const StringView& class_name) const
+bool Element::has_class(const FlyString& class_name) const
 {
-    auto value = attribute("class");
-    if (value.is_empty())
-        return false;
-    auto parts = value.split_view(' ');
-    for (auto& part : parts) {
-        if (part == class_name)
+    for (auto& class_ : m_classes) {
+        if (class_ == class_name)
             return true;
     }
     return false;
@@ -140,8 +136,16 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
     return adopt(*new LayoutInline(*this, move(style)));
 }
 
-void Element::parse_attribute(const FlyString&, const String&)
+void Element::parse_attribute(const FlyString& name, const String& value)
 {
+    if (name == "class") {
+        auto new_classes = value.split_view(' ');
+        m_classes.clear();
+        m_classes.ensure_capacity(new_classes.size());
+        for (auto& new_class : new_classes) {
+            m_classes.unchecked_append(new_class);
+        }
+    }
 }
 
 enum class StyleDifference {
