@@ -116,7 +116,17 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
 
 void HTMLDocumentParser::handle_initial(HTMLToken& token)
 {
-    if (token.type() == HTMLToken::Type::DOCTYPE) {
+    if (token.is_character() && token.is_parser_whitespace()) {
+        return;
+    }
+
+    if (token.is_comment()) {
+        auto comment = adopt(*new Comment(document(), token.m_comment_or_character.data.to_string()));
+        document().append_child(move(comment));
+        return;
+    }
+
+    if (token.is_doctype()) {
         auto doctype = adopt(*new DocumentType(document()));
         doctype->set_name(token.m_doctype.name.to_string());
         document().append_child(move(doctype));
@@ -128,6 +138,17 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
 
 void HTMLDocumentParser::handle_before_html(HTMLToken& token)
 {
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_comment()) {
+        auto comment = adopt(*new Comment(document(), token.m_comment_or_character.data.to_string()));
+        document().append_child(move(comment));
+        return;
+    }
+
     if (token.is_character() && token.is_parser_whitespace()) {
         return;
     }
@@ -139,7 +160,23 @@ void HTMLDocumentParser::handle_before_html(HTMLToken& token)
         m_insertion_mode = InsertionMode::BeforeHead;
         return;
     }
-    ASSERT_NOT_REACHED();
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("head", "body", "html", "br")) {
+        goto AnythingElse;
+    }
+
+    if (token.is_end_tag()) {
+        PARSE_ERROR();
+        return;
+    }
+
+AnythingElse:
+    auto element = create_element(document(), "html");
+    m_stack_of_open_elements.push(element);
+    // FIXME: If the Document is being loaded as part of navigation of a browsing context, then: run the application cache selection algorithm with no manifest, passing it the Document object.
+    m_insertion_mode = InsertionMode::BeforeHead;
+    process_using_the_rules_for(InsertionMode::BeforeHead, token);
+    return;
 }
 
 Element& HTMLDocumentParser::current_node()
@@ -181,13 +218,45 @@ void HTMLDocumentParser::handle_before_head(HTMLToken& token)
         return;
     }
 
+    if (token.is_comment()) {
+        insert_comment(token);
+        return;
+    }
+
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "html") {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
     if (token.is_start_tag() && token.tag_name() == "head") {
         auto element = insert_html_element(token);
         m_head_element = to<HTMLHeadElement>(element);
         m_insertion_mode = InsertionMode::InHead;
         return;
     }
-    ASSERT_NOT_REACHED();
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("head", "body", "html", "br")) {
+        goto AnythingElse;
+    }
+
+    if (token.is_end_tag()) {
+        PARSE_ERROR();
+        return;
+    }
+
+AnythingElse:
+    HTMLToken fake_head_token;
+    fake_head_token.m_type = HTMLToken::Type::StartTag;
+    fake_head_token.m_tag.tag_name.append("head");
+    m_head_element = to<HTMLHeadElement>(insert_html_element(fake_head_token));
+    m_insertion_mode = InsertionMode::InHead;
+    process_using_the_rules_for(InsertionMode::InHead, token);
+    return;
 }
 
 void HTMLDocumentParser::insert_comment(HTMLToken& token)
@@ -593,8 +662,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             if (node->tag_name() == token.tag_name()) {
                 generate_implied_end_tags(token.tag_name());
                 if (node != current_node()) {
-                    // It's a parse error
-                    TODO();
+                    PARSE_ERROR();
                 }
                 while (&current_node() != node) {
                     m_stack_of_open_elements.pop();
