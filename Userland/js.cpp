@@ -287,6 +287,9 @@ bool parse_and_run(JS::Interpreter& interpreter, const StringView& source)
 
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
+        auto hint = error.source_location_hint(source);
+        if (!hint.is_empty())
+            printf("%s\n", hint.characters());
         interpreter.throw_exception<JS::SyntaxError>(error.to_string());
     } else {
         interpreter.run(*program);
