@@ -70,8 +70,6 @@ ssize_t Console::write(Kernel::FileDescription&, size_t, const u8* data, ssize_t
 {
     if (!size)
         return 0;
-    if (!m_implementation)
-        return 0;
     for (ssize_t i = 0; i < size; ++i)
         put_char(data[i]);
     return size;
@@ -84,10 +82,4 @@ void Console::put_char(char ch)
     IO::out8(0xe9, ch);
 #endif
     m_logbuffer.enqueue(ch);
-    if (m_implementation)
-        m_implementation->on_sysconsole_receive(ch);
-}
-
-ConsoleImplementation::~ConsoleImplementation()
-{
 }

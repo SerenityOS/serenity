@@ -30,12 +30,6 @@
 #include <AK/Vector.h>
 #include <Kernel/Devices/CharacterDevice.h>
 
-class ConsoleImplementation {
-public:
-    virtual ~ConsoleImplementation();
-    virtual void on_sysconsole_receive(u8) = 0;
-};
-
 class Console final : public Kernel::CharacterDevice {
     AK_MAKE_ETERNAL
 public:
@@ -52,16 +46,10 @@ public:
     virtual ssize_t write(Kernel::FileDescription&, size_t, const u8*, ssize_t) override;
     virtual const char* class_name() const override { return "Console"; }
 
-    void set_implementation(ConsoleImplementation* implementation)
-    {
-        m_implementation = implementation;
-    }
-
     void put_char(char);
 
     const CircularQueue<char, 16384>& logbuffer() const { return m_logbuffer; }
 
 private:
-    ConsoleImplementation* m_implementation { nullptr };
     CircularQueue<char, 16384> m_logbuffer;
 };
