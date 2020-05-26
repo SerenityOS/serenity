@@ -48,6 +48,7 @@ public:
 private:
     void script_became_ready();
     void when_the_script_is_ready(Function<void()>);
+    void execute_script();
 
     WeakPtr<Document> m_parser_document;
     WeakPtr<Document> m_preparation_time_document;

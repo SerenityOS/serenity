@@ -115,6 +115,17 @@ void HTMLScriptElement::inserted_into(Node& new_parent)
     document().interpreter().run(*program);
 }
 
+void HTMLScriptElement::execute_script()
+{
+    auto parser = JS::Parser(JS::Lexer(m_script_source));
+    auto program = parser.parse_program();
+    if (parser.has_errors()) {
+        parser.print_errors();
+        return;
+    }
+    document().interpreter().run(*program);
+}
+
 void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 {
     if (m_already_started)
@@ -216,13 +227,15 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     }
 
     else {
-        ASSERT_NOT_REACHED();
+        // Immediately execute the script block, even if other scripts are already executing.
+        execute_script();
     }
 }
 
 void HTMLScriptElement::script_became_ready()
 {
-    ASSERT(m_script_ready_callback);
+    if (!m_script_ready_callback)
+        return;
     m_script_ready_callback();
     m_script_ready_callback = nullptr;
 }
