@@ -75,7 +75,9 @@ ByteBuffer TLSv12::read_line(size_t max_size)
 bool TLSv12::write(const ByteBuffer& buffer)
 {
     if (m_context.connection_status != ConnectionStatus::Established) {
+#ifdef TLS_DEBUG
         dbg() << "write request while not connected";
+#endif
         return false;
     }
 
@@ -165,11 +167,15 @@ bool TLSv12::check_connection_state(bool read)
 {
     if (!Core::Socket::is_open() || !Core::Socket::is_connected() || Core::Socket::eof()) {
         // an abrupt closure (the server is a jerk)
+#ifdef TLS_DEBUG
         dbg() << "Socket not open, assuming abrupt closure";
+#endif
         m_context.connection_finished = true;
     }
     if (m_context.critical_error) {
+#ifdef TLS_DEBUG
         dbg() << "CRITICAL ERROR " << m_context.critical_error << " :(";
+#endif
         if (on_tls_error)
             on_tls_error((AlertDescription)m_context.critical_error);
         return false;
@@ -180,10 +186,14 @@ bool TLSv12::check_connection_state(bool read)
                 on_tls_finished();
         }
         if (m_context.tls_buffer.size()) {
+#ifdef TLS_DEBUG
             dbg() << "connection closed without finishing data transfer, " << m_context.tls_buffer.size() << " bytes still in buffer & " << m_context.application_buffer.size() << " bytes in application buffer";
+#endif
         } else {
             m_context.connection_finished = false;
+#ifdef TLS_DEBUG
             dbg() << "FINISHED";
+#endif
         }
         if (!m_context.application_buffer.size()) {
             m_context.connection_status = ConnectionStatus::Disconnected;
@@ -212,7 +222,9 @@ bool TLSv12::flush()
     }
     if (m_context.send_retries++ == 10) {
         // drop the records, we can't send
+#ifdef TLS_DEBUG
         dbg() << "Dropping " << write_buffer().size() << " bytes worth of TLS records as max retries has been reached";
+#endif
         write_buffer().clear();
         m_context.send_retries = 0;
     }
