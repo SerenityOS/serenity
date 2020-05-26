@@ -324,6 +324,24 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     return m_input_error.has_value() ? Result<String, Editor::Error> { m_input_error.value() } : Result<String, Editor::Error> { m_returned_line };
 }
 
+void Editor::save_to(JsonObject& object)
+{
+    Core::Object::save_to(object);
+    object.set("is_searching", m_is_searching);
+    object.set("is_editing", m_is_editing);
+    object.set("cursor_offset", m_cursor);
+    object.set("needs_refresh", m_refresh_needed);
+    object.set("unprocessed_characters", m_incomplete_data.size());
+    object.set("history_size", m_history.size());
+    object.set("current_prompt", m_new_prompt);
+    object.set("was_interrupted", m_was_interrupted);
+    JsonObject display_area;
+    display_area.set("top_left_x", m_origin_x);
+    display_area.set("top_left_y", m_origin_y);
+    display_area.set("line_count", num_lines());
+    object.set("used_display_area", move(display_area));
+}
+
 void Editor::handle_read_event()
 {
     char keybuf[16];
