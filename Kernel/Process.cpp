@@ -1944,7 +1944,7 @@ int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
         return -EINVAL;
 
     auto contents = description->read_entire_file();
-    if (!contents.is_error())
+    if (contents.is_error())
         return contents.error();
 
     auto link_target = String::copy(contents.value());
