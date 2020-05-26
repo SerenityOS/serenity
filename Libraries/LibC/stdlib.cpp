@@ -208,7 +208,6 @@ void exit(int status)
     fflush(stdout);
     fflush(stderr);
     _exit(status);
-    ASSERT_NOT_REACHED();
 }
 
 static void __atexit_to_cxa_atexit(void* handler)
