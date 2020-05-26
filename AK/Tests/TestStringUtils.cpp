@@ -144,4 +144,15 @@ TEST_CASE(convert_to_uint)
     EXPECT(ok && actual == 12345u);
 }
 
+TEST_CASE(ends_with)
+{
+    String test_string = "ABCDEF";
+    EXPECT(AK::StringUtils::ends_with(test_string, "DEF", CaseSensitivity::CaseSensitive));
+    EXPECT(AK::StringUtils::ends_with(test_string, "ABCDEF",  CaseSensitivity::CaseSensitive));
+    EXPECT(!AK::StringUtils::ends_with(test_string, "ABCDE", CaseSensitivity::CaseSensitive));
+    EXPECT(!AK::StringUtils::ends_with(test_string, "ABCDEFG", CaseSensitivity::CaseSensitive));
+    EXPECT(AK::StringUtils::ends_with(test_string, "def",  CaseSensitivity::CaseInsensitive));
+    EXPECT(!AK::StringUtils::ends_with(test_string, "def",  CaseSensitivity::CaseSensitive));
+}
+
 TEST_MAIN(StringUtils)
