@@ -57,6 +57,10 @@ struct Configuration {
         Lazy,
         Eager,
     };
+    enum OperationMode {
+        Full,
+        NoEscapeSequences,
+    };
 
     Configuration()
     {
@@ -71,9 +75,11 @@ struct Configuration {
 
     void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
     void set(TokenSplitMechanism split) { split_mechanism = split; }
+    void set(OperationMode mode) { operation_mode = mode; }
 
     RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
     TokenSplitMechanism split_mechanism { TokenSplitMechanism::Spaces };
+    OperationMode operation_mode { OperationMode::Full };
 };
 
 class Editor {
@@ -89,21 +95,7 @@ public:
 
     Result<String, Error> get_line(const String& prompt);
 
-    void initialize()
-    {
-        if (m_initialized)
-            return;
-
-        struct termios termios;
-        tcgetattr(0, &termios);
-        m_default_termios = termios; // grab a copy to restore
-        // Because we use our own line discipline which includes echoing,
-        // we disable ICANON and ECHO.
-        termios.c_lflag &= ~(ECHO | ICANON);
-        tcsetattr(0, TCSANOW, &termios);
-        m_termios = termios;
-        m_initialized = true;
-    }
+    void initialize();
 
     void add_to_history(const String&);
     const Vector<String>& history() const { return m_history; }
