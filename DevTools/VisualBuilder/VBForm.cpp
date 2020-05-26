@@ -217,6 +217,8 @@ void VBForm::keydown_event(GUI::KeyEvent& event)
                 widget.gwidget()->move_by(m_grid_size, 0);
             });
             break;
+        default:
+            break;
         }
         return;
     }

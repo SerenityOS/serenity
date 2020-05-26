@@ -264,14 +264,14 @@ enum MouseButton : u8 {
 
 class KeyEvent final : public Event {
 public:
-    KeyEvent(Type type, int key, u8 modifiers)
+    KeyEvent(Type type, KeyCode key, u8 modifiers)
         : Event(type)
         , m_key(key)
         , m_modifiers(modifiers)
     {
     }
 
-    int key() const { return m_key; }
+    KeyCode key() const { return m_key; }
     bool ctrl() const { return m_modifiers & Mod_Ctrl; }
     bool alt() const { return m_modifiers & Mod_Alt; }
     bool shift() const { return m_modifiers & Mod_Shift; }
@@ -283,7 +283,7 @@ public:
 
 private:
     friend class WindowServerConnection;
-    int m_key { 0 };
+    KeyCode m_key { 0 };
     u8 m_modifiers { 0 };
     String m_text;
 };

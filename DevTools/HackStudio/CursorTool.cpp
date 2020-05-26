@@ -147,6 +147,8 @@ void CursorTool::on_keydown(GUI::KeyEvent& event)
         case Key_Right:
             move_selected_widgets_by(m_editor.form_widget().grid_size(), 0);
             break;
+        default:
+            break;
         }
     }
 }
