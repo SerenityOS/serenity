@@ -168,7 +168,9 @@ void init_stage2()
 
     PCI::initialize();
 
-    if (kernel_command_line().contains("text_debug")) {
+    bool text_mode = kernel_command_line().lookup("boot_mode").value_or("graphical") == "text";
+
+    if (text_mode) {
         dbg() << "Text mode enabled";
     } else {
         bool bxvga_found = false;
@@ -213,7 +215,6 @@ void init_stage2()
         DMIDecoder::initialize();
     }
 
-    bool text_debug = kernel_command_line().contains("text_debug");
     bool force_pio = kernel_command_line().contains("force_pio");
 
     auto root = kernel_command_line().lookup("root").value_or("/dev/hda");
@@ -302,28 +303,16 @@ void init_stage2()
 
     int error;
 
-    // SystemServer will start WindowServer, which will be doing graphics.
-    // From this point on we don't want to touch the VGA text terminal or
-    // accept keyboard input.
-    if (text_debug) {
-        tty0->set_graphical(false);
-        Thread* thread = nullptr;
-        Process::create_user_process(thread, "/bin/Shell", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
-        if (error != 0) {
-            klog() << "init_stage2: error spawning Shell: " << error;
-            hang();
-        }
-        thread->set_priority(THREAD_PRIORITY_HIGH);
-    } else {
-        tty0->set_graphical(true);
-        Thread* thread = nullptr;
-        Process::create_user_process(thread, "/bin/SystemServer", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
-        if (error != 0) {
-            klog() << "init_stage2: error spawning SystemServer: " << error;
-            hang();
-        }
-        thread->set_priority(THREAD_PRIORITY_HIGH);
+    // FIXME: It would be nicer to set the mode from userspace.
+    tty0->set_graphical(!text_mode);
+    Thread* thread = nullptr;
+    auto userspace_init = kernel_command_line().lookup("init").value_or("/bin/SystemServer");
+    Process::create_user_process(thread, userspace_init, (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
+    if (error != 0) {
+        klog() << "init_stage2: error spawning SystemServer: " << error;
+        hang();
     }
+    thread->set_priority(THREAD_PRIORITY_HIGH);
 
     NetworkTask::spawn();
 
