@@ -134,10 +134,10 @@ public:
     StringView substring_view(size_t start, size_t length) const;
 
     bool is_null() const { return !m_impl; }
-    bool is_empty() const { return length() == 0; }
-    size_t length() const { return m_impl ? m_impl->length() : 0; }
-    const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
-    const char& operator[](size_t i) const
+    ALWAYS_INLINE bool is_empty() const { return length() == 0; }
+    ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
+    ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
+    ALWAYS_INLINE const char& operator[](size_t i) const
     {
         return (*m_impl)[i];
     }
