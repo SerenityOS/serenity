@@ -98,6 +98,11 @@ bool FlyString::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
+bool FlyString::ends_with(const StringView& str, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::ends_with(view(), str, case_sensitivity);
+}
+
 FlyString FlyString::to_lowercase() const
 {
     return String(*m_impl).to_lowercase();
