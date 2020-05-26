@@ -242,7 +242,7 @@ int main(int argc, char** argv)
 
         String message;
         if (files.size() == 1) {
-            message = String::format("Really remove %s from the project?", FileSystemPath(files[0]).basename().characters());
+            message = String::format("Really remove %s from the project?", LexicalPath(files[0]).basename().characters());
         } else {
             message = String::format("Really remove %d files from the project?", files.size());
         }
@@ -711,8 +711,8 @@ void run(TerminalWrapper& wrapper)
 
 void open_project(String filename)
 {
-    FileSystemPath path(filename);
-    if (chdir(path.dirname().characters()) < 0) {
+    LexicalPath lexical_path(filename);
+    if (chdir(lexical_path.dirname().characters()) < 0) {
         perror("chdir");
         exit(1);
     }

@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <sys/stat.h>
@@ -52,18 +52,18 @@ int main(int argc, char** argv)
     bool has_errors = false;
 
     for (auto& directory : directories) {
-        FileSystemPath canonical_path(directory);
+        LexicalPath lexical_path(directory);
         if (!create_parents) {
-            if (mkdir(canonical_path.string().characters(), mode) < 0) {
+            if (mkdir(lexical_path.string().characters(), mode) < 0) {
                 perror("mkdir");
                 has_errors = true;
             }
             continue;
         }
         StringBuilder path_builder;
-        if (canonical_path.is_absolute())
+        if (lexical_path.is_absolute())
             path_builder.append("/");
-        for (auto& part : canonical_path.parts()) {
+        for (auto& part : lexical_path.parts()) {
             path_builder.append(part);
             auto path = path_builder.build();
             struct stat st;

@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>

@@ -26,7 +26,7 @@
 
 #include "ManualSectionNode.h"
 #include "ManualPageNode.h"
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <LibCore/DirIterator.h>
@@ -46,10 +46,10 @@ void ManualSectionNode::reify_if_needed() const
 
     Vector<String> page_names;
     while (dir_iter.has_next()) {
-        FileSystemPath file_path(dir_iter.next_path());
-        if (file_path.extension() != "md")
+        LexicalPath lexical_path(dir_iter.next_path());
+        if (lexical_path.extension() != "md")
             continue;
-        page_names.append(file_path.title());
+        page_names.append(lexical_path.title());
     }
 
     quick_sort(page_names);

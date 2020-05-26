@@ -25,8 +25,8 @@
  */
 
 #include "Launcher.h"
-#include <AK/FileSystemPath.h>
 #include <AK/Function.h>
+#include <AK/LexicalPath.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <stdio.h>
@@ -191,7 +191,7 @@ Vector<String> Launcher::handlers_for_path(const String& path)
     if (S_ISDIR(st.st_mode))
         return { "/bin/FileManager" };
 
-    auto extension = FileSystemPath(path).extension().to_lowercase();
+    auto extension = LexicalPath(path).extension().to_lowercase();
 
     return handlers_for(extension, m_file_handlers, [](auto& handler, auto& key) {
         return handler.file_types.contains(key);

@@ -26,14 +26,15 @@
 
 #pragma once
 
-#include <AK/FileSystemPath.h>
 #include <AK/Function.h>
+#include <AK/LexicalPath.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibWeb/Forward.h>
+
 class TextEditorWidget final : public GUI::Widget {
     C_OBJECT(TextEditorWidget)
 public:
@@ -47,7 +48,7 @@ public:
 
 private:
     TextEditorWidget();
-    void set_path(const FileSystemPath& file);
+    void set_path(const LexicalPath& file);
     void update_title();
     void update_markdown_preview();
 

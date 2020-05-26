@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
 #include <AK/Function.h>
+#include <AK/LexicalPath.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -142,9 +142,9 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     auto mkdir_action = Action::create("New directory...", Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
         auto& input_box = add<InputBox>("Enter name:", "New directory");
         if (input_box.exec() == InputBox::ExecOK && !input_box.text_value().is_empty()) {
-            auto new_dir_path = FileSystemPath(String::format("%s/%s",
-                                                   m_model->root_path().characters(),
-                                                   input_box.text_value().characters()))
+            auto new_dir_path = LexicalPath(String::format("%s/%s",
+                                                m_model->root_path().characters(),
+                                                input_box.text_value().characters()))
                                     .string();
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
@@ -196,7 +196,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         auto& filter_model = (SortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
         const FileSystemModel::Node& node = m_model->node(local_index);
-        FileSystemPath path { node.full_path(m_model) };
+        LexicalPath path { node.full_path(m_model) };
 
         clear_preview();
 
@@ -267,7 +267,7 @@ FilePicker::~FilePicker()
 {
 }
 
-void FilePicker::set_preview(const FileSystemPath& path)
+void FilePicker::set_preview(const LexicalPath& path)
 {
     if (path.has_extension(".png")) {
         auto bitmap = Gfx::Bitmap::load_from_file(path.string());
@@ -292,7 +292,7 @@ void FilePicker::clear_preview()
 
 void FilePicker::on_file_return()
 {
-    FileSystemPath path(String::format("%s/%s", m_model->root_path().characters(), m_filename_textbox->text().characters()));
+    LexicalPath path(String::format("%s/%s", m_model->root_path().characters(), m_filename_textbox->text().characters()));
 
     if (FilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
         auto result = MessageBox::show("File already exists, overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);

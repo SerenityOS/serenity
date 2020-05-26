@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
@@ -377,7 +377,7 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
     auto title_element = create_element(document, "title");
     head_element->append_child(title_element);
 
-    auto basename = FileSystemPath(url.path()).basename();
+    auto basename = LexicalPath(url.path()).basename();
     auto title_text = adopt(*new Text(document, String::format("%s [%dx%d]", basename.characters(), bitmap->width(), bitmap->height())));
     title_element->append_child(title_text);
 

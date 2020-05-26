@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <LibCore/DirIterator.h>
@@ -43,10 +43,10 @@ static Vector<u32> supported_emoji_codepoints()
     Core::DirIterator dt("/res/emoji", Core::DirIterator::SkipDots);
     while (dt.has_next()) {
         auto filename = dt.next_path();
-        auto fspath = FileSystemPath(filename);
-        if (fspath.extension() != "png")
+        auto lexical_path = LexicalPath(filename);
+        if (lexical_path.extension() != "png")
             continue;
-        auto basename = fspath.basename();
+        auto basename = lexical_path.basename();
         if (!basename.starts_with("U+"))
             continue;
         u32 codepoint = strtoul(basename.characters() + 2, nullptr, 16);

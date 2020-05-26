@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 
@@ -314,22 +314,22 @@ URL URL::complete_url(const String& string) const
     }
 
     StringBuilder builder;
-    FileSystemPath fspath(path());
+    LexicalPath lexical_path(path());
     builder.append('/');
 
     bool document_url_ends_in_slash = path()[path().length() - 1] == '/';
 
-    for (size_t i = 0; i < fspath.parts().size(); ++i) {
-        if (i == fspath.parts().size() - 1 && !document_url_ends_in_slash)
+    for (size_t i = 0; i < lexical_path.parts().size(); ++i) {
+        if (i == lexical_path.parts().size() - 1 && !document_url_ends_in_slash)
             break;
-        builder.append(fspath.parts()[i]);
+        builder.append(lexical_path.parts()[i]);
         builder.append('/');
     }
     builder.append(string);
     auto built = builder.to_string();
-    fspath = FileSystemPath(built);
+    lexical_path = LexicalPath(built);
 
-    built = fspath.string();
+    built = lexical_path.string();
     if (string.ends_with('/') && !built.ends_with('/')) {
         builder.clear();
         builder.append(built);
@@ -399,7 +399,7 @@ URL URL::create_with_url_or_path(const String& url_or_path)
     if (url.is_valid())
         return url;
 
-    String path = canonicalized_path(url_or_path);
+    String path = LexicalPath::canonicalized_path(url_or_path);
     return URL::create_with_file_protocol(path);
 }
 
@@ -407,7 +407,7 @@ String URL::basename() const
 {
     if (!m_valid)
         return {};
-    return FileSystemPath(m_path).basename();
+    return LexicalPath(m_path).basename();
 }
 
 }

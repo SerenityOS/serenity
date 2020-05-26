@@ -27,7 +27,7 @@
 #include "DirectoryView.h"
 #include "FileUtils.h"
 #include "PropertiesDialog.h"
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/ConfigFile.h>
@@ -165,7 +165,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     auto mkdir_action = GUI::Action::create("New directory...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter name:", "New directory", window);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
-            auto new_dir_path = canonicalized_path(
+            auto new_dir_path = LexicalPath::canonicalized_path(
                 String::format("%s/%s",
                     model->root_path().characters(),
                     input_box->text_value().characters()));
@@ -179,7 +179,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     auto touch_action = GUI::Action::create("New file...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter name:", "New file", window);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
-            auto new_file_path = canonicalized_path(
+            auto new_file_path = LexicalPath::canonicalized_path(
                 String::format("%s/%s",
                     model->root_path().characters(),
                     input_box->text_value().characters()));
@@ -323,7 +323,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter name:", "New directory", window);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
-            auto new_dir_path = canonicalized_path(
+            auto new_dir_path = LexicalPath::canonicalized_path(
                 String::format("%s/%s",
                     directory_view.path().characters(),
                     input_box->text_value().characters()));
@@ -442,7 +442,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                     selected = selected_file_paths();
                 } else {
                     path = directories_model->full_path(tree_view.selection().first());
-                    container_dir_path = FileSystemPath(path).basename();
+                    container_dir_path = LexicalPath(path).basename();
                     selected = tree_view_selected_file_paths();
                 }
 
@@ -510,7 +510,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
         String message;
         if (paths.size() == 1) {
-            message = String::format("Really delete %s?", FileSystemPath(paths[0]).basename().characters());
+            message = String::format("Really delete %s?", LexicalPath(paths[0]).basename().characters());
         } else {
             message = String::format("Really delete %d files?", paths.size());
         }
@@ -791,7 +791,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 continue;
             auto new_path = String::format("%s/%s",
                 target_node.full_path(directory_view.model()).characters(),
-                FileSystemPath(url_to_copy.path()).basename().characters());
+                LexicalPath(url_to_copy.path()).basename().characters());
 
             if (url_to_copy.path() == new_path)
                 continue;
