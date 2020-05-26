@@ -29,6 +29,7 @@
 #include "AST.h"
 #include "Lexer.h"
 #include <AK/NonnullRefPtr.h>
+#include <AK/StringBuilder.h>
 #include <stdio.h>
 
 namespace JS {
@@ -88,6 +89,19 @@ public:
             if (line == 0 || column == 0)
                 return message;
             return String::format("%s (line: %zu, column: %zu)", message.characters(), line, column);
+        }
+
+        String source_location_hint(const StringView& source, const char spacer = ' ', const char indicator = '^') const
+        {
+            if (line == 0 || column == 0)
+                return {};
+            StringBuilder builder;
+            builder.append(source.split_view('\n')[line - 1]);
+            builder.append('\n');
+            for (size_t i = 0; i < column - 1; ++i)
+                builder.append(spacer);
+            builder.append(indicator);
+            return builder.build();
         }
     };
 
