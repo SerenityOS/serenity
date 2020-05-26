@@ -79,15 +79,18 @@ ConsoleWidget::ConsoleWidget()
         auto parser = JS::Parser(JS::Lexer(js_source));
         auto program = parser.parse_program();
 
+        StringBuilder output_html;
         if (parser.has_errors()) {
             auto error = parser.errors()[0];
+            auto hint = error.source_location_hint(js_source);
+            if (!hint.is_empty())
+                output_html.append(String::format("<pre>%s</pre>", hint.characters()));
             m_interpreter->throw_exception<JS::SyntaxError>(error.to_string());
         } else {
             m_interpreter->run(*program);
         }
 
         if (m_interpreter->exception()) {
-            StringBuilder output_html;
             output_html.append("Uncaught exception: ");
             output_html.append(JS::MarkupGenerator::html_from_value(m_interpreter->exception()->value()));
             print_html(output_html.string_view());
