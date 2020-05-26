@@ -58,7 +58,16 @@
         will_switch_to(State::new_state);           \
         m_state = State::new_state;                 \
         will_emit(m_current_token);                 \
-        return m_current_token;                     \
+        m_queued_tokens.enqueue(m_current_token);   \
+        return m_queued_tokens.dequeue();           \
+    } while (0)
+
+#define EMIT_CHARACTER_AND_RECONSUME_IN(codepoint, new_state) \
+    do {                                                      \
+        m_queued_tokens.enqueue(m_current_token);             \
+        will_reconsume_in(State::new_state);                  \
+        m_state = State::new_state;                           \
+        goto new_state;                                       \
     } while (0)
 
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER --m_cursor;
@@ -90,21 +99,23 @@
         m_has_emitted_eof = true;                     \
         create_new_token(HTMLToken::Type::EndOfFile); \
         will_emit(m_current_token);                   \
-        return m_current_token;                       \
+        m_queued_tokens.enqueue(m_current_token);     \
+        return m_queued_tokens.dequeue();             \
     } while (0)
 
-#define EMIT_CURRENT_TOKEN          \
-    do {                            \
-        will_emit(m_current_token); \
-        return m_current_token;     \
+#define EMIT_CURRENT_TOKEN                        \
+    do {                                          \
+        will_emit(m_current_token);               \
+        m_queued_tokens.enqueue(m_current_token); \
+        return m_queued_tokens.dequeue();         \
     } while (0)
 
 #define EMIT_CHARACTER(codepoint)                                      \
     do {                                                               \
         create_new_token(HTMLToken::Type::Character);                  \
         m_current_token.m_comment_or_character.data.append(codepoint); \
-        will_emit(m_current_token);                                    \
-        return m_current_token;                                        \
+        m_queued_tokens.enqueue(m_current_token);                      \
+        return m_queued_tokens.dequeue();                              \
     } while (0)
 
 #define EMIT_CURRENT_CHARACTER \
@@ -141,6 +152,9 @@ Optional<u32> HTMLTokenizer::peek_codepoint(size_t offset) const
 
 Optional<HTMLToken> HTMLTokenizer::next_token()
 {
+    if (!m_queued_tokens.is_empty())
+        return m_queued_tokens.dequeue();
+
     for (;;) {
         auto current_input_character = next_codepoint();
         switch (m_state) {
@@ -1270,8 +1284,7 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
                 }
                 ANYTHING_ELSE
                 {
-                    EMIT_CHARACTER('<');
-                    RECONSUME_IN(ScriptData);
+                    EMIT_CHARACTER_AND_RECONSUME_IN('<', ScriptData);
                 }
             }
             END_STATE
