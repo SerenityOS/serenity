@@ -179,7 +179,7 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec unix fattr", nullptr) < 0) {
+    if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec unix fattr sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

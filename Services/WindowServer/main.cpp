@@ -39,7 +39,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath unix proc fattr", nullptr) < 0) {
+    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath unix proc fattr sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

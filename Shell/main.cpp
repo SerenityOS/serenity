@@ -59,26 +59,6 @@ int main(int argc, char** argv)
 {
     Core::EventLoop loop;
 
-    if (pledge("stdio rpath wpath cpath proc exec tty accept", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    auto shell = Shell::construct();
-    s_shell = shell.ptr();
-
-    editor.initialize();
-    shell->termios = editor.termios();
-    shell->default_termios = editor.default_termios();
-
-    editor.on_display_refresh = [&](auto& editor) {
-        editor.strip_styles();
-        shell->highlight(editor);
-    };
-    editor.on_tab_complete = [&](const Line::Editor& editor) {
-        return shell->complete(editor);
-    };
-
     signal(SIGINT, [](int) {
         editor.interrupted();
     });
@@ -106,6 +86,26 @@ int main(int argc, char** argv)
 
     // Ignore SIGTSTP as the shell should not be suspended with ^Z.
     signal(SIGTSTP, [](auto) {});
+
+    if (pledge("stdio rpath wpath cpath proc exec tty accept", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    auto shell = Shell::construct();
+    s_shell = shell.ptr();
+
+    editor.initialize();
+    shell->termios = editor.termios();
+    shell->default_termios = editor.default_termios();
+
+    editor.on_display_refresh = [&](auto& editor) {
+        editor.strip_styles();
+        shell->highlight(editor);
+    };
+    editor.on_tab_complete = [&](const Line::Editor& editor) {
+        return shell->complete(editor);
+    };
 
     if (argc > 2 && !strcmp(argv[1], "-c")) {
         dbgprintf("sh -c '%s'\n", argv[2]);
