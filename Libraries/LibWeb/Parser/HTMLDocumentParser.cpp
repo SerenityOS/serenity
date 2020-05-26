@@ -430,7 +430,7 @@ void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
     RefPtr<Element> entry = m_list_of_active_formatting_elements.at(index);
 
 Rewind:
-    if (m_list_of_active_formatting_elements.size() == 1) {
+    if (index == 0) {
         goto Create;
     }
 
