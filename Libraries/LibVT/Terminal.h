@@ -30,6 +30,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <Kernel/KeyCode.h>
 #include <LibVT/Line.h>
 #include <LibVT/Position.h>
 
@@ -95,6 +96,7 @@ public:
     const NonnullOwnPtrVector<Line>& history() const { return m_history; }
 
     void inject_string(const StringView&);
+    void handle_key_press(KeyCode, u8 charatcter, u8 flags);
 
     Attribute attribute_at(const Position&) const;
 
