@@ -246,6 +246,9 @@ void Service::spawn()
             }
         }
 
+        for (String& env : m_environment)
+            putenv(const_cast<char*>(env.characters()));
+
         char* argv[m_extra_arguments.size() + 2];
         argv[0] = const_cast<char*>(m_executable_path.characters());
         for (size_t i = 0; i < m_extra_arguments.size(); i++)
@@ -321,14 +324,16 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     if (!m_user.is_null())
         resolve_user();
 
+    m_working_directory = config.read_entry(name, "WorkingDirectory");
+    m_environment = config.read_entry(name, "Environment").split(' ');
+    m_boot_modes = config.read_entry(name, "BootModes", "graphical").split(',');
+
     m_socket_path = config.read_entry(name, "Socket");
-    if (!m_socket_path.is_null()) {
+    if (!m_socket_path.is_null() && is_enabled()) {
         auto socket_permissions_string = config.read_entry(name, "SocketPermissions", "0600");
         m_socket_permissions = strtol(socket_permissions_string.characters(), nullptr, 8) & 04777;
         setup_socket();
     }
-
-    m_working_directory = config.read_entry(name, "WorkingDirectory");
 }
 
 void Service::save_to(JsonObject& json)
@@ -343,6 +348,16 @@ void Service::save_to(JsonObject& json)
     for (String& arg : m_extra_arguments)
         extra_args.append(arg);
     json.set("extra_arguments", move(extra_args));
+
+    JsonArray boot_modes;
+    for (String& mode : m_boot_modes)
+        boot_modes.append(mode);
+    json.set("boot_modes", boot_modes);
+
+    JsonArray environment;
+    for (String& env : m_environment)
+        boot_modes.append(env);
+    json.set("environment", environment);
     */
 
     json.set("stdio_file_path", m_stdio_file_path);
@@ -362,4 +377,10 @@ void Service::save_to(JsonObject& json)
 
     json.set("restart_attempts", m_restart_attempts);
     json.set("working_directory", m_working_directory);
+}
+
+bool Service::is_enabled() const
+{
+    extern String g_boot_mode;
+    return m_boot_modes.contains_slow(g_boot_mode);
 }

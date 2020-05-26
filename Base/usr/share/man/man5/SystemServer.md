@@ -25,7 +25,9 @@ describing how to launch and manage this service.
 * `Socket` - a path to a socket to create on behalf of the service. For lazy services, SystemServer will actually watch the socket for new connection attempts. An open file descriptor to this socket will be passed as fd 3 to the service.
 * `SocketPermissions` - (octal) file system permissions for the socket file. The default permissions are 0600.
 * `User` - a name of the user to run the service as. This impacts what UID, GID (and extra GIDs) the service processes have. By default, services are run as root.
-* `WorkingDirectory` - The working directory in which the service is spawned. By Default, services are spawned in the root (`"/"`) directory.
+* `WorkingDirectory` - the working directory in which the service is spawned. By default, services are spawned in the root (`"/"`) directory.
+* `BootModes` - a comma-separated list of boot modes the service should be enabled in. By default, services are only enabled in the "graphical" mode. The current boot mode is read from the kernel command line, and is assumed to be "graphical" if not specified there.
+* `Environment` - a space-separated list of "variable=value" pairs to set in the environment for the service.
 
 ## Environment
 

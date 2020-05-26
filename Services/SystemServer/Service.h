@@ -36,6 +36,7 @@ class Service final : public Core::Object {
     C_OBJECT(Service)
 
 public:
+    bool is_enabled() const;
     void activate();
     void did_exit(int exit_code);
 
@@ -68,6 +69,12 @@ private:
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
     Vector<gid_t> m_extra_gids;
+    // The working directory in which to spawn the service.
+    String m_working_directory;
+    // Boot modes to run this service in. By default, this is the graphical mode.
+    Vector<String> m_boot_modes;
+    // Environment variables to pass to the service.
+    Vector<String> m_environment;
 
     // PID of the running instance of this service.
     pid_t m_pid { -1 };
@@ -80,9 +87,6 @@ private:
     // How many times we have tried to restart this service, only counting those
     // times where it has exited unsuccessfully and too quickly.
     int m_restart_attempts { 0 };
-
-    // The working directory in which to spawn the service
-    String m_working_directory;
 
     void resolve_user();
     void setup_socket();

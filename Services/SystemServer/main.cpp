@@ -38,6 +38,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+String g_boot_mode = "graphical";
+
 static void sigchld_handler(int)
 {
     int status = 0;
@@ -62,28 +64,22 @@ static void sigchld_handler(int)
     Core::EventLoop::wake();
 }
 
-static void check_for_test_mode()
+static void parse_boot_mode()
 {
     auto f = Core::File::construct("/proc/cmdline");
     if (!f->open(Core::IODevice::ReadOnly)) {
         dbg() << "Failed to read command line: " << f->error_string();
-        ASSERT(false);
+        return;
     }
-    const String cmd = String::copy(f->read_all());
-    dbg() << "Read command line: " << cmd;
-    if (cmd.matches("*testmode=1*")) {
-        // Eventually, we should run a test binary and wait for it to finish
-        // before shutting down. But this is good enough for now.
-        dbg() << "Waiting for testmode shutdown...";
-        sleep(5);
-        dbg() << "Shutting down due to testmode...";
-        if (fork() == 0) {
-            execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
-            ASSERT_NOT_REACHED();
-        }
-    } else {
-        dbg() << "Continuing normally";
+    const String cmdline = String::copy(f->read_all(), Chomp);
+    dbg() << "Read command line: " << cmdline;
+
+    for (auto& part : cmdline.split_view(' ')) {
+        auto pair = part.split_view('=', 2);
+        if (pair.size() == 2 && pair[0] == "boot_mode")
+            g_boot_mode = pair[1];
     }
+    dbg() << "Booting in " << g_boot_mode << " mode";
 }
 
 static void mount_all_filesystems()
@@ -111,6 +107,7 @@ int main(int, char**)
     }
 
     mount_all_filesystems();
+    parse_boot_mode();
 
     struct sigaction sa = {
         .sa_handler = sigchld_handler,
@@ -125,15 +122,16 @@ int main(int, char**)
     // This takes care of setting up sockets.
     NonnullRefPtrVector<Service> services;
     auto config = Core::ConfigFile::get_for_system("SystemServer");
-    for (auto name : config->groups())
-        services.append(Service::construct(*config, name));
+    for (auto name : config->groups()) {
+        auto service = Service::construct(*config, name);
+        if (service->is_enabled())
+            services.append(service);
+    }
 
     // After we've set them all up, activate them!
+    dbg() << "Activating " << services.size() << " services...";
     for (auto& service : services)
         service.activate();
-
-    // This won't return if we're in test mode.
-    check_for_test_mode();
 
     return event_loop.exec();
 }
