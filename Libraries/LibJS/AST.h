@@ -207,7 +207,8 @@ private:
     virtual const char* class_name() const override { return "FunctionDeclaration"; }
 };
 
-class FunctionExpression final : public Expression
+class FunctionExpression final
+    : public Expression
     , public FunctionNode {
 public:
     static bool must_have_name() { return false; }
