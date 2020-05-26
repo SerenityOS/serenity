@@ -9,4 +9,11 @@ foreach(source ${AK_TEST_SOURCES})
         COMMAND ${name}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
+
+    set_tests_properties(
+        ${name}
+        PROPERTIES
+            FAIL_REGULAR_EXPRESSION
+            "FAIL"
+    )
 endforeach()
