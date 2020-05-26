@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <LibVT/Terminal.h>
 #include <string.h>
 
@@ -1002,6 +1003,69 @@ void Terminal::inject_string(const StringView& str)
 void Terminal::emit_string(const StringView& string)
 {
     m_client.emit((const u8*)string.characters_without_null_termination(), string.length());
+}
+
+void Terminal::handle_key_press(KeyCode key, u8 character, u8 flags)
+{
+    bool ctrl = flags & Mod_Ctrl;
+    bool alt = flags & Mod_Alt;
+    bool shift = flags & Mod_Shift;
+
+    switch (key) {
+    case KeyCode::Key_Up:
+        emit_string(ctrl ? "\033[OA" : "\033[A");
+        return;
+    case KeyCode::Key_Down:
+        emit_string(ctrl ? "\033[OB" : "\033[B");
+        return;
+    case KeyCode::Key_Right:
+        emit_string(ctrl ? "\033[OC" : "\033[C");
+        return;
+    case KeyCode::Key_Left:
+        emit_string(ctrl ? "\033[OD" : "\033[D");
+        return;
+    case KeyCode::Key_Insert:
+        emit_string("\033[2~");
+        return;
+    case KeyCode::Key_Delete:
+        emit_string("\033[3~");
+        return;
+    case KeyCode::Key_Home:
+        emit_string("\033[H");
+        return;
+    case KeyCode::Key_End:
+        emit_string("\033[F");
+        return;
+    case KeyCode::Key_PageUp:
+        emit_string("\033[5~");
+        return;
+    case KeyCode::Key_PageDown:
+        emit_string("\033[6~");
+        return;
+    default:
+        break;
+    }
+
+    if (shift && key == KeyCode::Key_Tab) {
+        emit_string("\033[Z");
+        return;
+    }
+
+    // Key event was not one of the above special cases,
+    // attempt to treat it as a character...
+    if (ctrl) {
+        if (character >= 'a' && character <= 'z') {
+            character = character - 'a' + 1;
+        } else if (character == '\\') {
+            character = 0x1c;
+        }
+    }
+
+    // Alt modifier sends escape prefix.
+    if (alt)
+        emit_string("\033");
+
+    emit_string({ &character, 1 });
 }
 
 void Terminal::unimplemented_escape()
