@@ -72,7 +72,6 @@ private:
         Gfx::Rect rect;
         Gfx::Rect temporary_rect_during_move;
         bool is_moving { false };
-        bool is_selected { false };
         Gfx::Point movement_delta;
     };
 

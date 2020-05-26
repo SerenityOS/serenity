@@ -59,12 +59,17 @@ public:
 
     void did_modify_bitmap(Image&);
 
+    void set_selected(bool selected) { m_selected = selected; }
+    bool is_selected() const { return m_selected; }
+
 private:
     explicit Layer(const Gfx::Size&, const String& name);
 
     String m_name;
     Gfx::Point m_location;
     RefPtr<Gfx::Bitmap> m_bitmap;
+
+    bool m_selected { false };
 };
 
 }
