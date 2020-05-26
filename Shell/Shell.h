@@ -117,6 +117,8 @@ public:
 
     bool is_waiting_for(pid_t pid) const { return m_waiting_for_pid == pid; }
 
+    u64 find_last_job_id() const;
+
     String get_history_path();
     void load_history();
     void save_history();

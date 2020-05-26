@@ -154,8 +154,8 @@ int Shell::builtin_bg(int argc, const char** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
-    if (job_id == -1)
-        job_id = jobs.size() - 1;
+    if (job_id == -1 && !jobs.is_empty())
+        job_id = find_last_job_id();
 
     Job* job = nullptr;
 
@@ -400,8 +400,8 @@ int Shell::builtin_fg(int argc, const char** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
-    if (job_id == -1)
-        job_id = jobs.size() - 1;
+    if (job_id == -1 && !jobs.is_empty())
+        job_id = find_last_job_id();
 
     Job* job = nullptr;
 
@@ -1311,7 +1311,7 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
             StringBuilder cmd;
             cmd.join(" ", argv_string);
 
-            auto job = make<Job>(child, (unsigned)child, cmd.build(), jobs.size());
+            auto job = make<Job>(child, (unsigned)child, cmd.build(), find_last_job_id() + 1);
             jobs.set((u64)child, move(job));
         }
 
@@ -1834,6 +1834,16 @@ void Shell::stop_all_jobs()
             }
         }
     }
+}
+
+u64 Shell::find_last_job_id() const
+{
+    u64 job_id = 0;
+    for (auto& entry : jobs) {
+        if (entry.value->job_id() > job_id)
+            job_id = entry.value->job_id();
+    }
+    return job_id;
 }
 
 void Shell::save_to(JsonObject& object)
