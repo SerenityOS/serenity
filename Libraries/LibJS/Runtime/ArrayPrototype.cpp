@@ -68,6 +68,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("some", some, 1, attr);
     put_native_function("every", every, 1, attr);
     put_native_function("splice", splice, 2, attr);
+    put_native_function("fill", fill, 1, attr);
     put("length", Value(0), Attribute::Configurable);
 }
 
@@ -743,4 +744,51 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
     return removed_elements;
 }
 
+Value ArrayPrototype::fill(Interpreter& interpreter)
+{
+    auto *this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
+        return {};
+
+    ssize_t length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+
+    ssize_t relative_start = 0;
+    ssize_t relative_end = length;
+
+    if (interpreter.argument_count() >= 2) {
+        relative_start = interpreter.argument(1).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
+
+    if (interpreter.argument_count() >= 3) {
+        relative_end = interpreter.argument(2).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
+
+    size_t from, to;
+
+    if (relative_start < 0)
+        from = max(length + relative_start, 0L);
+    else
+        from = min(relative_start, length);
+
+    if (relative_end < 0)
+        to = max(length + relative_end, 0L);
+    else
+        to = min(relative_end, length);
+
+    for (size_t i = from; i < to; i++) {
+        this_object->put_by_index(i, interpreter.argument(0));
+        if (interpreter.exception())
+            return {};
+    }
+
+    return this_object;
 }
+
+}
+
