@@ -206,90 +206,38 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
     m_cursor_blink_timer->stop();
     m_cursor_blink_state = true;
     m_cursor_blink_timer->start();
-    auto ctrl_held = !!(event.modifiers() & Mod_Ctrl);
 
-    switch (event.key()) {
-    case KeyCode::Key_Up:
-        write(m_ptm_fd, ctrl_held ? "\033[OA" : "\033[A", 3 + ctrl_held);
+    if (event.key() == KeyCode::Key_PageUp && event.modifiers() == Mod_Shift) {
+        m_scrollbar->set_value(m_scrollbar->value() - m_terminal.rows());
         return;
-    case KeyCode::Key_Down:
-        write(m_ptm_fd, ctrl_held ? "\033[OB" : "\033[B", 3 + ctrl_held);
+    }
+    if (event.key() == KeyCode::Key_PageDown && event.modifiers() == Mod_Shift) {
+        m_scrollbar->set_value(m_scrollbar->value() + m_terminal.rows());
         return;
-    case KeyCode::Key_Right:
-        write(m_ptm_fd, ctrl_held ? "\033[OC" : "\033[C", 3 + ctrl_held);
-        return;
-    case KeyCode::Key_Left:
-        write(m_ptm_fd, ctrl_held ? "\033[OD" : "\033[D", 3 + ctrl_held);
-        return;
-    case KeyCode::Key_Insert:
-        write(m_ptm_fd, "\033[2~", 4);
-        return;
-    case KeyCode::Key_Delete:
-        write(m_ptm_fd, "\033[3~", 4);
-        return;
-    case KeyCode::Key_Home:
-        write(m_ptm_fd, "\033[H", 3);
-        return;
-    case KeyCode::Key_End:
-        write(m_ptm_fd, "\033[F", 3);
-        return;
-    case KeyCode::Key_PageUp:
-        if (event.modifiers() == Mod_Shift) {
-            m_scrollbar->set_value(m_scrollbar->value() - m_terminal.rows());
-            return;
-        }
-        write(m_ptm_fd, "\033[5~", 4);
-        return;
-    case KeyCode::Key_PageDown:
-        if (event.modifiers() == Mod_Shift) {
-            m_scrollbar->set_value(m_scrollbar->value() + m_terminal.rows());
-            return;
-        }
-        write(m_ptm_fd, "\033[6~", 4);
-        return;
-    case KeyCode::Key_Alt:
+    }
+    if (event.key() == KeyCode::Key_Alt) {
         m_alt_key_held = true;
         return;
-    default:
-        break;
     }
 
-    if (event.shift() && event.key() == KeyCode::Key_Tab) {
-        write(m_ptm_fd, "\033[Z", 3);
-        return;
+    // Clear the selection if we type in/behind it.
+    auto future_cursor_column = (event.key() == KeyCode::Key_Backspace) ? m_terminal.cursor_column() - 1 : m_terminal.cursor_column();
+    auto min_selection_row = min(m_selection_start.row(), m_selection_end.row());
+    auto max_selection_row = max(m_selection_start.row(), m_selection_end.row());
+
+    if (future_cursor_column <= last_selection_column_on_row(m_terminal.cursor_row()) && m_terminal.cursor_row() >= min_selection_row && m_terminal.cursor_row() <= max_selection_row) {
+        m_selection_end = {};
+        update();
     }
 
-    // Key event was not one of the above special cases,
-    // attempt to treat it as a character...
-    if (event.text().length() == 1) {
-        // 1 byte input == ASCII
-        char ch = !event.text().is_empty() ? event.text()[0] : 0;
-        if (event.ctrl()) {
-            if (ch >= 'a' && ch <= 'z') {
-                ch = ch - 'a' + 1;
-            } else if (ch == '\\') {
-                ch = 0x1c;
-            }
-        }
-
-        // ALT modifier sends escape prefix
-        if (event.alt())
-            write(m_ptm_fd, "\033", 1);
-
-        //Clear the selection if we type in/behind it
-        auto future_cursor_column = (event.key() == KeyCode::Key_Backspace) ? m_terminal.cursor_column() - 1 : m_terminal.cursor_column();
-        auto min_selection_row = min(m_selection_start.row(), m_selection_end.row());
-        auto max_selection_row = max(m_selection_start.row(), m_selection_end.row());
-
-        if (future_cursor_column <= last_selection_column_on_row(m_terminal.cursor_row()) && m_terminal.cursor_row() >= min_selection_row && m_terminal.cursor_row() <= max_selection_row) {
-            m_selection_end = {};
-            update();
-        }
-
-        write(m_ptm_fd, &ch, 1);
-    } else if (event.text().length() > 1) {
-        // 2+ byte input == Unicode
+    if (event.text().length() > 2) {
+        // Unicode (likely emoji), just emit it.
         write(m_ptm_fd, event.text().characters(), event.text().length());
+    } else {
+        // Ask the terminal to generate the correct character sequence and send
+        // it back to us via emit().
+        u8 character = event.text().length() == 1 ? event.text()[0] : 0;
+        m_terminal.handle_key_press(event.key(), character, event.modifiers());
     }
 
     if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_Shift && event.key() != Key_Logo)
