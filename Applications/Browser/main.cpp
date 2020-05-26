@@ -64,7 +64,8 @@ int main(int argc, char** argv)
     // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
     Web::ResourceLoader::the();
 
-    if (pledge("stdio shared_buffer accept cpath rpath wpath", nullptr) < 0) {
+    // FIXME: Once there is a standalone Download Manager, we can drop the "unix" pledge.
+    if (pledge("stdio shared_buffer accept unix cpath rpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -80,6 +81,12 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    // FIXME: Once there is a standalone Download Manager, we don't need to unveil this
+    if (unveil("/tmp/portal/launch", "rw") < 0) {
         perror("unveil");
         return 1;
     }

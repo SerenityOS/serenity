@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_bin(Browser)
-target_link_libraries(Browser LibWeb LibProtocol LibGUI)
+target_link_libraries(Browser LibWeb LibProtocol LibGUI LibDesktop)
