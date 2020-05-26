@@ -222,8 +222,11 @@ int atexit(void (*handler)())
 
 void abort()
 {
+    // For starters, send ourselves a SIGABRT.
     raise(SIGABRT);
-    ASSERT_NOT_REACHED();
+    // If that didn't kill us, try harder.
+    raise(SIGKILL);
+    _exit(127);
 }
 
 static HashTable<const char*> s_malloced_environment_variables;
