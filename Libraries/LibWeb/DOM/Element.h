@@ -58,7 +58,7 @@ public:
             callback(attribute.name(), attribute.value());
     }
 
-    bool has_class(const StringView&) const;
+    bool has_class(const FlyString&) const;
 
     virtual void apply_presentational_hints(StyleProperties&) const { }
     virtual void parse_attribute(const FlyString& name, const String& value);
@@ -86,6 +86,8 @@ private:
     Vector<Attribute> m_attributes;
 
     RefPtr<StyleProperties> m_resolved_style;
+
+    Vector<FlyString> m_classes;
 };
 
 template<>
