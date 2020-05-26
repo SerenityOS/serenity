@@ -43,9 +43,7 @@ String MarkupGenerator::html_from_source(const StringView& source)
     auto lexer = Lexer(source);
     for (auto token = lexer.next(); token.type() != TokenType::Eof; token = lexer.next()) {
         auto length = token.value().length();
-        auto start = token.line_column();
-        // FIXME: Why do we need to do this magic math? This math isn't even accurate enough, code like "let x = 10" renders incorrectly.
-        start = start < 2 ? 0 : start - 2;
+        auto start = token.line_column() - 1;
 
         if (start > source_cursor) {
             builder.append(source.substring_view(source_cursor, start - source_cursor));

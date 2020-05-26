@@ -55,11 +55,11 @@ private:
     bool match(char, char, char, char) const;
 
     StringView m_source;
-    size_t m_position = 0;
+    size_t m_position { 0 };
     Token m_current_token;
-    int m_current_char = 0;
-    size_t m_line_number = 1;
-    size_t m_line_column = 1;
+    int m_current_char { 0 };
+    size_t m_line_number { 1 };
+    size_t m_line_column { 0 };
 
     struct TemplateState {
         bool in_expr;
