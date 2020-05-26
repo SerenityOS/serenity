@@ -24,6 +24,10 @@ Note that `pledge()` can be called repeatedly to remove previously-pledged promi
 
 If `promises` or `execpromises` is null, the corresponding value is unchanged.
 
+If the process later attempts to use any system functionality it has previously promised *not* to use, the process is instantly terminated. Note that a process that has not ever called `pledge()` is considered to not have made any promises, and is allowed use any system functionality (subject to regular permission checks).
+
+`pledge()` is intended to be used in programs that want to sandbox themselves, either to limit the impact of a possible vulnerability exploitation, or before intentionally executing untrusted code.
+
 ## Promises
 
 * `stdio`: Basic I/O, memory allocation, information about self, various non-destructive syscalls
@@ -45,6 +49,7 @@ If `promises` or `execpromises` is null, the corresponding value is unchanged.
 * `chroot`: The [`chroot(2)`](chroot.md) syscall (\*)
 * `video`: May use [`ioctl(2)`](ioctl.md) and [`mmap(2)`](mmap.md) on framebuffer video devices
 * `settime`: Changing the system time and date
+* `sigaction`: Change signal handlers and dispositions (\*)
 
 Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
 
