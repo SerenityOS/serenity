@@ -67,7 +67,7 @@ static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_locatio
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio thread shared_buffer accept unix cpath rpath wpath fattr proc exec", nullptr) < 0) {
+    if (pledge("stdio thread shared_buffer accept unix cpath rpath wpath fattr proc exec sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

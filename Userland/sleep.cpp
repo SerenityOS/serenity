@@ -36,11 +36,6 @@ void handle_sigint(int)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
     int secs;
 
     Core::ArgsParser args_parser;
@@ -51,6 +46,12 @@ int main(int argc, char** argv)
     memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     unsigned remaining = sleep(secs);
     if (remaining) {
         printf("Sleep interrupted with %u seconds remaining.\n", remaining);
