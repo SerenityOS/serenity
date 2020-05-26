@@ -90,8 +90,8 @@ echo "installing grub using $grub..."
 $grub --boot-directory=mnt/boot --target=i386-pc --modules="ext2 part_msdos" "${dev}"
 
 if [ -d mnt/boot/grub2 ]; then
-    cp grub-"${partition_scheme}".cfg mnt/boot/grub2/grub.cfg
+    cp "$SERENITY_ROOT"/Meta/grub-"${partition_scheme}".cfg mnt/boot/grub2/grub.cfg
 else
-    cp grub-"${partition_scheme}".cfg mnt/boot/grub/grub.cfg
+    cp "$SERENITY_ROOT"/Meta/grub-"${partition_scheme}".cfg mnt/boot/grub/grub.cfg
 fi
 echo "done"
