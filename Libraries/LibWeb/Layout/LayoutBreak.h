@@ -40,7 +40,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "LayoutBreak"; }
-    virtual void split_into_lines(LayoutBlock&) override;
+    virtual void split_into_lines(LayoutBlock&, LayoutMode) override;
 };
 
 }

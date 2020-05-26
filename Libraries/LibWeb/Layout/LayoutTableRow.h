@@ -37,7 +37,7 @@ public:
     LayoutTableRow(const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutTableRow() override;
 
-    virtual void layout() override;
+    virtual void layout(LayoutMode = LayoutMode::Default) override;
 
     LayoutTableCell* first_cell();
     const LayoutTableCell* first_cell() const;

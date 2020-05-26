@@ -99,7 +99,13 @@ public:
 
     bool is_inline_block() const { return is_inline() && is_block(); }
 
-    virtual void layout();
+    enum class LayoutMode {
+        Default,
+        AllPossibleLineBreaks,
+        OnlyRequiredLineBreaks,
+    };
+
+    virtual void layout(LayoutMode);
     virtual void render(RenderingContext&);
 
     const LayoutBlock* containing_block() const;
@@ -111,11 +117,11 @@ public:
     LayoutNodeWithStyle* parent();
     const LayoutNodeWithStyle* parent() const;
 
-    void inserted_into(LayoutNode&) {}
-    void removed_from(LayoutNode&) {}
-    void children_changed() {}
+    void inserted_into(LayoutNode&) { }
+    void removed_from(LayoutNode&) { }
+    void children_changed() { }
 
-    virtual void split_into_lines(LayoutBlock& container);
+    virtual void split_into_lines(LayoutBlock& container, LayoutMode);
 
     bool is_visible() const { return m_visible; }
     void set_visible(bool visible) { m_visible = visible; }
@@ -161,7 +167,7 @@ private:
 
 class LayoutNodeWithStyle : public LayoutNode {
 public:
-    virtual ~LayoutNodeWithStyle() override {}
+    virtual ~LayoutNodeWithStyle() override { }
 
     const StyleProperties& style() const { return m_style; }
     void set_style(const StyleProperties& style) { m_style = style; }

@@ -40,7 +40,7 @@ public:
 
     virtual const char* class_name() const override { return "LayoutBlock"; }
 
-    virtual void layout() override;
+    virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void render(RenderingContext&) override;
 
     virtual LayoutNode& inline_wrapper() override;
@@ -63,15 +63,17 @@ public:
     template<typename Callback>
     void for_each_fragment(Callback) const;
 
-    virtual void split_into_lines(LayoutBlock& container) override;
+    virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
+
 
 private:
     virtual bool is_block() const override { return true; }
 
     NonnullRefPtr<StyleProperties> style_for_anonymous_block() const;
 
-    void layout_inline_children();
-    void layout_block_children();
+    void layout_children(LayoutMode);
+    void layout_inline_children(LayoutMode);
+    void layout_block_children(LayoutMode);
 
     void compute_width();
     void compute_position();

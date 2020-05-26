@@ -39,7 +39,7 @@ LayoutBreak::~LayoutBreak()
 {
 }
 
-void LayoutBreak::split_into_lines(LayoutBlock& block)
+void LayoutBreak::split_into_lines(LayoutBlock& block, LayoutMode)
 {
     block.add_line_box();
 }

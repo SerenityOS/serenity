@@ -38,7 +38,7 @@ public:
     LayoutCanvas(const HTMLCanvasElement&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutCanvas() override;
 
-    virtual void layout() override;
+    virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void render(RenderingContext&) override;
 
     const HTMLCanvasElement& node() const { return static_cast<const HTMLCanvasElement&>(LayoutReplaced::node()); }

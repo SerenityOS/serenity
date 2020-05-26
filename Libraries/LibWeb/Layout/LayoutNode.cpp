@@ -46,10 +46,10 @@ LayoutNode::~LayoutNode()
         m_node->set_layout_node({}, nullptr);
 }
 
-void LayoutNode::layout()
+void LayoutNode::layout(LayoutMode line_break_policy)
 {
-    for_each_child([](auto& child) {
-        child.layout();
+    for_each_child([&](auto& child) {
+        child.layout(line_break_policy);
     });
 }
 
@@ -111,11 +111,11 @@ LayoutDocument& LayoutNode::root()
     return *document().layout_node();
 }
 
-void LayoutNode::split_into_lines(LayoutBlock& container)
+void LayoutNode::split_into_lines(LayoutBlock& container, LayoutMode line_break_policy)
 {
     for_each_child([&](auto& child) {
         if (child.is_inline()) {
-            child.split_into_lines(container);
+            child.split_into_lines(container, line_break_policy);
         } else {
             // FIXME: Support block children of inlines.
         }
