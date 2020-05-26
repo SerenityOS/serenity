@@ -50,6 +50,21 @@ function assertThrowsError(testFunction, options) {
     }
 }
 
+/**
+ * Ensures the provided arrays contain exactly the same items.
+ * @param {Array} a First array
+ * @param {Array} b Second array
+ */
+function assertArrayEquals(a, b) {
+    if (a.length != b.length)
+        throw new AssertionError("Array lengths do not match");
+    
+    for (var i = 0; i < a.length; i++) {
+        if (a[i] !== b[i])
+            throw new AssertionError("Elements do not match");
+    }
+}
+
 const assertVisitsAll = (testFunction, expectedOutput) => {
     const visited = [];
     testFunction(value => visited.push(value));
