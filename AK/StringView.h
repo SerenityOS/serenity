@@ -73,7 +73,7 @@ public:
     unsigned hash() const;
 
     bool starts_with(const StringView&) const;
-    bool ends_with(const StringView&) const;
+    bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     bool starts_with(char) const;
     bool ends_with(char) const;
     bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
