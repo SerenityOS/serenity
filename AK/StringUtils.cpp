@@ -196,7 +196,7 @@ bool equals_ignoring_case(const StringView& a, const StringView& b)
     return true;
 }
 
-bool ends_with(const StringView& str, const StringView& end)
+bool ends_with(const StringView& str, const StringView& end, CaseSensitivity case_sensitivity)
 {
     if (end.is_empty())
         return true;
@@ -204,7 +204,19 @@ bool ends_with(const StringView& str, const StringView& end)
         return false;
     if (end.length() > str.length())
         return false;
-    return !memcmp(str.characters_without_null_termination() + (str.length() - end.length()), end.characters_without_null_termination(), end.length());
+
+    if (case_sensitivity == CaseSensitivity::CaseSensitive)
+        return !memcmp(str.characters_without_null_termination() + (str.length() - end.length()), end.characters_without_null_termination(), end.length());
+
+    auto str_chars = str.characters_without_null_termination();
+    auto end_chars = end.characters_without_null_termination();
+
+    size_t si = str.length() - end.length();
+    for (size_t ei = 0; ei < end.length(); ++si, ++ei) {
+        if (to_lowercase(str_chars[si]) != to_lowercase(end_chars[ei]))
+            return false;
+    }
+    return true;
 }
 
 }

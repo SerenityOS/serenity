@@ -105,11 +105,9 @@ void FileSystemPath::canonicalize()
     m_string = builder.to_string();
 }
 
-bool FileSystemPath::has_extension(StringView extension) const
+bool FileSystemPath::has_extension(const StringView& extension) const
 {
-    // FIXME: This is inefficient, expand StringView with enough functionality that we don't need to copy strings here.
-    String extension_string = extension;
-    return m_string.to_lowercase().ends_with(extension_string.to_lowercase());
+    return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
 }
 
 String canonicalized_path(const StringView& path)

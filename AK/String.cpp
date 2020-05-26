@@ -278,9 +278,9 @@ bool String::starts_with(char ch) const
     return characters()[0] == ch;
 }
 
-bool String::ends_with(const StringView& str) const
+bool String::ends_with(const StringView& str, CaseSensitivity case_sensitivity) const
 {
-    return StringUtils::ends_with(*this, str);
+    return StringUtils::ends_with(*this, str, case_sensitivity);
 }
 
 bool String::ends_with(char ch) const
