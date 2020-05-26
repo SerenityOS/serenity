@@ -26,17 +26,17 @@
 
 #include <AK/TestSuite.h>
 
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
-#include <AK/FileSystemPath.h>
 
 TEST_CASE(construct)
 {
-    EXPECT_EQ(FileSystemPath().is_valid(), false);
+    EXPECT_EQ(LexicalPath().is_valid(), false);
 }
 
 TEST_CASE(basic)
 {
-    FileSystemPath path("/abc/def/ghi.txt");
+    LexicalPath path("/abc/def/ghi.txt");
     EXPECT_EQ(path.is_valid(), true);
     EXPECT_EQ(path.basename(), "ghi.txt");
     EXPECT_EQ(path.title(), "ghi");
@@ -48,8 +48,8 @@ TEST_CASE(basic)
 
 TEST_CASE(dotdot_coalescing)
 {
-    EXPECT_EQ(FileSystemPath("/home/user/../../not/home").string(), "/not/home");
-    EXPECT_EQ(FileSystemPath("/../../../../").string(), "/");
+    EXPECT_EQ(LexicalPath("/home/user/../../not/home").string(), "/not/home");
+    EXPECT_EQ(LexicalPath("/../../../../").string(), "/");
 }
 
 // Temporarily disabled, as they were broken by commit a3e4dfdf9859a9b955bf4728328f740a47de5851
@@ -59,21 +59,21 @@ TEST_CASE(dotdot_coalescing)
 TEST_CASE(relative_paths)
 {
     {
-        FileSystemPath path("simple");
+        LexicalPath path("simple");
         EXPECT_EQ(path.is_valid(), true);
         EXPECT_EQ(path.string(), "./simple");
         EXPECT_EQ(path.parts().size(), 2u);
         EXPECT_EQ(path.basename(), "simple");
     }
     {
-        FileSystemPath path("a/relative/path");
+        LexicalPath path("a/relative/path");
         EXPECT_EQ(path.is_valid(), true);
         EXPECT_EQ(path.string(), "./a/relative/path");
         EXPECT_EQ(path.parts().size(), 4u);
         EXPECT_EQ(path.basename(), "path");
     }
     {
-        FileSystemPath path("./././foo");
+        LexicalPath path("./././foo");
         EXPECT_EQ(path.is_valid(), true);
         EXPECT_EQ(path.string(), "./foo");
         EXPECT_EQ(path.parts().size(), 2u);
@@ -81,7 +81,7 @@ TEST_CASE(relative_paths)
     }
 
     {
-        FileSystemPath path(".");
+        LexicalPath path(".");
         EXPECT_EQ(path.is_valid(), true);
         EXPECT_EQ(path.string(), ".");
         EXPECT_EQ(path.parts().size(), 1u);
@@ -123,4 +123,4 @@ TEST_CASE(has_extension)
 
 #endif
 
-TEST_MAIN(FileSystemPath)
+TEST_MAIN(LexicalPath)

@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/StandardPaths.h>
@@ -37,12 +37,12 @@ namespace Core {
 String StandardPaths::home_directory()
 {
     if (auto* home_env = getenv("HOME"))
-        return canonicalized_path(home_env);
+        return LexicalPath::canonicalized_path(home_env);
 
     auto* pwd = getpwuid(getuid());
     String path = pwd ? pwd->pw_dir : "/";
     endpwent();
-    return canonicalized_path(path);
+    return LexicalPath::canonicalized_path(path);
 }
 
 String StandardPaths::desktop_directory()
@@ -50,7 +50,7 @@ String StandardPaths::desktop_directory()
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Desktop");
-    return canonicalized_path(builder.to_string());
+    return LexicalPath::canonicalized_path(builder.to_string());
 }
 
 String StandardPaths::downloads_directory()
@@ -58,7 +58,7 @@ String StandardPaths::downloads_directory()
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Downloads");
-    return canonicalized_path(builder.to_string());
+    return LexicalPath::canonicalized_path(builder.to_string());
 }
 
 String StandardPaths::tempfile_directory()

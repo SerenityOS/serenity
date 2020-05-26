@@ -25,7 +25,7 @@
  */
 
 #include "Client.h"
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
@@ -82,7 +82,7 @@ void Client::handle_request(ByteBuffer raw_request)
         return;
     }
 
-    auto requested_path = canonicalized_path(request.resource());
+    auto requested_path = LexicalPath::canonicalized_path(request.resource());
     dbg() << "Canonical requested path: '" << requested_path << "'";
 
     StringBuilder path_builder;

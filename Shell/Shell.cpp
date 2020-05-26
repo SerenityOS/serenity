@@ -26,8 +26,8 @@
 
 #include "Shell.h"
 #include "Execution.h"
-#include <AK/FileSystemPath.h>
 #include <AK/Function.h>
+#include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -222,12 +222,12 @@ int Shell::builtin_cd(int argc, const char** argv)
         }
     }
 
-    FileSystemPath canonical_path(new_path);
-    if (!canonical_path.is_valid()) {
-        printf("FileSystemPath failed to canonicalize '%s'\n", new_path.characters());
+    LexicalPath lexical_path(new_path);
+    if (!lexical_path.is_valid()) {
+        printf("LexicalPath failed to canonicalize '%s'\n", new_path.characters());
         return 1;
     }
-    const char* path = canonical_path.string().characters();
+    const char* path = lexical_path.string().characters();
 
     struct stat st;
     int rc = stat(path, &st);
@@ -245,7 +245,7 @@ int Shell::builtin_cd(int argc, const char** argv)
         return 1;
     }
     setenv("OLDPWD", cwd.characters(), 1);
-    cwd = canonical_path.string();
+    cwd = lexical_path.string();
     setenv("PWD", cwd.characters(), 1);
     return 0;
 }
@@ -612,13 +612,13 @@ int Shell::builtin_popd(int argc, const char** argv)
         return 0;
     }
 
-    FileSystemPath canonical_path(path.characters());
-    if (!canonical_path.is_valid()) {
-        fprintf(stderr, "FileSystemPath failed to canonicalize '%s'\n", path.characters());
+    LexicalPath lexical_path(path.characters());
+    if (!lexical_path.is_valid()) {
+        fprintf(stderr, "LexicalPath failed to canonicalize '%s'\n", path.characters());
         return 1;
     }
 
-    const char* real_path = canonical_path.string().characters();
+    const char* real_path = lexical_path.string().characters();
 
     struct stat st;
     int rc = stat(real_path, &st);
@@ -639,7 +639,7 @@ int Shell::builtin_popd(int argc, const char** argv)
             return 1;
         }
 
-        cwd = canonical_path.string();
+        cwd = lexical_path.string();
     }
 
     return 0;
@@ -699,13 +699,13 @@ int Shell::builtin_pushd(int argc, const char** argv)
         }
     }
 
-    FileSystemPath canonical_path(path_builder.to_string());
-    if (!canonical_path.is_valid()) {
-        fprintf(stderr, "FileSystemPath failed to canonicalize '%s'\n", path_builder.to_string().characters());
+    LexicalPath lexical_path(path_builder.to_string());
+    if (!lexical_path.is_valid()) {
+        fprintf(stderr, "LexicalPath failed to canonicalize '%s'\n", path_builder.to_string().characters());
         return 1;
     }
 
-    const char* real_path = canonical_path.string().characters();
+    const char* real_path = lexical_path.string().characters();
 
     struct stat st;
     int rc = stat(real_path, &st);
@@ -726,7 +726,7 @@ int Shell::builtin_pushd(int argc, const char** argv)
             return 1;
         }
 
-        cwd = canonical_path.string();
+        cwd = lexical_path.string();
     }
 
     return 0;
@@ -1662,7 +1662,7 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
         path = token.substring(0, last_slash + 1);
         if (path[0] != '/')
             path = String::format("%s/%s", cwd.characters(), path.characters());
-        path = canonicalized_path(path);
+        path = LexicalPath::canonicalized_path(path);
         token = token.substring(last_slash + 1, token.length() - last_slash - 1);
     } else {
         // We have no slashes, so the directory to search is the current

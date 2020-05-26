@@ -26,7 +26,7 @@
 
 #include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
-#include <AK/FileSystemPath.h>
+#include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
@@ -99,7 +99,7 @@ RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
     GIFImageDecoderPlugin gif_decoder((const u8*)mapped_file.data(), mapped_file.size());
     auto bitmap = gif_decoder.bitmap();
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded GIF: %s", bitmap->width(), bitmap->height(), canonicalized_path(path).characters()));
+        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded GIF: %s", bitmap->width(), bitmap->height(), LexicalPath::canonicalized_path(path).characters()));
     return bitmap;
 }
 
@@ -536,7 +536,7 @@ GIFImageDecoderPlugin::GIFImageDecoderPlugin(const u8* data, size_t size)
     m_context->data_size = size;
 }
 
-GIFImageDecoderPlugin::~GIFImageDecoderPlugin() {}
+GIFImageDecoderPlugin::~GIFImageDecoderPlugin() { }
 
 Size GIFImageDecoderPlugin::size()
 {

@@ -25,7 +25,6 @@
  */
 
 #include "DirectoryView.h"
-#include <AK/FileSystemPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>

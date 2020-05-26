@@ -31,10 +31,10 @@
 
 namespace AK {
 
-class FileSystemPath {
+class LexicalPath {
 public:
-    FileSystemPath() {}
-    explicit FileSystemPath(const StringView&);
+    LexicalPath() { }
+    explicit LexicalPath(const StringView&);
 
     bool is_valid() const { return m_is_valid; }
     bool is_absolute() const { return m_is_absolute; }
@@ -49,6 +49,8 @@ public:
 
     bool has_extension(const StringView&) const;
 
+    static String canonicalized_path(const StringView&);
+
 private:
     void canonicalize();
 
@@ -62,9 +64,6 @@ private:
     bool m_is_absolute { false };
 };
 
-String canonicalized_path(const StringView&);
-
 };
 
-using AK::canonicalized_path;
-using AK::FileSystemPath;
+using AK::LexicalPath;
