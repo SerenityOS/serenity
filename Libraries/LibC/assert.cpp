@@ -37,8 +37,6 @@ void __assertion_failed(const char* msg)
     dbgprintf("USERSPACE(%d) ASSERTION FAILED: %s\n", getpid(), msg);
     fprintf(stderr, "ASSERTION FAILED: %s\n", msg);
     abort();
-    for (;;)
-        ;
 }
 #endif
 }
