@@ -61,6 +61,7 @@ private:
     static Value some(Interpreter&);
     static Value every(Interpreter&);
     static Value splice(Interpreter&);
+    static Value fill(Interpreter&);
 };
 
 }
