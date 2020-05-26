@@ -61,7 +61,7 @@ void LayerListWidget::rebuild_gadgets()
     m_gadgets.clear();
     if (m_image) {
         for (size_t layer_index = 0; layer_index < m_image->layer_count(); ++layer_index) {
-            m_gadgets.append({ layer_index, {}, {}, false, false, {} });
+            m_gadgets.append({ layer_index, {}, {}, false, {} });
         }
     }
     relayout_gadgets();
@@ -95,8 +95,8 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         }
 
         if (gadget.is_moving) {
-            painter.fill_rect(adjusted_rect, palette().threed_shadow1());
-        } else if (gadget.is_selected) {
+            painter.fill_rect(adjusted_rect, palette().selection().lightened(1.5f));
+        } else if (layer.is_selected()) {
             painter.fill_rect(adjusted_rect, palette().selection());
         }
 
@@ -109,7 +109,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         Gfx::Rect text_rect { thumbnail_rect.right() + 10, adjusted_rect.y(), adjusted_rect.width(), adjusted_rect.height() };
         text_rect.intersect(adjusted_rect);
 
-        painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, gadget.is_selected ? palette().selection_text() : palette().button_text());
+        painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
     };
 
     for (auto& gadget : m_gadgets) {
@@ -145,8 +145,8 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
     m_moving_gadget_index = gadget_index;
     m_moving_event_origin = event.position();
     auto& gadget = m_gadgets[m_moving_gadget_index.value()];
-    if (on_layer_select)
-        on_layer_select(&m_image->layer(gadget_index.value()));
+    auto& layer = m_image->layer(gadget_index.value());
+    set_selected_layer(&layer);
     gadget.is_moving = true;
     gadget.movement_delta = {};
     update();
@@ -190,7 +190,7 @@ void LayerListWidget::image_did_add_layer(size_t layer_index)
         m_gadgets[m_moving_gadget_index.value()].is_moving = false;
         m_moving_gadget_index = {};
     }
-    Gadget gadget { layer_index, {}, {}, false, false, {} };
+    Gadget gadget { layer_index, {}, {}, false, {} };
     m_gadgets.insert(layer_index, move(gadget));
     relayout_gadgets();
 }
@@ -275,18 +275,10 @@ void LayerListWidget::set_selected_layer(Layer* layer)
 {
     if (!m_image)
         return;
-    if (!layer) {
-        for (auto& gadget : m_gadgets)
-            gadget.is_selected = false;
-    } else {
-        auto layer_index = m_image->index_of(*layer);
-        for (auto& gadget : m_gadgets) {
-            if (gadget.layer_index == layer_index)
-                gadget.is_selected = true;
-            else
-                gadget.is_selected = false;
-        }
-    }
+    for (size_t i = 0; i < m_image->layer_count(); ++i)
+        m_image->layer(i).set_selected(layer == &m_image->layer(i));
+    if (on_layer_select)
+        on_layer_select(layer);
     update();
 }
 
