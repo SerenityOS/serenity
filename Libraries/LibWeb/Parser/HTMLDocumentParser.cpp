@@ -384,9 +384,11 @@ void HTMLDocumentParser::insert_character(u32 data)
         existing_text_node.set_data(builder.to_string());
         return;
     }
+    auto new_text_node = adopt(*new Text(document(), ""));
+    adjusted_insertion_location->append_child(new_text_node);
     StringBuilder builder;
     builder.append(Utf32View { &data, 1 });
-    adjusted_insertion_location->append_child(adopt(*new Text(document(), builder.to_string())));
+    new_text_node->set_data(builder.to_string());
 }
 
 void HTMLDocumentParser::handle_after_head(HTMLToken& token)
@@ -827,6 +829,8 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         return;
     }
 
+    // FIXME: This is a bit hackish, we can simplify this once we don't need to support
+    //        the old parser anymore, since then we don't need to maintain its children_changed() semantics.
     if (token.is_end_tag() && token.tag_name() == "style") {
         current_node().children_changed();
         // NOTE: We don't return here, keep going.
