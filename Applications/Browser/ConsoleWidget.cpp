@@ -54,26 +54,29 @@ ConsoleWidget::ConsoleWidget()
     html_element->append_child(head_element);
     auto body_element = create_element(base_document, "body");
     html_element->append_child(body_element);
-    m_console_output_container = body_element;
+    m_output_container = body_element;
 
-    m_console_output_view = add<Web::HtmlView>();
-    m_console_output_view->set_document(base_document);
+    m_output_view = add<Web::HtmlView>();
+    m_output_view->set_document(base_document);
 
-    m_console_input = add<GUI::TextBox>();
-    m_console_input->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
-    m_console_input->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_console_input->set_preferred_size(0, 22);
+    m_input = add<GUI::TextBox>();
+    m_input->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+    m_input->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    m_input->set_preferred_size(0, 22);
     // FIXME: Syntax Highlighting breaks the cursor's position on non fixed-width fonts.
-    m_console_input->set_font(Gfx::Font::default_fixed_width_font());
+    m_input->set_font(Gfx::Font::default_fixed_width_font());
+    m_input->set_history_enabled(true);
 
-    m_console_input->on_return_pressed = [this] {
-        auto js_source = m_console_input->text();
+    m_input->on_return_pressed = [this] {
+        auto js_source = m_input->text();
 
         // FIXME: An is_blank check to check if there is only whitespace would probably be preferable.
         if (js_source.is_empty())
             return;
 
-        m_console_input->clear();
+        m_input->add_current_text_to_history();
+        m_input->clear();
+
         print_source_line(js_source);
 
         auto parser = JS::Parser(JS::Lexer(js_source));
@@ -133,19 +136,19 @@ void ConsoleWidget::print_source_line(const StringView& source)
 
 void ConsoleWidget::print_html(const StringView& line)
 {
-    auto paragraph = create_element(m_console_output_container->document(), "p");
+    auto paragraph = create_element(m_output_container->document(), "p");
     paragraph->set_inner_html(line);
 
-    m_console_output_container->append_child(paragraph);
-    m_console_output_container->document().invalidate_layout();
-    m_console_output_container->document().update_layout();
+    m_output_container->append_child(paragraph);
+    m_output_container->document().invalidate_layout();
+    m_output_container->document().update_layout();
 
-    m_console_output_view->scroll_to_bottom();
+    m_output_view->scroll_to_bottom();
 }
 
 void ConsoleWidget::clear_output()
 {
-    const_cast<Web::HTMLBodyElement*>(m_console_output_view->document()->body())->remove_all_children();
+    const_cast<Web::HTMLBodyElement*>(m_output_view->document()->body())->remove_all_children();
 }
 
 }
