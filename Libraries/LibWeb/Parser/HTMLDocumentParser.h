@@ -29,6 +29,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Parser/HTMLTokenizer.h>
+#include <LibWeb/Parser/ListOfActiveFormattingElements.h>
 #include <LibWeb/Parser/StackOfOpenElements.h>
 
 #define ENUMERATE_INSERTION_MODES               \
@@ -106,13 +107,13 @@ private:
     void decrement_script_nesting_level();
     size_t script_nesting_level() const { return m_script_nesting_level; }
     void reset_the_insertion_mode_appropriately();
+    void run_the_adoption_agency_algorithm(HTMLToken&);
 
     InsertionMode m_insertion_mode { InsertionMode::Initial };
     InsertionMode m_original_insertion_mode { InsertionMode::Initial };
 
     StackOfOpenElements m_stack_of_open_elements;
-
-    NonnullRefPtrVector<Element> m_list_of_active_formatting_elements;
+    ListOfActiveFormattingElements m_list_of_active_formatting_elements;
 
     HTMLTokenizer m_tokenizer;
 

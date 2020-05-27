@@ -32,33 +32,32 @@
 
 namespace Web {
 
-class StackOfOpenElements {
+class ListOfActiveFormattingElements {
 public:
-    StackOfOpenElements() { }
-    ~StackOfOpenElements();
+    ListOfActiveFormattingElements() { }
+    ~ListOfActiveFormattingElements();
 
-    bool is_empty() const { return m_elements.is_empty(); }
-    void push(NonnullRefPtr<Element> element) { m_elements.append(move(element)); }
-    NonnullRefPtr<Element> pop() { return m_elements.take_last(); }
+    struct Entry {
+        bool is_marker() const { return !element; }
 
-    const Element& current_node() const { return m_elements.last(); }
-    Element& current_node() { return m_elements.last(); }
+        RefPtr<Element> element;
+    };
 
-    bool has_in_scope(const FlyString& tag_name) const;
-    bool has_in_button_scope(const FlyString& tag_name) const;
-    bool has_in_table_scope(const FlyString& tag_name) const;
-
-    bool has_in_scope(const Element&) const;
-
+    bool is_empty() const { return m_entries.is_empty(); }
     bool contains(const Element&) const;
 
-    const NonnullRefPtrVector<Element>& elements() const { return m_elements; }
+    void add(Element& element);
+    void add_marker();
+
+    void remove(Element&);
+
+    const Vector<Entry>& entries() const { return m_entries; }
+    Vector<Entry>& entries() { return m_entries; }
+
+    Element* last_element_with_tag_name_before_marker(const FlyString& tag_name);
 
 private:
-    bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
-    bool has_in_scope_impl(const Element& target_node, const Vector<FlyString>&) const;
-
-    NonnullRefPtrVector<Element> m_elements;
+    Vector<Entry> m_entries;
 };
 
 }
