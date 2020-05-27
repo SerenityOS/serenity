@@ -142,7 +142,11 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
         m_insertion_mode = InsertionMode::BeforeHTML;
         return;
     }
-    ASSERT_NOT_REACHED();
+
+    PARSE_ERROR();
+    document().set_quirks_mode(true);
+    m_insertion_mode = InsertionMode::BeforeHTML;
+    process_using_the_rules_for(InsertionMode::BeforeHTML, token);
 }
 
 void HTMLDocumentParser::handle_before_html(HTMLToken& token)
