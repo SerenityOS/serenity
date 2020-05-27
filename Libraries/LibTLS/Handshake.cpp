@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Random.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -33,7 +34,7 @@ namespace TLS {
 
 ByteBuffer TLSv12::build_hello()
 {
-    arc4random_buf(&m_context.local_random, 32);
+    AK::fill_with_random(&m_context.local_random, 32);
 
     auto packet_version = (u16)m_context.version;
     auto version = (u16)m_context.version;
@@ -42,7 +43,7 @@ ByteBuffer TLSv12::build_hello()
     builder.append((u8)ClientHello);
 
     // hello length (for later)
-    u8 dummy[3];
+    u8 dummy[3] = {};
     builder.append(dummy, 3);
 
     auto start_length = builder.length();

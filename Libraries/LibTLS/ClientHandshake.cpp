@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Random.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -245,12 +246,13 @@ void TLSv12::build_random(PacketBuilder& builder)
     u8 random_bytes[48];
     size_t bytes = 48;
 
-    arc4random_buf(random_bytes, bytes);
+    AK::fill_with_random(random_bytes, bytes);
 
     // remove zeros from the random bytes
-    for (size_t i = 0; i < bytes; ++i)
+    for (size_t i = 0; i < bytes; ++i) {
         if (!random_bytes[i])
-            random_bytes[i--] = arc4random();
+            random_bytes[i--] = AK::get_random<u8>();
+    }
 
     if (m_context.is_server) {
         dbg() << "Server mode not supported";

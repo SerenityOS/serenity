@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Random.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 //#define NT_DEBUG
@@ -289,7 +290,7 @@ static UnsignedBigInteger random_number(const UnsignedBigInteger& min, const Uns
     // FIXME: Need a cryptographically secure rng
     auto size = range.trimmed_length() * sizeof(u32);
     u8 buf[size];
-    arc4random_buf(buf, size);
+    AK::fill_with_random(buf, size);
     Vector<u32> vec;
     for (size_t i = 0; i < size / sizeof(u32); ++i) {
         vec.append(*(u32*)buf + i);

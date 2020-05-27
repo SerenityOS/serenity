@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Random.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/ASN1/PEM.h>
@@ -236,7 +237,10 @@ void RSA_PKCS1_EME::encrypt(const ByteBuffer& in, ByteBuffer& out)
     auto ps_length = mod_len - in.size() - 3;
     u8 ps[ps_length];
 
-    arc4random_buf(ps, ps_length);
+    // FIXME: Without this assertion, GCC refuses to compile due to a memcpy overflow(!?)
+    ASSERT(ps_length < 16384);
+
+    AK::fill_with_random(ps, ps_length);
     // since arc4random can create zeros (shocking!)
     // we have to go through and un-zero the zeros
     for (size_t i = 0; i < ps_length; ++i)
