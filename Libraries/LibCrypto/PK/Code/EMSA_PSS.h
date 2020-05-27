@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Random.h>
 #include <LibCrypto/PK/Code/Code.h>
 
 static constexpr u8 zeros[] { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -56,7 +57,7 @@ public:
         auto em_length = (em_bits + 7) / 8;
         u8 salt[SaltLength];
 
-        arc4random_buf(salt, SaltLength);
+        AK::fill_with_random(salt, SaltLength);
 
         if (em_length < hash_length + SaltLength + 2) {
             dbg() << "Ooops...encoding error";
