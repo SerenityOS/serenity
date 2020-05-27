@@ -42,10 +42,10 @@ namespace JS {
 SymbolPrototype::SymbolPrototype()
     : Object(interpreter().global_object().object_prototype())
 {
-    put_native_property("description", description_getter, nullptr, Attribute::Configurable);
+    define_native_property("description", description_getter, nullptr, Attribute::Configurable);
 
-    put_native_function("toString", to_string, 0, Attribute::Writable | Attribute::Configurable);
-    put_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_function("toString", to_string, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
 }
 
 SymbolPrototype::~SymbolPrototype()

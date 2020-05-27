@@ -37,10 +37,10 @@ namespace JS {
 StringConstructor::StringConstructor()
     : NativeFunction("String", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().global_object().string_prototype(), 0);
-    put("length", Value(1), Attribute::Configurable);
+    define_property("prototype", interpreter().global_object().string_prototype(), 0);
+    define_property("length", Value(1), Attribute::Configurable);
 
-    put_native_function("raw", raw, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_function("raw", raw, 0, Attribute::Writable | Attribute::Configurable);
 }
 
 StringConstructor::~StringConstructor()

@@ -73,9 +73,9 @@ template<typename ConstructorType>
 inline void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object& prototype)
 {
     constructor = heap().allocate<ConstructorType>();
-    constructor->put("name", js_string(heap(), property_name), Attribute::Configurable);
-    prototype.put("constructor", constructor, Attribute::Writable | Attribute::Configurable);
-    put(property_name, constructor, Attribute::Writable | Attribute::Configurable);
+    constructor->define_property("name", js_string(heap(), property_name), Attribute::Configurable);
+    prototype.define_property("constructor", constructor, Attribute::Writable | Attribute::Configurable);
+    define_property(property_name, constructor, Attribute::Writable | Attribute::Configurable);
 }
 
 }

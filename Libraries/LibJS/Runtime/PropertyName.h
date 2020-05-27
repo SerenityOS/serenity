@@ -40,14 +40,26 @@ public:
 
     PropertyName() {}
 
-    explicit PropertyName(i32 index)
+    PropertyName(i32 index)
         : m_type(Type::Number)
         , m_number(index)
     {
-        ASSERT(m_number >= 0);
+        ASSERT(index >= 0);
     }
 
-    explicit PropertyName(const FlyString& string)
+    PropertyName(const char* chars)
+        : m_type(Type::String)
+        , m_string(FlyString(chars))
+    {
+    }
+
+    PropertyName(const String& string)
+        : m_type(Type::String)
+        , m_string(FlyString(string))
+    {
+    }
+
+    PropertyName(const FlyString& string)
         : m_type(Type::String)
         , m_string(string)
     {
@@ -70,7 +82,7 @@ public:
 private:
     Type m_type { Type::Invalid };
     FlyString m_string;
-    i32 m_number { 0 };
+    u32 m_number { 0 };
 };
 
 }

@@ -82,19 +82,19 @@ void GlobalObject::initialize()
 #undef __JS_ENUMERATE
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    put_native_function("gc", gc, 0, attr);
-    put_native_function("isNaN", is_nan, 1, attr);
-    put_native_function("isFinite", is_finite, 1, attr);
-    put_native_function("parseFloat", parse_float, 1, attr);
+    define_native_function("gc", gc, 0, attr);
+    define_native_function("isNaN", is_nan, 1, attr);
+    define_native_function("isFinite", is_finite, 1, attr);
+    define_native_function("parseFloat", parse_float, 1, attr);
 
-    put("NaN", js_nan(), 0);
-    put("Infinity", js_infinity(), 0);
-    put("undefined", js_undefined(), 0);
+    define_property("NaN", js_nan(), 0);
+    define_property("Infinity", js_infinity(), 0);
+    define_property("undefined", js_undefined(), 0);
 
-    put("globalThis", this, attr);
-    put("console", heap().allocate<ConsoleObject>(), attr);
-    put("Math", heap().allocate<MathObject>(), attr);
-    put("Reflect", heap().allocate<ReflectObject>(), attr);
+    define_property("globalThis", this, attr);
+    define_property("console", heap().allocate<ConsoleObject>(), attr);
+    define_property("Math", heap().allocate<MathObject>(), attr);
+    define_property("Reflect", heap().allocate<ReflectObject>(), attr);
 
     add_constructor("Array", m_array_constructor, *m_array_prototype);
     add_constructor("Boolean", m_boolean_constructor, *m_boolean_prototype);

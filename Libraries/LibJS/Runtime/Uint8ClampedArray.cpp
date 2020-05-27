@@ -32,19 +32,17 @@
 
 namespace JS {
 
-Uint8ClampedArray* Uint8ClampedArray::create(GlobalObject& global_object, i32 length)
+Uint8ClampedArray* Uint8ClampedArray::create(GlobalObject& global_object, u32 length)
 {
-    ASSERT(length >= 0);
     auto& interpreter = global_object.interpreter();
     return interpreter.heap().allocate<Uint8ClampedArray>(length, *global_object.array_prototype());
 }
 
-Uint8ClampedArray::Uint8ClampedArray(i32 length, Object& prototype)
+Uint8ClampedArray::Uint8ClampedArray(u32 length, Object& prototype)
     : Object(&prototype)
     , m_length(length)
 {
-    ASSERT(m_length >= 0);
-    put_native_property("length", length_getter, nullptr);
+    define_native_property("length", length_getter, nullptr);
     m_data = new u8[m_length];
 }
 
@@ -65,10 +63,9 @@ Value Uint8ClampedArray::length_getter(Interpreter& interpreter)
     return Value(static_cast<const Uint8ClampedArray*>(this_object)->length());
 }
 
-bool Uint8ClampedArray::put_by_index(i32 property_index, Value value, u8)
+bool Uint8ClampedArray::put_by_index(u32 property_index, Value value)
 {
     // FIXME: Use attributes
-    ASSERT(property_index >= 0);
     ASSERT(property_index < m_length);
     auto number = value.to_i32(interpreter());
     if (interpreter().exception())
@@ -77,9 +74,8 @@ bool Uint8ClampedArray::put_by_index(i32 property_index, Value value, u8)
     return true;
 }
 
-Value Uint8ClampedArray::get_by_index(i32 property_index) const
+Value Uint8ClampedArray::get_by_index(u32 property_index) const
 {
-    ASSERT(property_index >= 0);
     ASSERT(property_index < m_length);
     return Value((i32)m_data[property_index]);
 }

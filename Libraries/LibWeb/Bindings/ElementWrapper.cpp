@@ -40,12 +40,12 @@ namespace Bindings {
 ElementWrapper::ElementWrapper(Element& element)
     : NodeWrapper(element)
 {
-    put_native_property("innerHTML", inner_html_getter, inner_html_setter);
-    put_native_property("id", id_getter, id_setter);
+    define_native_property("innerHTML", inner_html_getter, inner_html_setter);
+    define_native_property("id", id_getter, id_setter);
 
     u8 attributes = JS::Attribute::Configurable | JS::Attribute::Enumerable | JS::Attribute::Writable;
-    put_native_function("getAttribute", get_attribute, 1, attributes);
-    put_native_function("setAttribute", set_attribute, 2, attributes);
+    define_native_function("getAttribute", get_attribute, 1, attributes);
+    define_native_function("setAttribute", set_attribute, 2, attributes);
 }
 
 ElementWrapper::~ElementWrapper()
