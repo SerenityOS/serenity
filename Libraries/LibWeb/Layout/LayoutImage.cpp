@@ -40,7 +40,7 @@ LayoutImage::~LayoutImage()
 {
 }
 
-void LayoutImage::layout(LayoutMode line_break_policy)
+void LayoutImage::layout(LayoutMode layout_mode)
 {
     if (node().preferred_width() && node().preferred_height()) {
         rect().set_width(node().preferred_width());
@@ -57,7 +57,7 @@ void LayoutImage::layout(LayoutMode line_break_policy)
         rect().set_height(16);
     }
 
-    LayoutReplaced::layout(line_break_policy);
+    LayoutReplaced::layout(layout_mode);
 }
 
 void LayoutImage::render(RenderingContext& context)

@@ -40,11 +40,11 @@ LayoutCanvas::~LayoutCanvas()
 {
 }
 
-void LayoutCanvas::layout(LayoutMode line_break_policy)
+void LayoutCanvas::layout(LayoutMode layout_mode)
 {
     rect().set_width(node().requested_width());
     rect().set_height(node().requested_height());
-    LayoutReplaced::layout(line_break_policy);
+    LayoutReplaced::layout(layout_mode);
 }
 
 void LayoutCanvas::render(RenderingContext& context)

@@ -40,12 +40,12 @@ LayoutDocument::~LayoutDocument()
 {
 }
 
-void LayoutDocument::layout(LayoutMode line_break_policy)
+void LayoutDocument::layout(LayoutMode layout_mode)
 {
     ASSERT(document().frame());
     rect().set_width(document().frame()->size().width());
 
-    LayoutNode::layout(line_break_policy);
+    LayoutNode::layout(layout_mode);
 
     ASSERT(!children_are_inline());
 

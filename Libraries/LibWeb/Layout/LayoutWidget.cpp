@@ -43,10 +43,10 @@ LayoutWidget::~LayoutWidget()
     widget().remove_from_parent();
 }
 
-void LayoutWidget::layout(LayoutMode line_break_policy)
+void LayoutWidget::layout(LayoutMode layout_mode)
 {
     rect().set_size(widget().width(), widget().height());
-    LayoutReplaced::layout(line_break_policy);
+    LayoutReplaced::layout(layout_mode);
     widget().move_to(rect().x(), rect().y());
 }
 

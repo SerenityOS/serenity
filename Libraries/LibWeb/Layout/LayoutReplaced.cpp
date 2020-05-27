@@ -41,9 +41,9 @@ LayoutReplaced::~LayoutReplaced()
 {
 }
 
-void LayoutReplaced::split_into_lines(LayoutBlock& container, LayoutMode line_break_policy)
+void LayoutReplaced::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
 {
-    layout(line_break_policy);
+    layout(layout_mode);
 
     auto* line_box = &container.ensure_last_line_box();
     if (line_box->width() > 0 && line_box->width() + width() > container.width())
