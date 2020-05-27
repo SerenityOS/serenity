@@ -706,9 +706,9 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
                 this_object->put(to, from);
                 if (interpreter.exception())
                     return {};
-            }
-            else
+            } else {
                 this_object->delete_property(to);
+            }
         }
 
         for (size_t i = initial_length; i > new_length; --i)
@@ -725,9 +725,9 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
                 this_object->put(to, from);
                 if (interpreter.exception())
                     return {};
-            }
-            else
+            } else {
                 this_object->delete_property(to);
+            }
         }
     }
 
@@ -746,7 +746,7 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
 
 Value ArrayPrototype::fill(Interpreter& interpreter)
 {
-    auto *this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value().to_object(interpreter);
     if (!this_object)
         return {};
 
@@ -791,4 +791,3 @@ Value ArrayPrototype::fill(Interpreter& interpreter)
 }
 
 }
-
