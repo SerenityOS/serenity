@@ -47,6 +47,7 @@
 #include <LibWeb/HtmlView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLParser.h>
 #include <LibWeb/RenderingContext.h>
 #include <LibWeb/ResourceLoader.h>
@@ -431,7 +432,7 @@ static String guess_mime_type_based_on_filename(const URL& url)
     return "text/plain";
 }
 
-static RefPtr<Document> create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
+RefPtr<Document> HtmlView::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
 {
     if (mime_type.starts_with("image/"))
         return create_image_document(data, url);
@@ -441,8 +442,14 @@ static RefPtr<Document> create_document_from_mime_type(const ByteBuffer& data, c
         return create_markdown_document(data, url);
     if (mime_type == "text/gemini")
         return create_gemini_document(data, url);
-    if (mime_type == "text/html")
+    if (mime_type == "text/html") {
+        if (m_use_new_parser) {
+            HTMLDocumentParser parser(data);
+            parser.run(url);
+            return parser.document();
+        }
         return parse_html_document(data, url, encoding);
+    }
     return nullptr;
 }
 
