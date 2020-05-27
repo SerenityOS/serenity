@@ -28,6 +28,7 @@ set(SOURCES
     Runtime/Function.cpp
     Runtime/FunctionPrototype.cpp
     Runtime/GlobalObject.cpp
+    Runtime/IndexedProperties.cpp
     Runtime/LexicalEnvironment.cpp
     Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp

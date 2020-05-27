@@ -122,31 +122,44 @@ String read_next_piece()
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects);
 
-static void print_array(const JS::Array& array, HashTable<JS::Object*>& seen_objects)
+static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
 {
+    bool first = true;
     fputs("[ ", stdout);
-    for (size_t i = 0; i < array.elements().size(); ++i) {
-        print_value(array.elements()[i], seen_objects);
-        if (i != array.elements().size() - 1)
+    for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
+        if (!first)
             fputs(", ", stdout);
+        first = false;
+        auto value = it.value_and_attributes(&array).value;
+        // The V8 repl doesn't throw an exception here, and instead just
+        // prints 'undefined'. We may choose to replicate that behavior in
+        // the future, but for now lets just catch the error
+        if (array.interpreter().exception())
+            return;
+        print_value(value, seen_objects);
     }
     fputs(" ]", stdout);
 }
 
-static void print_object(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
+static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
     fputs("{ ", stdout);
-
-    for (size_t i = 0; i < object.elements().size(); ++i) {
-        if (object.elements()[i].is_empty())
-            continue;
-        printf("\"\033[33;1m%zu\033[0m\": ", i);
-        print_value(object.elements()[i], seen_objects);
-        if (i != object.elements().size() - 1)
+    bool first = true;
+    for (auto& entry : object.indexed_properties()) {
+        if (!first)
             fputs(", ", stdout);
+        first = false;
+        printf("\"\033[33;1m%d\033[0m\": ", entry.index());
+        auto value = entry.value_and_attributes(&object).value;
+        // The V8 repl doesn't throw an exception here, and instead just
+        // prints 'undefined'. We may choose to replicate that behavior in
+        // the future, but for now lets just catch the error
+        if (object.interpreter().exception())
+            return;
+        print_value(value, seen_objects);
     }
 
-    if (!object.elements().is_empty() && object.shape().property_count())
+    if (!object.indexed_properties().is_empty() && object.shape().property_count())
         fputs(", ", stdout);
 
     size_t index = 0;
@@ -196,7 +209,7 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
     }
 
     if (value.is_array())
-        return print_array(static_cast<const JS::Array&>(value.as_object()), seen_objects);
+        return print_array(static_cast<JS::Array&>(value.as_object()), seen_objects);
 
     if (value.is_object()) {
         auto& object = value.as_object();

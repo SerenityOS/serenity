@@ -63,13 +63,13 @@ Value ArrayConstructor::call(Interpreter& interpreter)
             return {};
         }
         auto* array = Array::create(interpreter.global_object());
-        array->elements().resize(array_length_value.as_i32());
+        array->indexed_properties().set_array_like_size(array_length_value.as_i32());
         return array;
     }
 
     auto* array = Array::create(interpreter.global_object());
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
-        array->elements().append(interpreter.argument(i));
+        array->indexed_properties().append(interpreter.argument(i));
     return array;
 }
 
@@ -91,7 +91,7 @@ Value ArrayConstructor::of(Interpreter& interpreter)
 {
     auto* array = Array::create(interpreter.global_object());
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
-        array->elements().append(interpreter.argument(i));
+        array->indexed_properties().append(interpreter.argument(i));
     return array;
 }
 

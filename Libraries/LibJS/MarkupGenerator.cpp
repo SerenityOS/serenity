@@ -116,10 +116,13 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
 void MarkupGenerator::array_to_html(const Array& array, StringBuilder& html_output, HashTable<Object*>& seen_objects)
 {
     html_output.append(wrap_string_in_style("[ ", StyleType::Punctuation));
-    for (size_t i = 0; i < array.elements().size(); ++i) {
-        value_to_html(array.elements()[i], html_output, seen_objects);
-        if (i != array.elements().size() - 1)
+    bool first = true;
+    for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
+        if (!first)
             html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
+        first = false;
+        // FIXME: Exception check
+        value_to_html(it.value_and_attributes(const_cast<Array*>(&array)).value, html_output, seen_objects);
     }
     html_output.append(wrap_string_in_style(" ]", StyleType::Punctuation));
 }
@@ -127,18 +130,18 @@ void MarkupGenerator::array_to_html(const Array& array, StringBuilder& html_outp
 void MarkupGenerator::object_to_html(const Object& object, StringBuilder& html_output, HashTable<Object*>& seen_objects)
 {
     html_output.append(wrap_string_in_style("{ ", StyleType::Punctuation));
-
-    for (size_t i = 0; i < object.elements().size(); ++i) {
-        if (object.elements()[i].is_empty())
-            continue;
-        html_output.append(wrap_string_in_style(String::format("%zu", i), StyleType::Number));
-        html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
-        value_to_html(object.elements()[i], html_output, seen_objects);
-        if (i != object.elements().size() - 1)
+    bool first = true;
+    for (auto& entry : object.indexed_properties()) {
+        if (!first)
             html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
+        first = false;
+        html_output.append(wrap_string_in_style(String::number(entry.index()), StyleType::Number));
+        html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
+        // FIXME: Exception check
+        value_to_html(entry.value_and_attributes(const_cast<Object*>(&object)).value, html_output, seen_objects);
     }
 
-    if (!object.elements().is_empty() && object.shape().property_count())
+    if (!object.indexed_properties().is_empty() && object.shape().property_count())
         html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
 
     size_t index = 0;

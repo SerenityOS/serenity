@@ -30,14 +30,13 @@
 #include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Cell.h>
+#include <LibJS/Runtime/IndexedProperties.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
-
-const u8 default_attributes = Attribute::Configurable | Attribute::Writable | Attribute::Enumerable;
 
 class Object : public Cell {
 public:
@@ -110,8 +109,9 @@ public:
 
     Value get_direct(size_t index) const { return m_storage[index]; }
 
-    const Vector<Value>& elements() const { return m_elements; }
-    Vector<Value>& elements() { return m_elements; }
+    const IndexedProperties& indexed_properties() const { return m_indexed_properties; }
+    IndexedProperties& indexed_properties() { return m_indexed_properties; }
+    void set_indexed_property_elements(Vector<Value>&& values) { m_indexed_properties = IndexedProperties(move(values)); }
 
 private:
     virtual Value get_by_index(u32 property_index) const;
@@ -124,7 +124,7 @@ private:
 
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
-    Vector<Value> m_elements;
+    IndexedProperties m_indexed_properties;
 };
 
 }

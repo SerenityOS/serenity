@@ -104,7 +104,7 @@ Value ScriptFunction::call(Interpreter& interpreter)
         if (parameter.is_rest) {
             auto* array = Array::create(interpreter.global_object());
             for (size_t rest_index = i; rest_index < argument_values.size(); ++rest_index)
-                array->elements().append(argument_values[rest_index]);
+                array->indexed_properties().append(argument_values[rest_index]);
             value = Value(array);
         } else {
             if (i < argument_values.size() && !argument_values[i].is_undefined()) {

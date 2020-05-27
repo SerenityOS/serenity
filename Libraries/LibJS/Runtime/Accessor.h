@@ -27,7 +27,9 @@
 
 #pragma once
 
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 
 namespace JS {
 

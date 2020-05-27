@@ -83,14 +83,20 @@ Value StringConstructor::raw(Interpreter& interpreter)
     if (!raw.is_array())
         return js_string(interpreter, "");
 
-    auto& raw_array_elements = static_cast<Array*>(raw.to_object(interpreter))->elements();
+    auto* array = static_cast<Array*>(raw.to_object(interpreter));
+    auto& raw_array_elements = array->indexed_properties();
     StringBuilder builder;
 
-    for (size_t i = 0; i < raw_array_elements.size(); ++i) {
-        builder.append(raw_array_elements.at(i).to_string(interpreter));
+    for (size_t i = 0; i < raw_array_elements.array_like_size(); ++i) {
+        auto result = raw_array_elements.get(array, i);
         if (interpreter.exception())
             return {};
-        if (i + 1 < interpreter.argument_count() && i < raw_array_elements.size() - 1) {
+        if (!result.has_value())
+            continue;
+        builder.append(result.value().value.to_string(interpreter));
+        if (interpreter.exception())
+            return {};
+        if (i + 1 < interpreter.argument_count() && i < raw_array_elements.array_like_size() - 1) {
             builder.append(interpreter.argument(i + 1).to_string(interpreter));
             if (interpreter.exception())
                 return {};

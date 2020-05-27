@@ -119,7 +119,7 @@ JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
     // FIXME: This should be a static NodeList, not a plain JS::Array.
     auto* node_list = JS::Array::create(interpreter.global_object());
     for (auto& element : elements) {
-        node_list->elements().append(wrap(interpreter.heap(), element));
+        node_list->indexed_properties().append(wrap(interpreter.heap(), element));
     }
     return node_list;
 }

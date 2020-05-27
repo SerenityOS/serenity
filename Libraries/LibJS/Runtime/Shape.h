@@ -45,6 +45,8 @@ struct Attribute {
     };
 };
 
+const u8 default_attributes = Attribute::Configurable | Attribute::Writable | Attribute::Enumerable;
+
 struct PropertyMetadata {
     size_t offset { 0 };
     u8 attributes { 0 };

@@ -66,7 +66,7 @@ Value Array::length_getter(Interpreter& interpreter)
     auto* array = array_from(interpreter);
     if (!array)
         return {};
-    return Value(array->length());
+    return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
 }
 
 void Array::length_setter(Interpreter& interpreter, Value value)
@@ -81,7 +81,7 @@ void Array::length_setter(Interpreter& interpreter, Value value)
         interpreter.throw_exception<RangeError>("Invalid array length");
         return;
     }
-    array->elements().resize(length.as_double());
+    array->indexed_properties().set_array_like_size(length.as_double());
 }
 
 }

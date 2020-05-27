@@ -57,9 +57,8 @@ static void update_function_name(Value& value, const FlyString& name)
             function.set_name(name);
     } else if (object.is_array()) {
         auto& array = static_cast<Array&>(object);
-        for (size_t i = 0; i < array.elements().size(); ++i) {
-            update_function_name(array.elements()[i], name);
-        }
+        for (auto& entry : array.indexed_properties().values_unordered())
+            update_function_name(entry.value, name);
     }
 }
 
@@ -142,20 +141,22 @@ Value CallExpression::execute(Interpreter& interpreter) const
             return {};
         if (m_arguments[i].is_spread) {
             // FIXME: Support generic iterables
-            Vector<Value> iterables;
             if (value.is_string()) {
                 for (auto ch : value.as_string().string())
-                    iterables.append(Value(js_string(interpreter, String::format("%c", ch))));
+                    arguments.append(Value(js_string(interpreter, String::format("%c", ch))));
             } else if (value.is_object() && value.as_object().is_array()) {
-                iterables = static_cast<const Array&>(value.as_object()).elements();
+                auto& array = static_cast<Array&>(value.as_object());
+                for (auto& entry : array.indexed_properties()) {
+                    arguments.append(entry.value_and_attributes(&array).value);
+                    if (interpreter.exception())
+                        return {};
+                }
             } else if (value.is_object() && value.as_object().is_string_object()) {
                 for (auto ch : static_cast<const StringObject&>(value.as_object()).primitive_string().string())
-                    iterables.append(Value(js_string(interpreter, String::format("%c", ch))));
+                    arguments.append(Value(js_string(interpreter, String::format("%c", ch))));
             } else {
                 interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string_without_side_effects().characters()));
             }
-            for (auto& value : iterables)
-                arguments.append(value);
         } else {
             arguments.append(value);
         }
@@ -361,8 +362,10 @@ Value ForInStatement::execute(Interpreter& interpreter) const
     auto* object = rhs_result.to_object(interpreter);
     while (object) {
         auto property_names = object->get_own_properties(*object, Object::GetOwnPropertyMode::Key, Attribute::Enumerable);
-        for (auto& property_name : static_cast<Array&>(property_names.as_object()).elements()) {
-            interpreter.set_variable(variable_name, property_name);
+        for (auto& property_name : property_names.as_object().indexed_properties()) {
+            interpreter.set_variable(variable_name, property_name.value_and_attributes(object).value);
+            if (interpreter.exception())
+                return {};
             last_value = interpreter.run(*m_body);
             if (interpreter.exception())
                 return {};
@@ -406,9 +409,13 @@ Value ForOfStatement::execute(Interpreter& interpreter) const
     size_t index = 0;
     auto next = [&]() -> Optional<Value> {
         if (rhs_result.is_array()) {
-            auto array_elements = static_cast<Array*>(&rhs_result.as_object())->elements();
-            if (index < array_elements.size())
-                return Value(array_elements.at(index));
+            auto& array_elements = rhs_result.as_object().indexed_properties();
+            if (index < array_elements.array_like_size()) {
+                auto result = array_elements.get(&rhs_result.as_object(), index);
+                if (interpreter.exception())
+                    return {};
+                return result.value().value;
+            }
         } else if (rhs_result.is_string()) {
             auto string = rhs_result.as_string().string();
             if (index < string.length())
@@ -1277,12 +1284,10 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
         if (property.type() == ObjectProperty::Type::Spread) {
             if (key_result.is_array()) {
                 auto& array_to_spread = static_cast<Array&>(key_result.as_object());
-                auto& elements = array_to_spread.elements();
-
-                for (size_t i = 0; i < elements.size(); ++i) {
-                    auto element = elements.at(i);
-                    if (!element.is_empty())
-                        object->define_property(i, element);
+                for (auto& entry : array_to_spread.indexed_properties()) {
+                    object->indexed_properties().append(entry.value_and_attributes(&array_to_spread).value);
+                    if (interpreter.exception())
+                        return {};
                 }
             } else if (key_result.is_object()) {
                 auto& obj_to_spread = key_result.as_object();
@@ -1441,30 +1446,29 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
                 // FIXME: Support arbitrary iterables
                 if (value.is_array()) {
                     auto& array_to_spread = static_cast<Array&>(value.as_object());
-                    for (auto& it : array_to_spread.elements()) {
-                        if (it.is_empty()) {
-                            array->elements().append(js_undefined());
-                        } else {
-                            array->elements().append(it);
-                        }
+                    for (auto& entry : array_to_spread.indexed_properties()) {
+                        array->indexed_properties().append(entry.value_and_attributes(&array_to_spread).value);
+                        if (interpreter.exception())
+                            return {};
                     }
                     continue;
                 }
                 if (value.is_string() || (value.is_object() && value.as_object().is_string_object())) {
                     String string_to_spread;
-                    if (value.is_string())
+                    if (value.is_string()) {
                         string_to_spread = value.as_string().string();
-                    else
+                    } else {
                         string_to_spread = static_cast<const StringObject&>(value.as_object()).primitive_string().string();
+                    }
                     for (size_t i = 0; i < string_to_spread.length(); ++i)
-                        array->elements().append(js_string(interpreter, string_to_spread.substring(i, 1)));
+                        array->indexed_properties().append(js_string(interpreter, string_to_spread.substring(i, 1)));
                     continue;
                 }
                 interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string_without_side_effects().characters()));
                 return {};
             }
         }
-        array->elements().append(value);
+        array->indexed_properties().append(value);
     }
     return array;
 }
@@ -1524,10 +1528,11 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter) const
             return {};
         // tag`${foo}`             -> "", foo, ""                -> tag(["", ""], foo)
         // tag`foo${bar}baz${qux}` -> "foo", bar, "baz", qux, "" -> tag(["foo", "baz", ""], bar, qux)
-        if (i % 2 == 0)
-            strings->elements().append(value);
-        else
+        if (i % 2 == 0) {
+            strings->indexed_properties().append(value);
+        } else {
             arguments.append(value);
+        }
     }
 
     auto* raw_strings = Array::create(interpreter.global_object());
@@ -1535,7 +1540,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter) const
         auto value = raw_string.execute(interpreter);
         if (interpreter.exception())
             return {};
-        raw_strings->elements().append(value);
+        raw_strings->indexed_properties().append(value);
     }
     strings->define_property("raw", raw_strings, 0);
 

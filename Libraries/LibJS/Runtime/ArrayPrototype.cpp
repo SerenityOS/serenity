@@ -143,7 +143,7 @@ Value ArrayPrototype::filter(Interpreter& interpreter)
     auto* new_array = Array::create(interpreter.global_object());
     for_each_item(interpreter, "filter", [&](auto, auto value, auto callback_result) {
         if (callback_result.to_boolean())
-            new_array->elements().append(value);
+            new_array->indexed_properties().append(value);
         return IterationDecision::Continue;
     });
     return Value(new_array);
@@ -166,9 +166,9 @@ Value ArrayPrototype::map(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     auto* new_array = Array::create(interpreter.global_object());
-    new_array->elements().resize(initial_length);
+    new_array->indexed_properties().set_array_like_size(initial_length);
     for_each_item(interpreter, "map", [&](auto index, auto, auto callback_result) {
-        new_array->elements()[index] = callback_result;
+        new_array->put(index, callback_result);
         return IterationDecision::Continue;
     });
     return Value(new_array);
@@ -182,8 +182,8 @@ Value ArrayPrototype::push(Interpreter& interpreter)
     if (this_object->is_array()) {
         auto* array = static_cast<Array*>(this_object);
         for (size_t i = 0; i < interpreter.argument_count(); ++i)
-            array->elements().append(interpreter.argument(i));
-        return Value(array->length());
+            array->indexed_properties().append(interpreter.argument(i));
+        return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
     }
     auto length = get_length(interpreter, *this_object);
     if (interpreter.exception())
@@ -207,8 +207,8 @@ Value ArrayPrototype::unshift(Interpreter& interpreter)
     if (!array)
         return {};
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
-        array->elements().insert(i, interpreter.argument(i));
-    return Value(array->length());
+        array->indexed_properties().insert(i, interpreter.argument(i));
+    return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
 }
 
 Value ArrayPrototype::pop(Interpreter& interpreter)
@@ -218,9 +218,9 @@ Value ArrayPrototype::pop(Interpreter& interpreter)
         return {};
     if (this_object->is_array()) {
         auto* array = static_cast<Array*>(this_object);
-        if (array->elements().is_empty())
+        if (array->indexed_properties().is_empty())
             return js_undefined();
-        return array->elements().take_last().value_or(js_undefined());
+        return array->indexed_properties().take_last(array).value.value_or(js_undefined());
     }
     auto length = get_length(interpreter, *this_object);
     if (length == 0) {
@@ -243,9 +243,12 @@ Value ArrayPrototype::shift(Interpreter& interpreter)
     auto* array = array_from(interpreter);
     if (!array)
         return {};
-    if (array->elements().is_empty())
+    if (array->indexed_properties().is_empty())
         return js_undefined();
-    return array->elements().take_first().value_or(js_undefined());
+    auto result = array->indexed_properties().take_first(array);
+    if (interpreter.exception())
+        return {};
+    return result.value.value_or(js_undefined());
 }
 
 Value ArrayPrototype::to_string(Interpreter& interpreter)
@@ -299,15 +302,19 @@ Value ArrayPrototype::concat(Interpreter& interpreter)
         return {};
 
     auto* new_array = Array::create(interpreter.global_object());
-    new_array->elements().append(array->elements());
+    new_array->indexed_properties().append_all(array, array->indexed_properties());
+    if (interpreter.exception())
+        return {};
 
     for (size_t i = 0; i < interpreter.argument_count(); ++i) {
         auto argument = interpreter.argument(i);
         if (argument.is_array()) {
             auto& argument_object = argument.as_object();
-            new_array->elements().append(argument_object.elements());
+            new_array->indexed_properties().append_all(&argument_object, argument_object.indexed_properties());
+            if (interpreter.exception())
+                return {};
         } else {
-            new_array->elements().append(argument);
+            new_array->indexed_properties().append(argument);
         }
     }
 
@@ -322,11 +329,13 @@ Value ArrayPrototype::slice(Interpreter& interpreter)
 
     auto* new_array = Array::create(interpreter.global_object());
     if (interpreter.argument_count() == 0) {
-        new_array->elements().append(array->elements());
+        new_array->indexed_properties().append_all(array, array->indexed_properties());
+        if (interpreter.exception())
+            return {};
         return new_array;
     }
 
-    ssize_t array_size = static_cast<ssize_t>(array->elements().size());
+    ssize_t array_size = static_cast<ssize_t>(array->indexed_properties().array_like_size());
     auto start_slice = interpreter.argument(0).to_i32(interpreter);
     if (interpreter.exception())
         return {};
@@ -348,10 +357,10 @@ Value ArrayPrototype::slice(Interpreter& interpreter)
             end_slice = array_size;
     }
 
-    size_t array_capacity = start_slice + array_size - end_slice;
-    new_array->elements().ensure_capacity(array_capacity);
     for (ssize_t i = start_slice; i < end_slice; ++i) {
-        new_array->elements().append(array->elements().at(i));
+        new_array->indexed_properties().append(array->get(i));
+        if (interpreter.exception())
+            return {};
     }
 
     return new_array;
@@ -512,16 +521,20 @@ Value ArrayPrototype::reverse(Interpreter& interpreter)
     if (!array)
         return {};
 
-    if (array->elements().size() == 0)
+    if (array->indexed_properties().is_empty())
         return array;
 
     Vector<Value> array_reverse;
-    array_reverse.ensure_capacity(array->elements().size());
+    auto size = array->indexed_properties().array_like_size();
+    array_reverse.ensure_capacity(size);
 
-    for (ssize_t i = array->elements().size() - 1; i >= 0; --i)
-        array_reverse.append(array->elements().at(i));
+    for (ssize_t i = size - 1; i >= 0; --i) {
+        array_reverse.append(array->get(i));
+        if (interpreter.exception())
+            return {};
+    }
 
-    array->elements() = move(array_reverse);
+    array->set_indexed_property_elements(move(array_reverse));
 
     return array;
 }
@@ -691,7 +704,7 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
         if (interpreter.exception())
             return {};
 
-        removed_elements->elements().append(value);
+        removed_elements->indexed_properties().append(value);
     }
 
     if (insert_count < actual_delete_count) {

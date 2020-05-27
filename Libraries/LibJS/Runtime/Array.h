@@ -39,8 +39,6 @@ public:
     explicit Array(Object& prototype);
     virtual ~Array() override;
 
-    i32 length() const { return static_cast<i32>(elements().size()); }
-
 private:
     virtual const char* class_name() const override { return "Array"; }
     virtual bool is_array() const override { return true; }
