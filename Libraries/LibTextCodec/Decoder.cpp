@@ -65,7 +65,12 @@ String Latin1Decoder::to_utf8(const StringView& input)
     StringBuilder builder(input.length());
     for (size_t i = 0; i < input.length(); ++i) {
         u8 ch = input[i];
-        builder.append(ch >= 0x80 ? '?' : ch);
+        if (ch & 0x80) {
+            builder.append(0xc0 | (ch >> 6));
+            builder.append(0x80 | (ch & 0x3f));
+        } else {
+            builder.append(ch);
+        }
     }
     return builder.to_string();
 }
