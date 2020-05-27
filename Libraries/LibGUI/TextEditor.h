@@ -172,6 +172,24 @@ private:
     void did_change();
     int fixed_glyph_width() const;
 
+    void defer_reflow();
+    void undefer_reflow();
+
+    class ReflowDeferrer {
+    public:
+        ReflowDeferrer(TextEditor& editor)
+            : m_editor(editor)
+        {
+            m_editor.defer_reflow();
+        }
+        ~ReflowDeferrer()
+        {
+            m_editor.undefer_reflow();
+        }
+    private:
+        TextEditor& m_editor;
+    };
+
     Gfx::Rect line_content_rect(size_t item_index) const;
     Gfx::Rect line_widget_rect(size_t line_index) const;
     Gfx::Rect cursor_content_rect() const;
@@ -237,6 +255,9 @@ private:
     RefPtr<Action> m_select_all_action;
     Core::ElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<Action> m_custom_context_menu_actions;
+
+    size_t m_reflow_deferred { 0 };
+    size_t m_reflow_requested { 0 };
 
     RefPtr<TextDocument> m_document;
 

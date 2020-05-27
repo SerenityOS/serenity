@@ -1197,6 +1197,7 @@ void TextEditor::delete_selection()
 
 void TextEditor::insert_at_cursor_or_replace_selection(const StringView& text)
 {
+    ReflowDeferrer defer(*this);
     ASSERT(!is_readonly());
     if (has_selection())
         delete_selection();
@@ -1224,11 +1225,26 @@ void TextEditor::paste()
 {
     if (is_readonly())
         return;
+
     auto paste_text = Clipboard::the().data();
     printf("Paste: \"%s\"\n", paste_text.characters());
 
     TemporaryChange change(m_automatic_indentation_enabled, false);
     insert_at_cursor_or_replace_selection(paste_text);
+}
+
+void TextEditor::defer_reflow()
+{
+    ++m_reflow_deferred;
+}
+
+void TextEditor::undefer_reflow()
+{
+    ASSERT(m_reflow_deferred);
+    if (!--m_reflow_deferred) {
+        if (m_reflow_requested)
+            recompute_all_visual_lines();
+    }
 }
 
 void TextEditor::enter_event(Core::Event&)
@@ -1359,6 +1375,11 @@ void TextEditor::clear_selection()
 
 void TextEditor::recompute_all_visual_lines()
 {
+    if (m_reflow_deferred) {
+        m_reflow_requested = true;
+        return;
+    }
+
     int y_offset = 0;
     for (size_t line_index = 0; line_index < line_count(); ++line_index) {
         recompute_visual_lines(line_index);
