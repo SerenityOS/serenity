@@ -94,9 +94,10 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
     Value value_here;
 
     if (property_name.is_number()) {
-        if (static_cast<size_t>(property_name.as_number()) >= m_elements.size())
+        auto existing_property = m_indexed_properties.get(nullptr, property_name.as_number(), false);
+        if (!existing_property.has_value())
             return {};
-        value_here = m_elements[property_name.as_number()];
+        value_here = existing_property.value().value;
     } else {
         auto metadata = shape().lookup(property_name.as_string());
         if (!metadata.has_value())
@@ -145,19 +146,20 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
     }
 
     size_t property_index = 0;
-    for (size_t i = 0; i < m_elements.size(); ++i) {
-        if (m_elements.at(i).is_empty())
-            continue;
-
+    for (auto& entry : m_indexed_properties) {
         if (kind == GetOwnPropertyMode::Key) {
-            properties_array->put_by_index(property_index, js_string(interpreter(), String::number(i)));
+            properties_array->define_property(property_index, js_string(interpreter(), String::number(entry.index())));
         } else if (kind == GetOwnPropertyMode::Value) {
-            properties_array->put_by_index(property_index, m_elements.at(i));
+            properties_array->define_property(property_index, entry.value_and_attributes(const_cast<Object*>(&this_object)).value);
+            if (interpreter().exception())
+                return {};
         } else {
             auto* entry_array = Array::create(interpreter().global_object());
-            entry_array->put_by_index(0, js_string(interpreter(), String::number(i)));
-            entry_array->put_by_index(1, m_elements.at(i));
-            properties_array->put_by_index(property_index, entry_array);
+            entry_array->define_property(0, js_string(interpreter(), String::number(entry.index())));
+            entry_array->define_property(1, entry.value_and_attributes(const_cast<Object*>(&this_object)).value);
+            if (interpreter().exception())
+                return {};
+            properties_array->define_property(property_index, entry_array);
         }
 
         ++property_index;
@@ -168,14 +170,18 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
             size_t offset = it.value.offset + property_index;
 
             if (kind == GetOwnPropertyMode::Key) {
-                properties_array->put_by_index(offset, js_string(interpreter(), it.key));
+                properties_array->define_property(offset, js_string(interpreter(), it.key));
             } else if (kind == GetOwnPropertyMode::Value) {
-                properties_array->put_by_index(offset, this_object.get(it.key));
+                properties_array->define_property(offset, this_object.get(it.key));
+                if (interpreter().exception())
+                    return {};
             } else {
                 auto* entry_array = Array::create(interpreter().global_object());
-                entry_array->put_by_index(0, js_string(interpreter(), it.key));
-                entry_array->put_by_index(1, this_object.get(it.key));
-                properties_array->put_by_index(offset, entry_array);
+                entry_array->define_property(0, js_string(interpreter(), it.key));
+                entry_array->define_property(1, this_object.get(it.key));
+                if (interpreter().exception())
+                    return {};
+                properties_array->define_property(offset, entry_array);
             }
         }
     }
@@ -189,9 +195,11 @@ Value Object::get_own_property_descriptor(PropertyName property_name) const
     u8 attributes;
 
     if (property_name.is_number()) {
-        if (static_cast<size_t>(property_name.as_number()) >= m_elements.size())
-            return {};
-        value = m_elements[property_name.as_number()];
+        auto existing_value = m_indexed_properties.get(nullptr, property_name.as_number(), false);
+        if (!existing_value.has_value())
+            return js_undefined();
+        value = existing_value.value().value;
+        attributes = existing_value.value().attributes;
         attributes = default_attributes;
     } else {
         auto metadata = shape().lookup(property_name.as_string());
@@ -381,9 +389,9 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
             attributes |= Attribute::HasSet;
     }
 
-    auto new_property = property_index >= m_elements.size();
-    auto existing_property = new_property ? Value() : m_elements[property_index];
-    auto existing_attributes = default_attributes;
+    auto existing_property = m_indexed_properties.get(nullptr, property_index, false);
+    auto new_property = !existing_property.has_value();
+    auto existing_attributes = new_property ? 0 : existing_property.value().attributes;
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !(existing_attributes & Attribute::Configurable) && attributes != existing_attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
@@ -392,7 +400,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
         return false;
     }
 
-    auto value_here = existing_property;
+    auto value_here = new_property ? Value() : existing_property.value().value;
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !(existing_attributes & Attribute::Writable)) {
         dbg() << "Disallow write to non-writable property";
         return false;
@@ -409,9 +417,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
         native_property.set(interpreter, value);
         interpreter.pop_call_frame();
     } else {
-        if (new_property)
-            m_elements.resize(property_index + 1);
-        m_elements[property_index] = value;
+        m_indexed_properties.put(&this_object, property_index, value, attributes, mode == PutOwnPropertyMode::Put);
     }
     return true;
 }
@@ -419,13 +425,8 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 Value Object::delete_property(PropertyName property_name)
 {
     ASSERT(property_name.is_valid());
-    if (property_name.is_number()) {
-        if (property_name.as_number() < static_cast<i32>(elements().size())) {
-            elements()[property_name.as_number()] = {};
-            return Value(true);
-        }
-        return Value(true);
-    }
+    if (property_name.is_number())
+        return Value(m_indexed_properties.remove(property_name.as_number()));
     auto metadata = shape().lookup(property_name.as_string());
     if (!metadata.has_value())
         return Value(true);
@@ -459,11 +460,13 @@ Value Object::get_by_index(u32 property_index) const
                 return js_string(heap(), string.substring(property_index, 1));
             return js_undefined();
         }
-        if (static_cast<size_t>(property_index) < object->m_elements.size()) {
-            auto value = object->m_elements[property_index];
-            if (value.is_empty())
+        if (static_cast<size_t>(property_index) < object->m_indexed_properties.array_like_size()) {
+            auto result = object->m_indexed_properties.get(const_cast<Object*>(this), property_index);
+            if (interpreter().exception())
                 return {};
-            return value;
+            if (result.has_value() && !result.value().value.is_empty())
+                return result.value().value;
+            return {};
         }
         object = object->prototype();
     }
@@ -494,12 +497,31 @@ Value Object::get(PropertyName property_name) const
 bool Object::put_by_index(u32 property_index, Value value)
 {
     ASSERT(!value.is_empty());
-    // FIXME: Implement some kind of sparse storage for arrays with huge indices.
-    // Also: Take attributes into account here
-    if (static_cast<size_t>(property_index) >= m_elements.size())
-        m_elements.resize(property_index + 1);
-    m_elements[property_index] = value;
-    return true;
+
+    // If there's a setter in the prototype chain, we go to the setter.
+    // Otherwise, it goes in the own property storage.
+    Object* object = this;
+    while (object) {
+        auto existing_value = object->m_indexed_properties.get(nullptr, property_index, false);
+        if (existing_value.has_value()) {
+            auto value_here = existing_value.value();
+            if (value_here.value.is_accessor()) {
+                value_here.value.as_accessor().call_setter(object, value);
+                return true;
+            }
+            if (value_here.value.is_object() && value_here.value.as_object().is_native_property()) {
+                auto& native_property = static_cast<NativeProperty&>(value_here.value.as_object());
+                auto& interpreter = const_cast<Object*>(this)->interpreter();
+                auto& call_frame = interpreter.push_call_frame();
+                call_frame.this_value = this;
+                native_property.set(interpreter, value);
+                interpreter.pop_call_frame();
+                return true;
+            }
+        }
+        object = object->prototype();
+    }
+    return put_own_property_by_index(*this, property_index, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
 bool Object::put(PropertyName property_name, Value value)
@@ -562,8 +584,8 @@ void Object::visit_children(Cell::Visitor& visitor)
     for (auto& value : m_storage)
         visitor.visit(value);
 
-    for (auto& value : m_elements)
-        visitor.visit(value);
+    for (auto& value : m_indexed_properties.values_unordered())
+        visitor.visit(value.value);
 }
 
 bool Object::has_property(PropertyName property_name) const
@@ -582,9 +604,7 @@ bool Object::has_own_property(PropertyName property_name) const
     auto has_indexed_property = [&](u32 index) -> bool {
         if (is_string_object())
             return index < static_cast<const StringObject*>(this)->primitive_string().string().length();
-        if (static_cast<size_t>(index) >= m_elements.size())
-            return false;
-        return !m_elements[index].is_empty();
+        return m_indexed_properties.has_index(index);
     };
 
     if (property_name.is_number())

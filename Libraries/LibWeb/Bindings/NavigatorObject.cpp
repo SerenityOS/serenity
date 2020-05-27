@@ -38,12 +38,12 @@ NavigatorObject::NavigatorObject()
     : Object(interpreter().global_object().object_prototype())
 {
     auto* languages = JS::Array::create(interpreter().global_object());
-    languages->elements().append(js_string(heap(), "en-US"));
+    languages->indexed_properties().append(js_string(heap(), "en-US"));
 
     define_property("appCodeName", js_string(heap(), "Mozilla"));
     define_property("appName", js_string(heap(), "Netscape"));
     define_property("appVersion", js_string(heap(), "4.0"));
-    define_property("language", languages->elements().first());
+    define_property("language", languages->get(0));
     define_property("languages", languages);
     define_property("platform", js_string(heap(), "SerenityOS"));
     define_property("product", js_string(heap(), "Gecko"));
