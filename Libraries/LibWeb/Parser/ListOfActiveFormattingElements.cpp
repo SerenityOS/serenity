@@ -71,4 +71,13 @@ void ListOfActiveFormattingElements::remove(Element& element)
     });
 }
 
+void ListOfActiveFormattingElements::clear_up_to_the_last_marker()
+{
+    while (!m_entries.is_empty()) {
+        auto entry = m_entries.take_last();
+        if (entry.is_marker())
+            break;
+    }
+}
+
 }

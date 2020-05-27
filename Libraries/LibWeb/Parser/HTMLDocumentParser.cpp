@@ -118,6 +118,15 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     case InsertionMode::InTable:
         handle_in_table(token);
         break;
+    case InsertionMode::InTableBody:
+        handle_in_table_body(token);
+        break;
+    case InsertionMode::InRow:
+        handle_in_row(token);
+        break;
+    case InsertionMode::InCell:
+        handle_in_cell(token);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -507,6 +516,9 @@ void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
     if (m_list_of_active_formatting_elements.is_empty())
         return;
 
+    if (m_list_of_active_formatting_elements.entries().last().is_marker())
+        return;
+
     if (m_stack_of_open_elements.contains(*m_list_of_active_formatting_elements.entries().last().element))
         return;
 
@@ -853,6 +865,108 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
     ASSERT_NOT_REACHED();
 }
 
+void HTMLDocumentParser::clear_the_stack_back_to_a_table_context()
+{
+    while (!current_node().tag_name().is_one_of("table", "template", "html"))
+        m_stack_of_open_elements.pop();
+}
+
+void HTMLDocumentParser::clear_the_stack_back_to_a_table_row_context()
+{
+    while (!current_node().tag_name().is_one_of("tr", "template", "html"))
+        m_stack_of_open_elements.pop();
+}
+
+void HTMLDocumentParser::clear_the_stack_back_to_a_table_body_context()
+{
+    while (!current_node().tag_name().is_one_of("tbody", "tfoot", "thead", "template", "html"))
+        m_stack_of_open_elements.pop();
+}
+
+void HTMLDocumentParser::handle_in_row(HTMLToken& token)
+{
+    if (token.is_start_tag() && token.tag_name().is_one_of("th", "td")) {
+        clear_the_stack_back_to_a_table_row_context();
+        insert_html_element(token);
+        m_insertion_mode = InsertionMode::InCell;
+        m_list_of_active_formatting_elements.add_marker();
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "tr") {
+        if (!m_stack_of_open_elements.has_in_table_scope("tr")) {
+            PARSE_ERROR();
+            return;
+        }
+        clear_the_stack_back_to_a_table_row_context();
+        m_stack_of_open_elements.pop();
+        m_insertion_mode = InsertionMode::InTableBody;
+        return;
+    }
+
+    TODO();
+}
+
+void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
+{
+    if (token.is_end_tag() && token.tag_name().is_one_of("td", "th")) {
+        if (!m_stack_of_open_elements.has_in_table_scope(token.tag_name())) {
+            PARSE_ERROR();
+            return;
+        }
+        generate_implied_end_tags();
+
+        if (current_node().tag_name() != token.tag_name()) {
+            PARSE_ERROR();
+        }
+
+        while (current_node().tag_name() != token.tag_name())
+            m_stack_of_open_elements.pop();
+        m_stack_of_open_elements.pop();
+
+        m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
+
+        m_insertion_mode = InsertionMode::InRow;
+        return;
+    }
+    if (token.is_start_tag() && token.tag_name().is_one_of("caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr")) {
+        TODO();
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("body", "caption", "col", "colgroup", "html")) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("table", "tbody", "tfoot", "thead", "tr")) {
+        TODO();
+    }
+
+    process_using_the_rules_for(InsertionMode::InBody, token);
+}
+
+void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
+{
+    if (token.is_start_tag() && token.tag_name() == "tr") {
+        clear_the_stack_back_to_a_table_body_context();
+        insert_html_element(token);
+        m_insertion_mode = InsertionMode::InRow;
+        return;
+    }
+
+    if ((token.is_start_tag() && token.tag_name().is_one_of("caption", "col", "colgroup", "tbody", "tfoot", "thead"))
+        || (token.is_end_tag() && token.tag_name() == "table")) {
+        // FIXME: If the stack of open elements does not have a tbody, thead, or tfoot element in table scope, this is a parse error; ignore the token.
+
+        clear_the_stack_back_to_a_table_body_context();
+        m_stack_of_open_elements.pop();
+        m_insertion_mode = InsertionMode::InTable;
+        process_using_the_rules_for(InsertionMode::InTable, token);
+        return;
+    }
+    TODO();
+}
+
 void HTMLDocumentParser::handle_in_table(HTMLToken& token)
 {
     if (token.is_character() && current_node().tag_name().is_one_of("table", "tbody", "tfoot", "thead", "tr")) {
@@ -879,7 +993,14 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
         TODO();
     }
     if (token.is_start_tag() && token.tag_name().is_one_of("td", "th", "tr")) {
-        TODO();
+        clear_the_stack_back_to_a_table_context();
+        HTMLToken fake_tbody_token;
+        fake_tbody_token.m_type = HTMLToken::Type::StartTag;
+        fake_tbody_token.m_tag.tag_name.append("tbody");
+        insert_html_element(fake_tbody_token);
+        m_insertion_mode = InsertionMode::InTableBody;
+        process_using_the_rules_for(InsertionMode::InTableBody, token);
+        return;
     }
     if (token.is_start_tag() && token.tag_name() == "table") {
         PARSE_ERROR();

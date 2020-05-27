@@ -37,6 +37,9 @@ public:
     StackOfOpenElements() { }
     ~StackOfOpenElements();
 
+    Element& first() { return m_elements.first(); }
+    Element& last() { return m_elements.last(); }
+
     bool is_empty() const { return m_elements.is_empty(); }
     void push(NonnullRefPtr<Element> element) { m_elements.append(move(element)); }
     NonnullRefPtr<Element> pop() { return m_elements.take_last(); }
