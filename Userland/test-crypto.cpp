@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibC/limits.h>
+#include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -37,6 +37,7 @@
 #include <LibCrypto/PK/RSA.h>
 #include <LibLine/Editor.h>
 #include <LibTLS/TLSv12.h>
+#include <limits.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -111,6 +112,7 @@ int run(Function<void(const char*, size_t)> fn)
 {
     if (interactive) {
         auto editor = Line::Editor::construct();
+        editor->initialize();
         for (;;) {
             auto line_result = editor->get_line("> ");
 
@@ -418,20 +420,20 @@ auto main(int argc, char** argv) -> int
         fflush(stdout);                   \
         gettimeofday(&start_time, &tz);   \
     }
-#define PASS                                                     \
-    {                                                            \
-        struct timeval end_time {                                \
-            0, 0                                                 \
-        };                                                       \
-        gettimeofday(&end_time, &tz);                            \
-        time_t interval_s = end_time.tv_sec - start_time.tv_sec; \
-        suseconds_t interval_us = end_time.tv_usec;              \
-        if (interval_us < start_time.tv_usec) {                  \
-            interval_s -= 1;                                     \
-            interval_us += 1000000;                              \
-        }                                                        \
-        interval_us -= start_time.tv_usec;                       \
-        printf("PASS %llds %dus\n", interval_s, interval_us);    \
+#define PASS                                                                          \
+    {                                                                                 \
+        struct timeval end_time {                                                     \
+            0, 0                                                                      \
+        };                                                                            \
+        gettimeofday(&end_time, &tz);                                                 \
+        time_t interval_s = end_time.tv_sec - start_time.tv_sec;                      \
+        suseconds_t interval_us = end_time.tv_usec;                                   \
+        if (interval_us < start_time.tv_usec) {                                       \
+            interval_s -= 1;                                                          \
+            interval_us += 1000000;                                                   \
+        }                                                                             \
+        interval_us -= start_time.tv_usec;                                            \
+        printf("PASS %llds %lldus\n", (long long)interval_s, (long long)interval_us); \
     }
 #define FAIL(reason) printf("FAIL: " #reason "\n")
 
@@ -1487,7 +1489,7 @@ void bigint_import_export()
         I_TEST((BigInteger | BigEndian Decode / Encode roundtrip));
         u8 random_bytes[128];
         u8 target_buffer[128];
-        arc4random_buf(random_bytes, 128);
+        AK::fill_with_random(random_bytes, 128);
         auto encoded = Crypto::UnsignedBigInteger::import_data(random_bytes, 128);
         encoded.export_data(target_buffer, 128);
         if (memcmp(target_buffer, random_bytes, 128) != 0)
