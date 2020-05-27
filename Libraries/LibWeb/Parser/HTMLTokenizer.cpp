@@ -32,18 +32,21 @@
 
 //#define TOKENIZER_TRACE
 
+#define CONSUME_NEXT_INPUT_CHARACTER \
+    current_input_character = next_codepoint();
+
 #define TODO()                                                                                              \
     do {                                                                                                    \
         dbg() << "[TODO: " << state_name(m_state) << "] '" << (char)current_input_character.value() << "'"; \
         ASSERT_NOT_REACHED();                                                                               \
     } while (0)
 
-#define SWITCH_TO(new_state)                        \
-    do {                                            \
-        will_switch_to(State::new_state);           \
-        m_state = State::new_state;                 \
-        current_input_character = next_codepoint(); \
-        goto new_state;                             \
+#define SWITCH_TO(new_state)              \
+    do {                                  \
+        will_switch_to(State::new_state); \
+        m_state = State::new_state;       \
+        CONSUME_NEXT_INPUT_CHARACTER;     \
+        goto new_state;                   \
     } while (0)
 
 #define RECONSUME_IN(new_state)              \
@@ -51,6 +54,20 @@
         will_reconsume_in(State::new_state); \
         m_state = State::new_state;          \
         goto new_state;                      \
+    } while (0)
+
+#define SWITCH_TO_RETURN_STATE          \
+    do {                                \
+        will_switch_to(m_return_state); \
+        m_state = m_return_state;       \
+        goto _StartOfFunction;          \
+    } while (0)
+
+#define RECONSUME_IN_RETURN_STATE          \
+    do {                                   \
+        will_reconsume_in(m_return_state); \
+        m_state = m_return_state;          \
+        goto _StartOfFunction;             \
     } while (0)
 
 #define SWITCH_TO_AND_EMIT_CURRENT_TOKEN(new_state) \
@@ -70,6 +87,19 @@
         goto new_state;                                       \
     } while (0)
 
+#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                               \
+    do {                                                                                 \
+        for (auto codepoint : m_temporary_buffer) {                                      \
+            if (consumed_as_part_of_an_attribute()) {                                    \
+                m_current_token.m_tag.attributes.last().value_builder.append(codepoint); \
+            } else {                                                                     \
+                create_new_token(HTMLToken::Type::Character);                            \
+                m_current_token.m_comment_or_character.data.append(codepoint);           \
+                m_queued_tokens.enqueue(m_current_token);                                \
+            }                                                                            \
+        }                                                                                \
+    } while (0)
+
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER --m_cursor;
 
 #define ON(codepoint) \
@@ -81,11 +111,20 @@
 #define ON_ASCII_ALPHA \
     if (current_input_character.has_value() && isalpha(current_input_character.value()))
 
+#define ON_ASCII_ALPHANUMERIC \
+    if (current_input_character.has_value() && isalnum(current_input_character.value()))
+
 #define ON_ASCII_UPPER_ALPHA \
     if (current_input_character.has_value() && current_input_character.value() >= 'A' && current_input_character.value() <= 'Z')
 
 #define ON_ASCII_LOWER_ALPHA \
     if (current_input_character.has_value() && current_input_character.value() >= 'a' && current_input_character.value() <= 'z')
+
+#define ON_ASCII_DIGIT \
+    if (current_input_character.has_value() && isxdigit(current_input_character.value()))
+
+#define ON_ASCII_HEX_DIGIT \
+    if (current_input_character.has_value() && isxdigit(current_input_character.value()))
 
 #define ON_WHITESPACE \
     if (current_input_character.has_value() && (current_input_character.value() == '\t' || current_input_character.value() == '\n' || current_input_character.value() == '\f' || current_input_character.value() == ' '))
@@ -134,6 +173,26 @@
     }                     \
     }
 
+static inline bool is_surrogate(u32 codepoint)
+{
+    return (codepoint & 0xfffff800) == 0xd800;
+}
+
+static inline bool is_noncharacter(u32 codepoint)
+{
+    return codepoint >= 0xfdd0 && (codepoint <= 0xfdef || (codepoint & 0xfffe) == 0xfffe) && codepoint <= 0x10ffff;
+}
+
+static inline bool is_c0_control(u32 codepoint)
+{
+    return codepoint <= 0x1f;
+}
+
+static inline bool is_control(u32 codepoint)
+{
+    return is_c0_control(codepoint) || (codepoint >= 0x7f && codepoint <= 0x9f);
+}
+
 namespace Web {
 
 Optional<u32> HTMLTokenizer::next_codepoint()
@@ -152,6 +211,7 @@ Optional<u32> HTMLTokenizer::peek_codepoint(size_t offset) const
 
 Optional<HTMLToken> HTMLTokenizer::next_token()
 {
+_StartOfFunction:
     if (!m_queued_tokens.is_empty())
         return m_queued_tokens.dequeue();
 
@@ -1066,6 +1126,200 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
 
             BEGIN_STATE(CharacterReference)
             {
+                m_temporary_buffer.clear();
+                m_temporary_buffer.append('&');
+
+                ON_ASCII_ALPHANUMERIC
+                {
+                    RECONSUME_IN(NamedCharacterReference);
+                }
+                ON('#')
+                {
+                    m_temporary_buffer.append(current_input_character.value());
+                    SWITCH_TO(NumericCharacterReference);
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN_RETURN_STATE;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(NamedCharacterReference)
+            {
+                // FIXME:This is not the right way to implement this state!!
+                ON(';')
+                {
+                    SWITCH_TO_RETURN_STATE;
+                }
+                ANYTHING_ELSE
+                {
+                    dbg() << "NamedCharacterReference: '" << (char)current_input_character.value() << "'";
+                    continue;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(NumericCharacterReference)
+            {
+                m_character_reference_code = 0;
+
+                ON('X')
+                {
+                    m_temporary_buffer.append(current_input_character.value());
+                    SWITCH_TO(HexadecimalCharacterReferenceStart);
+                }
+                ON('x')
+                {
+                    m_temporary_buffer.append(current_input_character.value());
+                    SWITCH_TO(HexadecimalCharacterReferenceStart);
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(DecimalCharacterReferenceStart);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(HexadecimalCharacterReferenceStart)
+            {
+                ON_ASCII_HEX_DIGIT
+                {
+                    RECONSUME_IN(HexadecimalCharacterReference);
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(DecimalCharacterReferenceStart)
+            {
+                ON_ASCII_DIGIT
+                {
+                    RECONSUME_IN(DecimalCharacterReference);
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(HexadecimalCharacterReference)
+            {
+                ON_ASCII_DIGIT
+                {
+                    m_character_reference_code *= 16;
+                    m_character_reference_code += current_input_character.value() - 0x30;
+                    continue;
+                }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_character_reference_code *= 16;
+                    m_character_reference_code += current_input_character.value() - 0x37;
+                    continue;
+                }
+                ON_ASCII_LOWER_ALPHA
+                {
+                    m_character_reference_code *= 16;
+                    m_character_reference_code += current_input_character.value() - 0x57;
+                    continue;
+                }
+                ON(';')
+                {
+                    SWITCH_TO(NumericCharacterReferenceEnd);
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(DecimalCharacterReference)
+            {
+                ON_ASCII_DIGIT
+                {
+                    m_character_reference_code *= 10;
+                    m_character_reference_code += current_input_character.value() - 0x30;
+                    continue;
+                }
+                ON(';')
+                {
+                    SWITCH_TO(NumericCharacterReferenceEnd);
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(NumericCharacterReferenceEnd)
+            {
+                if (m_character_reference_code == 0) {
+                    TODO();
+                }
+                if (m_character_reference_code > 0x10ffff) {
+                    TODO();
+                }
+                if (is_surrogate(m_character_reference_code)) {
+                    TODO();
+                }
+                if (is_noncharacter(m_character_reference_code)) {
+                    TODO();
+                }
+                if (m_character_reference_code == 0xd || (is_control(m_character_reference_code) && !isspace(m_character_reference_code))) {
+                    TODO();
+                }
+
+                if (is_control(m_character_reference_code)) {
+                    constexpr struct {
+                        u32 number;
+                        u32 codepoint;
+                    } conversion_table[] = {
+                        { 0x80, 0x20AC },
+                        { 0x82, 0x201A },
+                        { 0x83, 0x0192 },
+                        { 0x84, 0x201E },
+                        { 0x85, 0x2026 },
+                        { 0x86, 0x2020 },
+                        { 0x87, 0x2021 },
+                        { 0x88, 0x02C6 },
+                        { 0x89, 0x2030 },
+                        { 0x8A, 0x0160 },
+                        { 0x8B, 0x2039 },
+                        { 0x8C, 0x0152 },
+                        { 0x8E, 0x017D },
+                        { 0x91, 0x2018 },
+                        { 0x92, 0x2019 },
+                        { 0x93, 0x201C },
+                        { 0x94, 0x201D },
+                        { 0x95, 0x2022 },
+                        { 0x96, 0x2013 },
+                        { 0x97, 0x2014 },
+                        { 0x98, 0x02DC },
+                        { 0x99, 0x2122 },
+                        { 0x9A, 0x0161 },
+                        { 0x9B, 0x203A },
+                        { 0x9C, 0x0153 },
+                        { 0x9E, 0x017E },
+                        { 0x9F, 0x0178 },
+                    };
+                    for (auto& entry : conversion_table) {
+                        if (m_character_reference_code == entry.number) {
+                            m_character_reference_code = entry.codepoint;
+                            break;
+                        }
+                    }
+                }
+
+                m_temporary_buffer.clear();
+                m_temporary_buffer.append(m_character_reference_code);
+                FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
+                SWITCH_TO_RETURN_STATE;
             }
             END_STATE
 
@@ -1418,4 +1672,10 @@ bool HTMLTokenizer::current_end_tag_token_is_appropriate() const
         return false;
     return m_current_token.tag_name() == m_last_emitted_start_tag.tag_name();
 }
+
+bool HTMLTokenizer::consumed_as_part_of_an_attribute() const
+{
+    return m_return_state == State::AttributeValueUnquoted || m_return_state == State::AttributeValueSingleQuoted || m_return_state == State::AttributeValueDoubleQuoted;
+}
+
 }

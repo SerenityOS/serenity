@@ -153,10 +153,12 @@ private:
     void will_switch_to(State);
     void will_reconsume_in(State);
 
+    bool consumed_as_part_of_an_attribute() const;
+
     State m_state { State::Data };
     State m_return_state { State::Data };
 
-    StringBuilder m_temporary_buffer;
+    Vector<u32> m_temporary_buffer;
 
     StringView m_input;
     size_t m_cursor { 0 };
@@ -168,5 +170,7 @@ private:
     bool m_has_emitted_eof { false };
 
     Queue<HTMLToken> m_queued_tokens;
+
+    u32 m_character_reference_code { 0 };
 };
 }
