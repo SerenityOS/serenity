@@ -41,6 +41,11 @@
         ASSERT_NOT_REACHED();                                                                               \
     } while (0)
 
+#define PARSE_ERROR()            \
+    do {                         \
+        dbg() << "Parse error!"; \
+    } while (0)
+
 #define SWITCH_TO(new_state)              \
     do {                                  \
         will_switch_to(State::new_state); \
@@ -229,6 +234,11 @@ _StartOfFunction:
                 {
                     SWITCH_TO(TagOpen);
                 }
+                ON(0)
+                {
+                    PARSE_ERROR();
+                    EMIT_CURRENT_CHARACTER;
+                }
                 ON_EOF
                 {
                     EMIT_EOF;
@@ -257,11 +267,21 @@ _StartOfFunction:
                 }
                 ON('?')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    create_new_token(HTMLToken::Type::Comment);
+                    RECONSUME_IN(BogusComment);
+                }
+                ON_EOF
+                {
+                    create_new_token(HTMLToken::Type::Character);
+                    m_current_token.m_comment_or_character.data.append('<');
+                    RECONSUME_IN(Data);
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_CHARACTER('<');
+                    RECONSUME_IN(Data);
                 }
             }
             END_STATE
@@ -280,6 +300,22 @@ _StartOfFunction:
                 {
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    continue;
+                }
+                ON(0)
+                {
+                    PARSE_ERROR();
+                    m_current_token.m_tag.tag_name.append("\uFFFD");
+                    continue;
+                }
+                ON_EOF
+                {
+                    PARSE_ERROR();
+                    EMIT_EOF;
+                }
                 ANYTHING_ELSE
                 {
                     m_current_token.m_tag.tag_name.append(current_input_character.value());
@@ -295,6 +331,23 @@ _StartOfFunction:
                     create_new_token(HTMLToken::Type::EndTag);
                     RECONSUME_IN(TagName);
                 }
+                ON('>')
+                {
+                    PARSE_ERROR();
+                    SWITCH_TO(Data);
+                }
+                ON_EOF
+                {
+                    PARSE_ERROR();
+                    // FIXME: Emit a U+003C LESS-THAN SIGN character token, a U+002F SOLIDUS character token and an end-of-file token.
+                    continue;
+                }
+                ANYTHING_ELSE
+                {
+                    PARSE_ERROR();
+                    create_new_token(HTMLToken::Type::Comment);
+                    RECONSUME_IN(BogusComment);
+                }
             }
             END_STATE
 
@@ -307,6 +360,27 @@ _StartOfFunction:
                 }
                 if (consume_next_if_match("DOCTYPE", CaseSensitivity::CaseInsensitive)) {
                     SWITCH_TO(DOCTYPE);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(BogusComment)
+            {
+                ON('>')
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
                 }
             }
             END_STATE
@@ -1374,7 +1448,8 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_CHARACTER("\uFFFD");
                 }
                 ON_EOF
                 {
@@ -1421,11 +1496,19 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    TODO();
+                    if (!current_end_tag_token_is_appropriate()) {
+                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                        TODO();
+                    }
+                    SWITCH_TO(BeforeAttributeName);
                 }
                 ON('/')
                 {
-                    TODO();
+                    if (!current_end_tag_token_is_appropriate()) {
+                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                        TODO();
+                    }
+                    SWITCH_TO(SelfClosingStartTag);
                 }
                 ON('>')
                 {
@@ -1462,7 +1545,8 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_CHARACTER("\uFFFD");
                 }
                 ON_EOF
                 {
@@ -1509,11 +1593,19 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    TODO();
+                    if (!current_end_tag_token_is_appropriate()) {
+                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                        TODO();
+                    }
+                    SWITCH_TO(BeforeAttributeName);
                 }
                 ON('/')
                 {
-                    TODO();
+                    if (!current_end_tag_token_is_appropriate()) {
+                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
+                        TODO();
+                    }
+                    SWITCH_TO(SelfClosingStartTag);
                 }
                 ON('>')
                 {
@@ -1550,7 +1642,26 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_CHARACTER("\uFFFD");
+                }
+                ON_EOF
+                {
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CURRENT_CHARACTER;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(PLAINTEXT)
+            {
+                ON(0)
+                {
+                    PARSE_ERROR();
+                    EMIT_CHARACTER("\uFFFD");
                 }
                 ON_EOF
                 {
