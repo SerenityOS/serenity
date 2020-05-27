@@ -189,7 +189,8 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 
         // FIXME: Check classic vs. module script type
 
-        ResourceLoader::the().load(url, [this, url](auto& data, auto&) {
+        // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
+        ResourceLoader::the().load_sync(url, [this, url](auto& data, auto&) {
             if (data.is_null()) {
                 dbg() << "HTMLScriptElement: Failed to load " << url;
                 return;
@@ -212,6 +213,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     }
 
     else if (has_attribute("src") && m_parser_inserted && !has_attribute("async")) {
+
         document().set_pending_parsing_blocking_script({}, this);
         when_the_script_is_ready([this] {
             m_ready_to_be_parser_executed = true;
@@ -234,6 +236,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 
 void HTMLScriptElement::script_became_ready()
 {
+    m_script_ready = true;
     if (!m_script_ready_callback)
         return;
     m_script_ready_callback();

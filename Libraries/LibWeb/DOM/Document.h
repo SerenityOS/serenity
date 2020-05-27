@@ -130,6 +130,8 @@ public:
     NonnullRefPtr<Text> create_text_node(const String& data);
 
     void set_pending_parsing_blocking_script(Badge<HTMLScriptElement>, HTMLScriptElement*);
+    HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }
+    NonnullRefPtr<HTMLScriptElement> take_pending_parsing_blocking_script(Badge<HTMLDocumentParser>);
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;

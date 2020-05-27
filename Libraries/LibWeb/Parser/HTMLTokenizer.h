@@ -130,6 +130,9 @@ public:
 
     void switch_to(Badge<HTMLDocumentParser>, State new_state);
 
+    void set_blocked(bool b) { m_blocked = b; }
+    bool is_blocked() const { return m_blocked; }
+
 private:
     Optional<u32> next_codepoint();
     Optional<u32> peek_codepoint(size_t offset) const;
@@ -172,5 +175,8 @@ private:
     Queue<HTMLToken> m_queued_tokens;
 
     u32 m_character_reference_code { 0 };
+
+    bool m_blocked { false };
 };
+
 }

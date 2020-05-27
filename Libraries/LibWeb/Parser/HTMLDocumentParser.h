@@ -121,7 +121,7 @@ private:
     bool m_parsing_fragment { false };
     bool m_scripting_enabled { true };
     bool m_invoked_via_document_write { false };
-
+    bool m_aborted { false };
     bool m_parser_pause_flag { false };
     size_t m_script_nesting_level { 0 };
 
