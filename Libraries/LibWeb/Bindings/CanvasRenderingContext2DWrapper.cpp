@@ -51,25 +51,25 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
     : Wrapper(*interpreter().global_object().object_prototype())
     , m_impl(impl)
 {
-    put_native_function("fillRect", fill_rect, 4);
-    put_native_function("scale", scale, 2);
-    put_native_function("translate", translate, 2);
-    put_native_function("strokeRect", stroke_rect, 4);
-    put_native_function("drawImage", draw_image, 3);
-    put_native_function("beginPath", begin_path, 0);
-    put_native_function("closePath", close_path, 0);
-    put_native_function("stroke", stroke, 0);
-    put_native_function("fill", fill, 0);
-    put_native_function("moveTo", move_to, 2);
-    put_native_function("lineTo", line_to, 2);
-    put_native_function("quadraticCurveTo", quadratic_curve_to, 4);
-    put_native_function("createImageData", create_image_data, 1);
-    put_native_function("putImageData", put_image_data, 3);
+    define_native_function("fillRect", fill_rect, 4);
+    define_native_function("scale", scale, 2);
+    define_native_function("translate", translate, 2);
+    define_native_function("strokeRect", stroke_rect, 4);
+    define_native_function("drawImage", draw_image, 3);
+    define_native_function("beginPath", begin_path, 0);
+    define_native_function("closePath", close_path, 0);
+    define_native_function("stroke", stroke, 0);
+    define_native_function("fill", fill, 0);
+    define_native_function("moveTo", move_to, 2);
+    define_native_function("lineTo", line_to, 2);
+    define_native_function("quadraticCurveTo", quadratic_curve_to, 4);
+    define_native_function("createImageData", create_image_data, 1);
+    define_native_function("putImageData", put_image_data, 3);
 
-    put_native_property("fillStyle", fill_style_getter, fill_style_setter);
-    put_native_property("strokeStyle", stroke_style_getter, stroke_style_setter);
-    put_native_property("lineWidth", line_width_getter, line_width_setter);
-    put_native_property("canvas", canvas_getter, nullptr);
+    define_native_property("fillStyle", fill_style_getter, fill_style_setter);
+    define_native_property("strokeStyle", stroke_style_getter, stroke_style_setter);
+    define_native_property("lineWidth", line_width_getter, line_width_setter);
+    define_native_property("canvas", canvas_getter, nullptr);
 }
 
 CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()

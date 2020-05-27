@@ -39,12 +39,12 @@ namespace JS {
 ArrayConstructor::ArrayConstructor()
     : NativeFunction("Array", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().global_object().array_prototype(), 0);
-    put("length", Value(1), Attribute::Configurable);
+    define_property("prototype", interpreter().global_object().array_prototype(), 0);
+    define_property("length", Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    put_native_function("isArray", is_array, 1, attr);
-    put_native_function("of", of, 0, attr);
+    define_native_function("isArray", is_array, 1, attr);
+    define_native_function("of", of, 0, attr);
 }
 
 ArrayConstructor::~ArrayConstructor()

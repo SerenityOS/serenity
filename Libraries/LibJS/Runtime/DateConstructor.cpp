@@ -37,10 +37,10 @@ namespace JS {
 DateConstructor::DateConstructor()
     : NativeFunction("Date", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().global_object().date_prototype(), 0);
-    put("length", Value(7), Attribute::Configurable);
+    define_property("prototype", interpreter().global_object().date_prototype(), 0);
+    define_property("length", Value(7), Attribute::Configurable);
 
-    put_native_function("now", now, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_function("now", now, 0, Attribute::Writable | Attribute::Configurable);
 }
 
 DateConstructor::~DateConstructor()

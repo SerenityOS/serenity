@@ -38,16 +38,16 @@ namespace Bindings {
 XMLHttpRequestPrototype::XMLHttpRequestPrototype()
     : Object(interpreter().global_object().object_prototype())
 {
-    put_native_function("open", open, 2);
-    put_native_function("send", send, 0);
-    put_native_property("readyState", ready_state_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    put_native_property("responseText", response_text_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_native_function("open", open, 2);
+    define_native_function("send", send, 0);
+    define_native_property("readyState", ready_state_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_native_property("responseText", response_text_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
-    put("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);
-    put("OPENED", JS::Value((i32)XMLHttpRequest::ReadyState::Opened), JS::Attribute::Enumerable);
-    put("HEADERS_RECEIVED", JS::Value((i32)XMLHttpRequest::ReadyState::HeadersReceived), JS::Attribute::Enumerable);
-    put("LOADING", JS::Value((i32)XMLHttpRequest::ReadyState::Loading), JS::Attribute::Enumerable);
-    put("DONE", JS::Value((i32)XMLHttpRequest::ReadyState::Done), JS::Attribute::Enumerable);
+    define_property("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);
+    define_property("OPENED", JS::Value((i32)XMLHttpRequest::ReadyState::Opened), JS::Attribute::Enumerable);
+    define_property("HEADERS_RECEIVED", JS::Value((i32)XMLHttpRequest::ReadyState::HeadersReceived), JS::Attribute::Enumerable);
+    define_property("LOADING", JS::Value((i32)XMLHttpRequest::ReadyState::Loading), JS::Attribute::Enumerable);
+    define_property("DONE", JS::Value((i32)XMLHttpRequest::ReadyState::Done), JS::Attribute::Enumerable);
 }
 
 XMLHttpRequestPrototype::~XMLHttpRequestPrototype()

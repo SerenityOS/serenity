@@ -37,8 +37,8 @@ namespace Bindings {
 MouseEventWrapper::MouseEventWrapper(MouseEvent& event)
     : EventWrapper(event)
 {
-    put_native_property("offsetX", offset_x_getter, nullptr);
-    put_native_property("offsetY", offset_y_getter, nullptr);
+    define_native_property("offsetX", offset_x_getter, nullptr);
+    define_native_property("offsetY", offset_y_getter, nullptr);
 }
 
 MouseEventWrapper::~MouseEventWrapper()

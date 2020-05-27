@@ -43,9 +43,9 @@ void ObjectPrototype::initialize()
     // This must be called after the constructor has returned, so that the below code
     // can find the ObjectPrototype through normal paths.
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    put_native_function("hasOwnProperty", has_own_property, 1, attr);
-    put_native_function("toString", to_string, 0, attr);
-    put_native_function("valueOf", value_of, 0, attr);
+    define_native_function("hasOwnProperty", has_own_property, 1, attr);
+    define_native_function("toString", to_string, 0, attr);
+    define_native_function("valueOf", value_of, 0, attr);
 }
 
 ObjectPrototype::~ObjectPrototype()

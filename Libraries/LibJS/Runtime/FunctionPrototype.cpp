@@ -46,12 +46,12 @@ FunctionPrototype::FunctionPrototype()
 void FunctionPrototype::initialize()
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    put_native_function("apply", apply, 2, attr);
-    put_native_function("bind", bind, 1, attr);
-    put_native_function("call", call, 1, attr);
-    put_native_function("toString", to_string, 0, attr);
-    put("length", Value(0), Attribute::Configurable);
-    put("name", js_string(heap(), ""), Attribute::Configurable);
+    define_native_function("apply", apply, 2, attr);
+    define_native_function("bind", bind, 1, attr);
+    define_native_function("call", call, 1, attr);
+    define_native_function("toString", to_string, 0, attr);
+    define_property("length", Value(0), Attribute::Configurable);
+    define_property("name", js_string(heap(), ""), Attribute::Configurable);
 }
 
 FunctionPrototype::~FunctionPrototype()
@@ -80,7 +80,7 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
         return {};
     MarkedValueList arguments(interpreter.heap());
     for (size_t i = 0; i < length; ++i) {
-        auto element = arg_array.as_object().get(String::number(i));
+        auto element = arg_array.as_object().get(i);
         if (interpreter.exception())
             return {};
         arguments.append(element.value_or(js_undefined()));

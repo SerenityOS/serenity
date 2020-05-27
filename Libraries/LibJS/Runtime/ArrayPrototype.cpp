@@ -46,30 +46,30 @@ ArrayPrototype::ArrayPrototype()
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    put_native_function("filter", filter, 1, attr);
-    put_native_function("forEach", for_each, 1, attr);
-    put_native_function("map", map, 1, attr);
-    put_native_function("pop", pop, 0, attr);
-    put_native_function("push", push, 1, attr);
-    put_native_function("shift", shift, 0, attr);
-    put_native_function("toString", to_string, 0, attr);
-    put_native_function("unshift", unshift, 1, attr);
-    put_native_function("join", join, 1, attr);
-    put_native_function("concat", concat, 1, attr);
-    put_native_function("slice", slice, 2, attr);
-    put_native_function("indexOf", index_of, 1, attr);
-    put_native_function("reduce", reduce, 1, attr);
-    put_native_function("reduceRight", reduce_right, 1, attr);
-    put_native_function("reverse", reverse, 0, attr);
-    put_native_function("lastIndexOf", last_index_of, 1, attr);
-    put_native_function("includes", includes, 1, attr);
-    put_native_function("find", find, 1, attr);
-    put_native_function("findIndex", find_index, 1, attr);
-    put_native_function("some", some, 1, attr);
-    put_native_function("every", every, 1, attr);
-    put_native_function("splice", splice, 2, attr);
-    put_native_function("fill", fill, 1, attr);
-    put("length", Value(0), Attribute::Configurable);
+    define_native_function("filter", filter, 1, attr);
+    define_native_function("forEach", for_each, 1, attr);
+    define_native_function("map", map, 1, attr);
+    define_native_function("pop", pop, 0, attr);
+    define_native_function("push", push, 1, attr);
+    define_native_function("shift", shift, 0, attr);
+    define_native_function("toString", to_string, 0, attr);
+    define_native_function("unshift", unshift, 1, attr);
+    define_native_function("join", join, 1, attr);
+    define_native_function("concat", concat, 1, attr);
+    define_native_function("slice", slice, 2, attr);
+    define_native_function("indexOf", index_of, 1, attr);
+    define_native_function("reduce", reduce, 1, attr);
+    define_native_function("reduceRight", reduce_right, 1, attr);
+    define_native_function("reverse", reverse, 0, attr);
+    define_native_function("lastIndexOf", last_index_of, 1, attr);
+    define_native_function("includes", includes, 1, attr);
+    define_native_function("find", find, 1, attr);
+    define_native_function("findIndex", find_index, 1, attr);
+    define_native_function("some", some, 1, attr);
+    define_native_function("every", every, 1, attr);
+    define_native_function("splice", splice, 2, attr);
+    define_native_function("fill", fill, 1, attr);
+    define_property("length", Value(0), Attribute::Configurable);
 }
 
 ArrayPrototype::~ArrayPrototype()
@@ -115,7 +115,7 @@ static void for_each_item(Interpreter& interpreter, const String& name, AK::Func
     auto this_value = interpreter.argument(1);
 
     for (size_t i = 0; i < initial_length; ++i) {
-        auto value = this_object->get_by_index(i);
+        auto value = this_object->get(i);
         if (interpreter.exception())
             return;
         if (value.is_empty()) {
@@ -193,7 +193,7 @@ Value ArrayPrototype::push(Interpreter& interpreter)
     if (new_length > MAX_ARRAY_LIKE_INDEX)
         return interpreter.throw_exception<TypeError>("Maximum array size exceeded");
     for (size_t i = 0; i < argument_count; ++i)
-        this_object->put_by_index(length + i, interpreter.argument(i));
+        this_object->put(length + i, interpreter.argument(i));
     auto new_length_value = Value((i32)new_length);
     this_object->put("length", new_length_value);
     if (interpreter.exception())
@@ -228,10 +228,10 @@ Value ArrayPrototype::pop(Interpreter& interpreter)
         return js_undefined();
     }
     auto index = length - 1;
-    auto element = this_object->get_by_index(index).value_or(js_undefined());
+    auto element = this_object->get(index).value_or(js_undefined());
     if (interpreter.exception())
         return {};
-    this_object->delete_property(PropertyName(index));
+    this_object->delete_property(index);
     this_object->put("length", Value((i32)index));
     if (interpreter.exception())
         return {};
@@ -279,7 +279,7 @@ Value ArrayPrototype::join(Interpreter& interpreter)
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
             builder.append(separator);
-        auto value = this_object->get_by_index(i).value_or(js_undefined());
+        auto value = this_object->get(i).value_or(js_undefined());
         if (interpreter.exception())
             return {};
         if (value.is_undefined() || value.is_null())
@@ -379,7 +379,7 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
     }
     auto search_element = interpreter.argument(0);
     for (i32 i = from_index; i < length; ++i) {
-        auto element = this_object->get_by_index(i);
+        auto element = this_object->get(i);
         if (interpreter.exception())
             return {};
         if (strict_eq(interpreter, element, search_element))
@@ -410,7 +410,7 @@ Value ArrayPrototype::reduce(Interpreter& interpreter)
     } else {
         bool start_found = false;
         while (!start_found && start < initial_length) {
-            auto value = this_object->get_by_index(start);
+            auto value = this_object->get(start);
             if (interpreter.exception())
                 return {};
             start_found = !value.is_empty();
@@ -427,7 +427,7 @@ Value ArrayPrototype::reduce(Interpreter& interpreter)
     auto this_value = js_undefined();
 
     for (size_t i = start; i < initial_length; ++i) {
-        auto value = this_object->get_by_index(i);
+        auto value = this_object->get(i);
         if (interpreter.exception())
             return {};
         if (value.is_empty())
@@ -469,7 +469,7 @@ Value ArrayPrototype::reduce_right(Interpreter& interpreter)
     } else {
         bool start_found = false;
         while (!start_found && start >= 0) {
-            auto value = this_object->get_by_index(start);
+            auto value = this_object->get(start);
             if (interpreter.exception())
                 return {};
             start_found = !value.is_empty();
@@ -486,7 +486,7 @@ Value ArrayPrototype::reduce_right(Interpreter& interpreter)
     auto this_value = js_undefined();
 
     for (int i = start; i >= 0; --i) {
-        auto value = this_object->get_by_index(i);
+        auto value = this_object->get(i);
         if (interpreter.exception())
             return {};
         if (value.is_empty())
@@ -548,7 +548,7 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
     }
     auto search_element = interpreter.argument(0);
     for (i32 i = from_index; i >= 0; --i) {
-        auto element = this_object->get_by_index(i);
+        auto element = this_object->get(i);
         if (interpreter.exception())
             return {};
         if (strict_eq(interpreter, element, search_element))
@@ -579,7 +579,7 @@ Value ArrayPrototype::includes(Interpreter& interpreter)
     }
     auto value_to_find = interpreter.argument(0);
     for (i32 i = from_index; i < length; ++i) {
-        auto element = this_object->get_by_index(i).value_or(js_undefined());
+        auto element = this_object->get(i).value_or(js_undefined());
         if (interpreter.exception())
             return {};
         if (same_value_zero(interpreter, element, value_to_find))
@@ -687,7 +687,7 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
     auto removed_elements = Array::create(interpreter.global_object());
 
     for (size_t i = 0; i < actual_delete_count; ++i) {
-        auto value = this_object->get_by_index(actual_start + i);
+        auto value = this_object->get(actual_start + i);
         if (interpreter.exception())
             return {};
 
@@ -696,43 +696,43 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
 
     if (insert_count < actual_delete_count) {
         for (size_t i = actual_start; i < initial_length - actual_delete_count; ++i) {
-            auto from = this_object->get_by_index(i + actual_delete_count);
+            auto from = this_object->get(i + actual_delete_count);
             if (interpreter.exception())
                 return {};
 
             auto to = i + insert_count;
 
             if (!from.is_empty()) {
-                this_object->put_by_index(to, from);
+                this_object->put(to, from);
                 if (interpreter.exception())
                     return {};
             }
             else
-                this_object->delete_property(PropertyName(to));
+                this_object->delete_property(to);
         }
 
         for (size_t i = initial_length; i > new_length; --i)
-            this_object->delete_property(PropertyName(i - 1));
+            this_object->delete_property(i - 1);
     } else if (insert_count > actual_delete_count) {
         for (size_t i = initial_length - actual_delete_count; i > actual_start; --i) {
-            auto from = this_object->get_by_index(i + actual_delete_count - 1);
+            auto from = this_object->get(i + actual_delete_count - 1);
             if (interpreter.exception())
                 return {};
 
             auto to = i + insert_count - 1;
 
             if (!from.is_empty()) {
-                this_object->put_by_index(to, from);
+                this_object->put(to, from);
                 if (interpreter.exception())
                     return {};
             }
             else
-                this_object->delete_property(PropertyName(to));
+                this_object->delete_property(to);
         }
     }
 
     for (size_t i = 0; i < insert_count; ++i) {
-        this_object->put_by_index(actual_start + i, interpreter.argument(i + 2));
+        this_object->put(actual_start + i, interpreter.argument(i + 2));
         if (interpreter.exception())
             return {};
     }
@@ -782,7 +782,7 @@ Value ArrayPrototype::fill(Interpreter& interpreter)
         to = min(relative_end, length);
 
     for (size_t i = from; i < to; i++) {
-        this_object->put_by_index(i, interpreter.argument(0));
+        this_object->put(i, interpreter.argument(0));
         if (interpreter.exception())
             return {};
     }

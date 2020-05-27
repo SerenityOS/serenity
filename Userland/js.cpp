@@ -313,10 +313,10 @@ ReplObject::ReplObject()
 void ReplObject::initialize()
 {
     GlobalObject::initialize();
-    put_native_function("exit", exit_interpreter);
-    put_native_function("help", repl_help);
-    put_native_function("load", load_file, 1);
-    put_native_function("save", save_to_file, 1);
+    define_native_function("exit", exit_interpreter);
+    define_native_function("help", repl_help);
+    define_native_function("load", load_file, 1);
+    define_native_function("save", save_to_file, 1);
 }
 
 ReplObject::~ReplObject()
@@ -391,7 +391,7 @@ void repl(JS::Interpreter& interpreter)
 
 void enable_test_mode(JS::Interpreter& interpreter)
 {
-    interpreter.global_object().put_native_function("load", ReplObject::load_file);
+    interpreter.global_object().define_native_function("load", ReplObject::load_file);
 }
 
 static Function<void()> interrupt_interpreter;
@@ -751,7 +751,7 @@ int main(int argc, char** argv)
             case CompleteProperty: {
                 auto maybe_variable = interpreter->get_variable(variable_name);
                 if (maybe_variable.is_empty()) {
-                    maybe_variable = interpreter->global_object().get(variable_name);
+                    maybe_variable = interpreter->global_object().get(FlyString(variable_name));
                     if (maybe_variable.is_empty())
                         break;
                 }

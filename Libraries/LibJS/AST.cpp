@@ -1282,20 +1282,20 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
                 for (size_t i = 0; i < elements.size(); ++i) {
                     auto element = elements.at(i);
                     if (!element.is_empty())
-                        object->put_by_index(i, element);
+                        object->define_property(i, element);
                 }
             } else if (key_result.is_object()) {
                 auto& obj_to_spread = key_result.as_object();
 
                 for (auto& it : obj_to_spread.shape().property_table_ordered()) {
                     if (it.value.attributes & Attribute::Enumerable)
-                        object->put(it.key, obj_to_spread.get(it.key));
+                        object->define_property(it.key, obj_to_spread.get(it.key));
                 }
             } else if (key_result.is_string()) {
                 auto& str_to_spread = key_result.as_string().string();
 
                 for (size_t i = 0; i < str_to_spread.length(); i++) {
-                    object->put_by_index(i, js_string(interpreter, str_to_spread.substring(i, 1)));
+                    object->define_property(i, js_string(interpreter, str_to_spread.substring(i, 1)));
                 }
             }
 
@@ -1329,14 +1329,14 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
             }
             if (!accessor) {
                 accessor = Accessor::create(interpreter, nullptr, nullptr);
-                object->put_own_property(*object, key, Attribute::Configurable | Attribute::Enumerable, accessor, Object::PutOwnPropertyMode::DefineProperty);
+                object->define_property(key, accessor, Attribute::Configurable | Attribute::Enumerable);
             }
             if (property.type() == ObjectProperty::Type::Getter)
                 accessor->set_getter(&value.as_function());
             else
                 accessor->set_setter(&value.as_function());
         } else {
-            object->put(key, value);
+            object->define_property(key, value);
         }
     }
     return object;
@@ -1354,7 +1354,7 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
 {
     if (!is_computed()) {
         ASSERT(m_property->is_identifier());
-        return PropertyName(static_cast<const Identifier&>(*m_property).string());
+        return static_cast<const Identifier&>(*m_property).string();
     }
     auto index = m_property->execute(interpreter);
     if (interpreter.exception())
@@ -1363,12 +1363,12 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
     ASSERT(!index.is_empty());
 
     if (index.is_integer() && index.as_i32() >= 0)
-        return PropertyName(index.as_i32());
+        return index.as_i32();
 
     auto index_string = index.to_string(interpreter);
     if (interpreter.exception())
         return {};
-    return PropertyName(index_string);
+    return index_string;
 }
 
 String MemberExpression::to_string_approximation() const
@@ -1537,7 +1537,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter) const
             return {};
         raw_strings->elements().append(value);
     }
-    strings->put("raw", raw_strings, 0);
+    strings->define_property("raw", raw_strings, 0);
 
     return interpreter.call(tag_function, js_undefined(), move(arguments));
 }

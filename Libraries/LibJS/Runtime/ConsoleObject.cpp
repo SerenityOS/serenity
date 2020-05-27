@@ -38,15 +38,15 @@ namespace JS {
 ConsoleObject::ConsoleObject()
     : Object(interpreter().global_object().object_prototype())
 {
-    put_native_function("log", log);
-    put_native_function("debug", debug);
-    put_native_function("info", info);
-    put_native_function("warn", warn);
-    put_native_function("error", error);
-    put_native_function("trace", trace);
-    put_native_function("count", count);
-    put_native_function("countReset", count_reset);
-    put_native_function("clear", clear);
+    define_native_function("log", log);
+    define_native_function("debug", debug);
+    define_native_function("info", info);
+    define_native_function("warn", warn);
+    define_native_function("error", error);
+    define_native_function("trace", trace);
+    define_native_function("count", count);
+    define_native_function("countReset", count_reset);
+    define_native_function("clear", clear);
 }
 
 ConsoleObject::~ConsoleObject()

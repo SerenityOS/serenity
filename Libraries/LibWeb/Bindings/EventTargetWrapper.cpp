@@ -42,7 +42,7 @@ EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
     : Wrapper(*interpreter().global_object().object_prototype())
     , m_impl(impl)
 {
-    put_native_function("addEventListener", add_event_listener, 2);
+    define_native_function("addEventListener", add_event_listener, 2);
 }
 
 EventTargetWrapper::~EventTargetWrapper()

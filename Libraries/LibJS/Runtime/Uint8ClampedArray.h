@@ -32,15 +32,15 @@ namespace JS {
 
 class Uint8ClampedArray final : public Object {
 public:
-    static Uint8ClampedArray* create(GlobalObject&, i32 length);
+    static Uint8ClampedArray* create(GlobalObject&, u32 length);
 
-    Uint8ClampedArray(i32 length, Object& prototype);
+    Uint8ClampedArray(u32 length, Object& prototype);
     virtual ~Uint8ClampedArray() override;
 
     i32 length() const { return m_length; }
 
-    virtual bool put_by_index(i32 property_index, Value value, u8 attribute = default_attributes) override;
-    virtual Value get_by_index(i32 property_index) const override;
+    virtual bool put_by_index(u32 property_index, Value value) override;
+    virtual Value get_by_index(u32 property_index) const override;
 
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }
@@ -52,7 +52,7 @@ private:
     static Value length_getter(Interpreter&);
 
     u8* m_data { nullptr };
-    i32 m_length { 0 };
+    u32 m_length { 0 };
 };
 
 }

@@ -41,19 +41,19 @@ NumberConstructor::NumberConstructor()
     : NativeFunction("Number", *interpreter().global_object().function_prototype())
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    put_native_function("isFinite", is_finite, 1, attr);
-    put_native_function("isInteger", is_integer, 1, attr);
-    put_native_function("isNaN", is_nan, 1, attr);
-    put_native_function("isSafeInteger", is_safe_integer, 1, attr);
-    put("parseFloat", interpreter().global_object().get("parseFloat"));
-    put("prototype", interpreter().global_object().number_prototype(), 0);
-    put("length", Value(1), Attribute::Configurable);
-    put("EPSILON", Value(EPSILON), 0);
-    put("MAX_SAFE_INTEGER", Value(MAX_SAFE_INTEGER), 0);
-    put("MIN_SAFE_INTEGER", Value(MIN_SAFE_INTEGER), 0);
-    put("NEGATIVE_INFINITY", js_negative_infinity(), 0);
-    put("POSITIVE_INFINITY", js_infinity(), 0);
-    put("NaN", js_nan(), 0);
+    define_native_function("isFinite", is_finite, 1, attr);
+    define_native_function("isInteger", is_integer, 1, attr);
+    define_native_function("isNaN", is_nan, 1, attr);
+    define_native_function("isSafeInteger", is_safe_integer, 1, attr);
+    define_property("parseFloat", interpreter().global_object().get("parseFloat"));
+    define_property("prototype", interpreter().global_object().number_prototype(), 0);
+    define_property("length", Value(1), Attribute::Configurable);
+    define_property("EPSILON", Value(EPSILON), 0);
+    define_property("MAX_SAFE_INTEGER", Value(MAX_SAFE_INTEGER), 0);
+    define_property("MIN_SAFE_INTEGER", Value(MIN_SAFE_INTEGER), 0);
+    define_property("NEGATIVE_INFINITY", js_negative_infinity(), 0);
+    define_property("POSITIVE_INFINITY", js_infinity(), 0);
+    define_property("NaN", js_nan(), 0);
 }
 
 NumberConstructor::~NumberConstructor()
