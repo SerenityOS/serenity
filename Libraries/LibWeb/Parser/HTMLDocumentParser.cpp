@@ -24,11 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define PARSER_DEBUG
+
 #include <AK/Utf32View.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLFormElement.h>
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/HTMLScriptElement.h>
@@ -65,12 +68,18 @@ void HTMLDocumentParser::run(const URL& url)
     for (;;) {
         auto optional_token = m_tokenizer.next_token();
         if (!optional_token.has_value())
-            return;
+            break;
         auto& token = optional_token.value();
 
+#ifdef PARSER_DEBUG
         dbg() << "[" << insertion_mode_name() << "] " << token.to_string();
+#endif
         process_using_the_rules_for(m_insertion_mode, token);
     }
+
+    // "The end"
+
+    m_document->dispatch_event(Event::create("DOMContentLoaded"));
 }
 
 void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)
@@ -543,7 +552,7 @@ void HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
 
     size_t outer_loop_counter = 0;
 
-//OuterLoop:
+    //OuterLoop:
     if (outer_loop_counter >= 8)
         return;
 
