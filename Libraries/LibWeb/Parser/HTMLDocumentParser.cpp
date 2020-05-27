@@ -563,8 +563,8 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         if (m_stack_of_open_elements.has_in_button_scope("p"))
             close_a_p_element();
         if (current_node().tag_name().is_one_of("h1", "h2", "h3", "h4", "h5", "h6")) {
-            // FIXME: This is a parse error!
-            TODO();
+            PARSE_ERROR();
+            m_stack_of_open_elements.pop();
         }
         insert_html_element(token);
         return;
@@ -577,24 +577,19 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             && !m_stack_of_open_elements.has_in_scope("h4")
             && !m_stack_of_open_elements.has_in_scope("h5")
             && !m_stack_of_open_elements.has_in_scope("h6")) {
-            TODO();
+            PARSE_ERROR();
+            return;
         }
 
         generate_implied_end_tags();
         if (current_node().tag_name() != token.tag_name()) {
-            TODO();
+            PARSE_ERROR();
         }
 
         for (;;) {
             auto popped_element = m_stack_of_open_elements.pop();
-            if (popped_element->tag_name() == "h1"
-                || popped_element->tag_name() == "h2"
-                || popped_element->tag_name() == "h3"
-                || popped_element->tag_name() == "h4"
-                || popped_element->tag_name() == "h5"
-                || popped_element->tag_name() == "h6") {
+            if (popped_element->tag_name().is_one_of("h1", "h2", "h3", "h4", "h5", "h6"))
                 break;
-            }
         }
         return;
     }
@@ -617,22 +612,25 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
-        // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
+        if (m_stack_of_open_elements.has_in_button_scope("p"))
+            close_a_p_element();
         insert_html_element(token);
         return;
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
-        // FIXME: If the stack of open elements has a p element in button scope, then close a p element.
+        if (m_stack_of_open_elements.has_in_button_scope("p"))
+            close_a_p_element();
 
         if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
-            ASSERT_NOT_REACHED();
+            PARSE_ERROR();
+            return;
         }
 
         generate_implied_end_tags();
 
         if (current_node().tag_name() != token.tag_name()) {
-            ASSERT_NOT_REACHED();
+            PARSE_ERROR();
         }
 
         m_stack_of_open_elements.pop();
