@@ -35,7 +35,7 @@ FlyString class_;
 
 void initialize()
 {
-    bool s_initialized = false;
+    static bool s_initialized = false;
     if (s_initialized)
         return;
     id = "id";
