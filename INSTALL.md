@@ -47,4 +47,4 @@ $ cu -s 57600 -l /dev/ttyUSB0
 
 ## Troubleshooting boot issues without a serial port
 
-Serenity is a graphical OS and thus boots directly to the desktop. If your computer doesn't have a serial port and it fails to boot, you can force Serenity to boot into text mode by editing **Kernel/Arch/i386/Boot/boot.S** and removing **| MULTIBOOT_VIDEO_MODE** from the end of the **multiboot_flags** line before (re)running **make** and **make install**.
+Serenity is a graphical OS and thus boots directly to the desktop. If your computer doesn't have a serial port and it fails to boot, you can force Serenity to boot into text mode by selecting the **SerenityOS (text mode)** option in GRUB.
