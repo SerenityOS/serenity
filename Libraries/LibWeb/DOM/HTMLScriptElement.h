@@ -40,15 +40,16 @@ public:
     virtual void children_changed() override;
 
     bool is_non_blocking() const { return m_non_blocking; }
+    bool is_ready_to_be_parser_executed() const { return m_ready_to_be_parser_executed; }
 
     void set_parser_document(Badge<HTMLDocumentParser>, Document&);
     void set_non_blocking(Badge<HTMLDocumentParser>, bool);
     void prepare_script(Badge<HTMLDocumentParser>);
+    void execute_script();
 
 private:
     void script_became_ready();
     void when_the_script_is_ready(Function<void()>);
-    void execute_script();
 
     WeakPtr<Document> m_parser_document;
     WeakPtr<Document> m_preparation_time_document;

@@ -704,8 +704,48 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         if (script_nesting_level() == 0)
             m_parser_pause_flag = false;
         // FIXME: Handle tokenizer insertion point stuff here too.
+
+        while (document().pending_parsing_blocking_script()) {
+            if (script_nesting_level() != 0) {
+                m_parser_pause_flag = true;
+                // FIXME: Abort the processing of any nested invocations of the tokenizer,
+                //        yielding control back to the caller. (Tokenization will resume when
+                //        the caller returns to the "outer" tree construction stage.)
+                TODO();
+            } else {
+                auto the_script = document().take_pending_parsing_blocking_script({});
+                m_tokenizer.set_blocked(true);
+
+                // FIXME: If the parser's Document has a style sheet that is blocking scripts
+                //        or the script's "ready to be parser-executed" flag is not set:
+                //        spin the event loop until the parser's Document has no style sheet
+                //        that is blocking scripts and the script's "ready to be parser-executed"
+                //        flag is set.
+
+                ASSERT(the_script->is_ready_to_be_parser_executed());
+
+                if (m_aborted)
+                    return;
+
+                m_tokenizer.set_blocked(false);
+
+                // FIXME: Handle tokenizer insertion point stuff here too.
+
+                ASSERT(script_nesting_level() == 0);
+                increment_script_nesting_level();
+
+                the_script->execute_script();
+
+                decrement_script_nesting_level();
+                ASSERT(script_nesting_level() == 0);
+                m_parser_pause_flag = false;
+
+                // FIXME: Handle tokenizer insertion point stuff here too.
+            }
+        }
         return;
     }
+
     if (token.is_end_tag()) {
         m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;

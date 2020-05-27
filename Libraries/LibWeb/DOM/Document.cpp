@@ -424,4 +424,9 @@ void Document::set_pending_parsing_blocking_script(Badge<HTMLScriptElement>, HTM
     m_pending_parsing_blocking_script = script;
 }
 
+NonnullRefPtr<HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTMLDocumentParser>)
+{
+    return m_pending_parsing_blocking_script.release_nonnull();
+}
+
 }
