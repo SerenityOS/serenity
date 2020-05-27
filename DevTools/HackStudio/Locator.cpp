@@ -73,28 +73,6 @@ private:
     Vector<String> m_suggestions;
 };
 
-class LocatorTextBox final : public GUI::TextBox {
-    C_OBJECT(LocatorTextBox)
-public:
-    virtual ~LocatorTextBox() override {}
-
-    Function<void()> on_up;
-    Function<void()> on_down;
-
-    virtual void keydown_event(GUI::KeyEvent& event) override
-    {
-        if (event.key() == Key_Up)
-            on_up();
-        else if (event.key() == Key_Down)
-            on_down();
-
-        GUI::TextBox::keydown_event(event);
-    }
-
-private:
-    LocatorTextBox() {}
-};
-
 Locator::Locator()
 {
     if (!s_cplusplus_icon) {
@@ -106,14 +84,14 @@ Locator::Locator()
     set_layout<GUI::VerticalBoxLayout>();
     set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 20);
-    m_textbox = add<LocatorTextBox>();
+    m_textbox = add<GUI::TextBox>();
     m_textbox->on_change = [this] {
         update_suggestions();
     };
     m_textbox->on_escape_pressed = [this] {
         m_popup_window->hide();
     };
-    m_textbox->on_up = [this] {
+    m_textbox->on_up_pressed = [this] {
         GUI::ModelIndex new_index = m_suggestion_view->selection().first();
         if (new_index.is_valid())
             new_index = m_suggestion_view->model()->index(new_index.row() - 1);
@@ -125,7 +103,7 @@ Locator::Locator()
             m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
         }
     };
-    m_textbox->on_down = [this] {
+    m_textbox->on_down_pressed = [this] {
         GUI::ModelIndex new_index = m_suggestion_view->selection().first();
         if (new_index.is_valid())
             new_index = m_suggestion_view->model()->index(new_index.row() + 1);

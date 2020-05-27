@@ -28,8 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-class LocatorTextBox;
-
 class Locator final : public GUI::Widget {
     C_OBJECT(Locator)
 public:
@@ -44,7 +42,7 @@ private:
 
     Locator();
 
-    RefPtr<LocatorTextBox> m_textbox;
+    RefPtr<GUI::TextBox> m_textbox;
     RefPtr<GUI::Window> m_popup_window;
     RefPtr<GUI::TableView> m_suggestion_view;
 };
