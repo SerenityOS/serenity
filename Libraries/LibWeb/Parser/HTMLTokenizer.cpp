@@ -759,6 +759,19 @@ _StartOfFunction:
 
             BEGIN_STATE(SelfClosingStartTag)
             {
+                ON('>')
+                {
+                    m_current_token.m_tag.self_closing = true;
+                    SWITCH_TO(Data);
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    TODO();
+                }
             }
             END_STATE
 
