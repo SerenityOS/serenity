@@ -29,6 +29,10 @@ try {
     assert(a[0][1] === 2);
     assert(a[0][2] === 3);
 
+    a = new Array(1, 2, 3);
+    Object.defineProperty(a, 3, { get() { return 10; } });
+    assert(a.toString() === "1,2,3,10");
+
     [-1, -100, -0.1, 0.1, 1.23, Infinity, -Infinity, NaN].forEach(value => {
         assertThrowsError(() => {
             new Array(value);

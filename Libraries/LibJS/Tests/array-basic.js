@@ -40,6 +40,23 @@ try {
     assert(a[4] === undefined);
     assert(a[5] === 3);
 
+    a = [1,,2,,,3,];
+    Object.defineProperty(a, 1, {
+        get() {
+            return this.secret_prop;
+        },
+        set(value) {
+            this.secret_prop = value;
+        },
+    });
+    assert(a.length === 6);
+    assert(a.toString() === "1,,2,,,3");
+    assert(a.secret_prop === undefined);
+    a[1] = 20;
+    assert(a.length === 6);
+    assert(a.toString() === "1,20,2,,,3");
+    assert(a.secret_prop === 20);
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);

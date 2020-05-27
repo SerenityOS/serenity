@@ -7,6 +7,8 @@ try {
     assert(o.foo === 1);
     o.foo = 2;
     assert(o.foo === 1);
+    Object.defineProperty(o, 2, { get() { return 10; } });
+    assert(o[2] === 10);
 
     var d = Object.getOwnPropertyDescriptor(o, "foo");
     assert(d.configurable === false);

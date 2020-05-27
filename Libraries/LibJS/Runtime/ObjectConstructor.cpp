@@ -75,14 +75,11 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     auto* result = Array::create(interpreter.global_object());
-    for (size_t i = 0; i < object->elements().size(); ++i) {
-        if (!object->elements()[i].is_empty())
-            result->elements().append(js_string(interpreter, String::number(i)));
-    }
+    for (auto& entry : object->indexed_properties())
+        result->indexed_properties().append(js_string(interpreter, String::number(entry.index())));
+    for (auto& it : object->shape().property_table_ordered())
+        result->indexed_properties().append(js_string(interpreter, it.key));
 
-    for (auto& it : object->shape().property_table_ordered()) {
-        result->elements().append(js_string(interpreter, it.key));
-    }
     return result;
 }
 
