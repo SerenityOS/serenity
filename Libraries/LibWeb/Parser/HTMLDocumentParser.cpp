@@ -902,7 +902,69 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
 
 void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
 {
-    TODO();
+    for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
+        RefPtr<Element> node = m_stack_of_open_elements.elements().at(i);
+
+        if (node->tag_name() == "select") {
+            TODO();
+        }
+
+        if (node->tag_name().is_one_of("td", "th")) {
+            m_insertion_mode = InsertionMode::InCell;
+            return;
+        }
+
+        if (node->tag_name() == "tr") {
+            m_insertion_mode = InsertionMode::InRow;
+            return;
+        }
+
+        if (node->tag_name().is_one_of("tbody", "thead", "tfoot")) {
+            m_insertion_mode = InsertionMode::InTableBody;
+            return;
+        }
+
+        if (node->tag_name() == "caption") {
+            m_insertion_mode = InsertionMode::InCaption;
+            return;
+        }
+
+        if (node->tag_name() == "colgroup") {
+            m_insertion_mode = InsertionMode::InColumnGroup;
+            return;
+        }
+
+        if (node->tag_name() == "table") {
+            m_insertion_mode = InsertionMode::InTable;
+            return;
+        }
+
+        if (node->tag_name() == "template") {
+            TODO();
+        }
+
+        if (node->tag_name() == "body") {
+            m_insertion_mode = InsertionMode::InBody;
+            return;
+        }
+
+        if (node->tag_name() == "frameset") {
+            m_insertion_mode = InsertionMode::InFrameset;
+            if (m_parsing_fragment) {
+                TODO();
+            }
+            return;
+        }
+
+        if (node->tag_name() == "html") {
+            TODO();
+        }
+    }
+
+    m_insertion_mode = InsertionMode::InBody;
+    if (m_parsing_fragment) {
+        TODO();
+    }
 }
 
 const char* HTMLDocumentParser::insertion_mode_name() const
