@@ -535,9 +535,9 @@ void TextEditor::select_all()
 {
     TextPosition start_of_document { 0, 0 };
     TextPosition end_of_document { line_count() - 1, line(line_count() - 1).length() };
-    m_selection.set(start_of_document, end_of_document);
+    m_selection.set(end_of_document, start_of_document);
     did_update_selection();
-    set_cursor(end_of_document);
+    set_cursor(start_of_document);
     update();
 }
 
