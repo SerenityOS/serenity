@@ -56,6 +56,8 @@ public:
 
     Element* last_element_with_tag_name_before_marker(const FlyString& tag_name);
 
+    void clear_up_to_the_last_marker();
+
 private:
     Vector<Entry> m_entries;
 };
