@@ -79,19 +79,19 @@ ReflectObject::ReflectObject()
     : Object(interpreter().global_object().object_prototype())
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    put_native_function("apply", apply, 3, attr);
-    put_native_function("construct", construct, 2, attr);
-    put_native_function("defineProperty", define_property, 3, attr);
-    put_native_function("deleteProperty", delete_property, 2, attr);
-    put_native_function("get", get, 2, attr);
-    put_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2, attr);
-    put_native_function("getPrototypeOf", get_prototype_of, 1, attr);
-    put_native_function("has", has, 2, attr);
-    put_native_function("isExtensible", is_extensible, 1, attr);
-    put_native_function("ownKeys", own_keys, 1, attr);
-    put_native_function("preventExtensions", prevent_extensions, 1, attr);
-    put_native_function("set", set, 3, attr);
-    put_native_function("setPrototypeOf", set_prototype_of, 2, attr);
+    define_native_function("apply", apply, 3, attr);
+    define_native_function("construct", construct, 2, attr);
+    define_native_function("defineProperty", define_property, 3, attr);
+    define_native_function("deleteProperty", delete_property, 2, attr);
+    define_native_function("get", get, 2, attr);
+    define_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2, attr);
+    define_native_function("getPrototypeOf", get_prototype_of, 1, attr);
+    define_native_function("has", has, 2, attr);
+    define_native_function("isExtensible", is_extensible, 1, attr);
+    define_native_function("ownKeys", own_keys, 1, attr);
+    define_native_function("preventExtensions", prevent_extensions, 1, attr);
+    define_native_function("set", set, 3, attr);
+    define_native_function("setPrototypeOf", set_prototype_of, 2, attr);
 }
 
 ReflectObject::~ReflectObject()

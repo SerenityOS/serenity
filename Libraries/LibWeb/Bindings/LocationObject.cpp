@@ -39,15 +39,15 @@ LocationObject::LocationObject()
     : Object(interpreter().global_object().object_prototype())
 {
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
-    put_native_property("href", href_getter, href_setter, attr);
-    put_native_property("host", host_getter, nullptr, attr);
-    put_native_property("hostname", hostname_getter, nullptr, attr);
-    put_native_property("pathname", pathname_getter, nullptr, attr);
-    put_native_property("hash", hash_getter, nullptr, attr);
-    put_native_property("search", search_getter, nullptr, attr);
-    put_native_property("protocol", protocol_getter, nullptr, attr);
+    define_native_property("href", href_getter, href_setter, attr);
+    define_native_property("host", host_getter, nullptr, attr);
+    define_native_property("hostname", hostname_getter, nullptr, attr);
+    define_native_property("pathname", pathname_getter, nullptr, attr);
+    define_native_property("hash", hash_getter, nullptr, attr);
+    define_native_property("search", search_getter, nullptr, attr);
+    define_native_property("protocol", protocol_getter, nullptr, attr);
 
-    put_native_function("reload", reload, JS::Attribute::Enumerable);
+    define_native_function("reload", reload, JS::Attribute::Enumerable);
 }
 
 LocationObject::~LocationObject()

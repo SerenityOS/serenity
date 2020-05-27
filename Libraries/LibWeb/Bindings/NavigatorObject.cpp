@@ -40,15 +40,15 @@ NavigatorObject::NavigatorObject()
     auto* languages = JS::Array::create(interpreter().global_object());
     languages->elements().append(js_string(heap(), "en-US"));
 
-    put("appCodeName", js_string(heap(), "Mozilla"));
-    put("appName", js_string(heap(), "Netscape"));
-    put("appVersion", js_string(heap(), "4.0"));
-    put("language", languages->elements().first());
-    put("languages", languages);
-    put("platform", js_string(heap(), "SerenityOS"));
-    put("product", js_string(heap(), "Gecko"));
+    define_property("appCodeName", js_string(heap(), "Mozilla"));
+    define_property("appName", js_string(heap(), "Netscape"));
+    define_property("appVersion", js_string(heap(), "4.0"));
+    define_property("language", languages->elements().first());
+    define_property("languages", languages);
+    define_property("platform", js_string(heap(), "SerenityOS"));
+    define_property("product", js_string(heap(), "Gecko"));
 
-    put_native_property("userAgent", user_agent_getter, nullptr);
+    define_native_property("userAgent", user_agent_getter, nullptr);
 }
 
 NavigatorObject::~NavigatorObject()

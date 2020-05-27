@@ -60,25 +60,24 @@ public:
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
-    Value delete_property(PropertyName);
-
-    virtual Value get_by_index(i32 property_index) const;
-    Value get(const FlyString& property_name) const;
     Value get(PropertyName) const;
 
-    virtual bool put_by_index(i32 property_index, Value, u8 attributes = default_attributes);
-    bool put(const FlyString& property_name, Value, u8 attributes = default_attributes);
-    bool put(PropertyName, Value, u8 attributes = default_attributes);
+    bool has_property(PropertyName) const;
+    bool has_own_property(PropertyName) const;
 
-    Value get_own_property(const Object& this_object, const FlyString& property_name) const;
-    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, u8 attributes = Attribute::Configurable | Attribute::Enumerable | Attribute::Writable) const;
-    Value get_own_property_descriptor(const FlyString& property_name) const;
+    bool put(PropertyName, Value);
+
+    Value get_own_property(const Object& this_object, PropertyName) const;
+    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, u8 attributes = default_attributes) const;
+    Value get_own_property_descriptor(PropertyName) const;
 
     bool define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions = true);
-    bool put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value, PutOwnPropertyMode, bool throw_exceptions = true);
+    bool define_property(PropertyName, Value value, u8 attributes = default_attributes, bool throw_exceptions = true);
 
-    bool put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0, u8 attribute = default_attributes);
-    bool put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attribute = default_attributes);
+    bool define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0, u8 attribute = default_attributes);
+    bool define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attribute = default_attributes);
+
+    Value delete_property(PropertyName);
 
     virtual bool is_array() const { return false; }
     virtual bool is_boolean() const { return false; }
@@ -99,9 +98,6 @@ public:
     void set_prototype(Object*);
     bool has_prototype(const Object* prototype) const;
 
-    bool has_property(const FlyString& property_name) const;
-    bool has_own_property(const FlyString& property_name) const;
-
     enum class PreferredType {
         Default,
         String,
@@ -118,6 +114,11 @@ public:
     Vector<Value>& elements() { return m_elements; }
 
 private:
+    virtual Value get_by_index(u32 property_index) const;
+    virtual bool put_by_index(u32 property_index, Value);
+    bool put_own_property(Object& this_object, const FlyString& property_name, Value, u8 attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
+    bool put_own_property_by_index(Object& this_object, u32 property_index, Value, u8 attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
+
     void set_shape(Shape&);
     void ensure_shape_is_unique();
 

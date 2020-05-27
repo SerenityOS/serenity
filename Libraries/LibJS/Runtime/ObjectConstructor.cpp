@@ -38,19 +38,19 @@ namespace JS {
 ObjectConstructor::ObjectConstructor()
     : NativeFunction("Object", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().global_object().object_prototype(), 0);
-    put("length", Value(1), Attribute::Configurable);
+    define_property("prototype", interpreter().global_object().object_prototype(), 0);
+    define_property("length", Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    put_native_function("defineProperty", define_property, 3, attr);
-    put_native_function("is", is, 2, attr);
-    put_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2, attr);
-    put_native_function("getOwnPropertyNames", get_own_property_names, 1, attr);
-    put_native_function("getPrototypeOf", get_prototype_of, 1, attr);
-    put_native_function("setPrototypeOf", set_prototype_of, 2, attr);
-    put_native_function("keys", keys, 1, attr);
-    put_native_function("values", values, 1, attr);
-    put_native_function("entries", entries, 1, attr);
+    define_native_function("defineProperty", define_property_, 3, attr);
+    define_native_function("is", is, 2, attr);
+    define_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2, attr);
+    define_native_function("getOwnPropertyNames", get_own_property_names, 1, attr);
+    define_native_function("getPrototypeOf", get_prototype_of, 1, attr);
+    define_native_function("setPrototypeOf", set_prototype_of, 2, attr);
+    define_native_function("keys", keys, 1, attr);
+    define_native_function("values", values, 1, attr);
+    define_native_function("entries", entries, 1, attr);
 }
 
 ObjectConstructor::~ObjectConstructor()
@@ -118,7 +118,7 @@ Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
     return object->get_own_property_descriptor(property_key);
 }
 
-Value ObjectConstructor::define_property(Interpreter& interpreter)
+Value ObjectConstructor::define_property_(Interpreter& interpreter)
 {
     if (!interpreter.argument(0).is_object())
         return interpreter.throw_exception<TypeError>("Object argument is not an object");

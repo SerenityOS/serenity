@@ -51,21 +51,21 @@ void WindowObject::initialize()
 {
     GlobalObject::initialize();
 
-    put("window", this, JS::Attribute::Enumerable);
-    put_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
-    put_native_function("alert", alert);
-    put_native_function("confirm", confirm);
-    put_native_function("setInterval", set_interval, 1);
-    put_native_function("setTimeout", set_timeout, 1);
-    put_native_function("requestAnimationFrame", request_animation_frame, 1);
-    put_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
+    define_property("window", this, JS::Attribute::Enumerable);
+    define_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
+    define_native_function("alert", alert);
+    define_native_function("confirm", confirm);
+    define_native_function("setInterval", set_interval, 1);
+    define_native_function("setTimeout", set_timeout, 1);
+    define_native_function("requestAnimationFrame", request_animation_frame, 1);
+    define_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
 
-    put("navigator", heap().allocate<NavigatorObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    put("location", heap().allocate<LocationObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_property("navigator", heap().allocate<NavigatorObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_property("location", heap().allocate<LocationObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>();
     m_xhr_constructor = heap().allocate<XMLHttpRequestConstructor>();
-    m_xhr_constructor->put("prototype", m_xhr_prototype, 0);
+    m_xhr_constructor->define_property("prototype", m_xhr_prototype, 0);
     add_constructor("XMLHttpRequest", m_xhr_constructor, *m_xhr_prototype);
 }
 

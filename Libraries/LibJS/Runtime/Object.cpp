@@ -89,13 +89,21 @@ bool Object::has_prototype(const Object* prototype) const
     return false;
 }
 
-Value Object::get_own_property(const Object& this_object, const FlyString& property_name) const
+Value Object::get_own_property(const Object& this_object, PropertyName property_name) const
 {
-    auto metadata = shape().lookup(property_name);
-    if (!metadata.has_value())
-        return {};
+    Value value_here;
 
-    auto value_here = m_storage[metadata.value().offset];
+    if (property_name.is_number()) {
+        if (static_cast<size_t>(property_name.as_number()) >= m_elements.size())
+            return {};
+        value_here = m_elements[property_name.as_number()];
+    } else {
+        auto metadata = shape().lookup(property_name.as_string());
+        if (!metadata.has_value())
+            return {};
+        value_here = m_storage[metadata.value().offset];
+    }
+
     ASSERT(!value_here.is_empty());
     if (value_here.is_accessor()) {
         return value_here.as_accessor().call_getter(Value(const_cast<Object*>(this)));
@@ -122,14 +130,14 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
 
         for (size_t i = 0; i < str.length(); ++i) {
             if (kind == GetOwnPropertyMode::Key) {
-                properties_array->put_by_index(i, js_string(interpreter(), String::number(i)));
+                properties_array->define_property(i, js_string(interpreter(), String::number(i)));
             } else if (kind == GetOwnPropertyMode::Value) {
-                properties_array->put_by_index(i, js_string(interpreter(), String::format("%c", str[i])));
+                properties_array->define_property(i, js_string(interpreter(), String::format("%c", str[i])));
             } else {
                 auto* entry_array = Array::create(interpreter().global_object());
-                entry_array->put_by_index(0, js_string(interpreter(), String::number(i)));
-                entry_array->put_by_index(1, js_string(interpreter(), String::format("%c", str[i])));
-                properties_array->put_by_index(i, entry_array);
+                entry_array->define_property(0, js_string(interpreter(), String::number(i)));
+                entry_array->define_property(1, js_string(interpreter(), String::format("%c", str[i])));
+                properties_array->define_property(i, entry_array);
             }
         }
 
@@ -175,24 +183,36 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
     return properties_array;
 }
 
-Value Object::get_own_property_descriptor(const FlyString& property_name) const
+Value Object::get_own_property_descriptor(PropertyName property_name) const
 {
-    auto metadata = shape().lookup(property_name);
-    if (!metadata.has_value())
-        return js_undefined();
-    auto value = get(property_name);
-    if (interpreter().exception())
-        return {};
+    Value value;
+    u8 attributes;
+
+    if (property_name.is_number()) {
+        if (static_cast<size_t>(property_name.as_number()) >= m_elements.size())
+            return {};
+        value = m_elements[property_name.as_number()];
+        attributes = default_attributes;
+    } else {
+        auto metadata = shape().lookup(property_name.as_string());
+        if (!metadata.has_value())
+            return js_undefined();
+        value = get(property_name);
+        if (interpreter().exception())
+            return {};
+        attributes = metadata.value().attributes;
+    }
+
     auto* descriptor = Object::create_empty(interpreter(), interpreter().global_object());
-    descriptor->put("enumerable", Value((metadata.value().attributes & Attribute::Enumerable) != 0));
-    descriptor->put("configurable", Value((metadata.value().attributes & Attribute::Configurable) != 0));
+    descriptor->define_property("enumerable", Value((attributes & Attribute::Enumerable) != 0));
+    descriptor->define_property("configurable", Value((attributes & Attribute::Configurable) != 0));
     if (value.is_accessor()) {
         auto& pair = value.as_accessor();
-        descriptor->put("get", pair.getter());
-        descriptor->put("set", pair.setter());
+        descriptor->define_property("get", pair.getter());
+        descriptor->define_property("set", pair.setter());
     } else {
-        descriptor->put("value", value.value_or(js_undefined()));
-        descriptor->put("writable", Value((metadata.value().attributes & Attribute::Writable) != 0));
+        descriptor->define_property("value", value.value_or(js_undefined()));
+        descriptor->define_property("writable", Value((attributes & Attribute::Writable) != 0));
     }
     return descriptor;
 }
@@ -249,7 +269,7 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
               << "getter=" << getter.to_string_without_side_effects() << ", "
               << "setter=" << setter.to_string_without_side_effects() << "}";
 
-        return put_own_property(*this, property_name, attributes, Accessor::create(interpreter(), getter_function, setter_function), PutOwnPropertyMode::DefineProperty, throw_exceptions);
+        return define_property(property_name, Accessor::create(interpreter(), getter_function, setter_function), attributes, throw_exceptions);
     }
 
     auto value = descriptor.get("value");
@@ -263,10 +283,21 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
     dbg() << "Defining new property " << property_name << " with data descriptor { attributes=" << attributes
           << ", value=" << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects()) << " }";
 
-    return put_own_property(*this, property_name, attributes, value, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+    return define_property(property_name, value, attributes, throw_exceptions);
 }
 
-bool Object::put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value value, PutOwnPropertyMode mode, bool throw_exceptions)
+bool Object::define_property(PropertyName property_name, Value value, u8 attributes, bool throw_exceptions)
+{
+    if (property_name.is_number())
+        return put_own_property_by_index(*this, property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+    bool ok;
+    i32 property_index = property_name.as_string().to_int(ok);
+    if (ok && property_index >= 0)
+        return put_own_property_by_index(*this, property_index, value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+    return put_own_property(*this, property_name.as_string(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+}
+
+bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value, u8 attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
@@ -338,6 +369,53 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     return true;
 }
 
+bool Object::put_own_property_by_index(Object& this_object, u32 property_index, Value value, u8 attributes, PutOwnPropertyMode mode, bool throw_exceptions)
+{
+    ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
+
+    if (value.is_accessor()) {
+        auto& accessor = value.as_accessor();
+        if (accessor.getter())
+            attributes |= Attribute::HasGet;
+        if (accessor.setter())
+            attributes |= Attribute::HasSet;
+    }
+
+    auto new_property = property_index >= m_elements.size();
+    auto existing_property = new_property ? Value() : m_elements[property_index];
+    auto existing_attributes = default_attributes;
+
+    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !(existing_attributes & Attribute::Configurable) && attributes != existing_attributes) {
+        dbg() << "Disallow reconfig of non-configurable property";
+        if (throw_exceptions)
+            interpreter().throw_exception<TypeError>(String::format("Cannot change attributes of non-configurable property %d", property_index));
+        return false;
+    }
+
+    auto value_here = existing_property;
+    if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !(existing_attributes & Attribute::Writable)) {
+        dbg() << "Disallow write to non-writable property";
+        return false;
+    }
+
+    if (value.is_empty())
+        return true;
+
+    if (value_here.is_object() && value_here.as_object().is_native_property()) {
+        auto& native_property = static_cast<NativeProperty&>(value_here.as_object());
+        auto& interpreter = const_cast<Object*>(this)->interpreter();
+        auto& call_frame = interpreter.push_call_frame();
+        call_frame.this_value = &this_object;
+        native_property.set(interpreter, value);
+        interpreter.pop_call_frame();
+    } else {
+        if (new_property)
+            m_elements.resize(property_index + 1);
+        m_elements[property_index] = value;
+    }
+    return true;
+}
+
 Value Object::delete_property(PropertyName property_name)
 {
     ASSERT(property_name.is_valid());
@@ -371,16 +449,13 @@ void Object::ensure_shape_is_unique()
     m_shape = m_shape->create_unique_clone();
 }
 
-Value Object::get_by_index(i32 property_index) const
+Value Object::get_by_index(u32 property_index) const
 {
-    if (property_index < 0)
-        return get(String::number(property_index));
-
     const Object* object = this;
     while (object) {
         if (is_string_object()) {
             auto& string = static_cast<const StringObject*>(this)->primitive_string().string();
-            if (property_index < (i32)string.length())
+            if (property_index < string.length())
                 return js_string(heap(), string.substring(property_index, 1));
             return js_undefined();
         }
@@ -395,10 +470,14 @@ Value Object::get_by_index(i32 property_index) const
     return {};
 }
 
-Value Object::get(const FlyString& property_name) const
+Value Object::get(PropertyName property_name) const
 {
+    if (property_name.is_number())
+        return get_by_index(property_name.as_number());
+
+    auto property_string = property_name.to_string();
     bool ok;
-    i32 property_index = property_name.to_int(ok);
+    i32 property_index = property_string.to_int(ok);
     if (ok && property_index >= 0)
         return get_by_index(property_index);
 
@@ -412,18 +491,9 @@ Value Object::get(const FlyString& property_name) const
     return {};
 }
 
-Value Object::get(PropertyName property_name) const
-{
-    if (property_name.is_number())
-        return get_by_index(property_name.as_number());
-    return get(property_name.as_string());
-}
-
-bool Object::put_by_index(i32 property_index, Value value, u8 attributes)
+bool Object::put_by_index(u32 property_index, Value value)
 {
     ASSERT(!value.is_empty());
-    if (property_index < 0)
-        return put(String::number(property_index), value, attributes);
     // FIXME: Implement some kind of sparse storage for arrays with huge indices.
     // Also: Take attributes into account here
     if (static_cast<size_t>(property_index) >= m_elements.size())
@@ -432,19 +502,24 @@ bool Object::put_by_index(i32 property_index, Value value, u8 attributes)
     return true;
 }
 
-bool Object::put(const FlyString& property_name, Value value, u8 attributes)
+bool Object::put(PropertyName property_name, Value value)
 {
+    if (property_name.is_number())
+        return put_by_index(property_name.as_number(), value);
+
     ASSERT(!value.is_empty());
+
+    auto property_string = property_name.to_string();
     bool ok;
-    i32 property_index = property_name.to_int(ok);
+    i32 property_index = property_string.to_int(ok);
     if (ok && property_index >= 0)
-        return put_by_index(property_index, value, attributes);
+        return put_by_index(property_index, value);
 
     // If there's a setter in the prototype chain, we go to the setter.
     // Otherwise, it goes in the own property storage.
     Object* object = this;
     while (object) {
-        auto metadata = object->shape().lookup(property_name);
+        auto metadata = object->shape().lookup(property_string);
         if (metadata.has_value()) {
             auto value_here = object->m_storage[metadata.value().offset];
             if (value_here.is_accessor()) {
@@ -463,27 +538,20 @@ bool Object::put(const FlyString& property_name, Value value, u8 attributes)
         }
         object = object->prototype();
     }
-    return put_own_property(*this, property_name, attributes, value, PutOwnPropertyMode::Put);
+    return put_own_property(*this, property_string, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
-bool Object::put(PropertyName property_name, Value value, u8 attributes)
-{
-    if (property_name.is_number())
-        return put_by_index(property_name.as_number(), value, attributes);
-    return put(property_name.as_string(), value, attributes);
-}
-
-bool Object::put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length, u8 attributes)
+bool Object::define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length, u8 attribute)
 {
     auto* function = NativeFunction::create(interpreter(), interpreter().global_object(), property_name, move(native_function));
-    function->put("length", Value(length), Attribute::Configurable);
-    function->put("name", js_string(heap(), property_name), Attribute::Configurable);
-    return put(property_name, function, attributes);
+    function->define_property("length", Value(length), Attribute::Configurable);
+    function->define_property("name", js_string(heap(), property_name), Attribute::Configurable);
+    return define_property(property_name, function, attribute);
 }
 
-bool Object::put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attributes)
+bool Object::define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attribute)
 {
-    return put(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)), attributes);
+    return define_property(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)), attribute);
 }
 
 void Object::visit_children(Cell::Visitor& visitor)
@@ -498,7 +566,7 @@ void Object::visit_children(Cell::Visitor& visitor)
         visitor.visit(value);
 }
 
-bool Object::has_property(const FlyString& property_name) const
+bool Object::has_property(PropertyName property_name) const
 {
     const Object* object = this;
     while (object) {
@@ -509,18 +577,25 @@ bool Object::has_property(const FlyString& property_name) const
     return false;
 }
 
-bool Object::has_own_property(const FlyString& property_name) const
+bool Object::has_own_property(PropertyName property_name) const
 {
-    bool ok;
-    i32 property_index = property_name.to_int(ok);
-    if (ok && property_index >= 0) {
+    auto has_indexed_property = [&](u32 index) -> bool {
         if (is_string_object())
-            return property_index < (i32) static_cast<const StringObject*>(this)->primitive_string().string().length();
-        if (static_cast<size_t>(property_index) >= m_elements.size())
+            return index < static_cast<const StringObject*>(this)->primitive_string().string().length();
+        if (static_cast<size_t>(index) >= m_elements.size())
             return false;
-        return !m_elements[property_index].is_empty();
-    }
-    return shape().lookup(property_name).has_value();
+        return !m_elements[index].is_empty();
+    };
+
+    if (property_name.is_number())
+        return has_indexed_property(property_name.as_number());
+
+    bool ok;
+    i32 property_index = property_name.as_string().to_int(ok);
+    if (ok && property_index >= 0)
+        return has_indexed_property(property_index);
+
+    return shape().lookup(property_name.as_string()).has_value();
 }
 
 Value Object::to_primitive(PreferredType preferred_type) const
