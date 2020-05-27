@@ -29,6 +29,14 @@ add_custom_target(check-style
     USES_TERMINAL
 )
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    # Fix for invalid macOS cross compilation issues
+    # https://stackoverflow.com/questions/54482519
+    set(CMAKE_C_LINK_FLAGS "")
+    set(CMAKE_CXX_LINK_FLAGS "")
+    set(CMAKE_SKIP_RPATH TRUE)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++2a -fdiagnostics-color=always")
 
 include_directories(Libraries)
