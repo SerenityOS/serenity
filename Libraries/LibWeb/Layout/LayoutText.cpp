@@ -95,7 +95,7 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
 }
 
 template<typename Callback>
-void LayoutText::for_each_chunk(Callback callback, LayoutMode line_break_policy, bool do_wrap_lines, bool do_wrap_breaks) const
+void LayoutText::for_each_chunk(Callback callback, LayoutMode layout_mode, bool do_wrap_lines, bool do_wrap_breaks) const
 {
     Utf8View view(m_text_for_rendering);
     if (view.is_empty())
@@ -104,7 +104,7 @@ void LayoutText::for_each_chunk(Callback callback, LayoutMode line_break_policy,
     auto start_of_chunk = view.begin();
 
     auto commit_chunk = [&](auto it, bool has_breaking_newline, bool must_commit = false) {
-        if (line_break_policy == LayoutMode::OnlyRequiredLineBreaks && !must_commit)
+        if (layout_mode == LayoutMode::OnlyRequiredLineBreaks && !must_commit)
             return;
 
         int start = view.byte_offset_of(start_of_chunk);
@@ -120,7 +120,7 @@ void LayoutText::for_each_chunk(Callback callback, LayoutMode line_break_policy,
     bool last_was_space = isspace(*view.begin());
     bool last_was_newline = false;
     for (auto it = view.begin(); it != view.end();) {
-        if (line_break_policy == LayoutMode::AllPossibleLineBreaks) {
+        if (layout_mode == LayoutMode::AllPossibleLineBreaks) {
             commit_chunk(it, false);
         }
         if (last_was_newline) {
@@ -146,7 +146,7 @@ void LayoutText::for_each_chunk(Callback callback, LayoutMode line_break_policy,
         commit_chunk(view.end(), false, true);
 }
 
-void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode line_break_policy, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
+void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode layout_mode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
 {
     auto& font = style().font();
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
@@ -192,7 +192,7 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode li
         [&](const Utf8View& view, int start, int length, bool is_break) {
             chunks.append({ Utf8View(view), start, length, is_break });
         },
-        line_break_policy, do_wrap_lines, do_wrap_breaks);
+        layout_mode, do_wrap_lines, do_wrap_breaks);
 
     for (size_t i = 0; i < chunks.size(); ++i) {
         auto& chunk = chunks[i];
@@ -236,7 +236,7 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode li
     }
 }
 
-void LayoutText::split_into_lines(LayoutBlock& container, LayoutMode line_break_policy)
+void LayoutText::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
 {
     bool do_collapse = true;
     bool do_wrap_lines = true;
@@ -261,7 +261,7 @@ void LayoutText::split_into_lines(LayoutBlock& container, LayoutMode line_break_
         do_wrap_breaks = true;
     }
 
-    split_into_lines_by_rules(container, line_break_policy, do_collapse, do_wrap_lines, do_wrap_breaks);
+    split_into_lines_by_rules(container, layout_mode, do_collapse, do_wrap_lines, do_wrap_breaks);
 }
 
 }

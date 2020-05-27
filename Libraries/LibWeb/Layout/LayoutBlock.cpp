@@ -53,27 +53,27 @@ LayoutNode& LayoutBlock::inline_wrapper()
     return *last_child();
 }
 
-void LayoutBlock::layout(LayoutMode line_break_policy)
+void LayoutBlock::layout(LayoutMode layout_mode)
 {
     compute_width();
 
     if (!is_inline())
         compute_position();
 
-    layout_children(line_break_policy);
+    layout_children(layout_mode);
 
     compute_height();
 }
 
-void LayoutBlock::layout_children(LayoutMode line_break_policy)
+void LayoutBlock::layout_children(LayoutMode layout_mode)
 {
     if (children_are_inline())
-        layout_inline_children(line_break_policy);
+        layout_inline_children(layout_mode);
     else
-        layout_block_children(line_break_policy);
+        layout_block_children(layout_mode);
 }
 
-void LayoutBlock::layout_block_children(LayoutMode line_break_policy)
+void LayoutBlock::layout_block_children(LayoutMode layout_mode)
 {
     ASSERT(!children_are_inline());
     float content_height = 0;
@@ -82,10 +82,10 @@ void LayoutBlock::layout_block_children(LayoutMode line_break_policy)
         if (child.is_inline())
             return;
         auto& child_block = static_cast<LayoutBlock&>(child);
-        child_block.layout(line_break_policy);
+        child_block.layout(layout_mode);
         content_height = child_block.rect().bottom() + child_block.box_model().full_margin().bottom - rect().top();
     });
-    if (line_break_policy != LayoutMode::Default) {
+    if (layout_mode != LayoutMode::Default) {
         float max_width = 0;
         for_each_child([&](auto& child) {
             if (child.is_box())
@@ -96,13 +96,13 @@ void LayoutBlock::layout_block_children(LayoutMode line_break_policy)
     rect().set_height(content_height);
 }
 
-void LayoutBlock::layout_inline_children(LayoutMode line_break_policy)
+void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
 {
     ASSERT(children_are_inline());
     m_line_boxes.clear();
     for_each_child([&](auto& child) {
         ASSERT(child.is_inline());
-        child.split_into_lines(*this, line_break_policy);
+        child.split_into_lines(*this, layout_mode);
     });
 
     for (auto& line_box : m_line_boxes) {
@@ -188,7 +188,7 @@ void LayoutBlock::layout_inline_children(LayoutMode line_break_policy)
             if (fragment.layout_node().is_inline_block()) {
                 auto& inline_block = const_cast<LayoutBlock&>(to<LayoutBlock>(fragment.layout_node()));
                 inline_block.set_rect(fragment.rect());
-                inline_block.layout(line_break_policy);
+                inline_block.layout(layout_mode);
             }
 
             float final_line_box_width = 0;
@@ -202,7 +202,7 @@ void LayoutBlock::layout_inline_children(LayoutMode line_break_policy)
         content_height += max_height;
     }
 
-    if (line_break_policy != LayoutMode::Default) {
+    if (layout_mode != LayoutMode::Default) {
         rect().set_width(max_linebox_width);
     }
 
@@ -501,11 +501,11 @@ LineBox& LayoutBlock::add_line_box()
     return m_line_boxes.last();
 }
 
-void LayoutBlock::split_into_lines(LayoutBlock& container, LayoutMode line_break_policy)
+void LayoutBlock::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
 {
     ASSERT(is_inline());
 
-    layout(line_break_policy);
+    layout(layout_mode);
 
     auto* line_box = &container.ensure_last_line_box();
     if (line_box->width() > 0 && line_box->width() + width() > container.width())
