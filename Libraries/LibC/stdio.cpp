@@ -77,7 +77,6 @@ public:
     void set_popen_child(pid_t child_pid) { m_popen_child = child_pid; }
 
 private:
-
     struct Buffer {
         // A ringbuffer that also transparently implements ungetc().
     public:
@@ -911,23 +910,36 @@ void perror(const char* s)
 static int parse_mode(const char* mode)
 {
     int flags = 0;
+
     // NOTE: rt is a non-standard mode which opens a file for read, explicitly
     // specifying that it's a text file
-    if (!strcmp(mode, "r") || !strcmp(mode, "rb") || !strcmp(mode, "rt"))
-        flags = O_RDONLY;
-    else if (!strcmp(mode, "r+") || !strcmp(mode, "rb+"))
-        flags = O_RDWR;
-    else if (!strcmp(mode, "w") || !strcmp(mode, "wb"))
-        flags = O_WRONLY | O_CREAT | O_TRUNC;
-    else if (!strcmp(mode, "w+") || !strcmp(mode, "wb+"))
-        flags = O_RDWR | O_CREAT | O_TRUNC;
-    else if (!strcmp(mode, "a") || !strcmp(mode, "ab"))
-        flags = O_WRONLY | O_APPEND | O_CREAT;
-    else if (!strcmp(mode, "a+") || !strcmp(mode, "ab+"))
-        flags = O_RDWR | O_APPEND | O_CREAT;
-    else {
-        dbg() << "Unexpected mode _" << mode << "_";
-        ASSERT_NOT_REACHED();
+    for (; *mode; ++mode) {
+        switch (*mode) {
+        case 'r':
+            flags |= O_RDONLY;
+            break;
+        case 'w':
+            flags |= O_WRONLY | O_CREAT | O_TRUNC;
+            break;
+        case 'a':
+            flags |= O_WRONLY | O_APPEND | O_CREAT;
+            break;
+        case '+':
+            flags |= O_RDWR;
+            break;
+        case 'e':
+            flags |= O_CLOEXEC;
+            break;
+        case 'b':
+            // Ok...
+            break;
+        case 't':
+            // Ok...
+            break;
+        default:
+            dbg() << "Unsupported mode _" << mode << "_ (because of '" << *mode << "')";
+            ASSERT_NOT_REACHED();
+        }
     }
 
     return flags;
