@@ -189,18 +189,20 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
         };
     }
 
-    m_text_editor = add<GUI::TextBox>();
-    m_text_editor->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_text_editor->set_preferred_size(0, 19);
-    m_text_editor->on_return_pressed = [this] {
+    m_text_box = add<GUI::TextBox>();
+    m_text_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    m_text_box->set_preferred_size(0, 19);
+    m_text_box->on_return_pressed = [this] {
         if (m_type == Channel)
-            m_client.handle_user_input_in_channel(m_name, m_text_editor->text());
+            m_client.handle_user_input_in_channel(m_name, m_text_box->text());
         else if (m_type == Query)
-            m_client.handle_user_input_in_query(m_name, m_text_editor->text());
+            m_client.handle_user_input_in_query(m_name, m_text_box->text());
         else if (m_type == Server)
-            m_client.handle_user_input_in_server(m_text_editor->text());
-        m_text_editor->clear();
+            m_client.handle_user_input_in_server(m_text_box->text());
+        m_text_box->add_current_text_to_history();
+        m_text_box->clear();
     };
+    m_text_box->set_history_enabled(true);
 
     m_client.register_subwindow(*this);
 }

@@ -75,7 +75,7 @@ private:
     Type m_type;
     String m_name;
     RefPtr<Web::HtmlView> m_html_view;
-    RefPtr<GUI::TextEditor> m_text_editor;
+    RefPtr<GUI::TextBox> m_text_box;
     RefPtr<IRCLogBuffer> m_log_buffer;
     RefPtr<GUI::Menu> m_context_menu;
     int m_unread_count { 0 };
