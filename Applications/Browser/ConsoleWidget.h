@@ -26,6 +26,7 @@
 #pragma once
 
 #include "BrowserConsoleClient.h"
+#include "History.h"
 #include <LibGUI/Widget.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/HtmlView.h>
@@ -45,9 +46,9 @@ public:
 private:
     ConsoleWidget();
 
-    RefPtr<GUI::TextBox> m_console_input;
-    RefPtr<Web::HtmlView> m_console_output_view;
-    RefPtr<Web::Element> m_console_output_container;
+    RefPtr<GUI::TextBox> m_input;
+    RefPtr<Web::HtmlView> m_output_view;
+    RefPtr<Web::Element> m_output_container;
     WeakPtr<JS::Interpreter> m_interpreter;
     OwnPtr<BrowserConsoleClient> m_console_client;
 };
