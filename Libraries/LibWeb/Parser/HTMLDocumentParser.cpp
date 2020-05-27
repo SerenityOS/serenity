@@ -730,6 +730,15 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    if (token.is_start_tag() && token.tag_name().is_one_of("area", "br", "embed", "img", "keygen", "wbr")) {
+        reconstruct_the_active_formatting_elements();
+        insert_html_element(token);
+        m_stack_of_open_elements.pop();
+        token.acknowledge_self_closing_flag_if_set();
+        m_frameset_ok = false;
+        return;
+    }
+
     if (token.is_start_tag()) {
         reconstruct_the_active_formatting_elements();
         insert_html_element(token);
