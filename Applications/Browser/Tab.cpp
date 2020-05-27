@@ -59,6 +59,7 @@
 
 namespace Browser {
 
+extern bool g_use_new_html_parser;
 extern String g_home_url;
 
 Tab::Tab()
@@ -69,6 +70,8 @@ Tab::Tab()
     m_toolbar_container = widget.add<GUI::ToolBarContainer>();
     auto& toolbar = m_toolbar_container->add<GUI::ToolBar>();
     m_html_widget = widget.add<Web::HtmlView>();
+
+    m_html_widget->set_use_new_parser(g_use_new_html_parser);
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) {
         m_history.go_back();

@@ -28,6 +28,7 @@
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include "WindowActions.h"
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibGUI/AboutDialog.h>
@@ -44,6 +45,7 @@ namespace Browser {
 
 static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 String g_home_url;
+bool g_use_new_html_parser = false;
 
 }
 
@@ -58,6 +60,13 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+
+    const char* specified_url = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(Browser::g_use_new_html_parser, "Use new HTML parser", "new-parser", 'n');
+    args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
 
     GUI::Application app(argc, argv);
 
@@ -174,8 +183,8 @@ int main(int argc, char** argv)
     };
 
     URL first_url = Browser::g_home_url;
-    if (app.args().size() >= 1)
-        first_url = URL::create_with_url_or_path(app.args()[0]);
+    if (specified_url)
+        first_url = URL::create_with_url_or_path(specified_url);
 
     window_actions.on_create_new_tab = [&] {
         create_new_tab(Browser::g_home_url, true);

@@ -38,6 +38,9 @@ class HtmlView : public GUI::ScrollableWidget {
 public:
     virtual ~HtmlView() override;
 
+    // FIXME: Remove this once the new parser is ready.
+    void set_use_new_parser(bool use_new_parser) { m_use_new_parser = use_new_parser; }
+
     Document* document();
     const Document* document() const;
     void set_document(Document*);
@@ -83,6 +86,8 @@ protected:
 private:
     virtual void did_scroll() override;
 
+    RefPtr<Document> create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding);
+
     void run_javascript_url(const String& url);
     void layout_and_sync_size();
     void dump_selection(const char* event_name);
@@ -92,6 +97,8 @@ private:
 
     bool m_should_show_line_box_borders { false };
     bool m_in_mouse_selection { false };
+
+    bool m_use_new_parser { false };
 };
 
 }
