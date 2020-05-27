@@ -89,6 +89,7 @@ set(SOURCES
     Parser/HTMLParser.cpp
     Parser/HTMLToken.cpp
     Parser/HTMLTokenizer.cpp
+    Parser/ListOfActiveFormattingElements.cpp
     Parser/StackOfOpenElements.cpp
     ResourceLoader.cpp
     StylePropertiesModel.cpp

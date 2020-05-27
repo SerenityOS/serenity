@@ -492,11 +492,12 @@ void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
     if (m_list_of_active_formatting_elements.is_empty())
         return;
 
-    if (m_stack_of_open_elements.contains(m_list_of_active_formatting_elements.last()))
+    if (m_stack_of_open_elements.contains(*m_list_of_active_formatting_elements.entries().last().element))
         return;
 
-    ssize_t index = m_list_of_active_formatting_elements.size() - 1;
-    RefPtr<Element> entry = m_list_of_active_formatting_elements.at(index);
+    ssize_t index = m_list_of_active_formatting_elements.entries().size() - 1;
+    RefPtr<Element> entry = m_list_of_active_formatting_elements.entries().at(index).element;
+    ASSERT(entry);
 
 Rewind:
     if (index == 0) {
@@ -504,14 +505,16 @@ Rewind:
     }
 
     --index;
-    entry = m_list_of_active_formatting_elements.at(index);
+    entry = m_list_of_active_formatting_elements.entries().at(index).element;
+    ASSERT(entry);
 
     if (!m_stack_of_open_elements.contains(*entry))
         goto Rewind;
 
 Advance:
     ++index;
-    entry = m_list_of_active_formatting_elements.at(index);
+    entry = m_list_of_active_formatting_elements.entries().at(index).element;
+    ASSERT(entry);
 
 Create:
     // FIXME: Hold on to the real token!
@@ -520,10 +523,72 @@ Create:
     fake_token.m_tag.tag_name.append(entry->tag_name());
     auto new_element = insert_html_element(fake_token);
 
-    m_list_of_active_formatting_elements.ptr_at(index) = *new_element;
+    m_list_of_active_formatting_elements.entries().at(index).element = *new_element;
 
-    if (index != (ssize_t)m_list_of_active_formatting_elements.size() - 1)
+    if (index != (ssize_t)m_list_of_active_formatting_elements.entries().size() - 1)
         goto Advance;
+}
+
+void HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
+{
+    auto subject = token.tag_name();
+
+    // If the current node is an HTML element whose tag name is subject,
+    // and the current node is not in the list of active formatting elements,
+    // then pop the current node off the stack of open elements, and return.
+    if (current_node().tag_name() == subject && !m_list_of_active_formatting_elements.contains(current_node())) {
+        m_stack_of_open_elements.pop();
+        return;
+    }
+
+    size_t outer_loop_counter = 0;
+
+//OuterLoop:
+    if (outer_loop_counter >= 8)
+        return;
+
+    ++outer_loop_counter;
+
+    auto formatting_element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker(subject);
+    if (!formatting_element) {
+        // FIXME: If there is no such element, then return and instead act as
+        //        described in the "any other end tag" entry above.
+        TODO();
+    }
+
+    if (!m_stack_of_open_elements.contains(*formatting_element)) {
+        PARSE_ERROR();
+        // FIXME: If formatting element is not in the stack of open elements,
+        // then this is a parse error; remove the element from the list, and return.
+        TODO();
+    }
+
+    if (!m_stack_of_open_elements.has_in_scope(*formatting_element)) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (formatting_element != &current_node()) {
+        PARSE_ERROR();
+    }
+
+    // FIXME: Let furthest block be the topmost node in the stack of open elements
+    //        that is lower in the stack than formatting element, and is an element
+    //        in the special category. There might not be one.
+    RefPtr<Element> furthest_block = nullptr;
+
+    if (!furthest_block) {
+        while (&current_node() != formatting_element)
+            m_stack_of_open_elements.pop();
+        m_stack_of_open_elements.pop();
+
+        m_list_of_active_formatting_elements.remove(*formatting_element);
+        return;
+    }
+
+    // FIXME: Implement the rest of the AAA :^)
+
+    TODO();
 }
 
 void HTMLDocumentParser::handle_in_body(HTMLToken& token)
@@ -602,13 +667,16 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
-    {
-        if (token.is_start_tag() && token.tag_name().is_one_of("b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) {
-            reconstruct_the_active_formatting_elements();
-            auto element = insert_html_element(token);
-            m_list_of_active_formatting_elements.append(*element);
-            return;
-        }
+    if (token.is_start_tag() && token.tag_name().is_one_of("b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) {
+        reconstruct_the_active_formatting_elements();
+        auto element = insert_html_element(token);
+        m_list_of_active_formatting_elements.add(*element);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u")) {
+        run_the_adoption_agency_algorithm(token);
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
@@ -744,6 +812,11 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
             }
         }
         return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "style") {
+        current_node().children_changed();
+        // NOTE: We don't return here, keep going.
     }
 
     if (token.is_end_tag()) {

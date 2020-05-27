@@ -52,6 +52,23 @@ bool StackOfOpenElements::has_in_scope(const FlyString& tag_name) const
     return has_in_scope_impl(tag_name, s_base_list);
 }
 
+bool StackOfOpenElements::has_in_scope_impl(const Element& target_node, const Vector<FlyString>& list) const
+{
+    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
+        auto& node = m_elements.at(i);
+        if (&node == &target_node)
+            return true;
+        if (list.contains_slow(node.tag_name()))
+            return false;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+bool StackOfOpenElements::has_in_scope(const Element& target_node) const
+{
+    return has_in_scope_impl(target_node, s_base_list);
+}
+
 bool StackOfOpenElements::has_in_button_scope(const FlyString& tag_name) const
 {
     auto list = s_base_list;

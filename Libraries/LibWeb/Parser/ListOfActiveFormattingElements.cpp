@@ -24,41 +24,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/NonnullRefPtrVector.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Parser/ListOfActiveFormattingElements.h>
 
 namespace Web {
 
-class StackOfOpenElements {
-public:
-    StackOfOpenElements() { }
-    ~StackOfOpenElements();
+ListOfActiveFormattingElements::~ListOfActiveFormattingElements()
+{
+}
 
-    bool is_empty() const { return m_elements.is_empty(); }
-    void push(NonnullRefPtr<Element> element) { m_elements.append(move(element)); }
-    NonnullRefPtr<Element> pop() { return m_elements.take_last(); }
+void ListOfActiveFormattingElements::add(Element& element)
+{
+    m_entries.append({ element });
+}
 
-    const Element& current_node() const { return m_elements.last(); }
-    Element& current_node() { return m_elements.last(); }
+void ListOfActiveFormattingElements::add_marker()
+{
+    m_entries.append({ nullptr });
+}
 
-    bool has_in_scope(const FlyString& tag_name) const;
-    bool has_in_button_scope(const FlyString& tag_name) const;
-    bool has_in_table_scope(const FlyString& tag_name) const;
+bool ListOfActiveFormattingElements::contains(const Element& element) const
+{
+    for (auto& entry : m_entries) {
+        if (entry.element == &element)
+            return true;
+    }
+    return false;
+}
 
-    bool has_in_scope(const Element&) const;
+Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_marker(const FlyString& tag_name)
+{
+    for (ssize_t i = m_entries.size() - 1; i >= 0; --i) {
+        auto& entry = m_entries[i];
+        if (entry.is_marker())
+            return nullptr;
+        if (entry.element->tag_name() == tag_name)
+            return entry.element;
+    }
+    return nullptr;
+}
 
-    bool contains(const Element&) const;
-
-    const NonnullRefPtrVector<Element>& elements() const { return m_elements; }
-
-private:
-    bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
-    bool has_in_scope_impl(const Element& target_node, const Vector<FlyString>&) const;
-
-    NonnullRefPtrVector<Element> m_elements;
-};
+void ListOfActiveFormattingElements::remove(Element& element)
+{
+    m_entries.remove_first_matching([&](auto& entry) {
+        return entry.element == &element;
+    });
+}
 
 }
