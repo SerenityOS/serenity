@@ -807,6 +807,31 @@ _StartOfFunction:
 
             BEGIN_STATE(AfterAttributeName)
             {
+                ON_WHITESPACE
+                {
+                    continue;
+                }
+                ON('/')
+                {
+                    SWITCH_TO(SelfClosingStartTag);
+                }
+                ON('=')
+                {
+                    SWITCH_TO(BeforeAttributeValue);
+                }
+                ON('>')
+                {
+                    SWITCH_TO(Data);
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    m_current_token.m_tag.attributes.append(HTMLToken::AttributeBuilder());
+                    RECONSUME_IN(AttributeName);
+                }
             }
             END_STATE
 
