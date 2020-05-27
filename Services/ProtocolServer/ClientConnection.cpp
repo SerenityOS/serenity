@@ -26,8 +26,8 @@
 
 #include <AK/Badge.h>
 #include <AK/SharedBuffer.h>
-#include <ProtocolServer/Download.h>
 #include <ProtocolServer/ClientConnection.h>
+#include <ProtocolServer/Download.h>
 #include <ProtocolServer/Protocol.h>
 #include <ProtocolServer/ProtocolClientEndpoint.h>
 
@@ -78,6 +78,7 @@ OwnPtr<Messages::ProtocolServer::StopDownloadResponse> ClientConnection::handle(
     bool success = false;
     if (download) {
         download->stop();
+        m_downloads.remove(message.download_id());
         success = true;
     }
     return make<Messages::ProtocolServer::StopDownloadResponse>(success);
