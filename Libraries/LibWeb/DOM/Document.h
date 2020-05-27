@@ -133,6 +133,9 @@ public:
     HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }
     NonnullRefPtr<HTMLScriptElement> take_pending_parsing_blocking_script(Badge<HTMLDocumentParser>);
 
+    bool in_quirks_mode() const { return m_quirks_mode; }
+    void set_quirks_mode(bool mode) { m_quirks_mode = mode; }
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
@@ -158,6 +161,8 @@ private:
     OwnPtr<JS::Interpreter> m_interpreter;
 
     RefPtr<HTMLScriptElement> m_pending_parsing_blocking_script;
+
+    bool m_quirks_mode { false };
 };
 
 template<>
