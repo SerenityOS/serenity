@@ -20,6 +20,15 @@ add_custom_target(grub-image
     USES_TERMINAL
 )
 
+add_custom_target(lint-shell-scripts
+    COMMAND ${CMAKE_SOURCE_DIR}/Meta/lint-shell-scripts.sh
+    USES_TERMINAL
+)
+add_custom_target(check-style
+    COMMAND ${CMAKE_SOURCE_DIR}/Meta/check-style.sh
+    USES_TERMINAL
+)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++2a -fdiagnostics-color=always")
 
 include_directories(Libraries)
