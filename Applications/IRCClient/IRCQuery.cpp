@@ -27,7 +27,6 @@
 #include "IRCQuery.h"
 #include "IRCClient.h"
 #include <stdio.h>
-#include <time.h>
 
 IRCQuery::IRCQuery(IRCClient& client, const String& name)
     : m_client(client)

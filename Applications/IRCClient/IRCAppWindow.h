@@ -33,6 +33,7 @@
 
 class IRCAppWindow : public GUI::Window {
     C_OBJECT(IRCAppWindow);
+
 public:
     virtual ~IRCAppWindow() override;
 
