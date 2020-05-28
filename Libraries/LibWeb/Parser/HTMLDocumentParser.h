@@ -94,6 +94,8 @@ private:
     void handle_in_row(HTMLToken&);
     void handle_in_cell(HTMLToken&);
 
+    void stop_parsing() { m_stop_parsing = true; }
+
     void generate_implied_end_tags(const FlyString& exception = {});
     bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
     NonnullRefPtr<Element> create_element_for(HTMLToken&);
@@ -131,6 +133,7 @@ private:
     bool m_invoked_via_document_write { false };
     bool m_aborted { false };
     bool m_parser_pause_flag { false };
+    bool m_stop_parsing { false };
     size_t m_script_nesting_level { 0 };
 
     RefPtr<Document> m_document;
