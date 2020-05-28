@@ -94,4 +94,11 @@ bool StackOfOpenElements::contains(const Element& element) const
     return false;
 }
 
+void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(const FlyString& tag_name)
+{
+    while (m_elements.last().tag_name() != tag_name)
+        pop();
+    pop();
+}
+
 }
