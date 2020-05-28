@@ -39,9 +39,13 @@ public:
 private:
     void create_quick_launch_bar();
     void on_screen_rect_change(const Gfx::Rect&);
+    void update_buttons_size_policy();
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
 
     virtual void wm_event(GUI::WMEvent&) override;
 
+    GUI::SizePolicy m_size_policy;
+
     RefPtr<Gfx::Bitmap> m_default_icon;
+    RefPtr<GUI::Frame> m_quick_launch_bar;
 };

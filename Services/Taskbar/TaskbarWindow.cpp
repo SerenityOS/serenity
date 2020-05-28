@@ -40,6 +40,8 @@
 
 //#define EVENT_DEBUG
 
+static const int preferred_button_width = 140;
+
 class TaskbarWidget final : public GUI::Widget {
     C_OBJECT(TaskbarWidget);
 
@@ -58,7 +60,7 @@ private:
     }
 };
 
-TaskbarWindow::TaskbarWindow()
+TaskbarWindow::TaskbarWindow() : m_size_policy(GUI::SizePolicy::Fixed)
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
@@ -138,7 +140,34 @@ void TaskbarWindow::create_quick_launch_bar()
     }
 
     quick_launch_bar.set_preferred_size(total_width, 22);
+    m_quick_launch_bar = quick_launch_bar;
+    update_buttons_size_policy();
 }
+
+void TaskbarWindow::update_buttons_size_policy()
+{
+    int usable_width = main_widget()->width();
+    int used_width = preferred_button_width * (main_widget()->children().size() - 1);
+    if (m_quick_launch_bar)
+        usable_width -= m_quick_launch_bar->width();
+
+    auto new_policy = m_size_policy;
+    if (used_width > usable_width) {
+        if (m_size_policy == GUI::SizePolicy::Fixed)
+            new_policy = GUI::SizePolicy::Fill;
+    } else if (m_size_policy == GUI::SizePolicy::Fill) {
+        new_policy = GUI::SizePolicy::Fixed;
+    }
+
+    if (new_policy != m_size_policy) {
+        main_widget()->for_each_child_of_type<GUI::AbstractButton>([&](auto& child) {
+            child.set_size_policy(new_policy, GUI::SizePolicy::Fixed);
+            return IterationDecision::Continue;
+        });
+        m_size_policy = new_policy;
+    }
+}
+
 
 void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
 {
@@ -149,10 +178,11 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
     auto& button = main_widget()->add<TaskbarButton>(identifier);
-    button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    button.set_preferred_size(140, 22);
+    button.set_size_policy(m_size_policy, GUI::SizePolicy::Fixed);
+    button.set_preferred_size(preferred_button_width, 22);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);
+    update_buttons_size_policy();
     return button;
 }
 
@@ -173,6 +203,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             removed_event.window_id());
 #endif
         WindowList::the().remove_window(identifier);
+        update_buttons_size_policy();
         update();
         break;
     }
@@ -228,6 +259,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             window.button()->set_foreground_color(Color::Black);
             window.button()->set_text(changed_event.title());
         }
+        window.button()->set_tooltip(changed_event.title());
         window.button()->set_checked(changed_event.is_active());
         break;
     }
