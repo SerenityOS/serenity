@@ -59,6 +59,8 @@ int main(int argc, char** argv)
                     flags |= MS_NOSUID;
                 else if (part == "ro")
                     flags |= MS_RDONLY;
+                else if (part == "remount")
+                    flags |= MS_REMOUNT;
                 else if (part == "bind")
                     fprintf(stderr, "Ignoring -o bind, as it doesn't make sense for chroot\n");
                 else

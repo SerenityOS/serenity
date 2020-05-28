@@ -66,6 +66,7 @@ public:
         String absolute_path() const;
 
         int flags() const { return m_flags; }
+        void set_flags(int flags) { m_flags = flags; }
 
     private:
         InodeIdentifier m_host;
@@ -83,6 +84,7 @@ public:
     bool mount_root(FS&);
     KResult mount(FS&, Custody& mount_point, int flags);
     KResult bind_mount(Custody& source, Custody& mount_point, int flags);
+    KResult remount(Custody& mount_point, int new_flags);
     KResult unmount(InodeIdentifier guest_inode_id);
 
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
