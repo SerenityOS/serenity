@@ -1105,9 +1105,9 @@ NonnullRefPtr<ContinueStatement> Parser::parse_continue_statement()
 NonnullRefPtr<ConditionalExpression> Parser::parse_conditional_expression(NonnullRefPtr<Expression> test)
 {
     consume(TokenType::QuestionMark);
-    auto consequent = parse_expression(0);
+    auto consequent = parse_expression(2);
     consume(TokenType::Colon);
-    auto alternate = parse_expression(0);
+    auto alternate = parse_expression(2);
     return create_ast_node<ConditionalExpression>(move(test), move(consequent), move(alternate));
 }
 
