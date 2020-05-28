@@ -76,6 +76,7 @@ public:
     static void wake();
 
 private:
+    bool start_rpc_server();
     void wait_for_event(WaitMode);
     Optional<struct timeval> get_next_timer_expiration();
 
