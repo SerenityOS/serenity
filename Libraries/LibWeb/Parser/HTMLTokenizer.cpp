@@ -1614,11 +1614,212 @@ _StartOfFunction:
                 }
                 ON('!')
                 {
-                    TODO();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('!'));
+                    SWITCH_TO(ScriptDataEscapeStart);
                 }
                 ANYTHING_ELSE
                 {
                     EMIT_CHARACTER_AND_RECONSUME_IN('<', ScriptData);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEscapeStart)
+            {
+                ON('-')
+                {
+                    m_queued_tokens.enqueue(HTMLToken::make_character('-'));
+                    SWITCH_TO(ScriptDataEscapeStartDash);
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(ScriptData);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEscapeStartDash)
+            {
+                ON('-')
+                {
+                    m_queued_tokens.enqueue(HTMLToken::make_character('-'));
+                    SWITCH_TO(ScriptDataEscapedDashDash);
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(ScriptData);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEscapedDashDash)
+            {
+                ON('-')
+                {
+                    EMIT_CHARACTER('-');
+                }
+                ON('<')
+                {
+                    SWITCH_TO(ScriptDataEscapedLessThanSign);
+                }
+                ON('>')
+                {
+                    m_queued_tokens.enqueue(HTMLToken::make_character('>'));
+                    SWITCH_TO(ScriptData);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(ScriptDataEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEscapedLessThanSign)
+            {
+                ON('/')
+                {
+                    m_temporary_buffer.clear();
+                    SWITCH_TO(ScriptDataEscapedEndTagOpen);
+                }
+                ON_ASCII_ALPHA
+                {
+                    m_temporary_buffer.clear();
+                    EMIT_CHARACTER_AND_RECONSUME_IN('<', ScriptDataDoubleEscapeStart);
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CHARACTER_AND_RECONSUME_IN('<', ScriptDataEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEscapedEndTagOpen)
+            {
+                ON_ASCII_ALPHA
+                {
+                    create_new_token(HTMLToken::Type::EndTag);
+                    RECONSUME_IN(ScriptDataEscapedEndTagName);
+                }
+                ANYTHING_ELSE
+                {
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    RECONSUME_IN(ScriptDataEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEscapedEndTagName)
+            {
+                ON_WHITESPACE
+                {
+                    if (current_end_tag_token_is_appropriate()) {
+                        SWITCH_TO(BeforeAttributeName);
+                    } else {
+                        TODO();
+                    }
+                }
+                ON('/')
+                {
+                    if (current_end_tag_token_is_appropriate()) {
+                        SWITCH_TO(SelfClosingStartTag);
+                    } else {
+                        TODO();
+                    }
+                }
+                ON('>')
+                {
+                    if (current_end_tag_token_is_appropriate()) {
+                        SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
+                    } else {
+                        TODO();
+                    }
+                }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_temporary_buffer.append(current_input_character.value());
+                    continue;
+                }
+                ON_ASCII_LOWER_ALPHA
+                {
+                    m_current_token.m_tag.tag_name.append(current_input_character.value());
+                    m_temporary_buffer.append(current_input_character.value());
+                    continue;
+                }
+                ANYTHING_ELSE
+                {
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer) {
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                    }
+                    RECONSUME_IN(ScriptDataEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataDoubleEscapeStart)
+            {
+                TODO();
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEscapedDash)
+            {
+                ON('-')
+                {
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(ScriptDataEscapedDashDash);
+                }
+                ON('<')
+                {
+                    SWITCH_TO(ScriptDataEscapedLessThanSign);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(ScriptDataEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataEscaped)
+            {
+                ON('-')
+                {
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(ScriptDataEscapedDash);
+                }
+                ON('<')
+                {
+                    SWITCH_TO(ScriptDataEscapedLessThanSign);
+                }
+                ON(0)
+                {
+                    TODO();
+                }
+                ON_EOF
+                {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CURRENT_CHARACTER;
                 }
             }
             END_STATE
