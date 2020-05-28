@@ -1112,17 +1112,29 @@ NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()
 NonnullRefPtr<BreakStatement> Parser::parse_break_statement()
 {
     consume(TokenType::Break);
+    FlyString target_label;
+    if (match(TokenType::Semicolon)) {
+        consume();
+        return create_ast_node<BreakStatement>(target_label);
+    }
+    if (match_identifier_name() && !m_parser_state.m_current_token.trivia().contains('\n'))
+        target_label = consume().value();
     consume_or_insert_semicolon();
-    // FIXME: Handle labels. When fixing this, take care to correctly implement semicolon insertion
-    return create_ast_node<BreakStatement>();
+    return create_ast_node<BreakStatement>(target_label);
 }
 
 NonnullRefPtr<ContinueStatement> Parser::parse_continue_statement()
 {
     consume(TokenType::Continue);
+    FlyString target_label;
+    if (match(TokenType::Semicolon)) {
+        consume();
+        return create_ast_node<ContinueStatement>(target_label);
+    }
+    if (match_identifier_name() && !m_parser_state.m_current_token.trivia().contains('\n'))
+        target_label = consume().value();
     consume_or_insert_semicolon();
-    // FIXME: Handle labels. When fixing this, take care to correctly implement semicolon insertion
-    return create_ast_node<ContinueStatement>();
+    return create_ast_node<ContinueStatement>(target_label);
 }
 
 NonnullRefPtr<ConditionalExpression> Parser::parse_conditional_expression(NonnullRefPtr<Expression> test)

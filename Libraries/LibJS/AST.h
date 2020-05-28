@@ -1048,22 +1048,36 @@ private:
 
 class BreakStatement final : public Statement {
 public:
-    BreakStatement() { }
+    BreakStatement(FlyString target_label)
+        : m_target_label(target_label)
+    {
+    }
 
     virtual Value execute(Interpreter&) const override;
 
+    const FlyString& target_label() const { return m_target_label; }
+
 private:
     virtual const char* class_name() const override { return "BreakStatement"; }
+
+    FlyString m_target_label;
 };
 
 class ContinueStatement final : public Statement {
 public:
-    ContinueStatement() { }
+    ContinueStatement(FlyString target_label)
+        : m_target_label(target_label)
+    {
+    }
 
     virtual Value execute(Interpreter&) const override;
 
+    const FlyString& target_label() const { return m_target_label; }
+
 private:
     virtual const char* class_name() const override { return "ContinueStatement"; }
+
+    FlyString m_target_label;
 };
 
 class DebuggerStatement final : public Statement {
