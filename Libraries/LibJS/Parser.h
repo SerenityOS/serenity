@@ -78,6 +78,7 @@ public:
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
+    RefPtr<Statement> try_parse_labelled_statement();
 
     struct Error {
         String message;
