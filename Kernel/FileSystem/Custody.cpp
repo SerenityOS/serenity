@@ -59,4 +59,12 @@ String Custody::absolute_path() const
     return builder.to_string();
 }
 
+bool Custody::is_readonly() const
+{
+    if (m_mount_flags & MS_RDONLY)
+        return true;
+
+    return m_inode->fs().is_readonly();
+}
+
 }

@@ -52,6 +52,7 @@
 #define MS_NOEXEC (1 << 1)
 #define MS_NOSUID (1 << 2)
 #define MS_BIND (1 << 3)
+#define MS_RDONLY (1 << 4)
 
 #define PERF_EVENT_MALLOC 1
 #define PERF_EVENT_FREE 2

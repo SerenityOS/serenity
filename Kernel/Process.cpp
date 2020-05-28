@@ -318,6 +318,9 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
         return false;
 
     if (map_shared) {
+        // FIXME: What about readonly filesystem mounts? We cannot make a
+        // decision here without knowing the mount flags, so we would need to
+        // keep a Custody or something from mmap time.
         if ((prot & PROT_WRITE) && !metadata.may_write(process))
             return false;
         InterruptDisabler disabler;
