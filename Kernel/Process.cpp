@@ -4088,7 +4088,7 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
     auto target = validate_and_copy_string_from_user(params.target);
     auto fs_type = validate_and_copy_string_from_user(params.fs_type);
 
-    if (target.is_null() || fs_type.is_null())
+    if (target.is_null())
         return -EFAULT;
 
     auto description = file_description(source_fd);
@@ -4103,8 +4103,6 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 
     auto& target_custody = custody_or_error.value();
 
-    RefPtr<FS> fs;
-
     if (params.flags & MS_BIND) {
         // We're doing a bind mount.
         if (description.is_null())
@@ -4115,6 +4113,8 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
         }
         return VFS::the().bind_mount(*description->custody(), target_custody, params.flags);
     }
+
+    RefPtr<FS> fs;
 
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
         if (description.is_null())

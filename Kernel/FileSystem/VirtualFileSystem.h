@@ -132,8 +132,7 @@ private:
     Lock m_lock { "VFSLock" };
 
     RefPtr<Inode> m_root_inode;
-    Vector<Mount> m_mounts;
-
+    Vector<Mount, 16> m_mounts;
     RefPtr<Custody> m_root_custody;
 };
 
