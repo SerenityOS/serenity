@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Layout/LayoutBox.h>
 

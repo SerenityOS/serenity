@@ -24,14 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #pragma once
 
 #include "DNSAnswer.h"
 #include "DNSQuestion.h"
+#include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <AK/Optional.h>
 
 class DNSResponse {
 public:
@@ -69,7 +68,7 @@ public:
     Code code() const { return (Code)m_code; }
 
 private:
-    DNSResponse() {}
+    DNSResponse() { }
 
     u16 m_id { 0 };
     u8 m_code { 0 };

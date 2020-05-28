@@ -1,3 +1,5 @@
+#pragma once
+
 /* puff.h
   Copyright (C) 2002-2013 Mark Adler, all rights reserved
   version 2.3, 21 Jan 2013

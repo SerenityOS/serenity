@@ -27,7 +27,7 @@
 //
 // A Disk Device Connected to a PATA Channel
 //
-//
+
 #pragma once
 
 #include <Kernel/Devices/BlockDevice.h>

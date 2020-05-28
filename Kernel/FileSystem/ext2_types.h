@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
 /* 
  * If linux/types.h is already been included, assume it has defined
  * everything we need.  (cross fingers)  Other header files may have 

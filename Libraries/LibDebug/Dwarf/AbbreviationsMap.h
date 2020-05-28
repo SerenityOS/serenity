@@ -25,12 +25,14 @@
  */
 
 #pragma once
+
 #include "DwarfTypes.h"
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/Types.h>
 
 namespace Dwarf {
+
 class DwarfInfo;
 
 class AbbreviationsMap {

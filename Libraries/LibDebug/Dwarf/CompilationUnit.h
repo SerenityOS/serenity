@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include "AbbreviationsMap.h"
 #include <AK/Types.h>
 

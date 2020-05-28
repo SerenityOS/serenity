@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include <AK/Forward.h>
 #include <AK/String.h>
 #include <AK/Utf32View.h>

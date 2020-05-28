@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
 #include <AK/ByteBuffer.h>
 #include <AK/Optional.h>
 #include <AK/String.h>

@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
 #include <AK/String.h>
@@ -45,7 +46,7 @@ public:
     {
     }
 
-    UnsignedBigInteger() {}
+    UnsignedBigInteger() { }
 
     static UnsignedBigInteger create_invalid();
 
