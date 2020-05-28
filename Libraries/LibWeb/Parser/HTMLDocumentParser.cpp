@@ -472,11 +472,7 @@ void HTMLDocumentParser::close_a_p_element()
     if (current_node().tag_name() != "p") {
         PARSE_ERROR();
     }
-    for (;;) {
-        auto popped_element = m_stack_of_open_elements.pop();
-        if (popped_element->tag_name() == "p")
-            break;
-    }
+    m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped("p");
 }
 
 void HTMLDocumentParser::handle_after_body(HTMLToken& token)
@@ -729,7 +725,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             PARSE_ERROR();
         }
 
-        m_stack_of_open_elements.pop();
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
         return;
     }
 
@@ -946,9 +942,7 @@ void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
             PARSE_ERROR();
         }
 
-        while (current_node().tag_name() != token.tag_name())
-            m_stack_of_open_elements.pop();
-        m_stack_of_open_elements.pop();
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name())
 
         m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
 
@@ -1043,9 +1037,8 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
             PARSE_ERROR();
             return;
         }
-        while (current_node().tag_name() != "table")
-            m_stack_of_open_elements.pop();
-        m_stack_of_open_elements.pop();
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped("table");
 
         reset_the_insertion_mode_appropriately();
         return;

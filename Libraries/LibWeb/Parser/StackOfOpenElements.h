@@ -57,6 +57,8 @@ public:
 
     const NonnullRefPtrVector<Element>& elements() const { return m_elements; }
 
+    void pop_until_an_element_with_tag_name_has_been_popped(const FlyString&);
+
 private:
     bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
     bool has_in_scope_impl(const Element& target_node, const Vector<FlyString>&) const;
