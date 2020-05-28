@@ -25,9 +25,13 @@ function bar() {
 }
 
 function foo() {
+    label:
     for (var i = 0; i < 4; i++) {
         break // semicolon inserted here
         continue // semicolon inserted here
+
+        break label // semicolon inserted here
+        continue label // semicolon inserted here
     }
 
     var j // semicolon inserted here
@@ -39,8 +43,25 @@ function foo() {
     1;
 var curly/* semicolon inserted here */}
 
+function baz() {
+    let counter = 0;
+    let outer;
+
+    outer:
+    for (let i = 0; i < 5; ++i) {
+        for (let j = 0; j < 5; ++j) {
+            continue // semicolon inserted here
+            outer // semicolon inserted here
+        }
+        counter++;
+    }
+
+    return counter;
+}
+
 try {
     assert(foo() === undefined);
+    assert(baz() === 5);
 
     console.log("PASS");
 } catch (e) {

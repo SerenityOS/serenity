@@ -91,9 +91,18 @@ public:
 
     Heap& heap() { return m_heap; }
 
-    void unwind(ScopeType type) { m_unwind_until = type; }
+    void unwind(ScopeType type, FlyString label = {})
+    {
+        m_unwind_until = type;
+        m_unwind_until_label = label;
+    }
     void stop_unwind() { m_unwind_until = ScopeType::None; }
-    bool should_unwind_until(ScopeType type) const { return m_unwind_until == type; }
+    bool should_unwind_until(ScopeType type, FlyString label) const
+    {
+        if (m_unwind_until_label.is_null())
+            return m_unwind_until == type;
+        return m_unwind_until == type && m_unwind_until_label == label;
+    }
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 
     Value get_variable(const FlyString& name);
@@ -189,6 +198,7 @@ private:
     Exception* m_exception { nullptr };
 
     ScopeType m_unwind_until { ScopeType::None };
+    FlyString m_unwind_until_label;
 
     Console m_console;
 };

@@ -269,9 +269,11 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         consume();
         return create_ast_node<EmptyStatement>();
     default:
-        auto result = try_parse_labelled_statement();
-        if (!result.is_null())
-            return result.release_nonnull();
+        if (match(TokenType::Identifier)) {
+            auto result = try_parse_labelled_statement();
+            if (!result.is_null())
+                return result.release_nonnull();
+        }
         if (match_expression()) {
             auto expr = parse_expression(0);
             consume_or_insert_semicolon();
@@ -1117,7 +1119,7 @@ NonnullRefPtr<BreakStatement> Parser::parse_break_statement()
         consume();
         return create_ast_node<BreakStatement>(target_label);
     }
-    if (match_identifier_name() && !m_parser_state.m_current_token.trivia().contains('\n'))
+    if (match(TokenType::Identifier) && !m_parser_state.m_current_token.trivia().contains('\n'))
         target_label = consume().value();
     consume_or_insert_semicolon();
     return create_ast_node<BreakStatement>(target_label);
@@ -1131,7 +1133,7 @@ NonnullRefPtr<ContinueStatement> Parser::parse_continue_statement()
         consume();
         return create_ast_node<ContinueStatement>(target_label);
     }
-    if (match_identifier_name() && !m_parser_state.m_current_token.trivia().contains('\n'))
+    if (match(TokenType::Identifier) && !m_parser_state.m_current_token.trivia().contains('\n'))
         target_label = consume().value();
     consume_or_insert_semicolon();
     return create_ast_node<ContinueStatement>(target_label);
