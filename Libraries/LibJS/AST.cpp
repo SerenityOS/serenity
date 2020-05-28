@@ -282,9 +282,9 @@ Value ForStatement::execute(Interpreter& interpreter) const
             if (interpreter.exception())
                 return {};
             if (interpreter.should_unwind()) {
-                if (interpreter.should_unwind_until(ScopeType::Continuable)) {
+                if (interpreter.should_unwind_until(ScopeType::Continuable, m_label)) {
                     interpreter.stop_unwind();
-                } else if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                } else if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
                     interpreter.stop_unwind();
                     break;
                 } else {
@@ -303,9 +303,9 @@ Value ForStatement::execute(Interpreter& interpreter) const
             if (interpreter.exception())
                 return {};
             if (interpreter.should_unwind()) {
-                if (interpreter.should_unwind_until(ScopeType::Continuable)) {
+                if (interpreter.should_unwind_until(ScopeType::Continuable, m_label)) {
                     interpreter.stop_unwind();
-                } else if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                } else if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
                     interpreter.stop_unwind();
                     break;
                 } else {
@@ -370,9 +370,9 @@ Value ForInStatement::execute(Interpreter& interpreter) const
             if (interpreter.exception())
                 return {};
             if (interpreter.should_unwind()) {
-                if (interpreter.should_unwind_until(ScopeType::Continuable)) {
+                if (interpreter.should_unwind_until(ScopeType::Continuable, m_label)) {
                     interpreter.stop_unwind();
-                } else if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                } else if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
                     interpreter.stop_unwind();
                     break;
                 } else {
@@ -437,9 +437,9 @@ Value ForOfStatement::execute(Interpreter& interpreter) const
         if (interpreter.exception())
             return {};
         if (interpreter.should_unwind()) {
-            if (interpreter.should_unwind_until(ScopeType::Continuable)) {
+            if (interpreter.should_unwind_until(ScopeType::Continuable, m_label)) {
                 interpreter.stop_unwind();
-            } else if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+            } else if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
                 interpreter.stop_unwind();
                 break;
             } else {
@@ -1635,7 +1635,7 @@ Value SwitchStatement::execute(Interpreter& interpreter) const
             if (interpreter.exception())
                 return {};
             if (interpreter.should_unwind()) {
-                if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
                     interpreter.stop_unwind();
                     return {};
                 }
@@ -1655,13 +1655,13 @@ Value SwitchCase::execute(Interpreter& interpreter) const
 
 Value BreakStatement::execute(Interpreter& interpreter) const
 {
-    interpreter.unwind(ScopeType::Breakable);
+    interpreter.unwind(ScopeType::Breakable, m_target_label);
     return js_undefined();
 }
 
 Value ContinueStatement::execute(Interpreter& interpreter) const
 {
-    interpreter.unwind(ScopeType::Continuable);
+    interpreter.unwind(ScopeType::Continuable, m_target_label);
     return js_undefined();
 }
 
