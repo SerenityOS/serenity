@@ -76,6 +76,11 @@ void HTMLDocumentParser::run(const URL& url)
         dbg() << "[" << insertion_mode_name() << "] " << token.to_string();
 #endif
         process_using_the_rules_for(m_insertion_mode, token);
+
+        if (m_stop_parsing) {
+            dbg() << "Stop parsing! :^)";
+            break;
+        }
     }
 
     // "The end"
@@ -497,8 +502,8 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
     }
 
     if (token.is_end_of_file()) {
-        // FIXME: Stop parsing!
-        TODO();
+        stop_parsing();
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name() == "html") {
@@ -522,7 +527,7 @@ void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
     }
 
     if (token.is_end_of_file()) {
-        dbg() << "Stop parsing! :^)";
+        stop_parsing();
         return;
     }
     ASSERT_NOT_REACHED();
