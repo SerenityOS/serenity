@@ -20,7 +20,7 @@ If invoked as `mount -a`, `mount` mounts all the filesystems configured in
 [`SystemServer`(7)](../man7/SystemServer.md).
 
 Otherwise, `mount` performs a single filesystem mount. Source should be a path
-to a file containing the filesystem image. Target, and fstype have the same
+to a file containing the filesystem image. Target and fstype have the same
 meaning as in the [`mount`(2)](../man2/mount.md) syscall (if not specified,
 fstype defaults to `ext2`).
 
