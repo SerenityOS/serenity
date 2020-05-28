@@ -1,10 +1,12 @@
 # Root file system. This is a fake entry which gets ignored by `mount -a`;
 # the actual logic for mounting root is in the kernel.
-/dev/hda	/	ext2	nodev,nosuid
-# Remount /bin and /dev while adding the appropriate permissions.
-/dev	/dev	bind	bind,nosuid
-/bin	/bin	bind	bind,nodev
+/dev/hda	/	ext2	nodev,nosuid,ro
+# Remount /bin, /dev, /root, and /home while adding the appropriate permissions.
+/dev	/dev	bind	bind,nosuid,ro
+/bin	/bin	bind	bind,nodev,ro
+/home	/home	bind	bind,nodev,nosuid
+/root	/root	bind	bind,nodev,nosuid
 
 none	/proc	proc	nosuid
-none	/dev/pts	devpts	noexec,nosuid
+none	/dev/pts	devpts	noexec,nosuid,ro
 none	/tmp	tmp	nodev,nosuid
