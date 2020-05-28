@@ -91,6 +91,20 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
     return KSuccess;
 }
 
+KResult VFS::remount(Custody& mount_point, int new_flags)
+{
+    LOCKER(m_lock);
+
+    dbg() << "VFS: Remounting " << mount_point.absolute_path();
+
+    Mount* mount = find_mount_for_guest(mount_point.inode().identifier());
+    if (!mount)
+        return KResult(-ENODEV);
+
+    mount->set_flags(new_flags);
+    return KSuccess;
+}
+
 KResult VFS::unmount(InodeIdentifier guest_inode_id)
 {
     LOCKER(m_lock);
