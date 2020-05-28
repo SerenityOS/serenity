@@ -31,6 +31,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Cell.h>
 #include <LibJS/Runtime/IndexedProperties.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Shape.h>
@@ -106,6 +107,8 @@ public:
     const IndexedProperties& indexed_properties() const { return m_indexed_properties; }
     IndexedProperties& indexed_properties() { return m_indexed_properties; }
     void set_indexed_property_elements(Vector<Value>&& values) { m_indexed_properties = IndexedProperties(move(values)); }
+
+    Value invoke(const FlyString& property_name, Optional<MarkedValueList> arguments = {}) const;
 
 private:
     virtual Value get_by_index(u32 property_index) const;
