@@ -70,6 +70,8 @@ InodeIdentifier VFS::root_inode_id() const
 
 KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
 {
+    LOCKER(m_lock);
+
     auto& inode = mount_point.inode();
     dbg() << "VFS: Mounting " << file_system.class_name() << " at " << mount_point.absolute_path() << " (inode: " << inode.identifier() << ") with flags " << flags;
     // FIXME: check that this is not already a mount point
@@ -80,6 +82,8 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
 
 KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
+    LOCKER(m_lock);
+
     dbg() << "VFS: Bind-mounting " << source.absolute_path() << " at " << mount_point.absolute_path();
     // FIXME: check that this is not already a mount point
     Mount mount { source.inode(), mount_point, flags };
