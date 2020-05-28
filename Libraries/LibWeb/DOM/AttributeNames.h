@@ -36,6 +36,7 @@ void initialize();
 
 extern FlyString id;
 extern FlyString class_;
+extern FlyString type;
 
 }
 }

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
@@ -102,6 +103,16 @@ public:
     {
         if (is_self_closing())
             m_tag.self_closing_acknowledged = true;
+    }
+
+    StringView attribute(const FlyString& attribute_name)
+    {
+        ASSERT(is_start_tag() || is_end_tag());
+        for (auto& attribute : m_tag.attributes) {
+            if (attribute_name == attribute.name_builder.string_view())
+                return attribute.value_builder.string_view();
+        }
+        return {};
     }
 
     Type type() const { return m_type; }

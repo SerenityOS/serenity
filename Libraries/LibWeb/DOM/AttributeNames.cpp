@@ -32,6 +32,7 @@ namespace AttributeNames {
 
 FlyString id;
 FlyString class_;
+FlyString type;
 
 void initialize()
 {
@@ -40,6 +41,7 @@ void initialize()
         return;
     id = "id";
     class_ = "class";
+    type = "type";
     s_initialized = true;
 }
 
