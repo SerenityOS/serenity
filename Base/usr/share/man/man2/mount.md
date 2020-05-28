@@ -24,7 +24,7 @@ over `target`.
 
 For Ext2FS, `source_fd` must refer to an open file descriptor to a file containing
 the filesystem image. This may be a device file or any other seekable file. All
-the other filesystems ignore the `source_fd` — you can even pass an invalid file
+the other filesystems ignore the `source_fd` - you can even pass an invalid file
 descriptor such as -1.
 
 The following `flags` are supported:
@@ -33,6 +33,7 @@ The following `flags` are supported:
 * `MS_NOEXEC`: Disallow executing any executables from this file system.
 * `MS_NOSUID`: Ignore set-user-id bits on executables from this file system.
 * `MS_BIND`: Perform a bind-mount (see below).
+* `MS_RDONLY`: Mount the filesystem read-only.
 
 These flags can be used as a security measure to limit the possible abuses of the newly
 mounted file system.
