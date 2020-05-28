@@ -215,7 +215,6 @@ void InterruptManagement::locate_apic_data()
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
             dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ " << PhysicalAddress(ioapic_entry->ioapic_address);
             m_interrupt_controllers.resize(1 + irq_controller_count);
-            // FIXME: Casting ioapic_entry->ioapic_address below looks suspicious!
             m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base));
             irq_controller_count++;
         }
