@@ -44,6 +44,7 @@ private:
     virtual const char* class_name() const override { return "ObjectPrototype"; }
 
     static Value has_own_property(Interpreter&);
+    static Value to_locale_string(Interpreter&);
     static Value value_of(Interpreter&);
 };
 
