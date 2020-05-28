@@ -50,6 +50,8 @@ int parse_options(const StringView& options)
             flags |= MS_NOSUID;
         else if (part == "bind")
             flags |= MS_BIND;
+        else if (part == "ro")
+            flags |= MS_RDONLY;
         else
             fprintf(stderr, "Ignoring invalid option: %s\n", part.to_string().characters());
     }
@@ -157,7 +159,7 @@ bool print_mounts()
 
         printf("%s on %s type %s (", source.characters(), mount_point.characters(), class_name.characters());
 
-        if (readonly)
+        if (readonly || mount_flags & MS_RDONLY)
             printf("ro");
         else
             printf("rw");
