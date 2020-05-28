@@ -54,6 +54,7 @@ public:
     String absolute_path() const;
 
     int mount_flags() const { return m_mount_flags; }
+    bool is_readonly() const;
 
 private:
     Custody(Custody* parent, const StringView& name, Inode&, int mount_flags);
