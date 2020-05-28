@@ -51,7 +51,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Origin.h>
@@ -368,7 +368,7 @@ Color Document::link_color() const
         return m_link_color.value();
     if (!frame())
         return Color::Blue;
-    return frame()->html_view()->palette().link();
+    return frame()->page_view()->palette().link();
 }
 
 Color Document::active_link_color() const
@@ -377,7 +377,7 @@ Color Document::active_link_color() const
         return m_active_link_color.value();
     if (!frame())
         return Color::Red;
-    return frame()->html_view()->palette().active_link();
+    return frame()->page_view()->palette().active_link();
 }
 
 Color Document::visited_link_color() const
@@ -386,7 +386,7 @@ Color Document::visited_link_color() const
         return m_visited_link_color.value();
     if (!frame())
         return Color::Magenta;
-    return frame()->html_view()->palette().visited_link();
+    return frame()->page_view()->palette().visited_link();
 }
 
 JS::Interpreter& Document::interpreter()

@@ -90,7 +90,7 @@ private:
     RefPtr<GUI::Action> m_js_highlight;
     RefPtr<GUI::Action> m_ini_highlight;
 
-    RefPtr<Web::HtmlView> m_html_view;
+    RefPtr<Web::PageView> m_page_view;
 
     bool m_document_dirty { false };
     bool m_document_opening { false };

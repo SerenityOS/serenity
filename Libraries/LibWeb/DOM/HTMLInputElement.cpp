@@ -31,7 +31,7 @@
 #include <LibWeb/DOM/HTMLFormElement.h>
 #include <LibWeb/DOM/HTMLInputElement.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 
 namespace Web {
@@ -49,15 +49,15 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
 {
     ASSERT(document().frame());
     auto& frame = *document().frame();
-    ASSERT(frame.html_view());
-    auto& html_view = const_cast<HtmlView&>(*frame.html_view());
+    ASSERT(frame.page_view());
+    auto& page_view = const_cast<PageView&>(*frame.page_view());
 
     if (type() == "hidden")
         return nullptr;
 
     RefPtr<GUI::Widget> widget;
     if (type() == "submit") {
-        auto& button = html_view.add<GUI::Button>(value());
+        auto& button = page_view.add<GUI::Button>(value());
         int text_width = Gfx::Font::default_font().width(value());
         button.set_relative_rect(0, 0, text_width + 20, 20);
         button.on_click = [this](auto) {
@@ -68,7 +68,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         };
         widget = button;
     } else {
-        auto& text_box = html_view.add<GUI::TextBox>();
+        auto& text_box = page_view.add<GUI::TextBox>();
         text_box.set_text(value());
         text_box.on_change = [this] {
             auto& widget = to<LayoutWidget>(layout_node())->widget();

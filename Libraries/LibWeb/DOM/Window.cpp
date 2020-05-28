@@ -33,7 +33,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 
 namespace Web {
 
@@ -115,7 +115,7 @@ void Window::did_set_location_href(Badge<Bindings::LocationObject>, const String
     auto* frame = document().frame();
     if (!frame)
         return;
-    auto* view = frame->html_view();
+    auto* view = frame->page_view();
     if (!view)
         return;
     view->load(new_href);
@@ -126,7 +126,7 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     auto* frame = document().frame();
     if (!frame)
         return;
-    auto* view = frame->html_view();
+    auto* view = frame->page_view();
     if (!view)
         return;
     view->reload();

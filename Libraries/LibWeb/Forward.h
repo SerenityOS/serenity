@@ -44,7 +44,7 @@ class HTMLHeadElement;
 class HTMLHtmlElement;
 class HTMLImageElement;
 class HTMLScriptElement;
-class HtmlView;
+class PageView;
 class ImageData;
 class LayoutDocument;
 class LayoutNode;

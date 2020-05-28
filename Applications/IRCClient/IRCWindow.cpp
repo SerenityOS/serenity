@@ -39,7 +39,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 
 IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name)
     : m_client(client)
@@ -52,7 +52,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     // Make a container for the log buffer view + (optional) member list.
     auto& container = add<GUI::HorizontalSplitter>();
 
-    m_html_view = container.add<Web::HtmlView>();
+    m_page_view = container.add<Web::PageView>();
 
     if (m_type == Channel) {
         auto& member_view = container.add<GUI::TableView>();
@@ -215,7 +215,7 @@ IRCWindow::~IRCWindow()
 void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
 {
     m_log_buffer = &log_buffer;
-    m_html_view->set_document(const_cast<Web::Document*>(&log_buffer.document()));
+    m_page_view->set_document(const_cast<Web::Document*>(&log_buffer.document()));
 }
 
 bool IRCWindow::is_active() const
@@ -263,7 +263,7 @@ void IRCWindow::did_add_message(const String& name, const String& message)
         m_client.aid_update_window_list();
         return;
     }
-    m_html_view->scroll_to_bottom();
+    m_page_view->scroll_to_bottom();
 }
 
 void IRCWindow::clear_unread_count()

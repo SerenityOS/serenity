@@ -37,11 +37,11 @@
 namespace Web {
 
 class Document;
-class HtmlView;
+class PageView;
 
 class Frame : public TreeNode<Frame> {
 public:
-    static NonnullRefPtr<Frame> create(HtmlView& html_view) { return adopt(*new Frame(html_view)); }
+    static NonnullRefPtr<Frame> create(PageView& page_view) { return adopt(*new Frame(page_view)); }
     ~Frame();
 
     const Document* document() const { return m_document; }
@@ -49,8 +49,8 @@ public:
 
     void set_document(Document*);
 
-    HtmlView* html_view() { return m_html_view; }
-    const HtmlView* html_view() const { return m_html_view; }
+    PageView* page_view() { return m_page_view; }
+    const PageView* page_view() const { return m_page_view; }
 
     const Gfx::Size& size() const { return m_size; }
     void set_size(const Gfx::Size&);
@@ -62,9 +62,9 @@ public:
     Gfx::Rect viewport_rect() const { return m_viewport_rect; }
 
 private:
-    explicit Frame(HtmlView&);
+    explicit Frame(PageView&);
 
-    WeakPtr<HtmlView> m_html_view;
+    WeakPtr<PageView> m_page_view;
     RefPtr<Document> m_document;
     Gfx::Size m_size;
     Gfx::Rect m_viewport_rect;

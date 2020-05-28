@@ -44,7 +44,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
@@ -57,7 +57,7 @@
 
 namespace Web {
 
-HtmlView::HtmlView()
+PageView::PageView()
     : m_main_frame(Web::Frame::create(*this))
 {
     main_frame().on_set_needs_display = [this](auto& content_rect) {
@@ -74,11 +74,11 @@ HtmlView::HtmlView()
     set_background_role(ColorRole::Base);
 }
 
-HtmlView::~HtmlView()
+PageView::~PageView()
 {
 }
 
-void HtmlView::set_document(Document* new_document)
+void PageView::set_document(Document* new_document)
 {
     RefPtr<Document> old_document = document();
 
@@ -111,7 +111,7 @@ void HtmlView::set_document(Document* new_document)
     update();
 }
 
-void HtmlView::layout_and_sync_size()
+void PageView::layout_and_sync_size()
 {
     if (!document())
         return;
@@ -139,13 +139,13 @@ void HtmlView::layout_and_sync_size()
 #endif
 }
 
-void HtmlView::resize_event(GUI::ResizeEvent& event)
+void PageView::resize_event(GUI::ResizeEvent& event)
 {
     GUI::ScrollableWidget::resize_event(event);
     layout_and_sync_size();
 }
 
-void HtmlView::paint_event(GUI::PaintEvent& event)
+void PageView::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
 
@@ -173,7 +173,7 @@ void HtmlView::paint_event(GUI::PaintEvent& event)
     layout_root()->render(context);
 }
 
-void HtmlView::mousemove_event(GUI::MouseEvent& event)
+void PageView::mousemove_event(GUI::MouseEvent& event)
 {
     if (!layout_root())
         return GUI::ScrollableWidget::mousemove_event(event);
@@ -191,7 +191,7 @@ void HtmlView::mousemove_event(GUI::MouseEvent& event)
             hovered_link_element = node->enclosing_link_element();
             if (hovered_link_element) {
 #ifdef HTML_DEBUG
-                dbg() << "HtmlView: hovering over a link to " << hovered_link_element->href();
+                dbg() << "PageView: hovering over a link to " << hovered_link_element->href();
 #endif
                 is_hovering_link = true;
             }
@@ -224,7 +224,7 @@ void HtmlView::mousemove_event(GUI::MouseEvent& event)
     event.accept();
 }
 
-void HtmlView::mousedown_event(GUI::MouseEvent& event)
+void PageView::mousedown_event(GUI::MouseEvent& event)
 {
     if (!layout_root())
         return GUI::ScrollableWidget::mousemove_event(event);
@@ -239,7 +239,7 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
             auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
             node->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
             if (RefPtr<HTMLAnchorElement> link = node->enclosing_link_element()) {
-                dbg() << "HtmlView: clicking on a link to " << link->href();
+                dbg() << "PageView: clicking on a link to " << link->href();
 
                 if (event.button() == GUI::MouseButton::Left) {
                     if (link->href().starts_with("javascript:")) {
@@ -270,7 +270,7 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
     event.accept();
 }
 
-void HtmlView::mouseup_event(GUI::MouseEvent& event)
+void PageView::mouseup_event(GUI::MouseEvent& event)
 {
     if (!layout_root())
         return GUI::ScrollableWidget::mouseup_event(event);
@@ -289,7 +289,7 @@ void HtmlView::mouseup_event(GUI::MouseEvent& event)
     }
 }
 
-void HtmlView::keydown_event(GUI::KeyEvent& event)
+void PageView::keydown_event(GUI::KeyEvent& event)
 {
     if (event.modifiers() == 0) {
         switch (event.key()) {
@@ -325,7 +325,7 @@ void HtmlView::keydown_event(GUI::KeyEvent& event)
     event.accept();
 }
 
-void HtmlView::reload()
+void PageView::reload()
 {
     load(main_frame().document()->url());
 }
@@ -432,7 +432,7 @@ static String guess_mime_type_based_on_filename(const URL& url)
     return "text/plain";
 }
 
-RefPtr<Document> HtmlView::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
+RefPtr<Document> PageView::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
 {
     if (mime_type.starts_with("image/"))
         return create_image_document(data, url);
@@ -453,9 +453,9 @@ RefPtr<Document> HtmlView::create_document_from_mime_type(const ByteBuffer& data
     return nullptr;
 }
 
-void HtmlView::load(const URL& url)
+void PageView::load(const URL& url)
 {
-    dbg() << "HtmlView::load: " << url;
+    dbg() << "PageView::load: " << url;
 
     if (!url.is_valid()) {
         load_error_page(url, "Invalid URL");
@@ -537,7 +537,7 @@ void HtmlView::load(const URL& url)
     this->scroll_to_top();
 }
 
-void HtmlView::load_error_page(const URL& failed_url, const String& error)
+void PageView::load_error_page(const URL& failed_url, const String& error)
 {
     auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(
@@ -560,19 +560,19 @@ void HtmlView::load_error_page(const URL& failed_url, const String& error)
         });
 }
 
-const LayoutDocument* HtmlView::layout_root() const
+const LayoutDocument* PageView::layout_root() const
 {
     return document() ? document()->layout_node() : nullptr;
 }
 
-LayoutDocument* HtmlView::layout_root()
+LayoutDocument* PageView::layout_root()
 {
     if (!document())
         return nullptr;
     return const_cast<LayoutDocument*>(document()->layout_node());
 }
 
-void HtmlView::scroll_to_anchor(const StringView& name)
+void PageView::scroll_to_anchor(const StringView& name)
 {
     if (!document())
         return;
@@ -589,11 +589,11 @@ void HtmlView::scroll_to_anchor(const StringView& name)
     }
 
     if (!element) {
-        dbg() << "HtmlView::scroll_to_anchor(): Anchor not found: '" << name << "'";
+        dbg() << "PageView::scroll_to_anchor(): Anchor not found: '" << name << "'";
         return;
     }
     if (!element->layout_node()) {
-        dbg() << "HtmlView::scroll_to_anchor(): Anchor found but without layout node: '" << name << "'";
+        dbg() << "PageView::scroll_to_anchor(): Anchor found but without layout node: '" << name << "'";
         return;
     }
     auto& layout_node = *element->layout_node();
@@ -602,17 +602,17 @@ void HtmlView::scroll_to_anchor(const StringView& name)
     window()->set_override_cursor(GUI::StandardCursor::None);
 }
 
-Document* HtmlView::document()
+Document* PageView::document()
 {
     return main_frame().document();
 }
 
-const Document* HtmlView::document() const
+const Document* PageView::document() const
 {
     return main_frame().document();
 }
 
-void HtmlView::dump_selection(const char* event_name)
+void PageView::dump_selection(const char* event_name)
 {
     UNUSED_PARAM(event_name);
 #ifdef SELECTION_DEBUG
@@ -622,12 +622,12 @@ void HtmlView::dump_selection(const char* event_name)
 #endif
 }
 
-void HtmlView::did_scroll()
+void PageView::did_scroll()
 {
     main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
 }
 
-Gfx::Point HtmlView::compute_mouse_event_offset(const Gfx::Point& event_position, const LayoutNode& layout_node) const
+Gfx::Point PageView::compute_mouse_event_offset(const Gfx::Point& event_position, const LayoutNode& layout_node) const
 {
     auto content_event_position = to_content_position(event_position);
     auto top_left_of_layout_node = layout_node.box_type_agnostic_position();
@@ -638,7 +638,7 @@ Gfx::Point HtmlView::compute_mouse_event_offset(const Gfx::Point& event_position
     };
 }
 
-void HtmlView::run_javascript_url(const String& url)
+void PageView::run_javascript_url(const String& url)
 {
     ASSERT(url.starts_with("javascript:"));
     if (!document())
@@ -649,7 +649,7 @@ void HtmlView::run_javascript_url(const String& url)
     document()->run_javascript(source);
 }
 
-void HtmlView::drop_event(GUI::DropEvent& event)
+void PageView::drop_event(GUI::DropEvent& event)
 {
     if (event.mime_data().has_urls()) {
         if (on_url_drop) {

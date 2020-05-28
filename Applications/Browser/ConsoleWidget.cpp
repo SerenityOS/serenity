@@ -56,7 +56,7 @@ ConsoleWidget::ConsoleWidget()
     html_element->append_child(body_element);
     m_output_container = body_element;
 
-    m_output_view = add<Web::HtmlView>();
+    m_output_view = add<Web::PageView>();
     m_output_view->set_document(base_document);
 
     m_input = add<GUI::TextBox>();
