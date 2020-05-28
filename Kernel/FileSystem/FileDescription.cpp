@@ -330,13 +330,13 @@ void FileDescription::set_file_flags(u32 flags)
 KResult FileDescription::chmod(mode_t mode)
 {
     LOCKER(m_lock);
-    return m_file->chmod(mode);
+    return m_file->chmod(*this, mode);
 }
 
 KResult FileDescription::chown(uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
-    return m_file->chown(uid, gid);
+    return m_file->chown(*this, uid, gid);
 }
 
 }
