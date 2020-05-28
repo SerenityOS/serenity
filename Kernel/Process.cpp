@@ -4104,14 +4104,16 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
         // We're doing a bind mount.
         if (description.is_null())
             return -EBADF;
-        ASSERT(description->custody());
+        if (!description->custody()) {
+            // We only support bind-mounting inodes, not arbitrary files.
+            return -ENODEV;
+        }
         return VFS::the().bind_mount(*description->custody(), target_custody, params.flags);
     }
 
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
         if (description.is_null())
             return -EBADF;
-        ASSERT(description->custody());
         if (!description->file().is_seekable()) {
             dbg() << "mount: this is not a seekable file";
             return -ENODEV;
