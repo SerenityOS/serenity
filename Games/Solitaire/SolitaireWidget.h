@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include "CardStack.h"
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>

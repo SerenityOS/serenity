@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <LibCore/StandardPaths.h>

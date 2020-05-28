@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include <AK/BufferStream.h>
 #include <AK/Vector.h>
 

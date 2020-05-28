@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include "Debugger.h"
 #include <AK/NonnullOwnPtr.h>
 #include <LibGUI/Model.h>
