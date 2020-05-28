@@ -151,11 +151,11 @@ bool print_mounts()
         auto fs_object = value.as_object();
         auto class_name = fs_object.get("class_name").to_string();
         auto mount_point = fs_object.get("mount_point").to_string();
-        auto device = fs_object.get("device").as_string_or(class_name);
+        auto source = fs_object.get("source").as_string_or("none");
         auto readonly = fs_object.get("readonly").to_bool();
         auto mount_flags = fs_object.get("mount_flags").to_int();
 
-        printf("%s on %s type %s (", device.characters(), mount_point.characters(), class_name.characters());
+        printf("%s on %s type %s (", source.characters(), mount_point.characters(), class_name.characters());
 
         if (readonly)
             printf("ro");
