@@ -233,20 +233,10 @@ EventLoop::EventLoop()
         ASSERT(rc == 0);
         s_event_loop_stack->append(this);
 
-        auto rpc_path = String::format("/tmp/rpc.%d", getpid());
-        rc = unlink(rpc_path.characters());
-        if (rc < 0 && errno != ENOENT) {
-            perror("unlink");
-            ASSERT_NOT_REACHED();
+        if (!s_rpc_server) {
+            if (!start_rpc_server())
+                dbg() << "Core::EventLoop: Failed to start an RPC server";
         }
-        s_rpc_server = LocalServer::construct();
-        s_rpc_server->set_name("Core::EventLoop_RPC_server");
-        bool listening = s_rpc_server->listen(rpc_path);
-        ASSERT(listening);
-
-        s_rpc_server->on_ready_to_accept = [&] {
-            RPCClient::construct(s_rpc_server->accept());
-        };
     }
 
 #ifdef CEVENTLOOP_DEBUG
@@ -256,6 +246,22 @@ EventLoop::EventLoop()
 
 EventLoop::~EventLoop()
 {
+}
+
+bool EventLoop::start_rpc_server()
+{
+    auto rpc_path = String::format("/tmp/rpc.%d", getpid());
+    int rc = unlink(rpc_path.characters());
+    if (rc < 0 && errno != ENOENT) {
+        perror("unlink");
+        return false;
+    }
+    s_rpc_server = LocalServer::construct();
+    s_rpc_server->set_name("Core::EventLoop_RPC_server");
+    s_rpc_server->on_ready_to_accept = [&] {
+        RPCClient::construct(s_rpc_server->accept());
+    };
+    return s_rpc_server->listen(rpc_path);
 }
 
 EventLoop& EventLoop::main()

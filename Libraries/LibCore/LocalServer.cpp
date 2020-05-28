@@ -123,13 +123,13 @@ bool LocalServer::listen(const String& address)
     rc = ::bind(m_fd, (const sockaddr*)&un, sizeof(un));
     if (rc < 0) {
         perror("bind");
-        ASSERT_NOT_REACHED();
+        return false;
     }
 
     rc = ::listen(m_fd, 5);
     if (rc < 0) {
         perror("listen");
-        ASSERT_NOT_REACHED();
+        return false;
     }
 
     m_listening = true;
