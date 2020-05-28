@@ -72,8 +72,11 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
     m_last_value = js_undefined();
     for (auto& node : block.children()) {
         m_last_value = node.execute(*this);
-        if (m_unwind_until != ScopeType::None)
+        if (should_unwind()) {
+            if (should_unwind_until(ScopeType::Breakable, block.label()))
+                stop_unwind();
             break;
+        }
     }
 
     bool did_return = m_unwind_until == ScopeType::Function;
