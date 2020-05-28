@@ -97,14 +97,8 @@ public:
     void set_prototype(Object*);
     bool has_prototype(const Object* prototype) const;
 
-    enum class PreferredType {
-        Default,
-        String,
-        Number,
-    };
-
     virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
-    virtual Value to_primitive(PreferredType preferred_type = PreferredType::Default) const;
+    virtual Value to_primitive(Value::PreferredType preferred_type = Value::PreferredType::Default) const;
     virtual Value to_string() const;
 
     Value get_direct(size_t index) const { return m_storage[index]; }

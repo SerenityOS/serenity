@@ -29,6 +29,7 @@
 #include <AK/Assertions.h>
 #include <AK/Forward.h>
 #include <AK/LogStream.h>
+#include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Symbol.h>
 
@@ -51,6 +52,12 @@ public:
         Accessor,
     };
 
+    enum class PreferredType {
+        Default,
+        String,
+        Number,
+    };
+
     bool is_empty() const { return m_type == Type::Empty; }
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_null() const { return m_type == Type::Null; }
@@ -66,6 +73,8 @@ public:
 
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
+    bool is_positive_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) > 0; }
+    bool is_negative_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) < 0; }
     bool is_positive_zero() const { return is_number() && 1.0 / as_double() == __builtin_huge_val(); }
     bool is_negative_zero() const { return is_number() && 1.0 / as_double() == -__builtin_huge_val(); }
     bool is_integer() const { return is_finite_number() && (i32)as_double() == as_double(); }
@@ -201,7 +210,7 @@ public:
 
     String to_string(Interpreter&) const;
     PrimitiveString* to_primitive_string(Interpreter&);
-    Value to_primitive(Interpreter&) const;
+    Value to_primitive(Interpreter&, PreferredType preferred_type = PreferredType::Default) const;
     Object* to_object(Interpreter&) const;
     Value to_number(Interpreter&) const;
     double to_double(Interpreter&) const;
@@ -282,6 +291,7 @@ bool strict_eq(Interpreter&, Value lhs, Value rhs);
 bool same_value(Interpreter&, Value lhs, Value rhs);
 bool same_value_zero(Interpreter&, Value lhs, Value rhs);
 bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs);
+TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs, Value rhs);
 
 const LogStream& operator<<(const LogStream&, const Value&);
 
