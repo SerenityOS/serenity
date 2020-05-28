@@ -618,20 +618,20 @@ bool Object::has_own_property(PropertyName property_name) const
     return shape().lookup(property_name.as_string()).has_value();
 }
 
-Value Object::to_primitive(PreferredType preferred_type) const
+Value Object::to_primitive(Value::PreferredType preferred_type) const
 {
     Value result = js_undefined();
 
     switch (preferred_type) {
-    case PreferredType::Default:
-    case PreferredType::Number: {
+    case Value::PreferredType::Default:
+    case Value::PreferredType::Number: {
         result = value_of();
         if (result.is_object()) {
             result = to_string();
         }
         break;
     }
-    case PreferredType::String: {
+    case Value::PreferredType::String: {
         result = to_string();
         if (result.is_object())
             result = value_of();

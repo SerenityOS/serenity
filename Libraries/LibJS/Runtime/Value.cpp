@@ -27,6 +27,7 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -142,7 +143,7 @@ String Value::to_string(Interpreter& interpreter) const
     }
 
     if (is_object()) {
-        auto primitive_value = as_object().to_primitive(Object::PreferredType::String);
+        auto primitive_value = as_object().to_primitive(PreferredType::String);
         if (interpreter.exception())
             return {};
         return primitive_value.to_string(interpreter);
@@ -175,10 +176,10 @@ bool Value::to_boolean() const
     }
 }
 
-Value Value::to_primitive(Interpreter&) const
+Value Value::to_primitive(Interpreter&, PreferredType preferred_type) const
 {
     if (is_object())
-        return as_object().to_primitive();
+        return as_object().to_primitive(preferred_type);
     return *this;
 }
 
@@ -241,7 +242,7 @@ Value Value::to_number(Interpreter& interpreter) const
         interpreter.throw_exception<TypeError>("Can't convert symbol to number");
         return {};
     case Type::Object:
-        auto primitive = m_value.as_object->to_primitive(Object::PreferredType::Number);
+        auto primitive = m_value.as_object->to_primitive(PreferredType::Number);
         if (interpreter.exception())
             return {};
         return primitive.to_number(interpreter);
@@ -297,46 +298,34 @@ size_t Value::to_size_t(Interpreter& interpreter) const
 
 Value greater_than(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
-    if (interpreter.exception())
-        return {};
-    auto rhs_number = rhs.to_number(interpreter);
-    if (interpreter.exception())
-        return {};
-    return Value(lhs_number.as_double() > rhs_number.as_double());
+    TriState relation = abstract_relation(interpreter, false, lhs, rhs);
+    if (relation == TriState::Unknown)
+        return Value(false);
+    return Value(relation == TriState::True);
 }
 
 Value greater_than_equals(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
-    if (interpreter.exception())
-        return {};
-    auto rhs_number = rhs.to_number(interpreter);
-    if (interpreter.exception())
-        return {};
-    return Value(lhs_number.as_double() >= rhs_number.as_double());
+    TriState relation = abstract_relation(interpreter, true, lhs, rhs);
+    if (relation == TriState::Unknown || relation == TriState::True)
+        return Value(false);
+    return Value(true);
 }
 
 Value less_than(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
-    if (interpreter.exception())
-        return {};
-    auto rhs_number = rhs.to_number(interpreter);
-    if (interpreter.exception())
-        return {};
-    return Value(lhs_number.as_double() < rhs_number.as_double());
+    TriState relation = abstract_relation(interpreter, true, lhs, rhs);
+    if (relation == TriState::Unknown)
+        return Value(false);
+    return Value(relation == TriState::True);
 }
 
 Value less_than_equals(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
-    if (interpreter.exception())
-        return {};
-    auto rhs_number = rhs.to_number(interpreter);
-    if (interpreter.exception())
-        return {};
-    return Value(lhs_number.as_double() <= rhs_number.as_double());
+    TriState relation = abstract_relation(interpreter, false, lhs, rhs);
+    if (relation == TriState::Unknown || relation == TriState::True)
+        return Value(false);
+    return Value(true);
 }
 
 Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
@@ -671,6 +660,79 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
         return abstract_eq(interpreter, lhs.to_primitive(interpreter), rhs);
 
     return false;
+}
+
+TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs, Value rhs)
+{
+    Value x_primitive = {};
+    Value y_primitive = {};
+
+    if (left_first) {
+        x_primitive = lhs.to_primitive(interpreter, Value::PreferredType::Number);
+        if (interpreter.exception())
+            return {};
+        y_primitive = rhs.to_primitive(interpreter, Value::PreferredType::Number);
+        if (interpreter.exception())
+            return {};
+    } else {
+        y_primitive = lhs.to_primitive(interpreter, Value::PreferredType::Number);
+        if (interpreter.exception())
+            return {};
+        x_primitive = rhs.to_primitive(interpreter, Value::PreferredType::Number);
+        if (interpreter.exception())
+            return {};
+    }
+
+    if (x_primitive.is_string() && y_primitive.is_string()) {
+        auto x_string = x_primitive.as_string().string();
+        auto y_string = y_primitive.as_string().string();
+
+        if (x_string.starts_with(y_string))
+            return TriState::False;
+        if (y_string.starts_with(x_string))
+            return TriState::True;
+
+        Utf8View x_codepoints { x_string };
+        Utf8View y_codepoints { y_string };
+        for (auto k = x_codepoints.begin(), l = y_codepoints.begin();
+             k != x_codepoints.end() && l != y_codepoints.end();
+             ++k, ++l) {
+            if (*k != *l) {
+                if (*k < *l) {
+                    return TriState::True;
+                } else {
+                    return TriState::False;
+                }
+            }
+        }
+        ASSERT_NOT_REACHED();
+    }
+
+    // FIXME add BigInt cases here once we have BigInt
+
+    auto x_numeric = x_primitive.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto y_numeric = y_primitive.to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    if (x_numeric.is_nan() || y_numeric.is_nan())
+        return TriState::Unknown;
+
+    if (x_numeric.is_positive_infinity() || y_numeric.is_negative_infinity())
+        return TriState::False;
+
+    if (x_numeric.is_negative_infinity() || y_numeric.is_positive_infinity())
+        return TriState::True;
+
+    auto x_value = x_numeric.as_double();
+    auto y_value = y_numeric.as_double();
+
+    if (x_value < y_value)
+        return TriState::True;
+    else
+        return TriState::False;
 }
 
 }
