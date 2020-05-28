@@ -7,6 +7,7 @@ try {
         1: 23,
         foo,
         bar: "baz",
+        qux: true ? 10 : 20,
         "hello": "friends",
         [1 + 2]: 42,
         ["I am a " + computed + " key"]: foo,
@@ -17,6 +18,7 @@ try {
     assert(o["1"] === 23);
     assert(o.foo === "bar");
     assert(o["foo"] === "bar");
+    assert(o.qux === 10),
     assert(o.hello === "friends");
     assert(o["hello"] === "friends");
     assert(o[3] === 42);
