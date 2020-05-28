@@ -149,10 +149,10 @@ enum {
 #define X_OK 1
 #define F_OK 0
 
-#define MS_NODEV 1
-#define MS_NOEXEC 2
-#define MS_NOSUID 4
-#define MS_BIND 8
+#define MS_NODEV (1 << 0)
+#define MS_NOEXEC (1 << 1)
+#define MS_NOSUID (1 << 2)
+#define MS_BIND (1 << 3)
 
 /*
  * We aren't fully compliant (don't support policies, and don't have a wide
