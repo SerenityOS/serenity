@@ -96,7 +96,7 @@ public:
             if (line == 0 || column == 0)
                 return {};
             StringBuilder builder;
-            builder.append(source.split_view('\n')[line - 1]);
+            builder.append(source.split_view('\n', true)[line - 1]);
             builder.append('\n');
             for (size_t i = 0; i < column - 1; ++i)
                 builder.append(spacer);
