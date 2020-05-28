@@ -26,9 +26,8 @@
 
 #pragma once
 
-#include <stdlib.h>
-
 namespace Line {
+
 class Span {
 public:
     enum Mode {
@@ -52,4 +51,5 @@ private:
     size_t m_end { 0 };
     Mode m_mode { CodepointOriented };
 };
+
 }
