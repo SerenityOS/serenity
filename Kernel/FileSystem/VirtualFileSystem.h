@@ -118,9 +118,9 @@ public:
     KResult symlink(StringView target, StringView linkpath, Custody& base);
     KResult rmdir(StringView path, Custody& base);
     KResult chmod(StringView path, mode_t, Custody& base);
-    KResult chmod(Inode&, mode_t);
+    KResult chmod(Custody&, mode_t);
     KResult chown(StringView path, uid_t, gid_t, Custody& base);
-    KResult chown(Inode&, uid_t, gid_t);
+    KResult chown(Custody&, uid_t, gid_t);
     KResult access(StringView path, int mode, Custody& base);
     KResultOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);

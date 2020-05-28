@@ -393,8 +393,9 @@ KResultOr<NonnullRefPtr<Custody>> VFS::open_directory(StringView path, Custody& 
     return custody;
 }
 
-KResult VFS::chmod(Inode& inode, mode_t mode)
+KResult VFS::chmod(Custody& custody, mode_t mode)
 {
+    auto& inode = custody.inode();
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
 
@@ -412,8 +413,7 @@ KResult VFS::chmod(StringView path, mode_t mode, Custody& base)
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
-    auto& inode = custody.inode();
-    return chmod(inode, mode);
+    return chmod(custody, mode);
 }
 
 KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
@@ -479,8 +479,9 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     return KSuccess;
 }
 
-KResult VFS::chown(Inode& inode, uid_t a_uid, gid_t a_gid)
+KResult VFS::chown(Custody& custody, uid_t a_uid, gid_t a_gid)
 {
+    auto& inode = custody.inode();
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
 
@@ -521,8 +522,7 @@ KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
-    auto& inode = custody.inode();
-    return chown(inode, a_uid, a_gid);
+    return chown(custody, a_uid, a_gid);
 }
 
 KResult VFS::link(StringView old_path, StringView new_path, Custody& base)

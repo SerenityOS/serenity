@@ -100,13 +100,15 @@ KResult InodeFile::truncate(u64 size)
 KResult InodeFile::chown(FileDescription& description, uid_t uid, gid_t gid)
 {
     ASSERT(description.inode() == m_inode);
-    return VFS::the().chown(*m_inode, uid, gid);
+    ASSERT(description.custody());
+    return VFS::the().chown(*description.custody(), uid, gid);
 }
 
 KResult InodeFile::chmod(FileDescription& description, mode_t mode)
 {
     ASSERT(description.inode() == m_inode);
-    return VFS::the().chmod(*m_inode, mode);
+    ASSERT(description.custody());
+    return VFS::the().chmod(*description.custody(), mode);
 }
 
 }
