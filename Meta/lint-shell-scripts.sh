@@ -6,19 +6,19 @@ cd "$script_path/.."
 
 ERRORS=()
 
-for f in $(find . -path ./Root -prune -o \
-    -path ./Ports -prune -o \
-    -path ./.git -prune -o \
-    -path ./Toolchain -prune -o \
-    -type f | sort -u); do
+while IFS= read -r f; do
     if file "$f" | grep --quiet shell; then
         {
             shellcheck "$f" && echo -e "[\033[0;32mOK\033[0m]: sucessfully linted $f"
         } || {
             ERRORS+=("$f")
         }
-fi
-done
+    fi
+done < <(git ls-files -- \
+    '*.sh' \
+    ':!:Toolchain' \
+    ':!:Ports' \
+)
 
 if (( ${#ERRORS[@]} )); then
     echo "Files failing shellcheck: ${ERRORS[*]}"
