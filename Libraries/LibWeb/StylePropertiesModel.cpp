@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "StylePropertiesModel.h"
 #include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/DOM/Document.h>
 #include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/StylePropertiesModel.h>
 
 namespace Web {
 
@@ -35,10 +35,10 @@ StylePropertiesModel::StylePropertiesModel(const StyleProperties& properties)
     : m_properties(properties)
 {
     properties.for_each_property([&](auto property_id, auto& property_value) {
-	Value value;
-	value.name = CSS::string_from_property_id(property_id);
-	value.value = property_value.to_string();
-	m_values.append(value);
+        Value value;
+        value.name = CSS::string_from_property_id(property_id);
+        value.value = property_value.to_string();
+        m_values.append(value);
     });
 }
 
