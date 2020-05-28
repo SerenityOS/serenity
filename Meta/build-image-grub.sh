@@ -22,12 +22,12 @@ fi
 echo "using grub-install at ${grub}"
 
 echo "setting up disk image..."
-dd if=/dev/zero of=_disk_image bs=1M count="${DISK_SIZE:-800}" status=none || die "couldn't create disk image"
-chown "$SUDO_UID":"$SUDO_GID" _disk_image || die "couldn't adjust permissions on disk image"
+dd if=/dev/zero of=grub_disk_image bs=1M count="${DISK_SIZE:-800}" status=none || die "couldn't create disk image"
+chown "$SUDO_UID":"$SUDO_GID" grub_disk_image || die "couldn't adjust permissions on disk image"
 echo "done"
 
 printf "creating loopback device... "
-dev=$(losetup --find --partscan --show _disk_image)
+dev=$(losetup --find --partscan --show grub_disk_image)
 if [ -z "$dev" ]; then
     die "couldn't mount loopback device"
 fi
