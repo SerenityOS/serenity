@@ -153,6 +153,7 @@ enum {
 #define MS_NOEXEC (1 << 1)
 #define MS_NOSUID (1 << 2)
 #define MS_BIND (1 << 3)
+#define MS_RDONLY (1 << 4)
 
 /*
  * We aren't fully compliant (don't support policies, and don't have a wide
