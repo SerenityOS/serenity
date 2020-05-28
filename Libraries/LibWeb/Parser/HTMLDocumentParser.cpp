@@ -939,7 +939,7 @@ void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
             PARSE_ERROR();
         }
 
-        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name())
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
 
         m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
 
