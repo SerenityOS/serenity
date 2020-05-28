@@ -303,11 +303,13 @@ _StartOfFunction:
                 ON_ASCII_UPPER_ALPHA
                 {
                     m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    continue;
                 }
                 ON(0)
                 {
                     PARSE_ERROR();
                     m_current_token.m_tag.tag_name.append("\uFFFD");
+                    continue;
                 }
                 ON_EOF
                 {
@@ -338,6 +340,7 @@ _StartOfFunction:
                 {
                     PARSE_ERROR();
                     // FIXME: Emit a U+003C LESS-THAN SIGN character token, a U+002F SOLIDUS character token and an end-of-file token.
+                    continue;
                 }
                 ANYTHING_ELSE
                 {
