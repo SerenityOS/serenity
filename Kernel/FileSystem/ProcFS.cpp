@@ -749,7 +749,7 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         if (fs.is_file_backed())
             fs_object.add("source", static_cast<const FileBackedFS&>(fs).file_description().absolute_path());
         else
-            fs_object.add("source", fs.class_name());
+            fs_object.add("source", "none");
     });
     array.finish();
     return builder.build();
