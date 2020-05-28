@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibWeb/Parser/Entities.h>
 #include <LibWeb/Parser/HTMLToken.h>
 #include <LibWeb/Parser/HTMLTokenizer.h>
 #include <ctype.h>
@@ -1185,15 +1186,55 @@ _StartOfFunction:
 
             BEGIN_STATE(NamedCharacterReference)
             {
-                // FIXME:This is not the right way to implement this state!!
+                auto match = HTML::codepoints_from_entity(m_input.substring_view(m_cursor - 1, m_input.length() - m_cursor + 1));
+
+                if (match.has_value()) {
+                    m_cursor += match.value().entity.length();
+                    for (auto ch : match.value().entity)
+                        m_temporary_buffer.append(ch);
+
+                    if (consumed_as_part_of_an_attribute() && match.value().entity.ends_with(';')) {
+                        auto next_codepoint = peek_codepoint(0);
+                        if (next_codepoint.has_value() && next_codepoint.value() == '=') {
+                            FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
+                            SWITCH_TO_RETURN_STATE;
+                        }
+                    }
+
+                    if (!match.value().entity.ends_with(';')) {
+                        TODO();
+                    }
+
+                    m_temporary_buffer.clear();
+                    m_temporary_buffer.append(match.value().codepoints);
+
+                    FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
+                    SWITCH_TO_RETURN_STATE;
+                } else {
+                    FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
+                    SWITCH_TO(AmbiguousAmpersand);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(AmbiguousAmpersand)
+            {
+                ON_ASCII_ALPHANUMERIC
+                {
+                    if (consumed_as_part_of_an_attribute()) {
+                        m_current_token.m_tag.attributes.last().value_builder.append(current_input_character.value());
+                        continue;
+                    } else {
+                        EMIT_CURRENT_CHARACTER;
+                    }
+                }
                 ON(';')
                 {
-                    SWITCH_TO_RETURN_STATE;
+                    TODO();
                 }
                 ANYTHING_ELSE
                 {
-                    dbg() << "NamedCharacterReference: '" << (char)current_input_character.value() << "'";
-                    continue;
+                    RECONSUME_IN_RETURN_STATE;
                 }
             }
             END_STATE
