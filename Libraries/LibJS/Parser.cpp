@@ -893,8 +893,7 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
 {
     consume(TokenType::New);
 
-    // FIXME: Support full expressions as the callee as well.
-    auto callee = create_ast_node<Identifier>(consume(TokenType::Identifier).value());
+    auto callee = parse_expression(g_operator_precedence.get(TokenType::New).value(), Associativity::Right, { TokenType::ParenOpen });
 
     Vector<CallExpression::Argument> arguments;
 
