@@ -4103,6 +4103,11 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 
     auto& target_custody = custody_or_error.value();
 
+    if (params.flags & MS_REMOUNT) {
+        // We're not creating a new mount, we're updating an existing one!
+        return VFS::the().remount(target_custody, params.flags & ~MS_REMOUNT);
+    }
+
     if (params.flags & MS_BIND) {
         // We're doing a bind mount.
         if (description.is_null())

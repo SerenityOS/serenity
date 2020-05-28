@@ -52,6 +52,8 @@ int parse_options(const StringView& options)
             flags |= MS_BIND;
         else if (part == "ro")
             flags |= MS_RDONLY;
+        else if (part == "remount")
+            flags |= MS_REMOUNT;
         else
             fprintf(stderr, "Ignoring invalid option: %s\n", part.to_string().characters());
     }

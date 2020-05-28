@@ -154,6 +154,7 @@ enum {
 #define MS_NOSUID (1 << 2)
 #define MS_BIND (1 << 3)
 #define MS_RDONLY (1 << 4)
+#define MS_REMOUNT (1 << 5)
 
 /*
  * We aren't fully compliant (don't support policies, and don't have a wide

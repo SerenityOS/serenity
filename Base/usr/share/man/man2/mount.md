@@ -34,6 +34,7 @@ The following `flags` are supported:
 * `MS_NOSUID`: Ignore set-user-id bits on executables from this file system.
 * `MS_BIND`: Perform a bind-mount (see below).
 * `MS_RDONLY`: Mount the filesystem read-only.
+* `MS_REMOUNT`: Remount an already mounted filesystem (see below).
 
 These flags can be used as a security measure to limit the possible abuses of the newly
 mounted file system.
@@ -44,6 +45,36 @@ If `MS_BIND` is specified in `flags`, `fs_type` is ignored and a bind mount is
 performed instead. In this case, the file or directory specified by `source_fd`
 is overlayed over `target` — the target appears to be replaced by a copy of the
 source. This can be used as an alternative to symlinks or hardlinks.
+
+Each bind mount has its own set of flags, independent of the others or the
+original file system. It is possible to bind-mount a file or directory over
+itself, which may be useful for changing mount flags for a part of a filesystem.
+
+### Remounting
+
+If `MS_REMOUNT` is specified in `flags`, `source_fd` and `fs_type` are ignored,
+and a remount is performed instead. `target` must point to an existing mount
+point. The mount flags for that mount point are reset to `flags` (except the
+`MS_REMOUNT` flag itself, which is stripped from the value).
+
+Note that remounting a file system will only affect future operations with the
+file system, not any already opened files. For example, if you open a directory
+on a filesystem that's mounted with `MS_NODEV`, then remount the filesystem to
+allow opening devices, attempts to open a devices relative to the directory file
+descriptor (such as by using `openat()`) will still fail.
+
+In particular, current working directory and root directory of any already
+running processes behave the same way, and don't automatically "pick up" changes
+in mount flags of the underlying file system. To "refresh" the working directory
+to use the new mount flags after remounting a filesystem, a process can call
+`chdir()` with the path to the same directory.
+
+Similarly, to change the mount flags used by the root directory, a process can
+call [`chroot_with_mount_flags`(2)](chroot.md), specifying a single slash (`/`)
+as the path along with the desired flags. While is's possible to remount the
+root filesystem using `MS_REMOUNT`, it would only have a noticeable effect if
+the kernel was to launch more userspace processes directly, the way it does
+launch the initial userspace process.
 
 ## Errors
 
