@@ -31,6 +31,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
+#include <LibJS/AST.h>
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Heap.h>
@@ -122,6 +123,8 @@ public:
 
     const LexicalEnvironment* current_environment() const { return m_call_stack.last().environment; }
     LexicalEnvironment* current_environment() { return m_call_stack.last().environment; }
+
+    bool in_strict_mode() const { return m_scope_stack.last().scope_node->in_strict_mode(); }
 
     size_t argument_count() const
     {

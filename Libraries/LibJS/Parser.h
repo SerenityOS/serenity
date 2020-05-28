@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include "AST.h"
-#include "Lexer.h"
 #include <AK/NonnullRefPtr.h>
 #include <AK/StringBuilder.h>
+#include <LibJS/AST.h>
+#include <LibJS/Lexer.h>
 #include <stdio.h>
 
 namespace JS {
@@ -134,12 +134,20 @@ private:
     void save_state();
     void load_state();
 
+    enum class UseStrictDirectiveState {
+        None,
+        Looking,
+        Found,
+    };
+
     struct ParserState {
         Lexer m_lexer;
         Token m_current_token;
         Vector<Error> m_errors;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_var_scopes;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
+        UseStrictDirectiveState m_use_strict_directive { UseStrictDirectiveState::None };
+        bool m_strict_mode { false };
 
         explicit ParserState(Lexer);
     };

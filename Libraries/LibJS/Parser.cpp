@@ -206,9 +206,20 @@ NonnullRefPtr<Program> Parser::parse_program()
 {
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let);
     auto program = adopt(*new Program);
+
+    bool first = true;
+    m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Looking;
     while (!done()) {
         if (match_statement()) {
             program->append(parse_statement());
+            if (first) {
+                if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Found) {
+                    program->set_strict_mode();
+                    m_parser_state.m_strict_mode = true;
+                }
+                first = false;
+                m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
+            }
         } else {
             expected("statement");
             consume();
@@ -594,6 +605,15 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token)
             m_parser_state.m_current_token.line_number(),
             m_parser_state.m_current_token.line_column());
     }
+
+    if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Looking) {
+        if (string == "use strict" && token.type() != TokenType::TemplateLiteralString) {
+            m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Found;
+        } else {
+            m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
+        }
+    }
+
     return create_ast_node<StringLiteral>(string);
 }
 
@@ -910,16 +930,37 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
     ScopePusher scope(*this, ScopePusher::Let);
     auto block = create_ast_node<BlockStatement>();
     consume(TokenType::CurlyOpen);
+
+    bool first = true;
+    bool initial_strict_mode_state = m_parser_state.m_strict_mode;
+    if (initial_strict_mode_state) {
+        m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
+        block->set_strict_mode();
+    } else {
+        m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Looking;
+    }
+
     while (!done() && !match(TokenType::CurlyClose)) {
         if (match(TokenType::Semicolon)) {
             consume();
         } else if (match_statement()) {
             block->append(parse_statement());
+
+            if (first && !initial_strict_mode_state) {
+                if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Found) {
+                    block->set_strict_mode();
+                    m_parser_state.m_strict_mode = true;
+                }
+                m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
+            }
         } else {
             expected("statement");
             consume();
         }
+
+        first = false;
     }
+    m_parser_state.m_strict_mode = initial_strict_mode_state;
     consume(TokenType::CurlyClose);
     block->add_variables(m_parser_state.m_let_scopes.last());
     return block;

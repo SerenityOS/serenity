@@ -60,6 +60,31 @@ try {
     assert(foo === undefined);
     assert(bar === undefined);
 
+    (() => {
+        "use strict";
+        assert(isStrictMode());
+
+        (() => {
+            assert(isStrictMode());
+        })();
+    })();
+
+    (() => {
+        'use strict';
+        assert(isStrictMode());
+    })();
+
+    (() => {
+        assert(!isStrictMode());
+
+        (() => {
+            "use strict";
+            assert(isStrictMode());
+        })();
+
+        assert(!isStrictMode());
+    })();
+
     console.log("PASS");
 } catch {
     console.log("FAIL");
