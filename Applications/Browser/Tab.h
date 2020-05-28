@@ -60,7 +60,7 @@ private:
     void update_bookmark_button(const String& url);
 
     History<URL> m_history;
-    RefPtr<Web::HtmlView> m_html_widget;
+    RefPtr<Web::PageView> m_page_view;
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
     RefPtr<GUI::Action> m_reload_action;

@@ -31,7 +31,7 @@
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/ResourceLoader.h>
 
 namespace Web {
@@ -170,7 +170,7 @@ Color IdentifierStyleValue::to_color(const Document& document) const
     if (id() == CSS::ValueID::VendorSpecificLink)
         return document.link_color();
 
-    auto palette = document.frame()->html_view()->palette();
+    auto palette = document.frame()->page_view()->palette();
     switch (id()) {
     case CSS::ValueID::VendorSpecificPaletteDesktopBackground:
         return palette.color(ColorRole::DesktopBackground);

@@ -40,7 +40,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Parser/HTMLParser.h>
 
 // #define EDITOR_DEBUG
@@ -50,7 +50,7 @@ Editor::Editor()
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_documentation_html_view = m_documentation_tooltip_window->set_main_widget<Web::HtmlView>();
+    m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::PageView>();
 }
 
 Editor::~Editor()
@@ -194,7 +194,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
     ASSERT(head_element);
     head_element->append_child(style_element);
 
-    m_documentation_html_view->set_document(html_document);
+    m_documentation_page_view->set_document(html_document);
     m_documentation_tooltip_window->move_to(screen_location.translated(4, 4));
     m_documentation_tooltip_window->show();
 

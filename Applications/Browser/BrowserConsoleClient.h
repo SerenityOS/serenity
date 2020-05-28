@@ -28,7 +28,7 @@
 #include <LibGUI/Widget.h>
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 
 namespace Browser {
 

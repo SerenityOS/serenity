@@ -42,7 +42,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Parser/CSSParser.h>
 #include <LibWeb/Parser/HTMLParser.h>
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     tree_view.set_preferred_size(200, 500);
 
-    auto& html_view = splitter.add<Web::HtmlView>();
+    auto& page_view = splitter.add<Web::PageView>();
 
     History history;
 
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 
     auto open_page = [&](const String& path) {
         if (path.is_null()) {
-            html_view.set_document(nullptr);
+            page_view.set_document(nullptr);
             return;
         }
 
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 
         String html = md_document.render_to_html();
         auto html_document = Web::parse_html_document(html);
-        html_view.set_document(html_document);
+        page_view.set_document(html_document);
 
         String page_and_section = model->page_and_section(tree_view.selection().first());
         window->set_title(String::format("%s - Help", page_and_section.characters()));
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
     tree_view.on_selection_change = [&] {
         String path = model->page_path(tree_view.selection().first());
         if (path.is_null()) {
-            html_view.set_document(nullptr);
+            page_view.set_document(nullptr);
             return;
         }
         history.push(path);
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
         open_page(path);
     };
 
-    html_view.on_link_click = [&](const String& href, auto&, unsigned) {
+    page_view.on_link_click = [&](const String& href, auto&, unsigned) {
         char* current_path = strdup(history.current().characters());
         char* dir_path = dirname(current_path);
         char* path = realpath(String::format("%s/%s", dir_path, href.characters()).characters(), nullptr);

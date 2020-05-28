@@ -51,7 +51,7 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGfx/Font.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Parser/HTMLParser.h>
 #include <string.h>
 
@@ -87,8 +87,8 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    m_html_view = splitter.add<Web::HtmlView>();
-    m_html_view->set_visible(false);
+    m_page_view = splitter.add<Web::PageView>();
+    m_page_view->set_visible(false);
 
     m_find_replace_widget = add<GUI::Widget>();
     m_find_replace_widget->set_fill_with_background_color(true);
@@ -553,7 +553,7 @@ void TextEditorWidget::set_markdown_preview_enabled(bool enabled)
         return;
     m_markdown_preview_enabled = enabled;
     m_markdown_preview_action->set_checked(enabled);
-    m_html_view->set_visible(enabled);
+    m_page_view->set_visible(enabled);
     if (enabled)
         update_markdown_preview();
 }
@@ -564,6 +564,6 @@ void TextEditorWidget::update_markdown_preview()
     if (document.parse(m_editor->text())) {
         auto html = document.render_to_html();
         auto html_document = Web::parse_html_document(html, URL::create_with_file_protocol(m_path));
-        m_html_view->set_document(html_document);
+        m_page_view->set_document(html_document);
     }
 }

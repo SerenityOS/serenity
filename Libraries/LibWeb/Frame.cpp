@@ -26,13 +26,13 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/HtmlView.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 
 namespace Web {
 
-Frame::Frame(HtmlView& html_view)
-    : m_html_view(html_view.make_weak_ptr())
+Frame::Frame(PageView& page_view)
+    : m_page_view(page_view.make_weak_ptr())
 {
 }
 

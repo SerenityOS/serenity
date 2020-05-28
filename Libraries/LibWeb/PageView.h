@@ -33,10 +33,10 @@ namespace Web {
 
 class Frame;
 
-class HtmlView : public GUI::ScrollableWidget {
-    C_OBJECT(HtmlView)
+class PageView : public GUI::ScrollableWidget {
+    C_OBJECT(PageView)
 public:
-    virtual ~HtmlView() override;
+    virtual ~PageView() override;
 
     // FIXME: Remove this once the new parser is ready.
     void set_use_new_parser(bool use_new_parser) { m_use_new_parser = use_new_parser; }
@@ -73,7 +73,7 @@ public:
     virtual bool accepts_focus() const override { return true; }
 
 protected:
-    HtmlView();
+    PageView();
 
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;

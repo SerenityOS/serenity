@@ -57,13 +57,12 @@ set(SOURCES
     DOM/Node.cpp
     DOM/ParentNode.cpp
     DOM/Text.cpp
-    DOMTreeModel.cpp
     DOM/Window.cpp
     DOM/XMLHttpRequest.cpp
+    DOMTreeModel.cpp
     Dump.cpp
     FontCache.cpp
     Frame.cpp
-    HtmlView.cpp
     Layout/BoxModelMetrics.cpp
     Layout/LayoutBlock.cpp
     Layout/LayoutBox.cpp
@@ -76,14 +75,15 @@ set(SOURCES
     Layout/LayoutListItemMarker.cpp
     Layout/LayoutNode.cpp
     Layout/LayoutReplaced.cpp
-    Layout/LayoutTableCell.cpp
     Layout/LayoutTable.cpp
+    Layout/LayoutTableCell.cpp
     Layout/LayoutTableRow.cpp
     Layout/LayoutText.cpp
     Layout/LayoutTreeBuilder.cpp
     Layout/LayoutWidget.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
+    PageView.cpp
     Parser/CSSParser.cpp
     Parser/Entities.cpp
     Parser/HTMLDocumentParser.cpp
