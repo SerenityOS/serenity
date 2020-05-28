@@ -41,7 +41,6 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 static IRCAppWindow* s_the;
 
