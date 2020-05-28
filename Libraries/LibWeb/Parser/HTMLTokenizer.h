@@ -118,7 +118,7 @@ namespace Web {
 
 class HTMLTokenizer {
 public:
-    explicit HTMLTokenizer(const StringView& input);
+    explicit HTMLTokenizer(const StringView& input, const String& encoding);
 
     enum class State {
 #define __ENUMERATE_TOKENIZER_STATE(state) state,
@@ -132,6 +132,8 @@ public:
 
     void set_blocked(bool b) { m_blocked = b; }
     bool is_blocked() const { return m_blocked; }
+
+    String source() const { return m_decoded_input; }
 
 private:
     Optional<u32> next_codepoint();
@@ -162,6 +164,8 @@ private:
     State m_return_state { State::Data };
 
     Vector<u32> m_temporary_buffer;
+
+    String m_decoded_input;
 
     StringView m_input;
     size_t m_cursor { 0 };

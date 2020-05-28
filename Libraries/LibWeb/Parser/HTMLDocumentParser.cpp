@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define PARSER_DEBUG
+//#define PARSER_DEBUG
 
 #include <AK/Utf32View.h>
 #include <LibWeb/DOM/Comment.h>
@@ -51,8 +51,8 @@
 
 namespace Web {
 
-HTMLDocumentParser::HTMLDocumentParser(const StringView& input)
-    : m_tokenizer(input)
+HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding)
+    : m_tokenizer(input, encoding)
 {
 }
 
@@ -64,6 +64,7 @@ void HTMLDocumentParser::run(const URL& url)
 {
     m_document = adopt(*new Document);
     m_document->set_url(url);
+    m_document->set_source(m_tokenizer.source());
 
     for (;;) {
         auto optional_token = m_tokenizer.next_token();

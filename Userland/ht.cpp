@@ -47,7 +47,7 @@ int main(int argc, char** argv)
         return 1;
     auto contents = file_or_error.value()->read_all();
 
-    Web::HTMLDocumentParser parser(contents);
+    Web::HTMLDocumentParser parser(contents, "utf-8");
     parser.run(URL::create_with_file_protocol(input_path));
 
     auto& document = parser.document();

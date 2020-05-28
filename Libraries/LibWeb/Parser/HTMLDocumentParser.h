@@ -61,7 +61,7 @@ namespace Web {
 
 class HTMLDocumentParser {
 public:
-    explicit HTMLDocumentParser(const StringView& input);
+    HTMLDocumentParser(const StringView& input, const String& encoding);
     ~HTMLDocumentParser();
 
     void run(const URL&);

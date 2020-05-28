@@ -444,7 +444,7 @@ RefPtr<Document> HtmlView::create_document_from_mime_type(const ByteBuffer& data
         return create_gemini_document(data, url);
     if (mime_type == "text/html") {
         if (m_use_new_parser) {
-            HTMLDocumentParser parser(data);
+            HTMLDocumentParser parser(data, encoding);
             parser.run(url);
             return parser.document();
         }

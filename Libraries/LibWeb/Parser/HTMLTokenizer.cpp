@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Parser/Entities.h>
 #include <LibWeb/Parser/HTMLToken.h>
 #include <LibWeb/Parser/HTMLTokenizer.h>
@@ -1711,9 +1712,12 @@ void HTMLTokenizer::create_new_token(HTMLToken::Type type)
     m_current_token.m_type = type;
 }
 
-HTMLTokenizer::HTMLTokenizer(const StringView& input)
-    : m_input(input)
+HTMLTokenizer::HTMLTokenizer(const StringView& input, const String& encoding)
 {
+    auto* decoder = TextCodec::decoder_for(encoding);
+    ASSERT(decoder);
+    m_decoded_input = decoder->to_utf8(input);
+    m_input = m_decoded_input;
 }
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)
