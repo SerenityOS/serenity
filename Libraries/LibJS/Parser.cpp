@@ -816,6 +816,16 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
             syntax_error("Invalid left-hand side in assignment");
             return create_ast_node<ErrorExpression>();
         }
+        if (m_parser_state.m_strict_mode && lhs->is_identifier()) {
+            auto name = static_cast<const Identifier&>(*lhs).string();
+            if (name == "eval" || name == "arguments") {
+                syntax_error(
+                    String::format("'%s' cannot be assigned to in strict mode code", name.characters()),
+                    m_parser_state.m_current_token.line_number(),
+                    m_parser_state.m_current_token.line_column()
+                );
+            }
+        }
         return create_ast_node<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Period:
         consume();
