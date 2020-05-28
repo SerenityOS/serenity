@@ -127,12 +127,38 @@ table {
     display: table;
 }
 
+thead {
+    display: table-header-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
+tbody {
+    display: table-row-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
+tfoot {
+    display: table-footer-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
 tr {
     display: table-row;
 }
 
-td {
+td, th {
     display: table-cell;
+}
+
+col {
+    display: table-column;
+}
+
+colgroup {
+    display: table-column-group;
 }
 
 basefont {
