@@ -31,8 +31,8 @@
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Notification.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TableView.h>

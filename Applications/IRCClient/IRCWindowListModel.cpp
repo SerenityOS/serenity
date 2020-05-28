@@ -27,9 +27,6 @@
 #include "IRCWindowListModel.h"
 #include "IRCChannel.h"
 #include "IRCClient.h"
-#include "IRCWindow.h"
-#include <stdio.h>
-#include <time.h>
 
 IRCWindowListModel::IRCWindowListModel(IRCClient& client)
     : m_client(client)

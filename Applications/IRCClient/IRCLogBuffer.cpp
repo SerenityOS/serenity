@@ -31,9 +31,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLBodyElement.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/Parser/HTMLParser.h>
-#include <stdio.h>
 #include <time.h>
 
 NonnullRefPtr<IRCLogBuffer> IRCLogBuffer::create()
