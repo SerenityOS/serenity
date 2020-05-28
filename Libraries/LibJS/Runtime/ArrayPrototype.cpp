@@ -53,6 +53,7 @@ ArrayPrototype::ArrayPrototype()
     define_native_function("push", push, 1, attr);
     define_native_function("shift", shift, 0, attr);
     define_native_function("toString", to_string, 0, attr);
+    define_native_function("toLocaleString", to_locale_string, 0, attr);
     define_native_function("unshift", unshift, 1, attr);
     define_native_function("join", join, 1, attr);
     define_native_function("concat", concat, 1, attr);
@@ -262,6 +263,37 @@ Value ArrayPrototype::to_string(Interpreter& interpreter)
     if (!join_function.is_function())
         return ObjectPrototype::to_string(interpreter);
     return interpreter.call(join_function.as_function(), this_object);
+}
+
+Value ArrayPrototype::to_locale_string(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
+        return {};
+    String separator = ",";  // NOTE: This is implementation-specific.
+    auto length = get_length(interpreter, *this_object);
+    if (interpreter.exception())
+        return {};
+    StringBuilder builder;
+    for (size_t i = 0; i < length; ++i) {
+        if (i > 0)
+            builder.append(separator);
+        auto value = this_object->get(i).value_or(js_undefined());
+        if (interpreter.exception())
+            return {};
+        if (value.is_undefined() || value.is_null())
+            continue;
+        auto* value_object = value.to_object(interpreter);
+        ASSERT(value_object);
+        auto locale_string_result = value_object->invoke("toLocaleString");
+        if (interpreter.exception())
+            return {};
+        auto string = locale_string_result.to_string(interpreter);
+        if (interpreter.exception())
+            return {};
+        builder.append(string);
+    }
+    return js_string(interpreter, builder.to_string());
 }
 
 Value ArrayPrototype::join(Interpreter& interpreter)
