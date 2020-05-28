@@ -430,7 +430,8 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
             return (void*)-EBADF;
         if (description->is_directory())
             return (void*)-ENODEV;
-        if ((prot & PROT_READ) && !description->is_readable())
+        // Require read access even when read protection is not requested.
+        if (!description->is_readable())
             return (void*)-EACCES;
         if (map_shared) {
             if ((prot & PROT_WRITE) && !description->is_writable())
