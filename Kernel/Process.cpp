@@ -1345,6 +1345,8 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
 
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {
+        dbg() << "Failed to exec " << path << ": " << error;
+        delete first_thread;
         delete process;
         return nullptr;
     }
