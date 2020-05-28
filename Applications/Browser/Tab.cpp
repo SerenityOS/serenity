@@ -115,7 +115,7 @@ Tab::Tab()
         }
 
         m_html_widget->load(location);
-        m_location_box->set_focus(false);
+        m_html_widget->set_focus(true);
     };
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste & Go", [this](auto&) {
