@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Types.h>

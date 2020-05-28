@@ -34,17 +34,18 @@
 // More information about the ATA spec for PATA can be found here:
 //      ftp://ftp.seagate.com/acrobat/reference/111-1c.pdf
 //
+
 #pragma once
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <Kernel/IO.h>
 #include <Kernel/Lock.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
+#include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
-#include <Kernel/IO.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 

@@ -33,7 +33,7 @@ before_install:
 script:
 - export SERENITY_ROOT=$(pwd)
 - Meta/lint-shell-scripts.sh
-- Meta/check-license-headers.sh
+- Meta/check-style.sh
 - cd Toolchain
 - TRY_USE_LOCAL_TOOLCHAIN=y ./BuildIt.sh
 - cd "$SERENITY_ROOT"

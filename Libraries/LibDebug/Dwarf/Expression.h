@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include "AK/ByteBuffer.h"
 #include "AK/Types.h"
 
@@ -32,6 +33,7 @@ class PtraceRegisters;
 
 namespace Dwarf {
 namespace Expression {
+
 enum class Type {
     None,
     UnsignedIntetger,
@@ -52,5 +54,5 @@ enum class Operations : u8 {
 
 Value evaluate(const ByteBuffer&, const PtraceRegisters&);
 
-};
-};
+}
+}

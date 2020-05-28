@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include <AK/Vector.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>

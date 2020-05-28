@@ -25,6 +25,7 @@
  */
 
 #pragma once
+
 #include <AK/Types.h>
 
 struct [[gnu::packed]] PtraceRegisters
