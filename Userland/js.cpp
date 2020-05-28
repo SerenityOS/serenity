@@ -55,6 +55,7 @@ public:
     virtual ~ReplObject() override;
 
     static JS::Value load_file(JS::Interpreter&);
+    static JS::Value is_strict_mode(JS::Interpreter&);
 
 private:
     virtual const char* class_name() const override { return "ReplObject"; }
@@ -391,6 +392,11 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
     return JS::Value(true);
 }
 
+JS::Value ReplObject::is_strict_mode(JS::Interpreter& interpreter)
+{
+    return JS::Value(interpreter.in_strict_mode());
+}
+
 void repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
@@ -405,6 +411,7 @@ void repl(JS::Interpreter& interpreter)
 void enable_test_mode(JS::Interpreter& interpreter)
 {
     interpreter.global_object().define_native_function("load", ReplObject::load_file);
+    interpreter.global_object().define_native_function("isStrictMode", ReplObject::is_strict_mode);
 }
 
 static Function<void()> interrupt_interpreter;

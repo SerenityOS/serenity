@@ -120,6 +120,9 @@ public:
     void add_variables(NonnullRefPtrVector<VariableDeclaration>);
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
 
+    bool in_strict_mode() const { return m_strict_mode; }
+    void set_strict_mode() { m_strict_mode = true; }
+
 protected:
     ScopeNode() { }
 
@@ -127,6 +130,7 @@ private:
     virtual bool is_scope_node() const final { return true; }
     NonnullRefPtrVector<Statement> m_children;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
+    bool m_strict_mode { false };
 };
 
 class Program : public ScopeNode {
