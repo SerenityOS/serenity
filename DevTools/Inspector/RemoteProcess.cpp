@@ -188,7 +188,7 @@ void RemoteProcess::update()
         }
     };
 
-    auto success = m_socket->connect(Core::SocketAddress::local(String::format("/tmp/rpc.%d", m_pid)));
+    auto success = m_socket->connect(Core::SocketAddress::local(String::format("/tmp/rpc/%d", m_pid)));
     if (!success) {
         fprintf(stderr, "Couldn't connect to PID %d\n", m_pid);
         exit(1);

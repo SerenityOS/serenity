@@ -45,6 +45,7 @@
 #include <string.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
@@ -250,8 +251,22 @@ EventLoop::~EventLoop()
 
 bool EventLoop::start_rpc_server()
 {
-    auto rpc_path = String::format("/tmp/rpc.%d", getpid());
-    int rc = unlink(rpc_path.characters());
+    // Create /tmp/rpc if it doesn't exist.
+    int rc = mkdir("/tmp/rpc", 0777);
+    if (rc == 0) {
+        // Ensure it gets created as 0777 despite our umask.
+        rc = chmod("/tmp/rpc", 0777);
+        if (rc < 0) {
+            perror("chmod /tmp/rpc");
+            // Continue further.
+        }
+    } else if (errno != EEXIST) {
+        perror("mkdir /tmp/rpc");
+        return false;
+    }
+
+    auto rpc_path = String::format("/tmp/rpc/%d", getpid());
+    rc = unlink(rpc_path.characters());
     if (rc < 0 && errno != ENOENT) {
         perror("unlink");
         return false;
