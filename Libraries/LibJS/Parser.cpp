@@ -269,6 +269,9 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         consume();
         return create_ast_node<EmptyStatement>();
     default:
+        auto result = try_parse_labelled_statement();
+        if (!result.is_null())
+            return result.release_nonnull();
         if (match_expression()) {
             auto expr = parse_expression(0);
             consume_or_insert_semicolon();
@@ -381,6 +384,27 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     }
 
     return nullptr;
+}
+
+RefPtr<Statement> Parser::try_parse_labelled_statement()
+{
+    save_state();
+    ArmedScopeGuard state_rollback_guard = [&] {
+        load_state();
+    };
+
+    auto identifier = consume(TokenType::Identifier).value();
+    if (!match(TokenType::Colon))
+        return {};
+    consume(TokenType::Colon);
+
+    if (!match_statement())
+        return {};
+    auto statement = parse_statement();
+
+    statement->set_label(identifier);
+    state_rollback_guard.disarm();
+    return statement;
 }
 
 NonnullRefPtr<Expression> Parser::parse_primary_expression()

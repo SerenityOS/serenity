@@ -70,6 +70,12 @@ private:
 };
 
 class Statement : public ASTNode {
+public:
+    const FlyString& label() const { return m_label; }
+    void set_label(FlyString string) { m_label = string; }
+
+protected:
+    FlyString m_label;
 };
 
 class EmptyStatement final : public Statement {
