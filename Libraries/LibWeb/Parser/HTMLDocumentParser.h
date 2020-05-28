@@ -114,6 +114,7 @@ private:
     void clear_the_stack_back_to_a_table_context();
     void clear_the_stack_back_to_a_table_body_context();
     void clear_the_stack_back_to_a_table_row_context();
+    void close_the_cell();
 
     InsertionMode m_insertion_mode { InsertionMode::Initial };
     InsertionMode m_original_insertion_mode { InsertionMode::Initial };

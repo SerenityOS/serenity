@@ -907,6 +907,19 @@ void HTMLDocumentParser::handle_in_row(HTMLToken& token)
     TODO();
 }
 
+void HTMLDocumentParser::close_the_cell()
+{
+    generate_implied_end_tags();
+    if (!current_node().tag_name().is_one_of("td", "th")) {
+        PARSE_ERROR();
+    }
+    while (!current_node().tag_name().is_one_of("td", "th"))
+        m_stack_of_open_elements.pop();
+    m_stack_of_open_elements.pop();
+    m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
+    m_insertion_mode = InsertionMode::InRow;
+}
+
 void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
 {
     if (token.is_end_tag() && token.tag_name().is_one_of("td", "th")) {
@@ -930,7 +943,13 @@ void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
         return;
     }
     if (token.is_start_tag() && token.tag_name().is_one_of("caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr")) {
-        TODO();
+        if (!m_stack_of_open_elements.has_in_table_scope("td") && m_stack_of_open_elements.has_in_table_scope("th")) {
+            PARSE_ERROR();
+            return;
+        }
+        close_the_cell();
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("body", "caption", "col", "colgroup", "html")) {
