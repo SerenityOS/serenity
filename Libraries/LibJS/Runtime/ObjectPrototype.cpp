@@ -45,6 +45,7 @@ void ObjectPrototype::initialize()
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("hasOwnProperty", has_own_property, 1, attr);
     define_native_function("toString", to_string, 0, attr);
+    define_native_function("toLocaleString", to_locale_string, 0, attr);
     define_native_function("valueOf", value_of, 0, attr);
 }
 
@@ -69,6 +70,14 @@ Value ObjectPrototype::to_string(Interpreter& interpreter)
     if (!this_object)
         return {};
     return js_string(interpreter, String::format("[object %s]", this_object->class_name()));
+}
+
+Value ObjectPrototype::to_locale_string(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter);
+    if (!this_object)
+        return {};
+    return this_object->invoke("toString");
 }
 
 Value ObjectPrototype::value_of(Interpreter& interpreter)
