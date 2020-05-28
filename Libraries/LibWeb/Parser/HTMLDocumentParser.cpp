@@ -482,6 +482,25 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
         return;
     }
 
+    if (token.is_comment()) {
+        TODO();
+    }
+
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "html") {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_end_of_file()) {
+        // FIXME: Stop parsing!
+        TODO();
+    }
+
     if (token.is_end_tag() && token.tag_name() == "html") {
         if (m_parsing_fragment) {
             ASSERT_NOT_REACHED();
@@ -489,7 +508,10 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
         m_insertion_mode = InsertionMode::AfterAfterBody;
         return;
     }
-    ASSERT_NOT_REACHED();
+
+    PARSE_ERROR();
+    m_insertion_mode = InsertionMode::InBody;
+    process_using_the_rules_for(InsertionMode::InBody, token);
 }
 
 void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
