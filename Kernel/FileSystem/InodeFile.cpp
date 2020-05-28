@@ -97,13 +97,15 @@ KResult InodeFile::truncate(u64 size)
     return KSuccess;
 }
 
-KResult InodeFile::chown(uid_t uid, gid_t gid)
+KResult InodeFile::chown(FileDescription& description, uid_t uid, gid_t gid)
 {
+    ASSERT(description.inode() == m_inode);
     return VFS::the().chown(*m_inode, uid, gid);
 }
 
-KResult InodeFile::chmod(mode_t mode)
+KResult InodeFile::chmod(FileDescription& description, mode_t mode)
 {
+    ASSERT(description.inode() == m_inode);
     return VFS::the().chmod(*m_inode, mode);
 }
 

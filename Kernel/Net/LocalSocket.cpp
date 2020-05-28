@@ -375,7 +375,7 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
     }
 }
 
-KResult LocalSocket::chmod(mode_t mode)
+KResult LocalSocket::chmod(FileDescription&, mode_t mode)
 {
     if (m_file)
         return m_file->chmod(mode);
@@ -384,7 +384,7 @@ KResult LocalSocket::chmod(mode_t mode)
     return KSuccess;
 }
 
-KResult LocalSocket::chown(uid_t uid, gid_t gid)
+KResult LocalSocket::chown(FileDescription&, uid_t uid, gid_t gid)
 {
     if (m_file)
         return m_file->chown(uid, gid);
