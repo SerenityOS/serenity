@@ -49,6 +49,14 @@ public:
         EndOfFile,
     };
 
+    static HTMLToken make_character(u32 codepoint)
+    {
+        HTMLToken token;
+        token.m_type = Type::Character;
+        token.m_comment_or_character.data.append(codepoint);
+        return token;
+    }
+
     bool is_doctype() const { return m_type == Type::DOCTYPE; }
     bool is_start_tag() const { return m_type == Type::StartTag; }
     bool is_end_tag() const { return m_type == Type::EndTag; }
