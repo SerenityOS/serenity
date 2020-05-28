@@ -711,9 +711,6 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
-        if (m_stack_of_open_elements.has_in_button_scope("p"))
-            close_a_p_element();
-
         if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
             PARSE_ERROR();
             return;
