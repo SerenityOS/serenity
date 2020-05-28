@@ -79,11 +79,13 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
         icon_label.set_preferred_size(32, 32);
     }
 
-    auto& buggie_label = left_container.add<Label>();
-    buggie_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie-about.png"));
-    buggie_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    buggie_label.set_preferred_size(48, 104);
-    buggie_label.set_tooltip("Buggie!");
+    if (m_name == "SerenityOS") {
+        auto& buggie_label = left_container.add<Label>();
+        buggie_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie-about.png"));
+        buggie_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        buggie_label.set_preferred_size(48, 104);
+        buggie_label.set_tooltip("Buggie!");
+    }
 
     auto& right_container = content_container.add<Widget>();
     right_container.set_layout<VerticalBoxLayout>();
