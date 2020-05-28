@@ -1,0 +1,18 @@
+"use strict";
+
+load("test-common.js")
+
+try {
+    [true, false, "foo", 123].forEach(primitive => {
+        assertThrowsError(() => {
+            primitive.foo = "bar";
+        }, {
+            error: TypeError,
+            message: "Can't assign property foo to primitive value"
+        });
+    });
+
+    console.log("PASS");
+} catch (e) {
+    console.log("FAIL: " + e);
+}

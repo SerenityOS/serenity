@@ -559,15 +559,12 @@ Reference Identifier::to_reference(Interpreter& interpreter) const
 Reference MemberExpression::to_reference(Interpreter& interpreter) const
 {
     auto object_value = m_object->execute(interpreter);
-    if (object_value.is_empty())
-        return {};
-    auto* object = object_value.to_object(interpreter);
-    if (!object)
+    if (interpreter.exception())
         return {};
     auto property_name = computed_property_name(interpreter);
     if (!property_name.is_valid())
         return {};
-    return { object, property_name };
+    return { object_value, property_name };
 }
 
 Value UnaryExpression::execute(Interpreter& interpreter) const
