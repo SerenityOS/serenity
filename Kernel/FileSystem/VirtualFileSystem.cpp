@@ -42,6 +42,7 @@ namespace Kernel {
 
 static VFS* s_the;
 static constexpr int symlink_recursion_limit { 5 }; // FIXME: increase?
+static constexpr int root_mount_flags = MS_NODEV | MS_NOSUID | MS_RDONLY;
 
 VFS& VFS::the()
 {
@@ -116,7 +117,7 @@ bool VFS::mount_root(FS& file_system)
         return false;
     }
 
-    Mount mount { file_system, nullptr, MS_NODEV | MS_NOSUID };
+    Mount mount { file_system, nullptr, root_mount_flags };
 
     auto root_inode_id = mount.guest().fs()->root_inode();
     auto root_inode = mount.guest().fs()->get_inode(root_inode_id);
@@ -734,7 +735,7 @@ void VFS::sync()
 Custody& VFS::root_custody()
 {
     if (!m_root_custody)
-        m_root_custody = Custody::create(nullptr, "", *m_root_inode, MS_NODEV | MS_NOSUID);
+        m_root_custody = Custody::create(nullptr, "", *m_root_inode, root_mount_flags);
     return *m_root_custody;
 }
 
