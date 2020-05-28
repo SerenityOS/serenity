@@ -16,7 +16,7 @@ add_custom_target(run
 
 add_custom_target(grub-image
     COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" ${CMAKE_SOURCE_DIR}/Meta/build-image-grub.sh
-    BYPRODUCTS ${CMAKE_BINARY_DIR}/_disk_image
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
     USES_TERMINAL
 )
 
