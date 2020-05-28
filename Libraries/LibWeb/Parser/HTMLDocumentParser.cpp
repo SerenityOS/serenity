@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#define PARSER_DEBUG
+#define PARSER_DEBUG
 
 #include <AK/Utf32View.h>
 #include <LibWeb/DOM/Comment.h>
@@ -629,6 +629,11 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         reconstruct_the_active_formatting_elements();
         insert_character(token.codepoint());
         m_frameset_ok = false;
+        return;
+    }
+
+    if (token.is_comment()) {
+        insert_comment(token);
         return;
     }
 
