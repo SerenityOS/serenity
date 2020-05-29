@@ -205,8 +205,16 @@ String MarkupGenerator::style_from_style_type(StyleType type)
 MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
 {
     switch (token.type()) {
-    case TokenType::Invalid:
+    case TokenType::Enum:
     case TokenType::Eof:
+    case TokenType::Implements:
+    case TokenType::Invalid:
+    case TokenType::Package:
+    case TokenType::Private:
+    case TokenType::Protected:
+    case TokenType::Public:
+    case TokenType::Static:
+    case TokenType::UnterminatedTemplateLiteral:
         return StyleType::Invalid;
     case TokenType::NumericLiteral:
         return StyleType::Number;
@@ -230,13 +238,14 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
         return StyleType::Punctuation;
     case TokenType::Ampersand:
     case TokenType::AmpersandEquals:
+    case TokenType::Arrow:
     case TokenType::Asterisk:
-    case TokenType::DoubleAsteriskEquals:
     case TokenType::AsteriskEquals:
     case TokenType::Caret:
     case TokenType::CaretEquals:
     case TokenType::DoubleAmpersand:
     case TokenType::DoubleAsterisk:
+    case TokenType::DoubleAsteriskEquals:
     case TokenType::DoublePipe:
     case TokenType::DoubleQuestionMark:
     case TokenType::Equals:
@@ -268,32 +277,42 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     case TokenType::Slash:
     case TokenType::SlashEquals:
     case TokenType::Tilde:
+    case TokenType::TripleDot:
     case TokenType::UnsignedShiftRight:
     case TokenType::UnsignedShiftRightEquals:
         return StyleType::Operator;
     case TokenType::BoolLiteral:
     case TokenType::NullLiteral:
         return StyleType::KeywordBold;
+    case TokenType::Async:
     case TokenType::Class:
     case TokenType::Const:
     case TokenType::Debugger:
     case TokenType::Delete:
+    case TokenType::Export:
+    case TokenType::Extends:
     case TokenType::Function:
+    case TokenType::Import:
     case TokenType::In:
     case TokenType::Instanceof:
     case TokenType::Interface:
     case TokenType::Let:
     case TokenType::New:
+    case TokenType::Super:
     case TokenType::TemplateLiteralExprStart:
     case TokenType::TemplateLiteralExprEnd:
+    case TokenType::This:
     case TokenType::Throw:
     case TokenType::Typeof:
     case TokenType::Var:
     case TokenType::Void:
         return StyleType::Keyword;
     case TokenType::Await:
+    case TokenType::Break:
     case TokenType::Case:
     case TokenType::Catch:
+    case TokenType::Continue:
+    case TokenType::Default:
     case TokenType::Do:
     case TokenType::Else:
     case TokenType::Finally:
@@ -303,11 +322,13 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     case TokenType::Switch:
     case TokenType::Try:
     case TokenType::While:
+    case TokenType::With:
     case TokenType::Yield:
         return StyleType::ControlKeyword;
     case TokenType::Identifier:
         return StyleType::Identifier;
     default:
+        dbg() << "Unknown style type for token" << token.name();
         ASSERT_NOT_REACHED();
     }
 }
