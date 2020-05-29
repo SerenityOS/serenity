@@ -1046,6 +1046,11 @@ void Terminal::handle_key_press(KeyCode key, u8 character, u8 flags)
         break;
     }
 
+    if (!character) {
+        // Probably a modifier being pressed.
+        return;
+    }
+
     if (shift && key == KeyCode::Key_Tab) {
         emit_string("\033[Z");
         return;
