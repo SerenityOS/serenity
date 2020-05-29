@@ -37,13 +37,17 @@
 #    include <unistd.h>
 #endif
 
+#if defined(__APPLE__)
+#    include <sys/random.h>
+#endif
+
 namespace AK {
 
 inline void fill_with_random(void* buffer, size_t length)
 {
 #if defined(__serenity__)
     arc4random_buf(buffer, length);
-#elif defined(__linux__)
+#elif defined(__linux__) or defined(__APPLE__)
     int rc = getentropy(buffer, length);
     (void)rc;
 #endif
