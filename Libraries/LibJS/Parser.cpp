@@ -516,71 +516,121 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 
 NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 {
-    NonnullRefPtrVector<ObjectProperty> properties;
     consume(TokenType::CurlyOpen);
 
-    auto property_type = ObjectProperty::Type::KeyValue;
+    NonnullRefPtrVector<ObjectProperty> properties;
+    ObjectProperty::Type property_type;
 
-    while (!done() && !match(TokenType::CurlyClose)) {
-        RefPtr<Expression> property_key;
-        RefPtr<Expression> property_value;
-        auto need_colon = true;
+    auto match_property_key = [&]() -> bool {
+        auto type = m_parser_state.m_current_token.type();
+        return match_identifier_name()
+            || type == TokenType::BracketOpen
+            || type == TokenType::StringLiteral
+            || type == TokenType::NumericLiteral;
+    };
 
-        if (match_identifier_name()) {
-            auto identifier = consume().value();
-            if (property_type == ObjectProperty::Type::KeyValue) {
-                if (identifier == "get" && !match(TokenType::ParenOpen)) {
-                    property_type = ObjectProperty::Type::Getter;
-                    continue;
-                }
-                if (identifier == "set" && !match(TokenType::ParenOpen)) {
-                    property_type = ObjectProperty::Type::Setter;
-                    continue;
-                }
-            }
-            property_key = create_ast_node<StringLiteral>(identifier);
-            property_value = create_ast_node<Identifier>(identifier);
-            need_colon = false;
-        } else if (match(TokenType::StringLiteral)) {
-            property_key = parse_string_literal(consume());
+    auto parse_property_key = [&]() -> NonnullRefPtr<Expression> {
+        if (match(TokenType::StringLiteral)) {
+            return parse_string_literal(consume());
         } else if (match(TokenType::NumericLiteral)) {
-            property_key = create_ast_node<StringLiteral>(consume(TokenType::NumericLiteral).value());
+            return create_ast_node<StringLiteral>(consume(TokenType::NumericLiteral).value());
         } else if (match(TokenType::BracketOpen)) {
             consume(TokenType::BracketOpen);
-            property_key = parse_expression(0);
+            auto result = parse_expression(0);
             consume(TokenType::BracketClose);
-        } else if (match(TokenType::TripleDot)) {
-            consume(TokenType::TripleDot);
-            property_key = create_ast_node<SpreadExpression>(parse_expression(2));
-            property_value = property_key;
-            need_colon = false;
-            property_type = ObjectProperty::Type::Spread;
+            return result;
         } else {
-            if (property_type != ObjectProperty::Type::Getter && property_type != ObjectProperty::Type::Setter) {
-                syntax_error(String::format("Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier", m_parser_state.m_current_token.name()));
-                consume();
+            if (!match_identifier_name())
+                expected("IdentifierName");
+            return create_ast_node<StringLiteral>(consume().value());
+        }
+    };
+
+    auto skip_to_next_property = [&] {
+        while (!done() && !match(TokenType::Comma) && !match(TokenType::CurlyOpen))
+            consume();
+    };
+
+    while (!done() && !match(TokenType::CurlyClose)) {
+        property_type = ObjectProperty::Type::KeyValue;
+        RefPtr<Expression> property_name;
+        RefPtr<Expression> property_value;
+
+        if (match(TokenType::TripleDot)) {
+            consume();
+            property_name = parse_expression(4);
+            properties.append(create_ast_node<ObjectProperty>(*property_name, nullptr, ObjectProperty::Type::Spread));
+            if (!match(TokenType::Comma))
+                break;
+            consume(TokenType::Comma);
+            continue;
+        }
+
+        if (match(TokenType::Identifier)) {
+            auto identifier = consume().value();
+            if (identifier == "get" && match_property_key()) {
+                property_type = ObjectProperty::Type::Getter;
+                property_name = parse_property_key();
+            } else if (identifier == "set" && match_property_key()) {
+                property_type = ObjectProperty::Type::Setter;
+                property_name = parse_property_key();
+            } else {
+                property_name = create_ast_node<StringLiteral>(identifier);
+                property_value = create_ast_node<Identifier>(identifier);
+            }
+        } else {
+            property_name = parse_property_key();
+        }
+
+        if (property_type == ObjectProperty::Type::Getter || property_type == ObjectProperty::Type::Setter) {
+            if (!match(TokenType::ParenOpen)) {
+                syntax_error(
+                    "Expected '(' for object getter or setter property",
+                    m_parser_state.m_current_token.line_number(),
+                    m_parser_state.m_current_token.line_column()
+                );
+                skip_to_next_property();
+                continue;
+            }
+        }
+
+        if (match(TokenType::ParenOpen)) {
+            ASSERT(property_name);
+            auto function = parse_function_node<FunctionExpression>(false);
+            auto arg_count = function->parameters().size();
+
+            if (property_type == ObjectProperty::Type::Getter && arg_count != 0) {
+                syntax_error(
+                    "Object getter property must have no arguments",
+                    m_parser_state.m_current_token.line_number(),
+                    m_parser_state.m_current_token.line_column()
+                );
+                skip_to_next_property();
+                continue;
+            }
+            if (property_type == ObjectProperty::Type::Setter && arg_count != 1) {
+                syntax_error(
+                    "Object setter property must have one argument",
+                    m_parser_state.m_current_token.line_number(),
+                    m_parser_state.m_current_token.line_column()
+                );
+                skip_to_next_property();
                 continue;
             }
 
-            auto name = property_type == ObjectProperty::Type::Getter ? "get" : "set";
-            property_key = create_ast_node<StringLiteral>(name);
-            property_value = create_ast_node<Identifier>(name);
-            need_colon = false;
+            properties.append(create_ast_node<ObjectProperty>(*property_name, function, property_type));
+        } else if (match(TokenType::Colon)) {
+            consume();
+            ASSERT(property_name);
+            properties.append(create_ast_node<ObjectProperty>(*property_name, parse_expression(2), property_type));
+        } else {
+            ASSERT(property_name);
+            ASSERT(property_value);
+            properties.append(create_ast_node<ObjectProperty>(*property_name, *property_value, property_type));
         }
-
-        if (property_type != ObjectProperty::Type::Spread && match(TokenType::ParenOpen)) {
-            property_value = parse_function_node<FunctionExpression>(false);
-        } else if (need_colon || match(TokenType::Colon)) {
-            consume(TokenType::Colon);
-            property_value = parse_expression(2);
-        }
-        auto property = create_ast_node<ObjectProperty>(*property_key, *property_value, property_type);
-        properties.append(property);
-        property_type = ObjectProperty::Type::KeyValue;
 
         if (!match(TokenType::Comma))
             break;
-
         consume(TokenType::Comma);
     }
 
@@ -1001,19 +1051,21 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 }
 
 template<typename FunctionNodeType>
-NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_keyword)
+NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_function_and_name)
 {
     ScopePusher scope(*this, ScopePusher::Var);
 
-    if (needs_function_keyword)
+    if (check_for_function_and_name)
         consume(TokenType::Function);
 
     String name;
-    if (FunctionNodeType::must_have_name()) {
-        name = consume(TokenType::Identifier).value();
-    } else {
-        if (match(TokenType::Identifier))
+    if (check_for_function_and_name) {
+        if (FunctionNodeType::must_have_name()) {
             name = consume(TokenType::Identifier).value();
+        } else {
+            if (match(TokenType::Identifier))
+                name = consume(TokenType::Identifier).value();
+        }
     }
     consume(TokenType::ParenOpen);
     Vector<FunctionNode::Parameter> parameters;
