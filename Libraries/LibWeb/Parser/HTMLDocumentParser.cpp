@@ -46,7 +46,7 @@
 
 #define PARSE_ERROR()            \
     do {                         \
-        dbg() << "Parse error!"; \
+        dbg() << "Parse error! " << __PRETTY_FUNCTION__ << " @ " << __LINE__; \
     } while (0)
 
 namespace Web {
@@ -664,6 +664,37 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "html") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title")) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "template") {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "body") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "frameset") {
+        TODO();
+    }
+
+    if (token.is_end_of_file()) {
+        TODO();
+    }
+
     if (token.is_end_tag() && token.tag_name() == "body") {
         if (!m_stack_of_open_elements.has_in_scope("body")) {
             ASSERT_NOT_REACHED();
@@ -680,6 +711,17 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    if (token.is_start_tag() && token.tag_name() == "html") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
+        if (m_stack_of_open_elements.has_in_button_scope("p"))
+            close_a_p_element();
+        insert_html_element(token);
+        return;
+    }
+
     if (token.is_start_tag() && token.tag_name().is_one_of("h1", "h2", "h3", "h4", "h5", "h6")) {
         if (m_stack_of_open_elements.has_in_button_scope("p"))
             close_a_p_element();
@@ -689,6 +731,82 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
         insert_html_element(token);
         return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("pre", "listing")) {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "form") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "li") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("dd", "dt")) {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "plaintext") {
+        if (m_stack_of_open_elements.has_in_button_scope("p"))
+            close_a_p_element();
+        insert_html_element(token);
+        m_tokenizer.switch_to({}, HTMLTokenizer::State::PLAINTEXT);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "button") {
+        if (m_stack_of_open_elements.has_in_button_scope("button")) {
+            PARSE_ERROR();
+            generate_implied_end_tags();
+            m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped("button");
+        }
+        reconstruct_the_active_formatting_elements();
+        insert_html_element(token);
+        m_frameset_ok = false;
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "button", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "main", "menu", "nav", "ol", "pre", "section", "summary", "ul")) {
+        if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
+            PARSE_ERROR();
+            return;
+        }
+
+        generate_implied_end_tags();
+
+        if (current_node().tag_name() != token.tag_name()) {
+            PARSE_ERROR();
+        }
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "form") {
+        TODO();
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "p") {
+        if (!m_stack_of_open_elements.has_in_button_scope("p")) {
+            PARSE_ERROR();
+            HTMLToken fake_p_token;
+            fake_p_token.m_type = HTMLToken::Type::StartTag;
+            fake_p_token.m_tag.tag_name.append("p");
+            insert_html_element(fake_p_token);
+        }
+        close_a_p_element();
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "li") {
+        TODO();
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("dd", "dt")) {
+        TODO();
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("h1", "h2", "h3", "h4", "h5", "h6")) {
@@ -715,12 +833,8 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
-    if (token.is_end_tag() && token.tag_name() == "p") {
-        if (!m_stack_of_open_elements.has_in_button_scope("p")) {
-            TODO();
-        }
-        close_a_p_element();
-        return;
+    if (token.is_start_tag() && token.tag_name() == "a") {
+        TODO();
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) {
@@ -730,42 +844,40 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    if (token.is_start_tag() && token.tag_name() == "nobr") {
+        TODO();
+    }
+
     if (token.is_end_tag() && token.tag_name().is_one_of("a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u")) {
         run_the_adoption_agency_algorithm(token);
         return;
     }
 
-    if (token.is_start_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
-        if (m_stack_of_open_elements.has_in_button_scope("p"))
-            close_a_p_element();
+    if (token.is_start_tag() && token.tag_name().is_one_of("applet", "marquee", "object")) {
+        reconstruct_the_active_formatting_elements();
         insert_html_element(token);
+        m_list_of_active_formatting_elements.add_marker();
+        m_frameset_ok = false;
         return;
     }
 
-    if (token.is_end_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
-        if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
-            PARSE_ERROR();
-            return;
-        }
-
-        generate_implied_end_tags();
-
-        if (current_node().tag_name() != token.tag_name()) {
-            PARSE_ERROR();
-        }
-
-        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
-        return;
+    if (token.is_end_tag() && token.tag_name().is_one_of("applet", "marquee", "object")) {
+        TODO();
     }
 
     if (token.is_start_tag() && token.tag_name() == "table") {
-        // FIXME: If the Document is not set to quirks mode,
-        //        and the stack of open elements has a p element in button scope, then close a p element.
-
+        if (!document().in_quirks_mode()) {
+            if (m_stack_of_open_elements.has_in_button_scope("p"))
+                close_a_p_element();
+        }
         insert_html_element(token);
         m_frameset_ok = false;
         m_insertion_mode = InsertionMode::InTable;
         return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "br") {
+        TODO();
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("area", "br", "embed", "img", "keygen", "wbr")) {
@@ -789,12 +901,89 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    if (token.is_start_tag() && token.tag_name().is_one_of("param", "source", "track")) {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "hr") {
+        if (m_stack_of_open_elements.has_in_button_scope("p"))
+            close_a_p_element();
+        insert_html_element(token);
+        m_stack_of_open_elements.pop();
+        token.acknowledge_self_closing_flag_if_set();
+        m_frameset_ok = false;
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "image") {
+        // Parse error. Change the token's tag name to "img" and reprocess it. (Don't ask.)
+        PARSE_ERROR();
+        token.m_tag.tag_name.clear();
+        token.m_tag.tag_name.append("img");
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "textarea") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "xmp") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "iframe") {
+        m_frameset_ok = false;
+        parse_generic_raw_text_element(token);
+        return;
+    }
+
+    if (token.is_start_tag() && ((token.tag_name() == "noembed") || (token.tag_name() == "noscript" && m_scripting_enabled))) {
+        parse_generic_raw_text_element(token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "select") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("optgroup", "option")) {
+        if (current_node().tag_name() == "option")
+            m_stack_of_open_elements.pop();
+        reconstruct_the_active_formatting_elements();
+        insert_html_element(token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("rb", "rtc")) {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("rp", "rt")) {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "math") {
+        TODO();
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "svg") {
+        TODO();
+    }
+
+    if ((token.is_start_tag() && token.tag_name().is_one_of("caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"))) {
+        PARSE_ERROR();
+        return;
+    }
+
+    // Any other start tag
     if (token.is_start_tag()) {
         reconstruct_the_active_formatting_elements();
         insert_html_element(token);
         return;
     }
 
+    // Any other end tag
     if (token.is_end_tag()) {
         RefPtr<Element> node;
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
