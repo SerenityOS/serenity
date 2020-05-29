@@ -61,7 +61,6 @@ constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
 constexpr const char* DEFAULT_HASH_SUITE { "SHA256" };
 constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
 constexpr const char* DEFAULT_SERVER { "www.google.com" };
-constexpr int DEFAULT_PORT { 443 };
 
 // listAllTests
 // Cipher
