@@ -423,7 +423,7 @@ void EventLoop::wait_for_event(WaitMode mode)
         if (notifier->event_mask() & Notifier::Write)
             add_fd_to_set(notifier->fd(), wfds);
         if (notifier->event_mask() & Notifier::Exceptional)
-            ASSERT_NOT_REACHED();
+            continue;
     }
 
     bool queued_events_is_empty;
@@ -452,15 +452,19 @@ void EventLoop::wait_for_event(WaitMode mode)
         }
     }
 
-    int marked_fd_count = Core::safe_syscall(select, max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
-    if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
-        char buffer[32];
-        auto nread = read(s_wake_pipe_fds[0], buffer, sizeof(buffer));
-        if (nread < 0) {
-            perror("read from wake pipe");
-            ASSERT_NOT_REACHED();
+    SyscallException exception { true };
+    int marked_fd_count = Core::safe_syscall(select, exception, max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
+
+    if (!exception.was_interrupted) {
+        if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
+            char buffer[32];
+            auto nread = read(s_wake_pipe_fds[0], buffer, sizeof(buffer));
+            if (nread < 0) {
+                perror("read from wake pipe");
+                ASSERT_NOT_REACHED();
+            }
+            ASSERT(nread > 0);
         }
-        ASSERT(nread > 0);
     }
 
     if (!s_timers->is_empty()) {
@@ -491,17 +495,23 @@ void EventLoop::wait_for_event(WaitMode mode)
         }
     }
 
-    if (!marked_fd_count)
+    if (!exception.was_interrupted && !marked_fd_count)
         return;
 
     for (auto& notifier : *s_notifiers) {
-        if (FD_ISSET(notifier->fd(), &rfds)) {
-            if (notifier->on_ready_to_read)
-                post_event(*notifier, make<NotifierReadEvent>(notifier->fd()));
-        }
-        if (FD_ISSET(notifier->fd(), &wfds)) {
-            if (notifier->on_ready_to_write)
-                post_event(*notifier, make<NotifierWriteEvent>(notifier->fd()));
+        if (exception.was_interrupted) {
+            if (notifier->event_mask() & Notifier::Exceptional
+                && notifier->on_exceptional_event)
+                post_event(*notifier, make<NotifierExceptionalEvent>(notifier->fd()));
+        } else {
+            if (FD_ISSET(notifier->fd(), &rfds)) {
+                if (notifier->on_ready_to_read)
+                    post_event(*notifier, make<NotifierReadEvent>(notifier->fd()));
+            }
+            if (FD_ISSET(notifier->fd(), &wfds)) {
+                if (notifier->on_ready_to_write)
+                    post_event(*notifier, make<NotifierWriteEvent>(notifier->fd()));
+            }
         }
     }
 }

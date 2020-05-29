@@ -47,6 +47,7 @@ public:
 
     Function<void()> on_ready_to_read;
     Function<void()> on_ready_to_write;
+    Function<void()> on_exceptional_event;
 
     int fd() const { return m_fd; }
     unsigned event_mask() const { return m_event_mask; }

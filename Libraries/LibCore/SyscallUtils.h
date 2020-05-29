@@ -35,20 +35,38 @@
 
 namespace Core {
 
+struct SyscallException {
+    bool should_stop_on_interrupts { false };
+    bool was_interrupted { false };
+};
+
 template<typename Syscall, class... Args>
-inline int safe_syscall(Syscall syscall, Args&&... args)
+inline int safe_syscall(Syscall syscall, SyscallException& exception, Args&&... args)
 {
     for (;;) {
         int sysret = syscall(forward<Args>(args)...);
         if (sysret == -1) {
             int saved_errno = errno;
-            dbg() << "Core::safe_syscall: " << sysret << " (" << saved_errno << ": " << strerror(saved_errno) << ")";
-            if (errno == EINTR)
+            dbg() << "Core::safe_syscall: " << sysret << " (" << saved_errno << ": " << strerror(saved_errno) << ") would be ignored: " << !exception.should_stop_on_interrupts;
+            if (errno == EINTR) {
+                exception.was_interrupted = true;
+
+                if (exception.should_stop_on_interrupts)
+                    return sysret;
+
                 continue;
+            }
             ASSERT_NOT_REACHED();
         }
         return sysret;
     }
+}
+
+template<typename Syscall, class... Args>
+inline int safe_syscall(Syscall syscall, Args&&... args)
+{
+    SyscallException exception { false };
+    return safe_syscall(syscall, exception, forward<Args>(args)...);
 }
 
 }

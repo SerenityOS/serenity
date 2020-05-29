@@ -58,6 +58,8 @@ void Notifier::event(Core::Event& event)
         on_ready_to_read();
     } else if (event.type() == Core::Event::NotifierWrite && on_ready_to_write) {
         on_ready_to_write();
+    } else if (event.type() == Core::Event::NotifierExceptional && on_exceptional_event) {
+        on_exceptional_event();
     } else {
         Object::event(event);
     }

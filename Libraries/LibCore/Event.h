@@ -42,18 +42,19 @@ public:
         Timer,
         NotifierRead,
         NotifierWrite,
+        NotifierExceptional,
         DeferredInvoke,
         ChildAdded,
         ChildRemoved,
         Custom,
     };
 
-    Event() {}
+    Event() { }
     explicit Event(unsigned type)
         : m_type(type)
     {
     }
-    virtual ~Event() {}
+    virtual ~Event() { }
 
     unsigned type() const { return m_type; }
 
@@ -87,7 +88,7 @@ public:
         , m_timer_id(timer_id)
     {
     }
-    ~TimerEvent() {}
+    ~TimerEvent() { }
 
     int timer_id() const { return m_timer_id; }
 
@@ -102,7 +103,7 @@ public:
         , m_fd(fd)
     {
     }
-    ~NotifierReadEvent() {}
+    ~NotifierReadEvent() { }
 
     int fd() const { return m_fd; }
 
@@ -117,7 +118,22 @@ public:
         , m_fd(fd)
     {
     }
-    ~NotifierWriteEvent() {}
+    ~NotifierWriteEvent() { }
+
+    int fd() const { return m_fd; }
+
+private:
+    int m_fd;
+};
+
+class NotifierExceptionalEvent final : public Event {
+public:
+    explicit NotifierExceptionalEvent(int fd)
+        : Event(Event::NotifierExceptional)
+        , m_fd(fd)
+    {
+    }
+    ~NotifierExceptionalEvent() { }
 
     int fd() const { return m_fd; }
 
@@ -149,7 +165,7 @@ public:
         , m_data(data)
     {
     }
-    ~CustomEvent() {}
+    ~CustomEvent() { }
 
     int custom_type() const { return m_custom_type; }
     void* data() { return m_data; }
