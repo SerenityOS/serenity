@@ -265,7 +265,7 @@ constexpr static bool der_length_sequence(ASN1::List* list, size_t in_length, si
     return true;
 }
 
-static bool der_decode_sequence(const u8* in, size_t in_length, ASN1::List* list, size_t out_length, bool ordered = true)
+static inline bool der_decode_sequence(const u8* in, size_t in_length, ASN1::List* list, size_t out_length, bool ordered = true)
 {
     if (in_length < 2) {
         dbg() << "header too small";
