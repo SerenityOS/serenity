@@ -1244,8 +1244,10 @@ void TextEditor::undefer_reflow()
 {
     ASSERT(m_reflow_deferred);
     if (!--m_reflow_deferred) {
-        if (m_reflow_requested)
+        if (m_reflow_requested) {
             recompute_all_visual_lines();
+            scroll_cursor_into_view();
+        }
     }
 }
 
