@@ -662,9 +662,9 @@ Value Object::to_string() const
     return js_string(heap(), String::format("[object %s]", class_name()));
 }
 
-Value Object::invoke(const FlyString& property_name, Optional<MarkedValueList> arguments) const
+Value Object::invoke(const FlyString& property_name, Optional<MarkedValueList> arguments)
 {
-    auto& interpreter = const_cast<Object*>(this)->interpreter();
+    auto& interpreter = this->interpreter();
     auto property = get(property_name).value_or(js_undefined());
     if (interpreter.exception())
         return {};
@@ -672,7 +672,7 @@ Value Object::invoke(const FlyString& property_name, Optional<MarkedValueList> a
         interpreter.throw_exception<TypeError>(String::format("%s is not a function", property.to_string_without_side_effects().characters()));
         return {};
     }
-    return interpreter.call(property.as_function(), const_cast<Object*>(this), move(arguments));
+    return interpreter.call(property.as_function(), this, move(arguments));
 }
 
 }
