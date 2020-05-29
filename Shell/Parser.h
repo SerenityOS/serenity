@@ -61,7 +61,7 @@ struct Redirection {
     Type type;
     int fd { -1 };
     int rewire_fd { -1 };
-    String path {};
+    Token path {};
 };
 
 struct Rewiring {

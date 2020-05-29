@@ -1140,13 +1140,13 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
                     dbgprintf("Pipe\n");
                     break;
                 case Redirection::FileRead:
-                    dbgprintf("fd:%d = FileRead: %s\n", redirecton.fd, redirecton.path.characters());
+                    dbgprintf("fd:%d = FileRead: %s\n", redirecton.fd, redirecton.path.text.characters());
                     break;
                 case Redirection::FileWrite:
-                    dbgprintf("fd:%d = FileWrite: %s\n", redirecton.fd, redirecton.path.characters());
+                    dbgprintf("fd:%d = FileWrite: %s\n", redirecton.fd, redirecton.path.text.characters());
                     break;
                 case Redirection::FileWriteAppend:
-                    dbgprintf("fd:%d = FileWriteAppend: %s\n", redirecton.fd, redirecton.path.characters());
+                    dbgprintf("fd:%d = FileWriteAppend: %s\n", redirecton.fd, redirecton.path.text.characters());
                     break;
                 default:
                     break;
@@ -1206,7 +1206,7 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
                     break;
                 }
                 case Redirection::FileWriteAppend: {
-                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+                    int fd = open(redirection.path.text.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
                     if (fd < 0) {
                         perror("open");
                         return 1;
@@ -1216,7 +1216,7 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
                     break;
                 }
                 case Redirection::FileWrite: {
-                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                    int fd = open(redirection.path.text.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
                     if (fd < 0) {
                         perror("open");
                         return 1;
@@ -1226,7 +1226,7 @@ ExitCodeOrContinuationRequest Shell::run_command(const StringView& cmd)
                     break;
                 }
                 case Redirection::FileRead: {
-                    int fd = open(redirection.path.characters(), O_RDONLY);
+                    int fd = open(redirection.path.text.characters(), O_RDONLY);
                     if (fd < 0) {
                         perror("open");
                         return 1;
@@ -1580,10 +1580,12 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
     if (commands.size() == 0)
         return {};
 
-    // get the last token and whether it's the first in its subcommand
+    // Get the last token and whether it's the first in its subcommand.
     String token;
     bool is_first_in_subcommand = false;
     auto& subcommand = commands.last().subcommands;
+    String file_token_trail = " ";
+    String directory_token_trail = "/";
 
     if (subcommand.size() == 0) {
         // foo bar; <tab>
@@ -1591,22 +1593,38 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
         is_first_in_subcommand = true;
     } else {
         auto& last_command = subcommand.last();
-        if (last_command.args.size() == 0) {
-            // foo bar | <tab>
-            token = "";
-            is_first_in_subcommand = true;
-        } else {
-            auto& args = last_command.args;
-            if (args.last().type == Token::Comment) // we cannot complete comments
+        if (!last_command.redirections.is_empty() && last_command.redirections.last().type != Redirection::Pipe) {
+            // foo > bar<tab>
+            const auto& redirection = last_command.redirections.last();
+            const auto& path = redirection.path;
+
+            if (path.end != line.length())
                 return {};
 
-            if (args.last().end != line.length()) {
-                // There was a token separator at the end
-                is_first_in_subcommand = false;
+            token = path.text;
+            is_first_in_subcommand = false;
+            if (path.type == Token::UnterminatedDoubleQuoted)
+                file_token_trail = "\"";
+            else if (path.type == Token::UnterminatedSingleQuoted)
+                file_token_trail = "'";
+        } else {
+            if (last_command.args.size() == 0) {
+                // foo bar | <tab>
                 token = "";
+                is_first_in_subcommand = true;
             } else {
-                is_first_in_subcommand = args.size() == 1;
-                token = last_command.args.last().text;
+                auto& args = last_command.args;
+                if (args.last().type == Token::Comment) // we cannot complete comments
+                    return {};
+
+                if (args.last().end != line.length()) {
+                    // There was a token separator at the end
+                    is_first_in_subcommand = false;
+                    token = "";
+                } else {
+                    is_first_in_subcommand = args.size() == 1;
+                    token = last_command.args.last().text;
+                }
             }
         }
     }
@@ -1685,9 +1703,9 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
             if (!stat_error) {
                 if (S_ISDIR(program_status.st_mode)) {
                     if (!should_suggest_only_executables)
-                        suggestions.append({ escape_token(file), "/", { Line::Style::Hyperlink(String::format("file://%s", file_path.characters())), Line::Style::Anchored } });
+                        suggestions.append({ escape_token(file), directory_token_trail, { Line::Style::Hyperlink(String::format("file://%s", file_path.characters())), Line::Style::Anchored } });
                 } else {
-                    suggestions.append({ escape_token(file), " ", { Line::Style::Hyperlink(String::format("file://%s", file_path.characters())), Line::Style::Anchored } });
+                    suggestions.append({ escape_token(file), file_token_trail, { Line::Style::Hyperlink(String::format("file://%s", file_path.characters())), Line::Style::Anchored } });
                 }
             }
         }
