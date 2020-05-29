@@ -66,6 +66,17 @@ try {
     assert(a[2] === 3);
     assert(o4.test === undefined);
 
+    assertIsSyntaxError("({ get ...foo })");
+    assertIsSyntaxError("({ get... foo })");
+    assertIsSyntaxError("({ get foo })");
+    assertIsSyntaxError("({ get foo: bar })");
+    assertIsSyntaxError("({ get [foo]: bar })");
+    assertIsSyntaxError("({ get ...[foo] })");
+    assertIsSyntaxError("({ get foo(bar) {} })");
+    assertIsSyntaxError("({ set foo() {} })");
+    assertIsSyntaxError("({ set foo(bar, baz) {} })");
+    assertIsSyntaxError("({ ...foo: bar })");
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);

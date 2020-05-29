@@ -796,7 +796,7 @@ public:
         Spread,
     };
 
-    ObjectProperty(NonnullRefPtr<Expression> key, NonnullRefPtr<Expression> value, Type property_type)
+    ObjectProperty(NonnullRefPtr<Expression> key, RefPtr<Expression> value, Type property_type)
         : m_key(move(key))
         , m_value(move(value))
         , m_property_type(property_type)
@@ -804,7 +804,11 @@ public:
     }
 
     const Expression& key() const { return m_key; }
-    const Expression& value() const { return m_value; }
+    const Expression& value() const
+    {
+        ASSERT(m_value);
+        return *m_value;
+    }
 
     Type type() const { return m_property_type; }
 
@@ -815,7 +819,7 @@ private:
     virtual const char* class_name() const override { return "ObjectProperty"; }
 
     NonnullRefPtr<Expression> m_key;
-    NonnullRefPtr<Expression> m_value;
+    RefPtr<Expression> m_value;
     Type m_property_type;
 };
 
