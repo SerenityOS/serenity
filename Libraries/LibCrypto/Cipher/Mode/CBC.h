@@ -53,7 +53,7 @@ public:
         return builder.build();
     }
 
-    virtual size_t IV_length() const { return IVSizeInBits / 8; }
+    virtual size_t IV_length() const override { return IVSizeInBits / 8; }
 
     virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
     {
