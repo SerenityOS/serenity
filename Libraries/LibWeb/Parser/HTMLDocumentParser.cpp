@@ -623,10 +623,7 @@ void HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
         PARSE_ERROR();
     }
 
-    // FIXME: Let furthest block be the topmost node in the stack of open elements
-    //        that is lower in the stack than formatting element, and is an element
-    //        in the special category. There might not be one.
-    RefPtr<Element> furthest_block = nullptr;
+    RefPtr<Element> furthest_block = m_stack_of_open_elements.topmost_special_node_below(*formatting_element);
 
     if (!furthest_block) {
         while (&current_node() != formatting_element)
@@ -642,7 +639,7 @@ void HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
     TODO();
 }
 
-static bool is_special_tag(const FlyString& tag_name)
+bool HTMLDocumentParser::is_special_tag(const FlyString& tag_name)
 {
     return tag_name.is_one_of(
         "address",
@@ -911,7 +908,17 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name() == "li") {
-        TODO();
+        if (!m_stack_of_open_elements.has_in_list_item_scope("li")) {
+            PARSE_ERROR();
+            return;
+        }
+        generate_implied_end_tags("li");
+        if (current_node().tag_name() != "li") {
+            PARSE_ERROR();
+            dbg() << "Expected <li> current node, but had <" << current_node().tag_name() << ">";
+        }
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped("li");
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("dd", "dt")) {
@@ -943,7 +950,13 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "a") {
-        TODO();
+        if (m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker("a")) {
+            TODO();
+        }
+        reconstruct_the_active_formatting_elements();
+        auto element = insert_html_element(token);
+        m_list_of_active_formatting_elements.add(*element);
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) {
