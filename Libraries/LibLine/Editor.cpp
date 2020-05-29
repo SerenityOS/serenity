@@ -288,9 +288,13 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 
     Core::EventLoop loop;
 
-    m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read);
+    m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read | Core::Notifier::Exceptional);
     add_child(*m_notifier);
 
+    m_notifier->on_exceptional_event = [&] {
+        handle_interrupt();
+        refresh_display();
+    };
     m_notifier->on_ready_to_read = [&] {
         handle_read_event();
 
@@ -342,8 +346,40 @@ void Editor::save_to(JsonObject& object)
     object.set("used_display_area", move(display_area));
 }
 
+void Editor::handle_interrupt()
+{
+    if (m_was_resized) {
+        m_was_interrupted = false;
+        m_refresh_needed = true;
+        return;
+    }
+
+    if (!m_was_interrupted) {
+        finish();
+        return;
+    }
+
+    m_was_interrupted = false;
+
+    if (!m_buffer.is_empty())
+        printf("^C");
+
+    m_buffer.clear();
+    m_cursor = 0;
+
+    if (on_interrupt_handled)
+        on_interrupt_handled();
+
+    m_refresh_needed = true;
+}
+
 void Editor::handle_read_event()
 {
+    if (m_was_resized || m_was_interrupted) {
+        handle_interrupt();
+        return;
+    }
+
     char keybuf[16];
     ssize_t nread = 0;
 
@@ -352,26 +388,7 @@ void Editor::handle_read_event()
 
     if (nread < 0) {
         if (errno == EINTR) {
-            if (!m_was_interrupted) {
-                if (m_was_resized)
-                    return;
-
-                finish();
-                return;
-            }
-
-            m_was_interrupted = false;
-
-            if (!m_buffer.is_empty())
-                printf("^C");
-
-            m_buffer.clear();
-            m_cursor = 0;
-
-            if (on_interrupt_handled)
-                on_interrupt_handled();
-
-            m_refresh_needed = true;
+            handle_interrupt();
             return;
         }
 
@@ -953,6 +970,7 @@ void Editor::refresh_display()
     // Someone changed the window size, figure it out
     // and react to it, we might need to redraw.
     if (m_was_resized) {
+        m_was_resized = false;
         auto previous_num_columns = m_num_columns;
 
         struct winsize ws;
@@ -1079,6 +1097,14 @@ void Editor::strip_styles(bool strip_anchored)
     }
 
     m_refresh_needed = true;
+}
+
+void Editor::reposition_origin()
+{
+    if (m_is_editing) {
+        set_origin();
+        m_refresh_needed = true;
+    }
 }
 
 void Editor::reposition_cursor()

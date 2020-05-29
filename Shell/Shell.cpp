@@ -1749,8 +1749,12 @@ void Shell::custom_event(Core::CustomEvent& event)
         auto* job_ptr = event.data();
         if (job_ptr) {
             auto& job = *(Job*)job_ptr;
-            if (job.is_running_in_background())
-                fprintf(stderr, "Shell: Job %d(%s) exited\n", job.pid(), job.cmd().characters());
+            if (job.is_running_in_background()) {
+                fprintf(stderr, "\nShell: Job %d(%s) exited\n", job.pid(), job.cmd().characters());
+                fflush(stderr);
+                if (editor)
+                    editor->reposition_origin();
+            }
             jobs.remove(job.pid());
         }
         return;

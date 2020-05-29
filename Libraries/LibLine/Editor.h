@@ -110,20 +110,22 @@ public:
     Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
 
-    // FIXME: we will have to kindly ask our instantiators to set our signal handlers,
-    // since we can not do this cleanly ourselves. (signal() limitation: cannot give member functions)
+    // FIXME: We cannot safely detect a specific signal, so we will have to rely on
+    //        our users to tell us if the signal was indeed a WINCH.
+    void resized() { m_was_resized = true; }
+
     void interrupted()
     {
         if (m_is_editing)
             m_was_interrupted = true;
     }
-    void resized() { m_was_resized = true; }
 
     size_t cursor() const { return m_cursor; }
     const Vector<u32, 1024>& buffer() const { return m_buffer; }
     u32 buffer_at(size_t pos) const { return m_buffer.at(pos); }
     String line() const { return line(m_buffer.size()); }
     String line(size_t up_to_index) const;
+    void reposition_origin();
 
     // Only makes sense inside a character_input callback or on_* callback.
     void set_prompt(const String& prompt)
@@ -223,6 +225,7 @@ private:
 
     void refresh_display();
     void cleanup();
+    void handle_interrupt();
 
     void restore()
     {
@@ -324,7 +327,6 @@ private:
 
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
-    // TODO: handle signals internally.
     struct termios m_termios, m_default_termios;
     bool m_was_interrupted { false };
     bool m_was_resized { false };
