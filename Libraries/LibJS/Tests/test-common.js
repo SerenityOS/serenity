@@ -51,6 +51,18 @@ function assertThrowsError(testFunction, options) {
 }
 
 /**
+ * Ensures the provided JavaScript source code results in a SyntaxError
+ * @param {string} source The JavaScript source code to compile
+ */
+function assertIsSyntaxError(source) {
+    assertThrowsError(() => {
+        new Function(source)();
+    }, {
+        error: SyntaxError,
+    });
+}
+
+/**
  * Ensures the provided arrays contain exactly the same items.
  * @param {Array} a First array
  * @param {Array} b Second array
