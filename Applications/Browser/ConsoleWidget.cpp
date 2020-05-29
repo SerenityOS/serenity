@@ -27,6 +27,7 @@
 #include "ConsoleWidget.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextBox.h>
 #include <LibJS/Interpreter.h>
@@ -59,10 +60,13 @@ ConsoleWidget::ConsoleWidget()
     m_output_view = add<Web::PageView>();
     m_output_view->set_document(base_document);
 
-    m_input = add<GUI::TextBox>();
+    auto& bottom_container = add<GUI::Widget>();
+    bottom_container.set_layout<GUI::HorizontalBoxLayout>();
+    bottom_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    bottom_container.set_preferred_size(0, 22);
+
+    m_input = bottom_container.add<GUI::TextBox>();
     m_input->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
-    m_input->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_input->set_preferred_size(0, 22);
     // FIXME: Syntax Highlighting breaks the cursor's position on non fixed-width fonts.
     m_input->set_font(Gfx::Font::default_fixed_width_font());
     m_input->set_history_enabled(true);
@@ -103,6 +107,15 @@ ConsoleWidget::ConsoleWidget()
         }
 
         print_html(JS::MarkupGenerator::html_from_value(m_interpreter->last_value()));
+    };
+
+    auto& clear_button = bottom_container.add<GUI::Button>();
+    clear_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    clear_button.set_preferred_size(22, 22);
+    clear_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"));
+    clear_button.set_tooltip("Clear the console output");
+    clear_button.on_click = [this](auto) {
+        clear_output();
     };
 }
 
@@ -148,7 +161,8 @@ void ConsoleWidget::print_html(const StringView& line)
 
 void ConsoleWidget::clear_output()
 {
-    const_cast<Web::HTMLBodyElement*>(m_output_view->document()->body())->remove_all_children();
+    m_output_container->remove_all_children();
+    m_output_view->update();
 }
 
 }
