@@ -370,7 +370,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
             // for arrow function bodies which are a single expression.
             // Esprima generates a single "ArrowFunctionExpression"
             // with a "body" property.
-            auto return_expression = parse_expression(0);
+            auto return_expression = parse_expression(2);
             auto return_block = create_ast_node<BlockStatement>();
             return_block->append<ReturnStatement>(move(return_expression));
             return return_block;
@@ -848,8 +848,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
                 syntax_error(
                     String::format("'%s' cannot be assigned to in strict mode code", name.characters()),
                     m_parser_state.m_current_token.line_number(),
-                    m_parser_state.m_current_token.line_column()
-                );
+                    m_parser_state.m_current_token.line_column());
             }
         }
         return create_ast_node<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
