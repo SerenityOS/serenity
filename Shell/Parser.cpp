@@ -33,12 +33,13 @@ void Parser::commit_token(Token::Type type, AllowEmptyToken allow_empty)
 {
     if (allow_empty == AllowEmptyToken::No && m_token.is_empty())
         return;
+    Token token { String::copy(m_token), m_position, m_token.size(), type };
     if (state() == InRedirectionPath) {
-        m_redirections.last().path = String::copy(m_token);
+        m_redirections.last().path = move(token);
         m_token.clear_with_capacity();
         return;
     }
-    m_tokens.append({ String::copy(m_token), m_position, m_token.size(), type });
+    m_tokens.append(token);
     m_token.clear_with_capacity();
 };
 
@@ -333,13 +334,15 @@ Vector<Command> Parser::parse()
 
     while (m_state_stack.size() > 1) {
         if (state() == State::InDoubleQuotes) {
+            pop_state();
             commit_token(Token::UnterminatedDoubleQuoted, AllowEmptyToken::Yes);
         } else if (state() == State::InSingleQuotes) {
+            pop_state();
             commit_token(Token::UnterminatedSingleQuoted, AllowEmptyToken::Yes);
         } else {
             commit_token(Token::Bare, AllowEmptyToken::No);
+            pop_state();
         }
-        pop_state();
     }
     ASSERT(state() == State::Free);
 
