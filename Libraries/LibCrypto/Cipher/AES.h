@@ -89,7 +89,7 @@ struct AESCipherKey : public CipherKey {
             expand_decrypt_key(user_key, key_bits);
     }
 
-    virtual ~AESCipherKey() override {}
+    virtual ~AESCipherKey() override { }
 
     size_t rounds() const { return m_rounds; }
     size_t length() const { return m_bits / 8; }

@@ -219,7 +219,7 @@ public:
     {
     }
 
-    ~RSA_PKCS1_EME() {}
+    ~RSA_PKCS1_EME() { }
 
     virtual void encrypt(const ByteBuffer& in, ByteBuffer& out) override;
     virtual void decrypt(const ByteBuffer& in, ByteBuffer& out) override;
