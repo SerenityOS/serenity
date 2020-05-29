@@ -50,6 +50,7 @@ public:
     bool has_in_scope(const FlyString& tag_name) const;
     bool has_in_button_scope(const FlyString& tag_name) const;
     bool has_in_table_scope(const FlyString& tag_name) const;
+    bool has_in_list_item_scope(const FlyString& tag_name) const;
 
     bool has_in_scope(const Element&) const;
 
@@ -58,6 +59,8 @@ public:
     const NonnullRefPtrVector<Element>& elements() const { return m_elements; }
 
     void pop_until_an_element_with_tag_name_has_been_popped(const FlyString&);
+
+    Element* topmost_special_node_below(const Element&);
 
 private:
     bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;

@@ -76,6 +76,8 @@ public:
 
     InsertionMode insertion_mode() const { return m_insertion_mode; }
 
+    static bool is_special_tag(const FlyString& tag_name);
+
 private:
     const char* insertion_mode_name() const;
 

@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/StackOfOpenElements.h>
 
 namespace Web {
@@ -85,6 +86,14 @@ bool StackOfOpenElements::has_in_table_scope(const FlyString& tag_name) const
     return has_in_scope_impl(tag_name, list);
 }
 
+bool StackOfOpenElements::has_in_list_item_scope(const FlyString& tag_name) const
+{
+    auto list = s_base_list;
+    list.append("ol");
+    list.append("ul");
+    return has_in_scope_impl(tag_name, list);
+}
+
 bool StackOfOpenElements::contains(const Element& element) const
 {
     for (auto& element_on_stack : m_elements) {
@@ -99,6 +108,19 @@ void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(con
     while (m_elements.last().tag_name() != tag_name)
         pop();
     pop();
+}
+
+Element* StackOfOpenElements::topmost_special_node_below(const Element& formatting_element)
+{
+    Element* found_element = nullptr;
+    for (ssize_t i = m_elements.size() - 1; i >= 0; ++i) {
+        auto& element = m_elements[i];
+        if (&element == &formatting_element)
+            break;
+        if (HTMLDocumentParser::is_special_tag(element.tag_name()))
+            found_element = &element;
+    }
+    return found_element;
 }
 
 }
