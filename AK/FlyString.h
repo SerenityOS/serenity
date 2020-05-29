@@ -89,9 +89,8 @@ public:
 
     static void did_destroy_impl(Badge<StringImpl>, StringImpl&);
 
-    bool is_one_of() { return false; }
     template<typename T, typename... Rest>
-    bool is_one_of(const T& string, Rest... rest)
+    bool is_one_of(const T& string, Rest... rest) const
     {
         if (string == *this)
             return true;
@@ -100,6 +99,8 @@ public:
 
 
 private:
+    bool is_one_of() const { return false; }
+
     RefPtr<StringImpl> m_impl;
 };
 
