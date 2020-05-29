@@ -184,6 +184,7 @@ int main(int argc, char** argv)
             if (!active_layer)
                 return;
             image_editor.image()->remove_layer(*active_layer);
+            image_editor.set_active_layer(nullptr);
         },
         window));
 
