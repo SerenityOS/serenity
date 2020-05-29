@@ -39,7 +39,7 @@ enum class Intent {
 };
 
 enum class PaddingMode {
-    CMS, // RFC 1423
+    CMS,     // RFC 1423
     RFC5246, // very similar to CMS, but filled with |length - 1|, instead of |length|
     Null,
     // FIXME: We do not implement these yet
@@ -137,4 +137,3 @@ private:
 };
 }
 }
-
