@@ -55,6 +55,7 @@ public:
     bool has_in_scope(const Element&) const;
 
     bool contains(const Element&) const;
+    bool contains(const FlyString& tag_name) const;
 
     const NonnullRefPtrVector<Element>& elements() const { return m_elements; }
     NonnullRefPtrVector<Element>& elements() { return m_elements; }

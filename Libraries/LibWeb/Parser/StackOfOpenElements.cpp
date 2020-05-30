@@ -103,6 +103,15 @@ bool StackOfOpenElements::contains(const Element& element) const
     return false;
 }
 
+bool StackOfOpenElements::contains(const FlyString& tag_name) const
+{
+    for (auto& element_on_stack : m_elements) {
+        if (element_on_stack.tag_name() == tag_name)
+            return true;
+    }
+    return false;
+}
+
 void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(const FlyString& tag_name)
 {
     while (m_elements.last().tag_name() != tag_name)
