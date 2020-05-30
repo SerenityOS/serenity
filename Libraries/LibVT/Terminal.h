@@ -42,6 +42,7 @@ public:
 
     virtual void beep() = 0;
     virtual void set_window_title(const StringView&) = 0;
+    virtual void set_window_progress(int value, int max) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
     virtual void terminal_history_changed() = 0;
     virtual void emit(const u8*, size_t) = 0;

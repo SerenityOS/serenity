@@ -47,6 +47,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -359,6 +360,14 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes()[m_terminal.cursor_column()].foreground_color));
         }
     }
+}
+
+void TerminalWidget::set_window_progress(int value, int max)
+{
+    float float_value = value;
+    float float_max = max;
+    float progress = (float_value / float_max) * 100.0f;
+    window()->set_progress((int)roundf(progress));
 }
 
 void TerminalWidget::set_window_title(const StringView& title)

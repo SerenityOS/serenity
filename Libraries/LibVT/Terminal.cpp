@@ -573,6 +573,9 @@ void Terminal::execute_xterm_command()
         // FIXME: Respect the provided ID
         m_current_attribute.href_id = String::format("%u", m_next_href_id++);
         break;
+    case 9:
+        m_client.set_window_progress(numeric_params[1], numeric_params[2]);
+        break;
     default:
         unimplemented_xterm_escape();
         break;
