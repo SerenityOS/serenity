@@ -57,6 +57,7 @@ public:
     bool contains(const Element&) const;
 
     const NonnullRefPtrVector<Element>& elements() const { return m_elements; }
+    NonnullRefPtrVector<Element>& elements() { return m_elements; }
 
     void pop_until_an_element_with_tag_name_has_been_popped(const FlyString&);
 
