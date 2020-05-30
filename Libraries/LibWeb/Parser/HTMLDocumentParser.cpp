@@ -801,7 +801,17 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_end_of_file()) {
-        TODO();
+        // FIXME: If the stack of template insertion modes is not empty,
+        // then process the token using the rules for the "in template" insertion mode.
+
+        // FIXME: If there is a node in the stack of open elements that is not either
+        // a dd element, a dt element, an li element, an optgroup element, an option element,
+        // a p element, an rb element, an rp element, an rt element, an rtc element,
+        // a tbody element, a td element, a tfoot element, a th element, a thead element,
+        // a tr element, the body element, or the html element, then this is a parse error.
+
+        stop_parsing();
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name() == "body") {
