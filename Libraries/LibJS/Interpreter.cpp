@@ -207,9 +207,10 @@ Value Interpreter::call(Function& function, Value this_value, Optional<MarkedVal
 {
     auto& call_frame = push_call_frame();
     call_frame.function_name = function.name();
-    call_frame.this_value = this_value;
+    call_frame.this_value = function.bound_this().value_or(this_value);
+    call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
-        call_frame.arguments = arguments.value().values();
+        call_frame.arguments.append(arguments.value().values());
     call_frame.environment = function.create_environment();
     auto result = function.call(*this);
     pop_call_frame();
