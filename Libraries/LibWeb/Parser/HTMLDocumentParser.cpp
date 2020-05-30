@@ -1044,7 +1044,16 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("dd", "dt")) {
-        TODO();
+        if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
+            PARSE_ERROR();
+            return;
+        }
+        generate_implied_end_tags(token.tag_name());
+        if (current_node().tag_name() != token.tag_name()) {
+            PARSE_ERROR();
+        }
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("h1", "h2", "h3", "h4", "h5", "h6")) {
