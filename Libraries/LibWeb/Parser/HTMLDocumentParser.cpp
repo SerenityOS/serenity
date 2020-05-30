@@ -1228,7 +1228,10 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
                 m_stack_of_open_elements.pop();
                 break;
             }
-            // FIXME: Handle special elements!
+            if (is_special_tag(node->tag_name())) {
+                PARSE_ERROR();
+                return;
+            }
         }
         return;
     }
