@@ -43,6 +43,7 @@ private:
     virtual const char* class_name() const override { return "StringConstructor"; }
 
     static Value raw(Interpreter&);
+    static Value from_char_code(Interpreter&);
 };
 
 }
