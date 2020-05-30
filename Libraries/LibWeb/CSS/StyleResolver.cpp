@@ -359,6 +359,15 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::ListStyle) {
+        auto parts = split_on_whitespace(value.to_string());
+        if (!parts.is_empty()) {
+            auto value = parse_css_value(parts[0]);
+            style.set_property(CSS::PropertyID::ListStyleType, value);
+        }
+        return;
+    }
+
     style.set_property(property_id, value);
 }
 

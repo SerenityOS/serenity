@@ -47,6 +47,10 @@ void LayoutListItem::layout(LayoutMode layout_mode)
 
     LayoutBlock::layout(layout_mode);
 
+    if (style().string_or_fallback(CSS::PropertyID::ListStyleType, "disc") == "none") {
+        return;
+    }
+
     if (!m_marker) {
         m_marker = adopt(*new LayoutListItemMarker);
         if (first_child())
