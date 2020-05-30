@@ -122,7 +122,7 @@ void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(con
 Element* StackOfOpenElements::topmost_special_node_below(const Element& formatting_element)
 {
     Element* found_element = nullptr;
-    for (ssize_t i = m_elements.size() - 1; i >= 0; ++i) {
+    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& element = m_elements[i];
         if (&element == &formatting_element)
             break;
