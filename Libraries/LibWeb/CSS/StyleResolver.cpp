@@ -391,7 +391,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
         }
     }
 
-    auto style_attribute = element.attribute("style");
+    auto style_attribute = element.attribute(HTML::AttributeNames::style);
     if (!style_attribute.is_null()) {
         if (auto declaration = parse_css_declaration(style_attribute)) {
             for (auto& property : declaration->properties()) {
