@@ -37,6 +37,7 @@
 
 #define ASSERT_NOT_REACHED() fprintf(stderr, "\033[31;1mASSERT_NOT_REACHED\033[0m\n");
 #define RELEASE_ASSERT ASSERT
+#define TODO ASSERT_NOT_REACHED
 
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
