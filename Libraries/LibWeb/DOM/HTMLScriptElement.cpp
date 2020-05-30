@@ -206,10 +206,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 
     // FIXME: Check classic vs. module
     if (has_attribute("src") && has_attribute("defer") && m_parser_inserted && !has_attribute("async")) {
-        // FIXME: Add the element to the end of the list of scripts that will execute
-        //        when the document has finished parsing associated with the Document
-        //        of the parser that created the element.
-        ASSERT_NOT_REACHED();
+        document().add_script_to_execute_when_parsing_has_finished({}, *this);
     }
 
     else if (has_attribute("src") && m_parser_inserted && !has_attribute("async")) {
@@ -225,7 +222,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     }
 
     else if (has_attribute("src")) {
-        ASSERT_NOT_REACHED();
+        m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
     }
 
     else {

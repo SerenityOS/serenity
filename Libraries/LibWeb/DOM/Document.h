@@ -133,6 +133,12 @@ public:
     HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }
     NonnullRefPtr<HTMLScriptElement> take_pending_parsing_blocking_script(Badge<HTMLDocumentParser>);
 
+    void add_script_to_execute_when_parsing_has_finished(Badge<HTMLScriptElement>, HTMLScriptElement&);
+    NonnullRefPtrVector<HTMLScriptElement> take_scripts_to_execute_when_parsing_has_finished(Badge<HTMLDocumentParser>);
+
+    void add_script_to_execute_as_soon_as_possible(Badge<HTMLScriptElement>, HTMLScriptElement&);
+    NonnullRefPtrVector<HTMLScriptElement> take_scripts_to_execute_as_soon_as_possible(Badge<HTMLDocumentParser>);
+
     bool in_quirks_mode() const { return m_quirks_mode; }
     void set_quirks_mode(bool mode) { m_quirks_mode = mode; }
 
@@ -161,6 +167,8 @@ private:
     OwnPtr<JS::Interpreter> m_interpreter;
 
     RefPtr<HTMLScriptElement> m_pending_parsing_blocking_script;
+    NonnullRefPtrVector<HTMLScriptElement> m_scripts_to_execute_when_parsing_has_finished;
+    NonnullRefPtrVector<HTMLScriptElement> m_scripts_to_execute_as_soon_as_possible;
 
     bool m_quirks_mode { false };
 };
