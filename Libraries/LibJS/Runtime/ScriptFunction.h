@@ -33,9 +33,9 @@ namespace JS {
 
 class ScriptFunction final : public Function {
 public:
-    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment);
+    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, bool is_arrow_function = false);
 
-    ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype);
+    ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype, bool is_arrow_function = false);
     virtual ~ScriptFunction();
 
     const Statement& body() const { return m_body; }
@@ -61,6 +61,7 @@ private:
     const Vector<FunctionNode::Parameter> m_parameters;
     LexicalEnvironment* m_parent_environment { nullptr };
     i32 m_function_length;
+    bool m_is_arrow_function;
 };
 
 }

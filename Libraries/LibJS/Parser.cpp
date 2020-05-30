@@ -382,7 +382,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     if (!function_body_result.is_null()) {
         state_rollback_guard.disarm();
         auto body = function_body_result.release_nonnull();
-        return create_ast_node<FunctionExpression>("", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last());
+        return create_ast_node<FunctionExpression>("", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last(), true);
     }
 
     return nullptr;

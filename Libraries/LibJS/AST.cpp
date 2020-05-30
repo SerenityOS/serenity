@@ -76,7 +76,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter) const
 
 Value FunctionExpression::execute(Interpreter& interpreter) const
 {
-    return ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), function_length(), interpreter.current_environment());
+    return ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), function_length(), interpreter.current_environment(), m_is_arrow_function);
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter) const

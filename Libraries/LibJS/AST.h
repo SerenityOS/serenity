@@ -223,8 +223,9 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables)
+    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_arrow_function = false)
         : FunctionNode(name, move(body), move(parameters), function_length, move(variables))
+        , m_is_arrow_function(is_arrow_function)
     {
     }
 
@@ -233,6 +234,8 @@ public:
 
 private:
     virtual const char* class_name() const override { return "FunctionExpression"; }
+
+    bool m_is_arrow_function;
 };
 
 class ErrorExpression final : public Expression {
