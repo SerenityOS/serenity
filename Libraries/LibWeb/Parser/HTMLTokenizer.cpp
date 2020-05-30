@@ -34,6 +34,11 @@
 
 //#define TOKENIZER_TRACE
 
+#define PARSE_ERROR()                                                                      \
+    do {                                                                                   \
+        dbg() << "Parse error (tokenization)" << __PRETTY_FUNCTION__ << " @ " << __LINE__; \
+    } while (0)
+
 #define CONSUME_NEXT_INPUT_CHARACTER \
     current_input_character = next_codepoint();
 
@@ -1197,7 +1202,7 @@ _StartOfFunction:
                     }
 
                     if (!match.value().entity.ends_with(';')) {
-                        TODO();
+                        PARSE_ERROR();
                     }
 
                     m_temporary_buffer.clear();
