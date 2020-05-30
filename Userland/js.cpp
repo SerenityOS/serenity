@@ -86,8 +86,12 @@ String read_next_piece()
 {
     StringBuilder piece;
 
+    auto line_level_delta_for_next_line { 0 };
+
     do {
         auto line_result = s_editor->get_line(prompt_for_level(s_repl_line_level));
+
+        line_level_delta_for_next_line = 0;
 
         if (line_result.is_error()) {
             s_fail_repl = true;
@@ -100,23 +104,51 @@ String read_next_piece()
         piece.append(line);
         auto lexer = JS::Lexer(line);
 
+        enum {
+            NotInLabelOrObjectKey,
+            InLabelOrObjectKeyIdentifier,
+            InLabelOrObjectKey
+        } label_state { NotInLabelOrObjectKey };
+
         for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
             switch (token.type()) {
             case JS::TokenType::BracketOpen:
             case JS::TokenType::CurlyOpen:
             case JS::TokenType::ParenOpen:
+                label_state = NotInLabelOrObjectKey;
                 s_repl_line_level++;
                 break;
             case JS::TokenType::BracketClose:
             case JS::TokenType::CurlyClose:
             case JS::TokenType::ParenClose:
+                label_state = NotInLabelOrObjectKey;
                 s_repl_line_level--;
+                break;
+
+            case JS::TokenType::Identifier:
+            case JS::TokenType::StringLiteral:
+                if (label_state == NotInLabelOrObjectKey)
+                    label_state = InLabelOrObjectKeyIdentifier;
+                else
+                    label_state = NotInLabelOrObjectKey;
+                break;
+            case JS::TokenType::Colon:
+                if (label_state == InLabelOrObjectKeyIdentifier)
+                    label_state = InLabelOrObjectKey;
+                else
+                    label_state = NotInLabelOrObjectKey;
                 break;
             default:
                 break;
             }
         }
-    } while (s_repl_line_level > 0);
+
+        if (label_state == InLabelOrObjectKey) {
+            // If there's a label or object literal key at the end of this line,
+            // prompt for more lines but do not change the line level.
+            line_level_delta_for_next_line += 1;
+        }
+    } while (s_repl_line_level + line_level_delta_for_next_line > 0);
 
     return piece.to_string();
 }
