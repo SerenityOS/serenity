@@ -56,7 +56,7 @@ public:
 
 protected:
     explicit Function(Object& prototype);
-    explicit Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments);
+    Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments);
     virtual const char* class_name() const override { return "Function"; }
 
 private:
