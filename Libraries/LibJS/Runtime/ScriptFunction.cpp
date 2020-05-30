@@ -47,18 +47,19 @@ static ScriptFunction* script_function_from(Interpreter& interpreter)
     return static_cast<ScriptFunction*>(this_object);
 }
 
-ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment)
+ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, bool is_arrow_function)
 {
-    return global_object.heap().allocate<ScriptFunction>(name, body, move(parameters), m_function_length, parent_environment, *global_object.function_prototype());
+    return global_object.heap().allocate<ScriptFunction>(name, body, move(parameters), m_function_length, parent_environment, *global_object.function_prototype(), is_arrow_function);
 }
 
-ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype)
+ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype, bool is_arrow_function)
     : Function(prototype)
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
     , m_parent_environment(parent_environment)
     , m_function_length(m_function_length)
+    , m_is_arrow_function(is_arrow_function)
 {
     define_property("prototype", Object::create_empty(interpreter(), interpreter().global_object()), 0);
     define_native_property("length", length_getter, nullptr, Attribute::Configurable);
