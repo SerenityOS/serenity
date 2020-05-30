@@ -46,4 +46,5 @@ private:
 
     RefPtr<GUI::TreeView> m_variables_view;
     RefPtr<GUI::ListView> m_backtrace_view;
+    RefPtr<GUI::Menu> m_variable_context_menu;
 };
