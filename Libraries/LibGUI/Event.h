@@ -267,10 +267,11 @@ enum MouseButton : u8 {
 
 class KeyEvent final : public Event {
 public:
-    KeyEvent(Type type, KeyCode key, u8 modifiers)
+    KeyEvent(Type type, KeyCode key, u8 modifiers, u32 scancode)
         : Event(type)
         , m_key(key)
         , m_modifiers(modifiers)
+        , m_scancode(scancode)
     {
     }
 
@@ -281,6 +282,7 @@ public:
     bool logo() const { return m_modifiers & Mod_Logo; }
     u8 modifiers() const { return m_modifiers; }
     String text() const { return m_text; }
+    u32 scancode() const { return m_scancode; }
 
     String to_string() const;
 
@@ -288,6 +290,7 @@ private:
     friend class WindowServerConnection;
     KeyCode m_key { 0 };
     u8 m_modifiers { 0 };
+    u32 m_scancode { 0 };
     String m_text;
 };
 

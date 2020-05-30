@@ -129,7 +129,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
     if (!window)
         return;
 
-    auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode) message.key(), message.modifiers());
+    auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode) message.key(), message.modifiers(), message.scancode());
     if (message.character() != '\0') {
         char ch = message.character();
         key_event->m_text = String(&ch, 1);
@@ -188,7 +188,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyUp& message
     if (!window)
         return;
 
-    auto key_event = make<KeyEvent>(Event::KeyUp, (KeyCode) message.key(), message.modifiers());
+    auto key_event = make<KeyEvent>(Event::KeyUp, (KeyCode) message.key(), message.modifiers(), message.scancode());
     if (message.character() != '\0') {
         char ch = message.character();
         key_event->m_text = String(&ch, 1);
