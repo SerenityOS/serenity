@@ -31,7 +31,7 @@ try {
         message: "Reduce of empty array with no initial value"
     });
 
-    [1, 2].reduce(() => { assert(this === undefined) });
+    [1, 2].reduce(function () { assert(this === undefined) });
 
     var callbackCalled = 0;
     var callback = () => { callbackCalled++; return true };
