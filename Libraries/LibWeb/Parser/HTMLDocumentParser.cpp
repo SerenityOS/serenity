@@ -216,7 +216,7 @@ RefPtr<Node> HTMLDocumentParser::find_appropriate_place_for_inserting_node()
 {
     auto& target = current_node();
     if (m_foster_parenting) {
-        ASSERT_NOT_REACHED();
+        TODO();
     }
     return target;
 }
@@ -370,12 +370,12 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
         m_insertion_mode = InsertionMode::AfterHead;
         return;
     }
-    ASSERT_NOT_REACHED();
+    TODO();
 }
 
 void HTMLDocumentParser::handle_in_head_noscript(HTMLToken&)
 {
-    ASSERT_NOT_REACHED();
+    TODO();
 }
 
 void HTMLDocumentParser::parse_generic_raw_text_element(HTMLToken& token)
@@ -414,19 +414,19 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
             return;
         }
 
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
     if (token.is_comment()) {
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
     if (token.is_doctype()) {
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
     if (token.is_start_tag() && token.tag_name() == "html") {
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
     if (token.is_start_tag() && token.tag_name() == "body") {
@@ -437,15 +437,15 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "frameset") {
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title")) {
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
     if (token.is_end_tag() && token.tag_name() == "template") {
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("body", "html", "br")) {
@@ -453,7 +453,7 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
     }
 
     if ((token.is_start_tag() && token.tag_name() == "head") || token.is_end_tag()) {
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
 AnythingElse:
@@ -508,7 +508,7 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
 
     if (token.is_end_tag() && token.tag_name() == "html") {
         if (m_parsing_fragment) {
-            ASSERT_NOT_REACHED();
+            TODO();
         }
         m_insertion_mode = InsertionMode::AfterAfterBody;
         return;
@@ -530,7 +530,7 @@ void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
         stop_parsing();
         return;
     }
-    ASSERT_NOT_REACHED();
+    TODO();
 }
 
 void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
@@ -730,7 +730,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 {
     if (token.is_character()) {
         if (token.codepoint() == 0) {
-            ASSERT_NOT_REACHED();
+            TODO();
         }
         if (token.is_parser_whitespace()) {
             reconstruct_the_active_formatting_elements();
@@ -781,7 +781,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 
     if (token.is_end_tag() && token.tag_name() == "body") {
         if (!m_stack_of_open_elements.has_in_scope("body")) {
-            ASSERT_NOT_REACHED();
+            TODO();
         }
 
         // FIXME: Otherwise, if there is a node in the stack of open elements that is
@@ -1126,7 +1126,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
-    ASSERT_NOT_REACHED();
+    TODO();
 }
 
 void HTMLDocumentParser::increment_script_nesting_level()
@@ -1211,7 +1211,7 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         m_insertion_mode = m_original_insertion_mode;
         return;
     }
-    ASSERT_NOT_REACHED();
+    TODO();
 }
 
 void HTMLDocumentParser::clear_the_stack_back_to_a_table_context()
