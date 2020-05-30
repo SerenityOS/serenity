@@ -114,7 +114,13 @@ private:
     void decrement_script_nesting_level();
     size_t script_nesting_level() const { return m_script_nesting_level; }
     void reset_the_insertion_mode_appropriately();
-    void run_the_adoption_agency_algorithm(HTMLToken&);
+
+    enum AdoptionAgencyAlgorithmOutcome {
+        DoNothing,
+        RunAnyOtherEndTagSteps,
+    };
+
+    AdoptionAgencyAlgorithmOutcome run_the_adoption_agency_algorithm(HTMLToken&);
     void clear_the_stack_back_to_a_table_context();
     void clear_the_stack_back_to_a_table_body_context();
     void clear_the_stack_back_to_a_table_row_context();

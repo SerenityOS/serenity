@@ -605,7 +605,7 @@ Create:
         goto Advance;
 }
 
-void HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
+HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
 {
     auto subject = token.tag_name();
 
@@ -614,23 +614,20 @@ void HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
     // then pop the current node off the stack of open elements, and return.
     if (current_node().tag_name() == subject && !m_list_of_active_formatting_elements.contains(current_node())) {
         m_stack_of_open_elements.pop();
-        return;
+        return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
 
     size_t outer_loop_counter = 0;
 
     //OuterLoop:
     if (outer_loop_counter >= 8)
-        return;
+        return AdoptionAgencyAlgorithmOutcome::DoNothing;
 
     ++outer_loop_counter;
 
     auto formatting_element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker(subject);
-    if (!formatting_element) {
-        // FIXME: If there is no such element, then return and instead act as
-        //        described in the "any other end tag" entry above.
-        TODO();
-    }
+    if (!formatting_element)
+        return AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps;
 
     if (!m_stack_of_open_elements.contains(*formatting_element)) {
         PARSE_ERROR();
@@ -641,7 +638,7 @@ void HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
 
     if (!m_stack_of_open_elements.has_in_scope(*formatting_element)) {
         PARSE_ERROR();
-        return;
+        return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
 
     if (formatting_element != &current_node()) {
@@ -656,7 +653,7 @@ void HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
         m_stack_of_open_elements.pop();
 
         m_list_of_active_formatting_elements.remove(*formatting_element);
-        return;
+        return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
 
     // FIXME: Implement the rest of the AAA :^)
@@ -1052,7 +1049,8 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == "a") {
         if (auto* element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker("a")) {
             PARSE_ERROR();
-            run_the_adoption_agency_algorithm(token);
+            if (run_the_adoption_agency_algorithm(token) == AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps)
+                goto AnyOtherEndTag;
             m_list_of_active_formatting_elements.remove(*element);
             m_stack_of_open_elements.elements().remove_first_matching([&](auto& entry) {
                 return entry.ptr() == element;
@@ -1076,7 +1074,8 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u")) {
-        run_the_adoption_agency_algorithm(token);
+        if (run_the_adoption_agency_algorithm(token) == AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps)
+            goto AnyOtherEndTag;
         return;
     }
 
@@ -1210,8 +1209,8 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
-    // Any other end tag
     if (token.is_end_tag()) {
+    AnyOtherEndTag:
         RefPtr<Element> node;
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
             node = m_stack_of_open_elements.elements()[i];
