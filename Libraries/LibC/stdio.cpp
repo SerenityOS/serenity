@@ -714,6 +714,11 @@ int putchar(int ch)
     return putc(ch, stdout);
 }
 
+int libc_testfunc()
+{
+    return 2;
+}
+
 int fputs(const char* s, FILE* stream)
 {
     ASSERT(stream);

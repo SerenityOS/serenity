@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, Andrew Kaster <andrewdkaster@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,24 +23,18 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <stdio.h>
 
-#pragma once
+int libfunc();
 
-#include <sys/cdefs.h>
+extern "C" void __libc_init();
 
-__BEGIN_DECLS
+int main(int argc, char** argv)
+{
+    (void)argc;
+    (void)argv;
+    libc_testfunc();
+    // __libc_init();
 
-#define RTLD_DEFAULT 0
-#define RTLD_LAZY 1
-#define RTLD_NOW 2
-#define RTLD_GLOBAL 3
-#define RTLD_LOCAL 4
-
-int dlclose(void*);
-char* dlerror();
-void* dlopen(const char*, int);
-void* dlsym(void*, const char*);
-
-__END_DECLS
-
-void* serenity_dlopen(int fd, const char* filename, int flags);
+    return libfunc();
+}

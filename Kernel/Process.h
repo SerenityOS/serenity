@@ -36,11 +36,11 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>
-#include <Kernel/StdLib.h>
 #include <LibC/signal_numbers.h>
 
 namespace ELF {
@@ -453,6 +453,7 @@ private:
 
     int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description);
     ssize_t do_write(FileDescription&, const u8*, int data_size);
+    KResultOr<u32> load_program(FileDescription&, u32 offset, bool update_tls);
 
     KResultOr<NonnullRefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size);
 

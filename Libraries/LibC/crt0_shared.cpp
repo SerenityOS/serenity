@@ -24,23 +24,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+// #include <AK/Types.h>
+// #include <assert.h>
+// #include <stdio.h>
+// #include <stdlib.h>
 
-#include <sys/cdefs.h>
+extern "C" {
 
-__BEGIN_DECLS
+int main(int, char**, char**);
 
-#define RTLD_DEFAULT 0
-#define RTLD_LAZY 1
-#define RTLD_NOW 2
-#define RTLD_GLOBAL 3
-#define RTLD_LOCAL 4
+extern void __libc_init();
+extern void _init();
+extern char** environ;
+extern bool __environ_is_malloced;
 
-int dlclose(void*);
-char* dlerror();
-void* dlopen(const char*, int);
-void* dlsym(void*, const char*);
+void* ___tls_get_addr()
+{
+    // TODO
+    return nullptr;
+}
 
-__END_DECLS
+int _start(int argc, char** argv, char** env)
+{
+    environ = env;
+    __environ_is_malloced = false;
 
-void* serenity_dlopen(int fd, const char* filename, int flags);
+    __libc_init();
+
+    _init();
+
+    // FIXME: call functions in __init_array
+
+    // extern void (*__init_array_start[])(int, char**, char**) __attribute__((visibility("hidden")));
+    // extern void (*__init_array_end[])(int, char**, char**) __attribute__((visibility("hidden")));
+
+    // const size_t size = __init_array_end - __init_array_start;
+    // for (size_t i = 0; i < size; i++)
+    //     (*__init_array_start[i])(argc, argv, env);
+
+    int status = main(argc, argv, environ);
+    return status;
+
+    // exit(status);
+
+    // return 20150614;
+}
+}

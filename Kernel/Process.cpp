@@ -838,14 +838,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     if (parts.is_empty())
         return -ENOENT;
 
-    auto& inode = interpreter_description ? *interpreter_description->inode() : *main_program_description->inode();
-    auto vmobject = SharedInodeVMObject::create_with_inode(inode);
-
-    if (static_cast<const SharedInodeVMObject&>(*vmobject).writable_mappings()) {
-        dbg() << "Refusing to execute a write-mapped program";
-        return -ETXTBSY;
-    }
-
     // Disable profiling temporarily in case it's running on this process.
     bool was_profiling = is_profiling();
     TemporaryChange profiling_disabler(m_profiling, false);
@@ -861,35 +853,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     dbg() << "Process " << pid() << " exec: PD=" << m_page_directory.ptr() << " created";
 #endif
 
-    InodeMetadata loader_metadata;
-
-    // FIXME: Hoooo boy this is a hack if I ever saw one.
-    //      This is the 'random' offset we're giving to our ET_DYN exectuables to start as.
-    //      It also happens to be the static Virtual Addresss offset every static exectuable gets :)
-    //      Without this, some assumptions by the ELF loading hooks below are severely broken.
-    //      0x08000000 is a verified random number chosen by random dice roll https://xkcd.com/221/
-    u32 totally_random_offset = interpreter_description ? 0x08000000 : 0;
-
-    // FIXME: We should be able to load both the PT_INTERP interpreter and the main program... once the RTLD is smart enough
-    if (interpreter_description) {
-        loader_metadata = interpreter_description->metadata();
-        // we don't need the interpreter file desciption after we've loaded (or not) it into memory
-        interpreter_description = nullptr;
-    } else {
-        loader_metadata = main_program_description->metadata();
-    }
-
-    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(loader_metadata.size), "ELF loading", Region::Access::Read);
-    if (!region)
-        return -ENOMEM;
-
-    Region* master_tls_region { nullptr };
-    size_t master_tls_size = 0;
-    size_t master_tls_alignment = 0;
     u32 entry_eip = 0;
 
     MM.enter_process_paging_scope(*this);
-    RefPtr<ELF::Loader> loader;
+
     {
         ArmedScopeGuard rollback_regions_guard([&]() {
             ASSERT(Process::current == this);
@@ -897,79 +864,32 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             m_regions = move(old_regions);
             MM.enter_process_paging_scope(*this);
         });
-        loader = ELF::Loader::create(region->vaddr().as_ptr(), loader_metadata.size);
-        // Load the correct executable -- either interp or main program.
-        // FIXME: Once we actually load both interp and main, we'll need to be more clever about this.
-        //     In that case, both will be ET_DYN objects, so they'll both be completely relocatable.
-        //     That means, we can put them literally anywhere in User VM space (ASLR anyone?).
-        // ALSO FIXME: Reminder to really really fix that 'totally random offset' business.
-        loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
-            ASSERT(size);
-            ASSERT(alignment == PAGE_SIZE);
-            int prot = 0;
-            if (is_readable)
-                prot |= PROT_READ;
-            if (is_writable)
-                prot |= PROT_WRITE;
-            if (is_executable)
-                prot |= PROT_EXEC;
-            if (auto* region = allocate_region_with_vmobject(vaddr.offset(totally_random_offset), size, *vmobject, offset_in_image, String(name), prot)) {
-                region->set_shared(true);
-                return region->vaddr().as_ptr();
+
+        if (interpreter_description) {
+            auto res = load_program(*interpreter_description, 0, true);
+            if (res.is_error()) {
+                return res.error().error();
             }
-            return nullptr;
-        };
-        loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
-            ASSERT(size);
-            ASSERT(alignment == PAGE_SIZE);
-            int prot = 0;
-            if (is_readable)
-                prot |= PROT_READ;
-            if (is_writable)
-                prot |= PROT_WRITE;
-            if (auto* region = allocate_region(vaddr.offset(totally_random_offset), size, String(name), prot))
-                return region->vaddr().as_ptr();
-            return nullptr;
-        };
+            entry_eip = res.value();
 
-        // FIXME: Move TLS region allocation to userspace: LibC and the dynamic loader.
-        //     LibC if we end up with a statically linked executable, and the
-        //     dynamic loader so that it can create new TLS blocks for each shared libarary
-        //     that gets loaded as part of DT_NEEDED processing, and via dlopen()
-        //     If that doesn't happen quickly, at least pass the location of the TLS region
-        //     some ELF Auxilliary Vector so the loader can use it/create new ones as necessary.
-        loader->tls_section_hook = [&](size_t size, size_t alignment) {
-            ASSERT(size);
-            master_tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
-            master_tls_size = size;
-            master_tls_alignment = alignment;
-            return master_tls_region->vaddr().as_ptr();
-        };
-        bool success = loader->load();
-        if (!success) {
-            klog() << "do_exec: Failure loading " << path.characters();
-            return -ENOEXEC;
+        } else { // Statically linked program
+            auto res = load_program(*main_program_description, 0, true);
+            if (res.is_error()) {
+                return res.error().error();
+            }
+            entry_eip = res.value();
         }
-        // FIXME: Validate that this virtual address is within executable region,
-        //     instead of just non-null. You could totally have a DSO with entry point of
-        //     the beginning of the text segement.
-        if (!loader->entry().offset(totally_random_offset).get()) {
-            klog() << "do_exec: Failure loading " << path.characters() << ", entry pointer is invalid! (" << loader->entry().offset(totally_random_offset) << ")";
-            return -ENOEXEC;
-        }
-
         rollback_regions_guard.disarm();
+    }
 
-        // NOTE: At this point, we've committed to the new executable.
-        entry_eip = loader->entry().offset(totally_random_offset).get();
+    dbg() << "entry eip: " << (void*)entry_eip;
 
-        kill_threads_except_self();
+    kill_threads_except_self();
 
 #ifdef EXEC_DEBUG
-        klog() << "Memory layout after ELF load:";
-        dump_regions();
+    klog() << "Memory layout after ELF load:";
+    dump_regions();
 #endif
-    }
 
     m_executable = main_program_description->custody();
 
@@ -977,9 +897,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
-
-    // Copy of the master TLS region that we will clone for new threads
-    m_master_tls_region = master_tls_region->make_weak_ptr();
 
     auto main_program_metadata = main_program_description->metadata();
 
@@ -1006,6 +923,18 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             daf.description->close();
             daf = {};
         }
+    }
+
+    if (interpreter_description) {
+        main_program_description->set_readable(true); // So that the dynamic loader can mmap the main program
+        auto main_program_fd = alloc_fd();
+        // FIXME: The proper way to do this is to pass a special auxilary vector to
+        // the dynamic loader. However, since the dynamic loader currently uses
+        // the normal libc _start, we can just pass data via the environ for now.
+        environment.append(String::format("%s=%s", "_MAIN_PROGRAM_PATH", main_program_description->absolute_path().characters()));
+        environment.append(String::format("%s=%d", "_MAIN_PROGRAM_FD", main_program_fd));
+
+        m_fds[main_program_fd].set(move(main_program_description), 0); // flags=0
     }
 
     Thread* new_main_thread = nullptr;
@@ -1040,8 +969,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     u32 old_esp0 = tss.esp0;
 
-    m_master_tls_size = master_tls_size;
-    m_master_tls_alignment = master_tls_alignment;
+    // m_master_tls_size = master_tls_size;
+    // m_master_tls_alignment = master_tls_alignment;
 
     m_pid = new_main_thread->tid();
     new_main_thread->make_thread_specific_region({});
@@ -1074,6 +1003,98 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     new_main_thread->set_state(Thread::State::Skip1SchedulerPass);
     big_lock().force_unlock_if_locked();
     return 0;
+}
+
+KResultOr<u32> Process::load_program(FileDescription& program_description, u32 offset, bool update_tls)
+{
+    auto vmobject = SharedInodeVMObject::create_with_inode(*program_description.inode());
+    if (static_cast<const SharedInodeVMObject&>(*vmobject).writable_mappings()) {
+        dbg() << "Refusing to execute a write-mapped program";
+        return -ETXTBSY;
+    }
+
+    InodeMetadata loader_metadata = program_description.inode()->metadata();
+
+    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(loader_metadata.size), "ELF loading", Region::Access::Read);
+    if (!region)
+        return -ENOMEM;
+
+    RefPtr<ELF::Loader> loader;
+    loader = ELF::Loader::create(region->vaddr().as_ptr(), loader_metadata.size);
+
+    auto create_region_name = [&program_description](const String& loader_name) {
+        return String::format("%s-%s", program_description.absolute_path().characters(), loader_name.characters());
+    };
+
+    loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
+        ASSERT(size);
+        ASSERT(alignment == PAGE_SIZE);
+        int prot = 0;
+        if (is_readable)
+            prot |= PROT_READ;
+        if (is_writable)
+            prot |= PROT_WRITE;
+        if (is_executable)
+            prot |= PROT_EXEC;
+
+        auto* region = allocate_region_with_vmobject(
+            vaddr.offset(offset), size, *vmobject, offset_in_image,
+            create_region_name(name),
+            prot);
+        if (region) {
+            region->set_shared(true);
+            return region->vaddr().as_ptr();
+        }
+        return nullptr;
+    };
+    loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
+        ASSERT(size);
+        ASSERT(alignment == PAGE_SIZE);
+        int prot = 0;
+        if (is_readable)
+            prot |= PROT_READ;
+        if (is_writable)
+            prot |= PROT_WRITE;
+
+        auto* region = allocate_region(vaddr.offset(offset), size,
+            create_region_name(name),
+            prot);
+        if (region)
+            return region->vaddr().as_ptr();
+        return nullptr;
+    };
+
+    // FIXME: Move TLS region allocation to userspace: LibC and the dynamic loader.
+    //     LibC if we end up with a statically linked executable, and the
+    //     dynamic loader so that it can create new TLS blocks for each shared libarary
+    //     that gets loaded as part of DT_NEEDED processing, and via dlopen().
+    //     If that doesn't happen quickly, at least pass the location of the TLS region
+    //     some ELF Auxilliary Vector so the loader can use it/create new ones as necessary.
+    loader->tls_section_hook = [&](size_t size, size_t alignment) {
+        ASSERT(size);
+        auto* region = allocate_region({}, size, "TLS", PROT_READ | PROT_WRITE);
+        if (update_tls) {
+            m_master_tls_size = size;
+            m_master_tls_alignment = alignment;
+            m_master_tls_region = region->make_weak_ptr();
+        }
+        return region->vaddr().as_ptr();
+    };
+
+    bool success = loader->load();
+
+    if (!success) {
+        klog() << "do_exec: Failure loading program: ";
+        return -ENOEXEC;
+    }
+    // FIXME: Validate that this virtual address is within executable region,
+    //     instead of just non-null. You could totally have a DSO with entry point of
+    //     the beginning of the text segement.
+    if (!loader->entry().offset(offset).get()) {
+        klog() << "do_exec: Failure loading program, entry pointer is invalid! (" << loader->entry().offset(offset) << ")";
+        return -ENOEXEC;
+    }
+    return loader->entry().offset(offset).get();
 }
 
 static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const char first_page[], int nread)
@@ -5036,5 +5057,4 @@ KResult Process::poke_user_data(u32* address, u32 data)
     }
     return KResult(KSuccess);
 }
-
 }

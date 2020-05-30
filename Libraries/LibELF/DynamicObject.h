@@ -27,6 +27,8 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Optional.h>
+#include <AK/Vector.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibELF/exec_elf.h>
 
@@ -71,6 +73,13 @@ public:
         {
         }
 
+        static Symbol create_undefined(const DynamicObject& dynamic)
+        {
+            auto s = Symbol(dynamic, 0, {});
+            s.m_is_undefined = true;
+            return s;
+        }
+
         ~Symbol() {}
 
         const char* name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
@@ -80,13 +89,17 @@ public:
         unsigned index() const { return m_index; }
         unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
         unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
-        bool is_undefined() const { return this == &m_dynamic.the_undefined_symbol(); }
+        // TODO: Refactor the logic of is_undefined().
+        // The current logic is basically a hack around a bug that occured when we returned
+        // a Symbol by value, which lead to the "this == &m_dynamic.the_undefined_symbol()" check failing
+        bool is_undefined() const { return (this == &m_dynamic.the_undefined_symbol()) || m_is_undefined; }
         VirtualAddress address() const { return m_dynamic.base_address().offset(value()); }
 
     private:
         const DynamicObject& m_dynamic;
         const Elf32_Sym& m_sym;
         const unsigned m_index;
+        bool m_is_undefined { false };
     };
 
     class Section {
@@ -193,10 +206,10 @@ public:
     const Symbol symbol(unsigned) const;
     const Symbol& the_undefined_symbol() const { return m_the_undefined_symbol; }
 
-    const Section init_section() const;
-    const Section fini_section() const;
-    const Section init_array_section() const;
-    const Section fini_array_section() const;
+    Optional<const Section> init_section() const;
+    Optional<const Section> fini_section() const;
+    Optional<const Section> init_array_section() const;
+    Optional<const Section> fini_array_section() const;
 
     const HashSection hash_section() const;
 
@@ -210,10 +223,24 @@ public:
     bool must_bind_now() const { return m_dt_flags & DF_BIND_NOW; }
     bool has_static_thread_local_storage() const { return m_dt_flags & DF_STATIC_TLS; }
 
-    VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset); }
+    Optional<VirtualAddress> plt_got_base_address() const
+    {
+        if (!m_procedure_linkage_table_offset)
+            return {};
+        return m_base_address.offset(m_procedure_linkage_table_offset);
+    }
+
+    u32 number_of_plt_relocation_entries() const
+    {
+        return m_size_of_plt_relocation_entry_list;
+    }
+
     VirtualAddress base_address() const { return m_base_address; }
 
     const char* soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : nullptr; }
+
+    template<typename F>
+    void for_each_needed_library(F) const;
 
 private:
     const char* symbol_string_table_string(Elf32_Word) const;
@@ -264,6 +291,8 @@ private:
 
     bool m_has_soname { false };
     Elf32_Word m_soname_index { 0 }; // Index into dynstr table for SONAME
+
+    Vector<Elf32_Word> m_needed_libraries_string_table_offsets;
     // End Section information from DT_* entries
 };
 
@@ -294,6 +323,15 @@ inline void DynamicObject::for_each_dynamic_entry(F func) const
         if (dyn.tag() == DT_NULL)
             break;
         if (func(dyn) == IterationDecision::Break)
+            break;
+    }
+}
+
+template<typename F>
+inline void DynamicObject::for_each_needed_library(F func) const
+{
+    for (auto string_table_offset : m_needed_libraries_string_table_offsets) {
+        if (func(symbol_string_table_string(string_table_offset)) == IterationDecision::Break)
             break;
     }
 }

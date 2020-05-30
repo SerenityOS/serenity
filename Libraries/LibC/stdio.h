@@ -28,9 +28,9 @@
 
 #define _STDIO_H // Make GMP believe we exist.
 
+#include <bits/FILE.h>
 #include <limits.h>
 #include <stdarg.h>
-#include <bits/FILE.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -57,6 +57,7 @@ extern FILE* stderr;
 
 typedef long fpos_t;
 
+int libc_testfunc();
 int fseek(FILE*, long offset, int whence);
 int fgetpos(FILE*, fpos_t*);
 int fsetpos(FILE*, const fpos_t*);
