@@ -125,6 +125,8 @@ Value ScriptFunction::call(Interpreter& interpreter)
 
 Value ScriptFunction::construct(Interpreter& interpreter)
 {
+    if (m_is_arrow_function)
+        return interpreter.throw_exception<TypeError>(String::format("%s is not a constructor", m_name.characters()));
     return call(interpreter);
 }
 

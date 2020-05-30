@@ -81,6 +81,13 @@ try {
 
     assert(Baz.prototype === undefined);
 
+    assertThrowsError(() => {
+        new Baz();
+    }, {
+        error: TypeError,
+        message: "Baz is not a constructor"
+    });
+
     (() => {
         "use strict";
         assert(isStrictMode());
