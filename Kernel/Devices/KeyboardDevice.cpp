@@ -30,8 +30,8 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/KeyboardDevice.h>
-#include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/IO.h>
+#include <Kernel/TTY/VirtualConsole.h>
 
 //#define KEYBOARD_DEBUG
 
@@ -475,6 +475,7 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
 
     Event event;
     event.key = key;
+    event.scancode = m_has_e0_prefix ? 0xe000 + raw : raw;
     event.character = static_cast<u8>(character);
     event.flags = m_modifiers;
     if (pressed)
