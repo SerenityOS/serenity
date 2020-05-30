@@ -39,11 +39,6 @@
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLToken.h>
 
-#define TODO()                \
-    do {                      \
-        ASSERT_NOT_REACHED(); \
-    } while (0)
-
 #define PARSE_ERROR()                                                         \
     do {                                                                      \
         dbg() << "Parse error! " << __PRETTY_FUNCTION__ << " @ " << __LINE__; \

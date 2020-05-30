@@ -47,3 +47,4 @@
     } while (0)
 #define ASSERT_INTERRUPTS_DISABLED() ASSERT(!(cpu_flags() & 0x200))
 #define ASSERT_INTERRUPTS_ENABLED() ASSERT(cpu_flags() & 0x200)
+#define TODO ASSERT_NOT_REACHED

@@ -36,6 +36,7 @@
 #            define ASSERT assert
 #            define ASSERT_NOT_REACHED() assert(false)
 #            define RELEASE_ASSERT assert
+#            define TODO ASSERT_NOT_REACHED
 #        endif
 #    endif
 

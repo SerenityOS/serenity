@@ -37,12 +37,6 @@
 #define CONSUME_NEXT_INPUT_CHARACTER \
     current_input_character = next_codepoint();
 
-#define TODO()                                                                                              \
-    do {                                                                                                    \
-        dbg() << "[TODO: " << state_name(m_state) << "] '" << (char)current_input_character.value() << "'"; \
-        ASSERT_NOT_REACHED();                                                                               \
-    } while (0)
-
 #define SWITCH_TO(new_state)              \
     do {                                  \
         will_switch_to(State::new_state); \

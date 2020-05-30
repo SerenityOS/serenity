@@ -51,5 +51,6 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
     } while (0)
 #define ASSERT assert
 #define RELEASE_ASSERT assert
+#define TODO ASSERT_NOT_REACHED
 
 __END_DECLS
