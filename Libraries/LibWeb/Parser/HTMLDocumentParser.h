@@ -96,6 +96,8 @@ private:
     void handle_in_row(HTMLToken&);
     void handle_in_cell(HTMLToken&);
     void handle_in_table_text(HTMLToken&);
+    void handle_in_select_in_table(HTMLToken&);
+    void handle_in_select(HTMLToken&);
 
     void stop_parsing() { m_stop_parsing = true; }
 
@@ -105,6 +107,7 @@ private:
     RefPtr<Node> find_appropriate_place_for_inserting_node();
     RefPtr<Element> insert_html_element(HTMLToken&);
     Element& current_node();
+    Element& node_before_current_node();
     void insert_character(u32 data);
     void insert_comment(HTMLToken&);
     void reconstruct_the_active_formatting_elements();

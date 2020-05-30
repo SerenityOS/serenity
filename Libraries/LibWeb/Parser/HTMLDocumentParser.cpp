@@ -141,6 +141,12 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     case InsertionMode::InTableText:
         handle_in_table_text(token);
         break;
+    case InsertionMode::InSelectInTable:
+        handle_in_select_in_table(token);
+        break;
+    case InsertionMode::InSelect:
+        handle_in_select(token);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -218,6 +224,11 @@ AnythingElse:
 Element& HTMLDocumentParser::current_node()
 {
     return m_stack_of_open_elements.current_node();
+}
+
+Element& HTMLDocumentParser::node_before_current_node()
+{
+    return m_stack_of_open_elements.elements().at(m_stack_of_open_elements.elements().size() - 2);
 }
 
 RefPtr<Node> HTMLDocumentParser::find_appropriate_place_for_inserting_node()
@@ -1201,7 +1212,22 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "select") {
-        TODO();
+        reconstruct_the_active_formatting_elements();
+        insert_html_element(token);
+        m_frameset_ok = false;
+        switch (m_insertion_mode) {
+        case InsertionMode::InTable:
+        case InsertionMode::InCaption:
+        case InsertionMode::InTableBody:
+        case InsertionMode::InRow:
+        case InsertionMode::InCell:
+            m_insertion_mode = InsertionMode::InSelectInTable;
+            break;
+        default:
+            m_insertion_mode = InsertionMode::InSelect;
+            break;
+        }
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("optgroup", "option")) {
@@ -1539,7 +1565,14 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("tbody", "tfoot", "thead")) {
-        TODO();
+        if (!m_stack_of_open_elements.has_in_table_scope(token.tag_name())) {
+            PARSE_ERROR();
+            return;
+        }
+        clear_the_stack_back_to_a_table_body_context();
+        m_stack_of_open_elements.pop();
+        m_insertion_mode = InsertionMode::InTable;
+        return;
     }
 
     if ((token.is_start_tag() && token.tag_name().is_one_of("caption", "col", "colgroup", "tbody", "tfoot", "thead"))
@@ -1619,6 +1652,132 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
         return;
     }
     TODO();
+}
+
+void HTMLDocumentParser::handle_in_select_in_table(HTMLToken& token)
+{
+    (void)token;
+    TODO();
+}
+
+void HTMLDocumentParser::handle_in_select(HTMLToken& token)
+{
+    if (token.is_character()) {
+        if (token.codepoint() == 0) {
+            PARSE_ERROR();
+            return;
+        }
+        insert_character(token.codepoint());
+        return;
+    }
+
+    if (token.is_comment()) {
+        insert_comment(token);
+        return;
+    }
+
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "html") {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "option") {
+        if (current_node().tag_name() == "option") {
+            m_stack_of_open_elements.pop();
+        }
+        insert_html_element(token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "optgroup") {
+        if (current_node().tag_name() == "option") {
+            m_stack_of_open_elements.pop();
+        }
+        if (current_node().tag_name() == "optgroup") {
+            m_stack_of_open_elements.pop();
+        }
+        insert_html_element(token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "optgroup") {
+        if (current_node().tag_name() == "option" && node_before_current_node().tag_name() == "optgroup")
+            m_stack_of_open_elements.pop();
+
+        if (current_node().tag_name() == "optgroup") {
+            m_stack_of_open_elements.pop();
+        } else {
+            PARSE_ERROR();
+            return;
+        }
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "option") {
+        if (current_node().tag_name() == "option") {
+            m_stack_of_open_elements.pop();
+        } else {
+            PARSE_ERROR();
+            return;
+        }
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "select") {
+        if (m_stack_of_open_elements.has_in_select_scope("select")) {
+            PARSE_ERROR();
+            return;
+        }
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped("select");
+        reset_the_insertion_mode_appropriately();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == "select") {
+        PARSE_ERROR();
+
+        if (!m_stack_of_open_elements.has_in_select_scope("select"))
+            return;
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped("select");
+        reset_the_insertion_mode_appropriately();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("input", "keygen", "textarea")) {
+        PARSE_ERROR();
+
+        if (!m_stack_of_open_elements.has_in_select_scope("select")) {
+            return;
+        }
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped("select");
+        reset_the_insertion_mode_appropriately();
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("script", "template")) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == "template") {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_end_of_file()) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    PARSE_ERROR();
 }
 
 void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
