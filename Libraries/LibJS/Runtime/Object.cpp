@@ -109,15 +109,8 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
     if (value_here.is_accessor()) {
         return value_here.as_accessor().call_getter(Value(const_cast<Object*>(this)));
     }
-    if (value_here.is_object() && value_here.as_object().is_native_property()) {
-        auto& native_property = static_cast<const NativeProperty&>(value_here.as_object());
-        auto& interpreter = const_cast<Object*>(this)->interpreter();
-        auto& call_frame = interpreter.push_call_frame();
-        call_frame.this_value = const_cast<Object*>(&this_object);
-        auto result = native_property.get(interpreter);
-        interpreter.pop_call_frame();
-        return result;
-    }
+    if (value_here.is_object() && value_here.as_object().is_native_property())
+        return call_native_property_getter(const_cast<Object*>(&this_object), value_here);
     return value_here;
 }
 
@@ -205,7 +198,7 @@ Value Object::get_own_property_descriptor(PropertyName property_name) const
         auto metadata = shape().lookup(property_name.as_string());
         if (!metadata.has_value())
             return js_undefined();
-        value = get(property_name);
+        value = m_storage[metadata.value().offset];
         if (interpreter().exception())
             return {};
         attributes = metadata.value().attributes;
@@ -214,10 +207,16 @@ Value Object::get_own_property_descriptor(PropertyName property_name) const
     auto* descriptor = Object::create_empty(interpreter(), interpreter().global_object());
     descriptor->define_property("enumerable", Value((attributes & Attribute::Enumerable) != 0));
     descriptor->define_property("configurable", Value((attributes & Attribute::Configurable) != 0));
-    if (value.is_accessor()) {
+    if (value.is_object() && value.as_object().is_native_property()) {
+        auto result = call_native_property_getter(const_cast<Object*>(this), value);
+        descriptor->define_property("value", result);
+        descriptor->define_property("writable", Value((attributes & Attribute::Writable) != 0));
+    } else if (value.is_accessor()) {
         auto& pair = value.as_accessor();
-        descriptor->define_property("get", pair.getter());
-        descriptor->define_property("set", pair.setter());
+        if (pair.getter())
+            descriptor->define_property("get", pair.getter());
+        if (pair.setter())
+            descriptor->define_property("set", pair.setter());
     } else {
         descriptor->define_property("value", value.value_or(js_undefined()));
         descriptor->define_property("writable", Value((attributes & Attribute::Writable) != 0));
@@ -365,12 +364,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
         return true;
 
     if (value_here.is_object() && value_here.as_object().is_native_property()) {
-        auto& native_property = static_cast<NativeProperty&>(value_here.as_object());
-        auto& interpreter = const_cast<Object*>(this)->interpreter();
-        auto& call_frame = interpreter.push_call_frame();
-        call_frame.this_value = &this_object;
-        native_property.set(interpreter, value);
-        interpreter.pop_call_frame();
+        call_native_property_setter(const_cast<Object*>(&this_object), value_here, value);
     } else {
         m_storage[metadata.value().offset] = value;
     }
@@ -410,12 +404,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
         return true;
 
     if (value_here.is_object() && value_here.as_object().is_native_property()) {
-        auto& native_property = static_cast<NativeProperty&>(value_here.as_object());
-        auto& interpreter = const_cast<Object*>(this)->interpreter();
-        auto& call_frame = interpreter.push_call_frame();
-        call_frame.this_value = &this_object;
-        native_property.set(interpreter, value);
-        interpreter.pop_call_frame();
+        call_native_property_setter(const_cast<Object*>(&this_object), value_here, value);
     } else {
         m_indexed_properties.put(&this_object, property_index, value, attributes, mode == PutOwnPropertyMode::Put);
     }
@@ -510,12 +499,7 @@ bool Object::put_by_index(u32 property_index, Value value)
                 return true;
             }
             if (value_here.value.is_object() && value_here.value.as_object().is_native_property()) {
-                auto& native_property = static_cast<NativeProperty&>(value_here.value.as_object());
-                auto& interpreter = const_cast<Object*>(this)->interpreter();
-                auto& call_frame = interpreter.push_call_frame();
-                call_frame.this_value = this;
-                native_property.set(interpreter, value);
-                interpreter.pop_call_frame();
+                call_native_property_setter(const_cast<Object*>(this), value_here.value, value);
                 return true;
             }
         }
@@ -549,12 +533,7 @@ bool Object::put(PropertyName property_name, Value value)
                 return true;
             }
             if (value_here.is_object() && value_here.as_object().is_native_property()) {
-                auto& native_property = static_cast<NativeProperty&>(value_here.as_object());
-                auto& interpreter = const_cast<Object*>(this)->interpreter();
-                auto& call_frame = interpreter.push_call_frame();
-                call_frame.this_value = this;
-                native_property.set(interpreter, value);
-                interpreter.pop_call_frame();
+                call_native_property_setter(const_cast<Object*>(this), value_here, value);
                 return true;
             }
         }
@@ -673,6 +652,29 @@ Value Object::invoke(const FlyString& property_name, Optional<MarkedValueList> a
         return {};
     }
     return interpreter.call(property.as_function(), this, move(arguments));
+}
+
+Value Object::call_native_property_getter(Object* this_object, Value property) const
+{
+    ASSERT(property.is_object());
+    ASSERT(property.as_object().is_native_property());
+    auto& native_property = static_cast<NativeProperty&>(property.as_object());
+    auto& call_frame = interpreter().push_call_frame();
+    call_frame.this_value = this_object;
+    auto result = native_property.get(interpreter());
+    interpreter().pop_call_frame();
+    return result;
+}
+
+void Object::call_native_property_setter(Object* this_object, Value property, Value value) const
+{
+    ASSERT(property.is_object());
+    ASSERT(property.as_object().is_native_property());
+    auto& native_property = static_cast<NativeProperty&>(property.as_object());
+    auto& call_frame = interpreter().push_call_frame();
+    call_frame.this_value = this_object;
+    native_property.set(interpreter(), value);
+    interpreter().pop_call_frame();
 }
 
 }

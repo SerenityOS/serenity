@@ -116,6 +116,9 @@ private:
     bool put_own_property(Object& this_object, const FlyString& property_name, Value, u8 attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
     bool put_own_property_by_index(Object& this_object, u32 property_index, Value, u8 attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
 
+    Value call_native_property_getter(Object* this_object, Value property) const;
+    void call_native_property_setter(Object* this_object, Value property, Value) const;
+
     void set_shape(Shape&);
     void ensure_shape_is_unique();
 
