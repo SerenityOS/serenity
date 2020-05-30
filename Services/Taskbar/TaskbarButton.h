@@ -39,6 +39,7 @@ private:
 
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
 
     WindowIdentifier m_identifier;
 };

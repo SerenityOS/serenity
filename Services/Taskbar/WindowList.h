@@ -62,6 +62,16 @@ public:
     void set_minimized(bool minimized) { m_minimized = minimized; }
     bool is_minimized() const { return m_minimized; }
 
+    void set_progress(int progress)
+    {
+        if (m_progress == progress)
+            return;
+        m_progress = progress;
+        m_button->update();
+    }
+
+    int progress() const { return m_progress; }
+
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
 
 private:
@@ -72,6 +82,7 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
     bool m_active { false };
     bool m_minimized { false };
+    int m_progress { -1 };
 };
 
 class WindowList {
