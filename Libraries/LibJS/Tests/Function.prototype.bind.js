@@ -11,6 +11,17 @@ try {
     }
     assert(getB.bind("bar")() === "B");
 
+    // Bound functions should work with array functions
+    var Make3 = Number.bind(null, 3);
+    assert([55].map(Make3)[0] === 3);
+
+    var MakeTrue = Boolean.bind(null, true);
+    assert([1, 2, 3].filter(MakeTrue).length === 3);
+
+    assert([1, 2, 3].reduce((function (acc, x) { return acc + x }).bind(null, 4, 5)) === 9);
+
+    assert([1, 2, 3].reduce((function (acc, x) { return acc + x + this; }).bind(3)) === 12);
+
     function sum(a, b, c) {
         return a + b + c;
     }
