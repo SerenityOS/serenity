@@ -2276,20 +2276,23 @@ Optional<EntityMatch> codepoints_from_entity(const StringView& entity)
         { "vsupne;", 0x0228B, 0x0FE00 },
     };
 
-    // FIXME: Make case-insensitive
-    for (auto& single_codepoint_entity : single_codepoint_entities) {
-        if (entity.starts_with(single_codepoint_entity.entity))
-            return EntityMatch { { single_codepoint_entity.codepoint }, StringView(single_codepoint_entity.entity) };
-    }
+    EntityMatch match;
 
-    // FIXME: Make case-insensitive
-    for (auto& double_codepoint_entity : double_codepoint_entities) {
-        if (entity.starts_with(double_codepoint_entity.entity)) {
-            return EntityMatch { { double_codepoint_entity.codepoint1, double_codepoint_entity.codepoint2 }, StringView(double_codepoint_entity.entity) };
+    for (auto& single_codepoint_entity : single_codepoint_entities) {
+        if (entity.starts_with(single_codepoint_entity.entity)) {
+            if (match.entity.is_null() || entity.length() > match.entity.length())
+                match = { { single_codepoint_entity.codepoint }, StringView(single_codepoint_entity.entity) };
         }
     }
 
-    return {};
+    for (auto& double_codepoint_entity : double_codepoint_entities) {
+        if (entity.starts_with(double_codepoint_entity.entity)) {
+            if (match.entity.is_null() || entity.length() > match.entity.length())
+                match = EntityMatch { { double_codepoint_entity.codepoint1, double_codepoint_entity.codepoint2 }, StringView(double_codepoint_entity.entity) };
+        }
+    }
+
+    return match;
 }
 
 }
