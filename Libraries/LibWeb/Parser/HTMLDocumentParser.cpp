@@ -817,7 +817,16 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "form") {
-        TODO();
+        if (m_form_element && m_stack_of_open_elements.contains("template")) {
+            PARSE_ERROR();
+            return;
+        }
+        if (m_stack_of_open_elements.has_in_button_scope("p"))
+            close_a_p_element();
+        auto element = insert_html_element(token);
+        if (!m_stack_of_open_elements.contains("template"))
+            m_form_element = to<HTMLFormElement>(*element);
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "li") {
@@ -887,7 +896,22 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name() == "form") {
-        TODO();
+        if (!m_stack_of_open_elements.contains("template")) {
+            auto node = m_form_element;
+            m_form_element = nullptr;
+            if (!node || m_stack_of_open_elements.has_in_scope(*node)) {
+                PARSE_ERROR();
+                return;
+            }
+            generate_implied_end_tags();
+            if (&current_node() != node) {
+                PARSE_ERROR();
+            }
+            m_stack_of_open_elements.elements().remove_first_matching([&](auto& entry) { return entry.ptr() == node.ptr(); });
+        } else {
+            TODO();
+        }
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name() == "p") {
