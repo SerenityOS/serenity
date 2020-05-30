@@ -1719,11 +1719,24 @@ bool Shell::read_single_line()
     auto line_result = editor->get_line(prompt());
 
     if (line_result.is_error()) {
-        m_complete_line_builder.clear();
-        m_should_continue = ContinuationRequest::Nothing;
-        m_should_break_current_command = false;
-        Core::EventLoop::current().quit(line_result.error() == Line::Editor::Error::Eof ? 0 : 1);
-        return false;
+        if (line_result.error() == Line::Editor::Error::Eof || line_result.error() == Line::Editor::Error::Empty) {
+            // Pretend the user tried to execute builtin_exit()
+            // but only if there's no continuation.
+            if (m_should_continue == ContinuationRequest::Nothing) {
+                m_complete_line_builder.clear();
+                run_command("exit");
+                return read_single_line();
+            } else {
+                // Ignore the Eof.
+                return true;
+            }
+        } else {
+            m_complete_line_builder.clear();
+            m_should_continue = ContinuationRequest::Nothing;
+            m_should_break_current_command = false;
+            Core::EventLoop::current().quit(1);
+            return false;
+        }
     }
 
     auto& line = line_result.value();
