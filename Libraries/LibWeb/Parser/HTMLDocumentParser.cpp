@@ -945,8 +945,13 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "a") {
-        if (m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker("a")) {
-            TODO();
+        if (auto* element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker("a")) {
+            PARSE_ERROR();
+            run_the_adoption_agency_algorithm(token);
+            m_list_of_active_formatting_elements.remove(*element);
+            m_stack_of_open_elements.elements().remove_first_matching([&](auto& entry) {
+                return entry.ptr() == element;
+            });
         }
         reconstruct_the_active_formatting_elements();
         auto element = insert_html_element(token);
