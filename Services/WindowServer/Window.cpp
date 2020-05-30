@@ -304,14 +304,16 @@ void Window::event(Core::Event& event)
             Messages::WindowClient::KeyDown(m_window_id,
                 (u8) static_cast<const KeyEvent&>(event).character(),
                 (u32) static_cast<const KeyEvent&>(event).key(),
-                static_cast<const KeyEvent&>(event).modifiers()));
+                static_cast<const KeyEvent&>(event).modifiers(),
+                (u32) static_cast<const KeyEvent&>(event).scancode()));
         break;
     case Event::KeyUp:
         m_client->post_message(
             Messages::WindowClient::KeyUp(m_window_id,
                 (u8) static_cast<const KeyEvent&>(event).character(),
                 (u32) static_cast<const KeyEvent&>(event).key(),
-                static_cast<const KeyEvent&>(event).modifiers()));
+                static_cast<const KeyEvent&>(event).modifiers(),
+                (u32) static_cast<const KeyEvent&>(event).scancode()));
         break;
     case Event::WindowActivated:
         m_client->post_message(Messages::WindowClient::WindowActivated(m_window_id));
