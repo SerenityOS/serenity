@@ -38,8 +38,8 @@ class StringView {
 public:
     using ConstIterator = const char*;
 
-    ALWAYS_INLINE StringView() { }
-    ALWAYS_INLINE StringView(const char* characters, size_t length)
+    ALWAYS_INLINE constexpr StringView() { }
+    ALWAYS_INLINE constexpr StringView(const char* characters, size_t length)
         : m_characters(characters)
         , m_length(length)
     {
@@ -51,7 +51,7 @@ public:
     {
         ASSERT(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    ALWAYS_INLINE StringView(const char* cstring)
+    ALWAYS_INLINE constexpr StringView(const char* cstring)
         : m_characters(cstring)
         , m_length(cstring ? __builtin_strlen(cstring) : 0)
     {
