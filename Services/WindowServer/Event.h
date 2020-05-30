@@ -76,11 +76,12 @@ enum class MouseButton : u8 {
 
 class KeyEvent final : public Event {
 public:
-    KeyEvent(Type type, int key, char character, u8 modifiers)
+    KeyEvent(Type type, int key, char character, u8 modifiers, u32 scancode)
         : Event(type)
         , m_key(key)
         , m_character(character)
         , m_modifiers(modifiers)
+        , m_scancode(scancode)
     {
     }
 
@@ -91,6 +92,7 @@ public:
     bool logo() const { return m_modifiers & Mod_Logo; }
     u8 modifiers() const { return m_modifiers; }
     char character() const { return m_character; }
+    u32 scancode() const { return m_scancode; }
 
 private:
     friend class EventLoop;
@@ -98,6 +100,7 @@ private:
     int m_key { 0 };
     char m_character { 0 };
     u8 m_modifiers { 0 };
+    u32 m_scancode { 0 };
 };
 
 class MouseEvent final : public Event {
