@@ -121,7 +121,8 @@ public:
                 return;
             default:
                 perror("Connection::post_message write");
-                ASSERT_NOT_REACHED();
+                shutdown();
+                return;
             }
         }
 
@@ -130,6 +131,9 @@ public:
 
     void drain_messages_from_client()
     {
+        if (!m_socket->is_open())
+            return;
+
         Vector<u8> bytes;
         for (;;) {
             u8 buffer[4096];
@@ -143,7 +147,8 @@ public:
             }
             if (nread < 0) {
                 perror("recv");
-                ASSERT_NOT_REACHED();
+                shutdown();
+                return;
             }
             bytes.append(buffer, nread);
         }
