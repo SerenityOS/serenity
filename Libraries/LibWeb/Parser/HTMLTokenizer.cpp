@@ -763,7 +763,7 @@ _StartOfFunction:
                 ON('>')
                 {
                     m_current_token.m_tag.self_closing = true;
-                    SWITCH_TO(Data);
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
