@@ -142,6 +142,7 @@ enum class Error : i8 {
     FeatureNotSupported = -17,
     DecryptionFailed = -20,
     NeedMoreData = -21,
+    TimedOut = -22,
 };
 
 enum class AlertLevel : u8 {
@@ -293,6 +294,8 @@ struct Context {
     StringView negotiated_alpn;
 
     size_t send_retries { 0 };
+
+    time_t handshake_initiation_timestamp { 0 };
 };
 
 class TLSv12 : public Core::Socket {
@@ -335,7 +338,7 @@ public:
     ByteBuffer read(size_t max_size);
 
     bool write(const ByteBuffer& buffer);
-    void alert(bool critical, u8 code);
+    void alert(AlertLevel, AlertDescription);
 
     bool can_read_line() const { return m_context.application_buffer.size() && memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size()); }
     bool can_read() const { return m_context.application_buffer.size() > 0; }
@@ -467,7 +470,10 @@ private:
     OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_local;
     OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_remote;
 
-    bool m_has_scheduled_write_flush = false;
+    bool m_has_scheduled_write_flush { false };
+    i32 m_max_wait_time_for_handshake_in_seconds { 10 };
+
+    RefPtr<Core::Timer> m_handshake_timeout_timer;
 };
 
 namespace Constants {
