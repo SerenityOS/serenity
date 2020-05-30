@@ -61,7 +61,8 @@ ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vec
     , m_function_length(m_function_length)
     , m_is_arrow_function(is_arrow_function)
 {
-    define_property("prototype", Object::create_empty(interpreter(), interpreter().global_object()), 0);
+    if (!is_arrow_function)
+        define_property("prototype", Object::create_empty(interpreter(), interpreter().global_object()), 0);
     define_native_property("length", length_getter, nullptr, Attribute::Configurable);
     define_native_property("name", name_getter, nullptr, Attribute::Configurable);
 }
