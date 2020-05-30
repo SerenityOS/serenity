@@ -47,6 +47,8 @@ try {
     var multiply = function (x, y) { return x * y; };
     assert(multiply.call(null, 3, 4) === 12);
 
+    assert((() => this).call("foo") === globalThis);
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);
