@@ -160,6 +160,7 @@ enum KeyModifier {
 
 struct KeyEvent {
     KeyCode key { Key_Invalid };
+    u32 scancode { 0 };
     u8 character { 0 };
     u8 flags { 0 };
     bool alt() const { return flags & Mod_Alt; }
