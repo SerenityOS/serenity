@@ -377,7 +377,8 @@ void TreeView::did_update_model(unsigned flags)
 void TreeView::did_update_selection()
 {
     AbstractView::did_update_selection();
-    ASSERT(model());
+    if (!model())
+        return;
     auto index = selection().first();
     if (!index.is_valid())
         return;

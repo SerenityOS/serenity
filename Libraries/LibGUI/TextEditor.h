@@ -129,6 +129,8 @@ public:
     const SyntaxHighlighter* syntax_highlighter() const;
     void set_syntax_highlighter(OwnPtr<SyntaxHighlighter>);
 
+    bool is_in_drag_select() const { return m_in_drag_select; }
+
 protected:
     explicit TextEditor(Type = Type::MultiLine);
 
