@@ -48,7 +48,7 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
 
     NonnullRefPtrVector<LayoutNode> layout_children;
     bool have_inline_children = false;
-    bool have_block_children = false;
+    bool have_noninline_children = false;
 
     to<ParentNode>(node).for_each_child([&](Node& child) {
         auto layout_child = create_layout_tree(child, &layout_node->style());
@@ -56,13 +56,13 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
             return;
         if (layout_child->is_inline())
             have_inline_children = true;
-        if (layout_child->is_block())
-            have_block_children = true;
+        else
+            have_noninline_children = true;
         layout_children.append(layout_child.release_nonnull());
     });
 
     for (auto& layout_child : layout_children) {
-        if (have_block_children && have_inline_children && layout_child.is_inline()) {
+        if (have_noninline_children && have_inline_children && layout_child.is_inline()) {
             if (is<LayoutText>(layout_child) && to<LayoutText>(layout_child).text_for_style(*parent_style) == " ")
                 continue;
             layout_node->inline_wrapper().append_child(layout_child);
@@ -71,12 +71,8 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
         }
     }
 
-    if (have_inline_children && !have_block_children)
+    if (have_inline_children && !have_noninline_children)
         layout_node->set_children_are_inline(true);
-
-    // FIXME: This is really hackish. Some layout nodes don't care about inline children.
-    if (is<LayoutTable>(layout_node))
-        layout_node->set_children_are_inline(false);
 
     return layout_node;
 }
