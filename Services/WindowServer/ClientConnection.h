@@ -133,6 +133,7 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement&) override;
     virtual void handle(const Messages::WindowServer::EnableDisplayLink&) override;
     virtual void handle(const Messages::WindowServer::DisableDisplayLink&) override;
+    virtual void handle(const Messages::WindowServer::SetWindowProgress&) override;
 
     Window* window_from_id(i32 window_id);
 

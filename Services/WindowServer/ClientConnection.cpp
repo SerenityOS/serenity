@@ -810,4 +810,14 @@ void ClientConnection::notify_display_link(Badge<Compositor>)
     post_message(Messages::WindowClient::DisplayLinkNotification());
 }
 
+void ClientConnection::handle(const Messages::WindowServer::SetWindowProgress& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowProgress with bad window ID");
+        return;
+    }
+    it->value->set_progress(message.progress());
+}
+
 }

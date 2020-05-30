@@ -253,7 +253,7 @@ void WindowManager::tell_wm_listener_about_window(Window& listener, Window& wind
         return;
     if (window.is_internal())
         return;
-    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), window.is_active(), window.is_minimized(), window.is_frameless(), (i32)window.type(), window.title(), window.rect()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), window.is_active(), window.is_minimized(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress()));
 }
 
 void WindowManager::tell_wm_listener_about_window_rect(Window& listener, Window& window)
@@ -357,6 +357,11 @@ void WindowManager::notify_occlusion_state_changed(Window& window)
 {
     if (window.client())
         window.client()->post_message(Messages::WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
+}
+
+void WindowManager::notify_progress_changed(Window& window)
+{
+    tell_wm_listeners_window_state_changed(window);
 }
 
 void WindowManager::pick_new_active_window()

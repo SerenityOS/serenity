@@ -232,6 +232,9 @@ public:
     void set_frameless(bool frameless) { m_frameless = frameless; }
     bool is_frameless() const { return m_frameless; }
 
+    int progress() const { return m_progress; }
+    void set_progress(int);
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
@@ -281,6 +284,7 @@ private:
     MenuItem* m_window_menu_minimize_item { nullptr };
     MenuItem* m_window_menu_maximize_item { nullptr };
     int m_minimize_animation_step { -1 };
+    int m_progress { -1 };
 };
 
 }
