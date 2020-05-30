@@ -238,6 +238,16 @@ ssize_t TLSv12::handle_finished(const ByteBuffer& buffer, WritePacketStage& writ
 #endif
     m_context.connection_status = ConnectionStatus::Established;
 
+    if (m_handshake_timeout_timer) {
+        // Disable the handshake timeout timer as handshake has been established.
+        m_handshake_timeout_timer->stop();
+        m_handshake_timeout_timer->remove_from_parent();
+        m_handshake_timeout_timer = nullptr;
+    }
+
+    if (on_tls_ready_to_write)
+        on_tls_ready_to_write(*this);
+
     return handle_message(buffer);
 }
 

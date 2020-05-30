@@ -167,4 +167,11 @@ ByteBuffer TLSv12::build_finished()
     return packet;
 }
 
+void TLSv12::alert(AlertLevel level, AlertDescription code)
+{
+    auto the_alert = build_alert(level == AlertLevel::Critical, (u8)code);
+    write_packet(the_alert);
+    flush();
+}
+
 }
