@@ -129,10 +129,13 @@ DownloadWidget::~DownloadWidget()
 void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
 {
     m_progress_bar->set_min(0);
-    if (total_size.has_value())
+    if (total_size.has_value()) {
+        int percent = roundf(((float)downloaded_size / (float)total_size.value()) * 100.0f);
+        window()->set_progress(percent);
         m_progress_bar->set_max(total_size.value());
-    else
+    } else {
         m_progress_bar->set_max(0);
+    }
     m_progress_bar->set_value(downloaded_size);
 
     {
