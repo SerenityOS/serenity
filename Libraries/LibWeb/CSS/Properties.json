@@ -1,4 +1,6 @@
 {
+  "background": {
+  },
   "background-attachment": {
     "inherited": false,
     "initial": "scroll"

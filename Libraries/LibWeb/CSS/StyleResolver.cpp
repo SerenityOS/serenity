@@ -256,6 +256,17 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::Background) {
+        auto parts = split_on_whitespace(value.to_string());
+        NonnullRefPtrVector<StyleValue> values;
+        for (auto& part : parts) {
+            values.append(parse_css_value(part));
+        }
+        if (values[0].is_color())
+            style.set_property(CSS::PropertyID::BackgroundColor, values[0]);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::Margin) {
         if (value.is_length()) {
             style.set_property(CSS::PropertyID::MarginTop, value);
