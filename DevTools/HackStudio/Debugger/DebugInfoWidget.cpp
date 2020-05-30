@@ -29,8 +29,11 @@
 #include "Debugger.h"
 #include "VariablesModel.h"
 #include <AK/StringBuilder.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TreeView.h>
@@ -41,6 +44,53 @@ DebugInfoWidget::DebugInfoWidget()
     auto& splitter = add<GUI::HorizontalSplitter>();
     m_backtrace_view = splitter.add<GUI::ListView>();
     m_variables_view = splitter.add<GUI::TreeView>();
+
+    m_backtrace_view->on_selection = [this](auto& index) {
+        auto& model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
+
+        // Note: The reconstruction of the register set here is obviously incomplete.
+        // We currently only reconstruct eip & ebp. Ideally would also reconstruct the other registers somehow.
+        // (Other registers may be needed to get the values of variables who are not stored on the stack)
+        PtraceRegisters frame_regs {};
+        frame_regs.eip = model.frames()[index.row()].instruction_address;
+        frame_regs.ebp = model.frames()[index.row()].frame_base;
+
+        m_variables_view->set_model(VariablesModel::create(frame_regs));
+    };
+
+    auto edit_variable_action = GUI::Action::create("Change value", [&](auto&) {
+        m_variables_view->on_activation(m_variables_view->selection().first());
+    });
+
+    m_variable_context_menu = GUI::Menu::construct();
+    m_variable_context_menu->add_action(edit_variable_action);
+
+    auto is_valid_index = [](auto& index) {
+        if (!index.is_valid())
+            return false;
+        auto* variable = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
+        if (variable->location_type != DebugInfo::VariableInfo::LocationType::Address)
+            return false;
+        return variable->type.is_one_of("int", "bool");
+    };
+
+    m_variables_view->on_context_menu_request = [this, is_valid_index](auto& index, auto& event) {
+        if (!is_valid_index(index))
+            return;
+        m_variable_context_menu->popup(event.screen_position());
+    };
+
+    m_variables_view->on_activation = [this, is_valid_index](auto& index) {
+        if (!is_valid_index(index))
+            return;
+
+        auto input = GUI::InputBox::construct("Enter new value:", "Set variable value", window());
+
+        if (input->exec() == GUI::InputBox::ExecOK) {
+            auto& model = static_cast<VariablesModel&>(*m_variables_view->model());
+            model.set_variable_value(index, input->text_value(), window());
+        }
+    };
 }
 
 void DebugInfoWidget::update_state(const DebugSession& debug_session, const PtraceRegisters& regs)
@@ -48,20 +98,6 @@ void DebugInfoWidget::update_state(const DebugSession& debug_session, const Ptra
     m_variables_view->set_model(VariablesModel::create(regs));
     m_backtrace_view->set_model(BacktraceModel::create(debug_session, regs));
     m_backtrace_view->selection().set(m_backtrace_view->model()->index(0));
-
-    m_backtrace_view->on_selection
-        = [this](auto& index) {
-              auto& model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
-
-              // Note: The recontruction of the register set here is obviously incomplete.
-              // We currently only reconstruct eip & ebp. Ideally would also reconstruct the other registers somehow.
-              // (Other registers may be needed to get the values of variables who are not stored on the stack)
-              PtraceRegisters frame_regs {};
-              frame_regs.eip = model.frames()[index.row()].instruction_address;
-              frame_regs.ebp = model.frames()[index.row()].frame_base;
-
-              m_variables_view->set_model(VariablesModel::create(frame_regs));
-          };
 }
 
 void DebugInfoWidget::program_stopped()

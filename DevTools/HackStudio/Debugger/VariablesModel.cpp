@@ -25,6 +25,8 @@
  */
 
 #include "VariablesModel.h"
+#include <LibGUI/Application.h>
+#include <LibGUI/MessageBox.h>
 
 GUI::ModelIndex VariablesModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
 {
@@ -85,7 +87,52 @@ String variable_value_as_string(const DebugInfo::VariableInfo& variable)
         return String::format("'%c' (%d)", static_cast<char>(value.value()), static_cast<char>(value.value()));
     }
 
+    if (variable.type == "bool") {
+        auto value = Debugger::the().session()->peek((u32*)variable_address);
+        ASSERT(value.has_value());
+        return (value.value() & 1) ? "true" : "false";
+    }
+
     return String::format("type: %s @ %08x, ", variable.type.characters(), variable_address);
+}
+
+static Optional<u32> string_to_value_of_type(const StringView& string_value, const StringView& type)
+{
+    if (type == "int") {
+        bool success = false;
+        auto value = string_value.to_int(success);
+        return success ? value : Optional<u32>();
+    }
+
+    if (type == "bool") {
+        if (string_value == "true")
+            return true;
+        if (string_value == "false")
+            return false;
+        return {};
+    }
+
+    return {};
+}
+
+void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const StringView& string_value, GUI::Window* parent_window)
+{
+    auto variable = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
+
+    auto value = string_to_value_of_type(string_value, variable->type);
+
+    if (value.has_value()) {
+        auto success = Debugger::the().session()->poke((u32*)variable->location_data.address, value.value());
+        ASSERT(success);
+        return;
+    }
+
+    GUI::MessageBox::show(
+        String::format("String value \"%s\" could not be converted to a value of type %s.", string_value.to_string().characters(), variable->type.characters()),
+        "Set value failed",
+        GUI::MessageBox::Type::Error,
+        GUI::MessageBox::InputType::OK,
+        parent_window);
 }
 
 GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, Role role) const
