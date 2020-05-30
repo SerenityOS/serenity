@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Utf32View.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -40,7 +41,9 @@ StringConstructor::StringConstructor()
     define_property("prototype", interpreter().global_object().string_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 
-    define_native_function("raw", raw, 0, Attribute::Writable | Attribute::Configurable);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function("raw", raw, 0, attr);
+    define_native_function("fromCharCode", from_char_code, 1, attr);
 }
 
 StringConstructor::~StringConstructor()
@@ -103,6 +106,20 @@ Value StringConstructor::raw(Interpreter& interpreter)
         }
     }
 
+    return js_string(interpreter, builder.build());
+}
+
+Value StringConstructor::from_char_code(Interpreter& interpreter)
+{
+    StringBuilder builder;
+    for (size_t i = 0; i < interpreter.argument_count(); ++i) {
+        auto char_code = interpreter.argument(i).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto truncated = char_code & 0xffff;
+        // FIXME: We need an Utf16View :^)
+        builder.append(Utf32View((u32*)&truncated, 1));
+    }
     return js_string(interpreter, builder.build());
 }
 
