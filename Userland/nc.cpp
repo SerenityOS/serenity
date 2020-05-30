@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
 #include <errno.h>
-#include <getopt.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,45 +37,21 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define max(a, b) ((a > b) ? a : b)
-
-void exit_with_usage(int rc)
-{
-    fprintf(stderr, "Usage: nc [-l] [-v] [-h] [-N] [-s source] [-p source_port] [destination] [port]\n");
-    exit(rc);
-}
-
 int main(int argc, char** argv)
 {
     bool should_listen = false;
     bool verbose = false;
-    char *source_addr = nullptr;
-    int source_port = 0;
     bool should_close = false;
+    const char* addr = nullptr;
+    int port = 0;
 
-    int opt;
-    while ((opt = getopt(argc, argv, "hlvs:p:N")) != -1) {
-        switch (opt) {
-        case 'h':
-            exit_with_usage(0);
-            break;
-        case 'l':
-            should_listen = true;
-            break;
-        case 'v':
-            verbose = true;
-            break;
-        case 's':
-            source_addr = strdup(optarg);
-            break;
-        case 'p':
-            source_port = atoi(optarg);
-            break;
-        case 'N':
-            should_close = true;
-            break;
-        }
-    }
+    Core::ArgsParser args_parser;
+    args_parser.add_option(should_listen, "Listen instead of connecting", "listen", 'l');
+    args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v');
+    args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
+    args_parser.add_positional_argument(addr, "Address to connect to or listen on", "address");
+    args_parser.add_positional_argument(port, "Port to connect to or listen on", "port");
+    args_parser.parse(argc, argv);
 
     int fd;
 
@@ -89,10 +65,10 @@ int main(int argc, char** argv)
         struct sockaddr_in sa;
         memset(&sa, 0, sizeof sa);
         sa.sin_family = AF_INET;
-        sa.sin_port = htons(source_port);
+        sa.sin_port = htons(port);
         sa.sin_addr.s_addr = htonl(INADDR_ANY);
-        if (source_addr) {
-            if (inet_pton(AF_INET, source_addr, &sa.sin_addr) < 0) {
+        if (addr) {
+            if (inet_pton(AF_INET, addr, &sa.sin_addr) < 0) {
                 perror("inet_pton");
                 return 1;
             }
@@ -136,17 +112,6 @@ int main(int argc, char** argv)
             return 1;
         };
     } else {
-        if ((argc - optind) < 2) {
-            exit_with_usage(-1);
-        }
-
-        const char* addr_arg = argv[optind];
-        int port_arg = atoi(argv[optind + 1]);
-        if (port_arg < 0) {
-            perror("atoi");
-            return 1;
-        }
-
         fd = socket(AF_INET, SOCK_STREAM, 0);
         if (fd < 0) {
             perror("socket");
@@ -168,11 +133,11 @@ int main(int argc, char** argv)
         char addr_str[100];
 
         struct sockaddr_in dst_addr;
-        memset(&dst_addr, 0, sizeof(dst_addr));
+        memset(&addr, 0, sizeof(addr));
 
         dst_addr.sin_family = AF_INET;
-        dst_addr.sin_port = htons(port_arg);
-        if (inet_pton(AF_INET, addr_arg, &dst_addr.sin_addr) < 0) {
+        dst_addr.sin_port = htons(port);
+        if (inet_pton(AF_INET, addr, &dst_addr.sin_addr) < 0) {
             perror("inet_pton");
             return 1;
         }
