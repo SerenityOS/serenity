@@ -384,11 +384,16 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "template") {
-        TODO();
+        // FIXME: Support this properly
+        insert_html_element(token);
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name() == "template") {
-        TODO();
+        // FIXME: Support this properly
+        ASSERT(current_node().tag_name() == "template");
+        m_stack_of_open_elements.pop();
+        return;
     }
 
     if ((token.is_start_tag() && token.tag_name() == "head") || token.is_end_tag()) {
@@ -469,7 +474,13 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title")) {
-        TODO();
+        PARSE_ERROR();
+        m_stack_of_open_elements.push(*m_head_element);
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        m_stack_of_open_elements.elements().remove_first_matching([&](auto& entry) {
+            return entry.ptr() == m_head_element;
+        });
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name() == "template") {
