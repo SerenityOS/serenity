@@ -107,11 +107,6 @@ void Editor::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(rect, palette().selection());
     }
 
-    if (m_hovering_lines_ruler)
-        window()->set_override_cursor(GUI::StandardCursor::Arrow);
-    else if (m_hovering_editor)
-        window()->set_override_cursor(m_hovering_link && m_holding_ctrl ? GUI::StandardCursor::Hand : GUI::StandardCursor::IBeam);
-
     if (ruler_visible()) {
         size_t first_visible_line = text_position_at(event.rect().top_left()).line();
         size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
@@ -217,11 +212,15 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     if (!highlighter)
         return;
 
-    auto ruler_line_rect = ruler_content_rect(text_position.line());
-    m_hovering_lines_ruler = (event.position().x() < ruler_line_rect.width());
-
     bool hide_tooltip = true;
     bool is_over_link = false;
+
+    auto ruler_line_rect = ruler_content_rect(text_position.line());
+    auto hovering_lines_ruler = (event.position().x() < ruler_line_rect.width());
+    if (hovering_lines_ruler && !is_in_drag_select())
+        window()->set_override_cursor(GUI::StandardCursor::Arrow);
+    else if (m_hovering_editor)
+        window()->set_override_cursor(m_hovering_link && m_holding_ctrl ? GUI::StandardCursor::Hand : GUI::StandardCursor::IBeam);
 
     for (auto& span : document().spans()) {
         if (span.range.contains(m_previous_text_position) && !span.range.contains(text_position)) {
@@ -272,7 +271,7 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
 
     auto text_position = text_position_at(event.position());
     auto ruler_line_rect = ruler_content_rect(text_position.line());
-    if (event.position().x() < ruler_line_rect.width()) {
+    if (event.button() == GUI::MouseButton::Left && event.position().x() < ruler_line_rect.width()) {
         if (!m_breakpoint_lines.contains_slow(text_position.line())) {
             m_breakpoint_lines.append(text_position.line());
             on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);
