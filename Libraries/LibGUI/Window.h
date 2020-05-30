@@ -188,6 +188,8 @@ public:
 
     Window* find_parent_window();
 
+    void set_progress(int);
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);

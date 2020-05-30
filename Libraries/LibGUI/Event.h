@@ -111,7 +111,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, const StringView& title, const Gfx::Rect& rect, bool is_active, WindowType window_type, bool is_minimized, bool is_frameless)
+    WMWindowStateChangedEvent(int client_id, int window_id, const StringView& title, const Gfx::Rect& rect, bool is_active, WindowType window_type, bool is_minimized, bool is_frameless, int progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
@@ -119,6 +119,7 @@ public:
         , m_active(is_active)
         , m_minimized(is_minimized)
         , m_frameless(is_frameless)
+        , m_progress(progress)
     {
     }
 
@@ -128,6 +129,7 @@ public:
     WindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
     bool is_frameless() const { return m_frameless; }
+    int progress() const { return m_progress; }
 
 private:
     String m_title;
@@ -136,6 +138,7 @@ private:
     bool m_active;
     bool m_minimized;
     bool m_frameless;
+    int m_progress;
 };
 
 class WMWindowRectChangedEvent : public WMEvent {

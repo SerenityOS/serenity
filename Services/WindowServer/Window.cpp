@@ -537,4 +537,13 @@ void Window::set_parent_window(Window& parent_window)
     parent_window.add_child_window(*this);
 }
 
+void Window::set_progress(int progress)
+{
+    if (m_progress == progress)
+        return;
+
+    m_progress = progress;
+    WindowManager::the().notify_progress_changed(*this);
+}
+
 }

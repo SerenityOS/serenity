@@ -49,6 +49,8 @@ endpoint WindowServer = 2
     SetWindowTitle(i32 window_id, [UTF8] String title) => ()
     GetWindowTitle(i32 window_id) => ([UTF8] String title)
 
+    SetWindowProgress(i32 window_id, i32 progress) =|
+
     SetWindowRect(i32 window_id, Gfx::Rect rect) => (Gfx::Rect rect)
     GetWindowRect(i32 window_id) => (Gfx::Rect rect)
 
