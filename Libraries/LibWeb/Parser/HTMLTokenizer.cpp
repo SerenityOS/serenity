@@ -1978,22 +1978,31 @@ _StartOfFunction:
                 {
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO(BeforeAttributeName);
-                    // FIXME: Otherwise, treat it as per the "anything else" entry below.
-                    TODO();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer)
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                    RECONSUME_IN(ScriptData);
                 }
                 ON('/')
                 {
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO(SelfClosingStartTag);
-                    // FIXME: Otherwise, treat it as per the "anything else" entry below.
-                    TODO();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer)
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                    RECONSUME_IN(ScriptData);
                 }
                 ON('>')
                 {
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
-                    // FIXME: Otherwise, treat it as per the "anything else" entry below.
-                    TODO();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer)
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                    RECONSUME_IN(ScriptData);
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
@@ -2009,7 +2018,11 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer)
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                    RECONSUME_IN(ScriptData);
                 }
             }
             END_STATE
