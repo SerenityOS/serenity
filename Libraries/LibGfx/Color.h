@@ -72,19 +72,19 @@ public:
         MidMagenta,
     };
 
-    Color() {}
+    constexpr Color() { }
     Color(NamedColor);
-    Color(u8 r, u8 g, u8 b)
+    constexpr Color(u8 r, u8 g, u8 b)
         : m_value(0xff000000 | (r << 16) | (g << 8) | b)
     {
     }
-    Color(u8 r, u8 g, u8 b, u8 a)
+    constexpr Color(u8 r, u8 g, u8 b, u8 a)
         : m_value((a << 24) | (r << 16) | (g << 8) | b)
     {
     }
 
-    static Color from_rgb(unsigned rgb) { return Color(rgb | 0xff000000); }
-    static Color from_rgba(unsigned rgba) { return Color(rgba); }
+    static constexpr Color from_rgb(unsigned rgb) { return Color(rgb | 0xff000000); }
+    static constexpr Color from_rgba(unsigned rgba) { return Color(rgba); }
 
     u8 red() const { return (m_value >> 16) & 0xff; }
     u8 green() const { return (m_value >> 8) & 0xff; }
@@ -267,7 +267,7 @@ public:
     }
 
 private:
-    explicit Color(RGBA32 rgba)
+    constexpr explicit Color(RGBA32 rgba)
         : m_value(rgba)
     {
     }

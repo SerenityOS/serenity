@@ -204,11 +204,16 @@ Optional<Color> Color::from_string(const StringView& string)
         return {};
 
     struct ColorAndWebName {
+        constexpr ColorAndWebName(RGBA32 c, const char* n)
+            : color(c)
+            , name(n)
+        {
+        }
         RGBA32 color;
-        const char* name;
+        StringView name;
     };
 
-    const ColorAndWebName web_colors[] = {
+    constexpr ColorAndWebName web_colors[] = {
         // CSS Level 1
         { 0x000000, "black" },
         { 0xc0c0c0, "silver" },
@@ -365,7 +370,7 @@ Optional<Color> Color::from_string(const StringView& string)
         { 0x000000, nullptr }
     };
 
-    for (size_t i = 0; web_colors[i].name; ++i) {
+    for (size_t i = 0; !web_colors[i].name.is_null(); ++i) {
         if (string == web_colors[i].name)
             return Color::from_rgb(web_colors[i].color);
     }
