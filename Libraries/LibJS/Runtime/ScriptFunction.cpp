@@ -53,7 +53,7 @@ ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyStr
 }
 
 ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype, bool is_arrow_function)
-    : Function(prototype)
+    : Function(prototype, is_arrow_function ? interpreter().this_value() : Value(), {})
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))

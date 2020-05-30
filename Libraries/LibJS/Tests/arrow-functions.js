@@ -64,6 +64,19 @@ try {
     assert(foo === undefined);
     assert(bar === undefined);
 
+    function FooBar() {
+      this.x = {
+        y: () => this,
+        z: function () {
+          return (() => this)();
+        }
+      };
+    }
+
+    var foobar = new FooBar();
+    assert(foobar.x.y() === foobar);
+    assert(foobar.x.z() === foobar.x);
+
     (() => {
         "use strict";
         assert(isStrictMode());

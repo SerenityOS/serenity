@@ -102,9 +102,8 @@ try {
     //     assert(strictIdentity.bind(undefined)() === undefined);
     // })();
 
-    // FIXME: Uncomment me when arrow functions have the correct |this| value.
-    // // Arrow functions can not have their |this| value set.
-    // assert((() => this).bind("foo")() === globalThis)
+    // Arrow functions can not have their |this| value set.
+    assert((() => this).bind("foo")() === globalThis)
 
     console.log("PASS");
 } catch (e) {
