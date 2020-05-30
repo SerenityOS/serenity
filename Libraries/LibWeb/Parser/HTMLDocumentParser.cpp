@@ -1210,11 +1210,17 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "math") {
-        TODO();
+        dbg() << "<math> element encountered.";
+        reconstruct_the_active_formatting_elements();
+        insert_html_element(token);
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "svg") {
-        TODO();
+        dbg() << "<svg> element encountered.";
+        reconstruct_the_active_formatting_elements();
+        insert_html_element(token);
+        return;
     }
 
     if ((token.is_start_tag() && token.tag_name().is_one_of("caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"))) {
