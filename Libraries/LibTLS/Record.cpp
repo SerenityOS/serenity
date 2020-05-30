@@ -311,9 +311,7 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
             if (code == 0) {
                 // close notify
                 res += 2;
-                auto closure_alert = build_alert(true, (u8)AlertDescription::CloseNotify);
-                write_packet(closure_alert);
-                flush();
+                alert(AlertLevel::Critical, AlertDescription::CloseNotify);
                 m_context.connection_finished = true;
             }
             m_context.error_code = (Error)code;

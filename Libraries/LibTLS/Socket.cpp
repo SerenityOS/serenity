@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -110,14 +111,32 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
         }
     }
 
-    auto packet = build_hello();
-    write_packet(packet);
-
     Core::Socket::on_connected = [this] {
         Core::Socket::on_ready_to_read = [this] {
             read_from_socket();
         };
-        write_into_socket();
+
+        auto packet = build_hello();
+        write_packet(packet);
+
+        deferred_invoke([&](auto&) {
+            m_handshake_timeout_timer = Core::Timer::create_single_shot(
+                m_max_wait_time_for_handshake_in_seconds * 1000, [&] {
+                    // The server did not respond fast enough,
+                    // time the connection out.
+                    alert(AlertLevel::Critical, AlertDescription::UserCanceled);
+                    m_context.connection_finished = true;
+                    m_context.tls_buffer.clear();
+                    m_context.error_code = Error::TimedOut;
+                    m_context.critical_error = (u8)Error::TimedOut;
+                    check_connection_state(false); // Notify the client.
+                },
+                this);
+            write_into_socket();
+            m_handshake_timeout_timer->start();
+        });
+        m_has_scheduled_write_flush = true;
+
         if (on_tls_connected)
             on_tls_connected();
     };
@@ -138,7 +157,7 @@ void TLSv12::read_from_socket()
 
     if (!check_connection_state(true))
         return;
-    flush();
+
     consume(Core::Socket::read(4096));
 }
 
@@ -152,13 +171,10 @@ void TLSv12::write_into_socket()
         return;
     flush();
 
-    if (!is_established()) {
-        deferred_invoke([this](auto&) { write_into_socket(); });
-        m_has_scheduled_write_flush = true;
+    if (!is_established())
         return;
-    }
 
-    if (is_established() && !m_context.application_buffer.size()) // hey client, you still have stuff to read...
+    if (!m_context.application_buffer.size()) // hey client, you still have stuff to read...
         if (on_tls_ready_to_write)
             on_tls_ready_to_write(*this);
 }
