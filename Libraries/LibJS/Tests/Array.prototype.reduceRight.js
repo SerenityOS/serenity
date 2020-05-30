@@ -43,7 +43,7 @@ try {
     }
   );
 
-  [1, 2].reduceRight(() => {
+  [1, 2].reduceRight(function () {
     assert(this === undefined);
   });
 
