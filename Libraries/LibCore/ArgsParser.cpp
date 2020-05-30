@@ -51,6 +51,8 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
 
     int index_of_found_long_option = -1;
 
+    // Tell getopt() to reset its internal state, and start scanning from optind = 1.
+    // We could also set optreset = 1, but the host platform may not support that.
     optind = 0;
 
     for (size_t i = 0; i < m_options.size(); i++) {
@@ -103,7 +105,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
 
         const char* arg = found_option->requires_argument ? optarg : nullptr;
         if (!found_option->accept_value(arg)) {
-            fprintf(stderr, "Invalid value for option %s\n", found_option->name_for_display().characters());
+            fprintf(stderr, "\033[31mInvalid value for option \033[1m%s\033[22m, dude\033[0m\n", found_option->name_for_display().characters());
             print_usage_and_exit();
             return false;
         }
@@ -167,7 +169,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
 
 void ArgsParser::print_usage(FILE* file, const char* argv0)
 {
-    fprintf(file, "Usage:\n\t%s", argv0);
+    fprintf(file, "Usage:\n\t\033[1m%s\033[0m", argv0);
 
     for (auto& opt : m_options) {
         if (opt.long_name && !strcmp(opt.long_name, "help"))
@@ -205,13 +207,13 @@ void ArgsParser::print_usage(FILE* file, const char* argv0)
         };
         fprintf(file, "\t");
         if (opt.short_name) {
-            fprintf(file, "-%c", opt.short_name);
+            fprintf(file, "\033[1m-%c\033[0m", opt.short_name);
             print_argument();
         }
         if (opt.short_name && opt.long_name)
             fprintf(file, ", ");
         if (opt.long_name) {
-            fprintf(file, "--%s", opt.long_name);
+            fprintf(file, "\033[1m--%s\033[0m", opt.long_name);
             print_argument();
         }
 
@@ -224,7 +226,7 @@ void ArgsParser::print_usage(FILE* file, const char* argv0)
         fprintf(file, "\nArguments:\n");
 
     for (auto& arg : m_positional_args) {
-        fprintf(file, "\t%s", arg.name);
+        fprintf(file, "\t\033[1m%s\033[0m", arg.name);
         if (arg.help_string)
             fprintf(file, "\t%s", arg.help_string);
         fprintf(file, "\n");
