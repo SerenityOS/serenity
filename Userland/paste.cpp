@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         printf("%s", data_and_type.data.characters());
         // Append a newline to text contents, but
         // only if we're not asked not to do this.
-        if (data_and_type.type == "text/plain" && !no_newline)
+        if (data_and_type.type.starts_with("text/") && !no_newline)
             putchar('\n');
     } else {
         printf("%s\n", data_and_type.type.characters());
