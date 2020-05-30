@@ -94,6 +94,14 @@ bool StackOfOpenElements::has_in_list_item_scope(const FlyString& tag_name) cons
     return has_in_scope_impl(tag_name, list);
 }
 
+bool StackOfOpenElements::has_in_select_scope(const FlyString& tag_name) const
+{
+    auto list = s_base_list;
+    list.append("option");
+    list.append("optgroup");
+    return has_in_scope_impl(tag_name, list);
+}
+
 bool StackOfOpenElements::contains(const Element& element) const
 {
     for (auto& element_on_stack : m_elements) {
