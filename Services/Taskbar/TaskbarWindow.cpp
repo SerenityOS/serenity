@@ -221,6 +221,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         window.set_rect(changed_event.rect());
         window.set_active(changed_event.is_active());
         window.set_minimized(changed_event.is_minimized());
+        window.set_progress(changed_event.progress());
         if (window.is_minimized()) {
             window.button()->set_foreground_color(Color::DarkGray);
             window.button()->set_text(String::format("[%s]", changed_event.title().characters()));
