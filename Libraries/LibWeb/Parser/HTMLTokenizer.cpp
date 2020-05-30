@@ -1617,8 +1617,9 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    // FIXME: Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS character token. Reconsume in the RAWTEXT state.
-                    TODO();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    RECONSUME_IN(RAWTEXT);
                 }
             }
             END_STATE
@@ -1628,24 +1629,33 @@ _StartOfFunction:
                 ON_WHITESPACE
                 {
                     if (!current_end_tag_token_is_appropriate()) {
-                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
-                        TODO();
+                        m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                        m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                        for (auto codepoint : m_temporary_buffer)
+                            m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                        RECONSUME_IN(RAWTEXT);
                     }
                     SWITCH_TO(BeforeAttributeName);
                 }
                 ON('/')
                 {
                     if (!current_end_tag_token_is_appropriate()) {
-                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
-                        TODO();
+                        m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                        m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                        for (auto codepoint : m_temporary_buffer)
+                            m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                        RECONSUME_IN(RAWTEXT);
                     }
                     SWITCH_TO(SelfClosingStartTag);
                 }
                 ON('>')
                 {
                     if (!current_end_tag_token_is_appropriate()) {
-                        // FIXME: Otherwise, treat it as per the "anything else" entry below.
-                        TODO();
+                        m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                        m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                        for (auto codepoint : m_temporary_buffer)
+                            m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                        RECONSUME_IN(RAWTEXT);
                     }
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
@@ -1663,7 +1673,11 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer)
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
+                    RECONSUME_IN(RAWTEXT);
                 }
             }
             END_STATE
