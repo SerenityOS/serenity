@@ -4,11 +4,15 @@
         "url": "http://www.serenityos.org/"
     },
     {
-        "title": "SerenityOS Github Page",
+        "title": "SerenityOS @ GitHub",
         "url": "https://github.com/SerenityOS/serenity"
     },
     {
         "title": "Google",
         "url": "https://www.google.com/"
+    },
+    {
+        "title": "HTML spec",
+        "url": "https://html.spec.whatwg.org/multipage/"
     }
 ]
