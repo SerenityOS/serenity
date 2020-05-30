@@ -80,7 +80,17 @@ void HTMLDocumentParser::run(const URL& url)
 
     // "The end"
 
+    auto scripts_to_execute_when_parsing_has_finished = m_document->take_scripts_to_execute_when_parsing_has_finished({});
+    for (auto& script : scripts_to_execute_when_parsing_has_finished) {
+        script.execute_script();
+    }
+
     m_document->dispatch_event(Event::create("DOMContentLoaded"));
+
+    auto scripts_to_execute_as_soon_as_possible = m_document->take_scripts_to_execute_as_soon_as_possible({});
+    for (auto& script : scripts_to_execute_as_soon_as_possible) {
+        script.execute_script();
+    }
 }
 
 void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)

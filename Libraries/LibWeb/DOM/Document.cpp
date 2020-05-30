@@ -51,10 +51,10 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Parser/CSSParser.h>
 #include <stdio.h>
 
@@ -427,6 +427,26 @@ void Document::set_pending_parsing_blocking_script(Badge<HTMLScriptElement>, HTM
 NonnullRefPtr<HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTMLDocumentParser>)
 {
     return m_pending_parsing_blocking_script.release_nonnull();
+}
+
+void Document::add_script_to_execute_when_parsing_has_finished(Badge<HTMLScriptElement>, HTMLScriptElement& script)
+{
+    m_scripts_to_execute_when_parsing_has_finished.append(script);
+}
+
+NonnullRefPtrVector<HTMLScriptElement> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTMLDocumentParser>)
+{
+    return move(m_scripts_to_execute_when_parsing_has_finished);
+}
+
+void Document::add_script_to_execute_as_soon_as_possible(Badge<HTMLScriptElement>, HTMLScriptElement& script)
+{
+    m_scripts_to_execute_as_soon_as_possible.append(script);
+}
+
+NonnullRefPtrVector<HTMLScriptElement> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTMLDocumentParser>)
+{
+    return move(m_scripts_to_execute_as_soon_as_possible);
 }
 
 }
