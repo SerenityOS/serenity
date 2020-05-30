@@ -1154,7 +1154,24 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "textarea") {
-        TODO();
+        insert_html_element(token);
+
+        // If the next token is a U+000A LINE FEED (LF) character token,
+        // then ignore that token and move on to the next one.
+        // (Newlines at the start of pre blocks are ignored as an authoring convenience.)
+        auto next_token = m_tokenizer.next_token();
+
+        m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);
+        m_original_insertion_mode = m_insertion_mode;
+        m_frameset_ok = false;
+        m_insertion_mode = InsertionMode::Text;
+
+        if (next_token.has_value() && next_token.value().is_character() && next_token.value().codepoint() == '\n') {
+            // Ignore it.
+        } else {
+            process_using_the_rules_for(m_insertion_mode, next_token.value());
+        }
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "xmp") {
