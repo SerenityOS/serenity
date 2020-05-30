@@ -95,6 +95,7 @@ private:
     void handle_in_table_body(HTMLToken&);
     void handle_in_row(HTMLToken&);
     void handle_in_cell(HTMLToken&);
+    void handle_in_table_text(HTMLToken&);
 
     void stop_parsing() { m_stop_parsing = true; }
 
@@ -147,6 +148,8 @@ private:
     RefPtr<Document> m_document;
     RefPtr<HTMLHeadElement> m_head_element;
     RefPtr<HTMLFormElement> m_form_element;
+
+    Vector<HTMLToken> m_pending_table_character_tokens;
 };
 
 }

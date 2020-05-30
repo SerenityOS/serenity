@@ -138,6 +138,9 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     case InsertionMode::InCell:
         handle_in_cell(token);
         break;
+    case InsertionMode::InTableText:
+        handle_in_table_text(token);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -1454,6 +1457,37 @@ void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::InBody, token);
 }
 
+void HTMLDocumentParser::handle_in_table_text(HTMLToken& token)
+{
+    if (token.is_character()) {
+        if (token.codepoint() == 0) {
+            PARSE_ERROR();
+            return;
+        }
+
+        m_pending_table_character_tokens.append(token);
+        return;
+    }
+
+    for (auto& pending_token : m_pending_table_character_tokens) {
+        ASSERT(pending_token.is_character());
+        if (!pending_token.is_parser_whitespace()) {
+            // FIXME: If any of the tokens in the pending table character tokens list
+            // are character tokens that are not ASCII whitespace, then this is a parse error:
+            // reprocess the character tokens in the pending table character tokens list using
+            // the rules given in the "anything else" entry in the "in table" insertion mode.
+            TODO();
+        }
+    }
+
+    for (auto& pending_token : m_pending_table_character_tokens) {
+        insert_character(pending_token.codepoint());
+    }
+
+    m_insertion_mode = m_original_insertion_mode;
+    process_using_the_rules_for(m_insertion_mode, token);
+}
+
 void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
 {
     if (token.is_start_tag() && token.tag_name() == "tr") {
@@ -1461,6 +1495,14 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
         insert_html_element(token);
         m_insertion_mode = InsertionMode::InRow;
         return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of("th", "td")) {
+        TODO();
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("tbody", "tfoot", "thead")) {
+        TODO();
     }
 
     if ((token.is_start_tag() && token.tag_name().is_one_of("caption", "col", "colgroup", "tbody", "tfoot", "thead"))
@@ -1473,13 +1515,23 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
         process_using_the_rules_for(InsertionMode::InTable, token);
         return;
     }
-    TODO();
+
+    if (token.is_end_tag() && token.tag_name().is_one_of("body", "caption", "col", "colgroup", "html", "td", "th", "tr")) {
+        PARSE_ERROR();
+        return;
+    }
+
+    process_using_the_rules_for(InsertionMode::InTable, token);
 }
 
 void HTMLDocumentParser::handle_in_table(HTMLToken& token)
 {
     if (token.is_character() && current_node().tag_name().is_one_of("table", "tbody", "tfoot", "thead", "tr")) {
-        TODO();
+        m_pending_table_character_tokens.clear();
+        m_original_insertion_mode = m_insertion_mode;
+        m_insertion_mode = InsertionMode::InTableText;
+        process_using_the_rules_for(InsertionMode::InTableText, token);
+        return;
     }
     if (token.is_comment()) {
         insert_comment(token);
