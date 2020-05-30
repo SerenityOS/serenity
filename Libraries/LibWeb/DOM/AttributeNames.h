@@ -37,6 +37,8 @@ void initialize();
 extern FlyString id;
 extern FlyString class_;
 extern FlyString type;
+extern FlyString href;
+extern FlyString style;
 
 }
 }

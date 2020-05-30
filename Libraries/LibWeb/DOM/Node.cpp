@@ -63,7 +63,7 @@ Node::~Node()
 const HTMLAnchorElement* Node::enclosing_link_element() const
 {
     for (auto* node = this; node; node = node->parent()) {
-        if (is<HTMLAnchorElement>(*node) && to<HTMLAnchorElement>(*node).has_attribute("href"))
+        if (is<HTMLAnchorElement>(*node) && to<HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
             return to<HTMLAnchorElement>(node);
     }
     return nullptr;
@@ -127,7 +127,7 @@ bool Node::is_link() const
     auto* enclosing_link = enclosing_link_element();
     if (!enclosing_link)
         return false;
-    return enclosing_link->has_attribute("href");
+    return enclosing_link->has_attribute(HTML::AttributeNames::href);
 }
 
 void Node::dispatch_event(NonnullRefPtr<Event> event)
