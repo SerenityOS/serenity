@@ -77,6 +77,10 @@ try {
     assert(foobar.x.y() === foobar);
     assert(foobar.x.z() === foobar.x);
 
+    var Baz = () => {};
+
+    assert(Baz.prototype === undefined);
+
     (() => {
         "use strict";
         assert(isStrictMode());
