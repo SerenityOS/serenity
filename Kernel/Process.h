@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Checked.h>
 #include <AK/FixedArray.h>
 #include <AK/HashMap.h>
 #include <AK/InlineLinkedList.h>
@@ -332,8 +333,17 @@ public:
 
     [[nodiscard]] bool validate_read(const void*, size_t) const;
     [[nodiscard]] bool validate_write(void*, size_t) const;
+
     template<typename T>
-    [[nodiscard]] bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
+    [[nodiscard]] bool validate_read_typed(T* value, size_t count = 1)
+    {
+        Checked size = sizeof(T);
+        size *= count;
+        if (size.has_overflow())
+            return false;
+        return validate_read(value, size.value());
+    }
+
     template<typename T>
     [[nodiscard]] bool validate_read_and_copy_typed(T* dest, const T* src)
     {
@@ -343,8 +353,17 @@ public:
         }
         return validated;
     }
+
     template<typename T>
-    [[nodiscard]] bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
+    [[nodiscard]] bool validate_write_typed(T* value, size_t count = 1)
+    {
+        Checked size = sizeof(T);
+        size *= count;
+        if (size.has_overflow())
+            return false;
+        return validate_write(value, size.value());
+    }
+
     template<typename DataType, typename SizeType>
     [[nodiscard]] bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
     template<typename DataType, typename SizeType>
