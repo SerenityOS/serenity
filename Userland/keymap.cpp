@@ -24,97 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/JsonObject.h>
-#include <LibCore/File.h>
+#include <LibKeyboard/CharacterMap.h>
 #include <stdio.h>
-
-#include <AK/Optional.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Vector.h>
-#include <AK/kmalloc.h>
-#include <Kernel/Syscall.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-static Vector<char> read_map(const JsonObject& json, const String& name)
-{
-    if (!json.has(name))
-        return {};
-
-    Vector<char, 0x80> map;
-    map.resize(0x80);
-    auto map_arr = json.get(name).as_array();
-
-    for (int i = 0; i < map_arr.size(); i++) {
-        auto key_value = map_arr.at(i).as_string();
-        char character = 0;
-        if (key_value.length() == 0) {
-            ;
-        } else if (key_value.length() == 1) {
-            character = key_value.characters()[0];
-        } else if (key_value.length() == 4) {
-            // FIXME: Replace this workaround with "\u001B" in the keymap files
-            //     after these kind of escape sequences are implemented in JsonParser.
-            if (key_value == "0x1B") {
-                character = 0x1B;
-            }
-        } else {
-            fprintf(stderr, "Unknown character in %s[%u] = %s.\n", name.characters(), i, key_value.characters());
-            ASSERT_NOT_REACHED();
-        }
-
-        map[i] = character;
-    }
-
-    return map;
-}
-
-static RefPtr<Core::File> open_keymap_file(String& filename)
-{
-    auto file = Core::File::construct(filename);
-    if (file->open(Core::IODevice::ReadOnly))
-        return file;
-
-    if (!filename.ends_with(".json")) {
-        StringBuilder full_path;
-        full_path.append("/res/keymaps/");
-        full_path.append(filename);
-        full_path.append(".json");
-        filename = full_path.to_string();
-        file = Core::File::construct(filename);
-        if (file->open(Core::IODevice::ReadOnly))
-            return file;
-    }
-
-    return file;
-}
-
-static int read_map_from_file(String& filename)
-{
-    auto file = open_keymap_file(filename);
-    if (!file->is_open()) {
-        fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file->error_string());
-        return 1;
-    }
-
-    auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents).as_object();
-
-    auto map = read_map(json, "map");
-    auto shift_map = read_map(json, "shift_map");
-    auto alt_map = read_map(json, "alt_map");
-    auto altgr_map = read_map(json, "altgr_map");
-
-    if (altgr_map.is_empty()) {
-        // AltGr map was not found, using Alt map as fallback.
-        altgr_map = alt_map;
-    }
-
-    Syscall::SC_setkeymap_params params { map.data(), shift_map.data(), alt_map.data(), altgr_map.data() };
-    return syscall(SC_setkeymap, &params);
-}
 
 int main(int argc, char** argv)
 {
@@ -124,7 +35,9 @@ int main(int argc, char** argv)
     }
 
     String filename = argv[1];
-    int ret_val = read_map_from_file(filename);
+
+    Keyboard::CharacterMap character_map(filename);
+    int ret_val = character_map.set_system_map();
 
     if (ret_val == -EPERM)
         fprintf(stderr, "Permission denied.\n");
