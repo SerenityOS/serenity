@@ -452,25 +452,24 @@ void HTMLDocumentParser::insert_character(u32 data)
 
 void HTMLDocumentParser::handle_after_head(HTMLToken& token)
 {
-    if (token.is_character()) {
-        if (token.is_parser_whitespace()) {
-            insert_character(token.codepoint());
-            return;
-        }
-
-        TODO();
+    if (token.is_character() && token.is_parser_whitespace()) {
+        insert_character(token.codepoint());
+        return;
     }
 
     if (token.is_comment()) {
-        TODO();
+        insert_comment(token);
+        return;
     }
 
     if (token.is_doctype()) {
-        TODO();
+        PARSE_ERROR();
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "html") {
-        TODO();
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "body") {
@@ -481,7 +480,9 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "frameset") {
-        TODO();
+        insert_html_element(token);
+        m_insertion_mode = InsertionMode::InFrameset;
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title")) {
@@ -503,7 +504,8 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
     }
 
     if ((token.is_start_tag() && token.tag_name() == "head") || token.is_end_tag()) {
-        TODO();
+        PARSE_ERROR();
+        return;
     }
 
 AnythingElse:
@@ -512,7 +514,7 @@ AnythingElse:
     fake_body_token.m_tag.tag_name.append("body");
     insert_html_element(fake_body_token);
     m_insertion_mode = InsertionMode::InBody;
-    // FIXME: Reprocess the current token in InBody!
+    process_using_the_rules_for(m_insertion_mode, token);
 }
 
 void HTMLDocumentParser::generate_implied_end_tags(const FlyString& exception)
