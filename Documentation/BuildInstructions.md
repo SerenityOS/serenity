@@ -30,6 +30,8 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /
 #### macOS prerequisites
 Make sure you have all the dependencies installed:
 ```bash
+xcode-select --install
+xcode-select -s /Applications/Xcode.app/Contents/Developer #Requires sudo
 brew install coreutils
 brew tap discoteq/discoteq
 brew install flock
@@ -40,6 +42,7 @@ brew install m4
 brew install autoconf
 brew install libtool
 brew install automake
+brew install cmake
 brew install bash
 brew cask install osxfuse
 Toolchain/BuildFuseExt2.sh
