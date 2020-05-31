@@ -116,14 +116,22 @@ String JsonParser::consume_quoted_string()
         case 'f':
             buffer.append('\f');
             break;
-        case 'u':
-            consume();
-            consume();
-            consume();
-            consume();
-            // FIXME: This is obviously not correct, but we don't have non-ASCII support so meh.
-            buffer.append('?');
-            break;
+        case 'u': {
+            StringBuilder sb;
+            sb.append(consume());
+            sb.append(consume());
+            sb.append(consume());
+            sb.append(consume());
+
+            bool ok;
+            u32 codepoint = AK::StringUtils::convert_to_uint_from_hex(sb.to_string(), ok);
+            if (ok && codepoint < 128) {
+                buffer.append((char)codepoint);
+            } else {
+                // FIXME: This is obviously not correct, but we don't have non-ASCII support so meh.
+                buffer.append('?');
+            }
+        } break;
         default:
             buffer.append(escaped_ch);
             break;
