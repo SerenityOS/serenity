@@ -31,11 +31,6 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
     if (argc == 1) {
       char buffer[HOST_NAME_MAX];
       int rc = gethostname(buffer, sizeof(buffer));
