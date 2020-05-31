@@ -703,7 +703,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
 
 int Process::sys$sethostname(const char* hostname, ssize_t length)
 {
-    REQUIRE_PROMISE(stdio);
+    REQUIRE_NO_PROMISES;
     if (!is_superuser())
         return -EPERM;
     if (length < 0)
@@ -2495,7 +2495,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
 
 pid_t Process::sys$waitid(const Syscall::SC_waitid_params* user_params)
 {
-    REQUIRE_PROMISE(stdio);
+    REQUIRE_PROMISE(proc);
 
     Syscall::SC_waitid_params params;
     if (!validate_read_and_copy_typed(&params, user_params))
@@ -2545,7 +2545,7 @@ bool Process::validate_write(void* address, size_t size) const
 
 pid_t Process::sys$getsid(pid_t pid)
 {
-    REQUIRE_PROMISE(stdio);
+    REQUIRE_PROMISE(proc);
     if (pid == 0)
         return m_sid;
     InterruptDisabler disabler;
@@ -2576,7 +2576,7 @@ pid_t Process::sys$setsid()
 
 pid_t Process::sys$getpgid(pid_t pid)
 {
-    REQUIRE_PROMISE(stdio);
+    REQUIRE_PROMISE(proc);
     if (pid == 0)
         return m_pgid;
     InterruptDisabler disabler; // FIXME: Use a ProcessHandle
@@ -2677,7 +2677,7 @@ int Process::sys$dup2(int old_fd, int new_fd)
 
 int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
 {
-    REQUIRE_PROMISE(stdio);
+    REQUIRE_PROMISE(sigaction);
     if (old_set) {
         if (!validate_write_typed(old_set))
             return -EFAULT;
