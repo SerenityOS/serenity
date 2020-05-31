@@ -31,6 +31,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/String.h>
+#include <AK/StringImpl.h>
 
 namespace AK {
 
@@ -136,9 +137,36 @@ template<typename Builder>
 inline void JsonValue::serialize(Builder& builder) const
 {
     switch (m_type) {
-    case Type::String:
-        builder.appendf("\"%s\"", m_value.as_string->characters());
-        break;
+    case Type::String: {
+        auto size = m_value.as_string->length();
+        builder.append("\"");
+        for (size_t i = 0; i < size; i++) {
+            char ch = m_value.as_string->characters()[i];
+            switch (ch) {
+            case '\e':
+                builder.append("\\u001B");
+                break;
+            case '\b':
+                builder.append("\\b");
+                break;
+            case '\n':
+                builder.append("\\n");
+                break;
+            case '\t':
+                builder.append("\\t");
+                break;
+            case '\"':
+                builder.append("\\\"");
+                break;
+            case '\\':
+                builder.append("\\\\");
+                break;
+            default:
+                builder.appendf("%c", ch);
+            }
+        }
+        builder.append("\"");
+    } break;
     case Type::Array:
         m_value.as_array->serialize(builder);
         break;
