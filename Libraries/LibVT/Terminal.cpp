@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonObject.h>
+#include <AK/JsonParser.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibVT/Terminal.h>
@@ -538,6 +540,45 @@ void Terminal::escape$P(const ParamVector& params)
     line.set_dirty(true);
 }
 
+void Terminal::execute_terminal_json_command()
+{
+    StringView sv { (const char*)m_json_data.data(), m_json_data.size() };
+    JsonParser parser(sv);
+    auto value = parser.parse();
+
+    if (!value.is_object()) {
+        dbg() << "Invalid json command '" << sv << "'";
+        return;
+    }
+
+    auto& object = value.as_object();
+
+    object.for_each_member([&](auto& command, auto& params) {
+        if (!params.is_object()) {
+            dbg() << "Invalid parameters to command '" << command << "': " << params.to_string();
+            return;
+        }
+        auto& params_object = params.as_object();
+
+        if (command == "SetProgress") {
+            auto progress_max = params_object.get("maximum");
+            auto progress_value = params_object.get("value");
+
+            if (progress_max.is_number() && progress_value.is_number()) {
+                auto max = progress_max.to_i32();
+                auto value = progress_value.to_i32();
+                m_client.set_window_progress(value, max);
+            } else {
+                m_client.set_window_progress(-1, 1);
+            }
+
+            return;
+        }
+
+        dbg() << "Unknown command '" << command << "'";
+    });
+}
+
 void Terminal::execute_xterm_command()
 {
     ParamVector numeric_params;
@@ -840,6 +881,9 @@ void Terminal::on_input(u8 ch)
         } else if (ch == ']') {
             m_parser_state = ExpectXtermParameter;
             m_xterm_parameters.clear_with_capacity();
+        } else if (ch == '{') {
+            m_parser_state = ExpectSerenityTerminalEscapedJson;
+            m_json_data.clear_with_capacity();
         } else if (ch == '#') {
             m_parser_state = ExpectHashtagDigit;
         } else if (ch == 'D') {
@@ -858,6 +902,20 @@ void Terminal::on_input(u8 ch)
             dbg() << "Unexpected character in GotEscape '" << (char)ch << "'";
             m_parser_state = Normal;
         }
+        return;
+    case ExpectSerenityTerminalEscapedJson:
+        if (ch == 'S') {
+            m_parser_state = ExpectSerenityTerminalJson;
+            return;
+        }
+        break;
+    case ExpectSerenityTerminalJson:
+        if (ch == '\033') {
+            execute_terminal_json_command();
+            m_parser_state = Normal;
+            return;
+        }
+        m_json_data.append(ch);
         return;
     case ExpectHashtagDigit:
         if (ch >= '0' && ch <= '9') {

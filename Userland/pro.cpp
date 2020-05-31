@@ -30,6 +30,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <LibVT/Escape.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -61,7 +62,7 @@ int main(int argc, char** argv)
     download->on_progress = [&](Optional<u32> maybe_total_size, u32 downloaded_size) {
         fprintf(stderr, "\r\033[2K");
         if (maybe_total_size.has_value()) {
-            fprintf(stderr, "\033]9;%d;%d;\033\\", downloaded_size, maybe_total_size.value());
+            fprintf(stderr, "%s", VT::EscapeSequenceFor<VT::Progress>(downloaded_size, maybe_total_size.value()).characters());
             fprintf(stderr, "Download progress: %s / %s", human_readable_size(downloaded_size).characters(), human_readable_size(maybe_total_size.value()).characters());
         } else {
             fprintf(stderr, "Download progress: %s / ???", human_readable_size(downloaded_size).characters());
@@ -79,7 +80,7 @@ int main(int argc, char** argv)
         prev_time = current_time;
     };
     download->on_finish = [&](bool success, auto& payload, auto, auto&) {
-        fprintf(stderr, "\033]9;-1;\033\\");
+        fprintf(stderr, "%s", VT::EscapeSequenceFor<VT::Progress>(VT::Unset).characters());
         fprintf(stderr, "\n");
         if (success)
             write(STDOUT_FILENO, payload.data(), payload.size());

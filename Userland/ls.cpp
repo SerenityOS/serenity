@@ -33,6 +33,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
+#include <LibVT/Escape.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -170,7 +171,7 @@ size_t print_name(const struct stat& st, const String& name, const char* path_fo
 {
     if (!flag_disable_hyperlinks) {
         if (auto* full_path = realpath(path_for_hyperlink, nullptr)) {
-            printf("\033]8;;file://%s%s\033\\", hostname().characters(), full_path);
+            printf("%s", VT::EscapeSequenceFor<VT::Hyperlink>(String::format("file://%s%s", hostname().characters(), full_path)).characters());
             free(full_path);
         }
     }
@@ -221,7 +222,7 @@ size_t print_name(const struct stat& st, const String& name, const char* path_fo
     }
 
     if (!flag_disable_hyperlinks) {
-        printf("\033]8;;\033\\");
+        printf("%s", VT::EscapeSequenceFor<VT::Hyperlink>(VT::Unset).characters());
     }
 
     return nprinted;

@@ -37,6 +37,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibLine/Editor.h>
+#include <LibVT/Escape.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -65,7 +66,9 @@ void Shell::print_path(const String& path)
         printf("%s", path.characters());
         return;
     }
-    printf("\033]8;;file://%s%s\033\\%s\033]8;;\033\\", hostname, path.characters(), path.characters());
+    printf("%s", VT::EscapeSequenceFor<VT::Hyperlink>(String::format("file://%s%s", hostname, path.characters())).characters());
+    printf("%s", path.characters());
+    printf("%s", VT::EscapeSequenceFor<VT::Hyperlink>(VT::Unset).characters());
 }
 
 String Shell::prompt() const
@@ -77,7 +80,7 @@ String Shell::prompt() const
                 return "# ";
 
             StringBuilder builder;
-            builder.appendf("\033]0;%s@%s:%s\007", username.characters(), hostname, cwd.characters());
+            builder.appendf("%s", VT::EscapeSequenceFor<VT::Title>(String::format("%s@%s:%s", username.characters(), hostname, cwd.characters())).characters());
             builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", username.characters(), hostname, cwd.characters());
             return builder.to_string();
         }

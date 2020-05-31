@@ -174,6 +174,7 @@ private:
 
     void execute_escape_sequence(u8 final);
     void execute_xterm_command();
+    void execute_terminal_json_command();
     void execute_hashtag(u8);
 
     enum ParserState {
@@ -184,6 +185,8 @@ private:
         ExpectFinal,
         ExpectHashtagDigit,
         ExpectXtermParameter,
+        ExpectSerenityTerminalEscapedJson,
+        ExpectSerenityTerminalJson,
         ExpectStringTerminator,
         UTF8Needs3Bytes,
         UTF8Needs2Bytes,
@@ -195,6 +198,7 @@ private:
     Vector<u8> m_parameters;
     Vector<u8> m_intermediates;
     Vector<u8> m_xterm_parameters;
+    Vector<u8> m_json_data;
     Vector<bool> m_horizontal_tabs;
     u8 m_final { 0 };
     u32 m_last_codepoint { 0 };

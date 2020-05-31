@@ -29,12 +29,12 @@ for f in *.js; do
         echo -ne "( \033[31;1mFail\033[0m ) "
         (( ++fail_count ))
     fi
-    echo -ne "\033]9;${count};${test_count}\033\\"
+    echo -ne "\033{S{\"SetProgress\":{\"value\":${count},\"maximum\":${test_count}}}\033"
     echo "$f"
     (( ++count ))
 done
 
-echo -e "\033]9;-1\033\\"
+echo -e "\033{S{\"SetProgress\":{}}\033"
 
 pass_color=""
 fail_color=""
