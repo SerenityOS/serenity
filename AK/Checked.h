@@ -166,13 +166,13 @@ public:
         return m_overflow;
     }
 
-    bool operator!() const
+    ALWAYS_INLINE bool operator!() const
     {
         ASSERT(!m_overflow);
         return !m_value;
     }
 
-    T value() const
+    ALWAYS_INLINE T value() const
     {
         ASSERT(!m_overflow);
         return m_value;
