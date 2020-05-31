@@ -1,0 +1,11 @@
+[App]
+Name=VideoPlayer
+Executable=/bin/VideoPlayer
+Category=Graphics
+
+[Icons]
+16x16=/res/icons/16x16/app-videoplayer.png
+32x32=/res/icons/32x32/app-videoplayer.png
+
+[Launcher]
+FileTypes=mpg

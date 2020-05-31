@@ -48,6 +48,7 @@
     __ENUMERATE_FILETYPE(pdf, ".pdf")          \
     __ENUMERATE_FILETYPE(python, ".py")        \
     __ENUMERATE_FILETYPE(sound, ".wav")        \
+    __ENUMERATE_FILETYPE(video, ".mpg")        \
     __ENUMERATE_FILETYPE(ini, ".ini")          \
     __ENUMERATE_FILETYPE(text, ".txt")
 namespace GUI {
