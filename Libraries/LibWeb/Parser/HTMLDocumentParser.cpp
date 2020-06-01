@@ -1596,7 +1596,17 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("th", "td")) {
-        TODO();
+        PARSE_ERROR();
+        clear_the_stack_back_to_a_table_body_context();
+
+        HTMLToken fake_tr_token;
+        fake_tr_token.m_type = HTMLToken::Type::StartTag;
+        fake_tr_token.m_tag.tag_name.append("tr");
+        insert_html_element(fake_tr_token);
+
+        m_insertion_mode = InsertionMode::InRow;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("tbody", "tfoot", "thead")) {
