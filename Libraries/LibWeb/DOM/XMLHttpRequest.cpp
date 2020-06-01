@@ -33,7 +33,7 @@
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
-#include <LibWeb/ResourceLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 
