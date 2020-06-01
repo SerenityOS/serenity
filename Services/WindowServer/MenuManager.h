@@ -70,12 +70,6 @@ public:
 
     void close_all_menus_from_client(Badge<ClientConnection>, ClientConnection&);
 
-    void toggle_system_menu()
-    {
-        if (m_system_menu)
-            toggle_menu(*m_system_menu);
-    }
-
     Menu* system_menu() { return m_system_menu; }
     void set_system_menu(Menu&);
 
