@@ -114,10 +114,16 @@ public:
     // since we can not do this cleanly ourselves. (signal() limitation: cannot give member functions)
     void interrupted()
     {
-        if (m_is_editing)
+        if (m_is_editing) {
             m_was_interrupted = true;
+            handle_interrupt_event();
+        }
     }
-    void resized() { m_was_resized = true; }
+    void resized()
+    {
+        m_was_resized = true;
+        refresh_display();
+    }
 
     size_t cursor() const { return m_cursor; }
     const Vector<u32, 1024>& buffer() const { return m_buffer; }
@@ -176,6 +182,7 @@ private:
         Function<bool(Editor&)> callback;
     };
 
+    void handle_interrupt_event();
     void handle_read_event();
 
     Vector<size_t, 2> vt_dsr();
