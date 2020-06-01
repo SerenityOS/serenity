@@ -225,9 +225,12 @@ NonnullRefPtr<Program> Parser::parse_program()
             consume();
         }
     }
-    ASSERT(m_parser_state.m_var_scopes.size() == 1);
-    program->add_variables(m_parser_state.m_var_scopes.last());
-    program->add_variables(m_parser_state.m_let_scopes.last());
+    if (m_parser_state.m_var_scopes.size() == 1) {
+        program->add_variables(m_parser_state.m_var_scopes.last());
+        program->add_variables(m_parser_state.m_let_scopes.last());
+    } else {
+        syntax_error("Unclosed scope");
+    }
     return program;
 }
 
@@ -620,13 +623,19 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
             properties.append(create_ast_node<ObjectProperty>(*property_name, function, property_type));
         } else if (match(TokenType::Colon)) {
+            if (!property_name) {
+                syntax_error("Expected a property name");
+                skip_to_next_property();
+                continue;
+            }
             consume();
-            ASSERT(property_name);
             properties.append(create_ast_node<ObjectProperty>(*property_name, parse_expression(2), property_type));
-        } else {
-            ASSERT(property_name);
-            ASSERT(property_value);
+        } else if (property_name && property_value) {
             properties.append(create_ast_node<ObjectProperty>(*property_name, *property_value, property_type));
+        } else {
+            syntax_error("Expected a property");
+            skip_to_next_property();
+            continue;
         }
 
         if (!match(TokenType::Comma))
@@ -1342,7 +1351,7 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
             if (match_for_in_of())
                 return parse_for_in_of_statement(*init);
         } else {
-            ASSERT_NOT_REACHED();
+            syntax_error("Unexpected token in for loop");
         }
     }
     consume(TokenType::Semicolon);
