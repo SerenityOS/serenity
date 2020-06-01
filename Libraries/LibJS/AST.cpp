@@ -52,9 +52,9 @@ static void update_function_name(Value& value, const FlyString& name)
         return;
     auto& object = value.as_object();
     if (object.is_function()) {
-        auto& function = static_cast<ScriptFunction&>(object);
-        if (function.name().is_empty())
-            function.set_name(name);
+        auto& function = static_cast<Function&>(object);
+        if (function.is_script_function() && function.name().is_empty())
+            static_cast<ScriptFunction&>(function).set_name(name);
     } else if (object.is_array()) {
         auto& array = static_cast<Array&>(object);
         for (auto& entry : array.indexed_properties().values_unordered())
