@@ -834,11 +834,13 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    RECONSUME_IN(BeforeAttributeName);
                 }
             }
             END_STATE
