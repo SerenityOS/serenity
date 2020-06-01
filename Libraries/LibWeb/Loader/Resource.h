@@ -33,6 +33,7 @@
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Loader/LoadRequest.h>
 
 namespace Web {
 
@@ -43,7 +44,7 @@ class Resource : public RefCounted<Resource> {
     AK_MAKE_NONMOVABLE(Resource);
 
 public:
-    static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, const URL&);
+    static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, const LoadRequest&);
     ~Resource();
 
     bool is_loaded() const { return m_loaded; }
@@ -53,7 +54,7 @@ public:
 
     bool has_encoded_data() const { return !m_encoded_data.is_null(); }
 
-    const URL& url() const { return m_url; }
+    const URL& url() const { return m_request.url(); }
     const ByteBuffer& encoded_data() const { return m_encoded_data; }
 
     void register_client(Badge<ResourceClient>, ResourceClient&);
@@ -75,9 +76,9 @@ public:
     void did_fail(Badge<ResourceLoader>, const String& error);
 
 private:
-    explicit Resource(const URL&);
+    explicit Resource(const LoadRequest&);
 
-    URL m_url;
+    LoadRequest m_request;
     ByteBuffer m_encoded_data;
     bool m_loaded { false };
     bool m_failed { false };

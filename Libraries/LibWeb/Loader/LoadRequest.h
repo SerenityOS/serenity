@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,40 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <AK/URL.h>
-#include <LibCore/Object.h>
 #include <LibWeb/Forward.h>
-
-namespace Protocol {
-class Client;
-}
 
 namespace Web {
 
-class ResourceLoader : public Core::Object {
-    C_OBJECT(ResourceLoader)
+class LoadRequest {
 public:
-    static ResourceLoader& the();
+    LoadRequest()
+    {
+    }
 
-    RefPtr<Resource> load_resource(const LoadRequest&);
+    bool is_valid() const { return m_url.is_valid(); }
 
-    void load(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);
-    void load_sync(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);
+    const URL& url() const { return m_url; }
+    void set_url(const URL& url) { m_url = url; }
 
-    Function<void()> on_load_counter_change;
+    unsigned hash() const { return m_url.to_string().hash(); }
 
-    int pending_loads() const { return m_pending_loads; }
-
-    Protocol::Client& protocol_client() { return *m_protocol_client; }
-
-    const String& user_agent() const { return m_user_agent; }
+    bool operator==(const LoadRequest& other) const
+    {
+        return m_url == other.m_url;
+    }
 
 private:
-    ResourceLoader();
-    static bool is_port_blocked(int port);
+    URL m_url;
+};
 
-    virtual void save_to(JsonObject&) override;
+}
 
-    int m_pending_loads { 0 };
+namespace AK {
 
-    RefPtr<Protocol::Client> m_protocol_client;
-    String m_user_agent;
+template<>
+struct Traits<Web::LoadRequest> : public GenericTraits<Web::LoadRequest> {
+    static unsigned hash(const Web::LoadRequest& request) { return request.hash(); }
 };
 
 }

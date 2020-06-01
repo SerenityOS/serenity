@@ -54,8 +54,9 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
 
 void HTMLImageElement::load_image(const String& src)
 {
-    URL src_url = document().complete_url(src);
-    auto resource = ResourceLoader::the().load_resource(src_url);
+    LoadRequest request;
+    request.set_url(document().complete_url(src));
+    auto resource = ResourceLoader::the().load_resource(request);
     set_resource(resource);
 }
 
