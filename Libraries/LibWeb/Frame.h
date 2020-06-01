@@ -61,6 +61,8 @@ public:
     void set_viewport_rect(const Gfx::Rect&);
     Gfx::Rect viewport_rect() const { return m_viewport_rect; }
 
+    void did_scroll(Badge<PageView>);
+
 private:
     explicit Frame(PageView&);
 
