@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Function.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
 #include <LibWeb/Loader/Resource.h>
 
@@ -41,6 +42,18 @@ Resource::Resource(const LoadRequest& request)
 
 Resource::~Resource()
 {
+}
+
+void Resource::for_each_client(Function<void(ResourceClient&)> callback)
+{
+    Vector<WeakPtr<ResourceClient>, 16> clients_copy;
+    clients_copy.ensure_capacity(m_clients.size());
+    for (auto* client : m_clients)
+        clients_copy.append(client->make_weak_ptr());
+    for (auto client : clients_copy) {
+        if (client)
+            callback(*client);
+    }
 }
 
 void Resource::did_load(Badge<ResourceLoader>, const ByteBuffer& data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers)
