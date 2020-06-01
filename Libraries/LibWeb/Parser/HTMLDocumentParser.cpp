@@ -573,6 +573,12 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
 
 void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
 {
+    if (token.is_comment()) {
+        auto comment = adopt(*new Comment(document(), token.m_comment_or_character.data.to_string()));
+        document().append_child(move(comment));
+        return;
+    }
+
     if (token.is_doctype() || token.is_parser_whitespace() || (token.is_start_tag() && token.tag_name() == "html")) {
         process_using_the_rules_for(InsertionMode::InBody, token);
         return;
@@ -582,7 +588,10 @@ void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
         stop_parsing();
         return;
     }
-    TODO();
+
+    PARSE_ERROR();
+    m_insertion_mode = InsertionMode::InBody;
+    process_using_the_rules_for(m_insertion_mode, token);
 }
 
 void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
@@ -803,9 +812,16 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "html") {
-        TODO();
+        PARSE_ERROR();
+        if (m_stack_of_open_elements.contains("template"))
+            return;
+        for (auto& attribute : token.m_tag.attributes) {
+            if (current_node().has_attribute(attribute.name_builder.string_view()))
+                continue;
+            current_node().set_attribute(attribute.name_builder.to_string(), attribute.value_builder.to_string());
+        }
+        return;
     }
-
     if (token.is_start_tag() && token.tag_name().is_one_of("base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title")) {
         process_using_the_rules_for(InsertionMode::InHead, token);
         return;
@@ -817,7 +833,19 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "body") {
-        TODO();
+        PARSE_ERROR();
+        if (m_stack_of_open_elements.elements().size() == 1
+                || node_before_current_node().tag_name() != "body"
+                || m_stack_of_open_elements.contains("template")) {
+            return;
+        }
+        m_frameset_ok = false;
+        for (auto& attribute : token.m_tag.attributes) {
+            if (node_before_current_node().has_attribute(attribute.name_builder.string_view()))
+                continue;
+            node_before_current_node().set_attribute(attribute.name_builder.to_string(), attribute.value_builder.to_string());
+        }
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "frameset") {
@@ -852,10 +880,6 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 
         m_insertion_mode = InsertionMode::AfterBody;
         return;
-    }
-
-    if (token.is_start_tag() && token.tag_name() == "html") {
-        TODO();
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
