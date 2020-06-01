@@ -133,7 +133,7 @@ int main(int argc, char** argv)
     }
 
     editor->on_interrupt_handled = [&] {
-        if (!shell->should_read_more()) {
+        if (shell->should_read_more()) {
             shell->finish_command();
             editor->finish();
         }
