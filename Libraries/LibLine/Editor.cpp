@@ -292,6 +292,9 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     add_child(*m_notifier);
 
     m_notifier->on_ready_to_read = [&] {
+        if (m_was_interrupted)
+            handle_interrupt_event();
+
         handle_read_event();
 
         if (m_always_refresh)
@@ -342,6 +345,23 @@ void Editor::save_to(JsonObject& object)
     object.set("used_display_area", move(display_area));
 }
 
+void Editor::handle_interrupt_event()
+{
+    m_was_interrupted = false;
+
+    if (!m_buffer.is_empty())
+        printf("^C");
+
+    m_buffer.clear();
+    m_cursor = 0;
+
+    if (on_interrupt_handled)
+        on_interrupt_handled();
+
+    m_refresh_needed = true;
+    refresh_display();
+}
+
 void Editor::handle_read_event()
 {
     char keybuf[16];
@@ -360,18 +380,7 @@ void Editor::handle_read_event()
                 return;
             }
 
-            m_was_interrupted = false;
-
-            if (!m_buffer.is_empty())
-                printf("^C");
-
-            m_buffer.clear();
-            m_cursor = 0;
-
-            if (on_interrupt_handled)
-                on_interrupt_handled();
-
-            m_refresh_needed = true;
+            handle_interrupt_event();
             return;
         }
 
