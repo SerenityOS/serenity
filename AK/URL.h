@@ -73,6 +73,13 @@ public:
     static URL create_with_url_or_path(const String& url_or_path);
     static URL create_with_file_protocol(const String& path);
 
+    bool operator==(const URL& other) const
+    {
+        if (this == &other)
+            return true;
+        return to_string() == other.to_string();
+    }
+
 private:
     bool parse(const StringView&);
     bool compute_validity() const;
@@ -93,5 +100,10 @@ inline const LogStream& operator<<(const LogStream& stream, const URL& value)
 {
     return stream << value.to_string();
 }
+
+template<>
+struct Traits<URL> : public GenericTraits<URL> {
+    static unsigned hash(const URL& url) { return url.to_string().hash(); }
+};
 
 }
