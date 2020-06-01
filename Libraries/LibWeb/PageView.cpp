@@ -44,9 +44,9 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/PageView.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLParser.h>
 #include <LibWeb/RenderingContext.h>
@@ -443,12 +443,11 @@ RefPtr<Document> PageView::create_document_from_mime_type(const ByteBuffer& data
     if (mime_type == "text/gemini")
         return create_gemini_document(data, url);
     if (mime_type == "text/html") {
-        if (m_use_new_parser) {
-            HTMLDocumentParser parser(data, encoding);
-            parser.run(url);
-            return parser.document();
-        }
-        return parse_html_document(data, url, encoding);
+        if (m_use_old_parser)
+            return parse_html_document(data, url, encoding);
+        HTMLDocumentParser parser(data, encoding);
+        parser.run(url);
+        return parser.document();
     }
     return nullptr;
 }
