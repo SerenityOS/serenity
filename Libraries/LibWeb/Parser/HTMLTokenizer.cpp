@@ -1233,7 +1233,8 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    RECONSUME_IN(CommentEnd);
                 }
             }
             END_STATE
