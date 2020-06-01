@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -42,7 +43,7 @@ struct ImageFrameDescriptor {
 
 class ImageDecoderPlugin {
 public:
-    virtual ~ImageDecoderPlugin() {}
+    virtual ~ImageDecoderPlugin() { }
 
     virtual Size size() = 0;
     virtual RefPtr<Gfx::Bitmap> bitmap() = 0;
@@ -58,12 +59,13 @@ public:
     virtual ImageFrameDescriptor frame(size_t i) = 0;
 
 protected:
-    ImageDecoderPlugin() {}
+    ImageDecoderPlugin() { }
 };
 
 class ImageDecoder : public RefCounted<ImageDecoder> {
 public:
     static NonnullRefPtr<ImageDecoder> create(const u8* data, size_t size) { return adopt(*new ImageDecoder(data, size)); }
+    static NonnullRefPtr<ImageDecoder> create(const ByteBuffer& data) { return adopt(*new ImageDecoder(data.data(), data.size())); }
     ~ImageDecoder();
 
     Size size() const { return m_plugin->size(); }
