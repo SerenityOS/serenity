@@ -32,6 +32,8 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
+#include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/LoadRequest.h>
 
@@ -60,17 +62,7 @@ public:
     void register_client(Badge<ResourceClient>, ResourceClient&);
     void unregister_client(Badge<ResourceClient>, ResourceClient&);
 
-    template<typename Callback>
-    void for_each_client(Callback callback)
-    {
-        // FIXME: This should use some kind of smart pointer to ResourceClient!
-        Vector<ResourceClient*, 16> clients_copy;
-        clients_copy.ensure_capacity(m_clients.size());
-        for (auto* client : m_clients)
-            clients_copy.append(client);
-        for (auto* client : clients_copy)
-            callback(*client);
-    }
+    void for_each_client(Function<void(ResourceClient&)>);
 
     void did_load(Badge<ResourceLoader>, const ByteBuffer& data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers);
     void did_fail(Badge<ResourceLoader>, const String& error);
@@ -87,7 +79,7 @@ private:
     HashTable<ResourceClient*> m_clients;
 };
 
-class ResourceClient {
+class ResourceClient : public Weakable<ResourceClient> {
 public:
     virtual ~ResourceClient();
 
