@@ -295,9 +295,13 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
         }
         break;
     case MessageType::Alert:
+#ifdef TLS_DEBUG
         dbg() << "alert message of length " << length;
+#endif
         if (length >= 2) {
+#ifdef TLS_DEBUG
             print_buffer(plain);
+#endif
             auto level = plain[0];
             auto code = plain[1];
             if (level == (u8)AlertLevel::Critical) {
