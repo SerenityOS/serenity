@@ -163,43 +163,36 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
     return variables;
 }
 
-OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs) const
+static Optional<Dwarf::DIE> parse_variable_type_die(const Dwarf::DIE& variable_die, DebugInfo::VariableInfo& variable_info)
 {
-    ASSERT(variable_die.tag() == Dwarf::EntryTag::Variable
-        || variable_die.tag() == Dwarf::EntryTag::Member
-        || variable_die.tag() == Dwarf::EntryTag::FormalParameter);
-
-    if (variable_die.tag() == Dwarf::EntryTag::FormalParameter
-        && !variable_die.get_attribute(Dwarf::Attribute::Name).has_value()) {
-        // We don't want to display info for unused paramters
-        return {};
-    }
-
-    NonnullOwnPtr<VariableInfo> variable_info = make<VariableInfo>();
-
-    variable_info->name = variable_die.get_attribute(Dwarf::Attribute::Name).value().data.as_string;
     auto type_die_offset = variable_die.get_attribute(Dwarf::Attribute::Type);
-    ASSERT(type_die_offset.has_value());
+    if (!type_die_offset.has_value())
+        return {};
+
     ASSERT(type_die_offset.value().type == Dwarf::DIE::AttributeValue::Type::DieReference);
 
     auto type_die = variable_die.get_die_at_offset(type_die_offset.value().data.as_u32);
     auto type_name = type_die.get_attribute(Dwarf::Attribute::Name);
     if (type_name.has_value()) {
-        variable_info->type = type_name.value().data.as_string;
+        variable_info.type_name = type_name.value().data.as_string;
     } else {
         dbg() << "Unnamed DWARF type at offset: " << type_die.offset();
-        variable_info->name = "[Unnamed Type]";
+        variable_info.name = "[Unnamed Type]";
     }
 
+    return type_die;
+}
+
+static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::VariableInfo& variable_info, const PtraceRegisters& regs)
+{
     auto location_info = variable_die.get_attribute(Dwarf::Attribute::Location);
-    if (!location_info.has_value()) {
+    if (!location_info.has_value())
         location_info = variable_die.get_attribute(Dwarf::Attribute::MemberLocation);
-    }
 
     if (location_info.has_value()) {
         if (location_info.value().type == Dwarf::DIE::AttributeValue::Type::UnsignedNumber) {
-            variable_info->location_type = VariableInfo::LocationType::Address;
-            variable_info->location_data.address = location_info.value().data.as_u32;
+            variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
+            variable_info.location_data.address = location_info.value().data.as_u32;
         }
 
         if (location_info.value().type == Dwarf::DIE::AttributeValue::Type::DwarfExpression) {
@@ -208,26 +201,85 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
 
             if (value.type != Dwarf::Expression::Type::None) {
                 ASSERT(value.type == Dwarf::Expression::Type::UnsignedIntetger);
-                variable_info->location_type = VariableInfo::LocationType::Address;
-                variable_info->location_data.address = value.data.as_u32;
+                variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
+                variable_info.location_data.address = value.data.as_u32;
             }
         }
     }
+}
 
-    type_die.for_each_child([&](const Dwarf::DIE& member) {
-        if (member.is_null())
-            return;
-        auto member_variable = create_variable_info(member, regs);
+OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs) const
+{
+    ASSERT(variable_die.tag() == Dwarf::EntryTag::Variable
+        || variable_die.tag() == Dwarf::EntryTag::Member
+        || variable_die.tag() == Dwarf::EntryTag::FormalParameter
+        || variable_die.tag() == Dwarf::EntryTag::EnumerationType
+        || variable_die.tag() == Dwarf::EntryTag::Enumerator
+        || variable_die.tag() == Dwarf::EntryTag::StructureType);
 
-        ASSERT(member_variable);
-        ASSERT(member_variable->location_type == DebugInfo::VariableInfo::LocationType::Address);
-        ASSERT(variable_info->location_type == DebugInfo::VariableInfo::LocationType::Address);
+    if (variable_die.tag() == Dwarf::EntryTag::FormalParameter
+        && !variable_die.get_attribute(Dwarf::Attribute::Name).has_value()) {
+        // We don't want to display info for unused paramters
+        return {};
+    }
 
-        member_variable->location_data.address += variable_info->location_data.address;
-        member_variable->parent = variable_info.ptr();
+    NonnullOwnPtr<VariableInfo> variable_info = make<VariableInfo>();
+    variable_info->name = variable_die.get_attribute(Dwarf::Attribute::Name).value().data.as_string;
 
-        variable_info->members.append(member_variable.release_nonnull());
-    });
+    auto type_die = parse_variable_type_die(variable_die, *variable_info);
+
+    if (variable_die.tag() == Dwarf::EntryTag::Enumerator) {
+        auto constant = variable_die.get_attribute(Dwarf::Attribute::ConstValue);
+        ASSERT(constant.has_value());
+        switch (constant.value().type) {
+        case Dwarf::DIE::AttributeValue::Type::UnsignedNumber:
+            variable_info->constant_data.as_u32 = constant.value().data.as_u32;
+            break;
+        case Dwarf::DIE::AttributeValue::Type::SignedNumber:
+            variable_info->constant_data.as_i32 = constant.value().data.as_i32;
+            break;
+        case Dwarf::DIE::AttributeValue::Type::String:
+            variable_info->constant_data.as_string = constant.value().data.as_string;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    } else {
+        parse_variable_location(variable_die, *variable_info, regs);
+    }
+
+    if (type_die.has_value()) {
+        OwnPtr<VariableInfo> type_info;
+        if (type_die.value().tag() == Dwarf::EntryTag::EnumerationType || type_die.value().tag() == Dwarf::EntryTag::StructureType) {
+            type_info = create_variable_info(type_die.value(), regs);
+        }
+
+        type_die.value().for_each_child([&](const Dwarf::DIE& member) {
+            if (member.is_null())
+                return;
+            auto member_variable = create_variable_info(member, regs);
+
+            ASSERT(member_variable);
+
+            if (type_die.value().tag() == Dwarf::EntryTag::EnumerationType) {
+                member_variable->parent = type_info.ptr();
+                type_info->members.append(member_variable.release_nonnull());
+            } else {
+                ASSERT(variable_info->location_type == DebugInfo::VariableInfo::LocationType::Address);
+
+                if (member_variable->location_type == DebugInfo::VariableInfo::LocationType::Address)
+                    member_variable->location_data.address += variable_info->location_data.address;
+
+                member_variable->parent = variable_info.ptr();
+                variable_info->members.append(member_variable.release_nonnull());
+            }
+        });
+
+        if (type_info) {
+            variable_info->type = move(type_info);
+            variable_info->type->type_tag = type_die.value().tag();
+        }
+    }
 
     return variable_info;
 }
