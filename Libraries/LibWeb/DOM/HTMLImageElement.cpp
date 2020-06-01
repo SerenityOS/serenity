@@ -32,7 +32,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
 #include <LibWeb/Layout/LayoutImage.h>
-#include <LibWeb/ResourceLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 

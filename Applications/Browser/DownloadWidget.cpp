@@ -38,7 +38,7 @@
 #include <LibGUI/ProgressBar.h>
 #include <LibGUI/Window.h>
 #include <LibProtocol/Client.h>
-#include <LibWeb/ResourceLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <math.h>
 
 namespace Browser {

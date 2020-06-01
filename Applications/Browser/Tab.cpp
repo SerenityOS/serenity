@@ -55,7 +55,7 @@
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Parser/CSSParser.h>
-#include <LibWeb/ResourceLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Browser {
 

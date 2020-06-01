@@ -37,7 +37,7 @@
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibWeb/ResourceLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <stdio.h>
 #include <stdlib.h>
 

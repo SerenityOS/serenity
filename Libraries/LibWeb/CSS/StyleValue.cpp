@@ -32,7 +32,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Frame.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/ResourceLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 

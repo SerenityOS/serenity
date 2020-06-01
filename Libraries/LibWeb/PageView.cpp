@@ -50,7 +50,7 @@
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLParser.h>
 #include <LibWeb/RenderingContext.h>
-#include <LibWeb/ResourceLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <stdio.h>
 
 //#define SELECTION_DEBUG

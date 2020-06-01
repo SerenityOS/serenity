@@ -83,6 +83,7 @@ set(SOURCES
     Layout/LayoutWidget.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
+    Loader/ResourceLoader.cpp
     PageView.cpp
     Parser/CSSParser.cpp
     Parser/Entities.cpp
@@ -92,7 +93,6 @@ set(SOURCES
     Parser/HTMLTokenizer.cpp
     Parser/ListOfActiveFormattingElements.cpp
     Parser/StackOfOpenElements.cpp
-    ResourceLoader.cpp
     StylePropertiesModel.cpp
     URLEncoder.cpp
 

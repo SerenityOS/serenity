@@ -30,7 +30,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLScriptElement.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/ResourceLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 
