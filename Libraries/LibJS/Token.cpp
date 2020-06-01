@@ -146,11 +146,13 @@ String Token::string_value(StringValueStatus& status) const
 
                 if (code_point == '{') {
                     code_point = 0;
-                    do {
+                    while (true) {
                         if (i + 1 >= m_value.length() - offset)
                             return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
 
                         auto ch = m_value[++i];
+                        if (ch == '}')
+                            break;
                         if (!isxdigit(ch))
                             return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
 
@@ -158,8 +160,7 @@ String Token::string_value(StringValueStatus& status) const
                         if (new_code_point < code_point)
                             return encoding_failure(StringValueStatus::UnicodeEscapeOverflow);
                         code_point = new_code_point;
-                    } while (m_value[i + 1] != '}');
-                    ++i;
+                    }
                 } else {
                     if (i + 3 >= m_value.length() - offset || !isxdigit(code_point))
                         return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
