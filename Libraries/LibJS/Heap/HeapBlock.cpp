@@ -61,15 +61,16 @@ HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
     : m_heap(heap)
     , m_cell_size(cell_size)
 {
-    for (size_t i = 0; i < cell_count(); ++i) {
-        auto* freelist_entry = static_cast<FreelistEntry*>(cell(i));
+    ASSERT(cell_size >= sizeof(FreelistEntry));
+
+    FreelistEntry* next = nullptr;
+    for (ssize_t i = cell_count() - 1; i >= 0; i--) {
+        auto* freelist_entry = init_freelist_entry(i);
         freelist_entry->set_live(false);
-        if (i == cell_count() - 1)
-            freelist_entry->next = nullptr;
-        else
-            freelist_entry->next = static_cast<FreelistEntry*>(cell(i + 1));
+        freelist_entry->next = next;
+        next = freelist_entry;
     }
-    m_freelist = static_cast<FreelistEntry*>(cell(0));
+    m_freelist = next;
 }
 
 Cell* HeapBlock::allocate()
@@ -84,7 +85,7 @@ void HeapBlock::deallocate(Cell* cell)
     ASSERT(cell->is_live());
     ASSERT(!cell->is_marked());
     cell->~Cell();
-    auto* freelist_entry = static_cast<FreelistEntry*>(cell);
+    auto* freelist_entry = new (cell) FreelistEntry();
     freelist_entry->set_live(false);
     freelist_entry->next = m_freelist;
     m_freelist = freelist_entry;
