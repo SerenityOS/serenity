@@ -31,6 +31,7 @@
 #include <LibCore/File.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
@@ -69,15 +70,25 @@ void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, 
     loop.exec();
 }
 
-RefPtr<Resource> ResourceLoader::load_resource(const URL& url)
+static HashMap<LoadRequest, NonnullRefPtr<Resource>> s_resource_cache;
+
+RefPtr<Resource> ResourceLoader::load_resource(const LoadRequest& request)
 {
-    if (!url.is_valid())
+    if (!request.is_valid())
         return nullptr;
 
-    auto resource = Resource::create({}, url);
+    auto it = s_resource_cache.find(request);
+    if (it != s_resource_cache.end()) {
+        dbg() << "Reusing cached resource for: " << request.url();
+        return it->value;
+    }
+
+    auto resource = Resource::create({}, request);
+
+    s_resource_cache.set(request, resource);
 
     load(
-        url,
+        request.url(),
         [=](auto& data, auto& headers) {
             const_cast<Resource&>(*resource).did_load({}, data, headers);
         },

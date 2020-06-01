@@ -48,6 +48,7 @@ class PageView;
 class ImageData;
 class LayoutDocument;
 class LayoutNode;
+class LoadRequest;
 class MouseEvent;
 class Node;
 class Origin;

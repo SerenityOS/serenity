@@ -29,13 +29,13 @@
 
 namespace Web {
 
-NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, const URL& url)
+NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, const LoadRequest& request)
 {
-    return adopt(*new Resource(url));
+    return adopt(*new Resource(request));
 }
 
-Resource::Resource(const URL& url)
-    : m_url(url)
+Resource::Resource(const LoadRequest& request)
+    : m_request(request)
 {
 }
 
