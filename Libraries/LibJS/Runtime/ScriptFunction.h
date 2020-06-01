@@ -48,7 +48,7 @@ public:
     void set_name(const FlyString& name) { m_name = name; };
 
 private:
-    virtual bool is_script_function() const final { return true; }
+    virtual bool is_script_function() const override { return true; }
     virtual const char* class_name() const override { return "ScriptFunction"; }
     virtual LexicalEnvironment* create_environment() override;
     virtual void visit_children(Visitor&) override;
