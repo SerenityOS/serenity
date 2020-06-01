@@ -624,6 +624,7 @@ void PageView::dump_selection(const char* event_name)
 void PageView::did_scroll()
 {
     main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
+    main_frame().did_scroll({});
 }
 
 Gfx::Point PageView::compute_mouse_event_offset(const Gfx::Point& event_position, const LayoutNode& layout_node) const

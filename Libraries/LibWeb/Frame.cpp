@@ -81,4 +81,18 @@ void Frame::set_needs_display(const Gfx::Rect& rect)
     on_set_needs_display(rect);
 }
 
+void Frame::did_scroll(Badge<PageView>)
+{
+    if (!m_document)
+        return;
+    if (!m_document->layout_node())
+        return;
+    m_document->layout_node()->for_each_in_subtree([&](LayoutNode& layout_node) {
+        if (layout_node.is_widget()) {
+            layout_node.layout(LayoutNode::LayoutMode::Default);
+        }
+        return IterationDecision::Continue;
+    });
+}
+
 }
