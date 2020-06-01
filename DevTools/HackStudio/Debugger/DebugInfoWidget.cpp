@@ -71,7 +71,7 @@ DebugInfoWidget::DebugInfoWidget()
         auto* variable = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
         if (variable->location_type != DebugInfo::VariableInfo::LocationType::Address)
             return false;
-        return variable->type.is_one_of("int", "bool");
+        return variable->is_enum_type() || variable->type_name.is_one_of("int", "bool");
     };
 
     m_variables_view->on_context_menu_request = [this, is_valid_index](auto& index, auto& event) {
