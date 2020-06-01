@@ -42,8 +42,6 @@ public:
     size_t cell_size() const { return m_cell_size; }
     size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
 
-    Cell* cell(size_t index) { return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]); }
-
     Cell* allocate();
     void deallocate(Cell*);
 
@@ -72,9 +70,21 @@ public:
 private:
     HeapBlock(Heap&, size_t cell_size);
 
-    struct FreelistEntry : public Cell {
-        FreelistEntry* next;
+    struct FreelistEntry final : public Cell {
+        FreelistEntry* next { nullptr };
+
+        virtual const char* class_name() const override { return "FreelistEntry"; }
     };
+
+    Cell* cell(size_t index)
+    {
+        return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]);
+    }
+
+    FreelistEntry* init_freelist_entry(size_t index)
+    {
+        return new (&m_storage[index * cell_size()]) FreelistEntry();
+    }
 
     Heap& m_heap;
     size_t m_cell_size { 0 };
