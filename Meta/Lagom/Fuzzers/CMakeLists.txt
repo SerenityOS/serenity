@@ -4,6 +4,6 @@ target_compile_options(FuzzJs
     )
 
 target_link_libraries(FuzzJs
-    PUBLIC lagom
+    PUBLIC Lagom
     PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>
     )
