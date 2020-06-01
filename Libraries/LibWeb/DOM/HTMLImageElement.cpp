@@ -55,30 +55,40 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
 void HTMLImageElement::load_image(const String& src)
 {
     URL src_url = document().complete_url(src);
-    ResourceLoader::the().load(src_url, [this, weak_element = make_weak_ptr()](auto data, auto&) {
-        if (!weak_element) {
-            dbg() << "HTMLImageElement: Load completed after element destroyed.";
-            return;
-        }
-        if (data.is_null()) {
-            dbg() << "HTMLImageElement: Failed to load " << this->src();
-            return;
-        }
+    auto resource = ResourceLoader::the().load_resource(src_url);
+    set_resource(resource);
+}
 
-        m_encoded_data = data;
-        m_image_decoder = Gfx::ImageDecoder::create(m_encoded_data.data(), m_encoded_data.size());
+void HTMLImageElement::resource_did_load()
+{
+    ASSERT(resource());
 
-        if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
-            const auto& first_frame = m_image_decoder->frame(0);
-            m_timer->set_interval(first_frame.duration);
-            m_timer->on_timeout = [this] { animate(); };
-            m_timer->start();
-        }
+    if (!resource()->has_encoded_data()) {
+        dbg() << "HTMLImageElement: Resource did load, but encoded data empty: " << this->src();
+        return;
+    }
 
-        document().update_layout();
+    dbg() << "HTMLImageElement: Resource did load, encoded data looks tasty: " << this->src();
 
-        dispatch_event(Event::create("load"));
-    });
+    m_image_decoder = Gfx::ImageDecoder::create(resource()->encoded_data());
+
+    if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
+        const auto& first_frame = m_image_decoder->frame(0);
+        m_timer->set_interval(first_frame.duration);
+        m_timer->on_timeout = [this] { animate(); };
+        m_timer->start();
+    }
+
+    document().update_layout();
+    dispatch_event(Event::create("load"));
+}
+
+void HTMLImageElement::resource_did_fail()
+{
+    dbg() << "HTMLImageElement: Resource did fail: " << this->src();
+    m_image_decoder = nullptr;
+    document().update_layout();
+    dispatch_event(Event::create("error"));
 }
 
 void HTMLImageElement::animate()
@@ -162,7 +172,8 @@ void HTMLImageElement::set_volatile(Badge<LayoutDocument>, bool v)
     bool has_image = m_image_decoder->set_nonvolatile();
     if (has_image)
         return;
-    m_image_decoder = Gfx::ImageDecoder::create(m_encoded_data.data(), m_encoded_data.size());
+    ASSERT(resource());
+    m_image_decoder = Gfx::ImageDecoder::create(resource()->encoded_data());
 }
 
 }

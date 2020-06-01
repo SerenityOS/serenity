@@ -30,12 +30,15 @@
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/DOM/HTMLElement.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web {
 
 class LayoutDocument;
 
-class HTMLImageElement : public HTMLElement {
+class HTMLImageElement final
+    : public HTMLElement
+    , public ResourceClient {
 public:
     using WrapperType = Bindings::HTMLImageElementWrapper;
 
@@ -55,6 +58,9 @@ public:
     void set_volatile(Badge<LayoutDocument>, bool);
 
 private:
+    virtual void resource_did_load() override;
+    virtual void resource_did_fail() override;
+
     void load_image(const String& src);
 
     void animate();
@@ -62,7 +68,6 @@ private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
     RefPtr<Gfx::ImageDecoder> m_image_decoder;
-    ByteBuffer m_encoded_data;
 
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };

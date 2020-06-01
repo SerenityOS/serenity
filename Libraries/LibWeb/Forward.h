@@ -51,6 +51,8 @@ class LayoutNode;
 class MouseEvent;
 class Node;
 class Origin;
+class Resource;
+class ResourceLoader;
 class Selector;
 class StyleResolver;
 class StyleRule;

@@ -83,6 +83,7 @@ set(SOURCES
     Layout/LayoutWidget.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
+    Loader/Resource.cpp
     Loader/ResourceLoader.cpp
     PageView.cpp
     Parser/CSSParser.cpp

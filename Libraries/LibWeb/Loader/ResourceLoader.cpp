@@ -31,6 +31,7 @@
 #include <LibCore/File.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
@@ -66,6 +67,25 @@ void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, 
         });
 
     loop.exec();
+}
+
+RefPtr<Resource> ResourceLoader::load_resource(const URL& url)
+{
+    if (!url.is_valid())
+        return nullptr;
+
+    auto resource = Resource::create({}, url);
+
+    load(
+        url,
+        [=](auto& data, auto& headers) {
+            const_cast<Resource&>(*resource).did_load({}, data, headers);
+        },
+        [=](auto& error) {
+            const_cast<Resource&>(*resource).did_fail({}, error);
+        });
+
+    return resource;
 }
 
 void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
