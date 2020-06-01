@@ -40,7 +40,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     , m_name(name)
     , m_icon(icon)
 {
-    resize(413, 315);
+    resize(413, 205);
     set_title(String::format("About %s", m_name.characters()));
     set_resizable(false);
 
@@ -63,7 +63,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
 
     auto& left_container = content_container.add<Widget>();
     left_container.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    left_container.set_preferred_size(100, 0);
+    left_container.set_preferred_size(60, 0);
     left_container.set_layout<VerticalBoxLayout>();
     left_container.layout()->set_margins({ 0, 12, 0, 0 });
 
@@ -77,14 +77,6 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
         icon_label.set_icon(m_icon);
         icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         icon_label.set_preferred_size(32, 32);
-    }
-
-    if (m_name == "SerenityOS") {
-        auto& buggie_label = left_container.add<Label>();
-        buggie_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie-about.png"));
-        buggie_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        buggie_label.set_preferred_size(48, 104);
-        buggie_label.set_tooltip("Buggie!");
     }
 
     auto& right_container = content_container.add<Widget>();
@@ -104,7 +96,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     if (m_name != "SerenityOS")
         make_label("SerenityOS");
     make_label(version_string());
-    make_label("\xC2\xA9 The SerenityOS developers");
+    make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2020");
 
     right_container.layout()->add_spacer();
 
