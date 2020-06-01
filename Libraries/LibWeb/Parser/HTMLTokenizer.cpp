@@ -34,10 +34,14 @@
 
 //#define TOKENIZER_TRACE
 
+#ifdef TOKENIZER_TRACE
 #define PARSE_ERROR()                                                                      \
     do {                                                                                   \
         dbg() << "Parse error (tokenization)" << __PRETTY_FUNCTION__ << " @ " << __LINE__; \
     } while (0)
+#else
+#define PARSE_ERROR()
+#endif
 
 #define CONSUME_NEXT_INPUT_CHARACTER \
     current_input_character = next_codepoint();
