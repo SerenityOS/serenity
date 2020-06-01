@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define PARSER_DEBUG
+//#define PARSER_DEBUG
 
 #include <AK/Utf32View.h>
 #include <LibWeb/DOM/Comment.h>

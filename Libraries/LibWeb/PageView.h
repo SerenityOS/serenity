@@ -40,7 +40,7 @@ public:
     virtual ~PageView() override;
 
     // FIXME: Remove this once the new parser is ready.
-    void set_use_new_parser(bool use_new_parser) { m_use_new_parser = use_new_parser; }
+    void set_use_old_parser(bool use_old_parser) { m_use_old_parser = use_old_parser; }
 
     Document* document();
     const Document* document() const;
@@ -99,7 +99,7 @@ private:
     bool m_should_show_line_box_borders { false };
     bool m_in_mouse_selection { false };
 
-    bool m_use_new_parser { false };
+    bool m_use_old_parser { false };
 };
 
 }
