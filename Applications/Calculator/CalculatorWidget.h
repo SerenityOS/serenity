@@ -38,9 +38,9 @@ public:
 
 private:
     CalculatorWidget();
-    void add_button(GUI::Button&, Calculator::Operation);
-    void add_button(GUI::Button&, int);
-    void add_button(GUI::Button&);
+    void add_operation_button(GUI::Button&, Calculator::Operation, Color text_color = Color::Red);
+    void add_digit_button(GUI::Button&, int digit);
+    void add_button(GUI::Button&, Color text_color);
 
     void update_display();
 
