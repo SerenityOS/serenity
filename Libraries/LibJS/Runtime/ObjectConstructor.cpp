@@ -103,7 +103,7 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     object->set_prototype(&const_cast<Object&>(interpreter.argument(1).as_object()));
-    return {};
+    return object;
 }
 
 Value ObjectConstructor::is_extensible(Interpreter& interpreter)
