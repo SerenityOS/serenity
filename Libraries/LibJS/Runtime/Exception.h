@@ -37,12 +37,14 @@ public:
     virtual ~Exception() override;
 
     Value value() const { return m_value; }
+    const Vector<String>& trace() const { return m_trace; }
 
 private:
     virtual const char* class_name() const override { return "Exception"; }
     virtual void visit_children(Visitor&) override;
 
     Value m_value;
+    Vector<String> m_trace;
 };
 
 }
