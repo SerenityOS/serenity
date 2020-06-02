@@ -56,7 +56,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     main_container.set_background_role(Gfx::ColorRole::SyntaxKeyword);
     main_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-    // Top-Left Glyph Ediyor and info
+    // Top-Left Glyph Editor and info
     auto& editor_container = main_container.add<GUI::Widget>();
     editor_container.set_layout<GUI::VerticalBoxLayout>();
     editor_container.layout()->set_margins({ 4, 4, 4, 4 });
