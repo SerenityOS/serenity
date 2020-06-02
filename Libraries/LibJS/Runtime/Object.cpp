@@ -69,15 +69,18 @@ const Object* Object::prototype() const
     return shape().prototype();
 }
 
-void Object::set_prototype(Object* new_prototype)
+bool Object::set_prototype(Object* new_prototype)
 {
     if (prototype() == new_prototype)
-        return;
+        return true;
+    if (!m_is_extensible)
+        return false;
     if (shape().is_unique()) {
         shape().set_prototype_without_transition(new_prototype);
-        return;
+        return true;
     }
     m_shape = m_shape->create_prototype_transition(new_prototype);
+    return true;
 }
 
 bool Object::has_prototype(const Object* prototype) const

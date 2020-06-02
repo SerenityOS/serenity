@@ -95,7 +95,7 @@ public:
 
     Object* prototype();
     const Object* prototype() const;
-    void set_prototype(Object*);
+    bool set_prototype(Object* prototype);
     bool has_prototype(const Object* prototype) const;
 
     bool is_extensible() const { return m_is_extensible; }

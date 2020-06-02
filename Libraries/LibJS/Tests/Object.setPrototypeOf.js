@@ -11,7 +11,17 @@ try {
     });
 
     o = {};
-    assert(Object.setPrototypeOf(o, {}) === o);
+    p = {};
+    assert(Object.setPrototypeOf(o, p) === o);
+
+    Object.preventExtensions(o);
+    assertThrowsError(() => {
+        Object.setPrototypeOf(o, {});
+    }, {
+        error: TypeError,
+        message: "Can't set prototype of non-extensible object"
+    });
+    assert(Object.setPrototypeOf(o, p) === o);
 
     console.log("PASS");
 } catch (e) {
