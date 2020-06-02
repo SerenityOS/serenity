@@ -84,12 +84,12 @@
         return m_queued_tokens.dequeue();           \
     } while (0)
 
-#define EMIT_CHARACTER_AND_RECONSUME_IN(codepoint, new_state) \
-    do {                                                      \
-        m_queued_tokens.enqueue(m_current_token);             \
-        will_reconsume_in(State::new_state);                  \
-        m_state = State::new_state;                           \
-        goto new_state;                                       \
+#define EMIT_CHARACTER_AND_RECONSUME_IN(codepoint, new_state)          \
+    do {                                                               \
+        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint)); \
+        will_reconsume_in(State::new_state);                           \
+        m_state = State::new_state;                                    \
+        goto new_state;                                                \
     } while (0)
 
 #define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                               \
