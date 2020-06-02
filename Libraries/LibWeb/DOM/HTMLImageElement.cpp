@@ -70,7 +70,6 @@ void HTMLImageElement::resource_did_load()
 
     dbg() << "HTMLImageElement: Resource did load, encoded data looks tasty: " << this->src();
 
-    ASSERT(!m_image_decoder);
     m_image_decoder = resource()->ensure_decoder();
 
     if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
