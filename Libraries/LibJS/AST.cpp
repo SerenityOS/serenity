@@ -585,9 +585,25 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         return base_object->delete_property(reference.name());
     }
 
-    auto lhs_result = m_lhs->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+    Value lhs_result;
+    if (m_op == UnaryOp::Typeof && m_lhs->is_identifier()) {
+        auto reference = m_lhs->to_reference(interpreter);
+        if (interpreter.exception()) {
+            return {};
+        }
+        // FIXME: standard recommends checking with is_unresolvable but it ALWAYS return false here
+        if (reference.is_local_variable() || reference.is_global_variable()) {
+            auto name = reference.name();
+            lhs_result = interpreter.get_variable(name.to_string()).value_or(js_undefined());
+            if (interpreter.exception())
+                return {};
+        }
+    } else {
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
+
     switch (m_op) {
     case UnaryOp::BitwiseNot:
         return bitwise_not(interpreter, lhs_result);
