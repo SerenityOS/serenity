@@ -440,9 +440,9 @@ void TCPSocket::shut_down_for_writing()
     }
 }
 
-void TCPSocket::close()
+KResult TCPSocket::close()
 {
-    IPv4Socket::close();
+    auto result = IPv4Socket::close();
     if (state() == State::CloseWait) {
 #ifdef TCP_SOCKET_DEBUG
         dbg() << " Sending FIN from CloseWait and moving into LastAck";
@@ -453,6 +453,7 @@ void TCPSocket::close()
 
     LOCKER(closing_sockets().lock());
     closing_sockets().resource().set(tuple(), *this);
+    return result;
 }
 
 }
