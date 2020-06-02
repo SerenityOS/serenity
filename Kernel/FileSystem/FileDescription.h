@@ -65,7 +65,7 @@ public:
         set_writable(options & O_WRONLY);
     }
 
-    int close();
+    KResult close();
 
     off_t seek(off_t, int whence);
     ssize_t read(u8*, ssize_t);

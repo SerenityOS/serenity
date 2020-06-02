@@ -95,9 +95,10 @@ ssize_t SlavePTY::read(FileDescription& description, size_t offset, u8* buffer, 
     return TTY::read(description, offset, buffer, size);
 }
 
-void SlavePTY::close()
+KResult SlavePTY::close()
 {
     m_master->notify_slave_closed({});
+    return KSuccess;
 }
 
 }

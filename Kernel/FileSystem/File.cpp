@@ -46,8 +46,9 @@ KResultOr<NonnullRefPtr<FileDescription>> File::open(int options)
     return description;
 }
 
-void File::close()
+KResult File::close()
 {
+    return KSuccess;
 }
 
 int File::ioctl(FileDescription&, unsigned, FlatPtr)

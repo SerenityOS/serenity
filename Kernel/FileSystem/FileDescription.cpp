@@ -256,9 +256,11 @@ MasterPTY* FileDescription::master_pty()
     return static_cast<MasterPTY*>(m_file.ptr());
 }
 
-int FileDescription::close()
+KResult FileDescription::close()
 {
-    return 0;
+    if (m_file->ref_count() > 1)
+        return KSuccess;
+    return m_file->close();
 }
 
 String FileDescription::absolute_path() const
