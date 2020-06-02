@@ -165,7 +165,7 @@ public:
     void release_to_originator();
     void release_for_accept(RefPtr<TCPSocket>);
 
-    virtual void close() override;
+    virtual KResult close() override;
 
 protected:
     void set_direction(Direction direction) { m_direction = direction; }

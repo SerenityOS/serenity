@@ -69,7 +69,7 @@ public:
     virtual ~File();
 
     virtual KResultOr<NonnullRefPtr<FileDescription>> open(int options);
-    virtual void close();
+    virtual KResult close();
 
     virtual bool can_read(const FileDescription&, size_t) const = 0;
     virtual bool can_write(const FileDescription&, size_t) const = 0;

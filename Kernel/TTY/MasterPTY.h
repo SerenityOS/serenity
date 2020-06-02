@@ -54,7 +54,7 @@ private:
     virtual ssize_t write(FileDescription&, size_t, const u8*, ssize_t) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual void close() override;
+    virtual KResult close() override;
     virtual bool is_master_pty() const override { return true; }
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
     virtual const char* class_name() const override { return "MasterPTY"; }

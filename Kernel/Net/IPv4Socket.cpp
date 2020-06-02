@@ -564,9 +564,10 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     return -EINVAL;
 }
 
-void IPv4Socket::close()
+KResult IPv4Socket::close()
 {
-    shutdown(SHUT_RDWR);
+    (void)shutdown(SHUT_RDWR);
+    return KSuccess;
 }
 
 void IPv4Socket::shut_down_for_reading()
