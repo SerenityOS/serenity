@@ -7,7 +7,7 @@ getopt - parse command-line options
 ```**c++
 #include <getopt.h>
 
-extren int opterr;
+extern int opterr;
 extern int optopt;
 extern int optind;
 extern int optreset;
