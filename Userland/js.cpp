@@ -344,6 +344,11 @@ bool parse_and_run(JS::Interpreter& interpreter, const StringView& source)
     if (interpreter.exception()) {
         printf("Uncaught exception: ");
         print(interpreter.exception()->value());
+        auto trace = interpreter.exception()->trace();
+        if (trace.size() > 1) {
+            for (auto& function_name : trace)
+                printf(" -> %s\n", function_name.characters());
+        }
         interpreter.clear_exception();
         return false;
     }
