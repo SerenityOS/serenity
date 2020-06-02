@@ -25,8 +25,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 
@@ -41,8 +39,6 @@ Value Console::debug()
 {
     if (m_client)
         return m_client->debug();
-
-    dbg() << "debug: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
@@ -50,8 +46,6 @@ Value Console::error()
 {
     if (m_client)
         return m_client->error();
-
-    dbg() << "error: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
@@ -59,8 +53,6 @@ Value Console::info()
 {
     if (m_client)
         return m_client->info();
-
-    dbg() << "info: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
@@ -68,8 +60,6 @@ Value Console::log()
 {
     if (m_client)
         return m_client->log();
-
-    dbg() << "log: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
@@ -77,8 +67,6 @@ Value Console::warn()
 {
     if (m_client)
         return m_client->warn();
-
-    dbg() << "warn: " << m_interpreter.join_arguments();
     return js_undefined();
 }
 
@@ -86,8 +74,6 @@ Value Console::clear()
 {
     if (m_client)
         return m_client->clear();
-
-    dbg() << "clear:";
     return js_undefined();
 }
 
@@ -95,19 +81,6 @@ Value Console::trace()
 {
     if (m_client)
         return m_client->trace();
-
-    StringBuilder message_text;
-    message_text.append(m_interpreter.join_arguments());
-
-    auto trace = m_interpreter.get_trace();
-    for (auto function_name : trace) {
-        message_text.append("\n      -> ");
-        if (String(function_name).is_empty())
-            function_name = "<anonymous>";
-        message_text.append(function_name);
-    }
-
-    dbg() << "log: " << message_text.build();
     return js_undefined();
 }
 
@@ -115,12 +88,6 @@ Value Console::count()
 {
     if (m_client)
         return m_client->count();
-
-    auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string_without_side_effects() : "default";
-
-    auto counter_value = counter_increment(label);
-    dbg() << "log: " << label << ": " << counter_value;
-
     return js_undefined();
 }
 
@@ -128,14 +95,6 @@ Value Console::count_reset()
 {
     if (m_client)
         return m_client->count_reset();
-
-    auto label = m_interpreter.argument_count() ? m_interpreter.argument(0).to_string_without_side_effects() : "default";
-
-    if (counter_reset(label))
-        dbg() << "log: " << label << ": 0";
-    else
-        dbg() << "warn: \"" << label << "\" doesn't have a count";
-
     return js_undefined();
 }
 
