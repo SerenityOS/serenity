@@ -102,7 +102,17 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
     auto* object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
-    object->set_prototype(&const_cast<Object&>(interpreter.argument(1).as_object()));
+    auto prototype_value = interpreter.argument(1);
+    Object* prototype;
+    if (prototype_value.is_null()) {
+        prototype = nullptr;
+    } else if (prototype_value.is_object()) {
+        prototype = &prototype_value.as_object();
+    } else {
+        interpreter.throw_exception<TypeError>("Prototype must be null or object");
+        return {};
+    }
+    object->set_prototype(prototype);
     return object;
 }
 
