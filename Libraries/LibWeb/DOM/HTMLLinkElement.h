@@ -27,10 +27,13 @@
 #pragma once
 
 #include <LibWeb/DOM/HTMLElement.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web {
 
-class HTMLLinkElement final : public HTMLElement {
+class HTMLLinkElement final
+    : public HTMLElement
+    , public ResourceClient {
 public:
     HTMLLinkElement(Document&, const FlyString& tag_name);
     virtual ~HTMLLinkElement() override;
@@ -40,6 +43,13 @@ public:
     String rel() const { return attribute("rel"); }
     String type() const { return attribute("type"); }
     String href() const { return attribute("href"); }
+
+private:
+    // ^ResourceClient
+    virtual void resource_did_fail() override;
+    virtual void resource_did_load() override;
+
+    void load_stylesheet(const URL&);
 };
 
 template<>

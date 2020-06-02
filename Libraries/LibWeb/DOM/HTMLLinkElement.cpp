@@ -29,8 +29,8 @@
 #include <LibCore/File.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLLinkElement.h>
-#include <LibWeb/Parser/CSSParser.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Parser/CSSParser.h>
 
 namespace Web {
 
@@ -43,24 +43,40 @@ HTMLLinkElement::~HTMLLinkElement()
 {
 }
 
-void HTMLLinkElement::inserted_into(Node&)
+void HTMLLinkElement::inserted_into(Node& node)
 {
-    if (rel() == "stylesheet") {
-        URL url = document().complete_url(href());
-        ResourceLoader::the().load(url, [&](auto data, auto&) {
-            if (data.is_null()) {
-                dbg() << "HTMLLinkElement: Failed to load stylesheet: " << href();
-                return;
-            }
-            auto sheet = parse_css(data);
-            if (!sheet) {
-                dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
-                return;
-            }
-            document().add_sheet(*sheet);
-            document().update_style();
-        });
+    HTMLElement::inserted_into(node);
+
+    if (rel() == "stylesheet")
+        load_stylesheet(document().complete_url(href()));
+}
+
+void HTMLLinkElement::resource_did_fail()
+{
+}
+
+void HTMLLinkElement::resource_did_load()
+{
+    ASSERT(resource());
+    if (!resource()->has_encoded_data())
+        return;
+
+    dbg() << "HTMLLinkElement: Resource did load, looks good! " << href();
+
+    auto sheet = parse_css(resource()->encoded_data());
+    if (!sheet) {
+        dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
+        return;
     }
+    document().add_sheet(*sheet);
+    document().update_style();
+}
+
+void HTMLLinkElement::load_stylesheet(const URL& url)
+{
+    LoadRequest request;
+    request.set_url(url);
+    set_resource(ResourceLoader::the().load_resource(request));
 }
 
 }
