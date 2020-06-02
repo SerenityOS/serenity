@@ -30,22 +30,29 @@
 
 namespace Web {
 
-NetworkHistoryModel::NetworkHistoryModel(const HashMap<u32, Entry>& history)
+void NetworkHistoryModel::update_entries()
 {
     // HACK: Hash map does not preserve insertion order,
     //       so I'm sorting the load ids and then copying entries to a vector.
-    auto load_ids = history.keys();
+    auto load_ids = m_history.keys();
 
     quick_sort(load_ids, [](const auto id0, const auto id1) {
         return id0 < id1;
     });
 
-    m_entries.ensure_capacity(history.size());
+    m_entries.clear();
+    m_entries.ensure_capacity(m_history.size());
 
     for (auto load_id : load_ids) {
-        auto opt_entry = history.get(load_id);
+        auto opt_entry = m_history.get(load_id);
         m_entries.append(opt_entry.value());
     }
+}
+
+NetworkHistoryModel::NetworkHistoryModel(const HashMap<u32, Entry>& history)
+    : m_history(history)
+{
+    update_entries();
 }
 
 NetworkHistoryModel::~NetworkHistoryModel()
@@ -77,34 +84,29 @@ String NetworkHistoryModel::column_name(int column_index) const
 
 GUI::Variant NetworkHistoryModel::data(const GUI::ModelIndex& index, Role role) const
 {
+    ASSERT(index.is_valid());
     auto& entry = m_entries.at(index.row());
 
     if (role == Role::Display) {
-        if (index.column() == Column::Name) {
+        switch (index.column()) {
+        case Column::Name:
             if (entry.url.protocol() == "data")
                 return "[data]";
 
             return entry.url.basename();
-        }
-
-        if (index.column() == Column::Path) {
+        case Column::Path:
             if (entry.url.protocol() == "data")
                 return "N/A";
 
             return entry.url.path();
-        }
-
-        if (index.column() == Column::Host) {
-            if (entry.url.protocol() == "data" || entry.url.protocol() == "file")
+        case Column::Host:
+            if (entry.url.protocol() == "data")
                 return "N/A";
 
             return entry.url.host();
-        }
-
-        if (index.column() == Column::Protocol)
+        case Column::Protocol:
             return entry.url.protocol();
-
-        if (index.column() == Column::Time) {
+        case Column::Time:
             if (!entry.complete)
                 return "Pending";
 
@@ -132,6 +134,7 @@ GUI::Variant NetworkHistoryModel::data(const GUI::ModelIndex& index, Role role) 
 
 void NetworkHistoryModel::update()
 {
+    update_entries();
     did_update();
 }
 

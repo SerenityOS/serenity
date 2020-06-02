@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Luke Wilde <luke.wilde@live.co.uk>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,62 +26,41 @@
 
 #pragma once
 
-#include "History.h"
 #include <AK/URL.h>
+#include <AK/HashMap.h>
+#include <LibCore/ElapsedTimer.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/Widget.h>
-#include <LibHTTP/HttpJob.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/NetworkHistoryModel.h>
 
 namespace Browser {
 
-class Tab final : public GUI::Widget {
-    C_OBJECT(Tab);
-
+class NetworkHistoryWidget final : public GUI::Widget {
+    C_OBJECT(NetworkHistoryWidget)
 public:
-    virtual ~Tab() override;
+    virtual ~NetworkHistoryWidget();
 
-    void load(const URL&);
+    void register_callbacks();
+    void unregister_callbacks();
 
-    void did_become_active();
-    void context_menu_requested(const Gfx::Point& screen_position);
+    void on_page_navigation();
 
-    Function<void(String)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
-    Function<void(Tab&)> on_tab_close_request;
-    Function<void(const Gfx::Bitmap&)> on_favicon_change;
-
-    const String& title() const { return m_title; }
-    const Gfx::Bitmap* icon() const { return m_icon; }
 
 private:
-    Tab();
+    NetworkHistoryWidget();
 
-    void update_actions();
-    void update_bookmark_button(const String& url);
+    void update_view();
 
-    History<URL> m_history;
-    RefPtr<Web::PageView> m_page_view;
-    RefPtr<GUI::Action> m_go_back_action;
-    RefPtr<GUI::Action> m_go_forward_action;
-    RefPtr<GUI::Action> m_reload_action;
-    RefPtr<GUI::TextBox> m_location_box;
-    RefPtr<GUI::Button> m_bookmark_button;
-    RefPtr<GUI::Window> m_dom_inspector_window;
-    RefPtr<GUI::Window> m_console_window;
-    RefPtr<GUI::Window> m_network_history_window;
-    RefPtr<GUI::StatusBar> m_statusbar;
-    RefPtr<GUI::MenuBar> m_menubar;
-    RefPtr<GUI::ToolBarContainer> m_toolbar_container;
+    bool m_clear_on_navigation { true };
+    bool m_paused { false };
+    bool m_cache_disabled { false };
 
-    RefPtr<GUI::Menu> m_link_context_menu;
-    String m_link_context_menu_href;
+    HashMap<u32, Web::NetworkHistoryModel::Entry> m_network_history;
 
-    RefPtr<GUI::Menu> m_tab_context_menu;
-
-    String m_title;
-    RefPtr<const Gfx::Bitmap> m_icon;
-
-    bool m_should_push_loads_to_history { true };
+    RefPtr<GUI::TableView> m_history_view;
+    RefPtr<GUI::Menu> m_context_menu;
+    URL m_context_menu_url;
 };
 
 }

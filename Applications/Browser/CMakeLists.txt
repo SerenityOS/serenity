@@ -5,6 +5,7 @@ set(SOURCES
     DownloadWidget.cpp
     InspectorWidget.cpp
     main.cpp
+    NetworkHistoryWidget.cpp
     Tab.cpp
     WindowActions.cpp
 )

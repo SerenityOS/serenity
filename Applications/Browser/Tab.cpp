@@ -29,6 +29,7 @@
 #include "ConsoleWidget.h"
 #include "DownloadWidget.h"
 #include "InspectorWidget.h"
+#include "NetworkHistoryWidget.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
@@ -145,6 +146,11 @@ Tab::Tab()
             m_history.push(url);
         update_actions();
         update_bookmark_button(url.to_string());
+
+        if (m_network_history_window && m_network_history_window->is_visible()) {
+            auto* network_history_widget = static_cast<NetworkHistoryWidget*>(m_network_history_window->main_widget());
+            network_history_widget->on_page_navigation();
+        }
     };
 
     m_page_view->on_link_click = [this](auto& href, auto& target, unsigned modifiers) {
@@ -306,6 +312,30 @@ Tab::Tab()
             console_widget->set_interpreter(m_page_view->document()->interpreter().make_weak_ptr());
             m_console_window->show();
             m_console_window->move_to_front();
+        },
+        this));
+
+    inspect_menu.add_action(GUI::Action::create(
+        "Open Network History", { Mod_Ctrl, Key_E }, [this](auto&) {
+            if (!m_network_history_window) {
+                m_network_history_window = GUI::Window::construct();
+                m_network_history_window->set_rect(100, 100, 520, 300);
+                m_network_history_window->set_title("Network History");
+                m_network_history_window->set_main_widget<NetworkHistoryWidget>();
+            }
+
+            auto* network_history_widget = static_cast<NetworkHistoryWidget*>(m_network_history_window->main_widget());
+            network_history_widget->register_callbacks();
+            network_history_widget->on_tab_open_request = [this](auto& url) {
+                on_tab_open_request(url);
+            };
+
+            m_network_history_window->show();
+            m_network_history_window->move_to_front();
+            m_network_history_window->on_close_request = [network_history_widget]() {
+                network_history_widget->unregister_callbacks();
+                return GUI::Window::CloseRequestDecision::Close;
+            };
         },
         this));
 

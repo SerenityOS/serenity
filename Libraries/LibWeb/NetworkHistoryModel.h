@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/URL.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Model.h>
 
 namespace Web {
@@ -39,6 +40,7 @@ public:
         bool cached { false };
         URL url;
         int time { 0 };
+        Core::ElapsedTimer load_timer;
     };
 
     enum Column {
@@ -68,6 +70,9 @@ public:
 private:
     explicit NetworkHistoryModel(const HashMap<u32, Entry>& history);
 
+    void update_entries();
+
+    const HashMap<u32, Entry>& m_history;
     Vector<Entry> m_entries;
 };
 

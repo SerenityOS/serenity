@@ -201,9 +201,8 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
                 on_load_counter_change();
             on_load_end(new_load_id, success);
             if (!success) {
-                if (error_callback) {
+                if (error_callback)
                     error_callback("HTTP load failed");
-                }
                 return;
             }
             success_callback(ByteBuffer::copy(payload.data(), payload.size()), response_headers);
