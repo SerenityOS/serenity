@@ -98,6 +98,9 @@ public:
     void set_prototype(Object*);
     bool has_prototype(const Object* prototype) const;
 
+    bool is_extensible() const { return m_is_extensible; }
+    bool prevent_extensions();
+
     virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
     virtual Value to_primitive(Value::PreferredType preferred_type = Value::PreferredType::Default) const;
     virtual Value to_string() const;
@@ -122,6 +125,7 @@ private:
     void set_shape(Shape&);
     void ensure_shape_is_unique();
 
+    bool m_is_extensible { true };
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
     IndexedProperties m_indexed_properties;

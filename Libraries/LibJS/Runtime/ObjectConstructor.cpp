@@ -48,6 +48,8 @@ ObjectConstructor::ObjectConstructor()
     define_native_function("getOwnPropertyNames", get_own_property_names, 1, attr);
     define_native_function("getPrototypeOf", get_prototype_of, 1, attr);
     define_native_function("setPrototypeOf", set_prototype_of, 2, attr);
+    define_native_function("isExtensible", is_extensible, 1, attr);
+    define_native_function("preventExtensions", prevent_extensions, 1, attr);
     define_native_function("keys", keys, 1, attr);
     define_native_function("values", values, 1, attr);
     define_native_function("entries", entries, 1, attr);
@@ -102,6 +104,26 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
         return {};
     object->set_prototype(&const_cast<Object&>(interpreter.argument(1).as_object()));
     return {};
+}
+
+Value ObjectConstructor::is_extensible(Interpreter& interpreter)
+{
+    auto argument = interpreter.argument(0);
+    if (!argument.is_object())
+        return Value(false);
+    return Value(argument.as_object().is_extensible());
+}
+
+Value ObjectConstructor::prevent_extensions(Interpreter& interpreter)
+{
+    auto argument = interpreter.argument(0);
+    if (!argument.is_object())
+        return argument;
+    if (!argument.as_object().prevent_extensions()) {
+        interpreter.throw_exception<TypeError>("Proxy preventExtensions handler returned false");
+        return {};
+    }
+    return argument;
 }
 
 Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
