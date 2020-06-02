@@ -211,12 +211,12 @@ Value ReflectObject::has(Interpreter& interpreter)
     return Value(target->has_property(property_key));
 }
 
-Value ReflectObject::is_extensible(Interpreter&)
+Value ReflectObject::is_extensible(Interpreter& interpreter)
 {
-    // FIXME: For this to be useful we need one of these:
-    // Object.seal(), Object.freeze(), Reflect.preventExtensions()
-    // For now we just return true, as that's always the case.
-    return Value(true);
+    auto* target = get_target_object_from(interpreter, "isExtensible");
+    if (!target)
+        return {};
+    return Value(target->is_extensible());
 }
 
 Value ReflectObject::own_keys(Interpreter& interpreter)
@@ -227,10 +227,12 @@ Value ReflectObject::own_keys(Interpreter& interpreter)
     return target->get_own_properties(*target, GetOwnPropertyMode::Key);
 }
 
-Value ReflectObject::prevent_extensions(Interpreter&)
+Value ReflectObject::prevent_extensions(Interpreter& interpreter)
 {
-    // FIXME: Implement me :^)
-    ASSERT_NOT_REACHED();
+    auto* target = get_target_object_from(interpreter, "preventExtensions");
+    if (!target)
+        return {};
+    return Value(target->prevent_extensions());
 }
 
 Value ReflectObject::set(Interpreter& interpreter)
