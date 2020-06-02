@@ -50,7 +50,7 @@
 #include <time.h>
 #include <unistd.h>
 
-//#define CEVENTLOOP_DEBUG
+//#define EVENTLOOP_DEBUG
 //#define DEFERRED_INVOKE_DEBUG
 
 namespace Core {
@@ -95,7 +95,9 @@ public:
             u32 length;
             int nread = m_socket->read((u8*)&length, sizeof(length));
             if (nread == 0) {
+#ifdef EVENTLOOP_DEBUG
                 dbg() << "RPC client disconnected";
+#endif
                 shutdown();
                 return;
             }
@@ -240,7 +242,7 @@ EventLoop::EventLoop()
         }
     }
 
-#ifdef CEVENTLOOP_DEBUG
+#ifdef EVENTLOOP_DEBUG
     dbg() << getpid() << " Core::EventLoop constructed :)";
 #endif
 }
@@ -294,14 +296,18 @@ EventLoop& EventLoop::current()
 
 void EventLoop::quit(int code)
 {
+#ifdef EVENTLOOP_DEBUG
     dbg() << "Core::EventLoop::quit(" << code << ")";
+#endif
     m_exit_requested = true;
     m_exit_code = code;
 }
 
 void EventLoop::unquit()
 {
+#ifdef EVENTLOOP_DEBUG
     dbg() << "Core::EventLoop::unquit()";
+#endif
     m_exit_requested = false;
     m_exit_code = 0;
 }
@@ -353,7 +359,7 @@ void EventLoop::pump(WaitMode mode)
         auto& queued_event = events.at(i);
         auto* receiver = queued_event.receiver.ptr();
         auto& event = *queued_event.event;
-#ifdef CEVENTLOOP_DEBUG
+#ifdef EVENTLOOP_DEBUG
         if (receiver)
             dbg() << "Core::EventLoop: " << *receiver << " event " << (int)event.type();
 #endif
@@ -363,7 +369,10 @@ void EventLoop::pump(WaitMode mode)
                 ASSERT_NOT_REACHED();
                 return;
             default:
+#ifdef EVENTLOOP_DEBUG
                 dbg() << "Event type " << event.type() << " with no receiver :(";
+#endif
+                break;
             }
         } else if (event.type() == Event::Type::DeferredInvoke) {
 #ifdef DEFERRED_INVOKE_DEBUG
@@ -377,7 +386,7 @@ void EventLoop::pump(WaitMode mode)
 
         if (m_exit_requested) {
             LOCKER(m_private->lock);
-#ifdef CEVENTLOOP_DEBUG
+#ifdef EVENTLOOP_DEBUG
             dbg() << "Core::EventLoop: Exit requested. Rejigging " << (events.size() - i) << " events.";
 #endif
             decltype(m_queued_events) new_event_queue;
@@ -394,7 +403,7 @@ void EventLoop::pump(WaitMode mode)
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
     LOCKER(m_private->lock);
-#ifdef CEVENTLOOP_DEBUG
+#ifdef EVENTLOOP_DEBUG
     dbg() << "Core::EventLoop::post_event: {" << m_queued_events.size() << "} << receiver=" << receiver << ", event=" << event;
 #endif
     m_queued_events.empend(receiver, move(event));
@@ -479,7 +488,7 @@ void EventLoop::wait_for_event(WaitMode mode)
             && !it.value->owner->is_visible_for_timer_purposes()) {
             continue;
         }
-#ifdef CEVENTLOOP_DEBUG
+#ifdef EVENTLOOP_DEBUG
         dbg() << "Core::EventLoop: Timer " << timer.timer_id << " has expired, sending Core::TimerEvent to " << timer.owner;
 #endif
         post_event(*timer.owner, make<TimerEvent>(timer.timer_id));
