@@ -29,7 +29,7 @@
 #include <AK/Function.h>
 #include <AK/URL.h>
 #include <LibCore/Object.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Protocol {
 class Client;
@@ -42,7 +42,7 @@ class ResourceLoader : public Core::Object {
 public:
     static ResourceLoader& the();
 
-    RefPtr<Resource> load_resource(const LoadRequest&);
+    RefPtr<Resource> load_resource(Resource::Type, const LoadRequest&);
 
     void load(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);
     void load_sync(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);

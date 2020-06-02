@@ -34,6 +34,7 @@
 #include <AK/URL.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
+#include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/LoadRequest.h>
 
@@ -46,8 +47,13 @@ class Resource : public RefCounted<Resource> {
     AK_MAKE_NONMOVABLE(Resource);
 
 public:
-    static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, const LoadRequest&);
-    ~Resource();
+    enum class Type {
+        Generic,
+        Image,
+    };
+
+    static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, Type, const LoadRequest&);
+    virtual ~Resource();
 
     bool is_loaded() const { return m_loaded; }
 
@@ -67,11 +73,13 @@ public:
     void did_load(Badge<ResourceLoader>, const ByteBuffer& data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers);
     void did_fail(Badge<ResourceLoader>, const String& error);
 
-private:
-    explicit Resource(const LoadRequest&);
+protected:
+    explicit Resource(Type, const LoadRequest&);
 
+private:
     LoadRequest m_request;
     ByteBuffer m_encoded_data;
+    Type m_type { Type::Generic };
     bool m_loaded { false };
     bool m_failed { false };
     String m_error;

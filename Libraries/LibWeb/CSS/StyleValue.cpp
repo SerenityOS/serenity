@@ -293,7 +293,7 @@ ImageStyleValue::ImageStyleValue(const URL& url, Document& document)
 {
     LoadRequest request;
     request.set_url(url);
-    set_resource(ResourceLoader::the().load_resource(request));
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 }
 
 void ImageStyleValue::resource_did_load()

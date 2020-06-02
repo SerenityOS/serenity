@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,59 +24,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/URL.h>
-#include <LibCore/File.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLLinkElement.h>
-#include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Parser/CSSParser.h>
+#include <AK/Function.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageDecoder.h>
+#include <LibWeb/Loader/ImageResource.h>
 
 namespace Web {
 
-HTMLLinkElement::HTMLLinkElement(Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+ImageResource::ImageResource(const LoadRequest& request)
+    : Resource(Type::Image, request)
 {
 }
 
-HTMLLinkElement::~HTMLLinkElement()
+ImageResource::~ImageResource()
 {
 }
 
-void HTMLLinkElement::inserted_into(Node& node)
+Gfx::ImageDecoder& ImageResource::ensure_decoder()
 {
-    HTMLElement::inserted_into(node);
-
-    if (rel() == "stylesheet")
-        load_stylesheet(document().complete_url(href()));
+    if (!m_decoder)
+        m_decoder = Gfx::ImageDecoder::create(encoded_data());
+    return *m_decoder;
 }
 
-void HTMLLinkElement::resource_did_fail()
+void ImageResource::update_volatility()
 {
-}
-
-void HTMLLinkElement::resource_did_load()
-{
-    ASSERT(resource());
-    if (!resource()->has_encoded_data())
+    if (!m_decoder)
         return;
 
-    dbg() << "HTMLLinkElement: Resource did load, looks good! " << href();
+    bool visible_in_viewport = false;
+    for_each_client([&](auto& client) {
+        if (static_cast<const ImageResourceClient&>(client).is_visible_in_viewport())
+            visible_in_viewport = true;
+    });
 
-    auto sheet = parse_css(resource()->encoded_data());
-    if (!sheet) {
-        dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
+    if (!visible_in_viewport) {
+        m_decoder->set_volatile();
         return;
     }
-    document().add_sheet(*sheet);
-    document().update_style();
+
+    bool still_has_decoded_image = m_decoder->set_nonvolatile();
+    if (still_has_decoded_image)
+        return;
+
+    m_decoder = nullptr;
+    for_each_client([&](auto& client) {
+        static_cast<ImageResourceClient&>(client).resource_did_replace_decoder();
+    });
 }
 
-void HTMLLinkElement::load_stylesheet(const URL& url)
+ImageResourceClient::~ImageResourceClient()
 {
-    LoadRequest request;
-    request.set_url(url);
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 }
 
 }
