@@ -94,6 +94,8 @@ protected:
     Interpreter& interpreter() { return m_console.interpreter(); }
     const Interpreter& interpreter() const { return m_console.interpreter(); }
 
+    Vector<String> get_trace() const;
+
     Console& m_console;
 };
 

@@ -181,7 +181,6 @@ public:
     const Console& console() const { return m_console; }
 
     String join_arguments() const;
-    Vector<String> get_trace() const;
 
 private:
     Interpreter();
