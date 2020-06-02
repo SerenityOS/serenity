@@ -89,6 +89,12 @@ bool Object::has_prototype(const Object* prototype) const
     return false;
 }
 
+bool Object::prevent_extensions()
+{
+    m_is_extensible = false;
+    return true;
+}
+
 Value Object::get_own_property(const Object& this_object, PropertyName property_name) const
 {
     Value value_here;
@@ -308,6 +314,13 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
+    if (!is_extensible()) {
+        dbg() << "Disallow define_property of non-extensible object";
+        if (throw_exceptions && interpreter().in_strict_mode())
+            interpreter().throw_exception<TypeError>(String::format("Cannot define property %s on non-extensible object", property_name.characters()));
+        return false;
+    }
+
     if (value.is_accessor()) {
         auto& accessor = value.as_accessor();
         if (accessor.getter())
@@ -374,6 +387,13 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
 bool Object::put_own_property_by_index(Object& this_object, u32 property_index, Value value, u8 attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
+
+    if (!is_extensible()) {
+        dbg() << "Disallow define_property of non-extensible object";
+        if (throw_exceptions && interpreter().in_strict_mode())
+            interpreter().throw_exception<TypeError>(String::format("Cannot define property %d on non-extensible object", property_index));
+        return false;
+    }
 
     if (value.is_accessor()) {
         auto& accessor = value.as_accessor();
