@@ -39,6 +39,63 @@ enum MemoryOrder {
     memory_order_seq_cst = __ATOMIC_SEQ_CST
 };
 
+template <typename T>
+static inline T atomic_exchange(volatile T* var, T desired, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    return __atomic_exchange_n(var, desired, order);
+}
+
+template <typename T>
+static inline bool atomic_compare_exchange_strong(volatile T* var, T& expected, T desired, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    if (order == memory_order_acq_rel || order == memory_order_release)
+        return __atomic_compare_exchange_n(var, &expected, desired, false, memory_order_release, memory_order_acquire);
+    else
+        return __atomic_compare_exchange_n(var, &expected, desired, false, order, order);
+}
+
+template <typename T>
+static inline T atomic_fetch_add(volatile T* var, T val, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    return __atomic_fetch_add(var, val, order);
+}
+
+template <typename T>
+static inline T atomic_fetch_sub(volatile T* var, T val, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    return __atomic_fetch_sub(var, val, order);
+}
+
+template <typename T>
+static inline T atomic_fetch_and(volatile T* var, T val, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    return __atomic_fetch_and(var, val, order);
+}
+
+template <typename T>
+static inline T atomic_fetch_or(volatile T* var, T val, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    return __atomic_fetch_or(var, val, order);
+}
+
+template <typename T>
+static inline T atomic_fetch_xor(volatile T* var, T val, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    return __atomic_fetch_xor(var, val, order);
+}
+
+template <typename T>
+static inline T atomic_load(volatile T* var, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    return __atomic_load_n(var, order);
+}
+
+template <typename T>
+static inline void atomic_store(volatile T* var, T desired, MemoryOrder order = memory_order_seq_cst) noexcept
+{
+    __atomic_store_n(var, desired, order);
+}
+
 template<typename T>
 class Atomic {
     T m_value { 0 };
@@ -51,6 +108,11 @@ public:
     Atomic(T val) noexcept
         : m_value(val)
     {
+    }
+
+    volatile T* ptr()
+    {
+        return &m_value;
     }
 
     T exchange(T desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept
@@ -175,6 +237,11 @@ public:
     Atomic(T* val) noexcept
         : m_value(val)
     {
+    }
+
+    volatile T** ptr()
+    {
+        return &m_value;
     }
 
     T* exchange(T* desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept
