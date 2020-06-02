@@ -56,8 +56,7 @@ void HTMLImageElement::load_image(const String& src)
 {
     LoadRequest request;
     request.set_url(document().complete_url(src));
-    auto resource = ResourceLoader::the().load_resource(request);
-    set_resource(resource);
+    set_resource(ResourceLoader::the().load_resource(request));
 }
 
 void HTMLImageElement::resource_did_load()
