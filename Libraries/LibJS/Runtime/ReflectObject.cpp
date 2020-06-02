@@ -261,9 +261,7 @@ Value ReflectObject::set_prototype_of(Interpreter& interpreter)
     Object* prototype = nullptr;
     if (!prototype_value.is_null())
         prototype = const_cast<Object*>(&prototype_value.as_object());
-    target->set_prototype(prototype);
-    // FIXME: Needs to return false for prototype chain cycles and non-extensible objects (don't have those yet).
-    return Value(true);
+    return Value(target->set_prototype(prototype));
 }
 
 }

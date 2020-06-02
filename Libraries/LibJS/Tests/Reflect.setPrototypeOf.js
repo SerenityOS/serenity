@@ -28,10 +28,14 @@ try {
     assert(Reflect.setPrototypeOf({}, Reflect.getPrototypeOf({})) === true);
 
     var o = {};
+    var p = { foo: "bar" };
     assert(o.foo === undefined);
-    assert(Reflect.setPrototypeOf(o, { foo: "bar" }) === true);
+    assert(Reflect.setPrototypeOf(o, p) === true);
     assert(o.foo === "bar");
 
+    Reflect.preventExtensions(o);
+    assert(Reflect.setPrototypeOf(o, {}) === false);
+    assert(Reflect.setPrototypeOf(o, p) === true);
 
     console.log("PASS");
 } catch (e) {
