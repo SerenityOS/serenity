@@ -48,6 +48,9 @@ public:
     void load_sync(const URL&, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback = nullptr);
 
     Function<void()> on_load_counter_change;
+    Function<void(u32, const URL&)> on_load;
+    Function<void(u32, bool, bool)> on_load_finish;
+    Function<bool()> cache_disabled_check;
 
     int pending_loads() const { return m_pending_loads; }
 
@@ -59,9 +62,13 @@ private:
     ResourceLoader();
     static bool is_port_blocked(int port);
 
+    u32 on_load_begin(const URL&);
+    void on_load_end(u32, bool, bool cached = false);
+
     virtual void save_to(JsonObject&) override;
 
     int m_pending_loads { 0 };
+    u32 m_load_id { 0 };
 
     RefPtr<Protocol::Client> m_protocol_client;
     String m_user_agent;

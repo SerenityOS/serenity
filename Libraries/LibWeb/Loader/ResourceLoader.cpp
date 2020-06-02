@@ -51,6 +51,21 @@ ResourceLoader::ResourceLoader()
 {
 }
 
+u32 ResourceLoader::on_load_begin(const URL& url)
+{
+    u32 new_load_id = ++m_load_id;
+    if (on_load)
+        on_load(new_load_id, url);
+
+    return new_load_id;
+}
+
+void ResourceLoader::on_load_end(u32 load_id, bool success, bool cached)
+{
+    if (on_load_finish)
+        on_load_finish(load_id, success, cached);
+}
+
 void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     Core::EventLoop loop;
@@ -77,10 +92,23 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
     if (!request.is_valid())
         return nullptr;
 
-    auto it = s_resource_cache.find(request);
-    if (it != s_resource_cache.end()) {
-        dbg() << "Reusing cached resource for: " << request.url();
-        return it->value;
+    bool ignore_cache = false;
+
+    if (cache_disabled_check)
+        ignore_cache = cache_disabled_check();
+
+    if (!ignore_cache) {
+        auto it = s_resource_cache.find(request);
+        if (it != s_resource_cache.end()) {
+            dbg() << "Reusing cached resource for: " << request.url();
+
+            u32 load_id = on_load_begin(request.url());
+
+            auto resource = it->value;
+            on_load_end(load_id, !resource->is_failed(), true);
+
+            return resource;
+        }
     }
 
     auto resource = Resource::create({}, type, request);
@@ -106,11 +134,15 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         return;
     }
 
+    u32 new_load_id = on_load_begin(url);
+
     if (url.protocol() == "about") {
         dbg() << "Loading about: URL " << url;
-        deferred_invoke([success_callback = move(success_callback)](auto&) {
+        deferred_invoke([this, success_callback = move(success_callback), new_load_id](auto&) {
             success_callback(ByteBuffer::wrap(String::empty().characters(), 1), {});
+            on_load_end(new_load_id, true);
         });
+
         return;
     }
 
@@ -123,9 +155,11 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         else
             data = url.data_payload().to_byte_buffer();
 
-        deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
+        deferred_invoke([this, data = move(data), success_callback = move(success_callback), new_load_id](auto&) {
             success_callback(data, {});
+            on_load_end(new_load_id, true);
         });
+
         return;
     }
 
@@ -134,15 +168,19 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         f->set_filename(url.path());
         if (!f->open(Core::IODevice::OpenMode::ReadOnly)) {
             dbg() << "ResourceLoader::load: Error: " << f->error_string();
-            if (error_callback)
+            if (error_callback) {
                 error_callback(f->error_string());
+                on_load_end(new_load_id, false);
+            }
             return;
         }
 
         auto data = f->read_all();
-        deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
+        deferred_invoke([this, data = move(data), success_callback = move(success_callback), new_load_id](auto&) {
             success_callback(data, {});
+            on_load_end(new_load_id, true);
         });
+
         return;
     }
 
@@ -151,17 +189,21 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         headers.set("User-Agent", m_user_agent);
         auto download = protocol_client().start_download(url.to_string(), headers);
         if (!download) {
-            if (error_callback)
+            if (error_callback) {
                 error_callback("Failed to initiate load");
+                on_load_end(new_load_id, false);
+            }
             return;
         }
-        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, const ByteBuffer& payload, auto, auto& response_headers) {
+        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), new_load_id](bool success, const ByteBuffer& payload, auto, auto& response_headers) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
+            on_load_end(new_load_id, success);
             if (!success) {
-                if (error_callback)
+                if (error_callback) {
                     error_callback("HTTP load failed");
+                }
                 return;
             }
             success_callback(ByteBuffer::copy(payload.data(), payload.size()), response_headers);
@@ -172,8 +214,10 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         return;
     }
 
-    if (error_callback)
+    if (error_callback) {
         error_callback(String::format("Protocol not implemented: %s", url.protocol().characters()));
+        on_load_end(new_load_id, false);
+    }
 }
 
 bool ResourceLoader::is_port_blocked(int port)
@@ -193,6 +237,7 @@ void ResourceLoader::save_to(JsonObject& object)
 {
     Object::save_to(object);
     object.set("pending_loads", m_pending_loads);
+    object.set("load_id", m_load_id);
     object.set("user_agent", m_user_agent);
 }
 
