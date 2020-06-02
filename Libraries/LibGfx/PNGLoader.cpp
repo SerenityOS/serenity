@@ -68,38 +68,28 @@ struct [[gnu::packed]] PaletteEntry
     //u8 a;
 };
 
+template<typename T>
 struct [[gnu::packed]] Tuple
 {
-    u8 gray;
-    u8 a;
+    T gray;
+    T a;
 };
 
-struct [[gnu::packed]] Tuple16
-{
-    u16 gray;
-    u16 a;
-};
-
+template<typename T>
 struct [[gnu::packed]] Triplet
 {
-    u8 r;
-    u8 g;
-    u8 b;
+    T r;
+    T g;
+    T b;
 };
 
-struct [[gnu::packed]] Triplet16
+template<typename T>
+struct [[gnu::packed]] Quad
 {
-    u16 r;
-    u16 g;
-    u16 b;
-};
-
-struct [[gnu::packed]] Quad16
-{
-    u16 r;
-    u16 g;
-    u16 b;
-    u16 a;
+    T r;
+    T g;
+    T b;
+    T a;
 };
 
 struct PNGLoadingContext {
@@ -136,9 +126,7 @@ struct PNGLoadingContext {
 class Streamer {
 public:
     Streamer(const u8* data, int size)
-        : m_original_data(data)
-        , m_original_size(size)
-        , m_data_ptr(data)
+        : m_data_ptr(data)
         , m_size_remaining(size)
     {
     }
@@ -177,8 +165,6 @@ public:
     bool at_end() const { return !m_size_remaining; }
 
 private:
-    const u8* m_original_data;
-    int m_original_size;
     const u8* m_data_ptr;
     int m_size_remaining;
 };
@@ -362,7 +348,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
     case 4:
         if (context.bit_depth == 8) {
             for (int y = 0; y < context.height; ++y) {
-                auto* tuples = (Tuple*)context.scanlines[y].data.data();
+                auto* tuples = (Tuple<u8>*)context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     pixel.r = tuples[i].gray;
@@ -373,7 +359,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
             }
         } else if (context.bit_depth == 16) {
             for (int y = 0; y < context.height; ++y) {
-                auto* tuples = (Tuple16*)context.scanlines[y].data.data();
+                auto* tuples = (Tuple<u16>*)context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     pixel.r = tuples[i].gray & 0xFF;
@@ -389,7 +375,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
     case 2:
         if (context.bit_depth == 8) {
             for (int y = 0; y < context.height; ++y) {
-                auto* triplets = (Triplet*)context.scanlines[y].data.data();
+                auto* triplets = (Triplet<u8>*)context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     pixel.r = triplets[i].r;
@@ -400,7 +386,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
             }
         } else if (context.bit_depth == 16) {
             for (int y = 0; y < context.height; ++y) {
-                auto* triplets = (Triplet16*)context.scanlines[y].data.data();
+                auto* triplets = (Triplet<u16>*)context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     pixel.r = triplets[i].r & 0xFF;
@@ -420,7 +406,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
             }
         } else if (context.bit_depth == 16) {
             for (int y = 0; y < context.height; ++y) {
-                auto* triplets = (Quad16*)context.scanlines[y].data.data();
+                auto* triplets = (Quad<u16>*)context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     pixel.r = triplets[i].r & 0xFF;
