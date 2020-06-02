@@ -30,7 +30,7 @@
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/DOM/HTMLElement.h>
-#include <LibWeb/Loader/Resource.h>
+#include <LibWeb/Loader/ImageResource.h>
 
 namespace Web {
 
@@ -38,7 +38,7 @@ class LayoutDocument;
 
 class HTMLImageElement final
     : public HTMLElement
-    , public ResourceClient {
+    , public ImageResourceClient {
 public:
     using WrapperType = Bindings::HTMLImageElementWrapper;
 
@@ -55,11 +55,14 @@ public:
     const Gfx::Bitmap* bitmap() const;
     const Gfx::ImageDecoder* image_decoder() const { return m_image_decoder; }
 
-    void set_volatile(Badge<LayoutDocument>, bool);
+    void set_visible_in_viewport(Badge<LayoutDocument>, bool);
 
 private:
+    // ^ImageResource
     virtual void resource_did_load() override;
     virtual void resource_did_fail() override;
+    virtual void resource_did_replace_decoder() override;
+    virtual bool is_visible_in_viewport() const override { return m_visible_in_viewport; }
 
     void load_image(const String& src);
 
@@ -72,6 +75,8 @@ private:
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
     NonnullRefPtr<Core::Timer> m_timer;
+
+    bool m_visible_in_viewport { false };
 };
 
 template<>

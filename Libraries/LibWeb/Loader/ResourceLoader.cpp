@@ -72,7 +72,7 @@ void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, 
 
 static HashMap<LoadRequest, NonnullRefPtr<Resource>> s_resource_cache;
 
-RefPtr<Resource> ResourceLoader::load_resource(const LoadRequest& request)
+RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRequest& request)
 {
     if (!request.is_valid())
         return nullptr;
@@ -83,7 +83,7 @@ RefPtr<Resource> ResourceLoader::load_resource(const LoadRequest& request)
         return it->value;
     }
 
-    auto resource = Resource::create({}, request);
+    auto resource = Resource::create({}, type, request);
 
     s_resource_cache.set(request, resource);
 

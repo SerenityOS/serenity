@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,59 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/URL.h>
-#include <LibCore/File.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLLinkElement.h>
-#include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Parser/CSSParser.h>
+#pragma once
+
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web {
 
-HTMLLinkElement::HTMLLinkElement(Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
-{
-}
+class ImageResource final : public Resource {
+    friend class Resource;
 
-HTMLLinkElement::~HTMLLinkElement()
-{
-}
+public:
+    virtual ~ImageResource() override;
+    Gfx::ImageDecoder& ensure_decoder();
 
-void HTMLLinkElement::inserted_into(Node& node)
-{
-    HTMLElement::inserted_into(node);
+    void update_volatility();
 
-    if (rel() == "stylesheet")
-        load_stylesheet(document().complete_url(href()));
-}
+private:
+    explicit ImageResource(const LoadRequest&);
+    RefPtr<Gfx::ImageDecoder> m_decoder;
+};
 
-void HTMLLinkElement::resource_did_fail()
-{
-}
+class ImageResourceClient : public ResourceClient {
+public:
+    virtual ~ImageResourceClient();
 
-void HTMLLinkElement::resource_did_load()
-{
-    ASSERT(resource());
-    if (!resource()->has_encoded_data())
-        return;
+    virtual bool is_visible_in_viewport() const { return false; }
+    virtual void resource_did_replace_decoder() {}
 
-    dbg() << "HTMLLinkElement: Resource did load, looks good! " << href();
-
-    auto sheet = parse_css(resource()->encoded_data());
-    if (!sheet) {
-        dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
-        return;
-    }
-    document().add_sheet(*sheet);
-    document().update_style();
-}
-
-void HTMLLinkElement::load_stylesheet(const URL& url)
-{
-    LoadRequest request;
-    request.set_url(url);
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
-}
+protected:
+    ImageResource* resource() { return static_cast<ImageResource*>(ResourceClient::resource()); }
+    const ImageResource* resource() const { return static_cast<const ImageResource*>(ResourceClient::resource()); }
+};
 
 }

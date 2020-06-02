@@ -56,7 +56,7 @@ void HTMLImageElement::load_image(const String& src)
 {
     LoadRequest request;
     request.set_url(document().complete_url(src));
-    set_resource(ResourceLoader::the().load_resource(request));
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
 }
 
 void HTMLImageElement::resource_did_load()
@@ -70,7 +70,8 @@ void HTMLImageElement::resource_did_load()
 
     dbg() << "HTMLImageElement: Resource did load, encoded data looks tasty: " << this->src();
 
-    m_image_decoder = Gfx::ImageDecoder::create(resource()->encoded_data());
+    ASSERT(!m_image_decoder);
+    m_image_decoder = resource()->ensure_decoder();
 
     if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
         const auto& first_frame = m_image_decoder->frame(0);
@@ -89,6 +90,11 @@ void HTMLImageElement::resource_did_fail()
     m_image_decoder = nullptr;
     document().update_layout();
     dispatch_event(Event::create("error"));
+}
+
+void HTMLImageElement::resource_did_replace_decoder()
+{
+    m_image_decoder = resource()->ensure_decoder();
 }
 
 void HTMLImageElement::animate()
@@ -161,19 +167,17 @@ const Gfx::Bitmap* HTMLImageElement::bitmap() const
     return m_image_decoder->bitmap();
 }
 
-void HTMLImageElement::set_volatile(Badge<LayoutDocument>, bool v)
+void HTMLImageElement::set_visible_in_viewport(Badge<LayoutDocument>, bool visible_in_viewport)
 {
-    if (!m_image_decoder)
+    if (m_visible_in_viewport == visible_in_viewport)
         return;
-    if (v) {
-        m_image_decoder->set_volatile();
-        return;
-    }
-    bool has_image = m_image_decoder->set_nonvolatile();
-    if (has_image)
-        return;
-    ASSERT(resource());
-    m_image_decoder = Gfx::ImageDecoder::create(resource()->encoded_data());
+    m_visible_in_viewport = visible_in_viewport;
+
+    // FIXME: Don't update volatility every time. If we're here, we're probably scanning through
+    //        the whole document, updating "is visible in viewport" flags, and this could lead
+    //        to the same bitmap being marked volatile back and forth unnecessarily.
+    if (resource())
+        resource()->update_volatility();
 }
 
 }

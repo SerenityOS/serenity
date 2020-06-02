@@ -30,13 +30,16 @@
 
 namespace Web {
 
-NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, const LoadRequest& request)
+NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, Type type, const LoadRequest& request)
 {
-    return adopt(*new Resource(request));
+    if (type == Type::Image)
+        return adopt(*new ImageResource(request));
+    return adopt(*new Resource(type, request));
 }
 
-Resource::Resource(const LoadRequest& request)
+Resource::Resource(Type type, const LoadRequest& request)
     : m_request(request)
+    , m_type(type)
 {
 }
 
