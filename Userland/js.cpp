@@ -359,6 +359,7 @@ ReplObject::ReplObject()
 void ReplObject::initialize()
 {
     GlobalObject::initialize();
+    define_property("global", this, JS::Attribute::Enumerable);
     define_native_function("exit", exit_interpreter);
     define_native_function("help", repl_help);
     define_native_function("load", load_file, 1);
@@ -396,7 +397,8 @@ JS::Value ReplObject::repl_help(JS::Interpreter&)
     printf("REPL commands:\n");
     printf("    exit(code): exit the REPL with specified code. Defaults to 0.\n");
     printf("    help(): display this menu\n");
-    printf("    load(files): Accepts file names as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")\n");
+    printf("    load(files): accepts file names as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")\n");
+    printf("    save(file): accepts a file name, writes REPL input history to a file. For example: save(\"foo.txt\")\n");
     return JS::js_undefined();
 }
 
