@@ -120,4 +120,14 @@ bool Console::counter_reset(String label)
     return true;
 }
 
+Vector<String> ConsoleClient::get_trace() const
+{
+    Vector<String> trace;
+    auto call_stack = m_console.interpreter().call_stack();
+    // -2 to skip the console.trace() call frame
+    for (ssize_t i = call_stack.size() - 2; i >= 0; --i)
+        trace.append(call_stack[i].function_name);
+    return trace;
+}
+
 }
