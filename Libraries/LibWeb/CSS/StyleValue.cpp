@@ -31,8 +31,9 @@
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/PageView.h>
 
 namespace Web {
 
@@ -290,17 +291,21 @@ ImageStyleValue::ImageStyleValue(const URL& url, Document& document)
     , m_url(url)
     , m_document(document.make_weak_ptr())
 {
-    NonnullRefPtr<ImageStyleValue> protector(*this);
-    ResourceLoader::the().load(url, [this, protector](auto& data, auto&) {
-        if (!m_document)
-            return;
-        m_bitmap = Gfx::load_png_from_memory(data.data(), data.size());
-        if (!m_bitmap)
-            return;
-        // FIXME: Do less than a full repaint if possible?
-        if (m_document->frame())
-            m_document->frame()->set_needs_display({});
-    });
+    LoadRequest request;
+    request.set_url(url);
+    set_resource(ResourceLoader::the().load_resource(request));
+}
+
+void ImageStyleValue::resource_did_load()
+{
+    if (!m_document)
+        return;
+    m_bitmap = Gfx::load_png_from_memory(resource()->encoded_data().data(), resource()->encoded_data().size());
+    if (!m_bitmap)
+        return;
+    // FIXME: Do less than a full repaint if possible?
+    if (m_document->frame())
+        m_document->frame()->set_needs_display({});
 }
 
 }
