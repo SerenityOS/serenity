@@ -112,7 +112,10 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
         interpreter.throw_exception<TypeError>("Prototype must be null or object");
         return {};
     }
-    object->set_prototype(prototype);
+    if (!object->set_prototype(prototype)) {
+        interpreter.throw_exception<TypeError>("Can't set prototype of non-extensible object");
+        return {};
+    }
     return object;
 }
 
