@@ -282,13 +282,4 @@ String Interpreter::join_arguments() const
     return joined_arguments.build();
 }
 
-Vector<String> Interpreter::get_trace() const
-{
-    Vector<String> trace;
-    // -2 to skip the console.trace() call frame
-    for (ssize_t i = m_call_stack.size() - 2; i >= 0; --i)
-        trace.append(m_call_stack[i].function_name);
-    return trace;
-}
-
 }

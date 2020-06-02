@@ -501,7 +501,7 @@ public:
     virtual JS::Value trace() override
     {
         puts(interpreter().join_arguments().characters());
-        auto trace = interpreter().get_trace();
+        auto trace = get_trace();
         for (auto& function_name : trace) {
             if (function_name.is_empty())
                 function_name = "<anonymous>";

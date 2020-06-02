@@ -99,7 +99,7 @@ JS::Value BrowserConsoleClient::trace()
 {
     StringBuilder html;
     html.append(interpreter().join_arguments());
-    auto trace = interpreter().get_trace();
+    auto trace = get_trace();
     for (auto& function_name : trace) {
         if (function_name.is_empty())
             function_name = "&lt;anonymous&gt;";
