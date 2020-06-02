@@ -86,6 +86,7 @@ set(SOURCES
     Loader/ImageResource.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
+    NetworkHistoryModel.cpp
     PageView.cpp
     Parser/CSSParser.cpp
     Parser/Entities.cpp
