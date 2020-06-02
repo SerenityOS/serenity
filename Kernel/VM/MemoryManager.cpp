@@ -211,8 +211,6 @@ void MemoryManager::initialize()
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 {
-    if (vaddr.get() < 0xc0000000)
-        return nullptr;
     for (auto& region : MM.m_kernel_regions) {
         if (region.contains(vaddr))
             return &region;
@@ -310,6 +308,18 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
 {
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
+    if (!range.is_valid())
+        return nullptr;
+    auto vmobject = AnonymousVMObject::create_for_physical_range(paddr, size);
+    if (!vmobject)
+        return nullptr;
+    return allocate_kernel_region_with_vmobject(range, *vmobject, name, access, user_accessible, cacheable);
+}
+
+OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+{
+    ASSERT(!(size % PAGE_SIZE));
+    auto range = kernel_page_directory().identity_range_allocator().allocate_specific(VirtualAddress(paddr.get()), size);
     if (!range.is_valid())
         return nullptr;
     auto vmobject = AnonymousVMObject::create_for_physical_range(paddr, size);
@@ -665,7 +675,7 @@ void MemoryManager::unregister_vmobject(VMObject& vmobject)
 void MemoryManager::register_region(Region& region)
 {
     InterruptDisabler disabler;
-    if (region.vaddr().get() >= 0xc0000000)
+    if (region.is_kernel())
         m_kernel_regions.append(&region);
     else
         m_user_regions.append(&region);
@@ -674,7 +684,7 @@ void MemoryManager::register_region(Region& region)
 void MemoryManager::unregister_region(Region& region)
 {
     InterruptDisabler disabler;
-    if (region.vaddr().get() >= 0xc0000000)
+    if (region.is_kernel())
         m_kernel_regions.remove(&region);
     else
         m_user_regions.remove(&region);

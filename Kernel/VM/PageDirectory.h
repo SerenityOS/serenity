@@ -52,6 +52,7 @@ public:
     u32 cr3() const { return m_directory_table->paddr().get(); }
 
     RangeAllocator& range_allocator() { return m_range_allocator; }
+    RangeAllocator& identity_range_allocator() { return m_identity_range_allocator; }
 
     Process* process() { return m_process; }
     const Process* process() const { return m_process; }
@@ -62,6 +63,7 @@ private:
 
     Process* m_process { nullptr };
     RangeAllocator m_range_allocator;
+    RangeAllocator m_identity_range_allocator;
     RefPtr<PhysicalPage> m_directory_table;
     RefPtr<PhysicalPage> m_directory_pages[4];
     HashMap<unsigned, RefPtr<PhysicalPage>> m_physical_pages;

@@ -90,6 +90,11 @@ public:
 
     void dump() const;
 
+    bool contains(const Range& range) const
+    {
+        return m_total_range.contains(range);
+    }
+
 private:
     void carve_at_index(int, const Range&);
 

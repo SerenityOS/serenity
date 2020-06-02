@@ -40,13 +40,14 @@
 
 namespace Kernel {
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable)
+Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable, bool kernel)
     : m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(name)
     , m_access(access)
     , m_cacheable(cacheable)
+    , m_kernel(kernel)
 {
     MM.register_region(*this);
 }
@@ -186,14 +187,14 @@ size_t Region::amount_shared() const
 
 NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable);
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, false);
     region->m_user_accessible = true;
     return region;
 }
 
 NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable);
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, true);
     region->m_user_accessible = false;
     return region;
 }
@@ -268,8 +269,12 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
         dbg() << "MM: >> Unmapped " << vaddr << " => P" << String::format("%p", page ? page->paddr().get() : 0) << " <<";
 #endif
     }
-    if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes)
-        m_page_directory->range_allocator().deallocate(range());
+    if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes) {
+        if (m_page_directory->range_allocator().contains(range()))
+            m_page_directory->range_allocator().deallocate(range());
+        else
+            m_page_directory->identity_range_allocator().deallocate(range());
+    }
     m_page_directory = nullptr;
 }
 
