@@ -37,7 +37,7 @@ enum KSuccessTag {
 
 class KResult {
 public:
-    explicit KResult(int negative_e)
+    ALWAYS_INLINE explicit KResult(int negative_e)
         : m_error(negative_e)
     {
         ASSERT(negative_e <= 0);
@@ -55,7 +55,7 @@ public:
 private:
     template<typename T>
     friend class KResultOr;
-    KResult() {}
+    KResult() { }
 
     int m_error { 0 };
 };
@@ -116,24 +116,24 @@ public:
     }
 
     bool is_error() const { return m_is_error; }
-    KResult error() const
+    ALWAYS_INLINE KResult error() const
     {
         ASSERT(m_is_error);
         return m_error;
     }
     KResult result() const { return m_is_error ? KSuccess : m_error; }
-    T& value()
+    ALWAYS_INLINE T& value()
     {
         ASSERT(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
-    const T& value() const
+    ALWAYS_INLINE const T& value() const
     {
         ASSERT(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
-    T release_value()
+    ALWAYS_INLINE T release_value()
     {
         ASSERT(!m_is_error);
         T released_value = *reinterpret_cast<T*>(&m_storage);
