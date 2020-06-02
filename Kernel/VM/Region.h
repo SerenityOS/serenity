@@ -95,6 +95,9 @@ public:
     bool is_user_accessible() const { return m_user_accessible; }
     void set_user_accessible(bool b) { m_user_accessible = b; }
 
+    bool is_kernel() const { return m_kernel || vaddr().get() >= 0xc0000000; }
+    void set_kernel(bool kernel) { m_kernel = kernel; }
+
     PageFaultResponse handle_fault(const PageFault&);
 
     NonnullOwnPtr<Region> clone();
@@ -178,7 +181,7 @@ public:
     Region* m_prev { nullptr };
 
     // NOTE: These are public so we can make<> them.
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable, bool kernel);
 
     void set_inherit_mode(InheritMode inherit_mode) { m_inherit_mode = inherit_mode; }
 
@@ -211,6 +214,7 @@ private:
     bool m_cacheable : 1 { false };
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
+    bool m_kernel : 1 { false };
     mutable OwnPtr<Bitmap> m_cow_map;
 };
 
