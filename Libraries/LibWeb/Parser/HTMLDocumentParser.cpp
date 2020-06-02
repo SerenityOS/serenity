@@ -214,6 +214,7 @@ void HTMLDocumentParser::handle_before_html(HTMLToken& token)
 
 AnythingElse:
     auto element = create_element(document(), "html");
+    document().append_child(element);
     m_stack_of_open_elements.push(element);
     // FIXME: If the Document is being loaded as part of navigation of a browsing context, then: run the application cache selection algorithm with no manifest, passing it the Document object.
     m_insertion_mode = InsertionMode::BeforeHead;
