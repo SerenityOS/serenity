@@ -35,6 +35,7 @@
     __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor)     \
     __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor)           \
     __JS_ENUMERATE(ProxyObject, proxy, ProxyPrototype, ProxyConstructor)         \
+    __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor)     \
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor)     \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor)
 
