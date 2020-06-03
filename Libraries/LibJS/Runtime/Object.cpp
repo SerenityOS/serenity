@@ -123,7 +123,7 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
     return value_here;
 }
 
-Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode kind, u8 attributes) const
+Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode kind, PropertyAttributes attributes) const
 {
     auto* properties_array = Array::create(interpreter().global_object());
 
@@ -168,7 +168,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
     }
 
     for (auto& it : this_object.shape().property_table_ordered()) {
-        if (it.value.attributes & attributes) {
+        if (it.value.attributes.bits() & attributes.bits()) {
             size_t offset = it.value.offset + property_index;
 
             if (kind == GetOwnPropertyMode::Key) {
@@ -194,7 +194,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
 Value Object::get_own_property_descriptor(PropertyName property_name) const
 {
     Value value;
-    u8 attributes;
+    PropertyAttributes attributes;
 
     if (property_name.is_number()) {
         auto existing_value = m_indexed_properties.get(nullptr, property_name.as_number(), false);
@@ -214,12 +214,12 @@ Value Object::get_own_property_descriptor(PropertyName property_name) const
     }
 
     auto* descriptor = Object::create_empty(interpreter(), interpreter().global_object());
-    descriptor->define_property("enumerable", Value((attributes & Attribute::Enumerable) != 0));
-    descriptor->define_property("configurable", Value((attributes & Attribute::Configurable) != 0));
+    descriptor->define_property("enumerable", Value(attributes.is_enumerable()));
+    descriptor->define_property("configurable", Value(attributes.is_configurable()));
     if (value.is_object() && value.as_object().is_native_property()) {
         auto result = call_native_property_getter(const_cast<Object*>(this), value);
         descriptor->define_property("value", result);
-        descriptor->define_property("writable", Value((attributes & Attribute::Writable) != 0));
+        descriptor->define_property("writable", Value(attributes.is_writable()));
     } else if (value.is_accessor()) {
         auto& pair = value.as_accessor();
         if (pair.getter())
@@ -228,7 +228,7 @@ Value Object::get_own_property_descriptor(PropertyName property_name) const
             descriptor->define_property("set", pair.setter());
     } else {
         descriptor->define_property("value", value.value_or(js_undefined()));
-        descriptor->define_property("writable", Value((attributes & Attribute::Writable) != 0));
+        descriptor->define_property("writable", Value(attributes.is_writable()));
     }
     return descriptor;
 }
@@ -242,13 +242,25 @@ void Object::set_shape(Shape& new_shape)
 bool Object::define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions)
 {
     bool is_accessor_property = descriptor.has_property("get") || descriptor.has_property("set");
-    u8 configurable = descriptor.get("configurable").value_or(Value(false)).to_boolean() * Attribute::Configurable;
-    if (interpreter().exception())
-        return {};
-    u8 enumerable = descriptor.get("enumerable").value_or(Value(false)).to_boolean() * Attribute::Enumerable;
-    if (interpreter().exception())
-        return {};
-    u8 attributes = configurable | enumerable;
+    PropertyAttributes attributes;
+    if (descriptor.has_property("configurable")) {
+        if (interpreter().exception())
+            return false;
+        attributes.set_has_configurable();
+        if (descriptor.get("configurable").value_or(Value(false)).to_boolean())
+            attributes.set_configurable();
+        if (interpreter().exception())
+            return false;
+    }
+    if (descriptor.has_property("enumerable")) {
+        if (interpreter().exception())
+            return false;
+        attributes.set_has_enumerable();
+        if (descriptor.get("enumerable").value_or(Value(false)).to_boolean())
+            attributes.set_enumerable();
+        if (interpreter().exception())
+            return false;
+    }
 
     if (is_accessor_property) {
         if (descriptor.has_property("value") || descriptor.has_property("writable")) {
@@ -291,10 +303,17 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
     auto value = descriptor.get("value");
     if (interpreter().exception())
         return {};
-    u8 writable = descriptor.get("writable").value_or(Value(false)).to_boolean() * Attribute::Writable;
+    if (descriptor.has_property("writable")) {
+        if (interpreter().exception())
+            return false;
+        attributes.set_has_writable();
+        if (descriptor.get("writable").value_or(Value(false)).to_boolean())
+            attributes.set_writable();
+        if (interpreter().exception())
+            return false;
+    }
     if (interpreter().exception())
         return {};
-    attributes |= writable;
 
     dbg() << "Defining new property " << property_name << " with data descriptor { attributes=" << attributes
           << ", value=" << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects()) << " }";
@@ -302,7 +321,7 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
     return define_property(property_name, value, attributes, throw_exceptions);
 }
 
-bool Object::define_property(PropertyName property_name, Value value, u8 attributes, bool throw_exceptions)
+bool Object::define_property(PropertyName property_name, Value value, PropertyAttributes attributes, bool throw_exceptions)
 {
     if (property_name.is_number())
         return put_own_property_by_index(*this, property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
@@ -313,7 +332,7 @@ bool Object::define_property(PropertyName property_name, Value value, u8 attribu
     return put_own_property(*this, property_name.as_string(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
-bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value, u8 attributes, PutOwnPropertyMode mode, bool throw_exceptions)
+bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
@@ -327,9 +346,9 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     if (value.is_accessor()) {
         auto& accessor = value.as_accessor();
         if (accessor.getter())
-            attributes |= Attribute::HasGet;
+            attributes.set_has_getter();
         if (accessor.setter())
-            attributes |= Attribute::HasSet;
+            attributes.set_has_setter();
     }
 
     auto metadata = shape().lookup(property_name);
@@ -352,7 +371,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
         ASSERT(metadata.has_value());
     }
 
-    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !(metadata.value().attributes & Attribute::Configurable) && attributes != metadata.value().attributes) {
+    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable() && attributes != metadata.value().attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
         if (throw_exceptions)
             interpreter().throw_exception<TypeError>(String::format("Cannot change attributes of non-configurable property '%s'", property_name.characters()));
@@ -371,7 +390,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     }
 
     auto value_here = m_storage[metadata.value().offset];
-    if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !(metadata.value().attributes & Attribute::Writable)) {
+    if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !metadata.value().attributes.is_writable()) {
         dbg() << "Disallow write to non-writable property";
         return false;
     }
@@ -387,7 +406,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     return true;
 }
 
-bool Object::put_own_property_by_index(Object& this_object, u32 property_index, Value value, u8 attributes, PutOwnPropertyMode mode, bool throw_exceptions)
+bool Object::put_own_property_by_index(Object& this_object, u32 property_index, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
@@ -401,16 +420,16 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     if (value.is_accessor()) {
         auto& accessor = value.as_accessor();
         if (accessor.getter())
-            attributes |= Attribute::HasGet;
+            attributes.set_has_getter();
         if (accessor.setter())
-            attributes |= Attribute::HasSet;
+            attributes.set_has_setter();
     }
 
     auto existing_property = m_indexed_properties.get(nullptr, property_index, false);
     auto new_property = !existing_property.has_value();
-    auto existing_attributes = new_property ? 0 : existing_property.value().attributes;
+    PropertyAttributes existing_attributes = new_property ? 0 : existing_property.value().attributes;
 
-    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !(existing_attributes & Attribute::Configurable) && attributes != existing_attributes) {
+    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable() && attributes != existing_attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
         if (throw_exceptions)
             interpreter().throw_exception<TypeError>(String::format("Cannot change attributes of non-configurable property %d", property_index));
@@ -418,7 +437,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     }
 
     auto value_here = new_property ? Value() : existing_property.value().value;
-    if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !(existing_attributes & Attribute::Writable)) {
+    if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !existing_attributes.is_writable()) {
         dbg() << "Disallow write to non-writable property";
         return false;
     }
@@ -442,7 +461,7 @@ Value Object::delete_property(PropertyName property_name)
     auto metadata = shape().lookup(property_name.as_string());
     if (!metadata.has_value())
         return Value(true);
-    if (!(metadata.value().attributes & Attribute::Configurable))
+    if (!metadata.value().attributes.is_configurable())
         return Value(false);
 
     size_t deleted_offset = metadata.value().offset;
@@ -565,7 +584,7 @@ bool Object::put(PropertyName property_name, Value value)
     return put_own_property(*this, property_string, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
-bool Object::define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length, u8 attribute)
+bool Object::define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto* function = NativeFunction::create(interpreter(), interpreter().global_object(), property_name, move(native_function));
     function->define_property("length", Value(length), Attribute::Configurable);
@@ -573,7 +592,7 @@ bool Object::define_native_function(const FlyString& property_name, AK::Function
     return define_property(property_name, function, attribute);
 }
 
-bool Object::define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attribute)
+bool Object::define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, PropertyAttributes attribute)
 {
     return define_property(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)), attribute);
 }

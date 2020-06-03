@@ -1304,7 +1304,7 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
                 auto& obj_to_spread = key_result.as_object();
 
                 for (auto& it : obj_to_spread.shape().property_table_ordered()) {
-                    if (it.value.attributes & Attribute::Enumerable)
+                    if (it.value.attributes.is_enumerable())
                         object->define_property(it.key, obj_to_spread.get(it.key));
                 }
             } else if (key_result.is_string()) {
