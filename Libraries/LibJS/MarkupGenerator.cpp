@@ -223,6 +223,7 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     case TokenType::TemplateLiteralEnd:
     case TokenType::TemplateLiteralString:
     case TokenType::RegexLiteral:
+    case TokenType::RegexFlags:
     case TokenType::UnterminatedStringLiteral:
         return StyleType::String;
     case TokenType::BracketClose:

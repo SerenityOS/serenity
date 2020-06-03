@@ -585,6 +585,27 @@ private:
     virtual const char* class_name() const override { return "NullLiteral"; }
 };
 
+class RegExpLiteral final : public Literal {
+public:
+    explicit RegExpLiteral(String content, String flags)
+        : m_content(content)
+        , m_flags(flags)
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+    const String& content() const { return m_content; }
+    const String& flags() const { return m_flags; }
+
+private:
+    virtual const char* class_name() const override { return "RegexLiteral"; }
+
+    String m_content;
+    String m_flags;
+};
+
 class Identifier final : public Expression {
 public:
     explicit Identifier(const FlyString& string)

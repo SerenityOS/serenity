@@ -102,6 +102,7 @@ public:
     virtual bool is_bound_function() const { return false; }
     virtual bool is_native_property() const { return false; }
     virtual bool is_proxy_object() const { return false; }
+    virtual bool is_regexp_object() const { return false; }
     virtual bool is_string_object() const { return false; }
     virtual bool is_symbol_object() const { return false; }
 

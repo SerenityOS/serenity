@@ -26,8 +26,6 @@
  */
 
 #include <AK/LogStream.h>
-#include <AK/String.h>
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
@@ -36,13 +34,11 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/DateConstructor.h>
 #include <LibJS/Runtime/DatePrototype.h>
-#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberConstructor.h>
@@ -53,6 +49,8 @@
 #include <LibJS/Runtime/ProxyConstructor.h>
 #include <LibJS/Runtime/ProxyPrototype.h>
 #include <LibJS/Runtime/ReflectObject.h>
+#include <LibJS/Runtime/RegExpConstructor.h>
+#include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringPrototype.h>
@@ -106,6 +104,7 @@ void GlobalObject::initialize()
     add_constructor("Number", m_number_constructor, *m_number_prototype);
     add_constructor("Object", m_object_constructor, *m_object_prototype);
     add_constructor("Proxy", m_proxy_constructor, *m_proxy_prototype);
+    add_constructor("RegExp", m_regexp_constructor, *m_regexp_prototype);
     add_constructor("String", m_string_constructor, *m_string_prototype);
     add_constructor("Symbol", m_symbol_constructor, *m_symbol_prototype);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
+ * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,56 +24,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "Token.h"
-
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/RegExpConstructor.h>
+#include <LibJS/Runtime/RegExpObject.h>
 
 namespace JS {
 
-class Lexer {
-public:
-    explicit Lexer(StringView source);
+RegExpConstructor::RegExpConstructor()
+    : NativeFunction("RegExp", *interpreter().global_object().function_prototype())
+{
+    define_property("prototype", interpreter().global_object().regexp_prototype(), 0);
+    define_property("length", Value(2), Attribute::Configurable);
+}
 
-    Token next();
+RegExpConstructor::~RegExpConstructor()
+{
+}
 
-private:
-    void consume();
-    void consume_exponent();
-    bool is_eof() const;
-    bool is_identifier_start() const;
-    bool is_identifier_middle() const;
-    bool is_line_comment_start() const;
-    bool is_block_comment_start() const;
-    bool is_block_comment_end() const;
-    bool is_numeric_literal_start() const;
-    bool match(char, char) const;
-    bool match(char, char, char) const;
-    bool match(char, char, char, char) const;
-    bool slash_means_division() const;
+Value RegExpConstructor::call(Interpreter& interpreter)
+{
+    return construct(interpreter);
+}
 
-    StringView m_source;
-    size_t m_position { 0 };
-    Token m_current_token;
-    int m_current_char { 0 };
-    size_t m_line_number { 1 };
-    size_t m_line_column { 0 };
-
-    bool m_regex_is_in_character_class { false };
-
-    struct TemplateState {
-        bool in_expr;
-        u8 open_bracket_count;
-    };
-    Vector<TemplateState> m_template_states;
-
-    static HashMap<String, TokenType> s_keywords;
-    static HashMap<String, TokenType> s_three_char_tokens;
-    static HashMap<String, TokenType> s_two_char_tokens;
-    static HashMap<char, TokenType> s_single_char_tokens;
-};
+Value RegExpConstructor::construct(Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return RegExpObject::create(interpreter.global_object(), "(?:)", "");
+    auto contents = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto flags = interpreter.argument_count() > 1 ? interpreter.argument(1).to_string(interpreter) : "";
+    if (interpreter.exception())
+        return {};
+    return RegExpObject::create(interpreter.global_object(), contents, flags);
+}
 
 }

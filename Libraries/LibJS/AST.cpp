@@ -39,6 +39,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Reference.h>
+#include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
@@ -1427,6 +1428,17 @@ Value BooleanLiteral::execute(Interpreter&) const
 Value NullLiteral::execute(Interpreter&) const
 {
     return js_null();
+}
+
+void RegExpLiteral::dump(int indent) const
+{
+    print_indent(indent);
+    printf("%s (/%s/%s)\n", class_name(), content().characters(), flags().characters());
+}
+
+Value RegExpLiteral::execute(Interpreter& interpreter) const
+{
+    return RegExpObject::create(interpreter.global_object(), content(), flags());
 }
 
 void ArrayExpression::dump(int indent) const

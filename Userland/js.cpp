@@ -40,6 +40,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
@@ -224,6 +225,12 @@ static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
         printf(": %s", error.message().characters());
 }
 
+static void print_regexp(const JS::Object& object, HashTable<JS::Object*>&)
+{
+    auto& regexp = static_cast<const JS::RegExpObject&>(object);
+    printf("\033[34;1m/%s/%s\033[0m", regexp.content().characters(), regexp.flags().characters());
+}
+
 void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
     if (value.is_empty()) {
@@ -252,6 +259,8 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_date(object, seen_objects);
         if (object.is_error())
             return print_error(object, seen_objects);
+        if (object.is_regexp_object())
+            return print_regexp(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
@@ -618,6 +627,7 @@ int main(int argc, char** argv)
                 case JS::TokenType::TemplateLiteralEnd:
                 case JS::TokenType::TemplateLiteralString:
                 case JS::TokenType::RegexLiteral:
+                case JS::TokenType::RegexFlags:
                 case JS::TokenType::UnterminatedStringLiteral:
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
                     break;

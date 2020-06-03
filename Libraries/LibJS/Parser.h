@@ -70,6 +70,7 @@ public:
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, Vector<TokenType> forbidden = {});
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
+    NonnullRefPtr<RegExpLiteral> parse_regexp_literal();
     NonnullRefPtr<ObjectExpression> parse_object_expression();
     NonnullRefPtr<ArrayExpression> parse_array_expression();
     NonnullRefPtr<StringLiteral> parse_string_literal(Token token);

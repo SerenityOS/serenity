@@ -464,6 +464,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return parse_function_node<FunctionExpression>();
     case TokenType::BracketOpen:
         return parse_array_expression();
+    case TokenType::RegexLiteral:
+        return parse_regexp_literal();
     case TokenType::TemplateLiteralStart:
         return parse_template_literal(false);
     case TokenType::New:
@@ -473,6 +475,13 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         consume();
         return create_ast_node<ErrorExpression>();
     }
+}
+
+NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
+{
+    auto content = consume().value();
+    auto flags = match(TokenType::RegexFlags) ? consume().value() : "";
+    return create_ast_node<RegExpLiteral>(content.substring_view(1, content.length() - 2), flags);
 }
 
 NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
@@ -1449,6 +1458,7 @@ bool Parser::match_expression() const
         || type == TokenType::ParenOpen
         || type == TokenType::Function
         || type == TokenType::This
+        || type == TokenType::RegexLiteral
         || match_unary_prefixed_expression();
 }
 
