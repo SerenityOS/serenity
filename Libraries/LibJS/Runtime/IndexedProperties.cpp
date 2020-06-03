@@ -47,7 +47,7 @@ Optional<ValueAndAttributes> SimpleIndexedPropertyStorage::get(u32 index) const
     return ValueAndAttributes { m_packed_elements[index], default_attributes };
 }
 
-void SimpleIndexedPropertyStorage::put(u32 index, Value value, u8 attributes)
+void SimpleIndexedPropertyStorage::put(u32 index, Value value, PropertyAttributes attributes)
 {
     ASSERT(attributes == default_attributes);
     ASSERT(index < SPARSE_ARRAY_THRESHOLD);
@@ -66,7 +66,7 @@ void SimpleIndexedPropertyStorage::remove(u32 index)
         m_packed_elements[index] = {};
 }
 
-void SimpleIndexedPropertyStorage::insert(u32 index, Value value, u8 attributes)
+void SimpleIndexedPropertyStorage::insert(u32 index, Value value, PropertyAttributes attributes)
 {
     ASSERT(attributes == default_attributes);
     ASSERT(index < SPARSE_ARRAY_THRESHOLD);
@@ -122,7 +122,7 @@ Optional<ValueAndAttributes> GenericIndexedPropertyStorage::get(u32 index) const
     return m_sparse_elements.get(index);
 }
 
-void GenericIndexedPropertyStorage::put(u32 index, Value value, u8 attributes)
+void GenericIndexedPropertyStorage::put(u32 index, Value value, PropertyAttributes attributes)
 {
     if (index >= m_array_size)
         m_array_size = index + 1;
@@ -151,7 +151,7 @@ void GenericIndexedPropertyStorage::remove(u32 index)
     }
 }
 
-void GenericIndexedPropertyStorage::insert(u32 index, Value value, u8 attributes)
+void GenericIndexedPropertyStorage::insert(u32 index, Value value, PropertyAttributes attributes)
 {
     if (index >= m_array_size) {
         put(index, value, attributes);
@@ -281,7 +281,7 @@ Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 ind
     return result;
 }
 
-void IndexedProperties::put(Object* this_object, u32 index, Value value, u8 attributes, bool evaluate_accessors)
+void IndexedProperties::put(Object* this_object, u32 index, Value value, PropertyAttributes attributes, bool evaluate_accessors)
 {
     if (m_storage->is_simple_storage() && (index >= SPARSE_ARRAY_THRESHOLD || attributes != default_attributes))
         switch_to_generic_storage();
@@ -304,13 +304,13 @@ bool IndexedProperties::remove(u32 index)
     auto result = m_storage->get(index);
     if (!result.has_value())
         return true;
-    if (!(result.value().attributes & Attribute::Configurable))
+    if (!result.value().attributes.is_configurable())
         return false;
     m_storage->remove(index);
     return true;
 }
 
-void IndexedProperties::insert(u32 index, Value value, u8 attributes)
+void IndexedProperties::insert(u32 index, Value value, PropertyAttributes attributes)
 {
     if (m_storage->is_simple_storage() && (index >= SPARSE_ARRAY_THRESHOLD || attributes != default_attributes || array_like_size() == SPARSE_ARRAY_THRESHOLD))
         switch_to_generic_storage();
