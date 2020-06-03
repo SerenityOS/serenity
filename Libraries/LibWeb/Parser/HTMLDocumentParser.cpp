@@ -450,6 +450,7 @@ void HTMLDocumentParser::flush_character_insertions()
     if (m_character_insertion_builder.is_empty())
         return;
     m_character_insertion_node->set_data(m_character_insertion_builder.to_string());
+    m_character_insertion_node->parent()->children_changed();
     m_character_insertion_builder.clear();
 }
 
@@ -1422,13 +1423,6 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
             }
         }
         return;
-    }
-
-    // FIXME: This is a bit hackish, we can simplify this once we don't need to support
-    //        the old parser anymore, since then we don't need to maintain its children_changed() semantics.
-    if (token.is_end_tag() && token.tag_name() == "style") {
-        current_node().children_changed();
-        // NOTE: We don't return here, keep going.
     }
 
     if (token.is_end_tag()) {
