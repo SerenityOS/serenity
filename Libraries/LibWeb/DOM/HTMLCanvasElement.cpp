@@ -48,7 +48,7 @@ HTMLCanvasElement::~HTMLCanvasElement()
 int HTMLCanvasElement::requested_width() const
 {
     bool ok = false;
-    unsigned width = attribute("width").to_int(ok);
+    unsigned width = attribute(HTML::AttributeNames::width).to_int(ok);
     if (ok)
         return width;
 
@@ -58,7 +58,7 @@ int HTMLCanvasElement::requested_width() const
 int HTMLCanvasElement::requested_height() const
 {
     bool ok = false;
-    unsigned height = attribute("height").to_int(ok);
+    unsigned height = attribute(HTML::AttributeNames::height).to_int(ok);
     if (ok)
         return height;
 

@@ -29,6 +29,7 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <LibWeb/DOM/Attribute.h>
+#include <LibWeb/DOM/AttributeNames.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/Layout/LayoutNode.h>
 
@@ -68,7 +69,7 @@ public:
     LayoutNodeWithStyle* layout_node() { return static_cast<LayoutNodeWithStyle*>(Node::layout_node()); }
     const LayoutNodeWithStyle* layout_node() const { return static_cast<const LayoutNodeWithStyle*>(Node::layout_node()); }
 
-    String name() const { return attribute("name"); }
+    String name() const { return attribute(HTML::AttributeNames::name); }
 
     const StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
     NonnullRefPtr<StyleProperties> computed_style();
