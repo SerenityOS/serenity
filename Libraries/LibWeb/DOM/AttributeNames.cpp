@@ -41,18 +41,12 @@ void initialize()
         return;
 
 #define __ENUMERATE_HTML_ATTRIBUTE(name) \
-    name = #name;                        \
-    if (name.ends_with("_"))             \
-        name = name.view().substring_view(0, name.length() - 1);
+    name = #name;
     ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-    id = "id";
+    // NOTE: Special case for the class attribute since it's a C++ keyword.
     class_ = "class";
-    type = "type";
-    href = "href";
-    style = "style";
-    name = "name";
 
     s_initialized = true;
 }
