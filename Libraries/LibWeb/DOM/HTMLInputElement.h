@@ -37,9 +37,9 @@ public:
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
-    String type() const { return attribute("type"); }
-    String value() const { return attribute("value"); }
-    String name() const { return attribute("name"); }
+    String type() const { return attribute(HTML::AttributeNames::type); }
+    String value() const { return attribute(HTML::AttributeNames::value); }
+    String name() const { return attribute(HTML::AttributeNames::name); }
 };
 
 template<>

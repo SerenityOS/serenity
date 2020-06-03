@@ -81,10 +81,10 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         text_box.set_text(value());
         text_box.on_change = [this] {
             auto& widget = to<LayoutWidget>(layout_node())->widget();
-            const_cast<HTMLInputElement*>(this)->set_attribute("value", static_cast<const GUI::TextBox&>(widget).text());
+            const_cast<HTMLInputElement*>(this)->set_attribute(HTML::AttributeNames::value, static_cast<const GUI::TextBox&>(widget).text());
         };
         int text_width = Gfx::Font::default_font().width(value());
-        auto size_value = attribute("size");
+        auto size_value = attribute(HTML::AttributeNames::size);
         if (!size_value.is_null()) {
             bool ok;
             auto size = size_value.to_int(ok);

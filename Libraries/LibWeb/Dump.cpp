@@ -93,7 +93,7 @@ void dump_tree(const LayoutNode& layout_node)
 
     String identifier = "";
     if (layout_node.node() && is<Element>(*layout_node.node())) {
-        auto id = to<Element>(*layout_node.node()).attribute("id");
+        auto id = to<Element>(*layout_node.node()).attribute(HTML::AttributeNames::id);
         if (!id.is_empty()) {
             StringBuilder builder;
             builder.append('#');

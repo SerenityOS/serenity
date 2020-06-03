@@ -57,7 +57,7 @@ void HTMLScriptElement::children_changed()
 {
     HTMLElement::children_changed();
 
-    if (has_attribute("src"))
+    if (has_attribute(HTML::AttributeNames::src))
         return;
 
     StringBuilder builder;
@@ -82,7 +82,7 @@ void HTMLScriptElement::inserted_into(Node& new_parent)
 {
     HTMLElement::inserted_into(new_parent);
 
-    auto src = attribute("src");
+    auto src = attribute(HTML::AttributeNames::src);
     if (src.is_null())
         return;
 
@@ -133,12 +133,12 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     RefPtr<Document> parser_document = m_parser_document.ptr();
     m_parser_document = nullptr;
 
-    if (parser_document && !has_attribute("async")) {
+    if (parser_document && !has_attribute(HTML::AttributeNames::async)) {
         m_non_blocking = true;
     }
 
     auto source_text = child_text_content();
-    if (!has_attribute("src") && source_text.is_empty())
+    if (!has_attribute(HTML::AttributeNames::src) && source_text.is_empty())
         return;
 
     if (!is_connected())
@@ -173,8 +173,8 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 
     // FIXME: Check fetch options
 
-    if (has_attribute("src")) {
-        auto src = attribute("src");
+    if (has_attribute(HTML::AttributeNames::src)) {
+        auto src = attribute(HTML::AttributeNames::src);
         if (src.is_empty()) {
             // FIXME: Fire an "error" event at the element and return
             ASSERT_NOT_REACHED();
@@ -205,11 +205,11 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     }
 
     // FIXME: Check classic vs. module
-    if (has_attribute("src") && has_attribute("defer") && m_parser_inserted && !has_attribute("async")) {
+    if (has_attribute(HTML::AttributeNames::src) && has_attribute(HTML::AttributeNames::defer) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async)) {
         document().add_script_to_execute_when_parsing_has_finished({}, *this);
     }
 
-    else if (has_attribute("src") && m_parser_inserted && !has_attribute("async")) {
+    else if (has_attribute(HTML::AttributeNames::src) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async)) {
 
         document().set_pending_parsing_blocking_script({}, this);
         when_the_script_is_ready([this] {
@@ -217,11 +217,11 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
         });
     }
 
-    else if (has_attribute("src") && !has_attribute("async") && !m_non_blocking) {
+    else if (has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking) {
         ASSERT_NOT_REACHED();
     }
 
-    else if (has_attribute("src")) {
+    else if (has_attribute(HTML::AttributeNames::src)) {
         m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
     }
 

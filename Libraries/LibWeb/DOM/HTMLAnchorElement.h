@@ -35,8 +35,8 @@ public:
     HTMLAnchorElement(Document&, const FlyString& tag_name);
     virtual ~HTMLAnchorElement() override;
 
-    String href() const { return attribute("href"); }
-    String target() const { return attribute("target"); }
+    String href() const { return attribute(HTML::AttributeNames::href); }
+    String target() const { return attribute(HTML::AttributeNames::target); }
 };
 
 template<>

@@ -30,22 +30,30 @@ namespace Web {
 namespace HTML {
 namespace AttributeNames {
 
-FlyString id;
-FlyString class_;
-FlyString type;
-FlyString href;
-FlyString style;
+#define __ENUMERATE_HTML_ATTRIBUTE(name) FlyString name;
+ENUMERATE_HTML_ATTRIBUTES
+#undef __ENUMERATE_HTML_ATTRIBUTE
 
 void initialize()
 {
     static bool s_initialized = false;
     if (s_initialized)
         return;
+
+#define __ENUMERATE_HTML_ATTRIBUTE(name) \
+    name = #name;                        \
+    if (name.ends_with("_"))             \
+        name = name.view().substring_view(0, name.length() - 1);
+    ENUMERATE_HTML_ATTRIBUTES
+#undef __ENUMERATE_HTML_ATTRIBUTE
+
     id = "id";
     class_ = "class";
     type = "type";
     href = "href";
     style = "style";
+    name = "name";
+
     s_initialized = true;
 }
 

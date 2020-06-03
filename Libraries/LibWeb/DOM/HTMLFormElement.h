@@ -36,8 +36,8 @@ public:
     HTMLFormElement(Document&, const FlyString& tag_name);
     virtual ~HTMLFormElement() override;
 
-    String action() const { return attribute("action"); }
-    String method() const { return attribute("method"); }
+    String action() const { return attribute(HTML::AttributeNames::action); }
+    String method() const { return attribute(HTML::AttributeNames::method); }
 
     void submit(RefPtr<HTMLInputElement> submitter);
 };

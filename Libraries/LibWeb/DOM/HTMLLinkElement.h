@@ -40,9 +40,9 @@ public:
 
     virtual void inserted_into(Node&) override;
 
-    String rel() const { return attribute("rel"); }
-    String type() const { return attribute("type"); }
-    String href() const { return attribute("href"); }
+    String rel() const { return attribute(HTML::AttributeNames::rel); }
+    String type() const { return attribute(HTML::AttributeNames::type); }
+    String href() const { return attribute(HTML::AttributeNames::href); }
 
 private:
     // ^ResourceClient
