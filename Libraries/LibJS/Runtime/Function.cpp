@@ -57,7 +57,8 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
         switch (bound_this_value.type()) {
         case Value::Type::Undefined:
         case Value::Type::Null:
-            // FIXME: Null or undefined should be passed through in strict mode.
+            if (interpreter().in_strict_mode())
+                return bound_this_value;
             return &interpreter().global_object();
         default:
             return bound_this_value.to_object(interpreter());
