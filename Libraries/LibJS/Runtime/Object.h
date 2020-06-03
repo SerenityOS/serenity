@@ -68,14 +68,14 @@ public:
     bool put(PropertyName, Value);
 
     Value get_own_property(const Object& this_object, PropertyName) const;
-    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, u8 attributes = default_attributes) const;
+    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, PropertyAttributes attributes = default_attributes) const;
     Value get_own_property_descriptor(PropertyName) const;
 
     bool define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions = true);
-    bool define_property(PropertyName, Value value, u8 attributes = default_attributes, bool throw_exceptions = true);
+    bool define_property(PropertyName, Value value, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
 
-    bool define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0, u8 attribute = default_attributes);
-    bool define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attribute = default_attributes);
+    bool define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0, PropertyAttributes attributes = default_attributes);
+    bool define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, PropertyAttributes attributes = default_attributes);
 
     Value delete_property(PropertyName);
 
@@ -116,8 +116,8 @@ public:
 private:
     virtual Value get_by_index(u32 property_index) const;
     virtual bool put_by_index(u32 property_index, Value);
-    bool put_own_property(Object& this_object, const FlyString& property_name, Value, u8 attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
-    bool put_own_property_by_index(Object& this_object, u32 property_index, Value, u8 attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
+    bool put_own_property(Object& this_object, const FlyString& property_name, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
+    bool put_own_property_by_index(Object& this_object, u32 property_index, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
 
     Value call_native_property_getter(Object* this_object, Value property) const;
     void call_native_property_setter(Object* this_object, Value property, Value) const;
