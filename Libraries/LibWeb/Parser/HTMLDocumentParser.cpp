@@ -78,6 +78,8 @@ void HTMLDocumentParser::run(const URL& url)
         }
     }
 
+    flush_character_insertions();
+
     // "The end"
 
     auto scripts_to_execute_when_parsing_has_finished = m_document->take_scripts_to_execute_when_parsing_has_finished({});
@@ -431,24 +433,41 @@ void HTMLDocumentParser::parse_generic_raw_text_element(HTMLToken& token)
     m_insertion_mode = InsertionMode::Text;
 }
 
-void HTMLDocumentParser::insert_character(u32 data)
+Text* HTMLDocumentParser::find_character_insertion_node()
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     if (adjusted_insertion_location->is_document())
-        return;
-    if (adjusted_insertion_location->last_child() && adjusted_insertion_location->last_child()->is_text()) {
-        auto& existing_text_node = to<Text>(*adjusted_insertion_location->last_child());
-        StringBuilder builder;
-        builder.append(existing_text_node.data());
-        builder.append(Utf32View { &data, 1 });
-        existing_text_node.set_data(builder.to_string());
-        return;
-    }
+        return nullptr;
+    if (adjusted_insertion_location->last_child() && adjusted_insertion_location->last_child()->is_text())
+        return to<Text>(adjusted_insertion_location->last_child());
     auto new_text_node = adopt(*new Text(document(), ""));
     adjusted_insertion_location->append_child(new_text_node);
-    StringBuilder builder;
-    builder.append(Utf32View { &data, 1 });
-    new_text_node->set_data(builder.to_string());
+    return new_text_node;
+}
+
+void HTMLDocumentParser::flush_character_insertions()
+{
+    if (m_character_insertion_builder.is_empty())
+        return;
+    m_character_insertion_node->set_data(m_character_insertion_builder.to_string());
+    m_character_insertion_builder.clear();
+}
+
+void HTMLDocumentParser::insert_character(u32 data)
+{
+    auto node = find_character_insertion_node();
+    if (node == m_character_insertion_node) {
+        m_character_insertion_builder.append(Utf32View { &data, 1 });
+        return;
+    }
+    if (!m_character_insertion_node) {
+        m_character_insertion_node = node;
+        m_character_insertion_builder.append(Utf32View { &data, 1 });
+        return;
+    }
+    flush_character_insertions();
+    m_character_insertion_node = node;
+    m_character_insertion_builder.append(Utf32View { &data, 1 });
 }
 
 void HTMLDocumentParser::handle_after_head(HTMLToken& token)
@@ -836,8 +855,8 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == "body") {
         PARSE_ERROR();
         if (m_stack_of_open_elements.elements().size() == 1
-                || node_before_current_node().tag_name() != "body"
-                || m_stack_of_open_elements.contains("template")) {
+            || node_before_current_node().tag_name() != "body"
+            || m_stack_of_open_elements.contains("template")) {
             return;
         }
         m_frameset_ok = false;

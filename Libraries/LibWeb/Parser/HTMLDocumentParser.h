@@ -105,6 +105,8 @@ private:
     bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
     NonnullRefPtr<Element> create_element_for(HTMLToken&);
     RefPtr<Node> find_appropriate_place_for_inserting_node();
+    Text* find_character_insertion_node();
+    void flush_character_insertions();
     RefPtr<Element> insert_html_element(HTMLToken&);
     Element& current_node();
     Element& node_before_current_node();
@@ -153,6 +155,9 @@ private:
     RefPtr<HTMLFormElement> m_form_element;
 
     Vector<HTMLToken> m_pending_table_character_tokens;
+
+    RefPtr<Text> m_character_insertion_node;
+    StringBuilder m_character_insertion_builder;
 };
 
 }
