@@ -539,7 +539,7 @@ Value in(Interpreter& interpreter, Value lhs, Value rhs)
     auto lhs_string = lhs.to_string(interpreter);
     if (interpreter.exception())
         return {};
-    return Value(!rhs.as_object().get(lhs_string).is_empty());
+    return Value(rhs.as_object().has_property(lhs_string));
 }
 
 Value instance_of(Interpreter&, Value lhs, Value rhs)
