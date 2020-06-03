@@ -719,7 +719,7 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
     if (!match(TokenType::TemplateLiteralString))
         append_empty_string();
 
-    while (!match(TokenType::TemplateLiteralEnd) && !match(TokenType::UnterminatedTemplateLiteral)) {
+    while (!done() && !match(TokenType::TemplateLiteralEnd) && !match(TokenType::UnterminatedTemplateLiteral)) {
         if (match(TokenType::TemplateLiteralString)) {
             auto token = consume();
             expressions.append(parse_string_literal(token));
@@ -741,6 +741,9 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
 
             if (!match(TokenType::TemplateLiteralString))
                 append_empty_string();
+        } else {
+            expected("Template literal string or expression");
+            break;
         }
     }
 
