@@ -35,7 +35,7 @@ public:
     HTMLElement(Document&, const FlyString& tag_name);
     virtual ~HTMLElement() override;
 
-    String title() const { return attribute("title"); }
+    String title() const { return attribute(HTML::AttributeNames::title); }
 
 private:
     virtual bool is_html_element() const final { return true; }

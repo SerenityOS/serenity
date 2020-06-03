@@ -316,7 +316,7 @@ Vector<const Element*> Document::get_elements_by_name(const String& name) const
 {
     Vector<const Element*> elements;
     for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (element.attribute("name") == name)
+        if (element.attribute(HTML::AttributeNames::name) == name)
             elements.append(&element);
         return IterationDecision::Continue;
     });
