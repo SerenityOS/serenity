@@ -39,6 +39,19 @@
 
 namespace JS {
 
+struct PropertyDescriptor {
+    PropertyAttributes attributes;
+    Value value;
+    Function* getter;
+    Function* setter;
+
+    static PropertyDescriptor from_object(Interpreter&, const Object&);
+
+    bool is_accessor_descriptor() const { return getter || setter; }
+    bool is_data_descriptor() const { return !(value.is_empty() && !attributes.has_writable()); }
+    bool is_generic_descriptor() const { return !is_accessor_descriptor() && !is_data_descriptor(); }
+};
+
 class Object : public Cell {
 public:
     static Object* create_empty(Interpreter&, GlobalObject&);
@@ -69,7 +82,8 @@ public:
 
     Value get_own_property(const Object& this_object, PropertyName) const;
     Value get_own_properties(const Object& this_object, GetOwnPropertyMode, PropertyAttributes attributes = default_attributes) const;
-    Value get_own_property_descriptor(PropertyName) const;
+    Optional<PropertyDescriptor> get_own_property_descriptor(PropertyName) const;
+    Value get_own_property_descriptor_object(PropertyName) const;
 
     bool define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions = true);
     bool define_property(PropertyName, Value value, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
