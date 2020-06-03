@@ -113,6 +113,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(QuestionMark)                \
     __ENUMERATE_JS_TOKEN(QuestionMarkPeriod)          \
     __ENUMERATE_JS_TOKEN(RegexLiteral)                \
+    __ENUMERATE_JS_TOKEN(RegexFlags)                  \
     __ENUMERATE_JS_TOKEN(Return)                      \
     __ENUMERATE_JS_TOKEN(Semicolon)                   \
     __ENUMERATE_JS_TOKEN(ShiftLeft)                   \
@@ -138,6 +139,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Typeof)                      \
     __ENUMERATE_JS_TOKEN(UnsignedShiftRight)          \
     __ENUMERATE_JS_TOKEN(UnsignedShiftRightEquals)    \
+    __ENUMERATE_JS_TOKEN(UnterminatedRegexLiteral)    \
     __ENUMERATE_JS_TOKEN(UnterminatedStringLiteral)   \
     __ENUMERATE_JS_TOKEN(UnterminatedTemplateLiteral) \
     __ENUMERATE_JS_TOKEN(Var)                         \

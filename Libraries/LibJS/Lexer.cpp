@@ -244,6 +244,22 @@ bool Lexer::is_numeric_literal_start() const
     return isdigit(m_current_char) || (m_current_char == '.' && m_position < m_source.length() && isdigit(m_source[m_position]));
 }
 
+bool Lexer::slash_means_division() const
+{
+    auto type = m_current_token.type();
+    return type == TokenType::BoolLiteral
+           || type == TokenType::BracketClose
+           || type == TokenType::CurlyClose
+           || type == TokenType::Identifier
+           || type == TokenType::NullLiteral
+           || type == TokenType::NumericLiteral
+           || type == TokenType::ParenClose
+           || type == TokenType::RegexLiteral
+           || type == TokenType::StringLiteral
+           || type == TokenType::TemplateLiteralEnd
+           || type == TokenType::This;
+}
+
 Token Lexer::next()
 {
     size_t trivia_start = m_position;
@@ -277,7 +293,11 @@ Token Lexer::next()
     size_t value_start = m_position;
     auto token_type = TokenType::Invalid;
 
-    if (m_current_char == '`') {
+    if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && isalpha(m_current_char)) {
+        token_type = TokenType::RegexFlags;
+        while (!is_eof() && isalpha(m_current_char))
+            consume();
+    } else if (m_current_char == '`') {
         consume();
 
         if (!in_template) {
@@ -452,6 +472,28 @@ Token Lexer::next()
         if (!found_four_char_token && !found_three_char_token && !found_two_char_token && !found_one_char_token) {
             consume();
             token_type = TokenType::Invalid;
+        } else if (token_type == TokenType::Slash && !slash_means_division()) {
+            token_type = TokenType::RegexLiteral;
+
+            while (!is_eof()) {
+                if (m_current_char == '[') {
+                    m_regex_is_in_character_class = true;
+                } else if (m_current_char == ']') {
+                    m_regex_is_in_character_class = false;
+                } else if (!m_regex_is_in_character_class && m_current_char == '/') {
+                    break;
+                }
+
+                if (match('\\', '/') || match('\\', '[') || (m_regex_is_in_character_class && match('\\', ']')))
+                    consume();
+                consume();
+            }
+
+            if (is_eof()) {
+                token_type = TokenType::UnterminatedRegexLiteral;
+            } else {
+                consume();
+            }
         }
     }
 

@@ -47,6 +47,9 @@ set(SOURCES
     Runtime/ProxyPrototype.cpp
     Runtime/Reference.cpp
     Runtime/ReflectObject.cpp
+    Runtime/RegExpConstructor.cpp
+    Runtime/RegExpObject.cpp
+    Runtime/RegExpPrototype.cpp
     Runtime/ScriptFunction.cpp
     Runtime/Shape.cpp
     Runtime/StringConstructor.cpp
