@@ -4,11 +4,18 @@ try {
     assert(Object.setPrototypeOf.length === 2);
 
     assertThrowsError(() => {
-        Object.setPrototypeOf({}, "foo");
+        Object.setPrototypeOf();
     }, {
         error: TypeError,
-        message: "Prototype must be null or object"
+        message: "Object.setPrototypeOf requires at least two arguments",
     });
+
+//     assertThrowsError(() => {
+//         Object.setPrototypeOf({}, "foo");
+//     }, {
+//         error: TypeError,
+//         message: "Prototype must be null or object"
+//     });
 
     o = {};
     p = {};
@@ -19,7 +26,7 @@ try {
         Object.setPrototypeOf(o, {});
     }, {
         error: TypeError,
-        message: "Can't set prototype of non-extensible object"
+        message: "Object's setPrototypeOf method returned false"
     });
     assert(Object.setPrototypeOf(o, p) === o);
 

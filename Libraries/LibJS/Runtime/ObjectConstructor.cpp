@@ -98,7 +98,7 @@ Value ObjectConstructor::get_prototype_of(Interpreter& interpreter)
 Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 {
     if (interpreter.argument_count() < 2)
-        interpreter.throw_exception<TypeError>("Object.setPrototypeOf requires at least two arguments");
+        return interpreter.throw_exception<TypeError>("Object.setPrototypeOf requires at least two arguments");
     auto* object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
@@ -113,7 +113,8 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
         return {};
     }
     if (!object->set_prototype(prototype)) {
-        interpreter.throw_exception<TypeError>("Can't set prototype of non-extensible object");
+        if (!interpreter.exception())
+            interpreter.throw_exception<TypeError>("Object's setPrototypeOf method returned false");
         return {};
     }
     return object;
@@ -133,7 +134,8 @@ Value ObjectConstructor::prevent_extensions(Interpreter& interpreter)
     if (!argument.is_object())
         return argument;
     if (!argument.as_object().prevent_extensions()) {
-        interpreter.throw_exception<TypeError>("Proxy preventExtensions handler returned false");
+        if (!interpreter.exception())
+            interpreter.throw_exception<TypeError>("Proxy preventExtensions handler returned false");
         return {};
     }
     return argument;
@@ -161,7 +163,16 @@ Value ObjectConstructor::define_property_(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     auto& descriptor = interpreter.argument(2).as_object();
-    object.define_property(property_key, descriptor);
+    if (!object.define_property(property_key, descriptor)) {
+        if (!interpreter.exception()) {
+            if (object.is_proxy_object()) {
+                interpreter.throw_exception<TypeError>("Proxy handler's defineProperty method returned false");
+            } else {
+                interpreter.throw_exception<TypeError>("Unable to define property on non-extensible object");
+            }
+        }
+        return {};
+    }
     return &object;
 }
 
@@ -179,7 +190,7 @@ Value ObjectConstructor::keys(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::Key, Attribute::Enumerable);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::Key, true);
 }
 
 Value ObjectConstructor::values(Interpreter& interpreter)
@@ -191,7 +202,7 @@ Value ObjectConstructor::values(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::Value, Attribute::Enumerable);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::Value, true);
 }
 
 Value ObjectConstructor::entries(Interpreter& interpreter)
@@ -203,7 +214,7 @@ Value ObjectConstructor::entries(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::KeyAndValue, Attribute::Enumerable);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::KeyAndValue, true);
 }
 
 }

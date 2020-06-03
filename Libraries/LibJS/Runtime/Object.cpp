@@ -40,7 +40,7 @@
 
 namespace JS {
 
-PropertyDescriptor PropertyDescriptor::from_object(Interpreter& interpreter, const Object& object)
+PropertyDescriptor PropertyDescriptor::from_dictionary(Interpreter& interpreter, const Object& object)
 {
     PropertyAttributes attributes;
     if (object.has_property("configurable")) {
@@ -146,12 +146,12 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
         auto existing_property = m_indexed_properties.get(nullptr, property_name.as_number(), false);
         if (!existing_property.has_value())
             return {};
-        value_here = existing_property.value().value;
+        value_here = existing_property.value().value.value_or(js_undefined());
     } else {
         auto metadata = shape().lookup(property_name.as_string());
         if (!metadata.has_value())
             return {};
-        value_here = m_storage[metadata.value().offset];
+        value_here = m_storage[metadata.value().offset].value_or(js_undefined());
     }
 
     ASSERT(!value_here.is_empty());
@@ -163,7 +163,7 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
     return value_here;
 }
 
-Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode kind, PropertyAttributes attributes) const
+Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode kind, bool only_enumerable_properties) const
 {
     auto* properties_array = Array::create(interpreter().global_object());
 
@@ -189,16 +189,20 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
 
     size_t property_index = 0;
     for (auto& entry : m_indexed_properties) {
+        auto value_and_attributes = entry.value_and_attributes(const_cast<Object*>(&this_object));
+        if (only_enumerable_properties && !value_and_attributes.attributes.is_enumerable())
+            continue;
+
         if (kind == GetOwnPropertyMode::Key) {
             properties_array->define_property(property_index, js_string(interpreter(), String::number(entry.index())));
         } else if (kind == GetOwnPropertyMode::Value) {
-            properties_array->define_property(property_index, entry.value_and_attributes(const_cast<Object*>(&this_object)).value);
+            properties_array->define_property(property_index, value_and_attributes.value);
             if (interpreter().exception())
                 return {};
         } else {
             auto* entry_array = Array::create(interpreter().global_object());
             entry_array->define_property(0, js_string(interpreter(), String::number(entry.index())));
-            entry_array->define_property(1, entry.value_and_attributes(const_cast<Object*>(&this_object)).value);
+            entry_array->define_property(1, value_and_attributes.value);
             if (interpreter().exception())
                 return {};
             properties_array->define_property(property_index, entry_array);
@@ -208,23 +212,24 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
     }
 
     for (auto& it : this_object.shape().property_table_ordered()) {
-        if (it.value.attributes.bits() & attributes.bits()) {
-            size_t offset = it.value.offset + property_index;
+        if (only_enumerable_properties && !it.value.attributes.is_enumerable())
+            continue;
 
-            if (kind == GetOwnPropertyMode::Key) {
-                properties_array->define_property(offset, js_string(interpreter(), it.key));
-            } else if (kind == GetOwnPropertyMode::Value) {
-                properties_array->define_property(offset, this_object.get(it.key));
-                if (interpreter().exception())
-                    return {};
-            } else {
-                auto* entry_array = Array::create(interpreter().global_object());
-                entry_array->define_property(0, js_string(interpreter(), it.key));
-                entry_array->define_property(1, this_object.get(it.key));
-                if (interpreter().exception())
-                    return {};
-                properties_array->define_property(offset, entry_array);
-            }
+        size_t offset = it.value.offset + property_index;
+
+        if (kind == GetOwnPropertyMode::Key) {
+            properties_array->define_property(offset, js_string(interpreter(), it.key));
+        } else if (kind == GetOwnPropertyMode::Value) {
+            properties_array->define_property(offset, this_object.get(it.key));
+            if (interpreter().exception())
+                return {};
+        } else {
+            auto* entry_array = Array::create(interpreter().global_object());
+            entry_array->define_property(0, js_string(interpreter(), it.key));
+            entry_array->define_property(1, this_object.get(it.key));
+            if (interpreter().exception())
+                return {};
+            properties_array->define_property(offset, entry_array);
         }
     }
 
