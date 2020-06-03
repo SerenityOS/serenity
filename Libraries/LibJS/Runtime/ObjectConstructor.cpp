@@ -147,7 +147,7 @@ Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
     auto property_key = interpreter.argument(1).to_string(interpreter);
     if (interpreter.exception())
         return {};
-    return object->get_own_property_descriptor(property_key);
+    return object->get_own_property_descriptor_object(property_key);
 }
 
 Value ObjectConstructor::define_property_(Interpreter& interpreter)

@@ -40,6 +40,46 @@
 
 namespace JS {
 
+PropertyDescriptor PropertyDescriptor::from_object(Interpreter& interpreter, const Object& object)
+{
+    PropertyAttributes attributes;
+    if (object.has_property("configurable")) {
+        if (interpreter.exception())
+            return {};
+        attributes.set_has_configurable();
+        if (object.get("configurable").value_or(Value(false)).to_boolean())
+            attributes.set_configurable();
+        if (interpreter.exception())
+            return {};
+    }
+    if (object.has_property("enumerable")) {
+        if (interpreter.exception())
+            return {};
+        attributes.set_has_enumerable();
+        if (object.get("enumerable").value_or(Value(false)).to_boolean())
+            attributes.set_enumerable();
+        if (interpreter.exception())
+            return {};
+    }
+    if (object.has_property("writable")) {
+        if (interpreter.exception())
+            return {};
+        attributes.set_has_writable();
+        if (object.get("writable").value_or(Value(false)).to_boolean())
+            attributes.set_writable();
+        if (interpreter.exception())
+            return {};
+    }
+    PropertyDescriptor descriptor { attributes, object.get("value"), nullptr, nullptr };
+    auto getter = object.get("get");
+    if (getter.is_function())
+        descriptor.getter = &getter.as_function();
+    auto setter = object.get("set");
+    if (setter.is_function())
+        descriptor.setter = &setter.as_function();
+    return descriptor;
+}
+
 Object* Object::create_empty(Interpreter&, GlobalObject& global_object)
 {
     return global_object.heap().allocate<Object>(global_object.object_prototype());
@@ -191,7 +231,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
     return properties_array;
 }
 
-Value Object::get_own_property_descriptor(PropertyName property_name) const
+Optional<PropertyDescriptor> Object::get_own_property_descriptor(PropertyName property_name) const
 {
     Value value;
     PropertyAttributes attributes;
@@ -199,38 +239,58 @@ Value Object::get_own_property_descriptor(PropertyName property_name) const
     if (property_name.is_number()) {
         auto existing_value = m_indexed_properties.get(nullptr, property_name.as_number(), false);
         if (!existing_value.has_value())
-            return js_undefined();
+            return {};
         value = existing_value.value().value;
         attributes = existing_value.value().attributes;
         attributes = default_attributes;
     } else {
         auto metadata = shape().lookup(property_name.as_string());
         if (!metadata.has_value())
-            return js_undefined();
+            return {};
         value = m_storage[metadata.value().offset];
         if (interpreter().exception())
             return {};
         attributes = metadata.value().attributes;
     }
 
-    auto* descriptor = Object::create_empty(interpreter(), interpreter().global_object());
-    descriptor->define_property("enumerable", Value(attributes.is_enumerable()));
-    descriptor->define_property("configurable", Value(attributes.is_configurable()));
+    PropertyDescriptor descriptor { attributes, {}, nullptr, nullptr };
     if (value.is_object() && value.as_object().is_native_property()) {
         auto result = call_native_property_getter(const_cast<Object*>(this), value);
-        descriptor->define_property("value", result);
-        descriptor->define_property("writable", Value(attributes.is_writable()));
+        descriptor.value = result.value_or(js_undefined());
     } else if (value.is_accessor()) {
         auto& pair = value.as_accessor();
         if (pair.getter())
-            descriptor->define_property("get", pair.getter());
+            descriptor.getter = pair.getter();
         if (pair.setter())
-            descriptor->define_property("set", pair.setter());
+            descriptor.setter = pair.setter();
     } else {
-        descriptor->define_property("value", value.value_or(js_undefined()));
-        descriptor->define_property("writable", Value(attributes.is_writable()));
+        descriptor.value = value.value_or(js_undefined());
     }
+
     return descriptor;
+}
+
+Value Object::get_own_property_descriptor_object(PropertyName property_name) const
+{
+    auto descriptor_opt = get_own_property_descriptor(property_name);
+    if (!descriptor_opt.has_value())
+        return js_undefined();
+    auto descriptor = descriptor_opt.value();
+
+    auto* descriptor_object = Object::create_empty(interpreter(), interpreter().global_object());
+    descriptor_object->define_property("enumerable", Value(descriptor.attributes.is_enumerable()));
+    descriptor_object->define_property("configurable", Value(descriptor.attributes.is_configurable()));
+    if (descriptor.is_data_descriptor()) {
+        descriptor_object->define_property("value", descriptor.value.value_or(js_undefined()));
+        descriptor_object->define_property("writable", Value(descriptor.attributes.is_writable()));
+    } else if (descriptor.is_accessor_descriptor()) {
+        if (descriptor.getter) {
+            descriptor_object->define_property("get", Value(descriptor.getter));
+        }
+        if (descriptor.setter)
+            descriptor_object->define_property("set", Value(descriptor.setter));
+    }
+    return descriptor_object;
 }
 
 void Object::set_shape(Shape& new_shape)

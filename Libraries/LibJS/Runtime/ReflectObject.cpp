@@ -189,7 +189,7 @@ Value ReflectObject::get_own_property_descriptor(Interpreter& interpreter)
     auto property_key = interpreter.argument(1).to_string(interpreter);
     if (interpreter.exception())
         return {};
-    return target->get_own_property_descriptor(property_key);
+    return target->get_own_property_descriptor_object(property_key);
 }
 
 Value ReflectObject::get_prototype_of(Interpreter& interpreter)
