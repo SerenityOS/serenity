@@ -103,15 +103,17 @@ try {
     assert(Make5() === 5);
     assert(new Make5().valueOf() === 5);
 
-    // FIXME: Uncomment me when strict mode is implemented
-    //     function strictIdentity() {
-    //         return this;
-    //     }
+    // Null or undefined should be passed through as a |this| value in strict mode.
+    (() => {
+      "use strict";
+      function strictIdentity() {
+        return this;
+      }
 
-    //     assert(strictIdentity.bind()() === undefined);
-    //     assert(strictIdentity.bind(null)() === null);
-    //     assert(strictIdentity.bind(undefined)() === undefined);
-    // })();
+      assert(strictIdentity.bind()() === undefined);
+      assert(strictIdentity.bind(null)() === null);
+      assert(strictIdentity.bind(undefined)() === undefined);
+    })();
 
     // Arrow functions can not have their |this| value set.
     assert((() => this).bind("foo")() === globalThis)
