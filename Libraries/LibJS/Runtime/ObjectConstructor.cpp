@@ -98,7 +98,7 @@ Value ObjectConstructor::get_prototype_of(Interpreter& interpreter)
 Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 {
     if (interpreter.argument_count() < 2)
-        return {};
+        interpreter.throw_exception<TypeError>("Object.setPrototypeOf requires at least two arguments");
     auto* object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
