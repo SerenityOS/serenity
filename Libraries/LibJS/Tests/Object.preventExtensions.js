@@ -23,7 +23,13 @@ try {
     o.baz = "baz";
     assert(o.baz === undefined);
 
-    Object.defineProperty(o, "baz", { value: "baz" });
+    assertThrowsError(() => {
+        Object.defineProperty(o, "baz", { value: "baz" });
+    }, {
+        error: TypeError,
+        message: "Unable to define property on non-extensible object",
+    });
+
     assert(o.baz === undefined);
 
     assertThrowsError(() => {

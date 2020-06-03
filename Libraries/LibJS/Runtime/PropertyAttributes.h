@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <AK/Types.h>
+#include <AK/LogStream.h>
+
 namespace JS {
 
 struct Attribute {
