@@ -359,7 +359,7 @@ Value ForInStatement::execute(Interpreter& interpreter) const
         return {};
     auto* object = rhs_result.to_object(interpreter);
     while (object) {
-        auto property_names = object->get_own_properties(*object, Object::GetOwnPropertyMode::Key, Attribute::Enumerable);
+        auto property_names = object->get_own_properties(*object, Object::GetOwnPropertyMode::Key, true);
         for (auto& property_name : property_names.as_object().indexed_properties()) {
             interpreter.set_variable(variable_name, property_name.value_and_attributes(object).value);
             if (interpreter.exception())

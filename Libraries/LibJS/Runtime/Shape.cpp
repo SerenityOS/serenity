@@ -29,11 +29,6 @@
 
 namespace JS {
 
-const LogStream& operator<<(const LogStream& stream, const PropertyAttributes& attributes)
-{
-    return stream << attributes.bits();
-}
-
 Shape* Shape::create_unique_clone() const
 {
     auto* new_shape = heap().allocate<Shape>();

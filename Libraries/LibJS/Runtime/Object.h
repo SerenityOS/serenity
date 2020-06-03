@@ -42,10 +42,10 @@ namespace JS {
 struct PropertyDescriptor {
     PropertyAttributes attributes;
     Value value;
-    Function* getter;
-    Function* setter;
+    Function* getter { nullptr };
+    Function* setter { nullptr };
 
-    static PropertyDescriptor from_object(Interpreter&, const Object&);
+    static PropertyDescriptor from_dictionary(Interpreter&, const Object&);
 
     bool is_accessor_descriptor() const { return getter || setter; }
     bool is_data_descriptor() const { return !(value.is_empty() && !attributes.has_writable()); }
@@ -73,25 +73,25 @@ public:
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
-    Value get(PropertyName) const;
+    virtual Value get(PropertyName) const;
 
-    bool has_property(PropertyName) const;
+    virtual bool has_property(PropertyName) const;
     bool has_own_property(PropertyName) const;
 
-    bool put(PropertyName, Value);
+    virtual bool put(PropertyName, Value);
 
     Value get_own_property(const Object& this_object, PropertyName) const;
-    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, PropertyAttributes attributes = default_attributes) const;
-    Optional<PropertyDescriptor> get_own_property_descriptor(PropertyName) const;
+    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, bool only_enumerable_properties = false) const;
+    virtual Optional<PropertyDescriptor> get_own_property_descriptor(PropertyName) const;
     Value get_own_property_descriptor_object(PropertyName) const;
 
-    bool define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions = true);
+    virtual bool define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions = true);
     bool define_property(PropertyName, Value value, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
 
     bool define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0, PropertyAttributes attributes = default_attributes);
     bool define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, PropertyAttributes attributes = default_attributes);
 
-    Value delete_property(PropertyName);
+    virtual Value delete_property(PropertyName);
 
     virtual bool is_array() const { return false; }
     virtual bool is_boolean() const { return false; }
@@ -101,19 +101,20 @@ public:
     virtual bool is_native_function() const { return false; }
     virtual bool is_bound_function() const { return false; }
     virtual bool is_native_property() const { return false; }
+    virtual bool is_proxy_object() const { return false; }
     virtual bool is_string_object() const { return false; }
     virtual bool is_symbol_object() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_children(Cell::Visitor&) override;
 
-    Object* prototype();
-    const Object* prototype() const;
-    bool set_prototype(Object* prototype);
+    virtual Object* prototype();
+    virtual const Object* prototype() const;
+    virtual bool set_prototype(Object* prototype);
     bool has_prototype(const Object* prototype) const;
 
-    bool is_extensible() const { return m_is_extensible; }
-    bool prevent_extensions();
+    virtual bool is_extensible() const { return m_is_extensible; }
+    virtual bool prevent_extensions();
 
     virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
     virtual Value to_primitive(Value::PreferredType preferred_type = Value::PreferredType::Default) const;
