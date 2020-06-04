@@ -1415,6 +1415,8 @@ _StartOfFunction:
 
             BEGIN_STATE(NumericCharacterReferenceEnd)
             {
+                DONT_CONSUME_NEXT_INPUT_CHARACTER;
+
                 if (m_character_reference_code == 0) {
                     TODO();
                 }
