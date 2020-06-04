@@ -42,7 +42,6 @@ Date::Date(Core::DateTime datetime, u16 milliseconds, Object& prototype)
     , m_datetime(datetime)
     , m_milliseconds(milliseconds)
 {
-    set_prototype(&prototype);
 }
 
 Date::~Date()
