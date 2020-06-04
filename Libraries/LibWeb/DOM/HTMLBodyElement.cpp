@@ -60,6 +60,7 @@ void HTMLBodyElement::apply_presentational_hints(StyleProperties& style) const
 
 void HTMLBodyElement::parse_attribute(const FlyString& name, const String& value)
 {
+    HTMLElement::parse_attribute(name, value);
     if (name.equals_ignoring_case("link")) {
         auto color = Color::from_string(value);
         if (color.has_value())
