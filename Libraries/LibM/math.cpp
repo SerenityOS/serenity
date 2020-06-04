@@ -211,7 +211,7 @@ double log10(double x)
 double log(double x)
 {
     if (x < 0)
-        return __builtin_nan("");
+        return NAN;
     if (x == 0)
         return -__builtin_huge_val();
     double y = 1 + 2 * (x - 1) / (x + 1);
@@ -321,7 +321,7 @@ double atan(double x)
 double asin(double x)
 {
     if (x > 1 || x < -1)
-        return __builtin_nan("");
+        return NAN;
     if (x > 0.5 || x < -0.5)
         return 2 * atan(x / (1 + sqrt(1 - x * x)));
     double squared = x * x;
