@@ -1161,7 +1161,15 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "nobr") {
-        TODO();
+        reconstruct_the_active_formatting_elements();
+        if (m_stack_of_open_elements.has_in_scope("nobr")) {
+            PARSE_ERROR();
+            run_the_adoption_agency_algorithm(token);
+            reconstruct_the_active_formatting_elements();
+        }
+        auto element = insert_html_element(token);
+        m_list_of_active_formatting_elements.add(*element);
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u")) {
