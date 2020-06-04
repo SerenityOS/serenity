@@ -28,7 +28,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
-#include <AK/Result.h>
 #include <AK/StringView.h>
 
 namespace Gfx {
@@ -36,165 +35,231 @@ namespace TTF {
 
 class Font;
 
-enum class IndexToLocFormat {
-    Offset16,
-    Offset32,
-};
-
-class Head {
-private:
-    Head() {}
-    Head(ByteBuffer&& slice)
-        : m_slice(move(slice))
-    {
-        ASSERT(m_slice.size() >= 54);
-    }
-    u16 units_per_em() const;
-    i16 xmin() const;
-    i16 ymin() const;
-    i16 xmax() const;
-    i16 ymax() const;
-    u16 lowest_recommended_ppem() const;
-    Result<IndexToLocFormat, i16> index_to_loc_format() const;
-
-    ByteBuffer m_slice;
-
-    friend Font;
-};
-
-class Hhea {
-private:
-    Hhea() {}
-    Hhea(ByteBuffer&& slice)
-        : m_slice(move(slice))
-    {
-        ASSERT(m_slice.size() >= 36);
-    }
-    u16 number_of_h_metrics() const;
-
-    ByteBuffer m_slice;
-
-    friend Font;
-};
-
-class Maxp {
-private:
-    Maxp() {}
-    Maxp(ByteBuffer&& slice)
-        : m_slice(move(slice))
-    {
-        ASSERT(m_slice.size() >= 6);
-    }
-    u16 num_glyphs() const;
-
-    ByteBuffer m_slice;
-
-    friend Font;
-};
-
-struct GlyphHorizontalMetrics {
-    u16 advance_width;
-    i16 left_side_bearing;
-};
-
-class Hmtx {
-private:
-    Hmtx() {}
-    Hmtx(ByteBuffer&& slice, u32 num_glyphs, u32 number_of_h_metrics)
-        : m_slice(move(slice))
-        , m_num_glyphs(num_glyphs)
-        , m_number_of_h_metrics(number_of_h_metrics)
-    {
-        ASSERT(m_slice.size() >= number_of_h_metrics * 2 + num_glyphs * 2);
-    }
-    GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
-
-    ByteBuffer m_slice;
-    u32 m_num_glyphs;
-    u32 m_number_of_h_metrics;
-
-    friend Font;
-};
-
-enum class CmapSubtablePlatform {
-    Unicode,
-    Macintosh,
-    Windows,
-    Custom,
-};
-
-enum class CmapSubtableFormat {
-    ByteEncoding,
-    HighByte,
-    SegmentToDelta,
-    TrimmedTable,
-    Mixed16And32,
-    TrimmedArray,
-    SegmentedCoverage,
-    ManyToOneRange,
-    UnicodeVariationSequences,
-};
-
-class Cmap;
-
-class CmapSubtable {
-public:
-    CmapSubtablePlatform platform_id() const;
-    u16 encoding_id() const { return m_encoding_id; }
-    CmapSubtableFormat format() const;
-
-private:
-    CmapSubtable(ByteBuffer&& slice, u16 platform_id, u16 encoding_id)
-        : m_slice(move(slice))
-        , m_raw_platform_id(platform_id)
-        , m_encoding_id(encoding_id)
-    {
-    }
-    // Returns 0 if glyph not found. This corresponds to the "missing glyph"
-    u32 glyph_id_for_codepoint(u32 codepoint) const;
-    u32 glyph_id_for_codepoint_table_4(u32 codepoint) const;
-    u32 glyph_id_for_codepoint_table_12(u32 codepoint) const;
-
-    ByteBuffer m_slice;
-    u16 m_raw_platform_id;
-    u16 m_encoding_id;
-
-    friend Cmap;
-};
-
-class Cmap {
-private:
-    Cmap() {}
-    Cmap(ByteBuffer&& slice)
-        : m_slice(move(slice))
-    {
-        ASSERT(m_slice.size() > 4);
-    }
-    u32 num_subtables() const;
-    Optional<CmapSubtable> subtable(u32 index) const;
-    void set_active_index(u32 index) { m_active_index = index; }
-    // Returns 0 if glyph not found. This corresponds to the "missing glyph"
-    u32 glyph_id_for_codepoint(u32 codepoint) const;
-
-    ByteBuffer m_slice;
-    u32 m_active_index { UINT32_MAX };
-
-    friend Font;
-};
-
 class Font {
 public:
     static OwnPtr<Font> load_from_file(const StringView& path, unsigned index);
 
 private:
-    Font(AK::ByteBuffer&& buffer, u32 offset);
+    enum class IndexToLocFormat {
+        Offset16,
+        Offset32,
+    };
 
-    AK::ByteBuffer m_buffer;
+    class Head {
+    public:
+        Head() {}
+        Head(ByteBuffer&& slice)
+            : m_slice(move(slice))
+        {
+            ASSERT(m_slice.size() >= 54);
+        }
+        u16 units_per_em() const;
+        i16 xmin() const;
+        i16 ymin() const;
+        i16 xmax() const;
+        i16 ymax() const;
+        u16 lowest_recommended_ppem() const;
+        IndexToLocFormat index_to_loc_format() const;
+
+    private:
+        ByteBuffer m_slice;
+    };
+
+    class Hhea {
+    public:
+        Hhea() {}
+        Hhea(ByteBuffer&& slice)
+            : m_slice(move(slice))
+        {
+            ASSERT(m_slice.size() >= 36);
+        }
+        u16 number_of_h_metrics() const;
+
+    private:
+        ByteBuffer m_slice;
+    };
+
+    class Maxp {
+    public:
+        Maxp() {}
+        Maxp(ByteBuffer&& slice)
+            : m_slice(move(slice))
+        {
+            ASSERT(m_slice.size() >= 6);
+        }
+        u16 num_glyphs() const;
+
+    private:
+        ByteBuffer m_slice;
+    };
+
+    struct GlyphHorizontalMetrics {
+        u16 advance_width;
+        i16 left_side_bearing;
+    };
+
+    class Hmtx {
+    public:
+        Hmtx() {}
+        Hmtx(ByteBuffer&& slice, u32 num_glyphs, u32 number_of_h_metrics)
+            : m_slice(move(slice))
+            , m_num_glyphs(num_glyphs)
+            , m_number_of_h_metrics(number_of_h_metrics)
+        {
+            ASSERT(m_slice.size() >= number_of_h_metrics * 2 + num_glyphs * 2);
+        }
+        GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
+
+    private:
+        ByteBuffer m_slice;
+        u32 m_num_glyphs;
+        u32 m_number_of_h_metrics;
+    };
+
+    class Cmap {
+    public:
+        class Subtable {
+        public:
+            enum class Platform {
+                Unicode,
+                Macintosh,
+                Windows,
+                Custom,
+            };
+
+            enum class Format {
+                ByteEncoding,
+                HighByte,
+                SegmentToDelta,
+                TrimmedTable,
+                Mixed16And32,
+                TrimmedArray,
+                SegmentedCoverage,
+                ManyToOneRange,
+                UnicodeVariationSequences,
+            };
+
+            Subtable(ByteBuffer&& slice, u16 platform_id, u16 encoding_id)
+                : m_slice(move(slice))
+                , m_raw_platform_id(platform_id)
+                , m_encoding_id(encoding_id)
+            {
+            }
+            // Returns 0 if glyph not found. This corresponds to the "missing glyph"
+            u32 glyph_id_for_codepoint(u32 codepoint) const;
+            Platform platform_id() const;
+            u16 encoding_id() const { return m_encoding_id; }
+            Format format() const;
+
+        private:
+            u32 glyph_id_for_codepoint_table_4(u32 codepoint) const;
+            u32 glyph_id_for_codepoint_table_12(u32 codepoint) const;
+
+            ByteBuffer m_slice;
+            u16 m_raw_platform_id;
+            u16 m_encoding_id;
+        };
+
+        Cmap() {}
+        Cmap(ByteBuffer&& slice)
+            : m_slice(move(slice))
+        {
+            ASSERT(m_slice.size() > 4);
+        }
+
+        u32 num_subtables() const;
+        Optional<Subtable> subtable(u32 index) const;
+        void set_active_index(u32 index) { m_active_index = index; }
+        // Returns 0 if glyph not found. This corresponds to the "missing glyph"
+        u32 glyph_id_for_codepoint(u32 codepoint) const;
+
+    private:
+        ByteBuffer m_slice;
+        u32 m_active_index { UINT32_MAX };
+    };
+
+    class Loca {
+    public:
+        Loca() {}
+        Loca(ByteBuffer&& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
+            : m_slice(move(slice))
+            , m_num_glyphs(num_glyphs)
+            , m_index_to_loc_format(index_to_loc_format)
+        {
+            switch (m_index_to_loc_format) {
+            case IndexToLocFormat::Offset16:
+                ASSERT(m_slice.size() >= m_num_glyphs * 2);
+                break;
+            case IndexToLocFormat::Offset32:
+                ASSERT(m_slice.size() >= m_num_glyphs * 4);
+                break;
+            }
+        }
+        u32 get_glyph_offset(u32 glyph_id) const;
+
+    private:
+        ByteBuffer m_slice;
+        u32 m_num_glyphs;
+        IndexToLocFormat m_index_to_loc_format;
+    };
+
+    class Glyf {
+    public:
+        class Glyph {
+        public:
+            static Glyph simple(ByteBuffer&& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax);
+            static Glyph composite(ByteBuffer&& slice); // FIXME: This is currently just a dummy. Need to add support for composite glyphs.
+
+        private:
+            enum class Type {
+                Simple,
+                Composite,
+            };
+            struct Simple {
+                u16 num_contours;
+                i16 xmin;
+                i16 ymin;
+                i16 xmax;
+                i16 ymax;
+            };
+            struct Composite {
+            };
+
+            Glyph(ByteBuffer&& slice, Type type)
+                : m_type(type)
+                , m_slice(move(slice))
+            {
+            }
+
+            Type m_type;
+            ByteBuffer m_slice;
+            union {
+                Simple simple;
+                Composite composite;
+            } m_meta;
+        };
+
+        Glyf() {}
+        Glyf(ByteBuffer&& slice)
+            : m_slice(move(slice))
+        {
+        }
+        Glyph glyph(u32 offset) const;
+
+    private:
+        ByteBuffer m_slice;
+    };
+
+    Font(ByteBuffer&& buffer, u32 offset);
+
+    ByteBuffer m_buffer;
     Head m_head;
     Hhea m_hhea;
     Maxp m_maxp;
     Hmtx m_hmtx;
     Cmap m_cmap;
+    Loca m_loca;
+    Glyf m_glyf;
 };
 
 }
