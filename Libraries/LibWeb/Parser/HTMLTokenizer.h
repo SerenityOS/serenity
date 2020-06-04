@@ -169,7 +169,6 @@ private:
     String m_decoded_input;
 
     StringView m_input;
-    size_t m_cursor { 0 };
 
     Utf8View m_utf8_view;
     AK::Utf8CodepointIterator m_utf8_iterator;

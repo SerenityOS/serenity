@@ -157,12 +157,12 @@
         return m_queued_tokens.dequeue();         \
     } while (0)
 
-#define EMIT_CHARACTER(codepoint)                                      \
-    do {                                                               \
-        create_new_token(HTMLToken::Type::Character);                  \
+#define EMIT_CHARACTER(codepoint)                                                \
+    do {                                                                         \
+        create_new_token(HTMLToken::Type::Character);                            \
         m_current_token.m_comment_or_character.data.append_codepoint(codepoint); \
-        m_queued_tokens.enqueue(m_current_token);                      \
-        return m_queued_tokens.dequeue();                              \
+        m_queued_tokens.enqueue(m_current_token);                                \
+        return m_queued_tokens.dequeue();                                        \
     } while (0)
 
 #define EMIT_CURRENT_CHARACTER \
@@ -209,14 +209,20 @@ Optional<u32> HTMLTokenizer::next_codepoint()
         return {};
     m_prev_utf8_iterator = m_utf8_iterator;
     ++m_utf8_iterator;
+#ifdef TOKENIZER_TRACE
+    dbg() << "(Tokenizer) Next codepoint: " << (char)*m_prev_utf8_iterator;
+#endif
     return *m_prev_utf8_iterator;
 }
 
 Optional<u32> HTMLTokenizer::peek_codepoint(size_t offset) const
 {
-    if ((m_cursor + offset) >= m_input.length())
+    auto it = m_utf8_iterator;
+    for (size_t i = 0; i < offset && it != m_utf8_view.end(); ++i)
+        ++it;
+    if (it == m_utf8_view.end())
         return {};
-    return m_input[m_cursor + offset];
+    return *it;
 }
 
 Optional<HTMLToken> HTMLTokenizer::next_token()
@@ -1281,10 +1287,15 @@ _StartOfFunction:
 
             BEGIN_STATE(NamedCharacterReference)
             {
-                auto match = HTML::codepoints_from_entity(m_input.substring_view(m_cursor - 1, m_input.length() - m_cursor + 1));
+                size_t byte_offset = m_utf8_view.byte_offset_of(m_prev_utf8_iterator);
+
+                auto match = HTML::codepoints_from_entity(m_decoded_input.substring_view(byte_offset, m_decoded_input.length() - byte_offset - 1));
 
                 if (match.has_value()) {
-                    m_cursor += match.value().entity.length();
+                    for (size_t i = 0; i < match.value().entity.length(); ++i) {
+                        m_prev_utf8_iterator = m_utf8_iterator;
+                        ++m_utf8_iterator;
+                    }
                     for (auto ch : match.value().entity)
                         m_temporary_buffer.append(ch);
 
@@ -2078,7 +2089,10 @@ bool HTMLTokenizer::consume_next_if_match(const StringView& string, CaseSensitiv
         if (codepoint.value() != (u32)string[i])
             return false;
     }
-    m_cursor += string.length();
+    for (size_t i = 0; i < string.length(); ++i) {
+        m_prev_utf8_iterator = m_utf8_iterator;
+        ++m_utf8_iterator;
+    }
     return true;
 }
 
@@ -2093,7 +2107,6 @@ HTMLTokenizer::HTMLTokenizer(const StringView& input, const String& encoding)
     auto* decoder = TextCodec::decoder_for(encoding);
     ASSERT(decoder);
     m_decoded_input = decoder->to_utf8(input);
-    m_input = m_decoded_input;
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.begin();
 }
