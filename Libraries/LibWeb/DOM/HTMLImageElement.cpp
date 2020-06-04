@@ -48,6 +48,7 @@ HTMLImageElement::~HTMLImageElement()
 
 void HTMLImageElement::parse_attribute(const FlyString& name, const String& value)
 {
+    HTMLElement::parse_attribute(name, value);
     if (name.equals_ignoring_case("src"))
         load_image(value);
 }
