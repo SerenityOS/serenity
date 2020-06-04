@@ -32,6 +32,7 @@
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Symbol.h>
+#include <math.h>
 
 // 2 ** 53 - 1
 static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
@@ -251,7 +252,7 @@ inline Value js_null()
 
 inline Value js_nan()
 {
-    return Value(__builtin_nan(""));
+    return Value(NAN);
 }
 
 inline Value js_infinity()
