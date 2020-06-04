@@ -809,7 +809,8 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 {
     if (token.is_character()) {
         if (token.codepoint() == 0) {
-            TODO();
+            PARSE_ERROR();
+            return;
         }
         if (token.is_parser_whitespace()) {
             reconstruct_the_active_formatting_elements();
