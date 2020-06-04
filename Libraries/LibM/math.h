@@ -74,6 +74,8 @@ double fmod(double, double);
 float fmodf(float, float);
 double exp(double);
 float expf(float);
+double exp2(double);
+float exp2f(float);
 double frexp(double, int* exp);
 float frexpf(float, int* exp);
 double log(double);

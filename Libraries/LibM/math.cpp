@@ -279,6 +279,16 @@ float expf(float exponent)
     return (float)exp(exponent);
 }
 
+double exp2(double exponent)
+{
+    return pow(2.0, exponent);
+}
+
+float exp2f(float exponent)
+{
+    return pow(2.0f, exponent);
+}
+
 double cosh(double x)
 {
     double exponentiated = exp(-x);
