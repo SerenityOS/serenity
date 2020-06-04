@@ -110,17 +110,26 @@ SHA256::DigestType SHA256::peek()
     DigestType digest;
     size_t i = m_data_length;
 
+    if (BlockSize == m_data_length) {
+        transform(m_data_buffer);
+        m_bit_length += BlockSize * 8;
+        m_data_length = 0;
+        i = 0;
+    }
+
     if (m_data_length < FinalBlockDataSize) {
         m_data_buffer[i++] = 0x80;
         while (i < FinalBlockDataSize)
             m_data_buffer[i++] = 0x00;
 
     } else {
+        // First, complete a block with some padding.
         m_data_buffer[i++] = 0x80;
         while (i < BlockSize)
             m_data_buffer[i++] = 0x00;
-
         transform(m_data_buffer);
+
+        // Then start another block with BlockSize - 8 bytes of zeros
         __builtin_memset(m_data_buffer, 0, FinalBlockDataSize);
     }
 
@@ -218,17 +227,26 @@ SHA512::DigestType SHA512::peek()
     DigestType digest;
     size_t i = m_data_length;
 
+    if (BlockSize == m_data_length) {
+        transform(m_data_buffer);
+        m_bit_length += BlockSize * 8;
+        m_data_length = 0;
+        i = 0;
+    }
+
     if (m_data_length < FinalBlockDataSize) {
         m_data_buffer[i++] = 0x80;
         while (i < FinalBlockDataSize)
             m_data_buffer[i++] = 0x00;
 
     } else {
+        // First, complete a block with some padding.
         m_data_buffer[i++] = 0x80;
         while (i < BlockSize)
             m_data_buffer[i++] = 0x00;
-
         transform(m_data_buffer);
+
+        // Then start another block with BlockSize - 8 bytes of zeros
         __builtin_memset(m_data_buffer, 0, FinalBlockDataSize);
     }
 
