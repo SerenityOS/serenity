@@ -1284,7 +1284,13 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == "xmp") {
-        TODO();
+        if (m_stack_of_open_elements.has_in_button_scope("p")) {
+            close_a_p_element();
+        }
+        reconstruct_the_active_formatting_elements();
+        m_frameset_ok = false;
+        parse_generic_raw_text_element(token);
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "iframe") {
