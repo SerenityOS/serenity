@@ -147,6 +147,7 @@ private:
         Vector<Error> m_errors;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_var_scopes;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
+        Vector<NonnullRefPtrVector<FunctionDeclaration>> m_function_scopes;
         UseStrictDirectiveState m_use_strict_directive { UseStrictDirectiveState::None };
         bool m_strict_mode { false };
 
