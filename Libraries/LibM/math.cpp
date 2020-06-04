@@ -213,7 +213,7 @@ double log(double x)
     if (x < 0)
         return NAN;
     if (x == 0)
-        return -__builtin_huge_val();
+        return -INFINITY;
     double y = 1 + 2 * (x - 1) / (x + 1);
     double exponentiated = exp(y);
     y = y + 2 * (x - exponentiated) / (x + exponentiated);
@@ -257,7 +257,7 @@ double exp(double exponent)
             if (integer_part & 32)
                 result *= e_to_power<32>();
             if (integer_part >= 64)
-                return __builtin_huge_val();
+                return INFINITY;
         }
         exponent -= integer_part;
     } else if (exponent < 0)
