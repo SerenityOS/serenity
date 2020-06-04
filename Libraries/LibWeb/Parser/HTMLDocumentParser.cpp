@@ -1169,7 +1169,18 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of("applet", "marquee", "object")) {
-        TODO();
+        if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
+            PARSE_ERROR();
+            return;
+        }
+
+        generate_implied_end_tags();
+        if (current_node().tag_name() != token.tag_name()) {
+            PARSE_ERROR();
+        }
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
+        m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "table") {
