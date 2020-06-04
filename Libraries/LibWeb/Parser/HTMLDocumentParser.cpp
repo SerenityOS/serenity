@@ -1061,7 +1061,15 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             }
             m_stack_of_open_elements.elements().remove_first_matching([&](auto& entry) { return entry.ptr() == node.ptr(); });
         } else {
-            TODO();
+            if (!m_stack_of_open_elements.has_in_scope("form")) {
+                PARSE_ERROR();
+                return;
+            }
+            generate_implied_end_tags();
+            if (current_node().tag_name() != "form") {
+                PARSE_ERROR();
+            }
+            m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped("form");
         }
         return;
     }
