@@ -37,6 +37,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
@@ -59,10 +60,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto app_icon = GUI::Icon::default_icon("app-pixel-paint");
+
     auto window = GUI::Window::construct();
     window->set_title("PixelPaint");
     window->set_rect(40, 100, 950, 570);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-paintbrush.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& horizontal_container = window->set_main_widget<GUI::Widget>();
     horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -190,7 +193,7 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("PixelPaint", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-paintbrush.png"), window);
+        GUI::AboutDialog::show("PixelPaint", app_icon.bitmap_for_size(32), window);
     }));
 
     app.set_menubar(move(menubar));
