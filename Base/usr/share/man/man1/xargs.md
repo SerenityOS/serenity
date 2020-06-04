@@ -45,3 +45,7 @@ $ xargs -a list-of-files-to-delete --verbose rm
 $ xargs -a list-of-moves -L 2 mv
 $ xargs -a stuff --null -s 1024
 ```
+
+## See also
+
+* [`find`(1)](find.md)
