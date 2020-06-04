@@ -40,9 +40,9 @@ public:
 
     virtual void inserted_into(Node&) override;
 
-    String rel() const { return attribute("rel"); }
-    String type() const { return attribute("type"); }
-    String href() const { return attribute("href"); }
+    String rel() const { return attribute(HTML::AttributeNames::rel); }
+    String type() const { return attribute(HTML::AttributeNames::type); }
+    String href() const { return attribute(HTML::AttributeNames::href); }
 
 private:
     // ^ResourceClient
@@ -50,6 +50,8 @@ private:
     virtual void resource_did_load() override;
 
     void load_stylesheet(const URL&);
+
+    RefPtr<StyleSheet> m_style_sheet;
 };
 
 template<>

@@ -48,6 +48,7 @@ HTMLImageElement::~HTMLImageElement()
 
 void HTMLImageElement::parse_attribute(const FlyString& name, const String& value)
 {
+    HTMLElement::parse_attribute(name, value);
     if (name.equals_ignoring_case("src"))
         load_image(value);
 }
@@ -122,7 +123,7 @@ void HTMLImageElement::animate()
 int HTMLImageElement::preferred_width() const
 {
     bool ok = false;
-    int width = attribute("width").to_int(ok);
+    int width = attribute(HTML::AttributeNames::width).to_int(ok);
     if (ok)
         return width;
 
@@ -135,7 +136,7 @@ int HTMLImageElement::preferred_width() const
 int HTMLImageElement::preferred_height() const
 {
     bool ok = false;
-    int height = attribute("height").to_int(ok);
+    int height = attribute(HTML::AttributeNames::height).to_int(ok);
     if (ok)
         return height;
 

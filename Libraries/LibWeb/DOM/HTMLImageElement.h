@@ -47,8 +47,8 @@ public:
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
-    String alt() const { return attribute("alt"); }
-    String src() const { return attribute("src"); }
+    String alt() const { return attribute(HTML::AttributeNames::alt); }
+    String src() const { return attribute(HTML::AttributeNames::src); }
     int preferred_width() const;
     int preferred_height() const;
 

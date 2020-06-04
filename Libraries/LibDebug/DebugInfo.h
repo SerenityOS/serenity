@@ -53,17 +53,27 @@ public:
         enum class LocationType {
             None,
             Address,
-            Regsiter,
+            Register,
         };
         String name;
-        String type;
+        String type_name;
         LocationType location_type { LocationType::None };
         union {
             u32 address;
         } location_data { 0 };
 
+        union {
+            u32 as_u32;
+            u32 as_i32;
+            const char* as_string;
+        } constant_data { 0 };
+
+        Dwarf::EntryTag type_tag;
+        OwnPtr<VariableInfo> type;
         NonnullOwnPtrVector<VariableInfo> members;
         VariableInfo* parent { nullptr };
+
+        bool is_enum_type() const { return type && type->type_tag == Dwarf::EntryTag::EnumerationType; }
     };
 
     struct VariablesScope {

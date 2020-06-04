@@ -41,6 +41,7 @@ public:
     ~StyleSheet();
 
     const NonnullRefPtrVector<StyleRule>& rules() const { return m_rules; }
+    NonnullRefPtrVector<StyleRule>& rules() { return m_rules; }
 
 private:
     explicit StyleSheet(NonnullRefPtrVector<StyleRule>&&);

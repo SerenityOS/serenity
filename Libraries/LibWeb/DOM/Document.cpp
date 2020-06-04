@@ -63,6 +63,7 @@ namespace Web {
 Document::Document(const URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_resolver(make<StyleResolver>(*this))
+    , m_style_sheets(CSS::StyleSheetList::create(*this))
     , m_url(url)
     , m_window(Window::create_with_document(*this))
 {
@@ -316,7 +317,7 @@ Vector<const Element*> Document::get_elements_by_name(const String& name) const
 {
     Vector<const Element*> elements;
     for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (element.attribute("name") == name)
+        if (element.attribute(HTML::AttributeNames::name) == name)
             elements.append(&element);
         return IterationDecision::Continue;
     });

@@ -50,7 +50,9 @@ void HTMLStyleElement::children_changed()
     });
     m_stylesheet = parse_css(builder.to_string());
     if (m_stylesheet)
-        document().add_sheet(*m_stylesheet);
+        document().style_sheets().add_sheet(*m_stylesheet);
+    else
+        document().style_sheets().add_sheet(StyleSheet::create({}));
     HTMLElement::children_changed();
 }
 

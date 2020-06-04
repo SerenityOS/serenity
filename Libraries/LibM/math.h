@@ -31,6 +31,8 @@
 __BEGIN_DECLS
 
 #define HUGE_VAL 1e10000
+#define INFINITY __builtin_huge_val()
+#define NAN __builtin_nan("")
 #define M_E 2.718281828459045
 #define M_PI 3.141592653589793
 #define M_PI_2 (M_PI / 2)
@@ -72,6 +74,8 @@ double fmod(double, double);
 float fmodf(float, float);
 double exp(double);
 float expf(float);
+double exp2(double);
+float exp2f(float);
 double frexp(double, int* exp);
 float frexpf(float, int* exp);
 double log(double);

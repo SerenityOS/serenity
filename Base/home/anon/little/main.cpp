@@ -1,9 +1,15 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+enum TestEnum {
+    ValueOne,
+    ValueTwo
+};
+
 struct MyStruct {
     int x { -1 };
     bool status { false };
+    TestEnum test_value { ValueOne };
 };
 
 int main(int, char**)

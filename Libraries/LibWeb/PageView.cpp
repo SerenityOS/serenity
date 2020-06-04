@@ -388,7 +388,7 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
     html_element->append_child(body_element);
 
     auto image_element = create_element(document, "img");
-    image_element->set_attribute("src", url.to_string());
+    image_element->set_attribute(HTML::AttributeNames::src, url.to_string());
     body_element->append_child(image_element);
 
     return document;

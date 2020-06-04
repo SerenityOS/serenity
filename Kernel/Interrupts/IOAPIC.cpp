@@ -297,7 +297,7 @@ void IOAPIC::eoi(const GenericInterruptHandler& handler) const
     ASSERT(!is_hard_disabled());
     ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
     ASSERT(handler.type() != HandlerType::SpuriousInterruptHandler);
-    APIC::eoi();
+    APIC::the().eoi();
 }
 
 u16 IOAPIC::get_isr() const

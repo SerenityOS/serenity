@@ -27,16 +27,73 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <AK/NonnullOwnPtrVector.h>
+#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 
-namespace APIC {
+class APIC {
+public:
+    static APIC& the();
+    static void initialize();
+    static bool initialized();
 
-void enable_bsp();
-void eoi();
-bool init();
-void enable(u32 cpu);
-u8 spurious_interrupt_vector();
-}
+    bool init_bsp();
+    void enable_bsp();
+    void eoi();
+    void enable(u32 cpu);
+    static u8 spurious_interrupt_vector();
+
+private:
+    class ICRReg {
+        u32 m_reg { 0 };
+    
+    public:
+        enum DeliveryMode {
+            Fixed = 0x0,
+            LowPriority = 0x1,
+            SMI = 0x2,
+            NMI = 0x4,
+            INIT = 0x5,
+            StartUp = 0x6,
+        };
+        enum DestinationMode {
+            Physical = 0x0,
+            Logical = 0x1,
+        };
+        enum Level {
+            DeAssert = 0x0,
+            Assert = 0x1
+        };
+        enum class TriggerMode {
+            Edge = 0x0,
+            Level = 0x1,
+        };
+        enum DestinationShorthand {
+            NoShorthand = 0x0,
+            Self = 0x1,
+            AllIncludingSelf = 0x2,
+            AllExcludingSelf = 0x3,
+        };
+    
+        ICRReg(u8 vector, DeliveryMode delivery_mode, DestinationMode destination_mode, Level level, TriggerMode trigger_mode, DestinationShorthand destination)
+            : m_reg(vector | (delivery_mode << 8) | (destination_mode << 11) | (level << 14) | (static_cast<u32>(trigger_mode) << 15) | (destination << 18))
+        {
+        }
+    
+        u32 low() const { return m_reg; }
+        u32 high() const { return 0; }
+    };
+
+    OwnPtr<Region> m_apic_base;
+    NonnullOwnPtrVector<Region> m_apic_ap_stacks;
+    AK::Atomic<u32> m_apic_ap_count{0};
+    
+    static PhysicalAddress get_base();
+    static void set_base(const PhysicalAddress& base);
+    void write_register(u32 offset, u32 value);
+    u32 read_register(u32 offset);
+    void write_icr(const ICRReg& icr);
+};
 
 }

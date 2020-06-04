@@ -211,9 +211,9 @@ double log10(double x)
 double log(double x)
 {
     if (x < 0)
-        return __builtin_nan("");
+        return NAN;
     if (x == 0)
-        return -__builtin_huge_val();
+        return -INFINITY;
     double y = 1 + 2 * (x - 1) / (x + 1);
     double exponentiated = exp(y);
     y = y + 2 * (x - exponentiated) / (x + exponentiated);
@@ -257,7 +257,7 @@ double exp(double exponent)
             if (integer_part & 32)
                 result *= e_to_power<32>();
             if (integer_part >= 64)
-                return __builtin_huge_val();
+                return INFINITY;
         }
         exponent -= integer_part;
     } else if (exponent < 0)
@@ -277,6 +277,16 @@ double exp(double exponent)
 float expf(float exponent)
 {
     return (float)exp(exponent);
+}
+
+double exp2(double exponent)
+{
+    return pow(2.0, exponent);
+}
+
+float exp2f(float exponent)
+{
+    return pow(2.0f, exponent);
 }
 
 double cosh(double x)
@@ -321,7 +331,7 @@ double atan(double x)
 double asin(double x)
 {
     if (x > 1 || x < -1)
-        return __builtin_nan("");
+        return NAN;
     if (x > 0.5 || x < -0.5)
         return 2 * atan(x / (1 + sqrt(1 - x * x)));
     double squared = x * x;
