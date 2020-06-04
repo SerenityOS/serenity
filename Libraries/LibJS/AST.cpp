@@ -67,10 +67,8 @@ Value ScopeNode::execute(Interpreter& interpreter) const
     return interpreter.run(*this);
 }
 
-Value FunctionDeclaration::execute(Interpreter& interpreter) const
+Value FunctionDeclaration::execute(Interpreter&) const
 {
-    auto* function = ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), function_length(), interpreter.current_environment());
-    interpreter.set_variable(name(), function);
     return js_undefined();
 }
 
@@ -1763,6 +1761,11 @@ Value DebuggerStatement::execute(Interpreter&) const
 void ScopeNode::add_variables(NonnullRefPtrVector<VariableDeclaration> variables)
 {
     m_variables.append(move(variables));
+}
+
+void ScopeNode::add_functions(NonnullRefPtrVector<FunctionDeclaration> functions)
+{
+    m_functions.append(move(functions));
 }
 
 }

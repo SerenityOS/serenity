@@ -40,6 +40,7 @@
 namespace JS {
 
 class VariableDeclaration;
+class FunctionDeclaration;
 
 template<class T, class... Args>
 static inline NonnullRefPtr<T>
@@ -124,8 +125,9 @@ public:
     virtual void dump(int indent) const override;
 
     void add_variables(NonnullRefPtrVector<VariableDeclaration>);
+    void add_functions(NonnullRefPtrVector<FunctionDeclaration>);
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
-
+    const NonnullRefPtrVector<FunctionDeclaration>& functions() const { return m_functions; }
     bool in_strict_mode() const { return m_strict_mode; }
     void set_strict_mode() { m_strict_mode = true; }
 
@@ -136,6 +138,7 @@ private:
     virtual bool is_scope_node() const final { return true; }
     NonnullRefPtrVector<Statement> m_children;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
+    NonnullRefPtrVector<FunctionDeclaration> m_functions;
     bool m_strict_mode { false };
 };
 
@@ -175,6 +178,7 @@ public:
     const FlyString& name() const { return m_name; }
     const Statement& body() const { return *m_body; }
     const Vector<Parameter>& parameters() const { return m_parameters; };
+    i32 function_length() const { return m_function_length; }
 
 protected:
     FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables)
@@ -189,7 +193,6 @@ protected:
     void dump(int indent, const char* class_name) const;
 
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
-    i32 function_length() const { return m_function_length; }
 
 private:
     FlyString m_name;
