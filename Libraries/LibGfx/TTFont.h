@@ -32,28 +32,22 @@
 #include <AK/StringView.h>
 
 namespace Gfx {
+namespace TTF {
 
-class TTFont;
+class Font;
 
-enum class TTFIndexToLocFormat {
+enum class IndexToLocFormat {
     Offset16,
     Offset32,
 };
 
-class TTFHead {
+class Head {
 private:
-    TTFHead() {}
-    TTFHead(ByteBuffer&& slice)
+    Head() {}
+    Head(ByteBuffer&& slice)
         : m_slice(move(slice))
     {
         ASSERT(m_slice.size() >= 54);
-        dbg() << "HEAD:"
-              << "\n  units_per_em: " << units_per_em()
-              << "\n  xmin: " << xmin()
-              << "\n  ymin: " << ymin()
-              << "\n  xmax: " << xmax()
-              << "\n  ymax: " << ymax()
-              << "\n  lowest_recommended_ppem: " << lowest_recommended_ppem();
     }
     u16 units_per_em() const;
     i16 xmin() const;
@@ -61,23 +55,147 @@ private:
     i16 xmax() const;
     i16 ymax() const;
     u16 lowest_recommended_ppem() const;
-    Result<TTFIndexToLocFormat, i16> index_to_loc_format() const;
+    Result<IndexToLocFormat, i16> index_to_loc_format() const;
 
     ByteBuffer m_slice;
-    bool m_is_init;
 
-    friend TTFont;
+    friend Font;
 };
 
-class TTFont {
+class Hhea {
+private:
+    Hhea() {}
+    Hhea(ByteBuffer&& slice)
+        : m_slice(move(slice))
+    {
+        ASSERT(m_slice.size() >= 36);
+    }
+    u16 number_of_h_metrics() const;
+
+    ByteBuffer m_slice;
+
+    friend Font;
+};
+
+class Maxp {
+private:
+    Maxp() {}
+    Maxp(ByteBuffer&& slice)
+        : m_slice(move(slice))
+    {
+        ASSERT(m_slice.size() >= 6);
+    }
+    u16 num_glyphs() const;
+
+    ByteBuffer m_slice;
+
+    friend Font;
+};
+
+struct GlyphHorizontalMetrics {
+    u16 advance_width;
+    i16 left_side_bearing;
+};
+
+class Hmtx {
+private:
+    Hmtx() {}
+    Hmtx(ByteBuffer&& slice, u32 num_glyphs, u32 number_of_h_metrics)
+        : m_slice(move(slice))
+        , m_num_glyphs(num_glyphs)
+        , m_number_of_h_metrics(number_of_h_metrics)
+    {
+        ASSERT(m_slice.size() >= number_of_h_metrics * 2 + num_glyphs * 2);
+    }
+    GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
+
+    ByteBuffer m_slice;
+    u32 m_num_glyphs;
+    u32 m_number_of_h_metrics;
+
+    friend Font;
+};
+
+enum class CmapSubtablePlatform {
+    Unicode,
+    Macintosh,
+    Windows,
+    Custom,
+};
+
+enum class CmapSubtableFormat {
+    ByteEncoding,
+    HighByte,
+    SegmentToDelta,
+    TrimmedTable,
+    Mixed16And32,
+    TrimmedArray,
+    SegmentedCoverage,
+    ManyToOneRange,
+    UnicodeVariationSequences,
+};
+
+class Cmap;
+
+class CmapSubtable {
 public:
-    static OwnPtr<TTFont> load_from_file(const StringView& path, unsigned index);
+    CmapSubtablePlatform platform_id() const;
+    u16 encoding_id() const { return m_encoding_id; }
+    CmapSubtableFormat format() const;
 
 private:
-    TTFont(AK::ByteBuffer&& buffer, u32 offset);
+    CmapSubtable(ByteBuffer&& slice, u16 platform_id, u16 encoding_id)
+        : m_slice(move(slice))
+        , m_raw_platform_id(platform_id)
+        , m_encoding_id(encoding_id)
+    {
+    }
+    // Returns 0 if glyph not found. This corresponds to the "missing glyph"
+    u32 glyph_id_for_codepoint(u32 codepoint) const;
+    u32 glyph_id_for_codepoint_table_4(u32 codepoint) const;
+    u32 glyph_id_for_codepoint_table_12(u32 codepoint) const;
 
-    AK::ByteBuffer m_buffer;
-    TTFHead m_head;
+    ByteBuffer m_slice;
+    u16 m_raw_platform_id;
+    u16 m_encoding_id;
+
+    friend Cmap;
 };
 
+class Cmap {
+private:
+    Cmap() {}
+    Cmap(ByteBuffer&& slice)
+        : m_slice(move(slice))
+    {
+        ASSERT(m_slice.size() > 4);
+    }
+    u32 num_subtables() const;
+    Optional<CmapSubtable> subtable(u32 index) const;
+    void set_active_index(u32 index) { m_active_index = index; }
+    // Returns 0 if glyph not found. This corresponds to the "missing glyph"
+    u32 glyph_id_for_codepoint(u32 codepoint) const;
+
+    ByteBuffer m_slice;
+    u32 m_active_index { UINT32_MAX };
+
+    friend Font;
+};
+
+class Font {
+public:
+    static OwnPtr<Font> load_from_file(const StringView& path, unsigned index);
+
+private:
+    Font(AK::ByteBuffer&& buffer, u32 offset);
+
+    AK::ByteBuffer m_buffer;
+    Head m_head;
+    Hhea m_hhea;
+    Maxp m_maxp;
+    Hmtx m_hmtx;
+    Cmap m_cmap;
+};
+
+}
 }
