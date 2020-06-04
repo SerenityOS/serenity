@@ -30,6 +30,7 @@ set(SOURCES
     SystemTheme.cpp
     Triangle.cpp
     WindowTheme.cpp
+    TTFont.cpp
 )
 
 serenity_lib(LibGfx gfx)
