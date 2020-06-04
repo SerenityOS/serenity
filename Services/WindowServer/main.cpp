@@ -45,22 +45,22 @@ int main(int, char**)
     }
 
     if (unveil("/res", "r") < 0) {
-        perror("unveil");
+        perror("unveil /res");
         return 1;
     }
 
     if (unveil("/tmp", "cw") < 0) {
-        perror("unveil");
+        perror("unveil /tmp cw");
         return 1;
     }
 
     if (unveil("/etc/WindowServer/WindowServer.ini", "rwc") < 0) {
-        perror("unveil");
+        perror("unveil /etc/WindowServer/WindowServer.ini");
         return 1;
     }
 
     if (unveil("/dev", "rw") < 0) {
-        perror("unveil");
+        perror("unveil /dev rw");
         return 1;
     }
 
@@ -97,12 +97,12 @@ int main(int, char**)
     auto mm = WindowServer::MenuManager::construct();
 
     if (unveil("/tmp", "") < 0) {
-        perror("unveil");
+        perror("unveil /tmp");
         return 1;
     }
 
     if (unveil("/dev", "") < 0) {
-        perror("unveil");
+        perror("unveil /dev");
         return 1;
     }
 
