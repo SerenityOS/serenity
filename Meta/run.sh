@@ -22,7 +22,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -d cpu_reset,guest_errors
 -smp 2
 -device VGA,vgamem_mb=64
--hda _disk_image
+-drive file=_disk_image,format=raw,index=0,media=disk
 -device ich9-ahci
 -debugcon stdio
 -soundhw pcspk
