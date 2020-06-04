@@ -121,6 +121,7 @@ extern "C" [[noreturn]] void init()
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
         (*ctor)();
 
+    APIC::initialize();
     InterruptManagement::initialize();
     ACPI::initialize();
 
@@ -158,6 +159,26 @@ extern "C" [[noreturn]] void init()
     sti();
 
     Scheduler::idle_loop();
+    ASSERT_NOT_REACHED();
+}
+
+//
+// This is where C++ execution begins for APs, after boot.S transfers control here.
+//
+// The purpose of init_ap() is to initialize APs for multi-tasking.
+//
+extern "C" [[noreturn]] void init_ap(u32 cpu)
+{
+    APIC::the().enable(cpu);
+    
+#if 0
+    Scheduler::idle_loop();
+#else
+    // FIXME: remove once schedule can handle APs
+    cli();
+    for (;;)
+        asm volatile("hlt");
+#endif
     ASSERT_NOT_REACHED();
 }
 
