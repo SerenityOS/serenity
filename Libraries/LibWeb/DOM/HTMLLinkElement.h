@@ -50,6 +50,8 @@ private:
     virtual void resource_did_load() override;
 
     void load_stylesheet(const URL&);
+
+    RefPtr<StyleSheet> m_style_sheet;
 };
 
 template<>

@@ -68,12 +68,20 @@ void HTMLLinkElement::resource_did_load()
         dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
         return;
     }
-    document().add_sheet(*sheet);
+
+    // Transfer the rules from the successfully parsed sheet into the sheet we've already inserted.
+    m_style_sheet->rules() = sheet->rules();
+
     document().update_style();
 }
 
 void HTMLLinkElement::load_stylesheet(const URL& url)
 {
+    // First insert an empty style sheet in the document sheet list.
+    // There's probably a nicer way to do this, but this ensures that sheets are in document order.
+    m_style_sheet = StyleSheet::create({});
+    document().style_sheets().add_sheet(*m_style_sheet);
+
     LoadRequest request;
     request.set_url(url);
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
