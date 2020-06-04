@@ -889,15 +889,16 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 
     if (token.is_end_tag() && token.tag_name() == "body") {
         if (!m_stack_of_open_elements.has_in_scope("body")) {
-            TODO();
+            PARSE_ERROR();
+            return;
         }
 
-        // FIXME: Otherwise, if there is a node in the stack of open elements that is
-        // not either a dd element, a dt element, an li element, an optgroup element,
-        // an option element, a p element, an rb element, an rp element, an rt element,
-        // an rtc element, a tbody element, a td element, a tfoot element, a th element,
-        // a thead element, a tr element, the body element, or the html element,
-        // then this is a parse error.
+        for (auto& node : m_stack_of_open_elements.elements()) {
+            if (!node.tag_name().is_one_of("dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr", "body", "html")) {
+                PARSE_ERROR();
+                break;
+            }
+        }
 
         m_insertion_mode = InsertionMode::AfterBody;
         return;
