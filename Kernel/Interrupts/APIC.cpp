@@ -25,13 +25,17 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/TypedMapping.h>
 
 #define IRQ_APIC_SPURIOUS 0x7f
@@ -54,51 +58,28 @@
 
 namespace Kernel {
 
-namespace APIC {
+static APIC *s_apic;
 
-class ICRReg {
-    u32 m_reg { 0 };
+bool APIC::initialized()
+{
+    return (s_apic != nullptr);
+}
 
-public:
-    enum DeliveryMode {
-        Fixed = 0x0,
-        LowPriority = 0x1,
-        SMI = 0x2,
-        NMI = 0x4,
-        INIT = 0x5,
-        StartUp = 0x6,
-    };
-    enum DestinationMode {
-        Physical = 0x0,
-        Logical = 0x0,
-    };
-    enum Level {
-        DeAssert = 0x0,
-        Assert = 0x1
-    };
-    enum class TriggerMode {
-        Edge = 0x0,
-        Level = 0x1,
-    };
-    enum DestinationShorthand {
-        NoShorthand = 0x0,
-        Self = 0x1,
-        AllIncludingSelf = 0x2,
-        AllExcludingSelf = 0x3,
-    };
+APIC& APIC::the()
+{
+    ASSERT(APIC::initialized());
+    return *s_apic;
+}
 
-    ICRReg(u8 vector, DeliveryMode delivery_mode, DestinationMode destination_mode, Level level, TriggerMode trigger_mode, DestinationShorthand destination)
-        : m_reg(vector | (delivery_mode << 8) | (destination_mode << 11) | (level << 14) | (static_cast<u32>(trigger_mode) << 15) | (destination << 18))
-    {
-    }
+void APIC::initialize()
+{
+    ASSERT(!APIC::initialized());
+    s_apic = new APIC();
+}
 
-    u32 low() const { return m_reg; }
-    u32 high() const { return 0; }
-};
 
-static PhysicalAddress g_apic_base;
 
-static PhysicalAddress get_base()
+PhysicalAddress APIC::get_base()
 {
     u32 lo, hi;
     MSR msr(APIC_BASE_MSR);
@@ -106,7 +87,7 @@ static PhysicalAddress get_base()
     return PhysicalAddress(lo & 0xfffff000);
 }
 
-static void set_base(const PhysicalAddress& base)
+void APIC::set_base(const PhysicalAddress& base)
 {
     u32 hi = 0;
     u32 lo = base.get() | 0x800;
@@ -114,17 +95,17 @@ static void set_base(const PhysicalAddress& base)
     msr.set(lo, hi);
 }
 
-static void write_register(u32 offset, u32 value)
+void APIC::write_register(u32 offset, u32 value)
 {
-    *map_typed_writable<u32>(g_apic_base.offset(offset)) = value;
+    *reinterpret_cast<volatile u32*>(m_apic_base->vaddr().offset(offset).as_ptr()) = value;
 }
 
-static u32 read_register(u32 offset)
+u32 APIC::read_register(u32 offset)
 {
-    return *map_typed<u32>(g_apic_base.offset(offset));
+    return *reinterpret_cast<volatile u32*>(m_apic_base->vaddr().offset(offset).as_ptr());
 }
 
-static void write_icr(const ICRReg& icr)
+void APIC::write_icr(const ICRReg& icr)
 {
     write_register(APIC_REG_ICR_HIGH, icr.high());
     write_register(APIC_REG_ICR_LOW, icr.low());
@@ -134,32 +115,31 @@ static void write_icr(const ICRReg& icr)
 #define APIC_LVT_TRIGGER_LEVEL (1 << 14)
 #define APIC_LVT(iv, dm) ((iv & 0xff) | ((dm & 0x7) << 8))
 
-asm(
-    ".globl apic_ap_start \n"
-    ".type apic_ap_start, @function \n"
-    "apic_ap_start: \n"
-    ".set begin_apic_ap_start, . \n"
-    "    jmp apic_ap_start\n" // TODO: implement
-    ".set end_apic_ap_start, . \n"
-    "\n"
-    ".globl apic_ap_start_size \n"
-    "apic_ap_start_size: \n"
-    ".word end_apic_ap_start - begin_apic_ap_start \n");
-
 extern "C" void apic_ap_start(void);
 extern "C" u16 apic_ap_start_size;
+extern "C" u32 ap_cpu_init_stacks;
+extern "C" u32 ap_cpu_init_cr0;
+extern "C" u32 ap_cpu_init_cr3;
+extern "C" u32 ap_cpu_init_cr4;
+extern "C" u32 ap_cpu_gdtr;
+extern "C" u32 ap_cpu_idtr;
 
-void eoi()
+void APIC::eoi()
 {
     write_register(APIC_REG_EOI, 0x0);
 }
 
-u8 spurious_interrupt_vector()
+u8 APIC::spurious_interrupt_vector()
 {
     return IRQ_APIC_SPURIOUS;
 }
 
-bool init()
+#define APIC_INIT_VAR_PTR(tpe,vaddr,varname) \
+    reinterpret_cast<volatile tpe*>(reinterpret_cast<ptrdiff_t>(vaddr) \
+        + reinterpret_cast<ptrdiff_t>(&varname) \
+        - reinterpret_cast<ptrdiff_t>(&apic_ap_start))
+
+bool APIC::init_bsp()
 {
     // FIXME: Use the ACPI MADT table
     if (!MSR::have())
@@ -174,44 +154,88 @@ bool init()
     klog() << "Initializing APIC, base: " << apic_base;
     set_base(apic_base);
 
-    g_apic_base = apic_base;
+    m_apic_base = MM.allocate_kernel_region(apic_base.page_base(), PAGE_ROUND_UP(1), {}, Region::Access::Read | Region::Access::Write);
 
-    return true;
-}
+    auto rsdp = ACPI::StaticParsing::find_rsdp();
+    if (!rsdp.has_value()) {
+        klog() << "APIC: RSDP not found";
+        return false;
+    }
+    auto madt_address = ACPI::StaticParsing::find_table(rsdp.value(), "APIC");
+    if (madt_address.is_null()) {
+        klog() << "APIC: MADT table not found";
+        return false;
+    }
 
-void enable_bsp()
-{
-    // FIXME: Ensure this method can only be executed by the BSP.
-    enable(0);
-}
+    u32 processor_cnt = 0;
+    u32 processor_enabled_cnt = 0;
+    auto madt = map_typed<ACPI::Structures::MADT>(madt_address);
+    size_t entry_index = 0;
+    size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
+    auto* madt_entry = madt->entries;
+    while (entries_length > 0) {
+        size_t entry_length = madt_entry->length;
+        if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::LocalAPIC) {
+            auto* plapic_entry = (const ACPI::Structures::MADTEntries::ProcessorLocalAPIC*)madt_entry;
+            klog() << "APIC: AP found @ MADT entry " << entry_index << ", Processor Id: " << String::format("%02x", plapic_entry->acpi_processor_id)
+                << " APIC Id: " << String::format("%02x", plapic_entry->apic_id) << " Flags: " << String::format("%08x", plapic_entry->flags);
+            processor_cnt++;
+            if ((plapic_entry->flags & 0x1) != 0)
+                processor_enabled_cnt++;
+        }
+        madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
+        entries_length -= entry_length;
+        entry_index++;
+    }
+    
+    if (processor_enabled_cnt < 1)
+        processor_enabled_cnt = 1;
+    if (processor_cnt < 1)
+        processor_cnt = 1;
 
-void enable(u32 cpu)
-{
-    klog() << "Enabling local APIC for cpu #" << cpu;
+    klog() << "APIC Processors found: "  << processor_cnt << ", enabled: " << processor_enabled_cnt;
 
-    // dummy read, apparently to avoid a bug in old CPUs.
-    read_register(APIC_REG_SIV);
-    // set spurious interrupt vector
-    write_register(APIC_REG_SIV, (IRQ_APIC_SPURIOUS + IRQ_VECTOR_BASE) | 0x100);
+    enable_bsp();
 
-    // local destination mode (flat mode)
-    write_register(APIC_REG_DF, 0xf0000000);
+    if (processor_enabled_cnt > 1) {
+        u32 aps_to_enable = processor_enabled_cnt - 1;
+        
+        // Copy the APIC startup code and variables to P0x00008000
+        auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), PAGE_ROUND_UP(apic_ap_start_size), {}, Region::Access::Read | Region::Access::Write | Region::Access::Execute);
+        memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
 
-    // set destination id (note that this limits it to 8 cpus)
-    write_register(APIC_REG_LD, 0);
+        // Allocate enough stacks for all APs
+        for (u32 i = 0; i < aps_to_enable; i++) {
+            auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, false, true, true);
+            if (!stack_region) {
+                klog() << "APIC: Failed to allocate stack for AP #" << i;
+                return false;
+            }
+            stack_region->set_stack(true);
+            klog() << "APIC: Allocated AP #" << i << " stack at " << stack_region->vaddr();
+            m_apic_ap_stacks.append(stack_region.release_nonnull());
+        }
 
-    SpuriousInterruptHandler::initialize(IRQ_APIC_SPURIOUS);
+        // Store pointers to all stacks for the APs to use
+        auto ap_stack_array = APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_stacks);
+        for (size_t i = 0; i < m_apic_ap_stacks.size(); i++)
+            ap_stack_array[i] = m_apic_ap_stacks[i].vaddr().get() + Thread::default_kernel_stack_size;
 
-    write_register(APIC_REG_LVT_TIMER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
-    write_register(APIC_REG_LVT_THERMAL, APIC_LVT(0, 0) | APIC_LVT_MASKED);
-    write_register(APIC_REG_LVT_PERFORMANCE_COUNTER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
-    write_register(APIC_REG_LVT_LINT0, APIC_LVT(0, 7) | APIC_LVT_MASKED);
-    write_register(APIC_REG_LVT_LINT1, APIC_LVT(0, 0) | APIC_LVT_TRIGGER_LEVEL);
-    write_register(APIC_REG_LVT_ERR, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+        // Store the BSP's CR3 value for the APs to use
+        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
+        
+        // Store the BSP's GDT and IDT for the APs to use
+        const auto& gdtr = get_gdtr();
+        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_gdtr) = FlatPtr(&gdtr);
+        const auto& idtr = get_idtr();
+        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_idtr) = FlatPtr(&idtr);
+        
+        // Store the BSP's CR0 and CR4 values for the APs to use
+        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr0) = read_cr0();
+        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr4) = read_cr4();
+        
+        klog() << "APIC: Starting " << aps_to_enable << " AP(s)";
 
-    write_register(APIC_REG_TPR, 0);
-
-    if (cpu != 0) {
         // INIT
         write_icr(ICRReg(0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
 
@@ -223,9 +247,58 @@ void enable(u32 cpu)
 
             IO::delay(200);
         }
+
+        // Now wait until the ap_cpu_init_pending variable dropped to 0, which means all APs are initialized and no longer need these special mappings
+        if (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable) {
+            klog() << "APIC: Waiting for " << aps_to_enable << " AP(s) to finish initialization...";
+            do {
+                // Wait a little bit
+                IO::delay(200);
+            } while (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable);
+        }
+        
+        klog() << "APIC: " << processor_enabled_cnt << " processors are initialized and running";
     }
+    return true;
 }
 
+void APIC::enable_bsp()
+{
+    // FIXME: Ensure this method can only be executed by the BSP.
+    enable(0);
+}
+
+void APIC::enable(u32 cpu)
+{
+    if (cpu == 0)// FIXME: once memory management can deal with it, re-enable for all
+        klog() << "Enabling local APIC for cpu #" << cpu;
+
+    if (cpu == 0) {
+        // dummy read, apparently to avoid a bug in old CPUs.
+        read_register(APIC_REG_SIV);
+        // set spurious interrupt vector
+        write_register(APIC_REG_SIV, (IRQ_APIC_SPURIOUS + IRQ_VECTOR_BASE) | 0x100);
+
+        // local destination mode (flat mode)
+        write_register(APIC_REG_DF, 0xf0000000);
+
+        // set destination id (note that this limits it to 8 cpus)
+        write_register(APIC_REG_LD, 0);
+
+        SpuriousInterruptHandler::initialize(IRQ_APIC_SPURIOUS);
+
+        write_register(APIC_REG_LVT_TIMER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_THERMAL, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_PERFORMANCE_COUNTER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_LINT0, APIC_LVT(0, 7) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_LINT1, APIC_LVT(0, 0) | APIC_LVT_TRIGGER_LEVEL);
+        write_register(APIC_REG_LVT_ERR, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+
+        write_register(APIC_REG_TPR, 0);
+    } else {
+        // Notify the BSP that we are done initializing. It will unmap the startup data at P8000
+        m_apic_ap_count++;
+    }
 }
 
 }

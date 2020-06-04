@@ -290,6 +290,14 @@ struct [[gnu::packed]] IOAPIC
     u32 gsi_base;
 };
 
+struct [[gnu::packed]] ProcessorLocalAPIC
+{
+    MADTEntryHeader h;
+    u8 acpi_processor_id;
+    u8 apic_id;
+    u32 flags;
+};
+
 struct [[gnu::packed]] InterruptSourceOverride
 {
     MADTEntryHeader h;

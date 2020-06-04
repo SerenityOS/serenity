@@ -188,8 +188,7 @@ void InterruptManagement::switch_to_ioapic_mode()
             dbg() << "Interrupts: Detected " << irq_controller->model();
         }
     }
-    APIC::init();
-    APIC::enable_bsp();
+    APIC::the().init_bsp();
 
     if (auto mp_parser = MultiProcessorParser::autodetect()) {
         m_pci_interrupt_overrides = mp_parser->get_pci_interrupt_redirections();

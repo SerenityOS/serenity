@@ -41,6 +41,12 @@ class MemoryManager;
 class PageDirectory;
 class PageTableEntry;
 
+struct [[gnu::packed]] DescriptorTablePointer
+{
+    u16 limit;
+    void* address;
+};
+
 struct [[gnu::packed]] TSS32
 {
     u16 backlink, __blh;
@@ -248,6 +254,8 @@ public:
 class GenericInterruptHandler;
 struct RegisterState;
 
+const DescriptorTablePointer& get_gdtr();
+const DescriptorTablePointer& get_idtr();
 void gdt_init();
 void idt_init();
 void sse_init();
@@ -477,8 +485,10 @@ inline FlatPtr offset_in_page(const void* address)
     return offset_in_page((FlatPtr)address);
 }
 
+u32 read_cr0();
 u32 read_cr3();
 void write_cr3(u32);
+u32 read_cr4();
 
 u32 read_dr6();
 
