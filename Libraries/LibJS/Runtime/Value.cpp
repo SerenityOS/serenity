@@ -70,38 +70,32 @@ Accessor& Value::as_accessor()
 
 String Value::to_string_without_side_effects() const
 {
-    if (is_boolean())
-        return as_bool() ? "true" : "false";
-
-    if (is_null())
-        return "null";
-
-    if (is_undefined())
+    switch (m_type) {
+    case Type::Undefined:
         return "undefined";
-
-    if (is_number()) {
+    case Type::Null:
+        return "null";
+    case Type::Boolean:
+        return m_value.as_bool ? "true" : "false";
+    case Type::Number:
         if (is_nan())
             return "NaN";
-
         if (is_infinity())
-            return as_double() < 0 ? "-Infinity" : "Infinity";
-
+            return is_negative_infinity() ? "-Infinity" : "Infinity";
         if (is_integer())
             return String::number(as_i32());
-        return String::format("%.4f", as_double());
-    }
-
-    if (is_string())
+        return String::format("%.4f", m_value.as_double);
+    case Type::String:
         return m_value.as_string->string();
-
-    if (is_symbol())
-        return as_symbol().to_string();
-
-    if (is_accessor())
+    case Type::Symbol:
+        return m_value.as_symbol->to_string();
+    case Type::Object:
+        return String::format("[object %s]", as_object().class_name());
+    case Type::Accessor:
         return "<accessor>";
-
-    ASSERT(is_object());
-    return String::format("[object %s]", as_object().class_name());
+    default:
+        ASSERT_NOT_REACHED();
+    }
 }
 
 PrimitiveString* Value::to_primitive_string(Interpreter& interpreter)
@@ -116,60 +110,53 @@ PrimitiveString* Value::to_primitive_string(Interpreter& interpreter)
 
 String Value::to_string(Interpreter& interpreter) const
 {
-    if (is_boolean())
-        return as_bool() ? "true" : "false";
-
-    if (is_null())
-        return "null";
-
-    if (is_undefined())
+    switch (m_type) {
+    case Type::Undefined:
         return "undefined";
-
-    if (is_number()) {
+    case Type::Null:
+        return "null";
+    case Type::Boolean:
+        return m_value.as_bool ? "true" : "false";
+    case Type::Number:
         if (is_nan())
             return "NaN";
-
         if (is_infinity())
-            return as_double() < 0 ? "-Infinity" : "Infinity";
-
+            return is_negative_infinity() ? "-Infinity" : "Infinity";
         if (is_integer())
             return String::number(as_i32());
-        return String::format("%.4f", as_double());
-    }
-
-    if (is_symbol()) {
+        return String::format("%.4f", m_value.as_double);
+    case Type::String:
+        return m_value.as_string->string();
+    case Type::Symbol:
         interpreter.throw_exception<TypeError>("Can't convert symbol to string");
         return {};
-    }
-
-    if (is_object()) {
+    case Type::Object: {
         auto primitive_value = as_object().to_primitive(PreferredType::String);
         if (interpreter.exception())
             return {};
         return primitive_value.to_string(interpreter);
     }
-
-    ASSERT(is_string());
-    return m_value.as_string->string();
+    default:
+        ASSERT_NOT_REACHED();
+    }
 }
 
 bool Value::to_boolean() const
 {
     switch (m_type) {
+    case Type::Undefined:
+    case Type::Null:
+        return false;
     case Type::Boolean:
         return m_value.as_bool;
     case Type::Number:
-        if (is_nan()) {
+        if (is_nan())
             return false;
-        }
-        return !(m_value.as_double == 0 || m_value.as_double == -0);
-    case Type::Null:
-    case Type::Undefined:
-        return false;
+        return m_value.as_double != 0;
     case Type::String:
-        return !as_string().string().is_empty();
-    case Type::Object:
+        return !m_value.as_string->string().is_empty();
     case Type::Symbol:
+    case Type::Object:
         return true;
     default:
         ASSERT_NOT_REACHED();
@@ -185,37 +172,30 @@ Value Value::to_primitive(Interpreter&, PreferredType preferred_type) const
 
 Object* Value::to_object(Interpreter& interpreter) const
 {
-    if (is_object())
-        return &const_cast<Object&>(as_object());
-
-    if (is_string())
-        return StringObject::create(interpreter.global_object(), *m_value.as_string);
-
-    if (is_symbol())
-        return SymbolObject::create(interpreter.global_object(), *m_value.as_symbol);
-
-    if (is_number())
-        return NumberObject::create(interpreter.global_object(), m_value.as_double);
-
-    if (is_boolean())
-        return BooleanObject::create(interpreter.global_object(), m_value.as_bool);
-
-    if (is_null() || is_undefined()) {
+    switch (m_type) {
+    case Type::Undefined:
+    case Type::Null:
         interpreter.throw_exception<TypeError>("ToObject on null or undefined.");
         return nullptr;
+    case Type::Boolean:
+        return BooleanObject::create(interpreter.global_object(), m_value.as_bool);
+    case Type::Number:
+        return NumberObject::create(interpreter.global_object(), m_value.as_double);
+    case Type::String:
+        return StringObject::create(interpreter.global_object(), *m_value.as_string);
+    case Type::Symbol:
+        return SymbolObject::create(interpreter.global_object(), *m_value.as_symbol);
+    case Type::Object:
+        return &const_cast<Object&>(as_object());
+    default:
+        dbg() << "Dying because I can't to_object() on " << *this;
+        ASSERT_NOT_REACHED();
     }
-
-    dbg() << "Dying because I can't to_object() on " << *this;
-    ASSERT_NOT_REACHED();
 }
 
 Value Value::to_number(Interpreter& interpreter) const
 {
     switch (m_type) {
-    case Type::Empty:
-    case Type::Accessor:
-        ASSERT_NOT_REACHED();
-        return {};
     case Type::Undefined:
         return js_nan();
     case Type::Null:
@@ -241,14 +221,15 @@ Value Value::to_number(Interpreter& interpreter) const
     case Type::Symbol:
         interpreter.throw_exception<TypeError>("Can't convert symbol to number");
         return {};
-    case Type::Object:
+    case Type::Object: {
         auto primitive = m_value.as_object->to_primitive(PreferredType::Number);
         if (interpreter.exception())
             return {};
         return primitive.to_number(interpreter);
     }
-
-    ASSERT_NOT_REACHED();
+    default:
+        ASSERT_NOT_REACHED();
+    }
 }
 
 i32 Value::as_i32() const
@@ -597,8 +578,6 @@ bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs)
     ASSERT(lhs.type() == rhs.type());
 
     switch (lhs.type()) {
-    case Value::Type::Empty:
-        ASSERT_NOT_REACHED();
     case Value::Type::Undefined:
     case Value::Type::Null:
         return true;
