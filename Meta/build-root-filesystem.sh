@@ -23,6 +23,29 @@ fi
 
 umask 0022
 
+printf "installing base system... "
+cp -R "$SERENITY_ROOT"/Base/* mnt/
+cp -R Root/* mnt/
+chmod 400 mnt/res/kernel.map
+
+chmod 660 mnt/etc/WindowServer/WindowServer.ini
+chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
+echo "/bin/sh" > mnt/etc/shells
+
+chown 0:$wheel_gid mnt/bin/su
+chown 0:$phys_gid mnt/bin/shutdown
+chown 0:$phys_gid mnt/bin/reboot
+chown 0:0 mnt/boot/Kernel
+chown 0:0 mnt/res/kernel.map
+chmod 0400 mnt/res/kernel.map
+chmod 0400 mnt/boot/Kernel
+chmod 4750 mnt/bin/su
+chmod 4755 mnt/bin/ping
+chmod 4750 mnt/bin/reboot
+chmod 4750 mnt/bin/shutdown
+
+echo "done"
+
 printf "creating initial filesystem structure... "
 for dir in bin etc proc mnt tmp boot mod; do
     mkdir -p mnt/$dir
@@ -81,29 +104,6 @@ done
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
-echo "done"
-
-printf "installing base system... "
-cp -R "$SERENITY_ROOT"/Base/* mnt/
-cp -R Root/* mnt/
-chmod 400 mnt/res/kernel.map
-
-chmod 660 mnt/etc/WindowServer/WindowServer.ini
-chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
-echo "/bin/sh" > mnt/etc/shells
-
-chown 0:$wheel_gid mnt/bin/su
-chown 0:$phys_gid mnt/bin/shutdown
-chown 0:$phys_gid mnt/bin/reboot
-chown 0:0 mnt/boot/Kernel
-chown 0:0 mnt/res/kernel.map
-chmod 0400 mnt/res/kernel.map
-chmod 0400 mnt/boot/Kernel
-chmod 4750 mnt/bin/su
-chmod 4755 mnt/bin/ping
-chmod 4750 mnt/bin/reboot
-chmod 4750 mnt/bin/shutdown
-
 echo "done"
 
 printf "writing version file... "
