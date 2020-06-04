@@ -895,7 +895,7 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    SWITCH_TO(Data);
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
@@ -925,7 +925,8 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ANYTHING_ELSE
                 {
