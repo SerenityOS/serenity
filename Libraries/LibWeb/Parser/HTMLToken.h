@@ -123,6 +123,12 @@ public:
         return {};
     }
 
+    void drop_attributes()
+    {
+        ASSERT(is_start_tag() || is_end_tag());
+        m_tag.attributes.clear();
+    }
+
     Type type() const { return m_type; }
 
     String to_string() const;
