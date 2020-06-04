@@ -37,6 +37,7 @@ class Utf8CodepointIterator {
     friend class Utf8View;
 
 public:
+    Utf8CodepointIterator() { }
     ~Utf8CodepointIterator() { }
 
     bool operator==(const Utf8CodepointIterator&) const;
@@ -54,6 +55,7 @@ private:
 
 class Utf8View {
 public:
+    Utf8View() { }
     explicit Utf8View(const String&);
     explicit Utf8View(const StringView&);
     explicit Utf8View(const char*);
@@ -88,4 +90,5 @@ private:
 
 }
 
+using AK::Utf8CodepointIterator;
 using AK::Utf8View;
