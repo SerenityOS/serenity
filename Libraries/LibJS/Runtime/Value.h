@@ -201,10 +201,13 @@ public:
         return m_value.as_cell;
     }
 
-    String to_string_without_side_effects() const;
+    Accessor& as_accessor()
+    {
+        ASSERT(is_accessor());
+        return *m_value.as_accessor;
+    }
 
     Function& as_function();
-    Accessor& as_accessor();
 
     i32 as_i32() const;
     size_t as_size_t() const;
@@ -218,6 +221,8 @@ public:
     i32 to_i32(Interpreter&) const;
     size_t to_size_t(Interpreter&) const;
     bool to_boolean() const;
+
+    String to_string_without_side_effects() const;
 
     Value value_or(Value fallback) const
     {
