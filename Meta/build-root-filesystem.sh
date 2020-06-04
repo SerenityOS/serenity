@@ -26,6 +26,10 @@ umask 0022
 printf "installing base system... "
 cp -R "$SERENITY_ROOT"/Base/* mnt/
 cp -R Root/* mnt/
+# If umask was 027 or similar when the repo was cloned,
+# file permissions in Base/ are too restrictive. Restore
+# the permissions needed in the image.
+chmod -R g+rX,o+rX "$SERENITY_ROOT"/Base/* mnt/
 chmod 400 mnt/res/kernel.map
 
 chmod 660 mnt/etc/WindowServer/WindowServer.ini
