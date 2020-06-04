@@ -52,37 +52,37 @@ static u32 tag_from_str(const char *str)
     return be_u32((const u8*) str);
 }
 
-u16 Head::units_per_em() const
+u16 Font::Head::units_per_em() const
 {
     return be_u16(m_slice.offset_pointer(18));
 }
 
-i16 Head::xmin() const
+i16 Font::Head::xmin() const
 {
     return be_i16(m_slice.offset_pointer(36));
 }
 
-i16 Head::ymin() const
+i16 Font::Head::ymin() const
 {
     return be_i16(m_slice.offset_pointer(38));
 }
 
-i16 Head::xmax() const
+i16 Font::Head::xmax() const
 {
     return be_i16(m_slice.offset_pointer(40));
 }
 
-i16 Head::ymax() const
+i16 Font::Head::ymax() const
 {
     return be_i16(m_slice.offset_pointer(42));
 }
 
-u16 Head::lowest_recommended_ppem() const
+u16 Font::Head::lowest_recommended_ppem() const
 {
     return be_u16(m_slice.offset_pointer(46));
 }
 
-Result<IndexToLocFormat, i16> Head::index_to_loc_format() const
+Font::IndexToLocFormat Font::Head::index_to_loc_format() const
 {
     i16 raw = be_i16(m_slice.offset_pointer(50));
     switch (raw) {
@@ -91,21 +91,21 @@ Result<IndexToLocFormat, i16> Head::index_to_loc_format() const
     case 1:
         return IndexToLocFormat::Offset32;
     default:
-        return raw;
+        ASSERT_NOT_REACHED();
     }
 }
 
-u16 Hhea::number_of_h_metrics() const
+u16 Font::Hhea::number_of_h_metrics() const
 {
     return be_u16(m_slice.offset_pointer(34));
 }
 
-u16 Maxp::num_glyphs() const
+u16 Font::Maxp::num_glyphs() const
 {
     return be_u16(m_slice.offset_pointer(4));
 }
 
-GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
+Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 {
     ASSERT(glyph_id < m_num_glyphs);
     auto offset = glyph_id * 2;
@@ -125,39 +125,39 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
     }
 }
 
-CmapSubtablePlatform CmapSubtable::platform_id() const
+Font::Cmap::Subtable::Platform Font::Cmap::Subtable::platform_id() const
 {
     switch (m_raw_platform_id) {
-    case 0:  return CmapSubtablePlatform::Unicode;
-    case 1:  return CmapSubtablePlatform::Macintosh;
-    case 3:  return CmapSubtablePlatform::Windows;
-    case 4:  return CmapSubtablePlatform::Custom;
+    case 0:  return Platform::Unicode;
+    case 1:  return Platform::Macintosh;
+    case 3:  return Platform::Windows;
+    case 4:  return Platform::Custom;
     default: ASSERT_NOT_REACHED();
     }
 }
 
-CmapSubtableFormat CmapSubtable::format() const
+Font::Cmap::Subtable::Format Font::Cmap::Subtable::format() const
 {
     switch (be_u16(m_slice.offset_pointer(0))) {
-        case 0:  return CmapSubtableFormat::ByteEncoding;
-        case 2:  return CmapSubtableFormat::HighByte;
-        case 4:  return CmapSubtableFormat::SegmentToDelta;
-        case 6:  return CmapSubtableFormat::TrimmedTable;
-        case 8:  return CmapSubtableFormat::Mixed16And32;
-        case 10: return CmapSubtableFormat::TrimmedArray;
-        case 12: return CmapSubtableFormat::SegmentedCoverage;
-        case 13: return CmapSubtableFormat::ManyToOneRange;
-        case 14: return CmapSubtableFormat::UnicodeVariationSequences;
+        case 0:  return Format::ByteEncoding;
+        case 2:  return Format::HighByte;
+        case 4:  return Format::SegmentToDelta;
+        case 6:  return Format::TrimmedTable;
+        case 8:  return Format::Mixed16And32;
+        case 10: return Format::TrimmedArray;
+        case 12: return Format::SegmentedCoverage;
+        case 13: return Format::ManyToOneRange;
+        case 14: return Format::UnicodeVariationSequences;
         default: ASSERT_NOT_REACHED();
     }
 }
 
-u32 Cmap::num_subtables() const
+u32 Font::Cmap::num_subtables() const
 {
     return be_u16(m_slice.offset_pointer(2));
 }
 
-Optional<CmapSubtable> Cmap::subtable(u32 index) const
+Optional<Font::Cmap::Subtable> Font::Cmap::subtable(u32 index) const
 {
     if (index >= num_subtables()) {
         return {};
@@ -168,23 +168,23 @@ Optional<CmapSubtable> Cmap::subtable(u32 index) const
     u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + 4));
     ASSERT(subtable_offset < m_slice.size());
     auto subtable_slice = ByteBuffer::wrap(m_slice.offset_pointer(subtable_offset), m_slice.size() - subtable_offset);
-    return CmapSubtable(move(subtable_slice), platform_id, encoding_id);
+    return Subtable(move(subtable_slice), platform_id, encoding_id);
 }
 
 // FIXME: This only handles formats 4 (SegmentToDelta) and 12 (SegmentedCoverage) for now.
-u32 CmapSubtable::glyph_id_for_codepoint(u32 codepoint) const
+u32 Font::Cmap::Subtable::glyph_id_for_codepoint(u32 codepoint) const
 {
     switch (format()) {
-    case CmapSubtableFormat::SegmentToDelta:
+    case Format::SegmentToDelta:
         return glyph_id_for_codepoint_table_4(codepoint);
-    case CmapSubtableFormat::SegmentedCoverage:
+    case Format::SegmentedCoverage:
         return glyph_id_for_codepoint_table_12(codepoint);
     default:
         return 0;
     }
 }
 
-u32 CmapSubtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
+u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
 {
     u32 segcount_x2 = be_u16(m_slice.offset_pointer(6));
     if (m_slice.size() < segcount_x2 * 4 + 16) {
@@ -212,7 +212,7 @@ u32 CmapSubtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
     return 0;
 }
 
-u32 CmapSubtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
+u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
 {
     u32 num_groups = be_u32(m_slice.offset_pointer(12));
     ASSERT(m_slice.size() >= 16 + 12 * num_groups);
@@ -231,7 +231,7 @@ u32 CmapSubtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
     return 0;
 }
 
-u32 Cmap::glyph_id_for_codepoint(u32 codepoint) const
+u32 Font::Cmap::glyph_id_for_codepoint(u32 codepoint) const
 {
     auto opt_subtable = subtable(m_active_index);
     if (!opt_subtable.has_value()) {
@@ -239,6 +239,19 @@ u32 Cmap::glyph_id_for_codepoint(u32 codepoint) const
     }
     auto subtable = opt_subtable.value();
     return subtable.glyph_id_for_codepoint(codepoint);
+}
+
+u32 Font::Loca::get_glyph_offset(u32 glyph_id) const
+{
+    ASSERT(glyph_id < m_num_glyphs);
+    switch (m_index_to_loc_format) {
+    case IndexToLocFormat::Offset16:
+        return ((u32) be_u16(m_slice.offset_pointer(glyph_id * 2))) * 2;
+    case IndexToLocFormat::Offset32:
+        return be_u32(m_slice.offset_pointer(glyph_id * 4));
+    default:
+        ASSERT_NOT_REACHED();
+    }
 }
 
 OwnPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
@@ -279,78 +292,137 @@ OwnPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
     }
 }
 
-Font::Font(AK::ByteBuffer&& buffer, u32 offset)
-    : m_buffer(move(buffer))
-    {
-        ASSERT(m_buffer.size() >= offset + 12);
-        Optional<ByteBuffer> head_slice = {};
-        Optional<ByteBuffer> hhea_slice = {};
-        Optional<ByteBuffer> maxp_slice = {};
-        Optional<ByteBuffer> hmtx_slice = {};
-        Optional<ByteBuffer> cmap_slice = {};
+Font::Glyf::Glyph Font::Glyf::Glyph::simple(ByteBuffer&& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax)
+{
+    auto ret = Glyph(move(slice), Type::Composite);
+    ret.m_meta.simple = Simple {
+        .num_contours = num_contours,
+        .xmin = xmin,
+        .ymin = ymin,
+        .xmax = xmax,
+        .ymax = ymax,
+    };
+    dbg() << "Loaded simple glyph:"
+          << "\n  num_contours: " << num_contours
+          << "\n  xmin: " << xmin
+          << "\n  ymin: " << ymin
+          << "\n  xmax: " << xmax
+          << "\n  ymax: " << ymax;
+    return ret;
+}
 
-        //auto sfnt_version = be_u32(data + offset);
-        auto num_tables = be_u16(m_buffer.offset_pointer(offset + 4));
-        ASSERT(m_buffer.size() >= offset + 12 + num_tables * 16);
+// FIXME: This is currently just a dummy. Need to add support for composite glyphs.
+Font::Glyf::Glyph Font::Glyf::Glyph::composite(ByteBuffer&& slice)
+{
+    auto ret = Glyph(move(slice), Type::Composite);
+    ret.m_meta.composite = Composite();
+    return ret;
+}
 
-        for (auto i = 0; i < num_tables; i++) {
-            u32 record_offset = offset + 12 + i * 16;
-            u32 tag = be_u32(m_buffer.offset_pointer(record_offset));
-            u32 table_offset = be_u32(m_buffer.offset_pointer(record_offset + 8));
-            u32 table_length = be_u32(m_buffer.offset_pointer(record_offset + 12));
-            ASSERT(m_buffer.size() >= table_offset + table_length);
-            auto buffer = ByteBuffer::wrap(m_buffer.offset_pointer(table_offset), table_length);
-
-            // Get the table offsets we need.
-            if (tag == tag_from_str("head")) {
-                head_slice = move(buffer);
-            } else if (tag == tag_from_str("hhea")) {
-                hhea_slice = move(buffer);
-            } else if (tag == tag_from_str("maxp")) {
-                maxp_slice = move(buffer);
-            } else if (tag == tag_from_str("hmtx")) {
-                hmtx_slice = move(buffer);
-            } else if (tag == tag_from_str("cmap")) {
-                cmap_slice = move(buffer);
-            }
-        }
-
-        // Check that we've got everything we need.
-        ASSERT(head_slice.has_value());
-        ASSERT(hhea_slice.has_value());
-        ASSERT(maxp_slice.has_value());
-        ASSERT(hmtx_slice.has_value());
-        ASSERT(cmap_slice.has_value());
-
-        // Load the tables.
-        m_head = Head(move(head_slice.value()));
-        m_hhea = Hhea(move(hhea_slice.value()));
-        m_maxp = Maxp(move(maxp_slice.value()));
-        m_hmtx = Hmtx(move(hmtx_slice.value()), m_maxp.num_glyphs(), m_hhea.number_of_h_metrics());
-        m_cmap = Cmap(move(cmap_slice.value()));
-
-        // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
-        // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
-        for (u32 i = 0; i < m_cmap.num_subtables(); i++) {
-            auto opt_subtable = m_cmap.subtable(i);
-            if (!opt_subtable.has_value()) {
-                continue;
-            }
-            auto subtable = opt_subtable.value();
-            if (subtable.platform_id() == CmapSubtablePlatform::Windows) {
-                if (subtable.encoding_id() == 10) {
-                    m_cmap.set_active_index(i);
-                    break;
-                }
-                if (subtable.encoding_id() == 1) {
-                    m_cmap.set_active_index(i);
-                    break;
-                }
-            }
-        }
-
-        dbg() << "Glyph ID for 'A': " << m_cmap.glyph_id_for_codepoint('A');
-        dbg() << "Glyph ID for 'B': " << m_cmap.glyph_id_for_codepoint('B');
+Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
+{
+    ASSERT(m_slice.size() >= offset + 10);
+    i16 num_contours = be_i16(m_slice.offset_pointer(offset));
+    i16 xmin = be_i16(m_slice.offset_pointer(offset + 2));
+    i16 ymin = be_i16(m_slice.offset_pointer(offset + 4));
+    i16 xmax = be_i16(m_slice.offset_pointer(offset + 6));
+    i16 ymax = be_i16(m_slice.offset_pointer(offset + 8));
+    auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset), m_slice.size() - offset);
+    if (num_contours < 0) {
+        return Glyph::composite(move(slice));
+    } else {
+        return Glyph::simple(move(slice), num_contours, xmin, ymin, xmax, ymax);
     }
+}
+
+// FIXME: "loca" and "glyf" are not available for CFF fonts.
+Font::Font(ByteBuffer&& buffer, u32 offset)
+    : m_buffer(move(buffer))
+{
+    ASSERT(m_buffer.size() >= offset + 12);
+    Optional<ByteBuffer> head_slice = {};
+    Optional<ByteBuffer> hhea_slice = {};
+    Optional<ByteBuffer> maxp_slice = {};
+    Optional<ByteBuffer> hmtx_slice = {};
+    Optional<ByteBuffer> cmap_slice = {};
+    Optional<ByteBuffer> loca_slice = {};
+    Optional<ByteBuffer> glyf_slice = {};
+
+    //auto sfnt_version = be_u32(data + offset);
+    auto num_tables = be_u16(m_buffer.offset_pointer(offset + 4));
+    ASSERT(m_buffer.size() >= offset + 12 + num_tables * 16);
+
+    for (auto i = 0; i < num_tables; i++) {
+        u32 record_offset = offset + 12 + i * 16;
+        u32 tag = be_u32(m_buffer.offset_pointer(record_offset));
+        u32 table_offset = be_u32(m_buffer.offset_pointer(record_offset + 8));
+        u32 table_length = be_u32(m_buffer.offset_pointer(record_offset + 12));
+        ASSERT(m_buffer.size() >= table_offset + table_length);
+        auto buffer = ByteBuffer::wrap(m_buffer.offset_pointer(table_offset), table_length);
+
+        // Get the table offsets we need.
+        if (tag == tag_from_str("head")) {
+            head_slice = move(buffer);
+        } else if (tag == tag_from_str("hhea")) {
+            hhea_slice = move(buffer);
+        } else if (tag == tag_from_str("maxp")) {
+            maxp_slice = move(buffer);
+        } else if (tag == tag_from_str("hmtx")) {
+            hmtx_slice = move(buffer);
+        } else if (tag == tag_from_str("cmap")) {
+            cmap_slice = move(buffer);
+        } else if (tag == tag_from_str("loca")) {
+            loca_slice = move(buffer);
+        } else if (tag == tag_from_str("glyf")) {
+            glyf_slice = move(buffer);
+        }
+    }
+
+    // Check that we've got everything we need.
+    ASSERT(head_slice.has_value());
+    ASSERT(hhea_slice.has_value());
+    ASSERT(maxp_slice.has_value());
+    ASSERT(hmtx_slice.has_value());
+    ASSERT(cmap_slice.has_value());
+    ASSERT(loca_slice.has_value());
+    ASSERT(glyf_slice.has_value());
+
+    // Load the tables.
+    m_head = Head(move(head_slice.value()));
+    m_hhea = Hhea(move(hhea_slice.value()));
+    m_maxp = Maxp(move(maxp_slice.value()));
+    m_hmtx = Hmtx(move(hmtx_slice.value()), m_maxp.num_glyphs(), m_hhea.number_of_h_metrics());
+    m_cmap = Cmap(move(cmap_slice.value()));
+    m_loca = Loca(move(loca_slice.value()), m_maxp.num_glyphs(), m_head.index_to_loc_format());
+    m_glyf = Glyf(move(glyf_slice.value()));
+
+    // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
+    // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
+    for (u32 i = 0; i < m_cmap.num_subtables(); i++) {
+        auto opt_subtable = m_cmap.subtable(i);
+        if (!opt_subtable.has_value()) {
+            continue;
+        }
+        auto subtable = opt_subtable.value();
+        if (subtable.platform_id() == Cmap::Subtable::Platform::Windows) {
+            if (subtable.encoding_id() == 10) {
+                m_cmap.set_active_index(i);
+                break;
+            }
+            if (subtable.encoding_id() == 1) {
+                m_cmap.set_active_index(i);
+                break;
+            }
+        }
+    }
+
+    dbg() << "Glyph ID for 'A': " << m_cmap.glyph_id_for_codepoint('A');
+    dbg() << "Glyph ID for 'B': " << m_cmap.glyph_id_for_codepoint('B');
+
+    auto gid = m_cmap.glyph_id_for_codepoint('A');
+    auto glyph_offset = m_loca.get_glyph_offset(gid);
+    auto glyph = m_glyf.glyph(glyph_offset);
+}
+
 }
 }
