@@ -322,7 +322,7 @@ Tab::Tab()
         this));
     debug_menu.add_action(GUI::Action::create(
         "Dump Style sheets", [this](auto&) {
-            for (auto& sheet : m_page_view->document()->stylesheets()) {
+            for (auto& sheet : m_page_view->document()->style_sheets().sheets()) {
                 dump_sheet(sheet);
             }
         },

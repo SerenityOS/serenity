@@ -60,7 +60,7 @@ template<typename Callback>
 void StyleResolver::for_each_stylesheet(Callback callback) const
 {
     callback(default_stylesheet());
-    for (auto& sheet : document().stylesheets()) {
+    for (auto& sheet : document().style_sheets().sheets()) {
         callback(sheet);
     }
 }

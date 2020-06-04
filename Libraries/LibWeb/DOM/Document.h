@@ -37,6 +37,7 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 
@@ -63,8 +64,8 @@ public:
     StyleResolver& style_resolver() { return *m_style_resolver; }
     const StyleResolver& style_resolver() const { return *m_style_resolver; }
 
-    void add_sheet(const StyleSheet& sheet) { m_sheets.append(sheet); }
-    const NonnullRefPtrVector<StyleSheet>& stylesheets() const { return m_sheets; }
+    CSS::StyleSheetList& style_sheets() { return *m_style_sheets; }
+    const CSS::StyleSheetList& style_sheets() const { return *m_style_sheets; }
 
     virtual FlyString tag_name() const override { return "#document"; }
 
@@ -146,7 +147,7 @@ private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
     OwnPtr<StyleResolver> m_style_resolver;
-    NonnullRefPtrVector<StyleSheet> m_sheets;
+    RefPtr<CSS::StyleSheetList> m_style_sheets;
     RefPtr<Node> m_hovered_node;
     RefPtr<Node> m_inspected_node;
     WeakPtr<Frame> m_frame;
