@@ -41,7 +41,6 @@ Error::Error(const FlyString& name, const String& message, Object& prototype)
     , m_name(name)
     , m_message(message)
 {
-    set_prototype(&prototype);
 }
 
 Error::~Error()
