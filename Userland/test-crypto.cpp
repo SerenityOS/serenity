@@ -960,6 +960,32 @@ void hmac_sha256_test_process()
             PASS;
     }
     {
+        I_TEST((HMAC - SHA256 | DataSize > FinalBlockDataSize));
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+        u8 result[] = {
+            0x9b, 0xa3, 0x9e, 0xf3, 0xb4, 0x30, 0x5f, 0x6f, 0x67, 0xd0, 0xa8, 0xb0, 0xf0, 0xcb, 0x12, 0xf5, 0x85, 0xe2, 0x19, 0xba, 0x0c, 0x8b, 0xe5, 0x43, 0xf0, 0x93, 0x39, 0xa8, 0xa3, 0x07, 0xf1, 0x95
+        };
+        auto mac = hmac.process("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
+            FAIL(Invalid mac);
+            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((HMAC - SHA256 | DataSize == BlockSize));
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+        u8 result[] = {
+            0x1d, 0x90, 0xce, 0x68, 0x45, 0x0b, 0xba, 0xd6, 0xbe, 0x1c, 0xb2, 0x3a, 0xea, 0x7f, 0xac, 0x4b, 0x68, 0x08, 0xa4, 0x77, 0x81, 0x2a, 0xad, 0x5d, 0x05, 0xe2, 0x15, 0xe8, 0xf4, 0xcb, 0x06, 0xaf
+        };
+        auto mac = hmac.process("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
+            FAIL(Invalid mac);
+            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+        } else
+            PASS;
+    }
+    {
         I_TEST((HMAC - SHA256 | Reuse));
         Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
 
