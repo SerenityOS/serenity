@@ -62,12 +62,6 @@ Function& Value::as_function()
     return static_cast<Function&>(as_object());
 }
 
-Accessor& Value::as_accessor()
-{
-    ASSERT(is_accessor());
-    return static_cast<Accessor&>(*m_value.as_accessor);
-}
-
 String Value::to_string_without_side_effects() const
 {
     switch (m_type) {
