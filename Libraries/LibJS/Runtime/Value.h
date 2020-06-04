@@ -76,8 +76,8 @@ public:
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
     bool is_positive_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) > 0; }
     bool is_negative_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) < 0; }
-    bool is_positive_zero() const { return is_number() && 1.0 / as_double() == __builtin_huge_val(); }
-    bool is_negative_zero() const { return is_number() && 1.0 / as_double() == -__builtin_huge_val(); }
+    bool is_positive_zero() const { return is_number() && 1.0 / as_double() == INFINITY; }
+    bool is_negative_zero() const { return is_number() && 1.0 / as_double() == -INFINITY; }
     bool is_integer() const { return is_finite_number() && (i32)as_double() == as_double(); }
     bool is_finite_number() const
     {
@@ -257,12 +257,12 @@ inline Value js_nan()
 
 inline Value js_infinity()
 {
-    return Value(__builtin_huge_val());
+    return Value(INFINITY);
 }
 
 inline Value js_negative_infinity()
 {
-    return Value(-__builtin_huge_val());
+    return Value(-INFINITY);
 }
 
 Value greater_than(Interpreter&, Value lhs, Value rhs);
