@@ -37,6 +37,7 @@ public:
     enum Type {
         Var = 1,
         Let = 2,
+        Function = 3,
     };
 
     ScopePusher(Parser& parser, unsigned mask)
@@ -47,6 +48,8 @@ public:
             m_parser.m_parser_state.m_var_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
         if (m_mask & Let)
             m_parser.m_parser_state.m_let_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
+        if (m_mask & Function)
+            m_parser.m_parser_state.m_function_scopes.append(NonnullRefPtrVector<FunctionDeclaration>());
     }
 
     ~ScopePusher()
@@ -55,6 +58,8 @@ public:
             m_parser.m_parser_state.m_var_scopes.take_last();
         if (m_mask & Let)
             m_parser.m_parser_state.m_let_scopes.take_last();
+        if (m_mask & Function)
+            m_parser.m_parser_state.m_function_scopes.take_last();
     }
 
     Parser& m_parser;
@@ -204,7 +209,7 @@ Associativity Parser::operator_associativity(TokenType type) const
 
 NonnullRefPtr<Program> Parser::parse_program()
 {
-    ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let);
+    ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let | ScopePusher::Function);
     auto program = adopt(*new Program);
 
     bool first = true;
@@ -228,6 +233,7 @@ NonnullRefPtr<Program> Parser::parse_program()
     if (m_parser_state.m_var_scopes.size() == 1) {
         program->add_variables(m_parser_state.m_var_scopes.last());
         program->add_variables(m_parser_state.m_let_scopes.last());
+        program->add_functions(m_parser_state.m_function_scopes.last());
     } else {
         syntax_error("Unclosed scope");
     }
@@ -238,8 +244,11 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 {
     auto statement = [this]() -> NonnullRefPtr<Statement> {
     switch (m_parser_state.m_current_token.type()) {
-    case TokenType::Function:
-        return parse_function_node<FunctionDeclaration>();
+    case TokenType::Function: {
+        auto declaration = parse_function_node<FunctionDeclaration>();
+        m_parser_state.m_function_scopes.last().append(declaration);
+        return declaration;
+    }
     case TokenType::CurlyOpen:
         return parse_block_statement();
     case TokenType::Return:
@@ -590,8 +599,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 syntax_error(
                     "Expected '(' for object getter or setter property",
                     m_parser_state.m_current_token.line_number(),
-                    m_parser_state.m_current_token.line_column()
-                );
+                    m_parser_state.m_current_token.line_column());
                 skip_to_next_property();
                 continue;
             }
@@ -606,8 +614,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 syntax_error(
                     "Object getter property must have no arguments",
                     m_parser_state.m_current_token.line_number(),
-                    m_parser_state.m_current_token.line_column()
-                );
+                    m_parser_state.m_current_token.line_column());
                 skip_to_next_property();
                 continue;
             }
@@ -615,8 +622,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 syntax_error(
                     "Object setter property must have one argument",
                     m_parser_state.m_current_token.line_number(),
-                    m_parser_state.m_current_token.line_column()
-                );
+                    m_parser_state.m_current_token.line_column());
                 skip_to_next_property();
                 continue;
             }
@@ -1059,13 +1065,14 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
     m_parser_state.m_strict_mode = initial_strict_mode_state;
     consume(TokenType::CurlyClose);
     block->add_variables(m_parser_state.m_let_scopes.last());
+    block->add_functions(m_parser_state.m_function_scopes.last());
     return block;
 }
 
 template<typename FunctionNodeType>
 NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_function_and_name)
 {
-    ScopePusher scope(*this, ScopePusher::Var);
+    ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Function);
 
     if (check_for_function_and_name)
         consume(TokenType::Function);
@@ -1109,6 +1116,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_funct
 
     auto body = parse_block_statement();
     body->add_variables(m_parser_state.m_var_scopes.last());
+    body->add_functions(m_parser_state.m_function_scopes.last());
     return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>());
 }
 

@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Reference.h>
+#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
@@ -91,6 +92,11 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type)
 {
+    for (auto& declaration : scope_node.functions()) {
+        auto* function = ScriptFunction::create(global_object(), declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment());
+        set_variable(declaration.name(), function);
+    }
+
     if (scope_type == ScopeType::Function) {
         m_scope_stack.append({ scope_type, scope_node, false });
         return;
