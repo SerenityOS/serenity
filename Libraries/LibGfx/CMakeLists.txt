@@ -20,6 +20,7 @@ set(SOURCES
     StylePainter.cpp
     SystemTheme.cpp
     Triangle.cpp
+    TTFont.cpp
 )
 
 serenity_lib(LibGfx gfx)
