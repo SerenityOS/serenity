@@ -288,7 +288,7 @@ public:
 
 private:
     friend class WindowServerConnection;
-    KeyCode m_key { 0 };
+    KeyCode m_key { KeyCode::Key_Invalid };
     u8 m_modifiers { 0 };
     u32 m_scancode { 0 };
     String m_text;
