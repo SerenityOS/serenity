@@ -905,6 +905,24 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    if (token.is_end_tag() && token.tag_name() == "html") {
+        if (!m_stack_of_open_elements.has_in_scope("body")) {
+            PARSE_ERROR();
+            return;
+        }
+
+        for (auto& node : m_stack_of_open_elements.elements()) {
+            if (!node.tag_name().is_one_of("dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr", "body", "html")) {
+                PARSE_ERROR();
+                break;
+            }
+        }
+
+        m_insertion_mode = InsertionMode::AfterBody;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
     if (token.is_start_tag() && token.tag_name().is_one_of("address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "section", "summary", "ul")) {
         if (m_stack_of_open_elements.has_in_button_scope("p"))
             close_a_p_element();
