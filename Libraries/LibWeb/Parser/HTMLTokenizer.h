@@ -29,6 +29,7 @@
 #include <AK/Queue.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <AK/Utf8View.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Parser/HTMLToken.h>
 
@@ -169,6 +170,10 @@ private:
 
     StringView m_input;
     size_t m_cursor { 0 };
+
+    Utf8View m_utf8_view;
+    AK::Utf8CodepointIterator m_utf8_iterator;
+    AK::Utf8CodepointIterator m_prev_utf8_iterator;
 
     HTMLToken m_current_token;
 

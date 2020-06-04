@@ -35,12 +35,12 @@
 //#define TOKENIZER_TRACE
 
 #ifdef TOKENIZER_TRACE
-#define PARSE_ERROR()                                                                      \
-    do {                                                                                   \
-        dbg() << "Parse error (tokenization)" << __PRETTY_FUNCTION__ << " @ " << __LINE__; \
-    } while (0)
+#    define PARSE_ERROR()                                                                      \
+        do {                                                                                   \
+            dbg() << "Parse error (tokenization)" << __PRETTY_FUNCTION__ << " @ " << __LINE__; \
+        } while (0)
 #else
-#define PARSE_ERROR()
+#    define PARSE_ERROR()
 #endif
 
 #define CONSUME_NEXT_INPUT_CHARACTER \
@@ -92,20 +92,23 @@
         goto new_state;                                                \
     } while (0)
 
-#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                               \
-    do {                                                                                 \
-        for (auto codepoint : m_temporary_buffer) {                                      \
-            if (consumed_as_part_of_an_attribute()) {                                    \
-                m_current_token.m_tag.attributes.last().value_builder.append(codepoint); \
-            } else {                                                                     \
-                create_new_token(HTMLToken::Type::Character);                            \
-                m_current_token.m_comment_or_character.data.append(codepoint);           \
-                m_queued_tokens.enqueue(m_current_token);                                \
-            }                                                                            \
-        }                                                                                \
+#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                                         \
+    do {                                                                                           \
+        for (auto codepoint : m_temporary_buffer) {                                                \
+            if (consumed_as_part_of_an_attribute()) {                                              \
+                m_current_token.m_tag.attributes.last().value_builder.append_codepoint(codepoint); \
+            } else {                                                                               \
+                create_new_token(HTMLToken::Type::Character);                                      \
+                m_current_token.m_comment_or_character.data.append_codepoint(codepoint);           \
+                m_queued_tokens.enqueue(m_current_token);                                          \
+            }                                                                                      \
+        }                                                                                          \
     } while (0)
 
-#define DONT_CONSUME_NEXT_INPUT_CHARACTER --m_cursor;
+#define DONT_CONSUME_NEXT_INPUT_CHARACTER       \
+    do {                                        \
+        m_utf8_iterator = m_prev_utf8_iterator; \
+    } while (0)
 
 #define ON(codepoint) \
     if (current_input_character.has_value() && current_input_character.value() == codepoint)
@@ -157,7 +160,7 @@
 #define EMIT_CHARACTER(codepoint)                                      \
     do {                                                               \
         create_new_token(HTMLToken::Type::Character);                  \
-        m_current_token.m_comment_or_character.data.append(codepoint); \
+        m_current_token.m_comment_or_character.data.append_codepoint(codepoint); \
         m_queued_tokens.enqueue(m_current_token);                      \
         return m_queued_tokens.dequeue();                              \
     } while (0)
@@ -202,9 +205,11 @@ namespace Web {
 
 Optional<u32> HTMLTokenizer::next_codepoint()
 {
-    if (m_cursor >= m_input.length())
+    if (m_utf8_iterator == m_utf8_view.end())
         return {};
-    return m_input[m_cursor++];
+    m_prev_utf8_iterator = m_utf8_iterator;
+    ++m_utf8_iterator;
+    return *m_prev_utf8_iterator;
 }
 
 Optional<u32> HTMLTokenizer::peek_codepoint(size_t offset) const
@@ -306,7 +311,7 @@ _StartOfFunction:
                 ON(0)
                 {
                     PARSE_ERROR();
-                    m_current_token.m_tag.tag_name.append("\uFFFD");
+                    m_current_token.m_tag.tag_name.append_codepoint(0xFFFD);
                     continue;
                 }
                 ON_EOF
@@ -316,7 +321,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.tag_name.append(current_input_character.value());
+                    m_current_token.m_tag.tag_name.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -359,6 +364,15 @@ _StartOfFunction:
                 if (consume_next_if_match("DOCTYPE", CaseSensitivity::CaseInsensitive)) {
                     SWITCH_TO(DOCTYPE);
                 }
+                if (consume_next_if_match("[CDATA[")) {
+                    TODO();
+                }
+                ANYTHING_ELSE
+                {
+                    PARSE_ERROR();
+                    create_new_token(HTMLToken::Type::Comment);
+                    SWITCH_TO(BogusComment);
+                }
             }
             END_STATE
 
@@ -366,19 +380,23 @@ _StartOfFunction:
             {
                 ON('>')
                 {
-                    TODO();
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_comment_or_character.data.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    m_current_token.m_comment_or_character.data.append_codepoint(current_input_character.value());
+                    continue;
                 }
             }
             END_STATE
@@ -431,7 +449,7 @@ _StartOfFunction:
                 ANYTHING_ELSE
                 {
                     create_new_token(HTMLToken::Type::DOCTYPE);
-                    m_current_token.m_doctype.name.append(current_input_character.value());
+                    m_current_token.m_doctype.name.append_codepoint(current_input_character.value());
                     SWITCH_TO(DOCTYPEName);
                 }
             }
@@ -461,7 +479,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.name.append(current_input_character.value());
+                    m_current_token.m_doctype.name.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -634,7 +652,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.public_identifier.append(current_input_character.value());
+                    m_current_token.m_doctype.public_identifier.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -660,7 +678,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.public_identifier.append(current_input_character.value());
+                    m_current_token.m_doctype.public_identifier.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -686,7 +704,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.system_identifier.append(current_input_character.value());
+                    m_current_token.m_doctype.system_identifier.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -712,7 +730,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.system_identifier.append(current_input_character.value());
+                    m_current_token.m_doctype.system_identifier.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -873,7 +891,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.last().name_builder.append(current_input_character.value());
+                    m_current_token.m_tag.attributes.last().name_builder.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -956,7 +974,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.last().value_builder.append(current_input_character.value());
+                    m_current_token.m_tag.attributes.last().value_builder.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -983,7 +1001,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.last().value_builder.append(current_input_character.value());
+                    m_current_token.m_tag.attributes.last().value_builder.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -1014,7 +1032,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.last().value_builder.append(current_input_character.value());
+                    m_current_token.m_tag.attributes.last().value_builder.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -1090,7 +1108,7 @@ _StartOfFunction:
             {
                 ON('<')
                 {
-                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
+                    m_current_token.m_comment_or_character.data.append_codepoint(current_input_character.value());
                     SWITCH_TO(CommentLessThanSign);
                 }
                 ON('-')
@@ -1107,7 +1125,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
+                    m_current_token.m_comment_or_character.data.append_codepoint(current_input_character.value());
                     continue;
                 }
             }
@@ -1185,12 +1203,12 @@ _StartOfFunction:
             {
                 ON('!')
                 {
-                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
+                    m_current_token.m_comment_or_character.data.append_codepoint(current_input_character.value());
                     SWITCH_TO(CommentLessThanSignBang);
                 }
                 ON('<')
                 {
-                    m_current_token.m_comment_or_character.data.append(current_input_character.value());
+                    m_current_token.m_comment_or_character.data.append_codepoint(current_input_character.value());
                     continue;
                 }
                 ANYTHING_ELSE
@@ -1299,7 +1317,7 @@ _StartOfFunction:
                 ON_ASCII_ALPHANUMERIC
                 {
                     if (consumed_as_part_of_an_attribute()) {
-                        m_current_token.m_tag.attributes.last().value_builder.append(current_input_character.value());
+                        m_current_token.m_tag.attributes.last().value_builder.append_codepoint(current_input_character.value());
                         continue;
                     } else {
                         EMIT_CURRENT_CHARACTER;
@@ -1495,7 +1513,7 @@ _StartOfFunction:
                 ON(0)
                 {
                     PARSE_ERROR();
-                    EMIT_CHARACTER("\uFFFD");
+                    EMIT_CHARACTER(0xFFFD);
                 }
                 ON_EOF
                 {
@@ -1583,7 +1601,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_LOWER_ALPHA
                 {
-                    m_current_token.m_tag.tag_name.append(current_input_character.value());
+                    m_current_token.m_tag.tag_name.append_codepoint(current_input_character.value());
                     m_temporary_buffer.append(current_input_character.value());
                     continue;
                 }
@@ -1607,7 +1625,7 @@ _StartOfFunction:
                 ON(0)
                 {
                     PARSE_ERROR();
-                    EMIT_CHARACTER("\uFFFD");
+                    EMIT_CHARACTER(0xFFFD);
                 }
                 ON_EOF
                 {
@@ -1718,7 +1736,7 @@ _StartOfFunction:
                 ON(0)
                 {
                     PARSE_ERROR();
-                    EMIT_CHARACTER("\uFFFD");
+                    EMIT_CHARACTER(0xFFFD);
                 }
                 ON_EOF
                 {
@@ -1736,7 +1754,7 @@ _StartOfFunction:
                 ON(0)
                 {
                     PARSE_ERROR();
-                    EMIT_CHARACTER("\uFFFD");
+                    EMIT_CHARACTER(0xFFFD);
                 }
                 ON_EOF
                 {
@@ -2076,6 +2094,8 @@ HTMLTokenizer::HTMLTokenizer(const StringView& input, const String& encoding)
     ASSERT(decoder);
     m_decoded_input = decoder->to_utf8(input);
     m_input = m_decoded_input;
+    m_utf8_view = Utf8View(m_decoded_input);
+    m_utf8_iterator = m_utf8_view.begin();
 }
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)

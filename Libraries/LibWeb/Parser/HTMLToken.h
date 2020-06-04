@@ -30,6 +30,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 
 namespace Web {
@@ -67,9 +68,9 @@ public:
     u32 codepoint() const
     {
         ASSERT(is_character());
-        // FIXME: Handle non-ASCII codepoints properly.
-        ASSERT(m_comment_or_character.data.length() == 1);
-        return m_comment_or_character.data.string_view()[0];
+        Utf8View view(m_comment_or_character.data.string_view());
+        ASSERT(view.length_in_codepoints() == 1);
+        return *view.begin();
     }
 
     bool is_parser_whitespace() const
