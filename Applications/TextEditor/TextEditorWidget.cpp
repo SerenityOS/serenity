@@ -499,7 +499,7 @@ void TextEditorWidget::update_title()
 void TextEditorWidget::open_sesame(const String& path)
 {
     auto file = Core::File::construct(path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
         GUI::MessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
         return;
     }
