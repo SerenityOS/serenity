@@ -81,7 +81,8 @@ public:
             callback(*node);
     }
 
-    virtual const char* class_name() const { return "LayoutNode"; }
+    virtual const char* class_name() const = 0;
+    virtual bool is_root() const { return false; }
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }
     virtual bool is_replaced() const { return false; }
@@ -108,7 +109,11 @@ public:
     virtual void layout(LayoutMode);
     virtual void render(RenderingContext&);
 
+    bool is_absolutely_positioned() const;
+
     const LayoutBlock* containing_block() const;
+
+    bool can_contain_boxes_with_position_absolute() const;
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 

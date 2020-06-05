@@ -29,7 +29,9 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Frame.h>
 #include <LibWeb/Layout/LayoutBlock.h>
+#include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/LayoutReplaced.h>
 
 namespace Web {
 
@@ -53,13 +55,36 @@ void LayoutNode::layout(LayoutMode layout_mode)
     });
 }
 
+bool LayoutNode::can_contain_boxes_with_position_absolute() const
+{
+    return style().position() != CSS::Position::Static || is_root();
+}
+
 const LayoutBlock* LayoutNode::containing_block() const
 {
-    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (is<LayoutBlock>(*ancestor))
-            return to<LayoutBlock>(ancestor);
+    if (is_text()) {
+        auto* ancestor = parent();
+        while (ancestor && ((ancestor->is_inline() && !is<LayoutReplaced>(*ancestor)) || !is<LayoutBlock>(*ancestor)))
+            ancestor = ancestor->parent();
+        return to<LayoutBlock>(ancestor);
     }
-    return nullptr;
+
+    if (is_absolutely_positioned()) {
+        auto* ancestor = parent();
+        while (ancestor && !ancestor->can_contain_boxes_with_position_absolute())
+            ancestor = ancestor->parent();
+        while (ancestor && (!is<LayoutBlock>(ancestor) || ancestor->is_anonymous()))
+            ancestor = ancestor->containing_block();
+        return to<LayoutBlock>(ancestor);
+    }
+
+    if (style().position() == CSS::Position::Fixed)
+        return &root();
+
+    auto* ancestor = parent();
+    while (ancestor && ((ancestor->is_inline() && !is<LayoutReplaced>(*ancestor)) || !is<LayoutBlock>(*ancestor)))
+        ancestor = ancestor->parent();
+    return to<LayoutBlock>(ancestor);
 }
 
 void LayoutNode::render(RenderingContext& context)
@@ -154,5 +179,11 @@ Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
     }
     return position;
 }
+
+bool LayoutNode::is_absolutely_positioned() const
+{
+    return style().position() == CSS::Position::Absolute;
+}
+
 
 }

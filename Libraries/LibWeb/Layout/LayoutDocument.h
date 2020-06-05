@@ -45,6 +45,8 @@ public:
 
     void did_set_viewport_rect(Badge<Frame>, const Gfx::Rect&);
 
+    virtual bool is_root() const override { return true; }
+
 private:
     LayoutRange m_selection;
 };
