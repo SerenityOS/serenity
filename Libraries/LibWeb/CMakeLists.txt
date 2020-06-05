@@ -136,7 +136,7 @@ function(libweb_js_wrapper class)
     add_custom_command(
         OUTPUT Bindings/${class}Wrapper.h
         COMMAND /bin/mkdir -p Bindings
-        COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/DOM/${class}.idl > Bindings/${class}Wrapper.h
+        COMMAND ${LIBWEB_WRAPPER_GENERATOR_EXECUTABLE} --header ${CMAKE_CURRENT_SOURCE_DIR}/DOM/${class}.idl > Bindings/${class}Wrapper.h
         VERBATIM
         DEPENDS WrapperGenerator
         MAIN_DEPENDENCY DOM/${class}.idl
@@ -144,7 +144,7 @@ function(libweb_js_wrapper class)
     add_custom_command(
         OUTPUT Bindings/${class}Wrapper.cpp
         COMMAND /bin/mkdir -p Bindings
-        COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/DOM/${class}.idl > Bindings/${class}Wrapper.cpp
+        COMMAND ${LIBWEB_WRAPPER_GENERATOR_EXECUTABLE} --implementation ${CMAKE_CURRENT_SOURCE_DIR}/DOM/${class}.idl > Bindings/${class}Wrapper.cpp
         VERBATIM
         DEPENDS WrapperGenerator
         MAIN_DEPENDENCY DOM/${class}.idl
@@ -171,7 +171,7 @@ set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})
 add_custom_command(
     OUTPUT CSS/PropertyID.h
     COMMAND /bin/mkdir -p CSS
-    COMMAND Generate_CSS_PropertyID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json > CSS/PropertyID.h
+    COMMAND ${LIBWEB_GENERATE_CSS_PROPERTYID_H_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json > CSS/PropertyID.h
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_h
     MAIN_DEPENDENCY CSS/Properties.json
@@ -181,7 +181,7 @@ add_custom_target(generate_PropertyID.h DEPENDS CSS/PropertyID.h)
 add_custom_command(
     OUTPUT CSS/PropertyID.cpp
     COMMAND /bin/mkdir -p CSS
-    COMMAND Generate_CSS_PropertyID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json > CSS/PropertyID.cpp
+    COMMAND ${LIBWEB_GENERATE_CSS_PROPERTYID_CPP_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json > CSS/PropertyID.cpp
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_cpp
     MAIN_DEPENDENCY CSS/Properties.json

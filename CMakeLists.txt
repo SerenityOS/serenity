@@ -1,4 +1,17 @@
 cmake_minimum_required(VERSION 3.16)
+
+if (BUILD_CROSS_OS_PHASE2)
+set(CMAKE_SYSTEM_NAME Generic)
+endif()
+
+if (NOT DEFINED BUILD_HOST_TOOLS_PHASE1)
+set(BUILD_HOST_TOOLS_PHASE1 True)
+endif()
+
+if (NOT DEFINED BUILD_CROSS_OS_PHASE2)
+set(BUILD_CROSS_OS_PHASE2 True)
+endif()
+
 project(SerenityOS C CXX ASM)
 
 if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
@@ -45,11 +58,38 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++2a -fdiagn
 include_directories(Libraries)
 include_directories(.)
 
+if(BUILD_HOST_TOOLS_PHASE1)
+
 add_subdirectory(Meta/Lagom)
 add_subdirectory(DevTools/IPCCompiler)
 add_subdirectory(DevTools/FormCompiler)
 add_subdirectory(Libraries/LibWeb/CodeGenerators)
 add_subdirectory(AK/Tests)
+
+else()
+
+# Fake empty Targets needed when building with a two phase build
+add_custom_target(IPCCompiler)
+add_custom_target(FormCompiler)
+add_custom_target(WrapperGenerator)
+add_custom_target(Generate_CSS_PropertyID_h)
+add_custom_target(Generate_CSS_PropertyID_cpp)
+
+endif()
+
+if(DEFINED BUILD_HOST_TOOLS_LOCATION)
+set(IPC_COMPILER_EXECUTABLE "${BUILD_HOST_TOOLS_LOCATION}/DevTools/IPCCompiler/IPCCompiler")
+set(LIBWEB_WRAPPER_GENERATOR_EXECUTABLE "${BUILD_HOST_TOOLS_LOCATION}/Libraries/LibWeb/CodeGenerators/WrapperGenerator")
+set(LIBWEB_GENERATE_CSS_PROPERTYID_H_EXECUTABLE "${BUILD_HOST_TOOLS_LOCATION}/Libraries/LibWeb/CodeGenerators/Generate_CSS_PropertyID_h")
+set(LIBWEB_GENERATE_CSS_PROPERTYID_CPP_EXECUTABLE "${BUILD_HOST_TOOLS_LOCATION}/Libraries/LibWeb/CodeGenerators/Generate_CSS_PropertyID_cpp")
+else()
+set(IPC_COMPILER_EXECUTABLE "IPCCompiler")
+set(LIBWEB_WRAPPER_GENERATOR_EXECUTABLE "WrapperGenerator")
+set(LIBWEB_GENERATE_CSS_PROPERTYID_H_EXECUTABLE "Generate_CSS_PropertyID_h")
+set(LIBWEB_GENERATE_CSS_PROPERTYID_CPP_EXECUTABLE "Generate_CSS_PropertyID_cpp")
+endif()
+
+if (BUILD_CROSS_OS_PHASE2)
 
 function(serenity_install_headers target_name)
     file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h")
@@ -96,7 +136,7 @@ function(compile_ipc source output)
     set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
     add_custom_command(
         OUTPUT ${output}
-        COMMAND IPCCompiler ${source} > ${output}
+        COMMAND ${IPC_COMPILER_EXECUTABLE} ${source} > ${output}
         VERBATIM
         DEPENDS IPCCompiler
         MAIN_DEPENDENCY ${source}
@@ -149,3 +189,5 @@ add_subdirectory(MenuApplets)
 add_subdirectory(Shell)
 add_subdirectory(Demos)
 add_subdirectory(Userland)
+
+endif()

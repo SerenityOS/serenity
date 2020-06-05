@@ -55,10 +55,17 @@ set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSERENITY_LIBC_BUILD")
 
 add_library(crt0 STATIC crt0.cpp)
-add_custom_command(
-    TARGET crt0
-    COMMAND install -D $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
-)
+if(CMAKE_HOST_APPLE)
+    add_custom_command(
+        TARGET crt0
+        COMMAND ginstall -D $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
+    )
+else() 
+    add_custom_command(
+        TARGET crt0
+        COMMAND install -D $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
+    )
+endif()
 
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES})
 serenity_libc(LibC c)

@@ -23,6 +23,7 @@
 *.autosave
 Meta/Lagom/build
 Build
+BuildHost
 build
 CMakeFiles
 Toolchain/Tarballs

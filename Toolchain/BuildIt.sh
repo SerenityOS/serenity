@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
+if [ "$(uname)" = "Darwin" ]; then
+INSTALL=ginstall
+else
 shopt -s globstar
+INSTALL=install
+fi
 # This file will need to be run in bash, for now.
 
 
@@ -14,6 +19,7 @@ ARCH=${ARCH:-"i686"}
 TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local"
 BUILD=$(realpath "$DIR/../Build")
+BUILDHOST=$(realpath "$DIR/../BuildHost")
 SYSROOT="$BUILD/Root"
 
 MAKE="make"
@@ -226,16 +232,37 @@ pushd "$DIR/Build/"
         "$MAKE" install-gcc install-target-libgcc || exit 1
 
         echo "XXX serenity libc and libm"
+
+        if [ "$(uname)" = "Darwin" ]; then
+            mkdir -p "$BUILDHOST"
+            pushd "$BUILDHOST"
+                cmake -DBUILD_HOST_TOOLS_PHASE1=True -DBUILD_CROSS_OS_PHASE2=False ..
+                cmake --build .
+            popd
+        fi
+
         mkdir -p "$BUILD"
         pushd "$BUILD"
-            CXXFLAGS="-DBUILDING_SERENITY_TOOLCHAIN" cmake ..
-            cmake --build . --target LibC
-            install -D Libraries/LibC/libc.a Libraries/LibM/libm.a Root/usr/lib/
+            if [ "$(uname)" = "Darwin" ]; then
+                CXXFLAGS="-DBUILDING_SERENITY_TOOLCHAIN" cmake -DBUILD_HOST_TOOLS_LOCATION="${BUILDHOST}" -DBUILD_HOST_TOOLS_PHASE1=False -DBUILD_CROSS_OS_PHASE2=True ..
+            else
+                CXXFLAGS="-DBUILDING_SERENITY_TOOLCHAIN" cmake ..
+            fi
+            cmake --build . --target LibC 
+            $INSTALL -D Libraries/LibC/libc.a Libraries/LibM/libm.a Root/usr/lib/
             SRC_ROOT=$(realpath "$DIR"/..)
-            for header in "$SRC_ROOT"/Libraries/Lib{C,M}/**/*.h; do
-                target=$(echo "$header" | sed -e "s@$SRC_ROOT/Libraries/LibC@@" -e "s@$SRC_ROOT/Libraries/LibM@@")
-                install -D "$header" "Root/usr/include/$target"
-            done
+            if [ "$(uname)" = "Darwin" ]; then
+                FILES=`find "$SRC_ROOT"/Libraries/LibC "$SRC_ROOT"/Libraries/LibM -name '*.h' -print`
+                for header in $FILES; do
+                    target=$(echo "$header" | sed -e "s@$SRC_ROOT/Libraries/LibC@@" -e "s@$SRC_ROOT/Libraries/LibM@@")
+                    $INSTALL -D "$header" "Root/usr/include/$target"
+                done
+            else
+                for header in "$SRC_ROOT"/Libraries/Lib{C,M}/**/*.h; do
+                    target=$(echo "$header" | sed -e "s@$SRC_ROOT/Libraries/LibC@@" -e "s@$SRC_ROOT/Libraries/LibM@@")
+                    $INSTALL -D "$header" "Root/usr/include/$target"
+                done
+            fi
             unset SRC_ROOT
         popd
 
