@@ -139,6 +139,57 @@ FLATTEN SignedBigInteger SignedBigInteger::minus(const UnsignedBigInteger& other
     return { other.minus(m_unsigned_data), true };
 }
 
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const UnsignedBigInteger& other) const
+{
+    return { unsigned_value().bitwise_or(other), m_sign };
+}
+
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const UnsignedBigInteger& other) const
+{
+    return { unsigned_value().bitwise_and(other), false };
+}
+
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(const UnsignedBigInteger& other) const
+{
+    return { unsigned_value().bitwise_xor(other), m_sign };
+}
+
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_not() const
+{
+    return { unsigned_value().bitwise_not(), !m_sign };
+}
+
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& other) const
+{
+    auto result = bitwise_or(other.unsigned_value());
+
+    // The sign bit will have to be OR'd manually.
+    if (other.is_negative())
+        result.negate();
+
+    return result;
+}
+
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const SignedBigInteger& other) const
+{
+    auto result = bitwise_and(other.unsigned_value());
+
+    // The sign bit will have to be AND'd manually.
+    result.m_sign = is_negative() || other.is_negative();
+
+    return result;
+}
+
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(const SignedBigInteger& other) const
+{
+    auto result = bitwise_xor(other.unsigned_value());
+
+    // The sign bit will have to be XOR'd manually.
+    result.m_sign = is_negative() ^ other.is_negative();
+
+    return result;
+}
+
 bool SignedBigInteger::operator==(const UnsignedBigInteger& other) const
 {
     if (m_sign)

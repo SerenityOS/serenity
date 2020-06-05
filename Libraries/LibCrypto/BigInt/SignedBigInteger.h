@@ -107,12 +107,19 @@ public:
 
     SignedBigInteger plus(const SignedBigInteger& other) const;
     SignedBigInteger minus(const SignedBigInteger& other) const;
+    SignedBigInteger bitwise_or(const SignedBigInteger& other) const;
+    SignedBigInteger bitwise_and(const SignedBigInteger& other) const;
+    SignedBigInteger bitwise_xor(const SignedBigInteger& other) const;
+    SignedBigInteger bitwise_not() const;
     SignedBigInteger shift_left(size_t num_bits) const;
     SignedBigInteger multiplied_by(const SignedBigInteger& other) const;
     SignedDivisionResult divided_by(const SignedBigInteger& divisor) const;
 
     SignedBigInteger plus(const UnsignedBigInteger& other) const;
     SignedBigInteger minus(const UnsignedBigInteger& other) const;
+    SignedBigInteger bitwise_or(const UnsignedBigInteger& other) const;
+    SignedBigInteger bitwise_and(const UnsignedBigInteger& other) const;
+    SignedBigInteger bitwise_xor(const UnsignedBigInteger& other) const;
     SignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     SignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
 
