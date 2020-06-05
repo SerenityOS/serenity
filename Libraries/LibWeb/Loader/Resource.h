@@ -55,6 +55,8 @@ public:
     static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, Type, const LoadRequest&);
     virtual ~Resource();
 
+    Type type() const { return m_type; }
+
     bool is_loaded() const { return m_loaded; }
 
     bool is_failed() const { return m_failed; }
@@ -95,6 +97,8 @@ public:
     virtual void resource_did_fail() { }
 
 protected:
+    virtual Resource::Type client_type() const { return Resource::Type::Generic; }
+
     Resource* resource() { return m_resource; }
     const Resource* resource() const { return m_resource; }
     void set_resource(Resource*);

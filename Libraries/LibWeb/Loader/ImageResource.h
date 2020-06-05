@@ -54,6 +54,9 @@ public:
 protected:
     ImageResource* resource() { return static_cast<ImageResource*>(ResourceClient::resource()); }
     const ImageResource* resource() const { return static_cast<const ImageResource*>(ResourceClient::resource()); }
+
+private:
+    virtual Resource::Type client_type() const override { return Resource::Type::Image; }
 };
 
 }
