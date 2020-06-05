@@ -26,14 +26,13 @@
 
 #pragma once
 
-#include "AK/RegexMatcher.h"
+#include "LibRegex/RegexMatcher.h"
 #include "AK/StringBuilder.h"
 
 //#define REGEX_DEBUG
 
 #ifdef REGEX_DEBUG
 
-namespace AK {
 namespace regex {
 
 class RegexDebug {
@@ -65,8 +64,8 @@ public:
         for (;;) {
             auto* opcode = bytecode.get_opcode(state);
             if (!opcode) {
-                //FIXME: How to bring this bad situation to a good end?
-                break;
+                dbg() << "Wrong opcode... failed!";
+                return;
             }
 
             print_opcode("PrintBytecode", *opcode, state);
@@ -103,11 +102,11 @@ public:
     {
         StringBuilder builder;
         builder.append(execution_result_name(result));
-        if (result == ExecutionResult::Done) {
+        if (result == ExecutionResult::Succeeded) {
             builder.appendf(", ip: %lu/%lu, sp: %lu/%lu", state.instruction_position, bytecode.size() - 1, state.string_position, input.view.length() - 1);
         } else if (result == ExecutionResult::Fork_PrioHigh) {
             builder.appendf(", next ip: %lu", state.fork_at_position + opcode.size());
-        } else if (result != ExecutionResult::Exit) {
+        } else if (result != ExecutionResult::Failed) {
             builder.appendf(", next ip: %lu", state.instruction_position + opcode.size());
         }
 
@@ -148,8 +147,7 @@ private:
 };
 
 }
-}
 
-using AK::regex::RegexDebug;
+using Regex::RegexDebug;
 
 #endif

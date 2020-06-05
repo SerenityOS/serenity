@@ -27,26 +27,27 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <stdio.h>
 
-namespace AK {
 namespace regex {
 
 #define FlagsUnderlyingType u16
 
 enum class AllFlags : FlagsUnderlyingType {
-    Global = 1,                      // All matches (don't return after first match)
-    Insensitive = Global << 1,       // Case insensitive match (ignores case of [a-zA-Z])
-    Ungreedy = Global << 2,          // The match becomes lazy by default. Now a ? following a quantifier makes it greedy
-    Unicode = Global << 3,           // Enable all unicode features and interpret all unicode escape sequences as such
-    Extended = Global << 4,          // Ignore whitespaces. Spaces and text after a # in the pattern are ignored
-    Extra = Global << 5,             // Dissallow meaningless escapes. A \ followed by a letter with no special meaning is faulted
-    Anchored = Global << 6,          // Pattern is forced to ^ -> do not search in whole string!
-    DollarEndOnly = Global << 7,     // Force the a dollar sign, $, to always match end of the string, instead of end of the line. This option is ignored if the m-flag is set
-    NoSubExpressions = Global << 8,  // Do not return sub expressions in the result
-    StringCopyMatches = Global << 9, // Do explicitly copy results into new allocated string instead of StringView to original string.
-    SingleLine = Global << 10,       // Dot matches newline characters
-    Sticky = Global << 11,           // Force the pattern to only match consecutive matches from where the previous match ended.
-    Multiline = Global << 12,        // Handle newline characters. Match each line, one by one.
+    Global = 1,                        // All matches (don't return after first match)
+    Insensitive = Global << 1,         // Case insensitive match (ignores case of [a-zA-Z])
+    Ungreedy = Global << 2,            // The match becomes lazy by default. Now a ? following a quantifier makes it greedy
+    Unicode = Global << 3,             // Enable all unicode features and interpret all unicode escape sequences as such
+    Extended = Global << 4,            // Ignore whitespaces. Spaces and text after a # in the pattern are ignored
+    Extra = Global << 5,               // Dissallow meaningless escapes. A \ followed by a letter with no special meaning is faulted
+    MatchNotBeginOfLine = Global << 6, // Pattern is not forced to ^ -> search in whole string!
+    MatchNotEndOfLine = Global << 7,   // Don't Force the dollar sign, $, to always match end of the string, instead of end of the line. This option is ignored if the Multiline-flag is set
+    SkipSubExprResults = Global << 8,  // Do not return sub expressions in the result
+    StringCopyMatches = Global << 9,   // Do explicitly copy results into new allocated string instead of StringView to original string.
+    SingleLine = Global << 10,         // Dot matches newline characters
+    Sticky = Global << 11,             // Force the pattern to only match consecutive matches from where the previous match ended.
+    Multiline = Global << 12,          // Handle newline characters. Match each line, one by one.
+    Last = Multiline
 };
 
 enum class PosixFlags : FlagsUnderlyingType {
@@ -56,8 +57,9 @@ enum class PosixFlags : FlagsUnderlyingType {
     Unicode = (FlagsUnderlyingType)AllFlags::Unicode,
     Extended = (FlagsUnderlyingType)AllFlags::Extended,
     Extra = (FlagsUnderlyingType)AllFlags::Extra,
-    Anchored = (FlagsUnderlyingType)AllFlags::Anchored,
-    DollarEndOnly = (FlagsUnderlyingType)AllFlags::DollarEndOnly,
+    MatchNotBeginOfLine = (FlagsUnderlyingType)AllFlags::MatchNotBeginOfLine,
+    MatchNotEndOfLine = (FlagsUnderlyingType)AllFlags::MatchNotEndOfLine,
+    SkipSubExprResults = (FlagsUnderlyingType)AllFlags::SkipSubExprResults,
     Multiline = (FlagsUnderlyingType)AllFlags::Multiline,
     StringCopyMatches = (FlagsUnderlyingType)AllFlags::StringCopyMatches,
 };
@@ -112,6 +114,7 @@ public:
     }
 
     void reset_flags() { m_flags = (T)0; }
+    void reset_flag(T flag) { m_flags = (T)((FlagsUnderlyingType)m_flags & ~(FlagsUnderlyingType)flag); }
     void set_flag(T flag) { *this |= flag; }
     bool has_flag_set(T flag) const { return *this & flag; }
     T value() const { return m_flags; }
@@ -143,9 +146,8 @@ using ECMAScriptOptions = RegexOptions<ECMAScriptFlags>;
 using PosixOptions = RegexOptions<PosixFlags>;
 
 }
-}
 
-using AK::regex::ECMAScriptFlags;
-using AK::regex::ECMAScriptOptions;
-using AK::regex::PosixFlags;
-using AK::regex::PosixOptions;
+using regex::ECMAScriptFlags;
+using regex::ECMAScriptOptions;
+using regex::PosixFlags;
+using regex::PosixOptions;

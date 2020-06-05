@@ -26,9 +26,8 @@
 
 #include "RegexLexer.h"
 #include <AK/Assertions.h>
-#include <cstdio>
+#include <stdio.h>
 
-namespace AK {
 namespace regex {
 
 const char* Token::name(const TokenType type)
@@ -55,7 +54,7 @@ Lexer::Lexer(const StringView source)
 {
 }
 
-char Lexer::peek(size_t offset) const
+ALWAYS_INLINE char Lexer::peek(size_t offset) const
 {
     if ((m_position + offset) >= m_source.length())
         return EOF;
@@ -69,7 +68,7 @@ void Lexer::back(size_t offset)
     m_current_char = m_source[m_position];
 }
 
-void Lexer::consume()
+ALWAYS_INLINE void Lexer::consume()
 {
     m_previous_position = m_position;
 
@@ -99,6 +98,7 @@ Token Lexer::next()
     };
 
     auto commit_token = [&](auto type) -> Token& {
+        ASSERT(token_start_position + m_previous_position - token_start_position + 1 <= m_source.length());
         auto substring = m_source.substring_view(token_start_position, m_previous_position - token_start_position + 1);
         m_current_token = Token(type, token_start_position, substring);
         return m_current_token;
@@ -204,8 +204,7 @@ Token Lexer::next()
         return emit_token(TokenType::Char);
     }
 
-    return Token(TokenType::Eof, m_position, m_source.substring_view(0, 0));
+    return Token(TokenType::Eof, m_position, nullptr);
 }
 
-}
 }

@@ -31,25 +31,17 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <cstring>
-
-#ifdef __serenity
-#    include <regex.h>
-#else
-#    include <LibC/regex.h>
-#endif
+#include <LibRegex/Regex.h>
 
 #include <stdio.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
 {
-#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
-#endif
 
     Vector<const char*> files;
 
@@ -64,36 +56,32 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    static constexpr int num_matches { 8 };
-    regmatch_t matches[num_matches];
-    regex_t regex;
+    if (!use_ere)
+        return 0;
 
-    if (use_ere) {
+    // mock grep behaviour: if -e is omitted, use first positional argument as pattern
+    if (pattern == nullptr && files.size())
+        pattern = files.take_first();
 
-        // rebuild grep behaviour: if -e is omitted, use first positional argument as pattern
-        if (pattern == nullptr && files.size())
-            pattern = files.take_first();
-
-        if (regcomp(&regex, pattern, REG_EXTENDED) != REG_NOERR) {
-            fprintf(stderr, "Error in regular expression pattern.\n");
-            return 1;
-        }
+    Regex<PosixExtended> re(pattern);
+    if (re.parser_result.error != Error::NoError) {
+        return 1;
     }
 
     auto match = [&](const char* str, const char* filename = "", bool print_filename = false) {
         size_t last_printed_char_pos { 0 };
-        if (regexec(&regex, str, num_matches, matches, REG_MATCHALL) == REG_NOERR) {
-            size_t n = 0;
-            if (matches[0].match_count && print_filename) {
+        auto result = re.match(str, PosixFlags::Global);
+        if (result.success) {
+            if (result.matches.size() && print_filename) {
                 printf("\x1B[34m%s:\x1B[0m", filename);
             }
 
-            for (size_t i = 0; i < matches[0].match_count; ++i) {
+            for (auto& match : result.matches) {
+
                 printf("%s\x1B[32m%s\x1B[0m",
-                    String(&str[last_printed_char_pos], matches[n].rm_so - last_printed_char_pos).characters(),
-                    String(&str[matches[n].rm_so], matches[n].rm_eo - matches[n].rm_so).characters());
-                last_printed_char_pos = matches[n].rm_eo;
-                n += regex.re_nsub + 1;
+                    String(&str[last_printed_char_pos], match.global_offset - last_printed_char_pos).characters(),
+                    match.view.to_string().characters());
+                last_printed_char_pos = match.global_offset + match.view.length();
             }
             printf("%s", String(&str[last_printed_char_pos], strlen(str) - last_printed_char_pos).characters());
         }
@@ -159,10 +147,9 @@ int main(int argc, char** argv)
 
             first = false;
 
-            if (feof(stdin)) {
-                regfree(&regex);
+            if (feof(stdin))
                 return 0;
-            }
+
             ASSERT(str);
         }
     } else {
@@ -172,15 +159,11 @@ int main(int argc, char** argv)
         } else {
             bool print_filename { files.size() > 1 };
             for (auto& filename : files) {
-                if (!handle_file(filename, print_filename)) {
-                    regfree(&regex);
+                if (!handle_file(filename, print_filename))
                     return 1;
-                }
             }
         }
     }
-
-    regfree(&regex);
 
     return 0;
 }

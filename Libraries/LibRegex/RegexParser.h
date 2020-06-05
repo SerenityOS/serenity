@@ -32,11 +32,13 @@
 #include "RegexOptions.h"
 
 #include <AK/Forward.h>
+#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
-namespace AK {
 namespace regex {
+
+class PosixExtendedParser;
 
 template<typename T>
 struct GenericParserTraits {
@@ -81,15 +83,14 @@ public:
 protected:
     virtual bool parse_internal(ByteCode&, size_t& match_length_minimum) = 0;
 
-    bool match(TokenType type) const;
-    bool match(char ch) const;
-    Token consume();
-    Token consume(TokenType type, Error error);
-    bool consume(const String&);
-    void reset();
-    bool done() const;
-
-    bool set_error(Error error);
+    ALWAYS_INLINE bool match(TokenType type) const;
+    ALWAYS_INLINE bool match(char ch) const;
+    ALWAYS_INLINE Token consume();
+    ALWAYS_INLINE Token consume(TokenType type, Error error);
+    ALWAYS_INLINE bool consume(const String&);
+    ALWAYS_INLINE void reset();
+    ALWAYS_INLINE bool done() const;
+    ALWAYS_INLINE bool set_error(Error error);
 
     struct ParserState {
         Lexer& lexer;
@@ -126,20 +127,19 @@ public:
     ~PosixExtendedParser() = default;
 
 private:
-    bool match_repetition_symbol();
-    bool match_ordinary_characters();
+    ALWAYS_INLINE bool match_repetition_symbol();
+    ALWAYS_INLINE bool match_ordinary_characters();
 
     bool parse_internal(ByteCode&, size_t&) override;
 
     bool parse_root(ByteCode&, size_t&);
-    bool parse_sub_expression(ByteCode&, size_t&);
-    bool parse_bracket_expression(ByteCode&, size_t&);
-    bool parse_repetition_symbol(ByteCode&, size_t&);
+    ALWAYS_INLINE bool parse_sub_expression(ByteCode&, size_t&);
+    ALWAYS_INLINE bool parse_bracket_expression(ByteCode&, size_t&);
+    ALWAYS_INLINE bool parse_repetition_symbol(ByteCode&, size_t&);
 };
 
 using PosixExtended = PosixExtendedParser;
 
 }
-}
 
-using AK::regex::PosixExtended;
+using regex::PosixExtended;

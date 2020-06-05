@@ -26,25 +26,23 @@
 
 #include <AK/TestSuite.h> // import first, to prevent warning of ASSERT* redefinition
 
-#include <AK/Regex.h>
+#include <LibRegex/Regex.h>
 #include <stdio.h>
 
-#define BENCHMARK_LOOP_ITERATIONS 100000
+#ifndef REGEX_DEBUG
 
-#define REGEX_BENCHMARK_OUR
-#ifndef __serenity__
-#    define REGEX_BENCHMARK_OTHER
-#endif
+#    define BENCHMARK_LOOP_ITERATIONS 100000
 
-#if defined(REGEX_DEBUG)
-#    error "Running benchmark with debug on is not recommended!"
-#endif
+//#    define REGEX_BENCHMARK_OUR
+#    ifndef __serenity__
+//#        define REGEX_BENCHMARK_OTHER
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-#    include <regex>
-#endif
+#    if defined(REGEX_BENCHMARK_OTHER)
+#        include <regex>
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(catch_all_benchmark)
 {
     Regex<PosixExtended> re("^.*$");
@@ -910,6 +908,7 @@ BENCHMARK_CASE(simple_ignorecase_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_search("hell Friends", m, re), false);
     }
 }
+#endif
 #endif
 
 TEST_MAIN(Regex)

@@ -29,7 +29,6 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 
-namespace AK {
 namespace regex {
 
 enum class Error : u8 {
@@ -93,7 +92,6 @@ inline String get_error_string(Error error)
     return "Undefined error.";
 }
 }
-}
 
-using AK::regex::Error;
-using AK::regex::get_error_string;
+using regex::Error;
+using regex::get_error_string;

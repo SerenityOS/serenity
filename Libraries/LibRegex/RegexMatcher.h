@@ -39,7 +39,6 @@
 
 #include <stdio.h>
 
-namespace AK {
 namespace regex {
 
 static const constexpr size_t c_max_recursion = 5000;
@@ -68,11 +67,11 @@ public:
     }
     ~Matcher() = default;
 
-    RegexResult match(const StringView&, Optional<typename ParserTraits<Parser>::OptionsType> = {});
+    RegexResult match(const StringView&, Optional<typename ParserTraits<Parser>::OptionsType> = {}) const;
 
 private:
-    bool execute(const MatchInput&, MatchState&, MatchOutput&, size_t recursion_level);
-    bool execute_low_prio_forks(const MatchInput& input, MatchState& state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level);
+    Optional<bool> execute(const MatchInput& input, MatchState& state, MatchOutput& output, size_t recursion_level) const;
+    ALWAYS_INLINE Optional<bool> execute_low_prio_forks(const MatchInput& input, MatchState& original_state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level) const;
 
     const Regex<Parser>& m_pattern;
     const typename ParserTraits<Parser>::OptionsType m_regex_options;
@@ -82,30 +81,40 @@ template<class Parser>
 class Regex final {
 public:
     String pattern_value;
-    AK::regex::Parser::Result parser_result;
+    regex::Parser::Result parser_result;
     OwnPtr<Matcher<Parser>> matcher { nullptr };
 
     Regex(StringView pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
     ~Regex() = default;
 
     void print_bytecode(FILE* f = stdout) const;
-    String error_string() const;
+    String error_string(Optional<String> message = {}) const;
 
-    RegexResult match(StringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+    RegexResult match(StringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
         return matcher->match(view, regex_options);
     }
 
-    RegexResult search(StringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+    RegexResult search(StringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
-        return matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::Global);
+
+        AllOptions options = (AllOptions)regex_options.value_or({});
+        if ((options & AllFlags::MatchNotBeginOfLine) && (options & AllFlags::MatchNotEndOfLine)) {
+            options.reset_flag(AllFlags::MatchNotEndOfLine);
+            options.reset_flag(AllFlags::MatchNotBeginOfLine);
+        } /*else if ((options & AllFlags::MatchNotBeginOfLine) && ((options & AllFlags::Global))) {
+            options.reset_flag(AllFlags::MatchNotBeginOfLine);
+        }*/
+        options |= AllFlags::Global;
+
+        return matcher->match(view, options);
     }
 
-    bool match(StringView view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+    bool match(StringView view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
@@ -113,19 +122,17 @@ public:
         return m.success;
     }
 
-    bool search(StringView view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+    bool search(StringView view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
-        if (!matcher || parser_result.error != Error::NoError)
-            return {};
-        m = matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::Global);
+        m = search(view, regex_options);
         return m.success;
     }
 
-    bool has_match(const StringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+    bool has_match(const StringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return false;
-        RegexResult result = matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::NoSubExpressions);
+        RegexResult result = matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::SkipSubExprResults);
         return result.success;
     }
 };
@@ -169,14 +176,13 @@ bool has_match(const StringView view, Regex<Parser>& pattern, Optional<typename 
 {
     if (pattern.matcher == nullptr)
         return {};
-    RegexResult result = pattern.matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::NoSubExpressions);
+    RegexResult result = pattern.matcher->match(view, AllOptions { regex_options.value_or({}) } | AllFlags::SkipSubExprResults);
     return result.success;
 }
 
 }
-}
 
-using AK::regex::has_match;
-using AK::regex::match;
-using AK::regex::Regex;
-using AK::regex::RegexResult;
+using regex::has_match;
+using regex::match;
+using regex::Regex;
+using regex::RegexResult;

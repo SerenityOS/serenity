@@ -39,6 +39,7 @@ add_subdirectory(DevTools/IPCCompiler)
 add_subdirectory(DevTools/FormCompiler)
 add_subdirectory(Libraries/LibWeb/CodeGenerators)
 add_subdirectory(AK/Tests)
+add_subdirectory(Libraries/LibRegex/Tests)
 
 function(serenity_install_headers target_name)
     file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h")

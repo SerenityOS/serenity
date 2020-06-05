@@ -30,7 +30,6 @@
 
 #include <ctype.h>
 
-namespace AK {
 namespace regex {
 
 const char* OpCode::name(OpCodeId opcode_id)
@@ -96,7 +95,7 @@ const char* character_class_name(CharClass ch_class)
 
 HashMap<u32, OwnPtr<OpCode>> ByteCode::s_opcodes {};
 
-inline OpCode* ByteCode::get_opcode_by_id(OpCodeId id) const
+ALWAYS_INLINE OpCode* ByteCode::get_opcode_by_id(OpCodeId id) const
 {
     if (!s_opcodes.size()) {
         for (u32 i = (u32)OpCodeId::First; i <= (u32)OpCodeId::Last; ++i) {
@@ -159,50 +158,59 @@ OpCode* ByteCode::get_opcode(MatchState& state) const
     return op_code;
 }
 
-ExecutionResult OpCode_Exit::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
 {
     if (state.string_position > input.view.length() || state.instruction_position >= m_bytecode->size())
-        return ExecutionResult::Done;
+        return ExecutionResult::Succeeded;
 
-    return ExecutionResult::Exit;
+    return ExecutionResult::Failed;
 }
 
-ExecutionResult OpCode_Jump::execute(const MatchInput&, MatchState& state, MatchOutput&) const
+ALWAYS_INLINE ExecutionResult OpCode_Jump::execute(const MatchInput&, MatchState& state, MatchOutput&) const
 {
 
     state.instruction_position += offset();
     return ExecutionResult::Continue;
 }
 
-ExecutionResult OpCode_ForkJump::execute(const MatchInput&, MatchState& state, MatchOutput&) const
+ALWAYS_INLINE ExecutionResult OpCode_ForkJump::execute(const MatchInput&, MatchState& state, MatchOutput&) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     return ExecutionResult::Fork_PrioHigh;
 }
 
-ExecutionResult OpCode_ForkStay::execute(const MatchInput&, MatchState& state, MatchOutput&) const
+ALWAYS_INLINE ExecutionResult OpCode_ForkStay::execute(const MatchInput&, MatchState& state, MatchOutput&) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     return ExecutionResult::Fork_PrioLow;
 }
 
-ExecutionResult OpCode_CheckBegin::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+ALWAYS_INLINE ExecutionResult OpCode_CheckBegin::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
 {
-    if (state.string_position != 0 || ((input.regex_options & AllFlags::Global) && !((input.regex_options & AllFlags::Anchored) || (input.regex_options & AllFlags::Global))))
-        return ExecutionResult::Exit;
+    if (0 == state.string_position && (input.regex_options & AllFlags::MatchNotBeginOfLine))
+        return ExecutionResult::Failed;
 
-    return ExecutionResult::Continue;
+    if ((0 == state.string_position && !(input.regex_options & AllFlags::MatchNotBeginOfLine))
+        || (0 != state.string_position && (input.regex_options & AllFlags::MatchNotBeginOfLine))
+        || (0 == state.string_position && (input.regex_options & AllFlags::Global)))
+        return ExecutionResult::Continue;
+
+    return ExecutionResult::Failed;
 }
 
-ExecutionResult OpCode_CheckEnd::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
 {
-    if (state.string_position != input.view.length())
-        return ExecutionResult::Exit;
+    if (state.string_position == input.view.length() && (input.regex_options & AllFlags::MatchNotEndOfLine))
+        return ExecutionResult::Failed;
 
-    return ExecutionResult::Continue;
+    if ((state.string_position == input.view.length() && !(input.regex_options & AllFlags::MatchNotEndOfLine))
+        || (state.string_position != input.view.length() && (input.regex_options & AllFlags::MatchNotEndOfLine || input.regex_options & AllFlags::MatchNotBeginOfLine)))
+        return ExecutionResult::Succeeded;
+
+    return ExecutionResult::Failed;
 }
 
-ExecutionResult OpCode_SaveLeftCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
+ALWAYS_INLINE ExecutionResult OpCode_SaveLeftCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
 {
     if (input.match_index >= output.capture_group_matches.size()) {
         output.capture_group_matches.ensure_capacity(input.match_index);
@@ -218,26 +226,33 @@ ExecutionResult OpCode_SaveLeftCaptureGroup::execute(const MatchInput& input, Ma
             output.capture_group_matches.at(input.match_index).empend();
     }
 
-    output.capture_group_matches.at(input.match_index).at(id()).column = state.string_position;
+    output.capture_group_matches.at(input.match_index).at(id()).left_column = state.string_position;
     return ExecutionResult::Continue;
 }
 
-ExecutionResult OpCode_SaveRightCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
+ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
 {
     auto& match = output.capture_group_matches.at(input.match_index).at(id());
-    auto start_position = match.column;
+    auto start_position = match.left_column;
     auto length = state.string_position - start_position;
 
+    if (start_position < match.column)
+        return ExecutionResult::Continue;
+
+    ASSERT(start_position + length <= input.view.length());
+
+    auto view = input.view.substring_view(start_position, length);
+
     if (input.regex_options & AllFlags::StringCopyMatches) {
-        match = { input.view.substring_view(start_position, length).to_string(), input.line, start_position };
-    } else { // let the view point to the original string ...
-        match = { input.view.substring_view(start_position, length), input.line, start_position };
+        match = { view.to_string(), input.line, start_position, input.global_offset + start_position }; // create a copy of the original string
+    } else {
+        match = { view, input.line, start_position, input.global_offset + start_position }; // take view to original string
     }
 
     return ExecutionResult::Continue;
 }
 
-ExecutionResult OpCode_SaveLeftNamedCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
+ALWAYS_INLINE ExecutionResult OpCode_SaveLeftNamedCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
 {
     if (input.match_index >= output.named_capture_group_matches.size()) {
         output.named_capture_group_matches.ensure_capacity(input.match_index);
@@ -249,7 +264,7 @@ ExecutionResult OpCode_SaveLeftNamedCaptureGroup::execute(const MatchInput& inpu
     return ExecutionResult::Continue;
 }
 
-ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
+ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
 {
     StringView capture_group_name = name();
 
@@ -260,13 +275,16 @@ ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const MatchInput& inp
         auto& map = output.named_capture_group_matches.at(input.match_index);
 
 #ifdef REGEX_DEBUG
+        ASSERT(start_position + length < input.view.length());
         dbg() << "Save named capture group with name=" << capture_group_name << " and content: " << input.view.substring_view(start_position, length).to_string();
 #endif
 
+        ASSERT(start_position + length <= input.view.length());
+        auto view = input.view.substring_view(start_position, length);
         if (input.regex_options & AllFlags::StringCopyMatches) {
-            map.set(capture_group_name, { input.view.substring_view(start_position, length).to_string(), input.line, start_position });
-        } else { // let the view point to the original string ...
-            map.set(capture_group_name, { input.view.substring_view(start_position, length), input.line, start_position });
+            map.set(capture_group_name, { view.to_string(), input.line, start_position, input.global_offset + start_position }); // create a copy of the original string
+        } else {
+            map.set(capture_group_name, { view, input.line, start_position, input.global_offset + start_position }); // take view to original string
         }
     } else {
         fprintf(stderr, "Didn't find corresponding capture group match for name=%s, match_index=%lu\n", capture_group_name.to_string().characters(), input.match_index);
@@ -275,7 +293,7 @@ ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const MatchInput& inp
     return ExecutionResult::Continue;
 }
 
-ExecutionResult OpCode_Compare::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
 {
     bool inverse { false };
 
@@ -289,7 +307,6 @@ ExecutionResult OpCode_Compare::execute(const MatchInput& input, MatchState& sta
 
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
 
-        // FIXME: refactor the comparisons out... e.g. as callables
         if (compare_type == CharacterCompareType::Inverse)
             inverse = true;
 
@@ -298,14 +315,14 @@ ExecutionResult OpCode_Compare::execute(const MatchInput& input, MatchState& sta
 
             // We want to compare a string that is longer or equal in length to the available string
             if (input.view.length() - state.string_position < 1)
-                return ExecutionResult::ExitWithFork;
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             compare_char(input, state, ch, inverse, inverse_matched);
 
         } else if (compare_type == CharacterCompareType::AnyChar) {
             // We want to compare a string that is definitely longer than the available string
             if (input.view.length() - state.string_position < 1)
-                return ExecutionResult::ExitWithFork;
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             ASSERT(!inverse);
             ++state.string_position;
@@ -318,15 +335,15 @@ ExecutionResult OpCode_Compare::execute(const MatchInput& input, MatchState& sta
 
             // We want to compare a string that is definitely longer than the available string
             if (input.view.length() - state.string_position < length)
-                return ExecutionResult::ExitWithFork;
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             if (!compare_string(input, state, str, length))
-                return ExecutionResult::ExitWithFork;
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
 
         } else if (compare_type == CharacterCompareType::CharClass) {
 
             if (input.view.length() - state.string_position < 1)
-                return ExecutionResult::ExitWithFork;
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             auto character_class = (CharClass)m_bytecode->at(offset++);
             auto& ch = input.view[state.string_position];
@@ -353,56 +370,12 @@ ExecutionResult OpCode_Compare::execute(const MatchInput& input, MatchState& sta
         ++state.string_position;
 
     if (string_position == state.string_position || state.string_position > input.view.length())
-        return ExecutionResult::ExitWithFork;
+        return ExecutionResult::Failed_ExecuteLowPrioForks;
 
     return ExecutionResult::Continue;
 }
 
-const String OpCode_Compare::arguments_string() const
-{
-    return String::format("argc=%lu, args=%lu ", arguments_count(), arguments_size());
-}
-
-const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput> input) const
-{
-    Vector<String> result;
-
-    size_t offset { state().instruction_position + 3 };
-    StringView view;
-    if (input.has_value())
-        view = input.value().view;
-
-    for (size_t i = 0; i < arguments_count(); ++i) {
-        auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
-        result.empend(String::format("type=%lu [%s]", (size_t)compare_type, character_compare_type_name(compare_type)));
-
-        if (compare_type == CharacterCompareType::Char) {
-            char ch = m_bytecode->at(offset++);
-            result.empend(String::format("value='%c'", ch));
-            if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", String { view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
-        } else if (compare_type == CharacterCompareType::String) {
-            char* str = reinterpret_cast<char*>(m_bytecode->at(offset++));
-            auto& length = m_bytecode->at(offset++);
-            result.empend(String::format("value=\"%s\"", String { str, length }.characters()));
-            if (!view.is_null())
-                result.empend(String::format("compare against: \"%s\"", String { input.value().view.substring_view(state().string_position, state().string_position + length > view.length() ? 0 : length) }.characters()));
-        } else if (compare_type == CharacterCompareType::CharClass) {
-            auto character_class = (CharClass)m_bytecode->at(offset++);
-            result.empend(String::format("ch_class=%lu [%s]", (size_t)character_class, character_class_name(character_class)));
-            if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", String { input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
-        } else if (compare_type == CharacterCompareType::CharRange) {
-            auto value = (CharRange)m_bytecode->at(offset++);
-            result.empend(String::format("ch_range='%c'-'%c'", value.from, value.to));
-            if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", String { input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
-        }
-    }
-    return result;
-}
-
-inline void OpCode_Compare::compare_char(const MatchInput& input, MatchState& state, char& ch, bool inverse, bool& inverse_matched) const
+ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchState& state, char& ch, bool inverse, bool& inverse_matched) const
 {
     auto ch1 = ch;
     auto ch2 = input.view[state.string_position];
@@ -420,7 +393,7 @@ inline void OpCode_Compare::compare_char(const MatchInput& input, MatchState& st
     }
 }
 
-inline bool OpCode_Compare::compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length) const
+ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length) const
 {
     auto str_view1 = StringView(str, length);
     auto str_view2 = StringView(&input.view[state.string_position], length);
@@ -440,7 +413,7 @@ inline bool OpCode_Compare::compare_string(const MatchInput& input, MatchState& 
         return false;
 }
 
-inline void OpCode_Compare::compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, char ch, bool inverse, bool& inverse_matched) const
+ALWAYS_INLINE void OpCode_Compare::compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, char ch, bool inverse, bool& inverse_matched) const
 {
     switch (character_class) {
     case CharClass::Alnum:
@@ -538,7 +511,7 @@ inline void OpCode_Compare::compare_character_class(const MatchInput& input, Mat
     }
 }
 
-inline void OpCode_Compare::compare_character_range(const MatchInput& input, MatchState& state, char from, char to, char ch, bool inverse, bool& inverse_matched) const
+ALWAYS_INLINE void OpCode_Compare::compare_character_range(const MatchInput& input, MatchState& state, char from, char to, char ch, bool inverse, bool& inverse_matched) const
 {
     if (input.regex_options & AllFlags::Insensitive) {
         from = tolower(from);
@@ -554,5 +527,47 @@ inline void OpCode_Compare::compare_character_range(const MatchInput& input, Mat
     }
 }
 
+const String OpCode_Compare::arguments_string() const
+{
+    return String::format("argc=%lu, args=%lu ", arguments_count(), arguments_size());
+}
+
+const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput> input) const
+{
+    Vector<String> result;
+
+    size_t offset { state().instruction_position + 3 };
+    StringView view;
+    if (input.has_value())
+        view = input.value().view;
+
+    for (size_t i = 0; i < arguments_count(); ++i) {
+        auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
+        result.empend(String::format("type=%lu [%s]", (size_t)compare_type, character_compare_type_name(compare_type)));
+
+        if (compare_type == CharacterCompareType::Char) {
+            char ch = m_bytecode->at(offset++);
+            result.empend(String::format("value='%c'", ch));
+            if (!view.is_null())
+                result.empend(String::format("compare against: '%s'", String { view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
+        } else if (compare_type == CharacterCompareType::String) {
+            char* str = reinterpret_cast<char*>(m_bytecode->at(offset++));
+            auto& length = m_bytecode->at(offset++);
+            result.empend(String::format("value=\"%s\"", String { str, length }.characters()));
+            if (!view.is_null())
+                result.empend(String::format("compare against: \"%s\"", String { input.value().view.substring_view(state().string_position, state().string_position + length > view.length() ? 0 : length) }.characters()));
+        } else if (compare_type == CharacterCompareType::CharClass) {
+            auto character_class = (CharClass)m_bytecode->at(offset++);
+            result.empend(String::format("ch_class=%lu [%s]", (size_t)character_class, character_class_name(character_class)));
+            if (!view.is_null())
+                result.empend(String::format("compare against: '%s'", String { input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
+        } else if (compare_type == CharacterCompareType::CharRange) {
+            auto value = (CharRange)m_bytecode->at(offset++);
+            result.empend(String::format("ch_range='%c'-'%c'", value.from, value.to));
+            if (!view.is_null())
+                result.empend(String::format("compare against: '%s'", String { input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
+        }
+    }
+    return result;
 }
 }

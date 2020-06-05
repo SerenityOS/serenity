@@ -26,8 +26,8 @@
 
 #include <AK/TestSuite.h> // import first, to prevent warning of ASSERT* redefinition
 
-#include <AK/Regex.h>
-#include <AK/RegexDebug.h>
+#include <LibRegex/Regex.h>
+#include <LibRegex/RegexDebug.h>
 #include <AK/StringBuilder.h>
 #include <stdio.h>
 
@@ -82,10 +82,10 @@ TEST_CASE(regex_options_posix)
     EXPECT(eo & PosixFlags::Global);
     EXPECT(!(eo & PosixFlags::Insensitive));
 
-    eo = match_test_api_options(PosixFlags::Global | PosixFlags::Insensitive | PosixFlags::Anchored);
+    eo = match_test_api_options(PosixFlags::Global | PosixFlags::Insensitive | PosixFlags::MatchNotBeginOfLine);
     EXPECT(eo & PosixFlags::Global);
     EXPECT(eo & PosixFlags::Insensitive);
-    EXPECT(eo & PosixFlags::Anchored);
+    EXPECT(eo & PosixFlags::MatchNotBeginOfLine);
     EXPECT(!(eo & PosixFlags::Unicode));
     EXPECT(!(eo & PosixFlags::Multiline));
 
@@ -94,7 +94,7 @@ TEST_CASE(regex_options_posix)
     EXPECT(eo & PosixFlags::Insensitive);
     EXPECT(!(eo & PosixFlags::Multiline));
 
-    eo &= PosixFlags::Anchored;
+    eo &= PosixFlags::MatchNotBeginOfLine;
     EXPECT(!(eo & PosixFlags::Global));
     EXPECT(!(eo & PosixFlags::Insensitive));
     EXPECT(!(eo & PosixFlags::Multiline));
@@ -108,25 +108,25 @@ TEST_CASE(regex_options_posix)
 TEST_CASE(regex_lexer)
 {
     Lexer l("/[.*+?^${}()|[\\]\\\\]/g");
-    EXPECT(l.next().type() == AK::regex::TokenType::Slash);
-    EXPECT(l.next().type() == AK::regex::TokenType::LeftBracket);
-    EXPECT(l.next().type() == AK::regex::TokenType::Period);
-    EXPECT(l.next().type() == AK::regex::TokenType::Asterisk);
-    EXPECT(l.next().type() == AK::regex::TokenType::Plus);
-    EXPECT(l.next().type() == AK::regex::TokenType::Questionmark);
-    EXPECT(l.next().type() == AK::regex::TokenType::Circumflex);
-    EXPECT(l.next().type() == AK::regex::TokenType::Dollar);
-    EXPECT(l.next().type() == AK::regex::TokenType::LeftCurly);
-    EXPECT(l.next().type() == AK::regex::TokenType::RightCurly);
-    EXPECT(l.next().type() == AK::regex::TokenType::LeftParen);
-    EXPECT(l.next().type() == AK::regex::TokenType::RightParen);
-    EXPECT(l.next().type() == AK::regex::TokenType::Pipe);
-    EXPECT(l.next().type() == AK::regex::TokenType::LeftBracket);
-    EXPECT(l.next().type() == AK::regex::TokenType::EscapeSequence);
-    EXPECT(l.next().type() == AK::regex::TokenType::EscapeSequence);
-    EXPECT(l.next().type() == AK::regex::TokenType::RightBracket);
-    EXPECT(l.next().type() == AK::regex::TokenType::Slash);
-    EXPECT(l.next().type() == AK::regex::TokenType::Char);
+    EXPECT(l.next().type() == regex::TokenType::Slash);
+    EXPECT(l.next().type() == regex::TokenType::LeftBracket);
+    EXPECT(l.next().type() == regex::TokenType::Period);
+    EXPECT(l.next().type() == regex::TokenType::Asterisk);
+    EXPECT(l.next().type() == regex::TokenType::Plus);
+    EXPECT(l.next().type() == regex::TokenType::Questionmark);
+    EXPECT(l.next().type() == regex::TokenType::Circumflex);
+    EXPECT(l.next().type() == regex::TokenType::Dollar);
+    EXPECT(l.next().type() == regex::TokenType::LeftCurly);
+    EXPECT(l.next().type() == regex::TokenType::RightCurly);
+    EXPECT(l.next().type() == regex::TokenType::LeftParen);
+    EXPECT(l.next().type() == regex::TokenType::RightParen);
+    EXPECT(l.next().type() == regex::TokenType::Pipe);
+    EXPECT(l.next().type() == regex::TokenType::LeftBracket);
+    EXPECT(l.next().type() == regex::TokenType::EscapeSequence);
+    EXPECT(l.next().type() == regex::TokenType::EscapeSequence);
+    EXPECT(l.next().type() == regex::TokenType::RightBracket);
+    EXPECT(l.next().type() == regex::TokenType::Slash);
+    EXPECT(l.next().type() == regex::TokenType::Char);
 }
 
 TEST_CASE(parser_error_parens)
@@ -229,6 +229,15 @@ TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
     p.parse();
     EXPECT(p.has_error());
     EXPECT(p.error() == Error::EmptySubExpression);
+}
+
+TEST_CASE(catch_all_first)
+{
+    Regex<PosixExtended> re("^.*$");
+    RegexResult m;
+    re.match("Hello World", m);
+    EXPECT(m.count == 1);
+    EXPECT(re.match("Hello World", m));
 }
 
 TEST_CASE(catch_all)
@@ -399,7 +408,7 @@ TEST_CASE(named_capture_group)
 #endif
 
     String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
-    EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
+    EXPECT_EQ(re.search(haystack, result, PosixFlags::Multiline), true);
     EXPECT_EQ(result.count, 2u);
     EXPECT_EQ(result.matches.at(0).view, "Opacity=255");
     EXPECT_EQ(result.named_capture_group_matches.at(0).ensure("Test").view, "255");
@@ -426,6 +435,16 @@ TEST_CASE(a_star)
     EXPECT_EQ(result.matches.at(10).view.length(), 1u);
     EXPECT_EQ(result.matches.at(10).view, "a");
     EXPECT_EQ(result.matches.at(31).view.length(), 0u);
+}
+
+TEST_CASE(simple_period_end_benchmark)
+{
+    Regex<PosixExtended> re("hello.$");
+    RegexResult m;
+    EXPECT_EQ(re.search("Hello1", m), false);
+    EXPECT_EQ(re.search("hello1hello1", m), true);
+    EXPECT_EQ(re.search("hello2hell", m), false);
+    EXPECT_EQ(re.search("hello?", m), true);
 }
 
 TEST_MAIN(Regex)

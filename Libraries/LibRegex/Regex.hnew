@@ -26,5 +26,34 @@
 
 #pragma once
 
-#include <AK/RegexDebug.h>
-#include <AK/RegexMatcher.h>
+#include <AK/Types.h>
+
+namespace AK {
+namespace regex {
+
+enum class Error : u8 {
+    NoError = 0,
+    InvalidPattern,          // Invalid regular expression.
+    InvalidCollationElement, // Invalid collating element referenced.
+    InvalidCharacterClass,   // Invalid character class type referenced.
+    InvalidTrailingEscape,   // Trailing \ in pattern.
+    InvalidNumber,           // Number in \digit invalid or in error.
+    BracketMismatch,         // [ ] imbalance.
+    ParenMismatch,           // \( \) or ( ) imbalance.
+    BraceMismatch,           // \{ \} imbalance.
+    InvalidBraceContent,     // Content of \{ \} invalid: not a number, number too large, more than two numbers, first larger than second.
+    InvalidRange,            // Invalid endpoint in range expression.
+    InvalidRepetitionMarker, // ?, * or + not preceded by valid regular expression.
+    MaxRecursionReached,     // MaximumRecursion has been reached
+};
+
+enum class Flavor : u8 {
+    ECMAScript,
+    POSIX
+};
+
+}
+}
+
+using AK::regex::Error;
+using AK::regex::Flavor;

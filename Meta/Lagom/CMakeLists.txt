@@ -39,6 +39,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 file(GLOB AK_SOURCES "../../AK/*.cpp")
+file(GLOB LIBC_REGEX_SOURCES "../../Libraries/LibC/regex.cpp")
+file(GLOB LIBREGEX_SOURCES "../../Libraries/LibRegex/*.cpp")
 file(GLOB LIBCORE_SOURCES "../../Libraries/LibCore/*.cpp")
 file(GLOB LIBIPC_SOURCES "../../Libraries/LibIPC/*.cpp")
 file(GLOB LIBLINE_SOURCES "../../Libraries/LibLine/*.cpp")
@@ -49,7 +51,8 @@ file(GLOB LIBCRYPTO_SOURCES "../../Libraries/LibCrypto/*.cpp")
 file(GLOB LIBCRYPTO_SUBDIR_SOURCES "../../Libraries/LibCrypto/*/*.cpp")
 file(GLOB LIBTLS_SOURCES "../../Libraries/LibTLS/*.cpp")
 
-set(LAGOM_CORE_SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
+set(LAGOM_REGEX_SOURCES ${LIBC_REGEX_SOURCES} ${LIBREGEX_SOURCES})
+set(LAGOM_CORE_SOURCES ${LAGOM_REGEX_SOURCES} ${AK_SOURCES} ${LIBCORE_SOURCES})
 set(LAGOM_MORE_SOURCES ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBTLS_SOURCES})
 
 include_directories (../../)

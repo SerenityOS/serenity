@@ -28,49 +28,60 @@
 
 #include "RegexOptions.h"
 
+#include "AK/FlyString.h"
 #include "AK/HashMap.h"
 #include "AK/String.h"
 #include "AK/StringView.h"
 #include "AK/Vector.h"
 
-namespace AK {
 namespace regex {
 
 class Match final {
 private:
-    Optional<String> string;
+    Optional<FlyString> string;
 
 public:
     Match() = default;
     ~Match() = default;
 
-    Match(const StringView view_, const size_t line_, const size_t column_)
+    Match(const StringView view_, const size_t line_, const size_t column_, const size_t global_offset_)
         : view(view_)
         , line(line_)
         , column(column_)
+        , global_offset(global_offset_)
+        , left_column(column_)
     {
     }
 
-    Match(const String string_, const size_t line_, const size_t column_)
+    Match(const String string_, const size_t line_, const size_t column_, const size_t global_offset_)
         : string(string_)
         , view(string.value().view())
         , line(line_)
         , column(column_)
+        , global_offset(global_offset_)
+        , left_column(column_)
     {
     }
 
     StringView view { nullptr };
     size_t line { 0 };
     size_t column { 0 };
+    size_t global_offset { 0 };
+
+    // ugly, as not usable by user, but needed to prevent to create extra vectors that are
+    // able to store the column when the left paren has been found
+    size_t left_column { 0 };
 };
 
 struct MatchInput {
     StringView view { nullptr };
-    AK::regex::AllOptions regex_options {};
+    AllOptions regex_options {};
 
     size_t match_index { 0 };
     size_t line { 0 };
     size_t column { 0 };
+
+    size_t global_offset { 0 }; // For multiline matching, knowning the offset from start could be important
 };
 
 struct MatchState {
@@ -86,5 +97,4 @@ struct MatchOutput {
     Vector<HashMap<String, Match>> named_capture_group_matches;
 };
 
-}
 }

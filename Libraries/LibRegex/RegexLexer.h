@@ -29,7 +29,6 @@
 #include <AK/Forward.h>
 #include <AK/StringView.h>
 
-namespace AK {
 namespace regex {
 
 #define ENUMERATE_REGEX_TOKENS              \
@@ -94,8 +93,8 @@ public:
     void set_source(const StringView source) { m_source = source; }
 
 private:
-    char peek(size_t offset = 0) const;
-    void consume();
+    ALWAYS_INLINE char peek(size_t offset = 0) const;
+    ALWAYS_INLINE void consume();
 
     StringView m_source {};
     size_t m_position { 0 };
@@ -105,6 +104,5 @@ private:
 };
 
 }
-}
 
-using AK::regex::Lexer;
+using regex::Lexer;
