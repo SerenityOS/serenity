@@ -196,6 +196,11 @@ void Element::recompute_style()
         tree_builder.build(*this);
         return;
     }
+
+    // Don't bother with style on widgets. NATIVE LOOK & FEEL BABY!
+    if (layout_node()->is_widget())
+        return;
+
     auto diff = compute_style_difference(layout_node()->style(), *style, document());
     if (diff == StyleDifference::None)
         return;
