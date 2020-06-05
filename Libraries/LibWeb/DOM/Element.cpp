@@ -114,6 +114,10 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
 
     if (display == "none")
         return nullptr;
+
+    if (tag_name() == "noscript" && document().is_scripting_enabled())
+        return nullptr;
+
     if (display == "block")
         return adopt(*new LayoutBlock(this, move(style)));
     if (display == "inline")
