@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,32 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/Noncopyable.h>
-#include <AK/RefPtr.h>
-#include <AK/WeakPtr.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/Size.h>
-#include <LibWeb/TreeNode.h>
+#include <LibWeb/DOM/HTMLElement.h>
 
 namespace Web {
 
-class Document;
-class PageView;
-
-class Frame : public TreeNode<Frame> {
+class HTMLIFrameElement : public HTMLElement {
 public:
-    static NonnullRefPtr<Frame> create_subframe() { return adopt(*new Frame); }
-    static NonnullRefPtr<Frame> create(PageView& page_view) { return adopt(*new Frame(page_view)); }
-    ~Frame();
+    HTMLIFrameElement(Document&, const FlyString& tag_name);
+    virtual ~HTMLIFrameElement() override;
 
-    const Document* document() const { return m_document; }
-    Document* document() { return m_document; }
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
-    void set_document(Document*);
+    Frame* hosted_frame() { return m_hosted_frame; }
+    const Frame* hosted_frame() const { return m_hosted_frame; }
 
-    PageView* page_view() { return m_page_view; }
-    const PageView* page_view() const { return m_page_view; }
-
-    const Gfx::Size& size() const { return m_size; }
-    void set_size(const Gfx::Size&);
-
-    void set_needs_display(const Gfx::Rect&);
-    Function<void(const Gfx::Rect&)> on_set_needs_display;
-
-    void set_viewport_rect(const Gfx::Rect&);
-    Gfx::Rect viewport_rect() const { return m_viewport_rect; }
-
-    void did_scroll(Badge<PageView>);
+    virtual void parse_attribute(const FlyString& name, const String& value) override;
 
 private:
-    Frame();
-    explicit Frame(PageView&);
+    void load_src(const String&);
 
-    WeakPtr<PageView> m_page_view;
-    RefPtr<Document> m_document;
-    Gfx::Size m_size;
-    Gfx::Rect m_viewport_rect;
+    RefPtr<Frame> m_hosted_frame;
 };
+
+template<>
+inline bool is<HTMLIFrameElement>(const Node& node)
+{
+    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("iframe");
+}
 
 }

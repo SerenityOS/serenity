@@ -36,6 +36,7 @@
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/HTMLHeadingElement.h>
 #include <LibWeb/DOM/HTMLHtmlElement.h>
+#include <LibWeb/DOM/HTMLIFrameElement.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
 #include <LibWeb/DOM/HTMLInputElement.h>
 #include <LibWeb/DOM/HTMLLinkElement.h>
@@ -76,6 +77,8 @@ NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_n
         return adopt(*new HTMLInputElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "br")
         return adopt(*new HTMLBRElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "iframe")
+        return adopt(*new HTMLIFrameElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "h1"
         || lowercase_tag_name == "h2"
         || lowercase_tag_name == "h3"

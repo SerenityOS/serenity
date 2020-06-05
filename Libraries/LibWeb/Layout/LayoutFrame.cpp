@@ -24,78 +24,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibGUI/Painter.h>
+#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Widget.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
-#include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Layout/LayoutFrame.h>
 #include <LibWeb/PageView.h>
 
 namespace Web {
 
-Frame::Frame()
+LayoutFrame::LayoutFrame(const Element& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutReplaced(element, move(style))
 {
 }
 
-Frame::Frame(PageView& page_view)
-    : m_page_view(page_view.make_weak_ptr())
+LayoutFrame::~LayoutFrame()
 {
 }
 
-Frame::~Frame()
+void LayoutFrame::layout(LayoutMode layout_mode)
 {
+    set_has_intrinsic_width(true);
+    set_has_intrinsic_height(true);
+    // FIXME: Do proper error checking, etc.
+    bool ok;
+    set_intrinsic_width(node().attribute(HTML::AttributeNames::width).to_int(ok));
+    set_intrinsic_height(node().attribute(HTML::AttributeNames::height).to_int(ok));
+
+    LayoutReplaced::layout(layout_mode);
 }
 
-void Frame::set_document(Document* document)
+void LayoutFrame::render(RenderingContext& context)
 {
-    if (m_document == document)
-        return;
+    LayoutReplaced::render(context);
 
-    if (m_document)
-        m_document->detach_from_frame({}, *this);
+    context.painter().save();
+    auto old_viewport_rect = context.viewport_rect();
 
-    m_document = document;
+    context.painter().add_clip_rect(enclosing_int_rect(rect()));
+    context.painter().translate(x(), y());
 
-    if (m_document)
-        m_document->attach_to_frame({}, *this);
+    context.set_viewport_rect({ {}, node().hosted_frame()->size() });
+    node().hosted_frame()->document()->layout_node()->render(context);
+
+    context.set_viewport_rect(old_viewport_rect);
+    context.painter().restore();
 }
 
-void Frame::set_size(const Gfx::Size& size)
+void LayoutFrame::did_set_rect()
 {
-    if (m_size == size)
-        return;
-    m_size = size;
-}
+    LayoutReplaced::did_set_rect();
 
-void Frame::set_viewport_rect(const Gfx::Rect& rect)
-{
-    if (m_viewport_rect == rect)
-        return;
-    m_viewport_rect = rect;
+    ASSERT(node().hosted_frame());
+    node().hosted_frame()->set_size(Gfx::Size(rect().width(), rect().height()));
 
-    if (m_document && m_document->layout_node())
-        m_document->layout_node()->did_set_viewport_rect({}, rect);
-}
-
-void Frame::set_needs_display(const Gfx::Rect& rect)
-{
-    if (!m_viewport_rect.intersects(rect))
-        return;
-
-    if (!on_set_needs_display)
-        return;
-    on_set_needs_display(rect);
-}
-
-void Frame::did_scroll(Badge<PageView>)
-{
-    if (!m_document)
-        return;
-    if (!m_document->layout_node())
-        return;
-    m_document->layout_node()->for_each_in_subtree_of_type<LayoutWidget>([&](auto& layout_widget) {
-        layout_widget.update_widget();
-        return IterationDecision::Continue;
-    });
+    node().hosted_frame()->document()->layout();
 }
 
 }

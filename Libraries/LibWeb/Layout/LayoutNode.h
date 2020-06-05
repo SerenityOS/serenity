@@ -60,6 +60,7 @@ public:
 
     bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }
+    Node* node() { return const_cast<Node*>(m_node); }
 
     Document& document();
     const Document& document() const;
@@ -87,6 +88,7 @@ public:
     virtual bool is_block() const { return false; }
     virtual bool is_replaced() const { return false; }
     virtual bool is_widget() const { return false; }
+    virtual bool is_frame() const { return false; }
     virtual bool is_image() const { return false; }
     virtual bool is_canvas() const { return false; }
     virtual bool is_box() const { return false; }
