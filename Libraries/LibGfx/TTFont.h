@@ -27,17 +27,39 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
 #include <AK/StringView.h>
+#include <LibGfx/Size.h>
 
 namespace Gfx {
 namespace TTF {
 
-class Font;
+class AABitmap {
+public:
+    AABitmap(Size size)
+        : m_size(size)
+    {
+        m_data = OwnPtr(new u8[size.width() * size.height()]);
+    }
+    Size size() const { return m_size; }
+    u8 byte_at(int x, int y) const { return m_data[y * m_size.width() + x]; }
+    void set_byte_at(int x, int y, u8 value)
+    {
+        m_data[y * m_size.width() + x] = value;
+    }
+
+private:
+    Size m_size;
+    OwnPtr<u8> m_data;
+};
 
 class Font {
+    AK_MAKE_NONCOPYABLE(Font);
+
 public:
     static OwnPtr<Font> load_from_file(const StringView& path, unsigned index);
+    AABitmap raster_codepoint(u32 codepoint, float x_scale, float y_scale) const;
 
 private:
     enum class IndexToLocFormat {
@@ -48,8 +70,8 @@ private:
     class Head {
     public:
         Head() {}
-        Head(ByteBuffer&& slice)
-            : m_slice(move(slice))
+        Head(const ByteBuffer& slice)
+            : m_slice(slice)
         {
             ASSERT(m_slice.size() >= 54);
         }
@@ -68,8 +90,8 @@ private:
     class Hhea {
     public:
         Hhea() {}
-        Hhea(ByteBuffer&& slice)
-            : m_slice(move(slice))
+        Hhea(const ByteBuffer& slice)
+            : m_slice(slice)
         {
             ASSERT(m_slice.size() >= 36);
         }
@@ -82,8 +104,8 @@ private:
     class Maxp {
     public:
         Maxp() {}
-        Maxp(ByteBuffer&& slice)
-            : m_slice(move(slice))
+        Maxp(const ByteBuffer& slice)
+            : m_slice(slice)
         {
             ASSERT(m_slice.size() >= 6);
         }
@@ -101,8 +123,8 @@ private:
     class Hmtx {
     public:
         Hmtx() {}
-        Hmtx(ByteBuffer&& slice, u32 num_glyphs, u32 number_of_h_metrics)
-            : m_slice(move(slice))
+        Hmtx(const ByteBuffer& slice, u32 num_glyphs, u32 number_of_h_metrics)
+            : m_slice(slice)
             , m_num_glyphs(num_glyphs)
             , m_number_of_h_metrics(number_of_h_metrics)
         {
@@ -139,8 +161,8 @@ private:
                 UnicodeVariationSequences,
             };
 
-            Subtable(ByteBuffer&& slice, u16 platform_id, u16 encoding_id)
-                : m_slice(move(slice))
+            Subtable(const ByteBuffer& slice, u16 platform_id, u16 encoding_id)
+                : m_slice(slice)
                 , m_raw_platform_id(platform_id)
                 , m_encoding_id(encoding_id)
             {
@@ -161,8 +183,8 @@ private:
         };
 
         Cmap() {}
-        Cmap(ByteBuffer&& slice)
-            : m_slice(move(slice))
+        Cmap(const ByteBuffer& slice)
+            : m_slice(slice)
         {
             ASSERT(m_slice.size() > 4);
         }
@@ -181,8 +203,8 @@ private:
     class Loca {
     public:
         Loca() {}
-        Loca(ByteBuffer&& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
-            : m_slice(move(slice))
+        Loca(const ByteBuffer& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
+            : m_slice(slice)
             , m_num_glyphs(num_glyphs)
             , m_index_to_loc_format(index_to_loc_format)
         {
@@ -207,8 +229,9 @@ private:
     public:
         class Glyph {
         public:
-            static Glyph simple(ByteBuffer&& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax);
-            static Glyph composite(ByteBuffer&& slice); // FIXME: This is currently just a dummy. Need to add support for composite glyphs.
+            static Glyph simple(const ByteBuffer& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax);
+            static Glyph composite(const ByteBuffer& slice); // FIXME: This is currently just a dummy. Need to add support for composite glyphs.
+            AABitmap raster(float x_scale, float y_scale) const;
 
         private:
             enum class Type {
@@ -225,11 +248,12 @@ private:
             struct Composite {
             };
 
-            Glyph(ByteBuffer&& slice, Type type)
+            Glyph(const ByteBuffer& slice, Type type)
                 : m_type(type)
                 , m_slice(move(slice))
             {
             }
+            AABitmap raster_simple(float x_scale, float y_scale) const;
 
             Type m_type;
             ByteBuffer m_slice;
@@ -240,7 +264,7 @@ private:
         };
 
         Glyf() {}
-        Glyf(ByteBuffer&& slice)
+        Glyf(const ByteBuffer& slice)
             : m_slice(move(slice))
         {
         }
