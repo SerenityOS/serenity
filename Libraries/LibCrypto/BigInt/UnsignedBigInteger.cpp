@@ -80,6 +80,9 @@ UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)
 
 String UnsignedBigInteger::to_base10() const
 {
+    if (*this == UnsignedBigInteger { 0 })
+        return "0";
+
     StringBuilder builder;
     UnsignedBigInteger temp(*this);
     UnsignedBigInteger quotient;
