@@ -48,6 +48,7 @@ set(SOURCES
     DOM/HTMLHeadingElement.cpp
     DOM/HTMLHRElement.cpp
     DOM/HTMLHtmlElement.cpp
+    DOM/HTMLIFrameElement.cpp
     DOM/HTMLImageElement.cpp
     DOM/HTMLInputElement.cpp
     DOM/HTMLLinkElement.cpp
@@ -70,6 +71,7 @@ set(SOURCES
     Layout/LayoutBreak.cpp
     Layout/LayoutCanvas.cpp
     Layout/LayoutDocument.cpp
+    Layout/LayoutFrame.cpp
     Layout/LayoutImage.cpp
     Layout/LayoutInline.cpp
     Layout/LayoutListItem.cpp

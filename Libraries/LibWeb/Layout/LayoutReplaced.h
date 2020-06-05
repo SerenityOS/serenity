@@ -37,6 +37,7 @@ public:
     virtual ~LayoutReplaced() override;
 
     const Element& node() const { return to<Element>(*LayoutNode::node()); }
+    Element& node() { return to<Element>(*LayoutNode::node()); }
 
     virtual bool is_replaced() const final { return true; }
 

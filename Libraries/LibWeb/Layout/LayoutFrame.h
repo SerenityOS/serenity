@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,32 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/Noncopyable.h>
-#include <AK/RefPtr.h>
-#include <AK/WeakPtr.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/Size.h>
-#include <LibWeb/TreeNode.h>
+#include <LibWeb/Layout/LayoutReplaced.h>
+#include <LibWeb/DOM/HTMLIFrameElement.h>
 
 namespace Web {
 
-class Document;
-class PageView;
-
-class Frame : public TreeNode<Frame> {
+class LayoutFrame final : public LayoutReplaced {
 public:
-    static NonnullRefPtr<Frame> create_subframe() { return adopt(*new Frame); }
-    static NonnullRefPtr<Frame> create(PageView& page_view) { return adopt(*new Frame(page_view)); }
-    ~Frame();
+    LayoutFrame(const Element&, NonnullRefPtr<StyleProperties>);
+    virtual ~LayoutFrame() override;
 
-    const Document* document() const { return m_document; }
-    Document* document() { return m_document; }
+    virtual void render(RenderingContext&) override;
+    virtual void layout(LayoutMode) override;
 
-    void set_document(Document*);
-
-    PageView* page_view() { return m_page_view; }
-    const PageView* page_view() const { return m_page_view; }
-
-    const Gfx::Size& size() const { return m_size; }
-    void set_size(const Gfx::Size&);
-
-    void set_needs_display(const Gfx::Rect&);
-    Function<void(const Gfx::Rect&)> on_set_needs_display;
-
-    void set_viewport_rect(const Gfx::Rect&);
-    Gfx::Rect viewport_rect() const { return m_viewport_rect; }
-
-    void did_scroll(Badge<PageView>);
+    const HTMLIFrameElement& node() const { return static_cast<const HTMLIFrameElement&>(LayoutReplaced::node()); }
+    HTMLIFrameElement& node() { return static_cast<HTMLIFrameElement&>(LayoutReplaced::node()); }
 
 private:
-    Frame();
-    explicit Frame(PageView&);
-
-    WeakPtr<PageView> m_page_view;
-    RefPtr<Document> m_document;
-    Gfx::Size m_size;
-    Gfx::Rect m_viewport_rect;
+    virtual bool is_frame() const final { return true; }
+    virtual const char* class_name() const override { return "LayoutFrame"; }
+    virtual void did_set_rect() override;
 };
+
+template<>
+inline bool is<LayoutFrame>(const LayoutNode& node)
+{
+    return node.is_frame();
+}
 
 }
