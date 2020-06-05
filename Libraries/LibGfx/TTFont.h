@@ -29,6 +29,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
+#include <AK/RefCounted.h>
 #include <AK/StringView.h>
 #include <LibGfx/Size.h>
 
@@ -54,14 +55,40 @@ private:
     OwnPtr<u8> m_data;
 };
 
-class Font {
+class ScaledFont;
+
+struct ScaledFontMetrics {
+    int ascender;
+    int descender;
+    int line_gap;
+    int advance_width_max;
+
+    int height() const
+    {
+        return ascender - descender;
+    }
+};
+
+struct ScaledGlyphMetrics {
+    int ascender;
+    int descender;
+    int advance_width;
+    int left_side_bearing;
+};
+
+class Font : public RefCounted<Font> {
     AK_MAKE_NONCOPYABLE(Font);
 
 public:
-    static OwnPtr<Font> load_from_file(const StringView& path, unsigned index);
-    AABitmap raster_codepoint(u32 codepoint, float x_scale, float y_scale) const;
+    static RefPtr<Font> load_from_file(const StringView& path, unsigned index);
 
 private:
+    Font(ByteBuffer&& buffer, u32 offset);
+    ScaledFontMetrics metrics(float x_scale, float y_scale) const;
+    ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
+    AABitmap raster_glyph(u32 glyph_id, float x_scale, float y_scale) const;
+    u32 glyph_count() const { return m_maxp.num_glyphs(); }
+
     enum class IndexToLocFormat {
         Offset16,
         Offset32,
@@ -95,6 +122,10 @@ private:
         {
             ASSERT(m_slice.size() >= 36);
         }
+        i16 ascender() const;
+        i16 descender() const;
+        i16 line_gap() const;
+        u16 advance_width_max() const;
         u16 number_of_h_metrics() const;
 
     private:
@@ -232,6 +263,24 @@ private:
             static Glyph simple(const ByteBuffer& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax);
             static Glyph composite(const ByteBuffer& slice); // FIXME: This is currently just a dummy. Need to add support for composite glyphs.
             AABitmap raster(float x_scale, float y_scale) const;
+            int ascender() const
+            {
+                if (m_type == Type::Simple) {
+                    return m_meta.simple.ymax;
+                } else {
+                    // FIXME: Support composite outlines.
+                    ASSERT_NOT_REACHED();
+                }
+            }
+            int descender() const
+            {
+                if (m_type == Type::Simple) {
+                    return m_meta.simple.ymin;
+                } else {
+                    // FIXME: Support composite outlines.
+                    ASSERT_NOT_REACHED();
+                }
+            }
 
         private:
             enum class Type {
@@ -274,8 +323,6 @@ private:
         ByteBuffer m_slice;
     };
 
-    Font(ByteBuffer&& buffer, u32 offset);
-
     ByteBuffer m_buffer;
     Head m_head;
     Hhea m_hhea;
@@ -284,6 +331,34 @@ private:
     Cmap m_cmap;
     Loca m_loca;
     Glyf m_glyf;
+
+    friend ScaledFont;
+};
+
+class ScaledFont {
+public:
+    ScaledFont(RefPtr<Font> font, float point_width, float point_height, unsigned dpi_x = 96, unsigned dpi_y = 96)
+        : m_font(font)
+    {
+        float units_per_em = m_font->m_head.units_per_em();
+        m_x_scale = (point_width * dpi_x) / (72.0 * units_per_em);
+        m_y_scale = (point_height * dpi_y) / (72.0 * units_per_em);
+    }
+    u32 glyph_id_for_codepoint(u32 codepoint) const { return m_font->m_cmap.glyph_id_for_codepoint(codepoint); }
+    ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
+    ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale); }
+    AABitmap raster_glyph(u32 glyph_id) const { return m_font->raster_glyph(glyph_id, m_x_scale, m_y_scale); }
+    u32 glyph_count() const { return m_font->glyph_count(); }
+    int width(const StringView&) const;
+    int width(const Utf8View&) const;
+    int width(const Utf32View&) const;
+
+private:
+    RefPtr<Font> m_font;
+    float m_x_scale;
+    float m_y_scale;
+
+    friend Font;
 };
 
 }
