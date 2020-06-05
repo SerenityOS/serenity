@@ -83,6 +83,10 @@ public:
 
     UnsignedBigInteger plus(const UnsignedBigInteger& other) const;
     UnsignedBigInteger minus(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger bitwise_or(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger bitwise_and(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger bitwise_xor(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger bitwise_not() const;
     UnsignedBigInteger shift_left(size_t num_bits) const;
     UnsignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     UnsignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
@@ -91,6 +95,10 @@ public:
 
     static void add_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
     static void subtract_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
+    static void bitwise_or_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
+    static void bitwise_and_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
+    static void bitwise_xor_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
+    static void bitwise_not_without_allocation(const UnsignedBigInteger& left, UnsignedBigInteger& output);
     static void shift_left_without_allocation(const UnsignedBigInteger& number, size_t bits_to_shift_by, UnsignedBigInteger& temp_result, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
     static void multiply_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
     static void divide_without_allocation(const UnsignedBigInteger& numerator, const UnsignedBigInteger& denominator, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_minus, UnsignedBigInteger& quotient, UnsignedBigInteger& remainder);
