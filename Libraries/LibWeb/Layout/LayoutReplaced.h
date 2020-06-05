@@ -40,10 +40,39 @@ public:
 
     virtual bool is_replaced() const final { return true; }
 
+    bool has_intrinsic_width() const { return m_has_intrinsic_width; }
+    bool has_intrinsic_height() const { return m_has_intrinsic_height; }
+    bool has_intrinsic_ratio() const { return m_has_intrinsic_ratio; }
+
+    float intrinsic_width() const { return m_intrinsic_width; }
+    float intrinsic_height() const { return m_intrinsic_height; }
+    float intrinsic_ratio() const { return m_intrinsic_ratio; }
+
+    void set_has_intrinsic_width(bool has) { m_has_intrinsic_width = has; }
+    void set_has_intrinsic_height(bool has) { m_has_intrinsic_height = has; }
+    void set_has_intrinsic_ratio(bool has) { m_has_intrinsic_ratio = has; }
+
+    void set_intrinsic_width(float width) { m_intrinsic_width = width; }
+    void set_intrinsic_height(float height) { m_intrinsic_height = height; }
+    void set_intrinsic_ratio(float ratio) { m_intrinsic_ratio = ratio; }
+
+protected:
+    virtual void layout(LayoutMode) override;
+    virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
+
 private:
+    Gfx::FloatPoint calculate_position();
+    float calculate_width() const;
+    float calculate_height() const;
+
     virtual const char* class_name() const override { return "LayoutReplaced"; }
 
-    virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
+    bool m_has_intrinsic_width { false };
+    bool m_has_intrinsic_height { false };
+    bool m_has_intrinsic_ratio { false };
+    float m_intrinsic_width { 0 };
+    float m_intrinsic_height { 0 };
+    float m_intrinsic_ratio { 0 };
 };
 
 template<>

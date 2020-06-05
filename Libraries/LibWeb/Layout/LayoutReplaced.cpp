@@ -41,6 +41,136 @@ LayoutReplaced::~LayoutReplaced()
 {
 }
 
+float LayoutReplaced::calculate_width() const
+{
+    // 10.3.2 [Inline,] replaced elements
+
+    auto& style = this->style();
+    auto auto_value = Length();
+    auto zero_value = Length(0, Length::Type::Absolute);
+    auto& containing_block = *this->containing_block();
+
+    auto margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value, containing_block.width());
+    auto margin_right = style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value, containing_block.width());
+
+    // A computed value of 'auto' for 'margin-left' or 'margin-right' becomes a used value of '0'.
+    if (margin_left.is_auto())
+        margin_left = zero_value;
+    if (margin_right.is_auto())
+        margin_right = zero_value;
+
+    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, auto_value, containing_block.width());
+    auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, auto_value, containing_block.height());
+
+    // FIXME: Actually compute 'width'
+    auto computed_width = specified_width;
+
+    float used_width = specified_width.to_px();
+
+    // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width,
+    // then that intrinsic width is the used value of 'width'.
+    if (specified_height.is_auto() && specified_width.is_auto() && has_intrinsic_width()) {
+        used_width = intrinsic_width();
+    }
+
+    // If 'height' and 'width' both have computed values of 'auto' and the element has no intrinsic width,
+    // but does have an intrinsic height and intrinsic ratio;
+    // or if 'width' has a computed value of 'auto',
+    // 'height' has some other computed value, and the element does have an intrinsic ratio; then the used value of 'width' is:
+    //
+    //     (used height) * (intrinsic ratio)
+    else if ((specified_height.is_auto() && specified_width.is_auto() && !has_intrinsic_width() && has_intrinsic_height() && has_intrinsic_ratio()) || computed_width.is_auto()) {
+        used_width = calculate_height() * intrinsic_ratio();
+    }
+
+    else if (computed_width.is_auto() && has_intrinsic_width()) {
+        used_width = intrinsic_width();
+    }
+
+    else if (computed_width.is_auto()) {
+        used_width = 300;
+    }
+
+    return used_width;
+}
+
+float LayoutReplaced::calculate_height() const
+{
+    // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow,
+    // 'inline-block' replaced elements in normal flow and floating replaced elements
+    auto& style = this->style();
+    auto auto_value = Length();
+    auto zero_value = Length(0, Length::Type::Absolute);
+    auto& containing_block = *this->containing_block();
+
+    auto margin_top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
+    auto margin_bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
+
+    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, auto_value, containing_block.width());
+    auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, auto_value, containing_block.height());
+
+    float used_height = specified_height.to_px();
+
+    // If 'height' and 'width' both have computed values of 'auto' and the element also has
+    // an intrinsic height, then that intrinsic height is the used value of 'height'.
+    if (specified_width.is_auto() && specified_height.is_auto() && has_intrinsic_height())
+        used_height = intrinsic_height();
+    else if (specified_height.is_auto() && has_intrinsic_ratio())
+        used_height = calculate_width() * intrinsic_ratio();
+    else if (specified_height.is_auto() && has_intrinsic_height())
+        used_height = intrinsic_height();
+    else if (specified_height.is_auto())
+        used_height = 150;
+
+    return used_height;
+}
+
+Gfx::FloatPoint LayoutReplaced::calculate_position()
+{
+    auto& style = this->style();
+    auto auto_value = Length();
+    auto zero_value = Length(0, Length::Type::Absolute);
+    auto& containing_block = *this->containing_block();
+
+    auto width = style.length_or_fallback(CSS::PropertyID::Width, auto_value, containing_block.width());
+
+    if (style.position() == CSS::Position::Absolute) {
+        box_model().offset().top = style.length_or_fallback(CSS::PropertyID::Top, zero_value, containing_block.height());
+        box_model().offset().right = style.length_or_fallback(CSS::PropertyID::Right, zero_value, containing_block.width());
+        box_model().offset().bottom = style.length_or_fallback(CSS::PropertyID::Bottom, zero_value, containing_block.height());
+        box_model().offset().left = style.length_or_fallback(CSS::PropertyID::Left, zero_value, containing_block.width());
+    }
+
+    box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
+    box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
+    box_model().border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
+    box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
+    box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
+    box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
+
+    float position_x = box_model().margin().left.to_px()
+        + box_model().border().left.to_px()
+        + box_model().padding().left.to_px()
+        + box_model().offset().left.to_px();
+
+    if (style.position() != CSS::Position::Absolute || containing_block.style().position() == CSS::Position::Absolute)
+        position_x += containing_block.x();
+
+    float position_y = box_model().full_margin().top + box_model().offset().top.to_px();
+
+    return { position_x, position_y };
+}
+
+void LayoutReplaced::layout(LayoutMode layout_mode)
+{
+    rect().set_width(calculate_width());
+    rect().set_height(calculate_height());
+
+    LayoutBox::layout(layout_mode);
+
+    rect().set_location(calculate_position());
+}
+
 void LayoutReplaced::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
 {
     layout(layout_mode);

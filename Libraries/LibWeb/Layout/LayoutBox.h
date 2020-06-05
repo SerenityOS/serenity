@@ -35,7 +35,7 @@ class LayoutBox : public LayoutNodeWithStyleAndBoxModelMetrics {
 public:
     const Gfx::FloatRect& rect() const { return m_rect; }
     Gfx::FloatRect& rect() { return m_rect; }
-    void set_rect(const Gfx::FloatRect& rect) { m_rect = rect; }
+    void set_rect(const Gfx::FloatRect&);
 
     float x() const { return rect().x(); }
     float y() const { return rect().y(); }
@@ -56,6 +56,8 @@ protected:
     }
 
     virtual void render(RenderingContext&) override;
+
+    virtual void did_set_rect() {}
 
 private:
     virtual bool is_box() const override { return true; }

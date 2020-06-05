@@ -26,8 +26,9 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Frame.h>
-#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/PageView.h>
 
 namespace Web {
 
@@ -87,10 +88,8 @@ void Frame::did_scroll(Badge<PageView>)
         return;
     if (!m_document->layout_node())
         return;
-    m_document->layout_node()->for_each_in_subtree([&](LayoutNode& layout_node) {
-        if (layout_node.is_widget()) {
-            layout_node.layout(LayoutNode::LayoutMode::Default);
-        }
+    m_document->layout_node()->for_each_in_subtree_of_type<LayoutWidget>([&](auto& layout_widget) {
+        layout_widget.update_widget();
         return IterationDecision::Continue;
     });
 }

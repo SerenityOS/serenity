@@ -62,12 +62,15 @@ bool LayoutNode::can_contain_boxes_with_position_absolute() const
 
 const LayoutBlock* LayoutNode::containing_block() const
 {
-    if (is_text()) {
+    auto nearest_block_ancestor = [this] {
         auto* ancestor = parent();
-        while (ancestor && ((ancestor->is_inline() && !is<LayoutReplaced>(*ancestor)) || !is<LayoutBlock>(*ancestor)))
+        while (ancestor && !is<LayoutBlock>(*ancestor))
             ancestor = ancestor->parent();
         return to<LayoutBlock>(ancestor);
-    }
+    };
+
+    if (is_text())
+        return nearest_block_ancestor();
 
     if (is_absolutely_positioned()) {
         auto* ancestor = parent();
@@ -81,10 +84,7 @@ const LayoutBlock* LayoutNode::containing_block() const
     if (style().position() == CSS::Position::Fixed)
         return &root();
 
-    auto* ancestor = parent();
-    while (ancestor && ((ancestor->is_inline() && !is<LayoutReplaced>(*ancestor)) || !is<LayoutBlock>(*ancestor)))
-        ancestor = ancestor->parent();
-    return to<LayoutBlock>(ancestor);
+    return nearest_block_ancestor();
 }
 
 void LayoutNode::render(RenderingContext& context)
@@ -184,6 +184,5 @@ bool LayoutNode::is_absolutely_positioned() const
 {
     return style().position() == CSS::Position::Absolute;
 }
-
 
 }
