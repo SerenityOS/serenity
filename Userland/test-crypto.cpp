@@ -486,6 +486,7 @@ void bigint_multiplication();
 void bigint_division();
 void bigint_base10();
 void bigint_import_export();
+void bigint_bitwise();
 
 void bigint_test_signed_fibo500();
 void bigint_signed_addition_edgecases();
@@ -494,6 +495,7 @@ void bigint_signed_multiplication();
 void bigint_signed_division();
 void bigint_signed_base10();
 void bigint_signed_import_export();
+void bigint_signed_bitwise();
 
 int aes_cbc_tests()
 {
@@ -1294,6 +1296,7 @@ int bigint_tests()
     bigint_division();
     bigint_base10();
     bigint_import_export();
+    bigint_bitwise();
 
     bigint_test_signed_fibo500();
     bigint_signed_addition_edgecases();
@@ -1302,6 +1305,7 @@ int bigint_tests()
     bigint_signed_division();
     bigint_signed_base10();
     bigint_signed_import_export();
+    bigint_signed_bitwise();
 
     return 0;
 }
@@ -1586,6 +1590,72 @@ void bigint_import_export()
     }
 }
 
+void bigint_bitwise()
+{
+    {
+        I_TEST((BigInteger | Basic bitwise or));
+        auto num1 = "1234567"_bigint;
+        auto num2 = "1234567"_bigint;
+        if (num1.bitwise_or(num2) == num1) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
+    {
+        I_TEST((BigInteger | Bitwise or handles different lengths));
+        auto num1 = "1234567"_bigint;
+        auto num2 = "123456789012345678901234567890"_bigint;
+        auto expected = "123456789012345678901234622167"_bigint;
+        auto result = num1.bitwise_or(num2);
+        if (result == expected) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
+    {
+        I_TEST((BigInteger | Basic bitwise and));
+        auto num1 = "1234567"_bigint;
+        auto num2 = "1234561"_bigint;
+        if (num1.bitwise_and(num2) == "1234561"_bigint) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
+    {
+        I_TEST((BigInteger | Bitwise and handles different lengths));
+        auto num1 = "1234567"_bigint;
+        auto num2 = "123456789012345678901234567890"_bigint;
+        if (num1.bitwise_and(num2) == "1180290"_bigint) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
+    {
+        I_TEST((BigInteger | Basic bitwise xor));
+        auto num1 = "1234567"_bigint;
+        auto num2 = "1234561"_bigint;
+        if (num1.bitwise_xor(num2) == 6) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
+    {
+        I_TEST((BigInteger | Bitwise xor handles different lengths));
+        auto num1 = "1234567"_bigint;
+        auto num2 = "123456789012345678901234567890"_bigint;
+        if (num1.bitwise_xor(num2) == "123456789012345678901233441877"_bigint) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
+}
+
 void bigint_test_signed_fibo500()
 {
     {
@@ -1813,5 +1883,19 @@ void bigint_signed_import_export()
             FAIL(Could not roundtrip);
         else
             PASS;
+    }
+}
+
+void bigint_signed_bitwise()
+{
+    {
+        I_TEST((Signed BigInteger | Bitwise or handles sign));
+        auto num1 = "-1234567"_sbigint;
+        auto num2 = "1234567"_sbigint;
+        if (num1.bitwise_or(num2) == num1) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
     }
 }
