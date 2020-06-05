@@ -57,6 +57,8 @@ public:
 
     Origin origin() const;
 
+    bool is_scripting_enabled() const { return true; }
+
     URL complete_url(const String&) const;
 
     void fixup();
