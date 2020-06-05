@@ -64,9 +64,9 @@ serenity_libc(LibC c)
 target_link_libraries(LibC crt0)
 add_dependencies(LibC LibM)
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib")
-add_library(crt0Shared SHARED crt0_shared.cpp)
-install(TARGETS crt0Shared DESTINATION usr/lib)
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib")
+#add_library(crt0Shared SHARED crt0_shared.cpp)
+#install(TARGETS crt0Shared DESTINATION usr/lib)
 #add_custom_command(
 #    TARGET crt0Shared
 #    COMMAND install -D $<TARGET_OBJECTS:crt0Shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/libcrt0Shared.so
@@ -74,6 +74,6 @@ install(TARGETS crt0Shared DESTINATION usr/lib)
 
 
 add_library(LibCShared SHARED ${SOURCES})
-#target_link_directories(LibCShared PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(LibCShared crt0Shared)
+target_link_directories(LibCShared PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+#target_link_libraries(LibCShared crt0Shared)
 install(TARGETS LibCShared DESTINATION usr/lib)
