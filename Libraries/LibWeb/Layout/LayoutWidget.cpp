@@ -40,21 +40,15 @@ LayoutWidget::LayoutWidget(const Element& element, GUI::Widget& widget)
     : LayoutReplaced(element, StyleProperties::create())
     , m_widget(widget)
 {
+    set_has_intrinsic_width(true);
+    set_has_intrinsic_height(true);
+    set_intrinsic_width(widget.width());
+    set_intrinsic_height(widget.height());
 }
 
 LayoutWidget::~LayoutWidget()
 {
     widget().remove_from_parent();
-}
-
-void LayoutWidget::layout(LayoutMode layout_mode)
-{
-    set_has_intrinsic_width(true);
-    set_has_intrinsic_height(true);
-    set_intrinsic_width(widget().width());
-    set_intrinsic_height(widget().height());
-
-    LayoutReplaced::layout(layout_mode);
 }
 
 void LayoutWidget::did_set_rect()
