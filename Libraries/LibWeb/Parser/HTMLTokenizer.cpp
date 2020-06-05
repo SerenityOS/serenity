@@ -1546,8 +1546,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    EMIT_CHARACTER('<');
-                    RECONSUME_IN(RCDATA);
+                    EMIT_CHARACTER_AND_RECONSUME_IN('<', RCDATA);
                 }
             }
             END_STATE
