@@ -75,5 +75,5 @@ add_dependencies(LibC LibM)
 
 add_library(LibCShared SHARED ${SOURCES})
 target_link_directories(LibCShared PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-#target_link_libraries(LibCShared crt0Shared)
+target_link_libraries(LibCShared LibM)
 install(TARGETS LibCShared DESTINATION usr/lib)

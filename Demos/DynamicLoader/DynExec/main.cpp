@@ -23,9 +23,30 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdio.h>
+#include <Kernel/Syscall.h>
+const char* g_string = "Hello, World!\n";
 
-int libfunc();
+void local_dbgputstr(const char* str, int len)
+{
+    constexpr unsigned int function = Kernel::SC_dbgputch;
+    for (int i = 0; i < len; ++i) {
+        unsigned int result;
+        asm volatile("int $0x82"
+                     : "=a"(result)
+                     : "a"(function), "d"((u32)str[i])
+                     : "memory");
+    }
+}
+
+int main(int, char**)
+{
+    local_dbgputstr(g_string, 15);
+    return 0;
+}
+/*
+// #include <stdio.h>
+
+// int libfunc();
 
 extern "C" void __libc_init();
 
@@ -33,8 +54,9 @@ int main(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
-    libc_testfunc();
+    // libc_testfunc();
     // __libc_init();
 
-    return libfunc();
+    return 0;
 }
+*/

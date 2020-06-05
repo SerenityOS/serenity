@@ -7,6 +7,5 @@ set(SOURCES
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 add_library(ExampleSO SHARED ${SOURCES})
-#target_link_libraries(ExampleSO LibCShared)
-target_link_libraries(ExampleSO )
+target_link_libraries(ExampleSO LibCShared)
 install(TARGETS ExampleSO DESTINATION usr/lib)
