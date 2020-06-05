@@ -229,7 +229,7 @@ pushd "$DIR/Build/"
         mkdir -p "$BUILD"
         pushd "$BUILD"
             CXXFLAGS="-DBUILDING_SERENITY_TOOLCHAIN" cmake ..
-            "$MAKE" LibC
+            cmake --build . --target LibC
             install -D Libraries/LibC/libc.a Libraries/LibM/libm.a Root/usr/lib/
             SRC_ROOT=$(realpath "$DIR"/..)
             for header in "$SRC_ROOT"/Libraries/Lib{C,M}/**/*.h; do
