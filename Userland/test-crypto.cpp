@@ -56,6 +56,7 @@ static struct timeval start_time {
     0, 0
 };
 static struct timezone tz;
+static bool g_some_test_failed = false;
 static bool encrypting = true;
 
 constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
@@ -384,7 +385,7 @@ auto main(int argc, char** argv) -> int
 
         bigint_tests();
 
-        return 0;
+        return g_some_test_failed ? 1 : 0;
     }
     encrypting = mode_sv == "encrypt";
     if (encrypting || mode_sv == "decrypt") {
@@ -435,7 +436,11 @@ auto main(int argc, char** argv) -> int
         interval_us -= start_time.tv_usec;                                            \
         printf("PASS %llds %lldus\n", (long long)interval_s, (long long)interval_us); \
     }
-#define FAIL(reason) printf("FAIL: " #reason "\n")
+#define FAIL(reason)                   \
+    do {                               \
+        printf("FAIL: " #reason "\n"); \
+        g_some_test_failed = true;     \
+    } while (0)
 
 ByteBuffer operator""_b(const char* string, size_t length)
 {
@@ -506,7 +511,7 @@ int aes_cbc_tests()
         aes_cbc_test_decrypt();
     }
 
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 void aes_cbc_test_name()
@@ -639,7 +644,7 @@ int md5_tests()
     md5_test_name();
     md5_test_hash();
     md5_test_consecutive_updates();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 void md5_test_name()
@@ -771,21 +776,21 @@ int hmac_md5_tests()
 {
     hmac_md5_test_name();
     hmac_md5_test_process();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 int hmac_sha256_tests()
 {
     hmac_sha256_test_name();
     hmac_sha256_test_process();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 int hmac_sha512_tests()
 {
     hmac_sha512_test_name();
     hmac_sha512_test_process();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 void hmac_md5_test_name()
@@ -831,7 +836,7 @@ int sha1_tests()
 {
     sha1_test_name();
     sha1_test_hash();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 void sha1_test_name()
@@ -903,7 +908,7 @@ int sha256_tests()
 {
     sha256_test_name();
     sha256_test_hash();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 void sha256_test_name()
@@ -1014,7 +1019,7 @@ int sha512_tests()
 {
     sha512_test_name();
     sha512_test_hash();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 void sha512_test_name()
@@ -1102,7 +1107,7 @@ int rsa_tests()
     bigint_test_number_theory();
     rsa_test_encrypt_decrypt();
     rsa_emsa_pss_test_create();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 void rsa_test_encrypt()
@@ -1235,7 +1240,7 @@ void rsa_test_encrypt_decrypt()
 int tls_tests()
 {
     tls_test_client_hello();
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 void tls_test_client_hello()
@@ -1307,7 +1312,7 @@ int bigint_tests()
     bigint_signed_import_export();
     bigint_signed_bitwise();
 
-    return 0;
+    return g_some_test_failed ? 1 : 0;
 }
 
 Crypto::UnsignedBigInteger bigint_fibonacci(size_t n)
