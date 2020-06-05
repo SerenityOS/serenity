@@ -26,6 +26,8 @@
 
 #include "TTFont.h"
 #include <AK/LogStream.h>
+#include <AK/Utf8View.h>
+#include <AK/Utf32View.h>
 #include <bits/stdint.h>
 #include <LibCore/File.h>
 #include <math.h>
@@ -106,6 +108,26 @@ Font::IndexToLocFormat Font::Head::index_to_loc_format() const
     }
 }
 
+i16 Font::Hhea::ascender() const
+{
+    return be_i16(m_slice.offset_pointer(4));
+}
+
+i16 Font::Hhea::descender() const
+{
+    return be_i16(m_slice.offset_pointer(6));
+}
+
+i16 Font::Hhea::line_gap() const
+{
+    return be_i16(m_slice.offset_pointer(8));
+}
+
+u16 Font::Hhea::advance_width_max() const
+{
+    return be_u16(m_slice.offset_pointer(10));
+}
+
 u16 Font::Hhea::number_of_h_metrics() const
 {
     return be_u16(m_slice.offset_pointer(34));
@@ -128,10 +150,7 @@ struct Point {
 
     static Point interpolate(const Point& a, const Point &b, float t)
     {
-        return Point {
-            .x = a.x * (1.0f - t) + b.x * t,
-            .y = a.y * (1.0f - t) + b.y * t,
-        };
+        return Point(a.x * (1.0f - t) + b.x * t, a.y * (1.0f - t) + b.y * t);
     }
 
     static float squared_distance(const Point& a, const Point& b)
@@ -236,6 +255,9 @@ public:
         : m_size(size)
     {
         m_data = OwnPtr(new float[m_size.width() * m_size.height()]);
+        for (int i = 0; i < m_size.width() * m_size.height(); i++) {
+            m_data[i] = 0.0;
+        }
     }
 
     void move_to(Point& point)
@@ -272,8 +294,8 @@ public:
     AABitmap accumulate()
     {
         AABitmap bitmap(m_size);
-        float accumulator = 0.0;
         for (int y = 0; y < m_size.height(); y++) {
+            float accumulator = 0.0;
             for (int x = 0; x < m_size.width(); x++) {
                 accumulator += m_data[y * m_size.width() + x];
                 float value = accumulator;
@@ -290,7 +312,7 @@ public:
     }
 
 private:
-    void draw_line(Point& p0, Point& p1)
+    void draw_line(Point p0, Point p1)
     {
         ASSERT(p0.x >= 0.0 && p0.y >= 0.0 && p0.x <= m_size.width() && p0.y <= m_size.height());
         ASSERT(p1.x >= 0.0 && p1.y >= 0.0 && p1.x <= m_size.width() && p1.y <= m_size.height());
@@ -299,9 +321,12 @@ private:
             return;
         }
 
-        float direction = 1.0;
+        float direction = -1.0;
         if (p1.y < p0.y) {
-            direction = -1.0;
+            direction = 1.0;
+            auto tmp = p0;
+            p0 = p1;
+            p1 = tmp;
         }
 
         float dxdy = (p1.x - p0.x) / (p1.y - p0.y);
@@ -321,7 +346,7 @@ private:
             float x0 = x_cur;
             float x1 = x_next;
             if (x1 < x0) {
-                x1 =  x_cur;
+                x1 = x_cur;
                 x0 = x_next;
             }
             float x0_floor = floor(x0);
@@ -360,16 +385,18 @@ private:
 Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 {
     ASSERT(glyph_id < m_num_glyphs);
-    auto offset = glyph_id * 2;
-    i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset + 2));
     if (glyph_id < m_number_of_h_metrics) {
+        auto offset = glyph_id * 4;
         u16 advance_width = be_u16(m_slice.offset_pointer(offset));
+        i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset + 2));
         return GlyphHorizontalMetrics {
             .advance_width = advance_width,
             .left_side_bearing = left_side_bearing,
         };
     } else {
+        auto offset = m_number_of_h_metrics * 4 + (glyph_id - m_number_of_h_metrics) * 2;
         u16 advance_width = be_u16(m_slice.offset_pointer((m_number_of_h_metrics - 1) * 2));
+        i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset + 2));
         return GlyphHorizontalMetrics {
             .advance_width = advance_width,
             .left_side_bearing = left_side_bearing,
@@ -508,7 +535,7 @@ u32 Font::Loca::get_glyph_offset(u32 glyph_id) const
 
 Font::Glyf::Glyph Font::Glyf::Glyph::simple(const ByteBuffer& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax)
 {
-    auto ret = Glyph(slice, Type::Composite);
+    auto ret = Glyph(slice, Type::Simple);
     ret.m_meta.simple = Simple {
         .num_contours = num_contours,
         .xmin = xmin,
@@ -582,10 +609,10 @@ AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
     get_ttglyph_offsets(m_slice, num_points, flags_offset, &x_offset, &y_offset);
 
     // Prepare to render glyph.
-    u32 width = (u32) (ceil((simple.xmax - simple.xmin) * x_scale)) + 2;
-    u32 height = (u32) (ceil((simple.ymax - simple.ymin) * y_scale)) + 2;
+    u32 width = (u32) (ceil((simple.xmax - simple.xmin) * x_scale)) + 1;
+    u32 height = (u32) (ceil((simple.ymax - simple.ymin) * y_scale)) + 1;
     Rasterizer rasterizer(Size(width, height));
-    PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, -simple.xmin, -simple.ymin, x_scale, -y_scale);
+    PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, -simple.xmin, -simple.ymax, x_scale, -y_scale);
 
     int last_contour_end = -1;
     u32 contour_index = 0;
@@ -596,26 +623,36 @@ AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
     // Render glyph
     while (true) {
         if (!contour_start.has_value()) {
+            if (contour_index >= simple.num_contours) {
+                break;
+            }
             int current_contour_end = be_u16(m_slice.offset_pointer(contour_index++ * 2));
-            contour_size = current_contour_end - last_contour_end - 1;
+            contour_size = current_contour_end - last_contour_end;
             last_contour_end = current_contour_end;
             auto opt_item = point_iterator.next();
-            if (!opt_item.has_value() || !opt_item.value().on_curve) {
-                break;
+            if (!opt_item.has_value()) {
+                ASSERT_NOT_REACHED();
             }
             contour_start = opt_item.value().point;
             rasterizer.move_to(contour_start.value());
+            contour_size--;
         } else if (!last_offcurve_point.has_value()) {
             if (contour_size > 0) {
                 auto opt_item = point_iterator.next();
-                ASSERT(opt_item.has_value());
+                // FIXME: Should we draw a line to the first point here?
+                if (!opt_item.has_value()) {
+                    break;
+                }
                 auto item = opt_item.value();
                 contour_size--;
                 if (item.on_curve) {
                     rasterizer.line_to(item.point);
                 } else if (contour_size > 0) {
                     auto opt_next_item = point_iterator.next();
-                    ASSERT(opt_next_item.has_value());
+                    // FIXME: Should we draw a quadratic bezier to the first point here?
+                    if (!opt_next_item.has_value()) {
+                        break;
+                    }
                     auto next_item = opt_next_item.value();
                     contour_size--;
                     if (next_item.on_curve) {
@@ -638,8 +675,12 @@ AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
             last_offcurve_point = {};
             if (contour_size > 0) {
                 auto opt_item = point_iterator.next();
-                ASSERT(opt_item.has_value());
+                // FIXME: Should we draw a quadratic bezier to the first point here?
+                if (!opt_item.has_value()) {
+                    break;
+                }
                 auto item = opt_item.value();
+                contour_size--;
                 if (item.on_curve) {
                     rasterizer.quadratic_bezier_to(point0, item.point);
                 } else {
@@ -665,7 +706,7 @@ Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
     i16 ymin = be_i16(m_slice.offset_pointer(offset + 4));
     i16 xmax = be_i16(m_slice.offset_pointer(offset + 6));
     i16 ymax = be_i16(m_slice.offset_pointer(offset + 8));
-    auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset), m_slice.size() - offset);
+    auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset + 10), m_slice.size() - offset - 10);
     if (num_contours < 0) {
         return Glyph::composite(slice);
     } else {
@@ -673,9 +714,8 @@ Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
     }
 }
 
-OwnPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
+RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
 {
-    dbg() << "path: " << path << " | index: " << index;
     auto file_or_error = Core::File::open(String(path), Core::IODevice::ReadOnly);
     if (file_or_error.is_error()) {
         dbg() << "Could not open file: " << file_or_error.error();
@@ -699,7 +739,7 @@ OwnPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
             return nullptr;
         }
         u32 offset = be_u32(buffer.offset_pointer(12 + 4 * index));
-        return OwnPtr(new Font(move(buffer), offset));
+        return adopt(*new Font(move(buffer), offset));
     } else if (tag == tag_from_str("OTTO")) {
         dbg() << "CFF fonts not supported yet";
         return nullptr;
@@ -707,17 +747,8 @@ OwnPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
         dbg() << "Not a valid  font";
         return nullptr;
     } else {
-        return OwnPtr(new Font(move(buffer), 0));
+        return adopt(*new Font(move(buffer), 0));
     }
-}
-
-// FIXME: "loca" and "glyf" are not available for CFF fonts.
-AABitmap Font::raster_codepoint(u32 codepoint, float x_scale, float y_scale) const
-{
-    auto glyph_id = m_cmap.glyph_id_for_codepoint(codepoint);
-    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-    auto glyph = m_glyf.glyph(glyph_offset);
-    return glyph.raster(x_scale, y_scale);
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
@@ -800,9 +831,77 @@ Font::Font(ByteBuffer&& buffer, u32 offset)
             }
         }
     }
+}
 
-    dbg() << "Glyph ID for 'A': " << m_cmap.glyph_id_for_codepoint('A');
-    dbg() << "Glyph ID for 'B': " << m_cmap.glyph_id_for_codepoint('B');
+ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
+{
+    auto ascender = m_hhea.ascender() * y_scale;
+    auto descender = m_hhea.descender() * y_scale;
+    auto line_gap = m_hhea.line_gap() * y_scale;
+    auto advance_width_max = m_hhea.advance_width_max() * x_scale;
+    return ScaledFontMetrics {
+        .ascender = (int) roundf(ascender),
+        .descender = (int) roundf(descender),
+        .line_gap = (int) roundf(line_gap),
+        .advance_width_max = (int) roundf(advance_width_max),
+    };
+}
+
+ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const
+{
+    if (glyph_id >= m_maxp.num_glyphs()) {
+        glyph_id = 0;
+    }
+    auto horizontal_metrics = m_hmtx.get_glyph_horizontal_metrics(glyph_id);
+    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
+    auto glyph = m_glyf.glyph(glyph_offset);
+    int ascender = glyph.ascender();
+    int descender = glyph.descender();
+    return ScaledGlyphMetrics {
+        .ascender = (int) roundf(ascender * y_scale),
+        .descender = (int) roundf(descender * y_scale),
+        .advance_width = (int) roundf(horizontal_metrics.advance_width * x_scale),
+        .left_side_bearing = (int) roundf(horizontal_metrics.left_side_bearing * x_scale),
+    };
+}
+
+// FIXME: "loca" and "glyf" are not available for CFF fonts.
+AABitmap Font::raster_glyph(u32 glyph_id, float x_scale, float y_scale) const
+{
+    if (glyph_id >= m_maxp.num_glyphs()) {
+        glyph_id = 0;
+    }
+    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
+    auto glyph = m_glyf.glyph(glyph_offset);
+    return glyph.raster(x_scale, y_scale);
+}
+
+int ScaledFont::width(const StringView& string) const
+{
+    Utf8View utf8 { string };
+    return width(utf8);
+}
+
+int ScaledFont::width(const Utf8View& utf8) const
+{
+    int width = 0;
+    for (u32 codepoint : utf8) {
+        u32 glyph_id = glyph_id_for_codepoint(codepoint);
+        auto metrics = glyph_metrics(glyph_id);
+        width += metrics.advance_width;
+    }
+    return width;
+}
+
+int ScaledFont::width(const Utf32View& utf32) const
+{
+    int width = 0;
+    for (size_t i = 0; i < utf32.length(); i++) {
+        u32 glyph_id = glyph_id_for_codepoint(utf32.codepoints()[i]);
+        auto metrics = glyph_metrics(glyph_id);
+        width += metrics.advance_width;
+    }
+    return width;
 }
 
 }
