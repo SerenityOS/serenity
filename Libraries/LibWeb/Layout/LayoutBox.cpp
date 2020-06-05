@@ -272,4 +272,12 @@ bool LayoutBox::is_body() const
     return node() && node() == document().body();
 }
 
+void LayoutBox::set_rect(const Gfx::FloatRect& rect)
+{
+    if (m_rect == rect)
+        return;
+    m_rect = rect;
+    did_set_rect();
+}
+
 }

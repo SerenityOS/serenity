@@ -31,6 +31,7 @@
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutReplaced.h>
 #include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/LayoutWidget.h>
 #include <math.h>
 
 namespace Web {
@@ -83,12 +84,14 @@ void LayoutBlock::layout_block_children(LayoutMode layout_mode)
             return;
         auto& child_block = static_cast<LayoutBlock&>(child);
         child_block.layout(layout_mode);
-        content_height = child_block.rect().bottom() + child_block.box_model().full_margin().bottom - rect().top();
+
+        if (!child_block.is_absolutely_positioned())
+            content_height = child_block.rect().bottom() + child_block.box_model().full_margin().bottom - rect().top();
     });
     if (layout_mode != LayoutMode::Default) {
         float max_width = 0;
         for_each_child([&](auto& child) {
-            if (child.is_box())
+            if (child.is_box() && !child.is_absolutely_positioned())
                 max_width = max(max_width, to<LayoutBox>(child).width());
         });
         rect().set_width(max_width);
@@ -164,6 +167,10 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
 
         for (size_t i = 0; i < line_box.fragments().size(); ++i) {
             auto& fragment = line_box.fragments()[i];
+
+            if (fragment.layout_node().is_absolutely_positioned())
+                continue;
+
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
             fragment.rect().set_x(roundf(x_offset + fragment.rect().x()));

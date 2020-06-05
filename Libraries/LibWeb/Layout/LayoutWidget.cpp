@@ -49,9 +49,22 @@ LayoutWidget::~LayoutWidget()
 
 void LayoutWidget::layout(LayoutMode layout_mode)
 {
-    rect().set_size(widget().width(), widget().height());
-    LayoutReplaced::layout(layout_mode);
+    set_has_intrinsic_width(true);
+    set_has_intrinsic_height(true);
+    set_intrinsic_width(widget().width());
+    set_intrinsic_height(widget().height());
 
+    LayoutReplaced::layout(layout_mode);
+}
+
+void LayoutWidget::did_set_rect()
+{
+    LayoutReplaced::did_set_rect();
+    update_widget();
+}
+
+void LayoutWidget::update_widget()
+{
     auto adjusted_widget_position = rect().location().to_int_point();
     if (auto* page_view = document().frame()->page_view())
         adjusted_widget_position.move_by(-page_view->horizontal_scrollbar().value(), -page_view->vertical_scrollbar().value());

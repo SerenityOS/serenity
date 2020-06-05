@@ -30,7 +30,7 @@
 
 namespace Web {
 
-class LayoutWidget : public LayoutReplaced {
+class LayoutWidget final : public LayoutReplaced {
 public:
     LayoutWidget(const Element&, GUI::Widget&);
     virtual ~LayoutWidget() override;
@@ -43,8 +43,12 @@ public:
 
     virtual bool is_widget() const final { return true; }
 
+    void update_widget();
+
 private:
     virtual const char* class_name() const override { return "LayoutWidget"; }
+
+    virtual void did_set_rect() override;
 
     NonnullRefPtr<GUI::Widget> m_widget;
 };
