@@ -79,8 +79,12 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
 
     auto it = s_resource_cache.find(request);
     if (it != s_resource_cache.end()) {
-        dbg() << "Reusing cached resource for: " << request.url();
-        return it->value;
+        if (it->value->type() != type) {
+            dbg() << "FIXME: Not using cached resource for " << request.url() << " since there's a type mismatch.";
+        } else {
+            dbg() << "Reusing cached resource for: " << request.url();
+            return it->value;
+        }
     }
 
     auto resource = Resource::create({}, type, request);
