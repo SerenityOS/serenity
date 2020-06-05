@@ -99,6 +99,8 @@ void ResourceClient::set_resource(Resource* resource)
         m_resource->unregister_client({}, *this);
     m_resource = resource;
     if (m_resource) {
+        ASSERT(resource->type() == client_type());
+
         m_resource->register_client({}, *this);
 
         // Make sure that reused resources also have their load callback fired.

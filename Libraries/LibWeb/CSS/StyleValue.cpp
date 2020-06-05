@@ -293,13 +293,14 @@ ImageStyleValue::ImageStyleValue(const URL& url, Document& document)
 {
     LoadRequest request;
     request.set_url(url);
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
 }
 
 void ImageStyleValue::resource_did_load()
 {
     if (!m_document)
         return;
+    // FIXME: Use the shared decoder from ImageResource!
     m_bitmap = Gfx::load_png_from_memory(resource()->encoded_data().data(), resource()->encoded_data().size());
     if (!m_bitmap)
         return;

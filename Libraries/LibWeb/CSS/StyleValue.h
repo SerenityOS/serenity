@@ -36,7 +36,7 @@
 #include <LibGfx/Color.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/Loader/Resource.h>
+#include <LibWeb/Loader/ImageResource.h>
 
 namespace Web {
 
@@ -302,7 +302,7 @@ private:
 
 class ImageStyleValue final
     : public StyleValue
-    , public ResourceClient {
+    , public ImageResourceClient {
 public:
     static NonnullRefPtr<ImageStyleValue> create(const URL& url, Document& document) { return adopt(*new ImageStyleValue(url, document)); }
     virtual ~ImageStyleValue() override { }
