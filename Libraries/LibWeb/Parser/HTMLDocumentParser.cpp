@@ -1258,7 +1258,10 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of("param", "source", "track")) {
-        TODO();
+        insert_html_element(token);
+        m_stack_of_open_elements.pop();
+        token.acknowledge_self_closing_flag_if_set();
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == "hr") {
