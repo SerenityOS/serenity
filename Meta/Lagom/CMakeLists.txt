@@ -77,6 +77,11 @@ if (BUILD_LAGOM)
     set_target_properties(test-crypto_lagom PROPERTIES OUTPUT_NAME test-crypto)
     target_link_libraries(test-crypto_lagom Lagom)
     target_link_libraries(test-crypto_lagom stdc++)
+    add_test(
+        NAME Crypto
+        COMMAND test-crypto_lagom test -tc
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
 
     add_executable(disasm_lagom ../../Userland/disasm.cpp)
     set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)

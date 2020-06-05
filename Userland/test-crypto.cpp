@@ -51,6 +51,7 @@ static bool binary = false;
 static bool interactive = false;
 static bool run_tests = false;
 static int port = 443;
+static bool in_ci = false;
 
 static struct timeval start_time {
     0, 0
@@ -283,6 +284,7 @@ auto main(int argc, char** argv) -> int
     parser.add_option(suite, "Set the suite used", "suite-name", 'n', "suite name");
     parser.add_option(server, "Set the server to talk to (only for `tls')", "server-address", 's', "server-address");
     parser.add_option(port, "Set the port to talk to (only for `tls')", "port", 'p', "port");
+    parser.add_option(in_ci, "CI Test mode", "ci-mode", 'c');
     parser.parse(argc, argv);
 
     StringView mode_sv { mode };
@@ -381,7 +383,10 @@ auto main(int argc, char** argv) -> int
 
         rsa_tests();
 
-        tls_tests();
+        if (!in_ci) {
+            // Do not run these in CI to avoid tests with variables outside our control.
+            tls_tests();
+        }
 
         bigint_tests();
 
