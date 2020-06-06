@@ -44,6 +44,7 @@ public:
 
     void set_parser_document(Badge<HTMLDocumentParser>, Document&);
     void set_non_blocking(Badge<HTMLDocumentParser>, bool);
+    void set_already_started(Badge<HTMLDocumentParser>, bool b) { m_already_started = b; }
     void prepare_script(Badge<HTMLDocumentParser>);
     void execute_script();
 

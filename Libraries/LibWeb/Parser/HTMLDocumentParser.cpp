@@ -1431,6 +1431,15 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         insert_character(token.codepoint());
         return;
     }
+    if (token.is_end_of_file()) {
+        PARSE_ERROR();
+        if (current_node().tag_name() == "script")
+            to<HTMLScriptElement>(current_node()).set_already_started({}, true);
+        m_stack_of_open_elements.pop();
+        m_insertion_mode = m_original_insertion_mode;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
     if (token.is_end_tag() && token.tag_name() == "script") {
         NonnullRefPtr<HTMLScriptElement> script = to<HTMLScriptElement>(current_node());
         m_stack_of_open_elements.pop();
