@@ -60,6 +60,7 @@ PageView::PageView()
         if (on_set_document)
             on_set_document(document);
         layout_and_sync_size();
+        scroll_to_top();
         update();
     };
     main_frame().on_title_change = [this](auto& title) {
