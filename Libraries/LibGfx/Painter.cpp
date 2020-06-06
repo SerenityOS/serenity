@@ -1283,7 +1283,7 @@ void Painter::draw_quadratic_bezier_curve(const Point& control_point, const Poin
 
 void Painter::add_clip_rect(const Rect& rect)
 {
-    state().clip_rect.intersect(rect.translated(m_clip_origin.location()));
+    state().clip_rect.intersect(rect.translated(translation()));
     state().clip_rect.intersect(m_target->rect());
 }
 
