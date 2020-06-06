@@ -40,10 +40,13 @@ public:
     virtual ~PageView() override;
 
     // FIXME: Remove this once the new parser is ready.
-    void set_use_old_parser(bool use_old_parser) { m_use_old_parser = use_old_parser; }
+    void set_use_old_parser(bool use_old_parser);
+
+    void load_empty_document();
 
     Document* document();
     const Document* document() const;
+
     void set_document(Document*);
 
     const LayoutDocument* layout_root() const;
@@ -53,8 +56,7 @@ public:
     const Web::Frame& main_frame() const { return *m_main_frame; }
 
     void reload();
-    void load(const URL&);
-    void load_error_page(const URL&, const String& error);
+    bool load(const URL&);
     void scroll_to_anchor(const StringView&);
 
     URL url() const;
@@ -98,8 +100,6 @@ private:
 
     bool m_should_show_line_box_borders { false };
     bool m_in_mouse_selection { false };
-
-    bool m_use_old_parser { false };
 };
 
 }

@@ -33,11 +33,13 @@
 namespace Web {
 
 Frame::Frame()
+    : m_loader(*this)
 {
 }
 
 Frame::Frame(PageView& page_view)
-    : m_page_view(page_view.make_weak_ptr())
+    : m_loader(*this)
+    , m_page_view(page_view.make_weak_ptr())
 {
 }
 
@@ -57,6 +59,9 @@ void Frame::set_document(Document* document)
 
     if (m_document)
         m_document->attach_to_frame({}, *this);
+
+    if (on_set_document)
+        on_set_document(m_document);
 }
 
 void Frame::set_size(const Gfx::Size& size)
@@ -96,6 +101,16 @@ void Frame::did_scroll(Badge<PageView>)
         layout_widget.update_widget();
         return IterationDecision::Continue;
     });
+}
+
+void Frame::scroll_to_anchor(const String& fragment)
+{
+    // FIXME: We should be able to scroll iframes to an anchor, too!
+    if (!m_page_view)
+        return;
+    // FIXME: This logic is backwards, the work should be done in here,
+    //        and then we just request that the "view" scrolls to a certain content offset.
+    m_page_view->scroll_to_anchor(fragment);
 }
 
 }
