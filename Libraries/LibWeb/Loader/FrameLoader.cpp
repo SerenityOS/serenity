@@ -178,48 +178,9 @@ bool FrameLoader::load(const URL& url)
         return false;
     }
 
-    ResourceLoader::the().load(
-        url,
-        [this, url](auto data, auto& response_headers) {
-            // FIXME: Also check HTTP status code before redirecting
-            auto location = response_headers.get("Location");
-            if (location.has_value()) {
-                load(location.value());
-                return;
-            }
-
-            if (data.is_null()) {
-                load_error_page(url, "No data");
-                return;
-            }
-
-            String encoding = "utf-8";
-            String mime_type;
-
-            auto content_type = response_headers.get("Content-Type");
-            if (content_type.has_value()) {
-                dbg() << "Content-Type header: _" << content_type.value() << "_";
-                encoding = encoding_from_content_type(content_type.value());
-                mime_type = mime_type_from_content_type(content_type.value());
-            } else {
-                dbg() << "No Content-Type header to go on! Guessing based on filename...";
-                mime_type = guess_mime_type_based_on_filename(url);
-            }
-
-            dbg() << "I believe this content has MIME type '" << mime_type << "', encoding '" << encoding << "'";
-            auto document = create_document_from_mime_type(data, url, mime_type, encoding);
-            ASSERT(document);
-            frame().set_document(document);
-
-            if (!url.fragment().is_empty())
-                frame().scroll_to_anchor(url.fragment());
-
-            if (frame().on_title_change)
-                frame().on_title_change(document->title());
-        },
-        [this, url](auto error) {
-            load_error_page(url, error);
-        });
+    LoadRequest request;
+    request.set_url(url);
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
     if (frame().on_load_start)
         frame().on_load_start(url);
@@ -271,6 +232,52 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
             dbg() << "Failed to load error page: " << error;
             ASSERT_NOT_REACHED();
         });
+}
+
+void FrameLoader::resource_did_load()
+{
+    auto url = resource()->url();
+
+    if (!resource()->has_encoded_data()) {
+        load_error_page(url, "No data");
+        return;
+    }
+
+    // FIXME: Also check HTTP status code before redirecting
+    auto location = resource()->response_headers().get("Location");
+    if (location.has_value()) {
+        load(location.value());
+        return;
+    }
+
+    String encoding = "utf-8";
+    String mime_type;
+
+    auto content_type = resource()->response_headers().get("Content-Type");
+    if (content_type.has_value()) {
+        dbg() << "Content-Type header: _" << content_type.value() << "_";
+        encoding = encoding_from_content_type(content_type.value());
+        mime_type = mime_type_from_content_type(content_type.value());
+    } else {
+        dbg() << "No Content-Type header to go on! Guessing based on filename...";
+        mime_type = guess_mime_type_based_on_filename(url);
+    }
+
+    dbg() << "I believe this content has MIME type '" << mime_type << "', encoding '" << encoding << "'";
+    auto document = create_document_from_mime_type(resource()->encoded_data(), url, mime_type, encoding);
+    ASSERT(document);
+    frame().set_document(document);
+
+    if (!url.fragment().is_empty())
+        frame().scroll_to_anchor(url.fragment());
+
+    if (frame().on_title_change)
+        frame().on_title_change(document->title());
+}
+
+void FrameLoader::resource_did_fail()
+{
+    load_error_page(resource()->url(), resource()->error());
 }
 
 }
