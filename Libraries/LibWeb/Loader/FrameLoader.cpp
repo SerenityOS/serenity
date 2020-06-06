@@ -221,7 +221,12 @@ void FrameLoader::resource_did_load()
 
     dbg() << "I believe this content has MIME type '" << resource()->mime_type() << "', encoding '" << resource()->encoding() << "'";
     auto document = create_document_from_mime_type(resource()->encoded_data(), url, resource()->mime_type(), resource()->encoding());
-    ASSERT(document);
+
+    if (!document) {
+        load_error_page(url, "Failed to parse content.");
+        return;
+    }
+
     frame().set_document(document);
 
     if (!url.fragment().is_empty())
