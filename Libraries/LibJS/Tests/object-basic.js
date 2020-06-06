@@ -15,6 +15,7 @@ try {
         duplicate: "world"
     };
     assert(o[1] === 23);
+    assert(o[1n] === 23);
     assert(o["1"] === 23);
     assert(o.foo === "bar");
     assert(o["foo"] === "bar");
@@ -28,6 +29,9 @@ try {
     assert(o.baz === "test");
     assert(o["baz"] === "test");
     o[10] = "123";
+    assert(o[10] === "123");
+    assert(o["10"] === "123");
+    o[10n] = "123";
     assert(o[10] === "123");
     assert(o["10"] === "123");
     o[-1] = "hello friends";

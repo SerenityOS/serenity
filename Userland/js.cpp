@@ -257,7 +257,7 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 
     if (value.is_string())
         printf("\033[32;1m");
-    else if (value.is_number())
+    else if (value.is_number() || value.is_bigint())
         printf("\033[35;1m");
     else if (value.is_boolean())
         printf("\033[33;1m");
@@ -611,6 +611,7 @@ int main(int argc, char** argv)
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Underline });
                     break;
                 case JS::TokenType::NumericLiteral:
+                case JS::TokenType::BigIntLiteral:
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta) });
                     break;
                 case JS::TokenType::StringLiteral:
