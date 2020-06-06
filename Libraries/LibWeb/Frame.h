@@ -43,7 +43,7 @@ class PageView;
 
 class Frame : public TreeNode<Frame> {
 public:
-    static NonnullRefPtr<Frame> create_subframe() { return adopt(*new Frame); }
+    static NonnullRefPtr<Frame> create_subframe(Element& host_element, Frame& main_frame) { return adopt(*new Frame(host_element, main_frame)); }
     static NonnullRefPtr<Frame> create(PageView& page_view) { return adopt(*new Frame(page_view)); }
     ~Frame();
 
@@ -76,12 +76,21 @@ public:
 
     void scroll_to_anchor(const String&);
 
+    Frame& main_frame() { return m_main_frame; }
+    const Frame& main_frame() const { return m_main_frame; }
+
+    Element* host_element() { return m_host_element; }
+    const Element* host_element() const { return m_host_element; }
+
 private:
-    Frame();
+    explicit Frame(Element& host_element, Frame& main_frame);
     explicit Frame(PageView&);
+
+    Frame& m_main_frame;
 
     FrameLoader m_loader;
 
+    WeakPtr<Element> m_host_element;
     WeakPtr<PageView> m_page_view;
     RefPtr<Document> m_document;
     Gfx::Size m_size;
