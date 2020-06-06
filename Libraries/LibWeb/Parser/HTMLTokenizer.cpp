@@ -168,6 +168,16 @@
 #define EMIT_CURRENT_CHARACTER \
     EMIT_CHARACTER(current_input_character.value());
 
+#define SWITCH_TO_AND_EMIT_CHARACTER(codepoint, new_state) \
+    do {                                                   \
+        will_switch_to(State::new_state);                  \
+        m_state = State::new_state;                        \
+        EMIT_CHARACTER(codepoint);                          \
+    } while (0)
+
+#define SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(new_state) \
+    SWITCH_TO_AND_EMIT_CHARACTER(current_input_character.value(), new_state)
+
 #define BEGIN_STATE(state) \
     state:                 \
     case State::state: {   \
@@ -1560,7 +1570,6 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    // FIXME: Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS character token. Reconsume in the RCDATA state.
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
                     RECONSUME_IN(RCDATA);
@@ -1657,8 +1666,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    EMIT_CHARACTER('<');
-                    RECONSUME_IN(RAWTEXT);
+                    EMIT_CHARACTER_AND_RECONSUME_IN('<', RAWTEXT);
                 }
             }
             END_STATE
@@ -1801,8 +1809,7 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    m_queued_tokens.enqueue(HTMLToken::make_character('-'));
-                    SWITCH_TO(ScriptDataEscapeStartDash);
+                    SWITCH_TO_AND_EMIT_CHARACTER('-', ScriptDataEscapeStartDash);
                 }
                 ANYTHING_ELSE
                 {
@@ -1815,8 +1822,7 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    m_queued_tokens.enqueue(HTMLToken::make_character('-'));
-                    SWITCH_TO(ScriptDataEscapedDashDash);
+                    SWITCH_TO_AND_EMIT_CHARACTER('-', ScriptDataEscapedDashDash);
                 }
                 ANYTHING_ELSE
                 {
@@ -1837,20 +1843,21 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    m_queued_tokens.enqueue(HTMLToken::make_character('>'));
-                    SWITCH_TO(ScriptData);
+                    SWITCH_TO_AND_EMIT_CHARACTER('>', ScriptData);
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    SWITCH_TO_AND_EMIT_CHARACTER(0xFFFD, ScriptDataEscaped);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(ScriptDataEscaped);
+                    SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataEscaped);
                 }
             }
             END_STATE
@@ -1894,27 +1901,39 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    if (current_end_tag_token_is_appropriate()) {
+                    if (current_end_tag_token_is_appropriate())
                         SWITCH_TO(BeforeAttributeName);
-                    } else {
-                        TODO();
+
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer) {
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
                     }
+                    RECONSUME_IN(ScriptDataEscaped);
                 }
                 ON('/')
                 {
-                    if (current_end_tag_token_is_appropriate()) {
+                    if (current_end_tag_token_is_appropriate())
                         SWITCH_TO(SelfClosingStartTag);
-                    } else {
-                        TODO();
+
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer) {
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
                     }
+                    RECONSUME_IN(ScriptDataEscaped);
                 }
                 ON('>')
                 {
-                    if (current_end_tag_token_is_appropriate()) {
+                    if (current_end_tag_token_is_appropriate())
                         SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
-                    } else {
-                        TODO();
+
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    for (auto codepoint : m_temporary_buffer) {
+                        m_queued_tokens.enqueue(HTMLToken::make_character(codepoint));
                     }
+                    RECONSUME_IN(ScriptDataEscaped);
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
@@ -1942,7 +1961,204 @@ _StartOfFunction:
 
             BEGIN_STATE(ScriptDataDoubleEscapeStart)
             {
-                TODO();
+                auto temporary_buffer_equal_to_script = [this]() -> bool {
+                    if (m_temporary_buffer.size() != 6)
+                        return false;
+
+                    // FIXME: Is there a better way of doing this?
+                    return m_temporary_buffer[0] == 's' &&
+                           m_temporary_buffer[1] == 'c' &&
+                           m_temporary_buffer[2] == 'r' &&
+                           m_temporary_buffer[3] == 'i' &&
+                           m_temporary_buffer[4] == 'p' &&
+                           m_temporary_buffer[5] == 't';
+                };
+                ON_WHITESPACE
+                {
+                    if (temporary_buffer_equal_to_script())
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataDoubleEscaped);
+                    else
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataEscaped);
+                }
+                ON('/')
+                {
+                    if (temporary_buffer_equal_to_script())
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataDoubleEscaped);
+                    else
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataEscaped);
+                }
+                ON('>')
+                {
+                    if (temporary_buffer_equal_to_script())
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataDoubleEscaped);
+                    else
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataEscaped);
+                }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_temporary_buffer.append(tolower(current_input_character.value()));
+                    EMIT_CURRENT_CHARACTER;
+                }
+                ON_ASCII_LOWER_ALPHA
+                {
+                    m_temporary_buffer.append(current_input_character.value());
+                    EMIT_CURRENT_CHARACTER;
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(ScriptDataEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataDoubleEscaped)
+            {
+                ON('-')
+                {
+                    SWITCH_TO_AND_EMIT_CHARACTER('-', ScriptDataDoubleEscapedDash);
+                }
+                ON('<')
+                {
+                    SWITCH_TO_AND_EMIT_CHARACTER('<', ScriptDataDoubleEscapedLessThanSign);
+                }
+                ON(0)
+                {
+                    PARSE_ERROR();
+                    EMIT_CHARACTER(0xFFFD);
+                }
+                ON_EOF
+                {
+                    PARSE_ERROR();
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CURRENT_CHARACTER;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataDoubleEscapedDash)
+            {
+                ON('-')
+                {
+                    SWITCH_TO_AND_EMIT_CHARACTER('-', ScriptDataDoubleEscapedDashDash);
+                }
+                ON('<')
+                {
+                    SWITCH_TO_AND_EMIT_CHARACTER('<', ScriptDataDoubleEscapedLessThanSign);
+                }
+                ON(0)
+                {
+                    PARSE_ERROR();
+                    SWITCH_TO_AND_EMIT_CHARACTER(0xFFFD, ScriptDataDoubleEscaped);
+                }
+                ON_EOF
+                {
+                    PARSE_ERROR();
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataDoubleEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataDoubleEscapedDashDash)
+            {
+                ON('-')
+                {
+                    EMIT_CHARACTER('-');
+                }
+                ON('<')
+                {
+                    SWITCH_TO_AND_EMIT_CHARACTER('<', ScriptDataDoubleEscapedLessThanSign);
+                }
+                ON('>')
+                {
+                    SWITCH_TO_AND_EMIT_CHARACTER('>', ScriptData);
+                }
+                ON(0)
+                {
+                    PARSE_ERROR();
+                    SWITCH_TO_AND_EMIT_CHARACTER(0xFFFD, ScriptDataDoubleEscaped);
+                }
+                ON_EOF
+                {
+                    PARSE_ERROR();
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataDoubleEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataDoubleEscapedLessThanSign)
+            {
+                ON('/')
+                {
+                    m_temporary_buffer.clear();
+                    SWITCH_TO_AND_EMIT_CHARACTER('/', ScriptDataDoubleEscapeEnd);
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(ScriptDataDoubleEscaped);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(ScriptDataDoubleEscapeEnd)
+            {
+                auto temporary_buffer_equal_to_script = [this]() -> bool {
+                    if (m_temporary_buffer.size() != 6)
+                        return false;
+
+                    // FIXME: Is there a better way of doing this?
+                    return m_temporary_buffer[0] == 's' &&
+                           m_temporary_buffer[1] == 'c' &&
+                           m_temporary_buffer[2] == 'r' &&
+                           m_temporary_buffer[3] == 'i' &&
+                           m_temporary_buffer[4] == 'p' &&
+                           m_temporary_buffer[5] == 't';
+                };
+                ON_WHITESPACE
+                {
+                    if (temporary_buffer_equal_to_script())
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataEscaped);
+                    else
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataDoubleEscaped);
+                }
+                ON('/')
+                {
+                    if (temporary_buffer_equal_to_script())
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataEscaped);
+                    else
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataDoubleEscaped);
+                }
+                ON('>')
+                {
+                    if (temporary_buffer_equal_to_script())
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataEscaped);
+                    else
+                        SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataDoubleEscaped);
+                }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_temporary_buffer.append(tolower(current_input_character.value()));
+                    EMIT_CURRENT_CHARACTER;
+                }
+                ON_ASCII_LOWER_ALPHA
+                {
+                    m_temporary_buffer.append(current_input_character.value());
+                    EMIT_CURRENT_CHARACTER;
+                }
+                ANYTHING_ELSE
+                {
+                    RECONSUME_IN(ScriptDataDoubleEscaped);
+                }
             }
             END_STATE
 
@@ -1950,7 +2166,7 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(ScriptDataEscapedDashDash);
+                    SWITCH_TO_AND_EMIT_CHARACTER('-', ScriptDataEscapedDashDash);
                 }
                 ON('<')
                 {
@@ -1958,15 +2174,17 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    SWITCH_TO_AND_EMIT_CHARACTER(0xFFFD, ScriptDataEscaped);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(ScriptDataEscaped);
+                    SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(ScriptDataEscaped);
                 }
             }
             END_STATE
@@ -1975,7 +2193,7 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(ScriptDataEscapedDash);
+                    SWITCH_TO_AND_EMIT_CHARACTER('-', ScriptDataEscapedDash);
                 }
                 ON('<')
                 {
@@ -1983,11 +2201,13 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_CHARACTER(0xFFFD);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -2005,7 +2225,9 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    RECONSUME_IN(ScriptData);
                 }
             }
             END_STATE
