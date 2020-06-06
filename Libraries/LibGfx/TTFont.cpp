@@ -25,6 +25,7 @@
  */
 
 #include "TTFont.h"
+#include <AK/FixedArray.h>
 #include <AK/LogStream.h>
 #include <AK/Utf8View.h>
 #include <AK/Utf32View.h>
@@ -240,8 +241,8 @@ class Rasterizer {
 public:
     Rasterizer(Size size)
         : m_size(size)
+        , m_data(m_size.width() * m_size.height())
     {
-        m_data = OwnPtr(new float[m_size.width() * m_size.height()]);
         for (int i = 0; i < m_size.width() * m_size.height(); i++) {
             m_data[i] = 0.0;
         }
@@ -344,7 +345,7 @@ private:
     }
 
     Size m_size;
-    OwnPtr<float> m_data;
+    FixedArray<float> m_data;
 };
 
 Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
@@ -358,15 +359,14 @@ Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_
             .advance_width = advance_width,
             .left_side_bearing = left_side_bearing,
         };
-    } else {
-        auto offset = m_number_of_h_metrics * (u32) Sizes::LongHorMetric + (glyph_id - m_number_of_h_metrics) * (u32) Sizes::LeftSideBearing;
-        u16 advance_width = be_u16(m_slice.offset_pointer((m_number_of_h_metrics - 1) * (u32) Sizes::LongHorMetric));
-        i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset));
-        return GlyphHorizontalMetrics {
-            .advance_width = advance_width,
-            .left_side_bearing = left_side_bearing,
-        };
     }
+    auto offset = m_number_of_h_metrics * (u32) Sizes::LongHorMetric + (glyph_id - m_number_of_h_metrics) * (u32) Sizes::LeftSideBearing;
+    u16 advance_width = be_u16(m_slice.offset_pointer((m_number_of_h_metrics - 1) * (u32) Sizes::LongHorMetric));
+    i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset));
+    return GlyphHorizontalMetrics {
+        .advance_width = advance_width,
+        .left_side_bearing = left_side_bearing,
+    };
 }
 
 Font::Cmap::Subtable::Platform Font::Cmap::Subtable::platform_id() const
@@ -447,11 +447,10 @@ u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
         u32 range = be_u16(m_slice.offset_pointer((u32) Table4Offsets::RangeConstBase + segcount_x2 * 3 + offset));
         if (range == 0) {
             return (codepoint + delta) & 0xffff;
-        } else {
-            u32 glyph_offset = (u32) Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (codepoint - start_codepoint) * 2;
-            ASSERT(glyph_offset + 2 <= m_slice.size());
-            return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
         }
+        u32 glyph_offset = (u32) Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (codepoint - start_codepoint) * 2;
+        ASSERT(glyph_offset + 2 <= m_slice.size());
+        return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
     }
     return 0;
 }
@@ -674,9 +673,8 @@ Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
     auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset + (u32) Sizes::GlyphHeader), m_slice.size() - offset - (u32) Sizes::GlyphHeader);
     if (num_contours < 0) {
         return Glyph::composite(slice);
-    } else {
-        return Glyph::simple(slice, num_contours, xmin, ymin, xmax, ymax);
     }
+    return Glyph::simple(slice, num_contours, xmin, ymin, xmax, ymax);
 }
 
 RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
@@ -705,15 +703,16 @@ RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
         }
         u32 offset = be_u32(buffer.offset_pointer((u32) Sizes::TTCHeaderV1 + sizeof(u32) * index));
         return adopt(*new Font(move(buffer), offset));
-    } else if (tag == tag_from_str("OTTO")) {
+    }
+    if (tag == tag_from_str("OTTO")) {
         dbg() << "CFF fonts not supported yet";
         return nullptr;
-    } else if (tag != 0x00010000) {
+    }
+    if (tag != 0x00010000) {
         dbg() << "Not a valid  font";
         return nullptr;
-    } else {
-        return adopt(*new Font(move(buffer), 0));
     }
+    return adopt(*new Font(move(buffer), 0));
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
