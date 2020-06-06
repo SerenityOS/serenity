@@ -40,6 +40,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenType::Eof:
         return { palette.syntax_comment() };
     case JS::TokenType::NumericLiteral:
+    case JS::TokenType::BigIntLiteral:
         return { palette.syntax_number() };
     case JS::TokenType::StringLiteral:
     case JS::TokenType::TemplateLiteralStart:

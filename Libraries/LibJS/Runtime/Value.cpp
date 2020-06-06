@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +29,14 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/BigInt.h>
+#include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
@@ -42,9 +47,34 @@
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
+#include <ctype.h>
 #include <math.h>
 
 namespace JS {
+
+static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
+
+static bool is_valid_bigint_value(String string)
+{
+    string = string.trim_whitespace();
+    if (string.length() > 1 && (string[0] == '-' || string[0] == '+'))
+        string = string.substring_view(1, string.length() - 1);
+    for (auto& ch : string) {
+        if (!isdigit(ch))
+            return false;
+    }
+    return true;
+}
+
+ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)
+{
+    return lhs.is_number() && rhs.is_number();
+}
+
+ALWAYS_INLINE bool both_bigint(const Value& lhs, const Value& rhs)
+{
+    return lhs.is_bigint() && rhs.is_bigint();
+}
 
 bool Value::is_array() const
 {
@@ -83,6 +113,8 @@ String Value::to_string_without_side_effects() const
         return m_value.as_string->string();
     case Type::Symbol:
         return m_value.as_symbol->to_string();
+    case Type::BigInt:
+        return m_value.as_bigint->to_string();
     case Type::Object:
         return String::format("[object %s]", as_object().class_name());
     case Type::Accessor:
@@ -124,6 +156,8 @@ String Value::to_string(Interpreter& interpreter) const
     case Type::Symbol:
         interpreter.throw_exception<TypeError>("Can't convert symbol to string");
         return {};
+    case Type::BigInt:
+        return m_value.as_bigint->big_integer().to_base10();
     case Type::Object: {
         auto primitive_value = as_object().to_primitive(PreferredType::String);
         if (interpreter.exception())
@@ -150,6 +184,9 @@ bool Value::to_boolean() const
     case Type::String:
         return !m_value.as_string->string().is_empty();
     case Type::Symbol:
+        return true;
+    case Type::BigInt:
+        return m_value.as_bigint->big_integer() != BIGINT_ZERO;
     case Type::Object:
         return true;
     default:
@@ -179,12 +216,24 @@ Object* Value::to_object(Interpreter& interpreter) const
         return StringObject::create(interpreter.global_object(), *m_value.as_string);
     case Type::Symbol:
         return SymbolObject::create(interpreter.global_object(), *m_value.as_symbol);
+    case Type::BigInt:
+        return BigIntObject::create(interpreter.global_object(), *m_value.as_bigint);
     case Type::Object:
         return &const_cast<Object&>(as_object());
     default:
         dbg() << "Dying because I can't to_object() on " << *this;
         ASSERT_NOT_REACHED();
     }
+}
+
+Value Value::to_numeric(Interpreter& interpreter) const
+{
+    auto primitive = to_primitive(interpreter, Value::PreferredType::Number);
+    if (interpreter.exception())
+        return {};
+    if (primitive.is_bigint())
+        return primitive;
+    return primitive.to_number(interpreter);
 }
 
 Value Value::to_number(Interpreter& interpreter) const
@@ -215,12 +264,52 @@ Value Value::to_number(Interpreter& interpreter) const
     case Type::Symbol:
         interpreter.throw_exception<TypeError>("Can't convert symbol to number");
         return {};
+    case Type::BigInt:
+        interpreter.throw_exception<TypeError>("Can't convert BigInt to number");
+        return {};
     case Type::Object: {
         auto primitive = m_value.as_object->to_primitive(PreferredType::Number);
         if (interpreter.exception())
             return {};
         return primitive.to_number(interpreter);
     }
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+BigInt* Value::to_bigint(Interpreter& interpreter) const
+{
+    auto primitive = to_primitive(interpreter, PreferredType::Number);
+    if (interpreter.exception())
+        return nullptr;
+    switch (primitive.type()) {
+    case Type::Undefined:
+        interpreter.throw_exception<TypeError>("Can't convert undefined to BigInt");
+        return nullptr;
+    case Type::Null:
+        interpreter.throw_exception<TypeError>("Can't convert null to BigInt");
+        return nullptr;
+    case Type::Boolean: {
+        auto value = primitive.as_bool() ? 1 : 0;
+        return js_bigint(interpreter, Crypto::SignedBigInteger { value });
+    }
+    case Type::BigInt:
+        return &primitive.as_bigint();
+    case Type::Number:
+        interpreter.throw_exception<TypeError>("Can't convert number to BigInt");
+        return {};
+    case Type::String: {
+        auto& string = primitive.as_string().string();
+        if (!is_valid_bigint_value(string)) {
+            interpreter.throw_exception<SyntaxError>(String::format("Invalid value for BigInt: %s", string.characters()));
+            return {};
+        }
+        return js_bigint(interpreter, Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
+    }
+    case Type::Symbol:
+        interpreter.throw_exception<TypeError>("Can't convert symbol to BigInt");
+        return {};
     default:
         ASSERT_NOT_REACHED();
     }
@@ -305,55 +394,70 @@ Value less_than_equals(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value((i32)lhs_number.as_double() & (i32)rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric))
+        return Value((i32)lhs_numeric.as_double() & (i32)rhs_numeric.as_double());
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
+    interpreter.throw_exception<TypeError>("Can't use bitwise AND operator with BigInt and other type");
+    return {};
 }
 
 Value bitwise_or(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    bool lhs_invalid = lhs.is_undefined() || lhs.is_null() || lhs.is_nan() || lhs.is_infinity();
-    bool rhs_invalid = rhs.is_undefined() || rhs.is_null() || rhs.is_nan() || rhs.is_infinity();
-
-    if (lhs_invalid && rhs_invalid)
-        return Value(0);
-
-    if (lhs_invalid || rhs_invalid)
-        return lhs_invalid ? rhs.to_number(interpreter) : lhs.to_number(interpreter);
-
-    if (!rhs.is_number() && !lhs.is_number())
-        return Value(0);
-
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value((i32)lhs_number.as_double() | (i32)rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
+            return Value(0);
+        if (!lhs_numeric.is_finite_number())
+            return rhs_numeric;
+        if (!rhs_numeric.is_finite_number())
+            return lhs_numeric;
+        return Value((i32)lhs_numeric.as_double() | (i32)rhs_numeric.as_double());
+    }
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
+    interpreter.throw_exception<TypeError>("Can't use bitwise OR operator with BigInt and other type");
+    return {};
 }
 
 Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value((i32)lhs_number.as_double() ^ (i32)rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric))
+        return Value((i32)lhs_numeric.as_double() ^ (i32)rhs_numeric.as_double());
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
+    interpreter.throw_exception<TypeError>("Can't use bitwise XOR operator with BigInt and other type");
+    return {};
 }
 
 Value bitwise_not(Interpreter& interpreter, Value lhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value(~(i32)lhs_number.as_double());
+    if (lhs_numeric.is_number())
+        return Value(~(i32)lhs_numeric.as_double());
+    auto big_integer_bitwise_not = lhs_numeric.as_bigint().big_integer();
+    big_integer_bitwise_not = big_integer_bitwise_not.plus(Crypto::SignedBigInteger { 1 });
+    big_integer_bitwise_not.negate();
+    return js_bigint(interpreter, big_integer_bitwise_not);
 }
 
 Value unary_plus(Interpreter& interpreter, Value lhs)
@@ -363,57 +467,80 @@ Value unary_plus(Interpreter& interpreter, Value lhs)
 
 Value unary_minus(Interpreter& interpreter, Value lhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (lhs_number.is_nan())
-        return js_nan();
-    return Value(-lhs_number.as_double());
+    if (lhs_numeric.is_number()) {
+        if (lhs_numeric.is_nan())
+            return js_nan();
+        return Value(-lhs_numeric.as_double());
+    }
+    if (lhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
+        return js_bigint(interpreter, BIGINT_ZERO);
+    auto big_integer_negated = lhs_numeric.as_bigint().big_integer();
+    big_integer_negated.negate();
+    return js_bigint(interpreter, big_integer_negated);
 }
 
 Value left_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (!lhs_number.is_finite_number())
-        return Value(0);
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (!rhs_number.is_finite_number())
-        return lhs_number;
-    return Value((i32)lhs_number.as_double() << (i32)rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        if (!lhs_numeric.is_finite_number())
+            return Value(0);
+        if (!rhs_numeric.is_finite_number())
+            return lhs_numeric;
+        return Value((i32)lhs_numeric.as_double() << (i32)rhs_numeric.as_double());
+    }
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        TODO();
+    interpreter.throw_exception<TypeError>("Can't use left-shift operator with BigInt and other type");
+    return {};
 }
 
 Value right_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (!lhs_number.is_finite_number())
-        return Value(0);
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (!rhs_number.is_finite_number())
-        return lhs_number;
-    return Value((i32)lhs_number.as_double() >> (i32)rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        if (!lhs_numeric.is_finite_number())
+            return Value(0);
+        if (!rhs_numeric.is_finite_number())
+            return lhs_numeric;
+        return Value((i32)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
+    }
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        TODO();
+    interpreter.throw_exception<TypeError>("Can't use right-shift operator with BigInt and other type");
+    return {};
 }
 
 Value unsigned_right_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (!lhs_number.is_finite_number())
-        return Value(0);
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (!rhs_number.is_finite_number())
-        return lhs_number;
-    return Value((unsigned)lhs_number.as_double() >> (i32)rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        if (!lhs_numeric.is_finite_number())
+            return Value(0);
+        if (!rhs_numeric.is_finite_number())
+            return lhs_numeric;
+        return Value((unsigned)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
+    }
+    interpreter.throw_exception<TypeError>("Can't use unsigned right-shift operator with BigInt");
+    return {};
 }
 
 Value add(Interpreter& interpreter, Value lhs, Value rhs)
@@ -438,73 +565,104 @@ Value add(Interpreter& interpreter, Value lhs, Value rhs)
         return js_string(interpreter, builder.to_string());
     }
 
-    auto lhs_number = lhs_primitive.to_number(interpreter);
+    auto lhs_numeric = lhs_primitive.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs_primitive.to_number(interpreter);
+    auto rhs_numeric = rhs_primitive.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value(lhs_number.as_double() + rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric))
+        return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
+    interpreter.throw_exception<TypeError>("Can't use addition operator with BigInt and other type");
+    return {};
 }
 
 Value sub(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value(lhs_number.as_double() - rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric))
+        return Value(lhs_numeric.as_double() - rhs_numeric.as_double());
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer()));
+    interpreter.throw_exception<TypeError>("Can't use subtraction operator with BigInt and other type");
+    return {};
 }
 
 Value mul(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value(lhs_number.as_double() * rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric))
+        return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer()));
+    interpreter.throw_exception<TypeError>("Can't use multiplication operator with BigInt and other type");
+    return {};
 }
 
 Value div(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value(lhs_number.as_double() / rhs_number.as_double());
+    if (both_number(lhs_numeric, rhs_numeric))
+        return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
+    interpreter.throw_exception<TypeError>("Can't use division operator with BigInt and other type");
+    return {};
 }
 
 Value mod(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (lhs_number.is_nan() || rhs_number.is_nan())
-        return js_nan();
-    auto index = lhs_number.as_double();
-    auto period = rhs_number.as_double();
-    auto trunc = (double)(i32)(index / period);
-    return Value(index - trunc * period);
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        if (lhs_numeric.is_nan() || rhs_numeric.is_nan())
+            return js_nan();
+        auto index = lhs_numeric.as_double();
+        auto period = rhs_numeric.as_double();
+        auto trunc = (double)(i32)(index / period);
+        return Value(index - trunc * period);
+    }
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
+    interpreter.throw_exception<TypeError>("Can't use modulo operator with BigInt and other type");
+    return {};
 }
 
 Value exp(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_number = lhs.to_number(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_number = rhs.to_number(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    return Value(pow(lhs_number.as_double(), rhs_number.as_double()));
+    if (both_number(lhs_numeric, rhs_numeric))
+        return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
+    if (both_bigint(lhs_numeric, rhs_numeric))
+        return js_bigint(interpreter, Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
+    interpreter.throw_exception<TypeError>("Can't use exponentiation operator with BigInt and other type");
+    return {};
 }
 
 Value in(Interpreter& interpreter, Value lhs, Value rhs)
@@ -547,6 +705,14 @@ bool same_value(Interpreter& interpreter, Value lhs, Value rhs)
         return lhs.as_double() == rhs.as_double();
     }
 
+    if (lhs.is_bigint()) {
+        auto lhs_big_integer = lhs.as_bigint().big_integer();
+        auto rhs_big_integer = rhs.as_bigint().big_integer();
+        if (lhs_big_integer == BIGINT_ZERO && rhs_big_integer == BIGINT_ZERO && lhs_big_integer.is_negative() != rhs_big_integer.is_negative())
+            return false;
+        return lhs_big_integer == rhs_big_integer;
+    }
+
     return same_value_non_numeric(interpreter, lhs, rhs);
 }
 
@@ -558,17 +724,18 @@ bool same_value_zero(Interpreter& interpreter, Value lhs, Value rhs)
     if (lhs.is_number()) {
         if (lhs.is_nan() && rhs.is_nan())
             return true;
-        if ((lhs.is_positive_zero() || lhs.is_negative_zero()) && (rhs.is_positive_zero() || rhs.is_negative_zero()))
-            return true;
         return lhs.as_double() == rhs.as_double();
     }
+
+    if (lhs.is_bigint())
+        return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
 
     return same_value_non_numeric(interpreter, lhs, rhs);
 }
 
 bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs)
 {
-    ASSERT(!lhs.is_number());
+    ASSERT(!lhs.is_number() && !lhs.is_bigint());
     ASSERT(lhs.type() == rhs.type());
 
     switch (lhs.type()) {
@@ -598,10 +765,11 @@ bool strict_eq(Interpreter& interpreter, Value lhs, Value rhs)
             return false;
         if (lhs.as_double() == rhs.as_double())
             return true;
-        if ((lhs.is_positive_zero() || lhs.is_negative_zero()) && (rhs.is_positive_zero() || rhs.is_negative_zero()))
-            return true;
         return false;
     }
+
+    if (lhs.is_bigint())
+        return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
 
     return same_value_non_numeric(interpreter, lhs, rhs);
 }
@@ -620,25 +788,46 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
     if (lhs.is_string() && rhs.is_number())
         return abstract_eq(interpreter, lhs.to_number(interpreter), rhs);
 
+    if (lhs.is_bigint() && rhs.is_string()) {
+        auto& rhs_string = rhs.as_string().string();
+        if (!is_valid_bigint_value(rhs_string))
+            return false;
+        return abstract_eq(interpreter, lhs, js_bigint(interpreter, Crypto::SignedBigInteger::from_base10(rhs_string)));
+    }
+
+    if (lhs.is_string() && rhs.is_bigint())
+        return abstract_eq(interpreter, rhs, lhs);
+
     if (lhs.is_boolean())
         return abstract_eq(interpreter, lhs.to_number(interpreter), rhs);
 
     if (rhs.is_boolean())
         return abstract_eq(interpreter, lhs, rhs.to_number(interpreter));
 
-    if ((lhs.is_string() || lhs.is_number() || lhs.is_symbol()) && rhs.is_object())
+    if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object())
         return abstract_eq(interpreter, lhs, rhs.to_primitive(interpreter));
 
-    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || rhs.is_symbol()))
+    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol()))
         return abstract_eq(interpreter, lhs.to_primitive(interpreter), rhs);
+
+    if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
+        if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
+            return false;
+        if ((lhs.is_number() && !lhs.is_integer()) || (rhs.is_number() && !rhs.is_integer()))
+            return false;
+        if (lhs.is_number())
+            return Crypto::SignedBigInteger { lhs.as_i32() } == rhs.as_bigint().big_integer();
+        else
+            return Crypto::SignedBigInteger { rhs.as_i32() } == lhs.as_bigint().big_integer();
+    }
 
     return false;
 }
 
 TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs, Value rhs)
 {
-    Value x_primitive = {};
-    Value y_primitive = {};
+    Value x_primitive;
+    Value y_primitive;
 
     if (left_first) {
         x_primitive = lhs.to_primitive(interpreter, Value::PreferredType::Number);
@@ -681,12 +870,30 @@ TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs,
         ASSERT_NOT_REACHED();
     }
 
-    // FIXME add BigInt cases here once we have BigInt
+    if (x_primitive.is_bigint() && y_primitive.is_string()) {
+        auto& y_string = y_primitive.as_string().string();
+        if (!is_valid_bigint_value(y_string))
+            return TriState::Unknown;
+        if (x_primitive.as_bigint().big_integer() < Crypto::SignedBigInteger::from_base10(y_string))
+            return TriState::True;
+        else
+            return TriState::False;
+    }
 
-    auto x_numeric = x_primitive.to_number(interpreter);
+    if (x_primitive.is_string() && y_primitive.is_bigint()) {
+        auto& x_string = x_primitive.as_string().string();
+        if (!is_valid_bigint_value(x_string))
+            return TriState::Unknown;
+        if (Crypto::SignedBigInteger::from_base10(x_string) < y_primitive.as_bigint().big_integer())
+            return TriState::True;
+        else
+            return TriState::False;
+    }
+
+    auto x_numeric = x_primitive.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    auto y_numeric = y_primitive.to_number(interpreter);
+    auto y_numeric = y_primitive.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
 
@@ -699,10 +906,33 @@ TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs,
     if (x_numeric.is_negative_infinity() || y_numeric.is_positive_infinity())
         return TriState::True;
 
-    auto x_value = x_numeric.as_double();
-    auto y_value = y_numeric.as_double();
+    if (x_numeric.is_number() && y_numeric.is_number()) {
+        if (x_numeric.as_double() < y_numeric.as_double())
+            return TriState::True;
+        else
+            return TriState::False;
+    }
 
-    if (x_value < y_value)
+    if (x_numeric.is_bigint() && y_numeric.is_bigint()) {
+        if (x_numeric.as_bigint().big_integer() < y_numeric.as_bigint().big_integer())
+            return TriState::True;
+        else
+            return TriState::False;
+    }
+
+    ASSERT((x_numeric.is_number() && y_numeric.is_bigint()) || (x_numeric.is_bigint() && y_numeric.is_number()));
+
+    bool x_lower_than_y;
+    if (x_numeric.is_number()) {
+        x_lower_than_y = x_numeric.is_integer()
+            ? Crypto::SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer()
+            : (Crypto::SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.as_i32() + 1 } < y_numeric.as_bigint().big_integer());
+    } else {
+        x_lower_than_y = y_numeric.is_integer()
+            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() }
+            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() + 1 });
+    }
+    if (x_lower_than_y)
         return TriState::True;
     else
         return TriState::False;

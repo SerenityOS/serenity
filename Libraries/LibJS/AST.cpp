@@ -29,10 +29,12 @@
 #include <AK/HashMap.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
@@ -635,6 +637,8 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
             return js_string(interpreter, "boolean");
         case Value::Type::Symbol:
             return js_string(interpreter, "symbol");
+        case Value::Type::BigInt:
+            return js_string(interpreter, "bigint");
         default:
             ASSERT_NOT_REACHED();
         }
@@ -832,6 +836,12 @@ void NumericLiteral::dump(int indent) const
 {
     print_indent(indent);
     printf("NumericLiteral %g\n", m_value);
+}
+
+void BigIntLiteral::dump(int indent) const
+{
+    print_indent(indent);
+    printf("BigIntLiteral %s\n", m_value.characters());
 }
 
 void BooleanLiteral::dump(int indent) const
@@ -1108,23 +1118,28 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
     auto old_value = reference.get(interpreter);
     if (interpreter.exception())
         return {};
-    old_value = old_value.to_number(interpreter);
+    old_value = old_value.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
 
-    int op_result = 0;
+    Value new_value;
     switch (m_op) {
     case UpdateOp::Increment:
-        op_result = 1;
+        if (old_value.is_number())
+            new_value = Value(old_value.as_double() + 1);
+        else
+            new_value = js_bigint(interpreter, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
         break;
     case UpdateOp::Decrement:
-        op_result = -1;
+        if (old_value.is_number())
+            new_value = Value(old_value.as_double() - 1);
+        else
+            new_value = js_bigint(interpreter, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
         break;
     default:
         ASSERT_NOT_REACHED();
     }
 
-    auto new_value = Value(old_value.as_double() + op_result);
     reference.put(interpreter, new_value);
     if (interpreter.exception())
         return {};
@@ -1418,6 +1433,11 @@ Value StringLiteral::execute(Interpreter& interpreter) const
 Value NumericLiteral::execute(Interpreter&) const
 {
     return Value(m_value);
+}
+
+Value BigIntLiteral::execute(Interpreter& interpreter) const
+{
+    return js_bigint(interpreter, Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
 }
 
 Value BooleanLiteral::execute(Interpreter&) const

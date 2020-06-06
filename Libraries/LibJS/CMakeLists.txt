@@ -8,9 +8,13 @@ set(SOURCES
     Lexer.cpp
     MarkupGenerator.cpp
     Parser.cpp
-    Runtime/ArrayConstructor.cpp
     Runtime/Array.cpp
+    Runtime/ArrayConstructor.cpp
     Runtime/ArrayPrototype.cpp
+    Runtime/BigInt.cpp
+    Runtime/BigIntConstructor.cpp
+    Runtime/BigIntObject.cpp
+    Runtime/BigIntPrototype.cpp
     Runtime/BooleanConstructor.cpp
     Runtime/BooleanObject.cpp
     Runtime/BooleanPrototype.cpp
@@ -65,4 +69,4 @@ set(SOURCES
 )
 
 serenity_lib(LibJS js)
-target_link_libraries(LibJS LibM LibCore)
+target_link_libraries(LibJS LibM LibCore LibCrypto)

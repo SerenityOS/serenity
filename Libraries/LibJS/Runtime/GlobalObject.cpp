@@ -29,6 +29,8 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/BigIntConstructor.h>
+#include <LibJS/Runtime/BigIntPrototype.h>
 #include <LibJS/Runtime/BooleanConstructor.h>
 #include <LibJS/Runtime/BooleanPrototype.h>
 #include <LibJS/Runtime/ConsoleObject.h>
@@ -97,6 +99,7 @@ void GlobalObject::initialize()
     define_property("Reflect", heap().allocate<ReflectObject>(), attr);
 
     add_constructor("Array", m_array_constructor, *m_array_prototype);
+    add_constructor("BigInt", m_bigint_constructor, *m_bigint_prototype);
     add_constructor("Boolean", m_boolean_constructor, *m_boolean_prototype);
     add_constructor("Date", m_date_constructor, *m_date_prototype);
     add_constructor("Error", m_error_constructor, *m_error_prototype);

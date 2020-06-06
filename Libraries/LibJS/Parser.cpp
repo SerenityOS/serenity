@@ -451,6 +451,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     }
     case TokenType::NumericLiteral:
         return create_ast_node<NumericLiteral>(consume().double_value());
+    case TokenType::BigIntLiteral:
+        return create_ast_node<BigIntLiteral>(consume().value());
     case TokenType::BoolLiteral:
         return create_ast_node<BooleanLiteral>(consume().bool_value());
     case TokenType::StringLiteral:
@@ -547,7 +549,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         return match_identifier_name()
             || type == TokenType::BracketOpen
             || type == TokenType::StringLiteral
-            || type == TokenType::NumericLiteral;
+            || type == TokenType::NumericLiteral
+            || type == TokenType::BigIntLiteral;
     };
 
     auto parse_property_key = [&]() -> NonnullRefPtr<Expression> {
@@ -555,6 +558,9 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             return parse_string_literal(consume());
         } else if (match(TokenType::NumericLiteral)) {
             return create_ast_node<StringLiteral>(consume(TokenType::NumericLiteral).value());
+        } else if (match(TokenType::BigIntLiteral)) {
+            auto value = consume(TokenType::BigIntLiteral).value();
+            return create_ast_node<StringLiteral>(value.substring_view(0, value.length() - 1));
         } else if (match(TokenType::BracketOpen)) {
             consume(TokenType::BracketOpen);
             auto result = parse_expression(0);
@@ -1448,6 +1454,7 @@ bool Parser::match_expression() const
     auto type = m_parser_state.m_current_token.type();
     return type == TokenType::BoolLiteral
         || type == TokenType::NumericLiteral
+        || type == TokenType::BigIntLiteral
         || type == TokenType::StringLiteral
         || type == TokenType::TemplateLiteralStart
         || type == TokenType::NullLiteral
