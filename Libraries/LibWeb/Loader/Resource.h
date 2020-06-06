@@ -72,6 +72,9 @@ public:
     void register_client(Badge<ResourceClient>, ResourceClient&);
     void unregister_client(Badge<ResourceClient>, ResourceClient&);
 
+    const String& encoding() const { return m_encoding; }
+    const String& mime_type() const { return m_mime_type; }
+
     void for_each_client(Function<void(ResourceClient&)>);
 
     void did_load(Badge<ResourceLoader>, const ByteBuffer& data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers);
@@ -87,6 +90,8 @@ private:
     bool m_loaded { false };
     bool m_failed { false };
     String m_error;
+    String m_encoding;
+    String m_mime_type;
     HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
     HashTable<ResourceClient*> m_clients;
 };
