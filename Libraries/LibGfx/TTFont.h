@@ -35,6 +35,10 @@
 #include <LibGfx/Size.h>
 
 namespace Gfx {
+
+#define POINTS_PER_INCH 72.0f
+#define DEFAULT_DPI     96
+
 namespace TTF {
 
 class ScaledFont;
@@ -65,6 +69,17 @@ public:
     static RefPtr<Font> load_from_file(const StringView& path, unsigned index);
 
 private:
+    enum class Offsets {
+        NumTables = 4,
+        TableRecord_Offset = 8,
+        TableRecord_Length = 12,
+    };
+    enum class Sizes {
+        TTCHeaderV1 = 12,
+        OffsetTable = 12,
+        TableRecord = 16,
+    };
+
     Font(ByteBuffer&& buffer, u32 offset);
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
@@ -82,7 +97,7 @@ private:
         Head(const ByteBuffer& slice)
             : m_slice(slice)
         {
-            ASSERT(m_slice.size() >= 54);
+            ASSERT(m_slice.size() >= (size_t) Sizes::Table);
         }
         u16 units_per_em() const;
         i16 xmin() const;
@@ -93,6 +108,19 @@ private:
         IndexToLocFormat index_to_loc_format() const;
 
     private:
+        enum class Offsets {
+            UnitsPerEM = 18,
+            XMin = 36,
+            YMin = 38,
+            XMax = 40,
+            YMax = 42,
+            LowestRecPPEM = 46,
+            IndexToLocFormat = 50,
+        };
+        enum class Sizes {
+            Table = 54,
+        };
+
         ByteBuffer m_slice;
     };
 
@@ -102,7 +130,7 @@ private:
         Hhea(const ByteBuffer& slice)
             : m_slice(slice)
         {
-            ASSERT(m_slice.size() >= 36);
+            ASSERT(m_slice.size() >= (size_t) Sizes::Table);
         }
         i16 ascender() const;
         i16 descender() const;
@@ -111,6 +139,17 @@ private:
         u16 number_of_h_metrics() const;
 
     private:
+        enum class Offsets {
+            Ascender = 4,
+            Descender = 6,
+            LineGap = 8,
+            AdvanceWidthMax = 10,
+            NumberOfHMetrics = 34,
+        };
+        enum class Sizes {
+            Table = 36,
+        };
+
         ByteBuffer m_slice;
     };
 
@@ -120,11 +159,18 @@ private:
         Maxp(const ByteBuffer& slice)
             : m_slice(slice)
         {
-            ASSERT(m_slice.size() >= 6);
+            ASSERT(m_slice.size() >= (size_t) Sizes::TableV0p5);
         }
         u16 num_glyphs() const;
 
     private:
+        enum class Offsets {
+            NumGlyphs = 4
+        };
+        enum class Sizes {
+            TableV0p5 = 6,
+        };
+
         ByteBuffer m_slice;
     };
 
@@ -141,11 +187,16 @@ private:
             , m_num_glyphs(num_glyphs)
             , m_number_of_h_metrics(number_of_h_metrics)
         {
-            ASSERT(m_slice.size() >= number_of_h_metrics * 2 + num_glyphs * 2);
+            ASSERT(m_slice.size() >= number_of_h_metrics * (u32) Sizes::LongHorMetric + (num_glyphs - number_of_h_metrics) * (u32) Sizes::LeftSideBearing);
         }
         GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
 
     private:
+        enum class Sizes {
+            LongHorMetric = 4,
+            LeftSideBearing = 2
+        };
+
         ByteBuffer m_slice;
         u32 m_num_glyphs;
         u32 m_number_of_h_metrics;
@@ -156,22 +207,25 @@ private:
         class Subtable {
         public:
             enum class Platform {
-                Unicode,
-                Macintosh,
-                Windows,
-                Custom,
+                Unicode = 0,
+                Macintosh = 1,
+                Windows = 3,
+                Custom = 4,
             };
-
             enum class Format {
-                ByteEncoding,
-                HighByte,
-                SegmentToDelta,
-                TrimmedTable,
-                Mixed16And32,
-                TrimmedArray,
-                SegmentedCoverage,
-                ManyToOneRange,
-                UnicodeVariationSequences,
+                ByteEncoding = 0,
+                HighByte = 2,
+                SegmentToDelta = 4,
+                TrimmedTable = 6,
+                Mixed16And32 = 8,
+                TrimmedArray = 10,
+                SegmentedCoverage = 12,
+                ManyToOneRange = 13,
+                UnicodeVariationSequences = 14,
+            };
+            enum class WindowsEncoding {
+                UnicodeBMP = 1,
+                UnicodeFullRepertoire = 10,
             };
 
             Subtable(const ByteBuffer& slice, u16 platform_id, u16 encoding_id)
@@ -187,6 +241,29 @@ private:
             Format format() const;
 
         private:
+            enum class Table4Offsets {
+                SegCountX2 = 6,
+                EndConstBase = 14,
+                StartConstBase = 16,
+                DeltaConstBase = 16,
+                RangeConstBase = 16,
+                GlyphOffsetConstBase = 16,
+            };
+            enum class Table4Sizes {
+                Constant = 16,
+                NonConstMultiplier = 4,
+            };
+            enum class Table12Offsets {
+                NumGroups = 12,
+                Record_StartCode = 16,
+                Record_EndCode = 20,
+                Record_StartGlyph = 24,
+            };
+            enum class Table12Sizes {
+                Header = 16,
+                Record = 12,
+            };
+
             u32 glyph_id_for_codepoint_table_4(u32 codepoint) const;
             u32 glyph_id_for_codepoint_table_12(u32 codepoint) const;
 
@@ -199,7 +276,7 @@ private:
         Cmap(const ByteBuffer& slice)
             : m_slice(slice)
         {
-            ASSERT(m_slice.size() > 4);
+            ASSERT(m_slice.size() > (size_t) Sizes::TableHeader);
         }
 
         u32 num_subtables() const;
@@ -209,6 +286,16 @@ private:
         u32 glyph_id_for_codepoint(u32 codepoint) const;
 
     private:
+        enum class Offsets {
+            NumTables = 2,
+            EncodingRecord_EncodingID = 2,
+            EncodingRecord_Offset = 4,
+        };
+        enum class Sizes {
+            TableHeader = 4,
+            EncodingRecord = 8,
+        };
+
         ByteBuffer m_slice;
         u32 m_active_index { UINT32_MAX };
     };
@@ -251,7 +338,7 @@ private:
                     return m_meta.simple.ymax;
                 } else {
                     // FIXME: Support composite outlines.
-                    ASSERT_NOT_REACHED();
+                    TODO();
                 }
             }
             int descender() const
@@ -260,7 +347,7 @@ private:
                     return m_meta.simple.ymin;
                 } else {
                     // FIXME: Support composite outlines.
-                    ASSERT_NOT_REACHED();
+                    TODO();
                 }
             }
 
@@ -302,6 +389,16 @@ private:
         Glyph glyph(u32 offset) const;
 
     private:
+        enum class Offsets {
+            XMin = 2,
+            YMin = 4,
+            XMax = 6,
+            YMax = 8,
+        };
+        enum class Sizes {
+            GlyphHeader = 10,
+        };
+
         ByteBuffer m_slice;
     };
 
@@ -319,12 +416,12 @@ private:
 
 class ScaledFont {
 public:
-    ScaledFont(RefPtr<Font> font, float point_width, float point_height, unsigned dpi_x = 96, unsigned dpi_y = 96)
+    ScaledFont(RefPtr<Font> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
         : m_font(font)
     {
         float units_per_em = m_font->m_head.units_per_em();
-        m_x_scale = (point_width * dpi_x) / (72.0 * units_per_em);
-        m_y_scale = (point_height * dpi_y) / (72.0 * units_per_em);
+        m_x_scale = (point_width * dpi_x) / (POINTS_PER_INCH * units_per_em);
+        m_y_scale = (point_height * dpi_y) / (POINTS_PER_INCH * units_per_em);
     }
     u32 glyph_id_for_codepoint(u32 codepoint) const { return m_font->m_cmap.glyph_id_for_codepoint(codepoint); }
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
