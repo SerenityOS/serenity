@@ -59,37 +59,37 @@ static u32 tag_from_str(const char *str)
 
 u16 Font::Head::units_per_em() const
 {
-    return be_u16(m_slice.offset_pointer(18));
+    return be_u16(m_slice.offset_pointer((u32) Offsets::UnitsPerEM));
 }
 
 i16 Font::Head::xmin() const
 {
-    return be_i16(m_slice.offset_pointer(36));
+    return be_i16(m_slice.offset_pointer((u32) Offsets::XMin));
 }
 
 i16 Font::Head::ymin() const
 {
-    return be_i16(m_slice.offset_pointer(38));
+    return be_i16(m_slice.offset_pointer((u32) Offsets::YMin));
 }
 
 i16 Font::Head::xmax() const
 {
-    return be_i16(m_slice.offset_pointer(40));
+    return be_i16(m_slice.offset_pointer((u32) Offsets::XMax));
 }
 
 i16 Font::Head::ymax() const
 {
-    return be_i16(m_slice.offset_pointer(42));
+    return be_i16(m_slice.offset_pointer((u32) Offsets::YMax));
 }
 
 u16 Font::Head::lowest_recommended_ppem() const
 {
-    return be_u16(m_slice.offset_pointer(46));
+    return be_u16(m_slice.offset_pointer((u32) Offsets::LowestRecPPEM));
 }
 
 Font::IndexToLocFormat Font::Head::index_to_loc_format() const
 {
-    i16 raw = be_i16(m_slice.offset_pointer(50));
+    i16 raw = be_i16(m_slice.offset_pointer((u32) Offsets::IndexToLocFormat));
     switch (raw) {
     case 0:
         return IndexToLocFormat::Offset16;
@@ -102,33 +102,52 @@ Font::IndexToLocFormat Font::Head::index_to_loc_format() const
 
 i16 Font::Hhea::ascender() const
 {
-    return be_i16(m_slice.offset_pointer(4));
+    return be_i16(m_slice.offset_pointer((u32) Offsets::Ascender));
 }
 
 i16 Font::Hhea::descender() const
 {
-    return be_i16(m_slice.offset_pointer(6));
+    return be_i16(m_slice.offset_pointer((u32) Offsets::Descender));
 }
 
 i16 Font::Hhea::line_gap() const
 {
-    return be_i16(m_slice.offset_pointer(8));
+    return be_i16(m_slice.offset_pointer((u32) Offsets::LineGap));
 }
 
 u16 Font::Hhea::advance_width_max() const
 {
-    return be_u16(m_slice.offset_pointer(10));
+    return be_u16(m_slice.offset_pointer((u32) Offsets::AdvanceWidthMax));
 }
 
 u16 Font::Hhea::number_of_h_metrics() const
 {
-    return be_u16(m_slice.offset_pointer(34));
+    return be_u16(m_slice.offset_pointer((u32) Offsets::NumberOfHMetrics));
 }
 
 u16 Font::Maxp::num_glyphs() const
 {
-    return be_u16(m_slice.offset_pointer(4));
+    return be_u16(m_slice.offset_pointer((u32) Offsets::NumGlyphs));
 }
+
+enum class SimpleGlyfFlags {
+    // From spec.
+    OnCurve = 0x01,
+    XShortVector = 0x02,
+    YShortVector = 0x04,
+    RepeatFlag = 0x08,
+    XIsSameOrPositiveXShortVector = 0x10,
+    YIsSameOrPositiveYShortVector = 0x20,
+    // Combinations
+    XMask = 0x12,
+    YMask = 0x24,
+    XLongVector = 0x00,
+    YLongVector = 0x00,
+    XNegativeShortVector = 0x02,
+    YNegativeShortVector = 0x04,
+    XPositiveShortVector = 0x12,
+    YPositiveShortVector = 0x24,
+};
 
 class PointIterator {
 public:
@@ -159,33 +178,33 @@ public:
             m_flags_remaining--;
         } else {
             m_flag = m_slice[m_flags_offset++];
-            if (m_flag & 0x08) {
+            if (m_flag & (u8) SimpleGlyfFlags::RepeatFlag) {
                 m_flags_remaining = m_slice[m_flags_offset++];
             }
         }
-        switch (m_flag & 0x12) {
-        case 0x00:
+        switch (m_flag & (u8) SimpleGlyfFlags::XMask) {
+        case (u8) SimpleGlyfFlags::XLongVector:
             m_last_point.set_x(m_last_point.x() + be_i16(m_slice.offset_pointer(m_x_offset)));
             m_x_offset += 2;
             break;
-        case 0x02:
+        case (u8) SimpleGlyfFlags::XNegativeShortVector:
             m_last_point.set_x(m_last_point.x() - m_slice[m_x_offset++]);
             break;
-        case 0x12:
+        case (u8) SimpleGlyfFlags::XPositiveShortVector:
             m_last_point.set_x(m_last_point.x() + m_slice[m_x_offset++]);
             break;
         default:
             break;
         }
-        switch (m_flag & 0x24) {
-        case 0x00:
+        switch (m_flag & (u8) SimpleGlyfFlags::YMask) {
+        case (u8) SimpleGlyfFlags::YLongVector:
             m_last_point.set_y(m_last_point.y() + be_i16(m_slice.offset_pointer(m_y_offset)));
             m_y_offset += 2;
             break;
-        case 0x04:
+        case (u8) SimpleGlyfFlags::YNegativeShortVector:
             m_last_point.set_y(m_last_point.y() - m_slice[m_y_offset++]);
             break;
-        case 0x24:
+        case (u8) SimpleGlyfFlags::YPositiveShortVector:
             m_last_point.set_y(m_last_point.y() + m_slice[m_y_offset++]);
             break;
         default:
@@ -193,7 +212,7 @@ public:
         }
         m_points_remaining--;
         Item ret = {
-            .on_curve = (m_flag & 0x01) != 0,
+            .on_curve = (m_flag & (u8) SimpleGlyfFlags::OnCurve) != 0,
             .point = m_last_point,
         };
         ret.point.move_by(m_x_translate, m_y_translate);
@@ -332,7 +351,7 @@ Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_
 {
     ASSERT(glyph_id < m_num_glyphs);
     if (glyph_id < m_number_of_h_metrics) {
-        auto offset = glyph_id * 4;
+        auto offset = glyph_id * (u32) Sizes::LongHorMetric;
         u16 advance_width = be_u16(m_slice.offset_pointer(offset));
         i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset + 2));
         return GlyphHorizontalMetrics {
@@ -340,9 +359,9 @@ Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_
             .left_side_bearing = left_side_bearing,
         };
     } else {
-        auto offset = m_number_of_h_metrics * 4 + (glyph_id - m_number_of_h_metrics) * 2;
-        u16 advance_width = be_u16(m_slice.offset_pointer((m_number_of_h_metrics - 1) * 2));
-        i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset + 2));
+        auto offset = m_number_of_h_metrics * (u32) Sizes::LongHorMetric + (glyph_id - m_number_of_h_metrics) * (u32) Sizes::LeftSideBearing;
+        u16 advance_width = be_u16(m_slice.offset_pointer((m_number_of_h_metrics - 1) * (u32) Sizes::LongHorMetric));
+        i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset));
         return GlyphHorizontalMetrics {
             .advance_width = advance_width,
             .left_side_bearing = left_side_bearing,
@@ -379,7 +398,7 @@ Font::Cmap::Subtable::Format Font::Cmap::Subtable::format() const
 
 u32 Font::Cmap::num_subtables() const
 {
-    return be_u16(m_slice.offset_pointer(2));
+    return be_u16(m_slice.offset_pointer((u32) Offsets::NumTables));
 }
 
 Optional<Font::Cmap::Subtable> Font::Cmap::subtable(u32 index) const
@@ -387,10 +406,10 @@ Optional<Font::Cmap::Subtable> Font::Cmap::subtable(u32 index) const
     if (index >= num_subtables()) {
         return {};
     }
-    u32 record_offset = 4 + index * 8;
+    u32 record_offset = (u32) Sizes::TableHeader + index * (u32) Sizes::EncodingRecord;
     u16 platform_id = be_u16(m_slice.offset_pointer(record_offset));
-    u16 encoding_id = be_u16(m_slice.offset_pointer(record_offset + 2));
-    u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + 4));
+    u16 encoding_id = be_u16(m_slice.offset_pointer(record_offset + (u32) Offsets::EncodingRecord_EncodingID));
+    u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + (u32) Offsets::EncodingRecord_Offset));
     ASSERT(subtable_offset < m_slice.size());
     auto subtable_slice = ByteBuffer::wrap(m_slice.offset_pointer(subtable_offset), m_slice.size() - subtable_offset);
     return Subtable(subtable_slice, platform_id, encoding_id);
@@ -411,25 +430,25 @@ u32 Font::Cmap::Subtable::glyph_id_for_codepoint(u32 codepoint) const
 
 u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
 {
-    u32 segcount_x2 = be_u16(m_slice.offset_pointer(6));
-    if (m_slice.size() < segcount_x2 * 4 + 16) {
+    u32 segcount_x2 = be_u16(m_slice.offset_pointer((u32) Table4Offsets::SegCountX2));
+    if (m_slice.size() < segcount_x2 * (u32) Table4Sizes::NonConstMultiplier + (u32) Table4Sizes::Constant) {
         return 0;
     }
     for (u32 offset = 0; offset < segcount_x2; offset += 2) {
-        u32 end_codepoint = be_u16(m_slice.offset_pointer(14 + offset));
+        u32 end_codepoint = be_u16(m_slice.offset_pointer((u32) Table4Offsets::EndConstBase + offset));
         if (codepoint > end_codepoint) {
             continue;
         }
-        u32 start_codepoint = be_u16(m_slice.offset_pointer(16 + segcount_x2 + offset));
+        u32 start_codepoint = be_u16(m_slice.offset_pointer((u32) Table4Offsets::StartConstBase + segcount_x2 + offset));
         if (codepoint < start_codepoint) {
             break;
         }
-        u32 delta = be_u16(m_slice.offset_pointer(16 + segcount_x2 * 2 + offset));
-        u32 range = be_u16(m_slice.offset_pointer(16 + segcount_x2 * 3 + offset));
+        u32 delta = be_u16(m_slice.offset_pointer((u32) Table4Offsets::DeltaConstBase + segcount_x2 * 2 + offset));
+        u32 range = be_u16(m_slice.offset_pointer((u32) Table4Offsets::RangeConstBase + segcount_x2 * 3 + offset));
         if (range == 0) {
             return (codepoint + delta) & 0xffff;
         } else {
-            u32 glyph_offset = 16 + segcount_x2 * 3 + offset + range + (codepoint - start_codepoint) * 2;
+            u32 glyph_offset = (u32) Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (codepoint - start_codepoint) * 2;
             ASSERT(glyph_offset + 2 <= m_slice.size());
             return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
         }
@@ -439,18 +458,18 @@ u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
 
 u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
 {
-    u32 num_groups = be_u32(m_slice.offset_pointer(12));
-    ASSERT(m_slice.size() >= 16 + 12 * num_groups);
-    for (u32 offset = 0; offset < num_groups * 12; offset += 12) {
-        u32 start_codepoint = be_u32(m_slice.offset_pointer(16 + offset));
+    u32 num_groups = be_u32(m_slice.offset_pointer((u32) Table12Offsets::NumGroups));
+    ASSERT(m_slice.size() >= (u32) Table12Sizes::Header + (u32) Table12Sizes::Record * num_groups);
+    for (u32 offset = 0; offset < num_groups * (u32) Table12Sizes::Record; offset += (u32) Table12Sizes::Record) {
+        u32 start_codepoint = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_StartCode + offset));
         if (codepoint < start_codepoint) {
             break;
         }
-        u32 end_codepoint = be_u32(m_slice.offset_pointer(20 + offset));
+        u32 end_codepoint = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_EndCode + offset));
         if (codepoint > end_codepoint) {
             continue;
         }
-        u32 glyph_offset = be_u32(m_slice.offset_pointer(24 + offset));
+        u32 glyph_offset = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_StartGlyph + offset));
         return codepoint - start_codepoint + glyph_offset;
     }
     return 0;
@@ -507,7 +526,7 @@ RefPtr<Bitmap> Font::Glyf::Glyph::raster(float x_scale, float y_scale) const
         return raster_simple(x_scale, y_scale);
     case Type::Composite:
         // FIXME: Add support for composite glyphs
-        ASSERT_NOT_REACHED();
+        TODO();
     }
     ASSERT_NOT_REACHED();
 }
@@ -519,19 +538,19 @@ static void get_ttglyph_offsets(const ByteBuffer& slice, u32 num_points, u32 fla
     u32 repeat_count;
     while (num_points > 0) {
         u8 flag = slice[flags_offset + flags_size];
-        if (flag & 0x08) {
+        if (flag & (u8) SimpleGlyfFlags::RepeatFlag) {
             flags_size++;
             repeat_count = slice[flags_offset + flags_size] + 1;
         } else {
             repeat_count = 1;
         }
         flags_size++;
-        switch (flag & 0x12) {
-        case 0x00:
+        switch (flag & (u8) SimpleGlyfFlags::XMask) {
+        case (u8) SimpleGlyfFlags::XLongVector:
             x_size += repeat_count * 2;
             break;
-        case 0x02:
-        case 0x12:
+        case (u8) SimpleGlyfFlags::XNegativeShortVector:
+        case (u8) SimpleGlyfFlags::XPositiveShortVector:
             x_size += repeat_count;
             break;
         default:
@@ -646,13 +665,13 @@ RefPtr<Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) co
 
 Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
 {
-    ASSERT(m_slice.size() >= offset + 10);
+    ASSERT(m_slice.size() >= offset + (u32) Sizes::GlyphHeader);
     i16 num_contours = be_i16(m_slice.offset_pointer(offset));
-    i16 xmin = be_i16(m_slice.offset_pointer(offset + 2));
-    i16 ymin = be_i16(m_slice.offset_pointer(offset + 4));
-    i16 xmax = be_i16(m_slice.offset_pointer(offset + 6));
-    i16 ymax = be_i16(m_slice.offset_pointer(offset + 8));
-    auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset + 10), m_slice.size() - offset - 10);
+    i16 xmin = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::XMin));
+    i16 ymin = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::YMin));
+    i16 xmax = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::XMax));
+    i16 ymax = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::YMax));
+    auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset + (u32) Sizes::GlyphHeader), m_slice.size() - offset - (u32) Sizes::GlyphHeader);
     if (num_contours < 0) {
         return Glyph::composite(slice);
     } else {
@@ -680,11 +699,11 @@ RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
     u32 tag = be_u32(buffer.data());
     if (tag == tag_from_str("ttcf")) {
         // It's a font collection
-        if (buffer.size() < 12 + 4 * (index + 1)) {
+        if (buffer.size() < (u32) Sizes::TTCHeaderV1 + sizeof(u32) * (index + 1)) {
             dbg() << "Font file too small";
             return nullptr;
         }
-        u32 offset = be_u32(buffer.offset_pointer(12 + 4 * index));
+        u32 offset = be_u32(buffer.offset_pointer((u32) Sizes::TTCHeaderV1 + sizeof(u32) * index));
         return adopt(*new Font(move(buffer), offset));
     } else if (tag == tag_from_str("OTTO")) {
         dbg() << "CFF fonts not supported yet";
@@ -701,7 +720,7 @@ RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
 Font::Font(ByteBuffer&& buffer, u32 offset)
     : m_buffer(move(buffer))
 {
-    ASSERT(m_buffer.size() >= offset + 12);
+    ASSERT(m_buffer.size() >= offset + (u32) Sizes::OffsetTable);
     Optional<ByteBuffer> head_slice = {};
     Optional<ByteBuffer> hhea_slice = {};
     Optional<ByteBuffer> maxp_slice = {};
@@ -711,14 +730,14 @@ Font::Font(ByteBuffer&& buffer, u32 offset)
     Optional<ByteBuffer> glyf_slice = {};
 
     //auto sfnt_version = be_u32(data + offset);
-    auto num_tables = be_u16(m_buffer.offset_pointer(offset + 4));
-    ASSERT(m_buffer.size() >= offset + 12 + num_tables * 16);
+    auto num_tables = be_u16(m_buffer.offset_pointer(offset + (u32) Offsets::NumTables));
+    ASSERT(m_buffer.size() >= offset + (u32) Sizes::OffsetTable + num_tables * (u32) Sizes::TableRecord);
 
     for (auto i = 0; i < num_tables; i++) {
-        u32 record_offset = offset + 12 + i * 16;
+        u32 record_offset = offset + (u32) Sizes::OffsetTable + i * (u32) Sizes::TableRecord;
         u32 tag = be_u32(m_buffer.offset_pointer(record_offset));
-        u32 table_offset = be_u32(m_buffer.offset_pointer(record_offset + 8));
-        u32 table_length = be_u32(m_buffer.offset_pointer(record_offset + 12));
+        u32 table_offset = be_u32(m_buffer.offset_pointer(record_offset + (u32) Offsets::TableRecord_Offset));
+        u32 table_length = be_u32(m_buffer.offset_pointer(record_offset + (u32) Offsets::TableRecord_Length));
         ASSERT(m_buffer.size() >= table_offset + table_length);
         auto buffer = ByteBuffer::wrap(m_buffer.offset_pointer(table_offset), table_length);
 
@@ -767,11 +786,11 @@ Font::Font(ByteBuffer&& buffer, u32 offset)
         }
         auto subtable = opt_subtable.value();
         if (subtable.platform_id() == Cmap::Subtable::Platform::Windows) {
-            if (subtable.encoding_id() == 10) {
+            if (subtable.encoding_id() == (u16) Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
                 m_cmap.set_active_index(i);
                 break;
             }
-            if (subtable.encoding_id() == 1) {
+            if (subtable.encoding_id() == (u16) Cmap::Subtable::WindowsEncoding::UnicodeBMP) {
                 m_cmap.set_active_index(i);
                 break;
             }
