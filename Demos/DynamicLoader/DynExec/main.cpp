@@ -28,6 +28,7 @@ const char* g_string = "Hello, World!\n";
 
 void local_dbgputstr(const char* str, int len)
 {
+    // return str[0] + len;
     constexpr unsigned int function = Kernel::SC_dbgputch;
     for (int i = 0; i < len; ++i) {
         unsigned int result;
@@ -38,10 +39,13 @@ void local_dbgputstr(const char* str, int len)
     }
 }
 
+int libfunc();
+
 int main(int, char**)
 {
+    // return libfunc();
     local_dbgputstr(g_string, 15);
-    return 0;
+    return libfunc();
 }
 /*
 // #include <stdio.h>

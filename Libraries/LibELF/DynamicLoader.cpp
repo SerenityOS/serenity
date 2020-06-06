@@ -366,17 +366,19 @@ void DynamicLoader::relocate_got_plt()
     // TODO: is this actually the way it's supposed to be done?
     // why doesn't the compiler explicitly generate relocations for this?
 
-    auto got_address = m_dynamic_object->plt_got_base_address();
-    if (!got_address.has_value()) {
-        dbg() << "no plt, exiting relocate_got_plt";
-        return;
-    }
-    u32* got_u32_ptr = (u32*)got_address.value().as_ptr();
-    u32 num_plt_entries = m_dynamic_object->number_of_plt_relocation_entries();
-    const size_t OFFSET_IN_GOT_PLT = 3; // The first three entries in .got.plt are artificial
-    for (size_t i = 0; i < num_plt_entries; ++i) {
-        got_u32_ptr[i + OFFSET_IN_GOT_PLT] += m_dynamic_object->base_address().get();
-    }
+    // auto got_address = m_dynamic_object->plt_got_base_address();
+    // if (!got_address.has_value()) {
+    //     dbg() << "no plt, exiting relocate_got_plt";
+    //     return;
+    // }
+    // u32* got_u32_ptr = (u32*)got_address.value().as_ptr();
+    // u32 num_plt_entries = m_dynamic_object->number_of_plt_relocation_entries();
+    // const size_t OFFSET_IN_GOT_PLT = 3; // The first three entries in .got.plt are artificial
+    // for (size_t i = 0; i < num_plt_entries; ++i) {
+    //     dbg() << "relocate plt entry #" << i;
+    //     dbg() << (void*)got_u32_ptr[i + OFFSET_IN_GOT_PLT] << "->" << (void*)(got_u32_ptr[i + OFFSET_IN_GOT_PLT] + m_dynamic_object->base_address().get());
+    //     got_u32_ptr[i + OFFSET_IN_GOT_PLT] += m_dynamic_object->base_address().get();
+    // }
 }
 
 // Called from our ASM routine _plt_trampoline
