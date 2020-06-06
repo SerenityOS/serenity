@@ -48,6 +48,8 @@ LayoutFrame::~LayoutFrame()
 
 void LayoutFrame::layout(LayoutMode layout_mode)
 {
+    ASSERT(node().hosted_frame());
+
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     // FIXME: Do proper error checking, etc.
@@ -81,8 +83,6 @@ void LayoutFrame::did_set_rect()
 
     ASSERT(node().hosted_frame());
     node().hosted_frame()->set_size(Gfx::Size(rect().width(), rect().height()));
-
-    node().hosted_frame()->document()->layout();
 }
 
 }
