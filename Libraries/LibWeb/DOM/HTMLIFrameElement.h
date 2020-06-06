@@ -30,7 +30,7 @@
 
 namespace Web {
 
-class HTMLIFrameElement : public HTMLElement {
+class HTMLIFrameElement final : public HTMLElement {
 public:
     HTMLIFrameElement(Document&, const FlyString& tag_name);
     virtual ~HTMLIFrameElement() override;
@@ -40,9 +40,10 @@ public:
     Frame* hosted_frame() { return m_hosted_frame; }
     const Frame* hosted_frame() const { return m_hosted_frame; }
 
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
-
 private:
+    virtual void document_did_attach_to_frame(Frame&) override;
+    virtual void document_will_detach_from_frame(Frame&) override;
+
     void load_src(const String&);
 
     RefPtr<Frame> m_hosted_frame;

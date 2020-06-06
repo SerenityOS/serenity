@@ -44,7 +44,6 @@ namespace Web {
 HTMLIFrameElement::HTMLIFrameElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
-    m_hosted_frame = Frame::create_subframe();
 }
 
 HTMLIFrameElement::~HTMLIFrameElement()
@@ -57,14 +56,18 @@ RefPtr<LayoutNode> HTMLIFrameElement::create_layout_node(const StyleProperties* 
     return adopt(*new LayoutFrame(*this, move(style)));
 }
 
-void HTMLIFrameElement::parse_attribute(const FlyString& name, const String& value)
+void HTMLIFrameElement::document_did_attach_to_frame(Frame& frame)
 {
-    HTMLElement::parse_attribute(name, value);
-
-    if (name == HTML::AttributeNames::src) {
-        load_src(value);
+    ASSERT(!m_hosted_frame);
+    m_hosted_frame = Frame::create_subframe(*this, frame.main_frame());
+    auto src = attribute(HTML::AttributeNames::src);
+    if (src.is_null())
         return;
-    }
+    load_src(src);
+}
+
+void HTMLIFrameElement::document_will_detach_from_frame(Frame&)
+{
 }
 
 void HTMLIFrameElement::load_src(const String& value)
