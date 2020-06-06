@@ -28,7 +28,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Noncopyable.h>
-#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>
 #include <LibGfx/Bitmap.h>
@@ -336,19 +335,17 @@ private:
             {
                 if (m_type == Type::Simple) {
                     return m_meta.simple.ymax;
-                } else {
-                    // FIXME: Support composite outlines.
-                    TODO();
                 }
+                // FIXME: Support composite outlines.
+                TODO();
             }
             int descender() const
             {
                 if (m_type == Type::Simple) {
                     return m_meta.simple.ymin;
-                } else {
-                    // FIXME: Support composite outlines.
-                    TODO();
                 }
+                // FIXME: Support composite outlines.
+                TODO();
             }
 
         private:
