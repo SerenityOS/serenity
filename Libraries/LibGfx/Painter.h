@@ -36,6 +36,7 @@
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibGfx/TextElision.h>
+#include <LibTTF/Font.h>
 
 namespace Gfx {
 
