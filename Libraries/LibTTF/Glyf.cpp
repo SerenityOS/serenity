@@ -24,112 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "TTFont.h"
+#include "Font.h"
 #include <AK/FixedArray.h>
-#include <AK/LogStream.h>
-#include <AK/Utf8View.h>
-#include <AK/Utf32View.h>
-#include <bits/stdint.h>
-#include <LibCore/File.h>
 #include <LibGfx/FloatPoint.h>
 #include <LibGfx/Path.h>
 #include <math.h>
 
-namespace Gfx {
 namespace TTF {
 
-static u16 be_u16(const u8* ptr)
-{
-    return (((u16) ptr[0]) << 8) | ((u16) ptr[1]);
-}
-
-static u32 be_u32(const u8* ptr)
-{
-    return (((u32) ptr[0]) << 24) | (((u32) ptr[1]) << 16) | (((u32) ptr[2]) << 8) | ((u32) ptr[3]);
-}
-
-static i16 be_i16(const u8* ptr)
-{
-    return (((i16) ptr[0]) << 8) | ((i16) ptr[1]);
-}
-
-static u32 tag_from_str(const char *str)
-{
-    return be_u32((const u8*) str);
-}
-
-u16 Font::Head::units_per_em() const
-{
-    return be_u16(m_slice.offset_pointer((u32) Offsets::UnitsPerEM));
-}
-
-i16 Font::Head::xmin() const
-{
-    return be_i16(m_slice.offset_pointer((u32) Offsets::XMin));
-}
-
-i16 Font::Head::ymin() const
-{
-    return be_i16(m_slice.offset_pointer((u32) Offsets::YMin));
-}
-
-i16 Font::Head::xmax() const
-{
-    return be_i16(m_slice.offset_pointer((u32) Offsets::XMax));
-}
-
-i16 Font::Head::ymax() const
-{
-    return be_i16(m_slice.offset_pointer((u32) Offsets::YMax));
-}
-
-u16 Font::Head::lowest_recommended_ppem() const
-{
-    return be_u16(m_slice.offset_pointer((u32) Offsets::LowestRecPPEM));
-}
-
-Font::IndexToLocFormat Font::Head::index_to_loc_format() const
-{
-    i16 raw = be_i16(m_slice.offset_pointer((u32) Offsets::IndexToLocFormat));
-    switch (raw) {
-    case 0:
-        return IndexToLocFormat::Offset16;
-    case 1:
-        return IndexToLocFormat::Offset32;
-    default:
-        ASSERT_NOT_REACHED();
-    }
-}
-
-i16 Font::Hhea::ascender() const
-{
-    return be_i16(m_slice.offset_pointer((u32) Offsets::Ascender));
-}
-
-i16 Font::Hhea::descender() const
-{
-    return be_i16(m_slice.offset_pointer((u32) Offsets::Descender));
-}
-
-i16 Font::Hhea::line_gap() const
-{
-    return be_i16(m_slice.offset_pointer((u32) Offsets::LineGap));
-}
-
-u16 Font::Hhea::advance_width_max() const
-{
-    return be_u16(m_slice.offset_pointer((u32) Offsets::AdvanceWidthMax));
-}
-
-u16 Font::Hhea::number_of_h_metrics() const
-{
-    return be_u16(m_slice.offset_pointer((u32) Offsets::NumberOfHMetrics));
-}
-
-u16 Font::Maxp::num_glyphs() const
-{
-    return be_u16(m_slice.offset_pointer((u32) Offsets::NumGlyphs));
-}
+extern u16 be_u16(const u8* ptr);
+extern u32 be_u32(const u8* ptr);
+extern i16 be_i16(const u8* ptr);
 
 enum class SimpleGlyfFlags {
     // From spec.
@@ -154,7 +59,7 @@ class PointIterator {
 public:
     struct Item {
         bool on_curve;
-        FloatPoint point;
+        Gfx::FloatPoint point;
     };
 
     PointIterator(const ByteBuffer& slice, u16 num_points, u32 flags_offset, u32 x_offset, u32 y_offset, float x_translate, float y_translate, float x_scale, float y_scale)
@@ -226,7 +131,7 @@ private:
     ByteBuffer m_slice;
     u16 m_points_remaining;
     u8 m_flag { 0 };
-    FloatPoint m_last_point = { 0.0f, 0.0f };
+    Gfx::FloatPoint m_last_point = { 0.0f, 0.0f };
     u32 m_flags_remaining = { 0 };
     u32 m_flags_offset;
     u32 m_x_offset;
@@ -239,7 +144,7 @@ private:
 
 class Rasterizer {
 public:
-    Rasterizer(Size size)
+    Rasterizer(Gfx::Size size)
         : m_size(size)
         , m_data(m_size.width() * m_size.height())
     {
@@ -248,7 +153,7 @@ public:
         }
     }
 
-    RefPtr<Bitmap> draw_path(Path& path)
+    RefPtr<Gfx::Bitmap> draw_path(Gfx::Path& path)
     {
         for (auto& line : path.split_lines()) {
             draw_line(line.from, line.to);
@@ -257,9 +162,9 @@ public:
     }
 
 private:
-    RefPtr<Bitmap> accumulate()
+    RefPtr<Gfx::Bitmap> accumulate()
     {
-        auto bitmap = Bitmap::create(BitmapFormat::RGBA32, m_size);
+        auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, m_size);
         Color base_color = Color::from_rgb(0xffffff);
         for (int y = 0; y < m_size.height(); y++) {
             float accumulator = 0.0;
@@ -279,7 +184,7 @@ private:
         return bitmap;
     }
 
-    void draw_line(FloatPoint p0, FloatPoint p1)
+    void draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
     {
         ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
         ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
@@ -344,7 +249,7 @@ private:
         }
     }
 
-    Size m_size;
+    Gfx::Size m_size;
     FixedArray<float> m_data;
 };
 
@@ -367,121 +272,6 @@ Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_
         .advance_width = advance_width,
         .left_side_bearing = left_side_bearing,
     };
-}
-
-Font::Cmap::Subtable::Platform Font::Cmap::Subtable::platform_id() const
-{
-    switch (m_raw_platform_id) {
-    case 0:  return Platform::Unicode;
-    case 1:  return Platform::Macintosh;
-    case 3:  return Platform::Windows;
-    case 4:  return Platform::Custom;
-    default: ASSERT_NOT_REACHED();
-    }
-}
-
-Font::Cmap::Subtable::Format Font::Cmap::Subtable::format() const
-{
-    switch (be_u16(m_slice.offset_pointer(0))) {
-        case 0:  return Format::ByteEncoding;
-        case 2:  return Format::HighByte;
-        case 4:  return Format::SegmentToDelta;
-        case 6:  return Format::TrimmedTable;
-        case 8:  return Format::Mixed16And32;
-        case 10: return Format::TrimmedArray;
-        case 12: return Format::SegmentedCoverage;
-        case 13: return Format::ManyToOneRange;
-        case 14: return Format::UnicodeVariationSequences;
-        default: ASSERT_NOT_REACHED();
-    }
-}
-
-u32 Font::Cmap::num_subtables() const
-{
-    return be_u16(m_slice.offset_pointer((u32) Offsets::NumTables));
-}
-
-Optional<Font::Cmap::Subtable> Font::Cmap::subtable(u32 index) const
-{
-    if (index >= num_subtables()) {
-        return {};
-    }
-    u32 record_offset = (u32) Sizes::TableHeader + index * (u32) Sizes::EncodingRecord;
-    u16 platform_id = be_u16(m_slice.offset_pointer(record_offset));
-    u16 encoding_id = be_u16(m_slice.offset_pointer(record_offset + (u32) Offsets::EncodingRecord_EncodingID));
-    u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + (u32) Offsets::EncodingRecord_Offset));
-    ASSERT(subtable_offset < m_slice.size());
-    auto subtable_slice = ByteBuffer::wrap(m_slice.offset_pointer(subtable_offset), m_slice.size() - subtable_offset);
-    return Subtable(subtable_slice, platform_id, encoding_id);
-}
-
-// FIXME: This only handles formats 4 (SegmentToDelta) and 12 (SegmentedCoverage) for now.
-u32 Font::Cmap::Subtable::glyph_id_for_codepoint(u32 codepoint) const
-{
-    switch (format()) {
-    case Format::SegmentToDelta:
-        return glyph_id_for_codepoint_table_4(codepoint);
-    case Format::SegmentedCoverage:
-        return glyph_id_for_codepoint_table_12(codepoint);
-    default:
-        return 0;
-    }
-}
-
-u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
-{
-    u32 segcount_x2 = be_u16(m_slice.offset_pointer((u32) Table4Offsets::SegCountX2));
-    if (m_slice.size() < segcount_x2 * (u32) Table4Sizes::NonConstMultiplier + (u32) Table4Sizes::Constant) {
-        return 0;
-    }
-    for (u32 offset = 0; offset < segcount_x2; offset += 2) {
-        u32 end_codepoint = be_u16(m_slice.offset_pointer((u32) Table4Offsets::EndConstBase + offset));
-        if (codepoint > end_codepoint) {
-            continue;
-        }
-        u32 start_codepoint = be_u16(m_slice.offset_pointer((u32) Table4Offsets::StartConstBase + segcount_x2 + offset));
-        if (codepoint < start_codepoint) {
-            break;
-        }
-        u32 delta = be_u16(m_slice.offset_pointer((u32) Table4Offsets::DeltaConstBase + segcount_x2 * 2 + offset));
-        u32 range = be_u16(m_slice.offset_pointer((u32) Table4Offsets::RangeConstBase + segcount_x2 * 3 + offset));
-        if (range == 0) {
-            return (codepoint + delta) & 0xffff;
-        }
-        u32 glyph_offset = (u32) Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (codepoint - start_codepoint) * 2;
-        ASSERT(glyph_offset + 2 <= m_slice.size());
-        return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
-    }
-    return 0;
-}
-
-u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
-{
-    u32 num_groups = be_u32(m_slice.offset_pointer((u32) Table12Offsets::NumGroups));
-    ASSERT(m_slice.size() >= (u32) Table12Sizes::Header + (u32) Table12Sizes::Record * num_groups);
-    for (u32 offset = 0; offset < num_groups * (u32) Table12Sizes::Record; offset += (u32) Table12Sizes::Record) {
-        u32 start_codepoint = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_StartCode + offset));
-        if (codepoint < start_codepoint) {
-            break;
-        }
-        u32 end_codepoint = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_EndCode + offset));
-        if (codepoint > end_codepoint) {
-            continue;
-        }
-        u32 glyph_offset = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_StartGlyph + offset));
-        return codepoint - start_codepoint + glyph_offset;
-    }
-    return 0;
-}
-
-u32 Font::Cmap::glyph_id_for_codepoint(u32 codepoint) const
-{
-    auto opt_subtable = subtable(m_active_index);
-    if (!opt_subtable.has_value()) {
-        return 0;
-    }
-    auto subtable = opt_subtable.value();
-    return subtable.glyph_id_for_codepoint(codepoint);
 }
 
 u32 Font::Loca::get_glyph_offset(u32 glyph_id) const
@@ -518,7 +308,7 @@ Font::Glyf::Glyph Font::Glyf::Glyph::composite(const ByteBuffer& slice)
     return ret;
 }
 
-RefPtr<Bitmap> Font::Glyf::Glyph::raster(float x_scale, float y_scale) const
+RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster(float x_scale, float y_scale) const
 {
     switch (m_type) {
     case Type::Simple:
@@ -561,7 +351,7 @@ static void get_ttglyph_offsets(const ByteBuffer& slice, u32 num_points, u32 fla
     *y_offset = *x_offset + x_size;
 }
 
-RefPtr<Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
+RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
 {
     auto simple = m_meta.simple;
     // Get offets for flags, x, and y.
@@ -575,14 +365,14 @@ RefPtr<Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) co
     // Prepare to render glyph.
     u32 width = (u32) (ceil((simple.xmax - simple.xmin) * x_scale)) + 1;
     u32 height = (u32) (ceil((simple.ymax - simple.ymin) * y_scale)) + 1;
-    Path path;
+    Gfx::Path path;
     PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, -simple.xmin, -simple.ymax, x_scale, -y_scale);
 
     int last_contour_end = -1;
     u32 contour_index = 0;
     u32 contour_size = 0;
-    Optional<FloatPoint> contour_start = {};
-    Optional<FloatPoint> last_offcurve_point = {};
+    Optional<Gfx::FloatPoint> contour_start = {};
+    Optional<Gfx::FloatPoint> last_offcurve_point = {};
 
     // Render glyph
     while (true) {
@@ -622,7 +412,7 @@ RefPtr<Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) co
                     if (next_item.on_curve) {
                         path.quadratic_bezier_curve_to(item.point, next_item.point);
                     } else {
-                        auto mid_point = FloatPoint::interpolate(item.point, next_item.point, 0.5);
+                        auto mid_point = Gfx::FloatPoint::interpolate(item.point, next_item.point, 0.5);
                         path.quadratic_bezier_curve_to(item.point, mid_point);
                         last_offcurve_point = next_item.point;
                     }
@@ -648,7 +438,7 @@ RefPtr<Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) co
                 if (item.on_curve) {
                     path.quadratic_bezier_curve_to(point0, item.point);
                 } else {
-                    auto mid_point = FloatPoint::interpolate(point0, item.point, 0.5);
+                    auto mid_point = Gfx::FloatPoint::interpolate(point0, item.point, 0.5);
                     path.quadratic_bezier_curve_to(point0, mid_point);
                     last_offcurve_point = item.point;
                 }
@@ -659,7 +449,7 @@ RefPtr<Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) co
         }
     }
 
-    return Rasterizer(Size(width, height)).draw_path(path);
+    return Rasterizer(Gfx::Size(width, height)).draw_path(path);
 }
 
 Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
@@ -677,196 +467,4 @@ Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
     return Glyph::simple(slice, num_contours, xmin, ymin, xmax, ymax);
 }
 
-RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
-{
-    auto file_or_error = Core::File::open(String(path), Core::IODevice::ReadOnly);
-    if (file_or_error.is_error()) {
-        dbg() << "Could not open file: " << file_or_error.error();
-        return nullptr;
-    }
-    auto file = file_or_error.value();
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        dbg() << "Could not open file";
-        return nullptr;
-    }
-    auto buffer = file->read_all();
-    if (buffer.size() < 4) {
-        dbg() << "Font file too small";
-        return nullptr;
-    }
-    u32 tag = be_u32(buffer.data());
-    if (tag == tag_from_str("ttcf")) {
-        // It's a font collection
-        if (buffer.size() < (u32) Sizes::TTCHeaderV1 + sizeof(u32) * (index + 1)) {
-            dbg() << "Font file too small";
-            return nullptr;
-        }
-        u32 offset = be_u32(buffer.offset_pointer((u32) Sizes::TTCHeaderV1 + sizeof(u32) * index));
-        return adopt(*new Font(move(buffer), offset));
-    }
-    if (tag == tag_from_str("OTTO")) {
-        dbg() << "CFF fonts not supported yet";
-        return nullptr;
-    }
-    if (tag != 0x00010000) {
-        dbg() << "Not a valid  font";
-        return nullptr;
-    }
-    return adopt(*new Font(move(buffer), 0));
-}
-
-// FIXME: "loca" and "glyf" are not available for CFF fonts.
-Font::Font(ByteBuffer&& buffer, u32 offset)
-    : m_buffer(move(buffer))
-{
-    ASSERT(m_buffer.size() >= offset + (u32) Sizes::OffsetTable);
-    Optional<ByteBuffer> head_slice = {};
-    Optional<ByteBuffer> hhea_slice = {};
-    Optional<ByteBuffer> maxp_slice = {};
-    Optional<ByteBuffer> hmtx_slice = {};
-    Optional<ByteBuffer> cmap_slice = {};
-    Optional<ByteBuffer> loca_slice = {};
-    Optional<ByteBuffer> glyf_slice = {};
-
-    //auto sfnt_version = be_u32(data + offset);
-    auto num_tables = be_u16(m_buffer.offset_pointer(offset + (u32) Offsets::NumTables));
-    ASSERT(m_buffer.size() >= offset + (u32) Sizes::OffsetTable + num_tables * (u32) Sizes::TableRecord);
-
-    for (auto i = 0; i < num_tables; i++) {
-        u32 record_offset = offset + (u32) Sizes::OffsetTable + i * (u32) Sizes::TableRecord;
-        u32 tag = be_u32(m_buffer.offset_pointer(record_offset));
-        u32 table_offset = be_u32(m_buffer.offset_pointer(record_offset + (u32) Offsets::TableRecord_Offset));
-        u32 table_length = be_u32(m_buffer.offset_pointer(record_offset + (u32) Offsets::TableRecord_Length));
-        ASSERT(m_buffer.size() >= table_offset + table_length);
-        auto buffer = ByteBuffer::wrap(m_buffer.offset_pointer(table_offset), table_length);
-
-        // Get the table offsets we need.
-        if (tag == tag_from_str("head")) {
-            head_slice = buffer;
-        } else if (tag == tag_from_str("hhea")) {
-            hhea_slice = buffer;
-        } else if (tag == tag_from_str("maxp")) {
-            maxp_slice = buffer;
-        } else if (tag == tag_from_str("hmtx")) {
-            hmtx_slice = buffer;
-        } else if (tag == tag_from_str("cmap")) {
-            cmap_slice = buffer;
-        } else if (tag == tag_from_str("loca")) {
-            loca_slice = buffer;
-        } else if (tag == tag_from_str("glyf")) {
-            glyf_slice = buffer;
-        }
-    }
-
-    // Check that we've got everything we need.
-    ASSERT(head_slice.has_value());
-    ASSERT(hhea_slice.has_value());
-    ASSERT(maxp_slice.has_value());
-    ASSERT(hmtx_slice.has_value());
-    ASSERT(cmap_slice.has_value());
-    ASSERT(loca_slice.has_value());
-    ASSERT(glyf_slice.has_value());
-
-    // Load the tables.
-    m_head = Head(head_slice.value());
-    m_hhea = Hhea(hhea_slice.value());
-    m_maxp = Maxp(maxp_slice.value());
-    m_hmtx = Hmtx(hmtx_slice.value(), m_maxp.num_glyphs(), m_hhea.number_of_h_metrics());
-    m_cmap = Cmap(cmap_slice.value());
-    m_loca = Loca(loca_slice.value(), m_maxp.num_glyphs(), m_head.index_to_loc_format());
-    m_glyf = Glyf(glyf_slice.value());
-
-    // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
-    // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
-    for (u32 i = 0; i < m_cmap.num_subtables(); i++) {
-        auto opt_subtable = m_cmap.subtable(i);
-        if (!opt_subtable.has_value()) {
-            continue;
-        }
-        auto subtable = opt_subtable.value();
-        if (subtable.platform_id() == Cmap::Subtable::Platform::Windows) {
-            if (subtable.encoding_id() == (u16) Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
-                m_cmap.set_active_index(i);
-                break;
-            }
-            if (subtable.encoding_id() == (u16) Cmap::Subtable::WindowsEncoding::UnicodeBMP) {
-                m_cmap.set_active_index(i);
-                break;
-            }
-        }
-    }
-}
-
-ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
-{
-    auto ascender = m_hhea.ascender() * y_scale;
-    auto descender = m_hhea.descender() * y_scale;
-    auto line_gap = m_hhea.line_gap() * y_scale;
-    auto advance_width_max = m_hhea.advance_width_max() * x_scale;
-    return ScaledFontMetrics {
-        .ascender = (int) roundf(ascender),
-        .descender = (int) roundf(descender),
-        .line_gap = (int) roundf(line_gap),
-        .advance_width_max = (int) roundf(advance_width_max),
-    };
-}
-
-ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const
-{
-    if (glyph_id >= m_maxp.num_glyphs()) {
-        glyph_id = 0;
-    }
-    auto horizontal_metrics = m_hmtx.get_glyph_horizontal_metrics(glyph_id);
-    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-    auto glyph = m_glyf.glyph(glyph_offset);
-    int ascender = glyph.ascender();
-    int descender = glyph.descender();
-    return ScaledGlyphMetrics {
-        .ascender = (int) roundf(ascender * y_scale),
-        .descender = (int) roundf(descender * y_scale),
-        .advance_width = (int) roundf(horizontal_metrics.advance_width * x_scale),
-        .left_side_bearing = (int) roundf(horizontal_metrics.left_side_bearing * x_scale),
-    };
-}
-
-// FIXME: "loca" and "glyf" are not available for CFF fonts.
-RefPtr<Bitmap> Font::raster_glyph(u32 glyph_id, float x_scale, float y_scale) const
-{
-    if (glyph_id >= m_maxp.num_glyphs()) {
-        glyph_id = 0;
-    }
-    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-    auto glyph = m_glyf.glyph(glyph_offset);
-    return glyph.raster(x_scale, y_scale);
-}
-
-int ScaledFont::width(const StringView& string) const
-{
-    Utf8View utf8 { string };
-    return width(utf8);
-}
-
-int ScaledFont::width(const Utf8View& utf8) const
-{
-    int width = 0;
-    for (u32 codepoint : utf8) {
-        u32 glyph_id = glyph_id_for_codepoint(codepoint);
-        auto metrics = glyph_metrics(glyph_id);
-        width += metrics.advance_width;
-    }
-    return width;
-}
-
-int ScaledFont::width(const Utf32View& utf32) const
-{
-    int width = 0;
-    for (size_t i = 0; i < utf32.length(); i++) {
-        u32 glyph_id = glyph_id_for_codepoint(utf32.codepoints()[i]);
-        auto metrics = glyph_metrics(glyph_id);
-        width += metrics.advance_width;
-    }
-    return width;
-}
-
-}
 }
