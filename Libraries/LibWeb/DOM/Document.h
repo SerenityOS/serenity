@@ -53,7 +53,7 @@ public:
     virtual ~Document() override;
 
     void set_url(const URL& url) { m_url = url; }
-    const URL& url() const { return m_url; }
+    URL url() const { return m_url; }
 
     Origin origin() const;
 

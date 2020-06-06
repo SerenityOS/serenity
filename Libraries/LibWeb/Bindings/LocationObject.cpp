@@ -84,7 +84,7 @@ JS::Value LocationObject::hostname_getter(JS::Interpreter& interpreter)
 JS::Value LocationObject::host_getter(JS::Interpreter& interpreter)
 {
     auto& window = static_cast<WindowObject&>(interpreter.global_object());
-    auto& url = window.impl().document().url();
+    auto url = window.impl().document().url();
     StringBuilder builder;
     builder.append(url.host());
     builder.append(':');
