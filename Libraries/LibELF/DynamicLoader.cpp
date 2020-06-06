@@ -166,9 +166,7 @@ bool DynamicLoader::load_stage_2(unsigned flags)
         }
     }
 
-    // FIXME: uncomment this once things stabilize
-    dbg() << "NOTE: Skipping call_object_init_functions, remember to uncomment this later";
-    // call_object_init_functions();
+    call_object_init_functions();
 
 #ifdef DYNAMIC_LOAD_DEBUG
     dbgprintf("Loaded %s\n", m_filename.characters());
@@ -356,32 +354,32 @@ void DynamicLoader::setup_plt_trampoline()
 #endif
 }
 
-void DynamicLoader::relocate_got_plt()
-{
-    //
-    // At this stage, the .got.plt contains addresses that point back to
-    // the plt. This is a part of the lazy linking mechanism.
-    // The plt was probably loaded somewhere else than the compiler expected,
-    // so we need to relocate the addresses in .got.plt to point at the actual
-    // indtended parts in the plt.
+// void DynamicLoader::relocate_got_plt()
+// {
+//
+// At this stage, the .got.plt contains addresses that point back to
+// the plt. This is a part of the lazy linking mechanism.
+// The plt was probably loaded somewhere else than the compiler expected,
+// so we need to relocate the addresses in .got.plt to point at the actual
+// indtended parts in the plt.
 
-    // TODO: is this actually the way it's supposed to be done?
-    // why doesn't the compiler explicitly generate relocations for this?
+// TODO: is this actually the way it's supposed to be done?
+// why doesn't the compiler explicitly generate relocations for this?
 
-    // auto got_address = m_dynamic_object->plt_got_base_address();
-    // if (!got_address.has_value()) {
-    //     dbg() << "no plt, exiting relocate_got_plt";
-    //     return;
-    // }
-    // u32* got_u32_ptr = (u32*)got_address.value().as_ptr();
-    // u32 num_plt_entries = m_dynamic_object->number_of_plt_relocation_entries();
-    // const size_t OFFSET_IN_GOT_PLT = 3; // The first three entries in .got.plt are artificial
-    // for (size_t i = 0; i < num_plt_entries; ++i) {
-    //     dbg() << "relocate plt entry #" << i;
-    //     dbg() << (void*)got_u32_ptr[i + OFFSET_IN_GOT_PLT] << "->" << (void*)(got_u32_ptr[i + OFFSET_IN_GOT_PLT] + m_dynamic_object->base_address().get());
-    //     got_u32_ptr[i + OFFSET_IN_GOT_PLT] += m_dynamic_object->base_address().get();
-    // }
-}
+// auto got_address = m_dynamic_object->plt_got_base_address();
+// if (!got_address.has_value()) {
+//     dbg() << "no plt, exiting relocate_got_plt";
+//     return;
+// }
+// u32* got_u32_ptr = (u32*)got_address.value().as_ptr();
+// u32 num_plt_entries = m_dynamic_object->number_of_plt_relocation_entries();
+// const size_t OFFSET_IN_GOT_PLT = 3; // The first three entries in .got.plt are artificial
+// for (size_t i = 0; i < num_plt_entries; ++i) {
+//     dbg() << "relocate plt entry #" << i;
+//     dbg() << (void*)got_u32_ptr[i + OFFSET_IN_GOT_PLT] << "->" << (void*)(got_u32_ptr[i + OFFSET_IN_GOT_PLT] + m_dynamic_object->base_address().get());
+//     got_u32_ptr[i + OFFSET_IN_GOT_PLT] += m_dynamic_object->base_address().get();
+// }
+// }
 
 Optional<u32> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
 {
@@ -427,32 +425,32 @@ Elf32_Addr DynamicLoader::patch_plt_entry(u32 relocation_offset)
 
 void DynamicLoader::call_object_init_functions()
 {
-    if (!m_dynamic_object->init_section().has_value()) {
-        dbg() << "not init_section, exiting call_object_init_fuunctions";
-        return;
-    }
     typedef void (*InitFunc)();
-    auto init_function = (InitFunc)(m_dynamic_object->init_section().value().address().as_ptr());
+    if (m_dynamic_object->init_section().has_value()) {
+        auto init_function = (InitFunc)(m_dynamic_object->init_section().value().address().as_ptr());
 
 #ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Calling DT_INIT at %p\n", init_function);
+        dbgprintf("Calling DT_INIT at %p\n", init_function);
 #endif
-    (init_function)();
+        (init_function)();
+    }
 
-    auto init_array_section = m_dynamic_object->init_array_section().value();
+    if (m_dynamic_object->init_array_section().has_value()) {
+        auto init_array_section = m_dynamic_object->init_array_section().value();
 
-    InitFunc* init_begin = (InitFunc*)(init_array_section.address().as_ptr());
-    InitFunc* init_end = init_begin + init_array_section.entry_count();
-    while (init_begin != init_end) {
-        // Android sources claim that these can be -1, to be ignored.
-        // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
-        if (!*init_begin || ((i32)*init_begin == -1))
-            continue;
+        InitFunc* init_begin = (InitFunc*)(init_array_section.address().as_ptr());
+        InitFunc* init_end = init_begin + init_array_section.entry_count();
+        while (init_begin != init_end) {
+            // Android sources claim that these can be -1, to be ignored.
+            // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
+            if (!*init_begin || ((i32)*init_begin == -1))
+                continue;
 #ifdef DYNAMIC_LOAD_DEBUG
-        dbgprintf("Calling DT_INITARRAY entry at %p\n", *init_begin);
+            dbgprintf("Calling DT_INITARRAY entry at %p\n", *init_begin);
 #endif
-        (*init_begin)();
-        ++init_begin;
+            (*init_begin)();
+            ++init_begin;
+        }
     }
 }
 
