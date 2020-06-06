@@ -30,6 +30,7 @@
 #include <AK/String.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
+#include <math.h>
 
 namespace Gfx {
 
@@ -117,6 +118,23 @@ public:
         m_x /= factor;
         m_y /= factor;
         return *this;
+    }
+
+    static FloatPoint interpolate(const FloatPoint& p0, const FloatPoint& p1, float t)
+    {
+        return FloatPoint(p0.x() * (1.0 - t) + p1.x() * t, p0.y() * (1.0 - t) + p1.y() * t);
+    }
+
+    static float squared_distance(const FloatPoint& p0, const FloatPoint& p1)
+    {
+        float x_diff = p0.x() - p1.x();
+        float y_diff = p0.y() - p1.y();
+        return x_diff * x_diff + y_diff * y_diff;
+    }
+
+    static float distance(const FloatPoint& p0, const FloatPoint& p1)
+    {
+        return sqrtf(squared_distance(p0, p1));
     }
 
     String to_string() const { return String::format("[%g,%g]", x(), y()); }
