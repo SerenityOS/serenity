@@ -28,6 +28,7 @@
 #include <AK/Memory.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/SpinLock.h>
 #include <Kernel/VM/Region.h>
 
 #define SANITIZE_SLABS
@@ -50,22 +51,22 @@ public:
         }
         slabs[0].next = nullptr;
         m_freelist = &slabs[slab_count - 1];
-        m_num_allocated = 0;
-        m_num_free = slab_count;
+        m_num_allocated.store(0, AK::MemoryOrder::memory_order_release);
+        m_num_free.store(slab_count, AK::MemoryOrder::memory_order_release);
     }
 
     constexpr size_t slab_size() const { return templated_slab_size; }
 
     void* alloc()
     {
-        InterruptDisabler disabler;
+        ScopedSpinLock lock(m_lock);
         if (!m_freelist)
             return kmalloc(slab_size());
         ASSERT(m_freelist);
         void* ptr = m_freelist;
         m_freelist = m_freelist->next;
-        ++m_num_allocated;
-        --m_num_free;
+        m_num_allocated.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
+        m_num_free.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
 #ifdef SANITIZE_SLABS
         memset(ptr, SLAB_ALLOC_SCRUB_BYTE, slab_size());
 #endif
@@ -74,7 +75,7 @@ public:
 
     void dealloc(void* ptr)
     {
-        InterruptDisabler disabler;
+        ScopedSpinLock lock(m_lock);
         ASSERT(ptr);
         if (ptr < m_base || ptr >= m_end) {
             kfree(ptr);
@@ -86,12 +87,12 @@ public:
             memset(((FreeSlab*)ptr)->padding, SLAB_DEALLOC_SCRUB_BYTE, sizeof(FreeSlab::padding));
 #endif
         m_freelist = (FreeSlab*)ptr;
-        ++m_num_allocated;
-        --m_num_free;
+        m_num_allocated.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+        m_num_free.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
     }
 
-    size_t num_allocated() const { return m_num_allocated; }
-    size_t num_free() const { return m_num_free; }
+    size_t num_allocated() const { return m_num_allocated.load(AK::MemoryOrder::memory_order_consume); }
+    size_t num_free() const { return m_num_free.load(AK::MemoryOrder::memory_order_consume); }
 
 private:
     struct FreeSlab {
@@ -101,10 +102,11 @@ private:
 
     // NOTE: These are not default-initialized to prevent an init-time constructor from overwriting them
     FreeSlab* m_freelist;
-    size_t m_num_allocated;
-    size_t m_num_free;
+    Atomic<size_t> m_num_allocated;
+    Atomic<size_t> m_num_free;
     void* m_base;
     void* m_end;
+    SpinLock<u32> m_lock;
 
     static_assert(sizeof(FreeSlab) == templated_slab_size);
 };
