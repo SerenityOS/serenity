@@ -37,7 +37,7 @@
 #include <string.h>
 
 #define DYNAMIC_LOAD_DEBUG
-// #define DYNAMIC_LOAD_VERBOSE
+#define DYNAMIC_LOAD_VERBOSE
 
 #ifdef DYNAMIC_LOAD_VERBOSE
 #    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
@@ -269,7 +269,7 @@ void DynamicLoader::do_relocations()
         case R_386_GLOB_DAT: {
             auto symbol = relocation.symbol();
             VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 symbol_location = load_base_address + symbol.value();
+            u32 symbol_location = lookup_symbol(symbol).value();
             *patch_ptr = symbol_location;
             VERBOSE("   Symbol address: %p\n", *patch_ptr);
             break;
@@ -381,6 +381,20 @@ void DynamicLoader::relocate_got_plt()
     // }
 }
 
+Optional<u32> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
+{
+    if (symbol.value())
+        return symbol.address().get();
+
+    // TODO: Does a symbol with a null value always mean it is defined externally?
+    dbg() << "Looking up symbol: " << symbol.name();
+    auto res = dlsym(nullptr, symbol.name());
+    if (!res)
+        return {};
+    ASSERT(res);
+    return (u32)res;
+}
+
 // Called from our ASM routine _plt_trampoline
 extern "C" Elf32_Addr _fixup_plt_entry(DynamicLoader* object, u32 relocation_offset)
 {
@@ -398,16 +412,9 @@ Elf32_Addr DynamicLoader::patch_plt_entry(u32 relocation_offset)
     auto sym = relocation.symbol();
 
     u8* relocation_address = relocation.address().as_ptr();
-    u32 symbol_location = sym.address().get();
-
-    // TODO: Does a symbol with a null value always mean it is defined externally?
-    if (!sym.value()) {
-        dbg() << "Looking up symbol: " << sym.name();
-        printf("Lazy lookup for function: %s\n", sym.name());
-        auto res = dlsym(nullptr, sym.name());
-        ASSERT(res);
-        symbol_location = (u32)res;
-    }
+    auto res = lookup_symbol(sym);
+    ASSERT(res.has_value());
+    u32 symbol_location = res.value();
 
     VERBOSE("DynamicLoader: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
 

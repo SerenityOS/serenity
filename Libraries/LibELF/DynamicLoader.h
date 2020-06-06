@@ -110,6 +110,8 @@ private:
     void relocate_got_plt();
     void call_object_init_functions();
 
+    Optional<u32> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
+
     String m_filename;
     String m_program_interpreter;
     size_t m_file_size { 0 };

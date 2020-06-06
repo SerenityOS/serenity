@@ -24,6 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <Kernel/Syscall.h>
+
+extern int g_lib_var;
+
 const char* g_string = "Hello, World!\n";
 
 void local_dbgputstr(const char* str, int len)
@@ -45,7 +48,7 @@ int main(int, char**)
 {
     // return libfunc();
     local_dbgputstr(g_string, 15);
-    return libfunc();
+    return libfunc() + g_lib_var;
 }
 /*
 // #include <stdio.h>
