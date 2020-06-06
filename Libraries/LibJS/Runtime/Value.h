@@ -31,7 +31,6 @@
 #include <AK/LogStream.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Runtime/Symbol.h>
 #include <math.h>
 
 // 2 ** 53 - 1
@@ -51,6 +50,7 @@ public:
         Boolean,
         Symbol,
         Accessor,
+        BigInt,
     };
 
     enum class PreferredType {
@@ -68,6 +68,7 @@ public:
     bool is_boolean() const { return m_type == Type::Boolean; }
     bool is_symbol() const { return m_type == Type::Symbol; }
     bool is_accessor() const { return m_type == Type::Accessor; };
+    bool is_bigint() const { return m_type == Type::BigInt; };
     bool is_cell() const { return is_string() || is_accessor() || is_object(); }
     bool is_array() const;
     bool is_function() const;
@@ -140,6 +141,12 @@ public:
         m_value.as_accessor = accessor;
     }
 
+    Value(BigInt* bigint)
+        : m_type(Type::BigInt)
+    {
+        m_value.as_bigint = bigint;
+    }
+
     explicit Value(Type type)
         : m_type(type)
     {
@@ -207,6 +214,12 @@ public:
         return *m_value.as_accessor;
     }
 
+    BigInt& as_bigint()
+    {
+        ASSERT(is_bigint());
+        return *m_value.as_bigint;
+    }
+
     Function& as_function();
 
     i32 as_i32() const;
@@ -216,7 +229,9 @@ public:
     PrimitiveString* to_primitive_string(Interpreter&);
     Value to_primitive(Interpreter&, PreferredType preferred_type = PreferredType::Default) const;
     Object* to_object(Interpreter&) const;
+    Value to_numeric(Interpreter&) const;
     Value to_number(Interpreter&) const;
+    BigInt* to_bigint(Interpreter&) const;
     double to_double(Interpreter&) const;
     i32 to_i32(Interpreter&) const;
     size_t to_size_t(Interpreter&) const;
@@ -242,6 +257,7 @@ private:
         Object* as_object;
         Cell* as_cell;
         Accessor* as_accessor;
+        BigInt* as_bigint;
     } m_value;
 };
 

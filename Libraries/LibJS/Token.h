@@ -40,6 +40,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(AsteriskEquals)              \
     __ENUMERATE_JS_TOKEN(Async)                       \
     __ENUMERATE_JS_TOKEN(Await)                       \
+    __ENUMERATE_JS_TOKEN(BigIntLiteral)               \
     __ENUMERATE_JS_TOKEN(BoolLiteral)                 \
     __ENUMERATE_JS_TOKEN(BracketClose)                \
     __ENUMERATE_JS_TOKEN(BracketOpen)                 \

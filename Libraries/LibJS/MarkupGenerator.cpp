@@ -217,6 +217,7 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     case TokenType::UnterminatedTemplateLiteral:
         return StyleType::Invalid;
     case TokenType::NumericLiteral:
+    case TokenType::BigIntLiteral:
         return StyleType::Number;
     case TokenType::StringLiteral:
     case TokenType::TemplateLiteralStart:

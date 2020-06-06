@@ -348,37 +348,36 @@ Token Lexer::next()
             token_type = it->value;
         }
     } else if (is_numeric_literal_start()) {
+        token_type = TokenType::NumericLiteral;
         if (m_current_char == '0') {
             consume();
             if (m_current_char == '.') {
                 // decimal
                 consume();
-                while (isdigit(m_current_char)) {
+                while (isdigit(m_current_char))
                     consume();
-                }
-                if (m_current_char == 'e' || m_current_char == 'E') {
+                if (m_current_char == 'e' || m_current_char == 'E')
                     consume_exponent();
-                }
             } else if (m_current_char == 'e' || m_current_char == 'E') {
                 consume_exponent();
             } else if (m_current_char == 'o' || m_current_char == 'O') {
                 // octal
                 consume();
-                while (m_current_char >= '0' && m_current_char <= '7') {
+                while (m_current_char >= '0' && m_current_char <= '7')
                     consume();
-                }
             } else if (m_current_char == 'b' || m_current_char == 'B') {
                 // binary
                 consume();
-                while (m_current_char == '0' || m_current_char == '1') {
+                while (m_current_char == '0' || m_current_char == '1')
                     consume();
-                }
             } else if (m_current_char == 'x' || m_current_char == 'X') {
                 // hexadecimal
                 consume();
-                while (isxdigit(m_current_char)) {
+                while (isxdigit(m_current_char))
                     consume();
-                }
+            } else if (m_current_char == 'n') {
+                consume();
+                token_type = TokenType::BigIntLiteral;
             } else if (isdigit(m_current_char)) {
                 // octal without 'O' prefix. Forbidden in 'strict mode'
                 // FIXME: We need to make sure this produces a syntax error when in strict mode
@@ -388,20 +387,21 @@ Token Lexer::next()
             }
         } else {
             // 1...9 or period
-            while (isdigit(m_current_char)) {
+            while (isdigit(m_current_char))
                 consume();
-            }
-            if (m_current_char == '.') {
+            if (m_current_char == 'n') {
                 consume();
-                while (isdigit(m_current_char)) {
+                token_type = TokenType::BigIntLiteral;
+            } else {
+                if (m_current_char == '.') {
                     consume();
+                    while (isdigit(m_current_char))
+                        consume();
                 }
-            }
-            if (m_current_char == 'e' || m_current_char == 'E') {
-                consume_exponent();
+                if (m_current_char == 'e' || m_current_char == 'E')
+                    consume_exponent();
             }
         }
-        token_type = TokenType::NumericLiteral;
     } else if (m_current_char == '"' || m_current_char == '\'') {
         char stop_char = m_current_char;
         consume();

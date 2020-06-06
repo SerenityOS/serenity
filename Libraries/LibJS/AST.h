@@ -558,6 +558,22 @@ private:
     double m_value { 0 };
 };
 
+class BigIntLiteral final : public Literal {
+public:
+    explicit BigIntLiteral(String value)
+        : m_value(move(value))
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "BigIntLiteral"; }
+
+    String m_value;
+};
+
 class StringLiteral final : public Literal {
 public:
     explicit StringLiteral(String value)

@@ -28,6 +28,7 @@
 
 #define JS_ENUMERATE_NATIVE_OBJECTS                                              \
     __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor)               \
+    __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor)     \
     __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor) \
     __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor)                   \
     __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor)               \
@@ -55,6 +56,7 @@
 namespace JS {
 
 class ASTNode;
+class BigInt;
 class BoundFunction;
 class Cell;
 class DeferGC;
