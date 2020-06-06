@@ -253,7 +253,7 @@ void DynamicLoader::do_relocations()
         case R_386_32: {
             auto symbol = relocation.symbol();
             VERBOSE("Absolute relocation: name: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 symbol_address = symbol.value() + load_base_address;
+            u32 symbol_address = lookup_symbol(symbol).value();
             *patch_ptr += symbol_address;
             VERBOSE("   Symbol address: %p\n", *patch_ptr);
             break;
@@ -261,7 +261,7 @@ void DynamicLoader::do_relocations()
         case R_386_PC32: {
             auto symbol = relocation.symbol();
             VERBOSE("PC-relative relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 relative_offset = (symbol.value() - relocation.offset());
+            u32 relative_offset = (lookup_symbol(symbol).value() - (relocation.offset() + load_base_address));
             *patch_ptr += relative_offset;
             VERBOSE("   Symbol address: %p\n", *patch_ptr);
             break;
@@ -293,11 +293,13 @@ void DynamicLoader::do_relocations()
         case R_386_TLS_DTPMOD3: {
             // FIXME
             dbg() << "TODO: Offset in TLS block";
+            ASSERT_NOT_REACHED();
             break;
         }
         case R_386_TLS_DTPOFF32: {
             // FIXME
             dbg() << "TOODO: R_386_TLS_DTPOFF32";
+            ASSERT_NOT_REACHED();
             break;
         }
         default:
