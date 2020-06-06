@@ -30,8 +30,10 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
 #include <AK/WeakPtr.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
+#include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web {
@@ -57,16 +59,28 @@ public:
     void set_size(const Gfx::Size&);
 
     void set_needs_display(const Gfx::Rect&);
+
     Function<void(const Gfx::Rect&)> on_set_needs_display;
+    Function<void(const String&)> on_title_change;
+    Function<void(const URL&)> on_load_start;
+    Function<void(const Gfx::Bitmap&)> on_favicon_change;
+    Function<void(Document*)> on_set_document;
 
     void set_viewport_rect(const Gfx::Rect&);
     Gfx::Rect viewport_rect() const { return m_viewport_rect; }
 
     void did_scroll(Badge<PageView>);
 
+    FrameLoader& loader() { return m_loader; }
+    const FrameLoader& loader() const { return m_loader; }
+
+    void scroll_to_anchor(const String&);
+
 private:
     Frame();
     explicit Frame(PageView&);
+
+    FrameLoader m_loader;
 
     WeakPtr<PageView> m_page_view;
     RefPtr<Document> m_document;
