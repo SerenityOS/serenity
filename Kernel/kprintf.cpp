@@ -29,11 +29,13 @@
 #include <Kernel/Console.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
+#include <Kernel/SpinLock.h>
 #include <Kernel/kstdio.h>
 
 #include <LibC/stdarg.h>
 
 static bool serial_debug;
+static SpinLock s_log_lock;
 
 void set_serial_debug(bool on_or_off)
 {
@@ -114,6 +116,7 @@ static void console_putch(char*&, char ch)
 
 int kprintf(const char* fmt, ...)
 {
+    ScopedSpinLock lock(s_log_lock);
     color_on();
     va_list ap;
     va_start(ap, fmt);
@@ -130,6 +133,7 @@ static void buffer_putch(char*& bufptr, char ch)
 
 int sprintf(char* buffer, const char* fmt, ...)
 {
+    ScopedSpinLock lock(s_log_lock);
     va_list ap;
     va_start(ap, fmt);
     int ret = printf_internal(buffer_putch, buffer, fmt, ap);
@@ -154,6 +158,7 @@ extern "C" int dbgputstr(const char* characters, int length)
 {
     if (!characters)
         return 0;
+    ScopedSpinLock lock(s_log_lock);
     for (int i = 0; i < length; ++i)
         debugger_out(characters[i]);
     return 0;
@@ -163,6 +168,7 @@ extern "C" int kernelputstr(const char* characters, int length)
 {
     if (!characters)
         return 0;
+    ScopedSpinLock lock(s_log_lock);
     for (int i = 0; i < length; ++i)
         console_out(characters[i]);
     return 0;
@@ -170,6 +176,7 @@ extern "C" int kernelputstr(const char* characters, int length)
 
 extern "C" int dbgprintf(const char* fmt, ...)
 {
+    ScopedSpinLock lock(s_log_lock);
     color_on();
     va_list ap;
     va_start(ap, fmt);

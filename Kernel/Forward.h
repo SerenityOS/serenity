@@ -58,6 +58,8 @@ class Region;
 class Scheduler;
 class SharedBuffer;
 class Socket;
+template <typename BaseType> class SpinLock;
+template <typename BaseType, typename LockType> class ScopedSpinLock;
 class TCPSocket;
 class TTY;
 class Thread;
