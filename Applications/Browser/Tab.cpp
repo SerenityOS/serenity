@@ -171,6 +171,31 @@ Tab::Tab()
         }
     };
 
+    m_page_view->on_history_navigation = [this](auto delta) {
+        if (delta < 0)
+        {
+            if (!m_history.can_go_back(delta))
+                return;
+
+            for (i32 i = delta; i < 0; ++i)
+                m_history.go_back();
+        }
+        else
+        {
+            if (!m_history.can_go_forward(delta))
+                return;
+
+            for (i32 i = delta; i > 0; --i)
+                m_history.go_forward();
+        }
+
+        update_actions();
+        TemporaryChange<bool> change(m_should_push_loads_to_history, false);
+        m_page_view->load(m_history.current());
+    };
+
+    m_page_view->on_get_num_history_entries = [this]() { return m_history.num_entries(); };
+
     m_link_context_menu = GUI::Menu::construct();
     m_link_context_menu->add_action(GUI::Action::create("Open", [this](auto&) {
         m_page_view->on_link_click(m_link_context_menu_href, "", 0);

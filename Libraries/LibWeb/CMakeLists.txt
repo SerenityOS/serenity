@@ -5,6 +5,7 @@ set(SOURCES
     Bindings/EventListenerWrapper.cpp
     Bindings/EventTargetWrapper.cpp
     Bindings/EventWrapper.cpp
+    Bindings/HistoryObject.cpp
     Bindings/HTMLCanvasElementWrapper.cpp
     Bindings/HTMLImageElementWrapper.cpp
     Bindings/ImageDataWrapper.cpp

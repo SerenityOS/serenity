@@ -54,6 +54,9 @@ public:
     const LayoutDocument* layout_root() const;
     LayoutDocument* layout_root();
 
+    void go_to_history_delta(i32);
+    size_t num_history_entries();
+
     void reload();
     bool load(const URL&);
     void scroll_to_anchor(const StringView&);
@@ -71,6 +74,8 @@ public:
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
     Function<void(const URL&)> on_url_drop;
     Function<void(Document*)> on_set_document;
+    Function<void(i32)> on_history_navigation;
+    Function<size_t()> on_get_num_history_entries;
 
     virtual bool accepts_focus() const override { return true; }
 

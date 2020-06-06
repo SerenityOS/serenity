@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Luke Wilde <luke.wilde@live.co.uk>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,67 +26,26 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibWeb/Forward.h>
 
-template<typename T>
-class History final {
+namespace Web {
+namespace Bindings {
+
+class HistoryObject final : public JS::Object {
 public:
-    void push(const T& item);
-    T current() const;
-
-    void go_back();
-    void go_forward();
-
-    bool can_go_back() { return m_current > 0; }
-    bool can_go_forward() { return m_current + 1 < static_cast<int>(m_items.size()); }
-
-    bool can_go_back(i32 delta) { return m_current + delta >= 0; }
-    bool can_go_forward(i32 delta) { return m_current + delta < static_cast<int>(m_items.size()); }
-
-    void clear();
-
-    size_t num_entries() { return m_items.size(); }
+    HistoryObject();
+    virtual ~HistoryObject() override;
 
 private:
-    Vector<T> m_items;
-    int m_current { -1 };
+    virtual const char* class_name() const override { return "HistoryObject"; }
+
+    static JS::Value go(JS::Interpreter&);
+    static JS::Value back(JS::Interpreter&);
+    static JS::Value forward(JS::Interpreter&);
+
+    static JS::Value length_getter(JS::Interpreter&);
 };
 
-template<typename T>
-inline void History<T>::push(const T& item)
-{
-    m_items.shrink(m_current + 1);
-    m_items.append(item);
-    m_current++;
 }
-
-template<typename T>
-inline T History<T>::current() const
-{
-    if (m_current == -1)
-        return {};
-    return m_items[m_current];
-}
-
-template<typename T>
-inline void History<T>::go_back()
-{
-    ASSERT(can_go_back());
-    m_current--;
-}
-
-template<typename T>
-inline void History<T>::go_forward()
-{
-    ASSERT(can_go_forward());
-    m_current++;
-}
-
-template<typename T>
-inline void History<T>::clear()
-{
-    m_items = {};
-    m_current = -1;
 }

@@ -123,7 +123,29 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     auto* frame = document().frame();
     if (!frame)
         return;
+        
+    // FIXME: This causes a history entry, which it shouldn't.
     frame->loader().load(document().url());
+}
+
+void Window::did_call_history_navigation(Badge<Bindings::HistoryObject>, i32 delta)
+{
+    auto* frame = document().frame();
+    if (!frame)
+        return;
+
+    auto& view = static_cast<PageView&>(frame->main_frame().page().client());
+    view.go_to_history_delta(delta);
+}
+
+size_t Window::num_history_entries(Badge<Bindings::HistoryObject>)
+{
+    auto* frame = document().frame();
+    if (!frame)
+        return 0;
+
+    auto& view = static_cast<PageView&>(frame->main_frame().page().client());
+    return view.num_history_entries();
 }
 
 }

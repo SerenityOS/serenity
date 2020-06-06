@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>window.history navigation</title>
+        <style>
+            #gonoparam { background-color: blue; color: white; }
+            #gozerodelta { background-color: purple; color: white; }
+            #back { background-color: white; color: black; }
+            #forward { background-color:darkblue; color: white; }
+        </style>
+    </head>
+    <body>
+    <pre></pre>
+    <div id="gonoparam">Click me to call history.go()!</div>
+    <div id="gozerodelta">Click me to call history.go(0)!</div>
+    <div id="back">Click me to call history.back()!</div>
+    <div id="forward">Click me to call history.forward()!</div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // FIXME: When this handler is called, there is no frame, so Window::num_history_entries returns 0.
+            //        Until this is fixed, I've added a setTimeout to work around it.
+            setTimeout(() => {
+                var pre = document.querySelector("pre");
+                pre.innerHTML = "There are currently " + window.history.length + " entries in the history!\n";
+            }, 50);
+        });
+
+        document.getElementById("gonoparam").addEventListener("mousedown", function() {
+            window.history.go();
+        });
+
+        document.getElementById("gozerodelta").addEventListener("mousedown", function() {
+            window.history.go(0);
+        });
+
+        document.getElementById("back").addEventListener("mousedown", function() {
+            window.history.back();
+        });
+
+        document.getElementById("forward").addEventListener("mousedown", function() {
+            window.history.forward();
+        });
+    </script>
+    </body>
+</html>

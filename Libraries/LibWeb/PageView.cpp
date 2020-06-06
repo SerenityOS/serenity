@@ -364,4 +364,17 @@ void PageView::drop_event(GUI::DropEvent& event)
     ScrollableWidget::drop_event(event);
 }
 
+void PageView::go_to_history_delta(i32 delta) {
+    if (on_history_navigation)
+        on_history_navigation(delta);
+}
+
+size_t PageView::num_history_entries()
+{
+    if (on_get_num_history_entries)
+        return on_get_num_history_entries();
+
+    return 0;
+}
+
 }

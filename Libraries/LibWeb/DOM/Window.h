@@ -51,6 +51,9 @@ public:
 
     void did_set_location_href(Badge<Bindings::LocationObject>, const String& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
+    void did_call_go_with_zero_delta(Badge<Bindings::HistoryObject>);
+    void did_call_history_navigation(Badge<Bindings::HistoryObject>, i32 delta);
+    size_t num_history_entries(Badge<Bindings::HistoryObject>);
 
 private:
     explicit Window(Document&);
