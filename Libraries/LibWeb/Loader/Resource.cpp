@@ -59,12 +59,58 @@ void Resource::for_each_client(Function<void(ResourceClient&)> callback)
     }
 }
 
+String encoding_from_content_type(const String& content_type)
+{
+    auto offset = content_type.index_of("charset=");
+    if (offset.has_value())
+        return content_type.substring(offset.value() + 8, content_type.length() - offset.value() - 8).to_lowercase();
+
+    return "utf-8";
+}
+
+String mime_type_from_content_type(const String& content_type)
+{
+    auto offset = content_type.index_of(";");
+    if (offset.has_value())
+        return content_type.substring(0, offset.value()).to_lowercase();
+
+    return content_type;
+}
+
+static String guess_mime_type_based_on_filename(const URL& url)
+{
+    if (url.path().ends_with(".png"))
+        return "image/png";
+    if (url.path().ends_with(".gif"))
+        return "image/gif";
+    if (url.path().ends_with(".md"))
+        return "text/markdown";
+    if (url.path().ends_with(".html") || url.path().ends_with(".htm"))
+        return "text/html";
+    return "text/plain";
+}
+
 void Resource::did_load(Badge<ResourceLoader>, const ByteBuffer& data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers)
 {
     ASSERT(!m_loaded);
     m_encoded_data = data;
     m_response_headers = headers;
     m_loaded = true;
+
+    auto content_type = headers.get("Content-Type");
+    if (content_type.has_value()) {
+        dbg() << "Content-Type header: _" << content_type.value() << "_";
+        m_encoding = encoding_from_content_type(content_type.value());
+        m_mime_type = mime_type_from_content_type(content_type.value());
+    } else if (url().protocol() == "data" && !url().data_mime_type().is_empty()) {
+        dbg() << "This is a data URL with mime-type _" << url().data_mime_type() << "_";
+        m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
+        m_mime_type = url().data_mime_type();
+    } else {
+        dbg() << "No Content-Type header to go on! Guessing based on filename...";
+        m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
+        m_mime_type = guess_mime_type_based_on_filename(url());
+    }
 
     for_each_client([](auto& client) {
         client.resource_did_load();

@@ -118,37 +118,6 @@ static RefPtr<Document> create_gemini_document(const ByteBuffer& data, const URL
     return parse_html_document(markdown_document->render_to_html(), url);
 }
 
-String encoding_from_content_type(const String& content_type)
-{
-    auto offset = content_type.index_of("charset=");
-    if (offset.has_value())
-        return content_type.substring(offset.value() + 8, content_type.length() - offset.value() - 8).to_lowercase();
-
-    return "utf-8";
-}
-
-String mime_type_from_content_type(const String& content_type)
-{
-    auto offset = content_type.index_of(";");
-    if (offset.has_value())
-        return content_type.substring(0, offset.value()).to_lowercase();
-
-    return content_type;
-}
-
-static String guess_mime_type_based_on_filename(const URL& url)
-{
-    if (url.path().ends_with(".png"))
-        return "image/png";
-    if (url.path().ends_with(".gif"))
-        return "image/gif";
-    if (url.path().ends_with(".md"))
-        return "text/markdown";
-    if (url.path().ends_with(".html") || url.path().ends_with(".htm"))
-        return "text/html";
-    return "text/plain";
-}
-
 RefPtr<Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
 {
     if (mime_type.starts_with("image/"))
@@ -250,21 +219,8 @@ void FrameLoader::resource_did_load()
         return;
     }
 
-    String encoding = "utf-8";
-    String mime_type;
-
-    auto content_type = resource()->response_headers().get("Content-Type");
-    if (content_type.has_value()) {
-        dbg() << "Content-Type header: _" << content_type.value() << "_";
-        encoding = encoding_from_content_type(content_type.value());
-        mime_type = mime_type_from_content_type(content_type.value());
-    } else {
-        dbg() << "No Content-Type header to go on! Guessing based on filename...";
-        mime_type = guess_mime_type_based_on_filename(url);
-    }
-
-    dbg() << "I believe this content has MIME type '" << mime_type << "', encoding '" << encoding << "'";
-    auto document = create_document_from_mime_type(resource()->encoded_data(), url, mime_type, encoding);
+    dbg() << "I believe this content has MIME type '" << resource()->mime_type() << "', encoding '" << resource()->encoding() << "'";
+    auto document = create_document_from_mime_type(resource()->encoded_data(), url, resource()->mime_type(), resource()->encoding());
     ASSERT(document);
     frame().set_document(document);
 
