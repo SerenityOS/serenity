@@ -67,6 +67,8 @@ public:
     const URL& url() const { return m_request.url(); }
     const ByteBuffer& encoded_data() const { return m_encoded_data; }
 
+    const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
+
     void register_client(Badge<ResourceClient>, ResourceClient&);
     void unregister_client(Badge<ResourceClient>, ResourceClient&);
 

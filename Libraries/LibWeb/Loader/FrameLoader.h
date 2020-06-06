@@ -28,10 +28,12 @@
 
 #include <AK/Forward.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web {
 
-class FrameLoader {
+class FrameLoader final
+    : public ResourceClient {
 public:
     explicit FrameLoader(Frame&);
     ~FrameLoader();
@@ -44,6 +46,10 @@ public:
     void set_use_old_parser(bool b) { m_use_old_parser = b; }
 
 private:
+    // ^ResourceClient
+    virtual void resource_did_load() override;
+    virtual void resource_did_fail() override;
+
     void load_error_page(const URL& failed_url, const String& error_message);
     RefPtr<Document> create_document_from_mime_type(const ByteBuffer&, const URL&, const String& mime_type, const String& encoding);
 
