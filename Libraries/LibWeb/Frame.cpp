@@ -69,6 +69,8 @@ void Frame::set_size(const Gfx::Size& size)
     if (m_size == size)
         return;
     m_size = size;
+    if (m_document)
+        m_document->layout();
 }
 
 void Frame::set_viewport_rect(const Gfx::Rect& rect)

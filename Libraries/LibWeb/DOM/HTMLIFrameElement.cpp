@@ -76,21 +76,12 @@ void HTMLIFrameElement::load_src(const String& value)
         return;
     }
 
-    ResourceLoader::the().load_sync(
-        url,
-        [&](auto& data, auto& headers) {
-            (void)headers;
-            auto html_source = String::copy(data);
-            HTMLDocumentParser parser(html_source, "utf-8");
-            parser.run(url);
-            m_hosted_frame->set_document(&parser.document());
+    m_hosted_frame->on_set_needs_display = [this](auto&) {
+        if (layout_node())
+            layout_node()->set_needs_display();
+    };
 
-            dbg() << "The hosted frame now has this DOM:";
-            dump_tree(*m_hosted_frame->document());
-        },
-        [&](auto& error) {
-            dbg() << "<iframe> failed to load: " << error;
-        });
+    m_hosted_frame->loader().load(url);
 }
 
 }
