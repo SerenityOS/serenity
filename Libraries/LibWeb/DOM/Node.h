@@ -128,6 +128,9 @@ public:
 
     bool is_link() const;
 
+    virtual void document_did_attach_to_frame(Frame&) {}
+    virtual void document_will_detach_from_frame(Frame&) {}
+
 protected:
     Node(Document&, NodeType);
 

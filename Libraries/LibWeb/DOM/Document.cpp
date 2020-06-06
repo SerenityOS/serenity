@@ -161,11 +161,19 @@ String Document::title() const
 void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 {
     m_frame = frame.make_weak_ptr();
+    for_each_in_subtree([&](auto& node) {
+        node.document_did_attach_to_frame(frame);
+        return IterationDecision::Continue;
+    });
     layout();
 }
 
-void Document::detach_from_frame(Badge<Frame>, Frame&)
+void Document::detach_from_frame(Badge<Frame>, Frame& frame)
 {
+    for_each_in_subtree([&](auto& node) {
+        node.document_will_detach_from_frame(frame);
+        return IterationDecision::Continue;
+    });
     m_layout_root = nullptr;
     m_frame = nullptr;
 }
