@@ -79,8 +79,10 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
 
 RefPtr<LayoutNode> LayoutTreeBuilder::build(Node& node)
 {
-    // FIXME: Support building partial trees.
-    ASSERT(is<Document>(node) || !node.has_children());
+    if (!is<Document>(node) && node.has_children()) {
+        dbg() << "FIXME: Support building partial layout trees.";
+        return nullptr;
+    }
     return create_layout_tree(node, nullptr);
 }
 
