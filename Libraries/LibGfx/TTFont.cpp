@@ -30,20 +30,12 @@
 #include <AK/Utf32View.h>
 #include <bits/stdint.h>
 #include <LibCore/File.h>
+#include <LibGfx/FloatPoint.h>
+#include <LibGfx/Path.h>
 #include <math.h>
 
 namespace Gfx {
 namespace TTF {
-
-static float min(float x, float y)
-{
-    return x < y ? x : y;
-}
-
-static float max(float x, float y)
-{
-    return x > y ? x : y;
-}
 
 static u16 be_u16(const u8* ptr)
 {
@@ -138,34 +130,11 @@ u16 Font::Maxp::num_glyphs() const
     return be_u16(m_slice.offset_pointer(4));
 }
 
-struct Point {
-    float x;
-    float y;
-
-    Point(float x, float y)
-        : x(x)
-        , y(y)
-    {
-    }
-
-    static Point interpolate(const Point& a, const Point &b, float t)
-    {
-        return Point(a.x * (1.0f - t) + b.x * t, a.y * (1.0f - t) + b.y * t);
-    }
-
-    static float squared_distance(const Point& a, const Point& b)
-    {
-        float x_diff = a.x - b.x;
-        float y_diff = a.y - b.y;
-        return x_diff * x_diff + y_diff * y_diff;
-    }
-};
-
 class PointIterator {
 public:
     struct Item {
         bool on_curve;
-        Point point;
+        FloatPoint point;
     };
 
     PointIterator(const ByteBuffer& slice, u16 num_points, u32 flags_offset, u32 x_offset, u32 y_offset, float x_translate, float y_translate, float x_scale, float y_scale)
@@ -196,28 +165,28 @@ public:
         }
         switch (m_flag & 0x12) {
         case 0x00:
-            m_last_point.x += be_i16(m_slice.offset_pointer(m_x_offset));
+            m_last_point.set_x(m_last_point.x() + be_i16(m_slice.offset_pointer(m_x_offset)));
             m_x_offset += 2;
             break;
         case 0x02:
-            m_last_point.x -= m_slice[m_x_offset++];
+            m_last_point.set_x(m_last_point.x() - m_slice[m_x_offset++]);
             break;
         case 0x12:
-            m_last_point.x += m_slice[m_x_offset++];
+            m_last_point.set_x(m_last_point.x() + m_slice[m_x_offset++]);
             break;
         default:
             break;
         }
         switch (m_flag & 0x24) {
         case 0x00:
-            m_last_point.y += be_i16(m_slice.offset_pointer(m_y_offset));
+            m_last_point.set_y(m_last_point.y() + be_i16(m_slice.offset_pointer(m_y_offset)));
             m_y_offset += 2;
             break;
         case 0x04:
-            m_last_point.y -= m_slice[m_y_offset++];
+            m_last_point.set_y(m_last_point.y() - m_slice[m_y_offset++]);
             break;
         case 0x24:
-            m_last_point.y += m_slice[m_y_offset++];
+            m_last_point.set_y(m_last_point.y() + m_slice[m_y_offset++]);
             break;
         default:
             break;
@@ -227,10 +196,9 @@ public:
             .on_curve = (m_flag & 0x01) != 0,
             .point = m_last_point,
         };
-        ret.point.x += m_x_translate;
-        ret.point.y += m_y_translate;
-        ret.point.x *= m_x_scale;
-        ret.point.y *= m_y_scale;
+        ret.point.move_by(m_x_translate, m_y_translate);
+        ret.point.set_x(ret.point.x() * m_x_scale);
+        ret.point.set_y(ret.point.y() * m_y_scale);
         return ret;
     }
 
@@ -238,7 +206,7 @@ private:
     ByteBuffer m_slice;
     u16 m_points_remaining;
     u8 m_flag { 0 };
-    Point m_last_point = { 0.0f, 0.0f };
+    FloatPoint m_last_point = { 0.0f, 0.0f };
     u32 m_flags_remaining = { 0 };
     u32 m_flags_offset;
     u32 m_x_offset;
@@ -260,40 +228,19 @@ public:
         }
     }
 
-    void move_to(Point& point)
+    RefPtr<Bitmap> draw_path(Path& path)
     {
-        m_last_point = point;
-    }
-
-    void line_to(Point& point)
-    {
-        draw_line(m_last_point, point);
-        m_last_point = point;
-    }
-
-    // FIXME: Use a better algorithm to split/approximate bezier curve.
-    void quadratic_bezier_to(Point& control, Point& end_point)
-    {
-        float arbitrary = 15.0;
-        auto mid_point = Point::interpolate(m_last_point, end_point, 0.5);
-        float squared_distance = Point::squared_distance(mid_point, control);
-        u32 num_sections = 1 + floor(sqrtf(arbitrary * squared_distance));
-        float delta = 1.0 / num_sections;
-        float t = 0.0;
-        Point p_cur = m_last_point;
-        for (u32 i = 0; i < num_sections - 1; i++) {
-            t += delta;
-            Point pn = Point::interpolate(Point::interpolate(m_last_point, control, t), Point::interpolate(control, end_point, t), t);
-            draw_line(p_cur, pn);
-            p_cur = pn;
+        for (auto& line : path.split_lines()) {
+            draw_line(line.from, line.to);
         }
-        draw_line(p_cur, end_point);
-        m_last_point = end_point;
+        return accumulate();
     }
 
-    AABitmap accumulate()
+private:
+    RefPtr<Bitmap> accumulate()
     {
-        AABitmap bitmap(m_size);
+        auto bitmap = Bitmap::create(BitmapFormat::RGBA32, m_size);
+        Color base_color = Color::from_rgb(0xffffff);
         for (int y = 0; y < m_size.height(); y++) {
             float accumulator = 0.0;
             for (int x = 0; x < m_size.width(); x++) {
@@ -305,39 +252,39 @@ public:
                 if (value > 1.0) {
                     value = 1.0;
                 }
-                bitmap.set_byte_at(x, y, value * 255.0);
+                u8 alpha = value * 255.0;
+                bitmap->set_pixel(x, y, base_color.with_alpha(alpha));
             }
         }
         return bitmap;
     }
 
-private:
-    void draw_line(Point p0, Point p1)
+    void draw_line(FloatPoint p0, FloatPoint p1)
     {
-        ASSERT(p0.x >= 0.0 && p0.y >= 0.0 && p0.x <= m_size.width() && p0.y <= m_size.height());
-        ASSERT(p1.x >= 0.0 && p1.y >= 0.0 && p1.x <= m_size.width() && p1.y <= m_size.height());
+        ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
+        ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
         // If we're on the same Y, there's no need to draw
-        if (p0.y == p1.y) {
+        if (p0.y() == p1.y()) {
             return;
         }
 
         float direction = -1.0;
-        if (p1.y < p0.y) {
+        if (p1.y() < p0.y()) {
             direction = 1.0;
             auto tmp = p0;
             p0 = p1;
             p1 = tmp;
         }
 
-        float dxdy = (p1.x - p0.x) / (p1.y - p0.y);
-        u32 y0 = floor(p0.y);
-        u32 y1 = ceil(p1.y);
-        float x_cur = p0.x;
+        float dxdy = (p1.x() - p0.x()) / (p1.y() - p0.y());
+        u32 y0 = floor(p0.y());
+        u32 y1 = ceil(p1.y());
+        float x_cur = p0.x();
 
         for (u32 y = y0; y < y1; y++) {
             u32 line_offset = m_size.width() * y;
 
-            float dy = min(y + 1, p1.y) - max(y, p0.y);
+            float dy = min(y + 1.0f, p1.y()) - max((float) y, p0.y());
             float directed_dy = dy * direction;
             float x_next = x_cur + dy * dxdy;
             if (x_next < 0.0) {
@@ -378,7 +325,6 @@ private:
     }
 
     Size m_size;
-    Point m_last_point { 0.0, 0.0 };
     OwnPtr<float> m_data;
 };
 
@@ -554,7 +500,7 @@ Font::Glyf::Glyph Font::Glyf::Glyph::composite(const ByteBuffer& slice)
     return ret;
 }
 
-AABitmap Font::Glyf::Glyph::raster(float x_scale, float y_scale) const
+RefPtr<Bitmap> Font::Glyf::Glyph::raster(float x_scale, float y_scale) const
 {
     switch (m_type) {
     case Type::Simple:
@@ -597,7 +543,7 @@ static void get_ttglyph_offsets(const ByteBuffer& slice, u32 num_points, u32 fla
     *y_offset = *x_offset + x_size;
 }
 
-AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
+RefPtr<Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
 {
     auto simple = m_meta.simple;
     // Get offets for flags, x, and y.
@@ -611,14 +557,14 @@ AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
     // Prepare to render glyph.
     u32 width = (u32) (ceil((simple.xmax - simple.xmin) * x_scale)) + 1;
     u32 height = (u32) (ceil((simple.ymax - simple.ymin) * y_scale)) + 1;
-    Rasterizer rasterizer(Size(width, height));
+    Path path;
     PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, -simple.xmin, -simple.ymax, x_scale, -y_scale);
 
     int last_contour_end = -1;
     u32 contour_index = 0;
     u32 contour_size = 0;
-    Optional<Point> contour_start = {};
-    Optional<Point> last_offcurve_point = {};
+    Optional<FloatPoint> contour_start = {};
+    Optional<FloatPoint> last_offcurve_point = {};
 
     // Render glyph
     while (true) {
@@ -634,7 +580,7 @@ AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
                 ASSERT_NOT_REACHED();
             }
             contour_start = opt_item.value().point;
-            rasterizer.move_to(contour_start.value());
+            path.move_to(contour_start.value());
             contour_size--;
         } else if (!last_offcurve_point.has_value()) {
             if (contour_size > 0) {
@@ -646,7 +592,7 @@ AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
                 auto item = opt_item.value();
                 contour_size--;
                 if (item.on_curve) {
-                    rasterizer.line_to(item.point);
+                    path.line_to(item.point);
                 } else if (contour_size > 0) {
                     auto opt_next_item = point_iterator.next();
                     // FIXME: Should we draw a quadratic bezier to the first point here?
@@ -656,18 +602,18 @@ AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
                     auto next_item = opt_next_item.value();
                     contour_size--;
                     if (next_item.on_curve) {
-                        rasterizer.quadratic_bezier_to(item.point, next_item.point);
+                        path.quadratic_bezier_curve_to(item.point, next_item.point);
                     } else {
-                        auto mid_point = Point::interpolate(item.point, next_item.point, 0.5);
-                        rasterizer.quadratic_bezier_to(item.point, mid_point);
+                        auto mid_point = FloatPoint::interpolate(item.point, next_item.point, 0.5);
+                        path.quadratic_bezier_curve_to(item.point, mid_point);
                         last_offcurve_point = next_item.point;
                     }
                 } else {
-                    rasterizer.quadratic_bezier_to(item.point, contour_start.value());
+                    path.quadratic_bezier_curve_to(item.point, contour_start.value());
                     contour_start = {};
                 }
             } else {
-                rasterizer.line_to(contour_start.value());
+                path.line_to(contour_start.value());
                 contour_start = {};
             }
         } else {
@@ -682,20 +628,20 @@ AABitmap Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
                 auto item = opt_item.value();
                 contour_size--;
                 if (item.on_curve) {
-                    rasterizer.quadratic_bezier_to(point0, item.point);
+                    path.quadratic_bezier_curve_to(point0, item.point);
                 } else {
-                    auto mid_point = Point::interpolate(point0, item.point, 0.5);
-                    rasterizer.quadratic_bezier_to(point0, mid_point);
+                    auto mid_point = FloatPoint::interpolate(point0, item.point, 0.5);
+                    path.quadratic_bezier_curve_to(point0, mid_point);
                     last_offcurve_point = item.point;
                 }
             } else {
-                rasterizer.quadratic_bezier_to(point0, contour_start.value());
+                path.quadratic_bezier_curve_to(point0, contour_start.value());
                 contour_start = {};
             }
         }
     }
 
-    return rasterizer.accumulate();
+    return Rasterizer(Size(width, height)).draw_path(path);
 }
 
 Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
@@ -866,7 +812,7 @@ ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scal
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
-AABitmap Font::raster_glyph(u32 glyph_id, float x_scale, float y_scale) const
+RefPtr<Bitmap> Font::raster_glyph(u32 glyph_id, float x_scale, float y_scale) const
 {
     if (glyph_id >= m_maxp.num_glyphs()) {
         glyph_id = 0;

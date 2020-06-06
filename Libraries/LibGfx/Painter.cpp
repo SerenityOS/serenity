@@ -1282,45 +1282,22 @@ void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int
     }
 }
 
-static void split_quadratic_bezier_curve(const FloatPoint& original_control, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
-{
-    auto po1_midpoint = original_control + p1;
-    po1_midpoint /= 2;
-
-    auto po2_midpoint = original_control + p2;
-    po2_midpoint /= 2;
-
-    auto new_segment = po1_midpoint + po2_midpoint;
-    new_segment /= 2;
-
-    Painter::for_each_line_segment_on_bezier_curve(po1_midpoint, p1, new_segment, callback);
-    Painter::for_each_line_segment_on_bezier_curve(po2_midpoint, new_segment, p2, callback);
-}
-
-static bool can_approximate_bezier_curve(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& control)
-{
-    constexpr static int tolerance = 15;
-
-    auto p1x = 3 * control.x() - 2 * p1.x() - p2.x();
-    auto p1y = 3 * control.y() - 2 * p1.y() - p2.y();
-    auto p2x = 3 * control.x() - 2 * p2.x() - p1.x();
-    auto p2y = 3 * control.y() - 2 * p2.y() - p1.y();
-
-    p1x = p1x * p1x;
-    p1y = p1y * p1y;
-    p2x = p2x * p2x;
-    p2y = p2y * p2y;
-
-    return max(p1x, p2x) + max(p1y, p2y) <= tolerance;
-}
-
 void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
-    if (can_approximate_bezier_curve(p1, p2, control_point)) {
-        callback(p1, p2);
-    } else {
-        split_quadratic_bezier_curve(control_point, p1, p2, callback);
+    float arbitrary = 15.0;
+    auto mid_point = FloatPoint::interpolate(p1, p2, 0.5);
+    float squared_distance = FloatPoint::squared_distance(control_point, mid_point);
+    size_t num_sections = 1 + floorf(sqrtf(arbitrary * squared_distance));
+    float delta = 1.0 / num_sections;
+    float t = 0.0;
+    FloatPoint p_cur = p1;
+    for (size_t i = 0; i < num_sections - 1; i++) {
+        t += delta;
+        FloatPoint pn = FloatPoint::interpolate(FloatPoint::interpolate(p1, control_point, t), FloatPoint::interpolate(control_point, p2, t), t);
+        callback(p_cur, pn);
+        p_cur = pn;
     }
+    callback(p_cur, p2);
 }
 
 void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&& callback)

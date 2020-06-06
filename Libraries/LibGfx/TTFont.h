@@ -31,29 +31,11 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Size.h>
 
 namespace Gfx {
 namespace TTF {
-
-class AABitmap {
-public:
-    AABitmap(Size size)
-        : m_size(size)
-    {
-        m_data = OwnPtr(new u8[size.width() * size.height()]);
-    }
-    Size size() const { return m_size; }
-    u8 byte_at(int x, int y) const { return m_data[y * m_size.width() + x]; }
-    void set_byte_at(int x, int y, u8 value)
-    {
-        m_data[y * m_size.width() + x] = value;
-    }
-
-private:
-    Size m_size;
-    OwnPtr<u8> m_data;
-};
 
 class ScaledFont;
 
@@ -86,7 +68,7 @@ private:
     Font(ByteBuffer&& buffer, u32 offset);
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
-    AABitmap raster_glyph(u32 glyph_id, float x_scale, float y_scale) const;
+    RefPtr<Bitmap> raster_glyph(u32 glyph_id, float x_scale, float y_scale) const;
     u32 glyph_count() const { return m_maxp.num_glyphs(); }
 
     enum class IndexToLocFormat {
@@ -262,7 +244,7 @@ private:
         public:
             static Glyph simple(const ByteBuffer& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax);
             static Glyph composite(const ByteBuffer& slice); // FIXME: This is currently just a dummy. Need to add support for composite glyphs.
-            AABitmap raster(float x_scale, float y_scale) const;
+            RefPtr<Bitmap> raster(float x_scale, float y_scale) const;
             int ascender() const
             {
                 if (m_type == Type::Simple) {
@@ -302,7 +284,7 @@ private:
                 , m_slice(move(slice))
             {
             }
-            AABitmap raster_simple(float x_scale, float y_scale) const;
+            RefPtr<Bitmap> raster_simple(float x_scale, float y_scale) const;
 
             Type m_type;
             ByteBuffer m_slice;
@@ -347,7 +329,7 @@ public:
     u32 glyph_id_for_codepoint(u32 codepoint) const { return m_font->m_cmap.glyph_id_for_codepoint(codepoint); }
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale); }
-    AABitmap raster_glyph(u32 glyph_id) const { return m_font->raster_glyph(glyph_id, m_x_scale, m_y_scale); }
+    RefPtr<Bitmap> raster_glyph(u32 glyph_id) const { return m_font->raster_glyph(glyph_id, m_x_scale, m_y_scale); }
     u32 glyph_count() const { return m_font->glyph_count(); }
     int width(const StringView&) const;
     int width(const Utf8View&) const;
