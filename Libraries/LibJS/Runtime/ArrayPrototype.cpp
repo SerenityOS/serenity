@@ -170,6 +170,8 @@ Value ArrayPrototype::map(Interpreter& interpreter)
     new_array->indexed_properties().set_array_like_size(initial_length);
     for_each_item(interpreter, "map", [&](auto index, auto, auto callback_result) {
         new_array->put(index, callback_result);
+        if (interpreter.exception())
+            return IterationDecision::Break;
         return IterationDecision::Continue;
     });
     return Value(new_array);
@@ -193,8 +195,11 @@ Value ArrayPrototype::push(Interpreter& interpreter)
     auto new_length = length + argument_count;
     if (new_length > MAX_ARRAY_LIKE_INDEX)
         return interpreter.throw_exception<TypeError>("Maximum array size exceeded");
-    for (size_t i = 0; i < argument_count; ++i)
+    for (size_t i = 0; i < argument_count; ++i) {
         this_object->put(length + i, interpreter.argument(i));
+        if (interpreter.exception())
+            return {};
+    }
     auto new_length_value = Value((i32)new_length);
     this_object->put("length", new_length_value);
     if (interpreter.exception())
@@ -233,6 +238,8 @@ Value ArrayPrototype::pop(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     this_object->delete_property(index);
+    if (interpreter.exception())
+        return {};
     this_object->put("length", Value((i32)index));
     if (interpreter.exception())
         return {};
@@ -749,15 +756,18 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
 
             if (!from.is_empty()) {
                 this_object->put(to, from);
-                if (interpreter.exception())
-                    return {};
             } else {
                 this_object->delete_property(to);
             }
+            if (interpreter.exception())
+                return {};
         }
 
-        for (size_t i = initial_length; i > new_length; --i)
+        for (size_t i = initial_length; i > new_length; --i) {
             this_object->delete_property(i - 1);
+            if (interpreter.exception())
+                return {};
+        }
     } else if (insert_count > actual_delete_count) {
         for (size_t i = initial_length - actual_delete_count; i > actual_start; --i) {
             auto from = this_object->get(i + actual_delete_count - 1);
@@ -768,11 +778,11 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
 
             if (!from.is_empty()) {
                 this_object->put(to, from);
-                if (interpreter.exception())
-                    return {};
             } else {
                 this_object->delete_property(to);
             }
+            if (interpreter.exception())
+                return {};
         }
     }
 

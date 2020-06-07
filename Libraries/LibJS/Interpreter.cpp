@@ -107,10 +107,13 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
 
     for (auto& declaration : scope_node.variables()) {
         for (auto& declarator : declaration.declarations()) {
-            if (scope_node.is_program())
+            if (scope_node.is_program()) {
                 global_object().put(declarator.id().string(), js_undefined());
-            else
+                if (exception())
+                    return;
+            } else {
                 scope_variables_with_declaration_kind.set(declarator.id().string(), { js_undefined(), declaration.declaration_kind() });
+            }
         }
     }
 
@@ -233,8 +236,13 @@ Value Interpreter::construct(Function& function, Function& new_target, Optional<
 
     auto* new_object = Object::create_empty(*this, global_object());
     auto prototype = new_target.get("prototype");
-    if (prototype.is_object())
+    if (exception())
+        return {};
+    if (prototype.is_object()) {
         new_object->set_prototype(&prototype.as_object());
+        if (exception())
+            return {};
+    }
     call_frame.this_value = new_object;
     auto result = function.construct(*this);
 

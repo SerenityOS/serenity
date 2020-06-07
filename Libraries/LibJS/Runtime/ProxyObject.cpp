@@ -98,6 +98,8 @@ Object* ProxyObject::prototype()
         return nullptr;
     }
     if (m_target.is_extensible()) {
+        if (interpreter().exception())
+            return nullptr;
         if (trap_result.is_null())
             return nullptr;
         return &trap_result.as_object();
@@ -175,7 +177,8 @@ bool ProxyObject::is_extensible() const
     if (interpreter().exception())
         return false;
     if (trap_result != m_target.is_extensible()) {
-        interpreter().throw_exception<TypeError>("Proxy handler's isExtensible trap violates invariant: return value must match the target's extensibility");
+        if (!interpreter().exception())
+            interpreter().throw_exception<TypeError>("Proxy handler's isExtensible trap violates invariant: return value must match the target's extensibility");
         return false;
     }
     return trap_result;
@@ -202,7 +205,8 @@ bool ProxyObject::prevent_extensions()
     if (interpreter().exception())
         return false;
     if (trap_result && m_target.is_extensible()) {
-        interpreter().throw_exception<TypeError>("Proxy handler's preventExtensions trap violates invariant: cannot return true if the target object is extensible");
+        if (!interpreter().exception())
+            interpreter().throw_exception<TypeError>("Proxy handler's preventExtensions trap violates invariant: cannot return true if the target object is extensible");
         return false;
     }
     return trap_result;
@@ -244,7 +248,8 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(PropertyNa
             return {};
         }
         if (!m_target.is_extensible()) {
-            interpreter().throw_exception<TypeError>("Proxy handler's getOwnPropertyDescriptor trap violates invariant: cannot report a property as being undefined if it exists as an own property of the target and the target is non-extensible");
+            if (!interpreter().exception())
+                interpreter().throw_exception<TypeError>("Proxy handler's getOwnPropertyDescriptor trap violates invariant: cannot report a property as being undefined if it exists as an own property of the target and the target is non-extensible");
             return {};
         }
         return {};
@@ -253,7 +258,8 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(PropertyNa
     if (interpreter().exception())
         return {};
     if (!is_compatible_property_descriptor(interpreter(), m_target.is_extensible(), result_desc, target_desc)) {
-        interpreter().throw_exception<TypeError>("Proxy handler's getOwnPropertyDescriptor trap violates invariant: invalid property descriptor for existing property on the target");
+        if (!interpreter().exception())
+            interpreter().throw_exception<TypeError>("Proxy handler's getOwnPropertyDescriptor trap violates invariant: invalid property descriptor for existing property on the target");
         return {};
     }
     if (!result_desc.attributes.is_configurable() && (!target_desc.has_value() || target_desc.value().attributes.is_configurable())) {
@@ -295,7 +301,8 @@ bool ProxyObject::define_property(const FlyString& property_name, const Object& 
         return false;
     if (!target_desc.has_value()) {
         if (!m_target.is_extensible()) {
-            interpreter().throw_exception<TypeError>("Proxy handler's defineProperty trap violates invariant: a property cannot be reported as being defined if the property does not exist on the target and the target is non-extensible");
+            if (!interpreter().exception())
+                interpreter().throw_exception<TypeError>("Proxy handler's defineProperty trap violates invariant: a property cannot be reported as being defined if the property does not exist on the target and the target is non-extensible");
             return false;
         }
         if (setting_config_false) {
@@ -304,7 +311,8 @@ bool ProxyObject::define_property(const FlyString& property_name, const Object& 
         }
     } else {
         if (!is_compatible_property_descriptor(interpreter(), m_target.is_extensible(), PropertyDescriptor::from_dictionary(interpreter(), descriptor), target_desc)) {
-            interpreter().throw_exception<TypeError>("Proxy handler's defineProperty trap violates invariant: the new descriptor is not compatible with the existing descriptor of the property on the target");
+            if (!interpreter().exception())
+                interpreter().throw_exception<TypeError>("Proxy handler's defineProperty trap violates invariant: the new descriptor is not compatible with the existing descriptor of the property on the target");
             return false;
         }
         if (setting_config_false && target_desc.value().attributes.is_configurable()) {
@@ -346,7 +354,8 @@ bool ProxyObject::has_property(PropertyName name) const
                 return false;
             }
             if (!m_target.is_extensible()) {
-                interpreter().throw_exception<TypeError>("Proxy handler's has trap violates invariant: a property cannot be reported as non-existent if it exist on the target and the target is non-extensible");
+                if (!interpreter().exception())
+                    interpreter().throw_exception<TypeError>("Proxy handler's has trap violates invariant: a property cannot be reported as non-existent if it exist on the target and the target is non-extensible");
                 return false;
             }
         }

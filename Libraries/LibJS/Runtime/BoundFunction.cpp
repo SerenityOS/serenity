@@ -52,6 +52,8 @@ Value BoundFunction::construct(Interpreter& interpreter)
 {
     if (auto this_value = interpreter.this_value(); m_constructor_prototype && this_value.is_object()) {
         this_value.as_object().set_prototype(m_constructor_prototype);
+        if (interpreter.exception())
+            return {};
     }
     return m_target_function->construct(interpreter);
 }

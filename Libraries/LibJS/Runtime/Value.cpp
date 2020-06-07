@@ -675,11 +675,13 @@ Value in(Interpreter& interpreter, Value lhs, Value rhs)
     return Value(rhs.as_object().has_property(lhs_string));
 }
 
-Value instance_of(Interpreter&, Value lhs, Value rhs)
+Value instance_of(Interpreter& interpreter, Value lhs, Value rhs)
 {
     if (!lhs.is_object() || !rhs.is_object())
         return Value(false);
     auto constructor_prototype_property = rhs.as_object().get("prototype");
+    if (interpreter.exception())
+        return {};
     if (!constructor_prototype_property.is_object())
         return Value(false);
     return Value(lhs.as_object().has_prototype(&constructor_prototype_property.as_object()));

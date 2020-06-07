@@ -91,6 +91,8 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
 
     String name = "Error";
     auto name_property = this_object.get("name");
+    if (interpreter.exception())
+        return {};
     if (!name_property.is_empty() && !name_property.is_undefined()) {
         name = name_property.to_string(interpreter);
         if (interpreter.exception())
@@ -99,6 +101,8 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
 
     String message = "";
     auto message_property = this_object.get("message");
+    if (interpreter.exception())
+        return {};
     if (!message_property.is_empty() && !message_property.is_undefined()) {
         message = message_property.to_string(interpreter);
         if (interpreter.exception())

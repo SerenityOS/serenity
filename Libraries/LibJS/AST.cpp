@@ -173,8 +173,13 @@ Value CallExpression::execute(Interpreter& interpreter) const
     if (is_new_expression()) {
         new_object = Object::create_empty(interpreter, interpreter.global_object());
         auto prototype = function.get("prototype");
-        if (prototype.is_object())
+        if (interpreter.exception())
+            return {};
+        if (prototype.is_object()) {
             new_object->set_prototype(&prototype.as_object());
+            if (interpreter.exception())
+                return {};
+        }
         call_frame.this_value = new_object;
         result = function.construct(interpreter);
     } else {
@@ -382,6 +387,8 @@ Value ForInStatement::execute(Interpreter& interpreter) const
             }
         }
         object = object->prototype();
+        if (interpreter.exception())
+            return {};
     }
     return last_value;
 }
@@ -1320,14 +1327,19 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
                 auto& obj_to_spread = key_result.as_object();
 
                 for (auto& it : obj_to_spread.shape().property_table_ordered()) {
-                    if (it.value.attributes.is_enumerable())
+                    if (it.value.attributes.is_enumerable()) {
                         object->define_property(it.key, obj_to_spread.get(it.key));
+                        if (interpreter.exception())
+                            return {};
+                    }
                 }
             } else if (key_result.is_string()) {
                 auto& str_to_spread = key_result.as_string().string();
 
                 for (size_t i = 0; i < str_to_spread.length(); i++) {
                     object->define_property(i, js_string(interpreter, str_to_spread.substring(i, 1)));
+                    if (interpreter.exception())
+                        return {};
                 }
             }
 
@@ -1362,6 +1374,8 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
             if (!accessor) {
                 accessor = Accessor::create(interpreter, nullptr, nullptr);
                 object->define_property(key, accessor, Attribute::Configurable | Attribute::Enumerable);
+                if (interpreter.exception())
+                    return {};
             }
             if (property.type() == ObjectProperty::Type::Getter)
                 accessor->set_getter(&value.as_function());
@@ -1369,6 +1383,8 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
                 accessor->set_setter(&value.as_function());
         } else {
             object->define_property(key, value);
+            if (interpreter.exception())
+                return {};
         }
     }
     return object;
@@ -1586,6 +1602,8 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter) const
         raw_strings->indexed_properties().append(value);
     }
     strings->define_property("raw", raw_strings, 0);
+    if (interpreter.exception())
+        return {};
 
     return interpreter.call(tag_function, js_undefined(), move(arguments));
 }
