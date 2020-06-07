@@ -319,6 +319,8 @@ Gfx::Point PageView::to_screen_position(const Web::Frame& frame, const Gfx::Poin
 {
     Gfx::Point offset;
     for (auto* f = &frame; f; f = f->parent()) {
+        if (f->is_main_frame())
+            break;
         auto f_position = f->host_element()->layout_node()->box_type_agnostic_position().to_int_point();
         offset.move_by(f_position);
     }
