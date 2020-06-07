@@ -42,6 +42,9 @@
 #include <LibWeb/DOM/HTMLLinkElement.h>
 #include <LibWeb/DOM/HTMLScriptElement.h>
 #include <LibWeb/DOM/HTMLStyleElement.h>
+#include <LibWeb/DOM/HTMLTableCellElement.h>
+#include <LibWeb/DOM/HTMLTableElement.h>
+#include <LibWeb/DOM/HTMLTableRowElement.h>
 #include <LibWeb/DOM/HTMLTitleElement.h>
 
 namespace Web {
@@ -77,6 +80,14 @@ NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_n
         return adopt(*new HTMLInputElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "br")
         return adopt(*new HTMLBRElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "iframe")
+        return adopt(*new HTMLIFrameElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "table")
+        return adopt(*new HTMLTableElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "tr")
+        return adopt(*new HTMLTableRowElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "td" || lowercase_tag_name == "th")
+        return adopt(*new HTMLTableCellElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "iframe")
         return adopt(*new HTMLIFrameElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "h1"

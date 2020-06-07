@@ -55,6 +55,9 @@ set(SOURCES
     DOM/HTMLLinkElement.cpp
     DOM/HTMLScriptElement.cpp
     DOM/HTMLStyleElement.cpp
+    DOM/HTMLTableElement.cpp
+    DOM/HTMLTableCellElement.cpp
+    DOM/HTMLTableRowElement.cpp
     DOM/HTMLTitleElement.cpp
     DOM/ImageData.cpp
     DOM/Node.cpp
