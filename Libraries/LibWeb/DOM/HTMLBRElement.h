@@ -41,7 +41,7 @@ public:
 template<>
 inline bool is<HTMLBRElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("br");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::br;
 }
 
 }

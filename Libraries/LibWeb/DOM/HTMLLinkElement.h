@@ -57,7 +57,7 @@ private:
 template<>
 inline bool is<HTMLLinkElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("link");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::link;
 }
 
 }

@@ -68,6 +68,7 @@ Document::Document(const URL& url)
     , m_window(Window::create_with_document(*this))
 {
     HTML::AttributeNames::initialize();
+    HTML::TagNames::initialize();
 
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();

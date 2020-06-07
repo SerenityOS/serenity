@@ -69,7 +69,7 @@ private:
 template<>
 inline bool is<HTMLScriptElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("script");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::script;
 }
 
 }

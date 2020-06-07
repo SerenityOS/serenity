@@ -39,7 +39,7 @@ public:
 template<>
 inline bool is<HTMLTableRowElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("tr");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::tr;
 }
 
 }

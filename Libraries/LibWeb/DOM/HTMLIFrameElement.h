@@ -52,7 +52,7 @@ private:
 template<>
 inline bool is<HTMLIFrameElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("iframe");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::iframe;
 }
 
 }

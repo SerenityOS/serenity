@@ -39,7 +39,7 @@ public:
 template<>
 inline bool is<HTMLTableCellElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().is_one_of("td", "th");
+    return is<Element>(node) && to<Element>(node).tag_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th);
 }
 
 }

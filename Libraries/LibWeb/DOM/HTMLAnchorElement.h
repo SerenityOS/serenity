@@ -42,7 +42,7 @@ public:
 template<>
 inline bool is<HTMLAnchorElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("a");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::a;
 }
 
 }

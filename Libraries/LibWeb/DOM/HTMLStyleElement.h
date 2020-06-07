@@ -44,4 +44,11 @@ private:
     RefPtr<StyleSheet> m_stylesheet;
 };
 
+template<>
+inline bool is<HTMLStyleElement>(const Node& node)
+{
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::style;
+}
+
+
 }
