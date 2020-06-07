@@ -65,7 +65,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         longest_suggestion_length = 0;
     }
 
-    VT::move_absolute(max_line_count + m_origin_x, 1);
+    VT::move_absolute(max_line_count + m_origin_row, 1);
 
     if (m_pages.is_empty()) {
         size_t num_printed = 0;
@@ -142,8 +142,8 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     m_lines_used_for_last_suggestions = lines_used;
 
     // If we filled the screen, move back the origin.
-    if (m_origin_x + lines_used >= m_num_lines) {
-        m_origin_x = m_num_lines - lines_used;
+    if (m_origin_row + lines_used >= m_num_lines) {
+        m_origin_row = m_num_lines - lines_used;
     }
 
     if (m_pages.size() > 1) {
@@ -156,7 +156,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
             return;
         }
 
-        VT::move_absolute(m_origin_x + lines_used, m_num_columns - string.length() - 1);
+        VT::move_absolute(m_origin_row + lines_used, m_num_columns - string.length() - 1);
         VT::apply_style({ Style::Background(Style::XtermColor::Green) });
         fputs(string.characters(), stdout);
         VT::apply_style(Style::reset_style());

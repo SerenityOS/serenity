@@ -264,11 +264,11 @@ private:
         set_origin(position[0], position[1]);
     }
 
-    void set_origin(int x, int y)
+    void set_origin(int row, int col)
     {
-        m_origin_x = x;
-        m_origin_y = y;
-        m_suggestion_display->set_origin(x, y, {});
+        m_origin_row = row;
+        m_origin_column = col;
+        m_suggestion_display->set_origin(row, col, {});
     }
 
     bool should_break_token(Vector<u32, 1024>& buffer, size_t index);
@@ -312,8 +312,8 @@ private:
     bool m_cached_prompt_valid { false };
 
     // Exact position before our prompt in the terminal.
-    size_t m_origin_x { 0 };
-    size_t m_origin_y { 0 };
+    size_t m_origin_row { 0 };
+    size_t m_origin_column { 0 };
 
     OwnPtr<SuggestionDisplay> m_suggestion_display;
 
