@@ -156,6 +156,9 @@ public:
 
     String to_string() const;
 
+    const char* begin() { return m_characters; }
+    const char* end() { return m_characters + m_length; }
+
 private:
     friend class String;
     const StringImpl* m_impl { nullptr };
