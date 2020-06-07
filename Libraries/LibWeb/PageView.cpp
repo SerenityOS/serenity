@@ -41,6 +41,7 @@
 #include <LibWeb/DOM/MouseEvent.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Frame/EventHandler.h>
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
@@ -153,118 +154,29 @@ void PageView::paint_event(GUI::PaintEvent& event)
 
 void PageView::mousemove_event(GUI::MouseEvent& event)
 {
-    if (!layout_root())
-        return GUI::ScrollableWidget::mousemove_event(event);
-
-    bool hovered_node_changed = false;
-    bool is_hovering_link = false;
-    bool was_hovering_link = document()->hovered_node() && document()->hovered_node()->is_link();
-    auto result = layout_root()->hit_test(to_content_position(event.position()));
-    const HTMLAnchorElement* hovered_link_element = nullptr;
-    if (result.layout_node) {
-        RefPtr<Node> node = result.layout_node->node();
-        hovered_node_changed = node != document()->hovered_node();
-        document()->set_hovered_node(node);
-        if (node) {
-            hovered_link_element = node->enclosing_link_element();
-            if (hovered_link_element) {
-#ifdef HTML_DEBUG
-                dbg() << "PageView: hovering over a link to " << hovered_link_element->href();
-#endif
-                is_hovering_link = true;
-            }
-            auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
-            node->dispatch_event(MouseEvent::create("mousemove", offset.x(), offset.y()));
-        }
-        if (m_in_mouse_selection) {
-            layout_root()->selection().set_end({ result.layout_node, result.index_in_node });
-            dump_selection("MouseMove");
-            update();
-        }
+    if (main_frame().event_handler().handle_mousemove(to_content_position(event.position()), event.buttons(), event.modifiers())) {
+        event.accept();
+        return;
     }
-    if (window())
-        window()->set_override_cursor(is_hovering_link ? GUI::StandardCursor::Hand : GUI::StandardCursor::None);
-    if (hovered_node_changed) {
-        update();
-        RefPtr<HTMLElement> hovered_html_element = document()->hovered_node() ? document()->hovered_node()->enclosing_html_element() : nullptr;
-        if (hovered_html_element && !hovered_html_element->title().is_null()) {
-            auto screen_position = screen_relative_rect().location().translated(event.position());
-            GUI::Application::the().show_tooltip(hovered_html_element->title(), screen_position.translated(4, 4));
-        } else {
-            GUI::Application::the().hide_tooltip();
-        }
-    }
-    if (is_hovering_link != was_hovering_link) {
-        if (on_link_hover) {
-            on_link_hover(hovered_link_element ? document()->complete_url(hovered_link_element->href()).to_string() : String());
-        }
-    }
-    event.accept();
+    GUI::ScrollableWidget::mousemove_event(event);
 }
 
 void PageView::mousedown_event(GUI::MouseEvent& event)
 {
-    if (!layout_root())
-        return GUI::ScrollableWidget::mousemove_event(event);
-
-    bool hovered_node_changed = false;
-    auto result = layout_root()->hit_test(to_content_position(event.position()));
-    if (result.layout_node) {
-        RefPtr<Node> node = result.layout_node->node();
-        hovered_node_changed = node != document()->hovered_node();
-        document()->set_hovered_node(node);
-        if (node) {
-            auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
-            node->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
-            if (RefPtr<HTMLAnchorElement> link = node->enclosing_link_element()) {
-                dbg() << "PageView: clicking on a link to " << link->href();
-
-                if (event.button() == GUI::MouseButton::Left) {
-                    if (link->href().starts_with("javascript:")) {
-                        run_javascript_url(link->href());
-                    } else {
-                        if (on_link_click)
-                            on_link_click(link->href(), link->target(), event.modifiers());
-                    }
-                } else if (event.button() == GUI::MouseButton::Right) {
-                    if (on_link_context_menu_request)
-                        on_link_context_menu_request(link->href(), event.position().translated(screen_relative_rect().location()));
-                } else if (event.button() == GUI::MouseButton::Middle) {
-                    if (on_link_middle_click)
-                        on_link_middle_click(link->href());
-                }
-            } else {
-                if (event.button() == GUI::MouseButton::Left) {
-                    if (layout_root())
-                        layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
-                    dump_selection("MouseDown");
-                    m_in_mouse_selection = true;
-                }
-            }
-        }
+    if (main_frame().event_handler().handle_mousedown(to_content_position(event.position()), event.button(), event.modifiers())) {
+        event.accept();
+        return;
     }
-    if (hovered_node_changed)
-        update();
-    event.accept();
+    GUI::ScrollableWidget::mousedown_event(event);
 }
 
 void PageView::mouseup_event(GUI::MouseEvent& event)
 {
-    if (!layout_root())
-        return GUI::ScrollableWidget::mouseup_event(event);
-
-    auto result = layout_root()->hit_test(to_content_position(event.position()));
-    if (result.layout_node) {
-        if (RefPtr<Node> node = result.layout_node->node()) {
-            auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
-            node->dispatch_event(MouseEvent::create("mouseup", offset.x(), offset.y()));
-        }
+    if (main_frame().event_handler().handle_mouseup(to_content_position(event.position()), event.button(), event.modifiers())) {
+        event.accept();
+        return;
     }
-
-    if (event.button() == GUI::MouseButton::Left) {
-        dump_selection("MouseUp");
-        m_in_mouse_selection = false;
-    }
+    GUI::ScrollableWidget::mouseup_event(event);
 }
 
 void PageView::keydown_event(GUI::KeyEvent& event)
@@ -383,42 +295,10 @@ void PageView::set_document(Document* document)
     main_frame().set_document(document);
 }
 
-void PageView::dump_selection(const char* event_name)
-{
-    UNUSED_PARAM(event_name);
-#ifdef SELECTION_DEBUG
-    dbg() << event_name << " selection start: "
-          << layout_root()->selection().start().layout_node << ":" << layout_root()->selection().start().index_in_node << ", end: "
-          << layout_root()->selection().end().layout_node << ":" << layout_root()->selection().end().index_in_node;
-#endif
-}
-
 void PageView::did_scroll()
 {
     main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
     main_frame().did_scroll({});
-}
-
-Gfx::Point PageView::compute_mouse_event_offset(const Gfx::Point& event_position, const LayoutNode& layout_node) const
-{
-    auto content_event_position = to_content_position(event_position);
-    auto top_left_of_layout_node = layout_node.box_type_agnostic_position();
-
-    return {
-        content_event_position.x() - static_cast<int>(top_left_of_layout_node.x()),
-        content_event_position.y() - static_cast<int>(top_left_of_layout_node.y())
-    };
-}
-
-void PageView::run_javascript_url(const String& url)
-{
-    ASSERT(url.starts_with("javascript:"));
-    if (!document())
-        return;
-
-    auto source = url.substring_view(11, url.length() - 11);
-    dbg() << "running js from url: _" << source << "_";
-    document()->run_javascript(source);
 }
 
 void PageView::drop_event(GUI::DropEvent& event)
@@ -430,6 +310,50 @@ void PageView::drop_event(GUI::DropEvent& event)
         }
     }
     ScrollableWidget::drop_event(event);
+}
+
+void PageView::notify_link_click(Badge<EventHandler>, Web::Frame&, const String& href, const String& target, unsigned modifiers)
+{
+    if (on_link_click)
+        on_link_click(href, target, modifiers);
+}
+
+void PageView::notify_link_middle_click(Badge<EventHandler>, Web::Frame&, const String& href, const String&, unsigned)
+{
+    if (on_link_middle_click)
+        on_link_middle_click(href);
+}
+
+Gfx::Point PageView::to_screen_position(const Web::Frame& frame, const Gfx::Point& frame_position) const
+{
+    Gfx::Point offset;
+    for (auto* f = &frame; f; f = f->parent()) {
+        auto f_position = f->host_element()->layout_node()->box_type_agnostic_position().to_int_point();
+        offset.move_by(f_position);
+    }
+    return screen_relative_rect().location().translated(offset).translated(frame_position);
+}
+
+void PageView::notify_link_context_menu_request(Badge<EventHandler>, Web::Frame& frame, const Gfx::Point& content_position, const String& href, const String&, unsigned)
+{
+    if (on_link_context_menu_request)
+        on_link_context_menu_request(href, to_screen_position(frame, content_position));
+}
+
+void PageView::notify_link_hover(Badge<EventHandler>, Web::Frame&, const String& href)
+{
+    if (on_link_hover)
+        on_link_hover(href);
+}
+
+void PageView::notify_tooltip_area_enter(Badge<EventHandler>, Web::Frame& frame, const Gfx::Point& content_position, const String& title)
+{
+    GUI::Application::the().show_tooltip(title, to_screen_position(frame, content_position));
+}
+
+void PageView::notify_tooltip_area_leave(Badge<EventHandler>, Web::Frame&)
+{
+    GUI::Application::the().hide_tooltip();
 }
 
 }
