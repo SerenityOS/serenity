@@ -60,6 +60,7 @@ public:
     bool decode(i64&);
     bool decode(float&);
     bool decode(String&);
+    bool decode(URL&);
     bool decode(Dictionary&);
 
     template<typename T>

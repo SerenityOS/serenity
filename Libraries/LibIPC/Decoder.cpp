@@ -25,6 +25,7 @@
  */
 
 #include <AK/BufferStream.h>
+#include <AK/URL.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 
@@ -113,6 +114,15 @@ bool Decoder::decode(String& value)
     return !m_stream.handle_read_failure();
 }
 
+bool Decoder::decode(URL& value)
+{
+    String string;
+    if (!decode(string))
+        return false;
+    value = URL(string);
+    return true;
+}
+
 bool Decoder::decode(Dictionary& dictionary)
 {
     u64 size = 0;
@@ -135,14 +145,5 @@ bool Decoder::decode(Dictionary& dictionary)
 
     return true;
 }
-
-void dongle() {
-    ByteBuffer buffer;
-    BufferStream stream(buffer);
-    Decoder d(stream);
-    Vector<String> x;
-    d.decode(x);
-}
-
 
 }

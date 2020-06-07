@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/URL.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
 
@@ -138,6 +139,11 @@ Encoder& Encoder::operator<<(const String& value)
         return *this << (i32)-1;
     *this << static_cast<i32>(value.length());
     return *this << value.view();
+}
+
+Encoder& Encoder::operator<<(const URL& value)
+{
+    return *this << value.to_string();
 }
 
 Encoder& Encoder::operator<<(const Dictionary& dictionary)

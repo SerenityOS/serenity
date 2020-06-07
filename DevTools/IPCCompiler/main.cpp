@@ -244,6 +244,7 @@ int main(int argc, char** argv)
     out() << "#pragma once";
     out() << "#include <AK/BufferStream.h>";
     out() << "#include <AK/OwnPtr.h>";
+    out() << "#include <AK/URL.h>";
     out() << "#include <AK/Utf8View.h>";
     out() << "#include <LibGfx/Color.h>";
     out() << "#include <LibGfx/Rect.h>";
