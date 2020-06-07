@@ -132,7 +132,12 @@ bool EventHandler::handle_mousedown(const Gfx::Point& position, unsigned button,
             if (href.starts_with("javascript:")) {
                 document.run_javascript(href.substring_view(11, href.length() - 11));
             } else {
-                page_view.notify_link_click({}, m_frame, link->href(), link->target(), modifiers);
+                if (m_frame.is_main_frame()) {
+                    page_view.notify_link_click({}, m_frame, link->href(), link->target(), modifiers);
+                } else {
+                    // FIXME: Handle different targets!
+                    m_frame.loader().load(document.complete_url(link->href()));
+                }
             }
         } else if (button == GUI::MouseButton::Right) {
             page_view.notify_link_context_menu_request({}, m_frame, position, link->href(), link->target(), modifiers);
