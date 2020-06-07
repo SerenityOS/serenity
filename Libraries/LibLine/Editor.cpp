@@ -556,7 +556,7 @@ void Editor::handle_read_event()
                 ctrl_held = false;
                 continue;
             default:
-                dbgprintf("Shell: Unhandled final: %02x (%c)\r\n", codepoint, codepoint);
+                dbgprintf("LibLine: Unhandled final: %02x (%c)\r\n", codepoint, codepoint);
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
@@ -984,6 +984,7 @@ void Editor::refresh_display()
             swap(previous_num_columns, m_num_columns);
             has_cleaned_up = true;
         }
+        m_was_resized = false;
     }
     // Do not call hook on pure cursor movement.
     if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
@@ -991,6 +992,16 @@ void Editor::refresh_display()
         reposition_cursor();
         m_cached_buffer_size = m_buffer.size();
         return;
+    }
+    // We might be at the last line, and have more than one line;
+    // Refreshing the display will cause the terminal to scroll,
+    // so note that fact and bring origin up.
+    auto current_num_lines = num_lines();
+    if (m_origin_row + current_num_lines > m_num_lines + 1) {
+        if (current_num_lines > m_num_lines)
+            m_origin_row = 0;
+        else
+            m_origin_row = m_num_lines - current_num_lines + 1;
     }
 
     if (on_display_refresh)
