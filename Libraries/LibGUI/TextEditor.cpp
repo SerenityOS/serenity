@@ -404,6 +404,7 @@ void TextEditor::paint_event(PaintEvent& event)
     };
     if (m_ruler_visible)
         text_clip_rect.move_by(-ruler_width(), 0);
+    text_clip_rect.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
     painter.add_clip_rect(text_clip_rect);
 
     for (size_t line_index = first_visible_line; line_index <= last_visible_line; ++line_index) {
