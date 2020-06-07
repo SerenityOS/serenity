@@ -47,6 +47,9 @@ static inline bool is_digit(char ch)
 
 bool URL::parse(const StringView& string)
 {
+    if (string.is_null())
+        return false;
+
     enum class State {
         InProtocol,
         InHostname,
@@ -291,9 +294,15 @@ String URL::to_string() const
 
 URL URL::complete_url(const String& string) const
 {
+    if (!is_valid())
+        return {};
+
     URL url(string);
     if (url.is_valid())
         return url;
+
+    if (protocol() == "data")
+        return {};
 
     if (string.starts_with("//")) {
         URL url(String::format("%s:%s", m_protocol.characters(), string.characters()));
