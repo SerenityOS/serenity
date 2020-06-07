@@ -79,6 +79,8 @@ Value StringConstructor::raw(Interpreter& interpreter)
         return {};
 
     auto raw = template_object->get("raw");
+    if (interpreter.exception())
+        return {};
     if (raw.is_empty() || raw.is_undefined() || raw.is_null()) {
         interpreter.throw_exception<TypeError>(String::format("Cannot convert property 'raw' to object from %s", raw.is_null() ? "null" : "undefined"));
         return {};

@@ -145,6 +145,8 @@ Value ReflectObject::define_property(Interpreter& interpreter)
         return {};
     auto& descriptor = interpreter.argument(2).as_object();
     auto success = target->define_property(property_key, descriptor, false);
+    if (interpreter.exception())
+        return {};
     return Value(success);
 }
 
