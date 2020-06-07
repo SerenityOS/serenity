@@ -250,7 +250,7 @@ private:
 
     size_t cursor_line() const
     {
-        return (m_drawn_cursor + m_num_columns + current_prompt_length() - 1) / m_num_columns;
+        return (m_drawn_cursor + m_num_columns + current_prompt_length()) / m_num_columns;
     }
 
     size_t offset_in_line() const
