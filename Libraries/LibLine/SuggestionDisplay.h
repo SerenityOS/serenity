@@ -45,18 +45,18 @@ public:
 
     virtual void set_vt_size(size_t lines, size_t columns) = 0;
 
-    size_t origin_x() const { return m_origin_x; }
-    size_t origin_y() const { return m_origin_y; }
+    size_t origin_row() const { return m_origin_row; }
+    size_t origin_col() const { return m_origin_column; }
 
-    void set_origin(int x, int y, Badge<Editor>)
+    void set_origin(int row, int col, Badge<Editor>)
     {
-        m_origin_x = x;
-        m_origin_y = y;
+        m_origin_row = row;
+        m_origin_column = col;
     }
 
 protected:
-    int m_origin_x { 0 };
-    int m_origin_y { 0 };
+    int m_origin_row { 0 };
+    int m_origin_column { 0 };
 };
 
 class XtermSuggestionDisplay : public SuggestionDisplay {

@@ -339,8 +339,8 @@ void Editor::save_to(JsonObject& object)
     object.set("current_prompt", m_new_prompt);
     object.set("was_interrupted", m_was_interrupted);
     JsonObject display_area;
-    display_area.set("top_left_x", m_origin_x);
-    display_area.set("top_left_y", m_origin_y);
+    display_area.set("top_left_row", m_origin_row);
+    display_area.set("top_left_column", m_origin_column);
     display_area.set("line_count", num_lines());
     object.set("used_display_area", move(display_area));
 }
@@ -658,7 +658,7 @@ void Editor::handle_read_event()
 
                     m_suggestion_display->display(m_suggestion_manager);
 
-                    m_origin_x = m_suggestion_display->origin_x();
+                    m_origin_row = m_suggestion_display->origin_row();
                 }
             }
 
@@ -940,7 +940,7 @@ void Editor::recalculate_origin()
     // compensate for that.
     if (m_cached_prompt_length >= m_num_columns) {
         auto added_lines = (m_cached_prompt_length + 1) / m_num_columns - 1;
-        m_origin_x += added_lines;
+        m_origin_row += added_lines;
     }
 
     // We also need to recalculate our cursor position,
@@ -1016,7 +1016,7 @@ void Editor::refresh_display()
     if (!has_cleaned_up) {
         cleanup();
     }
-    VT::move_absolute(m_origin_x, m_origin_y);
+    VT::move_absolute(m_origin_row, m_origin_column);
 
     fputs(m_new_prompt.characters(), stdout);
 
@@ -1097,32 +1097,32 @@ void Editor::reposition_cursor()
     auto line = cursor_line() - 1;
     auto column = offset_in_line();
 
-    VT::move_absolute(line + m_origin_x, column + m_origin_y);
+    VT::move_absolute(line + m_origin_row, column + m_origin_column);
 }
 
-void VT::move_absolute(u32 x, u32 y)
+void VT::move_absolute(u32 row, u32 col)
 {
-    printf("\033[%d;%dH", x, y);
+    printf("\033[%d;%dH", row, col);
     fflush(stdout);
 }
 
-void VT::move_relative(int x, int y)
+void VT::move_relative(int row, int col)
 {
     char x_op = 'A', y_op = 'D';
 
-    if (x > 0)
+    if (row > 0)
         x_op = 'B';
     else
-        x = -x;
-    if (y > 0)
+        row = -row;
+    if (col > 0)
         y_op = 'C';
     else
-        y = -y;
+        col = -col;
 
-    if (x > 0)
-        printf("\033[%d%c", x, x_op);
-    if (y > 0)
-        printf("\033[%d%c", y, y_op);
+    if (row > 0)
+        printf("\033[%d%c", row, x_op);
+    if (col > 0)
+        printf("\033[%d%c", col, y_op);
 }
 
 Style Editor::find_applicable_style(size_t offset) const
@@ -1416,21 +1416,21 @@ Vector<size_t, 2> Editor::vt_dsr()
         }
         length += nread;
     } while (buf[length - 1] != 'R' && length < 16);
-    size_t x { 1 }, y { 1 };
+    size_t row { 1 }, col { 1 };
 
     if (buf[0] == '\033' && buf[1] == '[') {
         auto parts = StringView(buf + 2, length - 3).split_view(';');
         bool ok;
-        x = parts[0].to_int(ok);
+        row = parts[0].to_int(ok);
         if (!ok) {
-            dbg() << "Terminal DSR issue; received garbage x";
+            dbg() << "Terminal DSR issue; received garbage row";
         }
-        y = parts[1].to_int(ok);
+        col = parts[1].to_int(ok);
         if (!ok) {
-            dbg() << "Terminal DSR issue; received garbage y";
+            dbg() << "Terminal DSR issue; received garbage col";
         }
     }
-    return { x, y };
+    return { row, col };
 }
 
 String Editor::line(size_t up_to_index) const
