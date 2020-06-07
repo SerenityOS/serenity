@@ -162,6 +162,13 @@ void LayoutNode::set_needs_display()
     }
 }
 
+float LayoutNode::font_size() const
+{
+    // FIXME: This doesn't work right for relative font-sizes
+    auto length = style().length_or_fallback(CSS::PropertyID::FontSize, Length(10, Length::Type::Px));
+    return length.raw_value();
+}
+
 Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
 {
     if (is_box())

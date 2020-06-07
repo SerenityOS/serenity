@@ -212,7 +212,7 @@ public:
 
     virtual String to_string() const override { return String::format("%g%%", m_percentage); }
 
-    Length to_length(float reference) const { return Length((m_percentage / 100.0f) * reference, Length::Type::Absolute); }
+    Length to_length(float reference) const { return Length((m_percentage / 100.0f) * reference, Length::Type::Px); }
 
 private:
     virtual Length to_length() const override { return {}; }

@@ -17,6 +17,7 @@ set(SOURCES
     Bindings/XMLHttpRequestConstructor.cpp
     Bindings/XMLHttpRequestPrototype.cpp
     Bindings/XMLHttpRequestWrapper.cpp
+    CSS/Length.cpp
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/StyleDeclaration.cpp

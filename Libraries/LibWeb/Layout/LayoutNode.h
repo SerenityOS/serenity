@@ -158,6 +158,8 @@ public:
 
     Gfx::FloatPoint box_type_agnostic_position() const;
 
+    float font_size() const;
+
 protected:
     explicit LayoutNode(const Node*);
 

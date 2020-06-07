@@ -43,7 +43,7 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::Fl
         return;
 
     auto border_style = style().property(style_property_id);
-    float width = border_width.value()->to_length().to_px();
+    float width = border_width.value()->to_length().to_px(*this);
     if (width <= 0)
         return;
 
@@ -143,7 +143,7 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::Fl
         auto width = style().property(property_id);
         if (!width.has_value())
             return 0;
-        return width.value()->to_length().to_px();
+        return width.value()->to_length().to_px(*this);
     };
 
     float p1_step = 0;
@@ -203,10 +203,10 @@ void LayoutBox::render(RenderingContext& context)
 #endif
 
     Gfx::FloatRect padded_rect;
-    padded_rect.set_x(x() - box_model().padding().left.to_px());
-    padded_rect.set_width(width() + box_model().padding().left.to_px() + box_model().padding().right.to_px());
-    padded_rect.set_y(y() - box_model().padding().top.to_px());
-    padded_rect.set_height(height() + box_model().padding().top.to_px() + box_model().padding().bottom.to_px());
+    padded_rect.set_x(x() - box_model().padding().left.to_px(*this));
+    padded_rect.set_width(width() + box_model().padding().left.to_px(*this) + box_model().padding().right.to_px(*this));
+    padded_rect.set_y(y() - box_model().padding().top.to_px(*this));
+    padded_rect.set_height(height() + box_model().padding().top.to_px(*this) + box_model().padding().bottom.to_px(*this));
 
     if (!is_body()) {
         auto bgcolor = style().property(CSS::PropertyID::BackgroundColor);
@@ -224,10 +224,10 @@ void LayoutBox::render(RenderingContext& context)
     }
 
     Gfx::FloatRect bordered_rect;
-    bordered_rect.set_x(padded_rect.x() - box_model().border().left.to_px());
-    bordered_rect.set_width(padded_rect.width() + box_model().border().left.to_px() + box_model().border().right.to_px());
-    bordered_rect.set_y(padded_rect.y() - box_model().border().top.to_px());
-    bordered_rect.set_height(padded_rect.height() + box_model().border().top.to_px() + box_model().border().bottom.to_px());
+    bordered_rect.set_x(padded_rect.x() - box_model().border().left.to_px(*this));
+    bordered_rect.set_width(padded_rect.width() + box_model().border().left.to_px(*this) + box_model().border().right.to_px(*this));
+    bordered_rect.set_y(padded_rect.y() - box_model().border().top.to_px(*this));
+    bordered_rect.set_height(padded_rect.height() + box_model().border().top.to_px(*this) + box_model().border().bottom.to_px(*this));
 
     paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftWidth);
     paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightWidth);

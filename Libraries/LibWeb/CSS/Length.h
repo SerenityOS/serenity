@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibWeb/Forward.h>
 
 namespace Web {
 
@@ -34,10 +35,12 @@ class Length {
 public:
     enum class Type {
         Auto,
-        Absolute,
+        Px,
+        Em,
+        Rem,
     };
 
-    Length() {}
+    Length() { }
     Length(int value, Type type)
         : m_type(type)
         , m_value(value)
@@ -48,28 +51,24 @@ public:
         , m_value(value)
     {
     }
-    ~Length() {}
 
     bool is_auto() const { return m_type == Type::Auto; }
-    bool is_absolute() const { return m_type == Type::Absolute; }
+    bool is_absolute() const { return m_type == Type::Px; }
+    bool is_relative() const { return m_type == Type::Em || m_type == Type::Rem; }
 
-    float value() const { return m_value; }
+    float raw_value() const { return m_value; }
+    float to_px(const LayoutNode&) const;
 
     String to_string() const
     {
         if (is_auto())
-            return "[Length/auto]";
-        return String::format("%g [Length/px]", m_value);
-    }
-
-    float to_px() const
-    {
-        if (is_auto())
-            return 0;
-        return m_value;
+            return "[auto]";
+        return String::format("[%g %s]", m_value, unit_name());
     }
 
 private:
+    const char* unit_name() const;
+
     Type m_type { Type::Auto };
     float m_value { 0 };
 };

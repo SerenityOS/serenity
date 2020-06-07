@@ -253,6 +253,10 @@ static Optional<float> parse_number(const StringView& view)
     // FIXME: Maybe we should have "ends_with_ignoring_case()" ?
     if (view.to_string().to_lowercase().ends_with("px"))
         return parse_number(view.substring_view(0, view.length() - 2));
+    if (view.to_string().to_lowercase().ends_with("rem"))
+        return parse_number(view.substring_view(0, view.length() - 3));
+    if (view.to_string().to_lowercase().ends_with("em"))
+        return parse_number(view.substring_view(0, view.length() - 2));
 
     return try_parse_float(view);
 }
@@ -263,7 +267,11 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
     if (number.has_value()) {
         if (string.ends_with('%'))
             return PercentageStyleValue::create(number.value());
-        return LengthStyleValue::create(Length(number.value(), Length::Type::Absolute));
+        if (string.ends_with("em"))
+            return LengthStyleValue::create(Length(number.value(), Length::Type::Em));
+        if (string.ends_with("rem"))
+            return LengthStyleValue::create(Length(number.value(), Length::Type::Rem));
+        return LengthStyleValue::create(Length(number.value(), Length::Type::Px));
     }
 
     if (string.equals_ignoring_case("inherit"))

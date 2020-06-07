@@ -47,7 +47,7 @@ float LayoutReplaced::calculate_width() const
 
     auto& style = this->style();
     auto auto_value = Length();
-    auto zero_value = Length(0, Length::Type::Absolute);
+    auto zero_value = Length(0, Length::Type::Px);
     auto& containing_block = *this->containing_block();
 
     auto margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value, containing_block.width());
@@ -65,7 +65,7 @@ float LayoutReplaced::calculate_width() const
     // FIXME: Actually compute 'width'
     auto computed_width = specified_width;
 
-    float used_width = specified_width.to_px();
+    float used_width = specified_width.to_px(*this);
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width,
     // then that intrinsic width is the used value of 'width'.
@@ -100,16 +100,12 @@ float LayoutReplaced::calculate_height() const
     // 'inline-block' replaced elements in normal flow and floating replaced elements
     auto& style = this->style();
     auto auto_value = Length();
-    auto zero_value = Length(0, Length::Type::Absolute);
     auto& containing_block = *this->containing_block();
-
-    auto margin_top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
-    auto margin_bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
 
     auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, auto_value, containing_block.width());
     auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, auto_value, containing_block.height());
 
-    float used_height = specified_height.to_px();
+    float used_height = specified_height.to_px(*this);
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
     // an intrinsic height, then that intrinsic height is the used value of 'height'.
@@ -128,11 +124,8 @@ float LayoutReplaced::calculate_height() const
 Gfx::FloatPoint LayoutReplaced::calculate_position()
 {
     auto& style = this->style();
-    auto auto_value = Length();
-    auto zero_value = Length(0, Length::Type::Absolute);
+    auto zero_value = Length(0, Length::Type::Px);
     auto& containing_block = *this->containing_block();
-
-    auto width = style.length_or_fallback(CSS::PropertyID::Width, auto_value, containing_block.width());
 
     if (style.position() == CSS::Position::Absolute) {
         box_model().offset().top = style.length_or_fallback(CSS::PropertyID::Top, zero_value, containing_block.height());
@@ -148,15 +141,15 @@ Gfx::FloatPoint LayoutReplaced::calculate_position()
     box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
     box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
 
-    float position_x = box_model().margin().left.to_px()
-        + box_model().border().left.to_px()
-        + box_model().padding().left.to_px()
-        + box_model().offset().left.to_px();
+    float position_x = box_model().margin().left.to_px(*this)
+        + box_model().border().left.to_px(*this)
+        + box_model().padding().left.to_px(*this)
+        + box_model().offset().left.to_px(*this);
 
     if (style.position() != CSS::Position::Absolute || containing_block.style().position() == CSS::Position::Absolute)
         position_x += containing_block.x();
 
-    float position_y = box_model().full_margin().top + box_model().offset().top.to_px();
+    float position_y = box_model().full_margin(*this).top + box_model().offset().top.to_px(*this);
 
     return { position_x, position_y };
 }
