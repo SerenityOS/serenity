@@ -1032,7 +1032,8 @@ void TextEditor::scroll_position_into_view(const TextPosition& position)
 
 void TextEditor::scroll_cursor_into_view()
 {
-    scroll_position_into_view(m_cursor);
+    if (!m_reflow_deferred)
+        scroll_position_into_view(m_cursor);
 }
 
 Gfx::Rect TextEditor::line_content_rect(size_t line_index) const
