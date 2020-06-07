@@ -93,9 +93,14 @@ void Frame::set_needs_display(const Gfx::Rect& rect)
     if (!m_viewport_rect.intersects(rect))
         return;
 
-    if (!on_set_needs_display)
+    if (is_main_frame()) {
+        if (page_view())
+            page_view()->notify_needs_display({}, *this, rect);
         return;
-    on_set_needs_display(rect);
+    }
+
+    if (host_element() && host_element()->layout_node())
+        host_element()->layout_node()->set_needs_display();
 }
 
 void Frame::did_scroll(Badge<PageView>)

@@ -72,15 +72,6 @@ PageView::PageView()
         if (on_load_start)
             on_load_start(url);
     };
-    main_frame().on_set_needs_display = [this](auto& content_rect) {
-        if (content_rect.is_empty()) {
-            update();
-            return;
-        }
-        Gfx::Rect adjusted_rect = content_rect;
-        adjusted_rect.set_location(to_widget_position(content_rect.location()));
-        update(adjusted_rect);
-    };
 
     set_should_hide_unnecessary_scrollbars(true);
     set_background_role(ColorRole::Base);
@@ -334,6 +325,22 @@ Gfx::Point PageView::to_screen_position(const Web::Frame& frame, const Gfx::Poin
     return screen_relative_rect().location().translated(offset).translated(frame_position);
 }
 
+Gfx::Rect PageView::to_widget_rect(const Web::Frame& frame, const Gfx::Rect& frame_rect) const
+{
+    Gfx::Point offset;
+    for (auto* f = &frame; f; f = f->parent()) {
+        if (!f->host_element())
+            return {};
+        if (!f->host_element()->layout_node())
+            return {};
+        auto f_position = f->host_element()->layout_node()->box_type_agnostic_position().to_int_point();
+        offset.move_by(f_position);
+    }
+
+    auto content_position = frame_rect.location().translated(offset);
+    return { to_widget_position(content_position), frame_rect.size() };
+}
+
 void PageView::notify_link_context_menu_request(Badge<EventHandler>, Web::Frame& frame, const Gfx::Point& content_position, const String& href, const String&, unsigned)
 {
     if (on_link_context_menu_request)
@@ -354,6 +361,11 @@ void PageView::notify_tooltip_area_enter(Badge<EventHandler>, Web::Frame& frame,
 void PageView::notify_tooltip_area_leave(Badge<EventHandler>, Web::Frame&)
 {
     GUI::Application::the().hide_tooltip();
+}
+
+void PageView::notify_needs_display(Badge<Web::Frame>, Web::Frame& frame, const Gfx::Rect& rect)
+{
+    update(to_widget_rect(frame, rect));
 }
 
 }

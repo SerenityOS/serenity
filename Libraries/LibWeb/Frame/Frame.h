@@ -60,7 +60,6 @@ public:
 
     void set_needs_display(const Gfx::Rect&);
 
-    Function<void(const Gfx::Rect&)> on_set_needs_display;
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_load_start;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
