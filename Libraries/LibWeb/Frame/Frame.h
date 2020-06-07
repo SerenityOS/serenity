@@ -33,13 +33,11 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
+#include <LibWeb/Frame/EventHandler.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web {
-
-class Document;
-class PageView;
 
 class Frame : public TreeNode<Frame> {
 public:
@@ -76,6 +74,9 @@ public:
     FrameLoader& loader() { return m_loader; }
     const FrameLoader& loader() const { return m_loader; }
 
+    EventHandler& event_handler() { return m_event_handler; }
+    const EventHandler& event_handler() const { return m_event_handler; }
+
     void scroll_to_anchor(const String&);
 
     Frame& main_frame() { return m_main_frame; }
@@ -91,6 +92,7 @@ private:
     Frame& m_main_frame;
 
     FrameLoader m_loader;
+    EventHandler m_event_handler;
 
     WeakPtr<Element> m_host_element;
     WeakPtr<PageView> m_page_view;

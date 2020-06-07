@@ -26,64 +26,33 @@
 
 #pragma once
 
+#include <AK/Forward.h>
+#include <LibGUI/Forward.h>
+#include <LibGfx/Forward.h>
+#include <LibWeb/Forward.h>
+
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventHandler;
-class EventListener;
-class EventTarget;
 class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLDocumentParser;
-class HTMLElement;
-class HTMLFormElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HTMLImageElement;
-class HTMLScriptElement;
-class PageView;
-class ImageData;
-class LayoutDocument;
-class LayoutNode;
-class LoadRequest;
-class MouseEvent;
-class Node;
-class Origin;
-class Resource;
-class ResourceLoader;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Text;
-class Window;
-class XMLHttpRequest;
 
-namespace Bindings {
+class EventHandler {
+public:
+    explicit EventHandler(Badge<Frame>, Frame&);
+    ~EventHandler();
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class HTMLImageElementWrapper;
-class ImageDataWrapper;
-class LocationObject;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+    bool handle_mouseup(const Gfx::Point&, unsigned button, unsigned modifiers);
+    bool handle_mousedown(const Gfx::Point&, unsigned button, unsigned modifiers);
+    bool handle_mousemove(const Gfx::Point&, unsigned buttons, unsigned modifiers);
 
-}
+private:
+    LayoutDocument* layout_root();
+    const LayoutDocument* layout_root() const;
+
+    void dump_selection(const char* event_name) const;
+
+    Frame& m_frame;
+
+    bool m_in_mouse_selection { false };
+};
 
 }

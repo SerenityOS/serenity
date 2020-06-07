@@ -35,6 +35,7 @@ namespace Web {
 Frame::Frame(Element& host_element, Frame& main_frame)
     : m_main_frame(main_frame)
     , m_loader(*this)
+    , m_event_handler({}, *this)
     , m_host_element(host_element.make_weak_ptr())
 {
 }
@@ -42,6 +43,7 @@ Frame::Frame(Element& host_element, Frame& main_frame)
 Frame::Frame(PageView& page_view)
     : m_main_frame(*this)
     , m_loader(*this)
+    , m_event_handler({}, *this)
     , m_page_view(page_view.make_weak_ptr())
 {
 }

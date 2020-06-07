@@ -29,13 +29,13 @@
 #include <AK/URL.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Forward.h>
 
 namespace Web {
 
-class Frame;
-
 class PageView : public GUI::ScrollableWidget {
-    C_OBJECT(PageView)
+    C_OBJECT(PageView);
+
 public:
     virtual ~PageView() override;
 
@@ -75,6 +75,13 @@ public:
 
     virtual bool accepts_focus() const override { return true; }
 
+    void notify_link_click(Badge<EventHandler>, Web::Frame&, const String& href, const String& target, unsigned modifiers);
+    void notify_link_middle_click(Badge<EventHandler>, Web::Frame&, const String& href, const String& target, unsigned modifiers);
+    void notify_link_context_menu_request(Badge<EventHandler>, Web::Frame&, const Gfx::Point& content_position, const String& href, const String& target, unsigned modifiers);
+    void notify_link_hover(Badge<EventHandler>, Web::Frame&, const String& href);
+    void notify_tooltip_area_enter(Badge<EventHandler>, Web::Frame&, const Gfx::Point& content_position, const String& title);
+    void notify_tooltip_area_leave(Badge<EventHandler>, Web::Frame&);
+
 protected:
     PageView();
 
@@ -89,17 +96,13 @@ protected:
 private:
     virtual void did_scroll() override;
 
-    RefPtr<Document> create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding);
+    Gfx::Point to_screen_position(const Web::Frame&, const Gfx::Point&) const;
 
-    void run_javascript_url(const String& url);
     void layout_and_sync_size();
-    void dump_selection(const char* event_name);
-    Gfx::Point compute_mouse_event_offset(const Gfx::Point&, const LayoutNode&) const;
 
     RefPtr<Web::Frame> m_main_frame;
 
     bool m_should_show_line_box_borders { false };
-    bool m_in_mouse_selection { false };
 };
 
 }
