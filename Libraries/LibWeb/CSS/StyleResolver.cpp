@@ -190,7 +190,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 if (auto value = parse_line_style(parts[0])) {
                     set_property_border_style(style, value.release_nonnull());
                     set_property_border_color(style, ColorStyleValue::create(Gfx::Color::Black));
-                    set_property_border_width(style, LengthStyleValue::create(Length(3, Length::Type::Absolute)));
+                    set_property_border_width(style, LengthStyleValue::create(Length(3, Length::Type::Px)));
                     return;
                 }
             }

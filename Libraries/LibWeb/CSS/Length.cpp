@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,42 +24,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibGfx/Size.h>
-#include <LibWeb/CSS/LengthBox.h>
+#include <LibWeb/CSS/Length.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/HTMLHtmlElement.h>
 
 namespace Web {
 
-class BoxModelMetrics {
-public:
-    BoxModelMetrics();
-    ~BoxModelMetrics();
+float Length::to_px(const LayoutNode& layout_node) const
+{
+    switch (m_type) {
+    case Type::Auto:
+        return 0;
+    case Type::Px:
+        return m_value;
+    case Type::Em:
+        return m_value * layout_node.font_size();
+    case Type::Rem:
+        return m_value * layout_node.document().document_element()->layout_node()->font_size();
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
 
-    LengthBox& margin() { return m_margin; }
-    LengthBox& padding() { return m_padding; }
-    LengthBox& border() { return m_border; }
-    LengthBox& offset() { return m_offset; }
-
-    const LengthBox& margin() const { return m_margin; }
-    const LengthBox& padding() const { return m_padding; }
-    const LengthBox& border() const { return m_border; }
-    const LengthBox& offset() const { return m_offset; }
-
-    struct PixelBox {
-        float top;
-        float right;
-        float bottom;
-        float left;
-    };
-
-    PixelBox full_margin(const LayoutNode&) const;
-
-private:
-    LengthBox m_margin;
-    LengthBox m_padding;
-    LengthBox m_border;
-    LengthBox m_offset;
-};
+const char* Length::unit_name() const
+{
+    switch (m_type) {
+    case Type::Px:
+        return "px";
+    case Type::Em:
+        return "em";
+    case Type::Rem:
+        return "rem";
+    case Type::Auto:
+        return "auto";
+    }
+    ASSERT_NOT_REACHED();
+}
 
 }
