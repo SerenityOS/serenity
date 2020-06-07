@@ -27,7 +27,7 @@
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/HTMLFormElement.h>
 #include <LibWeb/DOM/HTMLInputElement.h>
-#include <LibWeb/Frame.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/URLEncoder.h>
 

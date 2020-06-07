@@ -25,7 +25,7 @@
  */
 
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutImage.h>
 

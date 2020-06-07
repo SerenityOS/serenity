@@ -55,7 +55,7 @@ public:
     void set_document(Document*);
 
     PageView* page_view() { return is_main_frame() ? m_page_view : main_frame().m_page_view; }
-    const PageView* page_view() const{ return is_main_frame() ? m_page_view : main_frame().m_page_view; }
+    const PageView* page_view() const { return is_main_frame() ? m_page_view : main_frame().m_page_view; }
 
     const Gfx::Size& size() const { return m_size; }
     void set_size(const Gfx::Size&);

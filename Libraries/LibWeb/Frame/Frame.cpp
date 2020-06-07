@@ -25,7 +25,7 @@
  */
 
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Frame.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/PageView.h>
