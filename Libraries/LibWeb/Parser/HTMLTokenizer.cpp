@@ -1302,7 +1302,7 @@ _StartOfFunction:
                 auto match = HTML::codepoints_from_entity(m_decoded_input.substring_view(byte_offset, m_decoded_input.length() - byte_offset - 1));
 
                 if (match.has_value()) {
-                    for (size_t i = 0; i < match.value().entity.length(); ++i) {
+                    for (size_t i = 0; i < match.value().entity.length() - 1; ++i) {
                         m_prev_utf8_iterator = m_utf8_iterator;
                         ++m_utf8_iterator;
                     }
