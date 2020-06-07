@@ -2292,6 +2292,8 @@ Optional<EntityMatch> codepoints_from_entity(const StringView& entity)
         }
     }
 
+    if (match.entity.is_empty())
+        return {};
     return match;
 }
 
