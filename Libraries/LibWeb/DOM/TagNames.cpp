@@ -45,6 +45,8 @@ void initialize()
     ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
 
+    template_ = "template";
+
     s_initialized = true;
 }
 
