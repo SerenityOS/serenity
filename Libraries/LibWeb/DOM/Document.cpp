@@ -262,8 +262,6 @@ void Document::update_layout()
         return;
 
     layout();
-    if (on_layout_updated)
-        on_layout_updated();
 }
 
 RefPtr<LayoutNode> Document::create_layout_node(const StyleProperties*) const
