@@ -247,7 +247,8 @@ bool Lexer::is_numeric_literal_start() const
 bool Lexer::slash_means_division() const
 {
     auto type = m_current_token.type();
-    return type == TokenType::BoolLiteral
+    return type == TokenType::BigIntLiteral
+           || type == TokenType::BoolLiteral
            || type == TokenType::BracketClose
            || type == TokenType::CurlyClose
            || type == TokenType::Identifier
