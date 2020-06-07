@@ -60,7 +60,7 @@ private:
 template<>
 inline bool is<HTMLCanvasElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("canvas");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::canvas;
 }
 
 }

@@ -38,4 +38,10 @@ public:
     virtual void apply_presentational_hints(StyleProperties&) const override;
 };
 
+template<>
+inline bool is<HTMLFontElement>(const Node& node)
+{
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::font;
+}
+
 }

@@ -62,6 +62,7 @@ set(SOURCES
     DOM/ImageData.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
+    DOM/TagNames.cpp
     DOM/Text.cpp
     DOM/Window.cpp
     DOM/XMLHttpRequest.cpp

@@ -31,6 +31,7 @@
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/AttributeNames.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/DOM/TagNames.h>
 #include <LibWeb/Layout/LayoutNode.h>
 
 namespace Web {

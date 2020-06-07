@@ -45,7 +45,7 @@ private:
 template<>
 inline bool is<HTMLBodyElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("body");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::body;
 }
 
 }

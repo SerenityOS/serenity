@@ -36,4 +36,10 @@ public:
     virtual ~HTMLHRElement() override;
 };
 
+template<>
+inline bool is<HTMLHRElement>(const Node& node)
+{
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::hr;
+}
+
 }

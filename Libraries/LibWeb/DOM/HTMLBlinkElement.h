@@ -42,4 +42,10 @@ private:
     NonnullRefPtr<Core::Timer> m_timer;
 };
 
+template<>
+inline bool is<HTMLBlinkElement>(const Node& node)
+{
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::blink;
+}
+
 }

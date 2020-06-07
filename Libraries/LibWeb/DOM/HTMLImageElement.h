@@ -82,7 +82,7 @@ private:
 template<>
 inline bool is<HTMLImageElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("img");
+    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::img;
 }
 
 }
