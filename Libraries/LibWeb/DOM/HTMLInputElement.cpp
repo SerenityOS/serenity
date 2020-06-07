@@ -31,7 +31,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLFormElement.h>
 #include <LibWeb/DOM/HTMLInputElement.h>
-#include <LibWeb/Frame.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/PageView.h>
 

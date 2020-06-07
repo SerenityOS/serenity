@@ -30,7 +30,7 @@
 #include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Frame.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>

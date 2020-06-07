@@ -41,7 +41,7 @@
 #include <LibWeb/DOM/MouseEvent.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>

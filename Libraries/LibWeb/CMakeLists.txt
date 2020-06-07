@@ -64,7 +64,8 @@ set(SOURCES
     DOMTreeModel.cpp
     Dump.cpp
     FontCache.cpp
-    Frame.cpp
+    Frame/EventHandler.cpp
+    Frame/Frame.cpp
     Layout/BoxModelMetrics.cpp
     Layout/LayoutBlock.cpp
     Layout/LayoutBox.cpp

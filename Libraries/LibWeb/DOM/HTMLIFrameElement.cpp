@@ -32,7 +32,7 @@
 #include <LibWeb/DOM/HTMLFormElement.h>
 #include <LibWeb/DOM/HTMLIFrameElement.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutFrame.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Loader/ResourceLoader.h>

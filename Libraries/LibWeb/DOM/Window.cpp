@@ -32,7 +32,7 @@
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
-#include <LibWeb/Frame.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/PageView.h>
 
 namespace Web {
