@@ -81,6 +81,7 @@ public:
     void notify_link_hover(Badge<EventHandler>, Web::Frame&, const String& href);
     void notify_tooltip_area_enter(Badge<EventHandler>, Web::Frame&, const Gfx::Point& content_position, const String& title);
     void notify_tooltip_area_leave(Badge<EventHandler>, Web::Frame&);
+    void notify_needs_display(Badge<Web::Frame>, Web::Frame&, const Gfx::Rect&);
 
 protected:
     PageView();
@@ -97,6 +98,7 @@ private:
     virtual void did_scroll() override;
 
     Gfx::Point to_screen_position(const Web::Frame&, const Gfx::Point&) const;
+    Gfx::Rect to_widget_rect(const Web::Frame&, const Gfx::Rect&) const;
 
     void layout_and_sync_size();
 

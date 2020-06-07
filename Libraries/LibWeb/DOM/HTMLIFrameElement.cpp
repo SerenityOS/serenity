@@ -79,11 +79,6 @@ void HTMLIFrameElement::load_src(const String& value)
         return;
     }
 
-    m_hosted_frame->on_set_needs_display = [this](auto&) {
-        if (layout_node())
-            layout_node()->set_needs_display();
-    };
-
     m_hosted_frame->loader().load(url);
 }
 
