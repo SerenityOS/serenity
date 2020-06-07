@@ -58,6 +58,7 @@ public:
     Encoder& operator<<(const char*);
     Encoder& operator<<(const StringView&);
     Encoder& operator<<(const String&);
+    Encoder& operator<<(const URL&);
     Encoder& operator<<(const Dictionary&);
 
     template<typename T>

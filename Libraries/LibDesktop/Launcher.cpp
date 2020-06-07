@@ -54,7 +54,7 @@ private:
 bool Launcher::open(const URL& url, const String& handler_name)
 {
     auto connection = LaunchServerConnection::construct();
-    return connection->send_sync<Messages::LaunchServer::OpenUrl>(url.to_string(), handler_name)->response();
+    return connection->send_sync<Messages::LaunchServer::OpenURL>(url, handler_name)->response();
 }
 
 Vector<String> Launcher::get_handlers_for_url(const URL& url)
