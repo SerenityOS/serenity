@@ -329,6 +329,8 @@ Gfx::Rect PageView::to_widget_rect(const Web::Frame& frame, const Gfx::Rect& fra
 {
     Gfx::Point offset;
     for (auto* f = &frame; f; f = f->parent()) {
+        if (f->is_main_frame())
+            break;
         if (!f->host_element())
             return {};
         if (!f->host_element()->layout_node())
@@ -366,6 +368,10 @@ void PageView::notify_tooltip_area_leave(Badge<EventHandler>, Web::Frame&)
 void PageView::notify_needs_display(Badge<Web::Frame>, Web::Frame& frame, const Gfx::Rect& rect)
 {
     update(to_widget_rect(frame, rect));
+
+    // FIXME: This is a total hack that forces a full repaint every time.
+    //        We shouldn't have to do this, but until the ICB is actually viewport-sized, we have no choice.
+    update();
 }
 
 }
