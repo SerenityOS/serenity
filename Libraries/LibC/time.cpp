@@ -330,6 +330,11 @@ int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec* reques
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int nanosleep(const struct timespec* requested_sleep, struct timespec* remaining_sleep)
+{
+    return clock_nanosleep(CLOCK_REALTIME, 0, requested_sleep, remaining_sleep);
+}
+
 int clock_getres(clockid_t, struct timespec*)
 {
     ASSERT_NOT_REACHED();
