@@ -40,6 +40,9 @@ in_addr_t inet_addr(const char*);
 
 #define IP_TTL 2
 
+#define IPPORT_RESERVED 1024
+#define IPPORT_USERRESERVED 5000
+
 struct in_addr {
     uint32_t s_addr;
 };
