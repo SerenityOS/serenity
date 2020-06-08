@@ -145,6 +145,12 @@ void PageView::page_did_invalidate(const Gfx::Rect&)
     update();
 }
 
+void PageView::page_did_change_favicon(const Gfx::Bitmap& bitmap)
+{
+    if (on_favicon_change)
+        on_favicon_change(bitmap);
+}
+
 void PageView::layout_and_sync_size()
 {
     if (!document())

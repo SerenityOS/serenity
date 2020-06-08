@@ -172,8 +172,7 @@ bool FrameLoader::load(const URL& url)
                     return;
                 }
                 dbg() << "Decoded favicon, " << bitmap->size();
-                if (frame().on_favicon_change)
-                    frame().on_favicon_change(*bitmap);
+                frame().page().client().page_did_change_favicon(*bitmap);
             });
     }
 
