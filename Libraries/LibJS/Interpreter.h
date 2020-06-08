@@ -177,6 +177,9 @@ public:
 
     Value last_value() const { return m_last_value; }
 
+    bool underscore_is_last_value() const { return m_underscore_is_last_value; }
+    void set_underscore_is_last_value(bool b) { m_underscore_is_last_value = b; }
+
     Console& console() { return m_console; }
     const Console& console() const { return m_console; }
 
@@ -198,6 +201,8 @@ private:
 
     ScopeType m_unwind_until { ScopeType::None };
     FlyString m_unwind_until_label;
+
+    bool m_underscore_is_last_value { false };
 
     Console m_console;
 };
