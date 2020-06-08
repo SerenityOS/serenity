@@ -91,7 +91,7 @@ Object::Object(Object* prototype)
         m_shape = interpreter().global_object().empty_object_shape();
         set_prototype(prototype);
     } else {
-        m_shape = interpreter().heap().allocate<Shape>();
+        m_shape = interpreter().heap().allocate<Shape>(interpreter().global_object());
     }
 }
 
