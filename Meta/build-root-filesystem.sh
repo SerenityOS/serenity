@@ -85,6 +85,7 @@ mknod mnt/dev/zero c 1 5
 mknod mnt/dev/full c 1 7
 # random, is failing (randomly) on fuse-ext2 on macos :)
 chmod 666 mnt/dev/random || true
+ln -s random mnt/dev/urandom
 chmod 666 mnt/dev/null
 chmod 666 mnt/dev/zero
 chmod 666 mnt/dev/full
