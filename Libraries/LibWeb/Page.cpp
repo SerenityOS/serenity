@@ -34,16 +34,6 @@ Page::Page(PageClient& client)
     : m_client(client)
 {
     m_main_frame = Frame::create(*this);
-
-    main_frame().on_set_document = [this](auto* document) {
-        m_client.page_did_set_document_in_main_frame(document);
-    };
-    main_frame().on_title_change = [this](auto& title) {
-        m_client.page_did_change_title(title);
-    };
-    main_frame().on_load_start = [this](auto& url) {
-        m_client.page_did_start_loading(url);
-    };
 }
 
 Page::~Page()
