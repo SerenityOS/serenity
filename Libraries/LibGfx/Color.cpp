@@ -25,7 +25,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/BufferStream.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
