@@ -407,7 +407,6 @@ protected:
     Optional<MatchState*> m_state;
 };
 
-
 class OpCode_Exit final : public OpCode {
 public:
     OpCode_Exit(ByteCode& bytecode)
@@ -567,10 +566,10 @@ public:
     const Vector<String> variable_arguments_to_string(Optional<MatchInput> input = {}) const;
 
 private:
-    ALWAYS_INLINE void compare_char(const MatchInput& input, MatchState& state, char& ch, bool inverse, bool& inverse_matched) const;
-    ALWAYS_INLINE bool compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length) const;
-    ALWAYS_INLINE void compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, char ch, bool inverse, bool& inverse_matched) const;
-    ALWAYS_INLINE void compare_character_range(const MatchInput& input, MatchState& state, char from, char to, char ch, bool inverse, bool& inverse_matched) const;
+    ALWAYS_INLINE static void compare_char(const MatchInput& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static bool compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length);
+    ALWAYS_INLINE static void compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, char ch, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static void compare_character_range(const MatchInput& input, MatchState& state, char from, char to, char ch, bool inverse, bool& inverse_matched);
 };
 
 template<typename T>

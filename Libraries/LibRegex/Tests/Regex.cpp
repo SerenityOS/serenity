@@ -383,7 +383,7 @@ TEST_CASE(ini_file_entries)
 #endif
 
     EXPECT_EQ(result.matches.at(0).view, "[Window]");
-    EXPECT_EQ(result.capture_group_matches.at(0).at(1).view, "Window");
+    EXPECT_EQ(result.capture_group_matches.at(0).at(0).view, "Window");
     EXPECT_EQ(result.matches.at(1).view, "Opacity=255");
     EXPECT_EQ(result.matches.at(1).line, 1u);
     EXPECT_EQ(result.matches.at(1).column, 0u);
@@ -394,6 +394,20 @@ TEST_CASE(ini_file_entries)
     EXPECT_EQ(result.capture_group_matches.at(2).at(0).view, "0");
     EXPECT_EQ(result.capture_group_matches.at(2).at(0).line, 2u);
     EXPECT_EQ(result.capture_group_matches.at(2).at(0).column, 12u);
+}
+
+TEST_CASE(ini_file_entries2)
+{
+    Regex<PosixExtended> re("[[:alpha:]]*=([[:digit:]]*)");
+    RegexResult result;
+
+    String haystack = "ViewMode=Icon";
+
+    EXPECT_EQ(re.match(haystack.view(), result), false);
+    EXPECT_EQ(result.count, 0u);
+
+    EXPECT_EQ(re.search(haystack.view(), result), true);
+    EXPECT_EQ(result.count, 1u);
 }
 
 TEST_CASE(named_capture_group)
