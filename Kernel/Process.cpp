@@ -3304,12 +3304,16 @@ int Process::sys$listen(int sockfd, int backlog)
 int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen_t* user_address_size)
 {
     REQUIRE_PROMISE(accept);
-    if (!validate_write_typed(user_address_size))
-        return -EFAULT;
+
     socklen_t address_size = 0;
-    copy_from_user(&address_size, user_address_size);
-    if (!validate_write(user_address, address_size))
-        return -EFAULT;
+    if (user_address) {
+        if (!validate_write_typed(user_address_size))
+            return -EFAULT;
+        copy_from_user(&address_size, user_address_size);
+        if (!validate_write(user_address, address_size))
+            return -EFAULT;
+    }
+
     int accepted_socket_fd = alloc_fd();
     if (accepted_socket_fd < 0)
         return accepted_socket_fd;
@@ -3319,6 +3323,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen
     if (!accepting_socket_description->is_socket())
         return -ENOTSOCK;
     auto& socket = *accepting_socket_description->socket();
+
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
             if (Thread::current->block<Thread::AcceptBlocker>(*accepting_socket_description) != Thread::BlockResult::WokeNormally)
@@ -3330,11 +3335,13 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen
     auto accepted_socket = socket.accept();
     ASSERT(accepted_socket);
 
-    u8 address_buffer[sizeof(sockaddr_un)];
-    address_size = min(sizeof(sockaddr_un), static_cast<size_t>(address_size));
-    accepted_socket->get_peer_address((sockaddr*)address_buffer, &address_size);
-    copy_to_user(user_address, address_buffer, address_size);
-    copy_to_user(user_address_size, &address_size);
+    if (user_address) {
+        u8 address_buffer[sizeof(sockaddr_un)];
+        address_size = min(sizeof(sockaddr_un), static_cast<size_t>(address_size));
+        accepted_socket->get_peer_address((sockaddr*)address_buffer, &address_size);
+        copy_to_user(user_address, address_buffer, address_size);
+        copy_to_user(user_address_size, &address_size);
+    }
 
     auto accepted_socket_description = FileDescription::create(*accepted_socket);
     accepted_socket_description->set_readable(true);
