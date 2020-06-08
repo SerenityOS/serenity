@@ -104,7 +104,7 @@ Value ScriptFunction::call(Interpreter& interpreter)
         auto parameter = parameters()[i];
         auto value = js_undefined();
         if (parameter.is_rest) {
-            auto* array = Array::create(interpreter.global_object());
+            auto* array = Array::create(global_object());
             for (size_t rest_index = i; rest_index < argument_values.size(); ++rest_index)
                 array->indexed_properties().append(argument_values[rest_index]);
             value = Value(array);

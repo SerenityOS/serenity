@@ -62,7 +62,7 @@ Value ProxyConstructor::construct(Interpreter& interpreter)
     if (!handler.is_object())
         return interpreter.throw_exception<TypeError>(String::format("Expected handler argument of Proxy constructor to be object, got %s", handler.to_string_without_side_effects().characters()));
 
-    return ProxyObject::create(interpreter.global_object(), target.as_object(), handler.as_object());
+    return ProxyObject::create(global_object(), target.as_object(), handler.as_object());
 }
 
 }
