@@ -47,7 +47,7 @@ public:
 private:
     Service(const Core::ConfigFile&, const StringView& name);
 
-    void spawn();
+    void spawn(int socket_fd = -1);
 
     // Path to the executable. By default this is /bin/{m_name}.
     String m_executable_path;
@@ -62,6 +62,10 @@ private:
     String m_socket_path;
     // File system permissions for the socket.
     mode_t m_socket_permissions { 0 };
+    // Whether we should accept connections on the socket and pass the accepted
+    // (and not listening) socket to the service. This requires a multi-instance
+    // service.
+    bool m_accept_socket_connections { false };
     // Whether we should only spawn this service once somebody connects to the socket.
     bool m_lazy;
     // The name of the user we should run this service as.
@@ -93,4 +97,5 @@ private:
     void resolve_user();
     void setup_socket();
     void setup_notifier();
+    void handle_socket_connection();
 };
