@@ -73,10 +73,12 @@ private:
     String m_working_directory;
     // Boot modes to run this service in. By default, this is the graphical mode.
     Vector<String> m_boot_modes;
+    // Whether several instances of this service can run at once.
+    bool m_multi_instance { false };
     // Environment variables to pass to the service.
     Vector<String> m_environment;
 
-    // PID of the running instance of this service.
+    // For single-instance services, PID of the running instance of this service.
     pid_t m_pid { -1 };
     // An open fd to the socket.
     int m_socket_fd { -1 };
