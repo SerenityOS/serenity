@@ -77,6 +77,7 @@ int clock_gettime(clockid_t, struct timespec*);
 int clock_settime(clockid_t, struct timespec*);
 int clock_nanosleep(clockid_t, int flags, const struct timespec* requested_sleep, struct timespec* remaining_sleep);
 int clock_getres(clockid_t, struct timespec* result);
+int nanosleep(const struct timespec* requested_sleep, struct timespec* remaining_sleep);
 struct tm* gmtime_r(const time_t* timep, struct tm* result);
 struct tm* localtime_r(const time_t* timep, struct tm* result);
 
