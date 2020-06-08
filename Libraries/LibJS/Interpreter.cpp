@@ -70,7 +70,9 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
     auto& block = static_cast<const ScopeNode&>(statement);
     enter_scope(block, move(arguments), scope_type);
 
-    m_last_value = js_undefined();
+    if (block.children().is_empty())
+        m_last_value = js_undefined();
+
     for (auto& node : block.children()) {
         m_last_value = node.execute(*this);
         if (should_unwind()) {
@@ -176,7 +178,10 @@ Value Interpreter::get_variable(const FlyString& name)
                 return possible_match.value().value;
         }
     }
-    return global_object().get(name);
+    auto value = global_object().get(name);
+    if (m_underscore_is_last_value && name == "_" && value.is_empty())
+        return m_last_value;
+    return value;
 }
 
 Reference Interpreter::get_reference(const FlyString& name)

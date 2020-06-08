@@ -575,6 +575,7 @@ int main(int argc, char** argv)
         ReplConsoleClient console_client(interpreter->console());
         interpreter->console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
+        interpreter->set_underscore_is_last_value(true);
         if (test_mode)
             enable_test_mode(*interpreter);
 
