@@ -48,6 +48,7 @@
 #include <unistd.h>
 
 OwnPtr<DebugSession> g_debug_session;
+static bool g_should_output_color = false;
 
 static void handle_sigint(int)
 {
@@ -70,8 +71,8 @@ void print_syscall(PtraceRegisters& regs, size_t depth)
     for (size_t i = 0; i < depth; ++i) {
         printf("  ");
     }
-    const char* begin_color = "\033[34;1m";
-    const char* end_color = "\033[0m";
+    const char* begin_color = g_should_output_color ? "\033[34;1m" : "";
+    const char* end_color = g_should_output_color ? "\033[0m" : "";
     printf("=> %sSC_%s(0x%x, 0x%x, 0x%x)%s\n",
         begin_color,
         Syscall::to_string(
@@ -114,6 +115,9 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+
+    if (isatty(STDOUT_FILENO))
+        g_should_output_color = true;
 
     const char* command = nullptr;
     Core::ArgsParser args_parser;
