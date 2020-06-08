@@ -346,7 +346,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             auto character_class = (CharClass)m_bytecode->at(offset++);
-            auto& ch = input.view[state.string_position];
+            auto ch = input.view[state.string_position];
 
             compare_character_class(input, state, character_class, ch, inverse, inverse_matched);
 
@@ -375,10 +375,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchState& state, char& ch, bool inverse, bool& inverse_matched) const
+ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched)
 {
-    auto ch1 = ch;
-    auto ch2 = input.view[state.string_position];
+    u32 ch2 = input.view[state.string_position];
 
     if (input.regex_options & AllFlags::Insensitive) {
         ch1 = tolower(ch1);
@@ -393,26 +392,30 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchSt
     }
 }
 
-ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length) const
+ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length)
 {
-    auto str_view1 = StringView(str, length);
-    auto str_view2 = StringView(&input.view[state.string_position], length);
-    String str1, str2;
-    if (input.regex_options & AllFlags::Insensitive) {
-        str1 = str_view1.to_string().to_lowercase();
-        str2 = str_view2.to_string().to_lowercase();
-        str_view1 = str1.view();
-        str_view2 = str2.view();
+    if (input.view.is_u8_view()) {
+        auto str_view1 = StringView(str, length);
+        auto str_view2 = StringView(&input.view.u8view()[state.string_position], length);
+
+        String str1, str2;
+        if (input.regex_options & AllFlags::Insensitive) {
+            str1 = str_view1.to_string().to_lowercase();
+            str2 = str_view2.to_string().to_lowercase();
+            str_view1 = str1.view();
+            str_view2 = str2.view();
+        }
+
+        if (str_view1 == str_view2) {
+            state.string_position += length;
+            return true;
+        }
     }
 
-    if (str_view1 == str_view2) {
-        state.string_position += length;
-        return true;
-    } else
-        return false;
+    return false;
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, char ch, bool inverse, bool& inverse_matched) const
+ALWAYS_INLINE void OpCode_Compare::compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, char ch, bool inverse, bool& inverse_matched)
 {
     switch (character_class) {
     case CharClass::Alnum:
@@ -510,7 +513,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(const MatchInput& inp
     }
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_character_range(const MatchInput& input, MatchState& state, char from, char to, char ch, bool inverse, bool& inverse_matched) const
+ALWAYS_INLINE void OpCode_Compare::compare_character_range(const MatchInput& input, MatchState& state, char from, char to, char ch, bool inverse, bool& inverse_matched)
 {
     if (input.regex_options & AllFlags::Insensitive) {
         from = tolower(from);
@@ -536,9 +539,7 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
     Vector<String> result;
 
     size_t offset { state().instruction_position + 3 };
-    StringView view;
-    if (input.has_value())
-        view = input.value().view;
+    RegexStringView view = ((input.has_value()) ? input.value().view : nullptr);
 
     for (size_t i = 0; i < arguments_count(); ++i) {
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
@@ -548,23 +549,23 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             char ch = m_bytecode->at(offset++);
             result.empend(String::format("value='%c'", ch));
             if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", String { view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
+                result.empend(String::format("compare against: '%s'", view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
         } else if (compare_type == CharacterCompareType::String) {
             char* str = reinterpret_cast<char*>(m_bytecode->at(offset++));
             auto& length = m_bytecode->at(offset++);
             result.empend(String::format("value=\"%s\"", String { str, length }.characters()));
             if (!view.is_null())
-                result.empend(String::format("compare against: \"%s\"", String { input.value().view.substring_view(state().string_position, state().string_position + length > view.length() ? 0 : length) }.characters()));
+                result.empend(String::format("compare against: \"%s\"", input.value().view.substring_view(state().string_position, state().string_position + length > view.length() ? 0 : length).to_string().characters()));
         } else if (compare_type == CharacterCompareType::CharClass) {
             auto character_class = (CharClass)m_bytecode->at(offset++);
             result.empend(String::format("ch_class=%lu [%s]", (size_t)character_class, character_class_name(character_class)));
             if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", String { input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
+                result.empend(String::format("compare against: '%s'", input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
             result.empend(String::format("ch_range='%c'-'%c'", value.from, value.to));
             if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", String { input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1) }.characters()));
+                result.empend(String::format("compare against: '%s'",  input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
         }
     }
     return result;
