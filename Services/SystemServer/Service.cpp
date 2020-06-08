@@ -180,12 +180,12 @@ void Service::spawn()
     dbg() << "Spawning " << name();
 
     m_run_timer.start();
-    m_pid = fork();
+    pid_t pid = fork();
 
-    if (m_pid < 0) {
+    if (pid < 0) {
         perror("fork");
-        ASSERT_NOT_REACHED();
-    } else if (m_pid == 0) {
+        dbg() << "Failed to spawn " << name() << ". Sucks, dude :(";
+    } else if (pid == 0) {
         // We are the child.
 
         if (!m_working_directory.is_null()) {
@@ -258,15 +258,17 @@ void Service::spawn()
         rc = execv(argv[0], argv);
         perror("exec");
         ASSERT_NOT_REACHED();
-    } else {
+    } else if (!m_multi_instance) {
         // We are the parent.
-        s_service_map.set(m_pid, this);
+        m_pid = pid;
+        s_service_map.set(pid, this);
     }
 }
 
 void Service::did_exit(int exit_code)
 {
     ASSERT(m_pid > 0);
+    ASSERT(!m_multi_instance);
 
     dbg() << "Service " << name() << " has exited with exit code " << exit_code;
 
@@ -327,8 +329,15 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     m_working_directory = config.read_entry(name, "WorkingDirectory");
     m_environment = config.read_entry(name, "Environment").split(' ');
     m_boot_modes = config.read_entry(name, "BootModes", "graphical").split(',');
+    m_multi_instance = config.read_bool_entry(name, "MultiInstance");
 
     m_socket_path = config.read_entry(name, "Socket");
+
+    // Lazy requires Socket.
+    ASSERT(!m_lazy || !m_socket_path.is_null());
+    // MultiInstance doesn't work with KeepAlive.
+    ASSERT(!m_multi_instance || !m_keep_alive);
+
     if (!m_socket_path.is_null() && is_enabled()) {
         auto socket_permissions_string = config.read_entry(name, "SocketPermissions", "0600");
         m_socket_permissions = strtol(socket_permissions_string.characters(), nullptr, 8) & 04777;
@@ -369,6 +378,7 @@ void Service::save_to(JsonObject& json)
     json.set("user", m_user);
     json.set("uid", m_uid);
     json.set("gid", m_gid);
+    json.set("multi_instance", m_multi_instance);
 
     if (m_pid > 0)
         json.set("pid", m_pid);
