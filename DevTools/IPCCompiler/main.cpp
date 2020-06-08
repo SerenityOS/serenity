@@ -393,19 +393,33 @@ int main(int argc, char** argv)
         out() << "        BufferStream stream(const_cast<ByteBuffer&>(buffer));";
         out() << "        i32 message_endpoint_magic = 0;";
         out() << "        stream >> message_endpoint_magic;";
+        out() << "        if (stream.handle_read_failure()) {";
+#ifdef GENERATE_DEBUG_CODE
+        out() << "            dbg() << \"Failed to read message endpoint magic\";";
+#endif
+        out() << "            return nullptr;";
+        out() << "        }";
         out() << "        if (message_endpoint_magic != " << endpoint.magic << ") {";
 #ifdef GENERATE_DEBUG_CODE
-        sout() << "            sout() << \"endpoint magic \" << message_endpoint_magic << \" != " << endpoint.magic << "\";";
+        out() << "            dbg() << \"endpoint magic \" << message_endpoint_magic << \" != " << endpoint.magic << "\";";
 #endif
         out() << "            return nullptr;";
         out() << "        }";
         out() << "        i32 message_id = 0;";
         out() << "        stream >> message_id;";
+        out() << "        if (stream.handle_read_failure()) {";
+#ifdef GENERATE_DEBUG_CODE
+        out() << "            dbg() << \"Failed to read message ID\";";
+#endif
+        out() << "            return nullptr;";
+        out() << "        }";
+        out() << "        OwnPtr<IPC::Message> message;";
         out() << "        switch (message_id) {";
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name) {
                 out() << "        case (int)Messages::" << endpoint.name << "::MessageID::" << name << ":";
-                out() << "            return Messages::" << endpoint.name << "::" << name << "::decode(stream, size_in_bytes);";
+                out() << "            message = Messages::" << endpoint.name << "::" << name << "::decode(stream, size_in_bytes);";
+                out() << "            break;";
             };
             do_decode_message(message.name);
             if (message.is_synchronous)
@@ -413,11 +427,18 @@ int main(int argc, char** argv)
         }
         out() << "        default:";
 #ifdef GENERATE_DEBUG_CODE
-        sout() << "            sout() << \"Failed to decode " << endpoint.name << ".(\" << message_id << \")\";";
+        out() << "            dbg() << \"Failed to decode " << endpoint.name << ".(\" << message_id << \")\";";
 #endif
         out() << "            return nullptr;";
 
         out() << "        }";
+        out() << "        if (stream.handle_read_failure()) {";
+#ifdef GENERATE_DEBUG_CODE
+        out() << "            sout() << \"Failed to read the message\";";
+#endif
+        out() << "            return nullptr;";
+        out() << "        }";
+        out() << "        return message;";
         out() << "    }";
         out();
         out() << "    virtual OwnPtr<IPC::Message> handle(const IPC::Message& message) override";
