@@ -181,7 +181,14 @@ bool Socket::send(const ByteBuffer& data)
 void Socket::did_update_fd(int fd)
 {
     if (fd < 0) {
-        m_read_notifier = nullptr;
+        if (m_read_notifier) {
+             m_read_notifier->remove_from_parent();
+             m_read_notifier = nullptr;
+        }
+        if (m_notifier) {
+            m_notifier->remove_from_parent();
+            m_notifier = nullptr;
+        }
         return;
     }
     if (m_connected) {
