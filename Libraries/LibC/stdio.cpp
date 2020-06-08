@@ -913,8 +913,8 @@ static int parse_mode(const char* mode)
 
     // NOTE: rt is a non-standard mode which opens a file for read, explicitly
     // specifying that it's a text file
-    for (; *mode; ++mode) {
-        switch (*mode) {
+    for (auto* ptr = mode; *ptr; ++ptr) {
+        switch (*ptr) {
         case 'r':
             flags |= O_RDONLY;
             break;
@@ -937,8 +937,7 @@ static int parse_mode(const char* mode)
             // Ok...
             break;
         default:
-            dbg() << "Unsupported mode _" << mode << "_ (because of '" << *mode << "')";
-            ASSERT_NOT_REACHED();
+            dbg() << "Potentially unsupported fopen mode _" << mode << "_ (because of '" << *ptr << "')";
         }
     }
 
