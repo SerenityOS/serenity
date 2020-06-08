@@ -68,4 +68,9 @@ Value NativeFunction::construct(Interpreter&)
     return {};
 }
 
+LexicalEnvironment* NativeFunction::create_environment()
+{
+    return interpreter().heap().allocate<LexicalEnvironment>(global_object(), LexicalEnvironment::EnvironmentRecordType::Function);
+}
+
 }

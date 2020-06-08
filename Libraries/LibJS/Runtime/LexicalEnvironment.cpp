@@ -24,7 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
@@ -32,9 +36,21 @@ LexicalEnvironment::LexicalEnvironment()
 {
 }
 
+LexicalEnvironment::LexicalEnvironment(EnvironmentRecordType environment_record_type)
+    : m_environment_record_type(environment_record_type)
+{
+}
+
 LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent)
     : m_parent(parent)
     , m_variables(move(variables))
+{
+}
+
+LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent, EnvironmentRecordType environment_record_type)
+    : m_parent(parent)
+    , m_variables(move(variables))
+    , m_environment_record_type(environment_record_type)
 {
 }
 
@@ -46,6 +62,10 @@ void LexicalEnvironment::visit_children(Visitor& visitor)
 {
     Cell::visit_children(visitor);
     visitor.visit(m_parent);
+    visitor.visit(m_this_value);
+    visitor.visit(m_home_object);
+    visitor.visit(m_new_target);
+    visitor.visit(m_current_function);
     for (auto& it : m_variables)
         visitor.visit(it.value.value);
 }
@@ -58,6 +78,55 @@ Optional<Variable> LexicalEnvironment::get(const FlyString& name) const
 void LexicalEnvironment::set(const FlyString& name, Variable variable)
 {
     m_variables.set(name, variable);
+}
+
+bool LexicalEnvironment::has_super_binding() const
+{
+    return m_environment_record_type == EnvironmentRecordType::Function && this_binding_status() != ThisBindingStatus::Lexical && m_home_object.is_object();
+}
+
+Value LexicalEnvironment::get_super_base()
+{
+    ASSERT(has_super_binding());
+    if (m_home_object.is_object())
+        return m_home_object.as_object().prototype();
+    return {};
+}
+
+bool LexicalEnvironment::has_this_binding() const
+{
+    // More like "is_capable_of_having_a_this_binding".
+    switch (m_environment_record_type) {
+    case EnvironmentRecordType::Declarative:
+    case EnvironmentRecordType::Object:
+        return false;
+    case EnvironmentRecordType::Function:
+        return this_binding_status() != ThisBindingStatus::Lexical;
+    case EnvironmentRecordType::Module:
+    case EnvironmentRecordType::Global:
+        return true;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+Value LexicalEnvironment::get_this_binding() const
+{
+    ASSERT(has_this_binding());
+    if (this_binding_status() == ThisBindingStatus::Uninitialized)
+        return interpreter().throw_exception<ReferenceError>(ErrorType::ThisHasNotBeenInitialized);
+
+    return m_this_value;
+}
+
+void LexicalEnvironment::bind_this_value(Value this_value)
+{
+    ASSERT(has_this_binding());
+    if (m_this_binding_status == ThisBindingStatus::Initialized) {
+        interpreter().throw_exception<ReferenceError>(ErrorType::ThisIsAlreadyInitialized);
+        return;
+    }
+    m_this_value = this_value;
+    m_this_binding_status = ThisBindingStatus::Initialized;
 }
 
 }

@@ -244,6 +244,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 {
     auto statement = [this]() -> NonnullRefPtr<Statement> {
     switch (m_parser_state.m_current_token.type()) {
+    case TokenType::Class:
+      return parse_class_declaration();
     case TokenType::Function: {
         auto declaration = parse_function_node<FunctionDeclaration>();
         m_parser_state.m_function_scopes.last().append(declaration);
@@ -421,6 +423,136 @@ RefPtr<Statement> Parser::try_parse_labelled_statement()
     return statement;
 }
 
+NonnullRefPtr<ClassDeclaration> Parser::parse_class_declaration()
+{
+    return create_ast_node<ClassDeclaration>(parse_class_expression(true));
+}
+
+NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_name)
+{
+    // Classes are always in strict mode.
+    TemporaryChange strict_mode_rollback(m_parser_state.m_strict_mode, true);
+
+    consume(TokenType::Class);
+
+    NonnullRefPtrVector<ClassMethod> methods;
+    RefPtr<Expression> super_class;
+    RefPtr<FunctionExpression> constructor;
+
+    String class_name = expect_class_name || match(TokenType::Identifier) ? consume(TokenType::Identifier).value().to_string() : "";
+
+    if (match(TokenType::Extends)) {
+        consume();
+        super_class = parse_primary_expression();
+    }
+
+    consume(TokenType::CurlyOpen);
+
+    while (!done() && !match(TokenType::CurlyClose)) {
+        RefPtr<Expression> property_key;
+        bool is_static = false;
+        bool is_constructor = false;
+        auto method_kind = ClassMethod::Kind::Method;
+
+        if (match(TokenType::Semicolon)) {
+            consume();
+            continue;
+        }
+
+        if (match_property_key()) {
+            StringView name;
+            if (match(TokenType::Identifier) && m_parser_state.m_current_token.value() == "static") {
+                consume();
+                is_static = true;
+            }
+
+            if (match(TokenType::Identifier)) {
+                auto identifier_name = m_parser_state.m_current_token.value();
+
+                if (identifier_name == "get") {
+                    method_kind = ClassMethod::Kind::Getter;
+                    consume();
+                } else if (identifier_name == "set") {
+                    method_kind = ClassMethod::Kind::Setter;
+                    consume();
+                }
+            }
+
+            if (match_property_key()) {
+                switch (m_parser_state.m_current_token.type()) {
+                case TokenType::Identifier:
+                    name = consume().value();
+                    property_key = create_ast_node<StringLiteral>(name);
+                    break;
+                case TokenType::StringLiteral: {
+                    auto string_literal = parse_string_literal(consume());
+                    name = string_literal->value();
+                    property_key = move(string_literal);
+                    break;
+                }
+                default:
+                    property_key = parse_property_key();
+                    break;
+                }
+
+            } else {
+                expected("property key");
+            }
+
+            // Constructor may be a StringLiteral or an Identifier.
+            if (!is_static && name == "constructor") {
+                if (method_kind != ClassMethod::Kind::Method)
+                    syntax_error("Class constructor may not be an accessor");
+                if (!constructor.is_null())
+                    syntax_error("Classes may not have more than one constructor");
+
+                is_constructor = true;
+            }
+        }
+
+        if (match(TokenType::ParenOpen)) {
+            auto function = parse_function_node<FunctionExpression>(false, true, !super_class.is_null());
+            auto arg_count = function->parameters().size();
+
+            if (method_kind == ClassMethod::Kind::Getter && arg_count != 0) {
+                syntax_error("Class getter method must have no arguments");
+            } else if (method_kind == ClassMethod::Kind::Setter && arg_count != 1) {
+                syntax_error("Class setter method must have one argument");
+            }
+
+            if (is_constructor) {
+                constructor = move(function);
+            } else if (!property_key.is_null()) {
+                methods.append(create_ast_node<ClassMethod>(property_key.release_nonnull(), move(function), method_kind, is_static));
+            } else {
+                syntax_error("No key for class method");
+            }
+        } else {
+            expected("ParenOpen");
+            consume();
+        }
+    }
+
+    consume(TokenType::CurlyClose);
+
+    if (constructor.is_null()) {
+        auto constructor_body = create_ast_node<BlockStatement>();
+        if (!super_class.is_null()) {
+            // Set constructor to the result of parsing the source text
+            // constructor(... args){ super (...args);}
+            auto super_call = create_ast_node<CallExpression>(create_ast_node<SuperExpression>(), Vector { CallExpression::Argument { create_ast_node<Identifier>("args"), true } });
+            constructor_body->append(create_ast_node<ExpressionStatement>(move(super_call)));
+            constructor_body->add_variables(m_parser_state.m_var_scopes.last());
+
+            constructor = create_ast_node<FunctionExpression>(class_name, move(constructor_body), Vector { FunctionNode::Parameter { "args", nullptr, true } }, 0, NonnullRefPtrVector<VariableDeclaration>());
+        } else {
+            constructor = create_ast_node<FunctionExpression>(class_name, move(constructor_body), Vector<FunctionNode::Parameter> {}, 0, NonnullRefPtrVector<VariableDeclaration>());
+        }
+    }
+
+    return create_ast_node<ClassExpression>(move(class_name), move(constructor), move(super_class), move(methods));
+}
+
 NonnullRefPtr<Expression> Parser::parse_primary_expression()
 {
     if (match_unary_prefixed_expression())
@@ -442,6 +574,13 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     case TokenType::This:
         consume();
         return create_ast_node<ThisExpression>();
+    case TokenType::Class:
+        return parse_class_expression(false);
+    case TokenType::Super:
+        consume();
+        if (!m_parser_state.m_allow_super_property_lookup)
+            syntax_error("'super' keyword unexpected here");
+        return create_ast_node<SuperExpression>();
     case TokenType::Identifier: {
         auto arrow_function_result = try_parse_arrow_function_expression(false);
         if (!arrow_function_result.is_null()) {
@@ -537,41 +676,33 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
     }
 }
 
+NonnullRefPtr<Expression> Parser::parse_property_key()
+{
+    if (match(TokenType::StringLiteral)) {
+        return parse_string_literal(consume());
+    } else if (match(TokenType::NumericLiteral)) {
+        return create_ast_node<StringLiteral>(consume(TokenType::NumericLiteral).value());
+    } else if (match(TokenType::BigIntLiteral)) {
+        auto value = consume(TokenType::BigIntLiteral).value();
+        return create_ast_node<StringLiteral>(value.substring_view(0, value.length() - 1));
+    } else if (match(TokenType::BracketOpen)) {
+        consume(TokenType::BracketOpen);
+        auto result = parse_expression(0);
+        consume(TokenType::BracketClose);
+        return result;
+    } else {
+        if (!match_identifier_name())
+            expected("IdentifierName");
+        return create_ast_node<StringLiteral>(consume().value());
+    }
+}
+
 NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 {
     consume(TokenType::CurlyOpen);
 
     NonnullRefPtrVector<ObjectProperty> properties;
     ObjectProperty::Type property_type;
-
-    auto match_property_key = [&]() -> bool {
-        auto type = m_parser_state.m_current_token.type();
-        return match_identifier_name()
-            || type == TokenType::BracketOpen
-            || type == TokenType::StringLiteral
-            || type == TokenType::NumericLiteral
-            || type == TokenType::BigIntLiteral;
-    };
-
-    auto parse_property_key = [&]() -> NonnullRefPtr<Expression> {
-        if (match(TokenType::StringLiteral)) {
-            return parse_string_literal(consume());
-        } else if (match(TokenType::NumericLiteral)) {
-            return create_ast_node<StringLiteral>(consume(TokenType::NumericLiteral).value());
-        } else if (match(TokenType::BigIntLiteral)) {
-            auto value = consume(TokenType::BigIntLiteral).value();
-            return create_ast_node<StringLiteral>(value.substring_view(0, value.length() - 1));
-        } else if (match(TokenType::BracketOpen)) {
-            consume(TokenType::BracketOpen);
-            auto result = parse_expression(0);
-            consume(TokenType::BracketClose);
-            return result;
-        } else {
-            if (!match_identifier_name())
-                expected("IdentifierName");
-            return create_ast_node<StringLiteral>(consume().value());
-        }
-    };
 
     auto skip_to_next_property = [&] {
         while (!done() && !match(TokenType::Comma) && !match(TokenType::CurlyOpen))
@@ -586,7 +717,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         if (match(TokenType::TripleDot)) {
             consume();
             property_name = parse_expression(4);
-            properties.append(create_ast_node<ObjectProperty>(*property_name, nullptr, ObjectProperty::Type::Spread));
+            properties.append(create_ast_node<ObjectProperty>(*property_name, nullptr, ObjectProperty::Type::Spread, false));
             if (!match(TokenType::Comma))
                 break;
             consume(TokenType::Comma);
@@ -622,7 +753,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
         if (match(TokenType::ParenOpen)) {
             ASSERT(property_name);
-            auto function = parse_function_node<FunctionExpression>(false);
+            auto function = parse_function_node<FunctionExpression>(false, true);
             auto arg_count = function->parameters().size();
 
             if (property_type == ObjectProperty::Type::Getter && arg_count != 0) {
@@ -642,7 +773,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 continue;
             }
 
-            properties.append(create_ast_node<ObjectProperty>(*property_name, function, property_type));
+            properties.append(create_ast_node<ObjectProperty>(*property_name, function, property_type, true));
         } else if (match(TokenType::Colon)) {
             if (!property_name) {
                 syntax_error("Expected a property name");
@@ -650,9 +781,9 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 continue;
             }
             consume();
-            properties.append(create_ast_node<ObjectProperty>(*property_name, parse_expression(2), property_type));
+            properties.append(create_ast_node<ObjectProperty>(*property_name, parse_expression(2), property_type, false));
         } else if (property_name && property_value) {
-            properties.append(create_ast_node<ObjectProperty>(*property_name, *property_value, property_type));
+            properties.append(create_ast_node<ObjectProperty>(*property_name, *property_value, property_type, false));
         } else {
             syntax_error("Expected a property");
             skip_to_next_property();
@@ -976,6 +1107,9 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
 
 NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
 {
+    if (!m_parser_state.m_allow_super_constructor_call && lhs->is_super_expression())
+        syntax_error("'super' keyword unexpected here");
+
     consume(TokenType::ParenOpen);
 
     Vector<CallExpression::Argument> arguments;
@@ -1085,8 +1219,11 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 }
 
 template<typename FunctionNodeType>
-NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_function_and_name)
+NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_function_and_name, bool allow_super_property_lookup, bool allow_super_constructor_call)
 {
+    TemporaryChange super_property_access_rollback(m_parser_state.m_allow_super_property_lookup, allow_super_property_lookup);
+    TemporaryChange super_constructor_call_rollback(m_parser_state.m_allow_super_constructor_call, allow_super_constructor_call);
+
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Function);
 
     if (check_for_function_and_name)
@@ -1465,6 +1602,7 @@ bool Parser::match_expression() const
         || type == TokenType::ParenOpen
         || type == TokenType::Function
         || type == TokenType::This
+        || type == TokenType::Super
         || type == TokenType::RegexLiteral
         || match_unary_prefixed_expression();
 }
@@ -1561,6 +1699,16 @@ bool Parser::match_statement() const
 bool Parser::match_identifier_name() const
 {
     return m_parser_state.m_current_token.is_identifier_name();
+}
+
+bool Parser::match_property_key() const
+{
+    auto type = m_parser_state.m_current_token.type();
+    return match_identifier_name()
+        || type == TokenType::BracketOpen
+        || type == TokenType::StringLiteral
+        || type == TokenType::NumericLiteral
+        || type == TokenType::BigIntLiteral;
 }
 
 bool Parser::done() const

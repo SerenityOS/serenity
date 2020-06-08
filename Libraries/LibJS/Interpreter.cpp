@@ -59,7 +59,10 @@ Value Interpreter::run(GlobalObject& global_object, const Statement& statement, 
             CallFrame global_call_frame;
             global_call_frame.this_value = &global_object;
             global_call_frame.function_name = "(global execution context)";
-            global_call_frame.environment = heap().allocate<LexicalEnvironment>(global_object);
+            global_call_frame.environment = heap().allocate<LexicalEnvironment>(global_object, LexicalEnvironment::EnvironmentRecordType::Global);
+            global_call_frame.environment->bind_this_value(&global_object);
+            if (exception())
+                return {};
             m_call_stack.append(move(global_call_frame));
         }
     }
@@ -226,6 +229,10 @@ Value Interpreter::call(Function& function, Value this_value, Optional<MarkedVal
     if (arguments.has_value())
         call_frame.arguments.append(arguments.value().values());
     call_frame.environment = function.create_environment();
+
+    ASSERT(call_frame.environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
+    call_frame.environment->bind_this_value(call_frame.this_value);
+
     auto result = function.call(*this);
     pop_call_frame();
     return result;
@@ -235,29 +242,59 @@ Value Interpreter::construct(Function& function, Function& new_target, Optional<
 {
     auto& call_frame = push_call_frame();
     call_frame.function_name = function.name();
+    call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
-        call_frame.arguments = arguments.value().values();
+        call_frame.arguments.append(arguments.value().values());
     call_frame.environment = function.create_environment();
 
-    auto* new_object = Object::create_empty(*this, global_object);
-    auto prototype = new_target.get("prototype");
-    if (exception())
-        return {};
-    if (prototype.is_object()) {
-        new_object->set_prototype(&prototype.as_object());
+    current_environment()->set_new_target(&new_target);
+
+    Object* new_object = nullptr;
+    if (function.constructor_kind() == Function::ConstructorKind::Base) {
+        new_object = Object::create_empty(*this, global_object);
+        current_environment()->bind_this_value(new_object);
         if (exception())
             return {};
+        auto prototype = new_target.get("prototype");
+        if (exception())
+            return {};
+        if (prototype.is_object()) {
+            new_object->set_prototype(&prototype.as_object());
+            if (exception())
+                return {};
+        }
     }
-    call_frame.this_value = new_object;
+
+    // If we are a Derived constructor, |this| has not been constructed before super is called.
+    Value this_value = function.constructor_kind() == Function::ConstructorKind::Base ? new_object : Value {};
+    call_frame.this_value = this_value;
     auto result = function.construct(*this);
 
+    this_value = current_environment()->get_this_binding();
     pop_call_frame();
+
+    // If we are constructing an instance of a derived class,
+    // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
+    if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
+        current_environment()->replace_this_binding(result);
+        auto prototype = new_target.get("prototype");
+        if (exception())
+            return {};
+        if (prototype.is_object()) {
+            result.as_object().set_prototype(&prototype.as_object());
+            if (exception())
+                return {};
+        }
+        return result;
+    }
 
     if (exception())
         return {};
+
     if (result.is_object())
         return result;
-    return new_object;
+
+    return this_value;
 }
 
 Value Interpreter::throw_exception(Exception* exception)
@@ -299,6 +336,26 @@ String Interpreter::join_arguments() const
             joined_arguments.append(' ');
     }
     return joined_arguments.build();
+}
+
+Value Interpreter::resolve_this_binding() const
+{
+    return get_this_environment()->get_this_binding();
+}
+
+const LexicalEnvironment* Interpreter::get_this_environment() const
+{
+    // We will always return because the Global environment will always be reached, which has a |this| binding.
+    for (const LexicalEnvironment* environment = current_environment(); environment; environment = environment->parent()) {
+        if (environment->has_this_binding())
+            return environment;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+Value Interpreter::get_new_target() const
+{
+    return get_this_environment()->new_target();
 }
 
 }

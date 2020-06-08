@@ -192,6 +192,10 @@ public:
 
     String join_arguments() const;
 
+    Value resolve_this_binding() const;
+    const LexicalEnvironment* get_this_environment() const;
+    Value get_new_target() const;
+
 private:
     Interpreter();
 
