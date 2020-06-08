@@ -66,8 +66,11 @@ ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& nam
 void ScriptFunction::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
     Function::initialize(interpreter, global_object);
-    if (!m_is_arrow_function)
-        define_property("prototype", Object::create_empty(interpreter, global_object), 0);
+    if (!is_arrow_function) {
+        Object* prototype = Object::create_empty(interpreter(), interpreter().global_object());
+        prototype->define_property("constructor", this, Attribute::Writable | Attribute::Configurable);
+        define_property("prototype", prototype, 0);
+    }
     define_native_property("length", length_getter, nullptr, Attribute::Configurable);
     define_native_property("name", name_getter, nullptr, Attribute::Configurable);
 }
