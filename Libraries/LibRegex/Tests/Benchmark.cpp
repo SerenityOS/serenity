@@ -42,6 +42,12 @@
 #        include <regex>
 #    endif
 
+#    if not(defined(REGEX_BENCHMARK_OUR) && defined(REGEX_BENCHMARK_OUR))
+BENCHMARK_CASE(dummy_benchmark)
+{
+}
+#    endif
+
 #    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(catch_all_benchmark)
 {
@@ -51,10 +57,10 @@ BENCHMARK_CASE(catch_all_benchmark)
         EXPECT(re.match("Hello World", m));
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(catch_all_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(catch_all_benchmark_reference_stdcpp)
 {
     std::regex re("^.*$");
     std::cmatch m;
@@ -62,9 +68,9 @@ BENCHMARK_CASE(catch_all_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("Hello World", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_start_benchmark)
 {
     Regex<PosixExtended> re("^hello friends");
@@ -75,10 +81,10 @@ BENCHMARK_CASE(simple_start_benchmark)
         EXPECT_EQ(re.match("Well, hello friends", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_start_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_start_benchmark_reference_stdcpp)
 {
     std::regex re("^hello friends");
     std::cmatch m;
@@ -88,9 +94,9 @@ BENCHMARK_CASE(simple_start_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("Well, hello friends", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_end_benchmark)
 {
     Regex<PosixExtended> re(".*hello\\.\\.\\. there$");
@@ -102,10 +108,10 @@ BENCHMARK_CASE(simple_end_benchmark)
         EXPECT_EQ(re.match("hello.. there", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_end_benchmark_reference_stdcpp_regex_search)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_end_benchmark_reference_stdcpp)
 {
     std::regex re(".*hello\\.\\.\\. there$");
     std::cmatch m;
@@ -116,9 +122,9 @@ BENCHMARK_CASE(simple_end_benchmark_reference_stdcpp_regex_search)
         EXPECT_EQ(std::regex_search("hello.. there", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_period_benchmark)
 {
     Regex<PosixExtended> re("hello.");
@@ -130,10 +136,10 @@ BENCHMARK_CASE(simple_period_benchmark)
         EXPECT_EQ(re.match("hello?", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_period_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_period_benchmark_reference_stdcpp)
 {
     std::regex re("hello.");
     std::cmatch m;
@@ -144,9 +150,9 @@ BENCHMARK_CASE(simple_period_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("hello?", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_period_end_benchmark)
 {
     Regex<PosixExtended> re("hello.$");
@@ -158,10 +164,10 @@ BENCHMARK_CASE(simple_period_end_benchmark)
         EXPECT_EQ(re.search("hello?", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_period_end_benchmark_reference_stdcpp_regex_search)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_period_end_benchmark_reference_stdcpp)
 {
     std::regex re("hello.$");
     std::cmatch m;
@@ -172,9 +178,9 @@ BENCHMARK_CASE(simple_period_end_benchmark_reference_stdcpp_regex_search)
         EXPECT_EQ(std::regex_search("hello?", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_escaped_benchmark)
 {
     Regex<PosixExtended> re("hello\\.");
@@ -184,10 +190,10 @@ BENCHMARK_CASE(simple_escaped_benchmark)
         EXPECT_EQ(re.match("hello.", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_escaped_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_escaped_benchmark_reference_stdcpp)
 {
     std::regex re("hello\\.");
     std::cmatch m;
@@ -196,9 +202,9 @@ BENCHMARK_CASE(simple_escaped_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("hello.", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_period2_end_benchmark)
 {
     Regex<PosixExtended> re(".*hi... there$");
@@ -211,10 +217,10 @@ BENCHMARK_CASE(simple_period2_end_benchmark)
         EXPECT_EQ(re.search("I said fyhihi there", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_period2_end_benchmark_reference_stdcpp_regex_search)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_period2_end_benchmark_reference_stdcpp)
 {
     std::regex re(".*hi... there$");
     std::cmatch m;
@@ -226,9 +232,9 @@ BENCHMARK_CASE(simple_period2_end_benchmark_reference_stdcpp_regex_search)
         EXPECT_EQ(std::regex_search("I said fyhihi there", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_plus_benchmark)
 {
     Regex<PosixExtended> re("a+");
@@ -240,10 +246,10 @@ BENCHMARK_CASE(simple_plus_benchmark)
         EXPECT_EQ(re.search("aaaaaaaaaaa", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_plus_benchmark_reference_stdcpp_regex_search)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_plus_benchmark_reference_stdcpp)
 {
     std::regex re("a+");
     std::cmatch m;
@@ -254,9 +260,9 @@ BENCHMARK_CASE(simple_plus_benchmark_reference_stdcpp_regex_search)
         EXPECT_EQ(std::regex_search("aaaaaaaaaaa", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_questionmark_benchmark)
 {
     Regex<PosixExtended> re("da?d");
@@ -271,10 +277,10 @@ BENCHMARK_CASE(simple_questionmark_benchmark)
         EXPECT_EQ(re.search("adadaa", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_questionmark_benchmark_reference_stdcpp_regex_search)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_questionmark_benchmark_reference_stdcpp)
 {
     std::regex re("da?d");
     std::cmatch m;
@@ -288,9 +294,9 @@ BENCHMARK_CASE(simple_questionmark_benchmark_reference_stdcpp_regex_search)
         EXPECT_EQ(std::regex_search("adadaa", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(character_class_benchmark)
 {
     Regex<PosixExtended> re("[[:alpha:]]");
@@ -302,10 +308,10 @@ BENCHMARK_CASE(character_class_benchmark)
         EXPECT_EQ(re.search(haystack.characters(), m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(character_class_benchmark_reference_stdcpp_regex_search)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(character_class_benchmark_reference_stdcpp)
 {
     std::regex re("[[:alpha:]]");
     std::cmatch m;
@@ -316,9 +322,9 @@ BENCHMARK_CASE(character_class_benchmark_reference_stdcpp_regex_search)
         EXPECT_EQ(std::regex_search(haystack.characters(), m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(escaped_char_questionmark_benchmark)
 {
     Regex<PosixExtended> re("This\\.?And\\.?That");
@@ -330,10 +336,10 @@ BENCHMARK_CASE(escaped_char_questionmark_benchmark)
         EXPECT_EQ(re.match("This..And..That", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(escaped_char_questionmark_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(escaped_char_questionmark_benchmark_reference_stdcpp)
 {
     std::regex re("This\\.?And\\.?That");
     std::cmatch m;
@@ -344,9 +350,9 @@ BENCHMARK_CASE(escaped_char_questionmark_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("This..And..That", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(char_qualifier_asterisk_benchmark)
 {
     Regex<PosixExtended> re("regex*");
@@ -356,10 +362,10 @@ BENCHMARK_CASE(char_qualifier_asterisk_benchmark)
         EXPECT_EQ(re.search("#include <stdio.h>", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(char_qualifier_asterisk_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(char_qualifier_asterisk_benchmark_reference_stdcpp)
 {
     std::regex re("regex*");
     std::cmatch m;
@@ -368,9 +374,9 @@ BENCHMARK_CASE(char_qualifier_asterisk_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_search("#include <stdio.h>", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(parens_qualifier_questionmark_benchmark)
 {
     Regex<PosixExtended> re("test(hello)?test");
@@ -381,10 +387,10 @@ BENCHMARK_CASE(parens_qualifier_questionmark_benchmark)
         EXPECT_EQ(re.match("testasfdtest", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(parens_qualifier_questionmark_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(parens_qualifier_questionmark_benchmark_reference_stdcpp)
 {
     std::regex re("test(hello)?test");
     std::cmatch m;
@@ -394,9 +400,9 @@ BENCHMARK_CASE(parens_qualifier_questionmark_benchmark_reference_stdcpp_regex_ma
         EXPECT_EQ(std::regex_match("testasfdtest", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(parens_qualifier_asterisk_benchmark)
 {
     Regex<PosixExtended> re("test(hello)*test");
@@ -408,10 +414,10 @@ BENCHMARK_CASE(parens_qualifier_asterisk_benchmark)
         EXPECT_EQ(re.match("aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(parens_qualifier_asterisk_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(parens_qualifier_asterisk_benchmark_reference_stdcpp)
 {
     std::regex re("test(hello)*test");
     std::cmatch m;
@@ -422,9 +428,9 @@ BENCHMARK_CASE(parens_qualifier_asterisk_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark)
 {
     Regex<PosixExtended> re("test(.*)test");
@@ -436,10 +442,10 @@ BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark)
         EXPECT_EQ(re.match("aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark_reference_stdcpp)
 {
     std::regex re("test(.*)test");
     std::cmatch m;
@@ -450,9 +456,9 @@ BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark_reference_stdcpp_regex_matc
         EXPECT_EQ(std::regex_match("aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(multi_parens_qualifier_questionmark_benchmark)
 {
     Regex<PosixExtended> re("test(a)?(b)?(c)?test");
@@ -466,10 +472,10 @@ BENCHMARK_CASE(multi_parens_qualifier_questionmark_benchmark)
         EXPECT_EQ(re.match("whaaaaat", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(multi_parens_qualifier_questionmark_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(multi_parens_qualifier_questionmark_benchmark_reference_stdcpp)
 {
     std::regex re("test(a)?(b)?(c)?test");
     std::cmatch m;
@@ -482,9 +488,9 @@ BENCHMARK_CASE(multi_parens_qualifier_questionmark_benchmark_reference_stdcpp_re
         EXPECT_EQ(std::regex_match("whaaaaat", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_alternative_benchmark)
 {
     Regex<PosixExtended> re("test|hello|friends");
@@ -496,10 +502,10 @@ BENCHMARK_CASE(simple_alternative_benchmark)
         EXPECT_EQ(re.match("whaaaaat", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_alternative_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_alternative_benchmark_reference_stdcpp)
 {
     std::regex re("test|hello|friends");
     std::cmatch m;
@@ -510,9 +516,9 @@ BENCHMARK_CASE(simple_alternative_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("whaaaaat", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(alternative_match_groups_benchmark)
 {
     Regex<PosixExtended> re("test(a)?(b)?|hello ?(dear|my)? friends");
@@ -528,10 +534,10 @@ BENCHMARK_CASE(alternative_match_groups_benchmark)
         EXPECT_EQ(re.match("hello test friends", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(alternative_match_groups_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(alternative_match_groups_benchmark_reference_stdcpp)
 {
     std::regex re("test(a)?(b)?|hello ?(dear|my)? friends");
     std::cmatch m;
@@ -546,9 +552,9 @@ BENCHMARK_CASE(alternative_match_groups_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("hello test friends", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(parens_qualifier_exact_benchmark)
 {
     Regex<PosixExtended> re("(hello){3}");
@@ -560,10 +566,10 @@ BENCHMARK_CASE(parens_qualifier_exact_benchmark)
         EXPECT_EQ(re.search("test hellohellohello", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(parens_qualifier_exact_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(parens_qualifier_exact_benchmark_reference_stdcpp)
 {
     std::regex re("(hello){3}");
     std::cmatch m;
@@ -574,9 +580,9 @@ BENCHMARK_CASE(parens_qualifier_exact_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_search("test hellohellohello", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(parens_qualifier_minimum_benchmark)
 {
     Regex<PosixExtended> re("(hello){3,}");
@@ -589,10 +595,10 @@ BENCHMARK_CASE(parens_qualifier_minimum_benchmark)
         EXPECT_EQ(re.search("test hellohellohellohello", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(parens_qualifier_minimum_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(parens_qualifier_minimum_benchmark_reference_stdcpp)
 {
     std::regex re("(hello){3,}");
     std::cmatch m;
@@ -604,9 +610,9 @@ BENCHMARK_CASE(parens_qualifier_minimum_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_search("test hellohellohellohello", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(parens_qualifier_maximum_benchmark)
 {
     Regex<PosixExtended> re("(hello){2,3}");
@@ -621,10 +627,10 @@ BENCHMARK_CASE(parens_qualifier_maximum_benchmark)
         EXPECT_EQ(re.search("test hellohellohellohello", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(parens_qualifier_maximum_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(parens_qualifier_maximum_benchmark_reference_stdcpp)
 {
     std::regex re("(hello){2,3}");
     std::cmatch m;
@@ -638,9 +644,9 @@ BENCHMARK_CASE(parens_qualifier_maximum_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_search("test hellohellohellohello", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(char_qualifier_min_max_benchmark)
 {
     Regex<PosixExtended> re("c{3,30}");
@@ -654,10 +660,10 @@ BENCHMARK_CASE(char_qualifier_min_max_benchmark)
         EXPECT_EQ(re.match("cccccccccccccccccccccccccccccccc", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(char_qualifier_min_max_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(char_qualifier_min_max_benchmark_reference_stdcpp)
 {
     std::regex re("c{3,30}");
     std::cmatch m;
@@ -670,9 +676,9 @@ BENCHMARK_CASE(char_qualifier_min_max_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("cccccccccccccccccccccccccccccccc", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_bracket_chars_benchmark)
 {
     Regex<PosixExtended> re("[abc]");
@@ -685,10 +691,10 @@ BENCHMARK_CASE(simple_bracket_chars_benchmark)
         EXPECT_EQ(re.match("e", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_bracket_chars_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_bracket_chars_benchmark_reference_stdcpp)
 {
     std::regex re("[abc]");
     std::cmatch m;
@@ -700,9 +706,9 @@ BENCHMARK_CASE(simple_bracket_chars_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("e", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_bracket_chars_inverse_benchmark)
 {
     Regex<PosixExtended> re("[^abc]");
@@ -715,10 +721,10 @@ BENCHMARK_CASE(simple_bracket_chars_inverse_benchmark)
         EXPECT_EQ(re.match("e", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_bracket_chars_inverse_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_bracket_chars_inverse_benchmark_reference_stdcpp)
 {
     std::regex re("[^abc]");
     std::cmatch m;
@@ -730,9 +736,9 @@ BENCHMARK_CASE(simple_bracket_chars_inverse_benchmark_reference_stdcpp_regex_mat
         EXPECT_EQ(std::regex_match("e", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_bracket_chars_range_benchmark)
 {
     Regex<PosixExtended> re("[a-d]");
@@ -745,10 +751,10 @@ BENCHMARK_CASE(simple_bracket_chars_range_benchmark)
         EXPECT_EQ(re.match("e", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_bracket_chars_range_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_bracket_chars_range_benchmark_reference_stdcpp)
 {
     std::regex re("[a-d]");
     std::cmatch m;
@@ -760,9 +766,9 @@ BENCHMARK_CASE(simple_bracket_chars_range_benchmark_reference_stdcpp_regex_match
         EXPECT_EQ(std::regex_match("e", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_bracket_chars_range_inverse_benchmark)
 {
     Regex<PosixExtended> re("[^a-df-z]");
@@ -777,10 +783,10 @@ BENCHMARK_CASE(simple_bracket_chars_range_inverse_benchmark)
         EXPECT_EQ(re.match("z", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_bracket_chars_range_inverse_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_bracket_chars_range_inverse_benchmark_reference_stdcpp)
 {
     std::regex re("[^a-df-z]");
     std::cmatch m;
@@ -794,9 +800,9 @@ BENCHMARK_CASE(simple_bracket_chars_range_inverse_benchmark_reference_stdcpp_reg
         EXPECT_EQ(std::regex_match("z", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(bracket_character_class_uuid_benchmark)
 {
     Regex<PosixExtended> re("^([[:xdigit:]]{8})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{12})$");
@@ -806,10 +812,10 @@ BENCHMARK_CASE(bracket_character_class_uuid_benchmark)
         EXPECT_EQ(re.match("fb9b62a2", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(bracket_character_class_uuid_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(bracket_character_class_uuid_benchmark_reference_stdcpp)
 {
     std::regex re("^([[:xdigit:]]{8})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{12})$");
     std::cmatch m;
@@ -818,9 +824,9 @@ BENCHMARK_CASE(bracket_character_class_uuid_benchmark_reference_stdcpp_regex_mat
         EXPECT_EQ(std::regex_match("fb9b62a2", m, re), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_bracket_character_class_inverse_benchmark)
 {
     Regex<PosixExtended> re("[^[:digit:]]");
@@ -833,10 +839,10 @@ BENCHMARK_CASE(simple_bracket_character_class_inverse_benchmark)
         EXPECT_EQ(re.match("e", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_bracket_character_class_inverse_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_bracket_character_class_inverse_benchmark_reference_stdcpp)
 {
     std::regex re("[^[:digit:]]");
     std::cmatch m;
@@ -848,9 +854,9 @@ BENCHMARK_CASE(simple_bracket_character_class_inverse_benchmark_reference_stdcpp
         EXPECT_EQ(std::regex_match("e", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(email_address_benchmark)
 {
     Regex<PosixExtended> re("^[A-Z0-9a-z._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\\.){1,125}[A-Za-z]{2,63}$");
@@ -860,10 +866,10 @@ BENCHMARK_CASE(email_address_benchmark)
         EXPECT_EQ(re.match("this.is.a.very_long_email_address@world.wide.web", m), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(email_address_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(email_address_benchmark_reference_stdcpp)
 {
     std::regex re("^[A-Z0-9a-z._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\\.){1,125}[A-Za-z]{2,63}$");
     std::cmatch m;
@@ -872,9 +878,9 @@ BENCHMARK_CASE(email_address_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_match("this.is.a.very_long_email_address@world.wide.web", m, re), true);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OUR)
+#    if defined(REGEX_BENCHMARK_OUR)
 BENCHMARK_CASE(simple_ignorecase_benchmark)
 {
     Regex<PosixExtended> re("^hello friends", PosixFlags::Insensitive);
@@ -890,10 +896,10 @@ BENCHMARK_CASE(simple_ignorecase_benchmark)
         EXPECT_EQ(re.search("hell Friends", m), false);
     }
 }
-#endif
+#    endif
 
-#if defined(REGEX_BENCHMARK_OTHER)
-BENCHMARK_CASE(simple_ignorecase_benchmark_reference_stdcpp_regex_match)
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_ignorecase_benchmark_reference_stdcpp)
 {
     std::regex re("^hello friends", std::regex_constants::icase);
     std::cmatch m;
@@ -908,7 +914,78 @@ BENCHMARK_CASE(simple_ignorecase_benchmark_reference_stdcpp_regex_match)
         EXPECT_EQ(std::regex_search("hell Friends", m, re), false);
     }
 }
-#endif
+#    endif
+
+#    if defined(REGEX_BENCHMARK_OUR)
+BENCHMARK_CASE(simple_notbol_noteol_benchmark)
+{
+    String pattern = "^hello friends$";
+    String pattern2 = "hello friends";
+    regex_t regex, regex2;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regcomp(&regex2, pattern2.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+
+        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL | REG_NOTEOL), REG_NOMATCH);
+
+        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "a hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "a hello friends", 0, NULL, REG_NOTBOL | REG_SEARCH), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL | REG_SEARCH), REG_NOERR);
+
+        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends b", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends b", 0, NULL, REG_NOTEOL | REG_SEARCH), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTEOL | REG_SEARCH), REG_NOMATCH);
+
+        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL | REG_NOTEOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL | REG_NOTEOL | REG_SEARCH), REG_NOMATCH);
+
+        EXPECT_EQ(regexec(&regex2, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex2, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+#    endif
+
+#    if defined(REGEX_BENCHMARK_OTHER)
+BENCHMARK_CASE(simple_notbol_noteol_benchmark_reference_stdcpp)
+{
+    std::regex re1("^hello friends$", std::regex_constants::match_not_bol);
+    std::regex re2("^hello friends$", std::regex_constants::match_not_eol);
+    std::regex re3("^hello friends$", std::regex_constants::match_not_bol | std::regex_constants::match_not_eol);
+    std::regex re4("hello friends", std::regex_constants::match_not_bol);
+    std::regex re5("hello friends", std::regex_constants::match_not_eol);
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("hello friends", m, re1), false);
+        EXPECT_EQ(std::regex_match("hello friends", m, re2), false);
+        EXPECT_EQ(std::regex_match("hello friends", m, re3), false);
+
+        EXPECT_EQ(std::regex_match("a hello friends b", m, re1), false);
+        EXPECT_EQ(std::regex_match("a hello friends", m, re1), false);
+        EXPECT_EQ(std::regex_search("a hello friends", m, re1), true);
+        EXPECT_EQ(std::regex_search("a hello friends b", m, re1), true);
+
+        EXPECT_EQ(std::regex_match("a hello friends b", m, re2), false);
+        EXPECT_EQ(std::regex_match("hello friends b", m, re2), false);
+        EXPECT_EQ(std::regex_search("hello friends b", m, re2), true);
+        EXPECT_EQ(std::regex_search("a hello friends b", m, re2), false);
+
+        EXPECT_EQ(std::regex_match("a hello friends b", m, re3), false);
+        EXPECT_EQ(std::regex_search("a hello friends b", m, re3), false);
+
+        EXPECT_EQ(std::regex_match("hello friends", m, re4), false);
+        EXPECT_EQ(std::regex_match("hello friends", m, re5), false);
+    }
+}
+#    endif
+
 #endif
 
 TEST_MAIN(Regex)

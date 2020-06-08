@@ -37,13 +37,6 @@ extern "C" {
 int regcomp(regex_t* preg, const char* pattern, int cflags)
 {
     *preg = { 0, 0, nullptr, 0, ReError::REG_NOERR, "", 0 };
-    //    preg->cflags = 0;
-    //    preg->eflags = 0;
-    //    if (preg->matcher)
-    //        preg->matcher = nullptr;
-    //    preg->re_pat_err = ReError::REG_NOERR;
-    //    preg->re_pat_errpos = 0;
-    //    preg->re_pat = "";
 
     if (!(cflags & REG_EXTENDED))
         return REG_ENOSYS;
@@ -51,7 +44,7 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     preg->cflags = cflags;
 
     String pattern_str(pattern);
-    preg->re = make<Regex<PosixExtended>>(pattern_str, PosixOptions {} | (PosixFlags)cflags);
+    preg->re = make<Regex<PosixExtended>>(pattern_str, PosixOptions {} | (PosixFlags)cflags | PosixFlags::SkipTrimEmptyMatches);
 
     auto parser_result = preg->re->parser_result;
     if (parser_result.error != regex::Error::NoError) {
@@ -79,9 +72,9 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
 
     RegexResult result;
     if (eflags & REG_SEARCH)
-        result = preg->re->search({ string }, PosixOptions {} | (PosixFlags)eflags);
+        result = preg->re->search(string, PosixOptions {} | (PosixFlags)eflags);
     else
-        result = preg->re->match({ string }, PosixOptions {} | (PosixFlags)eflags);
+        result = preg->re->match(string, PosixOptions {} | (PosixFlags)eflags);
 
     if (result.success) {
         auto size = result.matches.size();

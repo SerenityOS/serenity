@@ -66,10 +66,22 @@ String Regex<Parser>::error_string(Optional<String> message) const
 }
 
 template<typename Parser>
-RegexResult Matcher<Parser>::match(const StringView& view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
+RegexResult Matcher<Parser>::match(const RegexStringView& view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
+{
+    AllOptions options = m_regex_options | regex_options.value_or({}).value();
+
+    if (options.has_flag_set(AllFlags::Multiline))
+        return match(view.lines(), regex_options); // FIXME: how do we know, which line ending a line has (1char or 2char)? This is needed to get the correct match offsets from start of string...
+
+    Vector<RegexStringView> views;
+    views.append(view);
+    return match(views, regex_options);
+}
+
+template<typename Parser>
+RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
 {
     size_t match_count { 0 };
-    Vector<StringView> views { view };
 
     MatchInput input;
     MatchState state;
@@ -77,9 +89,6 @@ RegexResult Matcher<Parser>::match(const StringView& view, Optional<typename Par
 
     input.regex_options = m_regex_options | regex_options.value_or({}).value();
     output.operations = 0;
-
-    if (input.regex_options & AllFlags::Multiline)
-        views = view.lines(false); // FIXME: how do we know, which line ending a line has (1char or 2char)? This is needed to get the correct match offsets from start of string...
 
     if (c_match_preallocation_count) {
         output.matches.ensure_capacity(c_match_preallocation_count);
@@ -192,7 +201,16 @@ RegexResult Matcher<Parser>::match(const StringView& view, Optional<typename Par
     if (match_count) {
         auto capture_groups_count = min(output.capture_group_matches.size(), output.matches.size());
         for (size_t i = 0; i < capture_groups_count; ++i) {
-            output_copy.capture_group_matches.append(output.capture_group_matches.at(i));
+            if(input.regex_options & AllFlags::SkipTrimEmptyMatches) {
+                output_copy.capture_group_matches.append(output.capture_group_matches.at(i));
+            } else {
+                Vector<Match> capture_group_matches;
+                for (size_t j = 0; j < output.capture_group_matches.at(i).size(); ++j) {
+                    if (!output.capture_group_matches.at(i).at(j).view.is_null())
+                        capture_group_matches.append(output.capture_group_matches.at(i).at(j));
+                }
+                output_copy.capture_group_matches.append(capture_group_matches);
+            }
         }
 
         auto named_capture_groups_count = min(output.named_capture_group_matches.size(), output.matches.size());
@@ -216,6 +234,8 @@ RegexResult Matcher<Parser>::match(const StringView& view, Optional<typename Par
         move(output_copy.capture_group_matches),
         move(output_copy.named_capture_group_matches),
         output.operations,
+        m_pattern.parser_result.capture_groups_count,
+        m_pattern.parser_result.named_capture_groups_count,
     };
 }
 
@@ -306,7 +326,7 @@ ALWAYS_INLINE Optional<bool> Matcher<Parser>::execute_low_prio_forks(const Match
 
     original_state.string_position = 0;
     return false;
-};
+}
 
 template class Matcher<PosixExtendedParser>;
 template class Regex<PosixExtendedParser>;

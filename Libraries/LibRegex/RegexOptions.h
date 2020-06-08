@@ -34,20 +34,21 @@ namespace regex {
 #define FlagsUnderlyingType u16
 
 enum class AllFlags : FlagsUnderlyingType {
-    Global = 1,                        // All matches (don't return after first match)
-    Insensitive = Global << 1,         // Case insensitive match (ignores case of [a-zA-Z])
-    Ungreedy = Global << 2,            // The match becomes lazy by default. Now a ? following a quantifier makes it greedy
-    Unicode = Global << 3,             // Enable all unicode features and interpret all unicode escape sequences as such
-    Extended = Global << 4,            // Ignore whitespaces. Spaces and text after a # in the pattern are ignored
-    Extra = Global << 5,               // Dissallow meaningless escapes. A \ followed by a letter with no special meaning is faulted
-    MatchNotBeginOfLine = Global << 6, // Pattern is not forced to ^ -> search in whole string!
-    MatchNotEndOfLine = Global << 7,   // Don't Force the dollar sign, $, to always match end of the string, instead of end of the line. This option is ignored if the Multiline-flag is set
-    SkipSubExprResults = Global << 8,  // Do not return sub expressions in the result
-    StringCopyMatches = Global << 9,   // Do explicitly copy results into new allocated string instead of StringView to original string.
-    SingleLine = Global << 10,         // Dot matches newline characters
-    Sticky = Global << 11,             // Force the pattern to only match consecutive matches from where the previous match ended.
-    Multiline = Global << 12,          // Handle newline characters. Match each line, one by one.
-    Last = Multiline
+    Global = 1,                          // All matches (don't return after first match)
+    Insensitive = Global << 1,           // Case insensitive match (ignores case of [a-zA-Z])
+    Ungreedy = Global << 2,              // The match becomes lazy by default. Now a ? following a quantifier makes it greedy
+    Unicode = Global << 3,               // Enable all unicode features and interpret all unicode escape sequences as such
+    Extended = Global << 4,              // Ignore whitespaces. Spaces and text after a # in the pattern are ignored
+    Extra = Global << 5,                 // Disallow meaningless escapes. A \ followed by a letter with no special meaning is faulted
+    MatchNotBeginOfLine = Global << 6,   // Pattern is not forced to ^ -> search in whole string!
+    MatchNotEndOfLine = Global << 7,     // Don't Force the dollar sign, $, to always match end of the string, instead of end of the line. This option is ignored if the Multiline-flag is set
+    SkipSubExprResults = Global << 8,    // Do not return sub expressions in the result
+    StringCopyMatches = Global << 9,     // Do explicitly copy results into new allocated string instead of StringView to original string.
+    SingleLine = Global << 10,           // Dot matches newline characters
+    Sticky = Global << 11,               // Force the pattern to only match consecutive matches from where the previous match ended.
+    Multiline = Global << 12,            // Handle newline characters. Match each line, one by one.
+    SkipTrimEmptyMatches = Global << 13, // Do not remove empty capture group results.
+    Last = SkipTrimEmptyMatches
 };
 
 enum class PosixFlags : FlagsUnderlyingType {
@@ -60,6 +61,7 @@ enum class PosixFlags : FlagsUnderlyingType {
     MatchNotBeginOfLine = (FlagsUnderlyingType)AllFlags::MatchNotBeginOfLine,
     MatchNotEndOfLine = (FlagsUnderlyingType)AllFlags::MatchNotEndOfLine,
     SkipSubExprResults = (FlagsUnderlyingType)AllFlags::SkipSubExprResults,
+    SkipTrimEmptyMatches = (FlagsUnderlyingType)AllFlags::SkipTrimEmptyMatches,
     Multiline = (FlagsUnderlyingType)AllFlags::Multiline,
     StringCopyMatches = (FlagsUnderlyingType)AllFlags::StringCopyMatches,
 };
