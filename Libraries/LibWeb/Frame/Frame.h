@@ -42,7 +42,7 @@ namespace Web {
 class Frame : public TreeNode<Frame> {
 public:
     static NonnullRefPtr<Frame> create_subframe(Element& host_element, Frame& main_frame) { return adopt(*new Frame(host_element, main_frame)); }
-    static NonnullRefPtr<Frame> create(PageView& page_view) { return adopt(*new Frame(page_view)); }
+    static NonnullRefPtr<Frame> create(Page& page) { return adopt(*new Frame(page)); }
     ~Frame();
 
     bool is_main_frame() const { return this == &m_main_frame; }
@@ -52,8 +52,8 @@ public:
 
     void set_document(Document*);
 
-    PageView* page_view() { return is_main_frame() ? m_page_view : main_frame().m_page_view; }
-    const PageView* page_view() const { return is_main_frame() ? m_page_view : main_frame().m_page_view; }
+    Page& page() { return m_page; }
+    const Page& page() const { return m_page; }
 
     const Gfx::Size& size() const { return m_size; }
     void set_size(const Gfx::Size&);
@@ -84,17 +84,20 @@ public:
     Element* host_element() { return m_host_element; }
     const Element* host_element() const { return m_host_element; }
 
+    Gfx::Point to_main_frame_position(const Gfx::Point&);
+    Gfx::Rect to_main_frame_rect(const Gfx::Rect&);
+
 private:
     explicit Frame(Element& host_element, Frame& main_frame);
-    explicit Frame(PageView&);
+    explicit Frame(Page&);
 
+    Page& m_page;
     Frame& m_main_frame;
 
     FrameLoader m_loader;
     EventHandler m_event_handler;
 
     WeakPtr<Element> m_host_element;
-    WeakPtr<PageView> m_page_view;
     RefPtr<Document> m_document;
     Gfx::Size m_size;
     Gfx::Rect m_viewport_rect;

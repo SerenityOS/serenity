@@ -376,7 +376,7 @@ Color Document::link_color() const
         return m_link_color.value();
     if (!frame())
         return Color::Blue;
-    return frame()->page_view()->palette().link();
+    return frame()->page().palette().link();
 }
 
 Color Document::active_link_color() const
@@ -385,7 +385,7 @@ Color Document::active_link_color() const
         return m_active_link_color.value();
     if (!frame())
         return Color::Red;
-    return frame()->page_view()->palette().active_link();
+    return frame()->page().palette().active_link();
 }
 
 Color Document::visited_link_color() const
@@ -394,7 +394,7 @@ Color Document::visited_link_color() const
         return m_visited_link_color.value();
     if (!frame())
         return Color::Magenta;
-    return frame()->page_view()->palette().visited_link();
+    return frame()->page().palette().visited_link();
 }
 
 JS::Interpreter& Document::interpreter()

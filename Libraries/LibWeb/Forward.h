@@ -53,6 +53,8 @@ class LoadRequest;
 class MouseEvent;
 class Node;
 class Origin;
+class Page;
+class PageClient;
 class Resource;
 class ResourceLoader;
 class Selector;

@@ -29,11 +29,13 @@
 #include <AK/URL.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Page.h>
 
 namespace Web {
 
-class PageView : public GUI::ScrollableWidget {
+class PageView final
+    : public GUI::ScrollableWidget
+    , public PageClient {
     C_OBJECT(PageView);
 
 public:
@@ -51,9 +53,6 @@ public:
 
     const LayoutDocument* layout_root() const;
     LayoutDocument* layout_root();
-
-    Web::Frame& main_frame() { return *m_main_frame; }
-    const Web::Frame& main_frame() const { return *m_main_frame; }
 
     void reload();
     bool load(const URL&);
@@ -75,16 +74,11 @@ public:
 
     virtual bool accepts_focus() const override { return true; }
 
-    void notify_link_click(Badge<EventHandler>, Web::Frame&, const String& href, const String& target, unsigned modifiers);
-    void notify_link_middle_click(Badge<EventHandler>, Web::Frame&, const String& href, const String& target, unsigned modifiers);
-    void notify_link_context_menu_request(Badge<EventHandler>, Web::Frame&, const Gfx::Point& content_position, const String& href, const String& target, unsigned modifiers);
-    void notify_link_hover(Badge<EventHandler>, Web::Frame&, const String& href);
-    void notify_tooltip_area_enter(Badge<EventHandler>, Web::Frame&, const Gfx::Point& content_position, const String& title);
-    void notify_tooltip_area_leave(Badge<EventHandler>, Web::Frame&);
-    void notify_needs_display(Badge<Web::Frame>, Web::Frame&, const Gfx::Rect&);
-
-protected:
+private:
     PageView();
+
+    Page& page() { return *m_page; }
+    const Page& page() const { return *m_page; }
 
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -94,17 +88,29 @@ protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
-private:
     virtual void did_scroll() override;
 
-    Gfx::Point to_screen_position(const Web::Frame&, const Gfx::Point&) const;
-    Gfx::Rect to_widget_rect(const Web::Frame&, const Gfx::Rect&) const;
+    // ^Web::PageClient
+    virtual void page_did_change_title(const String&) override;
+    virtual void page_did_set_document_in_main_frame(Document*) override;
+    virtual void page_did_start_loading(const URL&) override;
+    virtual void page_did_change_selection() override;
+    virtual void page_did_request_cursor_change(GUI::StandardCursor) override;
+    virtual void page_did_request_link_context_menu(const Gfx::Point&, const String& href, const String& target, unsigned modifiers) override;
+    virtual void page_did_click_link(const String& href, const String& target, unsigned modifiers) override;
+    virtual void page_did_middle_click_link(const String& href, const String& target, unsigned modifiers) override;
+    virtual void page_did_enter_tooltip_area(const Gfx::Point&, const String&) override;
+    virtual void page_did_leave_tooltip_area() override;
+    virtual void page_did_hover_link(const URL&) override;
+    virtual void page_did_unhover_link() override;
+    virtual void page_did_request_scroll_to_anchor(const String& fragment) override;
+    virtual void page_did_invalidate(const Gfx::Rect&) override;
 
     void layout_and_sync_size();
 
-    RefPtr<Web::Frame> m_main_frame;
-
     bool m_should_show_line_box_borders { false };
+
+    NonnullOwnPtr<Page> m_page;
 };
 
 }

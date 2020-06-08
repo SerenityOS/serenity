@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,55 +24,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/StringBuilder.h>
-#include <LibWeb/DOM/HTMLFormElement.h>
-#include <LibWeb/DOM/HTMLInputElement.h>
 #include <LibWeb/Frame/Frame.h>
+#include <LibWeb/Page.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/URLEncoder.h>
 
 namespace Web {
 
-HTMLFormElement::HTMLFormElement(Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+Page::Page(PageClient& client)
+    : m_client(client)
+{
+    m_main_frame = Frame::create(*this);
+
+    main_frame().on_set_document = [this](auto* document) {
+        m_client.page_did_set_document_in_main_frame(document);
+    };
+    main_frame().on_title_change = [this](auto& title) {
+        m_client.page_did_change_title(title);
+    };
+    main_frame().on_load_start = [this](auto& url) {
+        m_client.page_did_start_loading(url);
+    };
+}
+
+Page::~Page()
 {
 }
 
-HTMLFormElement::~HTMLFormElement()
+void Page::load(const URL& url)
 {
+    main_frame().loader().load(url);
 }
 
-void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
+Gfx::Palette Page::palette() const
 {
-    if (action().is_null()) {
-        dbg() << "Unsupported form action ''";
-        return;
-    }
+    return static_cast<const PageView&>(m_client).palette();
+}
 
-    auto effective_method = method().to_lowercase();
-    if (effective_method != "get") {
-        if (effective_method == "post" || effective_method == "dialog") {
-            dbg() << "Unsupported form method '" << method() << "'";
-            return;
-        }
-        effective_method = "get";
-    }
+bool Page::handle_mouseup(const Gfx::Point& position, unsigned button, unsigned modifiers)
+{
+    return main_frame().event_handler().handle_mouseup(position, button, modifiers);
+}
 
-    URL url(document().complete_url(action()));
+bool Page::handle_mousedown(const Gfx::Point& position, unsigned button, unsigned modifiers)
+{
+    return main_frame().event_handler().handle_mousedown(position, button, modifiers);
+}
 
-    Vector<URLQueryParam> parameters;
-
-    for_each_in_subtree_of_type<HTMLInputElement>([&](auto& node) {
-        auto& input = to<HTMLInputElement>(node);
-        if (!input.name().is_null() && (input.type() != "submit" || &input == submitter))
-            parameters.append({ input.name(), input.value() });
-        return IterationDecision::Continue;
-    });
-
-    url.set_query(url_encode(parameters));
-
-    // FIXME: We shouldn't let the form just do this willy-nilly.
-    document().frame()->page().load(url);
+bool Page::handle_mousemove(const Gfx::Point& position, unsigned buttons, unsigned modifiers)
+{
+    return main_frame().event_handler().handle_mousemove(position, buttons, modifiers);
 }
 
 }
