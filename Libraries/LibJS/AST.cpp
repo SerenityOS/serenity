@@ -1006,9 +1006,9 @@ Value SpreadExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     return m_target->execute(interpreter, global_object);
 }
 
-Value ThisExpression::execute(Interpreter& interpreter, GlobalObject&) const
+Value ThisExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    return interpreter.this_value();
+    return interpreter.this_value(global_object);
 }
 
 void ThisExpression::dump(int indent) const

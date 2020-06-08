@@ -150,10 +150,10 @@ public:
         return index < arguments.size() ? arguments[index] : js_undefined();
     }
 
-    Value this_value() const
+    Value this_value(Object& global_object) const
     {
         if (m_call_stack.is_empty())
-            return m_global_object;
+            return &global_object;
         return m_call_stack.last().this_value;
     }
 

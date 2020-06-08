@@ -28,6 +28,7 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 #include <LibWeb/DOM/MouseEvent.h>
 
@@ -57,7 +58,7 @@ MouseEvent& MouseEventWrapper::event()
 
 static MouseEvent* impl_from(JS::Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return nullptr;
     // FIXME: Verify that it's a CanvasRenderingContext2DWrapper somehow!
