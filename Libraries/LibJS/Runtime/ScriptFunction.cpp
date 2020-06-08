@@ -112,7 +112,7 @@ Value ScriptFunction::call(Interpreter& interpreter)
             if (i < argument_values.size() && !argument_values[i].is_undefined()) {
                 value = argument_values[i];
             } else if (parameter.default_value) {
-                value = parameter.default_value->execute(interpreter);
+                value = parameter.default_value->execute(interpreter, global_object());
                 if (interpreter.exception())
                     return {};
             }
