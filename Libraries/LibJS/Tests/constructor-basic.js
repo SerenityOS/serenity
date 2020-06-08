@@ -1,7 +1,17 @@
-function Foo() {
-    this.x = 123;
-}
+load("test-common.js");
 
-var foo = new Foo();
-if (foo.x === 123)
-    console.log("PASS");
+try {
+  function Foo() {
+      this.x = 123;
+  }
+
+  assert(Foo.prototype.constructor === Foo);
+
+  var foo = new Foo();
+  assert(foo.constructor === Foo);
+  assert(foo.x === 123);
+
+  console.log("PASS");
+} catch (e) {
+  console.log("FAIL: " + e);
+}
