@@ -485,7 +485,7 @@ Token Lexer::next()
                     break;
                 }
 
-                if (match('\\', '/') || match('\\', '[') || (m_regex_is_in_character_class && match('\\', ']')))
+                if (match('\\', '/') || match('\\', '[') || match('\\', '\\') || (m_regex_is_in_character_class && match('\\', ']')))
                     consume();
                 consume();
             }
