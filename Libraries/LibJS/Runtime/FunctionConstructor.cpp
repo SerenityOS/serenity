@@ -82,7 +82,7 @@ Value FunctionConstructor::construct(Interpreter& interpreter)
         interpreter.throw_exception<SyntaxError>(error.to_string());
         return {};
     }
-    return function_expression->execute(interpreter);
+    return function_expression->execute(interpreter, global_object());
 }
 
 }
