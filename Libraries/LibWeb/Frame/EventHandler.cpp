@@ -105,7 +105,7 @@ bool EventHandler::handle_mousedown(const Gfx::Point& position, unsigned button,
         return false;
     auto& layout_root = *layout_root_ptr;
     auto& document = *m_frame.document();
-    auto& page_view = *m_frame.page_view();
+    auto& page_client = m_frame.page().client();
 
     auto result = layout_root.hit_test(position);
     if (!result.layout_node)
@@ -133,16 +133,16 @@ bool EventHandler::handle_mousedown(const Gfx::Point& position, unsigned button,
                 document.run_javascript(href.substring_view(11, href.length() - 11));
             } else {
                 if (m_frame.is_main_frame()) {
-                    page_view.notify_link_click({}, m_frame, link->href(), link->target(), modifiers);
+                    page_client.page_did_click_link(link->href(), link->target(), modifiers);
                 } else {
                     // FIXME: Handle different targets!
                     m_frame.loader().load(document.complete_url(link->href()));
                 }
             }
         } else if (button == GUI::MouseButton::Right) {
-            page_view.notify_link_context_menu_request({}, m_frame, position, link->href(), link->target(), modifiers);
+            page_client.page_did_request_link_context_menu(m_frame.to_main_frame_position(position), link->href(), link->target(), modifiers);
         } else if (button == GUI::MouseButton::Middle) {
-            page_view.notify_link_middle_click({}, m_frame, link->href(), link->target(), modifiers);
+            page_client.page_did_middle_click_link(link->href(), link->target(), modifiers);
         }
     } else {
         if (button == GUI::MouseButton::Left) {
@@ -161,7 +161,7 @@ bool EventHandler::handle_mousemove(const Gfx::Point& position, unsigned buttons
         return false;
     auto& layout_root = *layout_root_ptr;
     auto& document = *m_frame.document();
-    auto& page_view = *m_frame.page_view();
+    auto& page_client = m_frame.page().client();
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
@@ -193,22 +193,23 @@ bool EventHandler::handle_mousemove(const Gfx::Point& position, unsigned buttons
         if (m_in_mouse_selection) {
             layout_root.selection().set_end({ result.layout_node, result.index_in_node });
             dump_selection("MouseMove");
-            page_view.update();
+            page_client.page_did_change_selection();
         }
     }
-    if (page_view.window())
-        page_view.window()->set_override_cursor(is_hovering_link ? GUI::StandardCursor::Hand : GUI::StandardCursor::None);
+    page_client.page_did_request_cursor_change(is_hovering_link ? GUI::StandardCursor::Hand : GUI::StandardCursor::None);
     if (hovered_node_changed) {
-        page_view.update();
         RefPtr<HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element() : nullptr;
         if (hovered_html_element && !hovered_html_element->title().is_null()) {
-            page_view.notify_tooltip_area_enter({}, m_frame, position, hovered_html_element->title());
+            page_client.page_did_enter_tooltip_area(m_frame.to_main_frame_position(position), hovered_html_element->title());
         } else {
-            page_view.notify_tooltip_area_leave({}, m_frame);
+            page_client.page_did_leave_tooltip_area();
         }
     }
     if (is_hovering_link != was_hovering_link) {
-        page_view.notify_link_hover({}, m_frame, hovered_link_element ? document.complete_url(hovered_link_element->href()).to_string() : String());
+        if (is_hovering_link)
+            page_client.page_did_hover_link(document.complete_url(hovered_link_element->href()));
+        else
+            page_client.page_did_unhover_link();
     }
     return true;
 }

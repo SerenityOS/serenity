@@ -33,18 +33,19 @@
 namespace Web {
 
 Frame::Frame(Element& host_element, Frame& main_frame)
-    : m_main_frame(main_frame)
+    : m_page(main_frame.page())
+    , m_main_frame(main_frame)
     , m_loader(*this)
     , m_event_handler({}, *this)
     , m_host_element(host_element.make_weak_ptr())
 {
 }
 
-Frame::Frame(PageView& page_view)
-    : m_main_frame(*this)
+Frame::Frame(Page& page)
+    : m_page(page)
+    , m_main_frame(*this)
     , m_loader(*this)
     , m_event_handler({}, *this)
-    , m_page_view(page_view.make_weak_ptr())
 {
 }
 
@@ -94,8 +95,7 @@ void Frame::set_needs_display(const Gfx::Rect& rect)
         return;
 
     if (is_main_frame()) {
-        if (page_view())
-            page_view()->notify_needs_display({}, *this, rect);
+        page().client().page_did_invalidate(to_main_frame_rect(rect));
         return;
     }
 
@@ -117,12 +117,31 @@ void Frame::did_scroll(Badge<PageView>)
 
 void Frame::scroll_to_anchor(const String& fragment)
 {
-    // FIXME: We should be able to scroll iframes to an anchor, too!
-    if (!m_page_view)
-        return;
     // FIXME: This logic is backwards, the work should be done in here,
     //        and then we just request that the "view" scrolls to a certain content offset.
-    m_page_view->scroll_to_anchor(fragment);
+    page().client().page_did_request_scroll_to_anchor(fragment);
+}
+
+Gfx::Rect Frame::to_main_frame_rect(const Gfx::Rect& a_rect)
+{
+    auto rect = a_rect;
+    rect.set_location(to_main_frame_position(a_rect.location()));
+    return rect;
+}
+
+Gfx::Point Frame::to_main_frame_position(const Gfx::Point& a_position)
+{
+    auto position = a_position;
+    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor->is_main_frame())
+            break;
+        if (!ancestor->host_element())
+            return {};
+        if (!ancestor->host_element()->layout_node())
+            return {};
+        position.move_by(ancestor->host_element()->layout_node()->box_type_agnostic_position().to_int_point());
+    }
+    return position;
 }
 
 }

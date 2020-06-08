@@ -130,7 +130,7 @@ Tab::Tab()
     m_bookmark_button->set_preferred_size(22, 22);
 
     m_bookmark_button->on_click = [this](auto) {
-        auto url = m_page_view->main_frame().document()->url().to_string();
+        auto url = m_page_view->document()->url().to_string();
         if (BookmarksBarWidget::the().contains_bookmark(url)) {
             BookmarksBarWidget::the().remove_bookmark(url);
         } else {
@@ -195,7 +195,7 @@ Tab::Tab()
 
     m_page_view->on_title_change = [this](auto& title) {
         if (title.is_null()) {
-            m_title = m_page_view->main_frame().document()->url().to_string();
+            m_title = m_page_view->document()->url().to_string();
         } else {
             m_title = title;
         }

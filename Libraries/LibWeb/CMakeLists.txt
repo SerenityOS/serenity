@@ -96,6 +96,7 @@ set(SOURCES
     Loader/ImageResource.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
+    Page.cpp
     PageView.cpp
     Parser/CSSParser.cpp
     Parser/Entities.cpp
