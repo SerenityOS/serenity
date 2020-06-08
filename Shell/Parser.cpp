@@ -147,6 +147,8 @@ Vector<Command> Parser::parse()
             if (ch == '>') {
                 commit_token(Token::Special);
                 begin_redirect_write(STDOUT_FILENO);
+                ASSERT(!m_redirections.is_empty());
+                m_redirections.last().redirection_op_start = m_position;
 
                 // Search for another > for append.
                 push_state(State::InWriteAppendOrRedirectionPath);
@@ -155,6 +157,8 @@ Vector<Command> Parser::parse()
             if (ch == '<') {
                 commit_token(Token::Special);
                 begin_redirect_read(STDIN_FILENO);
+                ASSERT(!m_redirections.is_empty());
+                m_redirections.last().redirection_op_start = m_position;
                 push_state(State::InRedirectionPath);
                 break;
             }
@@ -208,11 +212,15 @@ Vector<Command> Parser::parse()
 
                     if (m_input.characters()[redir_end] == '>') {
                         begin_redirect_write(fd);
+                        ASSERT(!m_redirections.is_empty());
+                        m_redirections.last().redirection_op_start = m_position;
                         // Search for another > for append.
                         push_state(State::InWriteAppendOrRedirectionPath);
                     }
                     if (m_input.characters()[redir_end] == '<') {
                         begin_redirect_read(fd);
+                        ASSERT(!m_redirections.is_empty());
+                        m_redirections.last().redirection_op_start = m_position;
                         push_state(State::InRedirectionPath);
                     }
 
@@ -227,6 +235,8 @@ Vector<Command> Parser::parse()
                     if (next_ch == '>') {
                         commit_token(Token::Special);
                         begin_redirect_write(ch - '0');
+                        ASSERT(!m_redirections.is_empty());
+                        m_redirections.last().redirection_op_start = m_position;
                         ++i;
 
                         // Search for another > for append.
@@ -236,6 +246,8 @@ Vector<Command> Parser::parse()
                     if (next_ch == '<') {
                         commit_token(Token::Special);
                         begin_redirect_read(ch - '0');
+                        ASSERT(!m_redirections.is_empty());
+                        m_redirections.last().redirection_op_start = m_position;
                         ++i;
 
                         push_state(State::InRedirectionPath);
@@ -251,7 +263,7 @@ Vector<Command> Parser::parse()
                 pop_state();
                 push_state(State::InRedirectionPath);
                 ASSERT(m_redirections.size());
-                m_redirections[m_redirections.size() - 1].type = Redirection::FileWriteAppend;
+                m_redirections.last().type = Redirection::FileWriteAppend;
                 break;
             }
 
@@ -263,15 +275,11 @@ Vector<Command> Parser::parse()
             if (ch == '<') {
                 commit_token(Token::Special);
                 begin_redirect_read(STDIN_FILENO);
-                pop_state();
-                push_state(State::InRedirectionPath);
                 break;
             }
             if (ch == '>') {
                 commit_token(Token::Special);
                 begin_redirect_read(STDOUT_FILENO);
-                pop_state();
-                push_state(State::InRedirectionPath);
                 break;
             }
             if (ch == '|') {
@@ -292,8 +300,20 @@ Vector<Command> Parser::parse()
                 push_state(State::InSingleQuotes);
                 break;
             }
-            if (ch == ' ')
+            if (ch == ' ') {
+                if (m_token.is_empty()) {
+                    // foo > bar
+                    //      ^ We are at this space, we want to ignore it but not leave the state.
+                    break;
+                }
+                commit_token(Token::Special);
+                if (m_tokens.is_empty()) {
+                    fprintf(stderr, "Syntax error: Redirection without a path\n");
+                    return {};
+                }
+                pop_state();
                 break;
+            }
             m_token.append(ch);
             break;
         case State::InSingleQuotes:

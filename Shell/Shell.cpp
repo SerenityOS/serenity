@@ -1482,17 +1482,36 @@ void Shell::cache_path()
 void Shell::highlight(Line::Editor& editor) const
 {
     StringBuilder builder;
+    bool is_offset_by_string_start = false;
     if (m_should_continue == ExitCodeOrContinuationRequest::DoubleQuotedString) {
         builder.append('"');
+        is_offset_by_string_start = true;
     }
     if (m_should_continue == ExitCodeOrContinuationRequest::SingleQuotedString) {
         builder.append('\'');
+        is_offset_by_string_start = true;
     }
     builder.append(editor.line());
     auto commands = Parser { builder.string_view() }.parse();
     auto first_command { true };
     for (auto& command : commands) {
         for (auto& subcommand : command.subcommands) {
+            auto& redirections = subcommand.redirections;
+            for (auto& redirection : redirections) {
+                if (redirection.type == Redirection::Pipe)
+                    continue;
+                if (redirection.path.length == 0)
+                    continue;
+                Line::Style redirection_style { Line::Style::Foreground(0x87, 0x9b, 0xcd) }; // 25% darkened periwinkle :)
+                auto end = redirection.path.end;
+                auto redirection_op_start = redirection.redirection_op_start;
+                if (is_offset_by_string_start) {
+                    end--;
+                    redirection_op_start--;
+                }
+
+                editor.stylize({ redirection_op_start, end }, redirection_style);
+            }
             auto first { true };
             for (auto& arg : subcommand.args) {
                 auto start = arg.end - arg.length;
