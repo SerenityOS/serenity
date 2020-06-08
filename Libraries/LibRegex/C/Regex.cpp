@@ -79,7 +79,7 @@ int regcomp(regex_t* reg, const char* pattern, int cflags)
     preg->cflags = cflags;
 
     String pattern_str(pattern);
-    preg->re = make<Regex<PosixExtended>>(pattern_str, PosixOptions {} | (PosixFlags)cflags);
+    preg->re = make<Regex<PosixExtended>>(pattern_str, PosixOptions {} | (PosixFlags)cflags | PosixFlags::SkipTrimEmptyMatches);
 
     auto parser_result = preg->re->parser_result;
     if (parser_result.error != regex::Error::NoError) {
@@ -109,9 +109,9 @@ int regexec(const regex_t* reg, const char* string, size_t nmatch, regmatch_t pm
 
     RegexResult result;
     if (eflags & REG_SEARCH)
-        result = preg->re->search({ string }, PosixOptions {} | (PosixFlags)eflags);
+        result = preg->re->search(string, PosixOptions {} | (PosixFlags)eflags);
     else
-        result = preg->re->match({ string }, PosixOptions {} | (PosixFlags)eflags);
+        result = preg->re->match(string, PosixOptions {} | (PosixFlags)eflags);
 
     if (result.success) {
         auto size = result.matches.size();

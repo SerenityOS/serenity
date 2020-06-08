@@ -47,8 +47,10 @@ class OpCode_SaveLeftNamedCaptureGroup;
 class OpCode_SaveNamedLeftCaptureGroup;
 class OpCode_SaveRightNamedCaptureGroup;
 class OpCode_Compare;
+class RegexStringView;
 }
 
 using regex::Error;
 using regex::Lexer;
 using regex::PosixExtendedParser;
+using regex::RegexStringView;

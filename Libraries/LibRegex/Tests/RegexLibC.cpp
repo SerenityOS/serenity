@@ -30,13 +30,6 @@
 #include <LibC/regex.h>
 #include <stdio.h>
 
-#define BENCHMARK_LOOP_ITERATIONS 100000
-#define DISABLE_REGEX_BENCHMARK
-
-//#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
-#    include <regex>
-//#endif
-
 TEST_CASE(catch_all)
 {
     String pattern = "^.*$";
@@ -1115,9 +1108,11 @@ TEST_CASE(simple_ignorecase)
 TEST_CASE(simple_notbol_noteol)
 {
     String pattern = "^hello friends$";
-    regex_t regex;
+    String pattern2 = "hello friends";
+    regex_t regex, regex2;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regcomp(&regex2, pattern2.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
 
     EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
@@ -1136,76 +1131,10 @@ TEST_CASE(simple_notbol_noteol)
     EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL | REG_NOTEOL), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL | REG_NOTEOL | REG_SEARCH), REG_NOMATCH);
 
-    pattern = "hello friends";
-    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
-
-    EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
-    EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex2, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex2, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
 
     regfree(&regex);
 }
-
-//#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
-//BENCHMARK_CASE(simple_notbol_noteol_benchmark)
-//{
-//    String pattern = "^hello friends$";
-//    regex_t regex;
-
-//    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
-
-//    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
-
-//        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
-//        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
-//        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL | REG_NOTEOL), REG_NOMATCH);
-
-//        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL), REG_NOMATCH);
-//        EXPECT_EQ(regexec(&regex, "a hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
-//        EXPECT_EQ(regexec(&regex, "a hello friends", 0, NULL, REG_NOTBOL | REG_SEARCH), REG_NOERR);
-//        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL | REG_SEARCH), REG_NOMATCH);
-
-//        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTEOL), REG_NOMATCH);
-//        EXPECT_EQ(regexec(&regex, "hello friends b", 0, NULL, REG_NOTEOL), REG_NOMATCH);
-//        EXPECT_EQ(regexec(&regex, "hello friends b", 0, NULL, REG_NOTEOL | REG_SEARCH), REG_NOERR);
-//        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTEOL | REG_SEARCH), REG_NOMATCH);
-
-//        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL | REG_NOTEOL), REG_NOMATCH);
-//        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL | REG_NOTEOL | REG_SEARCH), REG_NOERR);
-//    }
-
-//    regfree(&regex);
-//}
-
-BENCHMARK_CASE(simple_notbol_noteol_benchmark_reference_stdcpp_regex_match)
-{
-    std::regex re1("^hello friends$", std::regex_constants::match_not_bol);
-    std::regex re2("^hello friends$", std::regex_constants::match_not_eol);
-    std::regex re3("^hello friends$", std::regex_constants::match_not_bol | std::regex_constants::match_not_eol);
-    std::regex re4("hello friends", std::regex_constants::match_not_bol);
-    std::regex re5("hello friends", std::regex_constants::match_not_eol);
-    std::cmatch m;
-    //for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
-    EXPECT_EQ(std::regex_match("hello friends", m, re1), false);
-    EXPECT_EQ(std::regex_match("hello friends", m, re2), false);
-    EXPECT_EQ(std::regex_match("hello friends", m, re3), false);
-
-    EXPECT_EQ(std::regex_match("a hello friends b", m, re1), false);
-    EXPECT_EQ(std::regex_match("a hello friends", m, re1), false);
-    EXPECT_EQ(std::regex_search("a hello friends", m, re1), true);
-    EXPECT_EQ(std::regex_search("a hello friends b", m, re1), true);
-
-    EXPECT_EQ(std::regex_match("a hello friends b", m, re2), false);
-    EXPECT_EQ(std::regex_match("hello friends b", m, re2), false);
-    EXPECT_EQ(std::regex_search("hello friends b", m, re2), true);
-    EXPECT_EQ(std::regex_search("a hello friends b", m, re2), false);
-
-    EXPECT_EQ(std::regex_match("a hello friends b", m, re3), false);
-    EXPECT_EQ(std::regex_search("a hello friends b", m, re3), false);
-
-    EXPECT_EQ(std::regex_match("hello friends", m, re4), false);
-    EXPECT_EQ(std::regex_match("hello friends", m, re5), false);
-    //}
-}
-//#endif
 
 TEST_MAIN(Regex)

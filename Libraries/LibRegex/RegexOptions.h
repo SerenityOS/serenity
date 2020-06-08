@@ -66,6 +66,7 @@ enum class PosixFlags : FlagsUnderlyingType {
     MatchNotBeginOfLine = (FlagsUnderlyingType)AllFlags::MatchNotBeginOfLine,
     MatchNotEndOfLine = (FlagsUnderlyingType)AllFlags::MatchNotEndOfLine,
     SkipSubExprResults = (FlagsUnderlyingType)AllFlags::SkipSubExprResults,
+    SkipTrimEmptyMatches = (FlagsUnderlyingType)AllFlags::SkipTrimEmptyMatches,
     Multiline = (FlagsUnderlyingType)AllFlags::Multiline,
     StringCopyMatches = (FlagsUnderlyingType)AllFlags::StringCopyMatches,
 };
