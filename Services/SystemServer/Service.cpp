@@ -158,11 +158,26 @@ void Service::setup_notifier()
 
     m_socket_notifier = Core::Notifier::construct(m_socket_fd, Core::Notifier::Event::Read, this);
     m_socket_notifier->on_ready_to_read = [this] {
-        dbg() << "Ready to read on behalf of " << name();
+        handle_socket_connection();
+    };
+}
+
+void Service::handle_socket_connection()
+{
+    dbg() << "Ready to read on behalf of " << name();
+    if (m_accept_socket_connections) {
+       int accepted_fd = accept(m_socket_fd, nullptr, nullptr);
+       if (accepted_fd < 0) {
+           perror("accept");
+           return;
+       }
+       spawn(accepted_fd);
+       close(accepted_fd);
+    } else {
         remove_child(*m_socket_notifier);
         m_socket_notifier = nullptr;
-        spawn();
-    };
+        spawn(m_socket_fd);
+    }
 }
 
 void Service::activate()
@@ -172,10 +187,10 @@ void Service::activate()
     if (m_lazy)
         setup_notifier();
     else
-        spawn();
+        spawn(m_socket_fd);
 }
 
-void Service::spawn()
+void Service::spawn(int socket_fd)
 {
     dbg() << "Spawning " << name();
 
@@ -231,11 +246,12 @@ void Service::spawn()
             dup2(STDIN_FILENO, STDERR_FILENO);
         }
 
-        if (!m_socket_path.is_null()) {
-            ASSERT(m_socket_fd > 2);
-            dup2(m_socket_fd, 3);
+        if (socket_fd >= 0) {
+            ASSERT(!m_socket_path.is_null());
+            ASSERT(socket_fd > 2);
+            dup2(socket_fd, 3);
             // The new descriptor is !CLOEXEC here.
-            // This is true even if m_socket_fd == 3.
+            // This is true even if socket_fd == 3.
             setenv("SOCKET_TAKEOVER", "1", true);
         }
 
@@ -330,11 +346,14 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     m_environment = config.read_entry(name, "Environment").split(' ');
     m_boot_modes = config.read_entry(name, "BootModes", "graphical").split(',');
     m_multi_instance = config.read_bool_entry(name, "MultiInstance");
+    m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections");
 
     m_socket_path = config.read_entry(name, "Socket");
 
     // Lazy requires Socket.
     ASSERT(!m_lazy || !m_socket_path.is_null());
+    // AcceptSocketConnections always requires Socket, Lazy, and MultiInstance.
+    ASSERT(!m_accept_socket_connections || (!m_socket_path.is_null() && m_lazy && m_multi_instance));
     // MultiInstance doesn't work with KeepAlive.
     ASSERT(!m_multi_instance || !m_keep_alive);
 
@@ -379,6 +398,7 @@ void Service::save_to(JsonObject& json)
     json.set("uid", m_uid);
     json.set("gid", m_gid);
     json.set("multi_instance", m_multi_instance);
+    json.set("accept_socket_connections", m_accept_socket_connections);
 
     if (m_pid > 0)
         json.set("pid", m_pid);
