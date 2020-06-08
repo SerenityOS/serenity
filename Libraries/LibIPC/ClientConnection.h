@@ -29,9 +29,7 @@
 #include <AK/ByteBuffer.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/IODevice.h>
 #include <LibCore/LocalSocket.h>
-#include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibIPC/Endpoint.h>
 #include <LibIPC/Message.h>

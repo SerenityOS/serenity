@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/BufferStream.h>
 #include <AK/Forward.h>
 #include <AK/NumericLimits.h>
 #include <AK/String.h>
