@@ -30,7 +30,7 @@
 
 namespace JS {
 
-Array* array_from(Interpreter&);
+Array* array_from(Interpreter&, GlobalObject&);
 
 class Array final : public Object {
 public:

@@ -43,7 +43,7 @@ BooleanPrototype::~BooleanPrototype() { }
 
 Value BooleanPrototype::to_string(Interpreter& interpreter)
 {
-    auto this_object = interpreter.this_value();
+    auto this_object = interpreter.this_value(interpreter.global_object());
     if (this_object.is_boolean()) {
         return js_string(interpreter.heap(), this_object.as_bool() ? "true" : "false");
     }
@@ -58,7 +58,7 @@ Value BooleanPrototype::to_string(Interpreter& interpreter)
 
 Value BooleanPrototype::value_of(Interpreter& interpreter)
 {
-    auto this_object = interpreter.this_value();
+    auto this_object = interpreter.this_value(interpreter.global_object());
     if (this_object.is_boolean()) {
         return this_object;
     }

@@ -99,9 +99,9 @@ static size_t get_length(Interpreter& interpreter, Object& object)
     return length_property.to_size_t(interpreter);
 }
 
-static void for_each_item(Interpreter& interpreter, const String& name, AK::Function<IterationDecision(size_t index, Value value, Value callback_result)> callback, bool skip_empty = true)
+static void for_each_item(Interpreter& interpreter, GlobalObject& global_object, const String& name, AK::Function<IterationDecision(size_t index, Value value, Value callback_result)> callback, bool skip_empty = true)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return;
 
@@ -142,7 +142,7 @@ static void for_each_item(Interpreter& interpreter, const String& name, AK::Func
 Value ArrayPrototype::filter(Interpreter& interpreter)
 {
     auto* new_array = Array::create(interpreter.global_object());
-    for_each_item(interpreter, "filter", [&](auto, auto value, auto callback_result) {
+    for_each_item(interpreter, interpreter.global_object(), "filter", [&](auto, auto value, auto callback_result) {
         if (callback_result.to_boolean())
             new_array->indexed_properties().append(value);
         return IterationDecision::Continue;
@@ -152,7 +152,7 @@ Value ArrayPrototype::filter(Interpreter& interpreter)
 
 Value ArrayPrototype::for_each(Interpreter& interpreter)
 {
-    for_each_item(interpreter, "forEach", [](auto, auto, auto) {
+    for_each_item(interpreter, interpreter.global_object(), "forEach", [](auto, auto, auto) {
         return IterationDecision::Continue;
     });
     return js_undefined();
@@ -160,7 +160,7 @@ Value ArrayPrototype::for_each(Interpreter& interpreter)
 
 Value ArrayPrototype::map(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     auto initial_length = get_length(interpreter, *this_object);
@@ -168,7 +168,7 @@ Value ArrayPrototype::map(Interpreter& interpreter)
         return {};
     auto* new_array = Array::create(interpreter.global_object());
     new_array->indexed_properties().set_array_like_size(initial_length);
-    for_each_item(interpreter, "map", [&](auto index, auto, auto callback_result) {
+    for_each_item(interpreter, interpreter.global_object(), "map", [&](auto index, auto, auto callback_result) {
         new_array->put(index, callback_result);
         if (interpreter.exception())
             return IterationDecision::Break;
@@ -179,7 +179,7 @@ Value ArrayPrototype::map(Interpreter& interpreter)
 
 Value ArrayPrototype::push(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (this_object->is_array()) {
@@ -209,7 +209,7 @@ Value ArrayPrototype::push(Interpreter& interpreter)
 
 Value ArrayPrototype::unshift(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
+    auto* array = array_from(interpreter, interpreter.global_object());
     if (!array)
         return {};
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
@@ -219,7 +219,7 @@ Value ArrayPrototype::unshift(Interpreter& interpreter)
 
 Value ArrayPrototype::pop(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (this_object->is_array()) {
@@ -248,7 +248,7 @@ Value ArrayPrototype::pop(Interpreter& interpreter)
 
 Value ArrayPrototype::shift(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
+    auto* array = array_from(interpreter, interpreter.global_object());
     if (!array)
         return {};
     if (array->indexed_properties().is_empty())
@@ -261,7 +261,7 @@ Value ArrayPrototype::shift(Interpreter& interpreter)
 
 Value ArrayPrototype::to_string(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     auto join_function = this_object->get("join");
@@ -274,10 +274,10 @@ Value ArrayPrototype::to_string(Interpreter& interpreter)
 
 Value ArrayPrototype::to_locale_string(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
-    String separator = ",";  // NOTE: This is implementation-specific.
+    String separator = ","; // NOTE: This is implementation-specific.
     auto length = get_length(interpreter, *this_object);
     if (interpreter.exception())
         return {};
@@ -305,7 +305,7 @@ Value ArrayPrototype::to_locale_string(Interpreter& interpreter)
 
 Value ArrayPrototype::join(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     String separator = ",";
@@ -336,7 +336,7 @@ Value ArrayPrototype::join(Interpreter& interpreter)
 
 Value ArrayPrototype::concat(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
+    auto* array = array_from(interpreter, interpreter.global_object());
     if (!array)
         return {};
 
@@ -362,7 +362,7 @@ Value ArrayPrototype::concat(Interpreter& interpreter)
 
 Value ArrayPrototype::slice(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
+    auto* array = array_from(interpreter, interpreter.global_object());
     if (!array)
         return {};
 
@@ -407,7 +407,7 @@ Value ArrayPrototype::slice(Interpreter& interpreter)
 
 Value ArrayPrototype::index_of(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -438,7 +438,7 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
 
 Value ArrayPrototype::reduce(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
 
@@ -497,7 +497,7 @@ Value ArrayPrototype::reduce(Interpreter& interpreter)
 
 Value ArrayPrototype::reduce_right(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
 
@@ -556,7 +556,7 @@ Value ArrayPrototype::reduce_right(Interpreter& interpreter)
 
 Value ArrayPrototype::reverse(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
+    auto* array = array_from(interpreter, interpreter.global_object());
     if (!array)
         return {};
 
@@ -580,7 +580,7 @@ Value ArrayPrototype::reverse(Interpreter& interpreter)
 
 Value ArrayPrototype::last_index_of(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -611,7 +611,7 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
 
 Value ArrayPrototype::includes(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -644,7 +644,7 @@ Value ArrayPrototype::find(Interpreter& interpreter)
 {
     auto result = js_undefined();
     for_each_item(
-        interpreter, "find", [&](auto, auto value, auto callback_result) {
+        interpreter, interpreter.global_object(), "find", [&](auto, auto value, auto callback_result) {
             if (callback_result.to_boolean()) {
                 result = value;
                 return IterationDecision::Break;
@@ -659,7 +659,7 @@ Value ArrayPrototype::find_index(Interpreter& interpreter)
 {
     auto result_index = -1;
     for_each_item(
-        interpreter, "findIndex", [&](auto index, auto, auto callback_result) {
+        interpreter, interpreter.global_object(), "findIndex", [&](auto index, auto, auto callback_result) {
             if (callback_result.to_boolean()) {
                 result_index = index;
                 return IterationDecision::Break;
@@ -673,7 +673,7 @@ Value ArrayPrototype::find_index(Interpreter& interpreter)
 Value ArrayPrototype::some(Interpreter& interpreter)
 {
     auto result = false;
-    for_each_item(interpreter, "some", [&](auto, auto, auto callback_result) {
+    for_each_item(interpreter, interpreter.global_object(), "some", [&](auto, auto, auto callback_result) {
         if (callback_result.to_boolean()) {
             result = true;
             return IterationDecision::Break;
@@ -686,7 +686,7 @@ Value ArrayPrototype::some(Interpreter& interpreter)
 Value ArrayPrototype::every(Interpreter& interpreter)
 {
     auto result = true;
-    for_each_item(interpreter, "every", [&](auto, auto, auto callback_result) {
+    for_each_item(interpreter, interpreter.global_object(), "every", [&](auto, auto, auto callback_result) {
         if (!callback_result.to_boolean()) {
             result = false;
             return IterationDecision::Break;
@@ -698,7 +698,7 @@ Value ArrayPrototype::every(Interpreter& interpreter)
 
 Value ArrayPrototype::splice(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
 
@@ -801,7 +801,7 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
 
 Value ArrayPrototype::fill(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
 

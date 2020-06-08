@@ -45,9 +45,9 @@ BigIntPrototype::~BigIntPrototype()
 {
 }
 
-static BigIntObject* bigint_object_from(Interpreter& interpreter)
+static BigIntObject* bigint_object_from(Interpreter& interpreter, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return nullptr;
     if (!this_object->is_bigint_object()) {
@@ -59,7 +59,7 @@ static BigIntObject* bigint_object_from(Interpreter& interpreter)
 
 Value BigIntPrototype::to_string(Interpreter& interpreter)
 {
-    auto* bigint_object = bigint_object_from(interpreter);
+    auto* bigint_object = bigint_object_from(interpreter, interpreter.global_object());
     if (!bigint_object)
         return {};
     return js_string(interpreter, bigint_object->bigint().big_integer().to_base10());
@@ -72,7 +72,7 @@ Value BigIntPrototype::to_locale_string(Interpreter& interpreter)
 
 Value BigIntPrototype::value_of(Interpreter& interpreter)
 {
-    auto* bigint_object = bigint_object_from(interpreter);
+    auto* bigint_object = bigint_object_from(interpreter, interpreter.global_object());
     if (!bigint_object)
         return {};
     return bigint_object->value_of();

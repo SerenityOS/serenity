@@ -60,7 +60,7 @@ FunctionPrototype::~FunctionPrototype()
 
 Value FunctionPrototype::apply(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -90,7 +90,7 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
 
 Value FunctionPrototype::bind(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -110,7 +110,7 @@ Value FunctionPrototype::bind(Interpreter& interpreter)
 
 Value FunctionPrototype::call(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -127,7 +127,7 @@ Value FunctionPrototype::call(Interpreter& interpreter)
 
 Value FunctionPrototype::to_string(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_function())

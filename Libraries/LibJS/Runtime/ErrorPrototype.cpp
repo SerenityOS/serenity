@@ -50,7 +50,7 @@ ErrorPrototype::~ErrorPrototype()
 
 Value ErrorPrototype::name_getter(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_error())
@@ -60,7 +60,7 @@ Value ErrorPrototype::name_getter(Interpreter& interpreter)
 
 void ErrorPrototype::name_setter(Interpreter& interpreter, Value value)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return;
     if (!this_object->is_error()) {
@@ -75,7 +75,7 @@ void ErrorPrototype::name_setter(Interpreter& interpreter, Value value)
 
 Value ErrorPrototype::message_getter(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_error())
@@ -85,9 +85,9 @@ Value ErrorPrototype::message_getter(Interpreter& interpreter)
 
 Value ErrorPrototype::to_string(Interpreter& interpreter)
 {
-    if (!interpreter.this_value().is_object())
+    if (!interpreter.this_value(interpreter.global_object()).is_object())
         return interpreter.throw_exception<TypeError>("Not an object");
-    auto& this_object = interpreter.this_value().as_object();
+    auto& this_object = interpreter.this_value(interpreter.global_object()).as_object();
 
     String name = "Error";
     auto name_property = this_object.get("name");

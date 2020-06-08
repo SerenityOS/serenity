@@ -37,7 +37,7 @@ namespace JS {
 
 static ScriptFunction* script_function_from(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return nullptr;
     if (!this_object->is_function()) {
@@ -53,7 +53,7 @@ ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyStr
 }
 
 ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype, bool is_arrow_function)
-    : Function(prototype, is_arrow_function ? interpreter().this_value() : Value(), {})
+    : Function(prototype, is_arrow_function ? interpreter().this_value(interpreter().global_object()) : Value(), {})
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))

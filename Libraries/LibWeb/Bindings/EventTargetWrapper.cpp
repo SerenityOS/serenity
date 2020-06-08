@@ -51,7 +51,7 @@ EventTargetWrapper::~EventTargetWrapper()
 
 JS::Value EventTargetWrapper::add_event_listener(JS::Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
     if (!this_object)
         return {};
     if (interpreter.argument_count() < 2)

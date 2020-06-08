@@ -49,9 +49,9 @@ Array::~Array()
 {
 }
 
-Array* array_from(Interpreter& interpreter)
+Array* array_from(Interpreter& interpreter, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_array()) {
@@ -63,7 +63,7 @@ Array* array_from(Interpreter& interpreter)
 
 Value Array::length_getter(Interpreter& interpreter)
 {
-    auto* array = array_from(interpreter);
+    auto* array = array_from(interpreter, interpreter.global_object());
     if (!array)
         return {};
     return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
@@ -71,7 +71,7 @@ Value Array::length_getter(Interpreter& interpreter)
 
 void Array::length_setter(Interpreter& interpreter, Value value)
 {
-    auto* array = array_from(interpreter);
+    auto* array = array_from(interpreter, interpreter.global_object());
     if (!array)
         return;
     auto length = value.to_number(interpreter);
