@@ -69,7 +69,7 @@ public:
     bool is_symbol() const { return m_type == Type::Symbol; }
     bool is_accessor() const { return m_type == Type::Accessor; };
     bool is_bigint() const { return m_type == Type::BigInt; };
-    bool is_cell() const { return is_string() || is_accessor() || is_object(); }
+    bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol(); }
     bool is_array() const;
     bool is_function() const;
 
