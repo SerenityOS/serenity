@@ -36,6 +36,7 @@
     M(BigIntBadOperatorOtherType, "Cannot use %s operator with BigInt and other type")                 \
     M(BigIntIntArgument, "BigInt argument must be an integer")                                         \
     M(BigIntInvalidValue, "Invalid value for BigInt: %s")                                              \
+    M(ClassDoesNotExtendAConstructorOrNull, "Class extends value %s is not a constructor or null")     \
     M(Convert, "Cannot convert %s to %s")                                                              \
     M(ConvertUndefinedToObject, "Cannot convert undefined to object")                                  \
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '%s'")         \
@@ -51,7 +52,7 @@
     M(JsonCircular, "Cannot stringify circular object")                                                \
     M(JsonMalformed, "Malformed JSON string")                                                          \
     M(NotA, "Not a %s object")                                                                         \
-    M(NotACtor, "%s is not a constructor")                                                             \
+    M(NotAConstructor, "%s is not a constructor")                                                      \
     M(NotAFunction, "%s is not a function")                                                            \
     M(NotAFunctionNoParam, "Not a function")                                                           \
     M(NotAn, "Not an %s object")                                                                       \
@@ -63,6 +64,8 @@
     M(ObjectSetPrototypeOfReturnedFalse, "Object's [[SetPrototypeOf]] method returned false")          \
     M(ObjectSetPrototypeOfTwoArgs, "Object.setPrototypeOf requires at least two arguments")            \
     M(ObjectPreventExtensionsReturnedFalse, "Object's [[PreventExtensions]] method returned false")    \
+    M(ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess,                                             \
+        "Object prototype must not be %s on a super property access")                                  \
     M(ObjectPrototypeWrongType, "Prototype must be an object or null")                                 \
     M(ProxyCallWithNew, "Proxy must be called with the 'new' operator")                                \
     M(ProxyConstructorBadType, "Expected %s argument of Proxy constructor to be object, got %s")       \
@@ -138,6 +141,8 @@
     M(ReflectBadDescriptorArgument, "Descriptor argument is not an object")                            \
     M(StringRawCannotConvert, "Cannot convert property 'raw' to object from %s")                       \
     M(StringRepeatCountMustBe, "repeat count must be a %s number")                                     \
+    M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                    \
+    M(ThisIsAlreadyInitialized, "|this| is already initialized")                                       \
     M(ToObjectNullOrUndef, "ToObject on null or undefined")                                            \
     M(UnknownIdentifier, "'%s' is not defined")                                                        \
     /* LibWeb bindings */                                                                              \

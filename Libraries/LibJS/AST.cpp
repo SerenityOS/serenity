@@ -92,15 +92,28 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         return { js_undefined(), m_callee->execute(interpreter, global_object) };
     }
 
+    if (m_callee->is_super_expression()) {
+        // If we are calling super, |this| has not been initalized yet, and would not be meaningful to provide.
+        auto new_target = interpreter.get_new_target();
+        ASSERT(new_target.is_function());
+        return { js_undefined(), new_target };
+    }
+
     if (m_callee->is_member_expression()) {
         auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
-        auto object_value = member_expression.object().execute(interpreter, global_object);
+        bool is_super_property_lookup = member_expression.object().is_super_expression();
+        auto lookup_target = is_super_property_lookup ? interpreter.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        auto* this_value = object_value.to_object(interpreter, global_object);
+        if (is_super_property_lookup && (lookup_target.is_null() || lookup_target.is_undefined())) {
+            interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects());
+            return {};
+        }
+
+        auto* this_value = is_super_property_lookup ? &interpreter.this_value(global_object).as_object() : lookup_target.to_object(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        auto callee = this_value->get(member_expression.computed_property_name(interpreter, global_object)).value_or(js_undefined());
+        auto callee = lookup_target.to_object(interpreter, global_object)->get(member_expression.computed_property_name(interpreter, global_object)).value_or(js_undefined());
         return { this_value, callee };
     }
     return { &global_object, m_callee->execute(interpreter, global_object) };
@@ -134,7 +147,6 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto& function = callee.as_function();
 
     MarkedValueList arguments(interpreter.heap());
-    arguments.values().append(function.bound_arguments());
 
     for (size_t i = 0; i < m_arguments.size(); ++i) {
         auto value = m_arguments[i].value->execute(interpreter, global_object);
@@ -163,31 +175,26 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         }
     }
 
-    auto& call_frame = interpreter.push_call_frame();
-    call_frame.function_name = function.name();
-    call_frame.arguments = arguments.values();
-    call_frame.environment = function.create_environment();
-
     Object* new_object = nullptr;
     Value result;
     if (is_new_expression()) {
-        new_object = Object::create_empty(interpreter, global_object);
-        auto prototype = function.get("prototype");
+        result = interpreter.construct(function, function, move(arguments), global_object);
+        if (result.is_object())
+            new_object = &result.as_object();
+    } else if (m_callee->is_super_expression()) {
+        auto* super_constructor = interpreter.current_environment()->current_function()->prototype();
+        // FIXME: Functions should track their constructor kind.
+        if (!super_constructor || !super_constructor->is_function())
+            return interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "Super constructor");
+
+        result = interpreter.construct(static_cast<Function&>(*super_constructor), function, move(arguments), global_object);
         if (interpreter.exception())
             return {};
-        if (prototype.is_object()) {
-            new_object->set_prototype(&prototype.as_object());
-            if (interpreter.exception())
-                return {};
-        }
-        call_frame.this_value = new_object;
-        result = function.construct(interpreter);
-    } else {
-        call_frame.this_value = function.bound_this().value_or(this_value);
-        result = function.call(interpreter);
-    }
 
-    interpreter.pop_call_frame();
+        interpreter.current_environment()->bind_this_value(result);
+    } else {
+        result = interpreter.call(function, this_value, move(arguments));
+    }
 
     if (interpreter.exception())
         return {};
@@ -658,6 +665,112 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     ASSERT_NOT_REACHED();
 }
 
+Value SuperExpression::execute(Interpreter&, GlobalObject&) const
+{
+    // The semantics for SuperExpressions are handled in CallExpression::compute_this_and_callee()
+    ASSERT_NOT_REACHED();
+}
+
+Value ClassMethod::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    return m_function->execute(interpreter, global_object);
+}
+
+Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    Value class_constructor_value = m_constructor->execute(interpreter, global_object);
+    if (interpreter.exception())
+        return {};
+
+    update_function_name(class_constructor_value, m_name);
+
+    ASSERT(class_constructor_value.is_function() && class_constructor_value.as_function().is_script_function());
+    ScriptFunction* class_constructor = static_cast<ScriptFunction*>(&class_constructor_value.as_function());
+    Value super_constructor = js_undefined();
+    if (!m_super_class.is_null()) {
+        super_constructor = m_super_class->execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+        if (!super_constructor.is_function() && !super_constructor.is_null())
+            return interpreter.throw_exception<TypeError>(ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects().characters());
+
+        class_constructor->set_constructor_kind(Function::ConstructorKind::Derived);
+        Object* prototype = Object::create_empty(interpreter, interpreter.global_object());
+
+        Object* super_constructor_prototype = nullptr;
+        if (!super_constructor.is_null()) {
+            super_constructor_prototype = &super_constructor.as_object().get("prototype").as_object();
+            if (interpreter.exception())
+                return {};
+        }
+        prototype->set_prototype(super_constructor_prototype);
+
+        prototype->define_property("constructor", class_constructor, 0);
+        if (interpreter.exception())
+            return {};
+        class_constructor->define_property("prototype", prototype, 0);
+        if (interpreter.exception())
+            return {};
+        class_constructor->set_prototype(super_constructor.is_null() ? global_object.function_prototype() : &super_constructor.as_object());
+    }
+
+    auto class_prototype = class_constructor->get("prototype");
+    if (interpreter.exception())
+        return {};
+
+    if (!class_prototype.is_object())
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Class prototype");
+
+    for (const auto& method : m_methods) {
+        auto method_value = method.execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+
+        auto& method_function = method_value.as_function();
+
+        auto key = method.key().execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+
+        auto& target = method.is_static() ? *class_constructor : class_prototype.as_object();
+        method_function.set_home_object(&target);
+
+        auto property_name = key.to_string(interpreter);
+
+        if (method.kind() == ClassMethod::Kind::Method) {
+            target.define_property(property_name, method_value);
+        } else {
+            String accessor_name = [&] {
+                switch (method.kind()) {
+                case ClassMethod::Kind::Getter:
+                    return String::format("get %s", property_name.characters());
+                case ClassMethod::Kind::Setter:
+                    return String::format("set %s", property_name.characters());
+                default:
+                    ASSERT_NOT_REACHED();
+                }
+            }();
+            update_function_name(method_value, accessor_name);
+            target.define_accessor(property_name, method_function, method.kind() == ClassMethod::Kind::Getter, Attribute::Configurable | Attribute::Enumerable);
+        }
+        if (interpreter.exception())
+            return {};
+    }
+
+    return class_constructor;
+}
+
+Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    Value class_constructor = m_class_expression->execute(interpreter, global_object);
+    if (interpreter.exception())
+        return {};
+
+    interpreter.current_environment()->set(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
+
+    return js_undefined();
+}
+
 static void print_indent(int indent)
 {
     for (int i = 0; i < indent * 2; ++i)
@@ -833,10 +946,74 @@ void CallExpression::dump(int indent) const
         argument.value->dump(indent + 1);
 }
 
+void ClassDeclaration::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_class_expression->dump(indent + 1);
+}
+
+void ClassExpression::dump(int indent) const
+{
+    print_indent(indent);
+    printf("ClassExpression: \"%s\"\n", m_name.characters());
+
+    print_indent(indent);
+    printf("(Constructor)\n");
+    m_constructor->dump(indent + 1);
+
+    if (!m_super_class.is_null()) {
+        print_indent(indent);
+        printf("(Super Class)\n");
+        m_super_class->dump(indent + 1);
+    }
+
+    print_indent(indent);
+    printf("(Methods)\n");
+    for (auto& method : m_methods)
+        method.dump(indent + 1);
+}
+
+void ClassMethod::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    printf("(Key)\n");
+    m_key->dump(indent + 1);
+
+    const char* kind_string = nullptr;
+    switch (m_kind) {
+    case Kind::Method:
+        kind_string = "Method";
+        break;
+    case Kind::Getter:
+        kind_string = "Getter";
+        break;
+    case Kind::Setter:
+        kind_string = "Setter";
+        break;
+    }
+    print_indent(indent);
+    printf("Kind: %s\n", kind_string);
+
+    print_indent(indent);
+    printf("Static: %s\n", m_is_static ? "true" : "false");
+
+    print_indent(indent);
+    printf("(Function)\n");
+    m_function->dump(indent + 1);
+}
+
 void StringLiteral::dump(int indent) const
 {
     print_indent(indent);
     printf("StringLiteral \"%s\"\n", m_value.characters());
+}
+
+void SuperExpression::dump(int indent) const
+{
+    print_indent(indent);
+    printf("super\n");
 }
 
 void NumericLiteral::dump(int indent) const
@@ -1006,9 +1183,9 @@ Value SpreadExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     return m_target->execute(interpreter, global_object);
 }
 
-Value ThisExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
+Value ThisExpression::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    return interpreter.this_value(global_object);
+    return interpreter.resolve_this_binding();
 }
 
 void ThisExpression::dump(int indent) const
@@ -1352,6 +1529,9 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         auto value = property.value().execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
+
+        if (value.is_function() && property.is_method())
+            value.as_function().set_home_object(object);
 
         String name = key;
         if (property.type() == ObjectProperty::Type::Getter) {

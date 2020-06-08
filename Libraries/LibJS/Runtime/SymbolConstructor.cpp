@@ -76,7 +76,7 @@ Value SymbolConstructor::call(Interpreter& interpreter)
 
 Value SymbolConstructor::construct(Interpreter& interpreter)
 {
-    interpreter.throw_exception<TypeError>(ErrorType::NotACtor, "Symbol");
+    interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "Symbol");
     return {};
 }
 
