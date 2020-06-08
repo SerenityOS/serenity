@@ -28,6 +28,14 @@ describing how to launch and manage this service.
 * `WorkingDirectory` - the working directory in which the service is spawned. By default, services are spawned in the root (`"/"`) directory.
 * `BootModes` - a comma-separated list of boot modes the service should be enabled in. By default, services are only enabled in the "graphical" mode. The current boot mode is read from the kernel command line, and is assumed to be "graphical" if not specified there.
 * `Environment` - a space-separated list of "variable=value" pairs to set in the environment for the service.
+* `MultiInstance` - whether multiple instances of the service can be running simultaneously.
+* `AcceptSocketConnections` - whether SystemServer should accept connections on the socket, and spawn an instance of the service for each client connection.
+
+Note that:
+* `Lazy` requires a `Socket`.
+* `SocketPermissions` require a `Socket`.
+* `MultiInstance` conflicts with `KeepAlive`.
+* `AcceptSocketConnections` requires `Socket`, `Lazy`, and `MultiInstance`.
 
 ## Environment
 
