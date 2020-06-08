@@ -47,10 +47,10 @@ static void sigchld_handler(int)
     if (!pid)
         return;
 
-    dbg() << "Reaped child with pid " << pid;
+    dbg() << "Reaped child with pid " << pid << ", exist status " << status;
     Service* service = Service::find_by_pid(pid);
     if (service == nullptr) {
-        dbg() << "There was no service with this pid, what is going on?";
+        // This can happen for multi-instance services.
         return;
     }
 
