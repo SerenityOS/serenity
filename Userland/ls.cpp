@@ -49,7 +49,7 @@
 static int do_file_system_object_long(const char* path);
 static int do_file_system_object_short(const char* path);
 
-static bool flag_colorize = true;
+static bool flag_colorize = false;
 static bool flag_long = false;
 static bool flag_show_dotfiles = false;
 static bool flag_show_inode = false;
@@ -79,6 +79,11 @@ int main(int argc, char** argv)
         terminal_rows = ws.ws_row;
         terminal_columns = ws.ws_col;
         output_is_terminal = true;
+    }
+    if (!isatty(STDOUT_FILENO)) {
+        flag_disable_hyperlinks = true;
+    } else {
+        flag_colorize = true;
     }
 
     if (pledge("stdio rpath", nullptr) < 0) {
@@ -300,7 +305,6 @@ bool print_filesystem_object(const String& path, const String& name, const struc
         printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
     } else {
         if (flag_human_readable) {
-            ASSERT(st.st_size > 0);
             printf(" %10s ", human_readable_size((size_t)st.st_size).characters());
         } else {
             printf(" %10zd ", st.st_size);
