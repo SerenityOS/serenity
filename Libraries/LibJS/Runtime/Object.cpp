@@ -437,7 +437,7 @@ bool Object::define_accessor(PropertyName property_name, Function& getter_or_set
             accessor = &existing_property.as_accessor();
     }
     if (!accessor) {
-        accessor = Accessor::create(interpreter(), nullptr, nullptr);
+        accessor = Accessor::create(interpreter(), global_object(), nullptr, nullptr);
         bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
         if (interpreter().exception())
             return {};

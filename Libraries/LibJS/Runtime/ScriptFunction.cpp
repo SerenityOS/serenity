@@ -66,8 +66,8 @@ ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& nam
 void ScriptFunction::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
     Function::initialize(interpreter, global_object);
-    if (!is_arrow_function) {
-        Object* prototype = Object::create_empty(interpreter(), interpreter().global_object());
+    if (!m_is_arrow_function) {
+        Object* prototype = Object::create_empty(interpreter, global_object);
         prototype->define_property("constructor", this, Attribute::Writable | Attribute::Configurable);
         define_property("prototype", prototype, 0);
     }
@@ -99,9 +99,11 @@ LexicalEnvironment* ScriptFunction::create_environment()
             }
         }
     }
-    if (variables.is_empty())
-        return m_parent_environment;
-    return heap().allocate<LexicalEnvironment>(global_object(), move(variables), m_parent_environment);
+
+    auto* environment = heap().allocate<LexicalEnvironment>(global_object(), move(variables), m_parent_environment, LexicalEnvironment::EnvironmentRecordType::Function);
+    environment->set_home_object(home_object());
+    environment->set_current_function(*this);
+    return environment;
 }
 
 Value ScriptFunction::call(Interpreter& interpreter)
@@ -134,7 +136,7 @@ Value ScriptFunction::call(Interpreter& interpreter)
 Value ScriptFunction::construct(Interpreter& interpreter)
 {
     if (m_is_arrow_function)
-        return interpreter.throw_exception<TypeError>(ErrorType::NotACtor, m_name.characters());
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, m_name.characters());
     return call(interpreter);
 }
 

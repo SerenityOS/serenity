@@ -46,7 +46,7 @@ public:
     NonnullRefPtr<Program> parse_program();
 
     template<typename FunctionNodeType>
-    NonnullRefPtr<FunctionNodeType> parse_function_node(bool check_for_function_and_name = true);
+    NonnullRefPtr<FunctionNodeType> parse_function_node(bool check_for_function_and_name = true, bool allow_super_property_lookup = false, bool allow_super_constructor_call = false);
 
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();
@@ -80,6 +80,9 @@ public:
     NonnullRefPtr<NewExpression> parse_new_expression();
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
     RefPtr<Statement> try_parse_labelled_statement();
+    NonnullRefPtr<ClassDeclaration> parse_class_declaration();
+    NonnullRefPtr<ClassExpression> parse_class_expression(bool expect_class_name);
+    NonnullRefPtr<Expression> parse_property_key();
 
     struct Error {
         String message;
@@ -126,6 +129,7 @@ private:
     bool match_statement() const;
     bool match_variable_declaration() const;
     bool match_identifier_name() const;
+    bool match_property_key() const;
     bool match(TokenType type) const;
     bool done() const;
     void expected(const char* what);
@@ -151,6 +155,8 @@ private:
         Vector<NonnullRefPtrVector<FunctionDeclaration>> m_function_scopes;
         UseStrictDirectiveState m_use_strict_directive { UseStrictDirectiveState::None };
         bool m_strict_mode { false };
+        bool m_allow_super_property_lookup { false };
+        bool m_allow_super_constructor_call { false };
 
         explicit ParserState(Lexer);
     };

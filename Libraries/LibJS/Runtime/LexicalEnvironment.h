@@ -40,11 +40,27 @@ struct Variable {
 
 class LexicalEnvironment final : public Cell {
 public:
+    enum class ThisBindingStatus {
+        Lexical,
+        Initialized,
+        Uninitialized,
+    };
+
+    enum class EnvironmentRecordType {
+        Declarative,
+        Function,
+        Global,
+        Object,
+        Module,
+    };
+
     LexicalEnvironment();
+    LexicalEnvironment(EnvironmentRecordType);
     LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent);
+    LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent, EnvironmentRecordType);
     virtual ~LexicalEnvironment() override;
 
-    LexicalEnvironment* parent() { return m_parent; }
+    LexicalEnvironment* parent() const { return m_parent; }
 
     Optional<Variable> get(const FlyString&) const;
     void set(const FlyString&, Variable);
@@ -53,12 +69,37 @@ public:
 
     const HashMap<FlyString, Variable>& variables() const { return m_variables; }
 
+    void set_home_object(Value object) { m_home_object = object; }
+    bool has_super_binding() const;
+    Value get_super_base();
+
+    bool has_this_binding() const;
+    ThisBindingStatus this_binding_status() const { return m_this_binding_status; }
+    Value get_this_binding() const;
+    void bind_this_value(Value this_value);
+
+    // Not a standard operation.
+    void replace_this_binding(Value this_value) { m_this_value = this_value; }
+
+    Value new_target() const { return m_new_target; };
+    void set_new_target(Value new_target) { m_new_target = new_target; }
+
+    Function* current_function() const { return m_current_function; }
+    void set_current_function(Function& function) { m_current_function = &function; }
+
 private:
     virtual const char* class_name() const override { return "LexicalEnvironment"; }
     virtual void visit_children(Visitor&) override;
 
     LexicalEnvironment* m_parent { nullptr };
     HashMap<FlyString, Variable> m_variables;
+    EnvironmentRecordType m_environment_record_type = EnvironmentRecordType::Declarative;
+    ThisBindingStatus m_this_binding_status = ThisBindingStatus::Uninitialized;
+    Value m_home_object;
+    Value m_this_value;
+    Value m_new_target;
+    // Corresponds to [[FunctionObject]]
+    Function* m_current_function { nullptr };
 };
 
 }

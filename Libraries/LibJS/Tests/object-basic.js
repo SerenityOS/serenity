@@ -70,6 +70,22 @@ try {
     assert(a[2] === 3);
     assert(o4.test === undefined);
 
+    var base = {
+        getNumber() {
+            return 10;
+        }
+    };
+
+    var derived = {
+        getNumber() {
+            return 20 + super.getNumber();
+        }
+    };
+
+    Object.setPrototypeOf(derived, base)
+    assert(derived.getNumber() === 30);
+
+    assertIsSyntaxError("({ foo: function() { super.bar; } })")
     assertIsSyntaxError("({ get ...foo })");
     assertIsSyntaxError("({ get... foo })");
     assertIsSyntaxError("({ get foo })");

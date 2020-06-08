@@ -35,6 +35,11 @@ class Function : public Object {
     JS_OBJECT(Function, Object);
 
 public:
+    enum class ConstructorKind {
+        Base,
+        Derived,
+    };
+
     virtual ~Function();
     virtual void initialize(Interpreter&, GlobalObject&) override { }
 
@@ -49,15 +54,15 @@ public:
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
-    Value bound_this() const
-    {
-        return m_bound_this;
-    }
+    Value bound_this() const { return m_bound_this; }
 
-    const Vector<Value>& bound_arguments() const
-    {
-        return m_bound_arguments;
-    }
+    const Vector<Value>& bound_arguments() const { return m_bound_arguments; }
+
+    Value home_object() const { return m_home_object; }
+    void set_home_object(Value home_object) { m_home_object = home_object; }
+
+    ConstructorKind constructor_kind() const { return m_constructor_kind; };
+    void set_constructor_kind(ConstructorKind constructor_kind) { m_constructor_kind = constructor_kind; }
 
 protected:
     explicit Function(Object& prototype);
@@ -67,6 +72,8 @@ private:
     virtual bool is_function() const final { return true; }
     Value m_bound_this;
     Vector<Value> m_bound_arguments;
+    Value m_home_object;
+    ConstructorKind m_constructor_kind = ConstructorKind::Base;
 };
 
 }

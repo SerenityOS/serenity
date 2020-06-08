@@ -74,7 +74,7 @@ Value BigIntConstructor::call(Interpreter& interpreter)
 
 Value BigIntConstructor::construct(Interpreter& interpreter)
 {
-    interpreter.throw_exception<TypeError>(ErrorType::NotACtor, "BigInt");
+    interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "BigInt");
     return {};
 }
 

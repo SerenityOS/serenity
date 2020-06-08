@@ -63,6 +63,7 @@ public:
     virtual bool is_variable_declaration() const { return false; }
     virtual bool is_call_expression() const { return false; }
     virtual bool is_new_expression() const { return false; }
+    virtual bool is_super_expression() const { return false; }
 
 protected:
     ASTNode() { }
@@ -581,6 +582,8 @@ public:
     {
     }
 
+    StringView value() const { return m_value; }
+
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
@@ -640,6 +643,87 @@ private:
     virtual const char* class_name() const override { return "Identifier"; }
 
     FlyString m_string;
+};
+
+class ClassMethod final : public ASTNode {
+public:
+    enum class Kind {
+        Method,
+        Getter,
+        Setter,
+    };
+
+    ClassMethod(NonnullRefPtr<Expression> key, NonnullRefPtr<FunctionExpression> function, Kind kind, bool is_static)
+        : m_key(move(key))
+        , m_function(move(function))
+        , m_kind(kind)
+        , m_is_static(is_static)
+    {
+    }
+
+    const Expression& key() const { return *m_key; }
+    Kind kind() const { return m_kind; }
+    bool is_static() const { return m_is_static; }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ClassMethod"; }
+
+    NonnullRefPtr<Expression> m_key;
+    NonnullRefPtr<FunctionExpression> m_function;
+    Kind m_kind;
+    bool m_is_static;
+};
+
+class SuperExpression final : public Expression {
+public:
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual bool is_super_expression() const override { return true; }
+    virtual const char* class_name() const override { return "SuperExpression"; }
+};
+
+class ClassExpression final : public Expression {
+public:
+    ClassExpression(String name, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassMethod> methods)
+        : m_name(move(name))
+        , m_constructor(move(constructor))
+        , m_super_class(move(super_class))
+        , m_methods(move(methods))
+    {
+    }
+
+    StringView name() const { return m_name; }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ClassExpression"; }
+
+    String m_name;
+    RefPtr<FunctionExpression> m_constructor;
+    RefPtr<Expression> m_super_class;
+    NonnullRefPtrVector<ClassMethod> m_methods;
+};
+
+class ClassDeclaration final : public Declaration {
+public:
+    ClassDeclaration(NonnullRefPtr<ClassExpression> class_expression)
+        : m_class_expression(move(class_expression))
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ClassDeclaration"; }
+    NonnullRefPtr<ClassExpression> m_class_expression;
 };
 
 class SpreadExpression final : public Expression {
@@ -836,10 +920,11 @@ public:
         Spread,
     };
 
-    ObjectProperty(NonnullRefPtr<Expression> key, RefPtr<Expression> value, Type property_type)
+    ObjectProperty(NonnullRefPtr<Expression> key, RefPtr<Expression> value, Type property_type, bool is_method)
         : m_key(move(key))
         , m_value(move(value))
         , m_property_type(property_type)
+        , m_is_method(is_method)
     {
     }
 
@@ -851,6 +936,7 @@ public:
     }
 
     Type type() const { return m_property_type; }
+    bool is_method() const { return m_is_method; }
 
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&, GlobalObject&) const override;
@@ -861,6 +947,7 @@ private:
     NonnullRefPtr<Expression> m_key;
     RefPtr<Expression> m_value;
     Type m_property_type;
+    bool m_is_method { false };
 };
 
 class ObjectExpression : public Expression {
