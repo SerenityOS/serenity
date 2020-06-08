@@ -42,6 +42,10 @@ configured to be *kept alive*, it can even exit after some period of inactivity;
 in this case SystemServer will respawn it again once there is a new connection
 to its socket.
 
+SystemServer can also be configured to accept connections on the socket and
+spawn separate instances of the service for each accepted connection, passing
+the accepted socket to the service process.
+
 ## See also
 
 * [`SystemServer`(5)](../man5/SystemServer.md)
