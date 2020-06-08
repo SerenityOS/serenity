@@ -82,6 +82,7 @@ public:
     virtual void page_did_unhover_link() { }
     virtual void page_did_request_scroll_to_anchor([[maybe_unused]] const String& fragment) { }
     virtual void page_did_invalidate(const Gfx::Rect&) { }
+    virtual void page_did_change_favicon(const Gfx::Bitmap&) { }
 };
 
 }

@@ -60,8 +60,6 @@ public:
 
     void set_needs_display(const Gfx::Rect&);
 
-    Function<void(const Gfx::Bitmap&)> on_favicon_change;
-
     void set_viewport_rect(const Gfx::Rect&);
     Gfx::Rect viewport_rect() const { return m_viewport_rect; }
 
