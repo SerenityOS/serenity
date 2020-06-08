@@ -70,7 +70,7 @@ GlobalObject::GlobalObject()
 void GlobalObject::initialize()
 {
     // These are done first since other prototypes depend on their presence.
-    m_empty_object_shape = heap().allocate<Shape>();
+    m_empty_object_shape = heap().allocate<Shape>(*this);
     m_object_prototype = heap().allocate<ObjectPrototype>();
     m_function_prototype = heap().allocate<FunctionPrototype>();
 

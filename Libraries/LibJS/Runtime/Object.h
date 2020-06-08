@@ -73,6 +73,8 @@ public:
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
+    GlobalObject& global_object() const { return shape().global_object(); }
+
     virtual Value get(PropertyName) const;
 
     virtual bool has_property(PropertyName) const;

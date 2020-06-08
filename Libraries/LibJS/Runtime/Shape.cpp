@@ -25,13 +25,14 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Shape.h>
 
 namespace JS {
 
 Shape* Shape::create_unique_clone() const
 {
-    auto* new_shape = heap().allocate<Shape>();
+    auto* new_shape = heap().allocate<Shape>(m_global_object);
     new_shape->m_unique = true;
     new_shape->m_prototype = m_prototype;
     ensure_property_table();
@@ -45,7 +46,7 @@ Shape* Shape::create_put_transition(const FlyString& property_name, PropertyAttr
     TransitionKey key { property_name, attributes };
     if (auto* existing_shape = m_forward_transitions.get(key).value_or(nullptr))
         return existing_shape;
-    auto* new_shape = heap().allocate<Shape>(this, property_name, attributes, TransitionType::Put);
+    auto* new_shape = heap().allocate<Shape>(*this, property_name, attributes, TransitionType::Put);
     m_forward_transitions.set(key, new_shape);
     return new_shape;
 }
@@ -55,31 +56,34 @@ Shape* Shape::create_configure_transition(const FlyString& property_name, Proper
     TransitionKey key { property_name, attributes };
     if (auto* existing_shape = m_forward_transitions.get(key).value_or(nullptr))
         return existing_shape;
-    auto* new_shape = heap().allocate<Shape>(this, property_name, attributes, TransitionType::Configure);
+    auto* new_shape = heap().allocate<Shape>(*this, property_name, attributes, TransitionType::Configure);
     m_forward_transitions.set(key, new_shape);
     return new_shape;
 }
 
 Shape* Shape::create_prototype_transition(Object* new_prototype)
 {
-    return heap().allocate<Shape>(this, new_prototype);
+    return heap().allocate<Shape>(*this, new_prototype);
 }
 
-Shape::Shape()
+Shape::Shape(GlobalObject& global_object)
+    : m_global_object(global_object)
 {
 }
 
-Shape::Shape(Shape* previous_shape, const FlyString& property_name, PropertyAttributes attributes, TransitionType transition_type)
-    : m_previous(previous_shape)
+Shape::Shape(Shape& previous_shape, const FlyString& property_name, PropertyAttributes attributes, TransitionType transition_type)
+    : m_global_object(previous_shape.m_global_object)
+    , m_previous(&previous_shape)
     , m_property_name(property_name)
     , m_attributes(attributes)
-    , m_prototype(previous_shape->m_prototype)
+    , m_prototype(previous_shape.m_prototype)
     , m_transition_type(transition_type)
 {
 }
 
-Shape::Shape(Shape* previous_shape, Object* new_prototype)
-    : m_previous(previous_shape)
+Shape::Shape(Shape& previous_shape, Object* new_prototype)
+    : m_global_object(previous_shape.m_global_object)
+    , m_previous(&previous_shape)
     , m_prototype(new_prototype)
     , m_transition_type(TransitionType::Prototype)
 {
@@ -92,6 +96,7 @@ Shape::~Shape()
 void Shape::visit_children(Cell::Visitor& visitor)
 {
     Cell::visit_children(visitor);
+    visitor.visit(&m_global_object);
     visitor.visit(m_prototype);
     visitor.visit(m_previous);
     for (auto& it : m_forward_transitions)
