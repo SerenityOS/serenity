@@ -33,6 +33,7 @@
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLParser.h>
 
@@ -151,8 +152,7 @@ bool FrameLoader::load(const URL& url)
     request.set_url(url);
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
-    if (frame().on_load_start)
-        frame().on_load_start(url);
+    frame().page().client().page_did_start_loading(url);
 
     if (url.protocol() != "file" && url.protocol() != "about") {
         URL favicon_url;
@@ -194,8 +194,7 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
             auto document = parse_html_document(html, failed_url);
             ASSERT(document);
             frame().set_document(document);
-            if (frame().on_title_change)
-                frame().on_title_change(document->title());
+            frame().page().client().page_did_change_title(document->title());
         },
         [](auto error) {
             dbg() << "Failed to load error page: " << error;
@@ -228,12 +227,10 @@ void FrameLoader::resource_did_load()
     }
 
     frame().set_document(document);
+    frame().page().client().page_did_change_title(document->title());
 
     if (!url.fragment().is_empty())
         frame().scroll_to_anchor(url.fragment());
-
-    if (frame().on_title_change)
-        frame().on_title_change(document->title());
 }
 
 void FrameLoader::resource_did_fail()

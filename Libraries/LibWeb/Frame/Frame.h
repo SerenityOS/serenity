@@ -60,10 +60,7 @@ public:
 
     void set_needs_display(const Gfx::Rect&);
 
-    Function<void(const String&)> on_title_change;
-    Function<void(const URL&)> on_load_start;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
-    Function<void(Document*)> on_set_document;
 
     void set_viewport_rect(const Gfx::Rect&);
     Gfx::Rect viewport_rect() const { return m_viewport_rect; }

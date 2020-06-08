@@ -66,8 +66,7 @@ void Frame::set_document(Document* document)
     if (m_document)
         m_document->attach_to_frame({}, *this);
 
-    if (on_set_document)
-        on_set_document(m_document);
+    page().client().page_did_set_document_in_main_frame(m_document);
 }
 
 void Frame::set_size(const Gfx::Size& size)
