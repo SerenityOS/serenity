@@ -44,7 +44,7 @@ void Reference::put(Interpreter& interpreter, Value value)
 
     if (is_local_variable() || is_global_variable()) {
         if (is_local_variable())
-            interpreter.set_variable(m_name.to_string(), value);
+            interpreter.set_variable(m_name.to_string(), value, interpreter.global_object());
         else
             interpreter.global_object().put(m_name, value);
         return;
@@ -85,7 +85,7 @@ Value Reference::get(Interpreter& interpreter)
     if (is_local_variable() || is_global_variable()) {
         Value value;
         if (is_local_variable())
-            value = interpreter.get_variable(m_name.to_string());
+            value = interpreter.get_variable(m_name.to_string(), interpreter.global_object());
         else
             value = interpreter.global_object().get(m_name);
         if (interpreter.exception())

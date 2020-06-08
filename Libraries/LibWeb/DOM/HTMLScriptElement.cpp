@@ -75,7 +75,7 @@ void HTMLScriptElement::children_changed()
         parser.print_errors();
         return;
     }
-    document().interpreter().run(*program);
+    document().interpreter().run(document().interpreter().global_object(), *program);
 }
 
 void HTMLScriptElement::inserted_into(Node& new_parent)
@@ -112,7 +112,7 @@ void HTMLScriptElement::inserted_into(Node& new_parent)
         parser.print_errors();
         return;
     }
-    document().interpreter().run(*program);
+    document().interpreter().run(document().interpreter().global_object(), *program);
 }
 
 void HTMLScriptElement::execute_script()
@@ -123,7 +123,7 @@ void HTMLScriptElement::execute_script()
         parser.print_errors();
         return;
     }
-    document().interpreter().run(*program);
+    document().interpreter().run(document().interpreter().global_object(), *program);
 }
 
 void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)

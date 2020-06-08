@@ -94,7 +94,7 @@ ConsoleWidget::ConsoleWidget()
                 output_html.append(String::format("<pre>%s</pre>", hint.characters()));
             m_interpreter->throw_exception<JS::SyntaxError>(error.to_string());
         } else {
-            m_interpreter->run(*program);
+            m_interpreter->run(m_interpreter->global_object(),*program);
         }
 
         if (m_interpreter->exception()) {

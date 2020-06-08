@@ -52,12 +52,12 @@ Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
+Value Interpreter::run(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
 {
     if (statement.is_program()) {
         if (m_call_stack.is_empty()) {
             CallFrame global_call_frame;
-            global_call_frame.this_value = m_global_object;
+            global_call_frame.this_value = &global_object;
             global_call_frame.function_name = "(global execution context)";
             global_call_frame.environment = heap().allocate<LexicalEnvironment>();
             m_call_stack.append(move(global_call_frame));
@@ -65,16 +65,16 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
     }
 
     if (!statement.is_scope_node())
-        return statement.execute(*this, global_object());
+        return statement.execute(*this, global_object);
 
     auto& block = static_cast<const ScopeNode&>(statement);
-    enter_scope(block, move(arguments), scope_type);
+    enter_scope(block, move(arguments), scope_type, global_object);
 
     if (block.children().is_empty())
         m_last_value = js_undefined();
 
     for (auto& node : block.children()) {
-        m_last_value = node.execute(*this, global_object());
+        m_last_value = node.execute(*this, global_object);
         if (should_unwind()) {
             if (should_unwind_until(ScopeType::Breakable, block.label()))
                 stop_unwind();
@@ -92,11 +92,11 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
     return did_return ? m_last_value : js_undefined();
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type)
+void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type, GlobalObject& global_object)
 {
     for (auto& declaration : scope_node.functions()) {
-        auto* function = ScriptFunction::create(global_object(), declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment());
-        set_variable(declaration.name(), function);
+        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment());
+        set_variable(declaration.name(), function, global_object);
     }
 
     if (scope_type == ScopeType::Function) {
@@ -110,7 +110,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
     for (auto& declaration : scope_node.variables()) {
         for (auto& declarator : declaration.declarations()) {
             if (scope_node.is_program()) {
-                global_object().put(declarator.id().string(), js_undefined());
+                global_object.put(declarator.id().string(), js_undefined());
                 if (exception())
                     return;
             } else {
@@ -149,7 +149,7 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
         m_unwind_until = ScopeType::None;
 }
 
-void Interpreter::set_variable(const FlyString& name, Value value, bool first_assignment)
+void Interpreter::set_variable(const FlyString& name, Value value, GlobalObject& global_object, bool first_assignment)
 {
     if (m_call_stack.size()) {
         for (auto* environment = current_environment(); environment; environment = environment->parent()) {
@@ -166,10 +166,10 @@ void Interpreter::set_variable(const FlyString& name, Value value, bool first_as
         }
     }
 
-    global_object().put(move(name), move(value));
+    global_object.put(move(name), move(value));
 }
 
-Value Interpreter::get_variable(const FlyString& name)
+Value Interpreter::get_variable(const FlyString& name, GlobalObject& global_object)
 {
     if (m_call_stack.size()) {
         for (auto* environment = current_environment(); environment; environment = environment->parent()) {
@@ -178,7 +178,7 @@ Value Interpreter::get_variable(const FlyString& name)
                 return possible_match.value().value;
         }
     }
-    auto value = global_object().get(name);
+    auto value = global_object.get(name);
     if (m_underscore_is_last_value && name == "_" && value.is_empty())
         return m_last_value;
     return value;
