@@ -1,0 +1,11 @@
+--- editline-1.17.1/aux/config.sub	2020-06-08 23:59:28.865434416 +1000
++++ editline-1.17.1/aux/config.sub.new	2020-06-08 23:59:21.345434106 +1000
+@@ -1390,7 +1390,7 @@
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+ 	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
+ 	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* | -bme* \
+-	      | -midnightbsd*)
++	      | -midnightbsd* | -serenity*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
