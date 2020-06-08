@@ -61,6 +61,7 @@ struct Redirection {
     Type type;
     int fd { -1 };
     int rewire_fd { -1 };
+    size_t redirection_op_start { 0 };
     Token path {};
 };
 
