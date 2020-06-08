@@ -55,14 +55,14 @@ Value DateConstructor::call(Interpreter& interpreter)
     return js_string(interpreter, static_cast<Date&>(date.as_object()).string());
 }
 
-Value DateConstructor::construct(Interpreter& interpreter)
+Value DateConstructor::construct(Interpreter&)
 {
     // TODO: Support args
     struct timeval tv;
     gettimeofday(&tv, nullptr);
     auto datetime = Core::DateTime::now();
     auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
-    return Date::create(interpreter.global_object(), datetime, milliseconds);
+    return Date::create(global_object(), datetime, milliseconds);
 }
 
 Value DateConstructor::now(Interpreter&)

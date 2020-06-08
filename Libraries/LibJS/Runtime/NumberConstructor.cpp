@@ -75,7 +75,7 @@ Value NumberConstructor::construct(Interpreter& interpreter)
         if (interpreter.exception())
             return {};
     }
-    return NumberObject::create(interpreter.global_object(), number);
+    return NumberObject::create(global_object(), number);
 }
 
 Value NumberConstructor::is_finite(Interpreter& interpreter)

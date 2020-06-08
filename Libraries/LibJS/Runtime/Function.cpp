@@ -59,7 +59,7 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
         case Value::Type::Null:
             if (interpreter().in_strict_mode())
                 return bound_this_value;
-            return &interpreter().global_object();
+            return &global_object();
         default:
             return bound_this_value.to_object(interpreter());
         }

@@ -51,14 +51,14 @@ Value RegExpConstructor::call(Interpreter& interpreter)
 Value RegExpConstructor::construct(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
-        return RegExpObject::create(interpreter.global_object(), "(?:)", "");
+        return RegExpObject::create(global_object(), "(?:)", "");
     auto contents = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
     auto flags = interpreter.argument_count() > 1 ? interpreter.argument(1).to_string(interpreter) : "";
     if (interpreter.exception())
         return {};
-    return RegExpObject::create(interpreter.global_object(), contents, flags);
+    return RegExpObject::create(global_object(), contents, flags);
 }
 
 }

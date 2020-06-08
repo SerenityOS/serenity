@@ -55,7 +55,7 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
         if (interpreter.exception())
             return {};
     }
-    return Error::create(interpreter.global_object(), "Error", message);
+    return Error::create(global_object(), "Error", message);
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                          \

@@ -91,7 +91,8 @@ Object::Object(Object* prototype)
         m_shape = interpreter().global_object().empty_object_shape();
         set_prototype(prototype);
     } else {
-        m_shape = interpreter().heap().allocate<Shape>(interpreter().global_object());
+        // This is the global object
+        m_shape = interpreter().heap().allocate<Shape>(static_cast<GlobalObject&>(*this));
     }
 }
 
@@ -167,7 +168,7 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
 
 Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode kind, bool only_enumerable_properties) const
 {
-    auto* properties_array = Array::create(interpreter().global_object());
+    auto* properties_array = Array::create(global_object());
 
     // FIXME: Support generic iterables
     if (this_object.is_string_object()) {
@@ -179,7 +180,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
             } else if (kind == GetOwnPropertyMode::Value) {
                 properties_array->define_property(i, js_string(interpreter(), String::format("%c", str[i])));
             } else {
-                auto* entry_array = Array::create(interpreter().global_object());
+                auto* entry_array = Array::create(global_object());
                 entry_array->define_property(0, js_string(interpreter(), String::number(i)));
                 if (interpreter().exception())
                     return {};
@@ -206,7 +207,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
         } else if (kind == GetOwnPropertyMode::Value) {
             properties_array->define_property(property_index, value_and_attributes.value);
         } else {
-            auto* entry_array = Array::create(interpreter().global_object());
+            auto* entry_array = Array::create(global_object());
             entry_array->define_property(0, js_string(interpreter(), String::number(entry.index())));
             if (interpreter().exception())
                 return {};
@@ -232,7 +233,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
         } else if (kind == GetOwnPropertyMode::Value) {
             properties_array->define_property(offset, this_object.get(it.key));
         } else {
-            auto* entry_array = Array::create(interpreter().global_object());
+            auto* entry_array = Array::create(global_object());
             entry_array->define_property(0, js_string(interpreter(), it.key));
             if (interpreter().exception())
                 return {};
@@ -294,7 +295,7 @@ Value Object::get_own_property_descriptor_object(PropertyName property_name) con
         return js_undefined();
     auto descriptor = descriptor_opt.value();
 
-    auto* descriptor_object = Object::create_empty(interpreter(), interpreter().global_object());
+    auto* descriptor_object = Object::create_empty(interpreter(), global_object());
     descriptor_object->define_property("enumerable", Value(descriptor.attributes.is_enumerable()));
     if (interpreter().exception())
         return {};
@@ -685,7 +686,7 @@ bool Object::put(PropertyName property_name, Value value)
 
 bool Object::define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length, PropertyAttributes attribute)
 {
-    auto* function = NativeFunction::create(interpreter(), interpreter().global_object(), property_name, move(native_function));
+    auto* function = NativeFunction::create(interpreter(), global_object(), property_name, move(native_function));
     function->define_property("length", Value(length), Attribute::Configurable);
     if (interpreter().exception())
         return {};

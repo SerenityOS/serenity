@@ -69,7 +69,7 @@ Value StringConstructor::construct(Interpreter& interpreter)
         primitive_string = interpreter.argument(0).to_primitive_string(interpreter);
     if (!primitive_string)
         return {};
-    return StringObject::create(interpreter.global_object(), *primitive_string);
+    return StringObject::create(global_object(), *primitive_string);
 }
 
 Value StringConstructor::raw(Interpreter& interpreter)
