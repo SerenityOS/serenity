@@ -84,7 +84,7 @@ public:
 
     ~Interpreter();
 
-    Value run(const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
+    Value run(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
 
     GlobalObject& global_object();
     const GlobalObject& global_object() const;
@@ -105,14 +105,14 @@ public:
     }
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 
-    Value get_variable(const FlyString& name);
-    void set_variable(const FlyString& name, Value, bool first_assignment = false);
+    Value get_variable(const FlyString& name, GlobalObject&);
+    void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false);
 
     Reference get_reference(const FlyString& name);
 
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);
 
-    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType);
+    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
 
     Value call(Function&, Value this_value, Optional<MarkedValueList> arguments = {});

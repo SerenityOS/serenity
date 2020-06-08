@@ -414,7 +414,7 @@ JS::Value Document::run_javascript(const StringView& source)
     }
     dbg() << "Document::run_javascript('" << source << "') will run:";
     program->dump(0);
-    return document().interpreter().run(*program);
+    return document().interpreter().run(document().interpreter().global_object(), *program);
 }
 
 NonnullRefPtr<Element> Document::create_element(const String& tag_name)

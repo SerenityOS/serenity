@@ -347,7 +347,7 @@ bool parse_and_run(JS::Interpreter& interpreter, const StringView& source)
             printf("%s\n", hint.characters());
         interpreter.throw_exception<JS::SyntaxError>(error.to_string());
     } else {
-        interpreter.run(*program);
+        interpreter.run(interpreter.global_object(), *program);
     }
 
     if (interpreter.exception()) {
@@ -820,7 +820,7 @@ int main(int argc, char** argv)
 
             switch (mode) {
             case CompleteProperty: {
-                auto maybe_variable = interpreter->get_variable(variable_name);
+                auto maybe_variable = interpreter->get_variable(variable_name, interpreter->global_object());
                 if (maybe_variable.is_empty()) {
                     maybe_variable = interpreter->global_object().get(FlyString(variable_name));
                     if (maybe_variable.is_empty())
