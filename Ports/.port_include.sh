@@ -52,7 +52,9 @@ func_defined post_fetch || post_fetch() {
 fetch() {
     if [ "$auth_type" == "sig" ] && [ ! -z "${auth_import_key}" ]; then
         # import gpg key if not existing locally
-        gpg --list-keys $auth_import_key || gpg --recv-key $auth_import_key
+        # The default keyserver keys.openpgp.org prints "new key but contains no user ID - skipped"
+        # and fails. Use a different key server.
+        gpg --list-keys $auth_import_key || gpg --keyserver hkps://keyserver.ubuntu.com --recv-key $auth_import_key
     fi
 
     OLDIFS=$IFS
