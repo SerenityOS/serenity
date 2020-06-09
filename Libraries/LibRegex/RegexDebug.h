@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include "LibRegex/RegexMatcher.h"
 #include "AK/StringBuilder.h"
+#include "LibRegex/RegexMatcher.h"
 
 //#define REGEX_DEBUG
 

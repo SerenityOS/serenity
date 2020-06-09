@@ -201,7 +201,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     if (match_count) {
         auto capture_groups_count = min(output.capture_group_matches.size(), output.matches.size());
         for (size_t i = 0; i < capture_groups_count; ++i) {
-            if(input.regex_options & AllFlags::SkipTrimEmptyMatches) {
+            if (input.regex_options & AllFlags::SkipTrimEmptyMatches) {
                 output_copy.capture_group_matches.append(output.capture_group_matches.at(i));
             } else {
                 Vector<Match> capture_group_matches;

@@ -193,7 +193,7 @@ public:
 
     const char* characters_without_null_termination() const
     {
-        if(is_u8_view())
+        if (is_u8_view())
             return u8view().characters_without_null_termination();
 
         return to_string().characters(); // FIXME: it contains the null termination, does that actually matter?
@@ -201,14 +201,14 @@ public:
 
     bool starts_with(const StringView& str) const
     {
-        if(is_u32_view())
+        if (is_u32_view())
             return false;
         return u8view().starts_with(str);
     }
 
     bool starts_with(const Utf32View& str) const
     {
-        if(is_u8_view())
+        if (is_u8_view())
             return false;
 
         StringBuilder builder;

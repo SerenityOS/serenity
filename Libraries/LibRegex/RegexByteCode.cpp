@@ -565,7 +565,7 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             auto value = (CharRange)m_bytecode->at(offset++);
             result.empend(String::format("ch_range='%c'-'%c'", value.from, value.to));
             if (!view.is_null())
-                result.empend(String::format("compare against: '%s'",  input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
+                result.empend(String::format("compare against: '%s'", input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
         }
     }
     return result;
