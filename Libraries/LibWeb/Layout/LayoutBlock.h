@@ -65,6 +65,10 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
 
+protected:
+    void compute_width();
+    void compute_position();
+    void compute_height();
 
 private:
     virtual bool is_block() const override { return true; }
@@ -74,10 +78,6 @@ private:
     void layout_children(LayoutMode);
     void layout_inline_children(LayoutMode);
     void layout_block_children(LayoutMode);
-
-    void compute_width();
-    void compute_position();
-    void compute_height();
 
     Vector<LineBox> m_line_boxes;
 };
