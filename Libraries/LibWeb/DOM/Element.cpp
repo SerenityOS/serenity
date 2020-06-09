@@ -39,6 +39,7 @@
 #include <LibWeb/Layout/LayoutTable.h>
 #include <LibWeb/Layout/LayoutTableCell.h>
 #include <LibWeb/Layout/LayoutTableRow.h>
+#include <LibWeb/Layout/LayoutTableRowGroup.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Parser/HTMLParser.h>
 
@@ -130,6 +131,8 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
         return adopt(*new LayoutTableRow(*this, move(style)));
     if (display == "table-cell")
         return adopt(*new LayoutTableCell(*this, move(style)));
+    if (display == "table-row-group")
+        return adopt(*new LayoutTableRowGroup(*this, move(style)));
     if (display == "inline-block") {
         auto inline_block = adopt(*new LayoutBlock(this, move(style)));
         inline_block->set_inline(true);

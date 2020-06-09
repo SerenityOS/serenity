@@ -87,6 +87,7 @@ set(SOURCES
     Layout/LayoutTable.cpp
     Layout/LayoutTableCell.cpp
     Layout/LayoutTableRow.cpp
+    Layout/LayoutTableRowGroup.cpp
     Layout/LayoutText.cpp
     Layout/LayoutTreeBuilder.cpp
     Layout/LayoutWidget.cpp
