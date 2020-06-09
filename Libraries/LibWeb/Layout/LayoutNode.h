@@ -31,6 +31,7 @@
 #include <LibGfx/FloatRect.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
 #include <LibWeb/Layout/LayoutPosition.h>
 #include <LibWeb/RenderingContext.h>
@@ -38,14 +39,51 @@
 
 namespace Web {
 
-class Document;
-class Element;
-class LayoutBlock;
-class LayoutDocument;
-class LayoutNode;
-class LayoutNodeWithStyle;
-class LineBoxFragment;
-class Node;
+template<typename T>
+inline bool is(const LayoutNode&)
+{
+    return false;
+}
+
+template<typename T>
+inline bool is(const LayoutNode* node)
+{
+    return !node || is<T>(*node);
+}
+
+template<>
+inline bool is<LayoutNode>(const LayoutNode&)
+{
+    return true;
+}
+
+template<typename T>
+inline const T& to(const LayoutNode& node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<const T&>(node);
+}
+
+template<typename T>
+inline T* to(LayoutNode* node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<T*>(node);
+}
+
+template<typename T>
+inline const T* to(const LayoutNode* node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<const T*>(node);
+}
+
+template<typename T>
+inline T& to(LayoutNode& node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<T&>(node);
+}
 
 struct HitTestResult {
     RefPtr<LayoutNode> layout_node;
@@ -80,6 +118,26 @@ public:
     {
         for (auto* node = first_child(); node; node = node->next_sibling())
             callback(*node);
+    }
+
+    template<typename T, typename Callback>
+    inline void for_each_child_of_type(Callback callback)
+    {
+        for (auto* node = first_child(); node; node = node->next_sibling()) {
+            if (!is<T>(node))
+                continue;
+            callback(to<T>(*node));
+        }
+    }
+
+    template<typename T, typename Callback>
+    inline void for_each_child_of_type(Callback callback) const
+    {
+        for (auto* node = first_child(); node; node = node->next_sibling()) {
+            if (!is<T>(node))
+                continue;
+            callback(to<T>(*node));
+        }
     }
 
     virtual const char* class_name() const = 0;
@@ -143,6 +201,12 @@ public:
 
     template<typename U>
     U* next_sibling_of_type();
+
+    template<typename U>
+    const U* previous_sibling_of_type() const;
+
+    template<typename U>
+    U* previous_sibling_of_type();
 
     template<typename T>
     const T* first_child_of_type() const;
@@ -226,58 +290,6 @@ inline LayoutNodeWithStyle* LayoutNode::parent()
 }
 
 template<typename T>
-inline bool is(const LayoutNode&)
-{
-    return false;
-}
-
-template<typename T>
-inline bool is(const LayoutNode* node)
-{
-    return !node || is<T>(*node);
-}
-
-template<>
-inline bool is<LayoutNode>(const LayoutNode&)
-{
-    return true;
-}
-
-template<>
-inline bool is<LayoutNodeWithStyle>(const LayoutNode& node)
-{
-    return node.has_style();
-}
-
-template<typename T>
-inline const T& to(const LayoutNode& node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<const T&>(node);
-}
-
-template<typename T>
-inline T* to(LayoutNode* node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<T*>(node);
-}
-
-template<typename T>
-inline const T* to(const LayoutNode* node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<const T*>(node);
-}
-
-template<typename T>
-inline T& to(LayoutNode& node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<T&>(node);
-}
-
-template<typename T>
 inline const T* LayoutNode::next_sibling_of_type() const
 {
     for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
@@ -291,6 +303,26 @@ template<typename T>
 inline T* LayoutNode::next_sibling_of_type()
 {
     for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
+        if (is<T>(*sibling))
+            return &to<T>(*sibling);
+    }
+    return nullptr;
+}
+
+template<typename T>
+inline const T* LayoutNode::previous_sibling_of_type() const
+{
+    for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
+        if (is<T>(*sibling))
+            return &to<T>(*sibling);
+    }
+    return nullptr;
+}
+
+template<typename T>
+inline T* LayoutNode::previous_sibling_of_type()
+{
+    for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
         if (is<T>(*sibling))
             return &to<T>(*sibling);
     }
@@ -335,6 +367,12 @@ inline T* LayoutNode::first_ancestor_of_type()
             return &to<T>(*ancestor);
     }
     return nullptr;
+}
+
+template<>
+inline bool is<LayoutNodeWithStyle>(const LayoutNode& node)
+{
+    return node.has_style();
 }
 
 }
