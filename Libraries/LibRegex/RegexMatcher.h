@@ -216,7 +216,6 @@ RegexResult search(const Vector<RegexStringView> views, Regex<Parser>& pattern, 
     return pattern.search(views, regex_options);
 }
 
-
 template<class Parser>
 bool search(const RegexStringView view, Regex<Parser>& pattern, RegexResult& res, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {

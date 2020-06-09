@@ -26,9 +26,9 @@
 
 #include <AK/TestSuite.h> // import first, to prevent warning of ASSERT* redefinition
 
+#include <AK/StringBuilder.h>
 #include <LibRegex/Regex.h>
 #include <LibRegex/RegexDebug.h>
-#include <AK/StringBuilder.h>
 #include <stdio.h>
 
 static ECMAScriptOptions match_test_api_options(const ECMAScriptOptions options)
