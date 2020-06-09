@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
  * All rights reserved.
  *
