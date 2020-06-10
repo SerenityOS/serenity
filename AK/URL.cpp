@@ -27,6 +27,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
+#include <AK/URLParser.h>
 
 namespace AK {
 
@@ -238,7 +239,7 @@ bool URL::parse(const StringView& string)
     if (state == State::InFragment)
         m_fragment = String::copy(buffer);
     if (state == State::InDataPayload)
-        m_data_payload = String::copy(buffer);
+        m_data_payload = urldecode(String::copy(buffer));
     if (m_query.is_null())
         m_query = "";
     if (m_fragment.is_null())
