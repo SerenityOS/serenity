@@ -67,8 +67,8 @@ void LayoutFrame::render(RenderingContext& context)
     context.painter().save();
     auto old_viewport_rect = context.viewport_rect();
 
-    context.painter().add_clip_rect(enclosing_int_rect(rect()));
-    context.painter().translate(x(), y());
+    context.painter().add_clip_rect(enclosing_int_rect(absolute_rect()));
+    context.painter().translate(absolute_x(), absolute_y());
 
     context.set_viewport_rect({ {}, node().hosted_frame()->size() });
     node().hosted_frame()->document()->layout_node()->render(context);
@@ -82,7 +82,7 @@ void LayoutFrame::did_set_rect()
     LayoutReplaced::did_set_rect();
 
     ASSERT(node().hosted_frame());
-    node().hosted_frame()->set_size(Gfx::Size(rect().width(), rect().height()));
+    node().hosted_frame()->set_size(size().to_int_size());
 }
 
 }

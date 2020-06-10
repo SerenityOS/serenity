@@ -27,6 +27,7 @@
 #include <AK/Utf8View.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/LayoutBox.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <ctype.h>
 
@@ -39,18 +40,21 @@ void LineBox::add_fragment(const LayoutNode& layout_node, int start, int length,
         // The fragment we're adding is from the last LayoutNode on the line.
         // Expand the last fragment instead of adding a new one with the same LayoutNode.
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
-        m_fragments.last().m_rect.set_width(m_fragments.last().m_rect.width() + width);
+        m_fragments.last().set_width(m_fragments.last().width() + width);
     } else {
-        m_fragments.empend(layout_node, start, length, Gfx::FloatRect(m_width, 0, width, height));
+        m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width, 0), Gfx::FloatSize(width, height)));
     }
     m_width += width;
+
+    if (is<LayoutBox>(layout_node))
+        const_cast<LayoutBox&>(to<LayoutBox>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
 }
 
 void LineBox::trim_trailing_whitespace()
 {
     while (!m_fragments.is_empty() && m_fragments.last().is_justifiable_whitespace()) {
         auto fragment = m_fragments.take_last();
-        m_width -= fragment.width();
+        m_width -= fragment->width();
     }
 
     if (m_fragments.is_empty())
@@ -64,7 +68,7 @@ void LineBox::trim_trailing_whitespace()
     int space_width = last_fragment.layout_node().style().font().glyph_width(' ');
     while (last_fragment.length() && isspace(last_text[last_fragment.length() - 1])) {
         last_fragment.m_length -= 1;
-        last_fragment.m_rect.set_width(last_fragment.m_rect.width() - space_width);
+        last_fragment.set_width(last_fragment.width() - space_width);
         m_width -= space_width;
     }
 }

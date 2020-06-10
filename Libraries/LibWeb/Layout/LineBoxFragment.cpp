@@ -57,6 +57,14 @@ StringView LineBoxFragment::text() const
     return to<LayoutText>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
 }
 
+const Gfx::FloatRect LineBoxFragment::absolute_rect() const
+{
+    Gfx::FloatRect rect { {}, size() };
+    rect.set_location(m_layout_node.containing_block()->absolute_position());
+    rect.move_by(offset());
+    return rect;
+}
+
 int LineBoxFragment::text_index_at(float x) const
 {
     if (!layout_node().is_text())
@@ -65,7 +73,7 @@ int LineBoxFragment::text_index_at(float x) const
     auto& font = layout_text.style().font();
     Utf8View view(text());
 
-    float relative_x = x - m_rect.location().x();
+    float relative_x = x - absolute_x();
     float glyph_spacing = font.glyph_spacing();
 
     float width_so_far = 0;

@@ -53,7 +53,7 @@ void LayoutTableRowGroup::layout(LayoutMode layout_mode)
         content_height += row.height();
     });
 
-    rect().set_height(content_height);
+    set_height(content_height);
 }
 
 }

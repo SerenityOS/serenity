@@ -155,7 +155,7 @@ void LayoutNode::set_needs_display()
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                const_cast<Frame*>(frame)->set_needs_display(enclosing_int_rect(fragment.rect()));
+                const_cast<Frame*>(frame)->set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
             }
             return IterationDecision::Continue;
         });
@@ -172,13 +172,13 @@ float LayoutNode::font_size() const
 Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
 {
     if (is_box())
-        return to<LayoutBox>(*this).position();
+        return to<LayoutBox>(*this).absolute_position();
     ASSERT(is_inline());
     Gfx::FloatPoint position;
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                position = fragment.rect().location();
+                position = fragment.absolute_rect().location();
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;

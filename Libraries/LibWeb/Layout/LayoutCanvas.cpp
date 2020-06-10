@@ -55,11 +55,11 @@ void LayoutCanvas::render(RenderingContext& context)
         return;
 
     // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-    if (!context.viewport_rect().intersects(enclosing_int_rect(rect())))
+    if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
         return;
 
     if (node().bitmap())
-        context.painter().draw_scaled_bitmap(enclosing_int_rect(rect()), *node().bitmap(), node().bitmap()->rect());
+        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
     LayoutReplaced::render(context);
 }
 
