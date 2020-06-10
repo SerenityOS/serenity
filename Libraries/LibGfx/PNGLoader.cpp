@@ -117,7 +117,7 @@ struct PNGLoadingContext {
     Vector<Scanline> scanlines;
     RefPtr<Gfx::Bitmap> bitmap;
     u8* decompression_buffer { nullptr };
-    int decompression_buffer_size { 0 };
+    size_t decompression_buffer_size { 0 };
     Vector<u8> compressed_data;
     Vector<PaletteEntry> palette_data;
     Vector<u8> palette_transparency_data;
@@ -125,7 +125,7 @@ struct PNGLoadingContext {
 
 class Streamer {
 public:
-    Streamer(const u8* data, int size)
+    Streamer(const u8* data, size_t size)
         : m_data_ptr(data)
         , m_size_remaining(size)
     {
@@ -134,7 +134,7 @@ public:
     template<typename T>
     bool read(T& value)
     {
-        if (m_size_remaining < (int)sizeof(T))
+        if (m_size_remaining < sizeof(T))
             return false;
         value = *((const NetworkOrdered<T>*)m_data_ptr);
         m_data_ptr += sizeof(T);
@@ -142,7 +142,7 @@ public:
         return true;
     }
 
-    bool read_bytes(u8* buffer, int count)
+    bool read_bytes(u8* buffer, size_t count)
     {
         if (m_size_remaining < count)
             return false;
@@ -152,7 +152,7 @@ public:
         return true;
     }
 
-    bool wrap_bytes(ByteBuffer& buffer, int count)
+    bool wrap_bytes(ByteBuffer& buffer, size_t count)
     {
         if (m_size_remaining < count)
             return false;
@@ -165,11 +165,11 @@ public:
     bool at_end() const { return !m_size_remaining; }
 
 private:
-    const u8* m_data_ptr;
-    int m_size_remaining;
+    const u8* m_data_ptr { nullptr };
+    size_t m_size_remaining { 0 };
 };
 
-static RefPtr<Gfx::Bitmap> load_png_impl(const u8*, int);
+static RefPtr<Gfx::Bitmap> load_png_impl(const u8*, size_t);
 static bool process_chunk(Streamer&, PNGLoadingContext& context, bool decode_size_only);
 
 RefPtr<Gfx::Bitmap> load_png(const StringView& path)
@@ -621,7 +621,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     return true;
 }
 
-static RefPtr<Gfx::Bitmap> load_png_impl(const u8* data, int data_size)
+static RefPtr<Gfx::Bitmap> load_png_impl(const u8* data, size_t data_size)
 {
     PNGLoadingContext context;
     context.data = data;
