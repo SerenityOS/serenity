@@ -33,6 +33,9 @@
 namespace Web {
 
 class StyleRule : public RefCounted<StyleRule> {
+    AK_MAKE_NONCOPYABLE(StyleRule);
+    AK_MAKE_NONMOVABLE(StyleRule);
+
 public:
     static NonnullRefPtr<StyleRule> create(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
     {
