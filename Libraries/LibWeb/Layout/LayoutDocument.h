@@ -43,7 +43,7 @@ public:
     const LayoutRange& selection() const { return m_selection; }
     LayoutRange& selection() { return m_selection; }
 
-    void did_set_viewport_rect(Badge<Frame>, const Gfx::Rect&);
+    void did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect&);
 
     virtual bool is_root() const override { return true; }
 

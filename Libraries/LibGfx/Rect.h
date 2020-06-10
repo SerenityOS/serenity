@@ -36,15 +36,15 @@
 
 namespace Gfx {
 
-class Rect {
+class IntRect {
 public:
-    Rect() {}
-    Rect(int x, int y, int width, int height)
+    IntRect() {}
+    IntRect(int x, int y, int width, int height)
         : m_location(x, y)
         , m_size(width, height)
     {
     }
-    Rect(const Point& location, const Size& size)
+    IntRect(const IntPoint& location, const IntSize& size)
         : m_location(location)
         , m_size(size)
     {
@@ -65,22 +65,22 @@ public:
         m_location.move_by(dx, dy);
     }
 
-    void move_by(const Point& delta)
+    void move_by(const IntPoint& delta)
     {
         m_location.move_by(delta);
     }
 
-    Point center() const
+    IntPoint center() const
     {
         return { x() + width() / 2, y() + height() / 2 };
     }
 
-    void set_location(const Point& location)
+    void set_location(const IntPoint& location)
     {
         m_location = location;
     }
 
-    void set_size(const Size& size)
+    void set_size(const IntSize& size)
     {
         m_size = size;
     }
@@ -107,30 +107,30 @@ public:
         set_height(height() - h);
     }
 
-    Rect shrunken(int w, int h) const
+    IntRect shrunken(int w, int h) const
     {
-        Rect rect = *this;
+        IntRect rect = *this;
         rect.shrink(w, h);
         return rect;
     }
 
-    Rect inflated(int w, int h) const
+    IntRect inflated(int w, int h) const
     {
-        Rect rect = *this;
+        IntRect rect = *this;
         rect.inflate(w, h);
         return rect;
     }
 
-    Rect translated(int dx, int dy) const
+    IntRect translated(int dx, int dy) const
     {
-        Rect rect = *this;
+        IntRect rect = *this;
         rect.move_by(dx, dy);
         return rect;
     }
 
-    Rect translated(const Point& delta) const
+    IntRect translated(const IntPoint& delta) const
     {
-        Rect rect = *this;
+        IntRect rect = *this;
         rect.move_by(delta);
         return rect;
     }
@@ -150,12 +150,12 @@ public:
         return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
     }
 
-    bool contains(const Point& point) const
+    bool contains(const IntPoint& point) const
     {
         return contains(point.x(), point.y());
     }
 
-    bool contains(const Rect& other) const
+    bool contains(const IntRect& other) const
     {
         return left() <= other.left()
             && right() >= other.right()
@@ -224,19 +224,19 @@ public:
         move_by(0, delta);
     }
 
-    bool intersects_vertically(const Rect& other) const
+    bool intersects_vertically(const IntRect& other) const
     {
         return top() <= other.bottom()
             && other.top() <= bottom();
     }
 
-    bool intersects_horizontally(const Rect& other) const
+    bool intersects_horizontally(const IntRect& other) const
     {
         return left() <= other.right()
             && other.left() <= right();
     }
 
-    bool intersects(const Rect& other) const
+    bool intersects(const IntRect& other) const
     {
         return left() <= other.right()
             && other.left() <= right()
@@ -254,62 +254,62 @@ public:
     void set_width(int width) { m_size.set_width(width); }
     void set_height(int height) { m_size.set_height(height); }
 
-    Point location() const { return m_location; }
-    Size size() const { return m_size; }
+    IntPoint location() const { return m_location; }
+    IntSize size() const { return m_size; }
 
-    Vector<Rect, 4> shatter(const Rect& hammer) const;
+    Vector<IntRect, 4> shatter(const IntRect& hammer) const;
 
-    bool operator==(const Rect& other) const
+    bool operator==(const IntRect& other) const
     {
         return m_location == other.m_location
             && m_size == other.m_size;
     }
 
-    bool operator!=(const Rect& other) const
+    bool operator!=(const IntRect& other) const
     {
         return !(*this == other);
     }
 
-    void intersect(const Rect&);
+    void intersect(const IntRect&);
 
-    static Rect from_two_points(const Point& a, const Point& b)
+    static IntRect from_two_points(const IntPoint& a, const IntPoint& b)
     {
         return { min(a.x(), b.x()), min(a.y(), b.y()), abs(a.x() - b.x()), abs(a.y() - b.y()) };
     }
 
-    static Rect intersection(const Rect& a, const Rect& b)
+    static IntRect intersection(const IntRect& a, const IntRect& b)
     {
-        Rect r(a);
+        IntRect r(a);
         r.intersect(b);
         return r;
     }
 
-    Rect intersected(const Rect& other) const
+    IntRect intersected(const IntRect& other) const
     {
         return intersection(*this, other);
     }
 
-    Rect united(const Rect&) const;
+    IntRect united(const IntRect&) const;
 
-    Point top_left() const { return { left(), top() }; }
-    Point top_right() const { return { right(), top() }; }
-    Point bottom_left() const { return { left(), bottom() }; }
-    Point bottom_right() const { return { right(), bottom() }; }
+    IntPoint top_left() const { return { left(), top() }; }
+    IntPoint top_right() const { return { right(), top() }; }
+    IntPoint bottom_left() const { return { left(), bottom() }; }
+    IntPoint bottom_right() const { return { right(), bottom() }; }
 
-    void align_within(const Rect&, TextAlignment);
+    void align_within(const IntRect&, TextAlignment);
 
-    void center_within(const Rect& other)
+    void center_within(const IntRect& other)
     {
         center_horizontally_within(other);
         center_vertically_within(other);
     }
 
-    void center_horizontally_within(const Rect& other)
+    void center_horizontally_within(const IntRect& other)
     {
         set_x(other.center().x() - width() / 2);
     }
 
-    void center_vertically_within(const Rect& other)
+    void center_vertically_within(const IntRect& other)
     {
         set_y(other.center().y() - height() / 2);
     }
@@ -317,11 +317,11 @@ public:
     String to_string() const;
 
 private:
-    Point m_location;
-    Size m_size;
+    IntPoint m_location;
+    IntSize m_size;
 };
 
-inline void Point::constrain(const Rect& rect)
+inline void IntPoint::constrain(const IntRect& rect)
 {
     if (x() < rect.left())
         set_x(rect.left());
@@ -333,11 +333,11 @@ inline void Point::constrain(const Rect& rect)
         set_y(rect.bottom());
 }
 
-const LogStream& operator<<(const LogStream&, const Rect&);
+const LogStream& operator<<(const LogStream&, const IntRect&);
 
 }
 
 namespace IPC {
-bool decode(Decoder&, Gfx::Rect&);
-bool encode(Encoder&, const Gfx::Rect&);
+bool decode(Decoder&, Gfx::IntRect&);
+bool encode(Encoder&, const Gfx::IntRect&);
 }

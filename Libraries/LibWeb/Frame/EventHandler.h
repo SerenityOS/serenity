@@ -40,9 +40,9 @@ public:
     explicit EventHandler(Badge<Frame>, Frame&);
     ~EventHandler();
 
-    bool handle_mouseup(const Gfx::Point&, unsigned button, unsigned modifiers);
-    bool handle_mousedown(const Gfx::Point&, unsigned button, unsigned modifiers);
-    bool handle_mousemove(const Gfx::Point&, unsigned buttons, unsigned modifiers);
+    bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
+    bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
+    bool handle_mousemove(const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
 
 private:
     LayoutDocument* layout_root();

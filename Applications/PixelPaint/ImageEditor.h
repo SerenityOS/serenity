@@ -56,7 +56,7 @@ public:
 
     void layers_did_change();
 
-    Layer* layer_at_editor_position(const Gfx::Point&);
+    Layer* layer_at_editor_position(const Gfx::IntPoint&);
 
     Color primary_color() const { return m_primary_color; }
     void set_primary_color(Color);
@@ -72,12 +72,12 @@ public:
 
     Function<void(Layer*)> on_active_layer_change;
 
-    Gfx::FloatRect layer_rect_to_editor_rect(const Layer&, const Gfx::Rect&) const;
-    Gfx::FloatRect image_rect_to_editor_rect(const Gfx::Rect&) const;
-    Gfx::FloatRect editor_rect_to_image_rect(const Gfx::Rect&) const;
-    Gfx::FloatPoint layer_position_to_editor_position(const Layer&, const Gfx::Point&) const;
-    Gfx::FloatPoint image_position_to_editor_position(const Gfx::Point&) const;
-    Gfx::FloatPoint editor_position_to_image_position(const Gfx::Point&) const;
+    Gfx::FloatRect layer_rect_to_editor_rect(const Layer&, const Gfx::IntRect&) const;
+    Gfx::FloatRect image_rect_to_editor_rect(const Gfx::IntRect&) const;
+    Gfx::FloatRect editor_rect_to_image_rect(const Gfx::IntRect&) const;
+    Gfx::FloatPoint layer_position_to_editor_position(const Layer&, const Gfx::IntPoint&) const;
+    Gfx::FloatPoint image_position_to_editor_position(const Gfx::IntPoint&) const;
+    Gfx::FloatPoint editor_position_to_image_position(const Gfx::IntPoint&) const;
 
 private:
     ImageEditor();
@@ -110,11 +110,11 @@ private:
     Color m_primary_color { Color::Black };
     Color m_secondary_color { Color::White };
 
-    Gfx::Rect m_editor_image_rect;
+    Gfx::IntRect m_editor_image_rect;
     float m_scale { 1 };
     Gfx::FloatPoint m_pan_origin;
     Gfx::FloatPoint m_saved_pan_origin;
-    Gfx::Point m_click_position;
+    Gfx::IntPoint m_click_position;
 };
 
 }

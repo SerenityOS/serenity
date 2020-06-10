@@ -73,7 +73,7 @@ void Splitter::leave_event(Core::Event&)
     }
 }
 
-bool Splitter::get_resize_candidates_at(const Gfx::Point& position, Widget*& first, Widget*& second)
+bool Splitter::get_resize_candidates_at(const Gfx::IntPoint& position, Widget*& first, Widget*& second)
 {
     int x_or_y = position.primary_offset_for_orientation(m_orientation);
 
@@ -117,7 +117,7 @@ void Splitter::recompute_grabbable_rect(const Widget& first, const Widget& secon
 {
     auto first_edge = first.content_rect().primary_offset_for_orientation(m_orientation) + first.content_rect().primary_size_for_orientation(m_orientation);
     auto second_edge = second.content_rect().primary_offset_for_orientation(m_orientation);
-    Gfx::Rect rect;
+    Gfx::IntRect rect;
     rect.set_primary_offset_for_orientation(m_orientation, first_edge);
     rect.set_primary_size_for_orientation(m_orientation, second_edge - first_edge);
     rect.set_secondary_offset_for_orientation(m_orientation, first.content_rect().secondary_offset_for_orientation(m_orientation));

@@ -145,7 +145,7 @@ void Cube::timer_event(Core::TimerEvent&)
     painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, m_bitmap->rect(), Gfx::Color::White, Gfx::Color::Blue);
 
     auto to_point = [](const FloatVector3& v) {
-        return Gfx::Point(v.x(), v.y());
+        return Gfx::IntPoint(v.x(), v.y());
     };
 
     for (size_t i = 0; i < sizeof(indices) / sizeof(indices[0]) / 3; i++) {

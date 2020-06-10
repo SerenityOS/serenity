@@ -51,8 +51,8 @@ public:
     virtual void did_update_model(unsigned flags);
     virtual void did_update_selection();
 
-    virtual Gfx::Rect content_rect(const ModelIndex&) const { return {}; }
-    virtual ModelIndex index_at_event_position(const Gfx::Point&) const = 0;
+    virtual Gfx::IntRect content_rect(const ModelIndex&) const { return {}; }
+    virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const = 0;
     void begin_editing(const ModelIndex&);
     void stop_editing();
 
@@ -92,9 +92,9 @@ protected:
     bool m_editable { false };
     ModelIndex m_edit_index;
     RefPtr<Widget> m_edit_widget;
-    Gfx::Rect m_edit_widget_content_rect;
+    Gfx::IntRect m_edit_widget_content_rect;
 
-    Gfx::Point m_left_mousedown_position;
+    Gfx::IntPoint m_left_mousedown_position;
     bool m_might_drag { false };
 
     ModelIndex m_hovered_index;

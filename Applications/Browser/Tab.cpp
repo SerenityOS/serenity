@@ -409,7 +409,7 @@ void Tab::did_become_active()
     GUI::Application::the().set_menubar(m_menubar);
 }
 
-void Tab::context_menu_requested(const Gfx::Point& screen_position)
+void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
 {
     m_tab_context_menu->popup(screen_position);
 }

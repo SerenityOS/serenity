@@ -40,28 +40,28 @@
 
 namespace Gfx {
 
-static bool size_would_overflow(BitmapFormat format, const Size& size)
+static bool size_would_overflow(BitmapFormat format, const IntSize& size)
 {
     if (size.width() < 0 || size.height() < 0)
         return true;
     return Checked<size_t>::multiplication_would_overflow(size.width(), size.height(), Bitmap::bpp_for_format(format));
 }
 
-RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const Size& size)
+RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const IntSize& size)
 {
     if (size_would_overflow(format, size))
         return nullptr;
     return adopt(*new Bitmap(format, size, Purgeable::No));
 }
 
-RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const Size& size)
+RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size)
 {
     if (size_would_overflow(format, size))
         return nullptr;
     return adopt(*new Bitmap(format, size, Purgeable::Yes));
 }
 
-Bitmap::Bitmap(BitmapFormat format, const Size& size, Purgeable purgeable)
+Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
     : m_size(size)
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
@@ -77,7 +77,7 @@ Bitmap::Bitmap(BitmapFormat format, const Size& size, Purgeable purgeable)
     m_needs_munmap = true;
 }
 
-RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data)
+RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, size_t pitch, RGBA32* data)
 {
     if (size_would_overflow(format, size))
         return nullptr;
@@ -94,7 +94,7 @@ RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
     return nullptr;
 }
 
-Bitmap::Bitmap(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data)
+Bitmap::Bitmap(BitmapFormat format, const IntSize& size, size_t pitch, RGBA32* data)
     : m_size(size)
     , m_data(data)
     , m_pitch(pitch)
@@ -105,14 +105,14 @@ Bitmap::Bitmap(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data
         m_palette = new RGBA32[256];
 }
 
-RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const Size& size)
+RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size)
 {
     if (size_would_overflow(format, size))
         return nullptr;
     return adopt(*new Bitmap(format, move(shared_buffer), size));
 }
 
-Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const Size& size)
+Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size)
     : m_size(size)
     , m_data((RGBA32*)shared_buffer->data())
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))

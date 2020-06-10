@@ -40,13 +40,13 @@ public:
     int horizontal_padding() const { return m_horizontal_padding; }
 
     void scroll_into_view(const ModelIndex&, Orientation);
-    Gfx::Size effective_item_size() const { return m_effective_item_size; }
+    Gfx::IntSize effective_item_size() const { return m_effective_item_size; }
 
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
-    virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
-    Gfx::Point adjusted_position(const Gfx::Point&) const;
+    virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
+    Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
     virtual void select_all() override;
 private:
@@ -63,21 +63,21 @@ private:
     virtual void drag_move_event(DragEvent&) override;
 
     int item_count() const;
-    Gfx::Rect item_rect(int item_index) const;
-    Vector<int> items_intersecting_rect(const Gfx::Rect&) const;
+    Gfx::IntRect item_rect(int item_index) const;
+    Vector<int> items_intersecting_rect(const Gfx::IntRect&) const;
     void update_content_size();
-    void get_item_rects(int item_index, const Gfx::Font&, const Variant& item_text, Gfx::Rect& item_rect, Gfx::Rect& icon_rect, Gfx::Rect& text_rect) const;
+    void get_item_rects(int item_index, const Gfx::Font&, const Variant& item_text, Gfx::IntRect& item_rect, Gfx::IntRect& icon_rect, Gfx::IntRect& text_rect) const;
 
     int m_horizontal_padding { 5 };
     int m_model_column { 0 };
     int m_visual_column_count { 0 };
     int m_visual_row_count { 0 };
 
-    Gfx::Size m_effective_item_size { 80, 80 };
+    Gfx::IntSize m_effective_item_size { 80, 80 };
 
     bool m_rubber_banding { false };
-    Gfx::Point m_rubber_band_origin;
-    Gfx::Point m_rubber_band_current;
+    Gfx::IntPoint m_rubber_band_origin;
+    Gfx::IntPoint m_rubber_band_current;
     Vector<ModelIndex> m_rubber_band_remembered_selection;
 
     ModelIndex m_drop_candidate_index;

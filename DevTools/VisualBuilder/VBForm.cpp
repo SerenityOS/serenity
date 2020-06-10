@@ -88,7 +88,7 @@ void VBForm::insert_widget(VBWidgetType type)
 {
     auto* insertion_parent = single_selected_widget();
     auto widget = VBWidget::create(type, *this, insertion_parent);
-    Gfx::Point insertion_position = m_next_insertion_position;
+    Gfx::IntPoint insertion_position = m_next_insertion_position;
     if (insertion_parent)
         insertion_position.move_by(insertion_parent->gwidget()->window_relative_rect().location());
     widget->set_rect({ insertion_position, { m_grid_size * 10 + 1, m_grid_size * 5 + 1 } });
@@ -136,7 +136,7 @@ bool VBForm::is_selected(const VBWidget& widget) const
     return m_selected_widgets.contains(const_cast<VBWidget*>(&widget));
 }
 
-VBWidget* VBForm::widget_at(const Gfx::Point& position)
+VBWidget* VBForm::widget_at(const Gfx::IntPoint& position)
 {
     auto result = hit_test(position, GUI::Widget::ShouldRespectGreediness::No);
     if (!result.widget)
@@ -354,7 +354,7 @@ void VBForm::mousemove_event(GUI::MouseEvent& event)
             if (widget.is_in_layout())
                 return;
             auto new_rect = widget.transform_origin_rect();
-            Gfx::Size minimum_size { 5, 5 };
+            Gfx::IntSize minimum_size { 5, 5 };
             new_rect.set_x(new_rect.x() + change_x);
             new_rect.set_y(new_rect.y() + change_y);
             new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));

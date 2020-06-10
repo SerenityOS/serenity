@@ -45,13 +45,13 @@ public:
     String wallpaper() const;
     bool set_wallpaper(const StringView& path);
 
-    Gfx::Rect rect() const { return m_rect; }
-    void did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::Rect&);
+    Gfx::IntRect rect() const { return m_rect; }
+    void did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::IntRect&);
 
-    Function<void(const Gfx::Rect&)> on_rect_change;
+    Function<void(const Gfx::IntRect&)> on_rect_change;
 
 private:
-    Gfx::Rect m_rect;
+    Gfx::IntRect m_rect;
 };
 
 }

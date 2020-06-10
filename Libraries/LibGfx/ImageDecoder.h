@@ -45,7 +45,7 @@ class ImageDecoderPlugin {
 public:
     virtual ~ImageDecoderPlugin() { }
 
-    virtual Size size() = 0;
+    virtual IntSize size() = 0;
     virtual RefPtr<Gfx::Bitmap> bitmap() = 0;
 
     virtual void set_volatile() = 0;
@@ -68,7 +68,7 @@ public:
     static NonnullRefPtr<ImageDecoder> create(const ByteBuffer& data) { return adopt(*new ImageDecoder(data.data(), data.size())); }
     ~ImageDecoder();
 
-    Size size() const { return m_plugin->size(); }
+    IntSize size() const { return m_plugin->size(); }
     int width() const { return size().width(); }
     int height() const { return size().height(); }
     RefPtr<Gfx::Bitmap> bitmap() const;

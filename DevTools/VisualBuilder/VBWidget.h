@@ -74,11 +74,11 @@ public:
 
     bool is_selected() const;
 
-    Gfx::Rect rect() const;
-    void set_rect(const Gfx::Rect&);
+    Gfx::IntRect rect() const;
+    void set_rect(const Gfx::IntRect&);
 
-    Gfx::Rect grabber_rect(Direction) const;
-    Direction grabber_at(const Gfx::Point&) const;
+    Gfx::IntRect grabber_rect(Direction) const;
+    Direction grabber_at(const Gfx::IntPoint&) const;
 
     GUI::Widget* gwidget() { return m_gwidget; }
 
@@ -93,7 +93,7 @@ public:
 
     void property_did_change();
 
-    Gfx::Rect transform_origin_rect() const { return m_transform_origin_rect; }
+    Gfx::IntRect transform_origin_rect() const { return m_transform_origin_rect; }
     void capture_transform_origin_rect();
 
     bool is_in_layout() const;
@@ -108,5 +108,5 @@ private:
     RefPtr<GUI::Widget> m_gwidget;
     NonnullOwnPtrVector<VBProperty> m_properties;
     NonnullRefPtr<VBWidgetPropertyModel> m_property_model;
-    Gfx::Rect m_transform_origin_rect;
+    Gfx::IntRect m_transform_origin_rect;
 };

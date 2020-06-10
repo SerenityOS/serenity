@@ -240,7 +240,7 @@ void LayoutBox::render(RenderingContext& context)
         context.painter().draw_rect(enclosing_int_rect(absolute_rect()), Color::Magenta);
 }
 
-HitTestResult LayoutBox::hit_test(const Gfx::Point& position) const
+HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position) const
 {
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check

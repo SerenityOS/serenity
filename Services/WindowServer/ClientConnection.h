@@ -62,7 +62,7 @@ public:
 
     bool is_showing_modal_window() const;
 
-    void notify_about_new_screen_rect(const Gfx::Rect&);
+    void notify_about_new_screen_rect(const Gfx::IntRect&);
     void post_paint_message(Window&, bool ignore_occlusion = false);
 
     Menu* find_menu_by_id(int menu_id)

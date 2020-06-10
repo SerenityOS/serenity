@@ -85,7 +85,7 @@ const Menu* MenuItem::submenu() const
     return m_menu.client()->find_menu_by_id(m_submenu_id);
 }
 
-Gfx::Rect MenuItem::rect() const
+Gfx::IntRect MenuItem::rect() const
 {
     if (!m_menu.is_scrollable())
         return m_rect;

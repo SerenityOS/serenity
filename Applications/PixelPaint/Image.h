@@ -51,18 +51,18 @@ public:
 
 class Image : public RefCounted<Image> {
 public:
-    static RefPtr<Image> create_with_size(const Gfx::Size&);
+    static RefPtr<Image> create_with_size(const Gfx::IntSize&);
 
     size_t layer_count() const { return m_layers.size(); }
     const Layer& layer(size_t index) const { return m_layers.at(index); }
     Layer& layer(size_t index) { return m_layers.at(index); }
 
-    const Gfx::Size& size() const { return m_size; }
-    Gfx::Rect rect() const { return { {}, m_size }; }
+    const Gfx::IntSize& size() const { return m_size; }
+    Gfx::IntRect rect() const { return { {}, m_size }; }
 
     void add_layer(NonnullRefPtr<Layer>);
 
-    void paint_into(GUI::Painter&, const Gfx::Rect& dest_rect);
+    void paint_into(GUI::Painter&, const Gfx::IntRect& dest_rect);
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
@@ -79,12 +79,12 @@ public:
     size_t index_of(const Layer&) const;
 
 private:
-    explicit Image(const Gfx::Size&);
+    explicit Image(const Gfx::IntSize&);
 
     void did_change();
     void did_modify_layer_stack();
 
-    Gfx::Size m_size;
+    Gfx::IntSize m_size;
     NonnullRefPtrVector<Layer> m_layers;
 
     HashTable<ImageClient*> m_clients;

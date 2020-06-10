@@ -54,9 +54,9 @@ public:
 
     void load(const URL&);
 
-    bool handle_mouseup(const Gfx::Point&, unsigned button, unsigned modifiers);
-    bool handle_mousedown(const Gfx::Point&, unsigned button, unsigned modifiers);
-    bool handle_mousemove(const Gfx::Point&, unsigned buttons, unsigned modifiers);
+    bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
+    bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
+    bool handle_mousemove(const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
 
     Gfx::Palette palette() const;
 
@@ -73,15 +73,15 @@ public:
     virtual void page_did_start_loading(const URL&) { }
     virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(GUI::StandardCursor) { }
-    virtual void page_did_request_link_context_menu(const Gfx::Point&, [[maybe_unused]] const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, [[maybe_unused]] const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_click_link([[maybe_unused]] const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_middle_click_link([[maybe_unused]] const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_enter_tooltip_area(const Gfx::Point&, const String&) { }
+    virtual void page_did_enter_tooltip_area(const Gfx::IntPoint&, const String&) { }
     virtual void page_did_leave_tooltip_area() { }
     virtual void page_did_hover_link(const URL&) { }
     virtual void page_did_unhover_link() { }
     virtual void page_did_request_scroll_to_anchor([[maybe_unused]] const String& fragment) { }
-    virtual void page_did_invalidate(const Gfx::Rect&) { }
+    virtual void page_did_invalidate(const Gfx::IntRect&) { }
     virtual void page_did_change_favicon(const Gfx::Bitmap&) { }
 };
 

@@ -42,11 +42,11 @@ public:
     Button(WindowFrame&, NonnullRefPtr<Gfx::CharacterBitmap>&&, Function<void(Button&)>&& on_click_handler);
     ~Button();
 
-    Gfx::Rect relative_rect() const { return m_relative_rect; }
-    void set_relative_rect(const Gfx::Rect& rect) { m_relative_rect = rect; }
+    Gfx::IntRect relative_rect() const { return m_relative_rect; }
+    void set_relative_rect(const Gfx::IntRect& rect) { m_relative_rect = rect; }
 
-    Gfx::Rect rect() const { return { {}, m_relative_rect.size() }; }
-    Gfx::Rect screen_rect() const;
+    Gfx::IntRect rect() const { return { {}, m_relative_rect.size() }; }
+    Gfx::IntRect screen_rect() const;
 
     void paint(Gfx::Painter&);
 
@@ -60,7 +60,7 @@ public:
 
 private:
     WindowFrame& m_frame;
-    Gfx::Rect m_relative_rect;
+    Gfx::IntRect m_relative_rect;
     NonnullRefPtr<Gfx::CharacterBitmap> m_bitmap;
     bool m_pressed { false };
     bool m_visible { true };

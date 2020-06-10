@@ -34,12 +34,12 @@
 
 namespace Gfx {
 
-class Rect;
+class IntRect;
 
-class Point {
+class IntPoint {
 public:
-    Point() { }
-    Point(int x, int y)
+    IntPoint() { }
+    IntPoint(int x, int y)
         : m_x(x)
         , m_y(y)
     {
@@ -57,71 +57,71 @@ public:
         m_y += dy;
     }
 
-    void move_by(const Point& delta)
+    void move_by(const IntPoint& delta)
     {
         move_by(delta.x(), delta.y());
     }
 
-    Point translated(const Point& delta) const
+    IntPoint translated(const IntPoint& delta) const
     {
-        Point point = *this;
+        IntPoint point = *this;
         point.move_by(delta);
         return point;
     }
 
-    Point translated(int dx, int dy) const
+    IntPoint translated(int dx, int dy) const
     {
-        Point point = *this;
+        IntPoint point = *this;
         point.move_by(dx, dy);
         return point;
     }
 
-    void constrain(const Rect&);
+    void constrain(const IntRect&);
 
-    bool operator==(const Point& other) const
+    bool operator==(const IntPoint& other) const
     {
         return m_x == other.m_x
             && m_y == other.m_y;
     }
 
-    bool operator!=(const Point& other) const
+    bool operator!=(const IntPoint& other) const
     {
         return !(*this == other);
     }
 
-    Point operator-() const { return { -m_x, -m_y }; }
+    IntPoint operator-() const { return { -m_x, -m_y }; }
 
-    Point operator-(const Point& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
-    Point& operator-=(const Point& other)
+    IntPoint operator-(const IntPoint& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
+    IntPoint& operator-=(const IntPoint& other)
     {
         m_x -= other.m_x;
         m_y -= other.m_y;
         return *this;
     }
 
-    Point& operator+=(const Point& other)
+    IntPoint& operator+=(const IntPoint& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
         return *this;
     }
-    Point operator+(const Point& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
+    IntPoint operator+(const IntPoint& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
 
-    Point& operator*=(int factor)
+    IntPoint& operator*=(int factor)
     {
         m_x *= factor;
         m_y *= factor;
         return *this;
     }
-    Point operator*(int factor) const { return { m_x * factor, m_y * factor }; }
+    IntPoint operator*(int factor) const { return { m_x * factor, m_y * factor }; }
 
-    Point& operator/=(int factor)
+    IntPoint& operator/=(int factor)
     {
         m_x /= factor;
         m_y /= factor;
         return *this;
     }
-    Point operator/(int factor) const { return { m_x / factor, m_y / factor }; }
+    IntPoint operator/(int factor) const { return { m_x / factor, m_y / factor }; }
 
     String to_string() const;
 
@@ -153,18 +153,18 @@ public:
             set_y(value);
     }
 
-    int dx_relative_to(const Point& other) const
+    int dx_relative_to(const IntPoint& other) const
     {
         return x() - other.x();
     }
 
-    int dy_relative_to(const Point& other) const
+    int dy_relative_to(const IntPoint& other) const
     {
         return y() - other.y();
     }
 
     // Returns pixels moved from other in either direction
-    int pixels_moved(const Point& other) const
+    int pixels_moved(const IntPoint& other) const
     {
         return max(abs(dx_relative_to(other)), abs(dy_relative_to(other)));
     }
@@ -174,11 +174,11 @@ private:
     int m_y { 0 };
 };
 
-const LogStream& operator<<(const LogStream&, const Point&);
+const LogStream& operator<<(const LogStream&, const IntPoint&);
 
 }
 
 namespace IPC {
-bool encode(Encoder&, const Gfx::Point&);
-bool decode(Decoder&, Gfx::Point&);
+bool encode(Encoder&, const Gfx::IntPoint&);
+bool decode(Decoder&, Gfx::IntPoint&);
 }

@@ -50,37 +50,37 @@ public:
         Dashed,
     };
 
-    void clear_rect(const Rect&, Color);
-    void fill_rect(const Rect&, Color);
-    void fill_rect_with_dither_pattern(const Rect&, Color, Color);
-    void fill_rect_with_checkerboard(const Rect&, const Size&, Color color_dark, Color color_light);
-    void fill_rect_with_gradient(Orientation, const Rect&, Color gradient_start, Color gradient_end);
-    void fill_rect_with_gradient(const Rect&, Color gradient_start, Color gradient_end);
-    void fill_ellipse(const Rect&, Color);
-    void draw_rect(const Rect&, Color, bool rough = false);
-    void draw_bitmap(const Point&, const CharacterBitmap&, Color = Color());
-    void draw_bitmap(const Point&, const GlyphBitmap&, Color = Color());
-    void draw_triangle(const Point&, const Point&, const Point&, Color);
-    void draw_ellipse_intersecting(const Rect&, Color, int thickness = 1);
-    void set_pixel(const Point&, Color);
-    void draw_line(const Point&, const Point&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
-    void draw_quadratic_bezier_curve(const Point& control_point, const Point&, const Point&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
-    void draw_scaled_bitmap(const Rect& dst_rect, const Gfx::Bitmap&, const Rect& src_rect);
-    void blit(const Point&, const Gfx::Bitmap&, const Rect& src_rect, float opacity = 1.0f);
-    void blit_dimmed(const Point&, const Gfx::Bitmap&, const Rect& src_rect);
-    void blit_brightened(const Point&, const Gfx::Bitmap&, const Rect& src_rect);
-    void blit_filtered(const Point&, const Gfx::Bitmap&, const Rect& src_rect, Function<Color(Color)>);
-    void draw_tiled_bitmap(const Rect& dst_rect, const Gfx::Bitmap&);
-    void blit_offset(const Point&, const Gfx::Bitmap&, const Rect& src_rect, const Point&);
-    void blit_scaled(const Rect&, const Gfx::Bitmap&, const Rect&, float, float);
-    void draw_text(const Rect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const Rect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const Rect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const Rect&, const Utf32View&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_glyph(const Point&, u32, Color);
-    void draw_glyph(const Point&, u32, const Font&, Color);
-    void draw_emoji(const Point&, const Gfx::Bitmap&, const Font&);
-    void draw_glyph_or_emoji(const Point&, u32 codepoint, const Font&, Color);
+    void clear_rect(const IntRect&, Color);
+    void fill_rect(const IntRect&, Color);
+    void fill_rect_with_dither_pattern(const IntRect&, Color, Color);
+    void fill_rect_with_checkerboard(const IntRect&, const IntSize&, Color color_dark, Color color_light);
+    void fill_rect_with_gradient(Orientation, const IntRect&, Color gradient_start, Color gradient_end);
+    void fill_rect_with_gradient(const IntRect&, Color gradient_start, Color gradient_end);
+    void fill_ellipse(const IntRect&, Color);
+    void draw_rect(const IntRect&, Color, bool rough = false);
+    void draw_bitmap(const IntPoint&, const CharacterBitmap&, Color = Color());
+    void draw_bitmap(const IntPoint&, const GlyphBitmap&, Color = Color());
+    void draw_triangle(const IntPoint&, const IntPoint&, const IntPoint&, Color);
+    void draw_ellipse_intersecting(const IntRect&, Color, int thickness = 1);
+    void set_pixel(const IntPoint&, Color);
+    void draw_line(const IntPoint&, const IntPoint&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
+    void draw_quadratic_bezier_curve(const IntPoint& control_point, const IntPoint&, const IntPoint&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
+    void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const IntRect& src_rect);
+    void blit(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity = 1.0f);
+    void blit_dimmed(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
+    void blit_brightened(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
+    void blit_filtered(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, Function<Color(Color)>);
+    void draw_tiled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&);
+    void blit_offset(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, const IntPoint&);
+    void blit_scaled(const IntRect&, const Gfx::Bitmap&, const IntRect&, float, float);
+    void draw_text(const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
+    void draw_text(const IntRect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
+    void draw_text(const IntRect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
+    void draw_text(const IntRect&, const Utf32View&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
+    void draw_glyph(const IntPoint&, u32, Color);
+    void draw_glyph(const IntPoint&, u32, const Font&, Color);
+    void draw_emoji(const IntPoint&, const Gfx::Bitmap&, const Font&);
+    void draw_glyph_or_emoji(const IntPoint&, u32 codepoint, const Font&, Color);
 
     static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&);
     static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&&);
@@ -103,14 +103,14 @@ public:
     void set_draw_op(DrawOp op) { state().draw_op = op; }
     DrawOp draw_op() const { return state().draw_op; }
 
-    void add_clip_rect(const Rect& rect);
+    void add_clip_rect(const IntRect& rect);
     void clear_clip_rect();
-    Rect clip_rect() const { return state().clip_rect; }
+    IntRect clip_rect() const { return state().clip_rect; }
 
     void translate(int dx, int dy) { state().translation.move_by(dx, dy); }
-    void translate(const Point& delta) { state().translation.move_by(delta); }
+    void translate(const IntPoint& delta) { state().translation.move_by(delta); }
 
-    Point translation() const { return state().translation; }
+    IntPoint translation() const { return state().translation; }
 
     Gfx::Bitmap* target() { return m_target.ptr(); }
 
@@ -123,25 +123,25 @@ public:
 
 protected:
     void set_pixel_with_draw_op(u32& pixel, const Color&);
-    void fill_rect_with_draw_op(const Rect&, Color);
-    void blit_with_alpha(const Point&, const Gfx::Bitmap&, const Rect& src_rect);
-    void blit_with_opacity(const Point&, const Gfx::Bitmap&, const Rect& src_rect, float opacity);
-    void draw_pixel(const Point&, Color, int thickness = 1);
+    void fill_rect_with_draw_op(const IntRect&, Color);
+    void blit_with_alpha(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
+    void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity);
+    void draw_pixel(const IntPoint&, Color, int thickness = 1);
 
-    void draw_text_line(const Rect&, const Utf8View&, const Font&, TextAlignment, Color, TextElision);
-    void draw_text_line(const Rect&, const Utf32View&, const Font&, TextAlignment, Color, TextElision);
+    void draw_text_line(const IntRect&, const Utf8View&, const Font&, TextAlignment, Color, TextElision);
+    void draw_text_line(const IntRect&, const Utf32View&, const Font&, TextAlignment, Color, TextElision);
 
     struct State {
         const Font* font;
-        Point translation;
-        Rect clip_rect;
+        IntPoint translation;
+        IntRect clip_rect;
         DrawOp draw_op;
     };
 
     State& state() { return m_state_stack.last(); }
     const State& state() const { return m_state_stack.last(); }
 
-    Rect m_clip_origin;
+    IntRect m_clip_origin;
     NonnullRefPtr<Gfx::Bitmap> m_target;
     Vector<State, 4> m_state_stack;
 };

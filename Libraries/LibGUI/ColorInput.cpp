@@ -46,7 +46,7 @@ ColorInput::~ColorInput()
 {
 }
 
-Gfx::Rect ColorInput::color_rect() const
+Gfx::IntRect ColorInput::color_rect() const
 {
     auto color_box_padding = 3;
     auto color_box_size = height() - color_box_padding - color_box_padding;

@@ -46,9 +46,9 @@ public:
     Variant(const FlyString&);
     Variant(const Gfx::Bitmap&);
     Variant(const GUI::Icon&);
-    Variant(const Gfx::Point&);
-    Variant(const Gfx::Size&);
-    Variant(const Gfx::Rect&);
+    Variant(const Gfx::IntPoint&);
+    Variant(const Gfx::IntSize&);
+    Variant(const Gfx::IntRect&);
     Variant(const Gfx::Font&);
     Variant(const Gfx::TextAlignment);
     Variant(const AK::JsonValue&);
@@ -184,17 +184,17 @@ public:
         return m_value.as_float;
     }
 
-    Gfx::Point as_point() const
+    Gfx::IntPoint as_point() const
     {
         return { m_value.as_point.x, m_value.as_point.y };
     }
 
-    Gfx::Size as_size() const
+    Gfx::IntSize as_size() const
     {
         return { m_value.as_size.width, m_value.as_size.height };
     }
 
-    Gfx::Rect as_rect() const
+    Gfx::IntRect as_rect() const
     {
         return { as_point(), as_size() };
     }

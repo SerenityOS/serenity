@@ -102,11 +102,11 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
 
         painter.draw_rect(adjusted_rect, Color::Black);
 
-        Gfx::Rect thumbnail_rect { adjusted_rect.x(), adjusted_rect.y(), adjusted_rect.height(), adjusted_rect.height() };
+        Gfx::IntRect thumbnail_rect { adjusted_rect.x(), adjusted_rect.y(), adjusted_rect.height(), adjusted_rect.height() };
         thumbnail_rect.shrink(8, 8);
         painter.draw_scaled_bitmap(thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
 
-        Gfx::Rect text_rect { thumbnail_rect.right() + 10, adjusted_rect.y(), adjusted_rect.width(), adjusted_rect.height() };
+        Gfx::IntRect text_rect { thumbnail_rect.right() + 10, adjusted_rect.y(), adjusted_rect.width(), adjusted_rect.height() };
         text_rect.intersect(adjusted_rect);
 
         painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
@@ -121,7 +121,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         paint_gadget(m_gadgets[m_moving_gadget_index.value()]);
 }
 
-Optional<size_t> LayerListWidget::gadget_at(const Gfx::Point& position)
+Optional<size_t> LayerListWidget::gadget_at(const Gfx::IntPoint& position)
 {
     for (size_t i = 0; i < m_gadgets.size(); ++i) {
         if (m_gadgets[i].rect.contains(position))

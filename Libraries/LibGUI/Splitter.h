@@ -50,16 +50,16 @@ protected:
 
 private:
     void recompute_grabbable_rect(const Widget&, const Widget&);
-    bool get_resize_candidates_at(const Gfx::Point&, Widget*&, Widget*&);
+    bool get_resize_candidates_at(const Gfx::IntPoint&, Widget*&, Widget*&);
 
     Gfx::Orientation m_orientation;
     bool m_resizing { false };
-    Gfx::Point m_resize_origin;
+    Gfx::IntPoint m_resize_origin;
     WeakPtr<Widget> m_first_resizee;
     WeakPtr<Widget> m_second_resizee;
-    Gfx::Size m_first_resizee_start_size;
-    Gfx::Size m_second_resizee_start_size;
-    Gfx::Rect m_grabbable_rect;
+    Gfx::IntSize m_first_resizee_start_size;
+    Gfx::IntSize m_second_resizee_start_size;
+    Gfx::IntRect m_grabbable_rect;
 };
 
 class VerticalSplitter final : public Splitter {

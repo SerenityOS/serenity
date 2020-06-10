@@ -31,12 +31,12 @@
 
 namespace Gfx {
 
-String Size::to_string() const
+String IntSize::to_string() const
 {
     return String::format("[%dx%d]", m_width, m_height);
 }
 
-const LogStream& operator<<(const LogStream& stream, const Size& value)
+const LogStream& operator<<(const LogStream& stream, const IntSize& value)
 {
     return stream << value.to_string();
 }
@@ -45,13 +45,13 @@ const LogStream& operator<<(const LogStream& stream, const Size& value)
 
 namespace IPC {
 
-bool encode(Encoder& encoder, const Gfx::Size& size)
+bool encode(Encoder& encoder, const Gfx::IntSize& size)
 {
     encoder << size.width() << size.height();
     return true;
 }
 
-bool decode(Decoder& decoder, Gfx::Size& size)
+bool decode(Decoder& decoder, Gfx::IntSize& size)
 {
     int width = 0;
     int height = 0;

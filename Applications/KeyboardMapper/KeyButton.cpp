@@ -50,7 +50,7 @@ void KeyButton::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(content_rect, Color::from_rgb(0x8C7272));
 
     if (!text().is_empty()) {
-        Gfx::Rect text_rect { 0, 0, font.width(text()), font.glyph_height() };
+        Gfx::IntRect text_rect { 0, 0, font.width(text()), font.glyph_height() };
         text_rect.align_within(content_rect, Gfx::TextAlignment::Center);
 
         auto clipped_rect = rect().intersected(this->rect());

@@ -73,7 +73,7 @@ private:
 
     RefPtr<Gfx::Bitmap> m_custom_colors;
     bool m_being_pressed { false };
-    Gfx::Point m_last_position;
+    Gfx::IntPoint m_last_position;
 
     void pick_color_at_position(GUI::MouseEvent& event);
 

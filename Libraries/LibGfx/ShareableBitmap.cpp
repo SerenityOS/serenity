@@ -52,7 +52,7 @@ bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
 bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
 {
     i32 shbuf_id = 0;
-    Gfx::Size size;
+    Gfx::IntSize size;
     if (!decoder.decode(shbuf_id))
         return false;
     if (!decoder.decode(size))

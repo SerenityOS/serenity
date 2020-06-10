@@ -32,10 +32,10 @@
 
 namespace Gfx {
 
-class Size {
+class IntSize {
 public:
-    Size() {}
-    Size(int w, int h)
+    IntSize() {}
+    IntSize(int w, int h)
         : m_width(w)
         , m_height(h)
     {
@@ -52,24 +52,24 @@ public:
     void set_width(int w) { m_width = w; }
     void set_height(int h) { m_height = h; }
 
-    bool operator==(const Size& other) const
+    bool operator==(const IntSize& other) const
     {
         return m_width == other.m_width && m_height == other.m_height;
     }
 
-    bool operator!=(const Size& other) const
+    bool operator!=(const IntSize& other) const
     {
         return !(*this == other);
     }
 
-    Size& operator-=(const Size& other)
+    IntSize& operator-=(const IntSize& other)
     {
         m_width -= other.m_width;
         m_height -= other.m_height;
         return *this;
     }
 
-    Size& operator+=(const Size& other)
+    IntSize& operator+=(const IntSize& other)
     {
         m_width += other.m_width;
         m_height += other.m_height;
@@ -109,11 +109,11 @@ private:
     int m_height { 0 };
 };
 
-const LogStream& operator<<(const LogStream&, const Size&);
+const LogStream& operator<<(const LogStream&, const IntSize&);
 
 }
 
 namespace IPC {
-bool encode(Encoder&, const Gfx::Size&);
-bool decode(Decoder&, Gfx::Size&);
+bool encode(Encoder&, const Gfx::IntSize&);
+bool decode(Decoder&, Gfx::IntSize&);
 }

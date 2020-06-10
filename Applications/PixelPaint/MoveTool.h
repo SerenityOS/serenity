@@ -46,8 +46,8 @@ private:
     virtual bool is_move_tool() const override { return true; }
 
     RefPtr<Layer> m_layer_being_moved;
-    Gfx::Point m_event_origin;
-    Gfx::Point m_layer_origin;
+    Gfx::IntPoint m_event_origin;
+    Gfx::IntPoint m_layer_origin;
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<Layer> m_context_menu_layer;
 };

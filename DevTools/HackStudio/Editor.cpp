@@ -80,7 +80,7 @@ void Editor::focusout_event(Core::Event& event)
     GUI::TextEditor::focusout_event(event);
 }
 
-Gfx::Rect Editor::breakpoint_icon_rect(size_t line_number) const
+Gfx::IntRect Editor::breakpoint_icon_rect(size_t line_number) const
 {
     auto ruler_line_rect = ruler_content_rect(line_number);
 
@@ -140,7 +140,7 @@ static HashMap<String, String>& man_paths()
     return paths;
 }
 
-void Editor::show_documentation_tooltip_if_available(const String& hovered_token, const Gfx::Point& screen_location)
+void Editor::show_documentation_tooltip_if_available(const String& hovered_token, const Gfx::IntPoint& screen_location)
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {

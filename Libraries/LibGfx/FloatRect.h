@@ -56,7 +56,7 @@ public:
     {
     }
 
-    explicit FloatRect(const Rect& other)
+    explicit FloatRect(const IntRect& other)
         : FloatRect((FloatPoint)other.location(), (FloatSize)other.size())
     {
     }
@@ -327,7 +327,7 @@ inline const LogStream& operator<<(const LogStream& stream, const FloatRect& val
     return stream << value.to_string();
 }
 
-inline Rect enclosing_int_rect(const FloatRect& float_rect)
+inline IntRect enclosing_int_rect(const FloatRect& float_rect)
 {
     return { (int)float_rect.x(), (int)float_rect.y(), (int)ceilf(float_rect.width()), (int)ceilf(float_rect.height()) };
 }

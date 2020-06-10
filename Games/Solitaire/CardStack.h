@@ -40,7 +40,7 @@ public:
     };
 
     CardStack();
-    CardStack(const Gfx::Point& position, Type type, uint8_t shift_x, uint8_t shift_y, uint8_t step = 1);
+    CardStack(const Gfx::IntPoint& position, Type type, uint8_t shift_x, uint8_t shift_y, uint8_t step = 1);
 
     bool is_dirty() const { return m_dirty; }
     bool is_empty() const { return m_stack.is_empty(); }
@@ -49,7 +49,7 @@ public:
     size_t count() const { return m_stack.size(); }
     const Card& peek() const { return m_stack.last(); }
     Card& peek() { return m_stack.last(); }
-    const Gfx::Rect& bounding_box() const { return m_bounding_box; }
+    const Gfx::IntRect& bounding_box() const { return m_bounding_box; }
 
     void set_focused(bool focused) { m_focused = focused; }
     void set_dirty() { m_dirty = true; };
@@ -59,7 +59,7 @@ public:
     void rebound_cards();
 
     bool is_allowed_to_push(const Card&) const;
-    void add_all_grabbed_cards(const Gfx::Point& click_location, NonnullRefPtrVector<Card>& grabbed);
+    void add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed);
     void draw(GUI::Painter&, const Gfx::Color& background_color);
     void clear();
 
@@ -67,14 +67,14 @@ private:
     void calculate_bounding_box();
 
     NonnullRefPtrVector<Card> m_stack;
-    Vector<Gfx::Point> m_stack_positions;
-    Gfx::Point m_position;
-    Gfx::Rect m_bounding_box;
+    Vector<Gfx::IntPoint> m_stack_positions;
+    Gfx::IntPoint m_position;
+    Gfx::IntRect m_bounding_box;
     Type m_type { Invalid };
     uint8_t m_shift_x { 0 };
     uint8_t m_shift_y { 0 };
     uint8_t m_step {};
     bool m_focused { false };
     bool m_dirty { false };
-    Gfx::Rect m_base;
+    Gfx::IntRect m_base;
 };

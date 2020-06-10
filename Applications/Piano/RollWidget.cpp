@@ -98,7 +98,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             int x_pos = x * m_note_width;
             int next_x_pos = (x + 1) * m_note_width;
             int distance_to_next_x = next_x_pos - x_pos;
-            Gfx::Rect rect(x_pos, y_pos, distance_to_next_x, note_height);
+            Gfx::IntRect rect(x_pos, y_pos, distance_to_next_x, note_height);
 
             if (key_pattern[key_pattern_index] == Black)
                 painter.fill_rect(rect, Color::LightGray);
@@ -128,7 +128,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             int y = ((note_count - 1) - note) * note_height;
             int height = note_height;
 
-            Gfx::Rect rect(x, y, width, height);
+            Gfx::IntRect rect(x, y, width, height);
             painter.fill_rect(rect, note_pressed_color);
             painter.draw_rect(rect, Color::Black);
         }

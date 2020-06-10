@@ -88,7 +88,7 @@ PaletteWidget::PaletteWidget(ImageEditor& editor)
     set_secondary_color(m_editor.secondary_color());
 
     m_primary_color_widget = add<GUI::Frame>();
-    Gfx::Rect rect { 0, 0, 38, 15 };
+    Gfx::IntRect rect { 0, 0, 38, 15 };
     rect.center_within(m_secondary_color_widget->relative_rect());
     m_primary_color_widget->set_relative_rect(rect);
     m_primary_color_widget->set_fill_with_background_color(true);

@@ -114,10 +114,10 @@ public:
             auto off_x = 80;
             auto off_y = 38;
 
-            Gfx::Point p1;
-            Gfx::Point p2;
-            Gfx::Point p3;
-            Gfx::Point p4;
+            Gfx::IntPoint p1;
+            Gfx::IntPoint p2;
+            Gfx::IntPoint p3;
+            Gfx::IntPoint p4;
 
             p1.set_x(radius * cos(M_PI * m_wheel_delta_acc / 18) + off_x);
             p1.set_y(radius * sin(M_PI * m_wheel_delta_acc / 18) + off_y);

@@ -113,8 +113,8 @@ public:
     void set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy);
     void set_size_policy(Orientation, SizePolicy);
 
-    Gfx::Size preferred_size() const { return m_preferred_size; }
-    void set_preferred_size(const Gfx::Size&);
+    Gfx::IntSize preferred_size() const { return m_preferred_size; }
+    void set_preferred_size(const Gfx::IntSize&);
     void set_preferred_size(int width, int height) { set_preferred_size({ width, height }); }
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
@@ -132,11 +132,11 @@ public:
     // This is called after children have been painted.
     virtual void second_paint_event(PaintEvent&);
 
-    Gfx::Rect relative_rect() const { return m_relative_rect; }
-    Gfx::Point relative_position() const { return m_relative_rect.location(); }
+    Gfx::IntRect relative_rect() const { return m_relative_rect; }
+    Gfx::IntPoint relative_position() const { return m_relative_rect.location(); }
 
-    Gfx::Rect window_relative_rect() const;
-    Gfx::Rect screen_relative_rect() const;
+    Gfx::IntRect window_relative_rect() const;
+    Gfx::IntRect screen_relative_rect() const;
 
     int x() const { return m_relative_rect.x(); }
     int y() const { return m_relative_rect.y(); }
@@ -144,11 +144,11 @@ public:
     int height() const { return m_relative_rect.height(); }
     int length(Orientation orientation) const { return orientation == Orientation::Vertical ? height() : width(); }
 
-    Gfx::Rect rect() const { return { 0, 0, width(), height() }; }
-    Gfx::Size size() const { return m_relative_rect.size(); }
+    Gfx::IntRect rect() const { return { 0, 0, width(), height() }; }
+    Gfx::IntSize size() const { return m_relative_rect.size(); }
 
     void update();
-    void update(const Gfx::Rect&);
+    void update(const Gfx::IntRect&);
 
     virtual bool accepts_focus() const { return false; }
 
@@ -159,12 +159,12 @@ public:
         Yes };
     struct HitTestResult {
         Widget* widget { nullptr };
-        Gfx::Point local_position;
+        Gfx::IntPoint local_position;
     };
-    HitTestResult hit_test(const Gfx::Point&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
-    Widget* child_at(const Gfx::Point&) const;
+    HitTestResult hit_test(const Gfx::IntPoint&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
+    Widget* child_at(const Gfx::IntPoint&) const;
 
-    void set_relative_rect(const Gfx::Rect&);
+    void set_relative_rect(const Gfx::IntRect&);
     void set_relative_rect(int x, int y, int width, int height) { set_relative_rect({ x, y, width, height }); }
 
     void set_x(int x) { set_relative_rect(x, y(), width(), height()); }
@@ -172,13 +172,13 @@ public:
     void set_width(int width) { set_relative_rect(x(), y(), width, height()); }
     void set_height(int height) { set_relative_rect(x(), y(), width(), height); }
 
-    void move_to(const Gfx::Point& point) { set_relative_rect({ point, relative_rect().size() }); }
+    void move_to(const Gfx::IntPoint& point) { set_relative_rect({ point, relative_rect().size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
-    void resize(const Gfx::Size& size) { set_relative_rect({ relative_rect().location(), size }); }
+    void resize(const Gfx::IntSize& size) { set_relative_rect({ relative_rect().location(), size }); }
     void resize(int width, int height) { resize({ width, height }); }
 
     void move_by(int x, int y) { move_by({ x, y }); }
-    void move_by(const Gfx::Point& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
+    void move_by(const Gfx::IntPoint& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
 
     Gfx::ColorRole background_role() const { return m_background_role; }
     void set_background_role(Gfx::ColorRole);
@@ -270,7 +270,7 @@ public:
     const Margins& content_margins() const { return m_content_margins; }
     void set_content_margins(const Margins&);
 
-    Gfx::Rect content_rect() const;
+    Gfx::IntRect content_rect() const;
 
     void set_accepts_emoji_input(bool b) { m_accepts_emoji_input = b; }
     bool accepts_emoji_input() const { return m_accepts_emoji_input; }
@@ -322,7 +322,7 @@ private:
     Window* m_window { nullptr };
     RefPtr<Layout> m_layout;
 
-    Gfx::Rect m_relative_rect;
+    Gfx::IntRect m_relative_rect;
     Gfx::ColorRole m_background_role;
     Gfx::ColorRole m_foreground_role;
     Color m_background_color;
@@ -332,7 +332,7 @@ private:
 
     SizePolicy m_horizontal_size_policy { SizePolicy::Fill };
     SizePolicy m_vertical_size_policy { SizePolicy::Fill };
-    Gfx::Size m_preferred_size;
+    Gfx::IntSize m_preferred_size;
     Margins m_content_margins;
 
     bool m_fill_with_background_color { false };

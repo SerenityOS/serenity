@@ -71,12 +71,12 @@ void WaveWidget::paint_event(GUI::PaintEvent& event)
         int y_left = sample_to_y(buffer[x].left);
         int y_right = sample_to_y(buffer[x].right);
 
-        Gfx::Point point1_left(prev_x * width_scale, prev_y_left);
-        Gfx::Point point2_left(x * width_scale, y_left);
+        Gfx::IntPoint point1_left(prev_x * width_scale, prev_y_left);
+        Gfx::IntPoint point2_left(x * width_scale, y_left);
         painter.draw_line(point1_left, point2_left, left_wave_color);
 
-        Gfx::Point point1_right(prev_x * width_scale, prev_y_right);
-        Gfx::Point point2_right(x * width_scale, y_right);
+        Gfx::IntPoint point1_right(prev_x * width_scale, prev_y_right);
+        Gfx::IntPoint point2_right(x * width_scale, y_right);
         painter.draw_line(point1_right, point2_right, right_wave_color);
 
         prev_x = x;

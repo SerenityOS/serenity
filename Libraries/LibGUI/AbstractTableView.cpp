@@ -109,7 +109,7 @@ void AbstractTableView::update_content_size()
     set_size_occupied_by_fixed_elements({ 0, header_height() });
 }
 
-Gfx::Rect AbstractTableView::header_rect(int column_index) const
+Gfx::IntRect AbstractTableView::header_rect(int column_index) const
 {
     if (!model())
         return {};
@@ -147,7 +147,7 @@ void AbstractTableView::paint_headers(Painter& painter)
             continue;
         int column_width = this->column_width(column_index);
         bool is_key_column = model()->key_column() == column_index;
-        Gfx::Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
+        Gfx::IntRect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
         bool hovered = column_index == m_hovered_column_header_index && model()->is_column_sortable(column_index);
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
@@ -224,7 +224,7 @@ void AbstractTableView::set_cell_painting_delegate(int column, OwnPtr<TableCellP
 
 void AbstractTableView::update_headers()
 {
-    Gfx::Rect rect { 0, 0, frame_inner_rect().width(), header_height() };
+    Gfx::IntRect rect { 0, 0, frame_inner_rect().width(), header_height() };
     rect.move_by(frame_thickness(), frame_thickness());
     update(rect);
 }
@@ -236,7 +236,7 @@ AbstractTableView::ColumnData& AbstractTableView::column_data(int column) const
     return m_column_data.at(column);
 }
 
-Gfx::Rect AbstractTableView::column_resize_grabbable_rect(int column) const
+Gfx::IntRect AbstractTableView::column_resize_grabbable_rect(int column) const
 {
     if (!model())
         return {};
@@ -257,7 +257,7 @@ void AbstractTableView::mousemove_event(MouseEvent& event)
         return AbstractView::mousemove_event(event);
 
     auto adjusted_position = this->adjusted_position(event.position());
-    Gfx::Point horizontally_adjusted_position(adjusted_position.x(), event.position().y());
+    Gfx::IntPoint horizontally_adjusted_position(adjusted_position.x(), event.position().y());
 
     if (m_in_column_resize) {
         auto delta = adjusted_position - m_column_resize_origin;
@@ -315,7 +315,7 @@ void AbstractTableView::mousemove_event(MouseEvent& event)
 void AbstractTableView::mouseup_event(MouseEvent& event)
 {
     auto adjusted_position = this->adjusted_position(event.position());
-    Gfx::Point horizontally_adjusted_position(adjusted_position.x(), event.position().y());
+    Gfx::IntPoint horizontally_adjusted_position(adjusted_position.x(), event.position().y());
     if (event.button() == MouseButton::Left) {
         if (m_in_column_resize) {
             if (!column_resize_grabbable_rect(m_resizing_column).contains(horizontally_adjusted_position))
@@ -352,7 +352,7 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
         return AbstractView::mousedown_event(event);
 
     auto adjusted_position = this->adjusted_position(event.position());
-    Gfx::Point horizontally_adjusted_position(adjusted_position.x(), event.position().y());
+    Gfx::IntPoint horizontally_adjusted_position(adjusted_position.x(), event.position().y());
 
     if (event.y() < header_height()) {
         int column_count = model()->column_count();
@@ -386,7 +386,7 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
     AbstractView::mousedown_event(event);
 }
 
-ModelIndex AbstractTableView::index_at_event_position(const Gfx::Point& position, bool& is_toggle) const
+ModelIndex AbstractTableView::index_at_event_position(const Gfx::IntPoint& position, bool& is_toggle) const
 {
     is_toggle = false;
     if (!model())
@@ -406,7 +406,7 @@ ModelIndex AbstractTableView::index_at_event_position(const Gfx::Point& position
     return {};
 }
 
-ModelIndex AbstractTableView::index_at_event_position(const Gfx::Point& position) const
+ModelIndex AbstractTableView::index_at_event_position(const Gfx::IntPoint& position) const
 {
     bool is_toggle;
     auto index = index_at_event_position(position, is_toggle);
@@ -489,7 +489,7 @@ void AbstractTableView::leave_event(Core::Event& event)
     set_hovered_header_index(-1);
 }
 
-Gfx::Rect AbstractTableView::content_rect(int row, int column) const
+Gfx::IntRect AbstractTableView::content_rect(int row, int column) const
 {
     auto row_rect = this->row_rect(row);
     int x = 0;
@@ -499,17 +499,17 @@ Gfx::Rect AbstractTableView::content_rect(int row, int column) const
     return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, item_height() };
 }
 
-Gfx::Rect AbstractTableView::content_rect(const ModelIndex& index) const
+Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
 {
     return content_rect(index.row(), index.column());
 }
 
-Gfx::Rect AbstractTableView::row_rect(int item_index) const
+Gfx::IntRect AbstractTableView::row_rect(int item_index) const
 {
     return { 0, header_height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }
 
-Gfx::Point AbstractTableView::adjusted_position(const Gfx::Point& position) const
+Gfx::IntPoint AbstractTableView::adjusted_position(const Gfx::IntPoint& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }

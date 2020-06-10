@@ -31,7 +31,7 @@
 
 namespace Gfx {
 
-void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, const Palette& palette, bool active, bool hovered, bool enabled)
+void StylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const Palette& palette, bool active, bool hovered, bool enabled)
 {
     Color base_color = palette.button();
     Color highlight_color2 = palette.threed_highlight();
@@ -72,7 +72,7 @@ void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, const Pa
         shadow_color2);
 }
 
-static void paint_button_new(Painter& painter, const Rect& rect, const Palette& palette, bool pressed, bool checked, bool hovered, bool enabled)
+static void paint_button_new(Painter& painter, const IntRect& rect, const Palette& palette, bool pressed, bool checked, bool hovered, bool enabled)
 {
     Color button_color = palette.button();
     Color highlight_color2 = palette.threed_highlight();
@@ -117,7 +117,7 @@ static void paint_button_new(Painter& painter, const Rect& rect, const Palette& 
     }
 }
 
-void StylePainter::paint_button(Painter& painter, const Rect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled)
+void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled)
 {
     if (button_style == ButtonStyle::Normal)
         return paint_button_new(painter, rect, palette, pressed, checked, hovered, enabled);
@@ -157,7 +157,7 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, const Palett
     }
 }
 
-void StylePainter::paint_surface(Painter& painter, const Rect& rect, const Palette& palette, bool paint_vertical_lines, bool paint_top_line)
+void StylePainter::paint_surface(Painter& painter, const IntRect& rect, const Palette& palette, bool paint_vertical_lines, bool paint_top_line)
 {
     painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, palette.button());
     painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? palette.threed_highlight() : palette.button());
@@ -168,7 +168,7 @@ void StylePainter::paint_surface(Painter& painter, const Rect& rect, const Palet
     }
 }
 
-void StylePainter::paint_frame(Painter& painter, const Rect& rect, const Palette& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
+void StylePainter::paint_frame(Painter& painter, const IntRect& rect, const Palette& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
 {
     Color top_left_color;
     Color bottom_right_color;
@@ -218,7 +218,7 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, const Palette
             top_left_color = dark_shade;
             bottom_right_color = dark_shade;
         }
-        Rect inner_container_frame_rect = rect.shrunken(2, 2);
+        IntRect inner_container_frame_rect = rect.shrunken(2, 2);
         painter.draw_line(inner_container_frame_rect.top_left(), inner_container_frame_rect.top_right(), top_left_color);
         painter.draw_line(inner_container_frame_rect.bottom_left(), inner_container_frame_rect.bottom_right(), bottom_right_color);
         painter.draw_line(inner_container_frame_rect.top_left().translated(0, 1), inner_container_frame_rect.bottom_left().translated(0, -1), top_left_color);
@@ -227,7 +227,7 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, const Palette
 
     if (shape == FrameShape::Box && thickness >= 2) {
         swap(top_left_color, bottom_right_color);
-        Rect inner_rect = rect.shrunken(2, 2);
+        IntRect inner_rect = rect.shrunken(2, 2);
         painter.draw_line(inner_rect.top_left(), inner_rect.top_right(), top_left_color);
         painter.draw_line(inner_rect.bottom_left(), inner_rect.bottom_right(), bottom_right_color);
         painter.draw_line(inner_rect.top_left().translated(0, 1), inner_rect.bottom_left().translated(0, -1), top_left_color);
@@ -235,7 +235,7 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, const Palette
     }
 }
 
-void StylePainter::paint_window_frame(Painter& painter, const Rect& rect, const Palette& palette)
+void StylePainter::paint_window_frame(Painter& painter, const IntRect& rect, const Palette& palette)
 {
     Color base_color = palette.button();
     Color dark_shade = palette.threed_shadow2();
@@ -261,7 +261,7 @@ void StylePainter::paint_window_frame(Painter& painter, const Rect& rect, const 
     painter.draw_line(rect.bottom_left().translated(3, -3), rect.bottom_right().translated(-3, -3), base_color);
 }
 
-void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const Palette& palette, int min, int max, int value, const StringView& text)
+void StylePainter::paint_progress_bar(Painter& painter, const IntRect& rect, const Palette& palette, int min, int max, int value, const StringView& text)
 {
     // First we fill the entire widget with the gradient. This incurs a bit of
     // overdraw but ensures a consistent look throughout the progression.
@@ -280,7 +280,7 @@ void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const 
     // Then we carve out a hole in the remaining part of the widget.
     // We draw the text a third time, clipped and inverse, for sharp contrast.
     float progress_width = progress * rect.width();
-    Rect hole_rect { (int)progress_width, 0, (int)(rect.width() - progress_width), rect.height() };
+    IntRect hole_rect { (int)progress_width, 0, (int)(rect.width() - progress_width), rect.height() };
     hole_rect.move_by(rect.location());
     hole_rect.set_right_without_resize(rect.right());
     PainterStateSaver saver(painter);
@@ -303,7 +303,7 @@ static const Gfx::Bitmap& circle_bitmap(bool checked, bool changing)
     return checked ? *s_filled_circle_bitmap : *s_unfilled_circle_bitmap;
 }
 
-void StylePainter::paint_radio_button(Painter& painter, const Rect& rect, const Palette&, bool is_checked, bool is_being_pressed)
+void StylePainter::paint_radio_button(Painter& painter, const IntRect& rect, const Palette&, bool is_checked, bool is_being_pressed)
 {
     if (!s_unfilled_circle_bitmap) {
         s_unfilled_circle_bitmap = Bitmap::load_from_file("/res/icons/unfilled-radio-circle.png");

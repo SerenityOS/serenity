@@ -79,11 +79,11 @@ private:
     int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
     int button_height() const { return orientation() == Orientation::Horizontal ? height() : button_size(); }
-    Gfx::Rect decrement_button_rect() const;
-    Gfx::Rect increment_button_rect() const;
-    Gfx::Rect decrement_gutter_rect() const;
-    Gfx::Rect increment_gutter_rect() const;
-    Gfx::Rect scrubber_rect() const;
+    Gfx::IntRect decrement_button_rect() const;
+    Gfx::IntRect increment_button_rect() const;
+    Gfx::IntRect decrement_gutter_rect() const;
+    Gfx::IntRect increment_gutter_rect() const;
+    Gfx::IntRect scrubber_rect() const;
     int scrubber_size() const;
     int scrubbable_range_in_pixels() const;
     void on_automatic_scrolling_timer_fired();
@@ -97,7 +97,7 @@ private:
 
     bool m_scrubbing { false };
     int m_scrub_start_value { 0 };
-    Gfx::Point m_scrub_origin;
+    Gfx::IntPoint m_scrub_origin;
 
     Gfx::Orientation m_orientation { Gfx::Orientation::Vertical };
     Component m_hovered_component { Component::Invalid };

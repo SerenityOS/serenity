@@ -38,7 +38,7 @@
 
 namespace Web {
 
-static Gfx::Point compute_mouse_event_offset(const Gfx::Point& position, const LayoutNode& layout_node)
+static Gfx::IntPoint compute_mouse_event_offset(const Gfx::IntPoint& position, const LayoutNode& layout_node)
 {
     auto top_left_of_layout_node = layout_node.box_type_agnostic_position();
     return {
@@ -70,7 +70,7 @@ LayoutDocument* EventHandler::layout_root()
     return const_cast<LayoutDocument*>(m_frame.document()->layout_node());
 }
 
-bool EventHandler::handle_mouseup(const Gfx::Point& position, unsigned button, unsigned modifiers)
+bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
     auto* layout_root_ptr = this->layout_root();
     if (!layout_root_ptr)
@@ -98,7 +98,7 @@ bool EventHandler::handle_mouseup(const Gfx::Point& position, unsigned button, u
     return handled_event;
 }
 
-bool EventHandler::handle_mousedown(const Gfx::Point& position, unsigned button, unsigned modifiers)
+bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
     auto* layout_root_ptr = this->layout_root();
     if (!layout_root_ptr)
@@ -154,7 +154,7 @@ bool EventHandler::handle_mousedown(const Gfx::Point& position, unsigned button,
     return true;
 }
 
-bool EventHandler::handle_mousemove(const Gfx::Point& position, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned buttons, unsigned modifiers)
 {
     auto* layout_root_ptr = this->layout_root();
     if (!layout_root_ptr)

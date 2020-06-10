@@ -50,9 +50,9 @@ public:
 
     virtual ~Card() override;
 
-    Gfx::Rect& rect() { return m_rect; }
-    Gfx::Point position() const { return m_rect.location(); }
-    const Gfx::Point& old_positon() const { return m_old_position; }
+    Gfx::IntRect& rect() { return m_rect; }
+    Gfx::IntPoint position() const { return m_rect.location(); }
+    const Gfx::IntPoint& old_positon() const { return m_old_position; }
     uint8_t value() const { return m_value; };
     Type type() const { return m_type; }
 
@@ -61,7 +61,7 @@ public:
     bool is_upside_down() const { return m_upside_down; }
     Gfx::Color color() const { return (m_type == Diamonds || m_type == Hearts) ? Color::Red : Color::Black; }
 
-    void set_position(const Gfx::Point p) { m_rect.set_location(p); }
+    void set_position(const Gfx::IntPoint p) { m_rect.set_location(p); }
     void set_moving(bool moving) { m_moving = moving; }
     void set_upside_down(bool upside_down) { m_upside_down = upside_down; }
 
@@ -74,9 +74,9 @@ public:
 private:
     Card(Type type, uint8_t value);
 
-    Gfx::Rect m_rect;
+    Gfx::IntRect m_rect;
     NonnullRefPtr<Gfx::Bitmap> m_front;
-    Gfx::Point m_old_position;
+    Gfx::IntPoint m_old_position;
     Type m_type;
     uint8_t m_value;
     bool m_old_position_valid { false };

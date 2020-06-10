@@ -75,12 +75,12 @@ void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, f
     mapped_y = (m_values[1] * unmapped_x + m_values[3] * unmapped_y + m_values[5]);
 }
 
-Point AffineTransform::map(const Point& point) const
+IntPoint AffineTransform::map(const IntPoint& point) const
 {
     float mapped_x;
     float mapped_y;
     map(point.x(), point.y(), mapped_x, mapped_y);
-    return Point(roundf(mapped_x), roundf(mapped_y));
+    return IntPoint(roundf(mapped_x), roundf(mapped_y));
 }
 
 FloatPoint AffineTransform::map(const FloatPoint& point) const
@@ -91,9 +91,9 @@ FloatPoint AffineTransform::map(const FloatPoint& point) const
     return FloatPoint(mapped_x, mapped_y);
 }
 
-Size AffineTransform::map(const Size& size) const
+IntSize AffineTransform::map(const IntSize& size) const
 {
-    return Size(roundf(size.width() * x_scale()), roundf(y_scale()));
+    return IntSize(roundf(size.width() * x_scale()), roundf(y_scale()));
 }
 
 FloatSize AffineTransform::map(const FloatSize& size) const
@@ -101,7 +101,7 @@ FloatSize AffineTransform::map(const FloatSize& size) const
     return { size.width() * x_scale(), size.height() * y_scale() };
 }
 
-Rect AffineTransform::map(const Rect& rect) const
+IntRect AffineTransform::map(const IntRect& rect) const
 {
     return enclosing_int_rect(map(FloatRect(rect)));
 }

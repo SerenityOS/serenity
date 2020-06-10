@@ -56,7 +56,7 @@ public:
     void add_separator();
     Menu& add_submenu(const String& name);
 
-    void popup(const Gfx::Point& screen_position);
+    void popup(const Gfx::IntPoint& screen_position);
     void dismiss();
 
 private:

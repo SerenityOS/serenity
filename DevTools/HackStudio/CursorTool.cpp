@@ -153,7 +153,7 @@ void CursorTool::on_keydown(GUI::KeyEvent& event)
     }
 }
 
-void CursorTool::set_rubber_band_position(const Gfx::Point& position)
+void CursorTool::set_rubber_band_position(const Gfx::IntPoint& position)
 {
     if (m_rubber_band_position == position)
         return;
@@ -171,11 +171,11 @@ void CursorTool::set_rubber_band_position(const Gfx::Point& position)
     m_editor.form_widget().update();
 }
 
-Gfx::Rect CursorTool::rubber_band_rect() const
+Gfx::IntRect CursorTool::rubber_band_rect() const
 {
     if (!m_rubber_banding)
         return {};
-    return Gfx::Rect::from_two_points(m_rubber_band_origin, m_rubber_band_position);
+    return Gfx::IntRect::from_two_points(m_rubber_band_origin, m_rubber_band_position);
 }
 
 void CursorTool::on_second_paint(GUI::Painter& painter, GUI::PaintEvent&)

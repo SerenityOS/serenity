@@ -89,7 +89,7 @@ void Menu::realize_if_needed()
         realize_menu();
 }
 
-void Menu::popup(const Gfx::Point& screen_position)
+void Menu::popup(const Gfx::IntPoint& screen_position)
 {
     realize_if_needed();
     WindowServerConnection::the().post_message(Messages::WindowServer::PopupMenu(m_menu_id, screen_position));
@@ -129,7 +129,7 @@ int Menu::realize_menu()
             int icon_buffer_id = -1;
             if (action.icon()) {
                 ASSERT(action.icon()->format() == Gfx::BitmapFormat::RGBA32);
-                ASSERT(action.icon()->size() == Gfx::Size(16, 16));
+                ASSERT(action.icon()->size() == Gfx::IntSize(16, 16));
                 if (action.icon()->shbuf_id() == -1) {
                     auto shared_buffer = SharedBuffer::create_with_size(action.icon()->size_in_bytes());
                     ASSERT(shared_buffer);

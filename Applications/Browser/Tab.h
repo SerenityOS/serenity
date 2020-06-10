@@ -43,7 +43,7 @@ public:
     void load(const URL&);
 
     void did_become_active();
-    void context_menu_requested(const Gfx::Point& screen_position);
+    void context_menu_requested(const Gfx::IntPoint& screen_position);
 
     Function<void(String)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;

@@ -482,7 +482,7 @@ static RefPtr<Gfx::Bitmap> render_thumbnail(const StringView& path)
     double scale = min(32 / (double)png_bitmap->width(), 32 / (double)png_bitmap->height());
 
     auto thumbnail = Gfx::Bitmap::create(png_bitmap->format(), { 32, 32 });
-    Gfx::Rect destination = Gfx::Rect(0, 0, (int)(png_bitmap->width() * scale), (int)(png_bitmap->height() * scale));
+    Gfx::IntRect destination = Gfx::IntRect(0, 0, (int)(png_bitmap->width() * scale), (int)(png_bitmap->height() * scale));
     destination.center_within(thumbnail->rect());
 
     Painter painter(*thumbnail);

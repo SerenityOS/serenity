@@ -61,10 +61,10 @@ private:
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
-    void show_documentation_tooltip_if_available(const String&, const Gfx::Point& screen_location);
+    void show_documentation_tooltip_if_available(const String&, const Gfx::IntPoint& screen_location);
     void navigate_to_include_if_available(String);
 
-    Gfx::Rect breakpoint_icon_rect(size_t line_number) const;
+    Gfx::IntRect breakpoint_icon_rect(size_t line_number) const;
     static const Gfx::Bitmap& breakpoint_icon_bitmap();
     static const Gfx::Bitmap& current_position_icon_bitmap();
 

@@ -151,9 +151,9 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
     virtual void theme_change_event(ThemeChangeEvent&) override;
     virtual void cursor_did_change() {}
-    Gfx::Rect ruler_content_rect(size_t line) const;
+    Gfx::IntRect ruler_content_rect(size_t line) const;
 
-    TextPosition text_position_at(const Gfx::Point&) const;
+    TextPosition text_position_at(const Gfx::IntPoint&) const;
     bool ruler_visible() const { return m_ruler_visible; }
 
 private:
@@ -192,10 +192,10 @@ private:
         TextEditor& m_editor;
     };
 
-    Gfx::Rect line_content_rect(size_t item_index) const;
-    Gfx::Rect line_widget_rect(size_t line_index) const;
-    Gfx::Rect cursor_content_rect() const;
-    Gfx::Rect content_rect_for_position(const TextPosition&) const;
+    Gfx::IntRect line_content_rect(size_t item_index) const;
+    Gfx::IntRect line_widget_rect(size_t line_index) const;
+    Gfx::IntRect cursor_content_rect() const;
+    Gfx::IntRect content_rect_for_position(const TextPosition&) const;
     void update_cursor();
     const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return document().lines(); }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
@@ -208,8 +208,8 @@ private:
     void delete_selection();
     void did_update_selection();
     int content_x_for_position(const TextPosition&) const;
-    Gfx::Rect ruler_rect_in_inner_coordinates() const;
-    Gfx::Rect visible_text_rect_in_inner_coordinates() const;
+    Gfx::IntRect ruler_rect_in_inner_coordinates() const;
+    Gfx::IntRect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
     void flush_pending_change_notification_if_needed();
@@ -268,7 +268,7 @@ private:
 
     struct LineVisualData {
         Vector<size_t, 1> visual_line_breaks;
-        Gfx::Rect visual_rect;
+        Gfx::IntRect visual_rect;
     };
 
     NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
@@ -276,7 +276,7 @@ private:
     OwnPtr<SyntaxHighlighter> m_highlighter;
 
     RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
-    Gfx::Point m_last_mousemove_position;
+    Gfx::IntPoint m_last_mousemove_position;
 };
 
 }

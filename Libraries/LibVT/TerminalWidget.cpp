@@ -147,17 +147,17 @@ static inline Color color_from_rgb(unsigned color)
     return Color::from_rgb(color);
 }
 
-Gfx::Rect TerminalWidget::glyph_rect(u16 row, u16 column)
+Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
 {
     int y = row * m_line_height;
     int x = column * font().glyph_width('x');
     return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x'), font().glyph_height() };
 }
 
-Gfx::Rect TerminalWidget::row_rect(u16 row)
+Gfx::IntRect TerminalWidget::row_rect(u16 row)
 {
     int y = row * m_line_height;
-    Gfx::Rect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x') * m_terminal.columns(), font().glyph_height() };
+    Gfx::IntRect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x') * m_terminal.columns(), font().glyph_height() };
     rect.inflate(0, m_line_spacing);
     return rect;
 }
@@ -264,7 +264,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
     painter.add_clip_rect(event.rect());
 
-    Gfx::Rect terminal_buffer_rect(frame_inner_rect().top_left(), { frame_inner_rect().width() - m_scrollbar->width(), frame_inner_rect().height() });
+    Gfx::IntRect terminal_buffer_rect(frame_inner_rect().top_left(), { frame_inner_rect().width() - m_scrollbar->width(), frame_inner_rect().height() });
     painter.add_clip_rect(terminal_buffer_rect);
 
     if (m_visual_beep_timer->is_active())
@@ -394,7 +394,7 @@ void TerminalWidget::flush_dirty_lines()
         m_terminal.m_need_full_flush = false;
         return;
     }
-    Gfx::Rect rect;
+    Gfx::IntRect rect;
     for (int i = 0; i < m_terminal.rows(); ++i) {
         if (m_terminal.visible_line(i).is_dirty()) {
             rect = rect.united(row_rect(i));
@@ -415,7 +415,7 @@ void TerminalWidget::resize_event(GUI::ResizeEvent& event)
     relayout(event.size());
 }
 
-void TerminalWidget::relayout(const Gfx::Size& size)
+void TerminalWidget::relayout(const Gfx::IntSize& size)
 {
     if (!m_scrollbar)
         return;
@@ -425,7 +425,7 @@ void TerminalWidget::relayout(const Gfx::Size& size)
     int new_rows = (size.height() - base_size.height()) / m_line_height;
     m_terminal.set_size(new_columns, new_rows);
 
-    Gfx::Rect scrollbar_rect = {
+    Gfx::IntRect scrollbar_rect = {
         size.width() - m_scrollbar->width() - frame_thickness(),
         frame_thickness(),
         m_scrollbar->width(),
@@ -434,7 +434,7 @@ void TerminalWidget::relayout(const Gfx::Size& size)
     m_scrollbar->set_relative_rect(scrollbar_rect);
 }
 
-Gfx::Size TerminalWidget::compute_base_size() const
+Gfx::IntSize TerminalWidget::compute_base_size() const
 {
     int base_width = frame_thickness() * 2 + m_inset * 2 + m_scrollbar->width();
     int base_height = frame_thickness() * 2 + m_inset * 2;
@@ -499,7 +499,7 @@ bool TerminalWidget::selection_contains(const VT::Position& position) const
     return position >= normalized_selection_start() && position <= normalized_selection_end();
 }
 
-VT::Position TerminalWidget::buffer_position_at(const Gfx::Point& position) const
+VT::Position TerminalWidget::buffer_position_at(const Gfx::IntPoint& position) const
 {
     auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     int row = adjusted_position.y() / m_line_height;

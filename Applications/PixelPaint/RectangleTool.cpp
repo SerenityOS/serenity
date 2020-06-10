@@ -43,7 +43,7 @@ RectangleTool::~RectangleTool()
 {
 }
 
-void RectangleTool::draw_using(GUI::Painter& painter, const Gfx::Rect& rect)
+void RectangleTool::draw_using(GUI::Painter& painter, const Gfx::IntRect& rect)
 {
     switch (m_mode) {
     case Mode::Fill:
@@ -78,7 +78,7 @@ void RectangleTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseE
 {
     if (event.button() == m_drawing_button) {
         GUI::Painter painter(layer.bitmap());
-        auto rect = Gfx::Rect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
+        auto rect = Gfx::IntRect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
         draw_using(painter, rect);
         m_drawing_button = GUI::MouseButton::None;
         layer.did_modify_bitmap(*m_editor->image());
@@ -101,7 +101,7 @@ void RectangleTool::on_second_paint(const Layer& layer, GUI::PaintEvent& event)
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    auto rect = Gfx::Rect::from_two_points(m_editor->layer_position_to_editor_position(layer, m_rectangle_start_position).to_int_point(), m_editor->layer_position_to_editor_position(layer, m_rectangle_end_position).to_int_point());
+    auto rect = Gfx::IntRect::from_two_points(m_editor->layer_position_to_editor_position(layer, m_rectangle_start_position).to_int_point(), m_editor->layer_position_to_editor_position(layer, m_rectangle_end_position).to_int_point());
     draw_using(painter, rect);
 }
 

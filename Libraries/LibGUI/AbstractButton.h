@@ -73,7 +73,7 @@ protected:
     virtual void save_to(JsonObject&) override;
     virtual bool set_property(const StringView& name, const JsonValue& value) override;
 
-    void paint_text(Painter&, const Gfx::Rect&, const Gfx::Font&, Gfx::TextAlignment);
+    void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::TextAlignment);
 
 private:
     virtual bool is_abstract_button() const final { return true; }

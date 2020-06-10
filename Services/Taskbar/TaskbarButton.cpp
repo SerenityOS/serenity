@@ -57,13 +57,13 @@ void TaskbarButton::resize_event(GUI::ResizeEvent& event)
     return GUI::Button::resize_event(event);
 }
 
-static void paint_custom_progress_bar(GUI::Painter& painter, const Gfx::Rect& rect, const Gfx::Rect& text_rect, const Palette& palette, int min, int max, int value, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
+static void paint_custom_progress_bar(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& text_rect, const Palette& palette, int min, int max, int value, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
 {
     float range_size = max - min;
     float progress = (value - min) / range_size;
     float progress_width = progress * rect.width();
 
-    Gfx::Rect progress_rect { rect.x(), rect.y(), (int)progress_width, rect.height() };
+    Gfx::IntRect progress_rect { rect.x(), rect.y(), (int)progress_width, rect.height() };
 
     {
         Gfx::PainterStateSaver saver(painter);
@@ -79,7 +79,7 @@ static void paint_custom_progress_bar(GUI::Painter& painter, const Gfx::Rect& re
         }
     }
 
-    Gfx::Rect hole_rect { (int)progress_width, 0, (int)(rect.width() - progress_width), rect.height() };
+    Gfx::IntRect hole_rect { (int)progress_width, 0, (int)(rect.width() - progress_width), rect.height() };
     hole_rect.move_by(rect.location());
     hole_rect.set_right_without_resize(rect.right());
     Gfx::PainterStateSaver saver(painter);
@@ -115,7 +115,7 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
         content_rect.set_width(content_rect.width() - icon.width() - 4);
     }
 
-    Gfx::Rect text_rect { 0, 0, font.width(text()), font.glyph_height() };
+    Gfx::IntRect text_rect { 0, 0, font.width(text()), font.glyph_height() };
     if (text_rect.width() > content_rect.width())
         text_rect.set_width(content_rect.width());
     text_rect.align_within(content_rect, text_alignment());

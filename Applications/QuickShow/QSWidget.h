@@ -76,11 +76,11 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
     int m_toolbar_height { 28 };
 
-    Gfx::Rect m_bitmap_rect;
+    Gfx::IntRect m_bitmap_rect;
     int m_scale { 100 };
     Gfx::FloatPoint m_pan_origin;
 
-    Gfx::Point m_click_position;
+    Gfx::IntPoint m_click_position;
     Gfx::FloatPoint m_saved_pan_origin;
     Vector<String> m_files_in_same_dir;
 };

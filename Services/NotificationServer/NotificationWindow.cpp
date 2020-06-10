@@ -41,9 +41,9 @@ static Vector<RefPtr<NotificationWindow>> s_windows;
 
 void update_notification_window_locations()
 {
-    Gfx::Rect last_window_rect;
+    Gfx::IntRect last_window_rect;
     for (auto& window : s_windows) {
-        Gfx::Point new_window_location;
+        Gfx::IntPoint new_window_location;
         if (last_window_rect.is_null())
             new_window_location = GUI::Desktop::the().rect().top_right().translated(-window->rect().width() - 24, 26);
         else
@@ -64,13 +64,13 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     set_resizable(false);
     set_minimizable(false);
 
-    Gfx::Rect lowest_notification_rect_on_screen;
+    Gfx::IntRect lowest_notification_rect_on_screen;
     for (auto& window : s_windows) {
         if (window->m_original_rect.y() > lowest_notification_rect_on_screen.y())
             lowest_notification_rect_on_screen = window->m_original_rect;
     }
 
-    Gfx::Rect rect;
+    Gfx::IntRect rect;
     rect.set_width(220);
     rect.set_height(40);
     rect.set_location(GUI::Desktop::the().rect().top_right().translated(-rect.width() - 24, 26));

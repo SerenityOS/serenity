@@ -74,12 +74,12 @@ void WaveEditor::paint_event(GUI::PaintEvent& event)
         int left_y = sample_to_y(recorded_sample[x].left);
         int right_y = sample_to_y(recorded_sample[x].right);
 
-        Gfx::Point left_point1(prev_x * width_scale, left_prev_y);
-        Gfx::Point left_point2(x * width_scale, left_y);
+        Gfx::IntPoint left_point1(prev_x * width_scale, left_prev_y);
+        Gfx::IntPoint left_point2(x * width_scale, left_y);
         painter.draw_line(left_point1, left_point2, left_wave_colors[RecordedSample]);
 
-        Gfx::Point right_point1(prev_x * width_scale, right_prev_y);
-        Gfx::Point right_point2(x * width_scale, right_y);
+        Gfx::IntPoint right_point1(prev_x * width_scale, right_prev_y);
+        Gfx::IntPoint right_point2(x * width_scale, right_y);
         painter.draw_line(right_point1, right_point2, right_wave_colors[RecordedSample]);
 
         prev_x = x;

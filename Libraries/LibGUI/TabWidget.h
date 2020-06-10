@@ -99,10 +99,10 @@ protected:
     virtual void context_menu_event(ContextMenuEvent&) override;
 
 private:
-    Gfx::Rect child_rect_for_size(const Gfx::Size&) const;
-    Gfx::Rect button_rect(int index) const;
-    Gfx::Rect bar_rect() const;
-    Gfx::Rect container_rect() const;
+    Gfx::IntRect child_rect_for_size(const Gfx::IntSize&) const;
+    Gfx::IntRect button_rect(int index) const;
+    Gfx::IntRect bar_rect() const;
+    Gfx::IntRect container_rect() const;
     void update_bar();
 
     RefPtr<Widget> m_active_widget;

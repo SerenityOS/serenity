@@ -60,8 +60,8 @@ void SampleWidget::paint_event(GUI::PaintEvent& event)
             ++count;
 
             if (count >= samples_per_pixel) {
-                Gfx::Point min_point = { x, y_offset + static_cast<int>(-sample_max * frame_inner_rect().height() / 2) };
-                Gfx::Point max_point = { x++, y_offset + static_cast<int>(sample_max * frame_inner_rect().height() / 2) };
+                Gfx::IntPoint min_point = { x, y_offset + static_cast<int>(-sample_max * frame_inner_rect().height() / 2) };
+                Gfx::IntPoint max_point = { x++, y_offset + static_cast<int>(sample_max * frame_inner_rect().height() / 2) };
                 painter.draw_line(min_point, max_point, Color::Green);
 
                 count = 0;

@@ -83,17 +83,17 @@ void ListView::did_update_model(unsigned flags)
     update();
 }
 
-Gfx::Rect ListView::content_rect(int row) const
+Gfx::IntRect ListView::content_rect(int row) const
 {
     return { 0, row * item_height(), content_width(), item_height() };
 }
 
-Gfx::Rect ListView::content_rect(const ModelIndex& index) const
+Gfx::IntRect ListView::content_rect(const ModelIndex& index) const
 {
     return content_rect(index.row());
 }
 
-ModelIndex ListView::index_at_event_position(const Gfx::Point& point) const
+ModelIndex ListView::index_at_event_position(const Gfx::IntPoint& point) const
 {
     ASSERT(model());
 
@@ -106,7 +106,7 @@ ModelIndex ListView::index_at_event_position(const Gfx::Point& point) const
     return {};
 }
 
-Gfx::Point ListView::adjusted_position(const Gfx::Point& position) const
+Gfx::IntPoint ListView::adjusted_position(const Gfx::IntPoint& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
@@ -143,7 +143,7 @@ void ListView::paint_event(PaintEvent& event)
             }
         }
 
-        Gfx::Rect row_rect(0, y, content_width(), item_height());
+        Gfx::IntRect row_rect(0, y, content_width(), item_height());
         painter.fill_rect(row_rect, background_color);
         auto index = model()->index(row_index, m_model_column);
         auto data = model()->data(index);
@@ -169,7 +169,7 @@ void ListView::paint_event(PaintEvent& event)
         ++painted_item_index;
     };
 
-    Gfx::Rect unpainted_rect(0, painted_item_index * item_height(), exposed_width, height());
+    Gfx::IntRect unpainted_rect(0, painted_item_index * item_height(), exposed_width, height());
     if (fill_with_background_color())
         painter.fill_rect(unpainted_rect, palette().color(background_role()));
 }

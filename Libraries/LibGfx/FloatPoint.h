@@ -44,7 +44,7 @@ public:
     {
     }
 
-    explicit FloatPoint(const Point& other)
+    explicit FloatPoint(const IntPoint& other)
         : m_x(other.x())
         , m_y(other.y())
     {
@@ -149,7 +149,7 @@ public:
             set_y(value);
     }
 
-    Point to_int_point() const { return Point(x(), y()); }
+    IntPoint to_int_point() const { return IntPoint(x(), y()); }
 
 private:
     float m_x { 0 };

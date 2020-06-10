@@ -165,7 +165,7 @@ void WindowSwitcher::redraw()
     Compositor::the().invalidate(m_rect);
 }
 
-Gfx::Rect WindowSwitcher::item_rect(int index) const
+Gfx::IntRect WindowSwitcher::item_rect(int index) const
 {
     return {
         padding(),
@@ -197,12 +197,12 @@ void WindowSwitcher::draw()
             rect_text_color = palette.threed_shadow2();
         }
         item_rect.shrink(item_padding(), 0);
-        Gfx::Rect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
+        Gfx::IntRect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
         if (window.backing_store()) {
             painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect());
             Gfx::StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
         }
-        Gfx::Rect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
+        Gfx::IntRect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
         painter.fill_rect(icon_rect, palette.window());
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);

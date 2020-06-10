@@ -418,7 +418,7 @@ void MenuManager::close_bar()
     m_bar_open = false;
 }
 
-Gfx::Rect MenuManager::menubar_rect() const
+Gfx::IntRect MenuManager::menubar_rect() const
 {
     return { 0, 0, Screen::the().rect().width(), 19 };
 }
@@ -432,7 +432,7 @@ void MenuManager::set_current_menubar(MenuBar* menubar)
 #ifdef DEBUG_MENUS
     dbg() << "[WM] Current menubar is now " << menubar;
 #endif
-    Gfx::Point next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
+    Gfx::IntPoint next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
     for_each_active_menubar_menu([&](Menu& menu) {
         int text_width = menu.title_font().width(menu.name());
         menu.set_rect_in_menubar({ next_menu_location.x() - MenuManager::menubar_menu_margin() / 2, 0, text_width + MenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });

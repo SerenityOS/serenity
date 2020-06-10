@@ -131,10 +131,10 @@ void Window::set_title(const String& title)
     WindowManager::the().notify_title_changed(*this);
 }
 
-void Window::set_rect(const Gfx::Rect& rect)
+void Window::set_rect(const Gfx::IntRect& rect)
 {
     ASSERT(!rect.is_empty());
-    Gfx::Rect old_rect;
+    Gfx::IntRect old_rect;
     if (m_rect == rect)
         return;
     old_rect = m_rect;
@@ -145,7 +145,7 @@ void Window::set_rect(const Gfx::Rect& rect)
     m_frame.notify_window_rect_changed(old_rect, rect);
 }
 
-void Window::set_rect_without_repaint(const Gfx::Rect& rect)
+void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
 {
     ASSERT(!rect.is_empty());
     if (m_rect == rect)
@@ -354,7 +354,7 @@ void Window::invalidate()
     Compositor::the().invalidate(frame().rect());
 }
 
-void Window::invalidate(const Gfx::Rect& rect)
+void Window::invalidate(const Gfx::IntRect& rect)
 {
     if (type() == WindowType::MenuApplet) {
         AppletManager::the().invalidate_applet(*this, rect);
@@ -395,7 +395,7 @@ void Window::set_default_icon()
     m_icon = default_window_icon();
 }
 
-void Window::request_update(const Gfx::Rect& rect, bool ignore_occlusion)
+void Window::request_update(const Gfx::IntRect& rect, bool ignore_occlusion)
 {
     if (m_pending_paint_rects.is_empty()) {
         deferred_invoke([this, ignore_occlusion](auto&) {
@@ -405,7 +405,7 @@ void Window::request_update(const Gfx::Rect& rect, bool ignore_occlusion)
     m_pending_paint_rects.add(rect);
 }
 
-void Window::popup_window_menu(const Gfx::Point& position)
+void Window::popup_window_menu(const Gfx::IntPoint& position)
 {
     if (!m_window_menu) {
         m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)");
@@ -464,7 +464,7 @@ void Window::set_fullscreen(bool fullscreen)
     if (m_fullscreen == fullscreen)
         return;
     m_fullscreen = fullscreen;
-    Gfx::Rect new_window_rect = m_rect;
+    Gfx::IntRect new_window_rect = m_rect;
     if (m_fullscreen) {
         m_saved_nonfullscreen_rect = m_rect;
         new_window_rect = Screen::the().rect();
@@ -475,19 +475,19 @@ void Window::set_fullscreen(bool fullscreen)
     set_rect(new_window_rect);
 }
 
-Gfx::Rect Window::tiled_rect(WindowTileType tiled) const
+Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
 {
     int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
     switch (tiled) {
     case WindowTileType::None:
         return m_untiled_rect;
     case WindowTileType::Left:
-        return Gfx::Rect(0,
+        return Gfx::IntRect(0,
             WindowManager::the().maximized_window_rect(*this).y(),
             Screen::the().width() / 2 - frame_width,
             WindowManager::the().maximized_window_rect(*this).height());
     case WindowTileType::Right:
-        return Gfx::Rect(Screen::the().width() / 2 + frame_width,
+        return Gfx::IntRect(Screen::the().width() / 2 + frame_width,
             WindowManager::the().maximized_window_rect(*this).y(),
             Screen::the().width() / 2 - frame_width,
             WindowManager::the().maximized_window_rect(*this).height());

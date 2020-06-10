@@ -62,9 +62,9 @@ public:
     int knob_secondary_size() const { return 20; }
 
     bool knob_dragging() const { return m_dragging; }
-    Gfx::Rect knob_rect() const;
+    Gfx::IntRect knob_rect() const;
 
-    Gfx::Rect inner_rect() const
+    Gfx::IntRect inner_rect() const
     {
         if (orientation() == Orientation::Horizontal)
             return rect().shrunken(20, 0);
@@ -94,7 +94,7 @@ private:
     bool m_knob_hovered { false };
     bool m_dragging { false };
     int m_drag_origin_value { 0 };
-    Gfx::Point m_drag_origin;
+    Gfx::IntPoint m_drag_origin;
     KnobSizeMode m_knob_size_mode { KnobSizeMode::Fixed };
     Orientation m_orientation { Orientation::Horizontal };
 };

@@ -31,12 +31,12 @@
 
 namespace Gfx {
 
-String Point::to_string() const
+String IntPoint::to_string() const
 {
     return String::format("[%d,%d]", x(), y());
 }
 
-const LogStream& operator<<(const LogStream& stream, const Point& value)
+const LogStream& operator<<(const LogStream& stream, const IntPoint& value)
 {
     return stream << value.to_string();
 }
@@ -45,13 +45,13 @@ const LogStream& operator<<(const LogStream& stream, const Point& value)
 
 namespace IPC {
 
-bool encode(Encoder& encoder, const Gfx::Point& point)
+bool encode(Encoder& encoder, const Gfx::IntPoint& point)
 {
     encoder << point.x() << point.y();
     return true;
 }
 
-bool decode(Decoder& decoder, Gfx::Point& point)
+bool decode(Decoder& decoder, Gfx::IntPoint& point)
 {
     int x = 0;
     int y = 0;

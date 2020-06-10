@@ -40,19 +40,19 @@ class Layer : public RefCounted<Layer> {
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static RefPtr<Layer> create_with_size(const Gfx::Size&, const String& name);
+    static RefPtr<Layer> create_with_size(const Gfx::IntSize&, const String& name);
 
     ~Layer() {}
 
-    const Gfx::Point& location() const { return m_location; }
-    void set_location(const Gfx::Point& location) { m_location = location; }
+    const Gfx::IntPoint& location() const { return m_location; }
+    void set_location(const Gfx::IntPoint& location) { m_location = location; }
 
     const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
     Gfx::Bitmap& bitmap() { return *m_bitmap; }
-    Gfx::Size size() const { return bitmap().size(); }
+    Gfx::IntSize size() const { return bitmap().size(); }
 
-    Gfx::Rect relative_rect() const { return { location(), size() }; }
-    Gfx::Rect rect() const { return { {}, size() }; }
+    Gfx::IntRect relative_rect() const { return { location(), size() }; }
+    Gfx::IntRect rect() const { return { {}, size() }; }
 
     const String& name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
@@ -63,10 +63,10 @@ public:
     bool is_selected() const { return m_selected; }
 
 private:
-    explicit Layer(const Gfx::Size&, const String& name);
+    explicit Layer(const Gfx::IntSize&, const String& name);
 
     String m_name;
-    Gfx::Point m_location;
+    Gfx::IntPoint m_location;
     RefPtr<Gfx::Bitmap> m_bitmap;
 
     bool m_selected { false };

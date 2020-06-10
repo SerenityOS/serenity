@@ -55,13 +55,13 @@ public:
     Page& page() { return m_page; }
     const Page& page() const { return m_page; }
 
-    const Gfx::Size& size() const { return m_size; }
-    void set_size(const Gfx::Size&);
+    const Gfx::IntSize& size() const { return m_size; }
+    void set_size(const Gfx::IntSize&);
 
-    void set_needs_display(const Gfx::Rect&);
+    void set_needs_display(const Gfx::IntRect&);
 
-    void set_viewport_rect(const Gfx::Rect&);
-    Gfx::Rect viewport_rect() const { return m_viewport_rect; }
+    void set_viewport_rect(const Gfx::IntRect&);
+    Gfx::IntRect viewport_rect() const { return m_viewport_rect; }
 
     void did_scroll(Badge<PageView>);
 
@@ -79,8 +79,8 @@ public:
     Element* host_element() { return m_host_element; }
     const Element* host_element() const { return m_host_element; }
 
-    Gfx::Point to_main_frame_position(const Gfx::Point&);
-    Gfx::Rect to_main_frame_rect(const Gfx::Rect&);
+    Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
+    Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
 
 private:
     explicit Frame(Element& host_element, Frame& main_frame);
@@ -94,8 +94,8 @@ private:
 
     WeakPtr<Element> m_host_element;
     RefPtr<Document> m_document;
-    Gfx::Size m_size;
-    Gfx::Rect m_viewport_rect;
+    Gfx::IntSize m_size;
+    Gfx::IntRect m_viewport_rect;
 };
 
 }

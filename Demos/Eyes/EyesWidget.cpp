@@ -64,7 +64,7 @@ void EyesWidget::paint_event(GUI::PaintEvent& event)
 void EyesWidget::render_eyeball(int index, GUI::Painter& painter) const
 {
     auto eye_width = width() / m_num_eyes;
-    Gfx::Rect bounds { index * eye_width, 0, eye_width, height() };
+    Gfx::IntRect bounds { index * eye_width, 0, eye_width, height() };
     auto width_thickness = max(int(eye_width / 5.5), 1);
     auto height_thickness = max(int(height() / 5.5), 1);
 
@@ -73,12 +73,12 @@ void EyesWidget::render_eyeball(int index, GUI::Painter& painter) const
     bounds.shrink(width_thickness, height_thickness);
     painter.fill_ellipse(bounds, palette().base());
 
-    Gfx::Point pupil_center = this->pupil_center(bounds);
-    Gfx::Size pupil_size {
+    Gfx::IntPoint pupil_center = this->pupil_center(bounds);
+    Gfx::IntSize pupil_size {
         bounds.width() / 5,
         bounds.height() / 5
     };
-    Gfx::Rect pupil {
+    Gfx::IntRect pupil {
         pupil_center.x() - pupil_size.width() / 2,
         pupil_center.y() - pupil_size.height() / 2,
         pupil_size.width(),
@@ -88,7 +88,7 @@ void EyesWidget::render_eyeball(int index, GUI::Painter& painter) const
     painter.fill_ellipse(pupil, palette().base_text());
 }
 
-Gfx::Point EyesWidget::pupil_center(Gfx::Rect& eyeball_bounds) const
+Gfx::IntPoint EyesWidget::pupil_center(Gfx::IntRect& eyeball_bounds) const
 {
     auto mouse_vector = m_mouse_position - eyeball_bounds.center();
     double dx = mouse_vector.x();

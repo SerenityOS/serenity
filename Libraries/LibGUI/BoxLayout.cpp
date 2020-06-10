@@ -51,7 +51,7 @@ void BoxLayout::run(Widget& widget)
     if (m_entries.is_empty())
         return;
 
-    Gfx::Size available_size = widget.size();
+    Gfx::IntSize available_size = widget.size();
     int number_of_entries_with_fixed_size = 0;
 
     int number_of_visible_entries = 0;
@@ -99,8 +99,8 @@ void BoxLayout::run(Widget& widget)
     if (should_log)
         dbgprintf("BoxLayout:   available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
 
-    Gfx::Size automatic_size;
-    Gfx::Size automatic_size_for_last_entry;
+    Gfx::IntSize automatic_size;
+    Gfx::IntSize automatic_size_for_last_entry;
 
     if (number_of_entries_with_automatic_size) {
         if (m_orientation == Orientation::Horizontal) {
@@ -135,7 +135,7 @@ void BoxLayout::run(Widget& widget)
             continue;
         if (!entry.widget->is_visible())
             continue;
-        Gfx::Rect rect(current_x, current_y, 0, 0);
+        Gfx::IntRect rect(current_x, current_y, 0, 0);
         if (entry.layout) {
             // FIXME: Implement recursive layout.
             ASSERT_NOT_REACHED();

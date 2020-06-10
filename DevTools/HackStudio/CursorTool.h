@@ -47,14 +47,14 @@ private:
     virtual void on_keydown(GUI::KeyEvent&) override;
     virtual void on_second_paint(GUI::Painter&, GUI::PaintEvent&) override;
 
-    void set_rubber_band_position(const Gfx::Point&);
-    Gfx::Rect rubber_band_rect() const;
+    void set_rubber_band_position(const Gfx::IntPoint&);
+    Gfx::IntRect rubber_band_rect() const;
 
-    Gfx::Point m_drag_origin;
-    HashMap<GUI::Widget*, Gfx::Point> m_positions_before_drag;
+    Gfx::IntPoint m_drag_origin;
+    HashMap<GUI::Widget*, Gfx::IntPoint> m_positions_before_drag;
     bool m_dragging { false };
 
     bool m_rubber_banding { false };
-    Gfx::Point m_rubber_band_origin;
-    Gfx::Point m_rubber_band_position;
+    Gfx::IntPoint m_rubber_band_origin;
+    Gfx::IntPoint m_rubber_band_position;
 };

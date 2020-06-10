@@ -42,21 +42,21 @@ EraseTool::~EraseTool()
 {
 }
 
-Gfx::Rect EraseTool::build_rect(const Gfx::Point& pos, const Gfx::Rect& widget_rect)
+Gfx::IntRect EraseTool::build_rect(const Gfx::IntPoint& pos, const Gfx::IntRect& widget_rect)
 {
     const int base_eraser_size = 10;
     const int eraser_size = (base_eraser_size * m_thickness);
     const int eraser_radius = eraser_size / 2;
     const auto ex = pos.x();
     const auto ey = pos.y();
-    return Gfx::Rect(ex - eraser_radius, ey - eraser_radius, eraser_size, eraser_size).intersected(widget_rect);
+    return Gfx::IntRect(ex - eraser_radius, ey - eraser_radius, eraser_size, eraser_size).intersected(widget_rect);
 }
 
 void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
-    Gfx::Rect r = build_rect(event.position(), layer.rect());
+    Gfx::IntRect r = build_rect(event.position(), layer.rect());
     GUI::Painter painter(layer.bitmap());
     painter.clear_rect(r, get_color());
     layer.did_modify_bitmap(*m_editor->image());
@@ -65,7 +65,7 @@ void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
 void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
-        Gfx::Rect r = build_rect(event.position(), layer.rect());
+        Gfx::IntRect r = build_rect(event.position(), layer.rect());
         GUI::Painter painter(layer.bitmap());
         painter.clear_rect(r, get_color());
         layer.did_modify_bitmap(*m_editor->image());

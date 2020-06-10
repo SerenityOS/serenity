@@ -49,12 +49,12 @@ namespace WindowServer {
 
 HashMap<int, NonnullRefPtr<ClientConnection>>* s_connections;
 
-static Gfx::Rect normalize_window_rect(Gfx::Rect rect, WindowType window_type)
+static Gfx::IntRect normalize_window_rect(Gfx::IntRect rect, WindowType window_type)
 {
     auto min_size = 1;
     if (window_type == WindowType::Normal)
         min_size = 50;
-    Gfx::Rect normalized_rect = { rect.x(), rect.y(), max(rect.width(), min_size), max(rect.height(), min_size) };
+    Gfx::IntRect normalized_rect = { rect.x(), rect.y(), max(rect.width(), min_size), max(rect.height(), min_size) };
     return normalized_rect;
 }
 
@@ -106,7 +106,7 @@ void ClientConnection::die()
     });
 }
 
-void ClientConnection::notify_about_new_screen_rect(const Gfx::Rect& rect)
+void ClientConnection::notify_about_new_screen_rect(const Gfx::IntRect& rect)
 {
     post_message(Messages::WindowClient::ScreenRectChanged(rect));
 }

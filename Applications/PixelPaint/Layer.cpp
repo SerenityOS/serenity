@@ -30,7 +30,7 @@
 
 namespace PixelPaint {
 
-RefPtr<Layer> Layer::create_with_size(const Gfx::Size& size, const String& name)
+RefPtr<Layer> Layer::create_with_size(const Gfx::IntSize& size, const String& name)
 {
     if (size.is_empty())
         return nullptr;
@@ -41,7 +41,7 @@ RefPtr<Layer> Layer::create_with_size(const Gfx::Size& size, const String& name)
     return adopt(*new Layer(size, name));
 }
 
-Layer::Layer(const Gfx::Size& size, const String& name)
+Layer::Layer(const Gfx::IntSize& size, const String& name)
     : m_name(name)
 {
     m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);

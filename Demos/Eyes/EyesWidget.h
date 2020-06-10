@@ -46,8 +46,8 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
 
     void render_eyeball(int index, GUI::Painter&) const;
-    Gfx::Point pupil_center(Gfx::Rect& eyeball_bounds) const;
+    Gfx::IntPoint pupil_center(Gfx::IntRect& eyeball_bounds) const;
 
-    Gfx::Point m_mouse_position;
+    Gfx::IntPoint m_mouse_position;
     int m_num_eyes { -1 };
 };

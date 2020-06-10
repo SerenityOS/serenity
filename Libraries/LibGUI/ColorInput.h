@@ -57,7 +57,7 @@ protected:
 private:
     ColorInput();
 
-    Gfx::Rect color_rect() const;
+    Gfx::IntRect color_rect() const;
     void set_color_without_changing_text(Color);
 
     Color m_color;

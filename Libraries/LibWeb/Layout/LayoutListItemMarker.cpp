@@ -40,7 +40,7 @@ LayoutListItemMarker::~LayoutListItemMarker()
 
 void LayoutListItemMarker::render(RenderingContext& context)
 {
-    Gfx::Rect bullet_rect { 0, 0, 4, 4 };
+    Gfx::IntRect bullet_rect { 0, 0, 4, 4 };
     bullet_rect.center_within(enclosing_int_rect(absolute_rect()));
     // FIXME: It would be nicer to not have to go via the parent here to get our inherited style.
     auto color = parent()->style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());

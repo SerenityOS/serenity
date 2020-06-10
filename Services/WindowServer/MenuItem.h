@@ -64,8 +64,8 @@ public:
     String shortcut_text() const { return m_shortcut_text; }
     void set_shortcut_text(const String& text) { m_shortcut_text = text; }
 
-    void set_rect(const Gfx::Rect& rect) { m_rect = rect; }
-    Gfx::Rect rect() const;
+    void set_rect(const Gfx::IntRect& rect) { m_rect = rect; }
+    Gfx::IntRect rect() const;
 
     unsigned identifier() const { return m_identifier; }
 
@@ -91,7 +91,7 @@ private:
     unsigned m_identifier { 0 };
     String m_text;
     String m_shortcut_text;
-    Gfx::Rect m_rect;
+    Gfx::IntRect m_rect;
     RefPtr<Gfx::Bitmap> m_icon;
     int m_submenu_id { -1 };
     bool m_exclusive { false };

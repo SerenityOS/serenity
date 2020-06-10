@@ -198,7 +198,7 @@ void DisplaySettingsWidget::create_frame()
     m_resolution_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_resolution_combo->set_preferred_size(0, 22);
     m_resolution_combo->set_only_allow_values_from_model(true);
-    m_resolution_combo->set_model(*ItemListModel<Gfx::Size>::create(m_resolutions));
+    m_resolution_combo->set_model(*ItemListModel<Gfx::IntSize>::create(m_resolutions));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         this->m_monitor_widget->set_desktop_resolution(m_resolutions.at(index.row()));
         this->m_monitor_widget->update();
@@ -301,7 +301,7 @@ void DisplaySettingsWidget::load_current_settings()
     }
 
     /// Resolution ////////////////////////////////////////////////////////////////////////////////
-    Gfx::Size find_size;
+    Gfx::IntSize find_size;
 
     bool okay = false;
     // Let's attempt to find the current resolution and select it!
@@ -318,7 +318,7 @@ void DisplaySettingsWidget::load_current_settings()
     }
 
     size_t index = m_resolutions.find_first_index(find_size).value_or(0);
-    Gfx::Size m_current_resolution = m_resolutions.at(index);
+    Gfx::IntSize m_current_resolution = m_resolutions.at(index);
     m_monitor_widget->set_desktop_resolution(m_current_resolution);
     m_resolution_combo->set_selected_index(index);
 

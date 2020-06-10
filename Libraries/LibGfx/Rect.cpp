@@ -33,7 +33,7 @@
 
 namespace Gfx {
 
-void Rect::intersect(const Rect& other)
+void IntRect::intersect(const IntRect& other)
 {
     int l = max(left(), other.left());
     int r = min(right(), other.right());
@@ -52,13 +52,13 @@ void Rect::intersect(const Rect& other)
     m_size.set_height((b - t) + 1);
 }
 
-Rect Rect::united(const Rect& other) const
+IntRect IntRect::united(const IntRect& other) const
 {
     if (is_null())
         return other;
     if (other.is_null())
         return *this;
-    Rect rect;
+    IntRect rect;
     rect.set_left(min(left(), other.left()));
     rect.set_top(min(top(), other.top()));
     rect.set_right(max(right(), other.right()));
@@ -66,32 +66,32 @@ Rect Rect::united(const Rect& other) const
     return rect;
 }
 
-Vector<Rect, 4> Rect::shatter(const Rect& hammer) const
+Vector<IntRect, 4> IntRect::shatter(const IntRect& hammer) const
 {
-    Vector<Rect, 4> pieces;
+    Vector<IntRect, 4> pieces;
     if (!intersects(hammer)) {
         pieces.unchecked_append(*this);
         return pieces;
     }
-    Rect top_shard {
+    IntRect top_shard {
         x(),
         y(),
         width(),
         hammer.y() - y()
     };
-    Rect bottom_shard {
+    IntRect bottom_shard {
         x(),
         hammer.y() + hammer.height(),
         width(),
         (y() + height()) - (hammer.y() + hammer.height())
     };
-    Rect left_shard {
+    IntRect left_shard {
         x(),
         max(hammer.y(), y()),
         hammer.x() - x(),
         min((hammer.y() + hammer.height()), (y() + height())) - max(hammer.y(), y())
     };
-    Rect right_shard {
+    IntRect right_shard {
         hammer.x() + hammer.width(),
         max(hammer.y(), y()),
         right() - hammer.right(),
@@ -109,7 +109,7 @@ Vector<Rect, 4> Rect::shatter(const Rect& hammer) const
     return pieces;
 }
 
-void Rect::align_within(const Rect& other, TextAlignment alignment)
+void IntRect::align_within(const IntRect& other, TextAlignment alignment)
 {
     switch (alignment) {
     case TextAlignment::Center:
@@ -133,12 +133,12 @@ void Rect::align_within(const Rect& other, TextAlignment alignment)
     }
 }
 
-String Rect::to_string() const
+String IntRect::to_string() const
 {
     return String::format("[%d,%d %dx%d]", x(), y(), width(), height());
 }
 
-const LogStream& operator<<(const LogStream& stream, const Rect& value)
+const LogStream& operator<<(const LogStream& stream, const IntRect& value)
 {
     return stream << value.to_string();
 }
@@ -147,16 +147,16 @@ const LogStream& operator<<(const LogStream& stream, const Rect& value)
 
 namespace IPC {
 
-bool encode(Encoder& encoder, const Gfx::Rect& rect)
+bool encode(Encoder& encoder, const Gfx::IntRect& rect)
 {
     encoder << rect.location() << rect.size();
     return true;
 }
 
-bool decode(Decoder& decoder, Gfx::Rect& rect)
+bool decode(Decoder& decoder, Gfx::IntRect& rect)
 {
-    Gfx::Point point;
-    Gfx::Size size;
+    Gfx::IntPoint point;
+    Gfx::IntSize size;
     if (!decoder.decode(point))
         return false;
     if (!decoder.decode(size))

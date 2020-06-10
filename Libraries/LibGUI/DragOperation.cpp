@@ -50,7 +50,7 @@ DragOperation::Outcome DragOperation::exec()
     ASSERT(!m_event_loop);
 
     int bitmap_id = -1;
-    Gfx::Size bitmap_size;
+    Gfx::IntSize bitmap_size;
     RefPtr<Gfx::Bitmap> shared_bitmap;
     if (m_bitmap) {
         shared_bitmap = m_bitmap->to_bitmap_backed_by_shared_buffer();
