@@ -163,6 +163,8 @@ struct KeyEvent {
     u32 scancode { 0 };
     u8 character { 0 };
     u8 flags { 0 };
+    bool caps_lock_on { false };
+    bool e0_prefix { false };
     bool alt() const { return flags & Mod_Alt; }
     bool ctrl() const { return flags & Mod_Ctrl; }
     bool shift() const { return flags & Mod_Shift; }
