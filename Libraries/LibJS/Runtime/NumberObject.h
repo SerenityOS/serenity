@@ -37,6 +37,7 @@ public:
     NumberObject(double, Object& prototype);
     virtual ~NumberObject() override;
 
+    virtual bool is_number_object() const override { return true; }
     virtual Value value_of() const override { return Value(m_value); }
 
 private:

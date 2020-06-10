@@ -34,6 +34,7 @@ set(SOURCES
     Runtime/FunctionPrototype.cpp
     Runtime/GlobalObject.cpp
     Runtime/IndexedProperties.cpp
+    Runtime/JSONObject.cpp
     Runtime/LexicalEnvironment.cpp
     Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp

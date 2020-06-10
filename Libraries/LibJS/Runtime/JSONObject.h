@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Jack Karamanian <karamanian.jack@gmail.com>
+ * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,21 +29,31 @@
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
-class BooleanObject : public Object {
+
+class JSONObject final : public Object {
 public:
-    static BooleanObject* create(GlobalObject&, bool);
-
-    BooleanObject(bool, Object& prototype);
-    virtual ~BooleanObject() override;
-
-    virtual Value value_of() const override
-    {
-        return Value(m_value);
-    }
+    JSONObject();
+    virtual ~JSONObject() override;
 
 private:
-    virtual const char* class_name() const override { return "BooleanObject"; }
-    virtual bool is_boolean_object() const override { return true; }
-    bool m_value { false };
+    struct StringifyState {
+        Function* replacer_function { nullptr };
+        HashTable<Object*> seen_objects;
+        String indent { String::empty() };
+        String gap;
+        Optional<Vector<String>> property_list;
+    };
+
+    virtual const char* class_name() const override { return "JSONObject"; }
+
+    // Stringify helpers
+    static String serialize_json_property(Interpreter&, StringifyState&, const PropertyName& key, Object* holder);
+    static String serialize_json_object(Interpreter&, StringifyState&, Object&);
+    static String serialize_json_array(Interpreter&, StringifyState&, Object&);
+    static String quote_json_string(String);
+
+    static Value stringify(Interpreter&);
+    static Value parse(Interpreter&);
 };
+
 }
