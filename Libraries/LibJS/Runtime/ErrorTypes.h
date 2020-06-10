@@ -47,6 +47,8 @@
     M(InvalidLeftHandAssignment, "Invalid left-hand side in assignment")                               \
     M(IsNotA, "%s is not a %s")                                                                        \
     M(IsNotAEvaluatedFrom, "%s is not a %s (evaluated from '%s')")                                     \
+    M(JsonBigInt, "Cannot serialize BigInt value to JSON")                                             \
+    M(JsonCircular, "Cannot stringify circular object")                                                \
     M(NotA, "Not a %s object")                                                                         \
     M(NotACtor, "%s is not a constructor")                                                             \
     M(NotAFunction, "%s is not a function")                                                            \

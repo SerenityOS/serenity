@@ -47,7 +47,6 @@ public:
 
 private:
     virtual const char* class_name() const override { return "Uint8ClampedArray"; }
-    virtual bool is_array() const override { return true; }
 
     static Value length_getter(Interpreter&);
 

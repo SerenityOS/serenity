@@ -220,6 +220,7 @@ public:
         return *m_value.as_bigint;
     }
 
+    Array& as_array();
     Function& as_function();
 
     i32 as_i32() const;
@@ -313,7 +314,8 @@ bool strict_eq(Interpreter&, Value lhs, Value rhs);
 bool same_value(Interpreter&, Value lhs, Value rhs);
 bool same_value_zero(Interpreter&, Value lhs, Value rhs);
 bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs);
-TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs, Value rhs);
+TriState abstract_relation(Interpreter&, bool left_first, Value lhs, Value rhs);
+size_t length_of_array_like(Interpreter&, Value);
 
 const LogStream& operator<<(const LogStream&, const Value&);
 
