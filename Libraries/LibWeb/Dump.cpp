@@ -242,6 +242,9 @@ void dump_selector(const Selector& selector)
             case Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
                 attribute_match_type_description = "ExactValueMatch";
                 break;
+            case Selector::SimpleSelector::AttributeMatchType::Contains:
+                attribute_match_type_description = "Contains";
+                break;
             }
 
             dbgprintf("%s:%s", type_description, simple_selector.value.characters());

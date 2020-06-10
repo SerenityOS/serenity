@@ -472,8 +472,13 @@ public:
             char expected_end_of_attribute_selector = ']';
             while (peek() != expected_end_of_attribute_selector) {
                 char ch = consume_one();
-                if (ch == '=') {
-                    attribute_match_type = Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
+                if (ch == '=' || (ch == '~' && peek() == '=')) {
+                    if (ch == '=') {
+                        attribute_match_type = Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
+                    } else if (ch == '~') {
+                        consume_one();
+                        attribute_match_type = Selector::SimpleSelector::AttributeMatchType::Contains;
+                    }
                     attribute_name = String::copy(buffer);
                     buffer.clear();
                     in_value = true;

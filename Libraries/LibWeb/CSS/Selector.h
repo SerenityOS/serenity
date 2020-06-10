@@ -63,6 +63,7 @@ public:
             None,
             HasAttribute,
             ExactValueMatch,
+            Contains,
         };
 
         AttributeMatchType attribute_match_type { AttributeMatchType::None };
