@@ -144,12 +144,12 @@ void ComboBox::open()
         auto item_text = model()->data(index).to_string();
         longest_item_width = max(longest_item_width, m_list_view->font().width(item_text));
     }
-    Gfx::Size size {
+    Gfx::IntSize size {
         max(width(), longest_item_width + m_list_view->width_occupied_by_vertical_scrollbar() + m_list_view->frame_thickness() * 2 + m_list_view->horizontal_padding()),
         model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
     };
 
-    Gfx::Rect list_window_rect { my_screen_rect.bottom_left(), size };
+    Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
     list_window_rect.intersect(Desktop::the().rect().shrunken(0, 128));
 
     m_list_window->set_rect(list_window_rect);

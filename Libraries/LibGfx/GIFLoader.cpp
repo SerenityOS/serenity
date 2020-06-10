@@ -538,7 +538,7 @@ GIFImageDecoderPlugin::GIFImageDecoderPlugin(const u8* data, size_t size)
 
 GIFImageDecoderPlugin::~GIFImageDecoderPlugin() { }
 
-Size GIFImageDecoderPlugin::size()
+IntSize GIFImageDecoderPlugin::size()
 {
     if (m_context->state == GIFLoadingContext::State::Error) {
         return {};

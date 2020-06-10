@@ -51,10 +51,10 @@ public:
 
     static Screen& the();
 
-    Gfx::Size size() const { return { width(), height() }; }
-    Gfx::Rect rect() const { return { 0, 0, width(), height() }; }
+    Gfx::IntSize size() const { return { width(), height() }; }
+    Gfx::IntRect rect() const { return { 0, 0, width(), height() }; }
 
-    Gfx::Point cursor_location() const { return m_cursor_location; }
+    Gfx::IntPoint cursor_location() const { return m_cursor_location; }
     unsigned mouse_button_state() const { return m_mouse_button_state; }
 
     void on_receive_mouse_data(const MousePacket&);
@@ -73,7 +73,7 @@ private:
     int m_height { 0 };
     int m_framebuffer_fd { -1 };
 
-    Gfx::Point m_cursor_location;
+    Gfx::IntPoint m_cursor_location;
     unsigned m_mouse_button_state { 0 };
     unsigned m_modifiers { 0 };
 };

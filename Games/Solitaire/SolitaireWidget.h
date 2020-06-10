@@ -124,7 +124,7 @@ private:
     Animation m_animation;
     CardStack* m_focused_stack { nullptr };
     CardStack m_stacks[StackLocation::__Count];
-    Gfx::Point m_mouse_down_location;
+    Gfx::IntPoint m_mouse_down_location;
     bool m_mouse_down { false };
     bool m_repaint_all { true };
     bool m_has_to_repaint { true };

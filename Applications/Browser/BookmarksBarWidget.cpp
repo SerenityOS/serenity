@@ -120,7 +120,7 @@ void BookmarksBarWidget::did_update_model()
         auto title = model()->data(model()->index(item_index, 0)).to_string();
         auto url = model()->data(model()->index(item_index, 1)).to_string();
 
-        Gfx::Rect rect { width, 0, font().width(title) + 32, height() };
+        Gfx::IntRect rect { width, 0, font().width(title) + 32, height() };
 
         auto& button = add<GUI::Button>();
         m_bookmarks.append(button);

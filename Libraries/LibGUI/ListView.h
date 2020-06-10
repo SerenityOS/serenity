@@ -44,10 +44,10 @@ public:
 
     void scroll_into_view(const ModelIndex&, Orientation);
 
-    Gfx::Point adjusted_position(const Gfx::Point&) const;
+    Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
-    virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
-    virtual Gfx::Rect content_rect(const ModelIndex&) const override;
+    virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
+    virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
 
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
@@ -65,7 +65,7 @@ private:
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 
-    Gfx::Rect content_rect(int row) const;
+    Gfx::IntRect content_rect(int row) const;
     int item_count() const;
     void update_content_size();
 

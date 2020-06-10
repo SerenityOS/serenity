@@ -50,7 +50,7 @@ private:
 
     template<typename Callback>
     void for_each_in_group(Callback);
-    static Gfx::Size circle_size();
+    static Gfx::IntSize circle_size();
 };
 
 }

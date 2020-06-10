@@ -44,7 +44,7 @@ public:
     void add_applet(Window& applet);
     void remove_applet(Window& applet);
     void draw();
-    void invalidate_applet(const Window& applet, const Gfx::Rect& rect);
+    void invalidate_applet(const Window& applet, const Gfx::IntRect& rect);
     void calculate_applet_rects(Window& window);
 
 private:

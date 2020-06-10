@@ -88,21 +88,21 @@ public:
     void remove_window(Window&);
 
     void notify_title_changed(Window&);
-    void notify_rect_changed(Window&, const Gfx::Rect& oldRect, const Gfx::Rect& newRect);
+    void notify_rect_changed(Window&, const Gfx::IntRect& oldRect, const Gfx::IntRect& newRect);
     void notify_minimization_state_changed(Window&);
     void notify_opacity_changed(Window&);
     void notify_occlusion_state_changed(Window&);
     void notify_progress_changed(Window&);
     void notify_client_changed_app_menubar(ClientConnection&);
 
-    Gfx::Rect maximized_window_rect(const Window&) const;
+    Gfx::IntRect maximized_window_rect(const Window&) const;
 
     const ClientConnection* dnd_client() const { return m_dnd_client.ptr(); }
     const String& dnd_text() const { return m_dnd_text; }
     const String& dnd_data_type() const { return m_dnd_data_type; }
     const String& dnd_data() const { return m_dnd_data; }
     const Gfx::Bitmap* dnd_bitmap() const { return m_dnd_bitmap; }
-    Gfx::Rect dnd_rect() const;
+    Gfx::IntRect dnd_rect() const;
 
     void start_dnd_drag(ClientConnection&, const String& text, Gfx::Bitmap*, const String& data_type, const String& data);
     void end_dnd_drag();
@@ -116,8 +116,8 @@ public:
 
     void move_to_front_and_make_active(Window&);
 
-    Gfx::Rect menubar_rect() const;
-    Gfx::Rect desktop_rect() const;
+    Gfx::IntRect menubar_rect() const;
+    Gfx::IntRect desktop_rect() const;
 
     const Cursor& active_cursor() const;
     const Cursor& arrow_cursor() const { return *m_arrow_cursor; }
@@ -131,15 +131,15 @@ public:
     const Cursor& move_cursor() const { return *m_move_cursor; }
     const Cursor& drag_cursor() const { return *m_drag_cursor; }
 
-    void invalidate(const Gfx::Rect&);
+    void invalidate(const Gfx::IntRect&);
     void invalidate();
-    void flush(const Gfx::Rect&);
+    void flush(const Gfx::IntRect&);
 
     const Gfx::Font& font() const;
     const Gfx::Font& window_title_font() const;
 
     bool set_resolution(int width, int height);
-    Gfx::Size resolution() const;
+    Gfx::IntSize resolution() const;
 
     void set_active_window(Window*);
     void set_hovered_button(Button*);
@@ -155,7 +155,7 @@ public:
     void tell_wm_listeners_window_icon_changed(Window&);
     void tell_wm_listeners_window_rect_changed(Window&);
 
-    void start_window_resize(Window&, const Gfx::Point&, MouseButton);
+    void start_window_resize(Window&, const Gfx::IntPoint&, MouseButton);
     void start_window_resize(Window&, const MouseEvent&);
 
     const Window* active_fullscreen_window() const { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
@@ -170,7 +170,7 @@ public:
 
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
-    NonnullRefPtr<Cursor> get_cursor(const String& name, const Gfx::Point& hotspot);
+    NonnullRefPtr<Cursor> get_cursor(const String& name, const Gfx::IntPoint& hotspot);
 
     void process_mouse_event(MouseEvent&, Window*& hovered_window);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
@@ -216,7 +216,7 @@ private:
     struct DoubleClickInfo {
         struct ClickMetadata {
             Core::ElapsedTimer clock;
-            Gfx::Point last_position;
+            Gfx::IntPoint last_position;
         };
 
         ClickMetadata& metadata_for_button(MouseButton);
@@ -249,14 +249,14 @@ private:
     WeakPtr<Window> m_active_input_window;
 
     WeakPtr<Window> m_move_window;
-    Gfx::Point m_move_origin;
-    Gfx::Point m_move_window_origin;
+    Gfx::IntPoint m_move_origin;
+    Gfx::IntPoint m_move_window_origin;
 
     WeakPtr<Window> m_resize_window;
     WeakPtr<Window> m_resize_candidate;
     MouseButton m_resizing_mouse_button { MouseButton::None };
-    Gfx::Rect m_resize_window_original_rect;
-    Gfx::Point m_resize_origin;
+    Gfx::IntRect m_resize_window_original_rect;
+    Gfx::IntPoint m_resize_origin;
     ResizeDirection m_resize_direction { ResizeDirection::None };
 
     u8 m_keyboard_modifiers { 0 };

@@ -132,10 +132,10 @@ void Widget::child_event(Core::ChildEvent& event)
     return Core::Object::child_event(event);
 }
 
-void Widget::set_relative_rect(const Gfx::Rect& a_rect)
+void Widget::set_relative_rect(const Gfx::IntRect& a_rect)
 {
     // Get rid of negative width/height values.
-    Gfx::Rect rect = {
+    Gfx::IntRect rect = {
         a_rect.x(),
         a_rect.y(),
         max(a_rect.width(), 0),
@@ -432,7 +432,7 @@ void Widget::update()
     update(rect());
 }
 
-void Widget::update(const Gfx::Rect& rect)
+void Widget::update(const Gfx::IntRect& rect)
 {
     if (!is_visible())
         return;
@@ -452,7 +452,7 @@ void Widget::update(const Gfx::Rect& rect)
         window->update(rect.translated(window_relative_rect().location()));
 }
 
-Gfx::Rect Widget::window_relative_rect() const
+Gfx::IntRect Widget::window_relative_rect() const
 {
     auto rect = relative_rect();
     for (auto* parent = parent_widget(); parent; parent = parent->parent_widget()) {
@@ -461,12 +461,12 @@ Gfx::Rect Widget::window_relative_rect() const
     return rect;
 }
 
-Gfx::Rect Widget::screen_relative_rect() const
+Gfx::IntRect Widget::screen_relative_rect() const
 {
     return window_relative_rect().translated(window()->position());
 }
 
-Widget* Widget::child_at(const Gfx::Point& point) const
+Widget* Widget::child_at(const Gfx::IntPoint& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!Core::is<Widget>(children()[i]))
@@ -480,7 +480,7 @@ Widget* Widget::child_at(const Gfx::Point& point) const
     return nullptr;
 }
 
-Widget::HitTestResult Widget::hit_test(const Gfx::Point& position, ShouldRespectGreediness should_respect_greediness)
+Widget::HitTestResult Widget::hit_test(const Gfx::IntPoint& position, ShouldRespectGreediness should_respect_greediness)
 {
     if (should_respect_greediness == ShouldRespectGreediness::Yes && is_greedy_for_hits())
         return { this, position };
@@ -549,7 +549,7 @@ bool Widget::global_cursor_tracking() const
     return win->global_cursor_tracking_widget() == this;
 }
 
-void Widget::set_preferred_size(const Gfx::Size& size)
+void Widget::set_preferred_size(const Gfx::IntSize& size)
 {
     if (m_preferred_size == size)
         return;
@@ -827,7 +827,7 @@ void Widget::set_content_margins(const Margins& margins)
     invalidate_layout();
 }
 
-Gfx::Rect Widget::content_rect() const
+Gfx::IntRect Widget::content_rect() const
 {
     auto rect = relative_rect();
     rect.move_by(m_content_margins.left(), m_content_margins.top());

@@ -150,14 +150,14 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
     m_maximize_button->set_bitmap(maximized ? *s_unmaximize_button_bitmap : *s_maximize_button_bitmap);
 }
 
-Gfx::Rect WindowFrame::title_bar_rect() const
+Gfx::IntRect WindowFrame::title_bar_rect() const
 {
     if (m_window.type() == WindowType::Notification)
         return { m_window.width() + 3, 3, window_titlebar_height, m_window.height() };
     return { 4, 4, m_window.width(), window_titlebar_height };
 }
 
-Gfx::Rect WindowFrame::title_bar_icon_rect() const
+Gfx::IntRect WindowFrame::title_bar_icon_rect() const
 {
     auto titlebar_rect = title_bar_rect();
     return {
@@ -168,7 +168,7 @@ Gfx::Rect WindowFrame::title_bar_icon_rect() const
     };
 }
 
-Gfx::Rect WindowFrame::title_bar_text_rect() const
+Gfx::IntRect WindowFrame::title_bar_text_rect() const
 {
     auto titlebar_rect = title_bar_rect();
     auto titlebar_icon_rect = title_bar_icon_rect();
@@ -196,7 +196,7 @@ WindowFrame::FrameColors WindowFrame::compute_frame_colors() const
 void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    Gfx::Rect outer_rect = { {}, rect().size() };
+    Gfx::IntRect outer_rect = { {}, rect().size() };
 
     Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
 
@@ -216,7 +216,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
     auto& window = m_window;
-    Gfx::Rect outer_rect = { {}, rect().size() };
+    Gfx::IntRect outer_rect = { {}, rect().size() };
 
     Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
 
@@ -232,7 +232,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), palette.button());
     painter.draw_line(titlebar_rect.bottom_left().translated(0, 2), titlebar_rect.bottom_right().translated(0, 2), palette.button());
 
-    auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::Rect() : m_buttons.last().relative_rect();
+    auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
 
@@ -275,7 +275,7 @@ void WindowFrame::paint(Gfx::Painter& painter)
     }
 }
 
-static Gfx::Rect frame_rect_for_window(Window& window, const Gfx::Rect& rect)
+static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& rect)
 {
     if (window.is_frameless())
         return rect;
@@ -302,12 +302,12 @@ static Gfx::Rect frame_rect_for_window(Window& window, const Gfx::Rect& rect)
     }
 }
 
-static Gfx::Rect frame_rect_for_window(Window& window)
+static Gfx::IntRect frame_rect_for_window(Window& window)
 {
     return frame_rect_for_window(window, window.rect());
 }
 
-Gfx::Rect WindowFrame::rect() const
+Gfx::IntRect WindowFrame::rect() const
 {
     return frame_rect_for_window(m_window);
 }
@@ -317,7 +317,7 @@ void WindowFrame::invalidate_title_bar()
     Compositor::the().invalidate(title_bar_rect().translated(rect().location()));
 }
 
-void WindowFrame::notify_window_rect_changed(const Gfx::Rect& old_rect, const Gfx::Rect& new_rect)
+void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
 {
     int window_button_width = 15;
     int window_button_height = 15;
@@ -329,13 +329,13 @@ void WindowFrame::notify_window_rect_changed(const Gfx::Rect& old_rect, const Gf
 
     for (auto& button : m_buttons) {
         if (m_window.type() == WindowType::Notification) {
-            Gfx::Rect rect { 0, pos, window_button_width, window_button_height };
+            Gfx::IntRect rect { 0, pos, window_button_width, window_button_height };
             rect.center_horizontally_within(title_bar_rect());
             button.set_relative_rect(rect);
             pos += window_button_width;
         } else {
             pos -= window_button_width;
-            Gfx::Rect rect { pos, 0, window_button_width, window_button_height };
+            Gfx::IntRect rect { pos, 0, window_button_width, window_button_height };
             rect.center_vertically_within(title_bar_text_rect());
             button.set_relative_rect(rect);
         }
@@ -397,7 +397,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
             { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
             { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
         };
-        Gfx::Rect outer_rect = { {}, rect().size() };
+        Gfx::IntRect outer_rect = { {}, rect().size() };
         ASSERT(outer_rect.contains(event.position()));
         int window_relative_x = event.x() - outer_rect.x();
         int window_relative_y = event.y() - outer_rect.y();

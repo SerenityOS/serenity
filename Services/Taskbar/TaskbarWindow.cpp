@@ -65,7 +65,7 @@ TaskbarWindow::TaskbarWindow()
 
     on_screen_rect_change(GUI::Desktop::the().rect());
 
-    GUI::Desktop::the().on_rect_change = [this](const Gfx::Rect& rect) { on_screen_rect_change(rect); };
+    GUI::Desktop::the().on_rect_change = [this](const Gfx::IntRect& rect) { on_screen_rect_change(rect); };
 
     auto& widget = set_main_widget<TaskbarWidget>();
     widget.set_layout<GUI::HorizontalBoxLayout>();
@@ -140,9 +140,9 @@ void TaskbarWindow::create_quick_launch_bar()
     quick_launch_bar.set_preferred_size(total_width, 22);
 }
 
-void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
+void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
 {
-    Gfx::Rect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
+    Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
     set_rect(new_rect);
 }
 

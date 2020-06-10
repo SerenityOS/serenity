@@ -155,7 +155,7 @@ void AbstractButton::keydown_event(KeyEvent& event)
     Widget::keydown_event(event);
 }
 
-void AbstractButton::paint_text(Painter& painter, const Gfx::Rect& rect, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
+void AbstractButton::paint_text(Painter& painter, const Gfx::IntRect& rect, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
 {
     auto clipped_rect = rect.intersected(this->rect());
 

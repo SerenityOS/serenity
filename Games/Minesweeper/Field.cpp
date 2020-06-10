@@ -121,7 +121,7 @@ private:
     bool m_chord { false };
 };
 
-Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::Size)> on_size_changed)
+Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed)
     : m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
@@ -241,7 +241,7 @@ void Field::reset()
         for (size_t c = 0; c < columns(); ++c) {
             if (!m_squares[i])
                 m_squares[i] = make<Square>();
-            Gfx::Rect rect = { frame_thickness() + static_cast<int>(c) * square_size(), frame_thickness() + static_cast<int>(r) * square_size(), square_size(), square_size() };
+            Gfx::IntRect rect = { frame_thickness() + static_cast<int>(c) * square_size(), frame_thickness() + static_cast<int>(r) * square_size(), square_size(), square_size() };
             auto& square = this->square(r, c);
             square.field = this;
             square.row = r;
@@ -329,13 +329,13 @@ void Field::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(inner_rect);
 
     for (int y = inner_rect.top() - 1; y <= inner_rect.bottom(); y += square_size()) {
-        Gfx::Point a { inner_rect.left(), y };
-        Gfx::Point b { inner_rect.right(), y };
+        Gfx::IntPoint a { inner_rect.left(), y };
+        Gfx::IntPoint b { inner_rect.right(), y };
         painter.draw_line(a, b, palette().threed_shadow1());
     }
     for (int x = frame_inner_rect().left() - 1; x <= frame_inner_rect().right(); x += square_size()) {
-        Gfx::Point a { x, inner_rect.top() };
-        Gfx::Point b { x, inner_rect.bottom() };
+        Gfx::IntPoint a { x, inner_rect.top() };
+        Gfx::IntPoint b { x, inner_rect.bottom() };
         painter.draw_line(a, b, palette().threed_shadow1());
     }
 }

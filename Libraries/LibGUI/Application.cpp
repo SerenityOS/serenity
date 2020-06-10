@@ -141,7 +141,7 @@ private:
     RefPtr<Label> m_label;
 };
 
-void Application::show_tooltip(const StringView& tooltip, const Gfx::Point& screen_location)
+void Application::show_tooltip(const StringView& tooltip, const Gfx::IntPoint& screen_location)
 {
     if (!m_tooltip_window) {
         m_tooltip_window = TooltipWindow::construct();
@@ -149,10 +149,10 @@ void Application::show_tooltip(const StringView& tooltip, const Gfx::Point& scre
     }
     m_tooltip_window->set_tooltip(tooltip);
 
-    Gfx::Rect desktop_rect = Desktop::the().rect();
+    Gfx::IntRect desktop_rect = Desktop::the().rect();
 
     const int margin = 30;
-    Gfx::Point adjusted_pos = screen_location;
+    Gfx::IntPoint adjusted_pos = screen_location;
     if (adjusted_pos.x() + m_tooltip_window->width() >= desktop_rect.width() - margin) {
         adjusted_pos = adjusted_pos.translated(-m_tooltip_window->width(), 0);
     }

@@ -29,7 +29,7 @@
 
 namespace WindowServer {
 
-Cursor::Cursor(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const Gfx::Point& hotspot)
+Cursor::Cursor(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const Gfx::IntPoint& hotspot)
     : m_bitmap(move(bitmap))
     , m_hotspot(hotspot)
 {
@@ -44,7 +44,7 @@ NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap)
     return adopt(*new Cursor(move(bitmap), bitmap->rect().center()));
 }
 
-NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const Gfx::Point& hotspot)
+NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const Gfx::IntPoint& hotspot)
 {
     return adopt(*new Cursor(move(bitmap), hotspot));
 }

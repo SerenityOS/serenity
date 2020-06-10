@@ -84,7 +84,7 @@ void ScrollableWidget::custom_layout()
 
     m_corner_widget->set_visible(m_vertical_scrollbar->is_visible() && m_horizontal_scrollbar->is_visible());
     if (m_corner_widget->is_visible()) {
-        Gfx::Rect corner_rect { m_horizontal_scrollbar->relative_rect().right() + 1, m_vertical_scrollbar->relative_rect().bottom() + 1, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
+        Gfx::IntRect corner_rect { m_horizontal_scrollbar->relative_rect().right() + 1, m_vertical_scrollbar->relative_rect().bottom() + 1, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
         m_corner_widget->set_relative_rect(corner_rect);
     }
 }
@@ -95,7 +95,7 @@ void ScrollableWidget::resize_event(ResizeEvent& event)
     update_scrollbar_ranges();
 }
 
-Gfx::Size ScrollableWidget::available_size() const
+Gfx::IntSize ScrollableWidget::available_size() const
 {
     int available_width = frame_inner_rect().width() - m_size_occupied_by_fixed_elements.width() - width_occupied_by_vertical_scrollbar();
     int available_height = frame_inner_rect().height() - m_size_occupied_by_fixed_elements.height() - height_occupied_by_horizontal_scrollbar();
@@ -121,7 +121,7 @@ void ScrollableWidget::update_scrollbar_ranges()
     m_vertical_scrollbar->set_big_step(visible_content_rect().height() - m_vertical_scrollbar->step());
 }
 
-void ScrollableWidget::set_content_size(const Gfx::Size& size)
+void ScrollableWidget::set_content_size(const Gfx::IntSize& size)
 {
     if (m_content_size == size)
         return;
@@ -129,7 +129,7 @@ void ScrollableWidget::set_content_size(const Gfx::Size& size)
     update_scrollbar_ranges();
 }
 
-void ScrollableWidget::set_size_occupied_by_fixed_elements(const Gfx::Size& size)
+void ScrollableWidget::set_size_occupied_by_fixed_elements(const Gfx::IntSize& size)
 {
     if (m_size_occupied_by_fixed_elements == size)
         return;
@@ -147,7 +147,7 @@ int ScrollableWidget::width_occupied_by_vertical_scrollbar() const
     return m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->width() : 0;
 }
 
-Gfx::Rect ScrollableWidget::visible_content_rect() const
+Gfx::IntRect ScrollableWidget::visible_content_rect() const
 {
     return {
         m_horizontal_scrollbar->value(),
@@ -157,14 +157,14 @@ Gfx::Rect ScrollableWidget::visible_content_rect() const
     };
 }
 
-void ScrollableWidget::scroll_into_view(const Gfx::Rect& rect, Orientation orientation)
+void ScrollableWidget::scroll_into_view(const Gfx::IntRect& rect, Orientation orientation)
 {
     if (orientation == Orientation::Vertical)
         return scroll_into_view(rect, false, true);
     return scroll_into_view(rect, true, false);
 }
 
-void ScrollableWidget::scroll_into_view(const Gfx::Rect& rect, bool scroll_horizontally, bool scroll_vertically)
+void ScrollableWidget::scroll_into_view(const Gfx::IntRect& rect, bool scroll_horizontally, bool scroll_vertically)
 {
     auto visible_content_rect = this->visible_content_rect();
     if (visible_content_rect.contains(rect))
@@ -206,7 +206,7 @@ void ScrollableWidget::scroll_to_bottom()
     scroll_into_view({ 0, content_height(), 1, 1 }, Orientation::Vertical);
 }
 
-Gfx::Rect ScrollableWidget::widget_inner_rect() const
+Gfx::IntRect ScrollableWidget::widget_inner_rect() const
 {
     auto rect = frame_inner_rect();
     rect.set_width(rect.width() - width_occupied_by_vertical_scrollbar());
@@ -214,7 +214,7 @@ Gfx::Rect ScrollableWidget::widget_inner_rect() const
     return rect;
 }
 
-Gfx::Point ScrollableWidget::to_content_position(const Gfx::Point& widget_position) const
+Gfx::IntPoint ScrollableWidget::to_content_position(const Gfx::IntPoint& widget_position) const
 {
     auto content_position = widget_position;
     content_position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
@@ -222,7 +222,7 @@ Gfx::Point ScrollableWidget::to_content_position(const Gfx::Point& widget_positi
     return content_position;
 }
 
-Gfx::Point ScrollableWidget::to_widget_position(const Gfx::Point& content_position) const
+Gfx::IntPoint ScrollableWidget::to_widget_position(const Gfx::IntPoint& content_position) const
 {
     auto widget_position = content_position;
     widget_position.move_by(-horizontal_scrollbar().value(), -vertical_scrollbar().value());

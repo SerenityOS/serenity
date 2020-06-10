@@ -70,7 +70,7 @@ public:
     Window(Core::Object&, WindowType);
     virtual ~Window() override;
 
-    void popup_window_menu(const Gfx::Point&);
+    void popup_window_menu(const Gfx::IntPoint&);
     void request_close();
 
     unsigned wm_event_mask() const { return m_wm_event_mask; }
@@ -136,33 +136,33 @@ public:
 
     bool is_modal() const { return m_modal; }
 
-    Gfx::Rect rect() const { return m_rect; }
-    void set_rect(const Gfx::Rect&);
+    Gfx::IntRect rect() const { return m_rect; }
+    void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
-    void set_rect_without_repaint(const Gfx::Rect&);
+    void set_rect_without_repaint(const Gfx::IntRect&);
 
-    void set_taskbar_rect(const Gfx::Rect& rect) { m_taskbar_rect = rect; }
-    const Gfx::Rect& taskbar_rect() const { return m_taskbar_rect; }
+    void set_taskbar_rect(const Gfx::IntRect& rect) { m_taskbar_rect = rect; }
+    const Gfx::IntRect& taskbar_rect() const { return m_taskbar_rect; }
 
-    void move_to(const Gfx::Point& position) { set_rect({ position, size() }); }
+    void move_to(const Gfx::IntPoint& position) { set_rect({ position, size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
 
-    void move_by(const Gfx::Point& delta) { set_position_without_repaint(position().translated(delta)); }
+    void move_by(const Gfx::IntPoint& delta) { set_position_without_repaint(position().translated(delta)); }
 
-    Gfx::Point position() const { return m_rect.location(); }
-    void set_position(const Gfx::Point& position) { set_rect({ position.x(), position.y(), width(), height() }); }
-    void set_position_without_repaint(const Gfx::Point& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
+    Gfx::IntPoint position() const { return m_rect.location(); }
+    void set_position(const Gfx::IntPoint& position) { set_rect({ position.x(), position.y(), width(), height() }); }
+    void set_position_without_repaint(const Gfx::IntPoint& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
-    Gfx::Size size() const { return m_rect.size(); }
+    Gfx::IntSize size() const { return m_rect.size(); }
 
     void invalidate();
-    void invalidate(const Gfx::Rect&);
+    void invalidate(const Gfx::IntRect&);
 
     virtual void event(Core::Event&) override;
 
     // Only used by WindowType::MenuApplet. Perhaps it could be a Window subclass? I don't know.
-    void set_rect_in_menubar(const Gfx::Rect& rect) { m_rect_in_menubar = rect; }
-    const Gfx::Rect& rect_in_menubar() const { return m_rect_in_menubar; }
+    void set_rect_in_menubar(const Gfx::IntRect& rect) { m_rect_in_menubar = rect; }
+    const Gfx::IntRect& rect_in_menubar() const { return m_rect_in_menubar; }
 
     const Gfx::Bitmap* backing_store() const { return m_backing_store.ptr(); }
     Gfx::Bitmap* backing_store() { return m_backing_store.ptr(); }
@@ -187,11 +187,11 @@ public:
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
 
-    Gfx::Size size_increment() const { return m_size_increment; }
-    void set_size_increment(const Gfx::Size& increment) { m_size_increment = increment; }
+    Gfx::IntSize size_increment() const { return m_size_increment; }
+    void set_size_increment(const Gfx::IntSize& increment) { m_size_increment = increment; }
 
-    Gfx::Size base_size() const { return m_base_size; }
-    void set_base_size(const Gfx::Size& size) { m_base_size = size; }
+    Gfx::IntSize base_size() const { return m_base_size; }
+    void set_base_size(const Gfx::IntSize& size) { m_base_size = size; }
 
     const Gfx::Bitmap& icon() const { return *m_icon; }
     void set_icon(NonnullRefPtr<Gfx::Bitmap>&& icon) { m_icon = move(icon); }
@@ -201,7 +201,7 @@ public:
     const Cursor* override_cursor() const { return m_override_cursor.ptr(); }
     void set_override_cursor(RefPtr<Cursor>&& cursor) { m_override_cursor = move(cursor); }
 
-    void request_update(const Gfx::Rect&, bool ignore_occlusion = false);
+    void request_update(const Gfx::IntRect&, bool ignore_occlusion = false);
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
     bool in_minimize_animation() const { return m_minimize_animation_step != -1; }
@@ -211,7 +211,7 @@ public:
     void start_minimize_animation() { m_minimize_animation_step = 0; }
     void end_minimize_animation() { m_minimize_animation_step = -1; }
 
-    Gfx::Rect tiled_rect(WindowTileType) const;
+    Gfx::IntRect tiled_rect(WindowTileType) const;
     void recalculate_rect();
 
     // For InlineLinkedList.
@@ -247,9 +247,9 @@ private:
     Vector<WeakPtr<Window>> m_child_windows;
 
     String m_title;
-    Gfx::Rect m_rect;
-    Gfx::Rect m_saved_nonfullscreen_rect;
-    Gfx::Rect m_taskbar_rect;
+    Gfx::IntRect m_rect;
+    Gfx::IntRect m_saved_nonfullscreen_rect;
+    Gfx::IntRect m_taskbar_rect;
     WindowType m_type { WindowType::Normal };
     bool m_global_cursor_tracking_enabled { false };
     bool m_automatic_cursor_tracking_enabled { false };
@@ -264,22 +264,22 @@ private:
     bool m_maximized { false };
     bool m_fullscreen { false };
     WindowTileType m_tiled { WindowTileType::None };
-    Gfx::Rect m_untiled_rect;
+    Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
     int m_window_id { -1 };
     i32 m_client_id { -1 };
     float m_opacity { 1 };
-    Gfx::Size m_size_increment;
-    Gfx::Size m_base_size;
+    Gfx::IntSize m_size_increment;
+    Gfx::IntSize m_base_size;
     NonnullRefPtr<Gfx::Bitmap> m_icon;
     RefPtr<Cursor> m_override_cursor;
     WindowFrame m_frame;
     unsigned m_wm_event_mask { 0 };
     Gfx::DisjointRectSet m_pending_paint_rects;
-    Gfx::Rect m_unmaximized_rect;
-    Gfx::Rect m_rect_in_menubar;
+    Gfx::IntRect m_unmaximized_rect;
+    Gfx::IntRect m_rect_in_menubar;
     RefPtr<Menu> m_window_menu;
     MenuItem* m_window_menu_minimize_item { nullptr };
     MenuItem* m_window_menu_maximize_item { nullptr };

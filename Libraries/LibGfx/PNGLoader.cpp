@@ -763,7 +763,7 @@ PNGImageDecoderPlugin::~PNGImageDecoderPlugin()
 {
 }
 
-Size PNGImageDecoderPlugin::size()
+IntSize PNGImageDecoderPlugin::size()
 {
     if (m_context->state == PNGLoadingContext::State::Error)
         return {};

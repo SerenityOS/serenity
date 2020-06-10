@@ -32,7 +32,7 @@
 
 namespace PixelPaint {
 
-RefPtr<Image> Image::create_with_size(const Gfx::Size& size)
+RefPtr<Image> Image::create_with_size(const Gfx::IntSize& size)
 {
     if (size.is_empty())
         return nullptr;
@@ -43,12 +43,12 @@ RefPtr<Image> Image::create_with_size(const Gfx::Size& size)
     return adopt(*new Image(size));
 }
 
-Image::Image(const Gfx::Size& size)
+Image::Image(const Gfx::IntSize& size)
     : m_size(size)
 {
 }
 
-void Image::paint_into(GUI::Painter& painter, const Gfx::Rect& dest_rect)
+void Image::paint_into(GUI::Painter& painter, const Gfx::IntRect& dest_rect)
 {
     float scale = (float)dest_rect.width() / (float)rect().width();
     Gfx::PainterStateSaver saver(painter);

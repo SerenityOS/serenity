@@ -36,7 +36,7 @@ CardStack::CardStack()
 {
 }
 
-CardStack::CardStack(const Gfx::Point& position, Type type, uint8_t shift_x, uint8_t shift_y, uint8_t step)
+CardStack::CardStack(const Gfx::IntPoint& position, Type type, uint8_t shift_x, uint8_t shift_y, uint8_t step)
     : m_position(position)
     , m_type(type)
     , m_shift_x(shift_x)
@@ -110,7 +110,7 @@ void CardStack::rebound_cards()
         card.set_position(m_stack_positions.at(card_index++));
 }
 
-void CardStack::add_all_grabbed_cards(const Gfx::Point& click_location, NonnullRefPtrVector<Card>& grabbed)
+void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed)
 {
     ASSERT(grabbed.is_empty());
 
@@ -218,7 +218,7 @@ NonnullRefPtr<Card> CardStack::pop()
 
 void CardStack::calculate_bounding_box()
 {
-    m_bounding_box = Gfx::Rect(m_position, { Card::width, Card::height });
+    m_bounding_box = Gfx::IntRect(m_position, { Card::width, Card::height });
 
     if (m_stack.is_empty())
         return;

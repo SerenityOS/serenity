@@ -68,7 +68,7 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
 
     for (int y = 0; y < font().glyph_height(); ++y) {
         for (int x = 0; x < font().max_glyph_width(); ++x) {
-            Gfx::Rect rect { x * m_scale, y * m_scale, m_scale, m_scale };
+            Gfx::IntRect rect { x * m_scale, y * m_scale, m_scale, m_scale };
             if (x >= font().glyph_width(m_glyph)) {
                 painter.fill_rect(rect, palette().threed_shadow1());
             } else {

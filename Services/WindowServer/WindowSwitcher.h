@@ -68,13 +68,13 @@ private:
     void draw();
     void redraw();
     void select_window_at_index(int index);
-    Gfx::Rect item_rect(int index) const;
+    Gfx::IntRect item_rect(int index) const;
     Window* selected_window();
 
     virtual void event(Core::Event&) override;
 
     RefPtr<Window> m_switcher_window;
-    Gfx::Rect m_rect;
+    Gfx::IntRect m_rect;
     bool m_visible { false };
     Vector<WeakPtr<Window>> m_windows;
     int m_selected_index { 0 };

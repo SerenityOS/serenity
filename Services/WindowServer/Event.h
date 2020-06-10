@@ -105,7 +105,7 @@ private:
 
 class MouseEvent final : public Event {
 public:
-    MouseEvent(Type type, const Gfx::Point& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta = 0)
+    MouseEvent(Type type, const Gfx::IntPoint& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta = 0)
         : Event(type)
         , m_position(position)
         , m_buttons(buttons)
@@ -115,7 +115,7 @@ public:
     {
     }
 
-    Gfx::Point position() const { return m_position; }
+    Gfx::IntPoint position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
@@ -128,10 +128,10 @@ public:
     void set_drag(bool b) { m_drag = b; }
     void set_drag_data_type(const String& drag_data_type) { m_drag_data_type = drag_data_type; }
 
-    MouseEvent translated(const Gfx::Point& delta) const { return MouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers, m_wheel_delta); }
+    MouseEvent translated(const Gfx::IntPoint& delta) const { return MouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers, m_wheel_delta); }
 
 private:
-    Gfx::Point m_position;
+    Gfx::IntPoint m_position;
     unsigned m_buttons { 0 };
     MouseButton m_button { MouseButton::None };
     unsigned m_modifiers { 0 };
@@ -142,19 +142,19 @@ private:
 
 class ResizeEvent final : public Event {
 public:
-    ResizeEvent(const Gfx::Rect& old_rect, const Gfx::Rect& rect)
+    ResizeEvent(const Gfx::IntRect& old_rect, const Gfx::IntRect& rect)
         : Event(Event::WindowResized)
         , m_old_rect(old_rect)
         , m_rect(rect)
     {
     }
 
-    Gfx::Rect old_rect() const { return m_old_rect; }
-    Gfx::Rect rect() const { return m_rect; }
+    Gfx::IntRect old_rect() const { return m_old_rect; }
+    Gfx::IntRect rect() const { return m_rect; }
 
 private:
-    Gfx::Rect m_old_rect;
-    Gfx::Rect m_rect;
+    Gfx::IntRect m_old_rect;
+    Gfx::IntRect m_rect;
 };
 
 }

@@ -82,7 +82,7 @@ WindowManager::~WindowManager()
 {
 }
 
-NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name, const Gfx::Point& hotspot)
+NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name, const Gfx::IntPoint& hotspot)
 {
     auto path = m_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
     auto gb = Gfx::Bitmap::load_from_file(path);
@@ -150,7 +150,7 @@ bool WindowManager::set_resolution(int width, int height)
     }
     if (m_config) {
         if (success) {
-            dbg() << "Saving resolution: " << Gfx::Size(width, height) << " to config file at " << m_config->file_name();
+            dbg() << "Saving resolution: " << Gfx::IntSize(width, height) << " to config file at " << m_config->file_name();
             m_config->write_num_entry("Screen", "Width", width);
             m_config->write_num_entry("Screen", "Height", height);
             m_config->sync();
@@ -164,7 +164,7 @@ bool WindowManager::set_resolution(int width, int height)
     return success;
 }
 
-Gfx::Size WindowManager::resolution() const
+Gfx::IntSize WindowManager::resolution() const
 {
     return Screen::the().size();
 }
@@ -320,7 +320,7 @@ void WindowManager::notify_title_changed(Window& window)
     tell_wm_listeners_window_state_changed(window);
 }
 
-void WindowManager::notify_rect_changed(Window& window, const Gfx::Rect& old_rect, const Gfx::Rect& new_rect)
+void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
 {
     UNUSED_PARAM(old_rect);
     UNUSED_PARAM(new_rect);
@@ -388,7 +388,7 @@ void WindowManager::start_window_move(Window& window, const MouseEvent& event)
     window.invalidate();
 }
 
-void WindowManager::start_window_resize(Window& window, const Gfx::Point& position, MouseButton button)
+void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& position, MouseButton button)
 {
     move_to_front_and_make_active(window);
     constexpr ResizeDirection direction_for_hot_area[3][3] = {
@@ -396,7 +396,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::Point& positi
         { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
         { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
     };
-    Gfx::Rect outer_rect = window.frame().rect();
+    Gfx::IntRect outer_rect = window.frame().rect();
     ASSERT(outer_rect.contains(position));
     int window_relative_x = position.x() - outer_rect.x();
     int window_relative_y = position.y() - outer_rect.y();
@@ -489,7 +489,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
                 m_move_window->set_tiled(WindowTileType::Right);
             } else if (pixels_moved_from_start > 5 || m_move_window->tiled() == WindowTileType::None) {
                 m_move_window->set_tiled(WindowTileType::None);
-                Gfx::Point pos = m_move_window_origin.translated(event.position() - m_move_origin);
+                Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
                 if (m_move_window->rect().contains(event.position()))
                     hovered_window = m_move_window;
@@ -565,7 +565,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
     auto new_rect = m_resize_window_original_rect;
 
     // First, size the new rect.
-    Gfx::Size minimum_size { 50, 50 };
+    Gfx::IntSize minimum_size { 50, 50 };
 
     new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));
     new_rect.set_height(max(minimum_size.height(), new_rect.height() + change_h));
@@ -890,14 +890,14 @@ void WindowManager::clear_resize_candidate()
     m_resize_candidate = nullptr;
 }
 
-Gfx::Rect WindowManager::menubar_rect() const
+Gfx::IntRect WindowManager::menubar_rect() const
 {
     if (active_fullscreen_window())
         return {};
     return MenuManager::the().menubar_rect();
 }
 
-Gfx::Rect WindowManager::desktop_rect() const
+Gfx::IntRect WindowManager::desktop_rect() const
 {
     if (active_fullscreen_window())
         return {};
@@ -1068,7 +1068,7 @@ void WindowManager::invalidate()
     Compositor::the().invalidate();
 }
 
-void WindowManager::invalidate(const Gfx::Rect& rect)
+void WindowManager::invalidate(const Gfx::IntRect& rect)
 {
     Compositor::the().invalidate(rect);
 }
@@ -1137,9 +1137,9 @@ ResizeDirection WindowManager::resize_direction_of_window(const Window& window)
     return m_resize_direction;
 }
 
-Gfx::Rect WindowManager::maximized_window_rect(const Window& window) const
+Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
 {
-    Gfx::Rect rect = Screen::the().rect();
+    Gfx::IntRect rect = Screen::the().rect();
 
     // Subtract window title bar (leaving the border)
     rect.set_y(rect.y() + window.frame().title_bar_rect().height());
@@ -1183,14 +1183,14 @@ void WindowManager::end_dnd_drag()
     m_dnd_bitmap = nullptr;
 }
 
-Gfx::Rect WindowManager::dnd_rect() const
+Gfx::IntRect WindowManager::dnd_rect() const
 {
     int bitmap_width = m_dnd_bitmap ? m_dnd_bitmap->width() : 0;
     int bitmap_height = m_dnd_bitmap ? m_dnd_bitmap->height() : 0;
     int width = font().width(m_dnd_text) + bitmap_width;
     int height = max((int)font().glyph_height(), bitmap_height);
     auto location = Compositor::the().current_cursor_rect().center().translated(8, 8);
-    return Gfx::Rect(location, { width, height }).inflated(4, 4);
+    return Gfx::IntRect(location, { width, height }).inflated(4, 4);
 }
 
 bool WindowManager::update_theme(String theme_path, String theme_name)

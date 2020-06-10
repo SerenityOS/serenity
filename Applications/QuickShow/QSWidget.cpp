@@ -138,12 +138,12 @@ void QSWidget::relayout()
 
     float scale_factor = (float)m_scale / 100.0f;
 
-    Gfx::Size new_size;
+    Gfx::IntSize new_size;
     new_size.set_width(m_bitmap->width() * scale_factor);
     new_size.set_height(m_bitmap->height() * scale_factor);
     m_bitmap_rect.set_size(new_size);
 
-    Gfx::Point new_location;
+    Gfx::IntPoint new_location;
     new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x() * scale_factor));
     new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * scale_factor));
     m_bitmap_rect.set_location(new_location);

@@ -76,12 +76,12 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     }
 }
 
-Gfx::FloatRect ImageEditor::layer_rect_to_editor_rect(const Layer& layer, const Gfx::Rect& layer_rect) const
+Gfx::FloatRect ImageEditor::layer_rect_to_editor_rect(const Layer& layer, const Gfx::IntRect& layer_rect) const
 {
     return image_rect_to_editor_rect(layer_rect.translated(layer.location()));
 }
 
-Gfx::FloatRect ImageEditor::image_rect_to_editor_rect(const Gfx::Rect& image_rect) const
+Gfx::FloatRect ImageEditor::image_rect_to_editor_rect(const Gfx::IntRect& image_rect) const
 {
     Gfx::FloatRect editor_rect;
     editor_rect.set_location(image_position_to_editor_position(image_rect.location()));
@@ -90,7 +90,7 @@ Gfx::FloatRect ImageEditor::image_rect_to_editor_rect(const Gfx::Rect& image_rec
     return editor_rect;
 }
 
-Gfx::FloatRect ImageEditor::editor_rect_to_image_rect(const Gfx::Rect& editor_rect) const
+Gfx::FloatRect ImageEditor::editor_rect_to_image_rect(const Gfx::IntRect& editor_rect) const
 {
     Gfx::FloatRect image_rect;
     image_rect.set_location(editor_position_to_image_position(editor_rect.location()));
@@ -99,12 +99,12 @@ Gfx::FloatRect ImageEditor::editor_rect_to_image_rect(const Gfx::Rect& editor_re
     return image_rect;
 }
 
-Gfx::FloatPoint ImageEditor::layer_position_to_editor_position(const Layer& layer, const Gfx::Point& layer_position) const
+Gfx::FloatPoint ImageEditor::layer_position_to_editor_position(const Layer& layer, const Gfx::IntPoint& layer_position) const
 {
     return image_position_to_editor_position(layer_position.translated(layer.location()));
 }
 
-Gfx::FloatPoint ImageEditor::image_position_to_editor_position(const Gfx::Point& image_position) const
+Gfx::FloatPoint ImageEditor::image_position_to_editor_position(const Gfx::IntPoint& image_position) const
 {
     Gfx::FloatPoint editor_position;
     editor_position.set_x(m_editor_image_rect.x() + ((float)image_position.x() * m_scale));
@@ -112,7 +112,7 @@ Gfx::FloatPoint ImageEditor::image_position_to_editor_position(const Gfx::Point&
     return editor_position;
 }
 
-Gfx::FloatPoint ImageEditor::editor_position_to_image_position(const Gfx::Point& editor_position) const
+Gfx::FloatPoint ImageEditor::editor_position_to_image_position(const Gfx::IntPoint& editor_position) const
 {
     Gfx::FloatPoint image_position;
     image_position.set_x(((float)editor_position.x() - m_editor_image_rect.x()) / m_scale);
@@ -131,7 +131,7 @@ GUI::MouseEvent ImageEditor::event_with_pan_and_scale_applied(const GUI::MouseEv
     auto image_position = editor_position_to_image_position(event.position());
     return {
         static_cast<GUI::Event::Type>(event.type()),
-        Gfx::Point(image_position.x(), image_position.y()),
+        Gfx::IntPoint(image_position.x(), image_position.y()),
         event.buttons(),
         event.button(),
         event.modifiers(),
@@ -145,7 +145,7 @@ GUI::MouseEvent ImageEditor::event_adjusted_for_layer(const GUI::MouseEvent& eve
     image_position.move_by(-layer.location().x(), -layer.location().y());
     return {
         static_cast<GUI::Event::Type>(event.type()),
-        Gfx::Point(image_position.x(), image_position.y()),
+        Gfx::IntPoint(image_position.x(), image_position.y()),
         event.buttons(),
         event.button(),
         event.modifiers(),
@@ -331,14 +331,14 @@ void ImageEditor::set_secondary_color(Color color)
         on_secondary_color_change(color);
 }
 
-Layer* ImageEditor::layer_at_editor_position(const Gfx::Point& editor_position)
+Layer* ImageEditor::layer_at_editor_position(const Gfx::IntPoint& editor_position)
 {
     if (!m_image)
         return nullptr;
     auto image_position = editor_position_to_image_position(editor_position);
     for (ssize_t i = m_image->layer_count() - 1; i >= 0; --i) {
         auto& layer = m_image->layer(i);
-        if (layer.relative_rect().contains(Gfx::Point(image_position.x(), image_position.y())))
+        if (layer.relative_rect().contains(Gfx::IntPoint(image_position.x(), image_position.y())))
             return const_cast<Layer*>(&layer);
     }
     return nullptr;
@@ -350,12 +350,12 @@ void ImageEditor::relayout()
         return;
     auto& image = *this->image();
 
-    Gfx::Size new_size;
+    Gfx::IntSize new_size;
     new_size.set_width(image.size().width() * m_scale);
     new_size.set_height(image.size().height() * m_scale);
     m_editor_image_rect.set_size(new_size);
 
-    Gfx::Point new_location;
+    Gfx::IntPoint new_location;
     new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x() * m_scale));
     new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * m_scale));
     m_editor_image_rect.set_location(new_location);

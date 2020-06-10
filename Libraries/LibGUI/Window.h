@@ -98,18 +98,18 @@ public:
     int width() const { return rect().width(); }
     int height() const { return rect().height(); }
 
-    Gfx::Rect rect() const;
-    Gfx::Size size() const { return rect().size(); }
-    void set_rect(const Gfx::Rect&);
+    Gfx::IntRect rect() const;
+    Gfx::IntSize size() const { return rect().size(); }
+    void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
-    Gfx::Point position() const { return rect().location(); }
+    Gfx::IntPoint position() const { return rect().location(); }
 
     void move_to(int x, int y) { move_to({ x, y }); }
-    void move_to(const Gfx::Point& point) { set_rect({ point, size() }); }
+    void move_to(const Gfx::IntPoint& point) { set_rect({ point, size() }); }
 
     void resize(int width, int height) { resize({ width, height }); }
-    void resize(const Gfx::Size& size) { set_rect({ position(), size }); }
+    void resize(const Gfx::IntSize& size) { set_rect({ position(), size }); }
 
     virtual void event(Core::Event&) override;
 
@@ -140,7 +140,7 @@ public:
     void set_focused_widget(Widget*);
 
     void update();
-    void update(const Gfx::Rect&);
+    void update(const Gfx::IntRect&);
 
     void set_global_cursor_tracking_widget(Widget*);
     Widget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
@@ -157,10 +157,10 @@ public:
     Gfx::Bitmap* front_bitmap() { return m_front_bitmap.ptr(); }
     Gfx::Bitmap* back_bitmap() { return m_back_bitmap.ptr(); }
 
-    Gfx::Size size_increment() const { return m_size_increment; }
-    void set_size_increment(const Gfx::Size&);
-    Gfx::Size base_size() const { return m_base_size; }
-    void set_base_size(const Gfx::Size&);
+    Gfx::IntSize size_increment() const { return m_size_increment; }
+    void set_size_increment(const Gfx::IntSize&);
+    Gfx::IntSize base_size() const { return m_base_size; }
+    void set_base_size(const Gfx::IntSize&);
 
     void set_override_cursor(StandardCursor);
     void set_override_cursor(const Gfx::Bitmap&);
@@ -199,10 +199,10 @@ private:
 
     void server_did_destroy();
 
-    RefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::Size&);
-    RefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::BitmapFormat, const Gfx::Size&);
+    RefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::IntSize&);
+    RefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::BitmapFormat, const Gfx::IntSize&);
     void set_current_backing_bitmap(Gfx::Bitmap&, bool flush_immediately = false);
-    void flip(const Vector<Gfx::Rect, 32>& dirty_rects);
+    void flip(const Vector<Gfx::IntRect, 32>& dirty_rects);
     void force_update();
 
     RefPtr<Gfx::Bitmap> m_front_bitmap;
@@ -216,11 +216,11 @@ private:
     WeakPtr<Widget> m_global_cursor_tracking_widget;
     WeakPtr<Widget> m_automatic_cursor_tracking_widget;
     WeakPtr<Widget> m_hovered_widget;
-    Gfx::Rect m_rect_when_windowless;
+    Gfx::IntRect m_rect_when_windowless;
     String m_title_when_windowless;
-    Vector<Gfx::Rect, 32> m_pending_paint_event_rects;
-    Gfx::Size m_size_increment;
-    Gfx::Size m_base_size;
+    Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
+    Gfx::IntSize m_size_increment;
+    Gfx::IntSize m_base_size;
     Color m_background_color { Color::WarmGray };
     WindowType m_window_type { WindowType::Normal };
     StandardCursor m_override_cursor { StandardCursor::None };

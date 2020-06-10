@@ -45,22 +45,22 @@ enum class StandardCursor {
 
 class Cursor : public RefCounted<Cursor> {
 public:
-    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::Point& hotspot);
+    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::IntPoint& hotspot);
     static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&);
     static RefPtr<Cursor> create(StandardCursor);
     ~Cursor();
 
-    Gfx::Point hotspot() const { return m_hotspot; }
+    Gfx::IntPoint hotspot() const { return m_hotspot; }
     const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
 
-    Gfx::Rect rect() const { return m_bitmap->rect(); }
-    Gfx::Size size() const { return m_bitmap->size(); }
+    Gfx::IntRect rect() const { return m_bitmap->rect(); }
+    Gfx::IntSize size() const { return m_bitmap->size(); }
 
 private:
-    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::Point&);
+    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::IntPoint&);
 
     RefPtr<Gfx::Bitmap> m_bitmap;
-    Gfx::Point m_hotspot;
+    Gfx::IntPoint m_hotspot;
 };
 
 }

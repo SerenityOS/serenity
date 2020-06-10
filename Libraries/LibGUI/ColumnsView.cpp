@@ -122,11 +122,11 @@ void ColumnsView::paint_event(PaintEvent& event)
                 text_color = palette().selection_text();
             }
 
-            Gfx::Rect row_rect { column_x, row * item_height(), column.width, item_height() };
+            Gfx::IntRect row_rect { column_x, row * item_height(), column.width, item_height() };
             painter.fill_rect(row_rect, background_color);
 
             auto icon = model()->data(index, Model::Role::Icon);
-            Gfx::Rect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };
+            Gfx::IntRect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };
             icon_rect.center_vertically_within(row_rect);
             if (icon.is_icon()) {
                 if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size())) {
@@ -137,7 +137,7 @@ void ColumnsView::paint_event(PaintEvent& event)
                 }
             }
 
-            Gfx::Rect text_rect = {
+            Gfx::IntRect text_rect = {
                 icon_rect.right() + 1 + icon_spacing(), row * item_height(),
                 column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - s_arrow_bitmap_width - icon_spacing(), item_height()
             };
@@ -146,7 +146,7 @@ void ColumnsView::paint_event(PaintEvent& event)
 
             bool expandable = model()->row_count(index) > 0;
             if (expandable) {
-                Gfx::Rect arrow_rect = {
+                Gfx::IntRect arrow_rect = {
                     text_rect.right() + 1 + icon_spacing(), 0,
                     s_arrow_bitmap_width, s_arrow_bitmap_height
                 };
@@ -214,7 +214,7 @@ void ColumnsView::update_column_sizes()
     set_content_size({ total_width, total_height });
 }
 
-ModelIndex ColumnsView::index_at_event_position(const Gfx::Point& a_position) const
+ModelIndex ColumnsView::index_at_event_position(const Gfx::IntPoint& a_position) const
 {
     if (!model())
         return {};

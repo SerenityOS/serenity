@@ -69,7 +69,7 @@ public:
     bool has_selection() const;
     bool selection_contains(const VT::Position&) const;
     String selected_text() const;
-    VT::Position buffer_position_at(const Gfx::Point&) const;
+    VT::Position buffer_position_at(const Gfx::IntPoint&) const;
     VT::Position normalized_selection_start() const;
     VT::Position normalized_selection_end() const;
 
@@ -115,15 +115,15 @@ private:
 
     void set_logical_focus(bool);
 
-    Gfx::Rect glyph_rect(u16 row, u16 column);
-    Gfx::Rect row_rect(u16 row);
+    Gfx::IntRect glyph_rect(u16 row, u16 column);
+    Gfx::IntRect row_rect(u16 row);
 
     void update_cursor();
     void invalidate_cursor();
 
-    void relayout(const Gfx::Size&);
+    void relayout(const Gfx::IntSize&);
 
-    Gfx::Size compute_base_size() const;
+    Gfx::IntSize compute_base_size() const;
     int first_selection_column_on_row(int row) const;
     int last_selection_column_on_row(int row) const;
 
@@ -182,5 +182,5 @@ private:
 
     Core::ElapsedTimer m_triple_click_timer;
 
-    Gfx::Point m_left_mousedown_position;
+    Gfx::IntPoint m_left_mousedown_position;
 };

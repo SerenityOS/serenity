@@ -51,7 +51,7 @@ public:
     void register_global_shortcut_action(Badge<Action>, Action&);
     void unregister_global_shortcut_action(Badge<Action>, Action&);
 
-    void show_tooltip(const StringView&, const Gfx::Point& screen_location);
+    void show_tooltip(const StringView&, const Gfx::IntPoint& screen_location);
     void hide_tooltip();
 
     bool quit_when_last_window_deleted() const { return m_quit_when_last_window_deleted; }

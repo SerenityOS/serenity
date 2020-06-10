@@ -61,7 +61,7 @@ Vector<char const*> ShutdownDialog::show()
 ShutdownDialog::ShutdownDialog()
     : Dialog(nullptr)
 {
-    Gfx::Rect rect({ 0, 0, 180, 180 + ((static_cast<int>(options.size()) - 3) * 16) });
+    Gfx::IntRect rect({ 0, 0, 180, 180 + ((static_cast<int>(options.size()) - 3) * 16) });
     rect.center_within(GUI::Desktop::the().rect());
     set_rect(rect);
     set_resizable(false);

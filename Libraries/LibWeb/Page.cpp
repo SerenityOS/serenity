@@ -50,17 +50,17 @@ Gfx::Palette Page::palette() const
     return static_cast<const PageView&>(m_client).palette();
 }
 
-bool Page::handle_mouseup(const Gfx::Point& position, unsigned button, unsigned modifiers)
+bool Page::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
     return main_frame().event_handler().handle_mouseup(position, button, modifiers);
 }
 
-bool Page::handle_mousedown(const Gfx::Point& position, unsigned button, unsigned modifiers)
+bool Page::handle_mousedown(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
     return main_frame().event_handler().handle_mousedown(position, button, modifiers);
 }
 
-bool Page::handle_mousemove(const Gfx::Point& position, unsigned buttons, unsigned modifiers)
+bool Page::handle_mousemove(const Gfx::IntPoint& position, unsigned buttons, unsigned modifiers)
 {
     return main_frame().event_handler().handle_mousemove(position, buttons, modifiers);
 }

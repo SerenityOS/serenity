@@ -79,13 +79,13 @@ static const NonnullRefPtr<Gfx::CharacterBitmap> s_club = Gfx::CharacterBitmap::
 static RefPtr<Gfx::Bitmap> s_background;
 
 Card::Card(Type type, uint8_t value)
-    : m_rect(Gfx::Rect({}, { width, height }))
+    : m_rect(Gfx::IntRect({}, { width, height }))
     , m_front(*Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { width, height }))
     , m_type(type)
     , m_value(value)
 {
     ASSERT(value < card_count);
-    Gfx::Rect paint_rect({ 0, 0 }, { width, height });
+    Gfx::IntRect paint_rect({ 0, 0 }, { width, height });
 
     if (s_background.is_null()) {
         s_background = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { width, height });
@@ -96,7 +96,7 @@ Card::Card(Type type, uint8_t value)
         ASSERT(!image.is_null());
 
         float aspect_ratio = image->width() / static_cast<float>(image->height());
-        auto target_size = Gfx::Size(static_cast<int>(aspect_ratio * (height - 5)), height - 5);
+        auto target_size = Gfx::IntSize(static_cast<int>(aspect_ratio * (height - 5)), height - 5);
 
         bg_painter.draw_scaled_bitmap(
             { { (width - target_size.width()) / 2, (height - target_size.height()) / 2 }, target_size },

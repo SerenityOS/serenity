@@ -43,13 +43,13 @@ public:
 
     void map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const;
 
-    Point map(const Point&) const;
+    IntPoint map(const IntPoint&) const;
     FloatPoint map(const FloatPoint&) const;
 
-    Size map(const Size&) const;
+    IntSize map(const IntSize&) const;
     FloatSize map(const FloatSize&) const;
 
-    Rect map(const Rect&) const;
+    IntRect map(const IntRect&) const;
     FloatRect map(const FloatRect&) const;
 
     float a() const { return m_values[0]; }

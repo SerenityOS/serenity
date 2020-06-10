@@ -176,14 +176,14 @@ String Window::title() const
     return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowTitle>(m_window_id)->title();
 }
 
-Gfx::Rect Window::rect() const
+Gfx::IntRect Window::rect() const
 {
     if (!is_visible())
         return m_rect_when_windowless;
     return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowRect>(m_window_id)->rect();
 }
 
-void Window::set_rect(const Gfx::Rect& a_rect)
+void Window::set_rect(const Gfx::IntRect& a_rect)
 {
     m_rect_when_windowless = a_rect;
     if (!is_visible()) {
@@ -242,14 +242,14 @@ void Window::event(Core::Event& event)
         auto& mouse_event = static_cast<MouseEvent&>(event);
         if (m_global_cursor_tracking_widget) {
             auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
-            Gfx::Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
+            Gfx::IntPoint local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
             m_global_cursor_tracking_widget->dispatch_event(*local_event, this);
             return;
         }
         if (m_automatic_cursor_tracking_widget) {
             auto window_relative_rect = m_automatic_cursor_tracking_widget->window_relative_rect();
-            Gfx::Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
+            Gfx::IntPoint local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
             m_automatic_cursor_tracking_widget->dispatch_event(*local_event, this);
             if (mouse_event.buttons() == 0)
@@ -311,7 +311,7 @@ void Window::event(Core::Event& event)
             set_current_backing_bitmap(*m_back_bitmap, true);
 
         if (is_visible()) {
-            Vector<Gfx::Rect> rects_to_send;
+            Vector<Gfx::IntRect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
             WindowServerConnection::the().post_message(Messages::WindowServer::DidFinishPainting(m_window_id, rects_to_send));
@@ -414,7 +414,7 @@ void Window::force_update()
     WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true));
 }
 
-void Window::update(const Gfx::Rect& a_rect)
+void Window::update(const Gfx::IntRect& a_rect)
 {
     if (!is_visible())
         return;
@@ -433,7 +433,7 @@ void Window::update(const Gfx::Rect& a_rect)
             auto rects = move(m_pending_paint_event_rects);
             if (rects.is_empty())
                 return;
-            Vector<Gfx::Rect> rects_to_send;
+            Vector<Gfx::IntRect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
             WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects_to_send, false));
@@ -543,7 +543,7 @@ void Window::set_current_backing_bitmap(Gfx::Bitmap& bitmap, bool flush_immediat
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shbuf_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
-void Window::flip(const Vector<Gfx::Rect, 32>& dirty_rects)
+void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
 {
     swap(m_front_bitmap, m_back_bitmap);
 
@@ -565,7 +565,7 @@ void Window::flip(const Vector<Gfx::Rect, 32>& dirty_rects)
     m_back_bitmap->shared_buffer()->set_volatile();
 }
 
-RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const Gfx::Size& size)
+RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const Gfx::IntSize& size)
 {
     ASSERT(WindowServerConnection::the().server_pid());
     ASSERT(!size.is_empty());
@@ -577,7 +577,7 @@ RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const
     return Gfx::Bitmap::create_with_shared_buffer(format, *shared_buffer, size);
 }
 
-RefPtr<Gfx::Bitmap> Window::create_backing_bitmap(const Gfx::Size& size)
+RefPtr<Gfx::Bitmap> Window::create_backing_bitmap(const Gfx::IntSize& size)
 {
     auto format = m_has_alpha_channel ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32;
     return create_shared_bitmap(format, size);
@@ -743,7 +743,7 @@ Action* Window::action_for_key_event(const KeyEvent& event)
     return found_action;
 }
 
-void Window::set_base_size(const Gfx::Size& base_size)
+void Window::set_base_size(const Gfx::IntSize& base_size)
 {
     if (m_base_size == base_size)
         return;
@@ -752,7 +752,7 @@ void Window::set_base_size(const Gfx::Size& base_size)
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
 }
 
-void Window::set_size_increment(const Gfx::Size& size_increment)
+void Window::set_size_increment(const Gfx::IntSize& size_increment)
 {
     if (m_size_increment == size_increment)
         return;

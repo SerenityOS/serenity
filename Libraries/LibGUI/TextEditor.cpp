@@ -135,7 +135,7 @@ void TextEditor::update_content_size()
     set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
 }
 
-TextPosition TextEditor::text_position_at(const Gfx::Point& a_position) const
+TextPosition TextEditor::text_position_at(const Gfx::IntPoint& a_position) const
 {
     auto position = a_position;
     position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
@@ -163,7 +163,7 @@ TextPosition TextEditor::text_position_at(const Gfx::Point& a_position) const
     size_t column_index = 0;
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
-        for_each_visual_line(line_index, [&](const Gfx::Rect& rect, auto& view, size_t start_of_line) {
+        for_each_visual_line(line_index, [&](const Gfx::IntRect& rect, auto& view, size_t start_of_line) {
             if (is_multi_line() && !rect.contains_vertically(position.y()))
                 return IterationDecision::Continue;
             column_index = start_of_line;
@@ -324,7 +324,7 @@ int TextEditor::ruler_width() const
     return 5 * font().glyph_width('x') + 4;
 }
 
-Gfx::Rect TextEditor::ruler_content_rect(size_t line_index) const
+Gfx::IntRect TextEditor::ruler_content_rect(size_t line_index) const
 {
     if (!m_ruler_visible)
         return {};
@@ -336,12 +336,12 @@ Gfx::Rect TextEditor::ruler_content_rect(size_t line_index) const
     };
 }
 
-Gfx::Rect TextEditor::ruler_rect_in_inner_coordinates() const
+Gfx::IntRect TextEditor::ruler_rect_in_inner_coordinates() const
 {
     return { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar() };
 }
 
-Gfx::Rect TextEditor::visible_text_rect_in_inner_coordinates() const
+Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
 {
     return {
         m_horizontal_content_padding + (m_ruler_visible ? (ruler_rect_in_inner_coordinates().right() + 1) : 0),
@@ -396,7 +396,7 @@ void TextEditor::paint_event(PaintEvent& event)
         }
     }
 
-    Gfx::Rect text_clip_rect {
+    Gfx::IntRect text_clip_rect {
         (m_ruler_visible ? (ruler_rect_in_inner_coordinates().right() + frame_thickness() + 1) : frame_thickness()),
         frame_thickness(),
         width() - width_occupied_by_vertical_scrollbar() - ruler_width(),
@@ -429,7 +429,7 @@ void TextEditor::paint_event(PaintEvent& event)
         size_t selection_end_column_within_line = selection.end().line() == line_index ? selection.end().column() : line.length();
 
         size_t visual_line_index = 0;
-        for_each_visual_line(line_index, [&](const Gfx::Rect& visual_line_rect, auto& visual_line_text, size_t start_of_visual_line) {
+        for_each_visual_line(line_index, [&](const Gfx::IntRect& visual_line_rect, auto& visual_line_text, size_t start_of_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
                 painter.fill_rect(visual_line_rect, widget_background_color.darkened(0.9f));
 #ifdef DEBUG_TEXTEDITOR
@@ -440,7 +440,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 auto color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
                 painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, color);
             } else {
-                Gfx::Rect character_rect = { visual_line_rect.location(), { 0, line_height() } };
+                Gfx::IntRect character_rect = { visual_line_rect.location(), { 0, line_height() } };
                 for (size_t i = 0; i < visual_line_text.length(); ++i) {
                     u32 codepoint = visual_line_text.substring_view(i, 1).codepoints()[0];
                     const Gfx::Font* font = &this->font();
@@ -489,7 +489,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         ? content_x_for_position({ line_index, (size_t)selection_end_column_within_line })
                         : visual_line_rect.right() + 1;
 
-                    Gfx::Rect selection_rect {
+                    Gfx::IntRect selection_rect {
                         selection_left,
                         visual_line_rect.y(),
                         selection_right - selection_left,
@@ -948,7 +948,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
     int x_offset = 0;
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
-        for_each_visual_line(position.line(), [&](const Gfx::Rect&, auto& visual_line_view, size_t start_of_visual_line) {
+        for_each_visual_line(position.line(), [&](const Gfx::IntRect&, auto& visual_line_view, size_t start_of_visual_line) {
             size_t offset_in_visual_line = position.column() - start_of_visual_line;
             if (position.column() >= start_of_visual_line && (offset_in_visual_line <= visual_line_view.length())) {
                 if (offset_in_visual_line == 0) {
@@ -971,7 +971,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
     }
 }
 
-Gfx::Rect TextEditor::content_rect_for_position(const TextPosition& position) const
+Gfx::IntRect TextEditor::content_rect_for_position(const TextPosition& position) const
 {
     if (!position.is_valid())
         return {};
@@ -981,13 +981,13 @@ Gfx::Rect TextEditor::content_rect_for_position(const TextPosition& position) co
     int x = content_x_for_position(position);
 
     if (is_single_line()) {
-        Gfx::Rect rect { x, 0, 1, font().glyph_height() + 2 };
+        Gfx::IntRect rect { x, 0, 1, font().glyph_height() + 2 };
         rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return rect;
     }
 
-    Gfx::Rect rect;
-    for_each_visual_line(position.line(), [&](const Gfx::Rect& visual_line_rect, auto& view, size_t start_of_visual_line) {
+    Gfx::IntRect rect;
+    for_each_visual_line(position.line(), [&](const Gfx::IntRect& visual_line_rect, auto& view, size_t start_of_visual_line) {
         if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
             // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
             //       *and* included in what we get from content_x_for_position().
@@ -1004,12 +1004,12 @@ Gfx::Rect TextEditor::content_rect_for_position(const TextPosition& position) co
     return rect;
 }
 
-Gfx::Rect TextEditor::cursor_content_rect() const
+Gfx::IntRect TextEditor::cursor_content_rect() const
 {
     return content_rect_for_position(m_cursor);
 }
 
-Gfx::Rect TextEditor::line_widget_rect(size_t line_index) const
+Gfx::IntRect TextEditor::line_widget_rect(size_t line_index) const
 {
     auto rect = line_content_rect(line_index);
     rect.set_x(frame_thickness());
@@ -1036,11 +1036,11 @@ void TextEditor::scroll_cursor_into_view()
         scroll_position_into_view(m_cursor);
 }
 
-Gfx::Rect TextEditor::line_content_rect(size_t line_index) const
+Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
 {
     auto& line = this->line(line_index);
     if (is_single_line()) {
-        Gfx::Rect line_rect = { content_x_for_position({ line_index, 0 }), 0, font().width(line.view()), font().glyph_height() + 4 };
+        Gfx::IntRect line_rect = { content_x_for_position({ line_index, 0 }), 0, font().width(line.view()), font().glyph_height() + 4 };
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
@@ -1412,7 +1412,7 @@ void TextEditor::ensure_cursor_is_valid()
 size_t TextEditor::visual_line_containing(size_t line_index, size_t column) const
 {
     size_t visual_line_index = 0;
-    for_each_visual_line(line_index, [&](const Gfx::Rect&, auto& view, size_t start_of_visual_line) {
+    for_each_visual_line(line_index, [&](const Gfx::IntRect&, auto& view, size_t start_of_visual_line) {
         if (column >= start_of_visual_line && ((column - start_of_visual_line) < view.length()))
             return IterationDecision::Break;
         ++visual_line_index;
@@ -1466,7 +1466,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
 
     for (auto visual_line_break : visual_data.visual_line_breaks) {
         auto visual_line_view = Utf32View(line.codepoints() + start_of_line, visual_line_break - start_of_line);
-        Gfx::Rect visual_line_rect {
+        Gfx::IntRect visual_line_rect {
             visual_data.visual_rect.x(),
             visual_data.visual_rect.y() + ((int)visual_line_index * line_height()),
             font().width(visual_line_view),

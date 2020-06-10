@@ -63,9 +63,9 @@ private:
     bool is_available(const Coordinate&);
     void queue_velocity(int v, int h);
     const Velocity& last_velocity() const;
-    Gfx::Rect cell_rect(const Coordinate&) const;
-    Gfx::Rect score_rect() const;
-    Gfx::Rect high_score_rect() const;
+    Gfx::IntRect cell_rect(const Coordinate&) const;
+    Gfx::IntRect score_rect() const;
+    Gfx::IntRect high_score_rect() const;
 
     int m_rows { 20 };
     int m_columns { 20 };

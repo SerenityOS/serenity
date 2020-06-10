@@ -49,11 +49,11 @@ enum RotationDirection {
 
 class Bitmap : public RefCounted<Bitmap> {
 public:
-    static RefPtr<Bitmap> create(BitmapFormat, const Size&);
-    static RefPtr<Bitmap> create_purgeable(BitmapFormat, const Size&);
-    static RefPtr<Bitmap> create_wrapper(BitmapFormat, const Size&, size_t pitch, RGBA32*);
+    static RefPtr<Bitmap> create(BitmapFormat, const IntSize&);
+    static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&);
+    static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, size_t pitch, RGBA32*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);
-    static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const Size&);
+    static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
 
     RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
@@ -69,8 +69,8 @@ public:
     u8* bits(int y);
     const u8* bits(int y) const;
 
-    Rect rect() const { return { {}, m_size }; }
-    Size size() const { return m_size; }
+    IntRect rect() const { return { {}, m_size }; }
+    IntSize size() const { return m_size; }
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
     size_t pitch() const { return m_pitch; }
@@ -121,7 +121,7 @@ public:
 
     Color get_pixel(int x, int y) const;
 
-    Color get_pixel(const Point& position) const
+    Color get_pixel(const IntPoint& position) const
     {
         return get_pixel(position.x(), position.y());
     }
@@ -136,7 +136,7 @@ public:
 
     void set_pixel(int x, int y, Color);
 
-    void set_pixel(const Point& position, Color color)
+    void set_pixel(const IntPoint& position, Color color)
     {
         set_pixel(position.x(), position.y(), color);
     }
@@ -149,11 +149,11 @@ public:
 private:
     enum class Purgeable { No,
         Yes };
-    Bitmap(BitmapFormat, const Size&, Purgeable);
-    Bitmap(BitmapFormat, const Size&, size_t pitch, RGBA32*);
-    Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const Size&);
+    Bitmap(BitmapFormat, const IntSize&, Purgeable);
+    Bitmap(BitmapFormat, const IntSize&, size_t pitch, RGBA32*);
+    Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
 
-    Size m_size;
+    IntSize m_size;
     RGBA32* m_data { nullptr };
     RGBA32* m_palette { nullptr };
     size_t m_pitch { 0 };

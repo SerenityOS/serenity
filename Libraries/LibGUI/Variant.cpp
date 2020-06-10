@@ -224,19 +224,19 @@ Variant::Variant(Color color)
     m_value.as_color = color.value();
 }
 
-Variant::Variant(const Gfx::Point& point)
+Variant::Variant(const Gfx::IntPoint& point)
     : m_type(Type::Point)
 {
     m_value.as_point = { point.x(), point.y() };
 }
 
-Variant::Variant(const Gfx::Size& size)
+Variant::Variant(const Gfx::IntSize& size)
     : m_type(Type::Size)
 {
     m_value.as_size = { size.width(), size.height() };
 }
 
-Variant::Variant(const Gfx::Rect& rect)
+Variant::Variant(const Gfx::IntRect& rect)
     : m_type(Type::Rect)
 {
     m_value.as_rect = (const RawRect&)rect;

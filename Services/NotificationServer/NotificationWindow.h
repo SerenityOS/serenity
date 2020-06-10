@@ -35,12 +35,12 @@ class NotificationWindow final : public GUI::Window {
 
 public:
     virtual ~NotificationWindow() override;
-    void set_original_rect(Gfx::Rect original_rect) { m_original_rect = original_rect; };
+    void set_original_rect(Gfx::IntRect original_rect) { m_original_rect = original_rect; };
 
 private:
     NotificationWindow(const String& text, const String& title, const Gfx::ShareableBitmap&);
 
-    Gfx::Rect m_original_rect;
+    Gfx::IntRect m_original_rect;
 };
 
 }

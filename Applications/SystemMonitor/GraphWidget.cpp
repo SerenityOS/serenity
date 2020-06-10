@@ -53,20 +53,20 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
     auto inner_rect = frame_inner_rect();
     float scale = (float)inner_rect.height() / (float)m_max;
 
-    Gfx::Point prev_point;
+    Gfx::IntPoint prev_point;
     for (size_t i = 0; i < m_values.size(); ++i) {
         int x = inner_rect.right() - (i * 2) + 1;
         if (x < 0)
             break;
         float scaled_value = (float)m_values.at(m_values.size() - i - 1) * scale;
-        Gfx::Point point = { x, inner_rect.bottom() - (int)scaled_value };
+        Gfx::IntPoint point = { x, inner_rect.bottom() - (int)scaled_value };
         if (i != 0)
             painter.draw_line(prev_point, point, m_graph_color);
         prev_point = point;
     }
 
     if (!m_values.is_empty() && text_formatter) {
-        Gfx::Rect text_rect = inner_rect.shrunken(8, 8);
+        Gfx::IntRect text_rect = inner_rect.shrunken(8, 8);
         text_rect.set_height(font().glyph_height());
         auto text = text_formatter(m_values.last(), m_max);
         painter.draw_text(text_rect.translated(1, 1), text.characters(), Gfx::TextAlignment::CenterRight, Color::Black);

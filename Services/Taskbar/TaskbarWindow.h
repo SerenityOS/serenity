@@ -40,7 +40,7 @@ public:
 
 private:
     void create_quick_launch_bar();
-    void on_screen_rect_change(const Gfx::Rect&);
+    void on_screen_rect_change(const Gfx::IntRect&);
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
 
     virtual void wm_event(GUI::WMEvent&) override;

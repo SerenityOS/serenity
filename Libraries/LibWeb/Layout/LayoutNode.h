@@ -94,7 +94,7 @@ class LayoutNode : public TreeNode<LayoutNode> {
 public:
     virtual ~LayoutNode();
 
-    virtual HitTestResult hit_test(const Gfx::Point&) const;
+    virtual HitTestResult hit_test(const Gfx::IntPoint&) const;
 
     bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }

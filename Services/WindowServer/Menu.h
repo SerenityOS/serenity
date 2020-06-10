@@ -73,11 +73,11 @@ public:
             callback(item);
     }
 
-    Gfx::Rect text_rect_in_menubar() const { return m_text_rect_in_menubar; }
-    void set_text_rect_in_menubar(const Gfx::Rect& rect) { m_text_rect_in_menubar = rect; }
+    Gfx::IntRect text_rect_in_menubar() const { return m_text_rect_in_menubar; }
+    void set_text_rect_in_menubar(const Gfx::IntRect& rect) { m_text_rect_in_menubar = rect; }
 
-    Gfx::Rect rect_in_menubar() const { return m_rect_in_menubar; }
-    void set_rect_in_menubar(const Gfx::Rect& rect) { m_rect_in_menubar = rect; }
+    Gfx::IntRect rect_in_menubar() const { return m_rect_in_menubar; }
+    void set_rect_in_menubar(const Gfx::IntRect& rect) { m_rect_in_menubar = rect; }
 
     Window* menu_window() { return m_menu_window.ptr(); }
     Window& ensure_menu_window();
@@ -117,7 +117,7 @@ public:
 
     void close();
 
-    void popup(const Gfx::Point&);
+    void popup(const Gfx::IntPoint&);
 
     bool is_menu_ancestor_of(const Menu&) const;
 
@@ -137,7 +137,7 @@ private:
     void handle_mouse_move_event(const MouseEvent&);
     int visible_item_count() const;
 
-    int item_index_at(const Gfx::Point&);
+    int item_index_at(const Gfx::IntPoint&);
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(MenuItem&);
     void update_for_new_hovered_item();
@@ -145,15 +145,15 @@ private:
     ClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;
-    Gfx::Rect m_rect_in_menubar;
-    Gfx::Rect m_text_rect_in_menubar;
+    Gfx::IntRect m_rect_in_menubar;
+    Gfx::IntRect m_text_rect_in_menubar;
     MenuBar* m_menubar { nullptr };
     NonnullOwnPtrVector<MenuItem> m_items;
     RefPtr<Window> m_menu_window;
 
     WeakPtr<Window> m_window_menu_of;
     bool m_is_window_menu_open = { false };
-    Gfx::Point m_last_position_in_hover;
+    Gfx::IntPoint m_last_position_in_hover;
     int m_theme_index_at_last_paint { -1 };
     int m_hovered_item_index { -1 };
 

@@ -58,7 +58,7 @@ void KeyboardMapperWidget::create_frame()
     m_keys.resize(KEY_COUNT);
 
     for (unsigned i = 0; i < KEY_COUNT; i++) {
-        Gfx::Rect rect = { keys[i].x, keys[i].y, keys[i].width, keys[i].height };
+        Gfx::IntRect rect = { keys[i].x, keys[i].y, keys[i].width, keys[i].height };
 
         auto& tmp_button = main_widget.add<KeyButton>();
         tmp_button.set_relative_rect(rect);

@@ -97,7 +97,7 @@ void PageView::page_did_request_cursor_change(GUI::StandardCursor cursor)
         window()->set_override_cursor(cursor);
 }
 
-void PageView::page_did_request_link_context_menu(const Gfx::Point& content_position, const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+void PageView::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(href, screen_relative_rect().location().translated(to_widget_position(content_position)));
@@ -115,7 +115,7 @@ void PageView::page_did_middle_click_link(const String& href, [[maybe_unused]] c
         on_link_middle_click(href);
 }
 
-void PageView::page_did_enter_tooltip_area(const Gfx::Point& content_position, const String& title)
+void PageView::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
 {
     GUI::Application::the().show_tooltip(title, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
@@ -140,7 +140,7 @@ void PageView::page_did_request_scroll_to_anchor(const String& fragment)
     scroll_to_anchor(fragment);
 }
 
-void PageView::page_did_invalidate(const Gfx::Rect&)
+void PageView::page_did_invalidate(const Gfx::IntRect&)
 {
     update();
 }

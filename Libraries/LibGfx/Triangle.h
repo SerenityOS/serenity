@@ -33,7 +33,7 @@ namespace Gfx {
 
 class Triangle {
 public:
-    Triangle(Point a, Point b, Point c)
+    Triangle(IntPoint a, IntPoint b, IntPoint c)
         : m_a(a)
         , m_b(b)
         , m_c(c)
@@ -41,11 +41,11 @@ public:
         m_det = (m_b.x() - m_a.x()) * (m_c.y() - m_a.y()) - (m_b.y() - m_a.y()) * (m_c.x() - m_a.x());
     }
 
-    Point a() const { return m_a; }
-    Point b() const { return m_b; }
-    Point c() const { return m_c; }
+    IntPoint a() const { return m_a; }
+    IntPoint b() const { return m_b; }
+    IntPoint c() const { return m_c; }
 
-    bool contains(Point p) const
+    bool contains(IntPoint p) const
     {
         int x = p.x();
         int y = p.y();
@@ -71,9 +71,9 @@ public:
 
 private:
     int m_det;
-    Point m_a;
-    Point m_b;
-    Point m_c;
+    IntPoint m_a;
+    IntPoint m_b;
+    IntPoint m_c;
 };
 
 const LogStream& operator<<(const LogStream&, const Triangle&);

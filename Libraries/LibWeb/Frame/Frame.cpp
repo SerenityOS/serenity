@@ -69,7 +69,7 @@ void Frame::set_document(Document* document)
     page().client().page_did_set_document_in_main_frame(m_document);
 }
 
-void Frame::set_size(const Gfx::Size& size)
+void Frame::set_size(const Gfx::IntSize& size)
 {
     if (m_size == size)
         return;
@@ -78,7 +78,7 @@ void Frame::set_size(const Gfx::Size& size)
         m_document->layout();
 }
 
-void Frame::set_viewport_rect(const Gfx::Rect& rect)
+void Frame::set_viewport_rect(const Gfx::IntRect& rect)
 {
     if (m_viewport_rect == rect)
         return;
@@ -88,7 +88,7 @@ void Frame::set_viewport_rect(const Gfx::Rect& rect)
         m_document->layout_node()->did_set_viewport_rect({}, rect);
 }
 
-void Frame::set_needs_display(const Gfx::Rect& rect)
+void Frame::set_needs_display(const Gfx::IntRect& rect)
 {
     if (!m_viewport_rect.intersects(rect))
         return;
@@ -121,14 +121,14 @@ void Frame::scroll_to_anchor(const String& fragment)
     page().client().page_did_request_scroll_to_anchor(fragment);
 }
 
-Gfx::Rect Frame::to_main_frame_rect(const Gfx::Rect& a_rect)
+Gfx::IntRect Frame::to_main_frame_rect(const Gfx::IntRect& a_rect)
 {
     auto rect = a_rect;
     rect.set_location(to_main_frame_position(a_rect.location()));
     return rect;
 }
 
-Gfx::Point Frame::to_main_frame_position(const Gfx::Point& a_position)
+Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
 {
     auto position = a_position;
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {

@@ -41,7 +41,7 @@ public:
     virtual ~GIFImageDecoderPlugin() override;
     GIFImageDecoderPlugin(const u8*, size_t);
 
-    virtual Size size() override;
+    virtual IntSize size() override;
     virtual RefPtr<Gfx::Bitmap> bitmap() override;
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile() override;

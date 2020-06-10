@@ -49,7 +49,7 @@ public:
     bool is_open(const Menu&) const;
     bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }
 
-    Gfx::Rect menubar_rect() const;
+    Gfx::IntRect menubar_rect() const;
     static int menubar_menu_margin() { return 16; }
 
     void set_needs_window_resize();

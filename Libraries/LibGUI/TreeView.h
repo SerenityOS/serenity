@@ -54,7 +54,7 @@ protected:
     virtual void did_update_model(unsigned flags) override;
 
 private:
-    virtual ModelIndex index_at_event_position(const Gfx::Point&, bool& is_toggle) const override;
+    virtual ModelIndex index_at_event_position(const Gfx::IntPoint&, bool& is_toggle) const override;
 
     int item_height() const { return 16; }
     int max_item_width() const { return frame_inner_rect().width(); }

@@ -63,7 +63,7 @@ public:
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
     Function<void(const String& href, const String& target, unsigned modifiers)> on_link_click;
-    Function<void(const String& href, const Gfx::Point& screen_position)> on_link_context_menu_request;
+    Function<void(const String& href, const Gfx::IntPoint& screen_position)> on_link_context_menu_request;
     Function<void(const String& href)> on_link_middle_click;
     Function<void(const String&)> on_link_hover;
     Function<void(const String&)> on_title_change;
@@ -96,15 +96,15 @@ private:
     virtual void page_did_start_loading(const URL&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(GUI::StandardCursor) override;
-    virtual void page_did_request_link_context_menu(const Gfx::Point&, const String& href, const String& target, unsigned modifiers) override;
+    virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const String& href, const String& target, unsigned modifiers) override;
     virtual void page_did_click_link(const String& href, const String& target, unsigned modifiers) override;
     virtual void page_did_middle_click_link(const String& href, const String& target, unsigned modifiers) override;
-    virtual void page_did_enter_tooltip_area(const Gfx::Point&, const String&) override;
+    virtual void page_did_enter_tooltip_area(const Gfx::IntPoint&, const String&) override;
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(const URL&) override;
     virtual void page_did_unhover_link() override;
     virtual void page_did_request_scroll_to_anchor(const String& fragment) override;
-    virtual void page_did_invalidate(const Gfx::Rect&) override;
+    virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_favicon(const Gfx::Bitmap&) override;
 
     void layout_and_sync_size();

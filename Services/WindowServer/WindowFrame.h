@@ -41,15 +41,15 @@ public:
     WindowFrame(Window&);
     ~WindowFrame();
 
-    Gfx::Rect rect() const;
+    Gfx::IntRect rect() const;
     void paint(Gfx::Painter&);
     void on_mouse_event(const MouseEvent&);
-    void notify_window_rect_changed(const Gfx::Rect& old_rect, const Gfx::Rect& new_rect);
+    void notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect);
     void invalidate_title_bar();
 
-    Gfx::Rect title_bar_rect() const;
-    Gfx::Rect title_bar_icon_rect() const;
-    Gfx::Rect title_bar_text_rect() const;
+    Gfx::IntRect title_bar_rect() const;
+    Gfx::IntRect title_bar_icon_rect() const;
+    Gfx::IntRect title_bar_text_rect() const;
 
     void did_set_maximized(Badge<Window>, bool);
 

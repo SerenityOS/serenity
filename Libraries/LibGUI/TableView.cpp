@@ -105,7 +105,7 @@ void TableView::paint_event(PaintEvent& event)
                 continue;
             int column_width = this->column_width(column_index);
             bool is_key_column = model()->key_column() == column_index;
-            Gfx::Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
+            Gfx::IntRect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
             if (is_key_column)
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
@@ -144,7 +144,7 @@ void TableView::paint_event(PaintEvent& event)
         ++painted_item_index;
     };
 
-    Gfx::Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
+    Gfx::IntRect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
     if (fill_with_background_color())
         painter.fill_rect(unpainted_rect, widget_background_color);
 

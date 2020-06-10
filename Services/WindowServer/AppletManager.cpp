@@ -91,8 +91,8 @@ void AppletManager::calculate_applet_rects(Window& window)
     int right_edge_x = menubar_rect.width() - 4;
     for (auto& existing_applet : m_applets) {
 
-        Gfx::Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
-        Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
+        Gfx::IntRect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
+        Gfx::IntRect dummy_menubar_rect(0, 0, 0, 18);
         new_applet_rect.center_vertically_within(dummy_menubar_rect);
 
         existing_applet->set_rect_in_menubar(new_applet_rect);
@@ -126,7 +126,7 @@ void AppletManager::draw_applet(const Window& applet)
     painter.blit(applet.rect_in_menubar().location(), *applet.backing_store(), applet.backing_store()->rect());
 }
 
-void AppletManager::invalidate_applet(const Window& applet, const Gfx::Rect& rect)
+void AppletManager::invalidate_applet(const Window& applet, const Gfx::IntRect& rect)
 {
     draw_applet(applet);
     MenuManager::the().window().invalidate(rect.translated(applet.rect_in_menubar().location()));

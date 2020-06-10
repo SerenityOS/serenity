@@ -58,19 +58,19 @@ public:
             mutable_row &= ~(1 << x);
     }
 
-    Size size() const { return m_size; }
+    IntSize size() const { return m_size; }
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
 
 private:
-    GlyphBitmap(const unsigned* rows, Size size)
+    GlyphBitmap(const unsigned* rows, IntSize size)
         : m_rows(rows)
         , m_size(size)
     {
     }
 
     const unsigned* m_rows { nullptr };
-    Size m_size;
+    IntSize m_size;
 };
 
 class Font : public RefCounted<Font> {

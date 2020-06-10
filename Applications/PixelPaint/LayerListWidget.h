@@ -69,21 +69,21 @@ private:
 
     struct Gadget {
         size_t layer_index { 0 };
-        Gfx::Rect rect;
-        Gfx::Rect temporary_rect_during_move;
+        Gfx::IntRect rect;
+        Gfx::IntRect temporary_rect_during_move;
         bool is_moving { false };
-        Gfx::Point movement_delta;
+        Gfx::IntPoint movement_delta;
     };
 
     bool is_moving_gadget() const { return m_moving_gadget_index.has_value(); }
 
-    Optional<size_t> gadget_at(const Gfx::Point&);
+    Optional<size_t> gadget_at(const Gfx::IntPoint&);
 
     Vector<Gadget> m_gadgets;
     RefPtr<Image> m_image;
 
     Optional<size_t> m_moving_gadget_index;
-    Gfx::Point m_moving_event_origin;
+    Gfx::IntPoint m_moving_event_origin;
 };
 
 }

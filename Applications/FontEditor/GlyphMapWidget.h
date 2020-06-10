@@ -58,7 +58,7 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    Gfx::Rect get_outer_rect(int glyph) const;
+    Gfx::IntRect get_outer_rect(int glyph) const;
 
     RefPtr<Gfx::Font> m_font;
     int m_glyph_count;

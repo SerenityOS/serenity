@@ -40,19 +40,19 @@ public:
     {
     }
 
-    void add(const Rect&);
+    void add(const IntRect&);
 
     bool is_empty() const { return m_rects.is_empty(); }
     size_t size() const { return m_rects.size(); }
 
     void clear() { m_rects.clear(); }
     void clear_with_capacity() { m_rects.clear_with_capacity(); }
-    const Vector<Rect, 32>& rects() const { return m_rects; }
+    const Vector<IntRect, 32>& rects() const { return m_rects; }
 
 private:
     void shatter();
 
-    Vector<Rect, 32> m_rects;
+    Vector<IntRect, 32> m_rects;
 };
 
 }

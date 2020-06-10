@@ -50,8 +50,8 @@ public:
     String title() const { return m_title; }
     void set_title(const String& title) { m_title = title; }
 
-    Gfx::Rect rect() const { return m_rect; }
-    void set_rect(const Gfx::Rect& rect) { m_rect = rect; }
+    Gfx::IntRect rect() const { return m_rect; }
+    void set_rect(const Gfx::IntRect& rect) { m_rect = rect; }
 
     GUI::Button* button() { return m_button; }
     void set_button(GUI::Button* button) { m_button = button; }
@@ -77,7 +77,7 @@ public:
 private:
     WindowIdentifier m_identifier;
     String m_title;
-    Gfx::Rect m_rect;
+    Gfx::IntRect m_rect;
     RefPtr<GUI::Button> m_button;
     RefPtr<Gfx::Bitmap> m_icon;
     bool m_active { false };

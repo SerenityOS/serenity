@@ -84,9 +84,9 @@ void TabWidget::resize_event(ResizeEvent& event)
     m_active_widget->set_relative_rect(child_rect_for_size(event.size()));
 }
 
-Gfx::Rect TabWidget::child_rect_for_size(const Gfx::Size& size) const
+Gfx::IntRect TabWidget::child_rect_for_size(const Gfx::IntSize& size) const
 {
-    Gfx::Rect rect;
+    Gfx::IntRect rect;
     switch (m_tab_position) {
     case TabPosition::Top:
         rect = { { container_padding(), bar_height() + container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
@@ -123,7 +123,7 @@ void TabWidget::child_event(Core::ChildEvent& event)
     Widget::child_event(event);
 }
 
-Gfx::Rect TabWidget::bar_rect() const
+Gfx::IntRect TabWidget::bar_rect() const
 {
     switch (m_tab_position) {
     case TabPosition::Top:
@@ -134,7 +134,7 @@ Gfx::Rect TabWidget::bar_rect() const
     ASSERT_NOT_REACHED();
 }
 
-Gfx::Rect TabWidget::container_rect() const
+Gfx::IntRect TabWidget::container_rect() const
 {
     switch (m_tab_position) {
     case TabPosition::Top:
@@ -166,7 +166,7 @@ void TabWidget::paint_event(PaintEvent& event)
     auto paint_tab_icon_if_needed = [&](auto& icon, auto& button_rect, auto& text_rect) {
         if (!icon)
             return;
-        Gfx::Rect icon_rect { button_rect.x(), button_rect.y(), 16, 16 };
+        Gfx::IntRect icon_rect { button_rect.x(), button_rect.y(), 16, 16 };
         icon_rect.move_by(4, 3);
         painter.draw_scaled_bitmap(icon_rect, *icon, icon->rect());
         text_rect.set_x(icon_rect.right() + 1 + 4);
@@ -217,14 +217,14 @@ void TabWidget::set_bar_visible(bool bar_visible)
     update_bar();
 }
 
-Gfx::Rect TabWidget::button_rect(int index) const
+Gfx::IntRect TabWidget::button_rect(int index) const
 {
     int x_offset = 2;
     for (int i = 0; i < index; ++i) {
         auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font());
         x_offset += tab_width;
     }
-    Gfx::Rect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()), bar_height() };
+    Gfx::IntRect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()), bar_height() };
     if (m_tabs[index].widget != m_active_widget) {
         rect.move_by(0, 2);
         rect.set_height(rect.height() - 2);

@@ -107,7 +107,7 @@ void Button::on_mouse_event(const MouseEvent& event)
     }
 }
 
-Gfx::Rect Button::screen_rect() const
+Gfx::IntRect Button::screen_rect() const
 {
     return m_relative_rect.translated(m_frame.rect().location());
 }

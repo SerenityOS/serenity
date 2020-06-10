@@ -82,7 +82,7 @@ CanvasRenderingContext2D* HTMLCanvasElement::get_context(String type)
     return m_context;
 }
 
-static Gfx::Size bitmap_size_for_canvas(const HTMLCanvasElement& canvas)
+static Gfx::IntSize bitmap_size_for_canvas(const HTMLCanvasElement& canvas)
 {
     int width = canvas.requested_width();
     int height = canvas.requested_height();

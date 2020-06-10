@@ -58,7 +58,7 @@ void Button::paint_event(PaintEvent& event)
         return;
 
     auto content_rect = rect().shrunken(8, 2);
-    auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Gfx::Point();
+    auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Gfx::IntPoint();
     if (m_icon && !text().is_empty())
         icon_location.set_x(content_rect.x());
     if (is_being_pressed() || is_checked())
@@ -79,7 +79,7 @@ void Button::paint_event(PaintEvent& event)
         content_rect.set_width(content_rect.width() - m_icon->width() - 4);
     }
 
-    Gfx::Rect text_rect { 0, 0, font.width(text()), font.glyph_height() };
+    Gfx::IntRect text_rect { 0, 0, font.width(text()), font.glyph_height() };
     if (text_rect.width() > content_rect.width())
         text_rect.set_width(content_rect.width());
     text_rect.align_within(content_rect, text_alignment());
