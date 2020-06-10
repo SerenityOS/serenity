@@ -197,13 +197,13 @@ static inline void set_property_border_style(StyleProperties& style, const Style
         style.set_property(CSS::PropertyID::BorderLeftStyle, value);
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value)
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, Document& document)
 {
     if (property_id == CSS::PropertyID::Border) {
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value, document);
     }
 
     if (property_id == CSS::PropertyID::BorderTop
@@ -329,6 +329,18 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         }
         if (values[0].is_color())
             style.set_property(CSS::PropertyID::BackgroundColor, values[0]);
+        for (auto& value : values) {
+            if (!value.is_string())
+                continue;
+            auto string = value.to_string();
+            if (!string.starts_with("url("))
+                continue;
+            if (!string.ends_with(')'))
+                continue;
+            auto url = string.substring_view(4, string.length() - 5);
+            auto background_image_value = ImageStyleValue::create(document.complete_url(url), document);
+            style.set_property(CSS::PropertyID::BackgroundImage, move(background_image_value));
+        }
         return;
     }
 
@@ -443,7 +455,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     if (parent_style) {
         parent_style->for_each_property([&](auto property_id, auto& value) {
             if (is_inherited_property(property_id))
-                set_property_expanding_shorthands(style, property_id, value);
+                set_property_expanding_shorthands(style, property_id, value, m_document);
         });
     }
 
@@ -459,7 +471,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
 
     for (auto& rule : matching_rules) {
         for (auto& property : rule.declaration().properties()) {
-            set_property_expanding_shorthands(style, property.property_id, property.value);
+            set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
         }
     }
 
@@ -467,7 +479,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     if (!style_attribute.is_null()) {
         if (auto declaration = parse_css_declaration(style_attribute)) {
             for (auto& property : declaration->properties()) {
-                set_property_expanding_shorthands(style, property.property_id, property.value);
+                set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
             }
         }
     }
