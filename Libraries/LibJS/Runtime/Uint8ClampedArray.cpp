@@ -59,7 +59,7 @@ Value Uint8ClampedArray::length_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (StringView(this_object->class_name()) != "Uint8ClampedArray")
-        return interpreter.throw_exception<TypeError>("Not a Uint8ClampedArray");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotA, "Uint8ClampedArray");
     return Value(static_cast<const Uint8ClampedArray*>(this_object)->length());
 }
 

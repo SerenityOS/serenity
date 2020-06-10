@@ -11,7 +11,7 @@ try {
         +bigint;
     }, {
         error: TypeError,
-        message: "Can't convert BigInt to number"
+        message: "Cannot convert BigInt to number"
     });
 
     assert(12n + 34n === 46n);

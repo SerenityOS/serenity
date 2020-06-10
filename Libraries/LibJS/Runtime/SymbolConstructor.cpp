@@ -71,7 +71,7 @@ Value SymbolConstructor::call(Interpreter& interpreter)
 
 Value SymbolConstructor::construct(Interpreter& interpreter)
 {
-    interpreter.throw_exception<TypeError>("Symbol is not a constructor");
+    interpreter.throw_exception<TypeError>(ErrorType::NotACtor, "Symbol");
     return {};
 }
 
@@ -91,7 +91,7 @@ Value SymbolConstructor::key_for(Interpreter& interpreter)
 {
     auto argument = interpreter.argument(0);
     if (!argument.is_symbol()) {
-        interpreter.throw_exception<TypeError>(String::format("%s is not a symbol", argument.to_string_without_side_effects().characters()));
+        interpreter.throw_exception<TypeError>(ErrorType::NotASymbol, argument.to_string_without_side_effects().characters());
         return {};
     }
 

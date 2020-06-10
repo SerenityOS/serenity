@@ -88,7 +88,7 @@ static Window* impl_from(JS::Interpreter& interpreter)
         return nullptr;
     }
     if (StringView("WindowObject") != this_object->class_name()) {
-        interpreter.throw_exception<JS::TypeError>("That's not a WindowObject, bro.");
+        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, "WindowObject");
         return nullptr;
     }
     return &static_cast<WindowObject*>(this_object)->impl();
@@ -129,12 +129,12 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::TypeError>("setInterval() needs at least one argument");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "setInterval");
     auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
-        return interpreter.throw_exception<JS::TypeError>("Not a function");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
 
     i32 interval = 0;
     if (interpreter.argument_count() >= 2) {
@@ -155,12 +155,12 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::TypeError>("setTimeout() needs at least one argument");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "setTimeout");
     auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
-        return interpreter.throw_exception<JS::TypeError>("Not a function");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
 
     i32 interval = 0;
     if (interpreter.argument_count() >= 2) {
@@ -181,12 +181,12 @@ JS::Value WindowObject::request_animation_frame(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::TypeError>("requestAnimationFrame() needs one argument");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "requestAnimationFrame");
     auto* callback_object = interpreter.argument(0).to_object(interpreter);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
-        return interpreter.throw_exception<JS::TypeError>("Not a function");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
     return JS::Value(impl->request_animation_frame(*static_cast<JS::Function*>(callback_object)));
 }
 
@@ -196,7 +196,7 @@ JS::Value WindowObject::cancel_animation_frame(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::TypeError>("cancelAnimationFrame() needs one argument");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "cancelAnimationFrame");
     auto id = interpreter.argument(0).to_i32(interpreter);
     if (interpreter.exception())
         return {};

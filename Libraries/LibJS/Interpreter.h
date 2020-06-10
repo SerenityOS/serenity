@@ -35,6 +35,7 @@
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/MarkedValueList.h>
@@ -173,6 +174,12 @@ public:
     Value throw_exception(Value value)
     {
         return throw_exception(heap().allocate<Exception>(value));
+    }
+
+    template<typename T, typename... Args>
+    Value throw_exception(ErrorType type, Args&&... args)
+    {
+        return throw_exception(T::create(global_object(), String::format(type.message(), forward<Args>(args)...)));
     }
 
     Value last_value() const { return m_last_value; }

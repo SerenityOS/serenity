@@ -51,7 +51,7 @@ static BigIntObject* bigint_object_from(Interpreter& interpreter, GlobalObject& 
     if (!this_object)
         return nullptr;
     if (!this_object->is_bigint_object()) {
-        interpreter.throw_exception<TypeError>("Not a BigInt object");
+        interpreter.throw_exception<TypeError>(ErrorType::NotA, "BigInt");
         return nullptr;
     }
     return static_cast<BigIntObject*>(this_object);

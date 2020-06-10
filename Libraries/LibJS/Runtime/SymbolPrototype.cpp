@@ -58,7 +58,7 @@ static SymbolObject* this_symbol_from_interpreter(Interpreter& interpreter)
     if (!this_object)
         return nullptr;
     if (!this_object->is_symbol_object()) {
-        interpreter.throw_exception<TypeError>("object must be of type Symbol");
+        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Symbol");
         return nullptr;
     }
     return static_cast<SymbolObject*>(this_object);

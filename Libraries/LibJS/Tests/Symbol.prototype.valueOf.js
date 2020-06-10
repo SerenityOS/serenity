@@ -13,7 +13,7 @@ try {
         Symbol.prototype.valueOf.call("foo");
     }, {
         error: TypeError,
-        message: "object must be of type Symbol"
+        message: "Not a Symbol object",
     });
 
     console.log("PASS");
