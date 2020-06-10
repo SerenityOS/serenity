@@ -296,10 +296,20 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BorderWidth) {
-        style.set_property(CSS::PropertyID::BorderTopWidth, value);
-        style.set_property(CSS::PropertyID::BorderRightWidth, value);
-        style.set_property(CSS::PropertyID::BorderBottomWidth, value);
-        style.set_property(CSS::PropertyID::BorderLeftWidth, value);
+        auto parts = split_on_whitespace(value.to_string());
+        if (parts.size() == 2) {
+            auto vertical_border_width = parse_css_value(parts[0]);
+            auto horizonal_border_width = parse_css_value(parts[1]);
+            style.set_property(CSS::PropertyID::BorderTopWidth, vertical_border_width);
+            style.set_property(CSS::PropertyID::BorderRightWidth, horizonal_border_width);
+            style.set_property(CSS::PropertyID::BorderBottomWidth, vertical_border_width);
+            style.set_property(CSS::PropertyID::BorderLeftWidth, horizonal_border_width);
+        } else {
+            style.set_property(CSS::PropertyID::BorderTopWidth, value);
+            style.set_property(CSS::PropertyID::BorderRightWidth, value);
+            style.set_property(CSS::PropertyID::BorderBottomWidth, value);
+            style.set_property(CSS::PropertyID::BorderLeftWidth, value);
+        }
         return;
     }
 
