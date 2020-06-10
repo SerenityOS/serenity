@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/QuickSort.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheet.h>
@@ -439,6 +440,13 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     element.apply_presentational_hints(*style);
 
     auto matching_rules = collect_matching_rules(element);
+
+    // FIXME: We need to look at the specificity of the matching *selector*, not just the matched *rule*!
+    // FIXME: It's really awkward that NonnullRefPtrVector cannot be quick_sort()'ed
+    quick_sort(reinterpret_cast<Vector<NonnullRefPtr<StyleRule>>&>(matching_rules), [&](auto& a, auto& b) {
+        return a->selectors().first().specificity() < b->selectors().first().specificity();
+    });
+
     for (auto& rule : matching_rules) {
         for (auto& property : rule.declaration().properties()) {
             set_property_expanding_shorthands(style, property.property_id, property.value);
