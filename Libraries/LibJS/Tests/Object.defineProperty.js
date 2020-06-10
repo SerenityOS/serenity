@@ -104,7 +104,7 @@ try {
         });
     }, {
         error: TypeError,
-        message: "Accessor property descriptors cannot specify a value or writable key",
+        message: "Accessor property descriptor cannot specify a value or writable key",
     });
 
     assertThrowsError(() => {
@@ -114,7 +114,7 @@ try {
         });
     }, {
         error: TypeError,
-        message: "Accessor property descriptors cannot specify a value or writable key",
+        message: "Accessor property descriptor cannot specify a value or writable key",
     });
 
     console.log("PASS");

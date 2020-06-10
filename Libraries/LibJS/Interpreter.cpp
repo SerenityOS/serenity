@@ -156,7 +156,7 @@ void Interpreter::set_variable(const FlyString& name, Value value, GlobalObject&
             auto possible_match = environment->get(name);
             if (possible_match.has_value()) {
                 if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const) {
-                    throw_exception<TypeError>("Assignment to constant variable");
+                    throw_exception<TypeError>(ErrorType::InvalidAssignToConst);
                     return;
                 }
 

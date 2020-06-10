@@ -51,7 +51,7 @@ void Reference::put(Interpreter& interpreter, Value value)
     }
 
     if (!base().is_object() && interpreter.in_strict_mode()) {
-        interpreter.throw_exception<TypeError>(String::format("Can't assign property %s to primitive value", m_name.to_string().characters()));
+        interpreter.throw_exception<TypeError>(ErrorType::ReferencePrimitiveAssignment, m_name.to_string().characters());
         return;
     }
 
@@ -66,11 +66,11 @@ void Reference::throw_reference_error(Interpreter& interpreter)
 {
     auto property_name = m_name.to_string();
     String message;
-    if (property_name.is_empty())
-        message = "Unresolvable reference";
-    else
-        message = String::format("'%s' not known", property_name.characters());
-    interpreter.throw_exception<ReferenceError>(message);
+    if (property_name.is_empty()) {
+        interpreter.throw_exception<ReferenceError>(ErrorType::ReferenceUnresolvable);
+    } else {
+        interpreter.throw_exception<ReferenceError>(ErrorType::UnknownIdentifier, property_name.characters());
+    }
 }
 
 Value Reference::get(Interpreter& interpreter)

@@ -6,7 +6,7 @@ try {
             "prop" in value;
         }, {
             error: TypeError,
-            message: "'in' operator must be used on object"
+            message: "'in' operator must be used on an object"
         });
     });
 

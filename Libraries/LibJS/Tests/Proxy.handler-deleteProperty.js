@@ -47,7 +47,7 @@ try {
         delete p.foo;
     }, {
         error: TypeError,
-        message: "Proxy handler's delete trap violates invariant: cannot report a non-configurable own property of the target as deleted",
+        message: "Proxy handler's deleteProperty trap violates invariant: cannot report a non-configurable own property of the target as deleted",
     });
 
     console.log("PASS");

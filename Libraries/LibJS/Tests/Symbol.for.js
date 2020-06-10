@@ -21,7 +21,7 @@ try {
         Symbol.for(Symbol());
     }, {
         error: TypeError,
-        message: "Can't convert symbol to string",
+        message: "Cannot convert symbol to string",
     });
 
     console.log("PASS");

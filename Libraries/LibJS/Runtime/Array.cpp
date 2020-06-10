@@ -55,7 +55,7 @@ Array* array_from(Interpreter& interpreter, GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!this_object->is_array()) {
-        interpreter.throw_exception<TypeError>("Not an Array");
+        interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Array");
         return nullptr;
     }
     return static_cast<Array*>(this_object);
@@ -78,7 +78,7 @@ void Array::length_setter(Interpreter& interpreter, Value value)
     if (interpreter.exception())
         return;
     if (length.is_nan() || length.is_infinity() || length.as_double() < 0) {
-        interpreter.throw_exception<RangeError>("Invalid array length");
+        interpreter.throw_exception<RangeError>(ErrorType::ArrayInvalidLength);
         return;
     }
     array->indexed_properties().set_array_like_size(length.as_double());

@@ -45,7 +45,7 @@ static StringObject* string_object_from(Interpreter& interpreter)
     if (!this_object)
         return nullptr;
     if (!this_object->is_string_object()) {
-        interpreter.throw_exception<TypeError>("Not a String object");
+        interpreter.throw_exception<TypeError>(ErrorType::NotA, "String");
         return nullptr;
     }
     return static_cast<StringObject*>(this_object);
@@ -115,9 +115,9 @@ Value StringPrototype::repeat(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     if (count_value.as_double() < 0)
-        return interpreter.throw_exception<RangeError>("repeat count must be a positive number");
+        return interpreter.throw_exception<RangeError>(ErrorType::StringRepeatCountMustBe, "positive");
     if (count_value.is_infinity())
-        return interpreter.throw_exception<RangeError>("repeat count must be a finite number");
+        return interpreter.throw_exception<RangeError>(ErrorType::StringRepeatCountMustBe, "finite");
     auto count = count_value.to_size_t(interpreter);
     if (interpreter.exception())
         return {};

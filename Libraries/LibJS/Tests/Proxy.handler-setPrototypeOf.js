@@ -57,7 +57,7 @@ try {
         Object.setPrototypeOf(p, {});
     }, {
         error: TypeError,
-        message: "Object's setPrototypeOf method returned false"
+        message: "Object's [[SetPrototypeOf]] method returned false",
     });
     assert(Object.getPrototypeOf(p) === childProto);
 

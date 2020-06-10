@@ -62,7 +62,7 @@ try {
         Object.defineProperty(p, "foo", {});
     }, {
         error: TypeError,
-        message: "Proxy handler's defineProperty method returned false",
+        message: "Object's [[DefineProperty]] method returned false",
     });
 
     o = {};

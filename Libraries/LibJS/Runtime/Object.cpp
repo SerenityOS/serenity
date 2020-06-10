@@ -352,7 +352,7 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
     if (is_accessor_property) {
         if (descriptor.has_property("value") || descriptor.has_property("writable")) {
             if (throw_exceptions)
-                interpreter().throw_exception<TypeError>("Accessor property descriptors cannot specify a value or writable key");
+                interpreter().throw_exception<TypeError>(ErrorType::AccessorValueOrWritable);
             return false;
         }
 
@@ -369,14 +369,14 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
         if (getter.is_function()) {
             getter_function = &getter.as_function();
         } else if (!getter.is_undefined()) {
-            interpreter().throw_exception<TypeError>("Accessor descriptor's 'get' field must be a function or undefined");
+            interpreter().throw_exception<TypeError>(ErrorType::AccessorBadField, "get");
             return false;
         }
 
         if (setter.is_function()) {
             setter_function = &setter.as_function();
         } else if (!setter.is_undefined()) {
-            interpreter().throw_exception<TypeError>("Accessor descriptor's 'set' field must be a function or undefined");
+            interpreter().throw_exception<TypeError>(ErrorType::AccessorBadField, "set");
             return false;
         }
 
@@ -424,7 +424,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     if (!is_extensible()) {
         dbg() << "Disallow define_property of non-extensible object";
         if (throw_exceptions && interpreter().in_strict_mode())
-            interpreter().throw_exception<TypeError>(String::format("Cannot define property %s on non-extensible object", property_name.characters()));
+            interpreter().throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_name.characters());
         return false;
     }
 
@@ -459,7 +459,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable() && attributes != metadata.value().attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
         if (throw_exceptions)
-            interpreter().throw_exception<TypeError>(String::format("Cannot change attributes of non-configurable property '%s'", property_name.characters()));
+            interpreter().throw_exception<TypeError>(ErrorType::DescChangeNonConfigurable, property_name.characters());
         return false;
     }
 
@@ -498,7 +498,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     if (!is_extensible()) {
         dbg() << "Disallow define_property of non-extensible object";
         if (throw_exceptions && interpreter().in_strict_mode())
-            interpreter().throw_exception<TypeError>(String::format("Cannot define property %d on non-extensible object", property_index));
+            interpreter().throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_index);
         return false;
     }
 
@@ -517,7 +517,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable() && attributes != existing_attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
         if (throw_exceptions)
-            interpreter().throw_exception<TypeError>(String::format("Cannot change attributes of non-configurable property %d", property_index));
+            interpreter().throw_exception<TypeError>(ErrorType::DescChangeNonConfigurable, property_index);
         return false;
     }
 
@@ -778,7 +778,7 @@ Value Object::to_string() const
         auto& interpreter = const_cast<Object*>(this)->interpreter();
         auto to_string_result = interpreter.call(to_string_function, const_cast<Object*>(this));
         if (to_string_result.is_object())
-            interpreter.throw_exception<TypeError>("Cannot convert object to string");
+            interpreter.throw_exception<TypeError>(ErrorType::Convert, "object", "string");
         if (interpreter.exception())
             return {};
         auto* string = to_string_result.to_primitive_string(interpreter);
@@ -796,7 +796,7 @@ Value Object::invoke(const FlyString& property_name, Optional<MarkedValueList> a
     if (interpreter.exception())
         return {};
     if (!property.is_function()) {
-        interpreter.throw_exception<TypeError>(String::format("%s is not a function", property.to_string_without_side_effects().characters()));
+        interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, property.to_string_without_side_effects().characters());
         return {};
     }
     return interpreter.call(property.as_function(), this, move(arguments));
