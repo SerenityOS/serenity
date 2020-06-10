@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LogStream.h>
 #include <AK/StringView.h>
 #include <LibWeb/Parser/Entities.h>
 
@@ -32,8 +33,8 @@ namespace HTML {
 
 Optional<EntityMatch> codepoints_from_entity(const StringView& entity)
 {
-    struct {
-        const char* entity;
+    constexpr struct {
+        StringView entity;
         u32 codepoint;
     } single_codepoint_entities[] = {
         { "AElig;", 0x000C6 },
@@ -2176,8 +2177,8 @@ Optional<EntityMatch> codepoints_from_entity(const StringView& entity)
         { "zwnj;", 0x0200C }
     };
 
-    struct {
-        const char* entity;
+    constexpr struct {
+        StringView entity;
         u32 codepoint1;
         u32 codepoint2;
     } double_codepoint_entities[] = {
@@ -2280,14 +2281,14 @@ Optional<EntityMatch> codepoints_from_entity(const StringView& entity)
 
     for (auto& single_codepoint_entity : single_codepoint_entities) {
         if (entity.starts_with(single_codepoint_entity.entity)) {
-            if (match.entity.is_null() || entity.length() > match.entity.length())
-                match = { { single_codepoint_entity.codepoint }, StringView(single_codepoint_entity.entity) };
+            if (match.entity.is_null() || single_codepoint_entity.entity.length() > match.entity.length())
+                match = { { single_codepoint_entity.codepoint }, single_codepoint_entity.entity };
         }
     }
 
     for (auto& double_codepoint_entity : double_codepoint_entities) {
         if (entity.starts_with(double_codepoint_entity.entity)) {
-            if (match.entity.is_null() || entity.length() > match.entity.length())
+            if (match.entity.is_null() || double_codepoint_entity.entity.length() > match.entity.length())
                 match = EntityMatch { { double_codepoint_entity.codepoint1, double_codepoint_entity.codepoint2 }, StringView(double_codepoint_entity.entity) };
         }
     }
