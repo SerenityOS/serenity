@@ -35,7 +35,7 @@ namespace Gfx {
 
 class FloatSize {
 public:
-    FloatSize() {}
+    FloatSize() { }
     FloatSize(float w, float h)
         : m_width(w)
         , m_height(h)
@@ -109,6 +109,8 @@ public:
     }
 
     String to_string() const { return String::format("[%gx%g]", m_width, m_height); }
+
+    Size to_int_size() const { return Size(width(), height()); }
 
 private:
     float m_width { 0 };
