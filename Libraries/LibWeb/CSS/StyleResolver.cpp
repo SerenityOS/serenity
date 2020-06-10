@@ -144,43 +144,97 @@ static Vector<String> split_on_whitespace(const StringView& string)
     return v;
 }
 
-static inline void set_property_border_width(StyleProperties& style, const StyleValue& value)
+enum class Edge {
+    Top,
+    Right,
+    Bottom,
+    Left,
+    All,
+};
+
+static bool contains(Edge a, Edge b)
+{
+    return a == b || b == Edge::All;
+}
+
+static inline void set_property_border_width(StyleProperties& style, const StyleValue& value, Edge edge)
 {
     ASSERT(value.is_length());
-    style.set_property(CSS::PropertyID::BorderTopWidth, value);
-    style.set_property(CSS::PropertyID::BorderRightWidth, value);
-    style.set_property(CSS::PropertyID::BorderBottomWidth, value);
-    style.set_property(CSS::PropertyID::BorderLeftWidth, value);
+    if (contains(Edge::Top, edge))
+        style.set_property(CSS::PropertyID::BorderTopWidth, value);
+    if (contains(Edge::Right, edge))
+        style.set_property(CSS::PropertyID::BorderRightWidth, value);
+    if (contains(Edge::Bottom, edge))
+        style.set_property(CSS::PropertyID::BorderBottomWidth, value);
+    if (contains(Edge::Left, edge))
+        style.set_property(CSS::PropertyID::BorderLeftWidth, value);
 }
 
-static inline void set_property_border_color(StyleProperties& style, const StyleValue& value)
+static inline void set_property_border_color(StyleProperties& style, const StyleValue& value, Edge edge)
 {
     ASSERT(value.is_color());
-    style.set_property(CSS::PropertyID::BorderTopColor, value);
-    style.set_property(CSS::PropertyID::BorderRightColor, value);
-    style.set_property(CSS::PropertyID::BorderBottomColor, value);
-    style.set_property(CSS::PropertyID::BorderLeftColor, value);
+    if (contains(Edge::Top, edge))
+        style.set_property(CSS::PropertyID::BorderTopColor, value);
+    if (contains(Edge::Right, edge))
+        style.set_property(CSS::PropertyID::BorderRightColor, value);
+    if (contains(Edge::Bottom, edge))
+        style.set_property(CSS::PropertyID::BorderBottomColor, value);
+    if (contains(Edge::Left, edge))
+        style.set_property(CSS::PropertyID::BorderLeftColor, value);
 }
 
-static inline void set_property_border_style(StyleProperties& style, const StyleValue& value)
+static inline void set_property_border_style(StyleProperties& style, const StyleValue& value, Edge edge)
 {
     ASSERT(value.is_string());
-    style.set_property(CSS::PropertyID::BorderTopStyle, value);
-    style.set_property(CSS::PropertyID::BorderRightStyle, value);
-    style.set_property(CSS::PropertyID::BorderBottomStyle, value);
-    style.set_property(CSS::PropertyID::BorderLeftStyle, value);
+    if (contains(Edge::Top, edge))
+        style.set_property(CSS::PropertyID::BorderTopStyle, value);
+    if (contains(Edge::Right, edge))
+        style.set_property(CSS::PropertyID::BorderRightStyle, value);
+    if (contains(Edge::Bottom, edge))
+        style.set_property(CSS::PropertyID::BorderBottomStyle, value);
+    if (contains(Edge::Left, edge))
+        style.set_property(CSS::PropertyID::BorderLeftStyle, value);
 }
 
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value)
 {
     if (property_id == CSS::PropertyID::Border) {
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value);
+    }
+
+    if (property_id == CSS::PropertyID::BorderTop
+        || property_id == CSS::PropertyID::BorderRight
+        || property_id == CSS::PropertyID::BorderBottom
+        || property_id == CSS::PropertyID::BorderLeft) {
+
+        Edge edge = Edge::All;
+        switch (property_id) {
+        case CSS::PropertyID::BorderTop:
+            edge = Edge::Top;
+            break;
+        case CSS::PropertyID::BorderRight:
+            edge = Edge::Right;
+            break;
+        case CSS::PropertyID::BorderBottom:
+            edge = Edge::Bottom;
+            break;
+        case CSS::PropertyID::BorderLeft:
+            edge = Edge::Left;
+            break;
+        default:
+            break;
+        }
+
         auto parts = split_on_whitespace(value.to_string());
         if (value.is_length()) {
-            set_property_border_width(style, value);
+            set_property_border_width(style, value, edge);
             return;
         }
         if (value.is_color()) {
-            set_property_border_color(style, value);
+            set_property_border_color(style, value, edge);
             return;
         }
         if (value.is_string()) {
@@ -188,9 +242,9 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
             if (parts.size() == 1) {
                 if (auto value = parse_line_style(parts[0])) {
-                    set_property_border_style(style, value.release_nonnull());
-                    set_property_border_color(style, ColorStyleValue::create(Gfx::Color::Black));
-                    set_property_border_width(style, LengthStyleValue::create(Length(3, Length::Type::Px)));
+                    set_property_border_style(style, value.release_nonnull(), edge);
+                    set_property_border_color(style, ColorStyleValue::create(Gfx::Color::Black), edge);
+                    set_property_border_width(style, LengthStyleValue::create(Length(3, Length::Type::Px)), edge);
                     return;
                 }
             }
@@ -221,11 +275,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             }
 
             if (line_width_value)
-                set_property_border_width(style, line_width_value.release_nonnull());
+                set_property_border_width(style, line_width_value.release_nonnull(), edge);
             if (color_value)
-                set_property_border_color(style, color_value.release_nonnull());
+                set_property_border_color(style, color_value.release_nonnull(), edge);
             if (line_style_value)
-                set_property_border_style(style, line_style_value.release_nonnull());
+                set_property_border_style(style, line_style_value.release_nonnull(), edge);
 
             return;
         }
