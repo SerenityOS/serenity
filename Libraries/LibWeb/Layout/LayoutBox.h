@@ -33,21 +33,32 @@ namespace Web {
 
 class LayoutBox : public LayoutNodeWithStyleAndBoxModelMetrics {
 public:
-    const Gfx::FloatRect& rect() const { return m_rect; }
-    Gfx::FloatRect& rect() { return m_rect; }
-    void set_rect(const Gfx::FloatRect&);
+    const Gfx::FloatRect absolute_rect() const;
 
-    float x() const { return rect().x(); }
-    float y() const { return rect().y(); }
-    float width() const { return rect().width(); }
-    float height() const { return rect().height(); }
-    Gfx::FloatSize size() const { return rect().size(); }
-    Gfx::FloatPoint position() const { return rect().location(); }
+    Gfx::FloatPoint effective_offset() const;
 
-    virtual HitTestResult hit_test(const Gfx::Point& position) const override;
+    void set_offset(const Gfx::FloatPoint& offset);
+    void set_offset(float x, float y) { set_offset({ x, y }); }
+
+    const Gfx::FloatSize& size() const { return m_size; }
+    void set_size(const Gfx::FloatSize&);
+    void set_size(float width, float height) { set_size({ width, height }); }
+
+    void set_width(float width) { set_size(width, height()); }
+    void set_height(float height) { set_size(width(), height); }
+    float width() const { return m_size.width(); }
+    float height() const { return m_size.height(); }
+
+    float absolute_x() const { return absolute_rect().x(); }
+    float absolute_y() const { return absolute_rect().y(); }
+    Gfx::FloatPoint absolute_position() const { return absolute_rect().location(); }
+
+    virtual HitTestResult hit_test(const Gfx::Point& absolute_position) const override;
     virtual void set_needs_display() override;
 
     bool is_body() const;
+
+    void set_containing_line_box_fragment(LineBoxFragment&);
 
 protected:
     LayoutBox(const Node* node, NonnullRefPtr<StyleProperties> style)
@@ -57,7 +68,7 @@ protected:
 
     virtual void render(RenderingContext&) override;
 
-    virtual void did_set_rect() {}
+    virtual void did_set_rect() { }
 
 private:
     virtual bool is_box() const override { return true; }
@@ -70,7 +81,11 @@ private:
     };
     void paint_border(RenderingContext&, Edge, const Gfx::FloatRect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
 
-    Gfx::FloatRect m_rect;
+    Gfx::FloatPoint m_offset;
+    Gfx::FloatSize m_size;
+
+    // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
+    WeakPtr<LineBoxFragment> m_containing_line_box_fragment;
 };
 
 template<>

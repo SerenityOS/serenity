@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Vector.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 
@@ -33,19 +34,20 @@ namespace Web {
 
 class LineBox {
 public:
-    LineBox() {}
+    LineBox() { }
 
     float width() const { return m_width; }
 
     void add_fragment(const LayoutNode& layout_node, int start, int length, int width, int height);
 
-    const Vector<LineBoxFragment>& fragments() const { return m_fragments; }
-    Vector<LineBoxFragment>& fragments() { return m_fragments; }
+    const NonnullOwnPtrVector<LineBoxFragment>& fragments() const { return m_fragments; }
+    NonnullOwnPtrVector<LineBoxFragment>& fragments() { return m_fragments; }
 
     void trim_trailing_whitespace();
+
 private:
     friend class LayoutBlock;
-    Vector<LineBoxFragment> m_fragments;
+    NonnullOwnPtrVector<LineBoxFragment> m_fragments;
     float m_width { 0 };
 };
 

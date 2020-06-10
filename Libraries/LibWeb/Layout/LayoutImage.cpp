@@ -52,11 +52,11 @@ void LayoutImage::layout(LayoutMode layout_mode)
         auto alt = node().alt();
         if (alt.is_empty())
             alt = node().src();
-        rect().set_width(font.width(alt) + 16);
-        rect().set_height(font.glyph_height() + 16);
+        set_width(font.width(alt) + 16);
+        set_height(font.glyph_height() + 16);
     } else {
-        rect().set_width(16);
-        rect().set_height(16);
+        set_width(16);
+        set_height(16);
     }
 
     LayoutReplaced::layout(layout_mode);
@@ -68,18 +68,18 @@ void LayoutImage::render(RenderingContext& context)
         return;
 
     // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-    if (!context.viewport_rect().intersects(enclosing_int_rect(rect())))
+    if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
         return;
 
     if (renders_as_alt_text()) {
         context.painter().set_font(Gfx::Font::default_font());
-        Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+        Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
         auto alt = node().alt();
         if (alt.is_empty())
             alt = node().src();
-        context.painter().draw_text(enclosing_int_rect(rect()), alt, Gfx::TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), Gfx::TextElision::Right);
+        context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), Gfx::TextElision::Right);
     } else if (node().bitmap())
-        context.painter().draw_scaled_bitmap(enclosing_int_rect(rect()), *node().bitmap(), node().bitmap()->rect());
+        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
     LayoutReplaced::render(context);
 }
 

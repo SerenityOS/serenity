@@ -72,17 +72,17 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
 
     auto background_color = style().property(CSS::PropertyID::BackgroundColor);
     if (background_color.has_value() && background_color.value()->is_color())
-        painter.fill_rect(enclosing_int_rect(fragment.rect()), background_color.value()->to_color(document()));
+        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), background_color.value()->to_color(document()));
 
     auto color = style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
     auto text_decoration = style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
 
     if (document().inspected_node() == &node())
-        context.painter().draw_rect(enclosing_int_rect(fragment.rect()), Color::Magenta);
+        context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
 
     bool is_underline = text_decoration == "underline";
     if (is_underline)
-        painter.draw_line(enclosing_int_rect(fragment.rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.rect()).bottom_right().translated(0, 1), color);
+        painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), color);
 
     auto text = m_text_for_rendering;
     auto text_transform = style().string_or_fallback(CSS::PropertyID::TextTransform, "none");
@@ -91,7 +91,7 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     if (text_transform == "lowercase")
         text = m_text_for_rendering.to_lowercase();
 
-    painter.draw_text(enclosing_int_rect(fragment.rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::TopLeft, color);
+    painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::TopLeft, color);
 }
 
 template<typename Callback>

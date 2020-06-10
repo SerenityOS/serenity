@@ -110,8 +110,8 @@ void dump_tree(const LayoutNode& layout_node)
             layout_box.class_name(),
             tag_name.characters(),
             identifier.characters(),
-            layout_box.x(),
-            layout_box.y(),
+            layout_box.absolute_x(),
+            layout_box.absolute_y(),
             layout_box.width(),
             layout_box.height());
 
@@ -158,7 +158,7 @@ void dump_tree(const LayoutNode& layout_node)
                     &fragment.layout_node(),
                     fragment.start(),
                     fragment.length(),
-                    fragment.rect().to_string().characters());
+                    fragment.absolute_rect().to_string().characters());
                 if (fragment.layout_node().is_text()) {
                     for (size_t i = 0; i < indent; ++i)
                         dbgprintf("    ");

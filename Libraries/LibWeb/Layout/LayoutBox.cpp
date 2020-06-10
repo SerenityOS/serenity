@@ -203,9 +203,9 @@ void LayoutBox::render(RenderingContext& context)
 #endif
 
     Gfx::FloatRect padded_rect;
-    padded_rect.set_x(x() - box_model().padding().left.to_px(*this));
+    padded_rect.set_x(absolute_x() - box_model().padding().left.to_px(*this));
     padded_rect.set_width(width() + box_model().padding().left.to_px(*this) + box_model().padding().right.to_px(*this));
-    padded_rect.set_y(y() - box_model().padding().top.to_px(*this));
+    padded_rect.set_y(absolute_y() - box_model().padding().top.to_px(*this));
     padded_rect.set_height(height() + box_model().padding().top.to_px(*this) + box_model().padding().bottom.to_px(*this));
 
     if (!is_body()) {
@@ -237,7 +237,7 @@ void LayoutBox::render(RenderingContext& context)
     LayoutNodeWithStyleAndBoxModelMetrics::render(context);
 
     if (node() && document().inspected_node() == node())
-        context.painter().draw_rect(enclosing_int_rect(m_rect), Color::Magenta);
+        context.painter().draw_rect(enclosing_int_rect(absolute_rect()), Color::Magenta);
 }
 
 HitTestResult LayoutBox::hit_test(const Gfx::Point& position) const
@@ -245,7 +245,7 @@ HitTestResult LayoutBox::hit_test(const Gfx::Point& position) const
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check
     //        m_rect.contains() since inline text rects can't be trusted..
-    HitTestResult result { m_rect.contains(position.x(), position.y()) ? this : nullptr };
+    HitTestResult result { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
     for_each_child([&](auto& child) {
         auto child_result = child.hit_test(position);
         if (child_result.layout_node)
@@ -260,7 +260,7 @@ void LayoutBox::set_needs_display()
     ASSERT(frame);
 
     if (!is_inline()) {
-        const_cast<Frame*>(frame)->set_needs_display(enclosing_int_rect(rect()));
+        const_cast<Frame*>(frame)->set_needs_display(enclosing_int_rect(absolute_rect()));
         return;
     }
 
@@ -272,12 +272,41 @@ bool LayoutBox::is_body() const
     return node() && node() == document().body();
 }
 
-void LayoutBox::set_rect(const Gfx::FloatRect& rect)
+void LayoutBox::set_offset(const Gfx::FloatPoint& offset)
 {
-    if (m_rect == rect)
+    if (m_offset == offset)
         return;
-    m_rect = rect;
+    m_offset = offset;
     did_set_rect();
+}
+
+void LayoutBox::set_size(const Gfx::FloatSize& size)
+{
+    if (m_size == size)
+        return;
+    m_size = size;
+    did_set_rect();
+}
+
+Gfx::FloatPoint LayoutBox::effective_offset() const
+{
+    if (m_containing_line_box_fragment)
+        return m_containing_line_box_fragment->offset();
+    return m_offset;
+}
+
+const Gfx::FloatRect LayoutBox::absolute_rect() const
+{
+    Gfx::FloatRect rect { effective_offset(), size() };
+    for (auto* block = containing_block(); block; block = block->containing_block()) {
+        rect.move_by(block->effective_offset());
+    }
+    return rect;
+}
+
+void LayoutBox::set_containing_line_box_fragment(LineBoxFragment& fragment)
+{
+    m_containing_line_box_fragment = fragment.make_weak_ptr();
 }
 
 }

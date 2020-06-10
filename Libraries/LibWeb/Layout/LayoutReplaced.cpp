@@ -141,27 +141,24 @@ Gfx::FloatPoint LayoutReplaced::calculate_position()
     box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
     box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
 
-    float position_x = box_model().margin().left.to_px(*this)
+    float x = box_model().margin().left.to_px(*this)
         + box_model().border().left.to_px(*this)
         + box_model().padding().left.to_px(*this)
         + box_model().offset().left.to_px(*this);
 
-    if (style.position() != CSS::Position::Absolute || containing_block.style().position() == CSS::Position::Absolute)
-        position_x += containing_block.x();
+    float y = box_model().full_margin(*this).top + box_model().offset().top.to_px(*this);
 
-    float position_y = box_model().full_margin(*this).top + box_model().offset().top.to_px(*this);
-
-    return { position_x, position_y };
+    return { x, y };
 }
 
 void LayoutReplaced::layout(LayoutMode layout_mode)
 {
-    rect().set_width(calculate_width());
-    rect().set_height(calculate_height());
+    set_width(calculate_width());
+    set_height(calculate_height());
 
     LayoutBox::layout(layout_mode);
 
-    rect().set_location(calculate_position());
+    set_offset(calculate_position());
 }
 
 void LayoutReplaced::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)

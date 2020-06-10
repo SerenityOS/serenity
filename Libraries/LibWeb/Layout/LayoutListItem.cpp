@@ -58,8 +58,8 @@ void LayoutListItem::layout(LayoutMode layout_mode)
         append_child(*m_marker);
     }
 
-    Gfx::FloatRect marker_rect { x() - 8, y(), 4, height() };
-    m_marker->set_rect(marker_rect);
+    m_marker->set_offset(-8, 0);
+    m_marker->set_size(4, height());
 }
 
 }

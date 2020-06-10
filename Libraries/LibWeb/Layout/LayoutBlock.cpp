@@ -86,7 +86,7 @@ void LayoutBlock::layout_block_children(LayoutMode layout_mode)
         child_block.layout(layout_mode);
 
         if (!child_block.is_absolutely_positioned())
-            content_height = child_block.rect().bottom() + child_block.box_model().full_margin(*this).bottom - rect().top();
+            content_height = max(content_height, child_block.effective_offset().y() + child_block.height() + child_block.box_model().full_margin(*this).bottom);
     });
     if (layout_mode != LayoutMode::Default) {
         float max_width = 0;
@@ -94,9 +94,9 @@ void LayoutBlock::layout_block_children(LayoutMode layout_mode)
             if (child.is_box() && !child.is_absolutely_positioned())
                 max_width = max(max_width, to<LayoutBox>(child).width());
         });
-        rect().set_width(max_width);
+        set_width(max_width);
     }
-    rect().set_height(content_height);
+    set_height(content_height);
 }
 
 void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
@@ -133,10 +133,10 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
     for (auto& line_box : m_line_boxes) {
         float max_height = min_line_height;
         for (auto& fragment : line_box.fragments()) {
-            max_height = max(max_height, fragment.rect().height());
+            max_height = max(max_height, fragment.height());
         }
 
-        float x_offset = x();
+        float x_offset = 0;
         float excess_horizontal_space = (float)width() - line_box.width();
 
         switch (text_align) {
@@ -158,7 +158,7 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
             for (auto& fragment : line_box.fragments()) {
                 if (fragment.is_justifiable_whitespace()) {
                     ++whitespace_count;
-                    excess_horizontal_space_including_whitespace += fragment.rect().width();
+                    excess_horizontal_space_including_whitespace += fragment.width();
                 }
             }
         }
@@ -173,34 +173,32 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
 
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
-            fragment.rect().set_x(roundf(x_offset + fragment.rect().x()));
-            fragment.rect().set_y(y() + content_height + (max_height - fragment.rect().height()) - (line_spacing / 2));
+            fragment.set_offset({ roundf(x_offset + fragment.offset().x()), content_height + (max_height - fragment.height()) - (line_spacing / 2) });
 
             if (text_align == CSS::ValueID::Justify) {
                 if (fragment.is_justifiable_whitespace()) {
-                    if (fragment.rect().width() != justified_space_width) {
-                        float diff = justified_space_width - fragment.rect().width();
-                        fragment.rect().set_width(justified_space_width);
+                    if (fragment.width() != justified_space_width) {
+                        float diff = justified_space_width - fragment.width();
+                        fragment.set_width(justified_space_width);
                         // Shift subsequent sibling fragments to the right to adjust for change in width.
                         for (size_t j = i + 1; j < line_box.fragments().size(); ++j) {
-                            line_box.fragments()[j].rect().move_by(diff, 0);
+                            auto offset = line_box.fragments()[j].offset();
+                            offset.move_by(diff, 0);
+                            line_box.fragments()[j].set_offset(offset);
                         }
                     }
                 }
             }
 
-            if (is<LayoutReplaced>(fragment.layout_node()))
-                const_cast<LayoutReplaced&>(to<LayoutReplaced>(fragment.layout_node())).set_rect(fragment.rect());
-
             if (fragment.layout_node().is_inline_block()) {
                 auto& inline_block = const_cast<LayoutBlock&>(to<LayoutBlock>(fragment.layout_node()));
-                inline_block.set_rect(fragment.rect());
+                inline_block.set_size(fragment.size());
                 inline_block.layout(layout_mode);
             }
 
             float final_line_box_width = 0;
             for (auto& fragment : line_box.fragments())
-                final_line_box_width += fragment.rect().width();
+                final_line_box_width += fragment.width();
             line_box.m_width = final_line_box_width;
 
             max_linebox_width = max(max_linebox_width, final_line_box_width);
@@ -210,10 +208,10 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
     }
 
     if (layout_mode != LayoutMode::Default) {
-        rect().set_width(max_linebox_width);
+        set_width(max_linebox_width);
     }
 
-    rect().set_height(content_height);
+    set_height(content_height);
 }
 
 void LayoutBlock::compute_width()
@@ -368,7 +366,7 @@ void LayoutBlock::compute_width()
         }
     }
 
-    rect().set_width(used_width.to_px(*this));
+    set_width(used_width.to_px(*this));
     box_model().margin().left = margin_left;
     box_model().margin().right = margin_right;
     box_model().border().left = border_left;
@@ -404,11 +402,6 @@ void LayoutBlock::compute_position()
         + box_model().padding().left.to_px(*this)
         + box_model().offset().left.to_px(*this);
 
-    if (style.position() != CSS::Position::Absolute || containing_block.style().position() == CSS::Position::Absolute)
-        position_x += containing_block.x();
-
-    rect().set_x(position_x);
-
     float position_y = box_model().full_margin(*this).top
         + box_model().offset().top.to_px(*this);
 
@@ -420,17 +413,14 @@ void LayoutBlock::compute_position()
             relevant_sibling = relevant_sibling->previous_sibling();
         }
 
-        if (relevant_sibling == nullptr) {
-            position_y += containing_block.y();
-        } else {
-            auto& previous_sibling_rect = relevant_sibling->rect();
+        if (relevant_sibling) {
             auto& previous_sibling_style = relevant_sibling->box_model();
-            position_y += previous_sibling_rect.y() + previous_sibling_rect.height();
+            position_y += relevant_sibling->effective_offset().y() + relevant_sibling->height();
             position_y += previous_sibling_style.full_margin(*this).bottom;
         }
     }
 
-    rect().set_y(position_y);
+    set_offset({ position_x, position_y });
 }
 
 void LayoutBlock::compute_height()
@@ -438,7 +428,7 @@ void LayoutBlock::compute_height()
     auto& style = this->style();
     auto height = style.length_or_fallback(CSS::PropertyID::Height, Length(), containing_block()->height());
     if (height.is_absolute())
-        rect().set_height(height.to_px(*this));
+        set_height(height.to_px(*this));
 }
 
 void LayoutBlock::render(RenderingContext& context)
@@ -452,7 +442,7 @@ void LayoutBlock::render(RenderingContext& context)
         for (auto& line_box : m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
                 if (context.should_show_line_box_borders())
-                    context.painter().draw_rect(enclosing_int_rect(fragment.rect()), Color::Green);
+                    context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
                 fragment.render(context);
             }
         }
@@ -467,7 +457,7 @@ HitTestResult LayoutBlock::hit_test(const Gfx::Point& position) const
     HitTestResult result;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
-            if (enclosing_int_rect(fragment.rect()).contains(position)) {
+            if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
                 if (fragment.layout_node().is_block())
                     return to<LayoutBlock>(fragment.layout_node()).hit_test(position);
                 return { fragment.layout_node(), fragment.text_index_at(position.x()) };
@@ -477,7 +467,7 @@ HitTestResult LayoutBlock::hit_test(const Gfx::Point& position) const
 
     // FIXME: This should be smarter about the text position if we're hitting a block
     //        that has text inside it, but `position` is to the right of the text box.
-    return { rect().contains(position.x(), position.y()) ? this : nullptr };
+    return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
 NonnullRefPtr<StyleProperties> LayoutBlock::style_for_anonymous_block() const
