@@ -81,10 +81,7 @@ Value ArrayConstructor::construct(Interpreter& interpreter)
 Value ArrayConstructor::is_array(Interpreter& interpreter)
 {
     auto value = interpreter.argument(0);
-    if (!value.is_array())
-        return Value(false);
-    // Exclude TypedArray and similar
-    return Value(StringView(value.as_object().class_name()) == "Array");
+    return Value(value.is_array());
 }
 
 Value ArrayConstructor::of(Interpreter& interpreter)

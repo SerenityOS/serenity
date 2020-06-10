@@ -81,6 +81,12 @@ bool Value::is_array() const
     return is_object() && as_object().is_array();
 }
 
+Array& Value::as_array()
+{
+    ASSERT(is_array());
+    return static_cast<Array&>(*m_value.as_object);
+}
+
 bool Value::is_function() const
 {
     return is_object() && as_object().is_function();
@@ -938,6 +944,15 @@ TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs,
         return TriState::True;
     else
         return TriState::False;
+}
+
+size_t length_of_array_like(Interpreter& interpreter, Value value)
+{
+    ASSERT(value.is_object());
+    auto result = value.as_object().get("length");
+    if (interpreter.exception())
+        return 0;
+    return result.to_size_t(interpreter);
 }
 
 }

@@ -41,6 +41,7 @@
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberConstructor.h>
@@ -96,6 +97,7 @@ void GlobalObject::initialize()
     define_property("globalThis", this, attr);
     define_property("console", heap().allocate<ConsoleObject>(), attr);
     define_property("Math", heap().allocate<MathObject>(), attr);
+    define_property("JSON", heap().allocate<JSONObject>(), attr);
     define_property("Reflect", heap().allocate<ReflectObject>(), attr);
 
     add_constructor("Array", m_array_constructor, *m_array_prototype);
