@@ -426,9 +426,17 @@ void LayoutBlock::compute_position()
 void LayoutBlock::compute_height()
 {
     auto& style = this->style();
-    auto height = style.length_or_fallback(CSS::PropertyID::Height, Length(), containing_block()->height());
-    if (height.is_absolute())
-        set_height(height.to_px(*this));
+
+    auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, Length(), containing_block()->height());
+    auto specified_max_height = style.length_or_fallback(CSS::PropertyID::MaxHeight, Length(), containing_block()->height());
+
+
+    if (!specified_height.is_auto()) {
+        float used_height = specified_height.to_px(*this);
+        if (!specified_max_height.is_auto())
+            used_height = min(used_height, specified_max_height.to_px(*this));
+        set_height(used_height);
+    }
 }
 
 void LayoutBlock::render(RenderingContext& context)
