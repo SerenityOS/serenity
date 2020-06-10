@@ -54,7 +54,7 @@ Value ErrorPrototype::name_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_error())
-        return interpreter.throw_exception<TypeError>("Not an Error object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
     return js_string(interpreter, static_cast<const Error*>(this_object)->name());
 }
 
@@ -64,7 +64,7 @@ void ErrorPrototype::name_setter(Interpreter& interpreter, Value value)
     if (!this_object)
         return;
     if (!this_object->is_error()) {
-        interpreter.throw_exception<TypeError>("Not an Error object");
+        interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
         return;
     }
     auto name = value.to_string(interpreter);
@@ -79,14 +79,14 @@ Value ErrorPrototype::message_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_error())
-        return interpreter.throw_exception<TypeError>("Not an Error object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
     return js_string(interpreter, static_cast<const Error*>(this_object)->message());
 }
 
 Value ErrorPrototype::to_string(Interpreter& interpreter)
 {
     if (!interpreter.this_value(interpreter.global_object()).is_object())
-        return interpreter.throw_exception<TypeError>("Not an object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, interpreter.this_value(interpreter.global_object()).to_string_without_side_effects().characters());
     auto& this_object = interpreter.this_value(interpreter.global_object()).as_object();
 
     String name = "Error";

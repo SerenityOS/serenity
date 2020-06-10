@@ -5,7 +5,7 @@ try {
         foo`bar${baz}`;
     }, {
         error: ReferenceError,
-        message: "'foo' not known"
+        message: "'foo' is not defined"
     });
 
     assertThrowsError(() => {
@@ -13,7 +13,7 @@ try {
         foo`bar${baz}`;
     }, {
         error: ReferenceError,
-        message: "'baz' not known"
+        message: "'baz' is not defined"
     });
 
     assertThrowsError(() => {

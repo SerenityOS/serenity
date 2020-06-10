@@ -7,7 +7,7 @@ try {
         }
     }, {
         error: ReferenceError,
-        message: "'foo' not known"
+        message: "'foo' is not defined"
     });
 
     assertThrowsError(() => {
@@ -16,7 +16,7 @@ try {
         }
     }, {
         error: ReferenceError,
-        message: "'foo' not known"
+        message: "'foo' is not defined"
     });
 
     var loopCount = 0;
@@ -26,7 +26,7 @@ try {
         }
     }, {
         error: ReferenceError,
-        message: "'foo' not known"
+        message: "'foo' is not defined"
     });
     assert(loopCount === 1);
 

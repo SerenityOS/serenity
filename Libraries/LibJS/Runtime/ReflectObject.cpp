@@ -38,7 +38,7 @@ static Object* get_target_object_from(Interpreter& interpreter, const String& na
 {
     auto target = interpreter.argument(0);
     if (!target.is_object()) {
-        interpreter.throw_exception<TypeError>(String::format("First argument of Reflect.%s() must be an object", name.characters()));
+        interpreter.throw_exception<TypeError>(ErrorType::ReflectArgumentMustBeAnObject, name.characters());
         return nullptr;
     }
     return static_cast<Object*>(&target.as_object());
@@ -48,7 +48,7 @@ static Function* get_target_function_from(Interpreter& interpreter, const String
 {
     auto target = interpreter.argument(0);
     if (!target.is_function()) {
-        interpreter.throw_exception<TypeError>(String::format("First argument of Reflect.%s() must be a function", name.characters()));
+        interpreter.throw_exception<TypeError>(ErrorType::ReflectArgumentMustBeAFunction, name.characters());
         return nullptr;
     }
     return &target.as_function();
@@ -57,7 +57,7 @@ static Function* get_target_function_from(Interpreter& interpreter, const String
 static void prepare_arguments_list(Interpreter& interpreter, Value value, MarkedValueList* arguments)
 {
     if (!value.is_object()) {
-        interpreter.throw_exception<TypeError>("Arguments list must be an object");
+        interpreter.throw_exception<TypeError>(ErrorType::ReflectBadArgumentsList);
         return;
     }
     auto& arguments_list = value.as_object();
@@ -125,7 +125,7 @@ Value ReflectObject::construct(Interpreter& interpreter)
         auto new_target_value = interpreter.argument(2);
         if (!new_target_value.is_function()
             || (new_target_value.as_object().is_native_function() && !static_cast<NativeFunction&>(new_target_value.as_object()).has_constructor())) {
-            interpreter.throw_exception<TypeError>("Optional third argument of Reflect.construct() must be a constructor");
+            interpreter.throw_exception<TypeError>(ErrorType::ReflectBadNewTarget);
             return {};
         }
         new_target = &new_target_value.as_function();
@@ -139,7 +139,7 @@ Value ReflectObject::define_property(Interpreter& interpreter)
     if (!target)
         return {};
     if (!interpreter.argument(2).is_object())
-        return interpreter.throw_exception<TypeError>("Descriptor argument is not an object");
+        return interpreter.throw_exception<TypeError>(ErrorType::ReflectBadDescriptorArgument);
     auto property_key = interpreter.argument(1).to_string(interpreter);
     if (interpreter.exception())
         return {};
@@ -257,7 +257,7 @@ Value ReflectObject::set_prototype_of(Interpreter& interpreter)
         return {};
     auto prototype_value = interpreter.argument(1);
     if (!prototype_value.is_object() && !prototype_value.is_null()) {
-        interpreter.throw_exception<TypeError>("Prototype must be an object or null");
+        interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeWrongType);
         return {};
     }
     Object* prototype = nullptr;

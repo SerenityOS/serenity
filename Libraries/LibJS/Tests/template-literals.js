@@ -36,7 +36,7 @@ try {
         `${b}`;
     }, {
         error: ReferenceError,
-        message: "'b' not known"
+        message: "'b' is not defined",
     })
 
     console.log("PASS");

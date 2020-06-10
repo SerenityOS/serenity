@@ -24,45 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/ProxyConstructor.h>
-#include <LibJS/Runtime/ProxyObject.h>
+#include <LibJS/Runtime/ErrorTypes.h>
 
 namespace JS {
 
-ProxyConstructor::ProxyConstructor()
-    : NativeFunction("Proxy", *interpreter().global_object().function_prototype())
-{
-    define_property("prototype", interpreter().global_object().proxy_prototype(), 0);
-    define_property("length", Value(2), Attribute::Configurable);
-}
-
-ProxyConstructor::~ProxyConstructor()
-{
-}
-
-Value ProxyConstructor::call(Interpreter& interpreter)
-{
-    return interpreter.throw_exception<TypeError>(ErrorType::ProxyCallWithNew);
-}
-
-Value ProxyConstructor::construct(Interpreter& interpreter)
-{
-    if (interpreter.argument_count() < 2)
-        return interpreter.throw_exception<TypeError>(ErrorType::ProxyTwoArguments);
-
-    auto target = interpreter.argument(0);
-    auto handler = interpreter.argument(1);
-
-    if (!target.is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects().characters());
-    if (!handler.is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects().characters());
-
-    return ProxyObject::create(global_object(), target.as_object(), handler.as_object());
-}
+#define __ENUMERATE_JS_ERROR(name, message) \
+const ErrorType ErrorType::name = ErrorType(message);
+    JS_ENUMERATE_ERROR_TYPES(__ENUMERATE_JS_ERROR)
+#undef __ENUMERATE_JS_ERROR
 
 }

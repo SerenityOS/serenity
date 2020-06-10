@@ -13,14 +13,14 @@ try {
         Object.keys(null);
     }, {
         error: TypeError,
-        message: "ToObject on null or undefined.",
+        message: "ToObject on null or undefined",
     });
 
     assertThrowsError(() => {
         Object.keys(undefined);
     }, {
         error: TypeError,
-        message: "ToObject on null or undefined.",
+        message: "ToObject on null or undefined",
     });
 
     let keys = Object.keys({ foo: 1, bar: 2, baz: 3 });

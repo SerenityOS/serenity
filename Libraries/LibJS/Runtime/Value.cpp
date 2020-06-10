@@ -154,7 +154,7 @@ String Value::to_string(Interpreter& interpreter) const
     case Type::String:
         return m_value.as_string->string();
     case Type::Symbol:
-        interpreter.throw_exception<TypeError>("Can't convert symbol to string");
+        interpreter.throw_exception<TypeError>(ErrorType::Convert, "symbol", "string");
         return {};
     case Type::BigInt:
         return m_value.as_bigint->big_integer().to_base10();
@@ -206,7 +206,7 @@ Object* Value::to_object(Interpreter& interpreter) const
     switch (m_type) {
     case Type::Undefined:
     case Type::Null:
-        interpreter.throw_exception<TypeError>("ToObject on null or undefined.");
+        interpreter.throw_exception<TypeError>(ErrorType::ToObjectNullOrUndef);
         return nullptr;
     case Type::Boolean:
         return BooleanObject::create(interpreter.global_object(), m_value.as_bool);
@@ -262,10 +262,10 @@ Value Value::to_number(Interpreter& interpreter) const
         return Value(parsed_double);
     }
     case Type::Symbol:
-        interpreter.throw_exception<TypeError>("Can't convert symbol to number");
+        interpreter.throw_exception<TypeError>(ErrorType::Convert, "symbol", "number");
         return {};
     case Type::BigInt:
-        interpreter.throw_exception<TypeError>("Can't convert BigInt to number");
+        interpreter.throw_exception<TypeError>(ErrorType::Convert, "BigInt", "number");
         return {};
     case Type::Object: {
         auto primitive = m_value.as_object->to_primitive(PreferredType::Number);
@@ -285,10 +285,10 @@ BigInt* Value::to_bigint(Interpreter& interpreter) const
         return nullptr;
     switch (primitive.type()) {
     case Type::Undefined:
-        interpreter.throw_exception<TypeError>("Can't convert undefined to BigInt");
+        interpreter.throw_exception<TypeError>(ErrorType::Convert, "undefined", "BigInt");
         return nullptr;
     case Type::Null:
-        interpreter.throw_exception<TypeError>("Can't convert null to BigInt");
+        interpreter.throw_exception<TypeError>(ErrorType::Convert, "null", "BigInt");
         return nullptr;
     case Type::Boolean: {
         auto value = primitive.as_bool() ? 1 : 0;
@@ -297,18 +297,18 @@ BigInt* Value::to_bigint(Interpreter& interpreter) const
     case Type::BigInt:
         return &primitive.as_bigint();
     case Type::Number:
-        interpreter.throw_exception<TypeError>("Can't convert number to BigInt");
+        interpreter.throw_exception<TypeError>(ErrorType::Convert, "number", "BigInt");
         return {};
     case Type::String: {
         auto& string = primitive.as_string().string();
         if (!is_valid_bigint_value(string)) {
-            interpreter.throw_exception<SyntaxError>(String::format("Invalid value for BigInt: %s", string.characters()));
+            interpreter.throw_exception<SyntaxError>(ErrorType::BigIntInvalidValue, string.characters());
             return {};
         }
         return js_bigint(interpreter, Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
     }
     case Type::Symbol:
-        interpreter.throw_exception<TypeError>("Can't convert symbol to BigInt");
+        interpreter.throw_exception<TypeError>(ErrorType::Convert, "symbol", "BigInt");
         return {};
     default:
         ASSERT_NOT_REACHED();
@@ -404,7 +404,7 @@ Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
         return Value((i32)lhs_numeric.as_double() & (i32)rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>("Can't use bitwise AND operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
     return {};
 }
 
@@ -427,7 +427,7 @@ Value bitwise_or(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>("Can't use bitwise OR operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
     return {};
 }
 
@@ -443,7 +443,7 @@ Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
         return Value((i32)lhs_numeric.as_double() ^ (i32)rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>("Can't use bitwise XOR operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
     return {};
 }
 
@@ -499,7 +499,7 @@ Value left_shift(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
-    interpreter.throw_exception<TypeError>("Can't use left-shift operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "left-shift");
     return {};
 }
 
@@ -520,7 +520,7 @@ Value right_shift(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
-    interpreter.throw_exception<TypeError>("Can't use right-shift operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "right-shift");
     return {};
 }
 
@@ -539,7 +539,7 @@ Value unsigned_right_shift(Interpreter& interpreter, Value lhs, Value rhs)
             return lhs_numeric;
         return Value((unsigned)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
     }
-    interpreter.throw_exception<TypeError>("Can't use unsigned right-shift operator with BigInt");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperator, "unsigned right-shift");
     return {};
 }
 
@@ -575,7 +575,7 @@ Value add(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>("Can't use addition operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "addition");
     return {};
 }
 
@@ -591,7 +591,7 @@ Value sub(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() - rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>("Can't use subtraction operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "subtraction");
     return {};
 }
 
@@ -607,7 +607,7 @@ Value mul(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>("Can't use multiplication operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "multiplication");
     return {};
 }
 
@@ -623,7 +623,7 @@ Value div(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
-    interpreter.throw_exception<TypeError>("Can't use division operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "division");
     return {};
 }
 
@@ -645,7 +645,7 @@ Value mod(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
-    interpreter.throw_exception<TypeError>("Can't use modulo operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "modulo");
     return {};
 }
 
@@ -661,14 +661,14 @@ Value exp(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>("Can't use exponentiation operator with BigInt and other type");
+    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "exponentiation");
     return {};
 }
 
 Value in(Interpreter& interpreter, Value lhs, Value rhs)
 {
     if (!rhs.is_object())
-        return interpreter.throw_exception<TypeError>("'in' operator must be used on object");
+        return interpreter.throw_exception<TypeError>(ErrorType::InOperatorWithObject);
     auto lhs_string = lhs.to_string(interpreter);
     if (interpreter.exception())
         return {};

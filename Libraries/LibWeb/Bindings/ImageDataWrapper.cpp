@@ -61,7 +61,7 @@ static ImageData* impl_from(JS::Interpreter& interpreter)
         return nullptr;
     }
     if (StringView("ImageDataWrapper") != this_object->class_name()) {
-        interpreter.throw_exception<JS::TypeError>("That's not an ImageDataWrapper, bro.");
+        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotAn, "ImageDataWrapper");
         return nullptr;
     }
     return &static_cast<ImageDataWrapper*>(this_object)->impl();

@@ -66,7 +66,7 @@ static Document* document_from(JS::Interpreter& interpreter)
     if (!this_object)
         return {};
     if (StringView("DocumentWrapper") != this_object->class_name()) {
-        interpreter.throw_exception<JS::TypeError>("That's not a DocumentWrapper, bro.");
+        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, "DocumentWrapper");
         return {};
     }
     return &static_cast<DocumentWrapper*>(this_object)->node();
@@ -78,7 +78,7 @@ JS::Value DocumentWrapper::get_element_by_id(JS::Interpreter& interpreter)
     if (!document)
         return {};
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::TypeError>("getElementById() needs one argument");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "getElementById");
     auto id = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
@@ -94,7 +94,7 @@ JS::Value DocumentWrapper::query_selector(JS::Interpreter& interpreter)
     if (!document)
         return {};
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::TypeError>("querySelector() needs one argument");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "querySelector");
     auto selector = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
@@ -111,7 +111,7 @@ JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
     if (!document)
         return {};
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::TypeError>("querySelectorAll() needs one argument");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "querySelectorAll");
     auto selector = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};

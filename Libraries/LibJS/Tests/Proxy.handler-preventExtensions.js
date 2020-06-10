@@ -30,7 +30,7 @@ try {
         Object.preventExtensions(p);
     }, {
         error: TypeError,
-        message: "Proxy preventExtensions handler returned false",
+        message: "Object's [[PreventExtensions]] method returned false",
     });
 
     o = {};

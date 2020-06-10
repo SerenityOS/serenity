@@ -6,73 +6,73 @@ try {
             1n + value;
         }, {
             error: TypeError,
-            message: "Can't use addition operator with BigInt and other type"
+            message: "Cannot use addition operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n - value;
         }, {
             error: TypeError,
-            message: "Can't use subtraction operator with BigInt and other type"
+            message: "Cannot use subtraction operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n * value;
         }, {
             error: TypeError,
-            message: "Can't use multiplication operator with BigInt and other type"
+            message: "Cannot use multiplication operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n / value;
         }, {
             error: TypeError,
-            message: "Can't use division operator with BigInt and other type"
+            message: "Cannot use division operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n % value;
         }, {
             error: TypeError,
-            message: "Can't use modulo operator with BigInt and other type"
+            message: "Cannot use modulo operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n ** value;
         }, {
             error: TypeError,
-            message: "Can't use exponentiation operator with BigInt and other type"
+            message: "Cannot use exponentiation operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n | value;
         }, {
             error: TypeError,
-            message: "Can't use bitwise OR operator with BigInt and other type"
+            message: "Cannot use bitwise OR operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n & value;
         }, {
             error: TypeError,
-            message: "Can't use bitwise AND operator with BigInt and other type"
+            message: "Cannot use bitwise AND operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n ^ value;
         }, {
             error: TypeError,
-            message: "Can't use bitwise XOR operator with BigInt and other type"
+            message: "Cannot use bitwise XOR operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n << value;
         }, {
             error: TypeError,
-            message: "Can't use left-shift operator with BigInt and other type"
+            message: "Cannot use left-shift operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n >> value;
         }, {
             error: TypeError,
-            message: "Can't use right-shift operator with BigInt and other type"
+            message: "Cannot use right-shift operator with BigInt and other type"
         });
         assertThrowsError(() => {
             1n >>> value;
         }, {
             error: TypeError,
-            message: "Can't use unsigned right-shift operator with BigInt"
+            message: "Cannot use unsigned right-shift operator with BigInt"
         });
     });
 

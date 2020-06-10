@@ -137,12 +137,12 @@ JS::Value CanvasRenderingContext2DWrapper::draw_image(JS::Interpreter& interpret
     if (!impl)
         return {};
     if (interpreter.argument_count() < 3)
-        return interpreter.throw_exception<JS::TypeError>("drawImage() needs three arguments");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::DrawImageArgumentCount);
     auto* image_argument = interpreter.argument(0).to_object(interpreter);
     if (!image_argument)
         return {};
     if (StringView(image_argument->class_name()) != "HTMLImageElementWrapper")
-        return interpreter.throw_exception<JS::TypeError>(String::format("Image is not an HTMLImageElement, it's an %s", image_argument->class_name()));
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::ImageIsAn, image_argument->class_name());
 
     auto x = interpreter.argument(1).to_double(interpreter);
     if (interpreter.exception())
@@ -288,10 +288,10 @@ JS::Value CanvasRenderingContext2DWrapper::fill(JS::Interpreter& interpreter)
             if (winding_name == "evenodd") {
                 winding = Gfx::Painter::WindingRule::EvenOdd;
             } else if (winding_name != "nonzero") {
-                return interpreter.throw_exception<JS::TypeError>("fill winding rule must be either 'nonzero' or 'evenodd'");
+                return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::FillBadWindingRule);
             }
         } else {
-            return interpreter.throw_exception<JS::TypeError>("fill called with non-string");
+            return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::FillNonString);
         }
     } else {
         // FIXME: Path2D object
@@ -378,7 +378,7 @@ JS::Value CanvasRenderingContext2DWrapper::put_image_data(JS::Interpreter& inter
         return {};
 
     if (StringView(image_data_object->class_name()) != "ImageDataWrapper") {
-        return interpreter.throw_exception<JS::TypeError>("putImageData called with non-ImageData");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::PutImageDataBadCall);
     }
 
     auto& image_data = static_cast<ImageDataWrapper*>(image_data_object)->impl();

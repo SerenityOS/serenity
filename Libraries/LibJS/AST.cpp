@@ -120,15 +120,15 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         auto call_type = is_new_expression() ? "constructor" : "function";
         if (m_callee->is_identifier() || m_callee->is_member_expression()) {
             String expression_string;
-            if (m_callee->is_identifier())
+            if (m_callee->is_identifier()) {
                 expression_string = static_cast<const Identifier&>(*m_callee).string();
-            else
+            } else {
                 expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
-            error_message = String::format("%s is not a %s (evaluated from '%s')", callee.to_string_without_side_effects().characters(), call_type, expression_string.characters());
+            }
+            return interpreter.throw_exception<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects().characters(), call_type, expression_string.characters());
         } else {
-            error_message = String::format("%s is not a %s", callee.to_string_without_side_effects().characters(), call_type);
+            return interpreter.throw_exception<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects().characters(), call_type);
         }
-        return interpreter.throw_exception<TypeError>(error_message);
     }
 
     auto& function = callee.as_function();
@@ -156,7 +156,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
                 for (auto ch : static_cast<const StringObject&>(value.as_object()).primitive_string().string())
                     arguments.append(Value(js_string(interpreter, String::format("%c", ch))));
             } else {
-                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string_without_side_effects().characters()));
+                interpreter.throw_exception<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects().characters());
             }
         } else {
             arguments.append(value);
@@ -412,7 +412,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     // FIXME: We need to properly implement the iterator protocol
     auto is_iterable = rhs_result.is_array() || rhs_result.is_string() || (rhs_result.is_object() && rhs_result.as_object().is_string_object());
     if (!is_iterable)
-        return interpreter.throw_exception<TypeError>("for..of right-hand side must be iterable");
+        return interpreter.throw_exception<TypeError>(ErrorType::ForOfNotIterable);
 
     size_t index = 0;
     auto next = [&]() -> Optional<Value> {
@@ -985,7 +985,7 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
 {
     auto value = interpreter.get_variable(string(), global_object);
     if (value.is_empty())
-        return interpreter.throw_exception<ReferenceError>(String::format("'%s' not known", string().characters()));
+        return interpreter.throw_exception<ReferenceError>(ErrorType::UnknownIdentifier, string().characters());
     return value;
 }
 
@@ -1107,7 +1107,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         return {};
 
     if (reference.is_unresolvable())
-        return interpreter.throw_exception<ReferenceError>("Invalid left-hand side in assignment");
+        return interpreter.throw_exception<ReferenceError>(ErrorType::InvalidLeftHandAssignment);
 
     update_function_name(rhs_result, reference.name().as_string());
     reference.put(interpreter, rhs_result);
@@ -1523,7 +1523,7 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
                         array->indexed_properties().append(js_string(interpreter, string_to_spread.substring(i, 1)));
                     continue;
                 }
-                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string_without_side_effects().characters()));
+                interpreter.throw_exception<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects().characters());
                 return {};
             }
         }
@@ -1573,7 +1573,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
     if (interpreter.exception())
         return {};
     if (!tag.is_function()) {
-        interpreter.throw_exception<TypeError>(String::format("%s is not a function", tag.to_string_without_side_effects().characters()));
+        interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, tag.to_string_without_side_effects().characters());
         return {};
     }
     auto& tag_function = tag.as_function();

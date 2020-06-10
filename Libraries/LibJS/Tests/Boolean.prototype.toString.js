@@ -12,7 +12,7 @@ try {
         Boolean.prototype.toString.call("foo");
     }, {
         error: TypeError,
-        message: "Not a Boolean"
+        message: "Not a Boolean object"
     });
 
     console.log("PASS");

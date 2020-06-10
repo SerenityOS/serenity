@@ -27,6 +27,7 @@ set(SOURCES
     Runtime/ErrorConstructor.cpp
     Runtime/Error.cpp
     Runtime/ErrorPrototype.cpp
+    Runtime/ErrorTypes.cpp
     Runtime/Exception.cpp
     Runtime/FunctionConstructor.cpp
     Runtime/Function.cpp

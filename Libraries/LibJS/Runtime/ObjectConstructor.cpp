@@ -98,7 +98,7 @@ Value ObjectConstructor::get_prototype_of(Interpreter& interpreter)
 Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 {
     if (interpreter.argument_count() < 2)
-        return interpreter.throw_exception<TypeError>("Object.setPrototypeOf requires at least two arguments");
+        return interpreter.throw_exception<TypeError>(ErrorType::ObjectSetPrototypeOfTwoArgs);
     auto* object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
         return {};
@@ -109,12 +109,12 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
     } else if (prototype_value.is_object()) {
         prototype = &prototype_value.as_object();
     } else {
-        interpreter.throw_exception<TypeError>("Prototype must be null or object");
+        interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeWrongType);
         return {};
     }
     if (!object->set_prototype(prototype)) {
         if (!interpreter.exception())
-            interpreter.throw_exception<TypeError>("Object's setPrototypeOf method returned false");
+            interpreter.throw_exception<TypeError>(ErrorType::ObjectSetPrototypeOfReturnedFalse);
         return {};
     }
     return object;
@@ -135,7 +135,7 @@ Value ObjectConstructor::prevent_extensions(Interpreter& interpreter)
         return argument;
     if (!argument.as_object().prevent_extensions()) {
         if (!interpreter.exception())
-            interpreter.throw_exception<TypeError>("Proxy preventExtensions handler returned false");
+            interpreter.throw_exception<TypeError>(ErrorType::ObjectPreventExtensionsReturnedFalse);
         return {};
     }
     return argument;
@@ -155,9 +155,9 @@ Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
 Value ObjectConstructor::define_property_(Interpreter& interpreter)
 {
     if (!interpreter.argument(0).is_object())
-        return interpreter.throw_exception<TypeError>("Object argument is not an object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Object argument");
     if (!interpreter.argument(2).is_object())
-        return interpreter.throw_exception<TypeError>("Descriptor argument is not an object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Descriptor argument");
     auto& object = interpreter.argument(0).as_object();
     auto property_key = interpreter.argument(1).to_string(interpreter);
     if (interpreter.exception())
@@ -166,9 +166,9 @@ Value ObjectConstructor::define_property_(Interpreter& interpreter)
     if (!object.define_property(property_key, descriptor)) {
         if (!interpreter.exception()) {
             if (object.is_proxy_object()) {
-                interpreter.throw_exception<TypeError>("Proxy handler's defineProperty method returned false");
+                interpreter.throw_exception<TypeError>(ErrorType::ObjectDefinePropertyReturnedFalse);
             } else {
-                interpreter.throw_exception<TypeError>("Unable to define property on non-extensible object");
+                interpreter.throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_key.characters());
             }
         }
         return {};
@@ -184,7 +184,7 @@ Value ObjectConstructor::is(Interpreter& interpreter)
 Value ObjectConstructor::keys(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
+        return interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
 
     auto* obj_arg = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
@@ -196,7 +196,7 @@ Value ObjectConstructor::keys(Interpreter& interpreter)
 Value ObjectConstructor::values(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
+        return interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
 
     auto* obj_arg = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
@@ -208,7 +208,7 @@ Value ObjectConstructor::values(Interpreter& interpreter)
 Value ObjectConstructor::entries(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
+        return interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
 
     auto* obj_arg = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())

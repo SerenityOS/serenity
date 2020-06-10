@@ -7,7 +7,7 @@ try {
         constantValue = 2;
     }, {
         error: TypeError,
-        message: "Assignment to constant variable"
+        message: "Invalid assignment to const variable"
     });
     assert(constantValue === 1);
 

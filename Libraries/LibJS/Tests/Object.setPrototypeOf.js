@@ -10,12 +10,12 @@ try {
         message: "Object.setPrototypeOf requires at least two arguments",
     });
 
-//     assertThrowsError(() => {
-//         Object.setPrototypeOf({}, "foo");
-//     }, {
-//         error: TypeError,
-//         message: "Prototype must be null or object"
-//     });
+    assertThrowsError(() => {
+        Object.setPrototypeOf({}, "foo");
+    }, {
+        error: TypeError,
+        message: "Prototype must be an object or null"
+    });
 
     o = {};
     p = {};
@@ -26,7 +26,7 @@ try {
         Object.setPrototypeOf(o, {});
     }, {
         error: TypeError,
-        message: "Object's setPrototypeOf method returned false"
+        message: "Object's [[SetPrototypeOf]] method returned false"
     });
     assert(Object.setPrototypeOf(o, p) === o);
 

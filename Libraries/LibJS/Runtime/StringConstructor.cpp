@@ -82,7 +82,7 @@ Value StringConstructor::raw(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     if (raw.is_empty() || raw.is_undefined() || raw.is_null()) {
-        interpreter.throw_exception<TypeError>(String::format("Cannot convert property 'raw' to object from %s", raw.is_null() ? "null" : "undefined"));
+        interpreter.throw_exception<TypeError>(ErrorType::StringRawCannotConvert, raw.is_null() ? "null" : "undefined");
         return {};
     }
     if (!raw.is_array())

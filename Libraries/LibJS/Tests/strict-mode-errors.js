@@ -8,7 +8,7 @@ try {
             primitive.foo = "bar";
         }, {
             error: TypeError,
-            message: "Can't assign property foo to primitive value"
+            message: "Cannot assign property foo to primitive value"
         });
     });
 

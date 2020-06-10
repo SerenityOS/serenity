@@ -11,14 +11,14 @@ try {
         s1 + "";
     }, {
         error: TypeError,
-        message: "Can't convert symbol to string",
+        message: "Cannot convert symbol to string",
     });
     
     assertThrowsError(() => {
         s1 + 1;
     }, {
         error: TypeError,
-        message: "Can't convert symbol to number",
+        message: "Cannot convert symbol to number",
     });
     
     console.log("PASS");

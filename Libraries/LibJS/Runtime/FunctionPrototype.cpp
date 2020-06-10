@@ -64,14 +64,14 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_function())
-        return interpreter.throw_exception<TypeError>("Not a Function object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
     auto& function = static_cast<Function&>(*this_object);
     auto this_arg = interpreter.argument(0);
     auto arg_array = interpreter.argument(1);
     if (arg_array.is_null() || arg_array.is_undefined())
         return interpreter.call(function, this_arg);
     if (!arg_array.is_object())
-        return interpreter.throw_exception<TypeError>("argument array must be an object");
+        return interpreter.throw_exception<TypeError>(ErrorType::FunctionArgsNotObject);
     auto length_property = arg_array.as_object().get("length");
     if (interpreter.exception())
         return {};
@@ -94,7 +94,7 @@ Value FunctionPrototype::bind(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_function())
-        return interpreter.throw_exception<TypeError>("Not a Function object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
 
     auto& this_function = static_cast<Function&>(*this_object);
     auto bound_this_arg = interpreter.argument(0);
@@ -114,7 +114,7 @@ Value FunctionPrototype::call(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_function())
-        return interpreter.throw_exception<TypeError>("Not a Function object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
     auto& function = static_cast<Function&>(*this_object);
     auto this_arg = interpreter.argument(0);
     MarkedValueList arguments(interpreter.heap());
@@ -131,7 +131,7 @@ Value FunctionPrototype::to_string(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_function())
-        return interpreter.throw_exception<TypeError>("Not a Function object");
+        return interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
 
     String function_name = static_cast<Function*>(this_object)->name();
     String function_parameters = "";

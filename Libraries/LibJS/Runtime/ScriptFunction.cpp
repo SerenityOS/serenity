@@ -41,7 +41,7 @@ static ScriptFunction* script_function_from(Interpreter& interpreter)
     if (!this_object)
         return nullptr;
     if (!this_object->is_function()) {
-        interpreter.throw_exception<TypeError>("Not a function");
+        interpreter.throw_exception<TypeError>(ErrorType::NotAFunctionNoParam);
         return nullptr;
     }
     return static_cast<ScriptFunction*>(this_object);
@@ -126,7 +126,7 @@ Value ScriptFunction::call(Interpreter& interpreter)
 Value ScriptFunction::construct(Interpreter& interpreter)
 {
     if (m_is_arrow_function)
-        return interpreter.throw_exception<TypeError>(String::format("%s is not a constructor", m_name.characters()));
+        return interpreter.throw_exception<TypeError>(ErrorType::NotACtor, m_name.characters());
     return call(interpreter);
 }
 

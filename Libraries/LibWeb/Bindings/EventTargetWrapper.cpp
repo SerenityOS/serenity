@@ -55,7 +55,7 @@ JS::Value EventTargetWrapper::add_event_listener(JS::Interpreter& interpreter)
     if (!this_object)
         return {};
     if (interpreter.argument_count() < 2)
-        return interpreter.throw_exception<JS::TypeError>("addEventListener() needs two arguments");
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, "addEventListener", "two");
     auto event_name = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};

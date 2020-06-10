@@ -33,8 +33,8 @@ try {
         }, {
             error: TypeError,
             message: typeof value === "symbol"
-                ? "Can't convert symbol to BigInt"
-                : `Can't convert ${value} to BigInt`
+                ? "Cannot convert symbol to BigInt"
+                : `Cannot convert ${value} to BigInt`
         });
     });
 

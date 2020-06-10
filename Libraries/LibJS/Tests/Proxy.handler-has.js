@@ -53,7 +53,7 @@ try {
         "bar" in p;
     }, {
         error: TypeError,
-        message: "Proxy handler's has trap violates invariant: a property cannot be reported as non-existent if it exist on the target and the target is non-extensible",
+        message: "Proxy handler's has trap violates invariant: a property cannot be reported as non-existent if it exists on the target and the target is non-extensible",
     });
 
     console.log("PASS");

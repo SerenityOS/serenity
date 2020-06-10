@@ -48,7 +48,7 @@ Value BooleanPrototype::to_string(Interpreter& interpreter)
         return js_string(interpreter.heap(), this_object.as_bool() ? "true" : "false");
     }
     if (!this_object.is_object() || !this_object.as_object().is_boolean()) {
-        interpreter.throw_exception<TypeError>("Not a Boolean");
+        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Boolean");
         return {};
     }
 
@@ -63,7 +63,7 @@ Value BooleanPrototype::value_of(Interpreter& interpreter)
         return this_object;
     }
     if (!this_object.is_object() || !this_object.as_object().is_boolean()) {
-        interpreter.throw_exception<TypeError>("Not a Boolean");
+        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Boolean");
         return {};
     }
 

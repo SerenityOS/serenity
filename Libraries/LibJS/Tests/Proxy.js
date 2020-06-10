@@ -7,14 +7,14 @@ try {
         new Proxy();
     }, {
         error: TypeError,
-        message: "Proxy requires at least two arguments",
+        message: "Proxy constructor requires at least two arguments",
     });
 
     assertThrowsError(() => {
         Proxy();
     }, {
         error: TypeError,
-        message: "Proxy must be called with the \"new\" operator",
+        message: "Proxy must be called with the 'new' operator",
     });
 
     assertThrowsError(() => {

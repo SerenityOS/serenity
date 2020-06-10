@@ -27,7 +27,7 @@ try {
         Object.defineProperty(o, "baz", { value: "baz" });
     }, {
         error: TypeError,
-        message: "Unable to define property on non-extensible object",
+        message: "Cannot define property baz on non-extensible object",
     });
 
     assert(o.baz === undefined);

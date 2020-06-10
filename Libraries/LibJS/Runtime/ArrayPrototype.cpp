@@ -80,12 +80,12 @@ ArrayPrototype::~ArrayPrototype()
 static Function* callback_from_args(Interpreter& interpreter, const String& name)
 {
     if (interpreter.argument_count() < 1) {
-        interpreter.throw_exception<TypeError>(String::format("Array.prototype.%s() requires at least one argument", name.characters()));
+        interpreter.throw_exception<TypeError>(ErrorType::ArrayPrototypeOneArg, name.characters());
         return nullptr;
     }
     auto callback = interpreter.argument(0);
     if (!callback.is_function()) {
-        interpreter.throw_exception<TypeError>(String::format("%s is not a function", callback.to_string_without_side_effects().characters()));
+        interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, callback.to_string_without_side_effects().characters());
         return nullptr;
     }
     return &callback.as_function();
@@ -194,7 +194,7 @@ Value ArrayPrototype::push(Interpreter& interpreter)
     auto argument_count = interpreter.argument_count();
     auto new_length = length + argument_count;
     if (new_length > MAX_ARRAY_LIKE_INDEX)
-        return interpreter.throw_exception<TypeError>("Maximum array size exceeded");
+        return interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
     for (size_t i = 0; i < argument_count; ++i) {
         this_object->put(length + i, interpreter.argument(i));
         if (interpreter.exception())
@@ -467,7 +467,7 @@ Value ArrayPrototype::reduce(Interpreter& interpreter)
             start += 1;
         }
         if (!start_found) {
-            interpreter.throw_exception<TypeError>("Reduce of empty array with no initial value");
+            interpreter.throw_exception<TypeError>(ErrorType::ReduceNoInitial);
             return {};
         }
     }
@@ -526,7 +526,7 @@ Value ArrayPrototype::reduce_right(Interpreter& interpreter)
             start -= 1;
         }
         if (!start_found) {
-            interpreter.throw_exception<TypeError>("Reduce of empty array with no initial value");
+            interpreter.throw_exception<TypeError>(ErrorType::ReduceNoInitial);
             return {};
         }
     }
@@ -734,7 +734,7 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
     size_t new_length = initial_length + insert_count - actual_delete_count;
 
     if (new_length > MAX_ARRAY_LIKE_INDEX)
-        return interpreter.throw_exception<TypeError>("Maximum array size exceeded");
+        return interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
 
     auto removed_elements = Array::create(interpreter.global_object());
 

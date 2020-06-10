@@ -5,7 +5,7 @@ try {
         ++x;
     }, {
         error: ReferenceError,
-        message: "'x' not known"
+        message: "'x' is not defined",
     });
 
     var n = 0;
