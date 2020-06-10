@@ -75,7 +75,7 @@ void StylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const
 static void paint_button_new(Painter& painter, const IntRect& rect, const Palette& palette, bool pressed, bool checked, bool hovered, bool enabled)
 {
     Color button_color = palette.button();
-    Color highlight_color2 = palette.threed_highlight();
+    Color highlight_color = palette.threed_highlight();
     Color shadow_color1 = palette.threed_shadow1();
     Color shadow_color2 = palette.threed_shadow2();
 
@@ -99,13 +99,21 @@ static void paint_button_new(Painter& painter, const IntRect& rect, const Palett
         // Sunken shadow
         painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, shadow_color1);
         painter.draw_line({ 1, 2 }, { 1, rect.height() - 2 }, shadow_color1);
+
+        // Outer shine
+        painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 1, rect.height() - 1 }, highlight_color);
+        painter.draw_line({ rect.width() - 1, 0 }, { rect.width() - 1, rect.height() - 2 }, highlight_color);
+
+        // Inner shine
+        painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, palette.button());
+        painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, palette.button());
     } else {
         // Base
-        painter.fill_rect({ 0, 0, rect.width(), rect.height() }, button_color);
+        painter.fill_rect({ 1, 1, rect.width() - 1, rect.height() - 1 }, button_color);
 
         // Outer highlight
-        painter.draw_line({ 1, 1 }, { rect.width() - 3, 1 }, highlight_color2);
-        painter.draw_line({ 1, 1 }, { 1, rect.height() - 3 }, highlight_color2);
+        painter.draw_line({ 1, 1 }, { rect.width() - 3, 1 }, highlight_color);
+        painter.draw_line({ 1, 1 }, { 1, rect.height() - 3 }, highlight_color);
 
         // Outer shadow
         painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
