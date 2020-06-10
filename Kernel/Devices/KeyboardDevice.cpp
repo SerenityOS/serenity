@@ -46,205 +46,6 @@ namespace Kernel {
 #define I8042_MOUSE_BUFFER 0x20
 #define I8042_KEYBOARD_BUFFER 0x00
 
-char* map;
-char* shift_map;
-char* alt_map;
-char* altgr_map;
-
-static const char en_map[0x80] = {
-    0,
-    '\033',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '0',
-    '-',
-    '=',
-    0x08,
-    '\t',
-    'q',
-    'w',
-    'e',
-    'r',
-    't',
-    'y',
-    'u',
-    'i',
-    'o',
-    'p',
-    '[',
-    ']',
-    '\n',
-    0,
-    'a',
-    's',
-    'd',
-    'f',
-    'g',
-    'h',
-    'j',
-    'k',
-    'l',
-    ';',
-    '\'',
-    '`',
-    0,
-    '\\',
-    'z',
-    'x',
-    'c',
-    'v',
-    'b',
-    'n',
-    'm',
-    ',',
-    '.',
-    '/',
-    0,
-    '*',
-    0,
-    ' ',
-    0,
-    0,
-    //60
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    //70
-    0,
-    0,
-    0,
-    0,
-    '-',
-    0,
-    0,
-    0,
-    '+',
-    0,
-    //80
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '\\',
-    0,
-    0,
-    0,
-};
-
-static const char en_shift_map[0x80] = {
-    0,
-    '\033',
-    '!',
-    '@',
-    '#',
-    '$',
-    '%',
-    '^',
-    '&',
-    '*',
-    '(',
-    ')',
-    '_',
-    '+',
-    0x08,
-    '\t',
-    'Q',
-    'W',
-    'E',
-    'R',
-    'T',
-    'Y',
-    'U',
-    'I',
-    'O',
-    'P',
-    '{',
-    '}',
-    '\n',
-    0,
-    'A',
-    'S',
-    'D',
-    'F',
-    'G',
-    'H',
-    'J',
-    'K',
-    'L',
-    ':',
-    '"',
-    '~',
-    0,
-    '|',
-    'Z',
-    'X',
-    'C',
-    'V',
-    'B',
-    'N',
-    'M',
-    '<',
-    '>',
-    '?',
-    0,
-    '*',
-    0,
-    ' ',
-    0,
-    0,
-    //60
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    //70
-    0,
-    0,
-    0,
-    0,
-    '-',
-    0,
-    0,
-    0,
-    '+',
-    0,
-    //80
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '|',
-    0,
-    0,
-    0,
-};
-
-static const char numpad_map[13] = { '7', '8', '9', 0, '4', '5', '6', 0, '1', '2', '3', '0', ',' };
-
 static const KeyCode unshifted_key_map[0x80] = {
     Key_Invalid,
     Key_Escape,
@@ -437,28 +238,20 @@ static const KeyCode shifted_key_map[0x100] = {
 
 static const KeyCode numpad_key_map[13] = { Key_7, Key_8, Key_9, Key_Invalid, Key_4, Key_5, Key_6, Key_Invalid, Key_1, Key_2, Key_3, Key_0, Key_Comma };
 
-void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
+void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
 {
-    KeyCode key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
-    char character = (m_modifiers & Mod_Shift) ? shift_map[raw] : (m_modifiers & Mod_Alt) ? alt_map[raw] : (m_modifiers & Mod_AltGr) ? altgr_map[raw] : map[raw];
+    KeyCode key = (m_modifiers & Mod_Shift) ? shifted_key_map[scan_code] : unshifted_key_map[scan_code];
 
     if (key == Key_NumLock && pressed)
         m_num_lock_on = !m_num_lock_on;
 
     if (m_num_lock_on && !m_has_e0_prefix) {
-        if (raw >= 0x47 && raw <= 0x53) {
-            u8 index = raw - 0x47;
+        if (scan_code >= 0x47 && scan_code <= 0x53) {
+            u8 index = scan_code - 0x47;
             KeyCode newKey = numpad_key_map[index];
 
             if (newKey != Key_Invalid) {
                 key = newKey;
-                character = numpad_map[index];
-            }
-        }
-    } else {
-        if (m_has_e0_prefix) {
-            if (key == Key_Slash) {
-                character = '/'; // On Turkish-QWERTY Keyboard Key_Slash mapped to '.' char, if e0 prefix is true remap to '/' char
             }
         }
     }
@@ -466,22 +259,19 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     if (key == Key_CapsLock && pressed)
         m_caps_lock_on = !m_caps_lock_on;
 
-    if (m_caps_lock_on && (m_modifiers == 0 || m_modifiers == Mod_Shift)) {
-        if (character >= 'a' && character <= 'z')
-            character &= ~0x20;
-        else if (character >= 'A' && character <= 'Z')
-            character |= 0x20;
-    }
-
     Event event;
     event.key = key;
-    event.scancode = m_has_e0_prefix ? 0xe000 + raw : raw;
-    event.character = static_cast<u8>(character);
+    event.scancode = m_has_e0_prefix ? 0xe000 + scan_code : scan_code;
     event.flags = m_modifiers;
+    event.e0_prefix = m_has_e0_prefix;
+    event.caps_lock_on = m_caps_lock_on;
+    event.character = m_character_map.get_char(event);
+
     if (pressed)
         event.flags |= Is_Press;
     if (m_client)
         m_client->on_key_pressed(event);
+
     m_queue.enqueue(event);
 
     m_has_e0_prefix = false;
@@ -528,12 +318,12 @@ void KeyboardDevice::handle_irq(const RegisterState&)
             break;
         default:
             if (m_modifiers & Mod_Alt) {
-                switch (map[ch]) {
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                    VirtualConsole::switch_to(map[ch] - '0' - 1);
+                switch (ch) {
+                case 0x02: // 1
+                case 0x03: // 2
+                case 0x04: // 3
+                case 0x05: // 4
+                    VirtualConsole::switch_to(ch - 0x02);
                     break;
                 default:
                     key_state_changed(ch, pressed);
@@ -559,8 +349,6 @@ KeyboardDevice::KeyboardDevice()
     , CharacterDevice(85, 1)
 {
     s_the = this;
-
-    KeyboardDevice::set_maps(en_map, en_shift_map, en_map, en_map);
 
     // Empty the buffer of any pending data.
     // I don't care what you've been pressing until now!
@@ -604,24 +392,10 @@ KeyboardClient::~KeyboardClient()
 {
 }
 
-void KeyboardDevice::set_maps(const char* n_map, const char* n_shift_map, const char* n_alt_map, const char* n_altgr_map)
+void KeyboardDevice::set_maps(Keyboard::CharacterMapData character_map_data)
 {
-    kfree(map);
-    kfree(shift_map);
-    kfree(alt_map);
-    kfree(altgr_map);
-
-    map = (char*)kmalloc(0x80);
-    shift_map = (char*)kmalloc(0x80);
-    alt_map = (char*)kmalloc(0x80);
-    altgr_map = (char*)kmalloc(0x80);
-
-    for (int i = 0; i < 0x80; i++) {
-        map[i] = n_map[i];
-        shift_map[i] = n_shift_map[i];
-        alt_map[i] = n_alt_map[i];
-        altgr_map[i] = n_altgr_map[i];
-    }
+    m_character_map.set_character_map_data(character_map_data);
+    dbg() << "New Character map passing to client.";
 }
 
 }

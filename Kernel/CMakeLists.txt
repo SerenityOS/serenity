@@ -144,11 +144,17 @@ set(VT_SOURCES
     ../Libraries/LibVT/Line.cpp
 )
 
+
+set(KEYBOARD_SOURCES
+    ../Libraries/LibKeyboard/CharacterMap.cpp
+)
+
 set(SOURCES
     ${KERNEL_SOURCES}
     ${AK_SOURCES}
     ${ELF_SOURCES}
     ${VT_SOURCES}
+    ${KEYBOARD_SOURCES}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKERNEL")
