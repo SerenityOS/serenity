@@ -91,6 +91,10 @@ bool matches(const Selector::SimpleSelector& component, const Element& element)
         if (element.attribute(component.attribute_name) != component.attribute_value)
             return false;
         break;
+    case Selector::SimpleSelector::AttributeMatchType::Contains:
+        if (!element.attribute(component.attribute_name).split(' ').contains_slow(component.attribute_value))
+            return false;
+        break;
     default:
         break;
     }
