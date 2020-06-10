@@ -91,7 +91,7 @@ public:
     Color threed_highlight() const { return color(ColorRole::ThreedHighlight); }
     Color threed_shadow1() const { return color(ColorRole::ThreedShadow1); }
     Color threed_shadow2() const { return color(ColorRole::ThreedShadow2); }
-    Color hover_highlight() const { return color(ColorRole::ThreedHighlight); }
+    Color hover_highlight() const { return color(ColorRole::HoverHighlight); }
     Color rubber_band_fill() const { return color(ColorRole::RubberBandFill); }
     Color rubber_band_border() const { return color(ColorRole::RubberBandBorder); }
     Color ruler() const { return color(ColorRole::Ruler); }
