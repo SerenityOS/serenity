@@ -492,6 +492,9 @@ public:
                     }
                     continue;
                 }
+                // FIXME: This is a hack that will go away when we replace this with a big boy CSS parser.
+                if (ch == '\\')
+                    ch = consume_one();
                 buffer.append(ch);
             }
             if (in_value)
