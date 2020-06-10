@@ -14,5 +14,9 @@
     {
         "title": "HTML spec",
         "url": "https://html.spec.whatwg.org/multipage/"
+    },
+    {
+        "title": "ACID2",
+        "url": "file:///home/anon/www/acid2.html#top"
     }
 ]
