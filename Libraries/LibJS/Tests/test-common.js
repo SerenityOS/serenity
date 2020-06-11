@@ -92,3 +92,40 @@ const assertVisitsAll = (testFunction, expectedOutput) => {
 function isClose(a, b) {
     return Math.abs(a - b) < 0.000001;
 }
+
+/**
+ * Quick and dirty deep equals method.
+ * @param {*} a First value
+ * @param {*} b Second value
+ */
+function assertDeepEquals(a, b) {
+    assert(deepEquals(a, b));
+}
+
+function deepEquals(a, b) {
+    if (Array.isArray(a))
+        return Array.isArray(b) && deepArrayEquals(a, b);
+    if (typeof a === "object")
+        return typeof b === "object" && deepObjectEquals(a, b);
+    return a === b;
+}
+
+function deepArrayEquals(a, b) {
+    if (a.length !== b.length)
+        return false;
+    for (let i = 0; i < a.length; ++i) {
+        if (!deepEquals(a[i], b[i]))
+            return false;
+    }
+    return true;
+}
+
+function deepObjectEquals(a, b) {
+    if (a === null)
+        return b === null;
+    for (let key of Reflect.ownKeys(a)) {
+        if (!deepEquals(a[key], b[key]))
+            return false;
+    }
+    return true;
+}
