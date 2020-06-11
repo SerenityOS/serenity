@@ -42,8 +42,9 @@ void JsonArrayModel::update()
 
     auto json = JsonValue::from_string(file->read_all());
 
-    ASSERT(json.is_array());
-    m_array = json.as_array();
+    ASSERT(json.has_value());
+    ASSERT(json.value().is_array());
+    m_array = json.value().as_array();
 
     did_update();
 }

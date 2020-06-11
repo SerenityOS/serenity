@@ -37,7 +37,6 @@ namespace AK {
 class JsonValue {
 public:
     enum class Type {
-        Undefined,
         Null,
         Int32,
         UnsignedInt32,
@@ -52,7 +51,7 @@ public:
         Object,
     };
 
-    static JsonValue from_string(const StringView&);
+    static Optional<JsonValue> from_string(const StringView&);
 
     explicit JsonValue(Type = Type::Null);
     ~JsonValue() { clear(); }
@@ -188,7 +187,6 @@ public:
     }
 
     bool is_null() const { return m_type == Type::Null; }
-    bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_bool() const { return m_type == Type::Bool; }
     bool is_string() const { return m_type == Type::String; }
     bool is_i32() const { return m_type == Type::Int32; }
@@ -246,7 +244,7 @@ private:
     void clear();
     void copy_from(const JsonValue&);
 
-    Type m_type { Type::Undefined };
+    Type m_type { Type::Null };
 
     union {
         StringImpl* as_string { nullptr };

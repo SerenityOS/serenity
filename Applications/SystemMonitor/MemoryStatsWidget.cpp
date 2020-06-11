@@ -98,7 +98,9 @@ void MemoryStatsWidget::refresh()
         ASSERT_NOT_REACHED();
 
     auto file_contents = proc_memstat->read_all();
-    auto json = JsonValue::from_string(file_contents).as_object();
+    auto json_result = JsonValue::from_string(file_contents);
+    ASSERT(json_result.has_value());
+    auto json = json_result.value().as_object();
 
     unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
     (void)kmalloc_eternal_allocated;

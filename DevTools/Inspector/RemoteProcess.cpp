@@ -167,11 +167,12 @@ void RemoteProcess::update()
         dbg() << "Got data size " << length << " and read that many bytes";
 
         auto json_value = JsonValue::from_string(data);
-        ASSERT(json_value.is_object());
+        ASSERT(json_value.has_value());
+        ASSERT(json_value.value().is_object());
 
-        dbg() << "Got JSON response " << json_value.to_string();
+        dbg() << "Got JSON response " << json_value.value().to_string();
 
-        auto& response = json_value.as_object();
+        auto& response = json_value.value().as_object();
 
         auto response_type = response.get("type").as_string_or({});
         if (response_type.is_null())

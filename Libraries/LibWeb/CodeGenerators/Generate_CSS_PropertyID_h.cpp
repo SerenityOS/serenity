@@ -56,7 +56,8 @@ int main(int argc, char** argv)
         return 1;
 
     auto json = JsonValue::from_string(file->read_all());
-    ASSERT(json.is_object());
+    ASSERT(json.has_value());
+    ASSERT(json.value().is_object());
 
     out() << "#pragma once";
     out() << "#include <AK/StringView.h>";
@@ -67,7 +68,7 @@ int main(int argc, char** argv)
     out() << "enum class PropertyID {";
     out() << "    Invalid,";
 
-    json.as_object().for_each_member([&](auto& name, auto& value) {
+    json.value().as_object().for_each_member([&](auto& name, auto& value) {
         ASSERT(value.is_object());
         out() << "    " << title_casify(name) << ",";
     });
