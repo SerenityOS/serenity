@@ -34,7 +34,7 @@ class ConfigFile;
 class CustomEvent;
 class DateTime;
 class DirIterator;
-class ElapsedTime;
+class ElapsedTimer;
 class Event;
 class EventLoop;
 class File;
