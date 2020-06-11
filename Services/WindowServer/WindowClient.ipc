@@ -35,4 +35,6 @@ endpoint WindowClient = 4
     UpdateSystemTheme(i32 system_theme_buffer_id) =|
 
     DisplayLinkNotification() =|
+
+    Ping() =|
 }

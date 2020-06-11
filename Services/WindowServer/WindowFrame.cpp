@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "ClientConnection.h"
 #include <AK/Badge.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font.h>
@@ -244,12 +245,23 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
         }
     }
 
+    String title_text;
+
+    if (window.client() && window.client()->is_unresponsive()) {
+        StringBuilder builder;
+        builder.append(window.title());
+        builder.append(" (Not responding)");
+        title_text = builder.to_string();
+    } else {
+        title_text = window.title();
+    }
+
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), window.title(), wm.window_title_font(), Gfx::TextAlignment::CenterLeft, border_color.darkened(0.4), Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, border_color.darkened(0.4), Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-        painter.draw_text(clipped_title_rect.translated(0, 1), window.title(), wm.window_title_font(), Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(0, 1), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
     }
 
     painter.blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
