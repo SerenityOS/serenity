@@ -889,8 +889,11 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (!is_readonly() && !event.ctrl() && !event.alt() && !event.text().is_empty()) {
-        insert_at_cursor_or_replace_selection(event.text());
+    if (!is_readonly() && !event.ctrl() && !event.alt() && event.code_point() != 0) {
+        StringBuilder sb;
+        sb.append_codepoint(event.code_point());
+
+        insert_at_cursor_or_replace_selection(sb.to_string());
         return;
     }
 
