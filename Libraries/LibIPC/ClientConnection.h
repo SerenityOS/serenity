@@ -31,6 +31,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Object.h>
+#include <LibCore/Timer.h>
 #include <LibIPC/Endpoint.h>
 #include <LibIPC/Message.h>
 #include <errno.h>
@@ -91,11 +92,20 @@ public:
         m_client_pid = creds.pid;
         add_child(socket);
         m_socket->on_ready_to_read = [this] { drain_messages_from_client(); };
+
+        m_responsiveness_timer = Core::Timer::construct();
+        m_responsiveness_timer->set_single_shot(true);
+        m_responsiveness_timer->set_interval(3000);
+        m_responsiveness_timer->on_timeout = [this] {
+            may_have_become_unresponsive();
+        };
     }
 
     virtual ~ClientConnection() override
     {
     }
+
+    virtual void may_have_become_unresponsive() {}
 
     void post_message(const Message& message)
     {
@@ -151,6 +161,9 @@ public:
             bytes.append(buffer, nread);
         }
 
+        if (!bytes.is_empty())
+            m_responsiveness_timer->start();
+
         size_t decoded_bytes = 0;
         for (size_t index = 0; index < bytes.size(); index += decoded_bytes) {
             auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
@@ -205,6 +218,7 @@ protected:
 private:
     Endpoint& m_endpoint;
     RefPtr<Core::LocalSocket> m_socket;
+    RefPtr<Core::Timer> m_responsiveness_timer;
     int m_client_id { -1 };
     int m_client_pid { -1 };
 };

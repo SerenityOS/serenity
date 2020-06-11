@@ -217,15 +217,22 @@ void Compositor::compose()
             }
 
             Gfx::IntRect dirty_rect_in_backing_coordinates = dirty_rect
-                                                              .intersected(window.rect())
-                                                              .intersected(backing_rect)
-                                                              .translated(-backing_rect.location());
+                                                                 .intersected(window.rect())
+                                                                 .intersected(backing_rect)
+                                                                 .translated(-backing_rect.location());
 
             if (dirty_rect_in_backing_coordinates.is_empty())
                 continue;
             auto dst = backing_rect.location().translated(dirty_rect_in_backing_coordinates.location());
 
-            m_back_painter->blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
+            if (window.client() && window.client()->is_unresponsive()) {
+                m_back_painter->blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [](Color src) {
+                    return src.to_grayscale().darkened(0.75f);
+                });
+            } else {
+                m_back_painter->blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
+            }
+
             for (auto background_rect : window.rect().shatter(backing_rect))
                 m_back_painter->fill_rect(background_rect, wm.palette().window());
         }

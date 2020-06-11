@@ -820,4 +820,28 @@ void ClientConnection::handle(const Messages::WindowServer::SetWindowProgress& m
     it->value->set_progress(message.progress());
 }
 
+void ClientConnection::handle(const Messages::WindowServer::Pong&)
+{
+    m_ping_timer = nullptr;
+    set_unresponsive(false);
+}
+
+void ClientConnection::set_unresponsive(bool unresponsive)
+{
+    if (m_unresponsive == unresponsive)
+        return;
+    m_unresponsive = unresponsive;
+    for (auto& it : m_windows) {
+        it.value->invalidate();
+    }
+}
+
+void ClientConnection::may_have_become_unresponsive()
+{
+    post_message(Messages::WindowClient::Ping());
+    m_ping_timer = Core::Timer::create_single_shot(1000, [this] {
+        set_unresponsive(true);
+    });
+}
+
 }

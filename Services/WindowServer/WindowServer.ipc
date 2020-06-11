@@ -95,4 +95,6 @@ endpoint WindowServer = 2
 
     EnableDisplayLink() =|
     DisableDisplayLink() =|
+
+    Pong() =|
 }

@@ -334,4 +334,9 @@ void WindowServerConnection::handle(const Messages::WindowClient::DisplayLinkNot
     });
 }
 
+void WindowServerConnection::handle(const Messages::WindowClient::Ping&)
+{
+    post_message(Messages::WindowServer::Pong());
+}
+
 }

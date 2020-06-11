@@ -50,7 +50,8 @@ class ClientConnection final
     C_OBJECT(ClientConnection)
 public:
     ~ClientConnection() override;
-    virtual void die() override;
+
+    bool is_unresponsive() const { return m_unresponsive; }
 
     void boost();
     void deboost();
@@ -85,6 +86,11 @@ public:
 private:
     explicit ClientConnection(Core::LocalSocket&, int client_id);
 
+    // ^ClientConnection
+    virtual void die() override;
+    virtual void may_have_become_unresponsive() override;
+
+    void set_unresponsive(bool);
     void destroy_window(Window&, Vector<i32>& destroyed_window_ids);
 
     virtual OwnPtr<Messages::WindowServer::GreetResponse> handle(const Messages::WindowServer::Greet&) override;
@@ -134,6 +140,7 @@ private:
     virtual void handle(const Messages::WindowServer::EnableDisplayLink&) override;
     virtual void handle(const Messages::WindowServer::DisableDisplayLink&) override;
     virtual void handle(const Messages::WindowServer::SetWindowProgress&) override;
+    virtual void handle(const Messages::WindowServer::Pong&) override;
 
     Window* window_from_id(i32 window_id);
 
@@ -142,11 +149,14 @@ private:
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
     WeakPtr<MenuBar> m_app_menubar;
 
+    RefPtr<Core::Timer> m_ping_timer;
+
     int m_next_menubar_id { 10000 };
     int m_next_menu_id { 20000 };
     int m_next_window_id { 1982 };
 
     bool m_has_display_link { false };
+    bool m_unresponsive { false };
 };
 
 }
