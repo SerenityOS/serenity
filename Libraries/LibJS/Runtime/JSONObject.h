@@ -26,8 +26,6 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
-
 namespace JS {
 
 class JSONObject final : public Object {
@@ -51,6 +49,12 @@ private:
     static String serialize_json_object(Interpreter&, StringifyState&, Object&);
     static String serialize_json_array(Interpreter&, StringifyState&, Object&);
     static String quote_json_string(String);
+
+    // Parse helpers
+    static Object* parse_json_object(Interpreter&, const JsonObject&);
+    static Array* parse_json_array(Interpreter&, const JsonArray&);
+    static Value parse_json_value(Interpreter&, const JsonValue&);
+    static Value internalize_json_property(Interpreter&, Object* holder, const PropertyName& name, Function& reviver);
 
     static Value stringify(Interpreter&);
     static Value parse(Interpreter&);

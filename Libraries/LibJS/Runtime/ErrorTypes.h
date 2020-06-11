@@ -49,6 +49,7 @@
     M(IsNotAEvaluatedFrom, "%s is not a %s (evaluated from '%s')")                                     \
     M(JsonBigInt, "Cannot serialize BigInt value to JSON")                                             \
     M(JsonCircular, "Cannot stringify circular object")                                                \
+    M(JsonMalformed, "Malformed JSON string")                                                          \
     M(NotA, "Not a %s object")                                                                         \
     M(NotACtor, "%s is not a constructor")                                                             \
     M(NotAFunction, "%s is not a function")                                                            \
