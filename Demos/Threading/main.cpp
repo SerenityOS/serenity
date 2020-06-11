@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2020, Christopher Joseph Dean Schaefer <disks86@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,32 +24,68 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <stdio.h>
 
-#include <AK/Atomic.h>
-#include <AK/Function.h>
 #include <AK/String.h>
-#include <LibCore/Object.h>
-#include <pthread.h>
+#include <LibThread/ConditionVariable.h>
+#include <LibThread/LockGuard.h>
+#include <LibThread/Thread.h>
 
-namespace LibThread {
+LibThread::ConditionVariable cv;
+LibThread::Mutex cv_m;
+volatile int i = 0;
 
-class Thread final : public Core::Object {
-    C_OBJECT(Thread);
+int waits()
+{
+    LibThread::UniqueLock lk(cv_m);
+    printf("Waiting... \n");
 
-public:
-    explicit Thread(Function<int()> action, StringView thread_name = nullptr);
-    virtual ~Thread();
+    cv.wait(lk, [] { return i == 1; });
+    printf("...finished waiting. i == 1\n");
 
-    void start();
-    void quit(void* code = 0);
-    void join();
+    return 0;
+}
 
-private:
-    Function<int()> m_action;
-    pthread_t m_tid;
-    String m_thread_name;
-    AK::Atomic<bool> m_is_running;
-};
+int signals()
+{
+    sleep(1);
+    {
+        LibThread::LockGuard lk(cv_m);
+        printf("Notifying...\n");
+    }
+    cv.notify_all();
 
+    sleep(1);
+    {
+        LibThread::LockGuard lk(cv_m);
+        i = 1;
+        printf("Notifying again...\n");
+    }
+    cv.notify_all();
+
+    return 0;
+}
+
+int main()
+{
+    /*
+     * Currently there appears to be a bug in pthread that causes only one thread to be notified.
+     * The can be reproduced by adding another wait thread.
+     */
+    auto wait_thread = LibThread::Thread::construct(waits);
+    auto signal_thread = LibThread::Thread::construct(signals);
+
+    wait_thread->start();
+    printf("Started Wait Thread\n");
+
+    signal_thread->start();
+    printf("Started Signal Thread\n");
+
+    wait_thread->join();
+    printf("Joined Wait Thread \n");
+
+    signal_thread->join();
+    printf("Joined Signal Thread \n");
+
+    return 0;
 }

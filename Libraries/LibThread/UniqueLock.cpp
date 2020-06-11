@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2020, Christopher Joseph Dean Schaefer <disks86@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,32 +24,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "UniqueLock.h"
 
-#include <AK/Atomic.h>
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <LibCore/Object.h>
-#include <pthread.h>
+LibThread::UniqueLock::UniqueLock(Mutex& mutex)
+    : m_mutex(mutex)
+{
+    m_mutex.lock();
+}
 
-namespace LibThread {
+LibThread::UniqueLock::~UniqueLock()
+{
+    if (m_is_owner)
+        pthread_mutex_destroy(m_mutex.native_handle());
+}
 
-class Thread final : public Core::Object {
-    C_OBJECT(Thread);
+void LibThread::UniqueLock::lock()
+{
+    m_mutex.lock();
+}
 
-public:
-    explicit Thread(Function<int()> action, StringView thread_name = nullptr);
-    virtual ~Thread();
+bool LibThread::UniqueLock::try_lock()
+{
+    return m_mutex.try_lock();
+}
 
-    void start();
-    void quit(void* code = 0);
-    void join();
+void LibThread::UniqueLock::unlock()
+{
+    m_mutex.unlock();
+}
 
-private:
-    Function<int()> m_action;
-    pthread_t m_tid;
-    String m_thread_name;
-    AK::Atomic<bool> m_is_running;
-};
+bool LibThread::UniqueLock::owns_lock() const noexcept
+{
+    return m_is_owner;
+}
 
+LibThread::Mutex* LibThread::UniqueLock::mutex() const noexcept
+{
+    return &m_mutex;
+}
+
+LibThread::UniqueLock::operator bool() const noexcept
+{
+    return owns_lock();
 }

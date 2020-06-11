@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2020, Christopher Joseph Dean Schaefer <disks86@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,30 +26,29 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <LibCore/Object.h>
 #include <pthread.h>
+
+#include "Mutex.h"
 
 namespace LibThread {
 
-class Thread final : public Core::Object {
-    C_OBJECT(Thread);
+class UniqueLock {
 
 public:
-    explicit Thread(Function<int()> action, StringView thread_name = nullptr);
-    virtual ~Thread();
-
-    void start();
-    void quit(void* code = 0);
-    void join();
+    UniqueLock(Mutex& mutex); //TODO: add support for && for ownership transfer
+    ~UniqueLock();
+    void lock();
+    bool try_lock();
+    //TODO: add support for try_lock
+    //TODO: add support for try_lock_until
+    void unlock();
+    bool owns_lock() const noexcept;
+    Mutex* mutex() const noexcept;
+    explicit operator bool() const noexcept;
 
 private:
-    Function<int()> m_action;
-    pthread_t m_tid;
-    String m_thread_name;
-    AK::Atomic<bool> m_is_running;
+    LibThread::Mutex& m_mutex;
+    bool m_is_owner = false;
 };
 
 }

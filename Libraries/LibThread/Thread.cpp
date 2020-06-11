@@ -32,12 +32,17 @@ LibThread::Thread::Thread(Function<int()> action, StringView thread_name)
     : Core::Object(nullptr)
     , m_action(move(action))
     , m_thread_name(thread_name.is_null() ? "" : thread_name)
+    , m_is_running(false)
 {
 }
 
 LibThread::Thread::~Thread()
 {
-    if (m_tid) {
+    /*
+     * m_tid check was replaced because writes from the other thread weren't always visible to the main thread.
+     * This caused this check to fail even when the thread had exited. Using an atomic resolves this behavior.
+     */
+    if (m_is_running) {
         dbg() << "trying to destroy a running thread!";
         ASSERT_NOT_REACHED();
     }
@@ -45,6 +50,7 @@ LibThread::Thread::~Thread()
 
 void LibThread::Thread::start()
 {
+    m_is_running = true;
     int rc = pthread_create(
         &m_tid,
         nullptr,
@@ -52,6 +58,7 @@ void LibThread::Thread::start()
             Thread* self = static_cast<Thread*>(arg);
             size_t exit_code = self->m_action();
             self->m_tid = 0;
+            self->m_is_running = false;
             pthread_exit((void*)exit_code);
             return (void*)exit_code;
         },
@@ -62,13 +69,28 @@ void LibThread::Thread::start()
         rc = pthread_setname_np(m_tid, m_thread_name.characters());
         ASSERT(rc == 0);
     }
-    dbg() << "Started a thread, tid = " << m_tid;
+    dbg() << "Started a thread, tid = " << m_tid << " from thread tid = " << pthread_self();
 }
 
-void LibThread::Thread::quit(void *code)
+void LibThread::Thread::quit(void* code)
 {
     ASSERT(m_tid == pthread_self());
 
     m_tid = 0;
+    m_is_running = false;
     pthread_exit(code);
+}
+
+void LibThread::Thread::join()
+{
+    ASSERT(m_tid != pthread_self());
+
+    //If the thread has already finished then m_tid will be 0 and join will fail if we call it.
+    int thread_id = m_tid;
+    if (thread_id) {
+        int rc = pthread_join(thread_id, NULL);
+        ASSERT(rc == 0);
+        m_tid = 0;
+        m_is_running = false;
+    }
 }

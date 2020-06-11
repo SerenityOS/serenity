@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2020, Christopher Joseph Dean Schaefer <disks86@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,32 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "assert.h"
 
-#include <AK/Atomic.h>
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <LibCore/Object.h>
-#include <pthread.h>
+#include "Mutex.h"
 
-namespace LibThread {
+LibThread::Mutex::Mutex()
+{
+    ASSERT(!pthread_mutex_init(&m_mutex, NULL));
+}
 
-class Thread final : public Core::Object {
-    C_OBJECT(Thread);
+LibThread::Mutex::~Mutex()
+{
+    pthread_mutex_destroy(&m_mutex);
+}
 
-public:
-    explicit Thread(Function<int()> action, StringView thread_name = nullptr);
-    virtual ~Thread();
+void LibThread::Mutex::lock()
+{
+    pthread_mutex_lock(&m_mutex);
+}
 
-    void start();
-    void quit(void* code = 0);
-    void join();
+bool LibThread::Mutex::try_lock()
+{
+    return !pthread_mutex_trylock(&m_mutex);
+}
 
-private:
-    Function<int()> m_action;
-    pthread_t m_tid;
-    String m_thread_name;
-    AK::Atomic<bool> m_is_running;
-};
+void LibThread::Mutex::unlock()
+{
+    pthread_mutex_unlock(&m_mutex);
+}
 
+pthread_mutex_t* LibThread::Mutex::native_handle()
+{
+    return &m_mutex;
 }
