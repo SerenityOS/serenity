@@ -94,24 +94,26 @@ static void paint_button_new(Painter& painter, const IntRect& rect, const Palett
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 
-        painter.draw_rect({ {}, rect.size() }, shadow_color2);
+        // Top shadow
+        painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, shadow_color2);
+        painter.draw_line({ 0, 0 }, { 0, rect.height() - 2 }, shadow_color2);
 
         // Sunken shadow
-        painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, shadow_color1);
-        painter.draw_line({ 1, 2 }, { 1, rect.height() - 2 }, shadow_color1);
+        painter.draw_line({ 1, 1 }, { rect.width() - 3, 1 }, shadow_color1);
+        painter.draw_line({ 1, 2 }, { 1, rect.height() - 3 }, shadow_color1);
 
-        // Outer shine
+        // Outer highlight
         painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 1, rect.height() - 1 }, highlight_color);
         painter.draw_line({ rect.width() - 1, 0 }, { rect.width() - 1, rect.height() - 2 }, highlight_color);
 
-        // Inner shine
+        // Inner highlight
         painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, palette.button());
         painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, palette.button());
     } else {
         // Base
-        painter.fill_rect({ 1, 1, rect.width() - 1, rect.height() - 1 }, button_color);
+        painter.fill_rect({ 0, 0, rect.width(), rect.height() }, button_color);
 
-        // Outer highlight
+        // Top highlight
         painter.draw_line({ 1, 1 }, { rect.width() - 3, 1 }, highlight_color);
         painter.draw_line({ 1, 1 }, { 1, rect.height() - 3 }, highlight_color);
 
@@ -130,12 +132,12 @@ void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Pal
     if (button_style == ButtonStyle::Normal)
         return paint_button_new(painter, rect, palette, pressed, checked, hovered, enabled);
 
+    if (button_style == ButtonStyle::CoolBar && !enabled)
+        return;
+
     Color button_color = palette.button();
     Color highlight_color = palette.threed_highlight();
     Color shadow_color = palette.threed_shadow1();
-
-    if (button_style == ButtonStyle::CoolBar && !enabled)
-        return;
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
@@ -155,11 +157,11 @@ void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Pal
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 
-        // White highlight
+        // Top highlight
         painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, highlight_color);
         painter.draw_line({ 1, 2 }, { 1, rect.height() - 2 }, highlight_color);
 
-        // Gray shadow
+        // Bottom shadow
         painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, shadow_color);
         painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, shadow_color);
     }
