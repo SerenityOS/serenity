@@ -172,7 +172,7 @@
     do {                                                   \
         will_switch_to(State::new_state);                  \
         m_state = State::new_state;                        \
-        EMIT_CHARACTER(codepoint);                          \
+        EMIT_CHARACTER(codepoint);                         \
     } while (0)
 
 #define SWITCH_TO_AND_EMIT_CURRENT_CHARACTER(new_state) \
@@ -1089,7 +1089,8 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ANYTHING_ELSE
                 {
@@ -1106,11 +1107,14 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1133,11 +1137,15 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_comment_or_character.data.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1164,7 +1172,9 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1183,11 +1193,14 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1205,7 +1218,9 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1255,7 +1270,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    RECONSUME_IN(Comment);
+                    RECONSUME_IN(CommentEndDash);
                 }
             }
             END_STATE
@@ -1264,7 +1279,11 @@ _StartOfFunction:
             {
                 ON('>')
                 {
-                    SWITCH_TO(CommentEnd);
+                    RECONSUME_IN(CommentEnd);
+                }
+                ON_EOF
+                {
+                    RECONSUME_IN(CommentEnd);
                 }
                 ANYTHING_ELSE
                 {
