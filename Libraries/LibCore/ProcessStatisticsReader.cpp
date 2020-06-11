@@ -48,7 +48,8 @@ HashMap<pid_t, Core::ProcessStatistics> ProcessStatisticsReader::get_all()
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    json.as_array().for_each([&](auto& value) {
+    ASSERT(json.has_value());
+    json.value().as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
         Core::ProcessStatistics process;
 

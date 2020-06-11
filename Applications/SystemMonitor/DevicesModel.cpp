@@ -127,10 +127,11 @@ void DevicesModel::update()
     if (!proc_devices->open(Core::IODevice::OpenMode::ReadOnly))
         ASSERT_NOT_REACHED();
 
-    auto json = JsonValue::from_string(proc_devices->read_all()).as_array();
+    auto json = JsonValue::from_string(proc_devices->read_all());
+    ASSERT(json.has_value());
 
     m_devices.clear();
-    json.for_each([this](auto& value) {
+    json.value().as_array().for_each([this](auto& value) {
         JsonObject device = value.as_object();
         DeviceInfo device_info;
 

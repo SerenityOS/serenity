@@ -75,7 +75,7 @@ void JsonValue::copy_from(const JsonValue& other)
 
 JsonValue::JsonValue(JsonValue&& other)
 {
-    m_type = exchange(other.m_type, Type::Undefined);
+    m_type = exchange(other.m_type, Type::Null);
     m_value.as_string = exchange(other.m_value.as_string, nullptr);
 }
 
@@ -83,7 +83,7 @@ JsonValue& JsonValue::operator=(JsonValue&& other)
 {
     if (this != &other) {
         clear();
-        m_type = exchange(other.m_type, Type::Undefined);
+        m_type = exchange(other.m_type, Type::Null);
         m_value.as_string = exchange(other.m_value.as_string, nullptr);
     }
     return *this;
@@ -247,11 +247,11 @@ void JsonValue::clear()
     default:
         break;
     }
-    m_type = Type::Undefined;
+    m_type = Type::Null;
     m_value.as_string = nullptr;
 }
 
-JsonValue JsonValue::from_string(const StringView& input)
+Optional<JsonValue> JsonValue::from_string(const StringView& input)
 {
     return JsonParser(input).parse();
 }

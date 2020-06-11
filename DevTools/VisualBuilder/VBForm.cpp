@@ -389,14 +389,15 @@ void VBForm::load_from_file(const String& path)
 
     auto file_contents = file->read_all();
     auto form_json = JsonValue::from_string(file_contents);
+    ASSERT(form_json.has_value());
 
-    if (!form_json.is_object()) {
+    if (!form_json.value().is_object()) {
         GUI::MessageBox::show(String::format("Could not parse '%s'", path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
         return;
     }
 
-    m_name = form_json.as_object().get("name").to_string();
-    auto widgets = form_json.as_object().get("widgets").as_array();
+    m_name = form_json.value().as_object().get("name").to_string();
+    auto widgets = form_json.value().as_object().get("widgets").as_array();
 
     widgets.for_each([&](const JsonValue& widget_value) {
         auto& widget_object = widget_value.as_object();

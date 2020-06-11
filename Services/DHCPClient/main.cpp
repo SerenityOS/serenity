@@ -77,9 +77,10 @@ int main(int argc, char** argv)
     }
 
     auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents).as_array();
+    auto json = JsonValue::from_string(file_contents);
+    ASSERT(json.has_value());
     Vector<InterfaceDescriptor> ifnames;
-    json.for_each([&ifnames](auto& value) {
+    json.value().as_array().for_each([&ifnames](auto& value) {
         auto if_object = value.as_object();
 
         if (if_object.get("class_name").to_string() == "LoopbackAdapter")

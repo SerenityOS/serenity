@@ -105,13 +105,13 @@ public:
             auto request = m_socket->read(length);
 
             auto request_json = JsonValue::from_string(request);
-            if (!request_json.is_object()) {
+            if (!request_json.has_value() || !request_json.value().is_object()) {
                 dbg() << "RPC client sent invalid request";
                 shutdown();
                 return;
             }
 
-            handle_request(request_json.as_object());
+            handle_request(request_json.value().as_object());
         };
     }
     virtual ~RPCClient() override

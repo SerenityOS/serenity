@@ -48,7 +48,7 @@ TEST_CASE(load_form)
 
     fclose(fp);
 
-    JsonValue form_json = JsonValue::from_string(builder.to_string());
+    JsonValue form_json = JsonValue::from_string(builder.to_string()).value();
 
     EXPECT(form_json.is_object());
 
@@ -87,14 +87,14 @@ BENCHMARK_CASE(load_4chan_catalog)
     auto json_string = builder.to_string();
 
     for (int i = 0; i < 10; ++i) {
-        JsonValue form_json = JsonValue::from_string(json_string);
+        JsonValue form_json = JsonValue::from_string(json_string).value();
         EXPECT(form_json.is_array());
     }
 }
 
 TEST_CASE(json_empty_string)
 {
-    auto json = JsonValue::from_string("\"\"");
+    auto json = JsonValue::from_string("\"\"").value();
     EXPECT_EQ(json.type(), JsonValue::Type::String);
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().is_empty(), true);
@@ -102,7 +102,7 @@ TEST_CASE(json_empty_string)
 
 TEST_CASE(json_utf8_character)
 {
-    auto json = JsonValue::from_string("\"\xc3\x84\"");
+    auto json = JsonValue::from_string("\"\xc3\x84\"").value();
     EXPECT_EQ(json.type(), JsonValue::Type::String);
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().length(), size_t { 2 });

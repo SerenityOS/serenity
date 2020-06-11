@@ -63,8 +63,9 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
+    ASSERT(json.has_value());
 
-    print(json);
+    print(json.value());
     printf("\n");
 
     return 0;
@@ -101,7 +102,7 @@ void print(const JsonValue& value, int indent)
         printf("\033[35;1m");
     else if (value.is_bool())
         printf("\033[32;1m");
-    else if (value.is_null() || value.is_undefined())
+    else if (value.is_null())
         printf("\033[34;1m");
     if (value.is_string())
         putchar('"');

@@ -172,12 +172,13 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
     }
 
     auto json = JsonValue::from_string(file->read_all());
-    if (!json.is_object()) {
+    ASSERT(json.has_value());
+    if (!json.value().is_object()) {
         fprintf(stderr, "Invalid perfcore format (not a JSON object)\n");
         return nullptr;
     }
 
-    auto& object = json.as_object();
+    auto& object = json.value().as_object();
     auto executable_path = object.get("executable").to_string();
 
     MappedFile elf_file(executable_path);

@@ -46,7 +46,9 @@ int main(int argc, char** argv)
     }
 
     auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents);
+    auto json_result = JsonValue::from_string(file_contents);
+    ASSERT(json_result.has_value());
+    auto json = json_result.value();
 
     if (!json.is_object()) {
         fprintf(stderr, "Malformed input\n");

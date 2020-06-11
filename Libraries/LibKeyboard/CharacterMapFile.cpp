@@ -48,7 +48,9 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& file_n
     }
 
     auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents).as_object();
+    auto json_result = JsonValue::from_string(file_contents);
+    ASSERT(json_result.has_value());
+    auto json = json_result.value().as_object();
 
     ByteBuffer map = read_map(json, "map");
     ByteBuffer shift_map = read_map(json, "shift_map");
