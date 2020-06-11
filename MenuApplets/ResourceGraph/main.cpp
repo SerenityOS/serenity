@@ -140,9 +140,10 @@ private:
             ASSERT_NOT_REACHED();
 
         auto file_contents = proc_memstat->read_all();
-        auto json = JsonValue::from_string(file_contents).as_object();
-        unsigned user_physical_allocated = json.get("user_physical_allocated").to_u32();
-        unsigned user_physical_available = json.get("user_physical_available").to_u32();
+        auto json = JsonValue::from_string(file_contents);
+        ASSERT(json.has_value());
+        unsigned user_physical_allocated = json.value().as_object().get("user_physical_allocated").to_u32();
+        unsigned user_physical_available = json.value().as_object().get("user_physical_available").to_u32();
         allocated = (user_physical_allocated * 4096) / 1024;
         available = (user_physical_available * 4096) / 1024;
     }

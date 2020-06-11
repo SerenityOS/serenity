@@ -56,7 +56,8 @@ int main(int argc, char** argv)
         return 1;
 
     auto json = JsonValue::from_string(file->read_all());
-    ASSERT(json.is_object());
+    ASSERT(json.has_value());
+    ASSERT(json.value().is_object());
 
     out() << "#include <AK/Assertions.h>";
     out() << "#include <LibWeb/CSS/PropertyID.h>";
@@ -65,7 +66,7 @@ int main(int argc, char** argv)
 
     out() << "PropertyID property_id_from_string(const StringView& string) {";
 
-    json.as_object().for_each_member([&](auto& name, auto& value) {
+    json.value().as_object().for_each_member([&](auto& name, auto& value) {
         ASSERT(value.is_object());
         out() << "    if (string.equals_ignoring_case(\"" << name << "\"))";
         out() << "        return PropertyID::" << title_casify(name) << ";";
@@ -77,7 +78,7 @@ int main(int argc, char** argv)
 
     out() << "const char* string_from_property_id(PropertyID property_id) {";
     out() << "    switch (property_id) {";
-    json.as_object().for_each_member([&](auto& name, auto& value) {
+    json.value().as_object().for_each_member([&](auto& name, auto& value) {
         ASSERT(value.is_object());
         out() << "    case PropertyID::" << title_casify(name) << ":";
         out() << "        return \"" << name << "\";";

@@ -40,23 +40,24 @@ public:
     {
     }
 
-    JsonValue parse();
+    Optional<JsonValue> parse();
 
 private:
+    Optional<JsonValue> parse_helper();
+
     char peek() const;
     char consume();
     void consume_whitespace();
-    void consume_specific(char expected_ch);
-    void consume_string(const char*);
+    bool consume_specific(char expected_ch);
+    bool consume_string(const char*);
     String consume_quoted_string();
-    JsonArray parse_array();
-    JsonObject parse_object();
-    JsonValue parse_number();
-    JsonValue parse_string();
-    JsonValue parse_false();
-    JsonValue parse_true();
-    JsonValue parse_null();
-    JsonValue parse_undefined();
+    Optional<JsonValue> parse_array();
+    Optional<JsonValue> parse_object();
+    Optional<JsonValue> parse_number();
+    Optional<JsonValue> parse_string();
+    Optional<JsonValue> parse_false();
+    Optional<JsonValue> parse_true();
+    Optional<JsonValue> parse_null();
 
     template<typename C>
     void consume_while(C);

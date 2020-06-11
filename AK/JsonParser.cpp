@@ -62,15 +62,16 @@ void JsonParser::consume_whitespace()
     consume_while([](char ch) { return is_whitespace(ch); });
 }
 
-void JsonParser::consume_specific(char expected_ch)
+bool JsonParser::consume_specific(char expected_ch)
 {
     char consumed_ch = consume();
-    ASSERT(consumed_ch == expected_ch);
+    return consumed_ch == expected_ch;
 }
 
 String JsonParser::consume_quoted_string()
 {
-    consume_specific('"');
+    if (!consume_specific('"'))
+        return {};
     Vector<char, 1024> buffer;
 
     for (;;) {
@@ -136,7 +137,8 @@ String JsonParser::consume_quoted_string()
             break;
         }
     }
-    consume_specific('"');
+    if (!consume_specific('"'))
+        return {};
 
     if (buffer.is_empty())
         return String::empty();
@@ -151,55 +153,78 @@ String JsonParser::consume_quoted_string()
     return last_string_starting_with_character;
 }
 
-JsonObject JsonParser::parse_object()
+Optional<JsonValue> JsonParser::parse_object()
 {
     JsonObject object;
-    consume_specific('{');
+    if (!consume_specific('{'))
+        return {};
     for (;;) {
         consume_whitespace();
         if (peek() == '}')
             break;
         consume_whitespace();
         auto name = consume_quoted_string();
+        if (name.is_null())
+            return {};
         consume_whitespace();
-        consume_specific(':');
+        if (!consume_specific(':'))
+            return {};
         consume_whitespace();
-        auto value = parse();
-        object.set(name, move(value));
+        auto value = parse_helper();
+        if (!value.has_value())
+            return {};
+        object.set(name, move(value.value()));
         consume_whitespace();
         if (peek() == '}')
             break;
-        consume_specific(',');
+        if (!consume_specific(','))
+            return {};
+        consume_whitespace();
+        if (peek() == '}')
+            return {};
     }
-    consume_specific('}');
+    if (!consume_specific('}'))
+        return {};
     return object;
 }
 
-JsonArray JsonParser::parse_array()
+Optional<JsonValue> JsonParser::parse_array()
 {
     JsonArray array;
-    consume_specific('[');
+    if (!consume_specific('['))
+        return {};
     for (;;) {
         consume_whitespace();
         if (peek() == ']')
             break;
-        array.append(parse());
+        auto element = parse_helper();
+        if (!element.has_value())
+            return {};
+        array.append(element.value());
         consume_whitespace();
         if (peek() == ']')
             break;
-        consume_specific(',');
+        if (!consume_specific(','))
+            return {};
+        consume_whitespace();
+        if (peek() == ']')
+            return {};
     }
     consume_whitespace();
-    consume_specific(']');
+    if (!consume_specific(']'))
+        return {};
     return array;
 }
 
-JsonValue JsonParser::parse_string()
+Optional<JsonValue> JsonParser::parse_string()
 {
-    return consume_quoted_string();
+    auto result = consume_quoted_string();
+    if (result.is_null())
+        return {};
+    return JsonValue(result);
 }
 
-JsonValue JsonParser::parse_number()
+Optional<JsonValue> JsonParser::parse_number()
 {
     JsonValue value;
     Vector<char, 128> number_buffer;
@@ -235,7 +260,10 @@ JsonValue JsonParser::parse_number()
         if (to_signed_result.has_value()) {
             whole = to_signed_result.value();
         } else {
-            whole = number_string.to_int().value();
+            auto number = number_string.to_int();
+            if (!number.has_value())
+                return {};
+            whole = number.value();
         }
 
         int fraction = fraction_string.to_uint().value();
@@ -252,7 +280,10 @@ JsonValue JsonParser::parse_number()
         if (to_unsigned_result.has_value()) {
             value = JsonValue(to_unsigned_result.value());
         } else {
-            value = JsonValue(number_string.to_int().value());
+            auto number = number_string.to_int();
+            if (!number.has_value())
+                return {};
+            value = JsonValue(number.value());
         }
 #ifndef KERNEL
     }
@@ -261,37 +292,37 @@ JsonValue JsonParser::parse_number()
     return value;
 }
 
-void JsonParser::consume_string(const char* str)
+bool JsonParser::consume_string(const char* str)
 {
-    for (size_t i = 0, length = strlen(str); i < length; ++i)
-        consume_specific(str[i]);
+    for (size_t i = 0, length = strlen(str); i < length; ++i) {
+        if (!consume_specific(str[i]))
+            return false;
+    }
+    return true;
 }
 
-JsonValue JsonParser::parse_true()
+Optional<JsonValue> JsonParser::parse_true()
 {
-    consume_string("true");
+    if (!consume_string("true"))
+        return {};
     return JsonValue(true);
 }
 
-JsonValue JsonParser::parse_false()
+Optional<JsonValue> JsonParser::parse_false()
 {
-    consume_string("false");
+    if (!consume_string("false"))
+        return {};
     return JsonValue(false);
 }
 
-JsonValue JsonParser::parse_null()
+Optional<JsonValue> JsonParser::parse_null()
 {
-    consume_string("null");
+    if (!consume_string("null"))
+        return {};
     return JsonValue(JsonValue::Type::Null);
 }
 
-JsonValue JsonParser::parse_undefined()
-{
-    consume_string("undefined");
-    return JsonValue(JsonValue::Type::Undefined);
-}
-
-JsonValue JsonParser::parse()
+Optional<JsonValue> JsonParser::parse_helper()
 {
     consume_whitespace();
     auto type_hint = peek();
@@ -320,10 +351,19 @@ JsonValue JsonParser::parse()
         return parse_true();
     case 'n':
         return parse_null();
-    case 'u':
-        return parse_undefined();
     }
 
-    return JsonValue();
+    return {};
 }
+
+Optional<JsonValue> JsonParser::parse() {
+    auto result = parse_helper();
+    if (!result.has_value())
+        return {};
+    consume_whitespace();
+    if (m_index != m_input.length())
+        return {};
+    return result;
+}
+
 }

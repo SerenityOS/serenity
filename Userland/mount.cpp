@@ -149,9 +149,10 @@ bool print_mounts()
     }
 
     auto content = df->read_all();
-    auto json = JsonValue::from_string(content).as_array();
+    auto json = JsonValue::from_string(content);
+    ASSERT(json.has_value());
 
-    json.for_each([](auto& value) {
+    json.value().as_array().for_each([](auto& value) {
         auto fs_object = value.as_object();
         auto class_name = fs_object.get("class_name").to_string();
         auto mount_point = fs_object.get("mount_point").to_string();

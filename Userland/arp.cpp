@@ -39,8 +39,9 @@ int main()
 
     printf("Address          HWaddress\n");
     auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents).as_array();
-    json.for_each([](auto& value) {
+    auto json = JsonValue::from_string(file_contents);
+    ASSERT(json.has_value());
+    json.value().as_array().for_each([](auto& value) {
         auto if_object = value.as_object();
 
         auto ip_address = if_object.get("ip_address").to_string();
