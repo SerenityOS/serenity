@@ -58,6 +58,11 @@ void Timer::start(int interval)
     m_active = true;
 }
 
+void Timer::restart()
+{
+    restart(m_interval);
+}
+
 void Timer::restart(int interval)
 {
     if (m_active)

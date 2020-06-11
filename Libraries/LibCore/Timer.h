@@ -46,6 +46,7 @@ public:
 
     void start();
     void start(int interval);
+    void restart();
     void restart(int interval);
     void stop();
 
