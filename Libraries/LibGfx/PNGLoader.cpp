@@ -246,7 +246,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* 
     }
     if constexpr (filter_type == 2) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
-        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
+        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (const Pixel*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
@@ -261,7 +261,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* 
     }
     if constexpr (filter_type == 3) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
-        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
+        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (const Pixel*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
@@ -358,10 +358,10 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
             auto mask = (1 << context.bit_depth) - 1;
             for (int y = 0; y < context.height; ++y) {
                 auto* gray_values = (u8*)context.scanlines[y].data.data();
-                for (int i = 0; i < context.width; ++i) {
-                    auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (i % pixels_per_byte));
-                    auto value = (gray_values[i / pixels_per_byte] >> bit_offset) & mask;
-                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                for (int x = 0; x < context.width; ++x) {
+                    auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (x % pixels_per_byte));
+                    auto value = (gray_values[x / pixels_per_byte] >> bit_offset) & mask;
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[x];
                     pixel.r = value * (0xff / pow(context.bit_depth, 2));
                     pixel.g = value * (0xff / pow(context.bit_depth, 2));
                     pixel.b = value * (0xff / pow(context.bit_depth, 2));
