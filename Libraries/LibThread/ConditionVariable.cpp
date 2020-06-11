@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2020, Christopher Joseph Dean Schaefer <disks86@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,32 +24,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "assert.h"
 
-#include <AK/Atomic.h>
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <LibCore/Object.h>
-#include <pthread.h>
+#include <LibThread/ConditionVariable.h>
 
-namespace LibThread {
+LibThread::ConditionVariable::ConditionVariable()
+{
+    auto rc = pthread_cond_init(&m_condition_variable, NULL);
+    ASSERT(!rc);
+}
 
-class Thread final : public Core::Object {
-    C_OBJECT(Thread);
+LibThread::ConditionVariable::~ConditionVariable()
+{
+    auto rc = pthread_cond_destroy(&m_condition_variable);
+    ASSERT(!rc);
+}
 
-public:
-    explicit Thread(Function<int()> action, StringView thread_name = nullptr);
-    virtual ~Thread();
+void LibThread::ConditionVariable::notify_one() noexcept
+{
+    auto rc = pthread_cond_signal(&m_condition_variable);
+    ASSERT(!rc);
+}
 
-    void start();
-    void quit(void* code = nullptr);
-    void join();
+void LibThread::ConditionVariable::notify_all() noexcept
+{
+    auto rc = pthread_cond_broadcast(&m_condition_variable);
+    ASSERT(!rc);
+}
 
-private:
-    Function<int()> m_action;
-    pthread_t m_tid;
-    String m_thread_name;
-    Atomic<bool> m_is_running;
-};
+void LibThread::ConditionVariable::wait(UniqueLock& lock) noexcept
+{
+    auto rc = pthread_cond_wait(&m_condition_variable, lock.mutex()->native_handle());
+    ASSERT(!rc);
+}
 
+pthread_cond_t LibThread::ConditionVariable::native_handle() noexcept
+{
+    return m_condition_variable;
 }

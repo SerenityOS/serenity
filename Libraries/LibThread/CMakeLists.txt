@@ -1,6 +1,10 @@
 set(SOURCES
-    BackgroundAction.cpp
-    Thread.cpp
+	BackgroundAction.cpp
+	ConditionVariable.cpp
+	LockGuard.cpp
+	Mutex.cpp
+	Thread.cpp
+	UniqueLock.cpp
 )
 
 serenity_lib(LibThread thread)
