@@ -80,6 +80,7 @@
 #include <LibC/signal_numbers.h>
 #include <LibELF/Loader.h>
 #include <LibELF/Validation.h>
+#include <LibKeyboard/CharacterMapData.h>
 
 //#define PROCESS_DEBUG
 //#define DEBUG_POLL_SELECT
@@ -4302,22 +4303,31 @@ int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* user_params)
     if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
+    Keyboard::CharacterMapData character_map_data;
+
     const char* map = params.map;
     const char* shift_map = params.shift_map;
     const char* alt_map = params.alt_map;
     const char* altgr_map = params.altgr_map;
 
-    if (!validate_read(map, 0x80))
+    if (!validate_read(map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!validate_read(shift_map, 0x80))
+    if (!validate_read(shift_map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!validate_read(alt_map, 0x80))
+    if (!validate_read(alt_map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!validate_read(altgr_map, 0x80))
+    if (!validate_read(altgr_map, CHAR_MAP_SIZE))
         return -EFAULT;
 
+    for (int i = 0; i < CHAR_MAP_SIZE; i++) {
+        character_map_data.map[i] = map[i];
+        character_map_data.shift_map[i] = shift_map[i];
+        character_map_data.alt_map[i] = alt_map[i];
+        character_map_data.altgr_map[i] = altgr_map[i];
+    }
+
     SmapDisabler disabler;
-    KeyboardDevice::the().set_maps(map, shift_map, alt_map, altgr_map);
+    KeyboardDevice::the().set_maps(character_map_data);
     return 0;
 }
 
