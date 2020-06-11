@@ -170,6 +170,7 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
         auto doctype = adopt(*new DocumentType(document()));
         doctype->set_name(token.m_doctype.name.to_string());
         document().append_child(move(doctype));
+        document().set_quirks_mode(token.m_doctype.force_quirks);
         m_insertion_mode = InsertionMode::BeforeHTML;
         return;
     }

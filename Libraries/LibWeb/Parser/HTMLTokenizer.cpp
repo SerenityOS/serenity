@@ -299,8 +299,7 @@ _StartOfFunction:
                 ANYTHING_ELSE
                 {
                     PARSE_ERROR();
-                    EMIT_CHARACTER('<');
-                    RECONSUME_IN(Data);
+                    EMIT_CHARACTER_AND_RECONSUME_IN('<', Data);
                 }
             }
             END_STATE
@@ -429,11 +428,16 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    create_new_token(HTMLToken::Type::DOCTYPE);
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    RECONSUME_IN(BeforeDOCTYPEName);
                 }
             }
             END_STATE
@@ -452,15 +456,25 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    create_new_token(HTMLToken::Type::DOCTYPE);
+                    m_current_token.m_doctype.name.append_codepoint(0xFFFD);
+                    SWITCH_TO(DOCTYPEName);
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    create_new_token(HTMLToken::Type::DOCTYPE);
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    create_new_token(HTMLToken::Type::DOCTYPE);
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -484,14 +498,20 @@ _StartOfFunction:
                 ON_ASCII_UPPER_ALPHA
                 {
                     m_current_token.m_doctype.name.append(tolower(current_input_character.value()));
+                    continue;
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.name.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -513,7 +533,10 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -523,7 +546,9 @@ _StartOfFunction:
                     if (toupper(current_input_character.value()) == 'S' && consume_next_if_match("YSTEM", CaseSensitivity::CaseInsensitive)) {
                         SWITCH_TO(AfterDOCTYPESystemKeyword);
                     }
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    RECONSUME_IN(BogusDOCTYPE);
                 }
             }
             END_STATE
@@ -536,23 +561,34 @@ _StartOfFunction:
                 }
                 ON('"')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.public_identifier.clear();
+                    SWITCH_TO(DOCTYPEPublicIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.public_identifier.clear();
+                    SWITCH_TO(DOCTYPEPublicIdentifierSingleQuoted);
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    RECONSUME_IN(BogusDOCTYPE);
                 }
             }
             END_STATE
@@ -565,23 +601,34 @@ _StartOfFunction:
                 }
                 ON('"')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.system_identifier.clear();
+                    SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.system_identifier.clear();
+                    SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    RECONSUME_IN(BogusDOCTYPE);
                 }
             }
             END_STATE
@@ -604,15 +651,22 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    RECONSUME_IN(BogusDOCTYPE);
                 }
             }
             END_STATE
@@ -635,15 +689,22 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    RECONSUME_IN(BogusDOCTYPE);
                 }
             }
             END_STATE
@@ -656,15 +717,22 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.public_identifier.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -682,15 +750,22 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.public_identifier.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -708,15 +783,22 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.system_identifier.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -734,15 +816,22 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.system_identifier.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ON('>')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -764,19 +853,28 @@ _StartOfFunction:
                 }
                 ON('"')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.system_identifier.clear();
+                    SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.system_identifier.clear();
+                    SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    RECONSUME_IN(BogusDOCTYPE);
                 }
             }
             END_STATE
@@ -803,11 +901,16 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    RECONSUME_IN(BogusDOCTYPE);
                 }
             }
             END_STATE
@@ -824,11 +927,38 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_doctype.force_quirks = true;
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    RECONSUME_IN(BogusDOCTYPE);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(BogusDOCTYPE)
+            {
+                ON('>')
+                {
+                    SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
+                }
+                ON(0)
+                {
+                    PARSE_ERROR();
+                    continue;
+                }
+                ON_EOF
+                {
+                    m_queued_tokens.enqueue(m_current_token);
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    continue;
                 }
             }
             END_STATE
