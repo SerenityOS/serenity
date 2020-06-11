@@ -4305,10 +4305,10 @@ int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* user_params)
 
     Keyboard::CharacterMapData character_map_data;
 
-    const char* map = params.map;
-    const char* shift_map = params.shift_map;
-    const char* alt_map = params.alt_map;
-    const char* altgr_map = params.altgr_map;
+    const u32* map = params.map;
+    const u32* shift_map = params.shift_map;
+    const u32* alt_map = params.alt_map;
+    const u32* altgr_map = params.altgr_map;
 
     if (!validate_read(map, CHAR_MAP_SIZE))
         return -EFAULT;
