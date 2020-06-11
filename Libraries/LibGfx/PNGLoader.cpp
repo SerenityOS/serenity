@@ -600,6 +600,12 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
             return false;
         }
 
+        if (filter > 4) {
+            dbg() << "Invalid PNG filter: " << filter;
+            context.state = PNGLoadingContext::State::Error;
+            return false;
+        }
+
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
         auto row_size = ((context.width * context.channels * context.bit_depth) + 7) / 8;
