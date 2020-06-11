@@ -265,7 +265,7 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
     event.flags = m_modifiers;
     event.e0_prefix = m_has_e0_prefix;
     event.caps_lock_on = m_caps_lock_on;
-    event.character = m_character_map.get_char(event);
+    event.code_point = m_character_map.get_char(event);
 
     if (pressed)
         event.flags |= Is_Press;

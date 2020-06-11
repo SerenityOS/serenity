@@ -161,7 +161,7 @@ enum KeyModifier {
 struct KeyEvent {
     KeyCode key { Key_Invalid };
     u32 scancode { 0 };
-    u8 character { 0 };
+    u32 code_point { 0 };
     u8 flags { 0 };
     bool caps_lock_on { false };
     bool e0_prefix { false };
