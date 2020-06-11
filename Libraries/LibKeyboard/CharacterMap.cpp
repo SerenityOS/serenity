@@ -26,22 +26,65 @@
 
 #include "CharacterMap.h"
 #include <Kernel/Syscall.h>
-#include <LibKeyboard/CharacterMapFile.h>
+#ifndef KERNEL
+#    include <LibKeyboard/CharacterMapFile.h>
+#endif
 
 namespace Keyboard {
 
 CharacterMap::CharacterMap(const String& file_name)
 {
+#ifdef KERNEL
+    UNUSED_PARAM(file_name);
+    m_character_map_data = default_character_map;
+#else
     auto result = CharacterMapFile::load_from_file(file_name);
     ASSERT(result.has_value());
 
-    m_character_map = result.value();
+    m_character_map_data = result.value();
+#endif
 }
 
 int CharacterMap::set_system_map()
 {
-    Syscall::SC_setkeymap_params params { m_character_map.map, m_character_map.shift_map, m_character_map.alt_map, m_character_map.altgr_map };
+    Syscall::SC_setkeymap_params params { m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map };
     return syscall(SC_setkeymap, &params);
+}
+
+char CharacterMap::get_char(KeyEvent event)
+{
+    auto modifiers = event.modifiers();
+    auto index = event.scancode & 0xFF; // Index is last byte of scan code.
+    auto caps_lock_on = event.caps_lock_on;
+
+    char character;
+    if (modifiers & Mod_Shift)
+        character = m_character_map_data.shift_map[index];
+    else if (modifiers & Mod_Alt)
+        character = m_character_map_data.alt_map[index];
+    else if (modifiers & Mod_AltGr)
+        character = m_character_map_data.altgr_map[index];
+    else
+        character = m_character_map_data.map[index];
+
+    if (caps_lock_on && (modifiers == 0 || modifiers == Mod_Shift)) {
+        if (character >= 'a' && character <= 'z')
+            character &= ~0x20;
+        else if (character >= 'A' && character <= 'Z')
+            character |= 0x20;
+    }
+
+    if (event.e0_prefix && event.key == Key_Slash) {
+        // If Key_Slash (scancode = 0x35) mapped to other form "/", we fix num pad key of "/" with this case.
+        character = '/';
+    }
+
+    return character;
+}
+
+void CharacterMap::set_character_map_data(CharacterMapData character_map_data)
+{
+    m_character_map_data = character_map_data;
 }
 
 }

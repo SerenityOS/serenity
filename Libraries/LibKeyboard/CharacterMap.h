@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <Kernel/KeyCode.h>
 #include <LibKeyboard/CharacterMapData.h>
 
 namespace Keyboard {
@@ -37,9 +38,11 @@ public:
     CharacterMap(const String& file_name);
 
     int set_system_map();
+    char get_char(KeyEvent);
+    void set_character_map_data(CharacterMapData character_map_data);
 
 private:
-    CharacterMapData m_character_map;
+    CharacterMapData m_character_map_data;
 };
 
 }
