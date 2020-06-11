@@ -24,6 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonParser.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonArray.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
@@ -39,7 +42,7 @@ JSONObject::JSONObject()
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("stringify", stringify, 3, attr);
-    define_native_function("parse", parse, 1, attr);
+    define_native_function("parse", parse, 2, attr);
 }
 
 JSONObject::~JSONObject()
@@ -365,9 +368,119 @@ String JSONObject::quote_json_string(String string)
     return builder.to_string();
 }
 
-Value JSONObject::parse(Interpreter&)
+Value JSONObject::parse(Interpreter& interpreter)
 {
-    return js_undefined();
+    if (!interpreter.argument_count())
+        return js_undefined();
+    auto string = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto reviver = interpreter.argument(1);
+
+    auto json = JsonValue::from_string(string);
+    if (!json.has_value()) {
+        interpreter.throw_exception<SyntaxError>(ErrorType::JsonMalformed);
+        return {};
+    }
+    Value result = parse_json_value(interpreter, json.value());
+    if (reviver.is_function()) {
+        auto* holder_object = Object::create_empty(interpreter, interpreter.global_object());
+        holder_object->define_property(String::empty(), result);
+        if (interpreter.exception())
+            return {};
+        return internalize_json_property(interpreter, holder_object, String::empty(), reviver.as_function());
+    }
+    return result;
+}
+
+Value JSONObject::parse_json_value(Interpreter& interpreter, const JsonValue& value)
+{
+    if (value.is_object())
+        return Value(parse_json_object(interpreter, value.as_object()));
+    if (value.is_array())
+        return Value(parse_json_array(interpreter, value.as_array()));
+    if (value.is_null())
+        return js_null();
+#if !defined(KERNEL)
+    if (value.is_double())
+        return Value(value.as_double());
+#endif
+    if (value.is_number())
+        return Value(value.to_i32(0));
+    if (value.is_string())
+        return js_string(interpreter, value.to_string());
+    if (value.is_bool())
+        return Value(static_cast<bool>(value.as_bool()));
+    ASSERT_NOT_REACHED();
+}
+
+Object* JSONObject::parse_json_object(Interpreter& interpreter, const JsonObject& json_object)
+{
+    auto* object = Object::create_empty(interpreter, interpreter.global_object());
+    json_object.for_each_member([&object, &interpreter](String key, JsonValue value) {
+        object->put(key, parse_json_value(interpreter, value));
+    });
+    return object;
+}
+
+Array* JSONObject::parse_json_array(Interpreter& interpreter, const JsonArray& json_array)
+{
+    auto* array = Array::create(interpreter.global_object());
+    size_t index = 0;
+    json_array.for_each([&array, &interpreter, &index](JsonValue value) {
+        array->put(index++, parse_json_value(interpreter, value));
+    });
+    return array;
+}
+
+Value JSONObject::internalize_json_property(Interpreter& interpreter, Object* holder, const PropertyName& name, Function& reviver)
+{
+    auto value = holder->get(name);
+    if (interpreter.exception())
+        return {};
+    if (value.is_object()) {
+        auto& value_object = value.as_object();
+
+        auto process_property = [&](const PropertyName& key) {
+            auto element = internalize_json_property(interpreter, &value_object, key, reviver);
+            if (interpreter.exception())
+                return;
+            if (element.is_undefined()) {
+                value_object.delete_property(key);
+            } else {
+                value_object.define_property(key, element, default_attributes, false);
+            }
+        };
+
+        if (value_object.is_array()) {
+            auto length = length_of_array_like(interpreter, value);
+            for (size_t i = 0; i < length; ++i) {
+                process_property(i);
+                if (interpreter.exception())
+                    return {};
+            }
+        } else {
+            for (auto& entry : value_object.indexed_properties()) {
+                auto value_and_attributes = entry.value_and_attributes(&value_object);
+                if (!value_and_attributes.attributes.is_enumerable())
+                    continue;
+                process_property(entry.index());
+                if (interpreter.exception())
+                    return {};
+            }
+            for (auto& [key, metadata] : value_object.shape().property_table_ordered()) {
+                if (!metadata.attributes.is_enumerable())
+                    continue;
+                process_property(key);
+                if (interpreter.exception())
+                    return {};
+            }
+        }
+    }
+    MarkedValueList arguments(interpreter.heap());
+    arguments.values().append(js_string(interpreter, name.to_string()));
+    arguments.values().append(value);
+    return interpreter.call(reviver, Value(holder), move(arguments));
 }
 
 }
