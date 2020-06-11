@@ -25,6 +25,7 @@
  */
 
 #include <AK/SharedBuffer.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
@@ -129,12 +130,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
     if (!window)
         return;
 
-    auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode) message.key(), message.modifiers(), message.scancode());
-    if (message.character() != '\0') {
-        char ch = message.character();
-        key_event->m_text = String(&ch, 1);
-    }
-
+    auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)message.key(), message.modifiers(), message.code_point(), message.scancode());
     Action* action = nullptr;
 
 #ifdef KEYBOARD_SHORTCUTS_DEBUG
@@ -176,7 +172,11 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
             return;
         key_event->m_key = Key_Invalid;
         key_event->m_modifiers = 0;
-        key_event->m_text = emoji_input_dialog->selected_emoji_text();
+
+        AK::Utf8View m_utf8_view(emoji_input_dialog->selected_emoji_text().characters());
+        u32 code_point = *m_utf8_view.begin();
+
+        key_event->m_code_point = code_point;
     }
 
     Core::EventLoop::current().post_event(*window, move(key_event));
@@ -188,12 +188,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyUp& message
     if (!window)
         return;
 
-    auto key_event = make<KeyEvent>(Event::KeyUp, (KeyCode) message.key(), message.modifiers(), message.scancode());
-    if (message.character() != '\0') {
-        char ch = message.character();
-        key_event->m_text = String(&ch, 1);
-    }
-
+    auto key_event = make<KeyEvent>(Event::KeyUp, (KeyCode)message.key(), message.modifiers(), message.code_point(), message.scancode());
     Core::EventLoop::current().post_event(*window, move(key_event));
 }
 

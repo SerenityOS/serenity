@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/Event.h>
@@ -267,10 +268,11 @@ enum MouseButton : u8 {
 
 class KeyEvent final : public Event {
 public:
-    KeyEvent(Type type, KeyCode key, u8 modifiers, u32 scancode)
+    KeyEvent(Type type, KeyCode key, u8 modifiers, u32 code_point, u32 scancode)
         : Event(type)
         , m_key(key)
         , m_modifiers(modifiers)
+        , m_code_point(code_point)
         , m_scancode(scancode)
     {
     }
@@ -281,7 +283,13 @@ public:
     bool shift() const { return m_modifiers & Mod_Shift; }
     bool logo() const { return m_modifiers & Mod_Logo; }
     u8 modifiers() const { return m_modifiers; }
-    String text() const { return m_text; }
+    u32 code_point() const { return m_code_point; }
+    String text() const
+    {
+        StringBuilder sb;
+        sb.append_codepoint(m_code_point);
+        return sb.to_string();
+    }
     u32 scancode() const { return m_scancode; }
 
     String to_string() const;
@@ -290,8 +298,9 @@ private:
     friend class WindowServerConnection;
     KeyCode m_key { KeyCode::Key_Invalid };
     u8 m_modifiers { 0 };
+    u32 m_code_point { 0 };
     u32 m_scancode { 0 };
-    String m_text;
+    String m_text2;
 };
 
 class MouseEvent final : public Event {
