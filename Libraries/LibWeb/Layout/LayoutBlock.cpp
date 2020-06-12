@@ -29,6 +29,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/LayoutBlock.h>
+#include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutReplaced.h>
 #include <LibWeb/Layout/LayoutText.h>
@@ -67,10 +68,10 @@ void LayoutBlock::layout(LayoutMode layout_mode)
     compute_height();
 
     if (layout_mode == LayoutMode::Default)
-        layout_absolute_descendants();
+        layout_absolutely_positioned_descendants();
 }
 
-void LayoutBlock::layout_absolute_descendants()
+void LayoutBlock::layout_absolutely_positioned_descendants()
 {
     for (auto& box : m_absolutely_positioned_descendants) {
         box->layout(LayoutMode::Default);
@@ -441,9 +442,7 @@ void LayoutBlock::compute_width()
 
 void LayoutBlock::compute_position()
 {
-    // Absolutely positioned blocks are positioned by position_absolute_boxes()
     if (is_absolutely_positioned()) {
-        dbg() << "Is abspos, adding to containing block " << containing_block()->node()->tag_name();
         const_cast<LayoutBlock*>(containing_block())->add_absolutely_positioned_descendant(*this);
         return;
     }

@@ -171,6 +171,7 @@ public:
     virtual void render(RenderingContext&);
 
     bool is_absolutely_positioned() const;
+    bool is_fixed_position() const;
 
     const LayoutBlock* containing_block() const;
 

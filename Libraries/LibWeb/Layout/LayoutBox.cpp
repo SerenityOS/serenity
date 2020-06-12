@@ -194,6 +194,10 @@ void LayoutBox::render(RenderingContext& context)
     if (!is_visible())
         return;
 
+    Gfx::PainterStateSaver saver(context.painter());
+    if (is_fixed_position())
+        context.painter().translate(context.scroll_offset());
+
 #ifdef DRAW_BOXES_AROUND_LAYOUT_NODES
     context.painter().draw_rect(m_rect, Color::Blue);
 #endif

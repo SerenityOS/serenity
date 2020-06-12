@@ -72,7 +72,9 @@ const LayoutBlock* LayoutNode::containing_block() const
     if (is_text())
         return nearest_block_ancestor();
 
-    if (is_absolutely_positioned()) {
+    auto position = style().position();
+
+    if (position == CSS::Position::Absolute) {
         auto* ancestor = parent();
         while (ancestor && !ancestor->can_contain_boxes_with_position_absolute())
             ancestor = ancestor->parent();
@@ -81,7 +83,7 @@ const LayoutBlock* LayoutNode::containing_block() const
         return to<LayoutBlock>(ancestor);
     }
 
-    if (style().position() == CSS::Position::Fixed)
+    if (position == CSS::Position::Fixed)
         return &root();
 
     return nearest_block_ancestor();
@@ -189,7 +191,13 @@ Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
 
 bool LayoutNode::is_absolutely_positioned() const
 {
-    return style().position() == CSS::Position::Absolute;
+    auto position = style().position();
+    return position == CSS::Position::Absolute || position == CSS::Position::Fixed;
+}
+
+bool LayoutNode::is_fixed_position() const
+{
+    return style().position() == CSS::Position::Fixed;
 }
 
 }

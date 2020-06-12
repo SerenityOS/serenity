@@ -34,9 +34,10 @@ namespace Web {
 
 class RenderingContext {
 public:
-    explicit RenderingContext(GUI::Painter& painter, const Palette& palette)
+    explicit RenderingContext(GUI::Painter& painter, const Palette& palette, const Gfx::IntPoint& scroll_offset)
         : m_painter(painter)
         , m_palette(palette)
+        , m_scroll_offset(scroll_offset)
     {
     }
 
@@ -49,10 +50,13 @@ public:
     Gfx::IntRect viewport_rect() const { return m_viewport_rect; }
     void set_viewport_rect(const Gfx::IntRect& rect) { m_viewport_rect = rect; }
 
+    const Gfx::IntPoint& scroll_offset() const { return m_scroll_offset; }
+
 private:
     GUI::Painter& m_painter;
     Palette m_palette;
     Gfx::IntRect m_viewport_rect;
+    Gfx::IntPoint m_scroll_offset;
     bool m_should_show_line_box_borders { false };
 };
 
