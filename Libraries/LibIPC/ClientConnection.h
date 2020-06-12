@@ -93,12 +93,7 @@ public:
         add_child(socket);
         m_socket->on_ready_to_read = [this] { drain_messages_from_client(); };
 
-        m_responsiveness_timer = Core::Timer::construct();
-        m_responsiveness_timer->set_single_shot(true);
-        m_responsiveness_timer->set_interval(3000);
-        m_responsiveness_timer->on_timeout = [this] {
-            may_have_become_unresponsive();
-        };
+        m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
     }
 
     virtual ~ClientConnection() override
