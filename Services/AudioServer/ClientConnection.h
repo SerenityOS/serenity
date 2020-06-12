@@ -34,22 +34,24 @@ namespace Audio {
 class Buffer;
 }
 
-class ASBufferQueue;
-class ASMixer;
+namespace AudioServer {
 
-class ASClientConnection final : public IPC::ClientConnection<AudioServerEndpoint>
+class BufferQueue;
+class Mixer;
+
+class ClientConnection final : public IPC::ClientConnection<AudioServerEndpoint>
     , public AudioServerEndpoint {
-    C_OBJECT(ASClientConnection)
+    C_OBJECT(ClientConnection)
 public:
-    explicit ASClientConnection(Core::LocalSocket&, int client_id, ASMixer& mixer);
-    ~ASClientConnection() override;
+    explicit ClientConnection(Core::LocalSocket&, int client_id, Mixer& mixer);
+    ~ClientConnection() override;
 
-    void did_finish_playing_buffer(Badge<ASBufferQueue>, int buffer_id);
-    void did_change_muted_state(Badge<ASMixer>, bool muted);
+    void did_finish_playing_buffer(Badge<BufferQueue>, int buffer_id);
+    void did_change_muted_state(Badge<Mixer>, bool muted);
 
     virtual void die() override;
 
-    static void for_each(Function<void(ASClientConnection&)>);
+    static void for_each(Function<void(ClientConnection&)>);
 
 private:
     virtual OwnPtr<Messages::AudioServer::GreetResponse> handle(const Messages::AudioServer::Greet&) override;
@@ -64,6 +66,8 @@ private:
     virtual OwnPtr<Messages::AudioServer::GetMutedResponse> handle(const Messages::AudioServer::GetMuted&) override;
     virtual OwnPtr<Messages::AudioServer::SetMutedResponse> handle(const Messages::AudioServer::SetMuted&) override;
 
-    ASMixer& m_mixer;
-    RefPtr<ASBufferQueue> m_queue;
+    Mixer& m_mixer;
+    RefPtr<BufferQueue> m_queue;
 };
+
+}
