@@ -66,19 +66,25 @@ void StyleResolver::for_each_stylesheet(Callback callback) const
     }
 }
 
-NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Element& element) const
+Vector<MatchingRule> StyleResolver::collect_matching_rules(const Element& element) const
 {
-    NonnullRefPtrVector<StyleRule> matching_rules;
+    Vector<MatchingRule> matching_rules;
 
+    size_t style_sheet_index = 0;
     for_each_stylesheet([&](auto& sheet) {
+        size_t rule_index = 0;
         for (auto& rule : sheet.rules()) {
+            size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
                 if (SelectorEngine::matches(selector, element)) {
-                    matching_rules.append(rule);
+                    matching_rules.append({ rule, style_sheet_index, rule_index, selector_index });
                     break;
                 }
+                ++selector_index;
             }
+            ++rule_index;
         }
+        ++style_sheet_index;
     });
 
 #ifdef HTML_DEBUG
@@ -484,14 +490,22 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
 
     auto matching_rules = collect_matching_rules(element);
 
-    // FIXME: We need to look at the specificity of the matching *selector*, not just the matched *rule*!
-    // FIXME: It's really awkward that NonnullRefPtrVector cannot be quick_sort()'ed
-    quick_sort(reinterpret_cast<Vector<NonnullRefPtr<StyleRule>>&>(matching_rules), [&](auto& a, auto& b) {
-        return a->selectors().first().specificity() < b->selectors().first().specificity();
+    quick_sort(matching_rules, [&](MatchingRule& a, MatchingRule& b) {
+        auto& a_selector = a.rule->selectors()[a.selector_index];
+        auto& b_selector = b.rule->selectors()[b.selector_index];
+        if (a_selector.specificity() < b_selector.specificity())
+            return true;
+        if (!(a_selector.specificity() == b_selector.specificity()))
+            return false;
+        if (a.style_sheet_index < b.style_sheet_index)
+            return true;
+        if (a.style_sheet_index > b.style_sheet_index)
+            return false;
+        return a.rule_index < b.rule_index;
     });
 
-    for (auto& rule : matching_rules) {
-        for (auto& property : rule.declaration().properties()) {
+    for (auto& match : matching_rules) {
+        for (auto& property : match.rule->declaration().properties()) {
             set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
         }
     }
