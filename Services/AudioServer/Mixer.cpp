@@ -26,11 +26,13 @@
 
 #include <AK/BufferStream.h>
 #include <AK/NumericLimits.h>
-#include <AudioServer/ASClientConnection.h>
-#include <AudioServer/ASMixer.h>
+#include <AudioServer/ClientConnection.h>
+#include <AudioServer/Mixer.h>
 #include <pthread.h>
 
-ASMixer::ASMixer()
+namespace AudioServer {
+
+Mixer::Mixer()
     : m_device(Core::File::construct("/dev/audio", this))
     , m_sound_thread(
           [this] {
@@ -52,13 +54,13 @@ ASMixer::ASMixer()
     m_sound_thread.start();
 }
 
-ASMixer::~ASMixer()
+Mixer::~Mixer()
 {
 }
 
-NonnullRefPtr<ASBufferQueue> ASMixer::create_queue(ASClientConnection& client)
+NonnullRefPtr<BufferQueue> Mixer::create_queue(ClientConnection& client)
 {
-    auto queue = adopt(*new ASBufferQueue(client));
+    auto queue = adopt(*new BufferQueue(client));
     pthread_mutex_lock(&m_pending_mutex);
     m_pending_mixing.append(*queue);
     pthread_cond_signal(&m_pending_cond);
@@ -66,7 +68,7 @@ NonnullRefPtr<ASBufferQueue> ASMixer::create_queue(ASClientConnection& client)
     return queue;
 }
 
-void ASMixer::mix()
+void Mixer::mix()
 {
     decltype(m_pending_mixing) active_mix_queues;
 
@@ -130,23 +132,24 @@ void ASMixer::mix()
     }
 }
 
-void ASMixer::set_muted(bool muted)
+void Mixer::set_muted(bool muted)
 {
     if (m_muted == muted)
         return;
     m_muted = muted;
-    ASClientConnection::for_each([muted](ASClientConnection& client) {
+    ClientConnection::for_each([muted](ClientConnection& client) {
         client.did_change_muted_state({}, muted);
     });
 }
 
-ASBufferQueue::ASBufferQueue(ASClientConnection& client)
+BufferQueue::BufferQueue(ClientConnection& client)
     : m_client(client.make_weak_ptr())
 {
 }
 
-void ASBufferQueue::enqueue(NonnullRefPtr<Audio::Buffer>&& buffer)
+void BufferQueue::enqueue(NonnullRefPtr<Audio::Buffer>&& buffer)
 {
     m_remaining_samples += buffer->sample_count();
     m_queue.enqueue(move(buffer));
+}
 }

@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "ASClientConnection.h"
+#include "ClientConnection.h"
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullRefPtrVector.h>
@@ -38,12 +38,14 @@
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 
-class ASClientConnection;
+namespace AudioServer {
 
-class ASBufferQueue : public RefCounted<ASBufferQueue> {
+class ClientConnection;
+
+class BufferQueue : public RefCounted<BufferQueue> {
 public:
-    explicit ASBufferQueue(ASClientConnection&);
-    ~ASBufferQueue() {}
+    explicit BufferQueue(ClientConnection&);
+    ~BufferQueue() {}
 
     bool is_full() const { return m_queue.size() >= 3; }
     void enqueue(NonnullRefPtr<Audio::Buffer>&&);
@@ -71,7 +73,7 @@ public:
         return true;
     }
 
-    ASClientConnection* client() { return m_client.ptr(); }
+    ClientConnection* client() { return m_client.ptr(); }
 
     void clear(bool paused = false)
     {
@@ -100,20 +102,20 @@ public:
 private:
     RefPtr<Audio::Buffer> m_current;
     Queue<NonnullRefPtr<Audio::Buffer>> m_queue;
-    int m_position { 0 };
-    int m_remaining_samples { 0 };
-    int m_played_samples { 0 };
-    bool m_paused { false };
-    WeakPtr<ASClientConnection> m_client;
+    int m_position{ 0 };
+    int m_remaining_samples{ 0 };
+    int m_played_samples{ 0 };
+    bool m_paused{ false };
+    WeakPtr<ClientConnection> m_client;
 };
 
-class ASMixer : public Core::Object {
-    C_OBJECT(ASMixer)
+class Mixer : public Core::Object {
+    C_OBJECT(Mixer)
 public:
-    ASMixer();
-    virtual ~ASMixer() override;
+    Mixer();
+    virtual ~Mixer() override;
 
-    NonnullRefPtr<ASBufferQueue> create_queue(ASClientConnection&);
+    NonnullRefPtr<BufferQueue> create_queue(ClientConnection&);
 
     int main_volume() const { return m_main_volume; }
     void set_main_volume(int volume) { m_main_volume = volume; }
@@ -122,7 +124,7 @@ public:
     void set_muted(bool);
 
 private:
-    Vector<NonnullRefPtr<ASBufferQueue>> m_pending_mixing;
+    Vector<NonnullRefPtr<BufferQueue>> m_pending_mixing;
     pthread_mutex_t m_pending_mutex;
     pthread_cond_t m_pending_cond;
 
@@ -130,10 +132,11 @@ private:
 
     LibThread::Thread m_sound_thread;
 
-    bool m_muted { false };
-    int m_main_volume { 100 };
+    bool m_muted{ false };
+    int m_main_volume{ 100 };
 
-    u8* m_zero_filled_buffer { nullptr };
+    u8* m_zero_filled_buffer{ nullptr };
 
     void mix();
 };
+}
