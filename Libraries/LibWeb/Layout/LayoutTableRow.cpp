@@ -39,9 +39,18 @@ LayoutTableRow::~LayoutTableRow()
 {
 }
 
-void LayoutTableRow::layout(LayoutMode layout_mode)
+void LayoutTableRow::layout(LayoutMode)
 {
-    LayoutBox::layout(layout_mode);
+    float tallest_cell_height = 0;
+    float content_width = 0;
+    for_each_child_of_type<LayoutTableCell>([&](auto& cell) {
+        cell.layout(LayoutMode::OnlyRequiredLineBreaks);
+        cell.set_offset(effective_offset().translated(content_width, 0));
+        content_width += cell.width();
+        tallest_cell_height = max(tallest_cell_height, cell.height());
+    });
+    set_width(content_width);
+    set_height(tallest_cell_height);
 }
 
 LayoutTableCell* LayoutTableRow::first_cell()
