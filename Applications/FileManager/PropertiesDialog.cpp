@@ -69,7 +69,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     file_container.layout()->set_spacing(20);
     file_container.set_preferred_size(0, 34);
 
-    m_icon = file_container.add<GUI::Label>();
+    m_icon = file_container.add<GUI::Image>();
     m_icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_icon->set_preferred_size(32, 32);
 
@@ -168,7 +168,8 @@ PropertiesDialog::~PropertiesDialog() {}
 
 void PropertiesDialog::update()
 {
-    m_icon->set_icon(const_cast<Gfx::Bitmap*>(m_model.icon_for_file(m_mode, m_name).bitmap_for_size(32)));
+    auto bitmap = m_model.icon_for_file(m_mode, m_name).bitmap_for_size(32);
+    m_icon->set_bitmap(bitmap);
     set_title(String::format("%s - Properties", m_name.characters()));
 }
 
