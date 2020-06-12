@@ -38,6 +38,13 @@ class ParentNode;
 class StyleRule;
 class StyleSheet;
 
+struct MatchingRule {
+    RefPtr<StyleRule> rule;
+    size_t style_sheet_index { 0 };
+    size_t rule_index { 0 };
+    size_t selector_index { 0 };
+};
+
 class StyleResolver {
 public:
     explicit StyleResolver(Document&);
@@ -48,7 +55,7 @@ public:
 
     NonnullRefPtr<StyleProperties> resolve_style(const Element&, const StyleProperties* parent_style) const;
 
-    NonnullRefPtrVector<StyleRule> collect_matching_rules(const Element&) const;
+    Vector<MatchingRule> collect_matching_rules(const Element&) const;
 
     static bool is_inherited_property(CSS::PropertyID);
 
