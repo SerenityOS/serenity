@@ -40,6 +40,8 @@ public:
 
 protected:
     virtual void click(unsigned modifiers = 0) override;
+    virtual void leave_event(Core::Event&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
 
 private:
