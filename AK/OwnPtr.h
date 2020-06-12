@@ -27,16 +27,18 @@
 #pragma once
 
 #include <AK/NonnullOwnPtr.h>
+#include <AK/RefCounted.h>
 
 namespace AK {
 
 template<typename T>
 class OwnPtr {
 public:
-    OwnPtr() {}
+    OwnPtr() { }
     explicit OwnPtr(T* ptr)
         : m_ptr(ptr)
     {
+        static_assert(!is_ref_counted((const T*)nullptr), "Use RefPtr<> for RefCounted types");
     }
     OwnPtr(OwnPtr&& other)
         : m_ptr(other.leak_ptr())
