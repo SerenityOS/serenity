@@ -38,6 +38,8 @@ public:
     LayoutTableCell* next_cell() { return next_sibling_of_type<LayoutTableCell>(); }
     const LayoutTableCell* next_cell() const { return next_sibling_of_type<LayoutTableCell>(); }
 
+    size_t colspan() const;
+
 private:
     virtual bool is_table_cell() const override { return true; }
     virtual const char* class_name() const override { return "LayoutTableCell"; }
