@@ -38,4 +38,10 @@ LayoutTableCell::~LayoutTableCell()
 {
 }
 
+size_t LayoutTableCell::colspan() const
+{
+    ASSERT(node());
+    return to<Element>(*node()).attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
+}
+
 }
