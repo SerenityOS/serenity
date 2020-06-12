@@ -100,6 +100,16 @@ public:
     }
 };
 
+static constexpr bool is_ref_counted(const RefCountedBase*)
+{
+    return true;
+}
+
+static constexpr bool is_ref_counted(...)
+{
+    return false;
+}
+
 }
 
 using AK::RefCounted;
