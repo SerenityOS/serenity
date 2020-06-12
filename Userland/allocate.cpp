@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/ElapsedTimer.h>
 #include <stdio.h>
@@ -36,7 +37,9 @@ void usage(void)
     exit(1);
 }
 
-enum Unit { Bytes, KiloBytes, MegaBytes };
+enum Unit { Bytes,
+    KiloBytes,
+    MegaBytes };
 
 int main(int argc, char** argv)
 {
@@ -44,11 +47,11 @@ int main(int argc, char** argv)
     Unit unit = MegaBytes;
 
     if (argc >= 2) {
-        bool ok;
-        count = String(argv[1]).to_uint(ok);
-        if (!ok) {
+        auto number = String(argv[1]).to_uint();
+        if (!number.has_value()) {
             usage();
         }
+        count = number.value();
     }
 
     if (argc >= 3) {

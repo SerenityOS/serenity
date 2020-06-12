@@ -76,10 +76,10 @@ bool handle_disassemble_command(const String& command, void* first_instruction)
     auto parts = command.split(' ');
     size_t number_of_instructions_to_disassemble = 5;
     if (parts.size() == 2) {
-        bool ok;
-        number_of_instructions_to_disassemble = parts[1].to_uint(ok);
-        if (!ok)
+        auto number = parts[1].to_uint();
+        if (!number.has_value())
             return false;
+        number_of_instructions_to_disassemble = number.value();
     }
 
     // FIXME: Instead of using a fixed "dump_size",
@@ -126,14 +126,13 @@ bool handle_breakpoint_command(const String& command)
         auto source_arguments = argument.split(':');
         if (source_arguments.size() != 2)
             return false;
-        bool ok = false;
-        size_t line = source_arguments[1].to_uint(ok);
-        if (!ok)
+        auto line = source_arguments[1].to_uint();
+        if (!line.has_value())
             return false;
         auto file = source_arguments[0];
         if (!file.contains("/"))
             file = String::format("./%s", file.characters());
-        auto result = g_debug_session->debug_info().get_instruction_from_source(file, line);
+        auto result = g_debug_session->debug_info().get_instruction_from_source(file, line.value());
         if (!result.has_value()) {
             printf("No matching instruction found\n");
             return false;

@@ -26,6 +26,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/HashTable.h>
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
@@ -88,9 +89,9 @@ FlyString::FlyString(const char* string)
 {
 }
 
-int FlyString::to_int(bool& ok) const
+Optional<int> FlyString::to_int() const
 {
-    return StringUtils::convert_to_int(view(), ok);
+    return StringUtils::convert_to_int(view());
 }
 
 bool FlyString::equals_ignoring_case(const StringView& other) const

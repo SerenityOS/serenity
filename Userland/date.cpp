@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <stdio.h>
@@ -44,12 +45,12 @@ int main(int argc, char** argv)
         return 0;
     }
     if (argc == 3 && !strcmp(argv[1], "-s")) {
-        bool ok;
-        timespec ts = { String(argv[2]).to_uint(ok), 0 };
-        if (!ok) {
+        auto number = StringView(argv[2]).to_uint();
+        if (!number.has_value()) {
             fprintf(stderr, "date: Invalid timestamp value");
             return 1;
         }
+        timespec ts = { number.value(), 0 };
         if (clock_settime(CLOCK_REALTIME, &ts) < 0) {
             perror("clock_settime");
             return 1;

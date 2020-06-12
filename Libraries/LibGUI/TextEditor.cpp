@@ -91,10 +91,9 @@ void TextEditor::create_actions()
                 auto input_box = InputBox::construct("Line:", "Go to line", window());
                 auto result = input_box->exec();
                 if (result == InputBox::ExecOK) {
-                    bool ok;
-                    auto line_number = input_box->text_value().to_uint(ok);
-                    if (ok)
-                        set_cursor(line_number - 1, 0);
+                    auto line_number = input_box->text_value().to_uint();
+                    if (line_number.has_value())
+                        set_cursor(line_number.value() - 1, 0);
                 }
             },
             this);

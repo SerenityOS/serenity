@@ -108,8 +108,8 @@ public:
     static String repeated(char, size_t count);
     bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
-    int to_int(bool& ok) const;
-    unsigned to_uint(bool& ok) const;
+    Optional<int> to_int() const;
+    Optional<unsigned> to_uint() const;
 
     String to_lowercase() const;
     String to_uppercase() const;

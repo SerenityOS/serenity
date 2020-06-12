@@ -123,10 +123,9 @@ String JsonParser::consume_quoted_string()
             sb.append(consume());
             sb.append(consume());
 
-            bool ok;
-            u32 codepoint = AK::StringUtils::convert_to_uint_from_hex(sb.to_string(), ok);
-            if (ok && codepoint < 128) {
-                buffer.append((char)codepoint);
+            auto codepoint = AK::StringUtils::convert_to_uint_from_hex(sb.to_string());
+            if (codepoint.has_value() && codepoint.value() < 0x80) {
+                buffer.append((char)codepoint.value());
             } else {
                 // FIXME: This is obviously not correct, but we don't have non-ASCII support so meh.
                 buffer.append('?');
@@ -202,7 +201,6 @@ JsonValue JsonParser::parse_string()
 
 JsonValue JsonParser::parse_number()
 {
-    bool ok;
     JsonValue value;
     Vector<char, 128> number_buffer;
     Vector<char, 128> fraction_buffer;
@@ -231,14 +229,17 @@ JsonValue JsonParser::parse_number()
 
 #ifndef KERNEL
     if (is_double) {
-        int whole = number_string.to_uint(ok);
-        if (!ok)
-            whole = number_string.to_int(ok);
-        ASSERT(ok);
+        // FIXME: This logic looks shaky.
+        int whole = 0;
+        auto to_signed_result = number_string.to_uint();
+        if (to_signed_result.has_value()) {
+            whole = to_signed_result.value();
+        } else {
+            whole = number_string.to_int().value();
+        }
 
-        int fraction = fraction_string.to_uint(ok);
+        int fraction = fraction_string.to_uint().value();
         fraction *= (whole < 0) ? -1 : 1;
-        ASSERT(ok);
 
         auto divider = 1;
         for (size_t i = 0; i < fraction_buffer.size(); ++i) {
@@ -247,10 +248,12 @@ JsonValue JsonParser::parse_number()
         value = JsonValue((double)whole + ((double)fraction / divider));
     } else {
 #endif
-        value = JsonValue(number_string.to_uint(ok));
-        if (!ok)
-            value = JsonValue(number_string.to_int(ok));
-        ASSERT(ok);
+        auto to_unsigned_result = number_string.to_uint();
+        if (to_unsigned_result.has_value()) {
+            value = JsonValue(to_unsigned_result.value());
+        } else {
+            value = JsonValue(number_string.to_int().value());
+        }
 #ifndef KERNEL
     }
 #endif

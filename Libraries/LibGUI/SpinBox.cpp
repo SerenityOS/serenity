@@ -35,10 +35,9 @@ SpinBox::SpinBox()
     m_editor = add<TextBox>();
     m_editor->set_text("0");
     m_editor->on_change = [this] {
-        bool ok;
-        int value = m_editor->text().to_uint(ok);
-        if (ok)
-            set_value(value);
+        auto value = m_editor->text().to_uint();
+        if (value.has_value())
+            set_value(value.value());
         else
             m_editor->set_text(String::number(m_value));
     };

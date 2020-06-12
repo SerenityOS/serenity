@@ -124,14 +124,13 @@ next_entry:
     auto& e_passwd = parts[1];
     auto& e_gid_string = parts[2];
     auto& e_members_string = parts[3];
-    bool ok;
-    gid_t e_gid = e_gid_string.to_uint(ok);
-    if (!ok) {
+    auto e_gid = e_gid_string.to_uint();
+    if (!e_gid.has_value()) {
         fprintf(stderr, "getgrent(): Malformed GID on line %u\n", __grdb_line_number);
         goto next_entry;
     }
     auto members = e_members_string.split(',');
-    __grdb_entry->gr_gid = e_gid;
+    __grdb_entry->gr_gid = e_gid.value();
     __grdb_entry->gr_name = __grdb_entry->name_buffer;
     __grdb_entry->gr_passwd = __grdb_entry->passwd_buffer;
     for (size_t i = 0; i < members.size(); ++i) {

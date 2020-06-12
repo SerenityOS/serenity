@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <grp.h>
 #include <pwd.h>
@@ -52,10 +53,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    bool ok;
-    new_gid = gid_arg.to_uint(ok);
+    auto number = gid_arg.to_uint();
 
-    if (!ok) {
+    if (number.has_value()) {
+        new_gid = number.value();
+    } else {
         auto* group = getgrnam(gid_arg.characters());
         if (!group) {
             fprintf(stderr, "Unknown group '%s'\n", gid_arg.characters());

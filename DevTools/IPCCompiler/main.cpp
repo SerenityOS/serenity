@@ -227,9 +227,7 @@ int main(int argc, char** argv)
         consume_specific('=');
         consume_whitespace();
         auto magic_string = extract_while([](char ch) { return !isspace(ch) && ch != '{'; });
-        bool ok;
-        endpoints.last().magic = magic_string.to_int(ok);
-        ASSERT(ok);
+        endpoints.last().magic = magic_string.to_int().value();
         consume_whitespace();
         consume_specific('{');
         parse_messages();

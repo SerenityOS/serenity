@@ -53,9 +53,8 @@ void LayoutFrame::layout(LayoutMode layout_mode)
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     // FIXME: Do proper error checking, etc.
-    bool ok;
-    set_intrinsic_width(node().attribute(HTML::AttributeNames::width).to_int(ok));
-    set_intrinsic_height(node().attribute(HTML::AttributeNames::height).to_int(ok));
+    set_intrinsic_width(node().attribute(HTML::AttributeNames::width).to_int().value_or(300));
+    set_intrinsic_height(node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
 
     LayoutReplaced::layout(layout_mode);
 }

@@ -78,18 +78,11 @@ public:
         auto parts = string.split_view('.');
         if (parts.size() != 4)
             return {};
-        bool ok;
-        auto a = parts[0].to_uint(ok);
-        if (!ok || a > 255)
-            return {};
-        auto b = parts[1].to_uint(ok);
-        if (!ok || b > 255)
-            return {};
-        auto c = parts[2].to_uint(ok);
-        if (!ok || c > 255)
-            return {};
-        auto d = parts[3].to_uint(ok);
-        if (!ok || d > 255)
+        auto a = parts[0].to_uint().value_or(256);
+        auto b = parts[1].to_uint().value_or(256);
+        auto c = parts[2].to_uint().value_or(256);
+        auto d = parts[3].to_uint().value_or(256);
+        if (a > 255 || b > 255 || c > 255 || d > 255)
             return {};
         return IPv4Address((u8)a, (u8)b, (u8)c, (u8)d);
     }

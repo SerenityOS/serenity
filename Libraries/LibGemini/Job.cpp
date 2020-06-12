@@ -77,13 +77,13 @@ void Job::on_socket_connected()
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
-            bool ok;
-            m_status = parts[0].to_uint(ok);
-            if (!ok) {
+            auto status = parts[0].to_uint();
+            if (!status.has_value()) {
                 fprintf(stderr, "Job: Expected numeric status code\n");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
+            m_status = status.value();
             m_meta = parts[1];
 
             if (m_status >= 10 && m_status < 20) {

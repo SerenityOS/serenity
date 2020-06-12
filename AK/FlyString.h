@@ -82,7 +82,7 @@ public:
 
     FlyString to_lowercase() const;
 
-    int to_int(bool& ok) const;
+    Optional<int> to_int() const;
 
     bool equals_ignoring_case(const StringView&) const;
     bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;

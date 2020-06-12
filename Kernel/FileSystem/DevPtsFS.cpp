@@ -177,10 +177,9 @@ RefPtr<Inode> DevPtsFSInode::lookup(StringView name)
     if (name == "." || name == "..")
         return fs().get_inode(identifier());
 
-    bool ok;
-    unsigned pty_index = name.to_uint(ok);
-    if (ok && ptys->contains(pty_index)) {
-        return fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index) });
+    auto pty_index = name.to_uint();
+    if (pty_index.has_value() && ptys->contains(pty_index.value())) {
+        return fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
     }
 
     return {};

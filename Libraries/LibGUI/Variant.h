@@ -158,13 +158,8 @@ public:
             ASSERT(as_uint() <= INT32_MAX);
             return (int)as_uint();
         }
-        if (is_string()) {
-            bool ok;
-            int value = as_string().to_int(ok);
-            if (!ok)
-                return 0;
-            return value;
-        }
+        if (is_string())
+            return as_string().to_int().value_or(0);
         return 0;
     }
 

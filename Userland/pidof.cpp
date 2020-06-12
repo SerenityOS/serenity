@@ -74,15 +74,16 @@ int main(int argc, char** argv)
 
     pid_t pid_to_omit = 0;
     if (omit_pid_value) {
-        bool ok = true;
-        if (!strcmp(omit_pid_value, "%PPID"))
+        if (!strcmp(omit_pid_value, "%PPID")) {
             pid_to_omit = getppid();
-        else
-            pid_to_omit = StringView(omit_pid_value).to_uint(ok);
-        if (!ok) {
-            fprintf(stderr, "Invalid value for -o\n");
-            args_parser.print_usage(stderr, argv[0]);
-            return 1;
+        } else {
+            auto number = StringView(omit_pid_value).to_uint();
+            if (!number.has_value()) {
+                fprintf(stderr, "Invalid value for -o\n");
+                args_parser.print_usage(stderr, argv[0]);
+                return 1;
+            }
+            pid_to_omit = number.value();
         }
     }
     return pid_of(process_name, single_shot, omit_pid_value != nullptr, pid_to_omit);

@@ -267,11 +267,10 @@ void IRCClient::handle(const Message& msg)
     }
 #endif
 
-    bool is_numeric;
-    int numeric = msg.command.to_uint(is_numeric);
+    auto numeric = msg.command.to_uint();
 
-    if (is_numeric) {
-        switch (numeric) {
+    if (numeric.has_value()) {
+        switch (numeric.value()) {
         case RPL_WELCOME:
             return handle_rpl_welcome(msg);
         case RPL_WHOISCHANNELS:
@@ -798,10 +797,9 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
     auto& channel_name = msg.arguments[1];
     auto& nick = msg.arguments[2];
     auto setat = msg.arguments[3];
-    bool ok;
-    time_t setat_time = setat.to_uint(ok);
-    if (ok)
-        setat = Core::DateTime::from_timestamp(setat_time).to_string();
+    auto setat_time = setat.to_uint();
+    if (setat_time.has_value())
+        setat = Core::DateTime::from_timestamp(setat_time.value()).to_string();
     ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::Blue);
 }
 

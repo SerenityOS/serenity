@@ -280,9 +280,9 @@ void ArgsParser::add_option(int& value, const char* help_string, const char* lon
         short_name,
         value_name,
         [&value](const char* s) {
-            bool ok;
-            value = StringView(s).to_int(ok);
-            return ok;
+            auto opt = StringView(s).to_int();
+            value = opt.value_or(0);
+            return opt.has_value();
         }
     };
     add_option(move(option));
@@ -316,9 +316,9 @@ void ArgsParser::add_positional_argument(int& value, const char* help_string, co
         required == Required::Yes ? 1 : 0,
         1,
         [&value](const char* s) {
-            bool ok;
-            value = StringView(s).to_int(ok);
-            return ok;
+            auto opt = StringView(s).to_int();
+            value = opt.value_or(0);
+            return opt.has_value();
         }
     };
     add_positional_argument(move(arg));

@@ -1431,14 +1431,17 @@ Vector<size_t, 2> Editor::vt_dsr()
 
     if (buf[0] == '\033' && buf[1] == '[') {
         auto parts = StringView(buf + 2, length - 3).split_view(';');
-        bool ok;
-        row = parts[0].to_int(ok);
-        if (!ok) {
+        auto row_opt = parts[0].to_int();
+        if (!row_opt.has_value()) {
             dbg() << "Terminal DSR issue; received garbage row";
+        } else {
+            row = row_opt.value();
         }
-        col = parts[1].to_int(ok);
-        if (!ok) {
+        auto col_opt = parts[1].to_int();
+        if (!col_opt.has_value()) {
             dbg() << "Terminal DSR issue; received garbage col";
+        } else {
+            col = col_opt.value();
         }
     }
     return { row, col };
