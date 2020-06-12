@@ -93,13 +93,18 @@ void dump_tree(const LayoutNode& layout_node)
 
     String identifier = "";
     if (layout_node.node() && is<Element>(*layout_node.node())) {
-        auto id = to<Element>(*layout_node.node()).attribute(HTML::AttributeNames::id);
+        auto& element = to<Element>(*layout_node.node());
+        StringBuilder builder;
+        auto id = element.attribute(HTML::AttributeNames::id);
         if (!id.is_empty()) {
-            StringBuilder builder;
             builder.append('#');
             builder.append(id);
-            identifier = builder.to_string();
         }
+        for (auto& class_name : element.class_names()) {
+            builder.append('.');
+            builder.append(class_name);
+        }
+        identifier = builder.to_string();
     }
 
     if (!layout_node.is_box()) {
