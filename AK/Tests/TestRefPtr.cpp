@@ -37,48 +37,48 @@ TEST_CASE(basics)
 {
     RefPtr<Object> object = adopt(*new Object);
     EXPECT(object.ptr() != nullptr);
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
     object->ref();
-    EXPECT_EQ(object->ref_count(), 2);
+    EXPECT_EQ(object->ref_count(), 2u);
     object->unref();
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
 
     {
         NonnullRefPtr another = *object;
-        EXPECT_EQ(object->ref_count(), 2);
+        EXPECT_EQ(object->ref_count(), 2u);
     }
 
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
 }
 
 TEST_CASE(assign_reference)
 {
     RefPtr<Object> object = adopt(*new Object);
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
     object = *object;
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
 }
 
 TEST_CASE(assign_ptr)
 {
     RefPtr<Object> object = adopt(*new Object);
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
     object = object.ptr();
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
 }
 
 TEST_CASE(assign_moved_self)
 {
     RefPtr<Object> object = adopt(*new Object);
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
     object = move(object);
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
 }
 
 TEST_CASE(assign_copy_self)
 {
     RefPtr<Object> object = adopt(*new Object);
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
 
     #ifdef __clang__
     #pragma clang diagnostic push
@@ -89,7 +89,7 @@ TEST_CASE(assign_copy_self)
     #pragma clang diagnostic pop
     #endif
 
-    EXPECT_EQ(object->ref_count(), 1);
+    EXPECT_EQ(object->ref_count(), 1u);
 }
 
 TEST_MAIN(RefPtr)
