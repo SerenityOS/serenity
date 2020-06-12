@@ -34,25 +34,26 @@ namespace AttributeNames {
 
 void initialize();
 
-#define ENUMERATE_HTML_ATTRIBUTES      \
-    __ENUMERATE_HTML_ATTRIBUTE(id)     \
-    __ENUMERATE_HTML_ATTRIBUTE(class_) \
-    __ENUMERATE_HTML_ATTRIBUTE(type)   \
-    __ENUMERATE_HTML_ATTRIBUTE(href)   \
-    __ENUMERATE_HTML_ATTRIBUTE(style)  \
-    __ENUMERATE_HTML_ATTRIBUTE(name)   \
-    __ENUMERATE_HTML_ATTRIBUTE(target) \
-    __ENUMERATE_HTML_ATTRIBUTE(width)  \
-    __ENUMERATE_HTML_ATTRIBUTE(height) \
-    __ENUMERATE_HTML_ATTRIBUTE(title)  \
-    __ENUMERATE_HTML_ATTRIBUTE(action) \
-    __ENUMERATE_HTML_ATTRIBUTE(method) \
-    __ENUMERATE_HTML_ATTRIBUTE(alt)    \
-    __ENUMERATE_HTML_ATTRIBUTE(src)    \
-    __ENUMERATE_HTML_ATTRIBUTE(value)  \
-    __ENUMERATE_HTML_ATTRIBUTE(rel)    \
-    __ENUMERATE_HTML_ATTRIBUTE(async)  \
-    __ENUMERATE_HTML_ATTRIBUTE(defer)  \
+#define ENUMERATE_HTML_ATTRIBUTES       \
+    __ENUMERATE_HTML_ATTRIBUTE(id)      \
+    __ENUMERATE_HTML_ATTRIBUTE(class_)  \
+    __ENUMERATE_HTML_ATTRIBUTE(type)    \
+    __ENUMERATE_HTML_ATTRIBUTE(href)    \
+    __ENUMERATE_HTML_ATTRIBUTE(style)   \
+    __ENUMERATE_HTML_ATTRIBUTE(name)    \
+    __ENUMERATE_HTML_ATTRIBUTE(target)  \
+    __ENUMERATE_HTML_ATTRIBUTE(width)   \
+    __ENUMERATE_HTML_ATTRIBUTE(height)  \
+    __ENUMERATE_HTML_ATTRIBUTE(title)   \
+    __ENUMERATE_HTML_ATTRIBUTE(action)  \
+    __ENUMERATE_HTML_ATTRIBUTE(method)  \
+    __ENUMERATE_HTML_ATTRIBUTE(alt)     \
+    __ENUMERATE_HTML_ATTRIBUTE(src)     \
+    __ENUMERATE_HTML_ATTRIBUTE(value)   \
+    __ENUMERATE_HTML_ATTRIBUTE(rel)     \
+    __ENUMERATE_HTML_ATTRIBUTE(async)   \
+    __ENUMERATE_HTML_ATTRIBUTE(defer)   \
+    __ENUMERATE_HTML_ATTRIBUTE(bgcolor) \
     __ENUMERATE_HTML_ATTRIBUTE(size)
 
 #define __ENUMERATE_HTML_ATTRIBUTE(name) extern FlyString name;
