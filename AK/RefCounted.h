@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
+#include <AK/Checked.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 
@@ -65,6 +66,7 @@ public:
     {
         auto old_ref_count = m_ref_count++;
         ASSERT(old_ref_count > 0);
+        ASSERT(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
     }
 
     ALWAYS_INLINE RefCountType ref_count() const
