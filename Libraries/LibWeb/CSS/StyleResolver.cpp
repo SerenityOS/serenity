@@ -354,6 +354,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             if (!string.ends_with(')'))
                 continue;
             auto url = string.substring_view(4, string.length() - 5);
+            if (url.length() >= 2 && url.starts_with('"') && url.ends_with('"'))
+                url = url.substring_view(1, url.length() - 2);
+            else if (url.length() >= 2 && url.starts_with('\'') && url.ends_with('\''))
+                url = url.substring_view(1, url.length() - 2);
+
             auto background_image_value = ImageStyleValue::create(document.complete_url(url), document);
             style.set_property(CSS::PropertyID::BackgroundImage, move(background_image_value));
         }
