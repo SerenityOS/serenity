@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,36 @@
 
 #pragma once
 
-#include <LibGUI/Widget.h>
-#include <LibWeb/Forward.h>
+#include <LibGUI/Model.h>
 
-namespace Browser {
+namespace Web {
 
-class InspectorWidget final : public GUI::Widget {
-    C_OBJECT(InspectorWidget)
+class Document;
+
+class LayoutTreeModel final : public GUI::Model {
 public:
-    virtual ~InspectorWidget();
+    static NonnullRefPtr<LayoutTreeModel> create(Document& document)
+    {
+        return adopt(*new LayoutTreeModel(document));
+    }
 
-    void set_document(Web::Document*);
+    virtual ~LayoutTreeModel() override;
+
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
+    virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
+    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
+    virtual void update() override;
 
 private:
-    InspectorWidget();
+    explicit LayoutTreeModel(Document&);
 
-    void set_inspected_node(Web::Node*);
+    NonnullRefPtr<Document> m_document;
 
-    RefPtr<GUI::TreeView> m_dom_tree_view;
-    RefPtr<GUI::TreeView> m_layout_tree_view;
-    RefPtr<GUI::TableView> m_style_table_view;
-    RefPtr<GUI::TableView> m_computed_style_table_view;
-    RefPtr<Web::Document> m_document;
+    GUI::Icon m_document_icon;
+    GUI::Icon m_element_icon;
+    GUI::Icon m_text_icon;
 };
 
 }

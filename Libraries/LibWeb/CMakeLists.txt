@@ -93,6 +93,7 @@ set(SOURCES
     Layout/LayoutWidget.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
+    LayoutTreeModel.cpp
     Loader/FrameLoader.cpp
     Loader/ImageResource.cpp
     Loader/Resource.cpp
