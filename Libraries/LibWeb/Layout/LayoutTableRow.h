@@ -37,7 +37,7 @@ public:
     LayoutTableRow(const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutTableRow() override;
 
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
+
 
     LayoutTableCell* first_cell();
     const LayoutTableCell* first_cell() const;
@@ -45,7 +45,11 @@ public:
     LayoutTableRow* next_row();
     const LayoutTableRow* next_row() const;
 
+    void layout_row(const Vector<float>& column_widths);
+    void calculate_column_widths(Vector<float>& column_widths);
+
 private:
+    virtual void layout(LayoutMode) override;
     virtual bool is_table_row() const override { return true; }
     virtual const char* class_name() const override { return "LayoutTableRow"; }
 };

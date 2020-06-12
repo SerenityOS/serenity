@@ -41,12 +41,30 @@ LayoutTableRow::~LayoutTableRow()
 
 void LayoutTableRow::layout(LayoutMode)
 {
-    float tallest_cell_height = 0;
-    float content_width = 0;
+}
+
+void LayoutTableRow::calculate_column_widths(Vector<float>& column_widths)
+{
+    size_t column_index = 0;
     for_each_child_of_type<LayoutTableCell>([&](auto& cell) {
         cell.layout(LayoutMode::OnlyRequiredLineBreaks);
+        column_widths[column_index] = max(column_widths[column_index], cell.width());
+        column_index += cell.colspan();
+    });
+}
+
+void LayoutTableRow::layout_row(const Vector<float>& column_widths)
+{
+    size_t column_index = 0;
+    float tallest_cell_height = 0;
+    float content_width = 0;
+
+    for_each_child_of_type<LayoutTableCell>([&](auto& cell) {
         cell.set_offset(effective_offset().translated(content_width, 0));
-        content_width += cell.width();
+
+        size_t cell_colspan = cell.colspan();
+        for (size_t i = 0; i < cell_colspan; ++i)
+            content_width += column_widths[column_index++];
         tallest_cell_height = max(tallest_cell_height, cell.height());
     });
     set_width(content_width);

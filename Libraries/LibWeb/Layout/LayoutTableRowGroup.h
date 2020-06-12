@@ -38,6 +38,8 @@ public:
     virtual void layout(LayoutMode = LayoutMode::Default) override;
 
 private:
+    size_t column_count() const;
+
     virtual bool is_table_row_group() const override { return true; }
     virtual const char* class_name() const override { return "LayoutTableRowGroup"; }
 };
