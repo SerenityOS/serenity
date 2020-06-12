@@ -119,4 +119,15 @@ bool File::exists(const String& filename)
     return stat(filename.characters(), &st) == 0;
 }
 
+String File::real_path_for(const String& filename)
+{
+    if (filename.is_null())
+        return {};
+    auto* path = realpath(filename.characters(), nullptr);
+    String real_path(path);
+    free(path);
+    return real_path;
+}
+
+
 }
