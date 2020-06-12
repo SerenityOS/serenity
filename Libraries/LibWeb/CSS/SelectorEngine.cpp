@@ -53,6 +53,9 @@ bool matches(const Selector::SimpleSelector& component, const Element& element)
         if (!element.is_link())
             return false;
         break;
+    case Selector::SimpleSelector::PseudoClass::Visited:
+        // FIXME: Maybe match this selector sometimes?
+        return false;
     case Selector::SimpleSelector::PseudoClass::Hover:
         if (!matches_hover_pseudo_class(element))
             return false;

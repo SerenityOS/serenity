@@ -47,6 +47,7 @@ public:
         enum class PseudoClass {
             None,
             Link,
+            Visited,
             Hover,
             Focus,
             FirstChild,
