@@ -30,6 +30,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/LinkLabel.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font.h>
 
@@ -40,7 +41,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     , m_name(name)
     , m_icon(icon)
 {
-    resize(413, 205);
+    resize(413, 225);
     set_title(String::format("About %s", m_name.characters()));
     set_resizable(false);
 
@@ -97,6 +98,13 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
         make_label("SerenityOS");
     make_label(version_string());
     make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2020");
+    make_label("Licensed under the BSD 2-Clause License.");
+
+    auto& link_label = right_container.add<LinkLabel>("http://serenityos.org");
+    link_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    link_label.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    link_label.set_preferred_size(0, 14);
+
 
     right_container.layout()->add_spacer();
 
