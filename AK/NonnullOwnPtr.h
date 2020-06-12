@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
+#include <AK/RefCounted.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -51,6 +52,7 @@ public:
     NonnullOwnPtr(AdoptTag, T& ptr)
         : m_ptr(&ptr)
     {
+        static_assert(!is_ref_counted((const T*)nullptr), "Use RefPtr<> for RefCounted types");
     }
     NonnullOwnPtr(NonnullOwnPtr&& other)
         : m_ptr(other.leak_ptr())
