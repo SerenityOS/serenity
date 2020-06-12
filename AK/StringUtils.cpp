@@ -26,6 +26,7 @@
  */
 
 #include <AK/Memory.h>
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
@@ -87,69 +88,54 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
     return (mask_ptr == mask_end) && string_ptr == string_end;
 }
 
-int convert_to_int(const StringView& str, bool& ok)
+Optional<int> convert_to_int(const StringView& str)
 {
-    if (str.is_empty()) {
-        ok = false;
-        return 0;
-    }
+    if (str.is_empty())
+        return {};
 
     bool negative = false;
     size_t i = 0;
     const auto characters = str.characters_without_null_termination();
 
     if (characters[0] == '-' || characters[0] == '+') {
-        if (str.length() == 1) {
-            ok = false;
-            return 0;
-        }
+        if (str.length() == 1)
+            return {};
         i++;
         negative = (characters[0] == '-');
     }
 
     int value = 0;
     for (; i < str.length(); i++) {
-        if (characters[i] < '0' || characters[i] > '9') {
-            ok = false;
-            return 0;
-        }
+        if (characters[i] < '0' || characters[i] > '9')
+            return {};
         value = value * 10;
         value += characters[i] - '0';
     }
-    ok = true;
-
     return negative ? -value : value;
 }
 
-unsigned convert_to_uint(const StringView& str, bool& ok)
+Optional<unsigned> convert_to_uint(const StringView& str)
 {
-    if (str.is_empty()) {
-        ok = false;
-        return 0;
-    }
+    if (str.is_empty())
+        return {};
 
     unsigned value = 0;
     const auto characters = str.characters_without_null_termination();
 
     for (size_t i = 0; i < str.length(); i++) {
-        if (characters[i] < '0' || characters[i] > '9') {
-            ok = false;
-            return 0;
-        }
+        if (characters[i] < '0' || characters[i] > '9')
+            return {};
+
         value = value * 10;
         value += characters[i] - '0';
     }
-    ok = true;
-
     return value;
 }
 
-unsigned convert_to_uint_from_hex(const StringView& str, bool& ok)
+Optional<unsigned> convert_to_uint_from_hex(const StringView& str)
 {
-    if (str.is_empty()) {
-        ok = false;
-        return 0;
-    }
+    if (str.is_empty())
+        return {};
 
     unsigned value = 0;
     const auto count = str.length();
@@ -165,14 +151,11 @@ unsigned convert_to_uint_from_hex(const StringView& str, bool& ok)
         } else if (digit >= 'A' && digit <= 'F') {
             digit_val = 10 + (digit - 'A');
         } else {
-            ok = false;
-            return 0;
+            return {};
         }
 
         value = (value << 4) + digit_val;
     }
-
-    ok = true;
     return value;
 }
 

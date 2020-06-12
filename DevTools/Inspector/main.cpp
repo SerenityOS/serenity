@@ -65,10 +65,11 @@ int main(int argc, char** argv)
     if (argc != 2)
         print_usage_and_exit();
 
-    bool ok;
-    pid_t pid = String(argv[1]).to_int(ok);
-    if (!ok)
+    auto pid_opt = String(argv[1]).to_int();
+    if (!pid_opt.has_value())
         print_usage_and_exit();
+
+    pid_t pid = pid_opt.value();
 
     GUI::Application app(argc, argv);
 

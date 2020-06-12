@@ -152,11 +152,11 @@ bool URL::parse(const StringView& string)
             if (buffer.is_empty())
                 return false;
             {
-                bool ok;
-                m_port = String::copy(buffer).to_uint(ok);
+                auto port_opt = String::copy(buffer).to_uint();
                 buffer.clear();
-                if (!ok)
+                if (!port_opt.has_value())
                     return false;
+                m_port = port_opt.value();
             }
             if (peek() == '/') {
                 state = State::InPath;

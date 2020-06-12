@@ -108,12 +108,12 @@ void Job::on_socket_connected()
                 fprintf(stderr, "Job: Expected 3-part HTTP status, got '%s'\n", line.data());
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
-            bool ok;
-            m_code = parts[1].to_uint(ok);
-            if (!ok) {
+            auto code = parts[1].to_uint();
+            if (!code.has_value()) {
                 fprintf(stderr, "Job: Expected numeric HTTP status\n");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
+            m_code = code.value();
             m_state = State::InHeaders;
             return;
         }
@@ -266,10 +266,9 @@ void Job::on_socket_connected()
             Optional<u32> content_length {};
 
             if (content_length_header.has_value()) {
-                bool ok;
-                auto length = content_length_header.value().to_uint(ok);
-                if (ok)
-                    content_length = length;
+                auto length = content_length_header.value().to_uint();
+                if (length.has_value())
+                    content_length = length.value();
             }
 
             deferred_invoke([this, content_length](auto&) { did_progress(content_length, m_received_size); });

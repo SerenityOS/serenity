@@ -124,9 +124,10 @@ static Optional<u32> string_to_variable_value(const StringView& string_value, co
     }
 
     if (variable.type_name == "int") {
-        bool success = false;
-        auto value = string_value.to_int(success);
-        return success ? value : Optional<u32>();
+        auto value = string_value.to_int();
+        if (value.has_value())
+            return value.value();
+        return {};
     }
 
     if (variable.type_name == "bool") {

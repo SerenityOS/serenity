@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
@@ -60,9 +61,8 @@ String urldecode(const StringView& input)
             builder.append(consume());
             continue;
         }
-        bool ok;
-        u8 byte_point = StringUtils::convert_to_uint_from_hex(input.substring_view(cursor + 1, 2), ok);
-        builder.append(byte_point);
+        auto byte_point = StringUtils::convert_to_uint_from_hex(input.substring_view(cursor + 1, 2));
+        builder.append(byte_point.value());
         consume();
         consume();
         consume();

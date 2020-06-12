@@ -89,74 +89,70 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
         }
 
         if (token[0] == '-') {
-            bool ok = true;
-            ssize_t index = token.substring(1, token.length() - 1).to_int(ok);
-            if (!ok) {
+            auto index = token.substring(1, token.length() - 1).to_int();
+            if (!index.has_value()) {
                 fprintf(stderr, "cut: invalid byte/character position '%s'\n", token.characters());
                 print_usage_and_exit(1);
             }
 
-            if (index == 0) {
+            if (index.value() == 0) {
                 fprintf(stderr, "cut: byte/character positions are numbered from 1\n");
                 print_usage_and_exit(1);
             }
 
-            Index tmp = { 1, index, Index::Type::RangedIndex };
+            Index tmp = { 1, index.value(), Index::Type::RangedIndex };
             add_if_not_exists(indexes, tmp);
         } else if (token[token.length() - 1] == '-') {
-            bool ok = true;
-            ssize_t index = token.substring(0, token.length() - 1).to_int(ok);
-            if (!ok) {
+            auto index = token.substring(0, token.length() - 1).to_int();
+            if (!index.has_value()) {
                 fprintf(stderr, "cut: invalid byte/character position '%s'\n", token.characters());
                 print_usage_and_exit(1);
             }
 
-            if (index == 0) {
+            if (index.value() == 0) {
                 fprintf(stderr, "cut: byte/character positions are numbered from 1\n");
                 print_usage_and_exit(1);
             }
-            Index tmp = { index, -1, Index::Type::SliceIndex };
+            Index tmp = { index.value(), -1, Index::Type::SliceIndex };
             add_if_not_exists(indexes, tmp);
         } else {
             auto range = token.split('-');
             if (range.size() == 2) {
-                bool ok = true;
-                ssize_t index1 = range[0].to_int(ok);
-                if (!ok) {
+                auto index1 = range[0].to_int();
+                if (!index1.has_value()) {
                     fprintf(stderr, "cut: invalid byte/character position '%s'\n", range[0].characters());
                     print_usage_and_exit(1);
                 }
 
-                ssize_t index2 = range[1].to_int(ok);
-                if (!ok) {
+                auto index2 = range[1].to_int();
+                if (!index2.has_value()) {
                     fprintf(stderr, "cut: invalid byte/character position '%s'\n", range[1].characters());
                     print_usage_and_exit(1);
                 }
 
-                if (index1 > index2) {
+                if (index1.value() > index2.value()) {
                     fprintf(stderr, "cut: invalid decreasing range\n");
                     print_usage_and_exit(1);
-                } else if (index1 == 0 || index2 == 0) {
+                } else if (index1.value() == 0 || index2.value() == 0) {
                     fprintf(stderr, "cut: byte/character positions are numbered from 1\n");
                     print_usage_and_exit(1);
                 }
 
-                Index tmp = { index1, index2, Index::Type::RangedIndex };
+                Index tmp = { index1.value(), index2.value(), Index::Type::RangedIndex };
                 add_if_not_exists(indexes, tmp);
             } else if (range.size() == 1) {
-                bool ok = true;
-                ssize_t index = range[0].to_int(ok);
-                if (!ok) {
+                auto index = range[0].to_int();
+                if (!index.has_value()) {
                     fprintf(stderr, "cut: invalid byte/character position '%s'\n", range[0].characters());
                     print_usage_and_exit(1);
                 }
 
-                if (index == 0) {
+                if (index.value() == 0) {
                     fprintf(stderr, "cut: byte/character positions are numbered from 1\n");
                     print_usage_and_exit(1);
                 }
 
-                Index tmp = { index, index, Index::Type::SingleIndex };
+                Index tmp = { index.value(), index.value(), Index::Type::SingleIndex };
                 add_if_not_exists(indexes, tmp);
             } else {
                 fprintf(stderr, "cut: invalid byte or character range\n");

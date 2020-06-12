@@ -47,22 +47,12 @@ HTMLCanvasElement::~HTMLCanvasElement()
 
 int HTMLCanvasElement::requested_width() const
 {
-    bool ok = false;
-    unsigned width = attribute(HTML::AttributeNames::width).to_int(ok);
-    if (ok)
-        return width;
-
-    return 300;
+    return attribute(HTML::AttributeNames::width).to_int().value_or(300);
 }
 
 int HTMLCanvasElement::requested_height() const
 {
-    bool ok = false;
-    unsigned height = attribute(HTML::AttributeNames::height).to_int(ok);
-    if (ok)
-        return height;
-
-    return 150;
+    return attribute(HTML::AttributeNames::height).to_int().value_or(150);
 }
 
 RefPtr<LayoutNode> HTMLCanvasElement::create_layout_node(const StyleProperties* parent_style) const

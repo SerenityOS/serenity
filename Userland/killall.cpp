@@ -54,7 +54,6 @@ static int kill_all(const String& process_name, const unsigned signum)
 
 int main(int argc, char** argv)
 {
-    bool ok;
     unsigned signum = SIGTERM;
     int name_argi = 1;
 
@@ -67,11 +66,12 @@ int main(int argc, char** argv)
         if (argv[1][0] != '-')
             print_usage_and_exit();
 
-        signum = String(&argv[1][1]).to_uint(ok);
-        if (!ok) {
+        auto number = String(&argv[1][1]).to_uint();
+        if (!number.has_value()) {
             printf("'%s' is not a valid signal number\n", &argv[1][1]);
             return 2;
         }
+        signum = number.value();
     }
 
     return kill_all(argv[name_argi], signum);

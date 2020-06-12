@@ -122,28 +122,12 @@ void HTMLImageElement::animate()
 
 int HTMLImageElement::preferred_width() const
 {
-    bool ok = false;
-    int width = attribute(HTML::AttributeNames::width).to_int(ok);
-    if (ok)
-        return width;
-
-    if (m_image_decoder)
-        return m_image_decoder->width();
-
-    return 0;
+    return attribute(HTML::AttributeNames::width).to_int().value_or(m_image_decoder ? m_image_decoder->width() : 0);
 }
 
 int HTMLImageElement::preferred_height() const
 {
-    bool ok = false;
-    int height = attribute(HTML::AttributeNames::height).to_int(ok);
-    if (ok)
-        return height;
-
-    if (m_image_decoder)
-        return m_image_decoder->height();
-
-    return 0;
+    return attribute(HTML::AttributeNames::height).to_int().value_or(m_image_decoder ? m_image_decoder->height() : 0);
 }
 
 RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style) const

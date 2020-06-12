@@ -196,14 +196,14 @@ ByteBuffer String::to_byte_buffer() const
     return ByteBuffer::copy(reinterpret_cast<const u8*>(characters()), length());
 }
 
-int String::to_int(bool& ok) const
+Optional<int> String::to_int() const
 {
-    return StringUtils::convert_to_int(this->view(), ok);
+    return StringUtils::convert_to_int(view());
 }
 
-unsigned String::to_uint(bool& ok) const
+Optional<unsigned> String::to_uint() const
 {
-    return StringUtils::convert_to_uint(this->view(), ok);
+    return StringUtils::convert_to_uint(view());
 }
 
 String String::number(unsigned long long value)

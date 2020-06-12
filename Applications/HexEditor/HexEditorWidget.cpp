@@ -82,11 +82,10 @@ HexEditorWidget::HexEditorWidget()
 
         auto input_box = GUI::InputBox::construct("Enter new file size:", "New file size", window());
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
-            auto valid = false;
-            auto file_size = input_box->text_value().to_int(valid);
-            if (valid && file_size > 0) {
+            auto file_size = input_box->text_value().to_int();
+            if (file_size.has_value() && file_size.value() > 0) {
                 m_document_dirty = false;
-                m_editor->set_buffer(ByteBuffer::create_zeroed(file_size));
+                m_editor->set_buffer(ByteBuffer::create_zeroed(file_size.value()));
                 set_path(LexicalPath());
                 update_title();
             } else {
@@ -149,11 +148,9 @@ HexEditorWidget::HexEditorWidget()
     m_goto_decimal_offset_action = GUI::Action::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter Decimal offset:", "Go To", window());
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
-            auto valid = false;
-            auto new_offset = input_box->text_value().to_int(valid);
-            if (valid) {
-                m_editor->set_position(new_offset);
-            }
+            auto new_offset = input_box->text_value().to_int();
+            if (new_offset.has_value())
+                m_editor->set_position(new_offset.value());
         }
     });
 

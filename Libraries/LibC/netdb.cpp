@@ -383,12 +383,11 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
         perror("malformed services file: port/protocol");
         return false;
     }
-    bool conversion_checker;
-    __getserv_port_buffer = port_protocol_split[0].to_int(conversion_checker);
-
-    if (!conversion_checker) {
+    auto number = port_protocol_split[0].to_int();
+    if (!number.has_value())
         return false;
-    }
+
+    __getserv_port_buffer = number.value();
 
     //Removing any annoying whitespace at the end of the protocol.
     port_protocol_split[1].replace(" ", "", true);
@@ -571,12 +570,11 @@ static bool fill_getproto_buffers(char* line, ssize_t read)
         return false;
     }
 
-    bool conversion_checker;
-    __getproto_protocol_buffer = split_line[1].to_int(conversion_checker);
-
-    if (!conversion_checker) {
+    auto number = split_line[1].to_int();
+    if (!number.has_value())
         return false;
-    }
+
+    __getproto_protocol_buffer = number.value();
 
     __getproto_alias_list_buffer.clear();
 

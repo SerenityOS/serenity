@@ -129,11 +129,7 @@ int ConfigFile::read_num_entry(const String& group, const String& key, int defau
         return default_value;
     }
 
-    bool ok;
-    int value = read_entry(group, key).to_int(ok);
-    if (!ok)
-        return default_value;
-    return value;
+    return read_entry(group, key).to_int().value_or(default_value);
 }
 
 bool ConfigFile::read_bool_entry(const String& group, const String& key, bool default_value) const

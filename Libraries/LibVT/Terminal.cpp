@@ -544,11 +544,8 @@ void Terminal::execute_xterm_command()
     auto param_string = String::copy(m_xterm_parameters);
     auto params = param_string.split(';', true);
     m_xterm_parameters.clear_with_capacity();
-    for (auto& parampart : params) {
-        bool ok;
-        unsigned value = parampart.to_uint(ok);
-        numeric_params.append(ok ? value : 0);
-    }
+    for (auto& parampart : params)
+        numeric_params.append(parampart.to_uint().value_or(0));
 
     while (params.size() < 3) {
         params.append(String::empty());
@@ -594,15 +591,14 @@ void Terminal::execute_escape_sequence(u8 final)
     }
     auto paramparts = String::copy(m_parameters).split(';');
     for (auto& parampart : paramparts) {
-        bool ok;
-        unsigned value = parampart.to_uint(ok);
-        if (!ok) {
+        auto value = parampart.to_uint();
+        if (!value.has_value()) {
             // FIXME: Should we do something else?
             m_parameters.clear_with_capacity();
             m_intermediates.clear_with_capacity();
             return;
         }
-        params.append(value);
+        params.append(value.value());
     }
 
 #if defined(TERMINAL_DEBUG)

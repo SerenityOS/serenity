@@ -85,10 +85,9 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         int text_width = Gfx::Font::default_font().width(value());
         auto size_value = attribute(HTML::AttributeNames::size);
         if (!size_value.is_null()) {
-            bool ok;
-            auto size = size_value.to_int(ok);
-            if (ok && size >= 0)
-                text_width = Gfx::Font::default_font().glyph_width('x') * size;
+            auto size = size_value.to_uint();
+            if (size.has_value())
+                text_width = Gfx::Font::default_font().glyph_width('x') * size.value();
         }
         text_box.set_relative_rect(0, 0, text_width + 20, 20);
         widget = text_box;

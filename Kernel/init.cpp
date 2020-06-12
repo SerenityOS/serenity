@@ -251,10 +251,9 @@ void init_stage2()
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
 
     if (root.length()) {
-        bool ok;
-        unsigned partition_number = root.to_uint(ok);
+        auto partition_number = root.to_uint();
 
-        if (!ok) {
+        if (!partition_number.has_value()) {
             klog() << "init_stage2: couldn't parse partition number from root kernel parameter";
             hang();
         }
@@ -273,9 +272,9 @@ void init_stage2()
                 klog() << "init_stage2: couldn't read GPT from disk";
                 hang();
             }
-            auto partition = gpt.partition(partition_number);
+            auto partition = gpt.partition(partition_number.value());
             if (!partition) {
-                klog() << "init_stage2: couldn't get partition " << partition_number;
+                klog() << "init_stage2: couldn't get partition " << partition_number.value();
                 hang();
             }
             root_dev = *partition;
@@ -287,20 +286,20 @@ void init_stage2()
                     klog() << "init_stage2: couldn't read EBR from disk";
                     hang();
                 }
-                auto partition = ebr.partition(partition_number);
+                auto partition = ebr.partition(partition_number.value());
                 if (!partition) {
-                    klog() << "init_stage2: couldn't get partition " << partition_number;
+                    klog() << "init_stage2: couldn't get partition " << partition_number.value();
                     hang();
                 }
                 root_dev = *partition;
             } else {
-                if (partition_number < 1 || partition_number > 4) {
-                    klog() << "init_stage2: invalid partition number " << partition_number << "; expected 1 to 4";
+                if (partition_number.value() < 1 || partition_number.value() > 4) {
+                    klog() << "init_stage2: invalid partition number " << partition_number.value() << "; expected 1 to 4";
                     hang();
                 }
-                auto partition = mbr.partition(partition_number);
+                auto partition = mbr.partition(partition_number.value());
                 if (!partition) {
-                    klog() << "init_stage2: couldn't get partition " << partition_number;
+                    klog() << "init_stage2: couldn't get partition " << partition_number.value();
                     hang();
                 }
                 root_dev = *partition;

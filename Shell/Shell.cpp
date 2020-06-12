@@ -463,10 +463,9 @@ int Shell::builtin_disown(int argc, const char** argv)
 
     Vector<size_t> job_ids;
     for (auto& job_id : str_job_ids) {
-        bool ok;
-        auto id = StringView { job_id }.to_uint(ok);
-        if (ok)
-            job_ids.append(id);
+        auto id = StringView(job_id).to_uint();
+        if (id.has_value())
+            job_ids.append(id.value());
         else
             printf("Invalid job id: %s\n", job_id);
     }

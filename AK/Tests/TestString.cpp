@@ -127,9 +127,8 @@ TEST_CASE(repeated)
 
 TEST_CASE(to_int)
 {
-    bool ok;
-    EXPECT(String("123").to_int(ok) == 123 && ok);
-    EXPECT(String("-123").to_int(ok) == -123 && ok);
+    EXPECT_EQ(String("123").to_int().value(), 123);
+    EXPECT_EQ(String("-123").to_int().value(), -123);
 }
 
 TEST_CASE(to_lowercase)

@@ -1356,17 +1356,16 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
                 }
             }
         }
-        bool ok;
-        unsigned name_as_number = name.to_uint(ok);
-        if (ok) {
-            bool process_exists = false;
-            {
-                InterruptDisabler disabler;
-                process_exists = Process::from_pid(name_as_number);
-            }
-            if (process_exists)
-                return fs().get_inode(to_identifier(fsid(), PDI_Root, name_as_number, FI_PID));
+        auto name_as_number = name.to_uint();
+        if (!name_as_number.has_value())
+            return {};
+        bool process_exists = false;
+        {
+            InterruptDisabler disabler;
+            process_exists = Process::from_pid(name_as_number.value());
         }
+        if (process_exists)
+            return fs().get_inode(to_identifier(fsid(), PDI_Root, name_as_number.value(), FI_PID));
         return {};
     }
 
@@ -1413,18 +1412,17 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
     }
 
     if (proc_file_type == FI_PID_fd) {
-        bool ok;
-        unsigned name_as_number = name.to_uint(ok);
-        if (ok) {
-            bool fd_exists = false;
-            {
-                InterruptDisabler disabler;
-                if (auto* process = Process::from_pid(to_pid(identifier())))
-                    fd_exists = process->file_description(name_as_number);
-            }
-            if (fd_exists)
-                return fs().get_inode(to_identifier_with_fd(fsid(), to_pid(identifier()), name_as_number));
+        auto name_as_number = name.to_uint();
+        if (!name_as_number.has_value())
+            return {};
+        bool fd_exists = false;
+        {
+            InterruptDisabler disabler;
+            if (auto* process = Process::from_pid(to_pid(identifier())))
+                fd_exists = process->file_description(name_as_number.value());
         }
+        if (fd_exists)
+            return fs().get_inode(to_identifier_with_fd(fsid(), to_pid(identifier()), name_as_number.value()));
     }
     return {};
 }

@@ -303,19 +303,9 @@ void DisplaySettingsWidget::load_current_settings()
     /// Resolution ////////////////////////////////////////////////////////////////////////////////
     Gfx::IntSize find_size;
 
-    bool okay = false;
     // Let's attempt to find the current resolution and select it!
-    find_size.set_width(ws_config->read_entry("Screen", "Width", "1024").to_int(okay));
-    if (!okay) {
-        fprintf(stderr, "DisplaySettings: failed to convert width to int!");
-        ASSERT_NOT_REACHED();
-    }
-
-    find_size.set_height(ws_config->read_entry("Screen", "Height", "768").to_int(okay));
-    if (!okay) {
-        fprintf(stderr, "DisplaySettings: failed to convert height to int!");
-        ASSERT_NOT_REACHED();
-    }
+    find_size.set_width(ws_config->read_num_entry("Screen", "Width", 1024));
+    find_size.set_height(ws_config->read_num_entry("Screen", "Height", 768));
 
     size_t index = m_resolutions.find_first_index(find_size).value_or(0);
     Gfx::IntSize m_current_resolution = m_resolutions.at(index);

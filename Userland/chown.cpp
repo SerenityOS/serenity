@@ -54,9 +54,10 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    bool ok;
-    new_uid = parts[0].to_uint(ok);
-    if (!ok) {
+    auto number = parts[0].to_uint();
+    if (number.has_value()) {
+        new_uid = number.value();
+    } else {
         auto* passwd = getpwnam(parts[0].characters());
         if (!passwd) {
             fprintf(stderr, "Unknown user '%s'\n", parts[0].characters());
@@ -66,8 +67,10 @@ int main(int argc, char** argv)
     }
 
     if (parts.size() == 2) {
-        new_gid = parts[1].to_uint(ok);
-        if (!ok) {
+        auto number = parts[1].to_uint();
+        if (number.has_value()) {
+            new_gid = number.value();
+        } else {
             auto* group = getgrnam(parts[1].characters());
             if (!new_gid) {
                 fprintf(stderr, "Unknown group '%s'\n", parts[1].characters());

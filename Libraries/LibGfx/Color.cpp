@@ -139,22 +139,11 @@ static Optional<Color> parse_rgb_color(const StringView& string)
     if (parts.size() != 3)
         return {};
 
-    bool ok;
-    auto r = parts[0].to_int(ok);
-    if (!ok)
-        return {};
-    auto g = parts[1].to_int(ok);
-    if (!ok)
-        return {};
-    auto b = parts[2].to_int(ok);
-    if (!ok)
-        return {};
+    auto r = parts[0].to_uint().value_or(256);
+    auto g = parts[1].to_uint().value_or(256);
+    auto b = parts[2].to_uint().value_or(256);
 
-    if (r < 0 || r > 255)
-        return {};
-    if (g < 0 || g > 255)
-        return {};
-    if (b < 0 || b > 255)
+    if (r > 255 || g > 255 || b > 255)
         return {};
 
     return Color(r, g, b);
@@ -171,27 +160,14 @@ static Optional<Color> parse_rgba_color(const StringView& string)
     if (parts.size() != 4)
         return {};
 
-    bool ok;
-    auto r = parts[0].to_int(ok);
-    if (!ok)
-        return {};
-    auto g = parts[1].to_int(ok);
-    if (!ok)
-        return {};
-    auto b = parts[2].to_int(ok);
-    if (!ok)
-        return {};
+    auto r = parts[0].to_int().value_or(256);
+    auto g = parts[1].to_int().value_or(256);
+    auto b = parts[2].to_int().value_or(256);
 
     double alpha = strtod(parts[3].to_string().characters(), nullptr);
-    int a = alpha * 255;
+    unsigned a = alpha * 255;
 
-    if (r < 0 || r > 255)
-        return {};
-    if (g < 0 || g > 255)
-        return {};
-    if (b < 0 || b > 255)
-        return {};
-    if (a < 0 || a > 255)
+    if (r > 255 || g > 255 || b > 255 || a > 255)
         return {};
 
     return Color(r, g, b, a);

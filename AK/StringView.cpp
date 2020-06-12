@@ -215,14 +215,14 @@ StringView StringView::substring_view_starting_after_substring(const StringView&
     return { remaining_characters, remaining_length };
 }
 
-int StringView::to_int(bool& ok) const
+Optional<int> StringView::to_int() const
 {
-    return StringUtils::convert_to_int(*this, ok);
+    return StringUtils::convert_to_int(*this);
 }
 
-unsigned StringView::to_uint(bool& ok) const
+Optional<unsigned> StringView::to_uint() const
 {
-    return StringUtils::convert_to_uint(*this, ok);
+    return StringUtils::convert_to_uint(*this);
 }
 
 unsigned StringView::hash() const

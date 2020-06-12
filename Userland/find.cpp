@@ -120,10 +120,10 @@ class LinksCommand final : public StatCommand {
 public:
     LinksCommand(const char* arg)
     {
-        bool ok;
-        m_links = StringView(arg).to_uint(ok);
-        if (!ok)
+        auto number = StringView(arg).to_uint();
+        if (!number.has_value())
             fatal_error("Invalid number: \033[1m%s", arg);
+        m_links = number.value();
     }
 
 private:
@@ -143,10 +143,10 @@ public:
             m_uid = passwd->pw_uid;
         } else {
             // Attempt to parse it as decimal UID.
-            bool ok;
-            m_uid = StringView(arg).to_uint(ok);
-            if (!ok)
+            auto number =  StringView(arg).to_uint();
+            if (!number.has_value())
                 fatal_error("Invalid user: \033[1m%s", arg);
+            m_uid = number.value();
         }
     }
 
@@ -167,10 +167,10 @@ public:
             m_gid = gr->gr_gid;
         } else {
             // Attempt to parse it as decimal GID.
-            bool ok;
-            m_gid = StringView(arg).to_int(ok);
-            if (!ok)
+            auto number = StringView(arg).to_int();
+            if (!number.has_value())
                 fatal_error("Invalid group: \033[1m%s", arg);
+            m_gid = number.value();
         }
     }
 
@@ -192,10 +192,10 @@ public:
             m_is_bytes = true;
             view = view.substring_view(0, view.length() - 1);
         }
-        bool ok;
-        m_size = view.to_uint(ok);
-        if (!ok)
+        auto number = view.to_uint();
+        if (!number.has_value())
             fatal_error("Invalid size: \033[1m%s", arg);
+        m_size = number.value();
     }
 
 private:

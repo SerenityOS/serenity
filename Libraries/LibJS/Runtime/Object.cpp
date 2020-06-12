@@ -410,9 +410,8 @@ bool Object::define_property(PropertyName property_name, Value value, PropertyAt
 {
     if (property_name.is_number())
         return put_own_property_by_index(*this, property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
-    bool ok;
-    i32 property_index = property_name.as_string().to_int(ok);
-    if (ok && property_index >= 0)
+    i32 property_index = property_name.as_string().to_int().value_or(-1);
+    if (property_index >= 0)
         return put_own_property_by_index(*this, property_index, value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
     return put_own_property(*this, property_name.as_string(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
@@ -543,9 +542,8 @@ Value Object::delete_property(PropertyName property_name)
     ASSERT(property_name.is_valid());
     if (property_name.is_number())
         return Value(m_indexed_properties.remove(property_name.as_number()));
-    bool ok;
-    int property_index = property_name.as_string().to_int(ok);
-    if (ok && property_index >= 0)
+    int property_index = property_name.as_string().to_int().value_or(-1);
+    if (property_index >= 0)
         return Value(m_indexed_properties.remove(property_name.as_number()));
 
     auto metadata = shape().lookup(property_name.as_string());
@@ -602,9 +600,8 @@ Value Object::get(PropertyName property_name) const
         return get_by_index(property_name.as_number());
 
     auto property_string = property_name.to_string();
-    bool ok;
-    i32 property_index = property_string.to_int(ok);
-    if (ok && property_index >= 0)
+    i32 property_index = property_string.to_int().value_or(-1);
+    if (property_index >= 0)
         return get_by_index(property_index);
 
     const Object* object = this;
@@ -656,9 +653,8 @@ bool Object::put(PropertyName property_name, Value value)
     ASSERT(!value.is_empty());
 
     auto property_string = property_name.to_string();
-    bool ok;
-    i32 property_index = property_string.to_int(ok);
-    if (ok && property_index >= 0)
+    i32 property_index = property_string.to_int().value_or(-1);
+    if (property_index >= 0)
         return put_by_index(property_index, value);
 
     // If there's a setter in the prototype chain, we go to the setter.
@@ -737,9 +733,8 @@ bool Object::has_own_property(PropertyName property_name) const
     if (property_name.is_number())
         return has_indexed_property(property_name.as_number());
 
-    bool ok;
-    i32 property_index = property_name.as_string().to_int(ok);
-    if (ok && property_index >= 0)
+    i32 property_index = property_name.as_string().to_int().value_or(-1);
+    if (property_index >= 0)
         return has_indexed_property(property_index);
 
     return shape().lookup(property_name.as_string()).has_value();

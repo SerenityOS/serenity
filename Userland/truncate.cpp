@@ -75,12 +75,12 @@ int main(int argc, char** argv)
             break;
         }
 
-        bool ok;
-        size = str.to_int(ok);
-        if (!ok) {
+        auto size_opt = str.to_int();
+        if (!size_opt.has_value()) {
             args_parser.print_usage(stderr, argv[0]);
             return 1;
         }
+        size = size_opt.value();
     }
 
     if (reference) {

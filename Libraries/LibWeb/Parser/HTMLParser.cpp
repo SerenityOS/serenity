@@ -266,18 +266,17 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                         }
 
                         if (j < 7) { // We found ; char
-                            bool ok;
-                            u32 codepoint;
+                            Optional<u32> codepoint;
                             String str_code_point = html.substring_view(i + 2, j - 2);
                             if (str_code_point.starts_with('x')) {
                                 String str = str_code_point.substring(1, str_code_point.length() - 1);
-                                codepoint = AK::StringUtils::convert_to_uint_from_hex(str, ok);
+                                codepoint = AK::StringUtils::convert_to_uint_from_hex(str);
                             } else {
-                                codepoint = str_code_point.to_uint(ok);
+                                codepoint = str_code_point.to_uint();
                             }
 
-                            if (ok) {
-                                Vector<char> bytes = codepoint_to_bytes(codepoint);
+                            if (codepoint.has_value()) {
+                                Vector<char> bytes = codepoint_to_bytes(codepoint.value());
                                 if (bytes.size() > 0) {
                                     for (size_t i = 0; i < bytes.size(); i++) {
                                         text_buffer.append(bytes.at(i));

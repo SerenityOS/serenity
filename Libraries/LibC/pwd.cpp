@@ -128,19 +128,18 @@ next_entry:
     auto& e_gecos = parts[4];
     auto& e_dir = parts[5];
     auto& e_shell = parts[6];
-    bool ok;
-    uid_t e_uid = e_uid_string.to_uint(ok);
-    if (!ok) {
+    auto e_uid = e_uid_string.to_uint();
+    if (!e_uid.has_value()) {
         fprintf(stderr, "getpwent(): Malformed UID on line %u\n", __pwdb_line_number);
         goto next_entry;
     }
-    gid_t e_gid = e_gid_string.to_uint(ok);
-    if (!ok) {
+    auto e_gid = e_gid_string.to_uint();
+    if (!e_gid.has_value()) {
         fprintf(stderr, "getpwent(): Malformed GID on line %u\n", __pwdb_line_number);
         goto next_entry;
     }
-    __pwdb_entry->pw_uid = e_uid;
-    __pwdb_entry->pw_gid = e_gid;
+    __pwdb_entry->pw_uid = e_uid.value();
+    __pwdb_entry->pw_gid = e_gid.value();
     __pwdb_entry->pw_name = __pwdb_entry->name_buffer;
     __pwdb_entry->pw_passwd = __pwdb_entry->passwd_buffer;
     __pwdb_entry->pw_gecos = __pwdb_entry->gecos_buffer;

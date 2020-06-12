@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <signal.h>
 #include <stdio.h>
@@ -45,24 +46,25 @@ int main(int argc, char** argv)
 
     if (argc != 2 && argc != 3)
         print_usage_and_exit();
-    bool ok;
     unsigned signum = SIGTERM;
     int pid_argi = 1;
     if (argc == 3) {
         pid_argi = 2;
         if (argv[1][0] != '-')
             print_usage_and_exit();
-        signum = String(&argv[1][1]).to_uint(ok);
-        if (!ok) {
+        auto number = StringView(&argv[1][1]).to_uint();
+        if (!number.has_value()) {
             printf("'%s' is not a valid signal number\n", &argv[1][1]);
             return 2;
         }
+        signum = number.value();
     }
-    pid_t pid = String(argv[pid_argi]).to_int(ok);
-    if (!ok) {
+    auto pid_opt = String(argv[pid_argi]).to_int();
+    if (!pid_opt.has_value()) {
         printf("'%s' is not a valid PID\n", argv[pid_argi]);
         return 3;
     }
+    pid_t pid = pid_opt.value();
 
     int rc = kill(pid, signum);
     if (rc < 0)
