@@ -30,10 +30,13 @@
 
 namespace Web {
 
-class HTMLTableCellElement : public HTMLElement {
+class HTMLTableCellElement final : public HTMLElement {
 public:
     HTMLTableCellElement(Document&, const FlyString& tag_name);
     virtual ~HTMLTableCellElement() override;
+
+private:
+    virtual void apply_presentational_hints(StyleProperties&) const override;
 };
 
 template<>
