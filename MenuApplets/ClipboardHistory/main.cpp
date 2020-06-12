@@ -25,8 +25,8 @@
  */
 
 #include "ClipboardHistoryModel.h"
-#include "IconWidget.h"
 #include <LibGUI/Application.h>
+#include <LibGUI/Image.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Window.h>
 
@@ -55,8 +55,10 @@ int main(int argc, char* argv[])
     auto applet_window = GUI::Window::construct();
     applet_window->set_title("ClipboardHistory");
     applet_window->set_window_type(GUI::WindowType::MenuApplet);
-    auto& icon = applet_window->set_main_widget<IconWidget>();
-    icon.on_click = [&main_window = *main_window] {
+    auto& icon = applet_window->set_main_widget<GUI::Image>();
+    icon.load_from_file("/res/icons/clipboard.png");
+    icon.set_fill_with_background_color(true);
+    icon.on_click = [& main_window = *main_window] {
         main_window.show();
     };
     applet_window->resize(16, 16);
