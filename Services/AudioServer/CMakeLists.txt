@@ -2,8 +2,8 @@ compile_ipc(AudioServer.ipc AudioServerEndpoint.h)
 compile_ipc(AudioClient.ipc AudioClientEndpoint.h)
 
 set(SOURCES
-    ASClientConnection.cpp
-    ASMixer.cpp
+    ClientConnection.cpp
+    Mixer.cpp
     main.cpp
     AudioServerEndpoint.h
     AudioClientEndpoint.h

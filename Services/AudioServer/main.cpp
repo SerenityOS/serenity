@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ASMixer.h"
+#include "Mixer.h"
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 
@@ -36,7 +36,7 @@ int main(int, char**)
     }
 
     Core::EventLoop event_loop;
-    ASMixer mixer;
+    AudioServer::Mixer mixer;
 
     auto server = Core::LocalServer::construct();
     bool ok = server->take_over_from_system_server();
@@ -49,7 +49,7 @@ int main(int, char**)
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<ASClientConnection>(*client_socket, client_id, mixer);
+        IPC::new_client_connection<AudioServer::ClientConnection>(*client_socket, client_id, mixer);
     };
 
     if (pledge("stdio thread shared_buffer accept", nullptr) < 0) {
