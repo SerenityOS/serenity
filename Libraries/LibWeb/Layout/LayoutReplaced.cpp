@@ -123,16 +123,10 @@ float LayoutReplaced::calculate_height() const
 
 Gfx::FloatPoint LayoutReplaced::calculate_position()
 {
+    ASSERT(!is_absolutely_positioned());
     auto& style = this->style();
     auto zero_value = Length(0, Length::Type::Px);
     auto& containing_block = *this->containing_block();
-
-    if (style.position() == CSS::Position::Absolute) {
-        box_model().offset().top = style.length_or_fallback(CSS::PropertyID::Top, zero_value, containing_block.height());
-        box_model().offset().right = style.length_or_fallback(CSS::PropertyID::Right, zero_value, containing_block.width());
-        box_model().offset().bottom = style.length_or_fallback(CSS::PropertyID::Bottom, zero_value, containing_block.height());
-        box_model().offset().left = style.length_or_fallback(CSS::PropertyID::Left, zero_value, containing_block.width());
-    }
 
     box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
     box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
@@ -158,7 +152,11 @@ void LayoutReplaced::layout(LayoutMode layout_mode)
 
     LayoutBox::layout(layout_mode);
 
-    set_offset(calculate_position());
+    if (is_absolutely_positioned()) {
+        const_cast<LayoutBlock*>(containing_block())->add_absolutely_positioned_descendant(*this);
+    } else {
+        set_offset(calculate_position());
+    }
 }
 
 void LayoutReplaced::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
