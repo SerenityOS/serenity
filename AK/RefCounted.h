@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Atomic.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 
@@ -62,8 +63,8 @@ public:
 
     ALWAYS_INLINE void ref() const
     {
-        ASSERT(m_ref_count);
-        ++m_ref_count;
+        auto old_ref_count = m_ref_count++;
+        ASSERT(old_ref_count > 0);
     }
 
     ALWAYS_INLINE RefCountType ref_count() const
@@ -78,13 +79,14 @@ protected:
         ASSERT(m_ref_count == 0);
     }
 
-    ALWAYS_INLINE void deref_base() const
+    ALWAYS_INLINE RefCountType deref_base() const
     {
-        ASSERT(m_ref_count);
-        --m_ref_count;
+        auto old_ref_count = m_ref_count--;
+        ASSERT(old_ref_count > 0);
+        return old_ref_count - 1;
     }
 
-    mutable RefCountType m_ref_count { 1 };
+    mutable Atomic<RefCountType> m_ref_count { 1 };
 };
 
 template<typename T>
@@ -92,11 +94,11 @@ class RefCounted : public RefCountedBase {
 public:
     void unref() const
     {
-        deref_base();
-        if (m_ref_count == 0) {
+        auto new_ref_count = deref_base();
+        if (new_ref_count == 0) {
             call_will_be_destroyed_if_present(static_cast<const T*>(this));
             delete static_cast<const T*>(this);
-        } else if (m_ref_count == 1) {
+        } else if (new_ref_count == 1) {
             call_one_ref_left_if_present(static_cast<const T*>(this));
         }
     }
