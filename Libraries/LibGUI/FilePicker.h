@@ -30,6 +30,7 @@
 #include <AK/Optional.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Dialog.h>
+#include <LibGUI/Image.h>
 
 namespace GUI {
 
@@ -73,7 +74,7 @@ private:
     LexicalPath m_selected_file;
 
     RefPtr<TextBox> m_filename_textbox;
-    RefPtr<Label> m_preview_image_label;
+    RefPtr<Image> m_preview_image_label;
     RefPtr<Label> m_preview_name_label;
     RefPtr<Label> m_preview_geometry_label;
     Mode m_mode { Mode::Open };
