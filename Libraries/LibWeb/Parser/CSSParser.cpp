@@ -542,6 +542,8 @@ public:
 
             if (pseudo_name.equals_ignoring_case("link"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Link;
+            else if (pseudo_name.equals_ignoring_case("visited"))
+                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Visited;
             else if (pseudo_name.equals_ignoring_case("hover"))
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Hover;
             else if (pseudo_name.equals_ignoring_case("focus"))
