@@ -36,7 +36,7 @@ BoxModelMetrics::~BoxModelMetrics()
 {
 }
 
-BoxModelMetrics::PixelBox BoxModelMetrics::full_margin(const LayoutNode& layout_node) const
+BoxModelMetrics::PixelBox BoxModelMetrics::margin_box(const LayoutNode& layout_node) const
 {
     return {
         m_margin.top.to_px(layout_node) + m_border.top.to_px(layout_node) + m_padding.top.to_px(layout_node),
