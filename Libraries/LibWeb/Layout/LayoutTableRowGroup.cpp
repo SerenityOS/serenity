@@ -25,8 +25,9 @@
  */
 
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Layout/LayoutTableRowGroup.h>
+#include <LibWeb/Layout/LayoutTableCell.h>
 #include <LibWeb/Layout/LayoutTableRow.h>
+#include <LibWeb/Layout/LayoutTableRowGroup.h>
 
 namespace Web {
 
@@ -39,18 +40,39 @@ LayoutTableRowGroup::~LayoutTableRowGroup()
 {
 }
 
-void LayoutTableRowGroup::layout(LayoutMode layout_mode)
+size_t LayoutTableRowGroup::column_count() const
+{
+    size_t table_column_count = 0;
+    for_each_child_of_type<LayoutTableRow>([&](auto& row) {
+        size_t row_column_count = 0;
+        row.template for_each_child_of_type<LayoutTableCell>([&](auto& cell) {
+            row_column_count += cell.colspan();
+        });
+        table_column_count = max(table_column_count, row_column_count);
+    });
+    return table_column_count;
+}
+
+void LayoutTableRowGroup::layout(LayoutMode)
 {
     compute_width();
 
     if (!is_inline())
         compute_position();
 
+    auto column_count = this->column_count();
+    Vector<float> column_widths;
+    column_widths.resize(column_count);
+
+    for_each_child_of_type<LayoutTableRow>([&](auto& row) {
+        row.calculate_column_widths(column_widths);
+    });
+
     float content_height = 0;
 
     for_each_child_of_type<LayoutTableRow>([&](auto& row) {
         row.set_offset(0, content_height);
-        row.layout(layout_mode);
+        row.layout_row(column_widths);
         content_height += row.height();
     });
 
