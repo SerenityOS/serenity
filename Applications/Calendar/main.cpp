@@ -60,8 +60,7 @@ int main(int argc, char** argv)
     window->set_title("Calendar");
     window->set_rect(20, 200, 596, 475);
 
-    auto calendar_widget = make<CalendarWidget>();
-    window->set_main_widget(calendar_widget);
+    auto& calendar_widget = window->set_main_widget<CalendarWidget>();
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"));
 
@@ -70,7 +69,7 @@ int main(int argc, char** argv)
 
     app_menu.add_action(GUI::Action::create("Add Event", { Mod_Ctrl | Mod_Shift, Key_E },
         [&](const GUI::Action&) {
-            calendar_widget->show_add_event_window();
+            calendar_widget.show_add_event_window();
             return;
         }));
 

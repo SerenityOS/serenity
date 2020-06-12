@@ -37,7 +37,7 @@
 
 CalendarWidget::CalendarWidget()
 {
-    m_calendar = make<Calendar>(Core::DateTime::now());
+    m_calendar = adopt(*new Calendar(Core::DateTime::now()));
 
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
@@ -196,7 +196,7 @@ void CalendarWidget::update_calendar_tiles(int target_year, int target_month)
 
 void CalendarWidget::show_add_event_window()
 {
-    AddEventDialog::show(*move(m_calendar), Core::DateTime::now(), window());
+    AddEventDialog::show(m_calendar, Core::DateTime::now(), window());
 }
 
 CalendarWidget::CalendarTile::CalendarTile(Calendar& calendar, int index, Core::DateTime date_time)
@@ -230,7 +230,7 @@ void CalendarWidget::CalendarTile::doubleclick_event(GUI::MouseEvent& event)
 {
     GUI::Widget::doubleclick_event(event);
     //TOOD: Should be calling show_add_event_window. Would we just replace m_calender /w m_calender_widget?
-    AddEventDialog::show(&m_calendar, m_date_time, window());
+    AddEventDialog::show(m_calendar, m_date_time, window());
 }
 
 void CalendarWidget::CalendarTile::paint_event(GUI::PaintEvent& event)
@@ -265,7 +265,7 @@ void CalendarWidget::CalendarTile::paint_event(GUI::PaintEvent& event)
     int highlight_rect_width = (font().glyph_width('0') * (m_display_date.length() + 1)) + 2;
     auto display_date = (m_date_time.day() == 1 && frame_inner_rect().width() > highlight_rect_width) ? m_display_date : String::number(m_date_time.day());
 
-    if (m_calendar.is_today(m_date_time)) {
+    if (m_calendar->is_today(m_date_time)) {
         auto highlight_rect = Gfx::IntRect(day_rect.width() / 2 - (highlight_rect_width / 2), day_rect.y(), highlight_rect_width, font().glyph_height() + 4);
         painter.draw_rect(highlight_rect, palette().base_text());
         painter.draw_text(day_rect, display_date, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, palette().base_text());
