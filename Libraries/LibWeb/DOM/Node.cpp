@@ -124,10 +124,7 @@ void Node::invalidate_style()
 
 bool Node::is_link() const
 {
-    auto* enclosing_link = enclosing_link_element();
-    if (!enclosing_link)
-        return false;
-    return enclosing_link->has_attribute(HTML::AttributeNames::href);
+    return enclosing_link_element();
 }
 
 void Node::dispatch_event(NonnullRefPtr<Event> event)
