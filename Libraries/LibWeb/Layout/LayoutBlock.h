@@ -72,7 +72,7 @@ protected:
     void compute_width();
     void compute_position();
     void compute_height();
-    void layout_absolute_descendants();
+    void layout_absolutely_positioned_descendants();
 
 private:
     virtual bool is_block() const override { return true; }
