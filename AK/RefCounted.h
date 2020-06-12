@@ -58,22 +58,24 @@ constexpr auto call_one_ref_left_if_present(...) -> FalseType
 
 class RefCountedBase {
 public:
+    typedef unsigned int RefCountType;
+
     ALWAYS_INLINE void ref() const
     {
         ASSERT(m_ref_count);
         ++m_ref_count;
     }
 
-    ALWAYS_INLINE int ref_count() const
+    ALWAYS_INLINE RefCountType ref_count() const
     {
         return m_ref_count;
     }
 
 protected:
-    RefCountedBase() {}
+    RefCountedBase() { }
     ALWAYS_INLINE ~RefCountedBase()
     {
-        ASSERT(!m_ref_count);
+        ASSERT(m_ref_count == 0);
     }
 
     ALWAYS_INLINE void deref_base() const
@@ -82,7 +84,7 @@ protected:
         --m_ref_count;
     }
 
-    mutable int m_ref_count { 1 };
+    mutable RefCountType m_ref_count { 1 };
 };
 
 template<typename T>
