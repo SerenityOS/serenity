@@ -146,7 +146,7 @@ Gfx::FloatPoint LayoutReplaced::calculate_position()
         + box_model().padding().left.to_px(*this)
         + box_model().offset().left.to_px(*this);
 
-    float y = box_model().full_margin(*this).top + box_model().offset().top.to_px(*this);
+    float y = box_model().margin_box(*this).top + box_model().offset().top.to_px(*this);
 
     return { x, y };
 }

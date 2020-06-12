@@ -150,7 +150,7 @@ void LayoutBlock::layout_block_children(LayoutMode layout_mode)
         child_block.layout(layout_mode);
 
         if (!child_block.is_absolutely_positioned())
-            content_height = max(content_height, child_block.effective_offset().y() + child_block.height() + child_block.box_model().full_margin(*this).bottom);
+            content_height = max(content_height, child_block.effective_offset().y() + child_block.height() + child_block.box_model().margin_box(*this).bottom);
     });
     if (layout_mode != LayoutMode::Default) {
         float max_width = 0;
@@ -464,7 +464,7 @@ void LayoutBlock::compute_position()
         + box_model().padding().left.to_px(*this)
         + box_model().offset().left.to_px(*this);
 
-    float position_y = box_model().full_margin(*this).top
+    float position_y = box_model().margin_box(*this).top
         + box_model().offset().top.to_px(*this);
 
     LayoutBlock* relevant_sibling = previous_sibling();
@@ -477,7 +477,7 @@ void LayoutBlock::compute_position()
     if (relevant_sibling) {
         auto& previous_sibling_style = relevant_sibling->box_model();
         position_y += relevant_sibling->effective_offset().y() + relevant_sibling->height();
-        position_y += previous_sibling_style.full_margin(*this).bottom;
+        position_y += previous_sibling_style.margin_box(*this).bottom;
     }
 
     set_offset({ position_x, position_y });
