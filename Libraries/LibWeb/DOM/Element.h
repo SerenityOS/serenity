@@ -61,6 +61,7 @@ public:
     }
 
     bool has_class(const FlyString&) const;
+    const Vector<FlyString>& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(StyleProperties&) const { }
     virtual void parse_attribute(const FlyString& name, const String& value);
