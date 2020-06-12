@@ -32,19 +32,24 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath unix cpath fattr unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/launch", "rw") < 0) {
         perror("unveil");
         return 1;
     }
