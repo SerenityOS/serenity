@@ -49,6 +49,7 @@ void LayoutTableRowGroup::layout(LayoutMode layout_mode)
     float content_height = 0;
 
     for_each_child_of_type<LayoutTableRow>([&](auto& row) {
+        row.set_offset(0, content_height);
         row.layout(layout_mode);
         content_height += row.height();
     });
