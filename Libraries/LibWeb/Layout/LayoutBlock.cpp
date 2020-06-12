@@ -477,7 +477,14 @@ void LayoutBlock::compute_position()
     if (relevant_sibling) {
         auto& previous_sibling_style = relevant_sibling->box_model();
         position_y += relevant_sibling->effective_offset().y() + relevant_sibling->height();
-        position_y += previous_sibling_style.margin_box(*this).bottom;
+
+        // Collapse top margin with bottom margin of previous sibling if necessary
+        float previous_sibling_margin_bottom = previous_sibling_style.margin().bottom.to_px(*relevant_sibling);
+        float my_margin_top = box_model().margin().top.to_px(*this);
+        if (previous_sibling_margin_bottom > my_margin_top) {
+            // Sibling's margin is larger than mine, adjust so we use sibling's.
+            position_y += previous_sibling_margin_bottom - my_margin_top;
+        }
     }
 
     set_offset({ position_x, position_y });
