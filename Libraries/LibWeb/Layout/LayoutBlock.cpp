@@ -170,6 +170,10 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
     m_line_boxes.clear();
     for_each_child([&](auto& child) {
         ASSERT(child.is_inline());
+        if (child.is_box() && child.is_absolutely_positioned()) {
+            const_cast<LayoutBlock*>(child.containing_block())->add_absolutely_positioned_descendant((LayoutBox&)child);
+            return;
+        }
         child.split_into_lines(*this, layout_mode);
     });
 
@@ -232,9 +236,6 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
 
         for (size_t i = 0; i < line_box.fragments().size(); ++i) {
             auto& fragment = line_box.fragments()[i];
-
-            if (fragment.layout_node().is_absolutely_positioned())
-                continue;
 
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
