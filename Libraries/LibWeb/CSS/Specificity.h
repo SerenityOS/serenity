@@ -51,8 +51,8 @@ public:
     bool operator==(const Specificity& other) const
     {
         return m_ids == other.m_ids
-            || m_classes < other.m_classes
-            || m_tag_names < other.m_tag_names;
+            || m_classes == other.m_classes
+            || m_tag_names == other.m_tag_names;
     }
 
 private:
