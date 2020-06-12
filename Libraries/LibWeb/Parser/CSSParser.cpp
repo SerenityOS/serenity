@@ -759,6 +759,9 @@ public:
             consume_specific(';');
 
         auto property_id = CSS::property_id_from_string(property_name);
+        if (property_id == CSS::PropertyID::Invalid) {
+            dbg() << "CSSParser: Unrecognized property '" << property_name << "'";
+        }
         return StyleProperty { property_id, parse_css_value(property_value), important };
     }
 
