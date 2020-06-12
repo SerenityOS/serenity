@@ -39,6 +39,7 @@ public:
         : m_codepoints(codepoints)
         , m_length(length)
     {
+        ASSERT(codepoints || length == 0);
     }
 
     const u32* codepoints() const { return m_codepoints; }
