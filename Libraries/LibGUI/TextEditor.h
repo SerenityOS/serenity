@@ -259,7 +259,9 @@ private:
     NonnullRefPtrVector<Action> m_custom_context_menu_actions;
 
     size_t m_reflow_deferred { 0 };
-    size_t m_reflow_requested { 0 };
+    bool m_reflow_requested { false };
+
+    bool is_visual_data_up_to_date() const { return !m_reflow_requested; }
 
     RefPtr<TextDocument> m_document;
 
