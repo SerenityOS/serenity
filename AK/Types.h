@@ -63,6 +63,7 @@ typedef int pid_t;
 
 #else
 #    include <stdint.h>
+#    include <stddef.h>
 #    include <sys/types.h>
 
 #    ifdef __ptrdiff_t
