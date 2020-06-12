@@ -1075,7 +1075,7 @@ void TextEditor::set_cursor(const TextPosition& a_position)
     if (position.column() > lines()[position.line()].length())
         position.set_column(lines()[position.line()].length());
 
-    if (m_cursor != position) {
+    if (m_cursor != position && is_visual_data_up_to_date()) {
         // NOTE: If the old cursor is no longer valid, repaint everything just in case.
         auto old_cursor_line_rect = m_cursor.line() < line_count()
             ? line_widget_rect(m_cursor.line())
@@ -1085,6 +1085,9 @@ void TextEditor::set_cursor(const TextPosition& a_position)
         scroll_cursor_into_view();
         update(old_cursor_line_rect);
         update_cursor();
+    } else if (m_cursor != position) {
+        m_cursor = position;
+        m_cursor_state = true;
     }
     cursor_did_change();
     if (on_cursor_change)
@@ -1386,6 +1389,8 @@ void TextEditor::recompute_all_visual_lines()
         m_reflow_requested = true;
         return;
     }
+
+    m_reflow_requested = false;
 
     int y_offset = 0;
     for (size_t line_index = 0; line_index < line_count(); ++line_index) {
