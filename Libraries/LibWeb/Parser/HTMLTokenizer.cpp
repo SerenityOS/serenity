@@ -2436,6 +2436,56 @@ _StartOfFunction:
             }
             END_STATE
 
+            BEGIN_STATE(CDATASection)
+            {
+                ON(']')
+                {
+                    SWITCH_TO(CDATASectionBracket);
+                }
+                ON_EOF
+                {
+                    PARSE_ERROR();
+                    EMIT_EOF;
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CURRENT_CHARACTER;
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CDATASectionBracket)
+            {
+                ON(']')
+                {
+                    SWITCH_TO(CDATASectionEnd);
+                }
+                ANYTHING_ELSE
+                {
+                    EMIT_CHARACTER_AND_RECONSUME_IN(']', CDATASection);
+                }
+            }
+            END_STATE
+
+            BEGIN_STATE(CDATASectionEnd)
+            {
+                ON(']')
+                {
+                    EMIT_CHARACTER(']');
+                }
+                ON('>')
+                {
+                    SWITCH_TO(Data);
+                }
+                ANYTHING_ELSE
+                {
+                    m_queued_tokens.enqueue(HTMLToken::make_character(']'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character(']'));
+                    RECONSUME_IN(CDATASection);
+                }
+            }
+            END_STATE
+
         default:
             TODO();
         }
