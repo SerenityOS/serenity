@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/DOM/HTMLTableElement.h>
+#include <LibWeb/Parser/CSSParser.h>
 
 namespace Web {
 
@@ -35,6 +36,15 @@ HTMLTableElement::HTMLTableElement(Document& document, const FlyString& tag_name
 
 HTMLTableElement::~HTMLTableElement()
 {
+}
+
+void HTMLTableElement::apply_presentational_hints(StyleProperties& style) const
+{
+    for_each_attribute([&](auto& name, auto& value) {
+        if (name == HTML::AttributeNames::width) {
+            style.set_property(CSS::PropertyID::Width, parse_css_value(value));
+        }
+    });
 }
 
 }
