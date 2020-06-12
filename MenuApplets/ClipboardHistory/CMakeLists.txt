@@ -1,6 +1,5 @@
 set(SOURCES
     ClipboardHistoryModel.cpp
-    IconWidget.cpp
     main.cpp
 )
 
