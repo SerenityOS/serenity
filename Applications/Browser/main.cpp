@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
 #include "BookmarksBarWidget.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
@@ -46,6 +47,7 @@ namespace Browser {
 static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 String g_home_url;
 bool g_use_old_html_parser = false;
+URL url_from_user_input(const String& input);
 
 }
 
@@ -183,8 +185,13 @@ int main(int argc, char** argv)
     };
 
     URL first_url = Browser::g_home_url;
-    if (specified_url)
-        first_url = URL::create_with_url_or_path(specified_url);
+    if (specified_url) {
+        if (Core::File::exists(specified_url)) {
+            first_url = URL::create_with_file_protocol(Core::File::real_path_for(specified_url));
+        } else {
+            first_url = Browser::url_from_user_input(specified_url);
+        }
+    }
 
     window_actions.on_create_new_tab = [&] {
         create_new_tab(Browser::g_home_url, true);

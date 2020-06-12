@@ -49,18 +49,30 @@
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame/Frame.h>
-#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Parser/CSSParser.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/PageView.h>
+#include <LibWeb/Parser/CSSParser.h>
 
 namespace Browser {
 
 extern bool g_use_old_html_parser;
 extern String g_home_url;
+
+URL url_from_user_input(const String& input)
+{
+    auto url = URL(input);
+    if (url.is_valid())
+        return url;
+
+    StringBuilder builder;
+    builder.append("http://");
+    builder.append(input);
+    return URL(builder.build());
+}
 
 Tab::Tab()
 {
@@ -78,26 +90,30 @@ Tab::Tab()
         update_actions();
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
         m_page_view->load(m_history.current());
-    }, this);
+    },
+        this);
 
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) {
         m_history.go_forward();
         update_actions();
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
         m_page_view->load(m_history.current());
-    }, this);
+    },
+        this);
 
     toolbar.add_action(*m_go_back_action);
     toolbar.add_action(*m_go_forward_action);
 
     toolbar.add_action(GUI::CommonActions::make_go_home_action([this](auto&) {
         m_page_view->load(g_home_url);
-    }, this));
+    },
+        this));
 
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) {
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
         m_page_view->reload();
-    }, this);
+    },
+        this);
 
     toolbar.add_action(*m_reload_action);
 
@@ -106,15 +122,8 @@ Tab::Tab()
     m_location_box->set_preferred_size(0, 22);
 
     m_location_box->on_return_pressed = [this] {
-        String location = m_location_box->text();
-        if (!URL(location).is_valid()) {
-            StringBuilder builder;
-            builder.append("http://");
-            builder.append(location);
-            location = builder.build();
-        }
-
-        m_page_view->load(location);
+        auto url = url_from_user_input(m_location_box->text());
+        m_page_view->load(url);
         m_page_view->set_focus(true);
     };
 
