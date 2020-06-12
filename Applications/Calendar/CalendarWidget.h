@@ -45,7 +45,7 @@ private:
 
     void update_calendar_tiles(int target_year, int target_month);
 
-    OwnPtr<Calendar> m_calendar;
+    RefPtr<Calendar> m_calendar;
     RefPtr<GUI::Widget> m_top_container;
     RefPtr<GUI::Widget> m_bottom_container;
     RefPtr<GUI::Label> m_selected_date_label;
@@ -70,7 +70,7 @@ private:
         String m_weekday_name;
         String m_display_date;
         Core::DateTime m_date_time;
-        Calendar& m_calendar;
+        RefPtr<Calendar> m_calendar;
     };
 
     RefPtr<CalendarTile> m_calendar_tiles[35];
