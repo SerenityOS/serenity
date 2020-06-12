@@ -46,4 +46,24 @@ BoxModelMetrics::PixelBox BoxModelMetrics::full_margin(const LayoutNode& layout_
     };
 }
 
+BoxModelMetrics::PixelBox BoxModelMetrics::padding_box(const LayoutNode& layout_node) const
+{
+    return {
+        m_padding.top.to_px(layout_node),
+        m_padding.right.to_px(layout_node),
+        m_padding.bottom.to_px(layout_node),
+        m_padding.left.to_px(layout_node),
+    };
+}
+
+BoxModelMetrics::PixelBox BoxModelMetrics::border_box(const LayoutNode& layout_node) const
+{
+    return {
+        m_border.top.to_px(layout_node) + m_padding.top.to_px(layout_node),
+        m_border.right.to_px(layout_node) + m_padding.right.to_px(layout_node),
+        m_border.bottom.to_px(layout_node) + m_padding.bottom.to_px(layout_node),
+        m_border.left.to_px(layout_node) + m_padding.left.to_px(layout_node),
+    };
+}
+
 }

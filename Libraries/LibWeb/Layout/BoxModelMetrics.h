@@ -54,6 +54,8 @@ public:
     };
 
     PixelBox full_margin(const LayoutNode&) const;
+    PixelBox padding_box(const LayoutNode&) const;
+    PixelBox border_box(const LayoutNode&) const;
 
 private:
     LengthBox m_margin;

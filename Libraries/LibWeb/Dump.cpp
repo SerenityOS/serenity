@@ -145,6 +145,11 @@ void dump_tree(const LayoutNode& layout_node)
 
     if (layout_node.is_block() && static_cast<const LayoutBlock&>(layout_node).children_are_inline()) {
         auto& block = static_cast<const LayoutBlock&>(layout_node);
+        if (block.absolutely_positioned_descendant_count()) {
+            for (size_t i = 0; i < indent; ++i)
+                dbgprintf("    ");
+            dbgprintf("  %zu absolutely positioned descendant(s) tracked here\n", block.absolutely_positioned_descendant_count());
+        }
         for (size_t i = 0; i < indent; ++i)
             dbgprintf("    ");
         dbgprintf("  Line boxes (%d):\n", block.line_boxes().size());

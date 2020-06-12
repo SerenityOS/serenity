@@ -58,6 +58,8 @@ void LayoutDocument::layout(LayoutMode layout_mode)
     });
     set_height(lowest_bottom);
 
+    layout_absolute_descendants();
+
     // FIXME: This is a total hack. Make sure any GUI::Widgets are moved into place after layout.
     //        We should stop embedding GUI::Widgets entirely, since that won't work out-of-process.
     for_each_in_subtree_of_type<LayoutWidget>([&](auto& widget) {

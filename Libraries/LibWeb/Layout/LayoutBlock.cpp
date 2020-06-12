@@ -27,6 +27,7 @@
 #include <LibGUI/Painter.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Dump.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutReplaced.h>
@@ -64,6 +65,69 @@ void LayoutBlock::layout(LayoutMode layout_mode)
     layout_children(layout_mode);
 
     compute_height();
+
+    if (layout_mode == LayoutMode::Default)
+        layout_absolute_descendants();
+}
+
+void LayoutBlock::layout_absolute_descendants()
+{
+    for (auto& box : m_absolutely_positioned_descendants) {
+        box->layout(LayoutMode::Default);
+        auto& box_model = box->box_model();
+        auto& style = box->style();
+        auto zero_value = Length(0, Length::Type::Px);
+
+        auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, Length(), width());
+
+        box_model.margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, {}, height());
+        box_model.margin().right = style.length_or_fallback(CSS::PropertyID::MarginRight, {}, width());
+        box_model.margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, {}, height());
+        box_model.margin().left = style.length_or_fallback(CSS::PropertyID::MarginLeft, {}, width());
+
+        box_model.offset().top = style.length_or_fallback(CSS::PropertyID::Top, {}, height());
+        box_model.offset().right = style.length_or_fallback(CSS::PropertyID::Right, {}, width());
+        box_model.offset().bottom = style.length_or_fallback(CSS::PropertyID::Bottom, {}, height());
+        box_model.offset().left = style.length_or_fallback(CSS::PropertyID::Left, {}, width());
+
+        if (box_model.offset().left.is_auto() && specified_width.is_auto() && box_model.offset().right.is_auto()) {
+            if (box_model.margin().left.is_auto())
+                box_model.margin().left = zero_value;
+            if (box_model.margin().right.is_auto())
+                box_model.margin().right = zero_value;
+        }
+
+        Gfx::FloatPoint used_offset;
+
+        float x_offset = box_model.offset().left.to_px(*box)
+            + box_model.border_box(*box).left
+            - box_model.offset().right.to_px(*box)
+            - box_model.border_box(*box).right;
+
+        float y_offset = box_model.offset().top.to_px(*box)
+            + box_model.border_box(*box).top
+            - box_model.offset().bottom.to_px(*box)
+            - box_model.border_box(*box).bottom;
+
+        if (!box_model.offset().left.is_auto()) {
+            used_offset.set_x(x_offset + box_model.margin().left.to_px(*box));
+        } else if (!box_model.offset().right.is_auto()) {
+            used_offset.set_x(width() + x_offset - box->width() - box_model.margin().right.to_px(*box));
+        }
+
+        if (!box_model.offset().top.is_auto()) {
+            used_offset.set_y(y_offset + box_model.margin().top.to_px(*box));
+        } else if (!box_model.offset().bottom.is_auto()) {
+            used_offset.set_y(height() + y_offset - box->height() - box_model.margin().bottom.to_px(*box));
+        }
+
+        box->set_offset(used_offset);
+    }
+}
+
+void LayoutBlock::add_absolutely_positioned_descendant(LayoutBox& box)
+{
+    m_absolutely_positioned_descendants.set(box);
 }
 
 void LayoutBlock::layout_children(LayoutMode layout_mode)
@@ -377,18 +441,16 @@ void LayoutBlock::compute_width()
 
 void LayoutBlock::compute_position()
 {
-    auto& style = this->style();
-
-    auto zero_value = Length(0, Length::Type::Px);
-
-    auto& containing_block = *this->containing_block();
-
-    if (style.position() == CSS::Position::Absolute) {
-        box_model().offset().top = style.length_or_fallback(CSS::PropertyID::Top, zero_value, containing_block.height());
-        box_model().offset().right = style.length_or_fallback(CSS::PropertyID::Right, zero_value, containing_block.width());
-        box_model().offset().bottom = style.length_or_fallback(CSS::PropertyID::Bottom, zero_value, containing_block.height());
-        box_model().offset().left = style.length_or_fallback(CSS::PropertyID::Left, zero_value, containing_block.width());
+    // Absolutely positioned blocks are positioned by position_absolute_boxes()
+    if (is_absolutely_positioned()) {
+        dbg() << "Is abspos, adding to containing block " << containing_block()->node()->tag_name();
+        const_cast<LayoutBlock*>(containing_block())->add_absolutely_positioned_descendant(*this);
+        return;
     }
+
+    auto& style = this->style();
+    auto zero_value = Length(0, Length::Type::Px);
+    auto& containing_block = *this->containing_block();
 
     box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
     box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
@@ -405,19 +467,17 @@ void LayoutBlock::compute_position()
     float position_y = box_model().full_margin(*this).top
         + box_model().offset().top.to_px(*this);
 
-    if (style.position() != CSS::Position::Absolute || containing_block.style().position() == CSS::Position::Absolute) {
-        LayoutBlock* relevant_sibling = previous_sibling();
-        while (relevant_sibling != nullptr) {
-            if (relevant_sibling->style().position() != CSS::Position::Absolute)
-                break;
-            relevant_sibling = relevant_sibling->previous_sibling();
-        }
+    LayoutBlock* relevant_sibling = previous_sibling();
+    while (relevant_sibling != nullptr) {
+        if (relevant_sibling->style().position() != CSS::Position::Absolute)
+            break;
+        relevant_sibling = relevant_sibling->previous_sibling();
+    }
 
-        if (relevant_sibling) {
-            auto& previous_sibling_style = relevant_sibling->box_model();
-            position_y += relevant_sibling->effective_offset().y() + relevant_sibling->height();
-            position_y += previous_sibling_style.full_margin(*this).bottom;
-        }
+    if (relevant_sibling) {
+        auto& previous_sibling_style = relevant_sibling->box_model();
+        position_y += relevant_sibling->effective_offset().y() + relevant_sibling->height();
+        position_y += previous_sibling_style.full_margin(*this).bottom;
     }
 
     set_offset({ position_x, position_y });
@@ -429,7 +489,6 @@ void LayoutBlock::compute_height()
 
     auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, Length(), containing_block()->height());
     auto specified_max_height = style.length_or_fallback(CSS::PropertyID::MaxHeight, Length(), containing_block()->height());
-
 
     if (!specified_height.is_auto()) {
         float used_height = specified_height.to_px(*this);
