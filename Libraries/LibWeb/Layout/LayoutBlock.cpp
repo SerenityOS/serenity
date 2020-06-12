@@ -481,7 +481,14 @@ void LayoutBlock::compute_position()
         // Collapse top margin with bottom margin of previous sibling if necessary
         float previous_sibling_margin_bottom = previous_sibling_style.margin().bottom.to_px(*relevant_sibling);
         float my_margin_top = box_model().margin().top.to_px(*this);
-        if (previous_sibling_margin_bottom > my_margin_top) {
+
+        if (my_margin_top < 0 || previous_sibling_margin_bottom < 0) {
+            // Negative margins present.
+            float largest_negative_margin = -min(my_margin_top, previous_sibling_margin_bottom);
+            float largest_positive_margin = (my_margin_top < 0 && previous_sibling_margin_bottom < 0) ? 0 : max(my_margin_top, previous_sibling_margin_bottom);
+            float final_margin = largest_positive_margin - largest_negative_margin;
+            position_y += final_margin - my_margin_top;
+        } else if (previous_sibling_margin_bottom > my_margin_top) {
             // Sibling's margin is larger than mine, adjust so we use sibling's.
             position_y += previous_sibling_margin_bottom - my_margin_top;
         }
