@@ -257,7 +257,43 @@ void dump_selector(const Selector& selector)
                 break;
             }
 
+            const char* pseudo_class_description = "";
+            switch (simple_selector.pseudo_class) {
+            case Selector::SimpleSelector::PseudoClass::Link:
+                pseudo_class_description = "Link";
+                break;
+            case Selector::SimpleSelector::PseudoClass::Visited:
+                pseudo_class_description = "Visited";
+                break;
+            case Selector::SimpleSelector::PseudoClass::None:
+                pseudo_class_description = "None";
+                break;
+            case Selector::SimpleSelector::PseudoClass::Root:
+                pseudo_class_description = "Root";
+                break;
+            case Selector::SimpleSelector::PseudoClass::Focus:
+                pseudo_class_description = "Focus";
+                break;
+            case Selector::SimpleSelector::PseudoClass::Empty:
+                pseudo_class_description = "Empty";
+                break;
+            case Selector::SimpleSelector::PseudoClass::Hover:
+                pseudo_class_description = "Hover";
+                break;
+            case Selector::SimpleSelector::PseudoClass::LastChild:
+                pseudo_class_description = "LastChild";
+                break;
+            case Selector::SimpleSelector::PseudoClass::FirstChild:
+                pseudo_class_description = "FirstChild";
+                break;
+            case Selector::SimpleSelector::PseudoClass::OnlyChild:
+                pseudo_class_description = "OnlyChild";
+                break;
+            }
+
             dbgprintf("%s:%s", type_description, simple_selector.value.characters());
+            if (simple_selector.pseudo_class != Selector::SimpleSelector::PseudoClass::None)
+                dbgprintf(" pseudo_class=%s", pseudo_class_description);
             if (simple_selector.attribute_match_type != Selector::SimpleSelector::AttributeMatchType::None) {
                 dbgprintf(" [%s, name='%s', value='%s']", attribute_match_type_description, simple_selector.attribute_name.characters(), simple_selector.attribute_value.characters());
             }
