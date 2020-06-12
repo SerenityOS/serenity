@@ -248,8 +248,8 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     preview_container.set_layout<VerticalBoxLayout>();
     preview_container.layout()->set_margins({ 8, 8, 8, 8 });
 
-    m_preview_image_label = preview_container.add<Label>();
-    m_preview_image_label->set_should_stretch_icon(true);
+    m_preview_image_label = preview_container.add<Image>();
+    m_preview_image_label->set_should_stretch(true);
     m_preview_image_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     m_preview_image_label->set_preferred_size(160, 160);
 
@@ -278,14 +278,14 @@ void FilePicker::set_preview(const LexicalPath& path)
         bool should_stretch = bitmap->width() > m_preview_image_label->width() || bitmap->height() > m_preview_image_label->height();
         m_preview_name_label->set_text(path.basename());
         m_preview_geometry_label->set_text(bitmap->size().to_string());
-        m_preview_image_label->set_should_stretch_icon(should_stretch);
-        m_preview_image_label->set_icon(move(bitmap));
+        m_preview_image_label->set_should_stretch(should_stretch);
+        m_preview_image_label->set_bitmap(move(bitmap));
     }
 }
 
 void FilePicker::clear_preview()
 {
-    m_preview_image_label->set_icon(nullptr);
+    m_preview_image_label->set_bitmap(nullptr);
     m_preview_name_label->set_text(String::empty());
     m_preview_geometry_label->set_text(String::empty());
 }
