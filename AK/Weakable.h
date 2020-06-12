@@ -44,8 +44,8 @@ class WeakLink : public RefCounted<WeakLink<T>> {
     friend class Weakable<T>;
 
 public:
-    T* ptr() { return static_cast<T*>(m_ptr); }
-    const T* ptr() const { return static_cast<const T*>(m_ptr); }
+    T* ptr() { return m_ptr; }
+    const T* ptr() const { return m_ptr; }
 
 private:
     explicit WeakLink(T& weakable)
