@@ -162,7 +162,7 @@ public:
         }
 
         if (!bytes.is_empty())
-            m_responsiveness_timer->start();
+            m_responsiveness_timer->restart();
 
         size_t decoded_bytes = 0;
         for (size_t index = 0; index < bytes.size(); index += decoded_bytes) {
