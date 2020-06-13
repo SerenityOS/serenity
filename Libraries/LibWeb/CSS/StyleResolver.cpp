@@ -344,6 +344,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Background) {
+        if (value.to_string() == "none") {
+            style.set_property(CSS::PropertyID::BackgroundColor, ColorStyleValue::create(Color::Transparent));
+            return;
+        }
         auto parts = split_on_whitespace(value.to_string());
         NonnullRefPtrVector<StyleValue> values;
         for (auto& part : parts) {
