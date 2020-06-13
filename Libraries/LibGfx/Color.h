@@ -49,6 +49,7 @@ struct HSV {
 class Color {
 public:
     enum NamedColor {
+        Transparent,
         Black,
         White,
         Red,
