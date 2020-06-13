@@ -288,6 +288,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char
             return symbol;
         }
     }
+    // dbg() << "Symbol::create_undefined";
     return Symbol::create_undefined(m_dynamic);
 }
 

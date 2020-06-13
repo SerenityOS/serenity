@@ -92,7 +92,8 @@ public:
         // TODO: Refactor the logic of is_undefined().
         // The current logic is basically a hack around a bug that occured when we returned
         // a Symbol by value, which lead to the "this == &m_dynamic.the_undefined_symbol()" check failing
-        bool is_undefined() const { return (this == &m_dynamic.the_undefined_symbol()) || m_is_undefined; }
+        // bool is_undefined() const { return (this == &m_dynamic.the_undefined_symbol()) || m_is_undefined; }
+        bool is_undefined() const { return (section_index() == 0) || m_is_undefined; }
         VirtualAddress address() const { return m_dynamic.base_address().offset(value()); }
 
     private:
@@ -271,6 +272,8 @@ private:
 
     FlatPtr m_string_table_offset { 0 };
     size_t m_size_of_string_table { 0 };
+
+    // NOTE: This is the .dynsym table, not the .symtab table
     FlatPtr m_symbol_table_offset { 0 };
     size_t m_size_of_symbol_table_entry { 0 };
 

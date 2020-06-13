@@ -25,33 +25,26 @@
  */
 #include <Kernel/Syscall.h>
 
-extern int g_lib_var;
+extern int g_lib_var1;
+extern int g_lib_var2;
+// extern __thread int g_tls_lib_var;
+// extern __thread int g_tls_lib_var2;
 
 const char* g_string = "Hello, World!\n";
 
 int libfunc();
+// int libfunc_tls();
 void local_dbgputstr(const char* str, int len);
 
 int main(int, char**)
 {
-    // return libfunc();
     local_dbgputstr(g_string, 15);
-    return libfunc() + g_lib_var;
+    int sum = 0;
+    sum += libfunc() + g_lib_var1 + g_lib_var2;
+    local_dbgputstr("1\n", 2);
+    // sum += libfunc_tls();
+    local_dbgputstr("2\n", 2);
+    // sum += g_tls_lib_var + g_tls_lib_var2;
+    local_dbgputstr("3\n", 2);
+    return sum;
 }
-/*
-// #include <stdio.h>
-
-// int libfunc();
-
-extern "C" void __libc_init();
-
-int main(int argc, char** argv)
-{
-    (void)argc;
-    (void)argv;
-    // libc_testfunc();
-    // __libc_init();
-
-    return 0;
-}
-*/

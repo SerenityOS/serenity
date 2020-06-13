@@ -89,7 +89,10 @@ DynamicLoader::~DynamicLoader()
 
 void* DynamicLoader::symbol_for_name(const char* name) const
 {
+    dbg() << "symbol_for_name: " << name;
     auto symbol = m_dynamic_object->hash_section().lookup_symbol(name);
+    dbg() << "is_undefined? : " << symbol.is_undefined();
+    dbg() << "value : " << symbol.value();
 
     if (symbol.is_undefined())
         return nullptr;
@@ -156,7 +159,7 @@ bool DynamicLoader::load_stage_2(unsigned flags)
 
     do_relocations();
     setup_plt_trampoline();
-    relocate_got_plt();
+    // relocate_got_plt();
 
     // Clean up our setting of .text to PROT_READ | PROT_WRITE
     if (m_dynamic_object->has_text_relocations()) {
@@ -227,7 +230,9 @@ void DynamicLoader::load_program_headers(const Image& elf_image)
         // FIXME: This can't be right either. TLS needs some real work i'd say :)
         m_tls_segment_address = tls_region_ptr->desired_load_address();
         VirtualAddress tls_segment_actual_addr = region->desired_load_address().offset((u32)text_segment_begin);
+        dbg() << "copying TLS into: " << (void*)tls_segment_actual_addr.as_ptr();
         memcpy(tls_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
+        dbg() << "after copy";
     }
 }
 
@@ -268,6 +273,7 @@ void DynamicLoader::do_relocations()
             auto symbol = relocation.symbol();
             VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
             u32 symbol_location = lookup_symbol(symbol).value();
+            ASSERT(symbol_location != load_base_address);
             *patch_ptr = symbol_location;
             VERBOSE("   Symbol address: %p\n", *patch_ptr);
             break;
@@ -285,6 +291,11 @@ void DynamicLoader::do_relocations()
             VERBOSE("Relocation type: R_386_TLS_TPOFF at offset %X\n", relocation.offset());
             // FIXME: this can't be right? I have no idea what "negative offset into TLS storage" means...
             // FIXME: Check m_has_static_tls and do something different for dynamic TLS
+            dbg() << "R_386_TLS_TPOFF: *patch_ptr: " << (void*)(*patch_ptr);
+            auto symbol = relocation.symbol();
+            VERBOSE("TLS relocation: '%s', value: %p\n", symbol.name(), symbol.value());
+            u32 symbol_location = lookup_symbol(symbol).value();
+            VERBOSE("symbol location: %d\n", symbol_location);
             *patch_ptr = relocation.offset() - (u32)m_tls_segment_address.as_ptr() - *patch_ptr;
             break;
         }
@@ -383,7 +394,14 @@ void DynamicLoader::setup_plt_trampoline()
 
 Optional<u32> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
 {
-    if (symbol.value())
+    // if (!symbol.is_undefined())
+    //     return symbol.address().get();
+    // TODO: check if symbol exists in .dynsym
+    // dbg() << "lookup_symbol: " << symbol.name();
+    // auto sym = symbol_for_name(symbol.name());
+    // if (sym)
+    //     return symbol.address().get();
+    if (!symbol.is_undefined())
         return symbol.address().get();
 
     // TODO: Does a symbol with a null value always mean it is defined externally?

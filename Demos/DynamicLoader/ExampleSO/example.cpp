@@ -2,8 +2,11 @@
 
 #include <Kernel/Syscall.h>
 // This will go into TLS
-// __thread int somevar;
-int g_lib_var = 2;
+// __thread int g_lib_var;
+int g_lib_var1;
+int g_lib_var2 = 5;
+// __thread int g_tls_lib_var;
+// __thread int g_tls_lib_var2;
 
 void local_dbgputstr(const char* str, int len)
 {
@@ -23,7 +26,8 @@ public:
     int x;
     A()
     {
-        x = 3;
+        g_lib_var1 = 2;
+        x = 3 + g_lib_var2;
         local_dbgputstr("A ctor\n", 8);
     }
 };
@@ -34,5 +38,12 @@ int libfunc()
 {
     // somevar = 4;
 
-    return 4 + g_lib_var + a.x;
+    return 4 + g_lib_var1 + a.x;
 }
+
+// int libfunc_tls()
+// {
+//     // g_tls_lib_var = 5;
+//     // g_tls_lib_var2 = 6;
+//     return g_tls_lib_var;
+// }
