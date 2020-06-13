@@ -72,7 +72,7 @@ String JsonParser::consume_quoted_string()
 {
     if (!consume_specific('"'))
         return {};
-    Vector<char, 1024> buffer;
+    Vector<u32, 1024> buffer;
 
     for (;;) {
         size_t peek_index = m_index;
@@ -87,8 +87,11 @@ String JsonParser::consume_quoted_string()
         }
 
         if (peek_index != m_index) {
-            buffer.append(m_input.characters_without_null_termination() + m_index, peek_index - m_index);
-            m_index = peek_index;
+            while (peek_index != m_index) {
+                u32 value = m_input.characters_without_null_termination()[m_index];
+                buffer.append(value);
+                m_index++;
+            }
         }
 
         if (m_index == m_input.length())
@@ -125,10 +128,9 @@ String JsonParser::consume_quoted_string()
             sb.append(consume());
 
             auto codepoint = AK::StringUtils::convert_to_uint_from_hex(sb.to_string());
-            if (codepoint.has_value() && codepoint.value() < 0x80) {
-                buffer.append((char)codepoint.value());
+            if (codepoint.has_value()) {
+                buffer.append(codepoint.value());
             } else {
-                // FIXME: This is obviously not correct, but we don't have non-ASCII support so meh.
                 buffer.append('?');
             }
         } break;
@@ -143,14 +145,12 @@ String JsonParser::consume_quoted_string()
     if (buffer.is_empty())
         return String::empty();
 
-    auto& last_string_starting_with_character = m_last_string_starting_with_character[(u8)buffer.first()];
-    if (last_string_starting_with_character.length() == buffer.size()) {
-        if (!memcmp(last_string_starting_with_character.characters(), buffer.data(), buffer.size()))
-            return last_string_starting_with_character;
+    StringBuilder final_sb;
+    for (auto cp : buffer) {
+        final_sb.append_codepoint(cp);
     }
 
-    last_string_starting_with_character = String::copy(buffer);
-    return last_string_starting_with_character;
+    return final_sb.to_string();
 }
 
 Optional<JsonValue> JsonParser::parse_object()
