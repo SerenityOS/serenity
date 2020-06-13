@@ -65,6 +65,16 @@ int main(int argc, char** argv, char** envp)
     lseek(main_program_fd, 0, SEEK_SET);
     dbg() << "main_program: " << main_program_path << ", fd: " << main_program_fd;
 
+    char* tls_region_addr_str = getenv("_TLS_REGION_ADDR");
+    ASSERT(tls_region_addr_str);
+    char* tls_region_size_str = getenv("_TLS_REGION_SIZE");
+    dbg() << "tls: " << tls_region_addr_str << ", size: " << tls_region_size_str;
+    void* tls_region_addr = (void*)strtoul(tls_region_addr_str, nullptr, 16);
+    size_t tls_region_size = atoi(tls_region_size_str);
+    dbg() << "tls: " << (void*)tls_region_addr << ", size: " << tls_region_size;
+
+    initialize_tls(tls_region_addr, tls_region_size);
+
     printf("Loading main program\n");
     void* res = serenity_dlopen(main_program_fd, main_program_path.characters(), RTLD_LAZY | RTLD_GLOBAL);
     dbg() << "dlopen res: " << res;
@@ -74,7 +84,7 @@ int main(int argc, char** argv, char** envp)
     auto entry_point = main_program.entry_point();
     dbg() << "entry point: " << entry_point;
     typedef int (*EntryFunction)(int, char**, char**);
-    // asm("int3");
+    asm("int3");
     int retval = ((EntryFunction)(entry_point.get()))(argc, argv, envp);
     printf("Main program return value: %d\n", retval);
 

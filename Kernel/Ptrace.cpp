@@ -167,7 +167,8 @@ void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, c
     ptrace_regs.ds = 0;
     ptrace_regs.es = 0;
     ptrace_regs.fs = 0;
-    ptrace_regs.gs = 0;
+    // ptrace_regs.gs = 0;
+    ptrace_regs.gs = kernel_regs.gs;
 }
 
 void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, const PtraceRegisters& ptrace_regs)
@@ -182,6 +183,7 @@ void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, con
     kernel_regs.edi = ptrace_regs.edi;
     kernel_regs.eip = ptrace_regs.eip;
     kernel_regs.eflags = ptrace_regs.eflags;
+    kernel_regs.gs = ptrace_regs.gs;
 }
 
 }

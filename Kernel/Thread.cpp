@@ -571,7 +571,8 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     m_signal_mask |= new_signal_mask;
 
-    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32* stack) {
+    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32 * stack)
+    {
         u32 old_esp = *stack;
         u32 ret_eip = state.eip;
         u32 ret_eflags = state.eflags;
@@ -860,11 +861,14 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
     return backtrace;
 }
 
-void Thread::make_thread_specific_region(Badge<Process>)
+void Thread::make_thread_specific_region(Badge<Process>, Region* allocated_region)
 {
     size_t thread_specific_region_alignment = max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
     size_t thread_specific_region_size = align_up_to(process().m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
-    auto* region = process().allocate_region({}, thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
+    Region* region = allocated_region;
+    if (!region) {
+        region = process().allocate_region({}, thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
+    }
     SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment)).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);

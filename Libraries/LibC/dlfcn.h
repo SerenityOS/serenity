@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -44,3 +45,6 @@ void* dlsym(void*, const char*);
 __END_DECLS
 
 void* serenity_dlopen(int fd, const char* filename, int flags);
+
+void initialize_tls(void* tls_base_addr, uint32_t tls_size);
+void* allocate_tls(uint32_t size);

@@ -27,11 +27,10 @@
 
 extern int g_lib_var1;
 extern int g_lib_var2;
-// extern __thread int g_tls_lib_var;
-// extern __thread int g_tls_lib_var2;
+__thread int g_tls_lib_var;
 
 const char* g_string = "Hello, World!\n";
-
+//
 int libfunc();
 // int libfunc_tls();
 void local_dbgputstr(const char* str, int len);
@@ -40,11 +39,13 @@ int main(int, char**)
 {
     local_dbgputstr(g_string, 15);
     int sum = 0;
-    sum += libfunc() + g_lib_var1 + g_lib_var2;
+    sum += libfunc() + g_lib_var1 + g_lib_var2 + g_tls_lib_var;
+    // sum += libfunc() + g_lib_var1 + g_lib_var2;
     local_dbgputstr("1\n", 2);
     // sum += libfunc_tls();
     local_dbgputstr("2\n", 2);
     // sum += g_tls_lib_var + g_tls_lib_var2;
     local_dbgputstr("3\n", 2);
-    return sum;
+    g_tls_lib_var = 3 + libfunc();
+    return g_tls_lib_var;
 }

@@ -362,7 +362,7 @@ public:
 
     ShouldUnblockThread dispatch_one_pending_signal();
     ShouldUnblockThread dispatch_signal(u8 signal);
-    bool has_unmasked_pending_signals() const {  return m_pending_signals & ~m_signal_mask; }
+    bool has_unmasked_pending_signals() const { return m_pending_signals & ~m_signal_mask; }
     void terminate_due_to_signal(u8 signal);
     bool should_ignore_signal(u8 signal) const;
     bool has_signal_handler(u8 signal) const;
@@ -375,7 +375,7 @@ public:
 
     u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
 
-    void make_thread_specific_region(Badge<Process>);
+    void make_thread_specific_region(Badge<Process>, Region* allocated_region = nullptr);
 
     unsigned syscall_count() const { return m_syscall_count; }
     void did_syscall() { ++m_syscall_count; }

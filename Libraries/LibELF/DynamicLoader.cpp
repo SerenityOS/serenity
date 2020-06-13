@@ -124,7 +124,7 @@ bool DynamicLoader::load_from_image(unsigned flags)
 
     m_dynamic_object = AK::make<DynamicObject>(m_text_segment_load_address, m_dynamic_section_address);
 
-    ASSERT(!m_tls_segment_address.as_ptr() || m_dynamic_object->has_static_thread_local_storage());
+    // ASSERT(!m_tls_segment_address.as_ptr() || m_dynamic_object->has_static_thread_local_storage());
 
     m_dynamic_object->for_each_needed_library([](const char* lib_name) {
         dbg() << "Loading dependency: " << lib_name;
@@ -230,16 +230,15 @@ void DynamicLoader::load_program_headers(const Image& elf_image)
     VirtualAddress data_segment_actual_addr = data_region.value().desired_load_address().offset((u32)text_segment_begin);
     memcpy(data_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + data_region.value().offset(), data_region.value().size_in_image());
 
-    // FIXME: Do some kind of 'allocate TLS section' or some such from a per-application pool
     if (tls_region.has_value()) {
-        // FIXME: This can't be right either. TLS needs some real work i'd say :)
-        m_tls_segment_address = tls_region.value().desired_load_address();
-        VirtualAddress tls_segment_actual_addr = tls_region.value().desired_load_address().offset((u32)text_segment_begin);
+        m_tls_segment_address = VirtualAddress { allocate_tls(tls_region.value().size_in_memory()) };
+        m_tls_segment_end = VirtualAddress { (m_tls_segment_address.as_ptr() + tls_region.value().size_in_memory() - sizeof(u32)) };
+        // VirtualAddress tls_segment_actual_addr = tls_region.value().desired_load_address().offset((u32)text_segment_begin);
+        VirtualAddress tls_segment_actual_addr = m_tls_segment_address;
         dbg() << "copying TLS into: " << (void*)tls_segment_actual_addr.as_ptr();
         memcpy(tls_segment_actual_addr.as_ptr(),
             (u8*)m_file_mapping + tls_region.value().offset(),
             tls_region.value().size_in_image());
-        dbg() << "after copy";
     }
 }
 
@@ -301,9 +300,9 @@ void DynamicLoader::do_relocations()
             dbg() << "R_386_TLS_TPOFF: *patch_ptr: " << (void*)(*patch_ptr);
             auto symbol = relocation.symbol();
             VERBOSE("TLS relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 symbol_location = lookup_symbol(symbol).value();
-            VERBOSE("symbol location: %d\n", symbol_location);
-            *patch_ptr = relocation.offset() - (u32)m_tls_segment_address.as_ptr() - *patch_ptr;
+            // *patch_ptr = relocation.offset() - (u32)m_tls_segment_address.as_ptr() - *patch_ptr;
+            *patch_ptr = -(symbol.value() + sizeof(u32));
+            dbg() << "TLS_TPOFF result: " << (void*)(*patch_ptr);
             break;
         }
         case R_386_TLS_DTPMOD3: {

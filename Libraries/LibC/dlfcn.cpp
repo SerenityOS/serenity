@@ -45,6 +45,10 @@ String g_dlerror_msg;
 
 HashMap<String, RefPtr<ELF::DynamicLoader>> g_elf_objects;
 
+static void* g_tls_base_addr = nullptr;
+static u32 g_tls_size = 0;
+static u32 g_next_tls_allocation_offset = 0;
+
 extern "C" {
 
 int dlclose(void*)
@@ -159,4 +163,24 @@ void* serenity_dlopen(int fd, const char* filename, int flags)
 
     // we have one refcount already
     return const_cast<ELF::DynamicLoader*>(g_elf_objects.get(basename).value());
+}
+
+void initialize_tls(void* tls_base_addr, u32 tls_size)
+{
+    ASSERT(g_tls_base_addr == nullptr);
+    g_tls_base_addr = tls_base_addr;
+    g_tls_size = tls_size;
+    g_next_tls_allocation_offset = 0;
+}
+
+void* allocate_tls(u32 size)
+{
+    if (g_next_tls_allocation_offset + size > g_tls_size) {
+        ASSERT_NOT_REACHED();
+        return nullptr;
+    }
+
+    void* allocated = (void*)((u32)g_tls_base_addr + g_next_tls_allocation_offset);
+    g_next_tls_allocation_offset += size;
+    return allocated;
 }

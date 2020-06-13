@@ -925,7 +925,19 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         }
     }
 
+    size_t thread_specific_region_alignment = max(m_master_tls_alignment, alignof(ThreadSpecificData));
+    size_t thread_specific_region_size = align_up_to(m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
+    auto* tls_region = allocate_region({}, thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
+    dbg() << "kernel: tls_region: " << (void*)tls_region->vaddr().as_ptr();
+    // This is a total hack to prevent from colliding with Loader.so's TLS
+    constexpr size_t TLS_POOL_OFFSET = 0;
+    u8* tls_pool_addr = tls_region->vaddr().as_ptr() + TLS_POOL_OFFSET;
+    dbg() << "thread_specific_region_size: " << thread_specific_region_size;
+    ASSERT(tls_region->size() > TLS_POOL_OFFSET);
+    u8* tls_pool_size = (u8*)(tls_region->size() - TLS_POOL_OFFSET);
+
     if (interpreter_description) {
+
         main_program_description->set_readable(true); // So that the dynamic loader can mmap the main program
         auto main_program_fd = alloc_fd();
         // FIXME: The proper way to do this is to pass a special auxilary vector to
@@ -933,6 +945,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         // the normal libc _start, we can just pass data via the environ for now.
         environment.append(String::format("%s=%s", "_MAIN_PROGRAM_PATH", main_program_description->absolute_path().characters()));
         environment.append(String::format("%s=%d", "_MAIN_PROGRAM_FD", main_program_fd));
+        environment.append(String::format("%s=%x", "_TLS_REGION_ADDR", tls_pool_addr));
+        environment.append(String::format("%s=%u", "_TLS_REGION_SIZE", tls_pool_size));
 
         m_fds[main_program_fd].set(move(main_program_description), 0); // flags=0
     }
@@ -973,7 +987,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     // m_master_tls_alignment = master_tls_alignment;
 
     m_pid = new_main_thread->tid();
-    new_main_thread->make_thread_specific_region({});
+    new_main_thread->make_thread_specific_region({}, tls_region);
     new_main_thread->reset_fpu_state();
 
     memset(&tss, 0, sizeof(TSS32));

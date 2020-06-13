@@ -68,6 +68,7 @@ void handle_print_registers(const PtraceRegisters& regs)
     printf("edi: 0x%x\n", regs.edi);
     printf("eip: 0x%x\n", regs.eip);
     printf("eflags: 0x%x\n", regs.eflags);
+    printf("gs: 0x%x\n", regs.gs);
 }
 
 bool handle_disassemble_command(const String& command, void* first_instruction)
@@ -175,10 +176,10 @@ int main(int argc, char** argv)
 {
     editor = Line::Editor::construct();
 
-    if (pledge("stdio proc exec rpath tty sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    // if (pledge("stdio proc exec rpath tty sigaction cpath unix", nullptr) < 0) {
+    //     perror("pledge");
+    //     return 1;
+    // }
 
     const char* command = nullptr;
     Core::ArgsParser args_parser;
@@ -199,8 +200,8 @@ int main(int argc, char** argv)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
-    ASSERT(rc);
+    // bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
+    // ASSERT(rc);
 
     DebugInfo::SourcePosition previous_source_position;
     bool in_step_line = false;
