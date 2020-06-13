@@ -47,7 +47,7 @@ void HTMLLinkElement::inserted_into(Node& node)
 {
     HTMLElement::inserted_into(node);
 
-    if (rel() == "stylesheet")
+    if (rel().split_view(' ').contains_slow("stylesheet"))
         load_stylesheet(document().complete_url(href()));
 }
 
