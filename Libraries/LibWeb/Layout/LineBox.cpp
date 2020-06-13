@@ -73,4 +73,11 @@ void LineBox::trim_trailing_whitespace()
     }
 }
 
+bool LineBox::ends_in_whitespace() const
+{
+    if (m_fragments.is_empty())
+        return false;
+    return m_fragments.last().ends_in_whitespace();
+}
+
 }

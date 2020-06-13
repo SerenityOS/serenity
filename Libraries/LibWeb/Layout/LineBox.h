@@ -45,6 +45,8 @@ public:
 
     void trim_trailing_whitespace();
 
+    bool ends_in_whitespace() const;
+
 private:
     friend class LayoutBlock;
     NonnullOwnPtrVector<LineBoxFragment> m_fragments;
