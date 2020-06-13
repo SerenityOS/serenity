@@ -89,6 +89,7 @@ private:
     // ^ClientConnection
     virtual void die() override;
     virtual void may_have_become_unresponsive() override;
+    virtual void did_become_responsive() override;
 
     void set_unresponsive(bool);
     void destroy_window(Window&, Vector<i32>& destroyed_window_ids);
