@@ -24,15 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Font.h>
-#include <LibGfx/StylePainter.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/LayoutImage.h>
 
 namespace Web {
 
-LayoutImage::LayoutImage(const HTMLImageElement& element, NonnullRefPtr<StyleProperties> style)
+LayoutImage::LayoutImage(const Element& element, NonnullRefPtr<StyleProperties> style, const ImageLoader& image_loader)
     : LayoutReplaced(element, move(style))
+    , m_image_loader(image_loader)
 {
 }
 
@@ -40,18 +42,31 @@ LayoutImage::~LayoutImage()
 {
 }
 
+int LayoutImage::preferred_width() const
+{
+    auto* decoder = m_image_loader.image_decoder();
+    return node().attribute(HTML::AttributeNames::width).to_int().value_or(decoder ? decoder->width() : 0);
+}
+
+int LayoutImage::preferred_height() const
+{
+    auto* decoder = m_image_loader.image_decoder();
+    return node().attribute(HTML::AttributeNames::height).to_int().value_or(decoder ? decoder->height() : 0);
+}
+
 void LayoutImage::layout(LayoutMode layout_mode)
 {
-    if (node().preferred_width() && node().preferred_height()) {
+    if (preferred_width() && preferred_height()) {
         set_has_intrinsic_width(true);
         set_has_intrinsic_height(true);
-        set_intrinsic_width(node().preferred_width());
-        set_intrinsic_height(node().preferred_height());
+        set_intrinsic_width(preferred_width());
+        set_intrinsic_height(preferred_height());
     } else if (renders_as_alt_text()) {
+        auto& image_element = to<HTMLImageElement>(node());
         auto& font = Gfx::Font::default_font();
-        auto alt = node().alt();
+        auto alt = image_element.alt();
         if (alt.is_empty())
-            alt = node().src();
+            alt = image_element.src();
         set_width(font.width(alt) + 16);
         set_height(font.glyph_height() + 16);
     } else {
@@ -74,20 +89,23 @@ void LayoutImage::render(RenderingContext& context)
     LayoutReplaced::render(context);
 
     if (renders_as_alt_text()) {
+        auto& image_element = to<HTMLImageElement>(node());
         context.painter().set_font(Gfx::Font::default_font());
         Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
-        auto alt = node().alt();
+        auto alt = image_element.alt();
         if (alt.is_empty())
-            alt = node().src();
+            alt = image_element.src();
         context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), Gfx::TextElision::Right);
-    } else if (node().bitmap())
-        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
-    LayoutReplaced::render(context);
+    } else if (m_image_loader.bitmap()) {
+        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *m_image_loader.bitmap(), m_image_loader.bitmap()->rect());
+    }
 }
 
 bool LayoutImage::renders_as_alt_text() const
 {
-    return !node().image_decoder();
+    if (is<HTMLImageElement>(node()))
+        return !m_image_loader.image_decoder();
+    return false;
 }
 
 }
