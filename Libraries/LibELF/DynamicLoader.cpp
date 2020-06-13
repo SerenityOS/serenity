@@ -124,6 +124,8 @@ bool DynamicLoader::load_from_image(unsigned flags)
 
     m_dynamic_object = AK::make<DynamicObject>(m_text_segment_load_address, m_dynamic_section_address);
 
+    ASSERT(!m_tls_segment_address.as_ptr() || m_dynamic_object->has_static_thread_local_storage());
+
     m_dynamic_object->for_each_needed_library([](const char* lib_name) {
         dbg() << "Loading dependency: " << lib_name;
         printf("Loading dependency: %s\n", lib_name);
@@ -181,57 +183,62 @@ void DynamicLoader::load_program_headers(const Image& elf_image)
 {
     Vector<ProgramHeaderRegion> program_headers;
 
-    ProgramHeaderRegion* text_region_ptr = nullptr;
-    ProgramHeaderRegion* data_region_ptr = nullptr;
-    ProgramHeaderRegion* tls_region_ptr = nullptr;
+    Optional<ProgramHeaderRegion> text_region;
+    Optional<ProgramHeaderRegion> data_region;
+    Optional<ProgramHeaderRegion> tls_region;
     VirtualAddress dynamic_region_desired_vaddr;
 
     elf_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
         ProgramHeaderRegion new_region;
         new_region.set_program_header(program_header.raw_header());
         program_headers.append(move(new_region));
-        auto& region = program_headers.last();
-        if (region.is_tls_template())
-            tls_region_ptr = &region;
-        else if (region.is_load()) {
-            if (region.is_executable())
-                text_region_ptr = &region;
-            else
-                data_region_ptr = &region;
+        auto region = program_headers.last();
+        if (region.is_tls_template()) {
+            tls_region = region;
+        } else if (region.is_load()) {
+            if (region.is_executable()) {
+                text_region = region;
+            } else
+                data_region = region;
         } else if (region.is_dynamic()) {
             dynamic_region_desired_vaddr = region.desired_load_address();
         }
     });
 
-    ASSERT(text_region_ptr && data_region_ptr);
+    ASSERT(text_region.has_value() && data_region.has_value());
 
     // Process regions in order: .text, .data, .tls
-    auto* region = text_region_ptr;
-    void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), region->mmap_prot(), MAP_PRIVATE, m_image_fd, region->offset(), String::format(".text: %s", m_filename.characters()).characters());
+    void* text_segment_begin = mmap_with_name(nullptr, text_region.value().required_load_size(),
+        text_region.value().mmap_prot(),
+        MAP_PRIVATE,
+        m_image_fd,
+        text_region.value().offset(),
+        String::format(".text: %s", m_filename.characters()).characters());
+
     if (MAP_FAILED == text_segment_begin) {
         ASSERT_NOT_REACHED();
     }
-    m_text_segment_size = region->required_load_size();
+    m_text_segment_size = text_region.value().required_load_size();
     m_text_segment_load_address = VirtualAddress { (u32)text_segment_begin };
 
     m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
 
-    region = data_region_ptr;
-    void* data_segment_begin = mmap_with_name((u8*)text_segment_begin + m_text_segment_size, region->required_load_size(), region->mmap_prot(), MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format(".data: %s", m_filename.characters()).characters());
+    void* data_segment_begin = mmap_with_name((u8*)text_segment_begin + m_text_segment_size, data_region.value().required_load_size(), data_region.value().mmap_prot(), MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format(".data: %s", m_filename.characters()).characters());
     if (MAP_FAILED == data_segment_begin) {
         ASSERT_NOT_REACHED();
     }
-    VirtualAddress data_segment_actual_addr = region->desired_load_address().offset((u32)text_segment_begin);
-    memcpy(data_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
+    VirtualAddress data_segment_actual_addr = data_region.value().desired_load_address().offset((u32)text_segment_begin);
+    memcpy(data_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + data_region.value().offset(), data_region.value().size_in_image());
 
     // FIXME: Do some kind of 'allocate TLS section' or some such from a per-application pool
-    if (tls_region_ptr) {
-        region = tls_region_ptr;
+    if (tls_region.has_value()) {
         // FIXME: This can't be right either. TLS needs some real work i'd say :)
-        m_tls_segment_address = tls_region_ptr->desired_load_address();
-        VirtualAddress tls_segment_actual_addr = region->desired_load_address().offset((u32)text_segment_begin);
+        m_tls_segment_address = tls_region.value().desired_load_address();
+        VirtualAddress tls_segment_actual_addr = tls_region.value().desired_load_address().offset((u32)text_segment_begin);
         dbg() << "copying TLS into: " << (void*)tls_segment_actual_addr.as_ptr();
-        memcpy(tls_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
+        memcpy(tls_segment_actual_addr.as_ptr(),
+            (u8*)m_file_mapping + tls_region.value().offset(),
+            tls_region.value().size_in_image());
         dbg() << "after copy";
     }
 }
