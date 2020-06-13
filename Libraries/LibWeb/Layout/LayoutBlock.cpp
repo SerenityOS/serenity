@@ -181,22 +181,10 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
         line_box.trim_trailing_whitespace();
     }
 
+    auto text_align = style().text_align();
     float min_line_height = style().line_height(*this);
     float line_spacing = min_line_height - style().font().glyph_height();
     float content_height = 0;
-
-    // FIXME: This should be done by the CSS parser!
-    CSS::ValueID text_align = CSS::ValueID::Left;
-    auto text_align_string = style().string_or_fallback(CSS::PropertyID::TextAlign, "left");
-    if (text_align_string == "center")
-        text_align = CSS::ValueID::Center;
-    else if (text_align_string == "left")
-        text_align = CSS::ValueID::Left;
-    else if (text_align_string == "right")
-        text_align = CSS::ValueID::Right;
-    else if (text_align_string == "justify")
-        text_align = CSS::ValueID::Justify;
-
     float max_linebox_width = 0;
 
     for (auto& line_box : m_line_boxes) {
@@ -210,6 +198,7 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
 
         switch (text_align) {
         case CSS::ValueID::Center:
+        case CSS::ValueID::VendorSpecificCenter:
             x_offset += excess_horizontal_space / 2;
             break;
         case CSS::ValueID::Right:
@@ -463,6 +452,10 @@ void LayoutBlock::compute_position()
         + box_model().border().left.to_px(*this)
         + box_model().padding().left.to_px(*this)
         + box_model().offset().left.to_px(*this);
+
+    if (parent()->is_block() && parent()->style().text_align() == CSS::ValueID::VendorSpecificCenter) {
+        position_x += (containing_block.width() / 2) - width() / 2;
+    }
 
     float position_y = box_model().margin_box(*this).top
         + box_model().offset().top.to_px(*this);

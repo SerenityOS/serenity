@@ -104,6 +104,7 @@ enum class ValueID {
     Left,
     Right,
     Justify,
+    VendorSpecificCenter,
 };
 
 enum class Position {

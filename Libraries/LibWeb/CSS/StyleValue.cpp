@@ -53,6 +53,8 @@ String IdentifierStyleValue::to_string() const
         return "(invalid)";
     case CSS::ValueID::VendorSpecificLink:
         return "-libweb-link";
+    case CSS::ValueID::VendorSpecificCenter:
+        return "-libweb-center";
     case CSS::ValueID::VendorSpecificPaletteDesktopBackground:
         return "-libweb-palette-desktop-background";
     case CSS::ValueID::VendorSpecificPaletteActiveWindowBorder1:
