@@ -84,4 +84,44 @@ ByteBuffer decode_base64(const StringView& input)
     return ByteBuffer::copy(output.data(), output.size());
 }
 
+ByteBuffer encode_base64(const StringView& input)
+{
+    Vector<u8> output;
+
+    auto get = [&](size_t offset, bool* need_padding = nullptr) -> u8 {
+        if (offset >= input.length()) {
+            if (need_padding)
+                *need_padding = true;
+            return 0;
+        }
+        return (u8)input[offset];
+    };
+
+    for (size_t i = 0; i < input.length(); i += 3) {
+        bool is_8bit = false;
+        bool is_16bit = false;
+
+        u8 in0 = get(i);
+        u8 in1 = get(i + 1, &is_16bit);
+        u8 in2 = get(i + 2, &is_8bit);
+
+        u8 index0 = (in0 >> 2) & 0x3f;
+        u8 index1 = ((in0 << 4) | (in1 >> 4)) & 0x3f;
+        u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
+        u8 index3 = in2 & 0x3f;
+
+        u8 out0 = s_alphabet[index0];
+        u8 out1 = s_alphabet[index1];
+        u8 out2 = is_16bit ? '=' : s_alphabet[index2];
+        u8 out3 = is_8bit ? '=' : s_alphabet[index3];
+
+        output.append(out0);
+        output.append(out1);
+        output.append(out2);
+        output.append(out3);
+    }
+
+    return ByteBuffer::copy(output.data(), output.size());
+}
+
 }

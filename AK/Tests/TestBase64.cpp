@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Tom Lebreux <tomlebreux@hotmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,17 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/TestSuite.h>
 
-#include <AK/Forward.h>
+#include <AK/Base64.h>
+#include <AK/ByteBuffer.h>
+#include <AK/String.h>
 
-namespace AK {
+TEST_CASE(test_encode)
+{
+    auto encode_equal = [&](const char* input, const char* expected) {
+        auto encoded = encode_base64(StringView(input));
+        EXPECT(String::copy(encoded) == String(expected));
+    };
 
-ByteBuffer decode_base64(const StringView&);
-
-ByteBuffer encode_base64(const StringView&);
-
+    encode_equal("", "");
+    encode_equal("f", "Zg==");
+    encode_equal("fo", "Zm8=");
+    encode_equal("foo", "Zm9v");
+    encode_equal("foob", "Zm9vYg==");
+    encode_equal("fooba", "Zm9vYmE=");
+    encode_equal("foobar", "Zm9vYmFy");
 }
 
-using AK::decode_base64;
-using AK::encode_base64;
+TEST_MAIN(Base64)
