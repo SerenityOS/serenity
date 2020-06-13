@@ -56,6 +56,7 @@ void initialize();
     __ENUMERATE_HTML_ATTRIBUTE(bgcolor) \
     __ENUMERATE_HTML_ATTRIBUTE(size)    \
     __ENUMERATE_HTML_ATTRIBUTE(align)   \
+    __ENUMERATE_HTML_ATTRIBUTE(data)    \
     __ENUMERATE_HTML_ATTRIBUTE(colspan)
 
 #define __ENUMERATE_HTML_ATTRIBUTE(name) extern FlyString name;
