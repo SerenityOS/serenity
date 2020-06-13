@@ -387,7 +387,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
         if (context.bit_depth == 8) {
             unpack_triplets_without_alpha<u8>(context);
         } else if (context.bit_depth == 16) {
-            unpack_grayscale_without_alpha<u16>(context);
+            unpack_triplets_without_alpha<u16>(context);
         } else {
             ASSERT_NOT_REACHED();
         }
