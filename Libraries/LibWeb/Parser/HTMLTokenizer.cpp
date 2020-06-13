@@ -129,7 +129,7 @@
     if (current_input_character.has_value() && current_input_character.value() >= 'a' && current_input_character.value() <= 'z')
 
 #define ON_ASCII_DIGIT \
-    if (current_input_character.has_value() && isxdigit(current_input_character.value()))
+    if (current_input_character.has_value() && isdigit(current_input_character.value()))
 
 #define ON_ASCII_HEX_DIGIT \
     if (current_input_character.has_value() && isxdigit(current_input_character.value()))
