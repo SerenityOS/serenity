@@ -969,7 +969,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::form) {
-        if (m_form_element && m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
+        if (m_form_element && !m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
             PARSE_ERROR();
             return;
         }
@@ -1258,7 +1258,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         m_stack_of_open_elements.pop();
         token.acknowledge_self_closing_flag_if_set();
         auto type_attribute = token.attribute(HTML::AttributeNames::type);
-        if (type_attribute.is_null() || type_attribute != "hidden") {
+        if (type_attribute.is_null() || !type_attribute.equals_ignoring_case("hidden")) {
             m_frameset_ok = false;
         }
         return;
@@ -1781,14 +1781,21 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
         fake_tbody_token.m_tag.tag_name.append(HTML::TagNames::tbody);
         insert_html_element(fake_tbody_token);
         m_insertion_mode = InsertionMode::InTableBody;
-        process_using_the_rules_for(InsertionMode::InTableBody, token);
+        process_using_the_rules_for(m_insertion_mode, token);
         return;
     }
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::table) {
         PARSE_ERROR();
-        TODO();
+        if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::table))
+            return;
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::table);
+
+        reset_the_insertion_mode_appropriately();
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
     }
-    if (token.is_end_tag()) {
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::table) {
         if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::table)) {
             PARSE_ERROR();
             return;
@@ -1799,7 +1806,53 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
         reset_the_insertion_mode_appropriately();
         return;
     }
-    TODO();
+    if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::body, HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::html, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr)) {
+        PARSE_ERROR();
+        return;
+    }
+    if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::style, HTML::TagNames::script, HTML::TagNames::template_))
+         || (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_)) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::input) {
+        auto type_attribute = token.attribute(HTML::AttributeNames::type);
+        if (type_attribute.is_null() || !type_attribute.equals_ignoring_case("hidden")) {
+            goto AnythingElse;
+        }
+
+        PARSE_ERROR();
+        insert_html_element(token);
+
+        // FIXME: Is this the correct interpretation of "Pop that input element off the stack of open elements."?
+        //        Because this wording is the first time it's seen in the spec.
+        //        Other times it's worded as: "Immediately pop the current node off the stack of open elements."
+        m_stack_of_open_elements.pop();
+        token.acknowledge_self_closing_flag_if_set();
+        return;
+    }
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::form) {
+        PARSE_ERROR();
+        if (m_form_element || m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
+            return;
+        }
+
+        m_form_element = to<HTMLFormElement>(insert_html_element(token));
+
+        // FIXME: See previous FIXME, as this is the same situation but for form.
+        m_stack_of_open_elements.pop();
+        return;
+    }
+    if (token.is_end_of_file()) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+AnythingElse:
+    PARSE_ERROR();
+    m_foster_parenting = true;
+    process_using_the_rules_for(InsertionMode::InBody, token);
+    m_foster_parenting = false;
 }
 
 void HTMLDocumentParser::handle_in_select_in_table(HTMLToken& token)
