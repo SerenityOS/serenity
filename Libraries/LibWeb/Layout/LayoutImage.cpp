@@ -71,6 +71,8 @@ void LayoutImage::render(RenderingContext& context)
     if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
         return;
 
+    LayoutReplaced::render(context);
+
     if (renders_as_alt_text()) {
         context.painter().set_font(Gfx::Font::default_font());
         Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
