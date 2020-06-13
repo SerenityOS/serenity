@@ -33,14 +33,14 @@ namespace Gfx {
 ImageDecoder::ImageDecoder(const u8* data, size_t size)
 {
     m_plugin = make<PNGImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff()) {
+    if (m_plugin->sniff())
         return;
-    }
 
     m_plugin = make<GIFImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff()) {
+    if (m_plugin->sniff())
         return;
-    }
+
+    m_plugin = nullptr;
 }
 
 ImageDecoder::~ImageDecoder()
@@ -49,6 +49,8 @@ ImageDecoder::~ImageDecoder()
 
 RefPtr<Gfx::Bitmap> ImageDecoder::bitmap() const
 {
+    if (!m_plugin)
+        return nullptr;
     return m_plugin->bitmap();
 }
 
