@@ -40,6 +40,22 @@ HTMLImageElement::HTMLImageElement(Document& document, const FlyString& tag_name
     : HTMLElement(document, tag_name)
     , m_timer(Core::Timer::construct())
 {
+    m_image_loader.on_load = [this] {
+        if (image_decoder() && image_decoder()->is_animated() && image_decoder()->frame_count() > 1) {
+            const auto& first_frame = image_decoder()->frame(0);
+            m_timer->set_interval(first_frame.duration);
+            m_timer->on_timeout = [this] { animate(); };
+            m_timer->start();
+        }
+        this->document().update_layout();
+        dispatch_event(Event::create("load"));
+    };
+
+    m_image_loader.on_fail = [this] {
+        dbg() << "HTMLImageElement: Resource did fail: " << this->src();
+        this->document().update_layout();
+        dispatch_event(Event::create("error"));
+    };
 }
 
 HTMLImageElement::~HTMLImageElement()
@@ -49,70 +65,29 @@ HTMLImageElement::~HTMLImageElement()
 void HTMLImageElement::parse_attribute(const FlyString& name, const String& value)
 {
     HTMLElement::parse_attribute(name, value);
-    if (name.equals_ignoring_case("src"))
-        load_image(value);
-}
 
-void HTMLImageElement::load_image(const String& src)
-{
-    LoadRequest request;
-    request.set_url(document().complete_url(src));
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
-}
-
-void HTMLImageElement::resource_did_load()
-{
-    ASSERT(resource());
-
-    if (!resource()->has_encoded_data()) {
-        dbg() << "HTMLImageElement: Resource did load, but encoded data empty: " << this->src();
-        return;
-    }
-
-    dbg() << "HTMLImageElement: Resource did load, encoded data looks tasty: " << this->src();
-
-    m_image_decoder = resource()->ensure_decoder();
-
-    if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
-        const auto& first_frame = m_image_decoder->frame(0);
-        m_timer->set_interval(first_frame.duration);
-        m_timer->on_timeout = [this] { animate(); };
-        m_timer->start();
-    }
-
-    document().update_layout();
-    dispatch_event(Event::create("load"));
-}
-
-void HTMLImageElement::resource_did_fail()
-{
-    dbg() << "HTMLImageElement: Resource did fail: " << this->src();
-    m_image_decoder = nullptr;
-    document().update_layout();
-    dispatch_event(Event::create("error"));
-}
-
-void HTMLImageElement::resource_did_replace_decoder()
-{
-    m_image_decoder = resource()->ensure_decoder();
+    if (name == HTML::AttributeNames::src)
+        m_image_loader.load(document().complete_url(value));
 }
 
 void HTMLImageElement::animate()
 {
-    if (!layout_node()) {
+    if (!layout_node())
         return;
-    }
 
-    m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
-    const auto& current_frame = m_image_decoder->frame(m_current_frame_index);
+    auto* decoder = image_decoder();
+    ASSERT(decoder);
+
+    m_current_frame_index = (m_current_frame_index + 1) % decoder->frame_count();
+    const auto& current_frame = decoder->frame(m_current_frame_index);
 
     if (current_frame.duration != m_timer->interval()) {
         m_timer->restart(current_frame.duration);
     }
 
-    if (m_current_frame_index == m_image_decoder->frame_count() - 1) {
+    if (m_current_frame_index == decoder->frame_count() - 1) {
         ++m_loops_completed;
-        if (m_loops_completed > 0 && m_loops_completed == m_image_decoder->loop_count()) {
+        if (m_loops_completed > 0 && m_loops_completed == decoder->loop_count()) {
             m_timer->stop();
         }
     }
@@ -120,6 +95,7 @@ void HTMLImageElement::animate()
     layout_node()->set_needs_display();
 }
 
+#if 0
 int HTMLImageElement::preferred_width() const
 {
     return attribute(HTML::AttributeNames::width).to_int().value_or(m_image_decoder ? m_image_decoder->width() : 0);
@@ -129,6 +105,7 @@ int HTMLImageElement::preferred_height() const
 {
     return attribute(HTML::AttributeNames::height).to_int().value_or(m_image_decoder ? m_image_decoder->height() : 0);
 }
+#endif
 
 RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style) const
 {
@@ -136,32 +113,27 @@ RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* p
     auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
     if (display == "none")
         return nullptr;
-    return adopt(*new LayoutImage(*this, move(style)));
+    return adopt(*new LayoutImage(*this, move(style), m_image_loader));
+}
+
+const Gfx::ImageDecoder* HTMLImageElement::image_decoder() const
+{
+    return m_image_loader.image_decoder();
 }
 
 const Gfx::Bitmap* HTMLImageElement::bitmap() const
 {
-    if (!m_image_decoder)
+    auto* decoder = image_decoder();
+    if (!decoder)
         return nullptr;
-
-    if (m_image_decoder->is_animated()) {
-        return m_image_decoder->frame(m_current_frame_index).image;
-    }
-
-    return m_image_decoder->bitmap();
+    if (decoder->is_animated())
+        return decoder->frame(m_current_frame_index).image;
+    return decoder->bitmap();
 }
 
 void HTMLImageElement::set_visible_in_viewport(Badge<LayoutDocument>, bool visible_in_viewport)
 {
-    if (m_visible_in_viewport == visible_in_viewport)
-        return;
-    m_visible_in_viewport = visible_in_viewport;
-
-    // FIXME: Don't update volatility every time. If we're here, we're probably scanning through
-    //        the whole document, updating "is visible in viewport" flags, and this could lead
-    //        to the same bitmap being marked volatile back and forth unnecessarily.
-    if (resource())
-        resource()->update_volatility();
+    m_image_loader.set_visible_in_viewport(visible_in_viewport);
 }
 
 }

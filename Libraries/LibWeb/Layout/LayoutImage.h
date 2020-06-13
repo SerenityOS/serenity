@@ -35,19 +35,24 @@ class HTMLImageElement;
 
 class LayoutImage : public LayoutReplaced {
 public:
-    LayoutImage(const HTMLImageElement&, NonnullRefPtr<StyleProperties>);
+    LayoutImage(const Element&, NonnullRefPtr<StyleProperties>, const ImageLoader&);
     virtual ~LayoutImage() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void render(RenderingContext&) override;
 
-    const HTMLImageElement& node() const { return static_cast<const HTMLImageElement&>(LayoutReplaced::node()); }
+    const Element& node() const { return static_cast<const Element&>(LayoutReplaced::node()); }
 
     bool renders_as_alt_text() const;
 
 private:
     virtual const char* class_name() const override { return "LayoutImage"; }
     virtual bool is_image() const override { return true; }
+
+    int preferred_width() const;
+    int preferred_height() const;
+
+    const ImageLoader& m_image_loader;
 };
 
 template<>

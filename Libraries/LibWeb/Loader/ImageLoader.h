@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,34 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/OwnPtr.h>
-#include <LibCore/Forward.h>
-#include <LibGfx/Forward.h>
-#include <LibWeb/DOM/HTMLElement.h>
-#include <LibWeb/Loader/ImageLoader.h>
+#include <AK/Function.h>
+#include <LibWeb/Loader/ImageResource.h>
 
 namespace Web {
 
-class LayoutDocument;
-
-class HTMLImageElement final : public HTMLElement {
+class ImageLoader : public ImageResourceClient {
 public:
-    using WrapperType = Bindings::HTMLImageElementWrapper;
+    ImageLoader();
 
-    HTMLImageElement(Document&, const FlyString& tag_name);
-    virtual ~HTMLImageElement() override;
-
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
-
-    String alt() const { return attribute(HTML::AttributeNames::alt); }
-    String src() const { return attribute(HTML::AttributeNames::src); }
-    int preferred_width() const;
-    int preferred_height() const;
+    void load(const URL&);
 
     const Gfx::Bitmap* bitmap() const;
     const Gfx::ImageDecoder* image_decoder() const;
 
-    void set_visible_in_viewport(Badge<LayoutDocument>, bool);
+    void set_visible_in_viewport(bool);
+
+    Function<void()> on_load;
+    Function<void()> on_fail;
 
 private:
-    void animate();
+    // ^ImageResourceClient
+    virtual void resource_did_load() override;
+    virtual void resource_did_fail() override;
+    virtual void resource_did_replace_decoder() override;
+    virtual bool is_visible_in_viewport() const override { return m_visible_in_viewport; }
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
-
-    ImageLoader m_image_loader;
-
-    size_t m_current_frame_index { 0 };
-    size_t m_loops_completed { 0 };
-    NonnullRefPtr<Core::Timer> m_timer;
+    RefPtr<Gfx::ImageDecoder> m_decoder;
+    bool m_visible_in_viewport { false };
 };
-
-template<>
-inline bool is<HTMLImageElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::img;
-}
 
 }
