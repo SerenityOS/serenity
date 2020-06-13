@@ -52,6 +52,7 @@ public:
     }
 
     void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
+    void set_property(CSS::PropertyID, const StringView&);
     Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
 
     Length length_or_fallback(CSS::PropertyID, const Length& fallback) const;
