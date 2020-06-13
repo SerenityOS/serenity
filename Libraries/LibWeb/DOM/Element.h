@@ -79,9 +79,10 @@ public:
     String inner_html() const;
     void set_inner_html(StringView);
 
-private:
+protected:
     RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
+private:
     Attribute* find_attribute(const FlyString& name);
     const Attribute* find_attribute(const FlyString& name) const;
 

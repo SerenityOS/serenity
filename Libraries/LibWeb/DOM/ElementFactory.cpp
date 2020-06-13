@@ -40,6 +40,7 @@
 #include <LibWeb/DOM/HTMLImageElement.h>
 #include <LibWeb/DOM/HTMLInputElement.h>
 #include <LibWeb/DOM/HTMLLinkElement.h>
+#include <LibWeb/DOM/HTMLObjectElement.h>
 #include <LibWeb/DOM/HTMLScriptElement.h>
 #include <LibWeb/DOM/HTMLStyleElement.h>
 #include <LibWeb/DOM/HTMLTableCellElement.h>
@@ -94,6 +95,8 @@ NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_n
         return adopt(*new HTMLScriptElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::canvas)
         return adopt(*new HTMLCanvasElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == HTML::TagNames::object)
+        return adopt(*new HTMLObjectElement(document, lowercase_tag_name));
     return adopt(*new Element(document, lowercase_tag_name));
 }
 

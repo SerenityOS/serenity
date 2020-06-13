@@ -52,6 +52,7 @@ set(SOURCES
     DOM/HTMLIFrameElement.cpp
     DOM/HTMLImageElement.cpp
     DOM/HTMLInputElement.cpp
+    DOM/HTMLObjectElement.cpp
     DOM/HTMLLinkElement.cpp
     DOM/HTMLScriptElement.cpp
     DOM/HTMLStyleElement.cpp
@@ -95,6 +96,7 @@ set(SOURCES
     Layout/LineBoxFragment.cpp
     LayoutTreeModel.cpp
     Loader/FrameLoader.cpp
+    Loader/ImageLoader.cpp
     Loader/ImageResource.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
