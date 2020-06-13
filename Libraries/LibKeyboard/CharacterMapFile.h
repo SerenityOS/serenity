@@ -37,7 +37,7 @@ public:
     static Optional<CharacterMapData> load_from_file(const String& file_name);
 
 private:
-    static ByteBuffer read_map(const JsonObject& json, const String& name);
+    static Vector<u32> read_map(const JsonObject& json, const String& name);
 };
 
 }
