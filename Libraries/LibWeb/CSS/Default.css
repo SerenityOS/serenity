@@ -59,7 +59,7 @@ article, aside, section {
 }
 
 center {
-    text-align: center;
+    text-align: -libweb-center;
 }
 
 h1, h2, h3 {
