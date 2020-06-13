@@ -26,15 +26,17 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 #define CHAR_MAP_SIZE 0x80
 
 namespace Keyboard {
 
 struct CharacterMapData {
-    char map[CHAR_MAP_SIZE];
-    char shift_map[CHAR_MAP_SIZE];
-    char alt_map[CHAR_MAP_SIZE];
-    char altgr_map[CHAR_MAP_SIZE];
+    u32 map[CHAR_MAP_SIZE];
+    u32 shift_map[CHAR_MAP_SIZE];
+    u32 alt_map[CHAR_MAP_SIZE];
+    u32 altgr_map[CHAR_MAP_SIZE];
 };
 
 // clang-format off
