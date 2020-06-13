@@ -1004,7 +1004,7 @@ void Terminal::emit_string(const StringView& string)
     m_client.emit((const u8*)string.characters_without_null_termination(), string.length());
 }
 
-void Terminal::handle_key_press(KeyCode key, u8 character, u8 flags)
+void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 {
     bool ctrl = flags & Mod_Ctrl;
     bool alt = flags & Mod_Alt;
@@ -1045,7 +1045,7 @@ void Terminal::handle_key_press(KeyCode key, u8 character, u8 flags)
         break;
     }
 
-    if (!character) {
+    if (!code_point) {
         // Probably a modifier being pressed.
         return;
     }
@@ -1058,10 +1058,10 @@ void Terminal::handle_key_press(KeyCode key, u8 character, u8 flags)
     // Key event was not one of the above special cases,
     // attempt to treat it as a character...
     if (ctrl) {
-        if (character >= 'a' && character <= 'z') {
-            character = character - 'a' + 1;
-        } else if (character == '\\') {
-            character = 0x1c;
+        if (code_point >= 'a' && code_point <= 'z') {
+            code_point = code_point - 'a' + 1;
+        } else if (code_point == '\\') {
+            code_point = 0x1c;
         }
     }
 
@@ -1069,7 +1069,10 @@ void Terminal::handle_key_press(KeyCode key, u8 character, u8 flags)
     if (alt)
         emit_string("\033");
 
-    emit_string({ &character, 1 });
+    StringBuilder sb;
+    sb.append_codepoint(code_point);
+
+    emit_string(sb.to_string());
 }
 
 void Terminal::unimplemented_escape()

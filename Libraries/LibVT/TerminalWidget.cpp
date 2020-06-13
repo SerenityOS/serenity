@@ -231,15 +231,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         update();
     }
 
-    if (event.text().length() > 2) {
-        // Unicode (likely emoji), just emit it.
-        write(m_ptm_fd, event.text().characters(), event.text().length());
-    } else {
-        // Ask the terminal to generate the correct character sequence and send
-        // it back to us via emit().
-        u8 character = event.text().length() == 1 ? event.text()[0] : 0;
-        m_terminal.handle_key_press(event.key(), character, event.modifiers());
-    }
+    m_terminal.handle_key_press(event.key(), event.code_point(), event.modifiers());
 
     if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_Shift && event.key() != Key_Logo)
         m_scrollbar->set_value(m_scrollbar->max());

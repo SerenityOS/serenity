@@ -38,7 +38,7 @@ namespace VT {
 
 class TerminalClient {
 public:
-    virtual ~TerminalClient() { }
+    virtual ~TerminalClient() {}
 
     virtual void beep() = 0;
     virtual void set_window_title(const StringView&) = 0;
@@ -97,7 +97,7 @@ public:
     const NonnullOwnPtrVector<Line>& history() const { return m_history; }
 
     void inject_string(const StringView&);
-    void handle_key_press(KeyCode, u8 charatcter, u8 flags);
+    void handle_key_press(KeyCode, u32, u8 flags);
 
     Attribute attribute_at(const Position&) const;
 
