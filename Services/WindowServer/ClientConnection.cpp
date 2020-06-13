@@ -844,4 +844,9 @@ void ClientConnection::may_have_become_unresponsive()
     });
 }
 
+void ClientConnection::did_become_responsive()
+{
+    set_unresponsive(false);
+}
+
 }

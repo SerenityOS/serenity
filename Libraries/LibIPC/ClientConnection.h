@@ -101,6 +101,7 @@ public:
     }
 
     virtual void may_have_become_unresponsive() {}
+    virtual void did_become_responsive() {}
 
     void post_message(const Message& message)
     {
@@ -130,6 +131,8 @@ public:
         }
 
         ASSERT(static_cast<size_t>(nwritten) == buffer.size());
+
+        m_responsiveness_timer->start();
     }
 
     void drain_messages_from_client()
@@ -156,8 +159,10 @@ public:
             bytes.append(buffer, nread);
         }
 
-        if (!bytes.is_empty())
-            m_responsiveness_timer->restart();
+        if (!bytes.is_empty()) {
+            m_responsiveness_timer->stop();
+            did_become_responsive();
+        }
 
         size_t decoded_bytes = 0;
         for (size_t index = 0; index < bytes.size(); index += decoded_bytes) {
