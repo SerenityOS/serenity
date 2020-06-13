@@ -38,6 +38,7 @@ set(SOURCES
     Label.cpp
     Layout.cpp
     LazyWidget.cpp
+    LinkLabel.cpp
     ListView.cpp
     MenuBar.cpp
     Menu.cpp
@@ -87,4 +88,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread)
+target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibDesktop)

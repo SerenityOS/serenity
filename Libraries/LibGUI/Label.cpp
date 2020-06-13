@@ -36,6 +36,7 @@ Label::Label(const StringView& text)
     : m_text(text)
 {
     set_frame_thickness(0);
+    set_foreground_role(Gfx::ColorRole::WindowText);
     set_frame_shadow(Gfx::FrameShadow::Plain);
     set_frame_shape(Gfx::FrameShape::NoFrame);
 }
@@ -84,18 +85,25 @@ void Label::paint_event(PaintEvent& event)
     text_rect.move_by(indent, 0);
     text_rect.set_width(text_rect.width() - indent * 2);
 
-    if (is_enabled()) {
-        painter.draw_text(text_rect, text(), m_text_alignment, palette().window_text(), Gfx::TextElision::Right);
-    } else {
+    if (!is_enabled()) {
         painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, Gfx::TextElision::Right);
-        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right);
     }
+    painter.draw_text(text_rect, text(), font(), m_text_alignment, text_color(), Gfx::TextElision::Right);
 }
 
 void Label::size_to_fit()
 {
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     set_preferred_size(font().width(m_text), 0);
+}
+
+Color Label::text_color()
+{
+    if (!is_enabled()) {
+        return Color::from_rgb(0x808080);
+    }
+
+    return palette().color(foreground_role());
 }
 
 }

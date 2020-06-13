@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Hüseyin ASLITÜRK <asliturk@hotmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,27 @@
 
 #pragma once
 
-#include <LibGUI/Frame.h>
-#include <LibGfx/TextAlignment.h>
+#include <LibGUI/Label.h>
 
 namespace GUI {
 
-class Label : public Frame {
-    C_OBJECT(Label)
+class LinkLabel : public Label {
+    C_OBJECT(LinkLabel)
 public:
-    virtual ~Label() override;
+    virtual ~LinkLabel() override;
 
-    String text() const { return m_text; }
-    void set_text(const StringView&);
-
-    void set_icon(const Gfx::Bitmap*);
-    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
-    Gfx::Bitmap* icon() { return m_icon.ptr(); }
-
-    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
-    void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
-
-    bool should_stretch_icon() const { return m_should_stretch_icon; }
-    void set_should_stretch_icon(bool b) { m_should_stretch_icon = b; }
-
-    void size_to_fit();
+    void set_href(const StringView& value) { m_href = value; }
 
 protected:
-    explicit Label(const StringView& text = {});
+    explicit LinkLabel(const StringView& text = {});
 
+    virtual void enter_event(Core::Event&) override;
+    virtual void leave_event(Core::Event&) override;
+    virtual void mousedown_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
 
-    Color text_color();
-
 private:
-    String m_text;
-    RefPtr<Gfx::Bitmap> m_icon;
-    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
-    bool m_should_stretch_icon { false };
+    String m_href;
 };
 
 }
