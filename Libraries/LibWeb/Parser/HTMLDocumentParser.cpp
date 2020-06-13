@@ -149,6 +149,9 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     case InsertionMode::InSelect:
         handle_in_select(token);
         break;
+    case InsertionMode::InCaption:
+        handle_in_caption(token);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -1740,7 +1743,11 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
         return;
     }
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::caption) {
-        TODO();
+        clear_the_stack_back_to_a_table_context();
+        m_list_of_active_formatting_elements.add_marker();
+        insert_html_element(token);
+        m_insertion_mode = InsertionMode::InCaption;
+        return;
     }
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::colgroup) {
         TODO();
@@ -1906,6 +1913,54 @@ void HTMLDocumentParser::handle_in_select(HTMLToken& token)
     }
 
     PARSE_ERROR();
+}
+
+void HTMLDocumentParser::handle_in_caption(HTMLToken& token)
+{
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::caption) {
+        if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::caption)) {
+            PARSE_ERROR();
+            return;
+        }
+
+        generate_implied_end_tags();
+
+        if (current_node().tag_name() != HTML::TagNames::caption)
+            PARSE_ERROR();
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::caption);
+        m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
+
+        m_insertion_mode = InsertionMode::InTable;
+        return;
+    }
+
+    if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr))
+         || (token.is_end_tag() && token.tag_name() == HTML::TagNames::table)) {
+        if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::caption)) {
+            PARSE_ERROR();
+            return;
+        }
+
+        generate_implied_end_tags();
+
+        if (current_node().tag_name() != HTML::TagNames::caption)
+            PARSE_ERROR();
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::caption);
+        m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
+
+        m_insertion_mode = InsertionMode::InTable;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::body, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::html, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr)) {
+        PARSE_ERROR();
+        return;
+    }
+
+    process_using_the_rules_for(InsertionMode::InBody, token);
 }
 
 void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
