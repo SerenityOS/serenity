@@ -40,6 +40,11 @@ namespace Gfx {
 
 Color::Color(NamedColor named)
 {
+    if (named == Transparent) {
+        m_value = 0;
+        return;
+    }
+
     struct {
         u8 r;
         u8 g;
