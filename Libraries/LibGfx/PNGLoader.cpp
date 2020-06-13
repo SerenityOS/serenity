@@ -94,6 +94,11 @@ struct [[gnu::packed]] Quad
     T a;
 };
 
+enum PngInterlaceMethod {
+    Null = 0,
+    Adam7 = 1
+};
+
 struct PNGLoadingContext {
     enum State {
         NotDecoded = 0,
@@ -172,7 +177,7 @@ private:
 };
 
 static RefPtr<Gfx::Bitmap> load_png_impl(const u8*, size_t);
-static bool process_chunk(Streamer&, PNGLoadingContext& context, bool decode_size_only);
+static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
 RefPtr<Gfx::Bitmap> load_png(const StringView& path)
 {
@@ -538,7 +543,7 @@ static bool decode_png_size(PNGLoadingContext& context)
 
     Streamer streamer(data_ptr, data_remaining);
     while (!streamer.at_end()) {
-        if (!process_chunk(streamer, context, true)) {
+        if (!process_chunk(streamer, context)) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -568,7 +573,7 @@ static bool decode_png_chunks(PNGLoadingContext& context)
 
     Streamer streamer(data_ptr, data_remaining);
     while (!streamer.at_end()) {
-        if (!process_chunk(streamer, context, false)) {
+        if (!process_chunk(streamer, context)) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -578,27 +583,10 @@ static bool decode_png_chunks(PNGLoadingContext& context)
     return true;
 }
 
-static bool decode_png_bitmap(PNGLoadingContext& context)
+static bool decode_png_bitmap_simple(PNGLoadingContext& context)
 {
-    if (context.state < PNGLoadingContext::State::ChunksDecoded) {
-        if (!decode_png_chunks(context))
-            return false;
-    }
-
-    if (context.state >= PNGLoadingContext::State::BitmapDecoded)
-        return true;
-
-    unsigned long srclen = context.compressed_data.size() - 6;
-    unsigned long destlen = context.decompression_buffer_size;
-    int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
-    if (ret < 0) {
-        context.state = PNGLoadingContext::State::Error;
-        return false;
-    }
-    context.compressed_data.clear();
-
-    context.scanlines.ensure_capacity(context.height);
     Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
+
     for (int y = 0; y < context.height; ++y) {
         u8 filter;
         if (!streamer.read(filter)) {
@@ -625,6 +613,163 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
 
     unfilter(context);
 
+    return true;
+}
+
+static int adam7_height(PNGLoadingContext& context, int pass)
+{
+    switch (pass) {
+    case 1:
+        return (context.height + 7) / 8;
+    case 2:
+        return (context.height + 7) / 8;
+    case 3:
+        return (context.height + 3) / 8;
+    case 4:
+        return (context.height + 3) / 4;
+    case 5:
+        return (context.height + 1) / 4;
+    case 6:
+        return (context.height + 1) / 2;
+    case 7:
+        return context.height / 2;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+static int adam7_width(PNGLoadingContext& context, int pass)
+{
+    switch (pass) {
+    case 1:
+        return (context.width + 7) / 8;
+    case 2:
+        return (context.width + 3) / 8;
+    case 3:
+        return (context.width + 3) / 4;
+    case 4:
+        return (context.width + 1) / 4;
+    case 5:
+        return (context.width + 1) / 2;
+    case 6:
+        return context.width / 2;
+    case 7:
+        return context.width;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+// Index 0 unused (non-interlaced case)
+static int adam7_starty[8] = { 0, 0, 0, 4, 0, 2, 0, 1 };
+static int adam7_startx[8] = { 0, 0, 4, 0, 2, 0, 1, 0 };
+static int adam7_stepy[8] = { 1, 8, 8, 8, 4, 4, 2, 2 };
+static int adam7_stepx[8] = { 1, 8, 8, 4, 4, 2, 2, 1 };
+
+static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, int pass)
+{
+    PNGLoadingContext subimage_context;
+    subimage_context.width = adam7_width(context, pass);
+    subimage_context.height = adam7_height(context, pass);
+    subimage_context.channels = context.channels;
+    subimage_context.color_type = context.color_type;
+    subimage_context.palette_data = context.palette_data;
+    subimage_context.palette_transparency_data = context.palette_transparency_data;
+    subimage_context.bit_depth = context.bit_depth;
+    subimage_context.filter_method = context.filter_method;
+
+    // For small images, some passes might be empty
+    if (!subimage_context.width || !subimage_context.height)
+        return true;
+
+    subimage_context.scanlines.clear_with_capacity();
+    for (int y = 0; y < subimage_context.height; ++y) {
+        u8 filter;
+        if (!streamer.read(filter)) {
+            context.state = PNGLoadingContext::State::Error;
+            return false;
+        }
+
+        if (filter > 4) {
+            dbg() << "Invalid PNG filter: " << filter;
+            context.state = PNGLoadingContext::State::Error;
+            return false;
+        }
+
+        subimage_context.scanlines.append({ filter });
+        auto& scanline_buffer = subimage_context.scanlines.last().data;
+        auto row_size = ((subimage_context.width * context.channels * context.bit_depth) + 7) / 8;
+        if (!streamer.wrap_bytes(scanline_buffer, row_size)) {
+            context.state = PNGLoadingContext::State::Error;
+            return false;
+        }
+    }
+
+    subimage_context.bitmap = Bitmap::create(context.bitmap->format(), { subimage_context.width, subimage_context.height });
+    unfilter(subimage_context);
+
+    // Copy the subimage data into the main image according to the pass pattern
+    for (int y = 0, dy = adam7_starty[pass]; y < subimage_context.height && dy < context.height; ++y, dy += adam7_stepy[pass]) {
+        for (int x = 0, dx = adam7_startx[pass]; x < subimage_context.width && dy < context.width; ++x, dx += adam7_stepx[pass]) {
+            context.bitmap->set_pixel(dx, dy, subimage_context.bitmap->get_pixel(x, y));
+        }
+    }
+    return true;
+}
+
+static bool decode_png_adam7(PNGLoadingContext& context)
+{
+    Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
+    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::RGBA32 : BitmapFormat::RGB32, { context.width, context.height });
+
+    for (int pass = 1; pass <= 7; ++pass) {
+        if (!decode_adam7_pass(context, streamer, pass))
+            return false;
+    }
+    return true;
+}
+
+static bool decode_png_bitmap(PNGLoadingContext& context)
+{
+    if (context.state < PNGLoadingContext::State::ChunksDecoded) {
+        if (!decode_png_chunks(context))
+            return false;
+    }
+
+    if (context.state >= PNGLoadingContext::State::BitmapDecoded)
+        return true;
+
+    unsigned long srclen = context.compressed_data.size() - 6;
+    unsigned long destlen = 0;
+    int ret = puff(NULL, &destlen, context.compressed_data.data() + 2, &srclen);
+    if (ret != 0) {
+        context.state = PNGLoadingContext::State::Error;
+        return false;
+    }
+    context.decompression_buffer_size = destlen;
+    context.decompression_buffer = (u8*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
+
+    ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
+    if (ret != 0) {
+        context.state = PNGLoadingContext::State::Error;
+        return false;
+    }
+    context.compressed_data.clear();
+
+    context.scanlines.ensure_capacity(context.height);
+    switch (context.interlace_method) {
+    case PngInterlaceMethod::Null:
+        if (!decode_png_bitmap_simple(context))
+            return false;
+        break;
+    case PngInterlaceMethod::Adam7:
+        if (!decode_png_adam7(context))
+            return false;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
     munmap(context.decompression_buffer, context.decompression_buffer_size);
     context.decompression_buffer = nullptr;
     context.decompression_buffer_size = 0;
@@ -648,7 +793,7 @@ static RefPtr<Gfx::Bitmap> load_png_impl(const u8* data, size_t data_size)
     return context.bitmap;
 }
 
-static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context, bool decode_size_only = false)
+static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
 {
     if (data.size() < (int)sizeof(PNG_IHDR))
         return false;
@@ -669,9 +814,8 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context, boo
     printf(" Interlace type: %d\n", context.interlace_method);
 #endif
 
-    // FIXME: Implement Adam7 deinterlacing
-    if (context.interlace_method != 0) {
-        dbgprintf("PNGLoader::process_IHDR: Interlaced PNGs not currently supported.\n");
+    if (context.interlace_method != PngInterlaceMethod::Null && context.interlace_method != PngInterlaceMethod::Adam7) {
+        dbgprintf("PNGLoader::process_IHDR: unknown interlace method: %d\n", context.interlace_method);
         return false;
     }
 
@@ -693,13 +837,6 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context, boo
         break;
     default:
         ASSERT_NOT_REACHED();
-    }
-
-    if (!decode_size_only) {
-        // Calculate number of bytes per row (+1 for filter)
-        auto row_size = ((context.width * context.channels * context.bit_depth) + 7) / 8 + 1;
-        context.decompression_buffer_size = row_size * context.height;
-        context.decompression_buffer = (u8*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
     }
     return true;
 }
@@ -726,7 +863,7 @@ static bool process_tRNS(const ByteBuffer& data, PNGLoadingContext& context)
     return true;
 }
 
-static bool process_chunk(Streamer& streamer, PNGLoadingContext& context, bool decode_size_only)
+static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
     if (!streamer.read(chunk_size)) {
@@ -754,7 +891,7 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context, bool d
 #endif
 
     if (!strcmp((const char*)chunk_type, "IHDR"))
-        return process_IHDR(chunk_data, context, decode_size_only);
+        return process_IHDR(chunk_data, context);
     if (!strcmp((const char*)chunk_type, "IDAT"))
         return process_IDAT(chunk_data, context);
     if (!strcmp((const char*)chunk_type, "PLTE"))
