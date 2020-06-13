@@ -152,6 +152,9 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     case InsertionMode::InCaption:
         handle_in_caption(token);
         break;
+    case InsertionMode::InColumnGroup:
+        handle_in_column_group(token);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -1750,10 +1753,20 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
         return;
     }
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::colgroup) {
-        TODO();
+        clear_the_stack_back_to_a_table_context();
+        insert_html_element(token);
+        m_insertion_mode = InsertionMode::InColumnGroup;
+        return;
     }
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::col) {
-        TODO();
+        clear_the_stack_back_to_a_table_context();
+        HTMLToken fake_colgroup_token;
+        fake_colgroup_token.m_type = HTMLToken::Type::StartTag;
+        fake_colgroup_token.m_tag.tag_name.append(HTML::TagNames::colgroup);
+        insert_html_element(fake_colgroup_token);
+        m_insertion_mode = InsertionMode::InColumnGroup;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
     }
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead)) {
         clear_the_stack_back_to_a_table_context();
@@ -1961,6 +1974,71 @@ void HTMLDocumentParser::handle_in_caption(HTMLToken& token)
     }
 
     process_using_the_rules_for(InsertionMode::InBody, token);
+}
+
+void HTMLDocumentParser::handle_in_column_group(HTMLToken& token)
+{
+    if (token.is_character() && token.is_parser_whitespace()) {
+        insert_character(token.codepoint());
+        return;
+    }
+
+    if (token.is_comment()) {
+        insert_comment(token);
+        return;
+    }
+
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::col) {
+        insert_html_element(token);
+        m_stack_of_open_elements.pop();
+        token.acknowledge_self_closing_flag_if_set();
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::colgroup) {
+        if (current_node().tag_name() != HTML::TagNames::colgroup) {
+            PARSE_ERROR();
+            return;
+        }
+
+        m_stack_of_open_elements.pop();
+        m_insertion_mode = InsertionMode::InTable;
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::col) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if ((token.is_start_tag() || token.is_end_tag()) && token.tag_name() == HTML::TagNames::template_) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_end_of_file()) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (current_node().tag_name() != HTML::TagNames::colgroup) {
+        PARSE_ERROR();
+        return;
+    }
+
+    m_stack_of_open_elements.pop();
+    m_insertion_mode = InsertionMode::InTable;
+    process_using_the_rules_for(m_insertion_mode, token);
 }
 
 void HTMLDocumentParser::reset_the_insertion_mode_appropriately()

@@ -99,6 +99,7 @@ private:
     void handle_in_select_in_table(HTMLToken&);
     void handle_in_select(HTMLToken&);
     void handle_in_caption(HTMLToken&);
+    void handle_in_column_group(HTMLToken&);
 
     void stop_parsing() { m_stop_parsing = true; }
 
