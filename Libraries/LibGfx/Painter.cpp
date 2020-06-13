@@ -1114,6 +1114,9 @@ void Painter::draw_pixel(const IntPoint& position, Color color, int thickness)
 
 void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int thickness, LineStyle style)
 {
+    if (color.alpha() == 0)
+        return;
+
     auto clip_rect = this->clip_rect();
 
     auto point1 = p1;
