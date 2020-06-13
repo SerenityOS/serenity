@@ -44,6 +44,14 @@ void HTMLTableCellElement::apply_presentational_hints(StyleProperties& style) co
             auto color = Color::from_string(value);
             if (color.has_value())
                 style.set_property(CSS::PropertyID::BackgroundColor, ColorStyleValue::create(color.value()));
+            return;
+        }
+        if (name == HTML::AttributeNames::align) {
+            if (value.equals_ignoring_case("center") || value.equals_ignoring_case("middle"))
+                style.set_property(CSS::PropertyID::TextAlign, StringView("-libweb-center"));
+            else
+                style.set_property(CSS::PropertyID::TextAlign, value.view());
+            return;
         }
     });
 }
