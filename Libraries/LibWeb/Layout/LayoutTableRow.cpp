@@ -71,24 +71,4 @@ void LayoutTableRow::layout_row(const Vector<float>& column_widths)
     set_height(tallest_cell_height);
 }
 
-LayoutTableCell* LayoutTableRow::first_cell()
-{
-    return first_child_of_type<LayoutTableCell>();
-}
-
-const LayoutTableCell* LayoutTableRow::first_cell() const
-{
-    return first_child_of_type<LayoutTableCell>();
-}
-
-LayoutTableRow* LayoutTableRow::next_row()
-{
-    return next_sibling_of_type<LayoutTableRow>();
-}
-
-const LayoutTableRow* LayoutTableRow::next_row() const
-{
-    return next_sibling_of_type<LayoutTableRow>();
-}
-
 }
