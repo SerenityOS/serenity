@@ -42,6 +42,7 @@ public:
     i32 id() const { return m_id; }
     URL url() const { return m_url; }
 
+    Optional<u32> status_code() const { return m_status_code; }
     Optional<u32> total_size() const { return m_total_size; }
     size_t downloaded_size() const { return m_downloaded_size; }
     const ByteBuffer& payload() const { return m_payload; }
@@ -54,6 +55,7 @@ protected:
 
     void did_finish(bool success);
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
+    void set_status_code(u32 status_code) { m_status_code = status_code; }
     void set_payload(const ByteBuffer&);
     void set_response_headers(const HashMap<String, String, CaseInsensitiveStringTraits>&);
 
@@ -61,6 +63,7 @@ private:
     ClientConnection& m_client;
     i32 m_id { 0 };
     URL m_url;
+    Optional<u32> m_status_code;
     Optional<u32> m_total_size {};
     size_t m_downloaded_size { 0 };
     ByteBuffer m_payload;

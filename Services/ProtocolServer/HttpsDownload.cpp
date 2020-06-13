@@ -36,6 +36,7 @@ HttpsDownload::HttpsDownload(ClientConnection& client, NonnullRefPtr<HTTP::Https
 {
     m_job->on_finish = [this](bool success) {
         if (auto* response = m_job->response()) {
+            set_status_code(response->code());
             set_payload(response->payload());
             set_response_headers(response->headers());
         }

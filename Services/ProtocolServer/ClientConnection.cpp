@@ -99,7 +99,7 @@ void ClientConnection::did_finish_download(Badge<Download>, Download& download, 
     IPC::Dictionary response_headers;
     for (auto& it : download.response_headers())
         response_headers.add(it.key, it.value);
-    post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size().value(), buffer ? buffer->shbuf_id() : -1, response_headers));
+    post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.status_code(), download.total_size().value(), buffer ? buffer->shbuf_id() : -1, response_headers));
 
     m_downloads.remove(download.id());
 }
