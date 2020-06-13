@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/QuickSort.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/DOM/Document.h>
@@ -40,6 +41,8 @@ StylePropertiesModel::StylePropertiesModel(const StyleProperties& properties)
         value.value = property_value.to_string();
         m_values.append(value);
     });
+
+    quick_sort(m_values, [](auto& a, auto& b) { return a.name < b.name; });
 }
 
 int StylePropertiesModel::row_count(const GUI::ModelIndex&) const
