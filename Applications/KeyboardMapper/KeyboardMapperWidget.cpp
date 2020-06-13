@@ -77,7 +77,7 @@ void KeyboardMapperWidget::create_frame()
                 ASSERT(index > 0);
 
                 tmp_button.set_text(value);
-                char* map;
+                u32* map;
 
                 if (m_current_map_name == "map") {
                     map = m_character_map.map;
@@ -176,7 +176,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
 {
     JsonObject map_json;
 
-    auto add_array = [&](String name, char* values) {
+    auto add_array = [&](String name, u32* values) {
         JsonArray items;
         for (int i = 0; i < 90; i++) {
             AK::StringBuilder sb;
@@ -249,7 +249,7 @@ void KeyboardMapperWidget::keyup_event(GUI::KeyEvent& event)
 void KeyboardMapperWidget::set_current_map(const String current_map)
 {
     m_current_map_name = current_map;
-    char* map;
+    u32* map;
 
     if (m_current_map_name == "map") {
         map = m_character_map.map;
@@ -269,7 +269,7 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
             continue;
 
         AK::StringBuilder sb;
-        sb.append(map[index]);
+        sb.append_codepoint(map[index]);
 
         m_keys.at(k)->set_text(sb.to_string());
     }
