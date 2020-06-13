@@ -41,7 +41,7 @@ bool Download::stop()
     return m_client->stop_download({}, *this);
 }
 
-void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf_id, const IPC::Dictionary& response_headers)
+void Download::did_finish(Badge<Client>, bool success, Optional<u32> status_code, u32 total_size, i32 shbuf_id, const IPC::Dictionary& response_headers)
 {
     if (!on_finish)
         return;
@@ -59,7 +59,7 @@ void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf
         caseless_response_headers.set(name, value);
     });
 
-    on_finish(success, payload, move(shared_buffer), caseless_response_headers);
+    on_finish(success, payload, move(shared_buffer), caseless_response_headers, status_code);
 }
 
 void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size)

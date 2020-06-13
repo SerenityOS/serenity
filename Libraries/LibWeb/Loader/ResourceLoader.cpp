@@ -163,13 +163,18 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
                 error_callback("Failed to initiate load");
             return;
         }
-        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, const ByteBuffer& payload, auto, auto& response_headers) {
+        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, const ByteBuffer& payload, auto, auto& response_headers, auto status_code) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
             if (!success) {
                 if (error_callback)
                     error_callback("HTTP load failed");
+                return;
+            }
+            if (status_code.has_value() && status_code.value() == 404) {
+                if (error_callback)
+                    error_callback("HTTP not found (four-oh-four!)");
                 return;
             }
             success_callback(ByteBuffer::copy(payload.data(), payload.size()), response_headers);

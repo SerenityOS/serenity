@@ -60,7 +60,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
         did_progress(total_size.value(), downloaded_size);
     };
-    m_download->on_finish = [this](bool success, auto& payload, auto payload_storage, auto& response_headers) {
+    m_download->on_finish = [this](bool success, auto& payload, auto payload_storage, auto& response_headers, auto) {
         did_finish(success, payload, payload_storage, response_headers);
     };
 

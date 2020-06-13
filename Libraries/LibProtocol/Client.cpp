@@ -72,7 +72,7 @@ void Client::handle(const Messages::ProtocolClient::DownloadFinished& message)
 {
     RefPtr<Download> download;
     if ((download = m_downloads.get(message.download_id()).value_or(nullptr))) {
-        download->did_finish({}, message.success(), message.total_size(), message.shbuf_id(), message.response_headers());
+        download->did_finish({}, message.success(), message.status_code(), message.total_size(), message.shbuf_id(), message.response_headers());
     }
     send_sync<Messages::ProtocolServer::DisownSharedBuffer>(message.shbuf_id());
     m_downloads.remove(message.download_id());
