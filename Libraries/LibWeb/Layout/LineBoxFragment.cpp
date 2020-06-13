@@ -30,6 +30,7 @@
 #include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/RenderingContext.h>
+#include <ctype.h>
 
 namespace Web {
 
@@ -43,6 +44,14 @@ void LineBoxFragment::render(RenderingContext& context)
     if (is<LayoutText>(layout_node())) {
         to<LayoutText>(layout_node()).render_fragment(context, *this);
     }
+}
+
+bool LineBoxFragment::ends_in_whitespace() const
+{
+    auto text = this->text();
+    if (text.is_empty())
+        return false;
+    return isspace(text[text.length() - 1]);
 }
 
 bool LineBoxFragment::is_justifiable_whitespace() const

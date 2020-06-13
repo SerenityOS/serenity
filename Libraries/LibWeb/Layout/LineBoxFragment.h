@@ -62,6 +62,7 @@ public:
 
     void render(RenderingContext&);
 
+    bool ends_in_whitespace() const;
     bool is_justifiable_whitespace() const;
     StringView text() const;
 

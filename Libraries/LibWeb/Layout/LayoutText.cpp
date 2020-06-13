@@ -46,7 +46,7 @@ LayoutText::~LayoutText()
 {
 }
 
-static bool is_all_whitespace(const String& string)
+static bool is_all_whitespace(const StringView& string)
 {
     for (size_t i = 0; i < string.length(); ++i) {
         if (!isspace(string[i]))
@@ -111,7 +111,8 @@ void LayoutText::for_each_chunk(Callback callback, LayoutMode layout_mode, bool 
         int length = view.byte_offset_of(it) - view.byte_offset_of(start_of_chunk);
 
         if (has_breaking_newline || length > 0) {
-            callback(view.substring_view(start, length), start, length, has_breaking_newline);
+            auto chunk_view = view.substring_view(start, length);
+            callback(chunk_view, start, length, has_breaking_newline, is_all_whitespace(chunk_view.as_string()));
         }
 
         start_of_chunk = it;
@@ -160,17 +161,23 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
     if (do_collapse) {
         auto utf8_view = Utf8View(node().data());
         StringBuilder builder(node().data().length());
-        for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
+        auto it = utf8_view.begin();
+        auto skip_over_whitespace = [&] {
+            auto prev = it;
+            while (it != utf8_view.end() && isspace(*it)) {
+                prev = it;
+                ++it;
+            }
+            it = prev;
+        };
+        if (line_boxes.last().ends_in_whitespace())
+            skip_over_whitespace();
+        for (; it != utf8_view.end(); ++it) {
             if (!isspace(*it)) {
                 builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.codepoint_length_in_bytes());
             } else {
                 builder.append(' ');
-                auto prev = it;
-                while (it != utf8_view.end() && isspace(*it)) {
-                    prev = it;
-                    ++it;
-                }
-                it = prev;
+                skip_over_whitespace();
             }
         }
         m_text_for_rendering = builder.to_string();
@@ -182,25 +189,30 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
     // !do_wrap_lines => chunks_are_lines
     struct Chunk {
         Utf8View view;
-        int start;
-        int length;
-        bool is_break;
+        int start { 0 };
+        int length { 0 };
+        bool is_break { false };
+        bool is_all_whitespace { false };
     };
     Vector<Chunk> chunks;
 
     for_each_chunk(
-        [&](const Utf8View& view, int start, int length, bool is_break) {
-            chunks.append({ Utf8View(view), start, length, is_break });
+        [&](const Utf8View& view, int start, int length, bool is_break, bool is_all_whitespace) {
+            chunks.append({ Utf8View(view), start, length, is_break, is_all_whitespace });
         },
         layout_mode, do_wrap_lines, do_wrap_breaks);
 
     for (size_t i = 0; i < chunks.size(); ++i) {
         auto& chunk = chunks[i];
 
+        // Collapse entire fragment into non-existence if previous fragment on line ended in whitespace.
+        if (do_collapse && line_boxes.last().ends_in_whitespace() && chunk.is_all_whitespace)
+            continue;
+
         float chunk_width;
         bool need_collapse = false;
         if (do_wrap_lines) {
-            bool need_collapse = do_collapse && isspace(*chunk.view.begin());
+            need_collapse = do_collapse && isspace(*chunk.view.begin()) && line_boxes.last().ends_in_whitespace();
 
             if (need_collapse)
                 chunk_width = space_width;
