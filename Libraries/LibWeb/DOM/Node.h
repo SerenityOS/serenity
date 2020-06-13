@@ -137,7 +137,7 @@ protected:
     Document& m_document;
     mutable LayoutNode* m_layout_node { nullptr };
     NodeType m_type { NodeType::INVALID };
-    bool m_needs_style_update { false };
+    bool m_needs_style_update { true };
 };
 
 template<typename T>
