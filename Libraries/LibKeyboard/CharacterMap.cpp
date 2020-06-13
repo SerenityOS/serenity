@@ -25,6 +25,7 @@
  */
 
 #include "CharacterMap.h"
+#include <AK/StringBuilder.h>
 #include <Kernel/Syscall.h>
 #ifndef KERNEL
 #    include <LibKeyboard/CharacterMapFile.h>
@@ -51,35 +52,35 @@ int CharacterMap::set_system_map()
     return syscall(SC_setkeymap, &params);
 }
 
-char CharacterMap::get_char(KeyEvent event)
+u32 CharacterMap::get_char(KeyEvent event)
 {
     auto modifiers = event.modifiers();
     auto index = event.scancode & 0xFF; // Index is last byte of scan code.
     auto caps_lock_on = event.caps_lock_on;
 
-    char character;
+    u32 code_point;
     if (modifiers & Mod_Shift)
-        character = m_character_map_data.shift_map[index];
+        code_point = m_character_map_data.shift_map[index];
     else if (modifiers & Mod_Alt)
-        character = m_character_map_data.alt_map[index];
+        code_point = m_character_map_data.alt_map[index];
     else if (modifiers & Mod_AltGr)
-        character = m_character_map_data.altgr_map[index];
+        code_point = m_character_map_data.altgr_map[index];
     else
-        character = m_character_map_data.map[index];
+        code_point = m_character_map_data.map[index];
 
     if (caps_lock_on && (modifiers == 0 || modifiers == Mod_Shift)) {
-        if (character >= 'a' && character <= 'z')
-            character &= ~0x20;
-        else if (character >= 'A' && character <= 'Z')
-            character |= 0x20;
+        if (code_point >= 'a' && code_point <= 'z')
+            code_point &= ~0x20;
+        else if (code_point >= 'A' && code_point <= 'Z')
+            code_point |= 0x20;
     }
 
     if (event.e0_prefix && event.key == Key_Slash) {
         // If Key_Slash (scancode = 0x35) mapped to other form "/", we fix num pad key of "/" with this case.
-        character = '/';
+        code_point = '/';
     }
 
-    return character;
+    return code_point;
 }
 
 void CharacterMap::set_character_map_data(CharacterMapData character_map_data)

@@ -38,7 +38,7 @@ public:
     CharacterMap(const String& file_name);
 
     int set_system_map();
-    char get_char(KeyEvent);
+    u32 get_char(KeyEvent);
     void set_character_map_data(CharacterMapData character_map_data);
 
 private:

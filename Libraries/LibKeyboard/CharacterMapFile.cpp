@@ -25,6 +25,7 @@
  */
 
 #include "CharacterMapFile.h"
+#include <AK/Utf8View.h>
 #include <LibCore/File.h>
 
 namespace Keyboard {
@@ -52,34 +53,34 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& file_n
     ASSERT(json_result.has_value());
     auto json = json_result.value().as_object();
 
-    ByteBuffer map = read_map(json, "map");
-    ByteBuffer shift_map = read_map(json, "shift_map");
-    ByteBuffer alt_map = read_map(json, "alt_map");
-    ByteBuffer altgr_map = read_map(json, "altgr_map");
+    Vector<u32> map = read_map(json, "map");
+    Vector<u32> shift_map = read_map(json, "shift_map");
+    Vector<u32> alt_map = read_map(json, "alt_map");
+    Vector<u32> altgr_map = read_map(json, "altgr_map");
 
     CharacterMapData character_map;
     for (int i = 0; i < CHAR_MAP_SIZE; i++) {
-        character_map.map[i] = map[i];
-        character_map.shift_map[i] = shift_map[i];
-        character_map.alt_map[i] = alt_map[i];
-        if (altgr_map) {
-            character_map.altgr_map[i] = altgr_map[i];
-        } else {
+        character_map.map[i] = map.at(i);
+        character_map.shift_map[i] = shift_map.at(i);
+        character_map.alt_map[i] = alt_map.at(i);
+        if (altgr_map.is_empty()) {
             // AltGr map was not found, using Alt map as fallback.
-            character_map.altgr_map[i] = alt_map[i];
+            character_map.altgr_map[i] = alt_map.at(i);
+        } else {
+            character_map.altgr_map[i] = altgr_map.at(i);
         }
     }
 
     return character_map;
 }
 
-ByteBuffer CharacterMapFile::read_map(const JsonObject& json, const String& name)
+Vector<u32> CharacterMapFile::read_map(const JsonObject& json, const String& name)
 {
     if (!json.has(name))
-        return nullptr;
+        return {};
 
-    ByteBuffer buffer;
-    buffer.grow(CHAR_MAP_SIZE);
+    Vector<u32> buffer;
+    buffer.resize(CHAR_MAP_SIZE);
 
     auto map_arr = json.get(name).as_array();
     for (int i = 0; i < map_arr.size(); i++) {
@@ -89,8 +90,8 @@ ByteBuffer CharacterMapFile::read_map(const JsonObject& json, const String& name
         } else if (key_value.length() == 1) {
             buffer[i] = key_value.characters()[0];
         } else {
-            dbg() << "Unknown character in " << name.characters() << "[" << i << "] = " << key_value.characters() << ".";
-            ASSERT_NOT_REACHED();
+            Utf8View m_utf8_view(key_value.characters());
+            buffer[i] = *m_utf8_view.begin();
         }
     }
 
