@@ -39,6 +39,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+//#define PNG_DEBUG
+
 namespace Gfx {
 
 static const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
@@ -502,13 +504,17 @@ static bool decode_png_header(PNGLoadingContext& context)
         return true;
 
     if (!context.data || context.data_size < sizeof(png_header)) {
+#ifdef PNG_DEBUG
         dbg() << "Missing PNG header";
+#endif
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
 
     if (memcmp(context.data, png_header, sizeof(png_header)) != 0) {
+#ifdef PNG_DEBUG
         dbg() << "Invalid PNG header";
+#endif
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
