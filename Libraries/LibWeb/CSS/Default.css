@@ -165,3 +165,8 @@ colgroup {
 basefont {
     display: block;
 }
+
+/* FIXME: I think this should only apply in quirks mode. */
+table {
+    text-align: left;
+}
