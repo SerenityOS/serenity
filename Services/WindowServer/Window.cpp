@@ -302,7 +302,7 @@ void Window::event(Core::Event& event)
     case Event::KeyDown:
         m_client->post_message(
             Messages::WindowClient::KeyDown(m_window_id,
-                (u8) static_cast<const KeyEvent&>(event).character(),
+                (u32) static_cast<const KeyEvent&>(event).code_point(),
                 (u32) static_cast<const KeyEvent&>(event).key(),
                 static_cast<const KeyEvent&>(event).modifiers(),
                 (u32) static_cast<const KeyEvent&>(event).scancode()));
@@ -310,7 +310,7 @@ void Window::event(Core::Event& event)
     case Event::KeyUp:
         m_client->post_message(
             Messages::WindowClient::KeyUp(m_window_id,
-                (u8) static_cast<const KeyEvent&>(event).character(),
+                (u32) static_cast<const KeyEvent&>(event).code_point(),
                 (u32) static_cast<const KeyEvent&>(event).key(),
                 static_cast<const KeyEvent&>(event).modifiers(),
                 (u32) static_cast<const KeyEvent&>(event).scancode()));
