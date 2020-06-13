@@ -35,6 +35,8 @@
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
+//#define CACHE_DEBUG
+
 namespace Web {
 
 ResourceLoader& ResourceLoader::the()
@@ -82,7 +84,9 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
         if (it->value->type() != type) {
             dbg() << "FIXME: Not using cached resource for " << request.url() << " since there's a type mismatch.";
         } else {
+#ifdef CACHE_DEBUG
             dbg() << "Reusing cached resource for: " << request.url();
+#endif
             return it->value;
         }
     }
