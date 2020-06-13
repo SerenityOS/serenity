@@ -454,7 +454,7 @@ void LayoutBlock::compute_position()
         + box_model().offset().left.to_px(*this);
 
     if (parent()->is_block() && parent()->style().text_align() == CSS::ValueID::VendorSpecificCenter) {
-        position_x += (containing_block.width() / 2) - width() / 2;
+        position_x = (containing_block.width() / 2) - width() / 2;
     }
 
     float position_y = box_model().margin_box(*this).top
