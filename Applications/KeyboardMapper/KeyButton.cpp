@@ -94,4 +94,3 @@ void KeyButton::leave_event(Core::Event& event)
     window()->set_override_cursor(GUI::StandardCursor::Arrow);
     AbstractButton::leave_event(event);
 }
-
