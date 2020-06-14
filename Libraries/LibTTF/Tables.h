@@ -37,11 +37,7 @@ enum class IndexToLocFormat {
 
 class Head {
 public:
-    Head(const ByteBuffer& slice)
-        : m_slice(slice)
-    {
-        ASSERT(m_slice.size() >= (size_t) Sizes::Table);
-    }
+    static Optional<Head> from_slice(const ByteBuffer&);
     u16 units_per_em() const;
     i16 xmin() const;
     i16 ymin() const;
@@ -64,16 +60,17 @@ private:
         Table = 54,
     };
 
+    Head(const ByteBuffer& slice)
+        : m_slice(slice)
+    {
+    }
+
     ByteBuffer m_slice;
 };
 
 class Hhea {
 public:
-    Hhea(const ByteBuffer& slice)
-        : m_slice(slice)
-    {
-        ASSERT(m_slice.size() >= (size_t) Sizes::Table);
-    }
+    static Optional<Hhea> from_slice(const ByteBuffer&);
     i16 ascender() const;
     i16 descender() const;
     i16 line_gap() const;
@@ -92,16 +89,17 @@ private:
         Table = 36,
     };
 
+    Hhea(const ByteBuffer& slice)
+        : m_slice(slice)
+    {
+    }
+
     ByteBuffer m_slice;
 };
 
 class Maxp {
 public:
-    Maxp(const ByteBuffer& slice)
-        : m_slice(slice)
-    {
-        ASSERT(m_slice.size() >= (size_t) Sizes::TableV0p5);
-    }
+    static Optional<Maxp> from_slice(const ByteBuffer&);
     u16 num_glyphs() const;
 
 private:
@@ -111,6 +109,11 @@ private:
     enum class Sizes {
         TableV0p5 = 6,
     };
+
+    Maxp(const ByteBuffer& slice)
+        : m_slice(slice)
+    {
+    }
 
     ByteBuffer m_slice;
 };
@@ -122,13 +125,7 @@ struct GlyphHorizontalMetrics {
 
 class Hmtx {
 public:
-    Hmtx(const ByteBuffer& slice, u32 num_glyphs, u32 number_of_h_metrics)
-        : m_slice(slice)
-        , m_num_glyphs(num_glyphs)
-        , m_number_of_h_metrics(number_of_h_metrics)
-    {
-        ASSERT(m_slice.size() >= number_of_h_metrics * (u32) Sizes::LongHorMetric + (num_glyphs - number_of_h_metrics) * (u32) Sizes::LeftSideBearing);
-    }
+    static Optional<Hmtx> from_slice(const ByteBuffer&, u32 num_glyphs, u32 number_of_h_metrics);
     GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
 
 private:
@@ -137,9 +134,16 @@ private:
         LeftSideBearing = 2
     };
 
+    Hmtx(const ByteBuffer& slice, u32 num_glyphs, u32 number_of_h_metrics)
+        : m_slice(slice)
+        , m_num_glyphs(num_glyphs)
+        , m_number_of_h_metrics(number_of_h_metrics)
+    {
+    }
+
     ByteBuffer m_slice;
-    u32 m_num_glyphs;
-    u32 m_number_of_h_metrics;
+    u32 m_num_glyphs { 0 };
+    u32 m_number_of_h_metrics { 0 };
 };
 
 }
