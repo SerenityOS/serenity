@@ -26,16 +26,13 @@
 
 #pragma once
 
+#include "Cmap.h"
 #include <AK/ByteBuffer.h>
-#include <AK/FixedArray.h>
 #include <AK/Noncopyable.h>
-#include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>
-#include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Size.h>
-#include <math.h>
 
 #define POINTS_PER_INCH 72.0f
 #define DEFAULT_DPI     96
@@ -85,376 +82,20 @@ private:
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
     RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id, float x_scale, float y_scale) const;
-    u32 glyph_count() const { return m_maxp.num_glyphs(); }
+    u32 glyph_count() const;
+    u16 units_per_em() const;
 
-    class Rasterizer {
-    public:
-        Rasterizer(Gfx::IntSize);
-        void draw_path(Gfx::Path&);
-        RefPtr<Gfx::Bitmap> accumulate();
-
-    private:
-        void draw_line(Gfx::FloatPoint, Gfx::FloatPoint);
-
-        Gfx::IntSize m_size;
-        FixedArray<float> m_data;
-    };
-
-    enum class IndexToLocFormat {
-        Offset16,
-        Offset32,
-    };
-
-    class Head {
-    public:
-        Head() {}
-        Head(const ByteBuffer& slice)
-            : m_slice(slice)
-        {
-            ASSERT(m_slice.size() >= (size_t) Sizes::Table);
-        }
-        u16 units_per_em() const;
-        i16 xmin() const;
-        i16 ymin() const;
-        i16 xmax() const;
-        i16 ymax() const;
-        u16 lowest_recommended_ppem() const;
-        IndexToLocFormat index_to_loc_format() const;
-
-    private:
-        enum class Offsets {
-            UnitsPerEM = 18,
-            XMin = 36,
-            YMin = 38,
-            XMax = 40,
-            YMax = 42,
-            LowestRecPPEM = 46,
-            IndexToLocFormat = 50,
-        };
-        enum class Sizes {
-            Table = 54,
-        };
-
-        ByteBuffer m_slice;
-    };
-
-    class Hhea {
-    public:
-        Hhea() {}
-        Hhea(const ByteBuffer& slice)
-            : m_slice(slice)
-        {
-            ASSERT(m_slice.size() >= (size_t) Sizes::Table);
-        }
-        i16 ascender() const;
-        i16 descender() const;
-        i16 line_gap() const;
-        u16 advance_width_max() const;
-        u16 number_of_h_metrics() const;
-
-    private:
-        enum class Offsets {
-            Ascender = 4,
-            Descender = 6,
-            LineGap = 8,
-            AdvanceWidthMax = 10,
-            NumberOfHMetrics = 34,
-        };
-        enum class Sizes {
-            Table = 36,
-        };
-
-        ByteBuffer m_slice;
-    };
-
-    class Maxp {
-    public:
-        Maxp() {}
-        Maxp(const ByteBuffer& slice)
-            : m_slice(slice)
-        {
-            ASSERT(m_slice.size() >= (size_t) Sizes::TableV0p5);
-        }
-        u16 num_glyphs() const;
-
-    private:
-        enum class Offsets {
-            NumGlyphs = 4
-        };
-        enum class Sizes {
-            TableV0p5 = 6,
-        };
-
-        ByteBuffer m_slice;
-    };
-
-    struct GlyphHorizontalMetrics {
-        u16 advance_width;
-        i16 left_side_bearing;
-    };
-
-    class Hmtx {
-    public:
-        Hmtx() {}
-        Hmtx(const ByteBuffer& slice, u32 num_glyphs, u32 number_of_h_metrics)
-            : m_slice(slice)
-            , m_num_glyphs(num_glyphs)
-            , m_number_of_h_metrics(number_of_h_metrics)
-        {
-            ASSERT(m_slice.size() >= number_of_h_metrics * (u32) Sizes::LongHorMetric + (num_glyphs - number_of_h_metrics) * (u32) Sizes::LeftSideBearing);
-        }
-        GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
-
-    private:
-        enum class Sizes {
-            LongHorMetric = 4,
-            LeftSideBearing = 2
-        };
-
-        ByteBuffer m_slice;
-        u32 m_num_glyphs;
-        u32 m_number_of_h_metrics;
-    };
-
-    class Cmap {
-    public:
-        class Subtable {
-        public:
-            enum class Platform {
-                Unicode = 0,
-                Macintosh = 1,
-                Windows = 3,
-                Custom = 4,
-            };
-            enum class Format {
-                ByteEncoding = 0,
-                HighByte = 2,
-                SegmentToDelta = 4,
-                TrimmedTable = 6,
-                Mixed16And32 = 8,
-                TrimmedArray = 10,
-                SegmentedCoverage = 12,
-                ManyToOneRange = 13,
-                UnicodeVariationSequences = 14,
-            };
-            enum class WindowsEncoding {
-                UnicodeBMP = 1,
-                UnicodeFullRepertoire = 10,
-            };
-
-            Subtable(const ByteBuffer& slice, u16 platform_id, u16 encoding_id)
-                : m_slice(slice)
-                , m_raw_platform_id(platform_id)
-                , m_encoding_id(encoding_id)
-            {
-            }
-            // Returns 0 if glyph not found. This corresponds to the "missing glyph"
-            u32 glyph_id_for_codepoint(u32 codepoint) const;
-            Platform platform_id() const;
-            u16 encoding_id() const { return m_encoding_id; }
-            Format format() const;
-
-        private:
-            enum class Table4Offsets {
-                SegCountX2 = 6,
-                EndConstBase = 14,
-                StartConstBase = 16,
-                DeltaConstBase = 16,
-                RangeConstBase = 16,
-                GlyphOffsetConstBase = 16,
-            };
-            enum class Table4Sizes {
-                Constant = 16,
-                NonConstMultiplier = 4,
-            };
-            enum class Table12Offsets {
-                NumGroups = 12,
-                Record_StartCode = 16,
-                Record_EndCode = 20,
-                Record_StartGlyph = 24,
-            };
-            enum class Table12Sizes {
-                Header = 16,
-                Record = 12,
-            };
-
-            u32 glyph_id_for_codepoint_table_4(u32 codepoint) const;
-            u32 glyph_id_for_codepoint_table_12(u32 codepoint) const;
-
-            ByteBuffer m_slice;
-            u16 m_raw_platform_id;
-            u16 m_encoding_id;
-        };
-
-        Cmap() {}
-        Cmap(const ByteBuffer& slice)
-            : m_slice(slice)
-        {
-            ASSERT(m_slice.size() > (size_t) Sizes::TableHeader);
-        }
-
-        u32 num_subtables() const;
-        Optional<Subtable> subtable(u32 index) const;
-        void set_active_index(u32 index) { m_active_index = index; }
-        // Returns 0 if glyph not found. This corresponds to the "missing glyph"
-        u32 glyph_id_for_codepoint(u32 codepoint) const;
-
-    private:
-        enum class Offsets {
-            NumTables = 2,
-            EncodingRecord_EncodingID = 2,
-            EncodingRecord_Offset = 4,
-        };
-        enum class Sizes {
-            TableHeader = 4,
-            EncodingRecord = 8,
-        };
-
-        ByteBuffer m_slice;
-        u32 m_active_index { UINT32_MAX };
-    };
-
-    class Loca {
-    public:
-        Loca() {}
-        Loca(const ByteBuffer& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
-            : m_slice(slice)
-            , m_num_glyphs(num_glyphs)
-            , m_index_to_loc_format(index_to_loc_format)
-        {
-            switch (m_index_to_loc_format) {
-            case IndexToLocFormat::Offset16:
-                ASSERT(m_slice.size() >= m_num_glyphs * 2);
-                break;
-            case IndexToLocFormat::Offset32:
-                ASSERT(m_slice.size() >= m_num_glyphs * 4);
-                break;
-            }
-        }
-        u32 get_glyph_offset(u32 glyph_id) const;
-
-    private:
-        ByteBuffer m_slice;
-        u32 m_num_glyphs;
-        IndexToLocFormat m_index_to_loc_format;
-    };
-
-    class Glyf {
-    public:
-        class Glyph {
-        public:
-            Glyph(const ByteBuffer& slice, i16 xmin, i16 ymin, i16 xmax, i16 ymax, i16 num_contours = -1)
-                : m_xmin(xmin)
-                , m_ymin(ymin)
-                , m_xmax(xmax)
-                , m_ymax(ymax)
-                , m_num_contours(num_contours)
-                , m_slice(move(slice))
-            {
-                if (m_num_contours >= 0) {
-                    m_type = Type::Simple;
-                }
-            }
-            template <typename GlyphCb>
-            RefPtr<Gfx::Bitmap> raster(float x_scale, float y_scale, GlyphCb glyph_callback) const
-            {
-                switch (m_type) {
-                case Type::Simple:
-                    return raster_simple(x_scale, y_scale);
-                case Type::Composite:
-                    return raster_composite(x_scale, y_scale, glyph_callback);
-                }
-                ASSERT_NOT_REACHED();
-            }
-            int ascender() const { return m_ymax; }
-            int descender() const { return m_ymin; }
-
-        private:
-            enum class Type {
-                Simple,
-                Composite,
-            };
-
-            class ComponentIterator {
-            public:
-                struct Item {
-                    u16 glyph_id;
-                    Gfx::AffineTransform affine;
-                };
-
-                ComponentIterator(const ByteBuffer& slice)
-                    : m_slice(slice)
-                {
-                }
-                Optional<Item> next();
-
-            private:
-                ByteBuffer m_slice;
-                bool m_has_more { true };
-                u32 m_offset { 0 };
-            };
-
-            void raster_inner(Rasterizer&, Gfx::AffineTransform&) const;
-            RefPtr<Gfx::Bitmap> raster_simple(float x_scale, float y_scale) const;
-            template <typename GlyphCb>
-            RefPtr<Gfx::Bitmap> raster_composite(float x_scale, float y_scale, GlyphCb glyph_callback) const
-            {
-                u32 width = (u32) (ceil((m_xmax - m_xmin) * x_scale)) + 1;
-                u32 height = (u32) (ceil((m_ymax - m_ymin) * y_scale)) + 1;
-                Rasterizer rasterizer(Gfx::IntSize(width, height));
-                auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
-                ComponentIterator component_iterator(m_slice);
-                while (true) {
-                    auto opt_item = component_iterator.next();
-                    if (!opt_item.has_value()) {
-                        break;
-                    }
-                    auto item = opt_item.value();
-                    auto affine_here = affine * item.affine;
-                    auto glyph = glyph_callback(item.glyph_id);
-                    glyph.raster_inner(rasterizer, affine_here);
-                }
-                return rasterizer.accumulate();
-            }
-
-            Type m_type { Type::Composite };
-            i16 m_xmin;
-            i16 m_ymin;
-            i16 m_xmax;
-            i16 m_ymax;
-            i16 m_num_contours { -1 };
-            ByteBuffer m_slice;
-        };
-
-        Glyf() {}
-        Glyf(const ByteBuffer& slice)
-            : m_slice(move(slice))
-        {
-        }
-        Glyph glyph(u32 offset) const;
-
-    private:
-        enum class Offsets {
-            XMin = 2,
-            YMin = 4,
-            XMax = 6,
-            YMax = 8,
-        };
-        enum class Sizes {
-            GlyphHeader = 10,
-        };
-
-        ByteBuffer m_slice;
-    };
-
+    // This owns the font data
     ByteBuffer m_buffer;
-    Head m_head;
-    Hhea m_hhea;
-    Maxp m_maxp;
-    Hmtx m_hmtx;
+    // These are all non-owning slices
+    ByteBuffer m_head_slice;
+    ByteBuffer m_hhea_slice;
+    ByteBuffer m_maxp_slice;
+    ByteBuffer m_hmtx_slice;
+    ByteBuffer m_loca_slice;
+    ByteBuffer m_glyf_slice;
+    // These are stateful wrappers around tables
     Cmap m_cmap;
-    Loca m_loca;
-    Glyf m_glyf;
 
     friend ScaledFont;
 };
@@ -464,7 +105,7 @@ public:
     ScaledFont(RefPtr<Font> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
         : m_font(font)
     {
-        float units_per_em = m_font->m_head.units_per_em();
+        float units_per_em = m_font->units_per_em();
         m_x_scale = (point_width * dpi_x) / (POINTS_PER_INCH * units_per_em);
         m_y_scale = (point_height * dpi_y) / (POINTS_PER_INCH * units_per_em);
     }

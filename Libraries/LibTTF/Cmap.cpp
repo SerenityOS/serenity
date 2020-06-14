@@ -24,7 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Font.h"
+#include "Cmap.h"
+#include <AK/Optional.h>
 
 namespace TTF {
 
@@ -32,7 +33,7 @@ extern u16 be_u16(const u8* ptr);
 extern u32 be_u32(const u8* ptr);
 extern i16 be_i16(const u8* ptr);
 
-Font::Cmap::Subtable::Platform Font::Cmap::Subtable::platform_id() const
+Cmap::Subtable::Platform Cmap::Subtable::platform_id() const
 {
     switch (m_raw_platform_id) {
     case 0:  return Platform::Unicode;
@@ -43,7 +44,7 @@ Font::Cmap::Subtable::Platform Font::Cmap::Subtable::platform_id() const
     }
 }
 
-Font::Cmap::Subtable::Format Font::Cmap::Subtable::format() const
+Cmap::Subtable::Format Cmap::Subtable::format() const
 {
     switch (be_u16(m_slice.offset_pointer(0))) {
         case 0:  return Format::ByteEncoding;
@@ -59,12 +60,12 @@ Font::Cmap::Subtable::Format Font::Cmap::Subtable::format() const
     }
 }
 
-u32 Font::Cmap::num_subtables() const
+u32 Cmap::num_subtables() const
 {
     return be_u16(m_slice.offset_pointer((u32) Offsets::NumTables));
 }
 
-Optional<Font::Cmap::Subtable> Font::Cmap::subtable(u32 index) const
+Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
 {
     if (index >= num_subtables()) {
         return {};
@@ -79,7 +80,7 @@ Optional<Font::Cmap::Subtable> Font::Cmap::subtable(u32 index) const
 }
 
 // FIXME: This only handles formats 4 (SegmentToDelta) and 12 (SegmentedCoverage) for now.
-u32 Font::Cmap::Subtable::glyph_id_for_codepoint(u32 codepoint) const
+u32 Cmap::Subtable::glyph_id_for_codepoint(u32 codepoint) const
 {
     switch (format()) {
     case Format::SegmentToDelta:
@@ -91,7 +92,7 @@ u32 Font::Cmap::Subtable::glyph_id_for_codepoint(u32 codepoint) const
     }
 }
 
-u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
+u32 Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
 {
     u32 segcount_x2 = be_u16(m_slice.offset_pointer((u32) Table4Offsets::SegCountX2));
     if (m_slice.size() < segcount_x2 * (u32) Table4Sizes::NonConstMultiplier + (u32) Table4Sizes::Constant) {
@@ -118,7 +119,7 @@ u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
     return 0;
 }
 
-u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
+u32 Cmap::Subtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
 {
     u32 num_groups = be_u32(m_slice.offset_pointer((u32) Table12Offsets::NumGroups));
     ASSERT(m_slice.size() >= (u32) Table12Sizes::Header + (u32) Table12Sizes::Record * num_groups);
@@ -137,7 +138,7 @@ u32 Font::Cmap::Subtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
     return 0;
 }
 
-u32 Font::Cmap::glyph_id_for_codepoint(u32 codepoint) const
+u32 Cmap::glyph_id_for_codepoint(u32 codepoint) const
 {
     auto opt_subtable = subtable(m_active_index);
     if (!opt_subtable.has_value()) {
