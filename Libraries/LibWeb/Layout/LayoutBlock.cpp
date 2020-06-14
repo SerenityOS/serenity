@@ -148,10 +148,8 @@ void LayoutBlock::layout_contained_boxes(LayoutMode layout_mode)
             place_block_level_replaced_element_in_normal_flow(to<LayoutReplaced>(box));
         else if (box.is_block())
             place_block_level_non_replaced_element_in_normal_flow(to<LayoutBlock>(box));
-        else {
-            dbg() << "FIXME: How do I place a " << box.class_name() << "?";
-            ASSERT_NOT_REACHED();
-        }
+        else
+            dbg() << "FIXME: LayoutBlock::layout_contained_boxes doesn't know how to place a " << box.class_name();
         content_height = max(content_height, box.effective_offset().y() + box.height() + box.box_model().margin_box(*this).bottom);
         content_width = max(content_width, to<LayoutBox>(box).width());
         return IterationDecision::Continue;
