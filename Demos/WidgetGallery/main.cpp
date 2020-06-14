@@ -31,6 +31,7 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/Image.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ProgressBar.h>
@@ -48,7 +49,7 @@ int main(int argc, char** argv)
     GUI::Application app(argc, argv);
 
     auto window = GUI::Window::construct();
-    window->set_rect(100, 100, 400, 487);
+    window->set_rect(100, 100, 433, 487);
     window->set_title("Widget Gallery");
 
     auto& root_widget = window->set_main_widget<GUI::Widget>();
@@ -229,6 +230,18 @@ int main(int argc, char** argv)
     };
 
     tab_msgbox.layout()->add_spacer();
+
+    auto& tab_image = tab_widget.add_tab<GUI::Widget>("Image");
+    tab_image.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    tab_image.set_layout<GUI::VerticalBoxLayout>();
+    tab_image.layout()->set_margins({ 4, 4, 4, 4 });
+    tab_image.layout()->set_spacing(4);
+
+    auto& banner_image = tab_image.add<GUI::Image>();
+    banner_image.load_from_file("/res/brand-banner.png");
+
+    auto& gif_animation_image = tab_image.add<GUI::Image>();
+    gif_animation_image.load_from_file("/res/download-animation.gif");
 
     window->show();
 
