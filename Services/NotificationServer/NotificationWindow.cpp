@@ -30,6 +30,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Image.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
@@ -90,10 +91,8 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     widget.layout()->set_spacing(6);
 
     if (icon.is_valid()) {
-        auto& icon_label = widget.add<GUI::Label>();
-        icon_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        icon_label.set_preferred_size(32, 32);
-        icon_label.set_icon(icon.bitmap());
+        auto& image = widget.add<GUI::Image>();
+        image.set_bitmap(icon.bitmap());
     }
 
     auto& left_container = widget.add<GUI::Widget>();
