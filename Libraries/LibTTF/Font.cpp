@@ -49,6 +49,11 @@ i16 be_i16(const u8* ptr)
     return (((i16) ptr[0]) << 8) | ((i16) ptr[1]);
 }
 
+float be_fword(const u8* ptr)
+{
+    return (float) be_i16(ptr) / (float) (1 << 14);
+}
+
 u32 tag_from_str(const char *str)
 {
     return be_u32((const u8*) str);
@@ -120,6 +125,27 @@ u16 Font::Hhea::advance_width_max() const
 u16 Font::Hhea::number_of_h_metrics() const
 {
     return be_u16(m_slice.offset_pointer((u32) Offsets::NumberOfHMetrics));
+}
+
+Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
+{
+    ASSERT(glyph_id < m_num_glyphs);
+    if (glyph_id < m_number_of_h_metrics) {
+        auto offset = glyph_id * (u32) Sizes::LongHorMetric;
+        u16 advance_width = be_u16(m_slice.offset_pointer(offset));
+        i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset + 2));
+        return GlyphHorizontalMetrics {
+            .advance_width = advance_width,
+            .left_side_bearing = left_side_bearing,
+        };
+    }
+    auto offset = m_number_of_h_metrics * (u32) Sizes::LongHorMetric + (glyph_id - m_number_of_h_metrics) * (u32) Sizes::LeftSideBearing;
+    u16 advance_width = be_u16(m_slice.offset_pointer((m_number_of_h_metrics - 1) * (u32) Sizes::LongHorMetric));
+    i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset));
+    return GlyphHorizontalMetrics {
+        .advance_width = advance_width,
+        .left_side_bearing = left_side_bearing,
+    };
 }
 
 u16 Font::Maxp::num_glyphs() const
@@ -287,7 +313,13 @@ RefPtr<Gfx::Bitmap> Font::raster_glyph(u32 glyph_id, float x_scale, float y_scal
     }
     auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
     auto glyph = m_glyf.glyph(glyph_offset);
-    return glyph.raster(x_scale, y_scale);
+    return glyph.raster(x_scale, y_scale, [&](u16 glyph_id) {
+        if (glyph_id >= m_maxp.num_glyphs()) {
+            glyph_id = 0;
+        }
+        auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
+        return m_glyf.glyph(glyph_offset);
+    });
 }
 
 int ScaledFont::width(const StringView& string) const
