@@ -43,8 +43,7 @@ LayoutDocument::~LayoutDocument()
 
 void LayoutDocument::layout(LayoutMode layout_mode)
 {
-    ASSERT(document().frame());
-    set_width(document().frame()->size().width());
+    set_width(frame().size().width());
 
     LayoutNode::layout(layout_mode);
 

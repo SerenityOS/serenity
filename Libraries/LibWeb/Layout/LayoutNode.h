@@ -103,6 +103,9 @@ public:
     Document& document();
     const Document& document() const;
 
+    const Frame& frame() const;
+    Frame& frame();
+
     const LayoutDocument& root() const;
     LayoutDocument& root();
 
