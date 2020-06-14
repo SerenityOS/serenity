@@ -39,9 +39,6 @@ public:
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
 
-    LayoutTableRow* first_row();
-    const LayoutTableRow* first_row() const;
-
 private:
     virtual bool is_table() const override { return true; }
     virtual const char* class_name() const override { return "LayoutTable"; }
