@@ -427,6 +427,31 @@ bool Object::define_property(PropertyName property_name, Value value, PropertyAt
     return put_own_property(*this, property_name.as_string(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
+bool Object::define_accessor(PropertyName property_name, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes, bool throw_exceptions)
+{
+    Accessor* accessor { nullptr };
+    auto property_metadata = shape().lookup(property_name.as_string());
+    if (property_metadata.has_value()) {
+        auto existing_property = get_direct(property_metadata.value().offset);
+        if (existing_property.is_accessor())
+            accessor = &existing_property.as_accessor();
+    }
+    if (!accessor) {
+        accessor = Accessor::create(interpreter(), nullptr, nullptr);
+        bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
+        if (interpreter().exception())
+            return {};
+        if (!definition_success)
+            return false;
+    }
+    if (is_getter)
+        accessor->set_getter(&getter_or_setter);
+    else
+        accessor->set_setter(&getter_or_setter);
+
+    return true;
+}
+
 bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));

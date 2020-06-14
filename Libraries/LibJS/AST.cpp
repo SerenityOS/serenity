@@ -1364,23 +1364,9 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
         if (property.type() == ObjectProperty::Type::Getter || property.type() == ObjectProperty::Type::Setter) {
             ASSERT(value.is_function());
-            Accessor* accessor { nullptr };
-            auto property_metadata = object->shape().lookup(key);
-            if (property_metadata.has_value()) {
-                auto existing_property = object->get_direct(property_metadata.value().offset);
-                if (existing_property.is_accessor())
-                    accessor = &existing_property.as_accessor();
-            }
-            if (!accessor) {
-                accessor = Accessor::create(interpreter, global_object, nullptr, nullptr);
-                object->define_property(key, accessor, Attribute::Configurable | Attribute::Enumerable);
-                if (interpreter.exception())
-                    return {};
-            }
-            if (property.type() == ObjectProperty::Type::Getter)
-                accessor->set_getter(&value.as_function());
-            else
-                accessor->set_setter(&value.as_function());
+            object->define_accessor(key, value.as_function(), property.type() == ObjectProperty::Type::Getter, Attribute::Configurable | Attribute::Enumerable);
+            if (interpreter.exception())
+                return {};
         } else {
             object->define_property(key, value);
             if (interpreter.exception())
