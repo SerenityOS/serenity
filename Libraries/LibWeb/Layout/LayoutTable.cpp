@@ -44,14 +44,4 @@ void LayoutTable::layout(LayoutMode layout_mode)
     LayoutBlock::layout(layout_mode);
 }
 
-LayoutTableRow* LayoutTable::first_row()
-{
-    return first_child_of_type<LayoutTableRow>();
-}
-
-const LayoutTableRow* LayoutTable::first_row() const
-{
-    return first_child_of_type<LayoutTableRow>();
-}
-
 }
