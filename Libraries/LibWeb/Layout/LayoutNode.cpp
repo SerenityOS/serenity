@@ -111,6 +111,18 @@ HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position) const
     return result;
 }
 
+const Frame& LayoutNode::frame() const
+{
+    ASSERT(document().frame());
+    return *document().frame();
+}
+
+Frame& LayoutNode::frame()
+{
+    ASSERT(document().frame());
+    return *document().frame();
+}
+
 const Document& LayoutNode::document() const
 {
     if (is_anonymous())
@@ -151,13 +163,10 @@ void LayoutNode::split_into_lines(LayoutBlock& container, LayoutMode layout_mode
 
 void LayoutNode::set_needs_display()
 {
-    auto* frame = document().frame();
-    ASSERT(frame);
-
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                const_cast<Frame*>(frame)->set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
+                frame().set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
             }
             return IterationDecision::Continue;
         });

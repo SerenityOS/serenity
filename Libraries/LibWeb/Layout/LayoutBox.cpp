@@ -260,11 +260,8 @@ HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position) const
 
 void LayoutBox::set_needs_display()
 {
-    auto* frame = document().frame();
-    ASSERT(frame);
-
     if (!is_inline()) {
-        const_cast<Frame*>(frame)->set_needs_display(enclosing_int_rect(absolute_rect()));
+        frame().set_needs_display(enclosing_int_rect(absolute_rect()));
         return;
     }
 
