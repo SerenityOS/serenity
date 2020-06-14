@@ -40,6 +40,8 @@ public:
     Frame* hosted_frame() { return m_hosted_frame; }
     const Frame* hosted_frame() const { return m_hosted_frame; }
 
+    const Document* hosted_document() const;
+
 private:
     virtual void document_did_attach_to_frame(Frame&) override;
     virtual void document_will_detach_from_frame(Frame&) override;

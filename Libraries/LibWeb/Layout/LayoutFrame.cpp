@@ -63,6 +63,13 @@ void LayoutFrame::render(RenderingContext& context)
 {
     LayoutReplaced::render(context);
 
+    auto* hosted_document = node().hosted_document();
+    if (!hosted_document)
+        return;
+    auto* hosted_layout_tree = hosted_document->layout_node();
+    if (!hosted_layout_tree)
+        return;
+
     context.painter().save();
     auto old_viewport_rect = context.viewport_rect();
 
@@ -70,7 +77,7 @@ void LayoutFrame::render(RenderingContext& context)
     context.painter().translate(absolute_x(), absolute_y());
 
     context.set_viewport_rect({ {}, node().hosted_frame()->size() });
-    node().hosted_frame()->document()->layout_node()->render(context);
+    const_cast<LayoutDocument*>(hosted_layout_tree)->render(context);
 
     context.set_viewport_rect(old_viewport_rect);
     context.painter().restore();

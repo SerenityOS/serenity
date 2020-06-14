@@ -82,4 +82,9 @@ void HTMLIFrameElement::load_src(const String& value)
     m_hosted_frame->loader().load(url);
 }
 
+const Document* HTMLIFrameElement::hosted_document() const
+{
+    return m_hosted_frame ? m_hosted_frame->document() : nullptr;
+}
+
 }
