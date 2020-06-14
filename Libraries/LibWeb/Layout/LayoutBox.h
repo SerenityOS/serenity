@@ -71,7 +71,7 @@ protected:
     virtual void did_set_rect() { }
 
 private:
-    virtual bool is_box() const override { return true; }
+    virtual bool is_box() const final { return true; }
 
     enum class Edge {
         Top,

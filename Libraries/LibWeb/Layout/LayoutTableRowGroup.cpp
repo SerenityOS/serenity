@@ -57,9 +57,6 @@ void LayoutTableRowGroup::layout(LayoutMode)
 {
     compute_width();
 
-    if (!is_inline())
-        compute_position();
-
     auto column_count = this->column_count();
     Vector<float> column_widths;
     column_widths.resize(column_count);

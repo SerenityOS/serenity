@@ -53,6 +53,7 @@ class LayoutBlock;
 class LayoutDocument;
 class LayoutNode;
 class LayoutNodeWithStyle;
+class LayoutReplaced;
 class LoadRequest;
 class MouseEvent;
 class Node;
