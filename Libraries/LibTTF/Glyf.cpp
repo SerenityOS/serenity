@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Glyf.h"
 #include <LibGfx/FloatPoint.h>
 #include <LibGfx/Path.h>
+#include <LibTTF/Glyf.h>
 
 namespace TTF {
 
@@ -95,33 +95,33 @@ public:
             m_flags_remaining--;
         } else {
             m_flag = m_slice[m_flags_offset++];
-            if (m_flag & (u8) SimpleGlyfFlags::RepeatFlag) {
+            if (m_flag & (u8)SimpleGlyfFlags::RepeatFlag) {
                 m_flags_remaining = m_slice[m_flags_offset++];
             }
         }
-        switch (m_flag & (u8) SimpleGlyfFlags::XMask) {
-        case (u8) SimpleGlyfFlags::XLongVector:
+        switch (m_flag & (u8)SimpleGlyfFlags::XMask) {
+        case (u8)SimpleGlyfFlags::XLongVector:
             m_last_point.set_x(m_last_point.x() + be_i16(m_slice.offset_pointer(m_x_offset)));
             m_x_offset += 2;
             break;
-        case (u8) SimpleGlyfFlags::XNegativeShortVector:
+        case (u8)SimpleGlyfFlags::XNegativeShortVector:
             m_last_point.set_x(m_last_point.x() - m_slice[m_x_offset++]);
             break;
-        case (u8) SimpleGlyfFlags::XPositiveShortVector:
+        case (u8)SimpleGlyfFlags::XPositiveShortVector:
             m_last_point.set_x(m_last_point.x() + m_slice[m_x_offset++]);
             break;
         default:
             break;
         }
-        switch (m_flag & (u8) SimpleGlyfFlags::YMask) {
-        case (u8) SimpleGlyfFlags::YLongVector:
+        switch (m_flag & (u8)SimpleGlyfFlags::YMask) {
+        case (u8)SimpleGlyfFlags::YLongVector:
             m_last_point.set_y(m_last_point.y() + be_i16(m_slice.offset_pointer(m_y_offset)));
             m_y_offset += 2;
             break;
-        case (u8) SimpleGlyfFlags::YNegativeShortVector:
+        case (u8)SimpleGlyfFlags::YNegativeShortVector:
             m_last_point.set_y(m_last_point.y() - m_slice[m_y_offset++]);
             break;
-        case (u8) SimpleGlyfFlags::YPositiveShortVector:
+        case (u8)SimpleGlyfFlags::YPositiveShortVector:
             m_last_point.set_y(m_last_point.y() + m_slice[m_y_offset++]);
             break;
         default:
@@ -129,7 +129,7 @@ public:
         }
         m_points_remaining--;
         Item ret = {
-            .on_curve = (m_flag & (u8) SimpleGlyfFlags::OnCurve) != 0,
+            .on_curve = (m_flag & (u8)SimpleGlyfFlags::OnCurve) != 0,
             .point = m_affine.map(m_last_point),
         };
         return ret;
@@ -147,7 +147,8 @@ private:
     Gfx::AffineTransform m_affine;
 };
 
-Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::next() {
+Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::next()
+{
     if (!m_has_more) {
         return {};
     }
@@ -156,17 +157,17 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
     u16 glyph_id = be_u16(m_slice.offset_pointer(m_offset));
     m_offset += 2;
     i16 arg1 = 0, arg2 = 0;
-    if (flags & (u16) CompositeGlyfFlags::Arg1AndArg2AreWords) {
+    if (flags & (u16)CompositeGlyfFlags::Arg1AndArg2AreWords) {
         arg1 = be_i16(m_slice.offset_pointer(m_offset));
         m_offset += 2;
         arg2 = be_i16(m_slice.offset_pointer(m_offset));
         m_offset += 2;
     } else {
-        arg1 = (i8) m_slice[m_offset++];
-        arg2 = (i8) m_slice[m_offset++];
+        arg1 = (i8)m_slice[m_offset++];
+        arg2 = (i8)m_slice[m_offset++];
     }
     float a = 1.0, b = 0.0, c = 0.0, d = 1.0, e = 0.0, f = 0.0;
-    if (flags & (u16) CompositeGlyfFlags::WeHaveATwoByTwo) {
+    if (flags & (u16)CompositeGlyfFlags::WeHaveATwoByTwo) {
         a = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
         b = be_fword(m_slice.offset_pointer(m_offset));
@@ -175,33 +176,33 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
         m_offset += 2;
         d = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
-    } else if (flags & (u16) CompositeGlyfFlags::WeHaveAnXAndYScale) {
+    } else if (flags & (u16)CompositeGlyfFlags::WeHaveAnXAndYScale) {
         a = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
         d = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
-    } else if (flags & (u16) CompositeGlyfFlags::WeHaveAScale) {
+    } else if (flags & (u16)CompositeGlyfFlags::WeHaveAScale) {
         a = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
         d = a;
     }
     // FIXME: Handle UseMyMetrics, ScaledComponentOffset, UnscaledComponentOffset, non-ArgsAreXYValues
-    if (flags & (u16) CompositeGlyfFlags::ArgsAreXYValues) {
+    if (flags & (u16)CompositeGlyfFlags::ArgsAreXYValues) {
         e = arg1;
         f = arg2;
     } else {
         TODO();
     }
-    if (flags & (u16) CompositeGlyfFlags::UseMyMetrics) {
+    if (flags & (u16)CompositeGlyfFlags::UseMyMetrics) {
         TODO();
     }
-    if (flags & (u16) CompositeGlyfFlags::ScaledComponentOffset) {
+    if (flags & (u16)CompositeGlyfFlags::ScaledComponentOffset) {
         TODO();
     }
-    if (flags & (u16) CompositeGlyfFlags::UnscaledComponentOffset) {
+    if (flags & (u16)CompositeGlyfFlags::UnscaledComponentOffset) {
         TODO();
     }
-    m_has_more = (flags & (u16) CompositeGlyfFlags::MoreComponents);
+    m_has_more = (flags & (u16)CompositeGlyfFlags::MoreComponents);
     return Item {
         .glyph_id = glyph_id,
         .affine = Gfx::AffineTransform(a, b, c, d, e, f),
@@ -278,7 +279,7 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
     for (u32 y = y0; y < y1; y++) {
         u32 line_offset = m_size.width() * y;
 
-        float dy = min(y + 1.0f, p1.y()) - max((float) y, p0.y());
+        float dy = min(y + 1.0f, p1.y()) - max((float)y, p0.y());
         float directed_dy = dy * direction;
         float x_next = x_cur + dy * dxdy;
         if (x_next < 0.0) {
@@ -318,12 +319,29 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
     }
 }
 
+Optional<Loca> Loca::from_slice(const ByteBuffer& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
+{
+    switch (index_to_loc_format) {
+    case IndexToLocFormat::Offset16:
+        if (slice.size() < num_glyphs * 2) {
+            return {};
+        }
+        break;
+    case IndexToLocFormat::Offset32:
+        if (slice.size() < num_glyphs * 4) {
+            return {};
+        }
+        break;
+    }
+    return Loca(slice, num_glyphs, index_to_loc_format);
+}
+
 u32 Loca::get_glyph_offset(u32 glyph_id) const
 {
     ASSERT(glyph_id < m_num_glyphs);
     switch (m_index_to_loc_format) {
     case IndexToLocFormat::Offset16:
-        return ((u32) be_u16(m_slice.offset_pointer(glyph_id * 2))) * 2;
+        return ((u32)be_u16(m_slice.offset_pointer(glyph_id * 2))) * 2;
     case IndexToLocFormat::Offset32:
         return be_u32(m_slice.offset_pointer(glyph_id * 4));
     default:
@@ -331,26 +349,26 @@ u32 Loca::get_glyph_offset(u32 glyph_id) const
     }
 }
 
-static void get_ttglyph_offsets(const ByteBuffer& slice, u32 num_points, u32 flags_offset, u32 *x_offset, u32 *y_offset)
+static void get_ttglyph_offsets(const ByteBuffer& slice, u32 num_points, u32 flags_offset, u32* x_offset, u32* y_offset)
 {
     u32 flags_size = 0;
     u32 x_size = 0;
     u32 repeat_count;
     while (num_points > 0) {
         u8 flag = slice[flags_offset + flags_size];
-        if (flag & (u8) SimpleGlyfFlags::RepeatFlag) {
+        if (flag & (u8)SimpleGlyfFlags::RepeatFlag) {
             flags_size++;
             repeat_count = slice[flags_offset + flags_size] + 1;
         } else {
             repeat_count = 1;
         }
         flags_size++;
-        switch (flag & (u8) SimpleGlyfFlags::XMask) {
-        case (u8) SimpleGlyfFlags::XLongVector:
+        switch (flag & (u8)SimpleGlyfFlags::XMask) {
+        case (u8)SimpleGlyfFlags::XLongVector:
             x_size += repeat_count * 2;
             break;
-        case (u8) SimpleGlyfFlags::XNegativeShortVector:
-        case (u8) SimpleGlyfFlags::XPositiveShortVector:
+        case (u8)SimpleGlyfFlags::XNegativeShortVector:
+        case (u8)SimpleGlyfFlags::XPositiveShortVector:
             x_size += repeat_count;
             break;
         default:
@@ -392,9 +410,7 @@ void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& aff
             contour_size = current_contour_end - last_contour_end;
             last_contour_end = current_contour_end;
             auto opt_item = point_iterator.next();
-            if (!opt_item.has_value()) {
-                ASSERT_NOT_REACHED();
-            }
+            ASSERT(opt_item.has_value());
             contour_start = opt_item.value().point;
             path.move_to(contour_start.value());
             contour_size--;
@@ -462,8 +478,8 @@ void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& aff
 
 RefPtr<Gfx::Bitmap> Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
 {
-    u32 width = (u32) (ceil((m_xmax - m_xmin) * x_scale)) + 2;
-    u32 height = (u32) (ceil((m_ymax - m_ymin) * y_scale)) + 2;
+    u32 width = (u32)(ceil((m_xmax - m_xmin) * x_scale)) + 2;
+    u32 height = (u32)(ceil((m_ymax - m_ymin) * y_scale)) + 2;
     Rasterizer rasterizer(Gfx::IntSize(width, height));
     auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
     raster_inner(rasterizer, affine);
@@ -472,13 +488,13 @@ RefPtr<Gfx::Bitmap> Glyf::Glyph::raster_simple(float x_scale, float y_scale) con
 
 Glyf::Glyph Glyf::glyph(u32 offset) const
 {
-    ASSERT(m_slice.size() >= offset + (u32) Sizes::GlyphHeader);
+    ASSERT(m_slice.size() >= offset + (u32)Sizes::GlyphHeader);
     i16 num_contours = be_i16(m_slice.offset_pointer(offset));
-    i16 xmin = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::XMin));
-    i16 ymin = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::YMin));
-    i16 xmax = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::XMax));
-    i16 ymax = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::YMax));
-    auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset + (u32) Sizes::GlyphHeader), m_slice.size() - offset - (u32) Sizes::GlyphHeader);
+    i16 xmin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::XMin));
+    i16 ymin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMin));
+    i16 xmax = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::XMax));
+    i16 ymax = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMax));
+    auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset + (u32)Sizes::GlyphHeader), m_slice.size() - offset - (u32)Sizes::GlyphHeader);
     return Glyph(slice, xmin, ymin, xmax, ymax, num_contours);
 }
 
