@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -180,11 +181,21 @@ void dump_tree(const LayoutNode& layout_node)
         }
     }
 
+    struct NameAndValue {
+        String name;
+        String value;
+    };
+    Vector<NameAndValue> properties;
     layout_node.style().for_each_property([&](auto property_id, auto& value) {
+        properties.append({ CSS::string_from_property_id(property_id), value.to_string() });
+    });
+    quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });
+
+    for (auto& property : properties) {
         for (size_t i = 0; i < indent; ++i)
             dbgprintf("    ");
-        dbgprintf("  (%s: %s)\n", CSS::string_from_property_id(property_id), value.to_string().characters());
-    });
+        dbgprintf("  (%s: %s)\n", property.name.characters(), property.value.characters());
+    }
 
     ++indent;
     layout_node.for_each_child([](auto& child) {
