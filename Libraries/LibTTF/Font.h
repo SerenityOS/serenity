@@ -27,12 +27,15 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/FixedArray.h>
 #include <AK/Noncopyable.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>
+#include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Size.h>
+#include <math.h>
 
 #define POINTS_PER_INCH 72.0f
 #define DEFAULT_DPI     96
@@ -64,7 +67,7 @@ class Font : public RefCounted<Font> {
     AK_MAKE_NONCOPYABLE(Font);
 
 public:
-    static RefPtr<Font> load_from_file(const StringView& path, unsigned index);
+    static RefPtr<Font> load_from_file(const StringView& path, unsigned index = 0);
 
 private:
     enum class Offsets {
@@ -83,6 +86,19 @@ private:
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
     RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id, float x_scale, float y_scale) const;
     u32 glyph_count() const { return m_maxp.num_glyphs(); }
+
+    class Rasterizer {
+    public:
+        Rasterizer(Gfx::IntSize);
+        void draw_path(Gfx::Path&);
+        RefPtr<Gfx::Bitmap> accumulate();
+
+    private:
+        void draw_line(Gfx::FloatPoint, Gfx::FloatPoint);
+
+        Gfx::IntSize m_size;
+        FixedArray<float> m_data;
+    };
 
     enum class IndexToLocFormat {
         Offset16,
@@ -327,54 +343,87 @@ private:
     public:
         class Glyph {
         public:
-            static Glyph simple(const ByteBuffer& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax);
-            static Glyph composite(const ByteBuffer& slice); // FIXME: This is currently just a dummy. Need to add support for composite glyphs.
-            RefPtr<Gfx::Bitmap> raster(float x_scale, float y_scale) const;
-            int ascender() const
+            Glyph(const ByteBuffer& slice, i16 xmin, i16 ymin, i16 xmax, i16 ymax, i16 num_contours = -1)
+                : m_xmin(xmin)
+                , m_ymin(ymin)
+                , m_xmax(xmax)
+                , m_ymax(ymax)
+                , m_num_contours(num_contours)
+                , m_slice(move(slice))
             {
-                if (m_type == Type::Simple) {
-                    return m_meta.simple.ymax;
+                if (m_num_contours >= 0) {
+                    m_type = Type::Simple;
                 }
-                // FIXME: Support composite outlines.
-                TODO();
             }
-            int descender() const
+            template <typename GlyphCb>
+            RefPtr<Gfx::Bitmap> raster(float x_scale, float y_scale, GlyphCb glyph_callback) const
             {
-                if (m_type == Type::Simple) {
-                    return m_meta.simple.ymin;
+                switch (m_type) {
+                case Type::Simple:
+                    return raster_simple(x_scale, y_scale);
+                case Type::Composite:
+                    return raster_composite(x_scale, y_scale, glyph_callback);
                 }
-                // FIXME: Support composite outlines.
-                TODO();
+                ASSERT_NOT_REACHED();
             }
+            int ascender() const { return m_ymax; }
+            int descender() const { return m_ymin; }
 
         private:
             enum class Type {
                 Simple,
                 Composite,
             };
-            struct Simple {
-                u16 num_contours;
-                i16 xmin;
-                i16 ymin;
-                i16 xmax;
-                i16 ymax;
-            };
-            struct Composite {
+
+            class ComponentIterator {
+            public:
+                struct Item {
+                    u16 glyph_id;
+                    Gfx::AffineTransform affine;
+                };
+
+                ComponentIterator(const ByteBuffer& slice)
+                    : m_slice(slice)
+                {
+                }
+                Optional<Item> next();
+
+            private:
+                ByteBuffer m_slice;
+                bool m_has_more { true };
+                u32 m_offset { 0 };
             };
 
-            Glyph(const ByteBuffer& slice, Type type)
-                : m_type(type)
-                , m_slice(move(slice))
-            {
-            }
+            void raster_inner(Rasterizer&, Gfx::AffineTransform&) const;
             RefPtr<Gfx::Bitmap> raster_simple(float x_scale, float y_scale) const;
+            template <typename GlyphCb>
+            RefPtr<Gfx::Bitmap> raster_composite(float x_scale, float y_scale, GlyphCb glyph_callback) const
+            {
+                u32 width = (u32) (ceil((m_xmax - m_xmin) * x_scale)) + 1;
+                u32 height = (u32) (ceil((m_ymax - m_ymin) * y_scale)) + 1;
+                Rasterizer rasterizer(Gfx::IntSize(width, height));
+                auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
+                ComponentIterator component_iterator(m_slice);
+                while (true) {
+                    auto opt_item = component_iterator.next();
+                    if (!opt_item.has_value()) {
+                        break;
+                    }
+                    auto item = opt_item.value();
+                    auto affine_here = affine * item.affine;
+                    auto glyph = glyph_callback(item.glyph_id);
+                    glyph.raster_inner(rasterizer, affine_here);
+                }
+                return rasterizer.accumulate();
+            }
 
-            Type m_type;
+            Type m_type { Type::Composite };
+            i16 m_xmin;
+            i16 m_ymin;
+            i16 m_xmax;
+            i16 m_ymax;
+            i16 m_num_contours { -1 };
             ByteBuffer m_slice;
-            union {
-                Simple simple;
-                Composite composite;
-            } m_meta;
         };
 
         Glyf() {}
