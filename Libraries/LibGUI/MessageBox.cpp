@@ -27,6 +27,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Image.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Font.h>
 #include <stdio.h>
@@ -117,11 +118,8 @@ void MessageBox::build()
     message_container.layout()->set_spacing(8);
 
     if (m_type != Type::None) {
-        auto& icon_label = message_container.add<Label>();
-        icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        icon_label.set_preferred_size(32, 32);
-        icon_label.set_icon(icon());
-        icon_width = icon_label.icon()->width();
+        auto& icon_image = message_container.add<Image>();
+        icon_image.set_bitmap(icon());
     }
 
     auto& label = message_container.add<Label>(m_text);
