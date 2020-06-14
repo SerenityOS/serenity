@@ -30,6 +30,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Image.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font.h>
 
@@ -52,10 +53,8 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     widget.set_layout<VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto& banner_label = widget.add<GUI::Label>();
-    banner_label.set_icon(Gfx::Bitmap::load_from_file("/res/brand-banner.png"));
-    banner_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    banner_label.set_preferred_size(banner_label.icon()->size());
+    auto& banner_image = widget.add<GUI::Image>();
+    banner_image.load_from_file("/res/brand-banner.png");
 
     auto& content_container = widget.add<Widget>();
     content_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
@@ -73,10 +72,8 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
         icon_wrapper.set_preferred_size(32, 48);
         icon_wrapper.set_layout<VerticalBoxLayout>();
 
-        auto& icon_label = icon_wrapper.add<Label>();
-        icon_label.set_icon(m_icon);
-        icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        icon_label.set_preferred_size(32, 32);
+        auto& icon_image = icon_wrapper.add<Image>();
+        icon_image.set_bitmap(m_icon);
     }
 
     auto& right_container = content_container.add<Widget>();
