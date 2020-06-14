@@ -24,7 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "Cmap.h"
 #include "Font.h"
+#include "Glyf.h"
+#include "Tables.h"
 #include <AK/LogStream.h>
 #include <AK/Utf8View.h>
 #include <AK/Utf32View.h>
@@ -59,37 +62,37 @@ u32 tag_from_str(const char *str)
     return be_u32((const u8*) str);
 }
 
-u16 Font::Head::units_per_em() const
+u16 Head::units_per_em() const
 {
     return be_u16(m_slice.offset_pointer((u32) Offsets::UnitsPerEM));
 }
 
-i16 Font::Head::xmin() const
+i16 Head::xmin() const
 {
     return be_i16(m_slice.offset_pointer((u32) Offsets::XMin));
 }
 
-i16 Font::Head::ymin() const
+i16 Head::ymin() const
 {
     return be_i16(m_slice.offset_pointer((u32) Offsets::YMin));
 }
 
-i16 Font::Head::xmax() const
+i16 Head::xmax() const
 {
     return be_i16(m_slice.offset_pointer((u32) Offsets::XMax));
 }
 
-i16 Font::Head::ymax() const
+i16 Head::ymax() const
 {
     return be_i16(m_slice.offset_pointer((u32) Offsets::YMax));
 }
 
-u16 Font::Head::lowest_recommended_ppem() const
+u16 Head::lowest_recommended_ppem() const
 {
     return be_u16(m_slice.offset_pointer((u32) Offsets::LowestRecPPEM));
 }
 
-Font::IndexToLocFormat Font::Head::index_to_loc_format() const
+IndexToLocFormat Head::index_to_loc_format() const
 {
     i16 raw = be_i16(m_slice.offset_pointer((u32) Offsets::IndexToLocFormat));
     switch (raw) {
@@ -102,32 +105,32 @@ Font::IndexToLocFormat Font::Head::index_to_loc_format() const
     }
 }
 
-i16 Font::Hhea::ascender() const
+i16 Hhea::ascender() const
 {
     return be_i16(m_slice.offset_pointer((u32) Offsets::Ascender));
 }
 
-i16 Font::Hhea::descender() const
+i16 Hhea::descender() const
 {
     return be_i16(m_slice.offset_pointer((u32) Offsets::Descender));
 }
 
-i16 Font::Hhea::line_gap() const
+i16 Hhea::line_gap() const
 {
     return be_i16(m_slice.offset_pointer((u32) Offsets::LineGap));
 }
 
-u16 Font::Hhea::advance_width_max() const
+u16 Hhea::advance_width_max() const
 {
     return be_u16(m_slice.offset_pointer((u32) Offsets::AdvanceWidthMax));
 }
 
-u16 Font::Hhea::number_of_h_metrics() const
+u16 Hhea::number_of_h_metrics() const
 {
     return be_u16(m_slice.offset_pointer((u32) Offsets::NumberOfHMetrics));
 }
 
-Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
+GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 {
     ASSERT(glyph_id < m_num_glyphs);
     if (glyph_id < m_number_of_h_metrics) {
@@ -148,7 +151,7 @@ Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_
     };
 }
 
-u16 Font::Maxp::num_glyphs() const
+u16 Maxp::num_glyphs() const
 {
     return be_u16(m_slice.offset_pointer((u32) Offsets::NumGlyphs));
 }
@@ -244,13 +247,14 @@ Font::Font(ByteBuffer&& buffer, u32 offset)
     ASSERT(glyf_slice.has_value());
 
     // Load the tables.
-    m_head = Head(head_slice.value());
-    m_hhea = Hhea(hhea_slice.value());
-    m_maxp = Maxp(maxp_slice.value());
-    m_hmtx = Hmtx(hmtx_slice.value(), m_maxp.num_glyphs(), m_hhea.number_of_h_metrics());
+    m_head_slice = head_slice.value();
+    m_hhea_slice = hhea_slice.value();
+    m_maxp_slice = maxp_slice.value();
+    m_hmtx_slice = hmtx_slice.value();
+    m_loca_slice = loca_slice.value();
+    m_glyf_slice = glyf_slice.value();
+
     m_cmap = Cmap(cmap_slice.value());
-    m_loca = Loca(loca_slice.value(), m_maxp.num_glyphs(), m_head.index_to_loc_format());
-    m_glyf = Glyf(glyf_slice.value());
 
     // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
     // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
@@ -275,10 +279,11 @@ Font::Font(ByteBuffer&& buffer, u32 offset)
 
 ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
 {
-    auto ascender = m_hhea.ascender() * y_scale;
-    auto descender = m_hhea.descender() * y_scale;
-    auto line_gap = m_hhea.line_gap() * y_scale;
-    auto advance_width_max = m_hhea.advance_width_max() * x_scale;
+    Hhea hhea(m_hhea_slice);
+    auto ascender = hhea.ascender() * y_scale;
+    auto descender = hhea.descender() * y_scale;
+    auto line_gap = hhea.line_gap() * y_scale;
+    auto advance_width_max = hhea.advance_width_max() * x_scale;
     return ScaledFontMetrics {
         .ascender = (int) roundf(ascender),
         .descender = (int) roundf(descender),
@@ -287,14 +292,22 @@ ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
     };
 }
 
+// FIXME: "loca" and "glyf" are not available for CFF fonts.
 ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const
 {
-    if (glyph_id >= m_maxp.num_glyphs()) {
+    u32 num_glyphs = glyph_count();
+    u16 number_of_h_metrics = Hhea(m_hhea_slice).number_of_h_metrics();
+    auto index_to_loc_format = Head(m_head_slice).index_to_loc_format();
+    Hmtx hmtx(m_hmtx_slice, num_glyphs, number_of_h_metrics);
+    Loca loca(m_loca_slice, num_glyphs, index_to_loc_format);
+    Glyf glyf(m_glyf_slice);
+
+    if (glyph_id >= num_glyphs) {
         glyph_id = 0;
     }
-    auto horizontal_metrics = m_hmtx.get_glyph_horizontal_metrics(glyph_id);
-    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-    auto glyph = m_glyf.glyph(glyph_offset);
+    auto horizontal_metrics = hmtx.get_glyph_horizontal_metrics(glyph_id);
+    auto glyph_offset = loca.get_glyph_offset(glyph_id);
+    auto glyph = glyf.glyph(glyph_offset);
     int ascender = glyph.ascender();
     int descender = glyph.descender();
     return ScaledGlyphMetrics {
@@ -308,18 +321,33 @@ ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scal
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
 RefPtr<Gfx::Bitmap> Font::raster_glyph(u32 glyph_id, float x_scale, float y_scale) const
 {
-    if (glyph_id >= m_maxp.num_glyphs()) {
+    u32 num_glyphs = glyph_count();
+    auto index_to_loc_format = Head(m_head_slice).index_to_loc_format();
+    Loca loca(m_loca_slice, num_glyphs, index_to_loc_format);
+    Glyf glyf(m_glyf_slice);
+
+    if (glyph_id >= num_glyphs) {
         glyph_id = 0;
     }
-    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-    auto glyph = m_glyf.glyph(glyph_offset);
+    auto glyph_offset = loca.get_glyph_offset(glyph_id);
+    auto glyph = glyf.glyph(glyph_offset);
     return glyph.raster(x_scale, y_scale, [&](u16 glyph_id) {
-        if (glyph_id >= m_maxp.num_glyphs()) {
+        if (glyph_id >= num_glyphs) {
             glyph_id = 0;
         }
-        auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-        return m_glyf.glyph(glyph_offset);
+        auto glyph_offset = loca.get_glyph_offset(glyph_id);
+        return glyf.glyph(glyph_offset);
     });
+}
+
+u32 Font::glyph_count() const
+{
+    return Maxp(m_maxp_slice).num_glyphs();
+}
+
+u16 Font::units_per_em() const
+{
+    return Head(m_head_slice).units_per_em();
 }
 
 int ScaledFont::width(const StringView& string) const
