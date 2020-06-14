@@ -28,7 +28,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
-#include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/DOM/HTMLElement.h>
 #include <LibWeb/Loader/ImageLoader.h>
@@ -60,10 +59,6 @@ private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
     ImageLoader m_image_loader;
-
-    size_t m_current_frame_index { 0 };
-    size_t m_loops_completed { 0 };
-    NonnullRefPtr<Core::Timer> m_timer;
 };
 
 template<>
