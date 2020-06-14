@@ -30,6 +30,7 @@ set(SOURCES
     GroupBox.cpp
     Icon.cpp
     IconView.cpp
+    Image.cpp
     INILexer.cpp
     INISyntaxHighlighter.cpp
     InputBox.cpp
