@@ -143,15 +143,10 @@ void LayoutBlock::layout_block_children(LayoutMode layout_mode)
 {
     ASSERT(!children_are_inline());
     float content_height = 0;
-    for_each_child([&](auto& child) {
-        // FIXME: What should we do here? Something like a <table> might have a bunch of useless text children..
-        if (child.is_inline())
-            return;
-        auto& child_block = static_cast<LayoutBlock&>(child);
-        child_block.layout(layout_mode);
-
-        if (!child_block.is_absolutely_positioned())
-            content_height = max(content_height, child_block.effective_offset().y() + child_block.height() + child_block.box_model().margin_box(*this).bottom);
+    for_each_child_of_type<LayoutBlock>([&](auto& child) {
+        child.layout(layout_mode);
+        if (!child.is_absolutely_positioned())
+            content_height = max(content_height, child.effective_offset().y() + child.height() + child.box_model().margin_box(*this).bottom);
     });
     if (layout_mode != LayoutMode::Default) {
         float max_width = 0;
