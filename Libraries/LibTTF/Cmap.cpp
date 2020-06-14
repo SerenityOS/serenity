@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Cmap.h"
 #include <AK/Optional.h>
+#include <LibTTF/Cmap.h>
 
 namespace TTF {
 
@@ -146,6 +146,14 @@ u32 Cmap::glyph_id_for_codepoint(u32 codepoint) const
     }
     auto subtable = opt_subtable.value();
     return subtable.glyph_id_for_codepoint(codepoint);
+}
+
+Optional<Cmap> Cmap::from_slice(const ByteBuffer& slice)
+{
+    if (slice.size() < (size_t) Sizes::TableHeader) {
+        return {};
+    }
+    return Cmap(slice);
 }
 
 }
