@@ -497,15 +497,12 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     quick_sort(matching_rules, [&](MatchingRule& a, MatchingRule& b) {
         auto& a_selector = a.rule->selectors()[a.selector_index];
         auto& b_selector = b.rule->selectors()[b.selector_index];
-        if (a_selector.specificity() < b_selector.specificity())
-            return true;
-        if (!(a_selector.specificity() == b_selector.specificity()))
-            return false;
-        if (a.style_sheet_index < b.style_sheet_index)
-            return true;
-        if (a.style_sheet_index > b.style_sheet_index)
-            return false;
-        return a.rule_index < b.rule_index;
+        if (a_selector.specificity() == b_selector.specificity()) {
+            if (a.style_sheet_index == b.style_sheet_index)
+                return a.rule_index < b.rule_index;
+            return a.style_sheet_index < b.style_sheet_index;
+        }
+        return a_selector.specificity() < b_selector.specificity();
     });
 
     for (auto& match : matching_rules) {
