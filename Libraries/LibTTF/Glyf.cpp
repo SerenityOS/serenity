@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Font.h"
+#include "Glyf.h"
 #include <LibGfx/FloatPoint.h>
 #include <LibGfx/Path.h>
 
@@ -147,7 +147,7 @@ private:
     Gfx::AffineTransform m_affine;
 };
 
-Optional<Font::Glyf::Glyph::ComponentIterator::Item> Font::Glyf::Glyph::ComponentIterator::next() {
+Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::next() {
     if (!m_has_more) {
         return {};
     }
@@ -208,7 +208,7 @@ Optional<Font::Glyf::Glyph::ComponentIterator::Item> Font::Glyf::Glyph::Componen
     };
 }
 
-Font::Rasterizer::Rasterizer(Gfx::IntSize size)
+Rasterizer::Rasterizer(Gfx::IntSize size)
     : m_size(size)
     , m_data(m_size.width() * m_size.height())
 {
@@ -217,14 +217,14 @@ Font::Rasterizer::Rasterizer(Gfx::IntSize size)
     }
 }
 
-void Font::Rasterizer::draw_path(Gfx::Path& path)
+void Rasterizer::draw_path(Gfx::Path& path)
 {
     for (auto& line : path.split_lines()) {
         draw_line(line.from, line.to);
     }
 }
 
-RefPtr<Gfx::Bitmap> Font::Rasterizer::accumulate()
+RefPtr<Gfx::Bitmap> Rasterizer::accumulate()
 {
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, m_size);
     Color base_color = Color::from_rgb(0xffffff);
@@ -246,7 +246,7 @@ RefPtr<Gfx::Bitmap> Font::Rasterizer::accumulate()
     return bitmap;
 }
 
-void Font::Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
+void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
 {
     // FIXME: Shift x and y according to dy/dx
     if (p0.x() < 0.0) { p0.set_x(roundf(p0.x())); }
@@ -254,7 +254,6 @@ void Font::Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
     if (p1.x() < 0.0) { p1.set_x(roundf(p1.x())); }
     if (p1.y() < 0.0) { p1.set_y(roundf(p1.y())); }
 
-    dbg() << "m_size: " << m_size << " | p0: (" << p0.x() << ", " << p0.y() << ") | p1: (" << p1.x() << ", " << p1.y() << ")";
     ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
     ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
 
@@ -319,7 +318,7 @@ void Font::Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
     }
 }
 
-u32 Font::Loca::get_glyph_offset(u32 glyph_id) const
+u32 Loca::get_glyph_offset(u32 glyph_id) const
 {
     ASSERT(glyph_id < m_num_glyphs);
     switch (m_index_to_loc_format) {
@@ -363,7 +362,7 @@ static void get_ttglyph_offsets(const ByteBuffer& slice, u32 num_points, u32 fla
     *y_offset = *x_offset + x_size;
 }
 
-void Font::Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& affine) const
+void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& affine) const
 {
     // Get offets for flags, x, and y.
     u16 num_points = be_u16(m_slice.offset_pointer((m_num_contours - 1) * 2)) + 1;
@@ -461,7 +460,7 @@ void Font::Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransfor
     rasterizer.draw_path(path);
 }
 
-RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
+RefPtr<Gfx::Bitmap> Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
 {
     u32 width = (u32) (ceil((m_xmax - m_xmin) * x_scale)) + 2;
     u32 height = (u32) (ceil((m_ymax - m_ymin) * y_scale)) + 2;
@@ -471,7 +470,7 @@ RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scal
     return rasterizer.accumulate();
 }
 
-Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
+Glyf::Glyph Glyf::glyph(u32 offset) const
 {
     ASSERT(m_slice.size() >= offset + (u32) Sizes::GlyphHeader);
     i16 num_contours = be_i16(m_slice.offset_pointer(offset));
