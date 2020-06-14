@@ -96,17 +96,11 @@ public:
         u32 glyph_id_for_codepoint_table_12(u32 codepoint) const;
 
         ByteBuffer m_slice;
-        u16 m_raw_platform_id;
-        u16 m_encoding_id;
+        u16 m_raw_platform_id { 0 };
+        u16 m_encoding_id { 0 };
     };
 
-    Cmap() {}
-    Cmap(const ByteBuffer& slice)
-        : m_slice(slice)
-    {
-        ASSERT(m_slice.size() > (size_t) Sizes::TableHeader);
-    }
-
+    static Optional<Cmap> from_slice(const ByteBuffer&);
     u32 num_subtables() const;
     Optional<Subtable> subtable(u32 index) const;
     void set_active_index(u32 index) { m_active_index = index; }
@@ -123,6 +117,11 @@ private:
         TableHeader = 4,
         EncodingRecord = 8,
     };
+
+    Cmap(const ByteBuffer& slice)
+        : m_slice(slice)
+    {
+    }
 
     ByteBuffer m_slice;
     u32 m_active_index { UINT32_MAX };
