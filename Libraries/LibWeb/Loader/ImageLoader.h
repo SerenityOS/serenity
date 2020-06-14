@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibCore/Timer.h>
 #include <LibWeb/Loader/ImageResource.h>
 
 namespace Web {
@@ -44,6 +45,7 @@ public:
 
     Function<void()> on_load;
     Function<void()> on_fail;
+    Function<void()> on_animate;
 
 private:
     // ^ImageResourceClient
@@ -52,8 +54,14 @@ private:
     virtual void resource_did_replace_decoder() override;
     virtual bool is_visible_in_viewport() const override { return m_visible_in_viewport; }
 
+    void animate();
+
     RefPtr<Gfx::ImageDecoder> m_decoder;
     bool m_visible_in_viewport { false };
+
+    size_t m_current_frame_index { 0 };
+    size_t m_loops_completed { 0 };
+    NonnullRefPtr<Core::Timer> m_timer;
 };
 
 }

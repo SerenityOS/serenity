@@ -38,15 +38,8 @@ namespace Web {
 
 HTMLImageElement::HTMLImageElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
-    , m_timer(Core::Timer::construct())
 {
     m_image_loader.on_load = [this] {
-        if (image_decoder() && image_decoder()->is_animated() && image_decoder()->frame_count() > 1) {
-            const auto& first_frame = image_decoder()->frame(0);
-            m_timer->set_interval(first_frame.duration);
-            m_timer->on_timeout = [this] { animate(); };
-            m_timer->start();
-        }
         this->document().update_layout();
         dispatch_event(Event::create("load"));
     };
@@ -55,6 +48,11 @@ HTMLImageElement::HTMLImageElement(Document& document, const FlyString& tag_name
         dbg() << "HTMLImageElement: Resource did fail: " << this->src();
         this->document().update_layout();
         dispatch_event(Event::create("error"));
+    };
+
+    m_image_loader.on_animate = [this] {
+        if (layout_node())
+            layout_node()->set_needs_display();
     };
 }
 
@@ -68,31 +66,6 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
 
     if (name == HTML::AttributeNames::src)
         m_image_loader.load(document().complete_url(value));
-}
-
-void HTMLImageElement::animate()
-{
-    if (!layout_node())
-        return;
-
-    auto* decoder = image_decoder();
-    ASSERT(decoder);
-
-    m_current_frame_index = (m_current_frame_index + 1) % decoder->frame_count();
-    const auto& current_frame = decoder->frame(m_current_frame_index);
-
-    if (current_frame.duration != m_timer->interval()) {
-        m_timer->restart(current_frame.duration);
-    }
-
-    if (m_current_frame_index == decoder->frame_count() - 1) {
-        ++m_loops_completed;
-        if (m_loops_completed > 0 && m_loops_completed == decoder->loop_count()) {
-            m_timer->stop();
-        }
-    }
-
-    layout_node()->set_needs_display();
 }
 
 RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style) const
@@ -111,12 +84,7 @@ const Gfx::ImageDecoder* HTMLImageElement::image_decoder() const
 
 const Gfx::Bitmap* HTMLImageElement::bitmap() const
 {
-    auto* decoder = image_decoder();
-    if (!decoder)
-        return nullptr;
-    if (decoder->is_animated())
-        return decoder->frame(m_current_frame_index).image;
-    return decoder->bitmap();
+    return m_image_loader.bitmap();
 }
 
 void HTMLImageElement::set_visible_in_viewport(Badge<LayoutDocument>, bool visible_in_viewport)

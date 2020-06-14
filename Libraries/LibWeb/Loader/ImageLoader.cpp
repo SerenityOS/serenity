@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibWeb/Loader/ImageLoader.h>
@@ -32,6 +33,7 @@
 namespace Web {
 
 ImageLoader::ImageLoader()
+    : m_timer(Core::Timer::construct())
 {
 }
 
@@ -72,8 +74,38 @@ void ImageLoader::resource_did_load()
     }
     m_decoder = resource()->ensure_decoder();
 
+    if (m_decoder->is_animated() && m_decoder->frame_count() > 1) {
+        const auto& first_frame = m_decoder->frame(0);
+        m_timer->set_interval(first_frame.duration);
+        m_timer->on_timeout = [this] { animate(); };
+        m_timer->start();
+    }
+
     if (on_load)
         on_load();
+}
+
+void ImageLoader::animate()
+{
+    auto* decoder = image_decoder();
+    ASSERT(decoder);
+
+    m_current_frame_index = (m_current_frame_index + 1) % decoder->frame_count();
+    const auto& current_frame = decoder->frame(m_current_frame_index);
+
+    if (current_frame.duration != m_timer->interval()) {
+        m_timer->restart(current_frame.duration);
+    }
+
+    if (m_current_frame_index == decoder->frame_count() - 1) {
+        ++m_loops_completed;
+        if (m_loops_completed > 0 && m_loops_completed == decoder->loop_count()) {
+            m_timer->stop();
+        }
+    }
+
+    if (on_animate)
+        on_animate();
 }
 
 void ImageLoader::resource_did_fail()
@@ -90,7 +122,11 @@ void ImageLoader::resource_did_replace_decoder()
 
 const Gfx::Bitmap* ImageLoader::bitmap() const
 {
-    return m_decoder ? m_decoder->bitmap() : nullptr;
+    if (!m_decoder)
+        return nullptr;
+    if (m_decoder->is_animated())
+        return m_decoder->frame(m_current_frame_index).image;
+    return m_decoder->bitmap();
 }
 
 const Gfx::ImageDecoder* ImageLoader::image_decoder() const
