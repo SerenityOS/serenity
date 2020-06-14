@@ -87,6 +87,9 @@ void ImageLoader::resource_did_load()
 
 void ImageLoader::animate()
 {
+    if (!m_visible_in_viewport)
+        return;
+
     auto* decoder = image_decoder();
     ASSERT(decoder);
 
