@@ -95,18 +95,6 @@ void HTMLImageElement::animate()
     layout_node()->set_needs_display();
 }
 
-#if 0
-int HTMLImageElement::preferred_width() const
-{
-    return attribute(HTML::AttributeNames::width).to_int().value_or(m_image_decoder ? m_image_decoder->width() : 0);
-}
-
-int HTMLImageElement::preferred_height() const
-{
-    return attribute(HTML::AttributeNames::height).to_int().value_or(m_image_decoder ? m_image_decoder->height() : 0);
-}
-#endif
-
 RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style) const
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
