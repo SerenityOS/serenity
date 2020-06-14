@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include "Tables.h"
 #include <AK/ByteBuffer.h>
 #include <AK/FixedArray.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
+#include <LibTTF/Tables.h>
 #include <math.h>
 
 namespace TTF {
@@ -50,25 +50,19 @@ private:
 
 class Loca {
 public:
+    static Optional<Loca> from_slice(const ByteBuffer&, u32 num_glyphs, IndexToLocFormat);
+    u32 get_glyph_offset(u32 glyph_id) const;
+
+private:
     Loca(const ByteBuffer& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
         : m_slice(slice)
         , m_num_glyphs(num_glyphs)
         , m_index_to_loc_format(index_to_loc_format)
     {
-        switch (m_index_to_loc_format) {
-        case IndexToLocFormat::Offset16:
-            ASSERT(m_slice.size() >= m_num_glyphs * 2);
-            break;
-        case IndexToLocFormat::Offset32:
-            ASSERT(m_slice.size() >= m_num_glyphs * 4);
-            break;
-        }
     }
-    u32 get_glyph_offset(u32 glyph_id) const;
 
-private:
     ByteBuffer m_slice;
-    u32 m_num_glyphs;
+    u32 m_num_glyphs { 0 };
     IndexToLocFormat m_index_to_loc_format;
 };
 
@@ -88,7 +82,7 @@ public:
                 m_type = Type::Simple;
             }
         }
-        template <typename GlyphCb>
+        template<typename GlyphCb>
         RefPtr<Gfx::Bitmap> raster(float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
             switch (m_type) {
@@ -129,11 +123,11 @@ public:
 
         void raster_inner(Rasterizer&, Gfx::AffineTransform&) const;
         RefPtr<Gfx::Bitmap> raster_simple(float x_scale, float y_scale) const;
-        template <typename GlyphCb>
+        template<typename GlyphCb>
         RefPtr<Gfx::Bitmap> raster_composite(float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
-            u32 width = (u32) (ceil((m_xmax - m_xmin) * x_scale)) + 1;
-            u32 height = (u32) (ceil((m_ymax - m_ymin) * y_scale)) + 1;
+            u32 width = (u32)(ceil((m_xmax - m_xmin) * x_scale)) + 1;
+            u32 height = (u32)(ceil((m_ymax - m_ymin) * y_scale)) + 1;
             Rasterizer rasterizer(Gfx::IntSize(width, height));
             auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
             ComponentIterator component_iterator(m_slice);
@@ -151,10 +145,10 @@ public:
         }
 
         Type m_type { Type::Composite };
-        i16 m_xmin;
-        i16 m_ymin;
-        i16 m_xmax;
-        i16 m_ymax;
+        i16 m_xmin { 0 };
+        i16 m_ymin { 0 };
+        i16 m_xmax { 0 };
+        i16 m_ymax { 0 };
         i16 m_num_contours { -1 };
         ByteBuffer m_slice;
     };
