@@ -38,6 +38,15 @@ public:
         : m_values { 1, 0, 0, 1, 0, 0 }
     {
     }
+    AffineTransform(float a, float b, float c, float d, float e, float f)
+    {
+        m_values[0] = a;
+        m_values[1] = b;
+        m_values[2] = c;
+        m_values[3] = d;
+        m_values[4] = e;
+        m_values[5] = f;
+    }
 
     bool is_identity() const;
 
@@ -64,6 +73,8 @@ public:
 
     AffineTransform& scale(float sx, float sy);
     AffineTransform& translate(float tx, float ty);
+
+    AffineTransform operator*(const AffineTransform&) const;
 
 private:
     float m_values[6] { 0 };

@@ -69,6 +69,17 @@ AffineTransform& AffineTransform::translate(float tx, float ty)
     return *this;
 }
 
+AffineTransform AffineTransform::operator*(const AffineTransform& other) const {
+    return AffineTransform(
+        a() * other.a() + c() * other.b(),
+        b() * other.a() + d() * other.b(),
+        a() * other.c() + c() * other.d(),
+        b() * other.c() + d() * other.d(),
+        a() * other.e() + c() * other.f() + e(),
+        b() * other.e() + d() * other.f() + f()
+    );
+}
+
 void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const
 {
     mapped_x = (m_values[0] * unmapped_x + m_values[2] * unmapped_y + m_values[4]);

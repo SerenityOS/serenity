@@ -25,16 +25,15 @@
  */
 
 #include "Font.h"
-#include <AK/FixedArray.h>
 #include <LibGfx/FloatPoint.h>
 #include <LibGfx/Path.h>
-#include <math.h>
 
 namespace TTF {
 
 extern u16 be_u16(const u8* ptr);
 extern u32 be_u32(const u8* ptr);
 extern i16 be_i16(const u8* ptr);
+extern float be_fword(const u8* ptr);
 
 enum class SimpleGlyfFlags {
     // From spec.
@@ -55,6 +54,21 @@ enum class SimpleGlyfFlags {
     YPositiveShortVector = 0x24,
 };
 
+enum class CompositeGlyfFlags {
+    Arg1AndArg2AreWords = 0x0001,
+    ArgsAreXYValues = 0x0002,
+    RoundXYToGrid = 0x0004,
+    WeHaveAScale = 0x0008,
+    MoreComponents = 0x0020,
+    WeHaveAnXAndYScale = 0x0040,
+    WeHaveATwoByTwo = 0x0080,
+    WeHaveInstructions = 0x0100,
+    UseMyMetrics = 0x0200,
+    OverlapCompound = 0x0400, // Not relevant - can overlap without this set
+    ScaledComponentOffset = 0x0800,
+    UnscaledComponentOffset = 0x1000,
+};
+
 class PointIterator {
 public:
     struct Item {
@@ -62,16 +76,13 @@ public:
         Gfx::FloatPoint point;
     };
 
-    PointIterator(const ByteBuffer& slice, u16 num_points, u32 flags_offset, u32 x_offset, u32 y_offset, float x_translate, float y_translate, float x_scale, float y_scale)
+    PointIterator(const ByteBuffer& slice, u16 num_points, u32 flags_offset, u32 x_offset, u32 y_offset, Gfx::AffineTransform affine)
         : m_slice(slice)
         , m_points_remaining(num_points)
         , m_flags_offset(flags_offset)
         , m_x_offset(x_offset)
         , m_y_offset(y_offset)
-        , m_x_translate(x_translate)
-        , m_y_translate(y_translate)
-        , m_x_scale(x_scale)
-        , m_y_scale(y_scale)
+        , m_affine(affine)
     {
     }
 
@@ -119,11 +130,8 @@ public:
         m_points_remaining--;
         Item ret = {
             .on_curve = (m_flag & (u8) SimpleGlyfFlags::OnCurve) != 0,
-            .point = m_last_point,
+            .point = m_affine.map(m_last_point),
         };
-        ret.point.move_by(m_x_translate, m_y_translate);
-        ret.point.set_x(ret.point.x() * m_x_scale);
-        ret.point.set_y(ret.point.y() * m_y_scale);
         return ret;
     }
 
@@ -136,142 +144,179 @@ private:
     u32 m_flags_offset;
     u32 m_x_offset;
     u32 m_y_offset;
-    float m_x_translate;
-    float m_y_translate;
-    float m_x_scale;
-    float m_y_scale;
+    Gfx::AffineTransform m_affine;
 };
 
-class Rasterizer {
-public:
-    Rasterizer(Gfx::Size size)
-        : m_size(size)
-        , m_data(m_size.width() * m_size.height())
-    {
-        for (int i = 0; i < m_size.width() * m_size.height(); i++) {
-            m_data[i] = 0.0;
-        }
+Optional<Font::Glyf::Glyph::ComponentIterator::Item> Font::Glyf::Glyph::ComponentIterator::next() {
+    if (!m_has_more) {
+        return {};
     }
-
-    RefPtr<Gfx::Bitmap> draw_path(Gfx::Path& path)
-    {
-        for (auto& line : path.split_lines()) {
-            draw_line(line.from, line.to);
-        }
-        return accumulate();
+    u16 flags = be_u16(m_slice.offset_pointer(m_offset));
+    m_offset += 2;
+    u16 glyph_id = be_u16(m_slice.offset_pointer(m_offset));
+    m_offset += 2;
+    i16 arg1 = 0, arg2 = 0;
+    if (flags & (u16) CompositeGlyfFlags::Arg1AndArg2AreWords) {
+        arg1 = be_i16(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+        arg2 = be_i16(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+    } else {
+        arg1 = (i8) m_slice[m_offset++];
+        arg2 = (i8) m_slice[m_offset++];
     }
-
-private:
-    RefPtr<Gfx::Bitmap> accumulate()
-    {
-        auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, m_size);
-        Color base_color = Color::from_rgb(0xffffff);
-        for (int y = 0; y < m_size.height(); y++) {
-            float accumulator = 0.0;
-            for (int x = 0; x < m_size.width(); x++) {
-                accumulator += m_data[y * m_size.width() + x];
-                float value = accumulator;
-                if (value < 0.0) {
-                    value = -value;
-                }
-                if (value > 1.0) {
-                    value = 1.0;
-                }
-                u8 alpha = value * 255.0;
-                bitmap->set_pixel(x, y, base_color.with_alpha(alpha));
-            }
-        }
-        return bitmap;
+    float a = 1.0, b = 0.0, c = 0.0, d = 1.0, e = 0.0, f = 0.0;
+    if (flags & (u16) CompositeGlyfFlags::WeHaveATwoByTwo) {
+        a = be_fword(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+        b = be_fword(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+        c = be_fword(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+        d = be_fword(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+    } else if (flags & (u16) CompositeGlyfFlags::WeHaveAnXAndYScale) {
+        a = be_fword(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+        d = be_fword(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+    } else if (flags & (u16) CompositeGlyfFlags::WeHaveAScale) {
+        a = be_fword(m_slice.offset_pointer(m_offset));
+        m_offset += 2;
+        d = a;
     }
-
-    void draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
-    {
-        ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
-        ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
-        // If we're on the same Y, there's no need to draw
-        if (p0.y() == p1.y()) {
-            return;
-        }
-
-        float direction = -1.0;
-        if (p1.y() < p0.y()) {
-            direction = 1.0;
-            auto tmp = p0;
-            p0 = p1;
-            p1 = tmp;
-        }
-
-        float dxdy = (p1.x() - p0.x()) / (p1.y() - p0.y());
-        u32 y0 = floor(p0.y());
-        u32 y1 = ceil(p1.y());
-        float x_cur = p0.x();
-
-        for (u32 y = y0; y < y1; y++) {
-            u32 line_offset = m_size.width() * y;
-
-            float dy = min(y + 1.0f, p1.y()) - max((float) y, p0.y());
-            float directed_dy = dy * direction;
-            float x_next = x_cur + dy * dxdy;
-            if (x_next < 0.0) {
-                x_next = 0.0;
-            }
-            float x0 = x_cur;
-            float x1 = x_next;
-            if (x1 < x0) {
-                x1 = x_cur;
-                x0 = x_next;
-            }
-            float x0_floor = floor(x0);
-            float x1_ceil = ceil(x1);
-            u32 x0i = x0_floor;
-
-            if (x1_ceil <= x0_floor + 1.0) {
-                // If x0 and x1 are within the same pixel, then area to the right is (1 - (mid(x0, x1) - x0_floor)) * dy
-                float area = ((x0 + x1) * 0.5) - x0_floor;
-                m_data[line_offset + x0i] += directed_dy * (1.0 - area);
-                m_data[line_offset + x0i + 1] += directed_dy * area;
-            } else {
-                float dydx = 1.0 / dxdy;
-                float x0_right = 1.0 - (x0 - x0_floor);
-                u32 x1_floor_i = floor(x1);
-                float area_upto_here = 0.5 * x0_right * x0_right * dydx;
-                m_data[line_offset + x0i] += direction * area_upto_here;
-                for (u32 x = x0i + 1; x < x1_floor_i; x++) {
-                    x0_right += 1.0;
-                    float total_area_here = 0.5 * x0_right * x0_right * dydx;
-                    m_data[line_offset + x] += direction * (total_area_here - area_upto_here);
-                    area_upto_here = total_area_here;
-                }
-                m_data[line_offset + x1_floor_i] += direction * (dy - area_upto_here);
-            }
-
-            x_cur = x_next;
-        }
+    // FIXME: Handle UseMyMetrics, ScaledComponentOffset, UnscaledComponentOffset, non-ArgsAreXYValues
+    if (flags & (u16) CompositeGlyfFlags::ArgsAreXYValues) {
+        e = arg1;
+        f = arg2;
+    } else {
+        TODO();
     }
-
-    Gfx::Size m_size;
-    FixedArray<float> m_data;
-};
-
-Font::GlyphHorizontalMetrics Font::Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
-{
-    ASSERT(glyph_id < m_num_glyphs);
-    if (glyph_id < m_number_of_h_metrics) {
-        auto offset = glyph_id * (u32) Sizes::LongHorMetric;
-        u16 advance_width = be_u16(m_slice.offset_pointer(offset));
-        i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset + 2));
-        return GlyphHorizontalMetrics {
-            .advance_width = advance_width,
-            .left_side_bearing = left_side_bearing,
-        };
+    if (flags & (u16) CompositeGlyfFlags::UseMyMetrics) {
+        TODO();
     }
-    auto offset = m_number_of_h_metrics * (u32) Sizes::LongHorMetric + (glyph_id - m_number_of_h_metrics) * (u32) Sizes::LeftSideBearing;
-    u16 advance_width = be_u16(m_slice.offset_pointer((m_number_of_h_metrics - 1) * (u32) Sizes::LongHorMetric));
-    i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset));
-    return GlyphHorizontalMetrics {
-        .advance_width = advance_width,
-        .left_side_bearing = left_side_bearing,
+    if (flags & (u16) CompositeGlyfFlags::ScaledComponentOffset) {
+        TODO();
+    }
+    if (flags & (u16) CompositeGlyfFlags::UnscaledComponentOffset) {
+        TODO();
+    }
+    m_has_more = (flags & (u16) CompositeGlyfFlags::MoreComponents);
+    return Item {
+        .glyph_id = glyph_id,
+        .affine = Gfx::AffineTransform(a, b, c, d, e, f),
     };
+}
+
+Font::Rasterizer::Rasterizer(Gfx::IntSize size)
+    : m_size(size)
+    , m_data(m_size.width() * m_size.height())
+{
+    for (int i = 0; i < m_size.width() * m_size.height(); i++) {
+        m_data[i] = 0.0;
+    }
+}
+
+void Font::Rasterizer::draw_path(Gfx::Path& path)
+{
+    for (auto& line : path.split_lines()) {
+        draw_line(line.from, line.to);
+    }
+}
+
+RefPtr<Gfx::Bitmap> Font::Rasterizer::accumulate()
+{
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, m_size);
+    Color base_color = Color::from_rgb(0xffffff);
+    for (int y = 0; y < m_size.height(); y++) {
+        float accumulator = 0.0;
+        for (int x = 0; x < m_size.width(); x++) {
+            accumulator += m_data[y * m_size.width() + x];
+            float value = accumulator;
+            if (value < 0.0) {
+                value = -value;
+            }
+            if (value > 1.0) {
+                value = 1.0;
+            }
+            u8 alpha = value * 255.0;
+            bitmap->set_pixel(x, y, base_color.with_alpha(alpha));
+        }
+    }
+    return bitmap;
+}
+
+void Font::Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
+{
+    // FIXME: Shift x and y according to dy/dx
+    if (p0.x() < 0.0) { p0.set_x(roundf(p0.x())); }
+    if (p0.y() < 0.0) { p0.set_y(roundf(p0.y())); }
+    if (p1.x() < 0.0) { p1.set_x(roundf(p1.x())); }
+    if (p1.y() < 0.0) { p1.set_y(roundf(p1.y())); }
+
+    dbg() << "m_size: " << m_size << " | p0: (" << p0.x() << ", " << p0.y() << ") | p1: (" << p1.x() << ", " << p1.y() << ")";
+    ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
+    ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
+
+    // If we're on the same Y, there's no need to draw
+    if (p0.y() == p1.y()) {
+        return;
+    }
+
+    float direction = -1.0;
+    if (p1.y() < p0.y()) {
+        direction = 1.0;
+        auto tmp = p0;
+        p0 = p1;
+        p1 = tmp;
+    }
+
+    float dxdy = (p1.x() - p0.x()) / (p1.y() - p0.y());
+    u32 y0 = floor(p0.y());
+    u32 y1 = ceil(p1.y());
+    float x_cur = p0.x();
+
+    for (u32 y = y0; y < y1; y++) {
+        u32 line_offset = m_size.width() * y;
+
+        float dy = min(y + 1.0f, p1.y()) - max((float) y, p0.y());
+        float directed_dy = dy * direction;
+        float x_next = x_cur + dy * dxdy;
+        if (x_next < 0.0) {
+            x_next = 0.0;
+        }
+        float x0 = x_cur;
+        float x1 = x_next;
+        if (x1 < x0) {
+            x1 = x_cur;
+            x0 = x_next;
+        }
+        float x0_floor = floor(x0);
+        float x1_ceil = ceil(x1);
+        u32 x0i = x0_floor;
+
+        if (x1_ceil <= x0_floor + 1.0) {
+            // If x0 and x1 are within the same pixel, then area to the right is (1 - (mid(x0, x1) - x0_floor)) * dy
+            float area = ((x0 + x1) * 0.5) - x0_floor;
+            m_data[line_offset + x0i] += directed_dy * (1.0 - area);
+            m_data[line_offset + x0i + 1] += directed_dy * area;
+        } else {
+            float dydx = 1.0 / dxdy;
+            float x0_right = 1.0 - (x0 - x0_floor);
+            u32 x1_floor_i = floor(x1);
+            float area_upto_here = 0.5 * x0_right * x0_right * dydx;
+            m_data[line_offset + x0i] += direction * area_upto_here;
+            for (u32 x = x0i + 1; x < x1_floor_i; x++) {
+                x0_right += 1.0;
+                float total_area_here = 0.5 * x0_right * x0_right * dydx;
+                m_data[line_offset + x] += direction * (total_area_here - area_upto_here);
+                area_upto_here = total_area_here;
+            }
+            m_data[line_offset + x1_floor_i] += direction * (dy - area_upto_here);
+        }
+
+        x_cur = x_next;
+    }
 }
 
 u32 Font::Loca::get_glyph_offset(u32 glyph_id) const
@@ -285,39 +330,6 @@ u32 Font::Loca::get_glyph_offset(u32 glyph_id) const
     default:
         ASSERT_NOT_REACHED();
     }
-}
-
-Font::Glyf::Glyph Font::Glyf::Glyph::simple(const ByteBuffer& slice, u16 num_contours, i16 xmin, i16 ymin, i16 xmax, i16 ymax)
-{
-    auto ret = Glyph(slice, Type::Simple);
-    ret.m_meta.simple = Simple {
-        .num_contours = num_contours,
-        .xmin = xmin,
-        .ymin = ymin,
-        .xmax = xmax,
-        .ymax = ymax,
-    };
-    return ret;
-}
-
-// FIXME: This is currently just a dummy. Need to add support for composite glyphs.
-Font::Glyf::Glyph Font::Glyf::Glyph::composite(const ByteBuffer& slice)
-{
-    auto ret = Glyph(slice, Type::Composite);
-    ret.m_meta.composite = Composite();
-    return ret;
-}
-
-RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster(float x_scale, float y_scale) const
-{
-    switch (m_type) {
-    case Type::Simple:
-        return raster_simple(x_scale, y_scale);
-    case Type::Composite:
-        // FIXME: Add support for composite glyphs
-        TODO();
-    }
-    ASSERT_NOT_REACHED();
 }
 
 static void get_ttglyph_offsets(const ByteBuffer& slice, u32 num_points, u32 flags_offset, u32 *x_offset, u32 *y_offset)
@@ -351,25 +363,22 @@ static void get_ttglyph_offsets(const ByteBuffer& slice, u32 num_points, u32 fla
     *y_offset = *x_offset + x_size;
 }
 
-RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
+void Font::Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& affine) const
 {
-    auto simple = m_meta.simple;
     // Get offets for flags, x, and y.
-    u16 num_points = be_u16(m_slice.offset_pointer((simple.num_contours - 1) * 2)) + 1;
-    u16 num_instructions = be_u16(m_slice.offset_pointer(simple.num_contours * 2));
-    u32 flags_offset = simple.num_contours * 2 + 2 + num_instructions;
+    u16 num_points = be_u16(m_slice.offset_pointer((m_num_contours - 1) * 2)) + 1;
+    u16 num_instructions = be_u16(m_slice.offset_pointer(m_num_contours * 2));
+    u32 flags_offset = m_num_contours * 2 + 2 + num_instructions;
     u32 x_offset = 0;
     u32 y_offset = 0;
     get_ttglyph_offsets(m_slice, num_points, flags_offset, &x_offset, &y_offset);
 
     // Prepare to render glyph.
-    u32 width = (u32) (ceil((simple.xmax - simple.xmin) * x_scale)) + 1;
-    u32 height = (u32) (ceil((simple.ymax - simple.ymin) * y_scale)) + 1;
     Gfx::Path path;
-    PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, -simple.xmin, -simple.ymax, x_scale, -y_scale);
+    PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, affine);
 
     int last_contour_end = -1;
-    u32 contour_index = 0;
+    i32 contour_index = 0;
     u32 contour_size = 0;
     Optional<Gfx::FloatPoint> contour_start = {};
     Optional<Gfx::FloatPoint> last_offcurve_point = {};
@@ -377,7 +386,7 @@ RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scal
     // Render glyph
     while (true) {
         if (!contour_start.has_value()) {
-            if (contour_index >= simple.num_contours) {
+            if (contour_index >= m_num_contours) {
                 break;
             }
             int current_contour_end = be_u16(m_slice.offset_pointer(contour_index++ * 2));
@@ -449,7 +458,17 @@ RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scal
         }
     }
 
-    return Rasterizer(Gfx::Size(width, height)).draw_path(path);
+    rasterizer.draw_path(path);
+}
+
+RefPtr<Gfx::Bitmap> Font::Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
+{
+    u32 width = (u32) (ceil((m_xmax - m_xmin) * x_scale)) + 2;
+    u32 height = (u32) (ceil((m_ymax - m_ymin) * y_scale)) + 2;
+    Rasterizer rasterizer(Gfx::IntSize(width, height));
+    auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
+    raster_inner(rasterizer, affine);
+    return rasterizer.accumulate();
 }
 
 Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
@@ -461,10 +480,7 @@ Font::Glyf::Glyph Font::Glyf::glyph(u32 offset) const
     i16 xmax = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::XMax));
     i16 ymax = be_i16(m_slice.offset_pointer(offset + (u32) Offsets::YMax));
     auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset + (u32) Sizes::GlyphHeader), m_slice.size() - offset - (u32) Sizes::GlyphHeader);
-    if (num_contours < 0) {
-        return Glyph::composite(slice);
-    }
-    return Glyph::simple(slice, num_contours, xmin, ymin, xmax, ymax);
+    return Glyph(slice, xmin, ymin, xmax, ymax, num_contours);
 }
 
 }
