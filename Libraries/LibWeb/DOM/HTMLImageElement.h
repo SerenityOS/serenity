@@ -51,8 +51,6 @@ public:
     const Gfx::Bitmap* bitmap() const;
     const Gfx::ImageDecoder* image_decoder() const;
 
-    void set_visible_in_viewport(Badge<LayoutDocument>, bool);
-
 private:
     void animate();
 

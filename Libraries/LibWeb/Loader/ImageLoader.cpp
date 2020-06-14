@@ -44,7 +44,7 @@ void ImageLoader::load(const URL& url)
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
 }
 
-void ImageLoader::set_visible_in_viewport(bool visible_in_viewport)
+void ImageLoader::set_visible_in_viewport(bool visible_in_viewport) const
 {
     if (m_visible_in_viewport == visible_in_viewport)
         return;
@@ -54,7 +54,7 @@ void ImageLoader::set_visible_in_viewport(bool visible_in_viewport)
     //        the whole document, updating "is visible in viewport" flags, and this could lead
     //        to the same bitmap being marked volatile back and forth unnecessarily.
     if (resource())
-        resource()->update_volatility();
+        const_cast<ImageResource*>(resource())->update_volatility();
 }
 
 void ImageLoader::resource_did_load()

@@ -41,7 +41,7 @@ public:
     const Gfx::Bitmap* bitmap() const;
     const Gfx::ImageDecoder* image_decoder() const;
 
-    void set_visible_in_viewport(bool);
+    void set_visible_in_viewport(bool) const;
 
     Function<void()> on_load;
     Function<void()> on_fail;
@@ -57,7 +57,7 @@ private:
     void animate();
 
     RefPtr<Gfx::ImageDecoder> m_decoder;
-    bool m_visible_in_viewport { false };
+    mutable bool m_visible_in_viewport { false };
 
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
