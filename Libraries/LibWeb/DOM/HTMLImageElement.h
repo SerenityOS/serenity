@@ -48,8 +48,6 @@ public:
 
     String alt() const { return attribute(HTML::AttributeNames::alt); }
     String src() const { return attribute(HTML::AttributeNames::src); }
-    int preferred_width() const;
-    int preferred_height() const;
 
     const Gfx::Bitmap* bitmap() const;
     const Gfx::ImageDecoder* image_decoder() const;
