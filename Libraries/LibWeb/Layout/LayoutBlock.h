@@ -65,26 +65,25 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
 
-    void add_absolutely_positioned_descendant(LayoutBox&);
-    size_t absolutely_positioned_descendant_count() const { return m_absolutely_positioned_descendants.size(); }
-
 protected:
     void compute_width();
-    void compute_position();
     void compute_height();
     void layout_absolutely_positioned_descendants();
 
 private:
     virtual bool is_block() const override { return true; }
 
+    void place_block_level_non_replaced_element_in_normal_flow(LayoutBlock&);
+    void place_block_level_replaced_element_in_normal_flow(LayoutReplaced&);
+    void layout_absolutely_positioned_descendant(LayoutBox&);
+
     NonnullRefPtr<StyleProperties> style_for_anonymous_block() const;
 
-    void layout_children(LayoutMode);
+    void layout_inside(LayoutMode);
     void layout_inline_children(LayoutMode);
-    void layout_block_children(LayoutMode);
+    void layout_contained_boxes(LayoutMode);
 
     Vector<LineBox> m_line_boxes;
-    HashTable<RefPtr<LayoutBox>> m_absolutely_positioned_descendants;
 };
 
 template<typename Callback>

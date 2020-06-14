@@ -62,7 +62,6 @@ protected:
     virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
 
 private:
-    Gfx::FloatPoint calculate_position();
     float calculate_width() const;
     float calculate_height() const;
 

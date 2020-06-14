@@ -121,42 +121,10 @@ float LayoutReplaced::calculate_height() const
     return used_height;
 }
 
-Gfx::FloatPoint LayoutReplaced::calculate_position()
-{
-    ASSERT(!is_absolutely_positioned());
-    auto& style = this->style();
-    auto zero_value = Length(0, Length::Type::Px);
-    auto& containing_block = *this->containing_block();
-
-    box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
-    box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
-    box_model().border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
-    box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
-    box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
-    box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
-
-    float x = box_model().margin().left.to_px(*this)
-        + box_model().border().left.to_px(*this)
-        + box_model().padding().left.to_px(*this)
-        + box_model().offset().left.to_px(*this);
-
-    float y = box_model().margin_box(*this).top + box_model().offset().top.to_px(*this);
-
-    return { x, y };
-}
-
-void LayoutReplaced::layout(LayoutMode layout_mode)
+void LayoutReplaced::layout(LayoutMode)
 {
     set_width(calculate_width());
     set_height(calculate_height());
-
-    LayoutBox::layout(layout_mode);
-
-    if (is_absolutely_positioned()) {
-        const_cast<LayoutBlock*>(containing_block())->add_absolutely_positioned_descendant(*this);
-    } else {
-        set_offset(calculate_position());
-    }
 }
 
 void LayoutReplaced::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
