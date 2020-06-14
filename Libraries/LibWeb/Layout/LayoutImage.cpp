@@ -108,4 +108,9 @@ bool LayoutImage::renders_as_alt_text() const
     return false;
 }
 
+void LayoutImage::set_visible_in_viewport(Badge<LayoutDocument>, bool visible_in_viewport)
+{
+    m_image_loader.set_visible_in_viewport(visible_in_viewport);
+}
+
 }

@@ -87,9 +87,4 @@ const Gfx::Bitmap* HTMLImageElement::bitmap() const
     return m_image_loader.bitmap();
 }
 
-void HTMLImageElement::set_visible_in_viewport(Badge<LayoutDocument>, bool visible_in_viewport)
-{
-    m_image_loader.set_visible_in_viewport(visible_in_viewport);
-}
-
 }

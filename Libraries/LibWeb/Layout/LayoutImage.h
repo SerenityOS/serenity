@@ -45,6 +45,8 @@ public:
 
     bool renders_as_alt_text() const;
 
+    void set_visible_in_viewport(Badge<LayoutDocument>, bool);
+
 private:
     virtual const char* class_name() const override { return "LayoutImage"; }
     virtual bool is_image() const override { return true; }
