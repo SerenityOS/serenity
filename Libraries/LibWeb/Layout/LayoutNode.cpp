@@ -154,11 +154,7 @@ LayoutDocument& LayoutNode::root()
 void LayoutNode::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
 {
     for_each_child([&](auto& child) {
-        if (child.is_inline()) {
-            child.split_into_lines(container, layout_mode);
-        } else {
-            // FIXME: Support block children of inlines.
-        }
+        child.split_into_lines(container, layout_mode);
     });
 }
 
