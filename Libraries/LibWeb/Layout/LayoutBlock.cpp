@@ -587,8 +587,6 @@ LineBox& LayoutBlock::add_line_box()
 
 void LayoutBlock::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
 {
-    ASSERT(is_inline());
-
     layout(layout_mode);
 
     auto* line_box = &container.ensure_last_line_box();
