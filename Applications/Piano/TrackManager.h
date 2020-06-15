@@ -28,92 +28,44 @@
 #pragma once
 
 #include "Music.h"
-#include <AK/FixedArray.h>
+#include "Track.h"
 #include <AK/Noncopyable.h>
-#include <AK/SinglyLinkedList.h>
-#include <LibAudio/Buffer.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/Vector.h>
 
-typedef AK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote> RollIter;
-
-class AudioEngine {
-    AK_MAKE_NONCOPYABLE(AudioEngine)
-    AK_MAKE_NONMOVABLE(AudioEngine)
+class TrackManager {
+    AK_MAKE_NONCOPYABLE(TrackManager)
+    AK_MAKE_NONMOVABLE(TrackManager)
 public:
-    AudioEngine();
-    ~AudioEngine();
+    TrackManager();
+    ~TrackManager();
 
+    Track& current_track() { return *m_tracks[m_current_track]; }
     const FixedArray<Sample>& buffer() const { return *m_front_buffer_ptr; }
-    const Vector<Audio::Sample>& recorded_sample() const { return m_recorded_sample; }
-    const SinglyLinkedList<RollNote>& roll_notes(int note) const { return m_roll_notes[note]; }
     int octave() const { return m_octave; }
     int octave_base() const { return (m_octave - octave_min) * 12; }
-    int wave() const { return m_wave; }
-    int attack() const { return m_attack; }
-    int decay() const { return m_decay; }
-    int sustain() const { return m_sustain; }
-    int release() const { return m_release; }
-    int delay() const { return m_delay; }
     int time() const { return m_time; }
 
     void fill_buffer(FixedArray<Sample>& buffer);
     void reset();
     void set_should_loop(bool b) { m_should_loop = b; }
-    String set_recorded_sample(const StringView& path);
-    void set_note(int note, Switch);
     void set_note_current_octave(int note, Switch);
-    void set_roll_note(int note, u32 on_sample, u32 off_sample);
     void set_octave(Direction);
-    void set_wave(int wave);
-    void set_wave(Direction);
-    void set_attack(int attack);
-    void set_decay(int decay);
-    void set_sustain(int sustain);
-    void set_release(int release);
-    void set_delay(int delay);
+    void add_track();
+    void next_track();
 
 private:
-    Audio::Sample sine(size_t note);
-    Audio::Sample saw(size_t note);
-    Audio::Sample square(size_t note);
-    Audio::Sample triangle(size_t note);
-    Audio::Sample noise() const;
-    Audio::Sample recorded_sample(size_t note);
-
-    void sync_roll(int note);
-    void set_sustain_impl(int sustain);
+    Vector<NonnullOwnPtr<Track>> m_tracks;
+    size_t m_current_track { 0 };
 
     FixedArray<Sample> m_front_buffer { sample_count };
     FixedArray<Sample> m_back_buffer { sample_count };
     FixedArray<Sample>* m_front_buffer_ptr { &m_front_buffer };
     FixedArray<Sample>* m_back_buffer_ptr { &m_back_buffer };
 
-    Vector<Sample> m_delay_buffer;
-
-    Vector<Audio::Sample> m_recorded_sample;
-
-    u8 m_note_on[note_count] { 0 };
-    double m_power[note_count] { 0 };
-    double m_pos[note_count]; // Initialized lazily.
-    Envelope m_envelope[note_count] { Done };
-
     int m_octave { 4 };
-    int m_wave { first_wave };
-    int m_attack;
-    double m_attack_step;
-    int m_decay;
-    double m_decay_step;
-    int m_sustain;
-    double m_sustain_level;
-    int m_release;
-    double m_release_step[note_count];
-    int m_delay { 0 };
-    size_t m_delay_samples { 0 };
-    size_t m_delay_index { 0 };
 
     u32 m_time { 0 };
 
     bool m_should_loop { true };
-
-    SinglyLinkedList<RollNote> m_roll_notes[note_count];
-    RollIter m_roll_iters[note_count];
 };

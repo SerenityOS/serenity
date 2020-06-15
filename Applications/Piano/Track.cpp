@@ -25,12 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioEngine.h"
+#include "Track.h"
 #include <AK/NumericLimits.h>
 #include <LibAudio/WavLoader.h>
 #include <math.h>
 
-AudioEngine::AudioEngine()
+Track::Track(const u32& time)
+    : m_time(time)
 {
     set_sustain_impl(1000);
     set_attack(5);
@@ -38,119 +39,104 @@ AudioEngine::AudioEngine()
     set_release(5);
 }
 
-AudioEngine::~AudioEngine()
+Track::~Track()
 {
 }
 
-void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
+void Track::fill_sample(Sample& sample)
 {
-    memset(buffer.data(), 0, buffer_size);
+    Audio::Sample new_sample;
 
-    for (size_t i = 0; i < buffer.size(); ++i) {
-        for (size_t note = 0; note < note_count; ++note) {
-            if (!m_roll_iters[note].is_end()) {
-                if (m_roll_iters[note]->on_sample == m_time) {
-                    set_note(note, On);
-                } else if (m_roll_iters[note]->off_sample == m_time) {
-                    set_note(note, Off);
-                    ++m_roll_iters[note];
-                    if (m_roll_iters[note].is_end())
-                        m_roll_iters[note] = m_roll_notes[note].begin();
-                }
+    for (size_t note = 0; note < note_count; ++note) {
+        if (!m_roll_iters[note].is_end()) {
+            if (m_roll_iters[note]->on_sample == m_time) {
+                set_note(note, On);
+            } else if (m_roll_iters[note]->off_sample == m_time) {
+                set_note(note, Off);
+                ++m_roll_iters[note];
+                if (m_roll_iters[note].is_end())
+                    m_roll_iters[note] = m_roll_notes[note].begin();
             }
+        }
 
-            switch (m_envelope[note]) {
-            case Done:
+        switch (m_envelope[note]) {
+        case Done:
+            continue;
+        case Attack:
+            m_power[note] += m_attack_step;
+            if (m_power[note] >= 1) {
+                m_power[note] = 1;
+                m_envelope[note] = Decay;
+            }
+            break;
+        case Decay:
+            m_power[note] -= m_decay_step;
+            if (m_power[note] < m_sustain_level)
+                m_power[note] = m_sustain_level;
+            break;
+        case Release:
+            m_power[note] -= m_release_step[note];
+            if (m_power[note] <= 0) {
+                m_power[note] = 0;
+                m_envelope[note] = Done;
                 continue;
-            case Attack:
-                m_power[note] += m_attack_step;
-                if (m_power[note] >= 1) {
-                    m_power[note] = 1;
-                    m_envelope[note] = Decay;
-                }
-                break;
-            case Decay:
-                m_power[note] -= m_decay_step;
-                if (m_power[note] < m_sustain_level)
-                    m_power[note] = m_sustain_level;
-                break;
-            case Release:
-                m_power[note] -= m_release_step[note];
-                if (m_power[note] <= 0) {
-                    m_power[note] = 0;
-                    m_envelope[note] = Done;
-                    continue;
-                }
-                break;
-            default:
-                ASSERT_NOT_REACHED();
             }
-
-            Audio::Sample sample;
-            switch (m_wave) {
-            case Wave::Sine:
-                sample = sine(note);
-                break;
-            case Wave::Saw:
-                sample = saw(note);
-                break;
-            case Wave::Square:
-                sample = square(note);
-                break;
-            case Wave::Triangle:
-                sample = triangle(note);
-                break;
-            case Wave::Noise:
-                sample = noise();
-                break;
-            case Wave::RecordedSample:
-                sample = recorded_sample(note);
-                break;
-            default:
-                ASSERT_NOT_REACHED();
-            }
-            buffer[i].left += sample.left * m_power[note] * volume;
-            buffer[i].right += sample.right * m_power[note] * volume;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
         }
 
-        if (m_delay) {
-            buffer[i].left += m_delay_buffer[m_delay_index].left * 0.333333;
-            buffer[i].right += m_delay_buffer[m_delay_index].right * 0.333333;
-            m_delay_buffer[m_delay_index].left = buffer[i].left;
-            m_delay_buffer[m_delay_index].right = buffer[i].right;
-            if (++m_delay_index >= m_delay_samples)
-                m_delay_index = 0;
+        Audio::Sample note_sample;
+        switch (m_wave) {
+        case Wave::Sine:
+            note_sample = sine(note);
+            break;
+        case Wave::Saw:
+            note_sample = saw(note);
+            break;
+        case Wave::Square:
+            note_sample = square(note);
+            break;
+        case Wave::Triangle:
+            note_sample = triangle(note);
+            break;
+        case Wave::Noise:
+            note_sample = noise();
+            break;
+        case Wave::RecordedSample:
+            note_sample = recorded_sample(note);
+            break;
+        default:
+            ASSERT_NOT_REACHED();
         }
-
-        if (++m_time >= roll_length) {
-            m_time = 0;
-            if (!m_should_loop)
-                break;
-        }
+        new_sample.left += note_sample.left * m_power[note] * volume;
+        new_sample.right += note_sample.right * m_power[note] * volume;
     }
 
-    memcpy(m_back_buffer_ptr->data(), buffer.data(), buffer_size);
-    swap(m_front_buffer_ptr, m_back_buffer_ptr);
+    if (m_delay) {
+        new_sample.left += m_delay_buffer[m_delay_index].left * 0.333333;
+        new_sample.right += m_delay_buffer[m_delay_index].right * 0.333333;
+        m_delay_buffer[m_delay_index].left = new_sample.left;
+        m_delay_buffer[m_delay_index].right = new_sample.right;
+        if (++m_delay_index >= m_delay_samples)
+            m_delay_index = 0;
+    }
+
+    sample.left += new_sample.left;
+    sample.right += new_sample.right;
 }
 
-void AudioEngine::reset()
+void Track::reset()
 {
-    memset(m_front_buffer.data(), 0, buffer_size);
-    memset(m_back_buffer.data(), 0, buffer_size);
-    m_front_buffer_ptr = &m_front_buffer;
-    m_back_buffer_ptr = &m_back_buffer;
-
     memset(m_delay_buffer.data(), 0, m_delay_buffer.size() * sizeof(Sample));
     m_delay_index = 0;
 
     memset(m_note_on, 0, sizeof(m_note_on));
     memset(m_power, 0, sizeof(m_power));
     memset(m_envelope, 0, sizeof(m_envelope));
-
-    m_time = 0;
 }
 
-String AudioEngine::set_recorded_sample(const StringView& path)
+String Track::set_recorded_sample(const StringView& path)
 {
     Audio::WavLoader wav_loader(path);
     if (wav_loader.has_error())
@@ -183,7 +169,7 @@ String AudioEngine::set_recorded_sample(const StringView& path)
 
 // All of the information for these waves is on Wikipedia.
 
-Audio::Sample AudioEngine::sine(size_t note)
+Audio::Sample Track::sine(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double sin_step = pos * 2 * M_PI;
@@ -192,7 +178,7 @@ Audio::Sample AudioEngine::sine(size_t note)
     return w;
 }
 
-Audio::Sample AudioEngine::saw(size_t note)
+Audio::Sample Track::saw(size_t note)
 {
     double saw_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -201,7 +187,7 @@ Audio::Sample AudioEngine::saw(size_t note)
     return w;
 }
 
-Audio::Sample AudioEngine::square(size_t note)
+Audio::Sample Track::square(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double square_step = pos * 2 * M_PI;
@@ -210,7 +196,7 @@ Audio::Sample AudioEngine::square(size_t note)
     return w;
 }
 
-Audio::Sample AudioEngine::triangle(size_t note)
+Audio::Sample Track::triangle(size_t note)
 {
     double triangle_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -219,14 +205,14 @@ Audio::Sample AudioEngine::triangle(size_t note)
     return w;
 }
 
-Audio::Sample AudioEngine::noise() const
+Audio::Sample Track::noise() const
 {
     double random_percentage = static_cast<double>(rand()) / RAND_MAX;
     double w = (random_percentage * 2) - 1;
     return w;
 }
 
-Audio::Sample AudioEngine::recorded_sample(size_t note)
+Audio::Sample Track::recorded_sample(size_t note)
 {
     int t = m_pos[note];
     if (t >= static_cast<int>(m_recorded_sample.size()))
@@ -254,7 +240,7 @@ static inline double calculate_step(double distance, int milliseconds)
     return step;
 }
 
-void AudioEngine::set_note(int note, Switch switch_note)
+void Track::set_note(int note, Switch switch_note)
 {
     ASSERT(note >= 0 && note < note_count);
 
@@ -278,12 +264,7 @@ void AudioEngine::set_note(int note, Switch switch_note)
     ASSERT(m_power[note] >= 0);
 }
 
-void AudioEngine::set_note_current_octave(int note, Switch switch_note)
-{
-    set_note(note + octave_base(), switch_note);
-}
-
-void AudioEngine::sync_roll(int note)
+void Track::sync_roll(int note)
 {
     auto it = m_roll_notes[note].find([&](auto& roll_note) { return roll_note.off_sample > m_time; });
     if (it.is_end())
@@ -292,7 +273,7 @@ void AudioEngine::sync_roll(int note)
         m_roll_iters[note] = it;
 }
 
-void AudioEngine::set_roll_note(int note, u32 on_sample, u32 off_sample)
+void Track::set_roll_note(int note, u32 on_sample, u32 off_sample)
 {
     RollNote new_roll_note = { on_sample, off_sample };
 
@@ -333,24 +314,13 @@ void AudioEngine::set_roll_note(int note, u32 on_sample, u32 off_sample)
     sync_roll(note);
 }
 
-void AudioEngine::set_octave(Direction direction)
-{
-    if (direction == Up) {
-        if (m_octave < octave_max)
-            ++m_octave;
-    } else {
-        if (m_octave > octave_min)
-            --m_octave;
-    }
-}
-
-void AudioEngine::set_wave(int wave)
+void Track::set_wave(int wave)
 {
     ASSERT(wave >= first_wave && wave <= last_wave);
     m_wave = wave;
 }
 
-void AudioEngine::set_wave(Direction direction)
+void Track::set_wave(Direction direction)
 {
     if (direction == Up) {
         if (++m_wave > last_wave)
@@ -361,40 +331,40 @@ void AudioEngine::set_wave(Direction direction)
     }
 }
 
-void AudioEngine::set_attack(int attack)
+void Track::set_attack(int attack)
 {
     ASSERT(attack >= 0);
     m_attack = attack;
     m_attack_step = calculate_step(1, m_attack);
 }
 
-void AudioEngine::set_decay(int decay)
+void Track::set_decay(int decay)
 {
     ASSERT(decay >= 0);
     m_decay = decay;
     m_decay_step = calculate_step(1 - m_sustain_level, m_decay);
 }
 
-void AudioEngine::set_sustain_impl(int sustain)
+void Track::set_sustain_impl(int sustain)
 {
     ASSERT(sustain >= 0);
     m_sustain = sustain;
     m_sustain_level = sustain / 1000.0;
 }
 
-void AudioEngine::set_sustain(int sustain)
+void Track::set_sustain(int sustain)
 {
     set_sustain_impl(sustain);
     set_decay(m_decay);
 }
 
-void AudioEngine::set_release(int release)
+void Track::set_release(int release)
 {
     ASSERT(release >= 0);
     m_release = release;
 }
 
-void AudioEngine::set_delay(int delay)
+void Track::set_delay(int delay)
 {
     ASSERT(delay >= 0);
     m_delay = delay;

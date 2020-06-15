@@ -25,7 +25,7 @@
  */
 
 #include "SamplerWidget.h"
-#include "AudioEngine.h"
+#include "TrackManager.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>
@@ -33,8 +33,8 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 
-WaveEditor::WaveEditor(AudioEngine& audio_engine)
-    : m_audio_engine(audio_engine)
+WaveEditor::WaveEditor(TrackManager& track_manager)
+    : m_track_manager(track_manager)
 {
 }
 
@@ -56,7 +56,7 @@ void WaveEditor::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.fill_rect(frame_inner_rect(), Color::Black);
 
-    auto recorded_sample = m_audio_engine.recorded_sample();
+    auto recorded_sample = m_track_manager.current_track().recorded_sample();
     if (recorded_sample.is_empty())
         return;
 
@@ -88,8 +88,8 @@ void WaveEditor::paint_event(GUI::PaintEvent& event)
     }
 }
 
-SamplerWidget::SamplerWidget(AudioEngine& audio_engine)
-    : m_audio_engine(audio_engine)
+SamplerWidget::SamplerWidget(TrackManager& track_manager)
+    : m_track_manager(track_manager)
 {
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 10, 10, 10, 10 });
@@ -111,7 +111,7 @@ SamplerWidget::SamplerWidget(AudioEngine& audio_engine)
         Optional<String> open_path = GUI::FilePicker::get_open_filepath();
         if (!open_path.has_value())
             return;
-        String error_string = m_audio_engine.set_recorded_sample(open_path.value());
+        String error_string = m_track_manager.current_track().set_recorded_sample(open_path.value());
         if (!error_string.is_empty()) {
             GUI::MessageBox::show(String::format("Failed to load WAV file: %s", error_string.characters()), "Error", GUI::MessageBox::Type::Error);
             return;
@@ -123,7 +123,7 @@ SamplerWidget::SamplerWidget(AudioEngine& audio_engine)
     m_recorded_sample_name = m_open_button_and_recorded_sample_name_container->add<GUI::Label>("No sample loaded");
     m_recorded_sample_name->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    m_wave_editor = add<WaveEditor>(m_audio_engine);
+    m_wave_editor = add<WaveEditor>(m_track_manager);
     m_wave_editor->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_wave_editor->set_preferred_size(0, 100);
 }

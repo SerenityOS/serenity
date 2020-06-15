@@ -25,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioEngine.h"
 #include "MainWidget.h"
+#include "TrackManager.h"
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
@@ -49,10 +49,10 @@ int main(int argc, char** argv)
     auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
 
-    AudioEngine audio_engine;
+    TrackManager track_manager;
 
     auto window = GUI::Window::construct();
-    auto& main_widget = window->set_main_widget<MainWidget>(audio_engine);
+    auto& main_widget = window->set_main_widget<MainWidget>(track_manager);
     window->set_title("Piano");
     window->set_rect(90, 90, 840, 600);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-piano.png"));
@@ -71,21 +71,21 @@ int main(int argc, char** argv)
 
         FixedArray<Sample> buffer(sample_count);
         for (;;) {
-            audio_engine.fill_buffer(buffer);
+            track_manager.fill_buffer(buffer);
             audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
             Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
             Core::EventLoop::wake();
 
             if (need_to_write_wav) {
                 need_to_write_wav = false;
-                audio_engine.reset();
-                audio_engine.set_should_loop(false);
+                track_manager.reset();
+                track_manager.set_should_loop(false);
                 do {
-                    audio_engine.fill_buffer(buffer);
+                    track_manager.fill_buffer(buffer);
                     wav_writer.write_samples(reinterpret_cast<u8*>(buffer.data()), buffer_size);
-                } while (audio_engine.time());
-                audio_engine.reset();
-                audio_engine.set_should_loop(true);
+                } while (track_manager.time());
+                track_manager.reset();
+                track_manager.set_should_loop(true);
                 wav_writer.finalize();
             }
         }
