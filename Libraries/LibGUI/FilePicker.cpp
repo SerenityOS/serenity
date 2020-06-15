@@ -269,7 +269,7 @@ FilePicker::~FilePicker()
 
 void FilePicker::set_preview(const LexicalPath& path)
 {
-    if (path.has_extension(".png")) {
+    if (Gfx::Bitmap::is_path_a_supported_image_format(path.string())) {
         auto bitmap = Gfx::Bitmap::load_from_file(path.string());
         if (!bitmap) {
             clear_preview();

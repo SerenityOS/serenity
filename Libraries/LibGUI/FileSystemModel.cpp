@@ -460,7 +460,7 @@ Icon FileSystemModel::icon_for_file(const mode_t mode, const String& name) const
 
 Icon FileSystemModel::icon_for(const Node& node) const
 {
-    if (node.name.to_lowercase().ends_with(".png") || node.name.to_lowercase().ends_with(".gif")) {
+    if (Gfx::Bitmap::is_path_a_supported_image_format(node.name.to_lowercase())) {
         if (!node.thumbnail) {
             if (!const_cast<FileSystemModel*>(this)->fetch_thumbnail_for(node))
                 return m_filetype_image_icon;
