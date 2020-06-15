@@ -127,6 +127,9 @@ void QSWidget::set_scale(int scale)
     if (scale > 1000)
         scale = 1000;
 
+    if (scale == 100)
+        m_pan_origin = { 0, 0 };
+
     m_scale = scale;
     relayout();
 }
