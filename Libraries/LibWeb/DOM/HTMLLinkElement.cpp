@@ -47,7 +47,7 @@ void HTMLLinkElement::inserted_into(Node& node)
 {
     HTMLElement::inserted_into(node);
 
-    if (rel().split_view(' ').contains_slow("stylesheet"))
+    if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate))
         load_stylesheet(document().complete_url(href()));
 }
 
@@ -85,6 +85,20 @@ void HTMLLinkElement::load_stylesheet(const URL& url)
     LoadRequest request;
     request.set_url(url);
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+}
+
+void HTMLLinkElement::parse_attribute(const FlyString& name, const String& value)
+{
+    if (name == HTML::AttributeNames::rel) {
+        m_relationship = 0;
+        auto parts = value.split_view(' ');
+        for (auto& part : parts) {
+            if (part == "stylesheet")
+                m_relationship |= Relationship::Stylesheet;
+            else if (part == "alternate")
+                m_relationship |= Relationship::Alternate;
+        }
+    }
 }
 
 }

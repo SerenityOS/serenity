@@ -49,8 +49,18 @@ private:
     virtual void resource_did_fail() override;
     virtual void resource_did_load() override;
 
+    void parse_attribute(const FlyString&, const String&) override;
+
     void load_stylesheet(const URL&);
 
+    struct Relationship {
+        enum {
+            Alternate = 1 << 0,
+            Stylesheet = 1 << 1,
+        };
+    };
+
+    unsigned m_relationship { 0 };
     RefPtr<StyleSheet> m_style_sheet;
 };
 
