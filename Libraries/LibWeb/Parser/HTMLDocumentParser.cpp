@@ -1076,7 +1076,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         if (!m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
             auto node = m_form_element;
             m_form_element = nullptr;
-            if (!node || m_stack_of_open_elements.has_in_scope(*node)) {
+            if (!node || !m_stack_of_open_elements.has_in_scope(*node)) {
                 PARSE_ERROR();
                 return;
             }
