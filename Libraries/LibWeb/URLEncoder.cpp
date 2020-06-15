@@ -25,34 +25,18 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/URLParser.h>
 #include <LibWeb/URLEncoder.h>
 
 namespace Web {
 
-String url_encode(const StringView& view)
-{
-    StringBuilder builder;
-
-    for (char c : view) {
-        if (c == ' ') {
-            builder.append('+');
-        } else if (c == '*' || c == '-' || c == '.' || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= 'a' && c <= 'z')) {
-            builder.append(c);
-        } else {
-            builder.appendf("%%%02X", c);
-        }
-    }
-
-    return builder.to_string();
-}
-
-String url_encode(const Vector<URLQueryParam>& pairs)
+String urlencode(const Vector<URLQueryParam>& pairs)
 {
     StringBuilder builder;
     for (size_t i = 0; i < pairs.size(); ++i) {
-        builder.append(url_encode(pairs[i].name));
+        builder.append(urlencode(pairs[i].name));
         builder.append('=');
-        builder.append(url_encode(pairs[i].value));
+        builder.append(urlencode(pairs[i].value));
         if (i != pairs.size() - 1)
             builder.append('&');
     }

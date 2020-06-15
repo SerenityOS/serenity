@@ -69,7 +69,7 @@ void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
         return IterationDecision::Continue;
     });
 
-    url.set_query(url_encode(parameters));
+    url.set_query(urlencode(parameters));
 
     // FIXME: We shouldn't let the form just do this willy-nilly.
     document().frame()->page().load(url);

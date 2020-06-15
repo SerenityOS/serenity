@@ -36,8 +36,7 @@ struct URLQueryParam {
     String value;
 };
 
-String url_encode(const StringView&);
-String url_encode(const Vector<URLQueryParam>&);
+String urlencode(const Vector<URLQueryParam>&);
 
 }
 
