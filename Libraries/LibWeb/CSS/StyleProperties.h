@@ -74,6 +74,7 @@ public:
     bool operator!=(const StyleProperties& other) const { return !(*this == other); }
 
     CSS::Position position() const;
+    Optional<int> z_index() const;
 
 private:
     HashMap<unsigned, NonnullRefPtr<StyleValue>> m_property_values;

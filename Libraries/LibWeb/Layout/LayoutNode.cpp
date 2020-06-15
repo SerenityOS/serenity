@@ -94,8 +94,9 @@ void LayoutNode::render(RenderingContext& context)
     if (!is_visible())
         return;
 
-    // TODO: render our border
     for_each_child([&](auto& child) {
+        if (child.is_box() && to<LayoutBox>(child).stacking_context())
+            return;
         child.render(context);
     });
 }

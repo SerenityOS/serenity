@@ -24,75 +24,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/QuickSort.h>
+#include <LibWeb/DOM/Node.h>
+#include <LibWeb/Layout/LayoutBox.h>
+#include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Layout/StackingContext.h>
 
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventHandler;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLDocumentParser;
-class HTMLElement;
-class HTMLFormElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HTMLImageElement;
-class HTMLScriptElement;
-class PageView;
-class ImageData;
-class LineBox;
-class LineBoxFragment;
-class LayoutBlock;
-class LayoutDocument;
-class LayoutNode;
-class LayoutNodeWithStyle;
-class LayoutReplaced;
-class LoadRequest;
-class MouseEvent;
-class Node;
-class Origin;
-class Page;
-class PageClient;
-class RenderingContext;
-class Resource;
-class ResourceLoader;
-class Selector;
-class StackingContext;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Text;
-class Window;
-class XMLHttpRequest;
+StackingContext::StackingContext(LayoutBox& box, StackingContext* parent)
+    : m_box(box)
+    , m_parent(parent)
+{
+    ASSERT(m_parent != this);
+    if (m_parent) {
+        m_parent->m_children.append(this);
 
-namespace Bindings {
+        // FIXME: Don't sort on every append..
+        quick_sort(m_children, [](auto& a, auto& b) {
+            return a->m_box.style().z_index().value_or(0) < b->m_box.style().z_index().value_or(0);
+        });
+    }
+}
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class HTMLImageElementWrapper;
-class ImageDataWrapper;
-class LocationObject;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+void StackingContext::render(RenderingContext& context)
+{
+    if (!m_box.is_root()) {
+        m_box.render(context);
+    } else {
+        // NOTE: LayoutDocument::render() merely calls StackingContext::render()
+        //       so we call its base class instead.
+        to<LayoutDocument>(m_box).LayoutBlock::render(context);
+    }
+    for (auto* child : m_children) {
+        child->render(context);
+    }
+}
 
+void StackingContext::dump(int indent) const
+{
+    for (int i = 0; i < indent; ++i)
+        dbgprintf(" ");
+    dbgprintf("SC for %s{%s} %s [children: %zu]\n", m_box.class_name(), m_box.node() ? m_box.node()->tag_name().characters() : "(anonymous)", m_box.absolute_rect().to_string().characters(), m_children.size());
+    for (auto& child : m_children)
+        child->dump(indent + 1);
 }
 
 }

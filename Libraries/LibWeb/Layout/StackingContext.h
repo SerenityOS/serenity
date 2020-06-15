@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,28 @@
 
 #pragma once
 
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/Layout/LayoutBlock.h>
+#include <AK/Vector.h>
+#include <LibWeb/Forward.h>
 
 namespace Web {
 
-class LayoutDocument final : public LayoutBlock {
+class LayoutBox;
+
+class StackingContext {
 public:
-    explicit LayoutDocument(const Document&, NonnullRefPtr<StyleProperties>);
-    virtual ~LayoutDocument() override;
+    StackingContext(LayoutBox&, StackingContext* parent);
 
-    const Document& node() const { return static_cast<const Document&>(*LayoutNode::node()); }
-    virtual const char* class_name() const override { return "LayoutDocument"; }
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
+    StackingContext* parent() { return m_parent; }
+    const StackingContext* parent() const { return m_parent; }
 
-    virtual void render(RenderingContext&) override;
+    void render(RenderingContext&);
 
-    const LayoutRange& selection() const { return m_selection; }
-    LayoutRange& selection() { return m_selection; }
-
-    void did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect&);
-
-    virtual bool is_root() const override { return true; }
-
-    void build_stacking_context_tree();
+    void dump(int indent = 0) const;
 
 private:
-    LayoutRange m_selection;
+    LayoutBox& m_box;
+    StackingContext* const m_parent { nullptr };
+    Vector<StackingContext*> m_children;
 };
-
-template<>
-inline bool is<LayoutDocument>(const LayoutNode& node)
-{
-    return node.is_root();
-}
-
 
 }

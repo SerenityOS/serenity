@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <LibGfx/FloatRect.h>
 #include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/StackingContext.h>
 
 namespace Web {
 
@@ -60,13 +62,18 @@ public:
 
     void set_containing_line_box_fragment(LineBoxFragment&);
 
+    bool establishes_stacking_context() const;
+    StackingContext* stacking_context() { return m_stacking_context; }
+    void set_stacking_context(NonnullOwnPtr<StackingContext> context) { m_stacking_context = move(context); }
+    StackingContext* enclosing_stacking_context();
+
+    virtual void render(RenderingContext&) override;
+
 protected:
     LayoutBox(const Node* node, NonnullRefPtr<StyleProperties> style)
         : LayoutNodeWithStyleAndBoxModelMetrics(node, move(style))
     {
     }
-
-    virtual void render(RenderingContext&) override;
 
     virtual void did_set_rect() { }
 
@@ -86,6 +93,8 @@ private:
 
     // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
     WeakPtr<LineBoxFragment> m_containing_line_box_fragment;
+
+    OwnPtr<StackingContext> m_stacking_context;
 };
 
 template<>
