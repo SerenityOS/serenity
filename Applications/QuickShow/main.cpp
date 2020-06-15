@@ -204,7 +204,7 @@ int main(int argc, char** argv)
             widget.set_scale(widget.scale() + 10);
         });
 
-    auto zoom_reset_action = GUI::Action::create("Zoom 100%", { Mod_None, Key_0 },
+    auto zoom_reset_action = GUI::Action::create("Zoom 100%", { Mod_None, Key_0 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-reset.png"),
         [&](auto&) {
             widget.set_scale(100);
         });
@@ -233,6 +233,7 @@ int main(int argc, char** argv)
     main_toolbar.add_action(go_last_action);
     main_toolbar.add_separator();
     main_toolbar.add_action(zoom_in_action);
+    main_toolbar.add_action(zoom_reset_action);
     main_toolbar.add_action(zoom_out_action);
 
     auto menubar = GUI::MenuBar::construct();
