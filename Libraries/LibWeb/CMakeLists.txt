@@ -94,6 +94,7 @@ set(SOURCES
     Layout/LayoutWidget.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
+    Layout/StackingContext.cpp
     LayoutTreeModel.cpp
     Loader/FrameLoader.cpp
     Loader/ImageLoader.cpp

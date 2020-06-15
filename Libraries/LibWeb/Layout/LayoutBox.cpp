@@ -310,4 +310,36 @@ void LayoutBox::set_containing_line_box_fragment(LineBoxFragment& fragment)
     m_containing_line_box_fragment = fragment.make_weak_ptr();
 }
 
+StackingContext* LayoutBox::enclosing_stacking_context()
+{
+    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (!ancestor->is_box())
+            continue;
+        auto& ancestor_box = to<LayoutBox>(*ancestor);
+        if (!ancestor_box.establishes_stacking_context())
+            continue;
+        ASSERT(ancestor_box.stacking_context());
+        return ancestor_box.stacking_context();
+    }
+    // We should always reach the LayoutDocument stacking context.
+    ASSERT_NOT_REACHED();
+}
+
+bool LayoutBox::establishes_stacking_context() const
+{
+    if (!has_style())
+        return false;
+    if (node() == document().root())
+        return true;
+    auto position = style().position();
+    auto z_index = style().z_index();
+    if (position == CSS::Position::Absolute || position == CSS::Position::Relative) {
+        if (z_index.has_value())
+            return true;
+    }
+    if (position == CSS::Position::Fixed || position == CSS::Position::Sticky)
+        return true;
+    return false;
+}
+
 }

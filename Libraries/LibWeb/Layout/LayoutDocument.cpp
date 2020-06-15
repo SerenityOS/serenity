@@ -29,6 +29,7 @@
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Layout/StackingContext.h>
 
 namespace Web {
 
@@ -41,8 +42,31 @@ LayoutDocument::~LayoutDocument()
 {
 }
 
+void LayoutDocument::build_stacking_context_tree()
+{
+    if (stacking_context())
+        return;
+
+    set_stacking_context(make<StackingContext>(*this, nullptr));
+
+    for_each_in_subtree_of_type<LayoutBox>([&](LayoutBox& box) {
+        if (&box == this)
+            return IterationDecision::Continue;
+        if (!box.establishes_stacking_context()) {
+            ASSERT(!box.stacking_context());
+            return IterationDecision::Continue;
+        }
+        auto* parent_context = box.enclosing_stacking_context();
+        ASSERT(parent_context);
+        box.set_stacking_context(make<StackingContext>(box, parent_context));
+        return IterationDecision::Continue;
+    });
+}
+
 void LayoutDocument::layout(LayoutMode layout_mode)
 {
+    build_stacking_context_tree();
+
     set_width(frame().size().width());
 
     LayoutNode::layout(layout_mode);
@@ -74,6 +98,11 @@ void LayoutDocument::did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect& a_v
         const_cast<LayoutImage&>(layout_image).set_visible_in_viewport({}, viewport_rect.intersects(layout_image.absolute_rect()));
         return IterationDecision::Continue;
     });
+}
+
+void LayoutDocument::render(RenderingContext& context)
+{
+    stacking_context()->render(context);
 }
 
 }

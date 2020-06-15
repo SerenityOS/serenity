@@ -185,6 +185,14 @@ float StyleProperties::line_height(const LayoutNode& layout_node) const
     return (float)font().glyph_height() * 1.4f;
 }
 
+Optional<int> StyleProperties::z_index() const
+{
+    auto value = property(CSS::PropertyID::ZIndex);
+    if (!value.has_value())
+        return {};
+    return static_cast<int>(value.value()->to_length().raw_value());
+}
+
 CSS::Position StyleProperties::position() const
 {
     if (property(CSS::PropertyID::Position).has_value()) {
