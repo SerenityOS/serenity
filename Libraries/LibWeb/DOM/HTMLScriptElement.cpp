@@ -190,14 +190,19 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
         // FIXME: Check classic vs. module script type
 
         // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
-        ResourceLoader::the().load_sync(url, [this, url](auto& data, auto&) {
-            if (data.is_null()) {
-                dbg() << "HTMLScriptElement: Failed to load " << url;
-                return;
-            }
-            m_script_source = String::copy(data);
-            script_became_ready();
-        });
+        ResourceLoader::the().load_sync(
+            url,
+            [this, url](auto& data, auto&) {
+                if (data.is_null()) {
+                    dbg() << "HTMLScriptElement: Failed to load " << url;
+                    return;
+                }
+                m_script_source = String::copy(data);
+                script_became_ready();
+            },
+            [this](auto&) {
+                m_failed_to_load = true;
+            });
     } else {
         // FIXME: Check classic vs. module script type
         m_script_source = source_text;

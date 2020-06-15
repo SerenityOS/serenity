@@ -41,6 +41,7 @@ public:
 
     bool is_non_blocking() const { return m_non_blocking; }
     bool is_ready_to_be_parser_executed() const { return m_ready_to_be_parser_executed; }
+    bool failed_to_load() const { return m_failed_to_load; }
 
     void set_parser_document(Badge<HTMLDocumentParser>, Document&);
     void set_non_blocking(Badge<HTMLDocumentParser>, bool);
@@ -60,6 +61,7 @@ private:
     bool m_from_an_external_file { false };
     bool m_script_ready { false };
     bool m_ready_to_be_parser_executed { false };
+    bool m_failed_to_load { false };
 
     Function<void()> m_script_ready_callback;
 
