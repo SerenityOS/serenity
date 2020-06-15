@@ -169,6 +169,9 @@ static StyleDifference compute_style_difference(const StyleProperties& old_style
     bool needs_repaint = false;
     bool needs_relayout = false;
 
+    if (new_style.string_or_fallback(CSS::PropertyID::Display, "block") != old_style.string_or_fallback(CSS::PropertyID::Color, "block"))
+        needs_relayout = true;
+
     if (new_style.color_or_fallback(CSS::PropertyID::Color, document, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::Color, document, Color::Black))
         needs_repaint = true;
     else if (new_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document, Color::Black))
@@ -209,7 +212,8 @@ void Element::recompute_style()
         return;
     layout_node()->set_style(*style);
     if (diff == StyleDifference::NeedsRelayout) {
-        ASSERT_NOT_REACHED();
+        document().force_layout();
+        return;
     }
     if (diff == StyleDifference::NeedsRepaint) {
         layout_node()->set_needs_display();
