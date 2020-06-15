@@ -200,12 +200,16 @@ Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
 
 bool LayoutNode::is_absolutely_positioned() const
 {
+    if (!has_style())
+        return false;
     auto position = style().position();
     return position == CSS::Position::Absolute || position == CSS::Position::Fixed;
 }
 
 bool LayoutNode::is_fixed_position() const
 {
+    if (!has_style())
+        return false;
     return style().position() == CSS::Position::Fixed;
 }
 
