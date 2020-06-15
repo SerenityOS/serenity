@@ -553,6 +553,19 @@ int ftruncate(int fd, off_t length)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int truncate(const char* path, off_t length)
+{
+    int fd = open(path, O_RDWR | O_CREAT, 0666);
+    if (fd < 0)
+        return fd;
+    int rc = ftruncate(fd, length);
+    int saved_errno = errno;
+    if (int close_rc = close(fd); close_rc < 0)
+        return close_rc;
+    errno = saved_errno;
+    return rc;
+}
+
 int gettid()
 {
     if (!s_cached_tid)
