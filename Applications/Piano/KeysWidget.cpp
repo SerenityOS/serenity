@@ -26,11 +26,11 @@
  */
 
 #include "KeysWidget.h"
-#include "AudioEngine.h"
+#include "TrackManager.h"
 #include <LibGUI/Painter.h>
 
-KeysWidget::KeysWidget(AudioEngine& audio_engine)
-    : m_audio_engine(audio_engine)
+KeysWidget::KeysWidget(TrackManager& track_manager)
+    : m_track_manager(track_manager)
 {
     set_fill_with_background_color(true);
 }
@@ -41,7 +41,7 @@ KeysWidget::~KeysWidget()
 
 int KeysWidget::mouse_note() const
 {
-    if (m_mouse_down && m_mouse_note + m_audio_engine.octave_base() < note_count)
+    if (m_mouse_down && m_mouse_note + m_track_manager.octave_base() < note_count)
         return m_mouse_note; // Can be -1.
     else
         return -1;
@@ -49,7 +49,7 @@ int KeysWidget::mouse_note() const
 
 void KeysWidget::set_key(int key, Switch switch_key)
 {
-    if (key == -1 || key + m_audio_engine.octave_base() >= note_count)
+    if (key == -1 || key + m_track_manager.octave_base() >= note_count)
         return;
 
     if (switch_key == On) {
@@ -60,7 +60,7 @@ void KeysWidget::set_key(int key, Switch switch_key)
     }
     ASSERT(m_key_on[key] <= 2);
 
-    m_audio_engine.set_note_current_octave(key, switch_key);
+    m_track_manager.set_note_current_octave(key, switch_key);
 }
 
 int KeysWidget::key_code_to_key(int key_code) const
@@ -191,7 +191,7 @@ void KeysWidget::paint_event(GUI::PaintEvent& event)
         x += white_key_width;
         ++i;
 
-        if (note + m_audio_engine.octave_base() >= note_count)
+        if (note + m_track_manager.octave_base() >= note_count)
             break;
         if (x >= frame_inner_rect().width())
             break;
@@ -213,7 +213,7 @@ void KeysWidget::paint_event(GUI::PaintEvent& event)
         x += black_key_offsets[i % black_keys_per_octave];
         ++i;
 
-        if (note + m_audio_engine.octave_base() >= note_count)
+        if (note + m_track_manager.octave_base() >= note_count)
             break;
         if (x >= frame_inner_rect().width())
             break;
