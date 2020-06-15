@@ -30,7 +30,7 @@
 #include "Music.h"
 #include <LibGUI/Widget.h>
 
-class AudioEngine;
+class TrackManager;
 class WaveWidget;
 class RollWidget;
 class SamplerWidget;
@@ -45,7 +45,7 @@ public:
     void set_octave_and_ensure_note_change(Direction);
 
 private:
-    explicit MainWidget(AudioEngine&);
+    explicit MainWidget(TrackManager&);
 
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
@@ -54,7 +54,7 @@ private:
     void note_key_action(int key_code, Switch);
     void special_key_action(int key_code);
 
-    AudioEngine& m_audio_engine;
+    TrackManager& m_track_manager;
 
     RefPtr<WaveWidget> m_wave_widget;
     RefPtr<RollWidget> m_roll_widget;

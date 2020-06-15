@@ -1,5 +1,6 @@
 set(SOURCES
-    AudioEngine.cpp
+    Track.cpp
+    TrackManager.cpp
     KeysWidget.cpp
     KnobsWidget.cpp
     main.cpp
