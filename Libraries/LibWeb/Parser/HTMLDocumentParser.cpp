@@ -1476,6 +1476,9 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
                 //        that is blocking scripts and the script's "ready to be parser-executed"
                 //        flag is set.
 
+                if (the_script->failed_to_load())
+                    return;
+
                 ASSERT(the_script->is_ready_to_be_parser_executed());
 
                 if (m_aborted)
