@@ -1933,7 +1933,7 @@ void HTMLDocumentParser::handle_in_select(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::select) {
-        if (m_stack_of_open_elements.has_in_select_scope(HTML::TagNames::select)) {
+        if (!m_stack_of_open_elements.has_in_select_scope(HTML::TagNames::select)) {
             PARSE_ERROR();
             return;
         }
