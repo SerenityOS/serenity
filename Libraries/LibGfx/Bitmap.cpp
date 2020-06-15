@@ -29,8 +29,8 @@
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGfx/GIFLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -86,10 +86,11 @@ RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, 
 
 RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
 {
-    if(path.ends_with(".png"))
-        return load_png(path);
-    if(path.ends_with(".gif"))
-        return load_gif(path);
+#define __ENUMERATE_IMAGE_FORMAT(Name, Ext) \
+    if (path.ends_with(Ext))                \
+        return load_##Name(path);
+    ENUMERATE_IMAGE_FORMATS
+#undef __ENUMERATE_IMAGE_FORMAT
 
     return nullptr;
 }

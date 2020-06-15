@@ -33,6 +33,10 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 
+#define ENUMERATE_IMAGE_FORMATS           \
+    __ENUMERATE_IMAGE_FORMAT(png, ".png") \
+    __ENUMERATE_IMAGE_FORMAT(gif, ".gif")
+
 namespace Gfx {
 
 enum class BitmapFormat {
@@ -54,6 +58,16 @@ public:
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, size_t pitch, RGBA32*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);
     static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
+    static bool is_path_a_supported_image_format(const StringView& path)
+    {
+#define __ENUMERATE_IMAGE_FORMAT(Name, Ext) \
+    if (path.ends_with(Ext))                \
+        return true;
+        ENUMERATE_IMAGE_FORMATS
+#undef __ENUMERATE_IMAGE_FORMAT
+
+        return false;
+    }
 
     RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
