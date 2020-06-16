@@ -72,7 +72,7 @@ int main(int argc, char** argv)
             new_gid = number.value();
         } else {
             auto* group = getgrnam(parts[1].characters());
-            if (!new_gid) {
+            if (!group) {
                 fprintf(stderr, "Unknown group '%s'\n", parts[1].characters());
                 return 1;
             }
