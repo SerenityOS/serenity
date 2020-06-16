@@ -25,6 +25,7 @@ set(LIBC_SOURCES
     serenity.cpp
     setjmp.S
     signal.cpp
+    spawn.cpp
     stat.cpp
     stdio.cpp
     stdlib.cpp
