@@ -452,7 +452,8 @@ bool PATAChannel::ata_read_sectors(u32 lba, u16 count, u8* outbuf, bool slave_re
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_PIO);
 
     for (int i = 0; i < count; i++) {
-        prepare_for_irq();
+        if (i > 0)
+            prepare_for_irq();
         wait_for_irq();
         if (m_device_error)
             return false;
