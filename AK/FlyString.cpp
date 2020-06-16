@@ -114,16 +114,26 @@ StringView FlyString::view() const
     return { characters(), length() };
 }
 
-bool FlyString::operator==(const String& string) const
+bool FlyString::operator==(const String& other) const
 {
-    if (m_impl == string.impl())
+    if (m_impl == other.impl())
         return true;
-    return String(m_impl.ptr()) == string;
+
+    if (!m_impl)
+        return !other.impl();
+
+    if (!other.impl())
+        return false;
+
+    if (length() != other.length())
+        return false;
+
+    return !__builtin_memcmp(characters(), other.characters(), length());
 }
 
 bool FlyString::operator==(const StringView& string) const
 {
-    return String(string) == String(m_impl.ptr());
+    return *this == String(string);
 }
 
 bool FlyString::operator==(const char* string) const
