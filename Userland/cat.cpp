@@ -25,13 +25,30 @@
  */
 
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
+
+bool detect_useless_use_of_cat(int argc)
+{
+    // I can think of somewhat valid uses of zero-argument cat
+    // from a tty to a pipe, so let's allow those.
+    if (argc != 2)
+        return false;
+
+    struct stat statbuf;
+    int rc = fstat(1, &statbuf);
+    if (rc < 0)
+        return false;
+
+    return S_ISFIFO(statbuf.st_mode);
+}
 
 int main(int argc, char** argv)
 {
@@ -40,12 +57,23 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    Vector<const char*> paths;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (detect_useless_use_of_cat(argc))
+        fprintf(stderr, "\033[34;1mMeow! Useless use of cat detected\033[0m\n");
+
     Vector<int> fds;
-    if (argc > 1) {
-        for (int i = 1; i < argc; i++) {
+    if (!paths.is_empty()) {
+        for (const char* path : paths) {
             int fd;
-            if ((fd = open(argv[i], O_RDONLY)) == -1) {
-                fprintf(stderr, "Failed to open %s: %s\n", argv[i], strerror(errno));
+            if (StringView { path } == "-") {
+                fd = 0;
+            } else if ((fd = open(path, O_RDONLY)) == -1) {
+                fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));
                 continue;
             }
             fds.append(fd);
@@ -69,14 +97,18 @@ int main(int argc, char** argv)
                 perror("read");
                 return 2;
             }
-            ssize_t nwritten = write(1, buf, nread);
-            if (nwritten < 0) {
-                perror("write");
-                return 3;
+            size_t already_written = 0;
+            while (already_written < (size_t)nread) {
+                ssize_t nwritten = write(1, buf + already_written, nread - already_written);
+                if (nwritten < 0) {
+                    perror("write");
+                    return 3;
+                }
+                already_written += nwritten;
             }
-            ASSERT(nwritten == nread);
         }
         close(fd);
     }
+
     return 0;
 }
