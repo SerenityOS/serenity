@@ -63,7 +63,6 @@ pkg_add bash gmp gcc git flock gmake sudo
 #### FreeBSD prerequisites
 ```
 $ pkg add coreutils gmake bash sudo git
-$ ln -s /usr/local/bin/ginstall /usr/local/bin/install
 ```
 
 ### Build
