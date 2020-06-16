@@ -33,6 +33,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -208,13 +209,11 @@ size_t print_name(const struct stat& st, const String& name, const char* path_fo
     }
     if (S_ISLNK(st.st_mode)) {
         if (path_for_link_resolution) {
-            char linkbuf[PATH_MAX];
-            ssize_t nread = readlink(path_for_link_resolution, linkbuf, sizeof(linkbuf) - 1);
-            if (nread < 0) {
-                perror("readlink failed");
+            auto link_destination = Core::File::read_link(path_for_link_resolution);
+            if (link_destination.is_null()) {
+                perror("readlink");
             } else {
-                linkbuf[nread] = '\0';
-                nprinted += printf(" -> ") + print_escaped(linkbuf);
+                nprinted += printf(" -> ") + print_escaped(link_destination.characters());
             }
         } else {
             nprinted += printf("@");
