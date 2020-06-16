@@ -84,7 +84,7 @@ public:
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const;
 
-    virtual FlyString tag_name() const = 0;
+    virtual FlyString node_name() const = 0;
 
     virtual String text_content() const;
 

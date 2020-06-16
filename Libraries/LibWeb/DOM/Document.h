@@ -69,7 +69,7 @@ public:
     CSS::StyleSheetList& style_sheets() { return *m_style_sheets; }
     const CSS::StyleSheetList& style_sheets() const { return *m_style_sheets; }
 
-    virtual FlyString tag_name() const override { return "#document"; }
+    virtual FlyString node_name() const override { return "#document"; }
 
     void set_hovered_node(Node*);
     Node* hovered_node() { return m_hovered_node; }

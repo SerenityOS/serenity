@@ -55,7 +55,7 @@ NodeWrapper* wrap(JS::Heap& heap, Node& node)
 NodeWrapper::NodeWrapper(Node& node)
     : EventTargetWrapper(node)
 {
-    put("nodeName", JS::js_string(heap(), node.tag_name()));
+    put("nodeName", JS::js_string(heap(), node.node_name()));
 }
 
 NodeWrapper::~NodeWrapper()

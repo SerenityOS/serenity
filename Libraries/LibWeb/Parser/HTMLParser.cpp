@@ -194,7 +194,7 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
         case State::Free:
             if (ch == '<') {
                 bool should_treat_as_text = false;
-                if (node_stack.last().tag_name() == "script") {
+                if (node_stack.last().node_name() == "script") {
                     bool is_script_close_tag = peek(1) == '/'
                         && tolower(peek(2)) == 's'
                         && tolower(peek(3)) == 'c'

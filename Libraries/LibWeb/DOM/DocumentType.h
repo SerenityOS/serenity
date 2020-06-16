@@ -36,7 +36,7 @@ public:
     explicit DocumentType(Document&);
     virtual ~DocumentType() override;
 
-    virtual FlyString tag_name() const override { return "#doctype"; }
+    virtual FlyString node_name() const override { return "#doctype"; }
 
     const String& name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }

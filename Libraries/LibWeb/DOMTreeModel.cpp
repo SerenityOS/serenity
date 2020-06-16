@@ -130,7 +130,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, Role role) const
         if (node.is_text())
             return String::format("%s", with_whitespace_collapsed(to<Text>(node).data()).characters());
         if (!node.is_element())
-            return node.tag_name();
+            return node.node_name();
         auto& element = to<Element>(node);
         StringBuilder builder;
         builder.append('<');

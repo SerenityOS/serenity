@@ -37,7 +37,7 @@ public:
     explicit Text(Document&, const String&);
     virtual ~Text() override;
 
-    virtual FlyString tag_name() const override { return "#text"; }
+    virtual FlyString node_name() const override { return "#text"; }
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;

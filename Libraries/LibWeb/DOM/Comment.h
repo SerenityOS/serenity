@@ -36,7 +36,7 @@ public:
     explicit Comment(Document&, const String&);
     virtual ~Comment() override;
 
-    virtual FlyString tag_name() const override { return "#comment"; }
+    virtual FlyString node_name() const override { return "#comment"; }
 };
 
 template<>

@@ -41,7 +41,7 @@ public:
     {
     }
 
-    virtual FlyString tag_name() const override { return "#document-fragment"; }
+    virtual FlyString node_name() const override { return "#document-fragment"; }
 };
 
 template<>
