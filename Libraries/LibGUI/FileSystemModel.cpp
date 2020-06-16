@@ -27,6 +27,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -73,14 +74,9 @@ bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
     mtime = st.st_mtime;
 
     if (S_ISLNK(mode)) {
-        char buffer[PATH_MAX];
-        int length = readlink(full_path.characters(), buffer, sizeof(buffer));
-        if (length < 0) {
+        symlink_target = Core::File::read_link(full_path);
+        if (symlink_target.is_null())
             perror("readlink");
-        } else {
-            ASSERT(length > 0);
-            symlink_target = String(buffer, length - 1);
-        }
     }
 
     return true;
