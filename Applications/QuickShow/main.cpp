@@ -103,6 +103,10 @@ int main(int argc, char** argv)
             }
         }
     };
+    widget.on_doubleclick = [&] {
+        window->set_fullscreen(!window->is_fullscreen());
+        toolbar_container.set_visible(!window->is_fullscreen());
+    };
 
     // Actions
     auto open_action = GUI::CommonActions::make_open_action(
@@ -192,8 +196,7 @@ int main(int argc, char** argv)
 
     auto full_sceen_action = GUI::CommonActions::make_fullscreen_action(
         [&](auto&) {
-            window->set_fullscreen(!window->is_fullscreen());
-            toolbar_container.set_visible(!window->is_fullscreen());
+            widget.on_doubleclick();
         });
 
     auto zoom_in_action = GUI::Action::create("Zoom In", { Mod_None, Key_Plus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"),

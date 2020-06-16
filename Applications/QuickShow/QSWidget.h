@@ -57,10 +57,12 @@ public:
     void load_from_file(const String&);
 
     Function<void(int)> on_scale_change;
+    Function<void()> on_doubleclick;
     Function<void(const GUI::DropEvent&)> on_drop;
 
 private:
     QSWidget();
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
