@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <Kernel/Syscall.h>
+#include <cstdio>
 
 extern int g_lib_var1;
 extern int g_lib_var2;
@@ -39,7 +40,8 @@ int main(int, char**)
 {
     g_tls_lib_var += 2;
     libfunc();
-    // local_dbgputstr(g_string, 15);
+    local_dbgputstr(g_string, 15);
+    printf("woot!\n");
     // int sum = 0;
     // sum += libfunc() + g_lib_var1 + g_lib_var2 + g_tls_lib_var;
     // // sum += libfunc() + g_lib_var1 + g_lib_var2;

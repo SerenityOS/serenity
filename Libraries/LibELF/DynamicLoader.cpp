@@ -278,7 +278,13 @@ void DynamicLoader::do_relocations()
         case R_386_GLOB_DAT: {
             auto symbol = relocation.symbol();
             VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 symbol_location = lookup_symbol(symbol).value();
+            auto symbol_location_option = lookup_symbol(symbol);
+            if (!symbol_location_option.has_value()) {
+                // TODO: We really should not skip a relocation if we didn't find a symbol
+                VERBOSE("Could not find symbol: %s, skipping relocation", symbol.name());
+                break;
+            }
+            u32 symbol_location = symbol_location_option.value();
             ASSERT(symbol_location != load_base_address);
             *patch_ptr = symbol_location;
             VERBOSE("   Symbol address: %p\n", *patch_ptr);
