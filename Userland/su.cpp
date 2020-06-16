@@ -36,6 +36,13 @@ extern "C" int main(int, char**);
 
 int main(int argc, char** argv)
 {
+    if (geteuid() != 0) {
+        fprintf(stderr, "Not running as root :(\n");
+    } else if (getuid() != 0) {
+        const char* target_user = argc > 1 ? argv[1] : "root";
+        fprintf(stderr, "Since you're such a good boy, %s, here's a %s shell for you\n", getlogin(), target_user);
+    }
+
     uid_t uid = 0;
     gid_t gid = 0;
     struct passwd* pwd = nullptr;
