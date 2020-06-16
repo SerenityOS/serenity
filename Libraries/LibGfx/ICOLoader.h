@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Paul Roukema <roukemap@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,49 +24,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
-#include <LibGfx/BMPLoader.h>
-#include <LibGfx/GIFLoader.h>
-#include <LibGfx/ICOLoader.h>
-#include <LibGfx/PBMLoader.h>
-#include <LibGfx/PNGLoader.h>
 
 namespace Gfx {
 
-ImageDecoder::ImageDecoder(const u8* data, size_t size)
-{
-    m_plugin = make<PNGImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff())
-        return;
+RefPtr<Gfx::Bitmap> load_ico(const StringView& path);
+RefPtr<Gfx::Bitmap> load_ico_from_memory(const u8*, size_t);
 
-    m_plugin = make<GIFImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff())
-        return;
+struct ICOLoadingContext;
 
-    m_plugin = make<BMPImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff())
-        return;
+class ICOImageDecoderPlugin final : public ImageDecoderPlugin {
+public:
+    virtual ~ICOImageDecoderPlugin() override;
+    ICOImageDecoderPlugin(const u8*, size_t);
 
-    m_plugin = make<PBMImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff())
-        return;
+    virtual IntSize size() override;
+    virtual RefPtr<Gfx::Bitmap> bitmap() override;
+    virtual void set_volatile() override;
+    [[nodiscard]] virtual bool set_nonvolatile() override;
+    virtual bool sniff() override;
+    virtual bool is_animated() override;
+    virtual size_t loop_count() override;
+    virtual size_t frame_count() override;
+    virtual ImageFrameDescriptor frame(size_t i) override;
 
-    m_plugin = make<ICOImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff())
-        return;
-
-    m_plugin = nullptr;
-}
-
-ImageDecoder::~ImageDecoder()
-{
-}
-
-RefPtr<Gfx::Bitmap> ImageDecoder::bitmap() const
-{
-    if (!m_plugin)
-        return nullptr;
-    return m_plugin->bitmap();
-}
+private:
+    OwnPtr<ICOLoadingContext> m_context;
+};
 
 }

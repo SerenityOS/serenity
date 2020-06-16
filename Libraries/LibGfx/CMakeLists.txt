@@ -9,6 +9,7 @@ set(SOURCES
     FloatRect.cpp
     Font.cpp
     GIFLoader.cpp
+    ICOLoader.cpp
     ImageDecoder.cpp
     Painter.cpp
     Palette.cpp
