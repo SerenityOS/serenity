@@ -2,7 +2,7 @@
 
 set -e
 
-wheel_gid=1
+goodboys_gid=1
 tty_gid=2
 phys_gid=3
 audio_gid=4
@@ -36,8 +36,8 @@ chmod 660 mnt/etc/WindowServer/WindowServer.ini
 chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
 echo "/bin/sh" > mnt/etc/shells
 
-chown 0:$wheel_gid mnt/bin/su
-chown 0:$wheel_gid mnt/bin/KeyboardSettings
+chown 0:$goodboys_gid mnt/bin/su
+chown 0:$goodboys_gid mnt/bin/KeyboardSettings
 chown 0:$phys_gid mnt/bin/shutdown
 chown 0:$phys_gid mnt/bin/reboot
 chown 0:0 mnt/boot/Kernel
