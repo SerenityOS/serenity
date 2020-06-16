@@ -160,6 +160,11 @@ void QSWidget::resize_event(GUI::ResizeEvent& event)
     GUI::Widget::resize_event(event);
 }
 
+void QSWidget::doubleclick_event(GUI::MouseEvent&)
+{
+    on_doubleclick();
+}
+
 void QSWidget::paint_event(GUI::PaintEvent& event)
 {
     Frame::paint_event(event);
