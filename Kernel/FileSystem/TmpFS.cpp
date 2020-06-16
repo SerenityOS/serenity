@@ -125,8 +125,8 @@ KResultOr<NonnullRefPtr<Inode>> TmpFS::create_inode(InodeIdentifier parent_id, c
 KResult TmpFS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid)
 {
     // Ensure it's a directory.
-    mode &= ~0170000;
-    mode |= 0040000;
+    mode &= ~S_IFMT;
+    mode |= S_IFDIR;
     auto result = create_inode(parent_id, name, mode, 0, 0, uid, gid);
     if (result.is_error())
         return result.error();
@@ -155,7 +155,7 @@ NonnullRefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata metadata, 
 NonnullRefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
-    metadata.mode = 0041777;
+    metadata.mode = S_IFDIR | S_ISVTX | 0777;
     return create(fs, metadata, { fs.fsid(), 1 });
 }
 

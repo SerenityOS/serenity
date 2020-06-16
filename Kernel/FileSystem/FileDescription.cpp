@@ -78,12 +78,12 @@ KResult FileDescription::fstat(stat& buffer)
 {
     if (is_fifo()) {
         memset(&buffer, 0, sizeof(buffer));
-        buffer.st_mode = 001000;
+        buffer.st_mode = S_IFIFO;
         return KSuccess;
     }
     if (is_socket()) {
         memset(&buffer, 0, sizeof(buffer));
-        buffer.st_mode = 0140000;
+        buffer.st_mode = S_IFSOCK;
         return KSuccess;
     }
 
