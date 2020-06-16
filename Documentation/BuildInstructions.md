@@ -27,6 +27,8 @@ sudo apt-get install gcc-9 g++-9
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /usr/bin/g++ g++ /usr/bin/g++-9
 ```
 
+Ensure your cmake version is >= 3.16 with `cmake --version`. If your package manager doesn't provide you with a suitable version you can download it directly from the [cmake website](https://cmake.org/download).
+
 #### macOS prerequisites
 Make sure you have all the dependencies installed:
 ```bash
