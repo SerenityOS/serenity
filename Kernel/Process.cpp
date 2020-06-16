@@ -1953,11 +1953,11 @@ int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
     if (contents.is_error())
         return contents.error();
 
-    auto link_target = String::copy(contents.value());
-    if (link_target.length() > params.buffer.size)
-        return -ENAMETOOLONG;
-    copy_to_user(params.buffer.data, link_target.characters(), link_target.length());
-    return link_target.length();
+    auto& link_target = contents.value();
+    auto size_to_copy = min(link_target.size(), params.buffer.size);
+    copy_to_user(params.buffer.data, link_target.data(), size_to_copy);
+    // Note: we return the whole size here, not the copied size.
+    return link_target.size();
 }
 
 int Process::sys$chdir(const char* user_path, size_t path_length)

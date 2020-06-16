@@ -364,7 +364,8 @@ ssize_t readlink(const char* path, char* buffer, size_t size)
 {
     Syscall::SC_readlink_params params { { path, strlen(path) }, { buffer, size } };
     int rc = syscall(SC_readlink, &params);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    // Return the number of bytes placed in the buffer, not the full path size.
+    __RETURN_WITH_ERRNO(rc, min((size_t)rc, size), -1);
 }
 
 off_t lseek(int fd, off_t offset, int whence)
