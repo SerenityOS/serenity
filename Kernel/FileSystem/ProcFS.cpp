@@ -1144,30 +1144,30 @@ InodeMetadata ProcFSInode::metadata() const
     }
 
     if (proc_parent_directory == PDI_PID_fd) {
-        metadata.mode = 00120700;
+        metadata.mode = S_IFLNK | S_IRUSR | S_IWUSR | S_IXUSR;
         return metadata;
     }
 
     switch (proc_file_type) {
     case FI_Root_self:
-        metadata.mode = 0120444;
+        metadata.mode = S_IFLNK | S_IRUSR | S_IRGRP | S_IROTH;
         break;
     case FI_PID_cwd:
     case FI_PID_exe:
     case FI_PID_root:
-        metadata.mode = 0120400;
+        metadata.mode = S_IFLNK | S_IRUSR;
         break;
     case FI_Root:
     case FI_Root_sys:
     case FI_Root_net:
-        metadata.mode = 040555;
+        metadata.mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
         break;
     case FI_PID:
     case FI_PID_fd:
-        metadata.mode = 040500;
+        metadata.mode = S_IFDIR | S_IRUSR | S_IXUSR;
         break;
     default:
-        metadata.mode = 0100444;
+        metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
         break;
     }
 

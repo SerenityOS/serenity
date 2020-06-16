@@ -40,16 +40,16 @@ inline constexpr u32 encoded_device(unsigned major, unsigned minor)
     return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
 }
 
-inline bool is_directory(mode_t mode) { return (mode & 0170000) == 0040000; }
-inline bool is_character_device(mode_t mode) { return (mode & 0170000) == 0020000; }
-inline bool is_block_device(mode_t mode) { return (mode & 0170000) == 0060000; }
-inline bool is_regular_file(mode_t mode) { return (mode & 0170000) == 0100000; }
-inline bool is_fifo(mode_t mode) { return (mode & 0170000) == 0010000; }
-inline bool is_symlink(mode_t mode) { return (mode & 0170000) == 0120000; }
-inline bool is_socket(mode_t mode) { return (mode & 0170000) == 0140000; }
-inline bool is_sticky(mode_t mode) { return mode & 01000; }
-inline bool is_setuid(mode_t mode) { return mode & 04000; }
-inline bool is_setgid(mode_t mode) { return mode & 02000; }
+inline bool is_directory(mode_t mode) { return (mode & S_IFMT) == S_IFDIR; }
+inline bool is_character_device(mode_t mode) { return (mode & S_IFMT) == S_IFCHR; }
+inline bool is_block_device(mode_t mode) { return (mode & S_IFMT) == S_IFBLK; }
+inline bool is_regular_file(mode_t mode) { return (mode & S_IFMT) == S_IFREG; }
+inline bool is_fifo(mode_t mode) { return (mode & S_IFMT) == S_IFIFO; }
+inline bool is_symlink(mode_t mode) { return (mode & S_IFMT) == S_IFLNK; }
+inline bool is_socket(mode_t mode) { return (mode & S_IFMT) == S_IFSOCK; }
+inline bool is_sticky(mode_t mode) { return mode & S_ISVTX; }
+inline bool is_setuid(mode_t mode) { return mode & S_ISUID; }
+inline bool is_setgid(mode_t mode) { return mode & S_ISGID; }
 
 struct InodeMetadata {
     bool is_valid() const { return inode.is_valid(); }
@@ -63,10 +63,10 @@ struct InodeMetadata {
         if (u == 0)
             return true;
         if (uid == u)
-            return mode & 0400;
+            return mode & S_IRUSR;
         if (gid == g || eg.contains(gid))
-            return mode & 0040;
-        return mode & 0004;
+            return mode & S_IRGRP;
+        return mode & S_IROTH;
     }
 
     bool may_write(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
@@ -74,10 +74,10 @@ struct InodeMetadata {
         if (u == 0)
             return true;
         if (uid == u)
-            return mode & 0200;
+            return mode & S_IWUSR;
         if (gid == g || eg.contains(gid))
-            return mode & 0020;
-        return mode & 0002;
+            return mode & S_IWGRP;
+        return mode & S_IWOTH;
     }
 
     bool may_execute(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
@@ -85,10 +85,10 @@ struct InodeMetadata {
         if (u == 0)
             return true;
         if (uid == u)
-            return mode & 0100;
+            return mode & S_IXUSR;
         if (gid == g || eg.contains(gid))
-            return mode & 0010;
-        return mode & 0001;
+            return mode & S_IXGRP;
+        return mode & S_IXOTH;
     }
 
     bool is_directory() const { return Kernel::is_directory(mode); }
