@@ -27,6 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
 #include <AK/Types.h>
+#include <LibCore/File.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -212,9 +213,8 @@ void test_unlink_symlink()
         ASSERT_NOT_REACHED();
     }
 
-    char buffer[PATH_MAX];
-    rc = readlink("/tmp/linky", buffer, sizeof(buffer));
-    ASSERT(rc == strlen("/proc/2/foo"));
+    auto target = Core::File::read_link("/tmp/linky");
+    ASSERT(target == "/proc/2/foo");
 
     rc = unlink("/tmp/linky");
     if (rc < 0) {
