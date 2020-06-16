@@ -41,9 +41,8 @@ int libfunc()
     // somevar = 4;
     g_tls_lib_var = 1;
     g_tls_lib_var2 = 2;
-    // g_tls_lib_var3 = 4;
-    // return 4 + g_lib_var1 + a.x + g_tls_lib_var;
-    return 0;
+    g_tls_lib_var3 = 4;
+    return 4 + g_lib_var1 + a.x + g_tls_lib_var;
 }
 
 // int libfunc_tls()

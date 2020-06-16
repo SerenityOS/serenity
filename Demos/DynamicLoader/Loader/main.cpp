@@ -84,7 +84,8 @@ int main(int argc, char** argv, char** envp)
     auto entry_point = main_program.entry_point();
     dbg() << "entry point: " << entry_point;
     // A hack to make enough space for TLS
-    volatile uint32_t tls_end = (u32)tls_region_addr + 0x100;
+    const uint32_t required_tls_size = 0x100; // TODO: calculate this
+    volatile uint32_t tls_end = (u32)tls_region_addr + required_tls_size;
     asm("movl %0,%%gs:0x0"
         :
         : "rm"(tls_end));
