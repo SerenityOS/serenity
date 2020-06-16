@@ -37,15 +37,17 @@ void local_dbgputstr(const char* str, int len);
 
 int main(int, char**)
 {
-    local_dbgputstr(g_string, 15);
-    int sum = 0;
-    sum += libfunc() + g_lib_var1 + g_lib_var2 + g_tls_lib_var;
-    // sum += libfunc() + g_lib_var1 + g_lib_var2;
-    local_dbgputstr("1\n", 2);
-    // sum += libfunc_tls();
-    local_dbgputstr("2\n", 2);
-    // sum += g_tls_lib_var + g_tls_lib_var2;
-    local_dbgputstr("3\n", 2);
-    g_tls_lib_var = 3 + libfunc();
+    g_tls_lib_var += 2;
+    libfunc();
+    // local_dbgputstr(g_string, 15);
+    // int sum = 0;
+    // sum += libfunc() + g_lib_var1 + g_lib_var2 + g_tls_lib_var;
+    // // sum += libfunc() + g_lib_var1 + g_lib_var2;
+    // local_dbgputstr("1\n", 2);
+    // // sum += libfunc_tls();
+    // local_dbgputstr("2\n", 2);
+    // // sum += g_tls_lib_var + g_tls_lib_var2;
+    // local_dbgputstr("3\n", 2);
+    // g_tls_lib_var = 3 + libfunc();
     return g_tls_lib_var;
 }

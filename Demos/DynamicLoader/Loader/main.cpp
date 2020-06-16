@@ -83,6 +83,11 @@ int main(int argc, char** argv, char** envp)
     const ELF::DynamicLoader& main_program = *reinterpret_cast<ELF::DynamicLoader*>(res);
     auto entry_point = main_program.entry_point();
     dbg() << "entry point: " << entry_point;
+    // A hack to make enough space for TLS
+    volatile uint32_t tls_end = (u32)tls_region_addr + 0x100;
+    asm("movl %0,%%gs:0x0"
+        :
+        : "rm"(tls_end));
     typedef int (*EntryFunction)(int, char**, char**);
     asm("int3");
     int retval = ((EntryFunction)(entry_point.get()))(argc, argv, envp);

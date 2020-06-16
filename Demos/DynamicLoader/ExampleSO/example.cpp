@@ -5,7 +5,7 @@
 // __thread int g_lib_var;
 int g_lib_var1;
 int g_lib_var2 = 5;
-__thread int g_tls_lib_var;
+__thread int g_tls_lib_var = 1;
 __thread int g_tls_lib_var2;
 __thread int g_tls_lib_var3;
 // __thread int g_tls_lib_var2;
@@ -41,7 +41,7 @@ int libfunc()
     // somevar = 4;
     g_tls_lib_var = 1;
     g_tls_lib_var2 = 2;
-    g_tls_lib_var3 = 3;
+    // g_tls_lib_var3 = 4;
     // return 4 + g_lib_var1 + a.x + g_tls_lib_var;
     return 0;
 }
