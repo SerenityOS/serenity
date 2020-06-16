@@ -134,7 +134,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, Role role) cons
         if (node.is_anonymous()) {
             builder.append("[anonymous]");
         } else if (!node.node()->is_element()) {
-            builder.append(node.node()->tag_name());
+            builder.append(node.node()->node_name());
         } else {
             auto& element = to<Element>(*node.node());
             builder.append('<');

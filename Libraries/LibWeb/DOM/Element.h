@@ -45,7 +45,8 @@ public:
     Element(Document&, const FlyString& tag_name);
     virtual ~Element() override;
 
-    virtual FlyString tag_name() const final { return m_tag_name; }
+    virtual FlyString node_name() const final { return m_tag_name; }
+    const FlyString& tag_name() const { return m_tag_name; }
 
     bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
     String attribute(const FlyString& name) const;
