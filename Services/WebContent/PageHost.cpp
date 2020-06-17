@@ -25,16 +25,19 @@
  */
 
 #include "PageHost.h"
+#include "ClientConnection.h"
 #include <AK/SharedBuffer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
+#include <WebContent/WebContentClientEndpoint.h>
 
 namespace WebContent {
 
-PageHost::PageHost()
-    : m_page(make<Web::Page>(*this))
+PageHost::PageHost(ClientConnection& client)
+    : m_client(client)
+    , m_page(make<Web::Page>(*this))
 {
     setup_palette();
 }
@@ -94,6 +97,11 @@ void PageHost::set_viewport_rect(const Gfx::IntRect& rect)
     if (page().main_frame().document())
         page().main_frame().document()->layout();
     page().main_frame().set_viewport_rect(rect);
+}
+
+void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)
+{
+    m_client.post_message(Messages::WebContentClient::DidInvalidateContentRect(content_rect));
 }
 
 }

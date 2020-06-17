@@ -39,6 +39,7 @@ public:
     void load(const URL&);
 
     void notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id);
+    void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, const Gfx::IntRect&);
 
 private:
     WebContentView();
