@@ -32,7 +32,9 @@
 #include "SamplerWidget.h"
 #include "TrackManager.h"
 #include "WaveWidget.h"
+#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/TabWidget.h>
 
 MainWidget::MainWidget(TrackManager& track_manager)
@@ -71,6 +73,21 @@ MainWidget::MainWidget(TrackManager& track_manager)
 
 MainWidget::~MainWidget()
 {
+}
+
+void MainWidget::add_actions(GUI::Menu& menu)
+{
+    menu.add_action(GUI::Action::create("Add track", { Mod_Ctrl, Key_T }, [&](auto&) {
+        m_track_manager.add_track();
+    }));
+
+    menu.add_action(GUI::Action::create("Next track", { Mod_Ctrl, Key_N }, [&](auto&) {
+        turn_off_pressed_keys();
+        m_track_manager.next_track();
+        turn_on_pressed_keys();
+
+        m_knobs_widget->update_knobs();
+    }));
 }
 
 // FIXME: There are some unnecessary calls to update() throughout this program,
@@ -125,21 +142,29 @@ void MainWidget::special_key_action(int key_code)
     }
 }
 
-void MainWidget::set_octave_and_ensure_note_change(Direction direction)
+void MainWidget::turn_off_pressed_keys()
 {
     m_keys_widget->set_key(m_keys_widget->mouse_note(), Off);
     for (int i = 0; i < key_code_count; ++i) {
         if (m_keys_pressed[i])
             note_key_action(i, Off);
     }
+}
 
-    m_track_manager.set_octave(direction);
-
+void MainWidget::turn_on_pressed_keys()
+{
     m_keys_widget->set_key(m_keys_widget->mouse_note(), On);
     for (int i = 0; i < key_code_count; ++i) {
         if (m_keys_pressed[i])
             note_key_action(i, On);
     }
+}
+
+void MainWidget::set_octave_and_ensure_note_change(Direction direction)
+{
+    turn_off_pressed_keys();
+    m_track_manager.set_octave(direction);
+    turn_on_pressed_keys();
 
     m_knobs_widget->update_knobs();
     m_keys_widget->update();
