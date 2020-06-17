@@ -1,6 +1,7 @@
 set(SOURCES
     AffineTransform.cpp
     Bitmap.cpp
+    BMPLoader.cpp
     CharacterBitmap.cpp
     Color.cpp
     DisjointRectSet.cpp

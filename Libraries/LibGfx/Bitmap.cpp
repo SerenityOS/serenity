@@ -29,14 +29,13 @@
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/BMPLoader.h>
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/ShareableBitmap.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
-#include <unistd.h>
 
 namespace Gfx {
 
@@ -69,8 +68,7 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
 {
     ASSERT(!m_size.is_empty());
     ASSERT(!size_would_overflow(format, size));
-    if (format == BitmapFormat::Indexed8)
-        m_palette = new RGBA32[256];
+    allocate_palette_from_format(format);
     int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
     m_data = (RGBA32*)mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
     ASSERT(m_data && m_data != (void*)-1);
@@ -102,8 +100,7 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, size_t pitch, RGBA32* d
     , m_format(format)
 {
     ASSERT(!size_would_overflow(format, size));
-    if (format == BitmapFormat::Indexed8)
-        m_palette = new RGBA32[256];
+    allocate_palette_from_format(format);
 }
 
 RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size)
@@ -120,7 +117,7 @@ Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer,
     , m_format(format)
     , m_shared_buffer(move(shared_buffer))
 {
-    ASSERT(format != BitmapFormat::Indexed8);
+    ASSERT(!is_indexed(format));
     ASSERT(!size_would_overflow(format, size));
 }
 
@@ -200,7 +197,7 @@ void Bitmap::set_mmap_name(const StringView& name)
 
 void Bitmap::fill(Color color)
 {
-    ASSERT(m_format == BitmapFormat::RGB32 || m_format == BitmapFormat::RGBA32);
+    ASSERT(!is_indexed(m_format));
     for (int y = 0; y < height(); ++y) {
         auto* scanline = this->scanline(y);
         fast_u32_fill(scanline, color.value(), width());
@@ -247,6 +244,19 @@ ShareableBitmap Bitmap::to_shareable_bitmap(pid_t peer_pid) const
     if (peer_pid > 0)
         bitmap->shared_buffer()->share_with(peer_pid);
     return ShareableBitmap(*bitmap);
+}
+
+void Bitmap::allocate_palette_from_format(BitmapFormat format)
+{
+    if (format == BitmapFormat::Indexed1) {
+        m_palette = new RGBA32[2];
+    } else if (format == BitmapFormat::Indexed2) {
+        m_palette = new RGBA32[4];
+    } else if (format == BitmapFormat::Indexed4) {
+        m_palette = new RGBA32[16];
+    } else if (format == BitmapFormat::Indexed8) {
+        m_palette = new RGBA32[256];
+    }
 }
 
 }

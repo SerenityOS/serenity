@@ -83,6 +83,8 @@ static String guess_mime_type_based_on_filename(const URL& url)
         return "image/png";
     if (url.path().ends_with(".gif"))
         return "image/gif";
+    if (url.path().ends_with(".bmp"))
+        return "image/bmp";
     if (url.path().ends_with(".md"))
         return "text/markdown";
     if (url.path().ends_with(".html") || url.path().ends_with(".htm"))

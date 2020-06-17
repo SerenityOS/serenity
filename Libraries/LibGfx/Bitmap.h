@@ -35,15 +35,19 @@
 
 #define ENUMERATE_IMAGE_FORMATS           \
     __ENUMERATE_IMAGE_FORMAT(png, ".png") \
-    __ENUMERATE_IMAGE_FORMAT(gif, ".gif")
+    __ENUMERATE_IMAGE_FORMAT(gif, ".gif") \
+    __ENUMERATE_IMAGE_FORMAT(bmp, ".bmp")
 
 namespace Gfx {
 
 enum class BitmapFormat {
     Invalid,
+    Indexed1,
+    Indexed2,
+    Indexed4,
+    Indexed8,
     RGB32,
     RGBA32,
-    Indexed8
 };
 
 enum RotationDirection {
@@ -77,6 +81,8 @@ public:
 
     ~Bitmap();
 
+    u8* scanline_u8(int y);
+    const u8* scanline_u8(int y) const;
     RGBA32* scanline(int y);
     const RGBA32* scanline(int y) const;
 
@@ -93,9 +99,21 @@ public:
     SharedBuffer* shared_buffer() { return m_shared_buffer.ptr(); }
     const SharedBuffer* shared_buffer() const { return m_shared_buffer.ptr(); }
 
+    ALWAYS_INLINE static bool is_indexed(BitmapFormat format)
+    {
+        return format == BitmapFormat::Indexed8 || format == BitmapFormat::Indexed4
+            || format == BitmapFormat::Indexed2 || format == BitmapFormat::Indexed1;
+    }
+
     static unsigned bpp_for_format(BitmapFormat format)
     {
         switch (format) {
+        case BitmapFormat::Indexed1:
+            return 1;
+        case BitmapFormat::Indexed2:
+            return 2;
+        case BitmapFormat::Indexed4:
+            return 4;
         case BitmapFormat::Indexed8:
             return 8;
         case BitmapFormat::RGB32:
@@ -167,6 +185,8 @@ private:
     Bitmap(BitmapFormat, const IntSize&, size_t pitch, RGBA32*);
     Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
 
+    void allocate_palette_from_format(BitmapFormat);
+
     IntSize m_size;
     RGBA32* m_data { nullptr };
     RGBA32* m_palette { nullptr };
@@ -178,14 +198,24 @@ private:
     RefPtr<SharedBuffer> m_shared_buffer;
 };
 
+inline u8* Bitmap::scanline_u8(int y)
+{
+    return (u8*)m_data + (y * m_pitch);
+}
+
+inline const u8* Bitmap::scanline_u8(int y) const
+{
+    return (const u8*)m_data + (y * m_pitch);
+}
+
 inline RGBA32* Bitmap::scanline(int y)
 {
-    return reinterpret_cast<RGBA32*>((((u8*)m_data) + (y * m_pitch)));
+    return reinterpret_cast<RGBA32*>(scanline_u8(y));
 }
 
 inline const RGBA32* Bitmap::scanline(int y) const
 {
-    return reinterpret_cast<const RGBA32*>((((const u8*)m_data) + (y * m_pitch)));
+    return reinterpret_cast<const RGBA32*>(scanline_u8(y));
 }
 
 inline const u8* Bitmap::bits(int y) const
@@ -211,9 +241,27 @@ inline Color Bitmap::get_pixel<BitmapFormat::RGBA32>(int x, int y) const
 }
 
 template<>
+inline Color Bitmap::get_pixel<BitmapFormat::Indexed1>(int x, int y) const
+{
+    return Color::from_rgb(m_palette[bits(y)[x]]);
+}
+
+template<>
+inline Color Bitmap::get_pixel<BitmapFormat::Indexed2>(int x, int y) const
+{
+    return Color::from_rgb(m_palette[bits(y)[x]]);
+}
+
+template<>
+inline Color Bitmap::get_pixel<BitmapFormat::Indexed4>(int x, int y) const
+{
+    return Color::from_rgb(m_palette[bits(y)[x]]);
+}
+
+template<>
 inline Color Bitmap::get_pixel<BitmapFormat::Indexed8>(int x, int y) const
 {
-    return Color::from_rgba(m_palette[bits(y)[x]]);
+    return Color::from_rgb(m_palette[bits(y)[x]]);
 }
 
 inline Color Bitmap::get_pixel(int x, int y) const
@@ -223,11 +271,16 @@ inline Color Bitmap::get_pixel(int x, int y) const
         return get_pixel<BitmapFormat::RGB32>(x, y);
     case BitmapFormat::RGBA32:
         return get_pixel<BitmapFormat::RGBA32>(x, y);
+    case BitmapFormat::Indexed1:
+        return get_pixel<BitmapFormat::Indexed1>(x, y);
+    case BitmapFormat::Indexed2:
+        return get_pixel<BitmapFormat::Indexed2>(x, y);
+    case BitmapFormat::Indexed4:
+        return get_pixel<BitmapFormat::Indexed4>(x, y);
     case BitmapFormat::Indexed8:
         return get_pixel<BitmapFormat::Indexed8>(x, y);
     default:
         ASSERT_NOT_REACHED();
-        return {};
     }
 }
 
@@ -252,6 +305,9 @@ inline void Bitmap::set_pixel(int x, int y, Color color)
     case BitmapFormat::RGBA32:
         set_pixel<BitmapFormat::RGBA32>(x, y, color);
         break;
+    case BitmapFormat::Indexed1:
+    case BitmapFormat::Indexed2:
+    case BitmapFormat::Indexed4:
     case BitmapFormat::Indexed8:
         ASSERT_NOT_REACHED();
     default:
