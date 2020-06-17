@@ -64,8 +64,11 @@ class Shell : public Core::Object {
     C_OBJECT(Shell);
 
 public:
+    constexpr static auto init_file_path = "~/shell-init.sh";
+
     int run_command(const StringView&);
     RefPtr<Job> run_command(AST::Command&);
+    bool run_file(const String&);
     bool run_builtin(int argc, const char** argv, int& retval);
     void block_on_job(RefPtr<Job>);
     String prompt() const;
