@@ -617,7 +617,30 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
     RefPtr<Job> job;
 
     auto shell = input_value;
-    auto commands = m_command->run(input_value)->resolve_as_commands(input_value);
+    auto initial_commands = m_command->run(input_value)->resolve_as_commands(input_value);
+    decltype(initial_commands) commands;
+
+    for (auto& command : initial_commands) {
+        if (!command.argv.is_empty()) {
+            auto alias = shell->resolve_alias(command.argv[0]);
+            if (!alias.is_null()) {
+                auto argv0 = command.argv.take_first();
+                auto subcommand_ast = Parser { alias }.parse();
+                if (subcommand_ast) {
+                    while (subcommand_ast->is_execute()) {
+                        auto* ast = static_cast<Execute*>(subcommand_ast.ptr());
+                        subcommand_ast = ast->command();
+                    }
+                    RefPtr<Node> substitute = adopt(*new Join(position(), move(subcommand_ast), adopt(*new CommandLiteral(position(), command))));
+                    commands.append(substitute->run(input_value)->resolve_as_commands(input_value));
+                } else {
+                    commands.append(command);
+                }
+            } else {
+                commands.append(command);
+            }
+        }
+    }
     Vector<RefPtr<Job>> jobs_to_wait_for;
 
     auto run_commands = [&](auto& commands) {

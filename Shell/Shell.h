@@ -40,6 +40,7 @@
 #include <termios.h>
 
 #define ENUMERATE_SHELL_BUILTINS()     \
+    __ENUMERATE_SHELL_BUILTIN(alias)   \
     __ENUMERATE_SHELL_BUILTIN(cd)      \
     __ENUMERATE_SHELL_BUILTIN(cdh)     \
     __ENUMERATE_SHELL_BUILTIN(pwd)     \
@@ -73,6 +74,7 @@ public:
     static Vector<String> expand_globs(const StringView& path, StringView base);
     static Vector<String> expand_globs(Vector<StringView> path_segments, const StringView& base);
     String resolve_path(String) const;
+    String resolve_alias(const String&) const;
 
     RefPtr<AST::Value> lookup_local_variable(const String&);
     String local_variable_or(const String&, const String&);
@@ -161,6 +163,7 @@ private:
     pid_t m_pid { 0 };
 
     HashMap<String, RefPtr<AST::Value>> m_local_variables;
+    HashMap<String, String> m_aliases;
 };
 
 static constexpr bool is_word_character(char c)

@@ -33,6 +33,40 @@
 
 extern RefPtr<Line::Editor> editor;
 
+int Shell::builtin_alias(int argc, const char** argv)
+{
+    Vector<const char*> arguments;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(arguments, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (arguments.is_empty()) {
+        for (auto& alias : m_aliases)
+            printf("%s=%s\n", escape_token(alias.key).characters(), escape_token(alias.value).characters());
+        return 0;
+    }
+
+    bool fail = false;
+    for (auto& argument : arguments) {
+        auto parts = String { argument }.split_limit('=', 2, true);
+        if (parts.size() == 1) {
+            auto alias = m_aliases.get(parts[0]);
+            if (alias.has_value()) {
+                printf("%s=%s\n", escape_token(parts[0]).characters(), escape_token(alias.value()).characters());
+            } else {
+                fail = true;
+            }
+        } else {
+            m_aliases.set(parts[0], parts[1]);
+        }
+    }
+
+    return fail ? 1 : 0;
+}
+
 int Shell::builtin_bg(int argc, const char** argv)
 {
     int job_id = -1;
