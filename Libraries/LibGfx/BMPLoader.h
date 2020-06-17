@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,39 +24,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
+#include <AK/Vector.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
-#include <LibGfx/BMPLoader.h>
-#include <LibGfx/GIFLoader.h>
-#include <LibGfx/PNGLoader.h>
 
 namespace Gfx {
 
-ImageDecoder::ImageDecoder(const u8* data, size_t size)
-{
-    m_plugin = make<PNGImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff())
-        return;
+RefPtr<Gfx::Bitmap> load_bmp(const StringView& path);
 
-    m_plugin = make<GIFImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff())
-        return;
+struct BMPLoadingContext;
 
-    m_plugin = make<BMPImageDecoderPlugin>(data, size);
-    if (m_plugin->sniff())
-        return;
+class BMPImageDecoderPlugin final : public ImageDecoderPlugin {
+public:
+    virtual ~BMPImageDecoderPlugin() override;
+    BMPImageDecoderPlugin(const u8*, size_t);
 
-    m_plugin = nullptr;
-}
+    virtual IntSize size() override;
+    virtual RefPtr<Gfx::Bitmap> bitmap() override;
+    virtual void set_volatile() override;
+    [[nodiscard]] virtual bool set_nonvolatile() override;
+    virtual bool sniff() override;
+    virtual bool is_animated() override;
+    virtual size_t loop_count() override;
+    virtual size_t frame_count() override;
+    virtual ImageFrameDescriptor frame(size_t i) override;
 
-ImageDecoder::~ImageDecoder()
-{
-}
-
-RefPtr<Gfx::Bitmap> ImageDecoder::bitmap() const
-{
-    if (!m_plugin)
-        return nullptr;
-    return m_plugin->bitmap();
-}
+private:
+    OwnPtr<BMPLoadingContext> m_context;
+};
 
 }
