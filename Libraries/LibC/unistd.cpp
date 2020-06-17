@@ -177,16 +177,6 @@ int execlp(const char* filename, const char* arg0, ...)
     return execvpe(filename, const_cast<char* const*>(args.data()), environ);
 }
 
-uid_t getuid()
-{
-    return syscall(SC_getuid);
-}
-
-gid_t getgid()
-{
-    return syscall(SC_getgid);
-}
-
 uid_t geteuid()
 {
     return syscall(SC_geteuid);
@@ -197,6 +187,16 @@ gid_t getegid()
     return syscall(SC_getegid);
 }
 
+uid_t getuid()
+{
+    return syscall(SC_getuid);
+}
+
+gid_t getgid()
+{
+    return syscall(SC_getgid);
+}
+
 pid_t getpid()
 {
     return syscall(SC_getpid);
@@ -205,6 +205,16 @@ pid_t getpid()
 pid_t getppid()
 {
     return syscall(SC_getppid);
+}
+
+int getresuid(uid_t* ruid, uid_t* euid, uid_t* suid)
+{
+    return syscall(SC_getresuid, ruid, euid, suid);
+}
+
+int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid)
+{
+    return syscall(SC_getresgid, rgid, egid, sgid);
 }
 
 pid_t getsid(pid_t pid)
@@ -457,6 +467,18 @@ unsigned int alarm(unsigned int seconds)
     return syscall(SC_alarm, seconds);
 }
 
+int seteuid(uid_t euid)
+{
+    int rc = syscall(SC_seteuid, euid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int setegid(gid_t egid)
+{
+    int rc = syscall(SC_setegid, egid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int setuid(uid_t uid)
 {
     int rc = syscall(SC_setuid, uid);
@@ -466,6 +488,30 @@ int setuid(uid_t uid)
 int setgid(gid_t gid)
 {
     int rc = syscall(SC_setgid, gid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int setreuid(uid_t ruid, uid_t euid)
+{
+    int rc = syscall(SC_setreuid, ruid, euid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int setregid(gid_t rgid, gid_t egid)
+{
+    int rc = syscall(SC_setregid, rgid, egid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int setresuid(uid_t ruid, uid_t euid, uid_t suid)
+{
+    int rc = syscall(SC_setresuid, ruid, euid, suid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int setresgid(gid_t rgid, gid_t egid, gid_t sgid)
+{
+    int rc = syscall(SC_setresgid, rgid, egid, sgid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
