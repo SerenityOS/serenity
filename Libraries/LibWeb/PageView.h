@@ -91,6 +91,7 @@ private:
     virtual void did_scroll() override;
 
     // ^Web::PageClient
+    virtual Gfx::Palette palette() const override { return GUI::ScrollableWidget::palette(); }
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_set_document_in_main_frame(Document*) override;
     virtual void page_did_start_loading(const URL&) override;

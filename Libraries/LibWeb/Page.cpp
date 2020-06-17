@@ -47,7 +47,7 @@ void Page::load(const URL& url)
 
 Gfx::Palette Page::palette() const
 {
-    return static_cast<const PageView&>(m_client).palette();
+    return m_client.palette();
 }
 
 bool Page::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
