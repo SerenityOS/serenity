@@ -32,7 +32,7 @@ namespace WebContent {
 
 class ClientConnection;
 
-class PageHost : public Web::PageClient {
+class PageHost final : public Web::PageClient {
     AK_MAKE_NONCOPYABLE(PageHost);
     AK_MAKE_NONMOVABLE(PageHost);
 
@@ -50,11 +50,11 @@ public:
 
 private:
     // ^PageHost
+    virtual Gfx::Palette palette() const override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
 
     explicit PageHost(ClientConnection&);
 
-    Gfx::Palette palette() const;
     void setup_palette();
 
     ClientConnection& m_client;
