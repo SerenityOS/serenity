@@ -30,12 +30,14 @@
 
 namespace WebContent {
 
+class ClientConnection;
+
 class PageHost : public Web::PageClient {
     AK_MAKE_NONCOPYABLE(PageHost);
     AK_MAKE_NONMOVABLE(PageHost);
 
 public:
-    static NonnullOwnPtr<PageHost> create() { return adopt_own(*new PageHost); }
+    static NonnullOwnPtr<PageHost> create(ClientConnection& client) { return adopt_own(*new PageHost(client)); }
     virtual ~PageHost();
 
     Web::Page& page() { return *m_page; }
@@ -47,11 +49,15 @@ public:
     void set_viewport_rect(const Gfx::IntRect&);
 
 private:
-    PageHost();
+    // ^PageHost
+    virtual void page_did_invalidate(const Gfx::IntRect&) override;
+
+    explicit PageHost(ClientConnection&);
 
     Gfx::Palette palette() const;
     void setup_palette();
 
+    ClientConnection& m_client;
     NonnullOwnPtr<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
 };

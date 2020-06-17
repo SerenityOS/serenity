@@ -38,7 +38,7 @@ static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
 ClientConnection::ClientConnection(Core::LocalSocket& socket, int client_id)
     : IPC::ClientConnection<WebContentServerEndpoint>(*this, socket, client_id)
-    , m_page_host(PageHost::create())
+    , m_page_host(PageHost::create(*this))
 {
     s_connections.set(client_id, *this);
 }

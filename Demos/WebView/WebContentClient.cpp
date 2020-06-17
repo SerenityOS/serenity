@@ -51,3 +51,11 @@ void WebContentClient::handle(const Messages::WebContentClient::DidFinishLoad& m
 {
     dbg() << "handle: WebContentClient::DidFinishLoad! url=" << message.url();
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidInvalidateContentRect& message)
+{
+    dbg() << "handle: WebContentClient::DidInvalidateContentRect! content_rect=" << message.content_rect();
+
+    // FIXME: Figure out a way to coalesce these messages to reduce unnecessary painting
+    m_view.notify_server_did_invalidate_content_rect({}, message.content_rect());
+}
