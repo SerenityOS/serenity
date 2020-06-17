@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         fprintf(stderr, "Not running as root :(\n");
     } else if (getuid() != 0) {
         const char* target_user = argc > 1 ? argv[1] : "root";
-        fprintf(stderr, "Since you're such a good boy, %s, here's a %s shell for you\n", getlogin(), target_user);
+        fprintf(stderr, "Access to account '%s' granted\n", target_user);
     }
 
     uid_t uid = 0;
