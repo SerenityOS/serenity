@@ -339,7 +339,7 @@ int Shell::builtin_exit(int, const char**)
 {
     if (!jobs.is_empty()) {
         if (!m_should_ignore_jobs_on_next_exit) {
-            printf("Shell: Hey dude, you have %zu active job%s, run 'exit' again to really exit.\n", jobs.size(), jobs.size() > 1 ? "s" : "");
+            printf("Shell: You have %zu active job%s, run 'exit' again to really exit.\n", jobs.size(), jobs.size() > 1 ? "s" : "");
             m_should_ignore_jobs_on_next_exit = true;
             return 1;
         }

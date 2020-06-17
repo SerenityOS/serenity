@@ -190,7 +190,7 @@ int OptionParser::handle_short_option()
     bool ok = lookup_short_option(option, needs_value);
     if (!ok) {
         optopt = option;
-        report_error("Unrecognized option \033[1m-%c\033[22m, dude", option);
+        report_error("Unrecognized option \033[1m-%c\033[22m", option);
         return '?';
     }
 
@@ -218,7 +218,7 @@ int OptionParser::handle_short_option()
             optarg = m_argv[m_arg_index + 1];
             m_consumed_args = 2;
         } else {
-            report_error("Missing value for option \033[1m-%c\033[22m, dude", option);
+            report_error("Missing value for option \033[1m-%c\033[22m", option);
             return '?';
         }
     }
@@ -266,7 +266,7 @@ int OptionParser::handle_long_option()
 
     auto* option = lookup_long_option(m_argv[m_arg_index] + 2);
     if (!option) {
-        report_error("Unrecognized option \033[1m%s\033[22m, dude", m_argv[m_arg_index]);
+        report_error("Unrecognized option \033[1m%s\033[22m", m_argv[m_arg_index]);
         return '?';
     }
     // lookup_long_option() will also set optarg if the value of the option is
@@ -278,7 +278,7 @@ int OptionParser::handle_long_option()
     switch (option->has_arg) {
     case no_argument:
         if (optarg) {
-            report_error("Option \033[1m--%s\033[22m doesn't accept an argument, dude", option->name);
+            report_error("Option \033[1m--%s\033[22m doesn't accept an argument", option->name);
             return '?';
         }
         m_consumed_args = 1;
@@ -295,7 +295,7 @@ int OptionParser::handle_long_option()
             optarg = m_argv[m_arg_index + 1];
             m_consumed_args = 2;
         } else {
-            report_error("Missing value for option \033[1m--%s\033[22m, dude", option->name);
+            report_error("Missing value for option \033[1m--%s\033[22m", option->name);
             return '?';
         }
         break;
