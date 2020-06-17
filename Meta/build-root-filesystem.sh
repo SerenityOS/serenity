@@ -163,6 +163,7 @@ ln -s ProfileViewer mnt/bin/pv
 ln -s WebServer mnt/bin/ws
 ln -s KeyboardSettings mnt/bin/keymap
 ln -s Solitaire mnt/bin/sl
+ln -s WebView mnt/bin/wv
 echo "done"
 
 # Run local sync script, if it exists
