@@ -26,6 +26,7 @@
 
 #include "Execution.h"
 #include "Shell.h"
+#include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -116,14 +117,23 @@ int main(int argc, char** argv)
         return shell->complete(editor);
     };
 
-    if (argc > 2 && !strcmp(argv[1], "-c")) {
-        dbgprintf("sh -c '%s'\n", argv[2]);
-        shell->run_command(argv[2]);
+    const char* command_to_run = nullptr;
+    const char* file_to_read_from = nullptr;
+
+    Core::ArgsParser parser;
+    parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
+    parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
+
+    parser.parse(argc, argv);
+
+    if (command_to_run) {
+        dbgprintf("sh -c '%s'\n", command_to_run);
+        shell->run_command(command_to_run);
         return 0;
     }
 
-    if (argc == 2 && argv[1][0] != '-') {
-        auto file = Core::File::construct(argv[1]);
+    if (file_to_read_from && StringView { "-" } != file_to_read_from) {
+        auto file = Core::File::construct(file_to_read_from);
         if (!file->open(Core::IODevice::ReadOnly)) {
             fprintf(stderr, "Failed to open %s: %s\n", file->filename().characters(), file->error_string());
             return 1;
