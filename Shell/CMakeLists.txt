@@ -1,4 +1,6 @@
 set(SOURCES
+    AST.cpp
+    Builtin.cpp
     main.cpp
     Parser.cpp
     Shell.cpp
