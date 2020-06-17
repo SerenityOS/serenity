@@ -176,7 +176,7 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
     dump(regs);
 
     if (Process::current->is_ring0()) {
-        klog() << "Oh shit, we've crashed in ring 0 :(";
+        klog() << "Crash in ring 0 :(";
         dump_backtrace();
         hang();
     }
@@ -819,7 +819,7 @@ void cpu_setup()
     if (g_cpu_supports_rdrand) {
         klog() << "x86: Using RDRAND for good randomness";
     } else {
-        klog() << "x86: No RDRAND support detected. Randomness will be shitty";
+        klog() << "x86: No RDRAND support detected, randomness will be poor";
     }
 }
 

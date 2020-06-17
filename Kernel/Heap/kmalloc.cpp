@@ -142,7 +142,7 @@ void* kmalloc_impl(size_t size)
 
     if (g_kmalloc_bytes_free < real_size) {
         Kernel::dump_backtrace();
-        klog() << "kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=" << g_kmalloc_bytes_free << ", real_size=" << real_size;
+        klog() << "kmalloc(): PANIC! Out of memory\nsum_free=" << g_kmalloc_bytes_free << ", real_size=" << real_size;
         Kernel::hang();
     }
 

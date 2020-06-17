@@ -35,21 +35,6 @@
 #include <string.h>
 #include <unistd.h>
 
-bool detect_useless_use_of_cat(int argc)
-{
-    // I can think of somewhat valid uses of zero-argument cat
-    // from a tty to a pipe, so let's allow those.
-    if (argc != 2)
-        return false;
-
-    struct stat statbuf;
-    int rc = fstat(1, &statbuf);
-    if (rc < 0)
-        return false;
-
-    return S_ISFIFO(statbuf.st_mode);
-}
-
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
@@ -62,9 +47,6 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
-
-    if (detect_useless_use_of_cat(argc))
-        fprintf(stderr, "\033[34;1mMeow! Useless use of cat detected\033[0m\n");
 
     Vector<int> fds;
     if (!paths.is_empty()) {

@@ -78,7 +78,7 @@ void Client::handle_request(ByteBuffer raw_request)
     }
 
     if (request.method() != HTTP::HttpRequest::Method::GET) {
-        send_error_response(403, "Forbidden, bro!", request);
+        send_error_response(403, "Forbidden!", request);
         return;
     }
 
@@ -115,7 +115,7 @@ void Client::handle_request(ByteBuffer raw_request)
 
     auto file = Core::File::construct(real_path);
     if (!file->open(Core::File::ReadOnly)) {
-        send_error_response(404, "Not found, bro!", request);
+        send_error_response(404, "Not found!", request);
         return;
     }
 

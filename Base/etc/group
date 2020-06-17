@@ -1,5 +1,5 @@
 root:x:0:
-goodboys:x:1:anon
+wheel:x:1:anon
 tty:x:2:
 phys:x:3:window,anon
 audio:x:4:anon
