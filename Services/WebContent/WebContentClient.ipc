@@ -1,0 +1,6 @@
+endpoint WebContentClient = 90
+{
+    DidFinishLoad(URL url) =|
+
+    DidPaint(Gfx::IntRect content_rect, i32 shbuf_id) =|
+}

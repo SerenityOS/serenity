@@ -1,0 +1,15 @@
+endpoint WebContentServer = 89
+{
+    Greet() => (i32 client_id)
+
+    UpdateSystemTheme(i32 shbuf_id) =|
+
+    LoadURL(URL url) =|
+
+    Paint(Gfx::IntRect content_rect, i32 shbuf_id) =|
+    SetViewportRect(Gfx::IntRect rect) =|
+
+    MouseDown(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    MouseMove(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    MouseUp(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+}
