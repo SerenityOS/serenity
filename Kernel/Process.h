@@ -142,11 +142,13 @@ public:
     pid_t pid() const { return m_pid; }
     pid_t sid() const { return m_sid; }
     pid_t pgid() const { return m_pgid; }
-    uid_t uid() const { return m_uid; }
-    gid_t gid() const { return m_gid; }
     const FixedArray<gid_t>& extra_gids() const { return m_extra_gids; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
+    uid_t uid() const { return m_uid; }
+    gid_t gid() const { return m_gid; }
+    uid_t suid() const { return m_suid; }
+    gid_t sgid() const { return m_sgid; }
     pid_t ppid() const { return m_ppid; }
 
     pid_t exec_tid() const { return m_exec_tid; }
@@ -192,6 +194,8 @@ public:
     gid_t sys$getegid();
     pid_t sys$getpid();
     pid_t sys$getppid();
+    int sys$getresuid(uid_t*, uid_t*, uid_t*);
+    int sys$getresgid(gid_t*, gid_t*, gid_t*);
     mode_t sys$umask(mode_t);
     int sys$open(const Syscall::SC_open_params*);
     int sys$close(int fd);
@@ -241,8 +245,14 @@ public:
     int sys$setgroups(ssize_t, const gid_t*);
     int sys$pipe(int pipefd[2], int flags);
     int sys$killpg(int pgrp, int sig);
-    int sys$setgid(gid_t);
+    int sys$seteuid(uid_t);
+    int sys$setegid(gid_t);
     int sys$setuid(uid_t);
+    int sys$setgid(gid_t);
+    int sys$setreuid(uid_t, uid_t);
+    int sys$setregid(gid_t, gid_t);
+    int sys$setresuid(uid_t, uid_t, uid_t);
+    int sys$setresgid(gid_t, gid_t, gid_t);
     unsigned sys$alarm(unsigned seconds);
     int sys$access(const char* pathname, size_t path_length, int mode);
     int sys$fcntl(int fd, int cmd, u32 extra_arg);
@@ -480,12 +490,15 @@ private:
     String m_name;
 
     pid_t m_pid { 0 };
-    uid_t m_uid { 0 };
-    gid_t m_gid { 0 };
-    uid_t m_euid { 0 };
-    gid_t m_egid { 0 };
     pid_t m_sid { 0 };
     pid_t m_pgid { 0 };
+
+    uid_t m_euid { 0 };
+    gid_t m_egid { 0 };
+    uid_t m_uid { 0 };
+    gid_t m_gid { 0 };
+    uid_t m_suid { 0 };
+    gid_t m_sgid { 0 };
 
     pid_t m_exec_tid { 0 };
 

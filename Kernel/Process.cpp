@@ -986,9 +986,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
         if (main_program_metadata.is_setuid())
-            m_euid = main_program_metadata.uid;
+            m_euid = m_suid = main_program_metadata.uid;
         if (main_program_metadata.is_setgid())
-            m_egid = main_program_metadata.gid;
+            m_egid = m_sgid = main_program_metadata.gid;
     }
 
     Thread::current->set_default_signal_dispositions();
@@ -1386,10 +1386,12 @@ Process* Process::create_kernel_process(Thread*& first_thread, String&& name, vo
 Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(allocate_pid())
-    , m_uid(uid)
-    , m_gid(gid)
     , m_euid(uid)
     , m_egid(gid)
+    , m_uid(uid)
+    , m_gid(gid)
+    , m_suid(uid)
+    , m_sgid(gid)
     , m_ring(ring)
     , m_executable(move(executable))
     , m_cwd(move(cwd))
@@ -2125,23 +2127,147 @@ int Process::sys$killpg(int pgrp, int signum)
     return do_killpg(pgrp, signum);
 }
 
+int Process::sys$seteuid(uid_t euid)
+{
+    REQUIRE_PROMISE(id);
+
+    // This has FreeBSD semantics.
+    // Linux and Solaris also allow m_euid.
+    if (euid != m_uid && euid != m_suid && !is_superuser())
+        return -EPERM;
+
+    m_euid = euid;
+    return 0;
+}
+
+int Process::sys$setegid(gid_t egid)
+{
+    REQUIRE_PROMISE(id);
+
+    // This has FreeBSD semantics.
+    // Linux and Solaris also allow m_egid.
+    if (egid != m_gid && egid != m_sgid && !is_superuser())
+        return -EPERM;
+
+    m_egid = egid;
+    return 0;
+}
+
 int Process::sys$setuid(uid_t uid)
 {
     REQUIRE_PROMISE(id);
-    if (uid != m_uid && !is_superuser())
+
+    // Linux and Solaris require real or saved.
+    // FreeBSD requires real or effective.
+    if (uid != m_uid && uid != m_euid && !is_superuser())
         return -EPERM;
+
+    // Solaris and Linux only set uid and suid if is_superuser(),
+    // FreeBSD always sets all 3.
     m_uid = uid;
     m_euid = uid;
+    m_suid = uid;
     return 0;
 }
 
 int Process::sys$setgid(gid_t gid)
 {
     REQUIRE_PROMISE(id);
-    if (gid != m_gid && !is_superuser())
+
+    // Linux and Solaris require real or saved.
+    // FreeBSD requires real or effective.
+    if (gid != m_gid && gid != m_egid && !is_superuser())
         return -EPERM;
+
+    // Solaris and Linux only set uid and suid if is_superuser(),
+    // FreeBSD always sets all 3.
     m_gid = gid;
     m_egid = gid;
+    m_sgid = gid;
+    return 0;
+}
+
+int Process::sys$setreuid(uid_t ruid, uid_t euid)
+{
+    REQUIRE_PROMISE(id);
+
+    // This has FreeBSD semantics.
+    // Linux and Solaris also allow id == m_suid.
+    auto ok = [this](uid_t id) { return id == (uid_t)-1 || id == m_uid || id == m_euid; };
+    if ((!ok(ruid) || !ok(euid)) && !is_superuser())
+        return -EPERM;
+
+    if (ruid != (uid_t)-1)
+        m_uid = ruid;
+    if (euid != (uid_t)-1)
+        m_euid = euid;
+
+    if (ruid != (uid_t)-1 || m_euid != m_uid)
+        m_suid = m_euid;
+
+    return 0;
+}
+
+int Process::sys$setregid(gid_t rgid, gid_t egid)
+{
+    REQUIRE_PROMISE(id);
+
+    // This has FreeBSD semantics.
+    // Linux and Solaris also allow id == m_sgid.
+    auto ok = [this](gid_t id) { return id == (gid_t)-1 || id == m_gid || id == m_egid; };
+    if ((!ok(rgid) || !ok(egid)) && !is_superuser())
+        return -EPERM;
+
+    if (rgid != (gid_t)-1)
+        m_gid = rgid;
+    if (egid != (gid_t)-1)
+        m_egid = egid;
+
+    if (rgid != (gid_t)-1 || m_egid != m_gid)
+        m_sgid = m_egid;
+
+    return 0;
+}
+
+int Process::sys$setresuid(uid_t ruid, uid_t euid, uid_t suid)
+{
+    REQUIRE_PROMISE(id);
+
+    if (ruid == (uid_t)-1)
+        ruid = m_uid;
+    if (euid == (uid_t)-1)
+        euid = m_euid;
+    if (suid == (uid_t)-1)
+        suid = m_suid;
+
+    auto ok = [this](uid_t id) { return id == m_uid || id == m_euid || id == m_suid; };
+    if ((!ok(ruid) || !ok(euid) || !ok(suid)) && !is_superuser())
+        return -EPERM;
+
+    m_uid = ruid;
+    m_euid = euid;
+    m_suid = suid;
+    return 0;
+}
+
+int Process::sys$setresgid(gid_t rgid, gid_t egid, gid_t sgid)
+{
+    REQUIRE_PROMISE(id);
+
+    if (rgid == (gid_t)-1)
+        rgid = m_gid;
+    if (egid == (gid_t)-1)
+        egid = m_egid;
+    if (sgid == (gid_t)-1)
+        sgid = m_sgid;
+
+    auto ok = [this](gid_t id) { return id == m_gid || id == m_egid || id == m_sgid; };
+    if ((!ok(rgid) || !ok(egid) || !ok(sgid)) && !is_superuser())
+        return -EPERM;
+
+    m_gid = rgid;
+    m_egid = egid;
+    m_sgid = sgid;
     return 0;
 }
 
@@ -2382,6 +2508,28 @@ pid_t Process::sys$getppid()
 {
     REQUIRE_PROMISE(stdio);
     return m_ppid;
+}
+
+int Process::sys$getresuid(uid_t* ruid, uid_t* euid, uid_t* suid)
+{
+    REQUIRE_PROMISE(stdio);
+    if (!validate_write_typed(ruid) || !validate_write_typed(euid) || !validate_write_typed(suid))
+        return -EFAULT;
+    copy_to_user(ruid, &m_uid);
+    copy_to_user(euid, &m_euid);
+    copy_to_user(suid, &m_suid);
+    return 0;
+}
+
+int Process::sys$getresgid(gid_t* rgid, gid_t* egid, gid_t* sgid)
+{
+    REQUIRE_PROMISE(stdio);
+    if (!validate_write_typed(rgid) || !validate_write_typed(egid) || !validate_write_typed(sgid))
+        return -EFAULT;
+    copy_to_user(rgid, &m_gid);
+    copy_to_user(egid, &m_egid);
+    copy_to_user(sgid, &m_sgid);
+    return 0;
 }
 
 mode_t Process::sys$umask(mode_t mask)

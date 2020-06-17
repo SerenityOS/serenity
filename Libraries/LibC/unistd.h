@@ -84,10 +84,18 @@ uid_t getuid();
 gid_t getgid();
 pid_t getpid();
 pid_t getppid();
+int getresuid(uid_t *, uid_t *, uid_t *);
+int getresgid(gid_t *, gid_t *, gid_t *);
 int getgroups(int size, gid_t list[]);
 int setgroups(size_t, const gid_t*);
+int seteuid(uid_t);
+int setegid(gid_t);
 int setuid(uid_t);
 int setgid(gid_t);
+int setreuid(uid_t, uid_t);
+int setregid(gid_t, gid_t);
+int setresuid(uid_t, uid_t, uid_t);
+int setresgid(gid_t, gid_t, gid_t);
 pid_t tcgetpgrp(int fd);
 int tcsetpgrp(int fd, pid_t pgid);
 ssize_t read(int fd, void* buf, size_t count);
@@ -156,6 +164,8 @@ enum {
 #define MS_BIND (1 << 3)
 #define MS_RDONLY (1 << 4)
 #define MS_REMOUNT (1 << 5)
+
+#define _POSIX_SAVED_IDS
 
 /*
  * We aren't fully compliant (don't support policies, and don't have a wide

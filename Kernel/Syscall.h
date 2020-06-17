@@ -54,8 +54,13 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(kill)               \
     __ENUMERATE_SYSCALL(getuid)             \
     __ENUMERATE_SYSCALL(exit)               \
+    __ENUMERATE_SYSCALL(geteuid)            \
+    __ENUMERATE_SYSCALL(getegid)            \
     __ENUMERATE_SYSCALL(getgid)             \
     __ENUMERATE_SYSCALL(getpid)             \
+    __ENUMERATE_SYSCALL(getppid)            \
+    __ENUMERATE_SYSCALL(getresuid)          \
+    __ENUMERATE_SYSCALL(getresgid)          \
     __ENUMERATE_SYSCALL(waitid)             \
     __ENUMERATE_SYSCALL(mmap)               \
     __ENUMERATE_SYSCALL(munmap)             \
@@ -78,12 +83,9 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(getpgrp)            \
     __ENUMERATE_SYSCALL(fork)               \
     __ENUMERATE_SYSCALL(execve)             \
-    __ENUMERATE_SYSCALL(geteuid)            \
-    __ENUMERATE_SYSCALL(getegid)            \
     __ENUMERATE_SYSCALL(dup)                \
     __ENUMERATE_SYSCALL(dup2)               \
     __ENUMERATE_SYSCALL(sigaction)          \
-    __ENUMERATE_SYSCALL(getppid)            \
     __ENUMERATE_SYSCALL(umask)              \
     __ENUMERATE_SYSCALL(getgroups)          \
     __ENUMERATE_SYSCALL(setgroups)          \
@@ -92,8 +94,14 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(sigpending)         \
     __ENUMERATE_SYSCALL(pipe)               \
     __ENUMERATE_SYSCALL(killpg)             \
+    __ENUMERATE_SYSCALL(seteuid)            \
+    __ENUMERATE_SYSCALL(setegid)            \
     __ENUMERATE_SYSCALL(setuid)             \
     __ENUMERATE_SYSCALL(setgid)             \
+    __ENUMERATE_SYSCALL(setreuid)           \
+    __ENUMERATE_SYSCALL(setregid)           \
+    __ENUMERATE_SYSCALL(setresuid)          \
+    __ENUMERATE_SYSCALL(setresgid)          \
     __ENUMERATE_SYSCALL(alarm)              \
     __ENUMERATE_SYSCALL(fstat)              \
     __ENUMERATE_SYSCALL(access)             \
