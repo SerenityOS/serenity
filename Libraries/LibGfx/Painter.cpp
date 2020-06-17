@@ -53,6 +53,12 @@ ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
 {
     if constexpr (format == BitmapFormat::Indexed8)
         return bitmap.palette_color(bitmap.bits(y)[x]);
+    if constexpr (format == BitmapFormat::Indexed4)
+        return bitmap.palette_color(bitmap.bits(y)[x]);
+    if constexpr (format == BitmapFormat::Indexed2)
+        return bitmap.palette_color(bitmap.bits(y)[x]);
+    if constexpr (format == BitmapFormat::Indexed1)
+        return bitmap.palette_color(bitmap.bits(y)[x]);
     if constexpr (format == BitmapFormat::RGB32)
         return Color::from_rgb(bitmap.scanline(y)[x]);
     if constexpr (format == BitmapFormat::RGBA32)
@@ -668,7 +674,7 @@ void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const In
         return;
     }
 
-    if (source.format() == BitmapFormat::Indexed8) {
+    if (Bitmap::is_indexed(source.format())) {
         const u8* src = source.bits(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch();
         for (int row = first_row; row <= last_row; ++row) {
@@ -760,6 +766,15 @@ void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& s
             break;
         case BitmapFormat::Indexed8:
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed8>);
+            break;
+        case BitmapFormat::Indexed4:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed4>);
+            break;
+        case BitmapFormat::Indexed2:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed2>);
+            break;
+        case BitmapFormat::Indexed1:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed1>);
             break;
         default:
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Invalid>);
