@@ -32,6 +32,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
@@ -47,14 +48,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept cpath rpath unix cpath fattr proc exec thread", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept cpath rpath wpath unix cpath fattr proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio shared_buffer accept cpath rpath proc exec thread", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept cpath rpath wpath proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -174,6 +175,11 @@ int main(int argc, char** argv)
             widget.flip(Gfx::Orientation::Horizontal);
         });
 
+    auto desktop_wallpaper_action = GUI::Action::create("Set as desktop wallpaper",
+        [&](auto&) {
+            GUI::Desktop::the().set_wallpaper(widget.path());
+        });
+
     auto go_first_action = GUI::Action::create("First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::First);
@@ -249,6 +255,8 @@ int main(int argc, char** argv)
     image_menu.add_action(rotate_right_action);
     image_menu.add_action(vertical_flip_action);
     image_menu.add_action(horizontal_flip_action);
+    image_menu.add_separator();
+    image_menu.add_action(desktop_wallpaper_action);
 
     auto& navigate_menu = menubar->add_menu("Navigate");
     navigate_menu.add_action(go_first_action);
