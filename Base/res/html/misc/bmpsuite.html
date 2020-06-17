@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+
+<title>BMP Suite Image List</title>
+
+<style>
+ .b { background:url(bmpsuite_files/bkgd.png); }
+ .q { background-color:#fff0e0; }
+ .bad { background-color:#ffa0a0; }
+ .sz1 { width:127px; height:64px; }
+ .szbad { width:64px; height:64px; }
+</style>
+
+</head>
+
+<body class="vsc-initialized">
+
+<h1>BMP Suite Image List</h1>
+
+<p><i>For <a href="https://entropymine.com/jason/bmpsuite/">BMP Suite</a>
+version 2.6</i></p>
+
+<p>This document describes the images in <i>BMP Suite</i>, and shows what
+I allege to be the correct way to interpret them. PNG and JPEG images are
+used for reference.
+</p>
+
+<p>It also shows how your web browser displays the BMP images,
+but that’s not its main purpose.
+BMP is poor image format to use on web pages, so a web browser’s
+level of support for it is arguably not important.</p>
+
+<table cellpadding="8" border="1">
+
+ <tbody><tr>
+  <th>File</th>
+  <th>Ver.</th>
+  <th>Correct display</th>
+  <th>In your browser</th>
+  <th>Notes</th>
+ </tr>
+
+ <tr>
+  <td>g/pal1.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal1.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal1.bmp"></td>
+  <td>1 bit/pixel paletted image, in which black is the first color in
+   the palette.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal1wb.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal1.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal1wb.bmp"></td>
+  <td>1 bit/pixel paletted image, in which white is the first color in
+   the palette.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal1bg.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal1bg.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal1bg.bmp"></td>
+  <td>1 bit/pixel paletted image, with colors other than black and white.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal1p1.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal1p1.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal1p1.bmp"></td>
+  <td>1 bit/pixel paletted image, with only one color in the palette.
+   The documentation says that 1-bpp images have a palette size of 2
+   (not “up to 2”), but it would be silly for a viewer not to
+   support a size of 1.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal2.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal2.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal2.bmp"></td>
+  <td>A paletted image with 2 bits/pixel. Usually only 1, 4,
+   and 8 are allowed, but 2 is legal on Windows CE.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal2color.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal2color.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal2color.bmp"></td>
+  <td>Same as pal2.bmp, but with a color palette instead of grayscale
+   palette.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal4.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal4.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal4.bmp"></td>
+  <td>Paletted image with 12 palette colors, and 4 bits/pixel.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal4gs.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal4gs.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal4gs.bmp"></td>
+  <td>Paletted image with 12 grayscale palette colors, and 4 bits/pixel.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal4rle.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal4.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal4rle.bmp"></td>
+  <td>4-bit image that uses RLE compression.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal4rletrns.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal4rletrns.png"><br>
+     or<br><img src="bmpsuite_files/pal4rletrns-0.png"><br>
+     or<br><img src="bmpsuite_files/pal4rletrns-b.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal4rletrns.bmp"></td>
+  <td>An RLE-compressed image that uses “delta”
+  codes to skip over some pixels, leaving them undefined. Some viewers
+  make undefined pixels transparent, others make them black, and
+  others assign them palette color 0 (purple, in this case).</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal4rlecut.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal4rlecut.png"><br>
+     or<br><img src="bmpsuite_files/pal4rlecut-0.png"><br>
+     or<br><img src="bmpsuite_files/pal4rlecut-b.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal4rlecut.bmp"></td>
+  <td>An RLE-compressed image that uses “delta” codes,
+   and early EOL &amp; EOBMP markers, to skip over some pixels.
+   It’s okay if the viewer’s image doesn’t exactly match
+   any of the reference images.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8.bmp"></td>
+  <td>Our standard paletted image, with 252 palette colors, and 8
+   bits/pixel.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8-0.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8-0.bmp"></td>
+  <td>Every field that can be set to 0 is set to 0: pixels/meter=0;
+   colors used=0 (meaning the default 256); size-of-image=0.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8gs.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8gs.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8gs.bmp"></td>
+  <td>An 8-bit image with a palette of 252 grayscale colors.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8rle.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8rle.bmp"></td>
+  <td>8-bit image that uses RLE compression.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8rletrns.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8rletrns.png"><br>
+     or<br><img src="bmpsuite_files/pal8rletrns-0.png"><br>
+     or<br><img src="bmpsuite_files/pal8rletrns-b.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8rletrns.bmp"></td>
+  <td>8-bit version of q/pal4rletrns.bmp.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8rlecut.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8rlecut.png"><br>
+     or<br><img src="bmpsuite_files/pal8rlecut-0.png"><br>
+     or<br><img src="bmpsuite_files/pal8rlecut-b.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8rlecut.bmp"></td>
+  <td>8-bit version of q/pal4rlecut.bmp.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8w126.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8w126.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8w126.bmp"></td>
+  <td rowspan="3">Images with different widths and heights.
+   In BMP format, rows are padded to a multiple of four bytes, so we
+   test all four possibilities.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8w125.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8w125.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8w125.bmp"></td>
+ </tr>
+
+ <tr>
+  <td>g/pal8w124.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8w124.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8w124.bmp"></td>
+ </tr>
+
+ <tr>
+  <td>g/pal8topdown.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8topdown.bmp"></td>
+  <td>BMP images are normally stored from the bottom up, but
+   there is a way to store them from the top down.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8offs.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8offs.bmp"></td>
+  <td>A file with some unused bytes between the palette and the
+   image. This is probably valid, but I’m not 100% sure.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8oversizepal.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8oversizepal.bmp"></td>
+  <td>An 8-bit image with 300 palette colors. This may be invalid,
+   because the documentation could
+   be interpreted to imply that 8-bit images aren’t allowed
+   to have more than 256 colors.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8nonsquare.bmp</td>
+  <td>3</td>
+  <td class="b">
+   <img src="bmpsuite_files/pal8nonsquare-v.png"><br>
+   or<br>
+   <img src="bmpsuite_files/pal8nonsquare-e.png">
+  </td>
+  <td class="b"><img src="bmpsuite_files/pal8nonsquare.bmp"></td>
+  <td>An image with non-square pixels: the X pixels/meter is twice
+   the Y pixels/meter. Image <i>editors</i> can be expected to
+   leave the image “squashed”; image <i>viewers</i> should
+   consider stretching it to its correct proportions.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8os2.bmp</td>
+  <td>OS/2v1</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8os2.bmp"></td>
+  <td>An OS/2-style bitmap. This format can be called OS/2 BMPv1,
+   or Windows BMPv2.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8os2-sz.bmp</td>
+  <td>OS/2v1</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8os2-sz.bmp"></td>
+  <td>Some OS/2 BMP specifications say that the <i>size</i> field in the file
+   header should be set to the aggregate size of the file header and
+   <i>infoheader</i>, instead of the total file size.
+   For OS/2v1, that means it will always be 26.
+   BMP decoders usually ignore this field, so it shouldn’t
+   cause a problem.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8os2-hs.bmp</td>
+  <td>OS/2v1</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8os2-hs.bmp"></td>
+  <td>Some OS/2 BMP specifications define the fields at offsets 6 and
+   8 to be a “hotspot” (for cursor graphics).
+   Though the fields are not used in BMP files, they are sometimes,
+   as in this file, set to nonzero values.
+   This should cause no problems, except that it could prevent some
+   programs from detecting this file as a BMP file.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8os2sp.bmp</td>
+  <td>OS/2v1</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8os2sp.bmp"></td>
+  <td>An OS/2v1 with a less-than-full-sized palette.
+   Probably not valid, but such files have been seen in the wild.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8os2v2.bmp</td>
+  <td>OS/2v2</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8os2v2.bmp"></td>
+  <td>An OS/2v2 bitmap.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8os2v2-16.bmp</td>
+  <td>OS/2v2</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8os2v2-16.bmp"></td>
+  <td>An OS/2v2 bitmap whose header has only 16 bytes, instead of the full 64.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8os2v2-sz.bmp</td>
+  <td>OS/2v2</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8os2v2-sz.bmp"></td>
+  <td>An OS/2v2 bitmap. Like q/pal8os2-sz.bmp, the <i>size</i> field is set to
+   the size of the headers (78), instead of the size of the file.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal8os2v2-40sz.bmp</td>
+  <td>OS/2v2</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8os2v2-40sz.bmp"></td>
+  <td>An OS/2v2 bitmap, with a 40-byte header. Like q/pal8os2-sz.bmp,
+   the <i>size</i> field is set to the size of the headers (54),
+   instead of the size of the file. Except for that, this file
+   cannot be distinguished from a Windows BMPv3 file.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb24rle24.bmp</td>
+  <td>OS/2v2</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24rle24.bmp"></td>
+  <td>An OS/2v2 bitmap with RLE24 compression. This image uses a limited
+   number of colors, just to make it more compressible.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/pal1huff.bmp</td>
+  <td>OS/2v2</td>
+  <td class="b"><img src="bmpsuite_files/pal1.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal1huff.bmp"></td>
+  <td>My attempt to make a BMP file with Huffman 1D compression.
+   It is quite possibly incorrect. Even if everything else about it is correct,
+   I have no way to know whether it is black/white reversed, and/or flipped
+   vertically.</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8v4.bmp</td>
+  <td>4</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8v4.bmp"></td>
+  <td>A v4 bitmap. I’m not sure that the gamma and chromaticity values in
+   this file are sensible, because I can’t find any detailed documentation
+   of them. Note that bmpsuite v2.4 and earlier had the gamma set differently
+   (and probably incorrectly).</td>
+ </tr>
+
+ <tr>
+  <td>g/pal8v5.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/pal8v5.bmp"></td>
+  <td>A v5 bitmap. Version 5 has additional colorspace options over v4, so it
+   is easier to create, and ought to be more portable.</td>
+ </tr>
+
+ <tr>
+  <td>g/rgb16.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb16.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb16.bmp"></td>
+  <td>A 16-bit image with the default color format: 5 bits each for red,
+   green, and blue, and 1 unused bit.
+   The whitest colors should (I assume) be displayed as pure white:
+   <span style="background-color:rgb(255,255,255)">(255,255,255)</span>, not
+   <span style="background-color:rgb(248,248,248)">(248,248,248)</span>.</td>
+ </tr>
+
+ <tr>
+  <td>g/rgb16bfdef.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb16.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb16bfdef.bmp"></td>
+  <td>Same format as rgb16.bmp, but with a BITFIELDS segment.</td>
+ </tr>
+
+ <tr>
+  <td>g/rgb16-565.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb16-565.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb16-565.bmp"></td>
+  <td>A 16-bit image with a BITFIELDS segment indicating 5 red, 6 green,
+   and 5 blue bits. This is a standard 16-bit format, even supported by
+   old versions of Windows that don’t support any other non-default 16-bit
+   formats.
+   The whitest colors should be displayed as pure white:
+   <span style="background-color:rgb(255,255,255)">(255,255,255)</span>, not
+   <span style="background-color:rgb(248,252,248)">(248,252,248)</span>.</td>
+ </tr>
+
+ <tr>
+  <td>g/rgb16-565pal.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb16-565.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb16-565pal.bmp"></td>
+  <td>A 16-bit image with both a BITFIELDS segment and a palette.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb16faketrns.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb16.png"><br>
+    or maybe<br>
+    <img class="b" src="bmpsuite_files/rgb16faketrns.png">
+</td>
+  <td class="b"><img src="bmpsuite_files/rgb16faketrns.bmp"></td>
+  <td>Same idea as q/rgb32fakealpha.bmp. The default 16-bit color format has
+   one unused bit per pixel, and in this image some of the unused bits are
+   set to 1. It’s possible that some viewers will interpret this image
+   as having transparency.
+</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb16-231.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb16-231.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb16-231.bmp"></td>
+  <td>An unusual and silly 16-bit image, with 2 red bits, 3 green bits, and 1
+  blue bit. Most viewers do support this image, but the colors may be darkened
+  with a yellow-green shadow. That’s because they’re doing simple
+  bit-shifting (possibly including one round of bit replication), instead of
+  proper scaling.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb16-3103.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb16-3103.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb16-3103.bmp"></td>
+  <td>Similar to q/rgb16-231.bmp, with 3 red bits, 10 green bits, and 3
+  blue bits.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba16-4444.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgba16-4444.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba16-4444.bmp"></td>
+  <td>A 16-bit image with an alpha channel. There are 4 bits for each color
+   channel, and 4 bits for the alpha channel.
+   It’s not clear if this is valid, but I can’t find anything that
+   suggests it isn’t.
+   </td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba16-5551.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgba16-5551.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba16-5551.bmp"></td>
+  <td>Similar to q/rgba16-4444.bmp, with 5 red bits, 5 green bits, 5 blue bits,
+   and a 1-bit alpha channel.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba16-1924.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgba16-1924.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba16-1924.bmp"></td>
+  <td>Similar to q/rgba16-4444.bmp, with 1 red bit, 9 green bits, 2 blue bits,
+   and 4 bits for the alpha channel.
+   </td>
+ </tr>
+
+ <tr>
+  <td>g/rgb24.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24.bmp"></td>
+  <td>A perfectly ordinary 24-bit (truecolor) image.</td>
+ </tr>
+
+ <tr>
+  <td>g/rgb24pal.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24pal.bmp"></td>
+  <td>A 24-bit image, with a palette containing 256 colors. There is little if
+   any reason for a truecolor image to contain a palette, but it is legal.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb24largepal.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24largepal.bmp"></td>
+  <td>A 24-bit image, with a palette containing 300 colors.
+   The fact that the palette has more than 256 colors may cause some viewers
+   to complain, but the documentation does not mention a size limit.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb24prof.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24prof.bmp"></td>
+  <td>My attempt to make a BMP file with an embedded color profile.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb24prof2.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24prof2.bmp"></td>
+  <td>This image tries to test whether color profiles are fully supported.
+   It has the red and green channels swapped, and an embedded color profile
+   that tries to swap them back. Support for this is uncommon.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb24lprof.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24lprof.bmp"></td>
+  <td>My attempt to make a BMP file with a linked color profile.
+   Supporting linked profiles may be a bad idea, as it can lead to security vulnerabilities.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb24jpeg.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.jpg"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24jpeg.bmp"></td>
+  <td rowspan="2">My attempt to make BMP files with embedded JPEG and PNG images.
+   These are not likely to be supported by much of anything (they’re
+   intended for printers).<br>
+   These image are stored in top-down order, with a positive bV5Height field.
+   This might not be correct. The documentation is very confusing on this issue.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb24png.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb24png.bmp"></td>
+ </tr>
+
+ <tr>
+  <td>g/rgb32.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb32.bmp"></td>
+  <td>A 32-bit image using the default color format for 32-bit images (no
+   BITFIELDS segment). There are 8 bits per color channel, and 8 unused
+   bits. The unused bits are set to 0.</td>
+ </tr>
+
+ <tr>
+  <td>g/rgb32bfdef.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb32bfdef.bmp"></td>
+  <td>Same format as rgb32.bmp, but with a BITFIELDS segment.</td>
+ </tr>
+
+ <tr>
+  <td>g/rgb32bf.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb32bf.bmp"></td>
+  <td>A 32-bit image with a BITFIELDS segment. As usual, there are 8 bits per
+   color channel, and 8 unused bits. But the color channels are in an unusual
+   order, so the viewer must read the BITFIELDS, and not just guess.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb32h52.bmp</td>
+  <td>(52)</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb32h52.bmp"></td>
+  <td>Similar to g/rgb32bf.bmp, but with a 52-byte
+   “BITMAPV2INFOHEADER”. This is an uncommon version of BMP, and I
+   can’t confirm that this file is correct.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb32-xbgr.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb32-xbgr.bmp"></td>
+  <td>Color channels are the same size and order as rgb32bfdef.bmp, but they use
+   the highest available bits, instead of the lowest (or vice versa, depending
+   on your byte-order perspective).</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb32fakealpha.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"><br>
+    or<br>
+    <img class="b" src="bmpsuite_files/fakealpha.png">
+</td>
+  <td class="b"><img src="bmpsuite_files/rgb32fakealpha.bmp"></td>
+  <td>Same as g/rgb32.bmp, except that the unused bits are set to something
+   other than 0.
+   If the image becomes transparent toward the bottom, it probably means
+   the viewer uses heuristics to guess whether the undefined
+   data represents transparency.
+   Reportedly, in ICO icon format, a 32-bit image has transparency if any
+   of the could-be alpha samples are nonzero. Some BMP decoders probably
+   use the same algorithm for BMP.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb32-111110.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb24.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb32-111110.bmp"></td>
+  <td>A 32 bits/pixel image, with all 32 bits used: 11 each for red and
+   green, and 10 for blue. As far as I know, this is valid, but it
+   is unusual.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgb32-7187.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb32-7187.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgb32-7187.bmp"></td>
+  <td>A 32 bits/pixel image, with 7 bits for red, 18 for green, and 7 for
+   blue.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba32-1.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgba32.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba32-1.bmp"></td>
+  <td>A BMP with an alpha channel. Transparency is barely documented,
+   so it’s <i>possible</i> that this file is not correctly formed.
+   The color channels are in the usual order.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba32-2.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgba32.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba32-2.bmp"></td>
+  <td>Same as q/rgba32-1.bmp, but with the color channels
+   in an unusual order, to prevent viewers from
+   passing this test by making a lucky guess.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba32-1010102.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgba32-1010102.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba32-1010102.bmp"></td>
+  <td>A 32 bits/pixel image, with 10 bits for red, 10 for green, 10 for blue,
+   and 2 for alpha.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba32-81284.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgba32-81284.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba32-81284.bmp"></td>
+  <td>A 32 bits/pixel image, with 8 bits for red, 12 for green, 8 for blue,
+   and 4 for alpha.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba32-61754.bmp</td>
+  <td>5</td>
+  <td class="b"><img src="bmpsuite_files/rgba32-61754.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba32-61754.bmp"></td>
+  <td>A 32 bits/pixel image, with 6 bits for red, 17 for green, 5 for blue,
+   and 4 for alpha.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba32abf.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgba32.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba32abf.bmp"></td>
+  <td>An image of type BI_ALHPABITFIELDS. Supposedly, this was used on
+   Windows CE. I don’t know whether it is constructed correctly.</td>
+ </tr>
+
+ <tr>
+  <td class="q">q/rgba32h56.bmp</td>
+  <td>(56)</td>
+  <td class="b"><img src="bmpsuite_files/rgba32.png"></td>
+  <td class="b"><img src="bmpsuite_files/rgba32h56.bmp"></td>
+  <td>Similar to q/rgba32-2.bmp, but with a 56-byte
+   “BITMAPV3INFOHEADER”. This is an uncommon version of BMP, and I
+   can’t confirm that this file is correct.</td>
+ </tr>
+
+ <tr>
+  <td class="q">x/ba-bm.bmp</td>
+  <td>OS/2v2</td>
+  <td class="b"><img src="bmpsuite_files/pal8.png"></td>
+  <td class="b"><img src="bmpsuite_files/ba-bm.bmp"></td>
+  <td>This image uses the OS/2v2 “Bitmap Array” (BA) container
+   format. Although a BA file may contain multiple images, this file has
+   only one.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badbitcount.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badbitcount.bmp"></td>
+  <td>Header indicates an absurdly large number of bits/pixel.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badbitssize.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badbitssize.bmp"></td>
+  <td>Header incorrectly indicates that the bitmap is several GB in size.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/baddens1.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img class="sz1" src="bmpsuite_files/baddens1.bmp"></td>
+  <td rowspan="2">Density (pixels per meter) suggests the image is <i>much</i>
+      larger in one dimension than the other.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/baddens2.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img class="sz1" src="bmpsuite_files/baddens2.bmp"></td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badfilesize.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badfilesize.bmp"></td>
+  <td>Header incorrectly indicates that the file is several GB in size.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badheadersize.bmp</td>
+  <td>?</td>
+  <td class="b">N/A</td>
+  <td class="b"><img class="sz1" src="bmpsuite_files/badheadersize.bmp"></td>
+  <td>Header size is 66 bytes, which is not a valid size for any known BMP
+   version.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badpalettesize.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badpalettesize.bmp"></td>
+  <td>Header incorrectly indicates that the palette contains an absurdly large
+   number of colors.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badplanes.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badplanes.bmp"></td>
+  <td>The “planes” setting, which is required to be 1, is not 1.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badrle4.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badrle4.bmp"></td>
+  <td>An invalid RLE4-compressed image that tries to cause buffer overruns.</td>
+ </tr>
+ <tr>
+  <td class="bad">b/badrle4bis.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badrle4bis.bmp"></td>
+  <td>Another invalid RLE4-compressed image that tries to cause buffer overruns.</td>
+ </tr>
+ <tr>
+  <td class="bad">b/badrle4ter.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badrle4ter.bmp"></td>
+  <td>Another invalid RLE4-compressed image that tries to cause buffer overruns.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badrle.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badrle.bmp"></td>
+  <td>8-bit version of b/badrle4.bmp.</td>
+ </tr>
+ <tr>
+  <td class="bad">b/badrlebis.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badrlebis.bmp"></td>
+  <td>8-bit version of b/badrle4bis.bmp.</td>
+ </tr>
+ <tr>
+  <td class="bad">b/badrleter.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/badrleter.bmp"></td>
+  <td>8-bit version of b/badrle4ter.bmp.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/badwidth.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img class="szbad" src="bmpsuite_files/badwidth.bmp"></td>
+  <td>The image claims to be a negative number of pixels in width.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/pal8badindex.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/pal8badindex.bmp"></td>
+  <td>Many of the palette indices used in the image are not present in the
+   palette.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/reallybig.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img class="szbad" src="bmpsuite_files/reallybig.bmp"></td>
+  <td>An image with a very large reported width and height.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/rgb16-880.bmp</td>
+  <td>3</td>
+  <td class="b"><img src="bmpsuite_files/rgb16-880.png"><br>(?)</td>
+  <td class="b"><img src="bmpsuite_files/rgb16-880.bmp"></td>
+  <td>A 16-bit image with a BITFIELDS segment indicating 8 red, 8 green,
+   and 0 blue bits. The documentation doesn’t say whether undefined
+   channels are legal, or how they should be handled.
+ </td></tr>
+
+ <tr>
+  <td class="bad">b/rletopdown.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/rletopdown.bmp"></td>
+  <td>An RLE-compressed image that tries to use top-down orientation,
+   which isn’t allowed.</td>
+ </tr>
+
+ <tr>
+  <td class="bad">b/shortfile.bmp</td>
+  <td>3</td>
+  <td class="b">N/A</td>
+  <td class="b"><img src="bmpsuite_files/shortfile.bmp"></td>
+  <td>A file that has been truncated in the middle of the bitmap.</td>
+ </tr>
+
+</tbody></table>
+
+
+
+
+</body></html>
