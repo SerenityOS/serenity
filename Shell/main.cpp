@@ -119,12 +119,23 @@ int main(int argc, char** argv)
 
     const char* command_to_run = nullptr;
     const char* file_to_read_from = nullptr;
+    bool skip_init_file = false;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
+    parser.add_option(skip_init_file, "Skip running ~/shell-init.sh", "skip-init", 0);
 
     parser.parse(argc, argv);
+
+    if (!skip_init_file) {
+        String file_path = Shell::init_file_path;
+        if (file_path.starts_with('~'))
+            file_path = shell->expand_tilde(file_path);
+        if (!shell->run_file(file_path)) {
+            fprintf(stderr, "Shell: Failed to execute init file '%s'\n", Shell::init_file_path);
+        }
+    }
 
     if (command_to_run) {
         dbgprintf("sh -c '%s'\n", command_to_run);
@@ -133,18 +144,9 @@ int main(int argc, char** argv)
     }
 
     if (file_to_read_from && StringView { "-" } != file_to_read_from) {
-        auto file = Core::File::construct(file_to_read_from);
-        if (!file->open(Core::IODevice::ReadOnly)) {
-            fprintf(stderr, "Failed to open %s: %s\n", file->filename().characters(), file->error_string());
-            return 1;
-        }
-        for (;;) {
-            auto line = file->read_line(4096);
-            if (line.is_null())
-                break;
-            shell->run_command(String::copy(line, Chomp));
-        }
-        return 0;
+        if (shell->run_file(file_to_read_from))
+            return 0;
+        return 1;
     }
 
     editor->on_interrupt_handled = [&] {

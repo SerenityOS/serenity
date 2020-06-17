@@ -460,6 +460,22 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
     return *job;
 }
 
+bool Shell::run_file(const String& filename)
+{
+    auto file_result = Core::File::open(filename, Core::File::ReadOnly);
+    if (file_result.is_error()) {
+        fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file_result.error().characters());
+        return false;
+    }
+    auto file = file_result.value();
+    for (;;) {
+        auto line = file->read_line(4096);
+        if (line.is_null())
+            break;
+        run_command(String::copy(line, Chomp));
+    }
+    return true;
+}
 void Shell::take_back_stdin()
 {
     tcsetpgrp(0, m_pid);
