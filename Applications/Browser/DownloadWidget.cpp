@@ -33,6 +33,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Image.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ProgressBar.h>
@@ -72,15 +73,11 @@ DownloadWidget::DownloadWidget(const URL& url)
     animation_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     animation_container.set_preferred_size(0, 32);
     auto& animation_layout = animation_container.set_layout<GUI::HorizontalBoxLayout>();
-    auto& browser_icon_label = animation_container.add<GUI::Label>();
-    browser_icon_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-browser.png"));
-    browser_icon_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    browser_icon_label.set_preferred_size(32, 32);
+
+    auto& browser_image = animation_container.add<GUI::Image>();
+    browser_image.load_from_file("/res/download-animation.gif");
     animation_layout.add_spacer();
-    auto& folder_icon_label = animation_container.add<GUI::Label>();
-    folder_icon_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-folder.png"));
-    folder_icon_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    folder_icon_label.set_preferred_size(32, 32);
+
 
     auto& source_label = add<GUI::Label>(String::format("From: %s", url.to_string().characters()));
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
