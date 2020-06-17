@@ -491,18 +491,6 @@ int setgid(gid_t gid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int setreuid(uid_t ruid, uid_t euid)
-{
-    int rc = syscall(SC_setreuid, ruid, euid);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int setregid(gid_t rgid, gid_t egid)
-{
-    int rc = syscall(SC_setregid, rgid, egid);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int setresuid(uid_t ruid, uid_t euid, uid_t suid)
 {
     int rc = syscall(SC_setresuid, ruid, euid, suid);
