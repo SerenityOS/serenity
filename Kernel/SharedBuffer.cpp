@@ -132,7 +132,6 @@ void SharedBuffer::deref_for_process(Process& process)
                 dbg() << "Releasing shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid();
 #endif
                 process.deallocate_region(*ref.region);
-                m_refs.unstable_remove(i);
 #ifdef SHARED_BUFFER_DEBUG
                 dbg() << "Released shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid();
 #endif
