@@ -306,6 +306,11 @@ void Shell::unset_local_variable(const String& name)
     m_local_variables.remove(name);
 }
 
+String Shell::resolve_alias(const String& name) const
+{
+    return m_aliases.get(name).value_or({});
+}
+
 int Shell::run_command(const StringView& cmd)
 {
     if (cmd.is_empty())
