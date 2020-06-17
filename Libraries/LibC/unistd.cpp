@@ -463,7 +463,7 @@ int setuid(uid_t uid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int setgid(uid_t gid)
+int setgid(gid_t gid)
 {
     int rc = syscall(SC_setgid, gid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
