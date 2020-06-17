@@ -73,17 +73,22 @@ int main(int argc, char** argv)
 
     signal(SIGCHLD, [](int) {
         auto& jobs = s_shell->jobs;
+        Vector<u64> disowned_jobs;
         for (auto& job : jobs) {
-            if (s_shell->is_waiting_for(job.value->pid()))
-                continue;
             int wstatus = 0;
             auto child_pid = waitpid(job.value->pid(), &wstatus, WNOHANG);
             if (child_pid == job.value->pid()) {
-                if (WIFEXITED(wstatus) || WIFSIGNALED(wstatus)) {
-                    Core::EventLoop::current().post_event(*s_shell, make<Core::CustomEvent>(Shell::ShellEventType::ChildExited, job.value));
+                if (WIFEXITED(wstatus)) {
+                    job.value->set_has_exit(WEXITSTATUS(wstatus));
+                } else if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
+                    job.value->set_has_exit(126);
                 }
             }
+            if (job.value->should_be_disowned())
+                disowned_jobs.append(job.key);
         }
+        for (auto key : disowned_jobs)
+            jobs.remove(key);
     });
 
     // Ignore SIGTSTP as the shell should not be suspended with ^Z.
@@ -133,10 +138,7 @@ int main(int argc, char** argv)
     }
 
     editor->on_interrupt_handled = [&] {
-        if (shell->should_read_more()) {
-            shell->finish_command();
-            editor->finish();
-        }
+        editor->finish();
     };
 
     shell->add_child(*editor);

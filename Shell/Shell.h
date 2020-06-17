@@ -39,37 +39,6 @@
 #include <LibLine/Editor.h>
 #include <termios.h>
 
-struct ExitCodeOrContinuationRequest {
-    enum ContinuationRequest {
-        Nothing,
-        Pipe,
-        DoubleQuotedString,
-        SingleQuotedString,
-    };
-
-    ExitCodeOrContinuationRequest(ContinuationRequest continuation)
-        : continuation(continuation)
-    {
-    }
-
-    ExitCodeOrContinuationRequest(int exit)
-        : exit_code(exit)
-    {
-    }
-
-    bool has_value() const { return exit_code.has_value(); }
-    int value() const
-    {
-        ASSERT(has_value());
-        return exit_code.value();
-    }
-
-    Optional<int> exit_code;
-    ContinuationRequest continuation { Nothing };
-};
-
-using ContinuationRequest = ExitCodeOrContinuationRequest::ContinuationRequest;
-
 #define ENUMERATE_SHELL_BUILTINS()     \
     __ENUMERATE_SHELL_BUILTIN(cd)      \
     __ENUMERATE_SHELL_BUILTIN(cdh)     \
@@ -94,13 +63,21 @@ class Shell : public Core::Object {
     C_OBJECT(Shell);
 
 public:
-    ExitCodeOrContinuationRequest run_command(const StringView&);
+    int run_command(const StringView&);
+    RefPtr<Job> run_command(AST::Command&);
     bool run_builtin(int argc, const char** argv, int& retval);
+    void block_on_job(RefPtr<Job>);
     String prompt() const;
 
     static String expand_tilde(const String&);
-    static Vector<String> expand_globs(const StringView& path, const StringView& base);
-    Vector<String> expand_parameters(const StringView&) const;
+    static Vector<String> expand_globs(const StringView& path, StringView base);
+    static Vector<String> expand_globs(Vector<StringView> path_segments, const StringView& base);
+    String resolve_path(String) const;
+
+    RefPtr<AST::Value> lookup_local_variable(const String&);
+    String local_variable_or(const String&, const String&);
+    void set_local_variable(const String&, RefPtr<AST::Value>);
+    void unset_local_variable(const String&);
 
     static String escape_token(const String& token);
     static String unescape_token(const String& token);
@@ -108,24 +85,21 @@ public:
     static bool is_glob(const StringView&);
     static Vector<StringView> split_path(const StringView&);
 
-    Vector<String> process_arguments(const Vector<Token>&);
-
-    static ContinuationRequest is_complete(const Vector<Command>&);
-
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete(const Line::Editor&);
+    Vector<Line::CompletionSuggestion> complete_path(const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_program_name(const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
 
-    bool is_waiting_for(pid_t pid) const { return m_waiting_for_pid == pid; }
+    void take_back_stdin();
 
     u64 find_last_job_id() const;
+    const Job* find_job(u64 id);
 
     String get_history_path();
     void load_history();
     void save_history();
     void print_path(const String& path);
-
-    bool should_read_more() const { return m_should_continue != ContinuationRequest::Nothing; }
-    void finish_command() { m_should_break_current_command = true; }
 
     bool read_single_line();
 
@@ -148,12 +122,11 @@ public:
     int last_return_code { 0 };
     Vector<String> directory_stack;
     CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
-    HashMap<u64, OwnPtr<Job>> jobs;
+    HashMap<u64, RefPtr<Job>> jobs;
     Vector<String, 256> cached_path;
 
     enum ShellEventType {
         ReadLine,
-        ChildExited,
     };
 
 private:
@@ -163,15 +136,8 @@ private:
     // ^Core::Object
     virtual void save_to(JsonObject&) override;
 
-    struct SpawnedProcess {
-        String name;
-        pid_t pid;
-    };
-
     void cache_path();
     void stop_all_jobs();
-
-    IterationDecision wait_for_pid(const SpawnedProcess&, bool is_first_command_in_chain, int& return_value);
 
     virtual void custom_event(Core::CustomEvent&) override;
 
@@ -190,11 +156,11 @@ private:
 #undef __ENUMERATE_SHELL_BUILTIN
     };
 
-    ExitCodeOrContinuationRequest::ContinuationRequest m_should_continue { ExitCodeOrContinuationRequest::Nothing };
     StringBuilder m_complete_line_builder;
-    bool m_should_break_current_command { false };
     bool m_should_ignore_jobs_on_next_exit { false };
-    pid_t m_waiting_for_pid { -1 };
+    pid_t m_pid { 0 };
+
+    HashMap<String, RefPtr<AST::Value>> m_local_variables;
 };
 
 static constexpr bool is_word_character(char c)
