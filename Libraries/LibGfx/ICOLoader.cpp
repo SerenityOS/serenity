@@ -113,6 +113,7 @@ struct ICOLoadingContext {
     const u8* data { nullptr };
     size_t data_size { 0 };
     Vector<ImageDescriptor> images;
+    size_t largest_index;
 };
 
 RefPtr<Gfx::Bitmap> load_ico(const StringView& path)
@@ -164,6 +165,21 @@ static Optional<ImageDescriptor> decode_ico_direntry(BufferStream& stream)
     return { desc };
 }
 
+static size_t find_largest_image(const ICOLoadingContext& context)
+{
+    size_t max_area = 0;
+    size_t index = 0;
+    size_t largest_index = 0;
+    for(const auto& desc : context.images) {
+        if (desc.width * desc.height > max_area) {
+            max_area = desc.width * desc.height;
+            largest_index = index;
+        }
+        ++index;
+    }
+    return largest_index;
+}
+
 static bool load_ico_directory(ICOLoadingContext& context)
 {
     auto buffer = ByteBuffer::wrap(context.data, context.data_size);
@@ -197,6 +213,7 @@ static bool load_ico_directory(ICOLoadingContext& context)
 #endif
         context.images.append(desc);
     }
+    context.largest_index = find_largest_image(context);
     context.state = ICOLoadingContext::State::DirectoryDecoded;
     return true;
 }
@@ -292,7 +309,7 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
     return true;
 }
 
-static bool load_ico_bitmap(ICOLoadingContext& context, size_t index)
+static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
 {
     if (context.state < ICOLoadingContext::State::DirectoryDecoded) {
         if (!load_ico_directory(context)) {
@@ -301,18 +318,21 @@ static bool load_ico_bitmap(ICOLoadingContext& context, size_t index)
         }
         context.state = ICOLoadingContext::State::DirectoryDecoded;
     }
-    if (index >= context.images.size()) {
+    size_t real_index = context.largest_index;
+    if (index.has_value())
+        real_index = index.value();
+    if (real_index >= context.images.size()) {
         return false;
     }
 
-    ImageDescriptor& desc = context.images[index];
+    ImageDescriptor& desc = context.images[real_index];
 
     PNGImageDecoderPlugin png_decoder(context.data + desc.offset, desc.size);
     if (png_decoder.sniff()) {
         desc.bitmap = png_decoder.bitmap();
         if (!desc.bitmap) {
 #ifdef ICO_DEBUG
-            printf("load_ico_bitmap: failed to load PNG encoded image index: %lu\n", index);
+            printf("load_ico_bitmap: failed to load PNG encoded image index: %lu\n", real_index);
 #endif
             return false;
         }
@@ -320,7 +340,7 @@ static bool load_ico_bitmap(ICOLoadingContext& context, size_t index)
     } else {
         if (!load_ico_bmp(context, desc)) {
 #ifdef ICO_DEBUG
-            printf("load_ico_bitmap: failed to load BMP encoded image index: %lu\n", index);
+            printf("load_ico_bitmap: failed to load BMP encoded image index: %lu\n", real_index);
 #endif
             return false;
         }
@@ -351,7 +371,7 @@ IntSize ICOImageDecoderPlugin::size()
         m_context->state = ICOLoadingContext::State::DirectoryDecoded;
     }
 
-    return { m_context->images[0].width, m_context->images[0].height };
+    return { m_context->images[m_context->largest_index].width, m_context->images[m_context->largest_index].height };
 }
 
 RefPtr<Gfx::Bitmap> ICOImageDecoderPlugin::bitmap()
@@ -361,7 +381,7 @@ RefPtr<Gfx::Bitmap> ICOImageDecoderPlugin::bitmap()
 
     if (m_context->state < ICOLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
-        bool success = load_ico_bitmap(*m_context, 0);
+        bool success = load_ico_bitmap(*m_context, {});
         if (!success) {
             m_context->state = ICOLoadingContext::State::Error;
             return nullptr;
@@ -369,8 +389,8 @@ RefPtr<Gfx::Bitmap> ICOImageDecoderPlugin::bitmap()
         m_context->state = ICOLoadingContext::State::BitmapDecoded;
     }
 
-    ASSERT(m_context->images[0].bitmap);
-    return m_context->images[0].bitmap;
+    ASSERT(m_context->images[m_context->largest_index].bitmap);
+    return m_context->images[m_context->largest_index].bitmap;
 }
 
 void ICOImageDecoderPlugin::set_volatile()
