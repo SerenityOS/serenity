@@ -28,20 +28,20 @@
 
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
-#include <LibGUI/Forward.h>
+#include <LibGfx/Forward.h>
 
 namespace Web {
 
 class RenderingContext {
 public:
-    explicit RenderingContext(GUI::Painter& painter, const Palette& palette, const Gfx::IntPoint& scroll_offset)
+    explicit RenderingContext(Gfx::Painter& painter, const Palette& palette, const Gfx::IntPoint& scroll_offset)
         : m_painter(painter)
         , m_palette(palette)
         , m_scroll_offset(scroll_offset)
     {
     }
 
-    GUI::Painter& painter() const { return m_painter; }
+    Gfx::Painter& painter() const { return m_painter; }
     const Palette& palette() const { return m_palette; }
 
     bool should_show_line_box_borders() const { return m_should_show_line_box_borders; }
@@ -53,7 +53,7 @@ public:
     const Gfx::IntPoint& scroll_offset() const { return m_scroll_offset; }
 
 private:
-    GUI::Painter& m_painter;
+    Gfx::Painter& m_painter;
     Palette m_palette;
     Gfx::IntRect m_viewport_rect;
     Gfx::IntPoint m_scroll_offset;
