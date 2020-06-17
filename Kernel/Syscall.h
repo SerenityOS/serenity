@@ -98,8 +98,6 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(setegid)            \
     __ENUMERATE_SYSCALL(setuid)             \
     __ENUMERATE_SYSCALL(setgid)             \
-    __ENUMERATE_SYSCALL(setreuid)           \
-    __ENUMERATE_SYSCALL(setregid)           \
     __ENUMERATE_SYSCALL(setresuid)          \
     __ENUMERATE_SYSCALL(setresgid)          \
     __ENUMERATE_SYSCALL(alarm)              \

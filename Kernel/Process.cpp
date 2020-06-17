@@ -2187,48 +2187,6 @@ int Process::sys$setgid(gid_t gid)
     return 0;
 }
 
-int Process::sys$setreuid(uid_t ruid, uid_t euid)
-{
-    REQUIRE_PROMISE(id);
-
-    // This has FreeBSD semantics.
-    // Linux and Solaris also allow id == m_suid.
-    auto ok = [this](uid_t id) { return id == (uid_t)-1 || id == m_uid || id == m_euid; };
-    if ((!ok(ruid) || !ok(euid)) && !is_superuser())
-        return -EPERM;
-
-    if (ruid != (uid_t)-1)
-        m_uid = ruid;
-    if (euid != (uid_t)-1)
-        m_euid = euid;
-
-    if (ruid != (uid_t)-1 || m_euid != m_uid)
-        m_suid = m_euid;
-
-    return 0;
-}
-
-int Process::sys$setregid(gid_t rgid, gid_t egid)
-{
-    REQUIRE_PROMISE(id);
-
-    // This has FreeBSD semantics.
-    // Linux and Solaris also allow id == m_sgid.
-    auto ok = [this](gid_t id) { return id == (gid_t)-1 || id == m_gid || id == m_egid; };
-    if ((!ok(rgid) || !ok(egid)) && !is_superuser())
-        return -EPERM;
-
-    if (rgid != (gid_t)-1)
-        m_gid = rgid;
-    if (egid != (gid_t)-1)
-        m_egid = egid;
-
-    if (rgid != (gid_t)-1 || m_egid != m_gid)
-        m_sgid = m_egid;
-
-    return 0;
-}
-
 int Process::sys$setresuid(uid_t ruid, uid_t euid, uid_t suid)
 {
     REQUIRE_PROMISE(id);

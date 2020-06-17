@@ -249,8 +249,6 @@ public:
     int sys$setegid(gid_t);
     int sys$setuid(uid_t);
     int sys$setgid(gid_t);
-    int sys$setreuid(uid_t, uid_t);
-    int sys$setregid(gid_t, gid_t);
     int sys$setresuid(uid_t, uid_t, uid_t);
     int sys$setresgid(gid_t, gid_t, gid_t);
     unsigned sys$alarm(unsigned seconds);
