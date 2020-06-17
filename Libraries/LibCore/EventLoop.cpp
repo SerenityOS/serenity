@@ -461,7 +461,21 @@ void EventLoop::wait_for_event(WaitMode mode)
         }
     }
 
-    int marked_fd_count = Core::safe_syscall(select, max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
+try_select_again:;
+    int marked_fd_count = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
+    if (marked_fd_count < 0) {
+        int saved_errno = errno;
+        if (saved_errno == EINTR) {
+            if (m_exit_requested)
+                return;
+            goto try_select_again;
+        }
+#ifdef EVENTLOOP_DEBUG
+        dbg() << "Core::EventLoop::wait_for_event: " << marked_fd_count << " (" << saved_errno << ": " << strerror(saved_errno) << ")";
+#endif
+        // Blow up, similar to Core::safe_syscall.
+        ASSERT_NOT_REACHED();
+    }
     if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
         char buffer[32];
         auto nread = read(s_wake_pipe_fds[0], buffer, sizeof(buffer));
