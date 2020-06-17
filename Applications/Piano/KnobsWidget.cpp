@@ -32,6 +32,12 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Slider.h>
 
+constexpr int max_attack = 1000;
+constexpr int max_decay = 1000;
+constexpr int max_sustain = 1000;
+constexpr int max_release = 1000;
+constexpr int max_delay = 8;
+
 KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     : m_track_manager(track_manager)
     , m_main_widget(main_widget)
@@ -76,7 +82,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     m_octave_knob->set_value((octave_max - 1) - (m_track_manager.octave() - 1));
     m_octave_knob->on_value_changed = [this](int value) {
         int new_octave = octave_max - value;
-        if (m_change_octave)
+        if (m_change_underlying)
             m_main_widget.set_octave_and_ensure_note_change(new_octave == m_track_manager.octave() + 1 ? Up : Down);
         ASSERT(new_octave == m_track_manager.octave());
         m_octave_value->set_text(String::number(new_octave));
@@ -88,66 +94,67 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     m_wave_knob->set_value(last_wave - m_track_manager.current_track().wave());
     m_wave_knob->on_value_changed = [this](int value) {
         int new_wave = last_wave - value;
-        m_track_manager.current_track().set_wave(new_wave);
+        if (m_change_underlying)
+            m_track_manager.current_track().set_wave(new_wave);
         ASSERT(new_wave == m_track_manager.current_track().wave());
         m_wave_value->set_text(wave_strings[new_wave]);
     };
 
-    constexpr int max_attack = 1000;
     m_attack_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_attack_knob->set_range(0, max_attack);
     m_attack_knob->set_value(max_attack - m_track_manager.current_track().attack());
     m_attack_knob->set_step(100);
     m_attack_knob->on_value_changed = [this](int value) {
         int new_attack = max_attack - value;
-        m_track_manager.current_track().set_attack(new_attack);
+        if (m_change_underlying)
+            m_track_manager.current_track().set_attack(new_attack);
         ASSERT(new_attack == m_track_manager.current_track().attack());
         m_attack_value->set_text(String::number(new_attack));
     };
 
-    constexpr int max_decay = 1000;
     m_decay_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_decay_knob->set_range(0, max_decay);
     m_decay_knob->set_value(max_decay - m_track_manager.current_track().decay());
     m_decay_knob->set_step(100);
     m_decay_knob->on_value_changed = [this](int value) {
         int new_decay = max_decay - value;
-        m_track_manager.current_track().set_decay(new_decay);
+        if (m_change_underlying)
+            m_track_manager.current_track().set_decay(new_decay);
         ASSERT(new_decay == m_track_manager.current_track().decay());
         m_decay_value->set_text(String::number(new_decay));
     };
 
-    constexpr int max_sustain = 1000;
     m_sustain_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_sustain_knob->set_range(0, max_sustain);
     m_sustain_knob->set_value(max_sustain - m_track_manager.current_track().sustain());
     m_sustain_knob->set_step(100);
     m_sustain_knob->on_value_changed = [this](int value) {
         int new_sustain = max_sustain - value;
-        m_track_manager.current_track().set_sustain(new_sustain);
+        if (m_change_underlying)
+            m_track_manager.current_track().set_sustain(new_sustain);
         ASSERT(new_sustain == m_track_manager.current_track().sustain());
         m_sustain_value->set_text(String::number(new_sustain));
     };
 
-    constexpr int max_release = 1000;
     m_release_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_release_knob->set_range(0, max_release);
     m_release_knob->set_value(max_release - m_track_manager.current_track().release());
     m_release_knob->set_step(100);
     m_release_knob->on_value_changed = [this](int value) {
         int new_release = max_release - value;
-        m_track_manager.current_track().set_release(new_release);
+        if (m_change_underlying)
+            m_track_manager.current_track().set_release(new_release);
         ASSERT(new_release == m_track_manager.current_track().release());
         m_release_value->set_text(String::number(new_release));
     };
 
-    constexpr int max_delay = 8;
     m_delay_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_delay_knob->set_range(0, max_delay);
     m_delay_knob->set_value(max_delay - m_track_manager.current_track().delay());
     m_delay_knob->on_value_changed = [this](int value) {
         int new_delay = max_delay - value;
-        m_track_manager.current_track().set_delay(new_delay);
+        if (m_change_underlying)
+            m_track_manager.current_track().set_delay(new_delay);
         ASSERT(new_delay == m_track_manager.current_track().delay());
         m_delay_value->set_text(String::number(new_delay));
     };
@@ -161,10 +168,18 @@ void KnobsWidget::update_knobs()
 {
     m_wave_knob->set_value(last_wave - m_track_manager.current_track().wave());
 
-    // FIXME: This is needed because when the slider is changed directly, it
-    // needs to change the octave, but if the octave was changed elsewhere, we
-    // need to change the slider without changing the octave.
-    m_change_octave = false;
+    // FIXME: This is needed because when the slider is changed normally, we
+    // need to change the underlying value, but if the keyboard was used, we
+    // need to change the slider without changing the underlying value.
+    m_change_underlying = false;
+
     m_octave_knob->set_value(octave_max - m_track_manager.octave());
-    m_change_octave = true;
+    m_wave_knob->set_value(last_wave - m_track_manager.current_track().wave());
+    m_attack_knob->set_value(max_attack - m_track_manager.current_track().attack());
+    m_decay_knob->set_value(max_decay - m_track_manager.current_track().decay());
+    m_sustain_knob->set_value(max_sustain - m_track_manager.current_track().sustain());
+    m_release_knob->set_value(max_release - m_track_manager.current_track().release());
+    m_delay_knob->set_value(max_delay - m_track_manager.current_track().delay());
+
+    m_change_underlying = true;
 }

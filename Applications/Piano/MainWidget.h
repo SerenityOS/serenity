@@ -42,6 +42,8 @@ class MainWidget final : public GUI::Widget {
 public:
     virtual ~MainWidget() override;
 
+    void add_actions(GUI::Menu&);
+
     void set_octave_and_ensure_note_change(Direction);
 
 private:
@@ -53,6 +55,9 @@ private:
 
     void note_key_action(int key_code, Switch);
     void special_key_action(int key_code);
+
+    void turn_off_pressed_keys();
+    void turn_on_pressed_keys();
 
     TrackManager& m_track_manager;
 

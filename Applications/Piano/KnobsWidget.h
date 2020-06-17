@@ -72,5 +72,5 @@ private:
     RefPtr<GUI::Slider> m_release_knob;
     RefPtr<GUI::Slider> m_delay_knob;
 
-    bool m_change_octave { true };
+    bool m_change_underlying { true };
 };

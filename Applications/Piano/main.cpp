@@ -117,6 +117,9 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("Piano", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-piano.png"), window);
     }));
 
+    auto& edit_menu = menubar->add_menu("Edit");
+    main_widget.add_actions(edit_menu);
+
     app.set_menubar(move(menubar));
 
     return app.exec();
