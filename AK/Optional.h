@@ -111,6 +111,7 @@ public:
     }
 
     ALWAYS_INLINE bool has_value() const { return m_has_value; }
+    ALWAYS_INLINE bool is_empty() const { return !has_value(); }
 
     ALWAYS_INLINE T& value()
     {
