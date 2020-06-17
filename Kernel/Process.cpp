@@ -4305,28 +4305,20 @@ int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* user_params)
 
     Keyboard::CharacterMapData character_map_data;
 
-    const u32* map = params.map;
-    const u32* shift_map = params.shift_map;
-    const u32* alt_map = params.alt_map;
-    const u32* altgr_map = params.altgr_map;
-
-    if (!validate_read(map, CHAR_MAP_SIZE))
+    if (!validate_read(params.map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!validate_read(shift_map, CHAR_MAP_SIZE))
+    if (!validate_read(params.shift_map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!validate_read(alt_map, CHAR_MAP_SIZE))
+    if (!validate_read(params.alt_map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!validate_read(altgr_map, CHAR_MAP_SIZE))
+    if (!validate_read(params.altgr_map, CHAR_MAP_SIZE))
         return -EFAULT;
 
-    for (int i = 0; i < CHAR_MAP_SIZE; i++) {
-        character_map_data.map[i] = map[i];
-        character_map_data.shift_map[i] = shift_map[i];
-        character_map_data.alt_map[i] = alt_map[i];
-        character_map_data.altgr_map[i] = altgr_map[i];
-    }
+    copy_from_user(character_map_data.map, params.map, CHAR_MAP_SIZE * sizeof(u32));
+    copy_from_user(character_map_data.shift_map, params.shift_map, CHAR_MAP_SIZE * sizeof(u32));
+    copy_from_user(character_map_data.alt_map, params.alt_map, CHAR_MAP_SIZE * sizeof(u32));
+    copy_from_user(character_map_data.altgr_map, params.altgr_map, CHAR_MAP_SIZE * sizeof(u32));
 
-    SmapDisabler disabler;
     KeyboardDevice::the().set_maps(character_map_data);
     return 0;
 }
