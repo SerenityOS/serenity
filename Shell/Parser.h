@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,111 +26,134 @@
 
 #pragma once
 
+#include "AST.h"
+#include <AK/Function.h>
+#include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-
-struct Token {
-    enum Type {
-        Bare,
-        SingleQuoted,
-        DoubleQuoted,
-        UnterminatedSingleQuoted,
-        UnterminatedDoubleQuoted,
-        Comment,
-        Special,
-    };
-    String text;
-    size_t end;
-    size_t length;
-    Type type;
-};
-
-enum Attributes {
-    None = 0x0,
-    ShortCircuitOnFailure = 0x1,
-    InBackground = 0x2,
-};
-
-struct Redirection {
-    enum Type {
-        Pipe,
-        FileWrite,
-        FileWriteAppend,
-        FileRead,
-    };
-    Type type;
-    int fd { -1 };
-    int rewire_fd { -1 };
-    size_t redirection_op_start { 0 };
-    Token path {};
-};
-
-struct Rewiring {
-    int fd { -1 };
-    int rewire_fd { -1 };
-};
-
-struct Subcommand {
-    Vector<Token> args;
-    Vector<Redirection> redirections;
-    Vector<Rewiring> rewirings;
-};
-
-struct Command {
-    Vector<Subcommand> subcommands;
-    Attributes attributes;
-};
 
 class Parser {
 public:
-    explicit Parser(const String& input)
-        : m_input(input)
+    Parser(StringView input)
+        : m_input(move(input))
     {
     }
 
-    Vector<Command> parse();
+    RefPtr<AST::Node> parse();
 
 private:
-    enum class AllowEmptyToken {
-        No,
-        Yes,
+    RefPtr<AST::Node> parse_toplevel();
+    RefPtr<AST::Node> parse_sequence();
+    RefPtr<AST::Node> parse_variable_decls();
+    RefPtr<AST::Node> parse_pipe_sequence();
+    RefPtr<AST::Node> parse_command();
+    RefPtr<AST::Node> parse_redirection();
+    RefPtr<AST::Node> parse_list_expression();
+    RefPtr<AST::Node> parse_expression();
+    RefPtr<AST::Node> parse_string_composite();
+    RefPtr<AST::Node> parse_string();
+    RefPtr<AST::Node> parse_doublequoted_string_inner();
+    RefPtr<AST::Node> parse_variable();
+    RefPtr<AST::Node> parse_evaluate();
+    RefPtr<AST::Node> parse_comment();
+    RefPtr<AST::Node> parse_bareword();
+    RefPtr<AST::Node> parse_glob();
+
+    template<typename A, typename... Args>
+    RefPtr<A> create(Args... args);
+
+    bool at_end() const { return m_input.length() <= m_offset; }
+    char peek();
+    char consume();
+    void putback();
+    bool expect(char);
+    bool expect(const StringView&);
+
+    StringView consume_while(Function<bool(char)>);
+
+    struct ScopedOffset {
+        ScopedOffset(Vector<size_t>& offsets, size_t offset)
+            : offsets(offsets)
+            , offset(offset)
+        {
+            offsets.append(offset);
+        }
+        ~ScopedOffset()
+        {
+            auto last = offsets.take_last();
+            ASSERT(last == offset);
+        }
+
+        Vector<size_t>& offsets;
+        size_t offset;
     };
-    void commit_token(Token::Type, AllowEmptyToken = AllowEmptyToken::No);
-    void commit_subcommand();
-    void commit_command(Attributes = None);
-    void do_pipe();
-    void begin_redirect_read(int fd);
-    void begin_redirect_write(int fd);
 
-    enum State {
-        Free,
-        InSingleQuotes,
-        InDoubleQuotes,
-        InWriteAppendOrRedirectionPath,
-        InRedirectionPath,
-    };
+    OwnPtr<ScopedOffset> push_start();
 
-    State state() const { return m_state_stack.last(); }
-
-    void pop_state()
-    {
-        m_state_stack.take_last();
-    }
-
-    void push_state(State state)
-    {
-        m_state_stack.append(state);
-    }
-
-    bool in_state(State) const;
-
-    Vector<State> m_state_stack { Free };
-    String m_input;
-
-    Vector<Command> m_commands;
-    Vector<Subcommand> m_subcommands;
-    Vector<Token> m_tokens;
-    Vector<Redirection> m_redirections;
-    Vector<char> m_token;
-    size_t m_position { 0 };
+    StringView m_input;
+    size_t m_offset { 0 };
+    Vector<size_t> m_rule_start_offsets;
 };
+
+#if 0
+constexpr auto the_grammar = R"(
+toplevel :: sequence?
+
+sequence :: variable_decls? pipe_sequence ';' sequence
+          | variable_decls? pipe_sequence '&'
+          | variable_decls? pipe_sequence '&' '&' sequence
+          | variable_decls? pipe_sequence '|' '|' sequence
+          | variable_decls? pipe_sequence
+
+variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
+
+pipe_sequence :: command '|' pipe_sequence
+               | command
+
+command :: redirection command
+         | list_expression command?
+
+redirection :: number? '>'{1,2} ' '* string_composite
+             | number? '<' ' '* string_composite
+             | number? '>' '&' number
+
+list_expression :: ' '* expression (' '+ list_expression)?
+
+expression :: evaluate
+            | string_composite
+            | comment
+            | '(' list_expression ')'
+
+evaluate :: '$' expression {eval / dynamic resolve}
+
+string_composite :: string string_composite?
+                  | variable string_composite?
+                  | bareword string_composite?
+                  | glob string_composite?
+
+string :: '"' dquoted_string_inner '"'
+        | "'" [^']* "'"
+
+dquoted_string_inner :: '\' . dquoted_string_inner?       {concat}
+                      | variable dquoted_string_inner?    {compose}
+                      | . dquoted_string_inner?
+                      | '\' 'x' digit digit dquoted_string_inner?
+                      | '\' [abefrn] dquoted_string_inner?
+
+variable :: '$' identifier
+          | '$' '$'
+          | '$' '?'
+          | ...
+
+comment :: '#' [^\n]*
+
+bareword :: [^"'*$&#|()[\]{} ?;<>] bareword?
+          | '\' [^"'*$&#|()[\]{} ?;<>] bareword?
+
+bareword_with_tilde_expansion :: '~' bareword?
+
+glob :: [*?] bareword?
+      | bareword [*?]
+)";
+#endif

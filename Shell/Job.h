@@ -27,6 +27,7 @@
 #pragma once
 
 #include "Execution.h"
+#include <AK/Function.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/OwnPtr.h>
@@ -34,7 +35,12 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Object.h>
 
-class Job {
+#define JOB_TIME_INFO
+#ifndef __serenity__
+#    undef JOB_TIME_INFO
+#endif
+
+class Job : public RefCounted<Job> {
 public:
     explicit Job()
     {
@@ -42,10 +48,12 @@ public:
 
     ~Job()
     {
+#ifdef JOB_TIME_INFO
         if (m_active) {
             auto elapsed = m_command_timer.elapsed();
             dbg() << "Command \"" << m_cmd << "\" finished in " << elapsed << " ms";
         }
+#endif
     }
 
     Job(pid_t pid, unsigned pgid, String cmd, u64 job_id)
@@ -64,7 +72,10 @@ public:
     u64 job_id() const { return m_job_id; }
     bool exited() const { return m_exited; }
     int exit_code() const { return m_exit_code; }
+    bool should_be_disowned() const { return m_should_be_disowned; }
+    void disown() { m_should_be_disowned = true; }
     bool is_running_in_background() const { return m_running_in_background; }
+    Function<void(RefPtr<Job>)> on_exit;
 
     Core::ElapsedTimer& timer() { return m_command_timer; }
 
@@ -74,6 +85,8 @@ public:
             return;
         m_exit_code = exit_code;
         m_exited = true;
+        if (on_exit)
+            on_exit(*this);
     }
 
     void set_running_in_background(bool running_in_background)
@@ -93,4 +106,5 @@ private:
     int m_exit_code { -1 };
     Core::ElapsedTimer m_command_timer;
     mutable bool m_active { true };
+    bool m_should_be_disowned { false };
 };
