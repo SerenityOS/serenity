@@ -63,6 +63,21 @@ void WebContentView::resize_event(GUI::ResizeEvent& event)
     client().post_message(Messages::WebContentServer::Paint(m_bitmap->rect(), m_bitmap->shbuf_id()));
 }
 
+void WebContentView::mousedown_event(GUI::MouseEvent& event)
+{
+    client().post_message(Messages::WebContentServer::MouseDown(event.position(), event.button(), event.buttons(), event.modifiers()));
+}
+
+void WebContentView::mouseup_event(GUI::MouseEvent& event)
+{
+    client().post_message(Messages::WebContentServer::MouseUp(event.position(), event.button(), event.buttons(), event.modifiers()));
+}
+
+void WebContentView::mousemove_event(GUI::MouseEvent& event)
+{
+    client().post_message(Messages::WebContentServer::MouseMove(event.position(), event.button(), event.buttons(), event.modifiers()));
+}
+
 void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id)
 {
     if (m_bitmap->shbuf_id() == shbuf_id)
