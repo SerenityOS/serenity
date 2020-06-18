@@ -155,16 +155,27 @@ bool WavLoader::parse_header()
     // Read chunks until we find DATA
     bool found_data = false;
     u32 data_sz = 0;
+    u8 search_byte = 0;
     while (true) {
-        u32 chunk_id;
-        stream >> chunk_id;
-        CHECK_OK("Reading chunk ID searching for data");
+        stream >> search_byte;
+        CHECK_OK("Reading byte searching for data");
+        if (search_byte != 0x64) //D
+            continue;
+
+        stream >> search_byte;
+        CHECK_OK("Reading next byte searching for data");
+        if (search_byte != 0x61) //A
+            continue;
+
+        u16 search_remaining = 0;
+        stream >> search_remaining;
+        CHECK_OK("Reading remaining bytes searching for data");
+        if (search_remaining != 0x6174) //TA
+            continue;
+
         stream >> data_sz;
-        CHECK_OK("Reading chunk size searching for data");
-        if (chunk_id == 0x61746164) { // DATA
-            found_data = true;
-            break;
-        }
+        found_data = true;
+        break;
     }
 
     ok = ok && found_data;
