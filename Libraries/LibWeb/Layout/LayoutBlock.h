@@ -41,7 +41,7 @@ public:
     virtual const char* class_name() const override { return "LayoutBlock"; }
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
-    virtual void render(RenderingContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, PaintPhase) override;
 
     virtual LayoutNode& inline_wrapper() override;
 

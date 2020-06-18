@@ -77,7 +77,7 @@ void LayoutImage::layout(LayoutMode layout_mode)
     LayoutReplaced::layout(layout_mode);
 }
 
-void LayoutImage::render(RenderingContext& context, PaintPhase phase)
+void LayoutImage::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -86,7 +86,7 @@ void LayoutImage::render(RenderingContext& context, PaintPhase phase)
     if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
         return;
 
-    LayoutReplaced::render(context, phase);
+    LayoutReplaced::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         if (renders_as_alt_text()) {

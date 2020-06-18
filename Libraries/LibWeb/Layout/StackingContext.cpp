@@ -47,17 +47,17 @@ StackingContext::StackingContext(LayoutBox& box, StackingContext* parent)
     }
 }
 
-void StackingContext::render(RenderingContext& context, LayoutNode::PaintPhase phase)
+void StackingContext::paint(PaintContext& context, LayoutNode::PaintPhase phase)
 {
     if (!m_box.is_root()) {
-        m_box.render(context, phase);
+        m_box.paint(context, phase);
     } else {
-        // NOTE: LayoutDocument::render() merely calls StackingContext::render()
+        // NOTE: LayoutDocument::paint() merely calls StackingContext::paint()
         //       so we call its base class instead.
-        to<LayoutDocument>(m_box).LayoutBlock::render(context, phase);
+        to<LayoutDocument>(m_box).LayoutBlock::paint(context, phase);
     }
     for (auto* child : m_children) {
-        child->render(context, phase);
+        child->paint(context, phase);
     }
 }
 

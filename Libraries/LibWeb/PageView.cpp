@@ -47,7 +47,7 @@
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/RenderingContext.h>
+#include <LibWeb/Painting/PaintContext.h>
 #include <stdio.h>
 
 //#define SELECTION_DEBUG
@@ -207,7 +207,7 @@ void PageView::paint_event(GUI::PaintEvent& event)
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    RenderingContext context(painter, palette(), { horizontal_scrollbar().value(), vertical_scrollbar().value() });
+    PaintContext context(painter, palette(), { horizontal_scrollbar().value(), vertical_scrollbar().value() });
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_viewport_rect(viewport_rect_in_content_coordinates());
     layout_root()->paint_all_phases(context);

@@ -67,7 +67,7 @@ public:
     void set_stacking_context(NonnullOwnPtr<StackingContext> context) { m_stacking_context = move(context); }
     StackingContext* enclosing_stacking_context();
 
-    virtual void render(RenderingContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, PaintPhase) override;
 
 protected:
     LayoutBox(const Node* node, NonnullRefPtr<StyleProperties> style)
@@ -86,7 +86,7 @@ private:
         Bottom,
         Left,
     };
-    void paint_border(RenderingContext&, Edge, const Gfx::FloatRect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
+    void paint_border(PaintContext&, Edge, const Gfx::FloatRect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
 
     Gfx::FloatPoint m_offset;
     Gfx::FloatSize m_size;
