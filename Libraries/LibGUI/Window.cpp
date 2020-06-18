@@ -682,6 +682,14 @@ void Window::set_fullscreen(bool fullscreen)
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetFullscreen>(m_window_id, fullscreen);
 }
 
+bool Window::is_maximized() const
+{
+    if (!is_visible())
+        return false;
+
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::IsMaximized>(m_window_id)->maximized();
+}
+
 void Window::schedule_relayout()
 {
     if (m_layout_pending)
