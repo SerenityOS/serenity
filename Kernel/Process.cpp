@@ -4295,10 +4295,11 @@ ssize_t Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int fl
 
 int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* user_params)
 {
+    REQUIRE_PROMISE(setkeymap);
+
     if (!is_superuser())
         return -EPERM;
 
-    REQUIRE_NO_PROMISES;
     Syscall::SC_setkeymap_params params;
     if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
