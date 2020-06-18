@@ -28,7 +28,7 @@
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Layout/LayoutBox.h>
 #include <LibWeb/Layout/LayoutDocument.h>
-#include <LibWeb/Layout/StackingContext.h>
+#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web {
 
