@@ -64,6 +64,8 @@ public:
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 
+    bool is_maximized() const;
+
     bool is_frameless() const { return m_frameless; }
     void set_frameless(bool frameless) { m_frameless = frameless; }
 
