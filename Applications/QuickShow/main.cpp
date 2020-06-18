@@ -43,6 +43,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/Rect.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -69,6 +70,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(true);
     window->set_rect(200, 200, 300, 200);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"));
+    window->set_title("QuickShow");
 
     auto& root_widget = window->set_main_widget<GUI::Widget>();
     root_widget.set_fill_with_background_color(true);
@@ -79,11 +81,23 @@ int main(int argc, char** argv)
     auto& main_toolbar = toolbar_container.add<GUI::ToolBar>();
 
     auto& widget = root_widget.add<QSWidget>();
-    widget.on_scale_change = [&](int scale) {
-        if (widget.bitmap())
-            window->set_title(String::format("%s %s %d%% - QuickShow", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
-        else
+    widget.on_scale_change = [&](int scale, Gfx::IntRect rect) {
+        if (!widget.bitmap()) {
             window->set_title("QuickShow");
+            return;
+        }
+
+        window->set_title(String::format("%s %s %d%% - QuickShow", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
+
+        if (window->is_fullscreen())
+            return;
+
+        if (window->is_maximized())
+            return;
+
+        auto w = max(window->width(), rect.width() + 4);
+        auto h = max(window->height(), rect.height() + widget.toolbar_height() + 6);
+        window->resize(w, h);
     };
     widget.on_drop = [&](auto& event) {
         window->move_to_front();
@@ -281,7 +295,6 @@ int main(int argc, char** argv)
     if (path != nullptr) {
         widget.load_from_file(path);
     }
-    widget.on_scale_change(100);
 
     window->show();
 
