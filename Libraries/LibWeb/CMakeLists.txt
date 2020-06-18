@@ -94,7 +94,6 @@ set(SOURCES
     Layout/LayoutWidget.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
-    Layout/StackingContext.cpp
     LayoutTreeModel.cpp
     Loader/FrameLoader.cpp
     Loader/ImageLoader.cpp
@@ -103,6 +102,7 @@ set(SOURCES
     Loader/ResourceLoader.cpp
     Page.cpp
     PageView.cpp
+    Painting/StackingContext.cpp
     Parser/CSSParser.cpp
     Parser/Entities.cpp
     Parser/HTMLDocumentParser.cpp
@@ -113,7 +113,6 @@ set(SOURCES
     Parser/StackOfOpenElements.cpp
     StylePropertiesModel.cpp
     URLEncoder.cpp
-
     CSS/PropertyID.h
     CSS/PropertyID.cpp
     CSS/DefaultStyleSheetSource.cpp

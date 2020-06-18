@@ -29,7 +29,7 @@
 #include <AK/OwnPtr.h>
 #include <LibGfx/FloatRect.h>
 #include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Layout/StackingContext.h>
+#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web {
 

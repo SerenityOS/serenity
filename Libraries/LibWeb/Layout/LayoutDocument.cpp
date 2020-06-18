@@ -29,7 +29,7 @@
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/Layout/LayoutWidget.h>
-#include <LibWeb/Layout/StackingContext.h>
+#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web {
 
