@@ -73,6 +73,10 @@ protected:
 private:
     virtual bool is_block() const override { return true; }
 
+    float calculate_shrink_to_fit_width(const Length& margin_left, const Length& border_left, const Length& padding_left, const Length& padding_right, const Length& border_right, const Length& margin_right);
+
+    void compute_width_for_absolutely_positioned_block();
+
     void place_block_level_non_replaced_element_in_normal_flow(LayoutBlock&);
     void place_block_level_replaced_element_in_normal_flow(LayoutReplaced&);
     void layout_absolutely_positioned_descendant(LayoutBox&);
