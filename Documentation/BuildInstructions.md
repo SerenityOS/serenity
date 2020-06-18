@@ -36,7 +36,6 @@ brew install coreutils
 brew tap discoteq/discoteq
 brew install flock
 brew install qemu
-brew install wget
 brew install e2fsprogs
 brew install m4
 brew install autoconf

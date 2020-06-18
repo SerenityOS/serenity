@@ -52,7 +52,7 @@ pushd "$DIR/Tarballs"
     echo "bu md5='$md5'"
     if [ ! -e $BINUTILS_PKG ] || [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
         rm -f $BINUTILS_PKG
-        wget "$BINUTILS_BASE_URL/$BINUTILS_PKG"
+        curl -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG"
     else
         echo "Skipped downloading binutils"
     fi
@@ -61,7 +61,7 @@ pushd "$DIR/Tarballs"
     echo "gc md5='$md5'"
     if [ ! -e $GCC_PKG ] || [ "$md5" != ${GCC_MD5SUM} ] ; then
         rm -f $GCC_PKG
-        wget "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
+        curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
     else
         echo "Skipped downloading gcc"
     fi
