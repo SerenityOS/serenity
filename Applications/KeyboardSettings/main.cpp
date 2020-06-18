@@ -43,9 +43,34 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath accept cpath wpath shared_buffer unix fattr proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     // If there is no command line parameter go for GUI.
     GUI::Application app(argc, argv);
+
+    if (pledge("stdio rpath accept shared_buffer proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0 ) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/bin/keymap", "x") < 0 ) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr)) {
+        perror("unveil");
+        return 1;
+    }
+
     auto app_icon = GUI::Icon::default_icon("app-keyboard-settings");
 
     Vector<String> character_map_files;
@@ -99,13 +124,17 @@ int main(int argc, char** argv)
             return;
         }
 
-        Keyboard::CharacterMap character_map(character_map_file);
-        int rc = character_map.set_system_map();
-        if (rc != 0) {
-            GUI::MessageBox::show(strerror(-rc), "Keyboard settings", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
-            return;
+        pid_t child_pid = fork();
+        if (child_pid < 0) {
+            perror("fork");
+            exit(1);
         }
-
+        if (child_pid == 0) {
+            if (execl("/bin/keymap", "/bin/keymap", character_map_file.characters(), nullptr) < 0) {
+                perror("execl");
+                exit(1);
+            }
+        }
         if (quit)
             app.quit();
     };
