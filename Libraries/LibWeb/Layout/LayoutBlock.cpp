@@ -282,22 +282,50 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
     auto width = style.length_or_fallback(CSS::PropertyID::Width, {}, containing_block.width());
 
     auto solve_for_left = [&] {
-        left = Length(containing_block.width() - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
+        return Length(containing_block.width() - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
     };
 
     auto solve_for_width = [&] {
-        width = Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
+        return Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
     };
 
     auto solve_for_right = [&] {
-        left = Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this), Length::Type::Px);
+        return Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this), Length::Type::Px);
     };
+
+    // If all three of 'left', 'width', and 'right' are 'auto':
+    if (left.is_auto() && width.is_auto() && right.is_auto()) {
+        // First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
+        if (margin_left.is_auto())
+            margin_left = Length(0, Length::Type::Px);
+        if (margin_right.is_auto())
+            margin_right = Length(0, Length::Type::Px);
+        // Then, if the 'direction' property of the element establishing the static-position containing block
+        // is 'ltr' set 'left' to the static position and apply rule number three below;
+        // otherwise, set 'right' to the static position and apply rule number one below.
+        // FIXME: This is very hackish.
+        left = Length(0, Length::Type::Px);
+        goto Rule3;
+    }
+
+    if (!left.is_auto() && !width.is_auto() && !right.is_auto()) {
+        // FIXME: This should be solved in a more complicated way.
+        set_width(width.to_px(*this));
+        return;
+    }
+
+    if (margin_left.is_auto())
+        margin_left = Length(0, Length::Type::Px);
+    if (margin_right.is_auto())
+        margin_right = Length(0, Length::Type::Px);
 
     // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto',
     //    then the width is shrink-to-fit. Then solve for 'left'
     if (left.is_auto() && width.is_auto() && !right.is_auto()) {
-        width = Length(calculate_shrink_to_fit_width(margin_left, border_left, padding_left, padding_right, border_right, margin_right), Length::Type::Px);
+        auto result = calculate_shrink_to_fit_width();
         solve_for_left();
+        auto available_width = solve_for_width();
+        width = Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), Length::Type::Px);
     }
 
     // 2. 'left' and 'right' are 'auto' and 'width' is not 'auto',
@@ -309,29 +337,32 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
         // FIXME: Check direction
         // FIXME: Use the static-position containing block
         left = zero_value;
-        solve_for_right();
+        right = solve_for_right();
     }
 
     // 3. 'width' and 'right' are 'auto' and 'left' is not 'auto',
     //    then the width is shrink-to-fit. Then solve for 'right'
     else if (width.is_auto() && right.is_auto() && !left.is_auto()) {
-        width = Length(calculate_shrink_to_fit_width(margin_left, border_left, padding_left, padding_right, border_right, margin_right), Length::Type::Px);
-        solve_for_right();
+    Rule3:
+        auto result = calculate_shrink_to_fit_width();
+        right = solve_for_right();
+        auto available_width = solve_for_width();
+        width = Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), Length::Type::Px);
     }
 
     // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
     else if (left.is_auto() && !width.is_auto() && !right.is_auto()) {
-        solve_for_left();
+        left = solve_for_left();
     }
 
     // 5. 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
     else if (width.is_auto() && !left.is_auto() && !right.is_auto()) {
-        solve_for_width();
+        width = solve_for_width();
     }
 
     // 6. 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
     else if (right.is_auto() && !left.is_auto() && !width.is_auto()) {
-        solve_for_right();
+        right = solve_for_right();
     }
 
     set_width(width.to_px(*this));
@@ -425,8 +456,20 @@ void LayoutBlock::compute_width()
                 margin_right = zero_value;
 
             // If 'width' is 'auto', the used value is the shrink-to-fit width as for floating elements.
-            if (width.is_auto())
-                width = Length(calculate_shrink_to_fit_width(margin_left, border_left, padding_left, padding_right, border_right, margin_right), Length::Type::Px);
+            if (width.is_auto()) {
+
+                // Find the available width: in this case, this is the width of the containing
+                // block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
+                // 'padding-right', 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
+                float available_width = containing_block.width()
+                    - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this)
+                    - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this);
+
+                auto result = calculate_shrink_to_fit_width();
+
+                // Then the shrink-to-fit width is: min(max(preferred minimum width, available width), preferred width).
+                width = Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), Length::Type::Px);
+            }
         }
 
         return width;
@@ -489,7 +532,7 @@ void LayoutBlock::place_block_level_replaced_element_in_normal_flow(LayoutReplac
     box.set_offset(x, y);
 }
 
-float LayoutBlock::calculate_shrink_to_fit_width(const Length& margin_left, const Length& border_left, const Length& padding_left, const Length& padding_right, const Length& border_right, const Length& margin_right)
+LayoutBlock::ShrinkToFitResult LayoutBlock::calculate_shrink_to_fit_width()
 {
     auto greatest_child_width = [&] {
         float max_width = 0;
@@ -506,14 +549,6 @@ float LayoutBlock::calculate_shrink_to_fit_width(const Length& margin_left, cons
         return max_width;
     };
 
-    // Find the available width: in this case, this is the width of the containing
-    // block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
-    // 'padding-right', 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
-
-    float available_width = containing_block()->width()
-        - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this)
-        - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this);
-
     // Calculate the preferred width by formatting the content without breaking lines
     // other than where explicit line breaks occur.
     layout_inside(LayoutMode::OnlyRequiredLineBreaks);
@@ -525,8 +560,7 @@ float LayoutBlock::calculate_shrink_to_fit_width(const Length& margin_left, cons
     layout_inside(LayoutMode::AllPossibleLineBreaks);
     float preferred_minimum_width = greatest_child_width();
 
-    // Then the shrink-to-fit width is: min(max(preferred minimum width, available width), preferred width).
-    return min(max(preferred_minimum_width, available_width), preferred_width);
+    return { preferred_width, preferred_minimum_width };
 }
 
 void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBlock& block)
@@ -672,8 +706,9 @@ void LayoutBlock::split_into_lines(LayoutBlock& container, LayoutMode layout_mod
     layout(layout_mode);
 
     auto* line_box = &container.ensure_last_line_box();
-    if (line_box->width() > 0 && line_box->width() + width() > container.width())
+    if (layout_mode != LayoutMode::OnlyRequiredLineBreaks && line_box->width() > 0 && line_box->width() + width() > container.width()) {
         line_box = &container.add_line_box();
+    }
     line_box->add_fragment(*this, 0, 0, width(), height());
 }
 
