@@ -29,10 +29,31 @@
 #include <LibGUI/Image.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Window.h>
+#include <stdio.h>
 
 int main(int argc, char* argv[])
 {
+    if (pledge("stdio shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GUI::Application app(argc, argv);
+
+    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
 
     auto main_window = GUI::Window::construct();
     main_window->set_title("Clipboard history");
