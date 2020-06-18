@@ -270,102 +270,128 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
     auto& containing_block = *this->containing_block();
     auto zero_value = Length(0, Length::Type::Px);
 
-    auto margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value, containing_block.width());
-    auto margin_right = style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value, containing_block.width());
-    auto border_left = style.length_or_fallback(CSS::PropertyID::BorderLeftWidth, zero_value);
-    auto border_right = style.length_or_fallback(CSS::PropertyID::BorderRightWidth, zero_value);
-    auto padding_left = style.length_or_fallback(CSS::PropertyID::PaddingLeft, zero_value, containing_block.width());
-    auto padding_right = style.length_or_fallback(CSS::PropertyID::PaddingRight, zero_value, containing_block.width());
+    auto try_compute_width = [&](const auto& a_width) {
+        auto margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value, containing_block.width());
+        auto margin_right = style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value, containing_block.width());
+        auto border_left = style.length_or_fallback(CSS::PropertyID::BorderLeftWidth, zero_value);
+        auto border_right = style.length_or_fallback(CSS::PropertyID::BorderRightWidth, zero_value);
+        auto padding_left = style.length_or_fallback(CSS::PropertyID::PaddingLeft, zero_value, containing_block.width());
+        auto padding_right = style.length_or_fallback(CSS::PropertyID::PaddingRight, zero_value, containing_block.width());
 
-    auto left = style.length_or_fallback(CSS::PropertyID::Left, {}, containing_block.width());
-    auto right = style.length_or_fallback(CSS::PropertyID::Right, {}, containing_block.width());
-    auto width = style.length_or_fallback(CSS::PropertyID::Width, {}, containing_block.width());
+        auto left = style.length_or_fallback(CSS::PropertyID::Left, {}, containing_block.width());
+        auto right = style.length_or_fallback(CSS::PropertyID::Right, {}, containing_block.width());
+        auto width = a_width;
 
-    auto solve_for_left = [&] {
-        return Length(containing_block.width() - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
-    };
+        auto solve_for_left = [&] {
+            return Length(containing_block.width() - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
+        };
 
-    auto solve_for_width = [&] {
-        return Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
-    };
+        auto solve_for_width = [&] {
+            return Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
+        };
 
-    auto solve_for_right = [&] {
-        return Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this), Length::Type::Px);
-    };
+        auto solve_for_right = [&] {
+            return Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left.to_px(*this) - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right.to_px(*this) - margin_right.to_px(*this), Length::Type::Px);
+        };
 
-    // If all three of 'left', 'width', and 'right' are 'auto':
-    if (left.is_auto() && width.is_auto() && right.is_auto()) {
-        // First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
+        // If all three of 'left', 'width', and 'right' are 'auto':
+        if (left.is_auto() && width.is_auto() && right.is_auto()) {
+            // First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
+            if (margin_left.is_auto())
+                margin_left = Length(0, Length::Type::Px);
+            if (margin_right.is_auto())
+                margin_right = Length(0, Length::Type::Px);
+            // Then, if the 'direction' property of the element establishing the static-position containing block
+            // is 'ltr' set 'left' to the static position and apply rule number three below;
+            // otherwise, set 'right' to the static position and apply rule number one below.
+            // FIXME: This is very hackish.
+            left = Length(0, Length::Type::Px);
+            goto Rule3;
+        }
+
+        if (!left.is_auto() && !width.is_auto() && !right.is_auto()) {
+            // FIXME: This should be solved in a more complicated way.
+            return width;
+        }
+
         if (margin_left.is_auto())
             margin_left = Length(0, Length::Type::Px);
         if (margin_right.is_auto())
             margin_right = Length(0, Length::Type::Px);
-        // Then, if the 'direction' property of the element establishing the static-position containing block
-        // is 'ltr' set 'left' to the static position and apply rule number three below;
-        // otherwise, set 'right' to the static position and apply rule number one below.
-        // FIXME: This is very hackish.
-        left = Length(0, Length::Type::Px);
-        goto Rule3;
+
+        // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto',
+        //    then the width is shrink-to-fit. Then solve for 'left'
+        if (left.is_auto() && width.is_auto() && !right.is_auto()) {
+            auto result = calculate_shrink_to_fit_width();
+            solve_for_left();
+            auto available_width = solve_for_width();
+            width = Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), Length::Type::Px);
+        }
+
+        // 2. 'left' and 'right' are 'auto' and 'width' is not 'auto',
+        //    then if the 'direction' property of the element establishing
+        //    the static-position containing block is 'ltr' set 'left'
+        //    to the static position, otherwise set 'right' to the static position.
+        //    Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
+        else if (left.is_auto() && right.is_auto() && !width.is_auto()) {
+            // FIXME: Check direction
+            // FIXME: Use the static-position containing block
+            left = zero_value;
+            right = solve_for_right();
+        }
+
+        // 3. 'width' and 'right' are 'auto' and 'left' is not 'auto',
+        //    then the width is shrink-to-fit. Then solve for 'right'
+        else if (width.is_auto() && right.is_auto() && !left.is_auto()) {
+        Rule3:
+            auto result = calculate_shrink_to_fit_width();
+            right = solve_for_right();
+            auto available_width = solve_for_width();
+            width = Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), Length::Type::Px);
+        }
+
+        // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
+        else if (left.is_auto() && !width.is_auto() && !right.is_auto()) {
+            left = solve_for_left();
+        }
+
+        // 5. 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
+        else if (width.is_auto() && !left.is_auto() && !right.is_auto()) {
+            width = solve_for_width();
+        }
+
+        // 6. 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
+        else if (right.is_auto() && !left.is_auto() && !width.is_auto()) {
+            right = solve_for_right();
+        }
+
+        return width;
+    };
+
+    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, {}, containing_block.width());
+
+    // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
+    auto used_width = try_compute_width(specified_width);
+
+    // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
+    //    but this time using the computed value of 'max-width' as the computed value for 'width'.
+    auto specified_max_width = style.length_or_fallback(CSS::PropertyID::MaxWidth, {}, containing_block.width());
+    if (!specified_max_width.is_auto()) {
+        if (used_width.to_px(*this) > specified_max_width.to_px(*this)) {
+            used_width = try_compute_width(specified_max_width);
+        }
     }
 
-    if (!left.is_auto() && !width.is_auto() && !right.is_auto()) {
-        // FIXME: This should be solved in a more complicated way.
-        set_width(width.to_px(*this));
-        return;
+    // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
+    //    but this time using the value of 'min-width' as the computed value for 'width'.
+    auto specified_min_width = style.length_or_fallback(CSS::PropertyID::MinWidth, {}, containing_block.width());
+    if (!specified_min_width.is_auto()) {
+        if (used_width.to_px(*this) < specified_min_width.to_px(*this)) {
+            used_width = try_compute_width(specified_min_width);
+        }
     }
 
-    if (margin_left.is_auto())
-        margin_left = Length(0, Length::Type::Px);
-    if (margin_right.is_auto())
-        margin_right = Length(0, Length::Type::Px);
-
-    // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto',
-    //    then the width is shrink-to-fit. Then solve for 'left'
-    if (left.is_auto() && width.is_auto() && !right.is_auto()) {
-        auto result = calculate_shrink_to_fit_width();
-        solve_for_left();
-        auto available_width = solve_for_width();
-        width = Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), Length::Type::Px);
-    }
-
-    // 2. 'left' and 'right' are 'auto' and 'width' is not 'auto',
-    //    then if the 'direction' property of the element establishing
-    //    the static-position containing block is 'ltr' set 'left'
-    //    to the static position, otherwise set 'right' to the static position.
-    //    Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
-    else if (left.is_auto() && right.is_auto() && !width.is_auto()) {
-        // FIXME: Check direction
-        // FIXME: Use the static-position containing block
-        left = zero_value;
-        right = solve_for_right();
-    }
-
-    // 3. 'width' and 'right' are 'auto' and 'left' is not 'auto',
-    //    then the width is shrink-to-fit. Then solve for 'right'
-    else if (width.is_auto() && right.is_auto() && !left.is_auto()) {
-    Rule3:
-        auto result = calculate_shrink_to_fit_width();
-        right = solve_for_right();
-        auto available_width = solve_for_width();
-        width = Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), Length::Type::Px);
-    }
-
-    // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
-    else if (left.is_auto() && !width.is_auto() && !right.is_auto()) {
-        left = solve_for_left();
-    }
-
-    // 5. 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
-    else if (width.is_auto() && !left.is_auto() && !right.is_auto()) {
-        width = solve_for_width();
-    }
-
-    // 6. 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
-    else if (right.is_auto() && !left.is_auto() && !width.is_auto()) {
-        right = solve_for_right();
-    }
-
-    set_width(width.to_px(*this));
+    set_width(used_width.to_px(*this));
 }
 
 void LayoutBlock::compute_width()
