@@ -48,7 +48,7 @@ void QSWidget::clear()
     m_bitmap = nullptr;
     m_path = {};
 
-    on_scale_change(100);
+    set_scale(100);
     update();
 }
 
@@ -121,6 +121,13 @@ void QSWidget::navigate(Directions direction)
 
 void QSWidget::set_scale(int scale)
 {
+    if (m_bitmap.is_null())
+        return;
+
+    if (m_scale == scale) {
+        update();
+        return;
+    }
 
     if (scale < 10)
         scale = 10;
@@ -131,6 +138,16 @@ void QSWidget::set_scale(int scale)
         m_pan_origin = { 0, 0 };
 
     m_scale = scale;
+    float scale_factor = (float)m_scale / 100.0f;
+
+    Gfx::IntSize new_size;
+    new_size.set_width(m_bitmap->width() * scale_factor);
+    new_size.set_height(m_bitmap->height() * scale_factor);
+    m_bitmap_rect.set_size(new_size);
+
+    if (on_scale_change)
+        on_scale_change(m_scale, m_bitmap_rect);
+
     relayout();
 }
 
@@ -140,19 +157,12 @@ void QSWidget::relayout()
         return;
 
     float scale_factor = (float)m_scale / 100.0f;
-
-    Gfx::IntSize new_size;
-    new_size.set_width(m_bitmap->width() * scale_factor);
-    new_size.set_height(m_bitmap->height() * scale_factor);
-    m_bitmap_rect.set_size(new_size);
+    Gfx::IntSize new_size = m_bitmap_rect.size();
 
     Gfx::IntPoint new_location;
     new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x() * scale_factor));
     new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * scale_factor));
     m_bitmap_rect.set_location(new_location);
-
-    if (on_scale_change)
-        on_scale_change(m_scale);
 
     update();
 }
@@ -245,14 +255,8 @@ void QSWidget::load_from_file(const String& path)
 
     m_path = path;
     m_bitmap = bitmap;
-    m_scale = 100;
-    m_pan_origin = { 0, 0 };
-
-    resize_window();
-
-    if (on_scale_change)
-        on_scale_change(m_scale);
-    relayout();
+    m_scale = -1;
+    set_scale(100);
 }
 
 void QSWidget::drop_event(GUI::DropEvent& event)
