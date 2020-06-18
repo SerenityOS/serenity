@@ -59,28 +59,30 @@ void LayoutFrame::layout(LayoutMode layout_mode)
     LayoutReplaced::layout(layout_mode);
 }
 
-void LayoutFrame::render(RenderingContext& context)
+void LayoutFrame::render(RenderingContext& context, PaintPhase phase)
 {
-    LayoutReplaced::render(context);
+    LayoutReplaced::render(context, phase);
 
-    auto* hosted_document = node().hosted_document();
-    if (!hosted_document)
-        return;
-    auto* hosted_layout_tree = hosted_document->layout_node();
-    if (!hosted_layout_tree)
-        return;
+    if (phase == PaintPhase::Foreground) {
+        auto* hosted_document = node().hosted_document();
+        if (!hosted_document)
+            return;
+        auto* hosted_layout_tree = hosted_document->layout_node();
+        if (!hosted_layout_tree)
+            return;
 
-    context.painter().save();
-    auto old_viewport_rect = context.viewport_rect();
+        context.painter().save();
+        auto old_viewport_rect = context.viewport_rect();
 
-    context.painter().add_clip_rect(enclosing_int_rect(absolute_rect()));
-    context.painter().translate(absolute_x(), absolute_y());
+        context.painter().add_clip_rect(enclosing_int_rect(absolute_rect()));
+        context.painter().translate(absolute_x(), absolute_y());
 
-    context.set_viewport_rect({ {}, node().hosted_frame()->size() });
-    const_cast<LayoutDocument*>(hosted_layout_tree)->render(context);
+        context.set_viewport_rect({ {}, node().hosted_frame()->size() });
+        const_cast<LayoutDocument*>(hosted_layout_tree)->paint_all_phases(context);
 
-    context.set_viewport_rect(old_viewport_rect);
-    context.painter().restore();
+        context.set_viewport_rect(old_viewport_rect);
+        context.painter().restore();
+    }
 }
 
 void LayoutFrame::did_set_rect()

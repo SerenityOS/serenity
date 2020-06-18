@@ -49,18 +49,21 @@ void LayoutCanvas::layout(LayoutMode layout_mode)
     LayoutReplaced::layout(layout_mode);
 }
 
-void LayoutCanvas::render(RenderingContext& context)
+void LayoutCanvas::render(RenderingContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
 
-    // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-    if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
-        return;
+    LayoutReplaced::render(context, phase);
 
-    if (node().bitmap())
-        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
-    LayoutReplaced::render(context);
+    if (phase == PaintPhase::Foreground) {
+        // FIXME: This should be done at a different level. Also rect() does not include padding etc!
+        if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
+            return;
+
+        if (node().bitmap())
+            context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
+    }
 }
 
 }

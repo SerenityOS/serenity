@@ -35,8 +35,6 @@ public:
     LayoutWidget(const Element&, GUI::Widget&);
     virtual ~LayoutWidget() override;
 
-    virtual void render(RenderingContext&) override;
-
     GUI::Widget& widget() { return m_widget; }
     const GUI::Widget& widget() const { return m_widget; }
 

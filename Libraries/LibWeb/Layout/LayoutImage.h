@@ -39,7 +39,7 @@ public:
     virtual ~LayoutImage() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
-    virtual void render(RenderingContext&) override;
+    virtual void render(RenderingContext&, PaintPhase) override;
 
     const Element& node() const { return static_cast<const Element&>(LayoutReplaced::node()); }
 

@@ -171,7 +171,14 @@ public:
     };
 
     virtual void layout(LayoutMode);
-    virtual void render(RenderingContext&);
+
+    enum class PaintPhase {
+        Background,
+        Border,
+        Foreground,
+        Overlay,
+    };
+    virtual void render(RenderingContext&, PaintPhase);
 
     bool is_absolutely_positioned() const;
     bool is_fixed_position() const;

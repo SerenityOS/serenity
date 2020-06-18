@@ -38,8 +38,10 @@ LayoutListItemMarker::~LayoutListItemMarker()
 {
 }
 
-void LayoutListItemMarker::render(RenderingContext& context)
+void LayoutListItemMarker::render(RenderingContext& context, PaintPhase phase)
 {
+    if (phase != PaintPhase::Foreground)
+        return;
     Gfx::IntRect bullet_rect { 0, 0, 4, 4 };
     bullet_rect.center_within(enclosing_int_rect(absolute_rect()));
     // FIXME: It would be nicer to not have to go via the parent here to get our inherited style.

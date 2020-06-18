@@ -35,7 +35,7 @@ public:
     LayoutListItemMarker();
     virtual ~LayoutListItemMarker() override;
 
-    virtual void render(RenderingContext&) override;
+    virtual void render(RenderingContext&, PaintPhase) override;
 
 private:
     virtual const char* class_name() const override { return "LayoutListItemMarker"; }

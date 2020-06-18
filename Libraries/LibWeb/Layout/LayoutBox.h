@@ -67,7 +67,7 @@ public:
     void set_stacking_context(NonnullOwnPtr<StackingContext> context) { m_stacking_context = move(context); }
     StackingContext* enclosing_stacking_context();
 
-    virtual void render(RenderingContext&) override;
+    virtual void render(RenderingContext&, PaintPhase) override;
 
 protected:
     LayoutBox(const Node* node, NonnullRefPtr<StyleProperties> style)
