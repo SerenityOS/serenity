@@ -29,12 +29,12 @@
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
-#include <LibWeb/RenderingContext.h>
+#include <LibWeb/Painting/PaintContext.h>
 #include <ctype.h>
 
 namespace Web {
 
-void LineBoxFragment::render(RenderingContext& context)
+void LineBoxFragment::render(PaintContext& context)
 {
     for (auto* ancestor = layout_node().parent(); ancestor; ancestor = ancestor->parent()) {
         if (!ancestor->is_visible())

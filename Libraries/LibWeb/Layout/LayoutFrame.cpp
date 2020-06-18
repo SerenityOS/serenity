@@ -59,9 +59,9 @@ void LayoutFrame::layout(LayoutMode layout_mode)
     LayoutReplaced::layout(layout_mode);
 }
 
-void LayoutFrame::render(RenderingContext& context, PaintPhase phase)
+void LayoutFrame::paint(PaintContext& context, PaintPhase phase)
 {
-    LayoutReplaced::render(context, phase);
+    LayoutReplaced::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         auto* hosted_document = node().hosted_document();

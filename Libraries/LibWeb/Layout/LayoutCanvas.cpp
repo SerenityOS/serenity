@@ -49,12 +49,12 @@ void LayoutCanvas::layout(LayoutMode layout_mode)
     LayoutReplaced::layout(layout_mode);
 }
 
-void LayoutCanvas::render(RenderingContext& context, PaintPhase phase)
+void LayoutCanvas::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
 
-    LayoutReplaced::render(context, phase);
+    LayoutReplaced::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         // FIXME: This should be done at a different level. Also rect() does not include padding etc!

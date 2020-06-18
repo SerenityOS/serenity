@@ -660,12 +660,12 @@ void LayoutBlock::compute_height()
     }
 }
 
-void LayoutBlock::render(RenderingContext& context, PaintPhase phase)
+void LayoutBlock::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
 
-    LayoutBox::render(context, phase);
+    LayoutBox::paint(context, phase);
 
     // FIXME: Inline backgrounds etc.
     if (phase == PaintPhase::Foreground) {

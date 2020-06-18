@@ -40,7 +40,7 @@ public:
     StackingContext* parent() { return m_parent; }
     const StackingContext* parent() const { return m_parent; }
 
-    void render(RenderingContext&, LayoutNode::PaintPhase);
+    void paint(PaintContext&, LayoutNode::PaintPhase);
 
     void dump(int indent = 0) const;
 

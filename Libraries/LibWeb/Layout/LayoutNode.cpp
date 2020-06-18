@@ -89,7 +89,7 @@ const LayoutBlock* LayoutNode::containing_block() const
     return nearest_block_ancestor();
 }
 
-void LayoutNode::render(RenderingContext& context, PaintPhase phase)
+void LayoutNode::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -97,7 +97,7 @@ void LayoutNode::render(RenderingContext& context, PaintPhase phase)
     for_each_child([&](auto& child) {
         if (child.is_box() && to<LayoutBox>(child).stacking_context())
             return;
-        child.render(context, phase);
+        child.paint(context, phase);
     });
 }
 

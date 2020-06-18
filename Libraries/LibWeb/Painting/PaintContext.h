@@ -32,9 +32,9 @@
 
 namespace Web {
 
-class RenderingContext {
+class PaintContext {
 public:
-    explicit RenderingContext(Gfx::Painter& painter, const Palette& palette, const Gfx::IntPoint& scroll_offset)
+    explicit PaintContext(Gfx::Painter& painter, const Palette& palette, const Gfx::IntPoint& scroll_offset)
         : m_painter(painter)
         , m_palette(palette)
         , m_scroll_offset(scroll_offset)

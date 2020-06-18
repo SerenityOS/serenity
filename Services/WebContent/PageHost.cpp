@@ -86,7 +86,7 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
         painter.draw_tiled_bitmap(content_rect, *background_bitmap);
     }
 
-    Web::RenderingContext context(painter, palette(), Gfx::IntPoint());
+    Web::PaintContext context(painter, palette(), Gfx::IntPoint());
     context.set_viewport_rect(content_rect);
     layout_root->paint_all_phases(context);
 }

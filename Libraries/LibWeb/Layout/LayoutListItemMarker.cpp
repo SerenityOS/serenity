@@ -38,7 +38,7 @@ LayoutListItemMarker::~LayoutListItemMarker()
 {
 }
 
-void LayoutListItemMarker::render(RenderingContext& context, PaintPhase phase)
+void LayoutListItemMarker::paint(PaintContext& context, PaintPhase phase)
 {
     if (phase != PaintPhase::Foreground)
         return;

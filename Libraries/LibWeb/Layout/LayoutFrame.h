@@ -36,7 +36,7 @@ public:
     LayoutFrame(const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutFrame() override;
 
-    virtual void render(RenderingContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, PaintPhase) override;
     virtual void layout(LayoutMode) override;
 
     const HTMLIFrameElement& node() const { return static_cast<const HTMLIFrameElement&>(LayoutReplaced::node()); }

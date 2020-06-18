@@ -33,7 +33,7 @@
 
 namespace Web {
 
-void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
+void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
 {
     auto border_width = style().property(width_property_id);
     if (!border_width.has_value())
@@ -186,7 +186,7 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::Fl
     }
 }
 
-void LayoutBox::render(RenderingContext& context, PaintPhase phase)
+void LayoutBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -230,7 +230,7 @@ void LayoutBox::render(RenderingContext& context, PaintPhase phase)
         paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomWidth);
     }
 
-    LayoutNodeWithStyleAndBoxModelMetrics::render(context, phase);
+    LayoutNodeWithStyleAndBoxModelMetrics::paint(context, phase);
 
     if (phase == PaintPhase::Overlay && node() && document().inspected_node() == node())
         context.painter().draw_rect(enclosing_int_rect(absolute_rect()), Color::Magenta);

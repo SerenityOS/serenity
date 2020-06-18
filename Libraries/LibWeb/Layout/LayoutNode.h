@@ -34,7 +34,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
 #include <LibWeb/Layout/LayoutPosition.h>
-#include <LibWeb/RenderingContext.h>
+#include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web {
@@ -178,7 +178,7 @@ public:
         Foreground,
         Overlay,
     };
-    virtual void render(RenderingContext&, PaintPhase);
+    virtual void paint(PaintContext&, PaintPhase);
 
     bool is_absolutely_positioned() const;
     bool is_fixed_position() const;

@@ -60,7 +60,7 @@ class Node;
 class Origin;
 class Page;
 class PageClient;
-class RenderingContext;
+class PaintContext;
 class Resource;
 class ResourceLoader;
 class Selector;
