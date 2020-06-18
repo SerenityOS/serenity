@@ -120,6 +120,8 @@ void MessageBox::build()
     if (m_type != Type::None) {
         auto& icon_image = message_container.add<Image>();
         icon_image.set_bitmap(icon());
+        if (icon())
+            icon_width = icon()->width();
     }
 
     auto& label = message_container.add<Label>(m_text);
