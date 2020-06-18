@@ -361,6 +361,16 @@ OwnPtr<Messages::WindowServer::GetWindowTitleResponse> ClientConnection::handle(
     return make<Messages::WindowServer::GetWindowTitleResponse>(it->value->title());
 }
 
+OwnPtr<Messages::WindowServer::IsMaximizedResponse> ClientConnection::handle(const Messages::WindowServer::IsMaximized& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("IsMaximized: Bad window ID");
+        return nullptr;
+    }
+    return make<Messages::WindowServer::IsMaximizedResponse>(it->value->is_minimized());
+}
+
 OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowIconBitmap& message)
 {
     auto it = m_windows.find(message.window_id());
