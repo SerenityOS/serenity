@@ -43,21 +43,6 @@
 
 int main(int argc, char** argv)
 {
-    const char* path = nullptr;
-    Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "The mapping file to be used", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
-
-    if (path != nullptr) {
-        Keyboard::CharacterMap character_map(path);
-        int rc = character_map.set_system_map();
-
-        if (rc != 0) {
-            fprintf(stderr, "%s\n", strerror(-rc));
-        }
-
-        return rc;
-    }
 
     // If there is no command line parameter go for GUI.
     GUI::Application app(argc, argv);

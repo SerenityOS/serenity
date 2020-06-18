@@ -37,7 +37,7 @@ chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
 echo "/bin/sh" > mnt/etc/shells
 
 chown 0:$wheel_gid mnt/bin/su
-chown 0:$wheel_gid mnt/bin/KeyboardSettings
+chown 0:$phys_gid mnt/bin/keymap
 chown 0:$phys_gid mnt/bin/shutdown
 chown 0:$phys_gid mnt/bin/reboot
 chown 0:0 mnt/boot/Kernel
@@ -48,7 +48,7 @@ chmod 4750 mnt/bin/su
 chmod 4755 mnt/bin/ping
 chmod 4750 mnt/bin/reboot
 chmod 4750 mnt/bin/shutdown
-chmod 4750 mnt/bin/KeyboardSettings
+chmod 4750 mnt/bin/keymap
 
 echo "done"
 
@@ -161,7 +161,6 @@ ln -s Debugger mnt/bin/sdb
 ln -s SystemMonitor mnt/bin/sm
 ln -s ProfileViewer mnt/bin/pv
 ln -s WebServer mnt/bin/ws
-ln -s KeyboardSettings mnt/bin/keymap
 ln -s Solitaire mnt/bin/sl
 ln -s WebView mnt/bin/wv
 echo "done"
