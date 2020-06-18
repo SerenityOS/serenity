@@ -77,7 +77,7 @@ void LayoutImage::layout(LayoutMode layout_mode)
     LayoutReplaced::layout(layout_mode);
 }
 
-void LayoutImage::render(RenderingContext& context)
+void LayoutImage::render(RenderingContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -86,18 +86,20 @@ void LayoutImage::render(RenderingContext& context)
     if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
         return;
 
-    LayoutReplaced::render(context);
+    LayoutReplaced::render(context, phase);
 
-    if (renders_as_alt_text()) {
-        auto& image_element = to<HTMLImageElement>(node());
-        context.painter().set_font(Gfx::Font::default_font());
-        Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
-        auto alt = image_element.alt();
-        if (alt.is_empty())
-            alt = image_element.src();
-        context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), Gfx::TextElision::Right);
-    } else if (m_image_loader.bitmap()) {
-        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *m_image_loader.bitmap(), m_image_loader.bitmap()->rect());
+    if (phase == PaintPhase::Foreground) {
+        if (renders_as_alt_text()) {
+            auto& image_element = to<HTMLImageElement>(node());
+            context.painter().set_font(Gfx::Font::default_font());
+            Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+            auto alt = image_element.alt();
+            if (alt.is_empty())
+                alt = image_element.src();
+            context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), Gfx::TextElision::Right);
+        } else if (m_image_loader.bitmap()) {
+            context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *m_image_loader.bitmap(), m_image_loader.bitmap()->rect());
+        }
     }
 }
 

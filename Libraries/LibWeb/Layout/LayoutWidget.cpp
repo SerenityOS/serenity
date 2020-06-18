@@ -65,9 +65,4 @@ void LayoutWidget::update_widget()
     widget().move_to(adjusted_widget_position);
 }
 
-void LayoutWidget::render(RenderingContext& context)
-{
-    LayoutReplaced::render(context);
-}
-
 }

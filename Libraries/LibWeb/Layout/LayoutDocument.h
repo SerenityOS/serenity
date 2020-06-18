@@ -40,7 +40,9 @@ public:
     virtual const char* class_name() const override { return "LayoutDocument"; }
     virtual void layout(LayoutMode = LayoutMode::Default) override;
 
-    virtual void render(RenderingContext&) override;
+    void paint_all_phases(RenderingContext&);
+
+    virtual void render(RenderingContext&, PaintPhase) override;
 
     const LayoutRange& selection() const { return m_selection; }
     LayoutRange& selection() { return m_selection; }

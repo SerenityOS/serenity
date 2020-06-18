@@ -39,7 +39,7 @@ public:
     virtual ~LayoutCanvas() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
-    virtual void render(RenderingContext&) override;
+    virtual void render(RenderingContext&, PaintPhase) override;
 
     const HTMLCanvasElement& node() const { return static_cast<const HTMLCanvasElement&>(LayoutReplaced::node()); }
 

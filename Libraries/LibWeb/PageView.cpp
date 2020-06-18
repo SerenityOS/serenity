@@ -210,7 +210,7 @@ void PageView::paint_event(GUI::PaintEvent& event)
     RenderingContext context(painter, palette(), { horizontal_scrollbar().value(), vertical_scrollbar().value() });
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_viewport_rect(viewport_rect_in_content_coordinates());
-    layout_root()->render(context);
+    layout_root()->paint_all_phases(context);
 }
 
 void PageView::mousemove_event(GUI::MouseEvent& event)

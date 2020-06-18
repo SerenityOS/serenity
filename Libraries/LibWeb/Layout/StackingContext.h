@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Layout/LayoutNode.h>
 
 namespace Web {
 
@@ -40,7 +40,7 @@ public:
     StackingContext* parent() { return m_parent; }
     const StackingContext* parent() const { return m_parent; }
 
-    void render(RenderingContext&);
+    void render(RenderingContext&, LayoutNode::PaintPhase);
 
     void dump(int indent = 0) const;
 

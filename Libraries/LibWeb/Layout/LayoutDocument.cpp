@@ -100,9 +100,17 @@ void LayoutDocument::did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect& a_v
     });
 }
 
-void LayoutDocument::render(RenderingContext& context)
+void LayoutDocument::paint_all_phases(RenderingContext& context)
 {
-    stacking_context()->render(context);
+    render(context, PaintPhase::Background);
+    render(context, PaintPhase::Border);
+    render(context, PaintPhase::Foreground);
+    render(context, PaintPhase::Overlay);
+}
+
+void LayoutDocument::render(RenderingContext& context, PaintPhase phase)
+{
+    stacking_context()->render(context, phase);
 }
 
 }

@@ -31,9 +31,6 @@
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutBox.h>
 
-//#define DRAW_BOXES_AROUND_LAYOUT_NODES
-//#define DRAW_BOXES_AROUND_HOVERED_NODES
-
 namespace Web {
 
 void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
@@ -189,7 +186,7 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::Fl
     }
 }
 
-void LayoutBox::render(RenderingContext& context)
+void LayoutBox::render(RenderingContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -198,21 +195,14 @@ void LayoutBox::render(RenderingContext& context)
     if (is_fixed_position())
         context.painter().translate(context.scroll_offset());
 
-#ifdef DRAW_BOXES_AROUND_LAYOUT_NODES
-    context.painter().draw_rect(m_rect, Color::Blue);
-#endif
-#ifdef DRAW_BOXES_AROUND_HOVERED_NODES
-    if (!is_anonymous() && node() == document().hovered_node())
-        context.painter().draw_rect(m_rect, Color::Red);
-#endif
-
     Gfx::FloatRect padded_rect;
     padded_rect.set_x(absolute_x() - box_model().padding().left.to_px(*this));
     padded_rect.set_width(width() + box_model().padding().left.to_px(*this) + box_model().padding().right.to_px(*this));
     padded_rect.set_y(absolute_y() - box_model().padding().top.to_px(*this));
     padded_rect.set_height(height() + box_model().padding().top.to_px(*this) + box_model().padding().bottom.to_px(*this));
 
-    if (!is_body()) {
+    if (phase == PaintPhase::Background && !is_body()) {
+        // FIXME: We should paint the body here too, but that currently happens at the view layer.
         auto bgcolor = style().property(CSS::PropertyID::BackgroundColor);
         if (bgcolor.has_value() && bgcolor.value()->is_color()) {
             context.painter().fill_rect(enclosing_int_rect(padded_rect), bgcolor.value()->to_color(document()));
@@ -227,20 +217,22 @@ void LayoutBox::render(RenderingContext& context)
         }
     }
 
-    Gfx::FloatRect bordered_rect;
-    bordered_rect.set_x(padded_rect.x() - box_model().border().left.to_px(*this));
-    bordered_rect.set_width(padded_rect.width() + box_model().border().left.to_px(*this) + box_model().border().right.to_px(*this));
-    bordered_rect.set_y(padded_rect.y() - box_model().border().top.to_px(*this));
-    bordered_rect.set_height(padded_rect.height() + box_model().border().top.to_px(*this) + box_model().border().bottom.to_px(*this));
+    if (phase == PaintPhase::Border) {
+        Gfx::FloatRect bordered_rect;
+        bordered_rect.set_x(padded_rect.x() - box_model().border().left.to_px(*this));
+        bordered_rect.set_width(padded_rect.width() + box_model().border().left.to_px(*this) + box_model().border().right.to_px(*this));
+        bordered_rect.set_y(padded_rect.y() - box_model().border().top.to_px(*this));
+        bordered_rect.set_height(padded_rect.height() + box_model().border().top.to_px(*this) + box_model().border().bottom.to_px(*this));
 
-    paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftWidth);
-    paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightWidth);
-    paint_border(context, Edge::Top, bordered_rect, CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopWidth);
-    paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomWidth);
+        paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftWidth);
+        paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightWidth);
+        paint_border(context, Edge::Top, bordered_rect, CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopWidth);
+        paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomWidth);
+    }
 
-    LayoutNodeWithStyleAndBoxModelMetrics::render(context);
+    LayoutNodeWithStyleAndBoxModelMetrics::render(context, phase);
 
-    if (node() && document().inspected_node() == node())
+    if (phase == PaintPhase::Overlay && node() && document().inspected_node() == node())
         context.painter().draw_rect(enclosing_int_rect(absolute_rect()), Color::Magenta);
 }
 

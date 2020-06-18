@@ -88,7 +88,7 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
 
     Web::RenderingContext context(painter, palette(), Gfx::IntPoint());
     context.set_viewport_rect(content_rect);
-    layout_root->render(context);
+    layout_root->paint_all_phases(context);
 }
 
 void PageHost::set_viewport_rect(const Gfx::IntRect& rect)

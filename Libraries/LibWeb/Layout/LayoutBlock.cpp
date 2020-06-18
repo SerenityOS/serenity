@@ -600,19 +600,22 @@ void LayoutBlock::compute_height()
     }
 }
 
-void LayoutBlock::render(RenderingContext& context)
+void LayoutBlock::render(RenderingContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
 
-    LayoutBox::render(context);
+    LayoutBox::render(context, phase);
 
-    if (children_are_inline()) {
-        for (auto& line_box : m_line_boxes) {
-            for (auto& fragment : line_box.fragments()) {
-                if (context.should_show_line_box_borders())
-                    context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
-                fragment.render(context);
+    // FIXME: Inline backgrounds etc.
+    if (phase == PaintPhase::Foreground) {
+        if (children_are_inline()) {
+            for (auto& line_box : m_line_boxes) {
+                for (auto& fragment : line_box.fragments()) {
+                    if (context.should_show_line_box_borders())
+                        context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
+                    fragment.render(context);
+                }
             }
         }
     }
