@@ -83,7 +83,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     m_name_box->set_enabled(!disable_rename);
     m_name_box->on_change = [&]() {
         m_name_dirty = m_name != m_name_box->text();
-        m_apply_button->set_enabled(true);
+        m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
     };
 
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"));
@@ -111,6 +111,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     }
 
     m_mode = st.st_mode;
+    m_old_mode = st.st_mode;
 
     auto properties = Vector<PropertyValuePair>();
     properties.append({ "Type:", get_description(m_mode) });
@@ -164,7 +165,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     update();
 }
 
-PropertiesDialog::~PropertiesDialog() {}
+PropertiesDialog::~PropertiesDialog() { }
 
 void PropertiesDialog::update()
 {
@@ -181,8 +182,8 @@ void PropertiesDialog::permission_changed(mode_t mask, bool set)
         m_mode &= ~mask;
     }
 
-    m_permissions_dirty = true;
-    m_apply_button->set_enabled(true);
+    m_permissions_dirty = m_mode != m_old_mode;
+    m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
 }
 
 String PropertiesDialog::make_full_path(String name)
@@ -217,6 +218,7 @@ bool PropertiesDialog::apply_changes()
             return false;
         }
 
+        m_old_mode = m_mode;
         m_permissions_dirty = false;
     }
 
