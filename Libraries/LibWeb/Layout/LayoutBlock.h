@@ -73,7 +73,11 @@ protected:
 private:
     virtual bool is_block() const override { return true; }
 
-    float calculate_shrink_to_fit_width(const Length& margin_left, const Length& border_left, const Length& padding_left, const Length& padding_right, const Length& border_right, const Length& margin_right);
+    struct ShrinkToFitResult {
+        float preferred_width { 0 };
+        float preferred_minimum_width { 0 };
+    };
+    ShrinkToFitResult calculate_shrink_to_fit_width();
 
     void compute_width_for_absolutely_positioned_block();
 
