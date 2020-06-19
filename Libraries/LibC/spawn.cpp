@@ -90,7 +90,7 @@ extern "C" {
             }
         }
         if (flags & POSIX_SPAWN_SETSIGMASK) {
-            if (sigprocmask(SIG_SETMASK, &attr->sigmask, nullptr) != 0) {
+            if (sigprocmask(SIG_SETMASK, &attr->sigmask, nullptr) < 0) {
                 perror("posix_spawn sigprocmask");
                 exit(127);
             }
