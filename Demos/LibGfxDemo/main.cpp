@@ -122,7 +122,7 @@ void Canvas::draw()
     painter.draw_line({ 740, 140 }, { 640, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
     painter.draw_line({ 690, 140 }, { 640, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
 
-    auto bg = Gfx::Bitmap::load_from_file("/home/anon/www/90s-bg.png");
+    auto bg = Gfx::Bitmap::load_from_file("/res/html/misc/90s-bg.png");
     painter.draw_tiled_bitmap({ 20, 260, 480, 320 }, *bg);
 
     painter.draw_line({ 40, 480 }, { 20, 260 }, Color::Red);
