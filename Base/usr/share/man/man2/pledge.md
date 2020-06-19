@@ -49,7 +49,7 @@ If the process later attempts to use any system functionality it has previously 
 * `chroot`: The [`chroot(2)`](chroot.md) syscall (\*)
 * `video`: May use [`ioctl(2)`](ioctl.md) and [`mmap(2)`](mmap.md) on framebuffer video devices
 * `settime`: Changing the system time and date
-* `setkeymap`: Changing the system keyboard layout
+* `setkeymap`: Changing the system keyboard layout (\*)
 * `sigaction`: Change signal handlers and dispositions (\*)
 
 Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
