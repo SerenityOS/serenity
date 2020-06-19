@@ -147,6 +147,18 @@ int posix_spawnp(pid_t* out_pid, const char* path, const posix_spawn_file_action
     posix_spawn_child(path, file_actions, attr, argv, envp, execvpe);
 }
 
+int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t* actions, const char* path)
+{
+    actions->state->actions.append([path]() { return chdir(path); });
+    return 0;
+}
+
+int posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t* actions, int fd)
+{
+    actions->state->actions.append([fd]() { return fchdir(fd); });
+    return 0;
+}
+
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t* actions, int fd)
 {
     actions->state->actions.append([fd]() { return close(fd); });
