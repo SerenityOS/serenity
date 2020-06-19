@@ -15,5 +15,5 @@ set(CMAKE_CXX_FLAGS " -static ${CMAKE_CXX_FLAGS}")
 add_executable(Loader.so ${SOURCES})
 install(TARGETS Loader.so RUNTIME DESTINATION usr/lib/)
 #set_property(TARGET Loader.so PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(Loader.so LibCStatic LibM)
+target_link_libraries(Loader.so LibC LibM)
 

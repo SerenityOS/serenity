@@ -4,4 +4,4 @@ set(SOURCES
 
 serenity_libc_static(LibM m)
 target_include_directories(LibM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(LibM LibCStatic)
+target_link_libraries(LibM LibC)

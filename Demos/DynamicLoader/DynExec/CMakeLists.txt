@@ -10,5 +10,5 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie")
 
 add_executable(DynExec ${SOURCES})
 install(TARGETS DynExec RUNTIME DESTINATION bin)
-#target_link_libraries(DynExec ExampleSO LibCShared)
-target_link_libraries(DynExec ExampleSO LibC)
+target_link_libraries(DynExec ExampleSO LibCShared)
+#target_link_libraries(DynExec ExampleSO LibC)

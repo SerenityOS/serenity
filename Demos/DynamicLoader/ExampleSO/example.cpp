@@ -1,6 +1,10 @@
 
 
+#include <AK/LogStream.h>
 #include <Kernel/Syscall.h>
+#include <cstdio>
+#include <errno.h>
+#include <fcntl.h>
 // This will go into TLS
 // __thread int g_lib_var;
 int g_lib_var1;
@@ -42,6 +46,11 @@ int libfunc()
     g_tls_lib_var = 1;
     g_tls_lib_var2 = 2;
     g_tls_lib_var3 = 4;
+    // open("/fsafaf", 0);
+    printf("ExampleSO: addr of errno: %p\n", &errno);
+    printf("ExampleSO: gettid(): %d\n", gettid());
+    printf("ExampleSO: gettid(): %d\n", gettid());
+    printf("ExampleSO: gettid(): %d\n", gettid());
     return 4 + g_lib_var1 + a.x + g_tls_lib_var;
 }
 

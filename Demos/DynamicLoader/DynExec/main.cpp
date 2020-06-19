@@ -41,10 +41,20 @@ void local_dbgputstr(const char* str, int len);
 int main(int, char**)
 {
     g_tls_lib_var += 2;
+    printf("hi\n");
+    // printf("errno before = %d\n", errno);
+    printf("DynExec: addr of errno: %p\n", &errno);
+    printf("main: gettid(): %d\n", gettid());
+    printf("main: gettid(): %d\n", gettid());
+    printf("main: gettid(): %d\n", gettid());
+    // printf("DynExec: addr of errno: %p\n", &errno);
     libfunc();
-    local_dbgputstr(g_string, 15);
-    printf("~~~ This should be printed by libc! ~~~\n");
-    dbg() << "This should be printed in the debug console";
+    printf("main: gettid(): %d\n", gettid());
+    printf("main: gettid(): %d\n", gettid());
+    // printf("errno after = %d\n", errno);
+    // local_dbgputstr(g_string, 15);
+    // printf("~~~ This should be printed by libc! ~~~\n");
+    // dbg() << "This should be printed in the debug console";
 
     // int sum = 0;
     // sum += libfunc() + g_lib_var1 + g_lib_var2 + g_tls_lib_var;
