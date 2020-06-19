@@ -72,7 +72,7 @@ String JsonParser::consume_quoted_string()
 {
     if (!consume_specific('"'))
         return {};
-    Vector<u32, 1024> buffer;
+    StringBuilder final_sb;
 
     for (;;) {
         size_t peek_index = m_index;
@@ -88,8 +88,7 @@ String JsonParser::consume_quoted_string()
 
         if (peek_index != m_index) {
             while (peek_index != m_index) {
-                u32 value = m_input.characters_without_null_termination()[m_index];
-                buffer.append(value);
+                final_sb.append(m_input.characters_without_null_termination()[m_index]);
                 m_index++;
             }
         }
@@ -99,26 +98,26 @@ String JsonParser::consume_quoted_string()
         if (ch == '"')
             break;
         if (ch != '\\') {
-            buffer.append(consume());
+            final_sb.append(consume());
             continue;
         }
         consume();
         char escaped_ch = consume();
         switch (escaped_ch) {
         case 'n':
-            buffer.append('\n');
+            final_sb.append('\n');
             break;
         case 'r':
-            buffer.append('\r');
+            final_sb.append('\r');
             break;
         case 't':
-            buffer.append('\t');
+            final_sb.append('\t');
             break;
         case 'b':
-            buffer.append('\b');
+            final_sb.append('\b');
             break;
         case 'f':
-            buffer.append('\f');
+            final_sb.append('\f');
             break;
         case 'u': {
             StringBuilder sb;
@@ -129,26 +128,18 @@ String JsonParser::consume_quoted_string()
 
             auto codepoint = AK::StringUtils::convert_to_uint_from_hex(sb.to_string());
             if (codepoint.has_value()) {
-                buffer.append(codepoint.value());
+                final_sb.append_codepoint(codepoint.value());
             } else {
-                buffer.append('?');
+                final_sb.append('?');
             }
         } break;
         default:
-            buffer.append(escaped_ch);
+            final_sb.append(escaped_ch);
             break;
         }
     }
     if (!consume_specific('"'))
         return {};
-
-    if (buffer.is_empty())
-        return String::empty();
-
-    StringBuilder final_sb;
-    for (auto cp : buffer) {
-        final_sb.append_codepoint(cp);
-    }
 
     return final_sb.to_string();
 }
