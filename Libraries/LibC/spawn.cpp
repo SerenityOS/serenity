@@ -95,6 +95,12 @@ extern "C" {
                 exit(127);
             }
         }
+        if (flags & POSIX_SPAWN_SETSID) {
+            if (setsid() < 0) {
+                perror("posix_spawn setsid");
+                exit(127);
+            }
+        }
 
         // FIXME: POSIX_SPAWN_SETSCHEDULER
     }
@@ -232,7 +238,7 @@ int posix_spawnattr_init(posix_spawnattr_t* attr)
 
 int posix_spawnattr_setflags(posix_spawnattr_t* attr, short flags)
 {
-    if (flags & ~(POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_SETSCHEDPARAM | POSIX_SPAWN_SETSCHEDULER | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK))
+    if (flags & ~(POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_SETSCHEDPARAM | POSIX_SPAWN_SETSCHEDULER | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETSID))
         return EINVAL;
 
     attr->flags = flags;
