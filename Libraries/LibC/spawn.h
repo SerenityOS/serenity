@@ -52,8 +52,9 @@ enum {
     POSIX_SPAWN_SETSIGMASK = 1 << 5,
 };
 
+struct posix_spawn_file_actions_state;
 typedef struct {
-    // FIXME
+    struct posix_spawn_file_actions_state* state;
 } posix_spawn_file_actions_t;
 
 typedef struct {
@@ -68,13 +69,11 @@ typedef struct {
 int posix_spawn(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const[], char* const[]);
 int posix_spawnp(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const[], char* const[]);
 
-#if 0
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t*, int);
-int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t*, int, int);
-int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t*, int, const char*, int, mode_t);
+int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t*, int old_fd, int new_fd);
+int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t*, int fd, const char*, int flags, mode_t);
 int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t*);
 int posix_spawn_file_actions_init(posix_spawn_file_actions_t*);
-#endif
 
 int posix_spawnattr_destroy(posix_spawnattr_t*);
 int posix_spawnattr_getflags(const posix_spawnattr_t*, short*);

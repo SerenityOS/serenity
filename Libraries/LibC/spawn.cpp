@@ -34,18 +34,23 @@
 
 #include <spawn.h>
 
-#include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <AK/Function.h>
+#include <AK/Vector.h>
+
+struct posix_spawn_file_actions_state {
+    Vector<Function<int()>, 4> actions;
+};
 
 extern "C" {
 
 [[noreturn]] static void posix_spawn_child(const char* path, const posix_spawn_file_actions_t* file_actions, const posix_spawnattr_t* attr, char* const argv[], char* const envp[], int (*exec)(const char*, char* const[], char* const[]))
 {
-    if (file_actions) {
-        // FIXME
-    }
     if (attr) {
         short flags = attr->flags;
         if (flags & POSIX_SPAWN_RESETIDS) {
@@ -94,6 +99,15 @@ extern "C" {
         // FIXME: POSIX_SPAWN_SETSCHEDULER
     }
 
+    if (file_actions) {
+        for (const auto& action : file_actions->state->actions) {
+            if (action() < 0) {
+                perror("posix_spawn file action");
+                exit(127);
+            }
+        }
+    }
+
     exec(path, argv, envp);
     perror("posix_spawn exec");
     exit(127);
@@ -127,33 +141,42 @@ int posix_spawnp(pid_t* out_pid, const char* path, const posix_spawn_file_action
     posix_spawn_child(path, file_actions, attr, argv, envp, execvpe);
 }
 
-
-#if 0
-// FIXME
-int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t*,
-    int)
+int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t* actions, int fd)
 {
+    actions->state->actions.append([fd]() { return close(fd); });
+    return 0;
 }
 
-int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t*,
-    int, int)
+int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t* actions, int old_fd, int new_fd)
 {
+    actions->state->actions.append([old_fd, new_fd]() { return dup2(old_fd, new_fd); });
+    return 0;
 }
 
-int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t*,
-    int, const char*, int, mode_t)
+int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t* actions, int want_fd, const char* path, int flags, mode_t mode)
 {
+    actions->state->actions.append([want_fd, path, flags, mode]() {
+        int opened_fd = open(path, flags, mode);
+        if (opened_fd < 0 || opened_fd == want_fd)
+            return opened_fd;
+        if (int rc = dup2(opened_fd, want_fd); rc < 0)
+            return rc;
+        return close(opened_fd);
+    });
+    return 0;
 }
 
-int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t*)
+int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t* actions)
 {
+    delete actions->state;
+    return 0;
 }
 
-int posix_spawn_file_actions_init(posix_spawn_file_actions_t*)
+int posix_spawn_file_actions_init(posix_spawn_file_actions_t* actions)
 {
+    actions->state = new posix_spawn_file_actions_state;
+    return 0;
 }
-#endif
-
 
 int posix_spawnattr_destroy(posix_spawnattr_t*)
 {
