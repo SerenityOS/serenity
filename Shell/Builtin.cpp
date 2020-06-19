@@ -654,15 +654,18 @@ int Shell::builtin_time(int argc, const char** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
-    StringBuilder builder;
-    builder.join(' ', args);
+    AST::Command command;
+    for (auto& arg : args)
+        command.argv.append(arg);
 
     Core::ElapsedTimer timer;
     timer.start();
-    // TODO: Exit code
-    run_command(builder.string_view());
+    auto job = run_command(command);
+    if (!job)
+        return 1;
+    block_on_job(job);
     fprintf(stderr, "Time: %d ms\n", timer.elapsed());
-    return 0;
+    return job->exit_code();
 }
 
 int Shell::builtin_umask(int argc, const char** argv)
