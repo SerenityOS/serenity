@@ -48,6 +48,16 @@ extern "C" {
     }
     if (attr) {
         short flags = attr->flags;
+        if (flags & POSIX_SPAWN_RESETIDS) {
+            if (seteuid(getuid()) < 0) {
+                perror("posix_spawn seteuid");
+                exit(127);
+            }
+            if (setegid(getgid()) < 0) {
+                perror("posix_spawn setegid");
+                exit(127);
+            }
+        }
         if (flags & POSIX_SPAWN_SETPGROUP) {
             if (setpgid(0, attr->pgroup) < 0) {
                 perror("posix_spawn setpgid");
@@ -81,7 +91,7 @@ extern "C" {
             }
         }
 
-        // FIXME: POSIX_SPAWN_RESETIDS, POSIX_SPAWN_SETSCHEDULER
+        // FIXME: POSIX_SPAWN_SETSCHEDULER
     }
 
     exec(path, argv, envp);
