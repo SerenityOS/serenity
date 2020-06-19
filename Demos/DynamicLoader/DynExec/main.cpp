@@ -23,8 +23,10 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <AK/LogStream.h>
 #include <Kernel/Syscall.h>
 #include <cstdio>
+#include <fcntl.h>
 
 extern int g_lib_var1;
 extern int g_lib_var2;
@@ -41,7 +43,9 @@ int main(int, char**)
     g_tls_lib_var += 2;
     libfunc();
     local_dbgputstr(g_string, 15);
-    printf("woot!\n");
+    printf("~~~ This should be printed by libc! ~~~\n");
+    dbg() << "This should be printed in the debug console";
+
     // int sum = 0;
     // sum += libfunc() + g_lib_var1 + g_lib_var2 + g_tls_lib_var;
     // // sum += libfunc() + g_lib_var1 + g_lib_var2;

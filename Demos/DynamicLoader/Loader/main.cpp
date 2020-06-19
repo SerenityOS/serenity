@@ -90,7 +90,7 @@ int main(int argc, char** argv, char** envp)
         :
         : "rm"(tls_end));
     typedef int (*EntryFunction)(int, char**, char**);
-    asm("int3");
+    // asm("int3");
     int retval = ((EntryFunction)(entry_point.get()))(argc, argv, envp);
     printf("Main program return value: %d\n", retval);
 

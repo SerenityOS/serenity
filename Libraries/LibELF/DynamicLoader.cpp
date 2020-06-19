@@ -37,7 +37,7 @@
 #include <string.h>
 
 #define DYNAMIC_LOAD_DEBUG
-#define DYNAMIC_LOAD_VERBOSE
+// #define DYNAMIC_LOAD_VERBOSE
 
 #ifdef DYNAMIC_LOAD_VERBOSE
 #    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)

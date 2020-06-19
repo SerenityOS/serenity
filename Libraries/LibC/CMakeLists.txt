@@ -60,9 +60,14 @@ add_custom_command(
 )
 
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES})
-serenity_libc(LibC c)
-target_link_libraries(LibC crt0)
-add_dependencies(LibC LibM)
+
+serenity_libc_static(LibCStatic c)
+target_link_libraries(LibCStatic crt0)
+add_dependencies(LibCStatic LibM)
+
+#serenity_libc_shared(LibC c)
+#target_link_libraries(LibC LibM)
+#add_dependencies(LibC LibM)
 
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib")
 #add_library(crt0Shared SHARED crt0_shared.cpp)
@@ -73,7 +78,7 @@ add_dependencies(LibC LibM)
 #)
 
 
-add_library(LibCShared SHARED ${SOURCES})
-target_link_directories(LibCShared PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(LibCShared LibM)
-install(TARGETS LibCShared DESTINATION usr/lib)
+add_library(LibC SHARED ${SOURCES})
+target_link_directories(LibC PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(LibC LibM)
+install(TARGETS LibC DESTINATION usr/lib)
