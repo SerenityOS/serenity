@@ -56,23 +56,23 @@ extern "C" {
         if (flags & POSIX_SPAWN_RESETIDS) {
             if (seteuid(getuid()) < 0) {
                 perror("posix_spawn seteuid");
-                exit(127);
+                _exit(127);
             }
             if (setegid(getgid()) < 0) {
                 perror("posix_spawn setegid");
-                exit(127);
+                _exit(127);
             }
         }
         if (flags & POSIX_SPAWN_SETPGROUP) {
             if (setpgid(0, attr->pgroup) < 0) {
                 perror("posix_spawn setpgid");
-                exit(127);
+                _exit(127);
             }
         }
         if (flags & POSIX_SPAWN_SETSCHEDPARAM) {
             if (sched_setparam(0, &attr->schedparam) < 0) {
                 perror("posix_spawn sched_setparam");
-                exit(127);
+                _exit(127);
             }
         }
         if (flags & POSIX_SPAWN_SETSIGDEF) {
@@ -85,20 +85,20 @@ extern "C" {
             for (int i = 0; i < NSIG; ++i) {
                 if (sigismember(&sigdefault, i) && sigaction(i, &default_action, nullptr) < 0) {
                     perror("posix_spawn sigaction");
-                    exit(127);
+                    _exit(127);
                 }
             }
         }
         if (flags & POSIX_SPAWN_SETSIGMASK) {
             if (sigprocmask(SIG_SETMASK, &attr->sigmask, nullptr) < 0) {
                 perror("posix_spawn sigprocmask");
-                exit(127);
+                _exit(127);
             }
         }
         if (flags & POSIX_SPAWN_SETSID) {
             if (setsid() < 0) {
                 perror("posix_spawn setsid");
-                exit(127);
+                _exit(127);
             }
         }
 
@@ -109,14 +109,14 @@ extern "C" {
         for (const auto& action : file_actions->state->actions) {
             if (action() < 0) {
                 perror("posix_spawn file action");
-                exit(127);
+                _exit(127);
             }
         }
     }
 
     exec(path, argv, envp);
     perror("posix_spawn exec");
-    exit(127);
+    _exit(127);
 }
 
 int posix_spawn(pid_t* out_pid, const char* path, const posix_spawn_file_actions_t* file_actions, const posix_spawnattr_t* attr, char* const argv[], char* const envp[])
