@@ -50,7 +50,11 @@ enum {
 
     POSIX_SPAWN_SETSIGDEF = 1 << 4,
     POSIX_SPAWN_SETSIGMASK = 1 << 5,
+
+    POSIX_SPAWN_SETSID = 1 << 6,
 };
+
+#define POSIX_SPAWN_SETSID POSIX_SPAWN_SETSID
 
 struct posix_spawn_file_actions_state;
 typedef struct {
