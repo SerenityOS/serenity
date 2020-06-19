@@ -8,6 +8,8 @@ if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
     "and that's all there is.")
 endif()
 
+set(CMAKE_INSTALL_MESSAGE NEVER)
+
 enable_testing()
 
 add_custom_target(image
