@@ -29,6 +29,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/Types.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibM/math.h>
@@ -58,6 +59,40 @@ struct ICONDIRENTRY {
     u32 offset;
 };
 static_assert(sizeof(ICONDIRENTRY) == 16);
+
+struct [[gnu::packed]] BMPFILEHEADER
+{
+    u8 signature[2];
+    u32 size;
+    u16 reserved1;
+    u16 reserved2;
+    u32 offset;
+};
+static_assert(sizeof(BMPFILEHEADER) == 14);
+
+struct BITMAPINFOHEADER {
+    u32 size;
+    i32 width;
+    i32 height;
+    u16 planes;
+    u16 bpp;
+    u32 compression;
+    u32 size_image;
+    u32 vres;
+    u32 hres;
+    u32 palette_size;
+    u32 important_colors;
+};
+static_assert(sizeof(BITMAPINFOHEADER) == 40);
+
+struct [[gnu::packed]] BMP_ARGB
+{
+    u8 b;
+    u8 g;
+    u8 r;
+    u8 a;
+};
+static_assert(sizeof(BMP_ARGB) == 4);
 
 struct ImageDescriptor {
     u16 width;
@@ -162,6 +197,98 @@ static bool load_ico_directory(ICOLoadingContext& context)
 #endif
         context.images.append(desc);
     }
+    context.state = ICOLoadingContext::State::DirectoryDecoded;
+    return true;
+}
+
+static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
+{
+    BITMAPINFOHEADER info;
+    if (desc.size < sizeof(info))
+        return false;
+
+    memcpy(&info, context.data + desc.offset, sizeof(info));
+    if (info.size != sizeof(info)) {
+#ifdef ICO_DEBUG
+        printf("load_ico_bmp: info size: %u, expected: %lu\n", info.size, sizeof(info));
+#endif
+        return false;
+    }
+
+    if (info.width < 0) {
+#ifdef ICO_DEBUG
+        printf("load_ico_bmp: width %d < 0\n", info.width);
+#endif
+        return false;
+    }
+    bool topdown = false;
+    if (info.height < 0) {
+        topdown = true;
+        info.height = -info.height;
+    }
+
+    if (info.planes != 1) {
+#ifdef ICO_DEBUG
+        printf("load_ico_bmp: planes: %d != 1", info.planes);
+#endif
+        return false;
+    }
+
+    if (info.bpp != 32) {
+#ifdef ICO_DEBUG
+        printf("load_ico_bmp: unsupported bpp: %u\n", info.bpp);
+#endif
+        return false;
+    }
+
+#ifdef ICO_DEBUG
+    printf("load_ico_bmp: width: %d height: %d direction: %s bpp: %d size_image: %u\n",
+        info.width, info.height, topdown ? "TopDown" : "BottomUp", info.bpp, info.size_image);
+#endif
+
+    if (info.compression != 0 || info.palette_size != 0 || info.important_colors != 0) {
+#ifdef ICO_DEBUG
+        printf("load_ico_bmp: following fields must be 0: compression: %u palette_size: %u important_colors: %u\n",
+            info.compression, info.palette_size, info.important_colors);
+#endif
+        return false;
+    }
+
+    if (info.width != desc.width || info.height != 2 * desc.height) {
+#ifdef ICO_DEBUG
+        printf("load_ico_bmp: size mismatch: ico %dx%d, bmp %dx%d\n",
+            desc.width, desc.height, info.width, info.height);
+#endif
+        return false;
+    }
+
+    // Mask is 1bpp, and each row must be 4-byte aligned
+    size_t mask_row_len = align_up_to(align_up_to(desc.width, 8)/8, 4);
+    size_t required_len = desc.height * (desc.width * sizeof(BMP_ARGB) + mask_row_len);
+    size_t available_len = desc.size - sizeof(info);
+    if (required_len > available_len) {
+#ifdef ICO_DEBUG
+        printf("load_ico_bmp: required_len: %lu > available_len: %lu\n",
+            required_len, available_len);
+#endif
+        return false;
+    }
+
+    desc.bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { desc.width, desc.height });
+    Bitmap& bitmap = *desc.bitmap;
+    const u8* image_base = context.data + desc.offset + sizeof(info);
+    const BMP_ARGB* data_base = (const BMP_ARGB*)image_base;
+    const u8* mask_base = image_base + desc.width * desc.height * sizeof(BMP_ARGB);
+    for (int y = 0; y < desc.height; y++) {
+        const u8* row_mask = mask_base + mask_row_len * y;
+        const BMP_ARGB* row_data = data_base + desc.width * y;
+        for (int x = 0; x < desc.width; x++) {
+            u8 mask = !!(row_mask[x / 8] & (0x80 >> (x % 8)));
+            BMP_ARGB data = row_data[x];
+            bitmap.set_pixel(x, topdown ? y : desc.height - y - 1,
+                Color(data.r, data.g, data.b, mask ? 0 : data.a));
+        }
+    }
     return true;
 }
 
@@ -191,8 +318,13 @@ static bool load_ico_bitmap(ICOLoadingContext& context, size_t index)
         }
         return true;
     } else {
-        dbg() << "load_ico_bitmap: image index: " << index << " must be BMP encoded, not implemented\n";
-        return false;
+        if (!load_ico_bmp(context, desc)) {
+#ifdef ICO_DEBUG
+            printf("load_ico_bitmap: failed to load BMP encoded image index: %lu\n", index);
+#endif
+            return false;
+        }
+        return true;
     }
 }
 
