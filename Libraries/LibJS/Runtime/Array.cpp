@@ -49,7 +49,7 @@ Array::~Array()
 {
 }
 
-Array* array_from(Interpreter& interpreter, GlobalObject& global_object)
+Array* Array::typed_this(Interpreter& interpreter, GlobalObject& global_object)
 {
     auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
@@ -63,7 +63,7 @@ Array* array_from(Interpreter& interpreter, GlobalObject& global_object)
 
 JS_DEFINE_NATIVE_GETTER(Array::length_getter)
 {
-    auto* array = array_from(interpreter, interpreter.global_object());
+    auto* array = typed_this(interpreter, global_object);
     if (!array)
         return {};
     return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_GETTER(Array::length_getter)
 
 JS_DEFINE_NATIVE_SETTER(Array::length_setter)
 {
-    auto* array = array_from(interpreter, global_object);
+    auto* array = typed_this(interpreter, global_object);
     if (!array)
         return;
     auto length = value.to_number(interpreter);

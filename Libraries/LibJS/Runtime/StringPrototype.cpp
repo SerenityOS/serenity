@@ -39,9 +39,9 @@
 
 namespace JS {
 
-static StringObject* string_object_from(Interpreter& interpreter)
+static StringObject* typed_this(Interpreter& interpreter, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return nullptr;
     if (!this_object->is_string_object()) {
@@ -51,9 +51,9 @@ static StringObject* string_object_from(Interpreter& interpreter)
     return static_cast<StringObject*>(this_object);
 }
 
-static String string_from(Interpreter& interpreter)
+static String ak_string_from(Interpreter& interpreter, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     return Value(this_object).to_string(interpreter);
@@ -94,7 +94,7 @@ StringPrototype::~StringPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     i32 index = 0;
@@ -110,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     if (!interpreter.argument_count())
@@ -133,7 +133,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     if (!interpreter.argument_count())
@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     auto needle = interpreter.argument(0).to_string(interpreter);
@@ -171,7 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     return js_string(interpreter, string.to_lowercase());
@@ -179,7 +179,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     return js_string(interpreter, string.to_uppercase());
@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 
 JS_DEFINE_NATIVE_GETTER(StringPrototype::length_getter)
 {
-    auto* string_object = string_object_from(interpreter);
+    auto* string_object = typed_this(interpreter, global_object);
     if (!string_object)
         return {};
     return Value((i32)string_object->primitive_string().string().length());
@@ -195,7 +195,7 @@ JS_DEFINE_NATIVE_GETTER(StringPrototype::length_getter)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 {
-    auto* string_object = string_object_from(interpreter);
+    auto* string_object = typed_this(interpreter, global_object);
     if (!string_object)
         return {};
     return js_string(interpreter, string_object->primitive_string().string());
@@ -237,7 +237,7 @@ static Value pad_string(Interpreter& interpreter, const String& string, PadPlace
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     return pad_string(interpreter, string, PadPlacement::Start);
@@ -245,7 +245,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     return pad_string(interpreter, string, PadPlacement::End);
@@ -253,7 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     return js_string(interpreter, string.trim_whitespace(String::TrimMode::Both));
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     return js_string(interpreter, string.trim_whitespace(String::TrimMode::Left));
@@ -269,7 +269,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     return js_string(interpreter, string.trim_whitespace(String::TrimMode::Right));
@@ -277,7 +277,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     StringBuilder builder;
@@ -293,7 +293,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     if (interpreter.argument_count() == 0)
@@ -328,7 +328,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
     auto search_string = interpreter.argument(0).to_string(interpreter);
@@ -354,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
 
@@ -397,7 +397,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 {
-    auto string = string_from(interpreter);
+    auto string = ak_string_from(interpreter, global_object);
     if (string.is_null())
         return {};
 

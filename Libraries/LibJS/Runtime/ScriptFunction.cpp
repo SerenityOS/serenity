@@ -35,9 +35,9 @@
 
 namespace JS {
 
-static ScriptFunction* script_function_from(Interpreter& interpreter)
+static ScriptFunction* typed_this(Interpreter& interpreter, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return nullptr;
     if (!this_object->is_function()) {
@@ -132,7 +132,7 @@ Value ScriptFunction::construct(Interpreter& interpreter)
 
 JS_DEFINE_NATIVE_GETTER(ScriptFunction::length_getter)
 {
-    auto* function = script_function_from(interpreter);
+    auto* function = typed_this(interpreter, global_object);
     if (!function)
         return {};
     return Value(static_cast<i32>(function->m_function_length));
@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_GETTER(ScriptFunction::length_getter)
 
 JS_DEFINE_NATIVE_GETTER(ScriptFunction::name_getter)
 {
-    auto* function = script_function_from(interpreter);
+    auto* function = typed_this(interpreter, global_object);
     if (!function)
         return {};
     return js_string(interpreter, function->name().is_null() ? "" : function->name());
