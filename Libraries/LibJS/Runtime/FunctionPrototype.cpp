@@ -60,7 +60,7 @@ FunctionPrototype::~FunctionPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -110,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -127,7 +127,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (!this_object->is_function())

@@ -54,7 +54,7 @@ ErrorPrototype::~ErrorPrototype()
 
 JS_DEFINE_NATIVE_GETTER(ErrorPrototype::name_getter)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (!this_object->is_error())
@@ -64,7 +64,7 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::name_getter)
 
 JS_DEFINE_NATIVE_SETTER(ErrorPrototype::name_setter)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return;
     if (!this_object->is_error()) {
@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_SETTER(ErrorPrototype::name_setter)
 
 JS_DEFINE_NATIVE_GETTER(ErrorPrototype::message_getter)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (!this_object->is_error())

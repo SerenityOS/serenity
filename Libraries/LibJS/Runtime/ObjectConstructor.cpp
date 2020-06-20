@@ -77,7 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 {
     if (!interpreter.argument_count())
         return {};
-    auto* object = interpreter.argument(0).to_object(interpreter);
+    auto* object = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
     auto* result = Array::create(global_object);
@@ -93,7 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 {
     if (!interpreter.argument_count())
         return {};
-    auto* object = interpreter.argument(0).to_object(interpreter);
+    auto* object = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
     return object->prototype();
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 {
     if (interpreter.argument_count() < 2)
         return interpreter.throw_exception<TypeError>(ErrorType::ObjectSetPrototypeOfTwoArgs);
-    auto* object = interpreter.argument(0).to_object(interpreter);
+    auto* object = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
     auto prototype_value = interpreter.argument(1);
@@ -147,7 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 {
-    auto* object = interpreter.argument(0).to_object(interpreter);
+    auto* object = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
     auto property_key = interpreter.argument(1).to_string(interpreter);
@@ -190,7 +190,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
     if (!interpreter.argument_count())
         return interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
 
-    auto* obj_arg = interpreter.argument(0).to_object(interpreter);
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
 
@@ -202,7 +202,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
     if (!interpreter.argument_count())
         return interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
 
-    auto* obj_arg = interpreter.argument(0).to_object(interpreter);
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
 
@@ -214,7 +214,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
     if (!interpreter.argument_count())
         return interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
 
-    auto* obj_arg = interpreter.argument(0).to_object(interpreter);
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
 

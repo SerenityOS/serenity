@@ -832,7 +832,7 @@ int main(int argc, char** argv)
                 if (!variable.is_object())
                     break;
 
-                const auto* object = variable.to_object(*interpreter);
+                const auto* object = variable.to_object(*interpreter, interpreter->global_object());
                 const auto& shape = object->shape();
                 list_all_properties(shape, property_name);
                 if (results.size())

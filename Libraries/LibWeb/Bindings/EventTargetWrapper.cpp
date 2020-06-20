@@ -51,7 +51,7 @@ EventTargetWrapper::~EventTargetWrapper()
 
 JS_DEFINE_NATIVE_FUNCTION(EventTargetWrapper::add_event_listener)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (interpreter.argument_count() < 2)

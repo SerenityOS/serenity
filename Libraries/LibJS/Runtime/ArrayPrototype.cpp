@@ -105,7 +105,7 @@ static size_t get_length(Interpreter& interpreter, Object& object)
 
 static void for_each_item(Interpreter& interpreter, GlobalObject& global_object, const String& name, AK::Function<IterationDecision(size_t index, Value value, Value callback_result)> callback, bool skip_empty = true)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return;
 
@@ -164,7 +164,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     auto initial_length = get_length(interpreter, *this_object);
@@ -183,7 +183,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (this_object->is_array()) {
@@ -223,7 +223,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (this_object->is_array()) {
@@ -265,7 +265,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     auto join_function = this_object->get("join");
@@ -278,7 +278,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     String separator = ","; // NOTE: This is implementation-specific.
@@ -294,7 +294,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
             return {};
         if (value.is_undefined() || value.is_null())
             continue;
-        auto* value_object = value.to_object(interpreter);
+        auto* value_object = value.to_object(interpreter, global_object);
         ASSERT(value_object);
         auto locale_string_result = value_object->invoke("toLocaleString");
         if (interpreter.exception())
@@ -309,7 +309,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     String separator = ",";
@@ -411,7 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -442,7 +442,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
 
@@ -501,7 +501,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
 
@@ -584,7 +584,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -615,7 +615,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -702,7 +702,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
 
@@ -805,7 +805,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
 

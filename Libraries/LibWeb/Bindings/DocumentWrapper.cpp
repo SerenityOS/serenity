@@ -60,9 +60,9 @@ const Document& DocumentWrapper::node() const
     return static_cast<const Document&>(NodeWrapper::node());
 }
 
-static Document* document_from(JS::Interpreter& interpreter)
+static Document* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     if (StringView("DocumentWrapper") != this_object->class_name()) {
@@ -74,7 +74,7 @@ static Document* document_from(JS::Interpreter& interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(DocumentWrapper::get_element_by_id)
 {
-    auto* document = document_from(interpreter);
+    auto* document = impl_from(interpreter, global_object);
     if (!document)
         return {};
     if (!interpreter.argument_count())
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(DocumentWrapper::get_element_by_id)
 
 JS_DEFINE_NATIVE_FUNCTION(DocumentWrapper::query_selector)
 {
-    auto* document = document_from(interpreter);
+    auto* document = impl_from(interpreter, global_object);
     if (!document)
         return {};
     if (!interpreter.argument_count())
@@ -107,7 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(DocumentWrapper::query_selector)
 
 JS_DEFINE_NATIVE_FUNCTION(DocumentWrapper::query_selector_all)
 {
-    auto* document = document_from(interpreter);
+    auto* document = impl_from(interpreter, global_object);
     if (!document)
         return {};
     if (!interpreter.argument_count())

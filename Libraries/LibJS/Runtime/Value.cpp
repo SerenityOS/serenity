@@ -207,7 +207,7 @@ Value Value::to_primitive(Interpreter&, PreferredType preferred_type) const
     return *this;
 }
 
-Object* Value::to_object(Interpreter& interpreter) const
+Object* Value::to_object(Interpreter& interpreter, GlobalObject& global_object) const
 {
     switch (m_type) {
     case Type::Undefined:
@@ -215,15 +215,15 @@ Object* Value::to_object(Interpreter& interpreter) const
         interpreter.throw_exception<TypeError>(ErrorType::ToObjectNullOrUndef);
         return nullptr;
     case Type::Boolean:
-        return BooleanObject::create(interpreter.global_object(), m_value.as_bool);
+        return BooleanObject::create(global_object, m_value.as_bool);
     case Type::Number:
-        return NumberObject::create(interpreter.global_object(), m_value.as_double);
+        return NumberObject::create(global_object, m_value.as_double);
     case Type::String:
-        return StringObject::create(interpreter.global_object(), *m_value.as_string);
+        return StringObject::create(global_object, *m_value.as_string);
     case Type::Symbol:
-        return SymbolObject::create(interpreter.global_object(), *m_value.as_symbol);
+        return SymbolObject::create(global_object, *m_value.as_symbol);
     case Type::BigInt:
-        return BigIntObject::create(interpreter.global_object(), *m_value.as_bigint);
+        return BigIntObject::create(global_object, *m_value.as_bigint);
     case Type::Object:
         return &const_cast<Object&>(as_object());
     default:

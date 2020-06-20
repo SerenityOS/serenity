@@ -76,9 +76,9 @@ CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()
 {
 }
 
-static CanvasRenderingContext2D* impl_from(JS::Interpreter& interpreter)
+static CanvasRenderingContext2D* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return nullptr;
     // FIXME: Verify that it's a CanvasRenderingContext2DWrapper somehow!
@@ -87,7 +87,7 @@ static CanvasRenderingContext2D* impl_from(JS::Interpreter& interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::fill_rect)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (interpreter.argument_count() >= 4) {
@@ -110,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::fill_rect)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::stroke_rect)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (interpreter.argument_count() >= 4) {
@@ -133,12 +133,12 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::stroke_rect)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::draw_image)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (interpreter.argument_count() < 3)
         return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::DrawImageArgumentCount);
-    auto* image_argument = interpreter.argument(0).to_object(interpreter);
+    auto* image_argument = interpreter.argument(0).to_object(interpreter, global_object);
     if (!image_argument)
         return {};
     if (StringView(image_argument->class_name()) != "HTMLImageElementWrapper")
@@ -156,7 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::draw_image)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::scale)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (interpreter.argument_count() >= 2) {
@@ -174,7 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::scale)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::translate)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (interpreter.argument_count() >= 2) {
@@ -192,7 +192,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::translate)
 
 JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::fill_style_getter)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     return JS::js_string(interpreter, impl->fill_style());
@@ -200,7 +200,7 @@ JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::fill_style_getter)
 
 JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::fill_style_setter)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return;
     auto string = value.to_string(interpreter);
@@ -211,7 +211,7 @@ JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::fill_style_setter)
 
 JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::stroke_style_getter)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     return JS::js_string(interpreter, impl->stroke_style());
@@ -219,7 +219,7 @@ JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::stroke_style_getter)
 
 JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::stroke_style_setter)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return;
     auto string = value.to_string(interpreter);
@@ -230,7 +230,7 @@ JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::stroke_style_setter)
 
 JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::line_width_getter)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     return JS::Value(impl->line_width());
@@ -238,7 +238,7 @@ JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::line_width_getter)
 
 JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::line_width_setter)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return;
     auto line_width = value.to_double(interpreter);
@@ -249,7 +249,7 @@ JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::line_width_setter)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::begin_path)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     impl->begin_path();
@@ -258,7 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::begin_path)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::close_path)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     impl->close_path();
@@ -267,7 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::close_path)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::stroke)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     impl->stroke();
@@ -276,7 +276,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::stroke)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::fill)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     auto winding = Gfx::Painter::WindingRule::Nonzero;
@@ -303,7 +303,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::fill)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::move_to)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     auto x = interpreter.argument(0).to_double(interpreter);
@@ -318,7 +318,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::move_to)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::line_to)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     auto x = interpreter.argument(0).to_double(interpreter);
@@ -333,7 +333,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::line_to)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::quadratic_curve_to)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     auto cx = interpreter.argument(0).to_double(interpreter);
@@ -354,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::quadratic_curve_to)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::create_image_data)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     auto width = interpreter.argument(0).to_i32(interpreter);
@@ -369,11 +369,11 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::create_image_data)
 
 JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::put_image_data)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
 
-    auto* image_data_object = interpreter.argument(0).to_object(interpreter);
+    auto* image_data_object = interpreter.argument(0).to_object(interpreter, global_object);
     if (!image_data_object)
         return {};
 
@@ -394,7 +394,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::put_image_data)
 
 JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::canvas_getter)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     auto* element = impl->element();

@@ -61,9 +61,9 @@ const HTMLCanvasElement& HTMLCanvasElementWrapper::node() const
     return static_cast<const HTMLCanvasElement&>(NodeWrapper::node());
 }
 
-static HTMLCanvasElement* impl_from(JS::Interpreter& interpreter)
+static HTMLCanvasElement* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return nullptr;
     // FIXME: Verify that it's a HTMLCanvasElementWrapper somehow!
@@ -72,7 +72,7 @@ static HTMLCanvasElement* impl_from(JS::Interpreter& interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(HTMLCanvasElementWrapper::get_context)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     auto context_type = interpreter.argument(0).to_string(interpreter);
@@ -86,14 +86,14 @@ JS_DEFINE_NATIVE_FUNCTION(HTMLCanvasElementWrapper::get_context)
 
 JS_DEFINE_NATIVE_GETTER(HTMLCanvasElementWrapper::width_getter)
 {
-    if (auto* impl = impl_from(interpreter))
+    if (auto* impl = impl_from(interpreter, global_object))
         return JS::Value(impl->requested_width());
     return {};
 }
 
 JS_DEFINE_NATIVE_GETTER(HTMLCanvasElementWrapper::height_getter)
 {
-    if (auto* impl = impl_from(interpreter))
+    if (auto* impl = impl_from(interpreter, global_object))
         return JS::Value(impl->requested_height());
     return {};
 }

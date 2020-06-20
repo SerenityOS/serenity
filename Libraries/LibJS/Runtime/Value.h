@@ -229,7 +229,7 @@ public:
     String to_string(Interpreter&) const;
     PrimitiveString* to_primitive_string(Interpreter&);
     Value to_primitive(Interpreter&, PreferredType preferred_type = PreferredType::Default) const;
-    Object* to_object(Interpreter&) const;
+    Object* to_object(Interpreter&, GlobalObject&) const;
     Value to_numeric(Interpreter&) const;
     Value to_number(Interpreter&) const;
     BigInt* to_bigint(Interpreter&) const;

@@ -63,9 +63,9 @@ const Element& ElementWrapper::node() const
     return static_cast<const Element&>(NodeWrapper::node());
 }
 
-static Element* impl_from(JS::Interpreter& interpreter)
+static Element* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return nullptr;
     // FIXME: Verify that it's an ElementWrapper somehow!
@@ -74,7 +74,7 @@ static Element* impl_from(JS::Interpreter& interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(ElementWrapper::get_attribute)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
 
@@ -94,7 +94,7 @@ JS_DEFINE_NATIVE_FUNCTION(ElementWrapper::get_attribute)
 
 JS_DEFINE_NATIVE_FUNCTION(ElementWrapper::set_attribute)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
 
@@ -115,14 +115,14 @@ JS_DEFINE_NATIVE_FUNCTION(ElementWrapper::set_attribute)
 
 JS_DEFINE_NATIVE_GETTER(ElementWrapper::inner_html_getter)
 {
-    if (auto* impl = impl_from(interpreter))
+    if (auto* impl = impl_from(interpreter, global_object))
         return JS::js_string(interpreter, impl->inner_html());
     return {};
 }
 
 JS_DEFINE_NATIVE_SETTER(ElementWrapper::inner_html_setter)
 {
-    if (auto* impl = impl_from(interpreter)) {
+    if (auto* impl = impl_from(interpreter, global_object)) {
         auto string = value.to_string(interpreter);
         if (interpreter.exception())
             return;
@@ -132,14 +132,14 @@ JS_DEFINE_NATIVE_SETTER(ElementWrapper::inner_html_setter)
 
 JS_DEFINE_NATIVE_GETTER(ElementWrapper::id_getter)
 {
-    if (auto* impl = impl_from(interpreter))
+    if (auto* impl = impl_from(interpreter, global_object))
         return JS::js_string(interpreter, impl->attribute(HTML::AttributeNames::id));
     return {};
 }
 
 JS_DEFINE_NATIVE_SETTER(ElementWrapper::id_setter)
 {
-    if (auto* impl = impl_from(interpreter)) {
+    if (auto* impl = impl_from(interpreter, global_object)) {
         auto string = value.to_string(interpreter);
         if (interpreter.exception())
             return;

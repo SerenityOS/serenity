@@ -56,9 +56,9 @@ MouseEvent& MouseEventWrapper::event()
     return static_cast<MouseEvent&>(EventWrapper::event());
 }
 
-static MouseEvent* impl_from(JS::Interpreter& interpreter)
+static MouseEvent* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return nullptr;
     // FIXME: Verify that it's a CanvasRenderingContext2DWrapper somehow!
@@ -67,14 +67,14 @@ static MouseEvent* impl_from(JS::Interpreter& interpreter)
 
 JS_DEFINE_NATIVE_GETTER(MouseEventWrapper::offset_x_getter)
 {
-    if (auto* impl = impl_from(interpreter))
+    if (auto* impl = impl_from(interpreter, global_object))
         return JS::Value(impl->offset_x());
     return {};
 }
 
 JS_DEFINE_NATIVE_GETTER(MouseEventWrapper::offset_y_getter)
 {
-    if (auto* impl = impl_from(interpreter))
+    if (auto* impl = impl_from(interpreter, global_object))
         return JS::Value(impl->offset_y());
     return {};
 }
