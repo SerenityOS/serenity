@@ -42,8 +42,9 @@ NumberConstructor::NumberConstructor(GlobalObject& global_object)
 {
 }
 
-void NumberConstructor::initialize(Interpreter&, GlobalObject& global_object)
+void NumberConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    NativeFunction::initialize(interpreter, global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("isFinite", is_finite, 1, attr);
     define_native_function("isInteger", is_integer, 1, attr);

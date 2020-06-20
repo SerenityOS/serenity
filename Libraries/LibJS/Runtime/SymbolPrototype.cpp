@@ -44,10 +44,10 @@ SymbolPrototype::SymbolPrototype(GlobalObject& global_object)
 {
 }
 
-void SymbolPrototype::initialize(Interpreter&, GlobalObject&)
+void SymbolPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Object::initialize(interpreter, global_object);
     define_native_property("description", description_getter, nullptr, Attribute::Configurable);
-
     define_native_function("toString", to_string, 0, Attribute::Writable | Attribute::Configurable);
     define_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
 }

@@ -80,8 +80,9 @@ ReflectObject::ReflectObject(GlobalObject& global_object)
 {
 }
 
-void ReflectObject::initialize(Interpreter&, GlobalObject&)
+void ReflectObject::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Object::initialize(interpreter, global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("apply", apply, 3, attr);
     define_native_function("construct", construct, 2, attr);

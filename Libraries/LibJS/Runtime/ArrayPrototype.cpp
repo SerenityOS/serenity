@@ -46,8 +46,9 @@ ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
 {
 }
 
-void ArrayPrototype::initialize(Interpreter&, GlobalObject&)
+void ArrayPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Object::initialize(interpreter, global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function("filter", filter, 1, attr);

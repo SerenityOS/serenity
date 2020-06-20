@@ -37,8 +37,9 @@ BigIntPrototype::BigIntPrototype(GlobalObject& global_object)
 {
 }
 
-void BigIntPrototype::initialize(Interpreter&, GlobalObject&)
+void BigIntPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Object::initialize(interpreter, global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("toString", to_string, 0, attr);
     define_native_function("toLocaleString", to_locale_string, 0, attr);

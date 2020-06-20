@@ -39,8 +39,9 @@ MathObject::MathObject(GlobalObject& global_object)
 {
 }
 
-void MathObject::initialize(Interpreter&, GlobalObject&)
+void MathObject::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Object::initialize(interpreter, global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("abs", abs, 1, attr);
     define_native_function("random", random, 0, attr);

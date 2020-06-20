@@ -64,8 +64,9 @@ StringPrototype::StringPrototype(GlobalObject& global_object)
 {
 }
 
-void StringPrototype::initialize(Interpreter&, GlobalObject&)
+void StringPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    StringObject::initialize(interpreter, global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_property("length", length_getter, nullptr, 0);

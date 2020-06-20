@@ -42,8 +42,9 @@ JSONObject::JSONObject(GlobalObject& global_object)
 {
 }
 
-void JSONObject::initialize(Interpreter&, GlobalObject&)
+void JSONObject::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Object::initialize(interpreter, global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("stringify", stringify, 3, attr);
     define_native_function("parse", parse, 2, attr);

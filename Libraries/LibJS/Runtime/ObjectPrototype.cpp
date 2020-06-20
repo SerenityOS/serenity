@@ -39,8 +39,9 @@ ObjectPrototype::ObjectPrototype(GlobalObject&)
 {
 }
 
-void ObjectPrototype::initialize(Interpreter&, GlobalObject&)
+void ObjectPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Object::initialize(interpreter, global_object);
     // This must be called after the constructor has returned, so that the below code
     // can find the ObjectPrototype through normal paths.
     u8 attr = Attribute::Writable | Attribute::Configurable;
