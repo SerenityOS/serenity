@@ -30,14 +30,14 @@
 
 namespace JS {
 
-Array* array_from(Interpreter&, GlobalObject&);
-
 class Array final : public Object {
 public:
     static Array* create(GlobalObject&);
 
     explicit Array(Object& prototype);
     virtual ~Array() override;
+
+    static Array* typed_this(Interpreter&, GlobalObject&);
 
 private:
     virtual const char* class_name() const override { return "Array"; }

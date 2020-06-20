@@ -213,7 +213,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 {
-    auto* array = array_from(interpreter, global_object);
+    auto* array = Array::typed_this(interpreter, global_object);
     if (!array)
         return {};
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
@@ -252,7 +252,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
 {
-    auto* array = array_from(interpreter, global_object);
+    auto* array = Array::typed_this(interpreter, global_object);
     if (!array)
         return {};
     if (array->indexed_properties().is_empty())
@@ -340,7 +340,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 {
-    auto* array = array_from(interpreter, global_object);
+    auto* array = Array::typed_this(interpreter, global_object);
     if (!array)
         return {};
 
@@ -366,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 {
-    auto* array = array_from(interpreter, global_object);
+    auto* array = Array::typed_this(interpreter, global_object);
     if (!array)
         return {};
 
@@ -560,7 +560,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
 {
-    auto* array = array_from(interpreter, global_object);
+    auto* array = Array::typed_this(interpreter, global_object);
     if (!array)
         return {};
 
