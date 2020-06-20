@@ -808,7 +808,7 @@ Value Object::call_native_property_getter(Object* this_object, Value property) c
     auto& native_property = static_cast<NativeProperty&>(property.as_object());
     auto& call_frame = interpreter().push_call_frame();
     call_frame.this_value = this_object;
-    auto result = native_property.get(interpreter());
+    auto result = native_property.get(interpreter(), global_object());
     interpreter().pop_call_frame();
     return result;
 }
@@ -820,7 +820,7 @@ void Object::call_native_property_setter(Object* this_object, Value property, Va
     auto& native_property = static_cast<NativeProperty&>(property.as_object());
     auto& call_frame = interpreter().push_call_frame();
     call_frame.this_value = this_object;
-    native_property.set(interpreter(), value);
+    native_property.set(interpreter(), global_object(), value);
     interpreter().pop_call_frame();
 }
 
