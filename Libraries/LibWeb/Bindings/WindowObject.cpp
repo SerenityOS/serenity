@@ -45,6 +45,7 @@ namespace Bindings {
 WindowObject::WindowObject(Window& impl)
     : m_impl(impl)
 {
+    impl.set_wrapper({}, *this);
 }
 
 void WindowObject::initialize()

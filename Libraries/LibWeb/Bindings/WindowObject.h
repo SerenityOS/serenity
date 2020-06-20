@@ -26,13 +26,16 @@
 
 #pragma once
 
+#include <AK/Weakable.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
 namespace Bindings {
 
-class WindowObject final : public JS::GlobalObject {
+class WindowObject final
+    : public JS::GlobalObject
+    , public Weakable<WindowObject> {
 public:
     explicit WindowObject(Window&);
     virtual void initialize() override;

@@ -51,6 +51,11 @@ Window::~Window()
 {
 }
 
+void Window::set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject& wrapper)
+{
+    m_wrapper = wrapper.make_weak_ptr();
+}
+
 void Window::alert(const String& message)
 {
     GUI::MessageBox::show(message, "Alert", GUI::MessageBox::Type::Information);
@@ -65,22 +70,20 @@ bool Window::confirm(const String& message)
 void Window::set_interval(JS::Function& callback, i32 interval)
 {
     // FIXME: This leaks the interval timer and makes it unstoppable.
-    (void)Core::Timer::construct(interval, [handle = make_handle(&callback)] {
+    (void)Core::Timer::construct(interval, [this, handle = make_handle(&callback)] {
         auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
         auto& interpreter = function.interpreter();
-        auto& window = static_cast<Bindings::WindowObject&>(interpreter.global_object());
-        interpreter.call(function, &window);
+        interpreter.call(function, wrapper());
     }).leak_ref();
 }
 
 void Window::set_timeout(JS::Function& callback, i32 interval)
 {
     // FIXME: This leaks the interval timer and makes it unstoppable.
-    auto& timer = Core::Timer::construct(interval, [handle = make_handle(&callback)] {
+    auto& timer = Core::Timer::construct(interval, [this, handle = make_handle(&callback)] {
         auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
         auto& interpreter = function.interpreter();
-        auto& window = static_cast<Bindings::WindowObject&>(interpreter.global_object());
-        interpreter.call(function, &window);
+        interpreter.call(function, wrapper());
     }).leak_ref();
     timer.set_single_shot(true);
 }
