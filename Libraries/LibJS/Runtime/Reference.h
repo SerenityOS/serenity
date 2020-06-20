@@ -34,7 +34,7 @@ namespace JS {
 
 class Reference {
 public:
-    Reference() {}
+    Reference() { }
     Reference(Value base, const PropertyName& name, bool strict = false)
         : m_base(base)
         , m_name(name)
@@ -85,11 +85,11 @@ public:
         return m_global_variable;
     }
 
-    void put(Interpreter&, Value);
-    Value get(Interpreter&);
+    void put(Interpreter&, GlobalObject&, Value);
+    Value get(Interpreter&, GlobalObject&);
 
 private:
-    void throw_reference_error(Interpreter&);
+    void throw_reference_error(Interpreter&, GlobalObject&);
 
     Value m_base { js_undefined() };
     PropertyName m_name;
