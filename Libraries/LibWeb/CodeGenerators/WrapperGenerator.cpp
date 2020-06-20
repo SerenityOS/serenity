@@ -30,16 +30,19 @@
 #include <LibCore/File.h>
 #include <ctype.h>
 
-static String snake_name(const StringView& camel_name)
+static String snake_name(const StringView& title_name)
 {
     StringBuilder builder;
-    for (auto ch : camel_name) {
+    bool first = true;
+    for (auto ch : title_name) {
         if (isupper(ch)) {
-            builder.append('_');
+            if (!first)
+                builder.append('_');
             builder.append(tolower(ch));
         } else {
             builder.append(ch);
         }
+        first = false;
     }
     return builder.to_string();
 }
@@ -338,6 +341,9 @@ static void generate_header(const IDL::Interface& interface)
         out() << "    const " << interface.name << "& impl() const { return static_cast<const " << interface.name << "&>(" << wrapper_base_class << "::impl()); }";
     }
 
+    auto is_foo_wrapper_name = snake_name(String::format("Is%s", wrapper_class.characters()));
+    out() << "    virtual bool " << is_foo_wrapper_name << "() const final { return true; }";
+
     out() << "private:";
     out() << "    virtual const char* class_name() const override { return \"" << interface.name << "\"; }";
 
@@ -407,7 +413,8 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);";
     out() << "    if (!this_object)";
     out() << "        return {};";
-    out() << "    if (StringView(\"" << interface.name << "\") != this_object->class_name()) {";
+    auto is_foo_wrapper_name = snake_name(String::format("Is%s", wrapper_class.characters()));
+    out() << "    if (!this_object->is_web_wrapper() || !static_cast<Wrapper*>(this_object)->" << is_foo_wrapper_name << "()) {";
     out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << interface.name << "\");";
     out() << "        return nullptr;";
     out() << "    }";
