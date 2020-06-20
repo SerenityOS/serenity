@@ -473,6 +473,13 @@ void generate_implementation(const IDL::Interface& interface)
                 out() << "    auto " << snake_name(parameter.name) << " = interpreter.argument(" << argument_index << ").to_string(interpreter);";
                 out() << "    if (interpreter.exception())";
                 out() << "        return {};";
+            } else if (parameter.type.name == "Node") {
+                out() << "    auto " << snake_name(parameter.name) << "_object = interpreter.argument(" << argument_index << ").to_object(interpreter, global_object);";
+                out() << "    if (interpreter.exception())";
+                out() << "        return {};";
+                out() << "    if (!" << snake_name(parameter.name) << "_object->is_web_wrapper() || !static_cast<Wrapper*>(" << snake_name(parameter.name) << "_object)->is_node_wrapper())";
+                out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << parameter.type.name << "\");";
+                out() << "    auto& " << snake_name(parameter.name) << " = static_cast<" << wrapper_class << "*>(" << snake_name(parameter.name) << "_object)->impl();";
             }
             ++argument_index;
         }

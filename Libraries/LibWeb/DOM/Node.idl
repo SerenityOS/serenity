@@ -8,5 +8,6 @@ interface Node : EventTarget {
     readonly attribute Node? parentNode;
     readonly attribute Element? parentElement;
 
+    Node appendChild(Node node);
 }
 

@@ -82,6 +82,8 @@ public:
     bool is_document_fragment() const { return type() == NodeType::DOCUMENT_FRAGMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
 
+    RefPtr<Node> append_child(NonnullRefPtr<Node>, bool notify = true);
+
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const;
 
     virtual FlyString node_name() const = 0;
