@@ -193,4 +193,10 @@ const Element* Node::parent_element() const
     return to<Element>(parent());
 }
 
+RefPtr<Node> Node::append_child(NonnullRefPtr<Node> node, bool notify)
+{
+    TreeNode<Node>::append_child(node, notify);
+    return node;
+}
+
 }
