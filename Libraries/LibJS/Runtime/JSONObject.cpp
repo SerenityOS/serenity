@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/JsonParser.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonParser.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
                     if (value_object.is_string_object() || value_object.is_number_object()) {
                         item = value_object.value_of().to_string(interpreter);
                         if (interpreter.exception())
-                            return { };
+                            return {};
                     }
                 }
                 if (!item.is_null() && !list.contains_slow(item)) {
@@ -201,8 +201,7 @@ String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyStat
                 "%s:%s%s",
                 quote_json_string(key.to_string()).characters(),
                 state.gap.is_empty() ? "" : " ",
-                serialized_property_string.characters()
-            ));
+                serialized_property_string.characters()));
         }
     };
 
@@ -222,7 +221,7 @@ String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyStat
             if (interpreter.exception())
                 return {};
         }
-        for (auto&[key, metadata] : object.shape().property_table_ordered()) {
+        for (auto& [key, metadata] : object.shape().property_table_ordered()) {
             if (!metadata.attributes.is_enumerable())
                 continue;
             process_property(key);
@@ -382,7 +381,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
         interpreter.throw_exception<SyntaxError>(ErrorType::JsonMalformed);
         return {};
     }
-    Value result = parse_json_value(interpreter, json.value());
+    Value result = parse_json_value(interpreter, global_object, json.value());
     if (reviver.is_function()) {
         auto* holder_object = Object::create_empty(interpreter, global_object);
         holder_object->define_property(String::empty(), result);
@@ -393,12 +392,12 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     return result;
 }
 
-Value JSONObject::parse_json_value(Interpreter& interpreter, const JsonValue& value)
+Value JSONObject::parse_json_value(Interpreter& interpreter, GlobalObject& global_object, const JsonValue& value)
 {
     if (value.is_object())
-        return Value(parse_json_object(interpreter, value.as_object()));
+        return Value(parse_json_object(interpreter, global_object, value.as_object()));
     if (value.is_array())
-        return Value(parse_json_array(interpreter, value.as_array()));
+        return Value(parse_json_array(interpreter, global_object, value.as_array()));
     if (value.is_null())
         return js_null();
 #if !defined(KERNEL)
@@ -414,21 +413,21 @@ Value JSONObject::parse_json_value(Interpreter& interpreter, const JsonValue& va
     ASSERT_NOT_REACHED();
 }
 
-Object* JSONObject::parse_json_object(Interpreter& interpreter, const JsonObject& json_object)
+Object* JSONObject::parse_json_object(Interpreter& interpreter, GlobalObject& global_object, const JsonObject& json_object)
 {
-    auto* object = Object::create_empty(interpreter, interpreter.global_object());
-    json_object.for_each_member([&object, &interpreter](String key, JsonValue value) {
-        object->put(key, parse_json_value(interpreter, value));
+    auto* object = Object::create_empty(interpreter, global_object);
+    json_object.for_each_member([&](auto& key, auto& value) {
+        object->put(key, parse_json_value(interpreter, global_object, value));
     });
     return object;
 }
 
-Array* JSONObject::parse_json_array(Interpreter& interpreter, const JsonArray& json_array)
+Array* JSONObject::parse_json_array(Interpreter& interpreter, GlobalObject& global_object, const JsonArray& json_array)
 {
-    auto* array = Array::create(interpreter.global_object());
+    auto* array = Array::create(global_object);
     size_t index = 0;
-    json_array.for_each([&array, &interpreter, &index](JsonValue value) {
-        array->put(index++, parse_json_value(interpreter, value));
+    json_array.for_each([&](auto& value) {
+        array->put(index++, parse_json_value(interpreter, global_object, value));
     });
     return array;
 }
