@@ -53,8 +53,9 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(JS::GlobalObjec
 {
 }
 
-void CanvasRenderingContext2DWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
+void CanvasRenderingContext2DWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
+    Wrapper::initialize(interpreter, global_object);
     define_native_function("fillRect", fill_rect, 4);
     define_native_function("scale", scale, 2);
     define_native_function("translate", translate, 2);

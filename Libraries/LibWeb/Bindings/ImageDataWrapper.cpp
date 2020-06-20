@@ -46,8 +46,9 @@ ImageDataWrapper::ImageDataWrapper(JS::GlobalObject& global_object, ImageData& i
 {
 }
 
-void ImageDataWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
+void ImageDataWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
+    Wrapper::initialize(interpreter, global_object);
     define_native_property("width", width_getter, nullptr);
     define_native_property("height", height_getter, nullptr);
     define_native_property("data", data_getter, nullptr);

@@ -43,10 +43,10 @@ HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(JS::GlobalObject& global_obje
 {
 }
 
-void HTMLCanvasElementWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
+void HTMLCanvasElementWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
+    ElementWrapper::initialize(interpreter, global_object);
     define_native_function("getContext", get_context, 1);
-
     define_native_property("width", width_getter, nullptr);
     define_native_property("height", height_getter, nullptr);
 }

@@ -43,8 +43,10 @@ ElementWrapper::ElementWrapper(JS::GlobalObject& global_object, Element& element
 {
 }
 
-void ElementWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
+void ElementWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
+    NodeWrapper::initialize(interpreter, global_object);
+
     define_native_property("innerHTML", inner_html_getter, inner_html_setter);
     define_native_property("id", id_getter, id_setter);
 
