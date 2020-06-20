@@ -24,8 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Base64.h>
+#include <AK/ByteBuffer.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
@@ -60,6 +63,8 @@ void WindowObject::initialize()
     define_native_function("setTimeout", set_timeout, 1);
     define_native_function("requestAnimationFrame", request_animation_frame, 1);
     define_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
+    define_native_function("atob", atob, 1);
+    define_native_function("btoa", btoa, 1);
 
     define_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -203,6 +208,34 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
         return {};
     impl->cancel_animation_frame(id);
     return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "atob");
+    auto string = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto decoded = decode_base64(StringView(string));
+    return JS::js_string(interpreter, String::copy(decoded));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "btoa");
+    auto string = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto encoded = encode_base64(StringView(string));
+    return JS::js_string(interpreter, String::copy(encoded));
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
