@@ -52,10 +52,16 @@ public:
     void did_set_location_href(Badge<Bindings::LocationObject>, const String& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
 
+    Bindings::WindowObject* wrapper() { return m_wrapper; }
+    const Bindings::WindowObject* wrapper() const { return m_wrapper; }
+
+    void set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject&);
+
 private:
     explicit Window(Document&);
 
     Document& m_document;
+    WeakPtr<Bindings::WindowObject> m_wrapper;
 };
 
 }
