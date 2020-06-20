@@ -39,6 +39,7 @@ SymbolConstructor::SymbolConstructor(GlobalObject& global_object)
 
 void SymbolConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    NativeFunction::initialize(interpreter, global_object);
     define_property("prototype", global_object.symbol_prototype(), 0);
     define_property("length", Value(0), Attribute::Configurable);
 

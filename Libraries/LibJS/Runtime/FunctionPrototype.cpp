@@ -43,8 +43,9 @@ FunctionPrototype::FunctionPrototype(GlobalObject& global_object)
 {
 }
 
-void FunctionPrototype::initialize(Interpreter&, GlobalObject&)
+void FunctionPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Object::initialize(interpreter, global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("apply", apply, 2, attr);
     define_native_function("bind", bind, 1, attr);

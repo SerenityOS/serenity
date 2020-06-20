@@ -39,8 +39,9 @@ BoundFunction::BoundFunction(GlobalObject& global_object, Function& target_funct
 {
 }
 
-void BoundFunction::initialize(Interpreter&, GlobalObject&)
+void BoundFunction::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
+    Function::initialize(interpreter, global_object);
     define_property("length", Value(m_length), Attribute::Configurable);
 }
 
