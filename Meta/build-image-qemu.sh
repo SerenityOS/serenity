@@ -8,8 +8,9 @@ die() {
 }
 
 if [ "$(id -u)" != 0 ]; then
-    die "this script needs to run as root"
+    exec sudo -E -- "$0" "$@" || die "this script needs to run as root"
 fi
+
 if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/usr/local/opt/e2fsprogs/bin:$PATH"
     export PATH="/usr/local/opt/e2fsprogs/sbin:$PATH"
