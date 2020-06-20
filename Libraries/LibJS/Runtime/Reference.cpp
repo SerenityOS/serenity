@@ -33,20 +33,20 @@
 
 namespace JS {
 
-void Reference::put(Interpreter& interpreter, Value value)
+void Reference::put(Interpreter& interpreter, GlobalObject& global_object, Value value)
 {
     // NOTE: The caller is responsible for doing an exception check after assign().
 
     if (is_unresolvable()) {
-        throw_reference_error(interpreter);
+        throw_reference_error(interpreter, global_object);
         return;
     }
 
     if (is_local_variable() || is_global_variable()) {
         if (is_local_variable())
-            interpreter.set_variable(m_name.to_string(), value, interpreter.global_object());
+            interpreter.set_variable(m_name.to_string(), value, global_object);
         else
-            interpreter.global_object().put(m_name, value);
+            global_object.put(m_name, value);
         return;
     }
 
@@ -55,14 +55,14 @@ void Reference::put(Interpreter& interpreter, Value value)
         return;
     }
 
-    auto* object = base().to_object(interpreter, interpreter.global_object());
+    auto* object = base().to_object(interpreter, global_object);
     if (!object)
         return;
 
     object->put(m_name, value);
 }
 
-void Reference::throw_reference_error(Interpreter& interpreter)
+void Reference::throw_reference_error(Interpreter& interpreter, GlobalObject&)
 {
     auto property_name = m_name.to_string();
     String message;
@@ -73,31 +73,31 @@ void Reference::throw_reference_error(Interpreter& interpreter)
     }
 }
 
-Value Reference::get(Interpreter& interpreter)
+Value Reference::get(Interpreter& interpreter, GlobalObject& global_object)
 {
     // NOTE: The caller is responsible for doing an exception check after fetch().
 
     if (is_unresolvable()) {
-        throw_reference_error(interpreter);
+        throw_reference_error(interpreter, global_object);
         return {};
     }
 
     if (is_local_variable() || is_global_variable()) {
         Value value;
         if (is_local_variable())
-            value = interpreter.get_variable(m_name.to_string(), interpreter.global_object());
+            value = interpreter.get_variable(m_name.to_string(), global_object);
         else
-            value = interpreter.global_object().get(m_name);
+            value = global_object.get(m_name);
         if (interpreter.exception())
             return {};
         if (value.is_empty()) {
-            throw_reference_error(interpreter);
+            throw_reference_error(interpreter, global_object);
             return {};
         }
         return value;
     }
 
-    auto* object = base().to_object(interpreter, interpreter.global_object());
+    auto* object = base().to_object(interpreter, global_object);
     if (!object)
         return {};
 

@@ -1110,7 +1110,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         return interpreter.throw_exception<ReferenceError>(ErrorType::InvalidLeftHandAssignment);
 
     update_function_name(rhs_result, reference.name().as_string());
-    reference.put(interpreter, rhs_result);
+    reference.put(interpreter, global_object, rhs_result);
 
     if (interpreter.exception())
         return {};
@@ -1122,7 +1122,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto reference = m_argument->to_reference(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    auto old_value = reference.get(interpreter);
+    auto old_value = reference.get(interpreter, global_object);
     if (interpreter.exception())
         return {};
     old_value = old_value.to_numeric(interpreter);
@@ -1147,7 +1147,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         ASSERT_NOT_REACHED();
     }
 
-    reference.put(interpreter, new_value);
+    reference.put(interpreter, global_object, new_value);
     if (interpreter.exception())
         return {};
     return m_prefixed ? new_value : old_value;
