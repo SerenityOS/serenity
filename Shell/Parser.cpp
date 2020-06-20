@@ -262,8 +262,9 @@ RefPtr<AST::Node> Parser::parse_command()
         if (!list_expr)
             return nullptr;
 
-        auto next_command = parse_command();
         auto cast = create<AST::CastToCommand>(move(list_expr)); // Cast List Command
+
+        auto next_command = parse_command();
         if (!next_command)
             return cast;
 
@@ -396,6 +397,16 @@ RefPtr<AST::Node> Parser::parse_expression()
     auto rule_start = push_start();
     auto starting_char = peek();
 
+    auto read_concat = [&](auto expr) -> RefPtr<AST::Node> {
+        if (is_whitespace(peek()))
+            return expr;
+
+        if (auto next_expr = parse_expression())
+            return create<AST::Juxtaposition>(move(expr), move(next_expr));
+
+        return expr;
+    };
+
     if (strchr("&|[]){} ;<>", starting_char) != nullptr)
         return nullptr;
 
@@ -409,10 +420,10 @@ RefPtr<AST::Node> Parser::parse_expression()
 
     if (starting_char == '$') {
         if (auto variable = parse_variable())
-            return variable;
+            return read_concat(variable);
 
         if (auto inline_exec = parse_evaluate())
-            return inline_exec;
+            return read_concat(inline_exec);
     }
 
     if (starting_char == '#')
@@ -424,11 +435,11 @@ RefPtr<AST::Node> Parser::parse_expression()
         if (!list)
             list = create<AST::SyntaxError>();
         if (!expect(')'))
-            return create<AST::SyntaxError>();
-        return create<AST::CastToList>(move(list)); // Cast To List
+            return read_concat(create<AST::SyntaxError>());
+        return read_concat(create<AST::CastToList>(move(list))); // Cast To List
     }
 
-    return parse_string_composite();
+    return read_concat(parse_string_composite());
 }
 
 RefPtr<AST::Node> Parser::parse_string_composite()
@@ -436,35 +447,35 @@ RefPtr<AST::Node> Parser::parse_string_composite()
     auto rule_start = push_start();
     if (auto string = parse_string()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::StringConcatenate>(move(string), move(next_part)); // Concatenate String StringComposite
+            return create<AST::Juxtaposition>(move(string), move(next_part)); // Concatenate String StringComposite
 
         return string;
     }
 
     if (auto variable = parse_variable()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::StringConcatenate>(move(variable), move(next_part)); // Concatenate Variable StringComposite
+            return create<AST::Juxtaposition>(move(variable), move(next_part)); // Concatenate Variable StringComposite
 
         return variable;
     }
 
     if (auto glob = parse_glob()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::StringConcatenate>(move(glob), move(next_part)); // Concatenate Glob StringComposite
+            return create<AST::Juxtaposition>(move(glob), move(next_part)); // Concatenate Glob StringComposite
 
         return glob;
     }
 
     if (auto bareword = parse_bareword()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::StringConcatenate>(move(bareword), move(next_part)); // Concatenate Bareword StringComposite
+            return create<AST::Juxtaposition>(move(bareword), move(next_part)); // Concatenate Bareword StringComposite
 
         return bareword;
     }
 
     if (auto inline_command = parse_evaluate()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::StringConcatenate>(move(inline_command), move(next_part)); // Concatenate Execute StringComposite
+            return create<AST::Juxtaposition>(move(inline_command), move(next_part)); // Concatenate Execute StringComposite
 
         return inline_command;
     }

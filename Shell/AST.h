@@ -690,17 +690,17 @@ private:
     char m_name { -1 };
 };
 
-class StringConcatenate final : public Node {
+class Juxtaposition final : public Node {
 public:
-    StringConcatenate(Position, RefPtr<Node>, RefPtr<Node>);
-    virtual ~StringConcatenate();
+    Juxtaposition(Position, RefPtr<Node>, RefPtr<Node>);
+    virtual ~Juxtaposition();
 
 private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(TheExecutionInputType) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
-    virtual String class_name() const override { return "StringConcatenate"; }
+    virtual String class_name() const override { return "Juxtaposition"; }
 
     RefPtr<Node> m_left;
     RefPtr<Node> m_right;

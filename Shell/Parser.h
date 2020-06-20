@@ -120,10 +120,10 @@ redirection :: number? '>'{1,2} ' '* string_composite
 
 list_expression :: ' '* expression (' '+ list_expression)?
 
-expression :: evaluate
-            | string_composite
-            | comment
-            | '(' list_expression ')'
+expression :: evaluate expression?
+            | string_composite expression?
+            | comment expession?
+            | '(' list_expression ')' expression?
 
 evaluate :: '$' expression {eval / dynamic resolve}
 
