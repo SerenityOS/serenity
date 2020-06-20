@@ -117,7 +117,7 @@ public:
     void exit_scope(const ScopeNode&);
 
     Value call(Function&, Value this_value, Optional<MarkedValueList> arguments = {});
-    Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments = {});
+    Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject&);
 
     CallFrame& push_call_frame()
     {
