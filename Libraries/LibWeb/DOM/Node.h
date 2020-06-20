@@ -101,6 +101,12 @@ public:
     const Node* root() const;
     bool is_connected() const;
 
+    Node* parent_node() { return parent(); }
+    const Node* parent_node() const { return parent(); }
+
+    Element* parent_element();
+    const Element* parent_element() const;
+
     template<typename T>
     const T* first_child_of_type() const;
 

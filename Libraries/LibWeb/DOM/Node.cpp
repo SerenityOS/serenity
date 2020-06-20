@@ -179,4 +179,18 @@ bool Node::is_connected() const
     return root() && root()->is_document();
 }
 
+Element* Node::parent_element()
+{
+    if (!parent() || !is<Element>(parent()))
+        return nullptr;
+    return to<Element>(parent());
+}
+
+const Element* Node::parent_element() const
+{
+    if (!parent() || !is<Element>(parent()))
+        return nullptr;
+    return to<Element>(parent());
+}
+
 }
