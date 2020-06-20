@@ -43,8 +43,9 @@ DocumentWrapper::DocumentWrapper(JS::GlobalObject& global_object, Document& docu
 {
 }
 
-void DocumentWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
+void DocumentWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
+    NodeWrapper::initialize(interpreter, global_object);
     define_native_function("getElementById", get_element_by_id, 1);
     define_native_function("querySelector", query_selector, 1);
     define_native_function("querySelectorAll", query_selector_all, 1);

@@ -44,8 +44,9 @@ EventTargetWrapper::EventTargetWrapper(JS::GlobalObject& global_object, EventTar
 {
 }
 
-void EventTargetWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
+void EventTargetWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
+    Wrapper::initialize(interpreter, global_object);
     define_native_function("addEventListener", add_event_listener, 2);
 }
 

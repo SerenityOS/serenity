@@ -57,8 +57,9 @@ NodeWrapper::NodeWrapper(JS::GlobalObject& global_object, Node& node)
 {
 }
 
-void NodeWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject&)
+void NodeWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
+    EventTargetWrapper::initialize(interpreter, global_object);
     put("nodeName", JS::js_string(interpreter.heap(), node().node_name()));
 }
 

@@ -40,8 +40,9 @@ MouseEventWrapper::MouseEventWrapper(JS::GlobalObject& global_object, MouseEvent
 {
 }
 
-void MouseEventWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
+void MouseEventWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
+    EventWrapper::initialize(interpreter, global_object);
     define_native_property("offsetX", offset_x_getter, nullptr);
     define_native_property("offsetY", offset_y_getter, nullptr);
 }
