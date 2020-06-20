@@ -32,16 +32,20 @@
 
 namespace JS {
 
-SymbolConstructor::SymbolConstructor()
-    : NativeFunction("Symbol", *interpreter().global_object().function_prototype())
+SymbolConstructor::SymbolConstructor(GlobalObject& global_object)
+    : NativeFunction("Symbol", *global_object.function_prototype())
 {
-    define_property("prototype", interpreter().global_object().symbol_prototype(), 0);
+}
+
+void SymbolConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+{
+    define_property("prototype", global_object.symbol_prototype(), 0);
     define_property("length", Value(0), Attribute::Configurable);
 
     define_native_function("for", for_, 1, Attribute::Writable | Attribute::Configurable);
     define_native_function("keyFor", key_for, 1, Attribute::Writable | Attribute::Configurable);
 
-    SymbolObject::initialize_well_known_symbols(interpreter());
+    SymbolObject::initialize_well_known_symbols(interpreter);
 
     define_property("iterator", SymbolObject::well_known_iterator(), 0);
     define_property("asyncIterator", SymbolObject::well_known_async_terator(), 0);

@@ -32,7 +32,8 @@ namespace JS {
 
 class ArrayConstructor final : public NativeFunction {
 public:
-    ArrayConstructor();
+    explicit ArrayConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ArrayConstructor() override;
 
     virtual Value call(Interpreter&) override;

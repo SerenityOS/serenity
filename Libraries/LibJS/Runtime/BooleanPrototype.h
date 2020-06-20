@@ -32,7 +32,8 @@ namespace JS {
 
 class BooleanPrototype final : public BooleanObject {
 public:
-    BooleanPrototype();
+    explicit BooleanPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~BooleanPrototype() override;
 
 private:

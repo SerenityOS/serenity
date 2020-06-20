@@ -32,9 +32,8 @@ namespace JS {
 
 class FunctionPrototype final : public Object {
 public:
-    FunctionPrototype();
-    void initialize();
-
+    explicit FunctionPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~FunctionPrototype() override;
 
 private:

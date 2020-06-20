@@ -33,10 +33,14 @@
 
 namespace JS {
 
-ProxyConstructor::ProxyConstructor()
-    : NativeFunction("Proxy", *interpreter().global_object().function_prototype())
+ProxyConstructor::ProxyConstructor(GlobalObject& global_object)
+    : NativeFunction("Proxy", *global_object.function_prototype())
 {
-    define_property("prototype", interpreter().global_object().proxy_prototype(), 0);
+}
+
+void ProxyConstructor::initialize(Interpreter&, GlobalObject& global_object)
+{
+    define_property("prototype", global_object.proxy_prototype(), 0);
     define_property("length", Value(2), Attribute::Configurable);
 }
 

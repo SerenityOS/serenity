@@ -35,8 +35,12 @@
 namespace Web {
 namespace Bindings {
 
-XMLHttpRequestPrototype::XMLHttpRequestPrototype()
-    : Object(interpreter().global_object().object_prototype())
+XMLHttpRequestPrototype::XMLHttpRequestPrototype(JS::GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void XMLHttpRequestPrototype::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_native_function("open", open, 2);
     define_native_function("send", send, 0);

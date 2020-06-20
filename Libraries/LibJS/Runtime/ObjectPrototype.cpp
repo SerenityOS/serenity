@@ -34,12 +34,12 @@
 
 namespace JS {
 
-ObjectPrototype::ObjectPrototype()
+ObjectPrototype::ObjectPrototype(GlobalObject&)
     : Object(nullptr)
 {
 }
 
-void ObjectPrototype::initialize()
+void ObjectPrototype::initialize(Interpreter&, GlobalObject&)
 {
     // This must be called after the constructor has returned, so that the below code
     // can find the ObjectPrototype through normal paths.

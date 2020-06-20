@@ -32,7 +32,7 @@ namespace JS {
 
 class RegExpPrototype final : public RegExpObject {
 public:
-    RegExpPrototype();
+    explicit RegExpPrototype(GlobalObject&);
     virtual ~RegExpPrototype() override;
 
 private:

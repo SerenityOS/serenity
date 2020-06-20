@@ -33,7 +33,8 @@ namespace JS {
 
 class ErrorConstructor final : public NativeFunction {
 public:
-    ErrorConstructor();
+    explicit ErrorConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ErrorConstructor() override;
 
     virtual Value call(Interpreter&) override;
@@ -47,7 +48,8 @@ private:
 #define DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName) \
     class ConstructorName final : public NativeFunction {                                         \
     public:                                                                                       \
-        ConstructorName();                                                                        \
+        explicit ConstructorName(GlobalObject&);                                                  \
+        virtual void initialize(Interpreter&, GlobalObject&) override;                            \
         virtual ~ConstructorName() override;                                                      \
         virtual Value call(Interpreter&) override;                                                \
         virtual Value construct(Interpreter&) override;                                           \

@@ -31,10 +31,14 @@
 
 namespace JS {
 
-ErrorConstructor::ErrorConstructor()
-    : NativeFunction("Error", *interpreter().global_object().function_prototype())
+ErrorConstructor::ErrorConstructor(GlobalObject& global_object)
+    : NativeFunction("Error", *global_object.function_prototype())
 {
-    define_property("prototype", interpreter().global_object().error_prototype(), 0);
+}
+
+void ErrorConstructor::initialize(Interpreter&, GlobalObject& global_object)
+{
+    define_property("prototype", global_object.error_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 }
 
@@ -59,10 +63,13 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                          \
-    ConstructorName::ConstructorName()                                                                                 \
-        : NativeFunction(*interpreter().global_object().function_prototype())                                          \
+    ConstructorName::ConstructorName(GlobalObject& global_object)                                                      \
+        : NativeFunction(*global_object.function_prototype())                                                          \
     {                                                                                                                  \
-        define_property("prototype", interpreter().global_object().snake_name##_prototype(), 0);                       \
+    }                                                                                                                  \
+    void ConstructorName::initialize(Interpreter&, GlobalObject& global_object)                                        \
+    {                                                                                                                  \
+        define_property("prototype", global_object.snake_name##_prototype(), 0);                                       \
         define_property("length", Value(1), Attribute::Configurable);                                                  \
     }                                                                                                                  \
     ConstructorName::~ConstructorName() { }                                                                            \

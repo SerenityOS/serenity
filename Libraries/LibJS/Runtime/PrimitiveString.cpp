@@ -41,7 +41,7 @@ PrimitiveString::~PrimitiveString()
 
 PrimitiveString* js_string(Heap& heap, String string)
 {
-    return heap.allocate<PrimitiveString>(move(string));
+    return heap.allocate<PrimitiveString>(heap.interpreter().global_object(), move(string));
 }
 
 PrimitiveString* js_string(Interpreter& interpreter, String string)

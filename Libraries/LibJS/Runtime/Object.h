@@ -57,6 +57,7 @@ public:
     static Object* create_empty(Interpreter&, GlobalObject&);
 
     explicit Object(Object* prototype);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~Object();
 
     enum class GetOwnPropertyMode {

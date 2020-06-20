@@ -33,7 +33,8 @@ namespace Bindings {
 
 class XMLHttpRequestPrototype final : public JS::Object {
 public:
-    XMLHttpRequestPrototype();
+    explicit XMLHttpRequestPrototype(JS::GlobalObject&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~XMLHttpRequestPrototype() override;
 
 private:

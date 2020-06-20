@@ -32,7 +32,8 @@ namespace JS {
 
 class BigIntPrototype final : public Object {
 public:
-    BigIntPrototype();
+    explicit BigIntPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~BigIntPrototype() override;
 
 private:

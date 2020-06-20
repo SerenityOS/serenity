@@ -37,7 +37,7 @@ namespace JS {
 
 RegExpObject* RegExpObject::create(GlobalObject& global_object, String content, String flags)
 {
-    return global_object.heap().allocate<RegExpObject>(content, flags, *global_object.regexp_prototype());
+    return global_object.heap().allocate<RegExpObject>(global_object, content, flags, *global_object.regexp_prototype());
 }
 
 RegExpObject::RegExpObject(String content, String flags, Object& prototype)

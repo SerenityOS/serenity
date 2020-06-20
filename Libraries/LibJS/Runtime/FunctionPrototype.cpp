@@ -38,12 +38,12 @@
 
 namespace JS {
 
-FunctionPrototype::FunctionPrototype()
-    : Object(interpreter().global_object().object_prototype())
+FunctionPrototype::FunctionPrototype(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
 {
 }
 
-void FunctionPrototype::initialize()
+void FunctionPrototype::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("apply", apply, 2, attr);

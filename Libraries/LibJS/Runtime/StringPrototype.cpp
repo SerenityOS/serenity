@@ -59,8 +59,12 @@ static String string_from(Interpreter& interpreter)
     return Value(this_object).to_string(interpreter);
 }
 
-StringPrototype::StringPrototype()
-    : StringObject(*js_string(interpreter(), String::empty()), *interpreter().global_object().object_prototype())
+StringPrototype::StringPrototype(GlobalObject& global_object)
+    : StringObject(*js_string(interpreter(), String::empty()), *global_object.object_prototype())
+{
+}
+
+void StringPrototype::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
 

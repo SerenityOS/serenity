@@ -34,10 +34,14 @@
 
 namespace JS {
 
-BigIntConstructor::BigIntConstructor()
-    : NativeFunction("BigInt", *interpreter().global_object().function_prototype())
+BigIntConstructor::BigIntConstructor(GlobalObject& global_object)
+    : NativeFunction("BigInt", *global_object.function_prototype())
 {
-    define_property("prototype", interpreter().global_object().bigint_prototype(), 0);
+}
+
+void BigIntConstructor::initialize(Interpreter&, GlobalObject& global_object)
+{
+    define_property("prototype", global_object.bigint_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

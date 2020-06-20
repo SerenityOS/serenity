@@ -32,9 +32,8 @@ namespace JS {
 
 class ObjectPrototype final : public Object {
 public:
-    ObjectPrototype();
-    void initialize();
-
+    explicit ObjectPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ObjectPrototype() override;
 
     // public to serve as intrinsic function %Object.prototype.toString%

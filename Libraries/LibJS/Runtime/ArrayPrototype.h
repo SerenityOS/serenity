@@ -33,7 +33,8 @@ namespace JS {
 
 class ArrayPrototype final : public Object {
 public:
-    ArrayPrototype();
+    ArrayPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ArrayPrototype() override;
 
 private:

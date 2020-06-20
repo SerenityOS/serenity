@@ -82,7 +82,7 @@ PropertyDescriptor PropertyDescriptor::from_dictionary(Interpreter& interpreter,
 
 Object* Object::create_empty(Interpreter&, GlobalObject& global_object)
 {
-    return global_object.heap().allocate<Object>(global_object.object_prototype());
+    return global_object.heap().allocate<Object>(global_object, global_object.object_prototype());
 }
 
 Object::Object(Object* prototype)
@@ -92,8 +92,12 @@ Object::Object(Object* prototype)
         set_prototype(prototype);
     } else {
         // This is the global object
-        m_shape = interpreter().heap().allocate<Shape>(static_cast<GlobalObject&>(*this));
+        m_shape = interpreter().heap().allocate<Shape>(static_cast<GlobalObject&>(*this), static_cast<GlobalObject&>(*this));
     }
+}
+
+void Object::initialize(Interpreter&, GlobalObject&)
+{
 }
 
 Object::~Object()
@@ -694,7 +698,7 @@ bool Object::define_native_function(const FlyString& property_name, AK::Function
 
 bool Object::define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
-    return define_property(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)), attribute);
+    return define_property(property_name, heap().allocate<NativeProperty>(global_object(), move(getter), move(setter)), attribute);
 }
 
 void Object::visit_children(Cell::Visitor& visitor)

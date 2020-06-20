@@ -36,19 +36,25 @@
 
 namespace JS {
 
-ArrayConstructor::ArrayConstructor()
-    : NativeFunction("Array", *interpreter().global_object().function_prototype())
+ArrayConstructor::ArrayConstructor(GlobalObject& global_object)
+    : NativeFunction("Array", *global_object.function_prototype())
 {
-    define_property("prototype", interpreter().global_object().array_prototype(), 0);
+}
+
+ArrayConstructor::~ArrayConstructor()
+{
+}
+
+void ArrayConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+{
+    NativeFunction::initialize(interpreter, global_object);
+
+    define_property("prototype", global_object.array_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("isArray", is_array, 1, attr);
     define_native_function("of", of, 0, attr);
-}
-
-ArrayConstructor::~ArrayConstructor()
-{
 }
 
 Value ArrayConstructor::call(Interpreter& interpreter)

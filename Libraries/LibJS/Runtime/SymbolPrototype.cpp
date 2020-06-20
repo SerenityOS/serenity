@@ -39,8 +39,12 @@
 
 namespace JS {
 
-SymbolPrototype::SymbolPrototype()
-    : Object(interpreter().global_object().object_prototype())
+SymbolPrototype::SymbolPrototype(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void SymbolPrototype::initialize(Interpreter&, GlobalObject&)
 {
     define_native_property("description", description_getter, nullptr, Attribute::Configurable);
 
@@ -88,5 +92,4 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::value_of)
         return {};
     return this_object->value_of();
 }
-
 }

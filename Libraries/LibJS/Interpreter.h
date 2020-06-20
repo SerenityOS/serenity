@@ -78,7 +78,7 @@ public:
     static NonnullOwnPtr<Interpreter> create(Args&&... args)
     {
         auto interpreter = adopt_own(*new Interpreter);
-        interpreter->m_global_object = interpreter->heap().allocate<GlobalObjectType>(forward<Args>(args)...);
+        interpreter->m_global_object = interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...);
         static_cast<GlobalObjectType*>(interpreter->m_global_object)->initialize();
         return interpreter;
     }
@@ -173,7 +173,7 @@ public:
     Value throw_exception(Exception*);
     Value throw_exception(Value value)
     {
-        return throw_exception(heap().allocate<Exception>(value));
+        return throw_exception(heap().allocate<Exception>(global_object(), value));
     }
 
     template<typename T, typename... Args>

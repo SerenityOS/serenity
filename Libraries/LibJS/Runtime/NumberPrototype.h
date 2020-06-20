@@ -32,7 +32,7 @@ namespace JS {
 
 class NumberPrototype final : public NumberObject {
 public:
-    NumberPrototype();
+    explicit NumberPrototype(GlobalObject&);
     virtual ~NumberPrototype() override;
 
 private:

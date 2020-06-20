@@ -32,7 +32,8 @@ namespace JS {
 
 class RegExpConstructor final : public NativeFunction {
 public:
-    RegExpConstructor();
+    explicit RegExpConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~RegExpConstructor() override;
 
     virtual Value call(Interpreter&) override;

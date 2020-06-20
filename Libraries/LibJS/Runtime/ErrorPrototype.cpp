@@ -35,8 +35,12 @@
 
 namespace JS {
 
-ErrorPrototype::ErrorPrototype()
-    : Object(interpreter().global_object().object_prototype())
+ErrorPrototype::ErrorPrototype(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void ErrorPrototype::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_property("name", name_getter, name_setter, attr);
@@ -117,8 +121,8 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    PrototypeName::PrototypeName()                                            \
-        : Object(interpreter().global_object().error_prototype())             \
+    PrototypeName::PrototypeName(GlobalObject& global_object)                 \
+        : Object(global_object.error_prototype())                             \
     {                                                                         \
     }                                                                         \
     PrototypeName::~PrototypeName() { }                                       \

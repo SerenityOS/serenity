@@ -59,7 +59,7 @@ bool static is_compatible_property_descriptor(Interpreter& interpreter, bool is_
 
 ProxyObject* ProxyObject::create(GlobalObject& global_object, Object& target, Object& handler)
 {
-    return global_object.heap().allocate<ProxyObject>(target, handler, *global_object.proxy_prototype());
+    return global_object.heap().allocate<ProxyObject>(global_object, target, handler, *global_object.proxy_prototype());
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)

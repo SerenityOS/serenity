@@ -33,10 +33,14 @@
 
 namespace JS {
 
-BooleanConstructor::BooleanConstructor()
-    : NativeFunction("Boolean", *interpreter().global_object().function_prototype())
+BooleanConstructor::BooleanConstructor(GlobalObject& global_object)
+    : NativeFunction("Boolean", *global_object.function_prototype())
 {
-    define_property("prototype", Value(interpreter().global_object().boolean_prototype()), 0);
+}
+
+void BooleanConstructor::initialize(Interpreter&, GlobalObject& global_object)
+{
+    define_property("prototype", Value(global_object.boolean_prototype()), 0);
     define_property("length", Value(1), Attribute::Configurable);
 }
 

@@ -32,7 +32,7 @@ namespace JS {
 
 Shape* Shape::create_unique_clone() const
 {
-    auto* new_shape = heap().allocate<Shape>(m_global_object);
+    auto* new_shape = heap().allocate<Shape>(m_global_object, m_global_object);
     new_shape->m_unique = true;
     new_shape->m_prototype = m_prototype;
     ensure_property_table();
@@ -46,7 +46,7 @@ Shape* Shape::create_put_transition(const FlyString& property_name, PropertyAttr
     TransitionKey key { property_name, attributes };
     if (auto* existing_shape = m_forward_transitions.get(key).value_or(nullptr))
         return existing_shape;
-    auto* new_shape = heap().allocate<Shape>(*this, property_name, attributes, TransitionType::Put);
+    auto* new_shape = heap().allocate<Shape>(m_global_object, *this, property_name, attributes, TransitionType::Put);
     m_forward_transitions.set(key, new_shape);
     return new_shape;
 }
@@ -56,14 +56,14 @@ Shape* Shape::create_configure_transition(const FlyString& property_name, Proper
     TransitionKey key { property_name, attributes };
     if (auto* existing_shape = m_forward_transitions.get(key).value_or(nullptr))
         return existing_shape;
-    auto* new_shape = heap().allocate<Shape>(*this, property_name, attributes, TransitionType::Configure);
+    auto* new_shape = heap().allocate<Shape>(m_global_object, *this, property_name, attributes, TransitionType::Configure);
     m_forward_transitions.set(key, new_shape);
     return new_shape;
 }
 
 Shape* Shape::create_prototype_transition(Object* new_prototype)
 {
-    return heap().allocate<Shape>(*this, new_prototype);
+    return heap().allocate<Shape>(m_global_object, *this, new_prototype);
 }
 
 Shape::Shape(GlobalObject& global_object)

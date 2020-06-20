@@ -32,7 +32,8 @@ namespace JS {
 
 class FunctionConstructor final : public NativeFunction {
 public:
-    FunctionConstructor();
+    explicit FunctionConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~FunctionConstructor() override;
 
     virtual Value call(Interpreter&) override;

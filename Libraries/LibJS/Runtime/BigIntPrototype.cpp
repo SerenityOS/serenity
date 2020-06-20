@@ -32,8 +32,12 @@
 
 namespace JS {
 
-BigIntPrototype::BigIntPrototype()
-    : Object(interpreter().global_object().object_prototype())
+BigIntPrototype::BigIntPrototype(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void BigIntPrototype::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("toString", to_string, 0, attr);

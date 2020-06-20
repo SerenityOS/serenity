@@ -41,8 +41,12 @@
 
 namespace JS {
 
-ArrayPrototype::ArrayPrototype()
-    : Object(interpreter().global_object().object_prototype())
+ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void ArrayPrototype::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
 

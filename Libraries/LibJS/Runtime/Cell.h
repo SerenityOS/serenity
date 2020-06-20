@@ -37,7 +37,8 @@ class Cell {
     AK_MAKE_NONMOVABLE(Cell);
 
 public:
-    virtual ~Cell() {}
+    virtual void initialize(Interpreter&, GlobalObject&) { }
+    virtual ~Cell() { }
 
     bool is_marked() const { return m_mark; }
     void set_marked(bool b) { m_mark = b; }
@@ -56,14 +57,14 @@ public:
         virtual void visit_impl(Cell*) = 0;
     };
 
-    virtual void visit_children(Visitor&) {}
+    virtual void visit_children(Visitor&) { }
 
     Heap& heap() const;
     Interpreter& interpreter();
     Interpreter& interpreter() const;
 
 protected:
-    Cell() {}
+    Cell() { }
 
 private:
     bool m_mark { false };

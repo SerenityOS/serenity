@@ -35,8 +35,8 @@
 
 namespace JS {
 
-RegExpPrototype::RegExpPrototype()
-    : RegExpObject({}, {}, *interpreter().global_object().object_prototype())
+RegExpPrototype::RegExpPrototype(GlobalObject& global_object)
+    : RegExpObject({}, {}, *global_object.object_prototype())
 {
 }
 

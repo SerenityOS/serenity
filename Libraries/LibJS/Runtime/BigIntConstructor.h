@@ -32,7 +32,8 @@ namespace JS {
 
 class BigIntConstructor final : public NativeFunction {
 public:
-    BigIntConstructor();
+    explicit BigIntConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~BigIntConstructor() override;
 
     virtual Value call(Interpreter&) override;
