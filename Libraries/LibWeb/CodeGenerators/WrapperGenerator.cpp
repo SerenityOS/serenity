@@ -467,7 +467,7 @@ void generate_implementation(const IDL::Interface& interface)
         Vector<String> parameter_names;
         size_t argument_index = 0;
         for (auto& parameter : function.parameters) {
-            parameter_names.append(parameter.name);
+            parameter_names.append(snake_name(parameter.name));
             if (parameter.type.name == "DOMString") {
                 out() << "    auto " << snake_name(parameter.name) << " = interpreter.argument(" << argument_index << ").to_string(interpreter);";
                 out() << "    if (interpreter.exception())";
