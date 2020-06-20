@@ -81,7 +81,7 @@ public:
 
     const HTMLHtmlElement* document_element() const;
     const HTMLHeadElement* head() const;
-    const HTMLBodyElement* body() const;
+    const HTMLElement* body() const;
 
     String title() const;
 
