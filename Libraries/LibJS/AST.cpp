@@ -1372,7 +1372,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
                     accessor = &existing_property.as_accessor();
             }
             if (!accessor) {
-                accessor = Accessor::create(interpreter, nullptr, nullptr);
+                accessor = Accessor::create(interpreter, global_object, nullptr, nullptr);
                 object->define_property(key, accessor, Attribute::Configurable | Attribute::Enumerable);
                 if (interpreter.exception())
                     return {};
