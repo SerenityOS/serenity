@@ -324,7 +324,7 @@ int Shell::run_command(const StringView& cmd)
     if (!command)
         return 0;
 
-#ifdef SH_DEBUG
+#ifndef SH_DEBUG
     dbg() << "Command follows";
     command->dump(0);
 #endif
