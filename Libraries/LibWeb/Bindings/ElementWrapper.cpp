@@ -61,12 +61,12 @@ ElementWrapper::~ElementWrapper()
 
 Element& ElementWrapper::node()
 {
-    return static_cast<Element&>(NodeWrapper::node());
+    return static_cast<Element&>(NodeWrapper::impl());
 }
 
 const Element& ElementWrapper::node() const
 {
-    return static_cast<const Element&>(NodeWrapper::node());
+    return static_cast<const Element&>(NodeWrapper::impl());
 }
 
 static Element* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)

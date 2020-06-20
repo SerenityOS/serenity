@@ -24,29 +24,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
+#include <LibJS/Interpreter.h>
+#include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
+#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/HTMLCanvasElement.h>
+#include <LibWeb/DOM/HTMLImageElement.h>
+#include <LibWeb/DOM/Node.h>
 
 namespace Web {
 namespace Bindings {
 
-class DocumentWrapper : public NodeWrapper {
-public:
-    DocumentWrapper(JS::GlobalObject&, Document&);
-    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
-    virtual ~DocumentWrapper() override;
-
-    Document& node();
-    const Document& node() const;
-
-private:
-    virtual const char* class_name() const override { return "DocumentWrapper"; }
-
-    JS_DECLARE_NATIVE_FUNCTION(get_element_by_id);
-    JS_DECLARE_NATIVE_FUNCTION(query_selector);
-    JS_DECLARE_NATIVE_FUNCTION(query_selector_all);
-};
+NodeWrapper* wrap(JS::Heap& heap, Node& node)
+{
+    if (is<Document>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Document>(node)));
+    if (is<HTMLCanvasElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLCanvasElement>(node)));
+    if (is<HTMLImageElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLImageElement>(node)));
+    if (is<Element>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Element>(node)));
+    return static_cast<NodeWrapper*>(wrap_impl(heap, node));
+}
 
 }
 }

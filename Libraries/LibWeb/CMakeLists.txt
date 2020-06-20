@@ -1,6 +1,7 @@
 set(SOURCES
     Bindings/CanvasRenderingContext2DWrapper.cpp
     Bindings/DocumentWrapper.cpp
+    Bindings/DocumentWrapper.h
     Bindings/ElementWrapper.cpp
     Bindings/EventListenerWrapper.cpp
     Bindings/EventTargetWrapper.cpp
@@ -12,6 +13,8 @@ set(SOURCES
     Bindings/MouseEventWrapper.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapper.cpp
+    Bindings/NodeWrapper.h
+    Bindings/NodeWrapperFactory.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
     Bindings/XMLHttpRequestConstructor.cpp
@@ -122,6 +125,46 @@ set(GENERATED_SOURCES
     ../../Services/ProtocolServer/ProtocolClientEndpoint.h
     ../../Services/ProtocolServer/ProtocolServerEndpoint.h
 )
+
+add_custom_command(
+    OUTPUT Bindings/NodeWrapper.h
+    COMMAND /bin/mkdir -p Bindings
+    COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/DOM/Node.idl > Bindings/NodeWrapper.h
+    VERBATIM
+    DEPENDS WrapperGenerator
+    MAIN_DEPENDENCY DOM/Node.idl
+)
+add_custom_target(generate_NodeWrapper.h DEPENDS Bindings/NodeWrapper.h)
+
+add_custom_command(
+    OUTPUT Bindings/NodeWrapper.cpp
+    COMMAND /bin/mkdir -p Bindings
+    COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/DOM/Node.idl > Bindings/NodeWrapper.cpp
+    VERBATIM
+    DEPENDS WrapperGenerator
+    MAIN_DEPENDENCY DOM/Node.idl
+)
+add_custom_target(generate_NodeWrapper.cpp DEPENDS Bindings/NodeWrapper.cpp)
+
+add_custom_command(
+    OUTPUT Bindings/DocumentWrapper.h
+    COMMAND /bin/mkdir -p Bindings
+    COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/DOM/Document.idl > Bindings/DocumentWrapper.h
+    VERBATIM
+    DEPENDS WrapperGenerator
+    MAIN_DEPENDENCY DOM/Document.idl
+)
+add_custom_target(generate_DocumentWrapper.h DEPENDS Bindings/DocumentWrapper.h)
+
+add_custom_command(
+    OUTPUT Bindings/DocumentWrapper.cpp
+    COMMAND /bin/mkdir -p Bindings
+    COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/DOM/Document.idl > Bindings/DocumentWrapper.cpp
+    VERBATIM
+    DEPENDS WrapperGenerator
+    MAIN_DEPENDENCY DOM/Document.idl
+)
+add_custom_target(generate_DocumentWrapper.cpp DEPENDS Bindings/DocumentWrapper.cpp)
 
 add_custom_command(
     OUTPUT CSS/PropertyID.h

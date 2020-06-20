@@ -36,6 +36,7 @@
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
+#include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>

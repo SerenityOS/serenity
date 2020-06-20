@@ -46,12 +46,12 @@ HTMLImageElementWrapper::~HTMLImageElementWrapper()
 
 HTMLImageElement& HTMLImageElementWrapper::node()
 {
-    return static_cast<HTMLImageElement&>(NodeWrapper::node());
+    return static_cast<HTMLImageElement&>(NodeWrapper::impl());
 }
 
 const HTMLImageElement& HTMLImageElementWrapper::node() const
 {
-    return static_cast<const HTMLImageElement&>(NodeWrapper::node());
+    return static_cast<const HTMLImageElement&>(NodeWrapper::impl());
 }
 
 }

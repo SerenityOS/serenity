@@ -32,6 +32,7 @@
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
+#include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>

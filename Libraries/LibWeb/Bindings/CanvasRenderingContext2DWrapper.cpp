@@ -34,6 +34,7 @@
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
+#include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/DOM/CanvasRenderingContext2D.h>
 #include <LibWeb/DOM/HTMLCanvasElement.h>
 #include <LibWeb/DOM/HTMLImageElement.h>

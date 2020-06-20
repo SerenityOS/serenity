@@ -57,12 +57,12 @@ HTMLCanvasElementWrapper::~HTMLCanvasElementWrapper()
 
 HTMLCanvasElement& HTMLCanvasElementWrapper::node()
 {
-    return static_cast<HTMLCanvasElement&>(NodeWrapper::node());
+    return static_cast<HTMLCanvasElement&>(NodeWrapper::impl());
 }
 
 const HTMLCanvasElement& HTMLCanvasElementWrapper::node() const
 {
-    return static_cast<const HTMLCanvasElement&>(NodeWrapper::node());
+    return static_cast<const HTMLCanvasElement&>(NodeWrapper::impl());
 }
 
 static HTMLCanvasElement* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)

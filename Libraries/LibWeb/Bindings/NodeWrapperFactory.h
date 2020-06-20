@@ -26,23 +26,11 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/EventTargetWrapper.h>
+#include <LibWeb/Forward.h>
+#include <LibJS/Forward.h>
 
 namespace Web {
 namespace Bindings {
-
-class NodeWrapper : public EventTargetWrapper {
-public:
-    NodeWrapper(JS::GlobalObject&, Node&);
-    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
-    virtual ~NodeWrapper() override;
-
-    Node& node();
-    const Node& node() const;
-
-private:
-    virtual const char* class_name() const override { return "NodeWrapper"; }
-};
 
 NodeWrapper* wrap(JS::Heap&, Node&);
 
