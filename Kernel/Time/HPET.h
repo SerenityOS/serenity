@@ -37,6 +37,8 @@
 namespace Kernel {
 
 class HPETComparator;
+struct HPETRegistersBlock;
+
 class HPET {
 public:
     static bool initialized();
@@ -63,6 +65,9 @@ public:
     Vector<unsigned> capable_interrupt_numbers(const HPETComparator&);
 
 private:
+    const volatile HPETRegistersBlock& registers() const;
+    volatile HPETRegistersBlock& registers();
+
     void global_disable();
     void global_enable();
 
@@ -71,7 +76,7 @@ private:
 
     u64 calculate_ticks_in_nanoseconds() const;
 
-    PhysicalAddress find_acpi_hept_registers_block();
+    PhysicalAddress find_acpi_hpet_registers_block();
     explicit HPET(PhysicalAddress acpi_hpet);
     PhysicalAddress m_physical_acpi_hpet_table;
     PhysicalAddress m_physical_acpi_hpet_registers;
