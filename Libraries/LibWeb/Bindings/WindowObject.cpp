@@ -213,7 +213,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (!interpreter.argument_count())
@@ -227,7 +227,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (!interpreter.argument_count())
