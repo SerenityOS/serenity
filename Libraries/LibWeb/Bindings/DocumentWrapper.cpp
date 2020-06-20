@@ -38,8 +38,12 @@
 namespace Web {
 namespace Bindings {
 
-DocumentWrapper::DocumentWrapper(Document& document)
-    : NodeWrapper(document)
+DocumentWrapper::DocumentWrapper(JS::GlobalObject& global_object, Document& document)
+    : NodeWrapper(global_object, document)
+{
+}
+
+void DocumentWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_native_function("getElementById", get_element_by_id, 1);
     define_native_function("querySelector", query_selector, 1);

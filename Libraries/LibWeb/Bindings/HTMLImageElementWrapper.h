@@ -33,7 +33,7 @@ namespace Bindings {
 
 class HTMLImageElementWrapper : public ElementWrapper {
 public:
-    explicit HTMLImageElementWrapper(HTMLImageElement&);
+    HTMLImageElementWrapper(JS::GlobalObject&, HTMLImageElement&);
     virtual ~HTMLImageElementWrapper() override;
 
     HTMLImageElement& node();

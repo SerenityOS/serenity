@@ -33,7 +33,7 @@ namespace Bindings {
 
 class XMLHttpRequestWrapper final : public EventTargetWrapper {
 public:
-    explicit XMLHttpRequestWrapper(XMLHttpRequest&);
+    XMLHttpRequestWrapper(JS::GlobalObject&, XMLHttpRequest&);
     virtual ~XMLHttpRequestWrapper() override;
 
     XMLHttpRequest& impl();

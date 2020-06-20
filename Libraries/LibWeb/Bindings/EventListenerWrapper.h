@@ -33,7 +33,7 @@ namespace Bindings {
 
 class EventListenerWrapper final : public Wrapper {
 public:
-    explicit EventListenerWrapper(EventListener&);
+    EventListenerWrapper(JS::GlobalObject&, EventListener&);
     virtual ~EventListenerWrapper() override;
 
     EventListener& impl() { return *m_impl; }

@@ -35,8 +35,12 @@
 namespace Web {
 namespace Bindings {
 
-LocationObject::LocationObject()
-    : Object(interpreter().global_object().object_prototype())
+LocationObject::LocationObject(JS::GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void LocationObject::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_property("href", href_getter, href_setter, attr);

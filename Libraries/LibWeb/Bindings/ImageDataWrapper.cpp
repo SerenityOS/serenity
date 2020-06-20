@@ -40,9 +40,13 @@ ImageDataWrapper* wrap(JS::Heap& heap, ImageData& event)
     return static_cast<ImageDataWrapper*>(wrap_impl(heap, event));
 }
 
-ImageDataWrapper::ImageDataWrapper(ImageData& impl)
-    : Wrapper(*interpreter().global_object().object_prototype())
+ImageDataWrapper::ImageDataWrapper(JS::GlobalObject& global_object, ImageData& impl)
+    : Wrapper(*global_object.object_prototype())
     , m_impl(impl)
+{
+}
+
+void ImageDataWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_native_property("width", width_getter, nullptr);
     define_native_property("height", height_getter, nullptr);

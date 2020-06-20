@@ -34,19 +34,23 @@
 namespace Web {
 namespace Bindings {
 
-NavigatorObject::NavigatorObject()
-    : Object(interpreter().global_object().object_prototype())
+NavigatorObject::NavigatorObject(JS::GlobalObject& global_object)
+    : Object(global_object.object_prototype())
 {
-    auto* languages = JS::Array::create(interpreter().global_object());
+}
+
+void NavigatorObject::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
+{
+    auto* languages = JS::Array::create(global_object);
     languages->indexed_properties().append(js_string(heap(), "en-US"));
 
-    define_property("appCodeName", js_string(heap(), "Mozilla"));
-    define_property("appName", js_string(heap(), "Netscape"));
-    define_property("appVersion", js_string(heap(), "4.0"));
+    define_property("appCodeName", js_string(interpreter.heap(), "Mozilla"));
+    define_property("appName", js_string(interpreter.heap(), "Netscape"));
+    define_property("appVersion", js_string(interpreter.heap(), "4.0"));
     define_property("language", languages->get(0));
     define_property("languages", languages);
-    define_property("platform", js_string(heap(), "SerenityOS"));
-    define_property("product", js_string(heap(), "Gecko"));
+    define_property("platform", js_string(interpreter.heap(), "SerenityOS"));
+    define_property("product", js_string(interpreter.heap(), "Gecko"));
 
     define_native_property("userAgent", user_agent_getter, nullptr);
 }

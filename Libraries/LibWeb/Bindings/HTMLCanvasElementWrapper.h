@@ -33,7 +33,8 @@ namespace Bindings {
 
 class HTMLCanvasElementWrapper : public ElementWrapper {
 public:
-    explicit HTMLCanvasElementWrapper(HTMLCanvasElement&);
+    HTMLCanvasElementWrapper(JS::GlobalObject&, HTMLCanvasElement&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~HTMLCanvasElementWrapper() override;
 
     HTMLCanvasElement& node();

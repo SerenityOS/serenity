@@ -38,9 +38,13 @@
 namespace Web {
 namespace Bindings {
 
-EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
-    : Wrapper(*interpreter().global_object().object_prototype())
+EventTargetWrapper::EventTargetWrapper(JS::GlobalObject& global_object, EventTarget& impl)
+    : Wrapper(*global_object.object_prototype())
     , m_impl(impl)
+{
+}
+
+void EventTargetWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_native_function("addEventListener", add_event_listener, 2);
 }

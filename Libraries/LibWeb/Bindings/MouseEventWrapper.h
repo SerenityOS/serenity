@@ -33,7 +33,8 @@ namespace Bindings {
 
 class MouseEventWrapper : public EventWrapper {
 public:
-    explicit MouseEventWrapper(MouseEvent&);
+    MouseEventWrapper(JS::GlobalObject&, MouseEvent&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~MouseEventWrapper() override;
 
     MouseEvent& event();

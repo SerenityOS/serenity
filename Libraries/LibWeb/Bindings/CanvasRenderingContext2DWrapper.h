@@ -33,7 +33,8 @@ namespace Bindings {
 
 class CanvasRenderingContext2DWrapper final : public Wrapper {
 public:
-    explicit CanvasRenderingContext2DWrapper(CanvasRenderingContext2D&);
+    CanvasRenderingContext2DWrapper(JS::GlobalObject&, CanvasRenderingContext2D&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~CanvasRenderingContext2DWrapper() override;
 
     CanvasRenderingContext2D& impl() { return m_impl; }

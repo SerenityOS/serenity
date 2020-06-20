@@ -41,10 +41,10 @@ XMLHttpRequestWrapper* wrap(JS::Heap& heap, XMLHttpRequest& impl)
     return static_cast<XMLHttpRequestWrapper*>(wrap_impl(heap, impl));
 }
 
-XMLHttpRequestWrapper::XMLHttpRequestWrapper(XMLHttpRequest& impl)
-    : EventTargetWrapper(impl)
+XMLHttpRequestWrapper::XMLHttpRequestWrapper(JS::GlobalObject& global_object, XMLHttpRequest& impl)
+    : EventTargetWrapper(global_object, impl)
 {
-    set_prototype(static_cast<WindowObject&>(interpreter().global_object()).xhr_prototype());
+    set_prototype(static_cast<WindowObject&>(global_object).xhr_prototype());
 }
 
 XMLHttpRequestWrapper::~XMLHttpRequestWrapper()
