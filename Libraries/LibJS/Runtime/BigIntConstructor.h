@@ -42,8 +42,8 @@ private:
     virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "BigIntConstructor"; }
 
-    static Value as_int_n(Interpreter&);
-    static Value as_uint_n(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(as_int_n);
+    JS_DECLARE_NATIVE_FUNCTION(as_uint_n);
 };
 
 }

@@ -53,9 +53,9 @@ Uint8ClampedArray::~Uint8ClampedArray()
     m_data = nullptr;
 }
 
-Value Uint8ClampedArray::length_getter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(Uint8ClampedArray::length_getter)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (StringView(this_object->class_name()) != "Uint8ClampedArray")

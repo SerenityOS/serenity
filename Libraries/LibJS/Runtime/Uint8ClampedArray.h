@@ -48,7 +48,7 @@ public:
 private:
     virtual const char* class_name() const override { return "Uint8ClampedArray"; }
 
-    static Value length_getter(Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(length_getter);
 
     u8* m_data { nullptr };
     u32 m_length { 0 };

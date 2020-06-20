@@ -680,7 +680,7 @@ bool Object::put(PropertyName property_name, Value value)
     return put_own_property(*this, property_string, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
-bool Object::define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length, PropertyAttributes attribute)
+bool Object::define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto* function = NativeFunction::create(interpreter(), global_object(), property_name, move(native_function));
     function->define_property("length", Value(length), Attribute::Configurable);
@@ -692,7 +692,7 @@ bool Object::define_native_function(const FlyString& property_name, AK::Function
     return define_property(property_name, function, attribute);
 }
 
-bool Object::define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, PropertyAttributes attribute)
+bool Object::define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
     return define_property(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)), attribute);
 }

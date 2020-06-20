@@ -39,11 +39,13 @@ BooleanPrototype::BooleanPrototype()
     define_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
 }
 
-BooleanPrototype::~BooleanPrototype() { }
-
-Value BooleanPrototype::to_string(Interpreter& interpreter)
+BooleanPrototype::~BooleanPrototype()
 {
-    auto this_object = interpreter.this_value(interpreter.global_object());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
+{
+    auto this_object = interpreter.this_value(global_object);
     if (this_object.is_boolean()) {
         return js_string(interpreter.heap(), this_object.as_bool() ? "true" : "false");
     }
@@ -56,9 +58,9 @@ Value BooleanPrototype::to_string(Interpreter& interpreter)
     return js_string(interpreter.heap(), bool_value ? "true" : "false");
 }
 
-Value BooleanPrototype::value_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::value_of)
 {
-    auto this_object = interpreter.this_value(interpreter.global_object());
+    auto this_object = interpreter.this_value(global_object);
     if (this_object.is_boolean()) {
         return this_object;
     }

@@ -98,7 +98,7 @@ ReflectObject::~ReflectObject()
 {
 }
 
-Value ReflectObject::apply(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
 {
     auto* target = get_target_function_from(interpreter, "apply");
     if (!target)
@@ -111,7 +111,7 @@ Value ReflectObject::apply(Interpreter& interpreter)
     return interpreter.call(*target, this_arg, move(arguments));
 }
 
-Value ReflectObject::construct(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
 {
     auto* target = get_target_function_from(interpreter, "construct");
     if (!target)
@@ -133,7 +133,7 @@ Value ReflectObject::construct(Interpreter& interpreter)
     return interpreter.construct(*target, *new_target, move(arguments));
 }
 
-Value ReflectObject::define_property(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
 {
     auto* target = get_target_object_from(interpreter, "defineProperty");
     if (!target)
@@ -150,7 +150,7 @@ Value ReflectObject::define_property(Interpreter& interpreter)
     return Value(success);
 }
 
-Value ReflectObject::delete_property(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
 {
     auto* target = get_target_object_from(interpreter, "deleteProperty");
     if (!target)
@@ -171,7 +171,7 @@ Value ReflectObject::delete_property(Interpreter& interpreter)
     return target->delete_property(property_name);
 }
 
-Value ReflectObject::get(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
 {
     // FIXME: There's a third argument, receiver, for getters - use it once we have those.
     auto* target = get_target_object_from(interpreter, "get");
@@ -183,7 +183,7 @@ Value ReflectObject::get(Interpreter& interpreter)
     return target->get(property_key).value_or(js_undefined());
 }
 
-Value ReflectObject::get_own_property_descriptor(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
 {
     auto* target = get_target_object_from(interpreter, "getOwnPropertyDescriptor");
     if (!target)
@@ -194,7 +194,7 @@ Value ReflectObject::get_own_property_descriptor(Interpreter& interpreter)
     return target->get_own_property_descriptor_object(property_key);
 }
 
-Value ReflectObject::get_prototype_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_prototype_of)
 {
     auto* target = get_target_object_from(interpreter, "getPrototypeOf");
     if (!target)
@@ -202,7 +202,7 @@ Value ReflectObject::get_prototype_of(Interpreter& interpreter)
     return target->prototype();
 }
 
-Value ReflectObject::has(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::has)
 {
     auto* target = get_target_object_from(interpreter, "has");
     if (!target)
@@ -213,7 +213,7 @@ Value ReflectObject::has(Interpreter& interpreter)
     return Value(target->has_property(property_key));
 }
 
-Value ReflectObject::is_extensible(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::is_extensible)
 {
     auto* target = get_target_object_from(interpreter, "isExtensible");
     if (!target)
@@ -221,7 +221,7 @@ Value ReflectObject::is_extensible(Interpreter& interpreter)
     return Value(target->is_extensible());
 }
 
-Value ReflectObject::own_keys(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
 {
     auto* target = get_target_object_from(interpreter, "ownKeys");
     if (!target)
@@ -229,7 +229,7 @@ Value ReflectObject::own_keys(Interpreter& interpreter)
     return target->get_own_properties(*target, GetOwnPropertyMode::Key);
 }
 
-Value ReflectObject::prevent_extensions(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)
 {
     auto* target = get_target_object_from(interpreter, "preventExtensions");
     if (!target)
@@ -237,7 +237,7 @@ Value ReflectObject::prevent_extensions(Interpreter& interpreter)
     return Value(target->prevent_extensions());
 }
 
-Value ReflectObject::set(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
 {
     // FIXME: There's a fourth argument, receiver, for setters - use it once we have those.
     auto* target = get_target_object_from(interpreter, "set");
@@ -250,7 +250,7 @@ Value ReflectObject::set(Interpreter& interpreter)
     return Value(target->put(property_key, value));
 }
 
-Value ReflectObject::set_prototype_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set_prototype_of)
 {
     auto* target = get_target_object_from(interpreter, "setPrototypeOf");
     if (!target)

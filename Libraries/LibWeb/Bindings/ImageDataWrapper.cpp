@@ -67,7 +67,7 @@ static ImageData* impl_from(JS::Interpreter& interpreter)
     return &static_cast<ImageDataWrapper*>(this_object)->impl();
 }
 
-JS::Value ImageDataWrapper::width_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ImageDataWrapper::width_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -75,7 +75,7 @@ JS::Value ImageDataWrapper::width_getter(JS::Interpreter& interpreter)
     return JS::Value(impl->width());
 }
 
-JS::Value ImageDataWrapper::height_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ImageDataWrapper::height_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -83,7 +83,7 @@ JS::Value ImageDataWrapper::height_getter(JS::Interpreter& interpreter)
     return JS::Value(impl->height());
 }
 
-JS::Value ImageDataWrapper::data_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ImageDataWrapper::data_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)

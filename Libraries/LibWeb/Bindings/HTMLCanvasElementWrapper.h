@@ -42,10 +42,10 @@ public:
 private:
     virtual const char* class_name() const override { return "HTMLCanvasElementWrapper"; }
 
-    static JS::Value get_context(JS::Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(get_context);
 
-    static JS::Value width_getter(JS::Interpreter&);
-    static JS::Value height_getter(JS::Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(width_getter);
+    JS_DECLARE_NATIVE_GETTER(height_getter);
 };
 
 }

@@ -65,7 +65,7 @@ Value DateConstructor::construct(Interpreter&)
     return Date::create(global_object(), datetime, milliseconds);
 }
 
-Value DateConstructor::now(Interpreter&)
+JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 {
     struct timeval tv;
     gettimeofday(&tv, nullptr);

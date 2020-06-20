@@ -55,10 +55,10 @@ protected:
 private:
     virtual const char* class_name() const override { return "GlobalObject"; }
 
-    static Value gc(Interpreter&);
-    static Value is_nan(Interpreter&);
-    static Value is_finite(Interpreter&);
-    static Value parse_float(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(gc);
+    JS_DECLARE_NATIVE_FUNCTION(is_nan);
+    JS_DECLARE_NATIVE_FUNCTION(is_finite);
+    JS_DECLARE_NATIVE_FUNCTION(parse_float);
 
     Shape* m_empty_object_shape { nullptr };
 

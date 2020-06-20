@@ -42,8 +42,8 @@ public:
 private:
     virtual const char* class_name() const override { return "MouseEventWrapper"; }
 
-    static JS::Value offset_x_getter(JS::Interpreter&);
-    static JS::Value offset_y_getter(JS::Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(offset_x_getter);
+    JS_DECLARE_NATIVE_GETTER(offset_y_getter);
 };
 
 }

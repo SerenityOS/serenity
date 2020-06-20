@@ -78,22 +78,22 @@ Value NumberConstructor::construct(Interpreter& interpreter)
     return NumberObject::create(global_object(), number);
 }
 
-Value NumberConstructor::is_finite(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_finite)
 {
     return Value(interpreter.argument(0).is_finite_number());
 }
 
-Value NumberConstructor::is_integer(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_integer)
 {
     return Value(interpreter.argument(0).is_integer());
 }
 
-Value NumberConstructor::is_nan(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_nan)
 {
     return Value(interpreter.argument(0).is_nan());
 }
 
-Value NumberConstructor::is_safe_integer(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_safe_integer)
 {
     if (!interpreter.argument(0).is_number())
         return Value(false);

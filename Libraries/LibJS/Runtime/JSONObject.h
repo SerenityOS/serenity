@@ -56,8 +56,8 @@ private:
     static Value parse_json_value(Interpreter&, const JsonValue&);
     static Value internalize_json_property(Interpreter&, Object* holder, const PropertyName& name, Function& reviver);
 
-    static Value stringify(Interpreter&);
-    static Value parse(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(stringify);
+    JS_DECLARE_NATIVE_FUNCTION(parse);
 };
 
 }

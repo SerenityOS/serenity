@@ -40,10 +40,10 @@ public:
 private:
     virtual const char* class_name() const override { return "FunctionPrototype"; }
 
-    static Value apply(Interpreter&);
-    static Value bind(Interpreter&);
-    static Value call(Interpreter&);
-    static Value to_string(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(apply);
+    JS_DECLARE_NATIVE_FUNCTION(bind);
+    JS_DECLARE_NATIVE_FUNCTION(call);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
 };
 
 }

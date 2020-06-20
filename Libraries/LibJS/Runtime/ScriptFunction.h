@@ -53,8 +53,8 @@ private:
     virtual LexicalEnvironment* create_environment() override;
     virtual void visit_children(Visitor&) override;
 
-    static Value length_getter(Interpreter&);
-    static Value name_getter(Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(length_getter);
+    JS_DECLARE_NATIVE_GETTER(name_getter);
 
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;

@@ -42,9 +42,9 @@ public:
 private:
     virtual const char* class_name() const override { return "ImageDataWrapper"; }
 
-    static JS::Value width_getter(JS::Interpreter&);
-    static JS::Value height_getter(JS::Interpreter&);
-    static JS::Value data_getter(JS::Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(width_getter);
+    JS_DECLARE_NATIVE_GETTER(height_getter);
+    JS_DECLARE_NATIVE_GETTER(data_getter);
 
     NonnullRefPtr<ImageData> m_impl;
 };

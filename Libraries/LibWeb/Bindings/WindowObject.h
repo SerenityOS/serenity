@@ -48,15 +48,15 @@ private:
     virtual const char* class_name() const override { return "WindowObject"; }
     virtual void visit_children(Visitor&) override;
 
-    static JS::Value document_getter(JS::Interpreter&);
-    static void document_setter(JS::Interpreter&, JS::Value);
+    JS_DECLARE_NATIVE_GETTER(document_getter);
+    JS_DECLARE_NATIVE_SETTER(document_setter);
 
-    static JS::Value alert(JS::Interpreter&);
-    static JS::Value confirm(JS::Interpreter&);
-    static JS::Value set_interval(JS::Interpreter&);
-    static JS::Value set_timeout(JS::Interpreter&);
-    static JS::Value request_animation_frame(JS::Interpreter&);
-    static JS::Value cancel_animation_frame(JS::Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(alert);
+    JS_DECLARE_NATIVE_FUNCTION(confirm);
+    JS_DECLARE_NATIVE_FUNCTION(set_interval);
+    JS_DECLARE_NATIVE_FUNCTION(set_timeout);
+    JS_DECLARE_NATIVE_FUNCTION(request_animation_frame);
+    JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
 
     NonnullRefPtr<Window> m_impl;
 

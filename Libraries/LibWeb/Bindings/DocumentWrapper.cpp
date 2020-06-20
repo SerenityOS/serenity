@@ -72,7 +72,7 @@ static Document* document_from(JS::Interpreter& interpreter)
     return &static_cast<DocumentWrapper*>(this_object)->node();
 }
 
-JS::Value DocumentWrapper::get_element_by_id(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DocumentWrapper::get_element_by_id)
 {
     auto* document = document_from(interpreter);
     if (!document)
@@ -88,7 +88,7 @@ JS::Value DocumentWrapper::get_element_by_id(JS::Interpreter& interpreter)
     return wrap(interpreter.heap(), const_cast<Element&>(*element));
 }
 
-JS::Value DocumentWrapper::query_selector(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DocumentWrapper::query_selector)
 {
     auto* document = document_from(interpreter);
     if (!document)
@@ -105,7 +105,7 @@ JS::Value DocumentWrapper::query_selector(JS::Interpreter& interpreter)
     return wrap(interpreter.heap(), *element);
 }
 
-JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DocumentWrapper::query_selector_all)
 {
     auto* document = document_from(interpreter);
     if (!document)
@@ -118,7 +118,7 @@ JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
     // FIXME: Throw if selector is invalid
     auto elements = document->query_selector_all(selector);
     // FIXME: This should be a static NodeList, not a plain JS::Array.
-    auto* node_list = JS::Array::create(interpreter.global_object());
+    auto* node_list = JS::Array::create(global_object);
     for (auto& element : elements) {
         node_list->indexed_properties().append(wrap(interpreter.heap(), element));
     }

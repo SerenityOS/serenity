@@ -65,14 +65,14 @@ static MouseEvent* impl_from(JS::Interpreter& interpreter)
     return &static_cast<MouseEventWrapper*>(this_object)->event();
 }
 
-JS::Value MouseEventWrapper::offset_x_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(MouseEventWrapper::offset_x_getter)
 {
     if (auto* impl = impl_from(interpreter))
         return JS::Value(impl->offset_x());
     return {};
 }
 
-JS::Value MouseEventWrapper::offset_y_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(MouseEventWrapper::offset_y_getter)
 {
     if (auto* impl = impl_from(interpreter))
         return JS::Value(impl->offset_y());

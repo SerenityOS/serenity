@@ -135,14 +135,14 @@ void GlobalObject::visit_children(Visitor& visitor)
 #undef __JS_ENUMERATE
 }
 
-Value GlobalObject::gc(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 {
     dbg() << "Forced garbage collection requested!";
     interpreter.heap().collect_garbage();
     return js_undefined();
 }
 
-Value GlobalObject::is_nan(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_nan)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -150,7 +150,7 @@ Value GlobalObject::is_nan(Interpreter& interpreter)
     return Value(number.is_nan());
 }
 
-Value GlobalObject::is_finite(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_finite)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -158,7 +158,7 @@ Value GlobalObject::is_finite(Interpreter& interpreter)
     return Value(number.is_finite_number());
 }
 
-Value GlobalObject::parse_float(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
     if (interpreter.argument(0).is_number())
         return interpreter.argument(0);

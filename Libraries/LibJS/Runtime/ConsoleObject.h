@@ -38,15 +38,15 @@ public:
 private:
     virtual const char* class_name() const override { return "ConsoleObject"; }
 
-    static Value log(Interpreter&);
-    static Value debug(Interpreter&);
-    static Value info(Interpreter&);
-    static Value warn(Interpreter&);
-    static Value error(Interpreter&);
-    static Value trace(Interpreter&);
-    static Value count(Interpreter&);
-    static Value count_reset(Interpreter&);
-    static Value clear(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(log);
+    JS_DECLARE_NATIVE_FUNCTION(debug);
+    JS_DECLARE_NATIVE_FUNCTION(info);
+    JS_DECLARE_NATIVE_FUNCTION(warn);
+    JS_DECLARE_NATIVE_FUNCTION(error);
+    JS_DECLARE_NATIVE_FUNCTION(trace);
+    JS_DECLARE_NATIVE_FUNCTION(count);
+    JS_DECLARE_NATIVE_FUNCTION(count_reset);
+    JS_DECLARE_NATIVE_FUNCTION(clear);
 };
 
 }

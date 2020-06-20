@@ -38,19 +38,19 @@ public:
 private:
     virtual const char* class_name() const override { return "ReflectObject"; }
 
-    static Value apply(Interpreter&);
-    static Value construct(Interpreter&);
-    static Value define_property(Interpreter&);
-    static Value delete_property(Interpreter&);
-    static Value get(Interpreter&);
-    static Value get_own_property_descriptor(Interpreter&);
-    static Value get_prototype_of(Interpreter&);
-    static Value has(Interpreter&);
-    static Value is_extensible(Interpreter&);
-    static Value own_keys(Interpreter&);
-    static Value prevent_extensions(Interpreter&);
-    static Value set(Interpreter&);
-    static Value set_prototype_of(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(apply);
+    JS_DECLARE_NATIVE_FUNCTION(construct);
+    JS_DECLARE_NATIVE_FUNCTION(define_property);
+    JS_DECLARE_NATIVE_FUNCTION(delete_property);
+    JS_DECLARE_NATIVE_FUNCTION(get);
+    JS_DECLARE_NATIVE_FUNCTION(get_own_property_descriptor);
+    JS_DECLARE_NATIVE_FUNCTION(get_prototype_of);
+    JS_DECLARE_NATIVE_FUNCTION(has);
+    JS_DECLARE_NATIVE_FUNCTION(is_extensible);
+    JS_DECLARE_NATIVE_FUNCTION(own_keys);
+    JS_DECLARE_NATIVE_FUNCTION(prevent_extensions);
+    JS_DECLARE_NATIVE_FUNCTION(set);
+    JS_DECLARE_NATIVE_FUNCTION(set_prototype_of);
 };
 
 }

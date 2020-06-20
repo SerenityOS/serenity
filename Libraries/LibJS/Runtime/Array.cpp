@@ -61,7 +61,7 @@ Array* array_from(Interpreter& interpreter, GlobalObject& global_object)
     return static_cast<Array*>(this_object);
 }
 
-Value Array::length_getter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(Array::length_getter)
 {
     auto* array = array_from(interpreter, interpreter.global_object());
     if (!array)
@@ -69,9 +69,9 @@ Value Array::length_getter(Interpreter& interpreter)
     return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
 }
 
-void Array::length_setter(Interpreter& interpreter, Value value)
+JS_DEFINE_NATIVE_SETTER(Array::length_setter)
 {
-    auto* array = array_from(interpreter, interpreter.global_object());
+    auto* array = array_from(interpreter, global_object);
     if (!array)
         return;
     auto length = value.to_number(interpreter);

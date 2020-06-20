@@ -42,8 +42,8 @@ private:
     virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "ArrayConstructor"; }
 
-    static Value is_array(Interpreter&);
-    static Value of(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(is_array);
+    JS_DECLARE_NATIVE_FUNCTION(of);
 };
 
 }
