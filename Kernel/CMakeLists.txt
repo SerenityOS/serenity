@@ -1,5 +1,4 @@
 set(KERNEL_SOURCES
-    ACPI/DMIDecoder.cpp
     ACPI/DynamicParser.cpp
     ACPI/Initialize.cpp
     ACPI/MultiProcessorParser.cpp
