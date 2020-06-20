@@ -97,7 +97,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         auto object_value = member_expression.object().execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        auto* this_value = object_value.to_object(interpreter);
+        auto* this_value = object_value.to_object(interpreter, global_object);
         if (interpreter.exception())
             return {};
         auto callee = this_value->get(member_expression.computed_property_name(interpreter, global_object)).value_or(js_undefined());
@@ -365,7 +365,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto rhs_result = m_rhs->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    auto* object = rhs_result.to_object(interpreter);
+    auto* object = rhs_result.to_object(interpreter, global_object);
     while (object) {
         auto property_names = object->get_own_properties(*object, Object::GetOwnPropertyMode::Key, true);
         for (auto& property_name : property_names.as_object().indexed_properties()) {
@@ -587,7 +587,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         ASSERT(!reference.is_local_variable());
         if (reference.is_global_variable())
             return global_object.delete_property(reference.name());
-        auto* base_object = reference.base().to_object(interpreter);
+        auto* base_object = reference.base().to_object(interpreter, global_object);
         if (!base_object)
             return {};
         return base_object->delete_property(reference.name());
@@ -1435,7 +1435,7 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto object_value = m_object->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    auto* object_result = object_value.to_object(interpreter);
+    auto* object_result = object_value.to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
     return object_result->get(computed_property_name(interpreter, global_object)).value_or(js_undefined());

@@ -80,9 +80,9 @@ void WindowObject::visit_children(Visitor& visitor)
     visitor.visit(m_xhr_prototype);
 }
 
-static Window* impl_from(JS::Interpreter& interpreter)
+static Window* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object) {
         ASSERT_NOT_REACHED();
         return nullptr;
@@ -96,7 +96,7 @@ static Window* impl_from(JS::Interpreter& interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     String message = "";
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     String message = "";
@@ -125,12 +125,12 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (!interpreter.argument_count())
         return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "setInterval");
-    auto* callback_object = interpreter.argument(0).to_object(interpreter);
+    auto* callback_object = interpreter.argument(0).to_object(interpreter, global_object);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
@@ -151,12 +151,12 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (!interpreter.argument_count())
         return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "setTimeout");
-    auto* callback_object = interpreter.argument(0).to_object(interpreter);
+    auto* callback_object = interpreter.argument(0).to_object(interpreter, global_object);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
@@ -177,12 +177,12 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (!interpreter.argument_count())
         return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "requestAnimationFrame");
-    auto* callback_object = interpreter.argument(0).to_object(interpreter);
+    auto* callback_object = interpreter.argument(0).to_object(interpreter, global_object);
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
@@ -192,7 +192,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     if (!interpreter.argument_count())
@@ -206,7 +206,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
 {
-    auto* impl = impl_from(interpreter);
+    auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
     return wrap(interpreter.heap(), impl->document());

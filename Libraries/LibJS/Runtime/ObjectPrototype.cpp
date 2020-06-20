@@ -56,7 +56,7 @@ ObjectPrototype::~ObjectPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     auto name = interpreter.argument(0).to_string(interpreter);
@@ -67,7 +67,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     return js_string(interpreter, String::format("[object %s]", this_object->class_name()));
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     return this_object->invoke("toString");
@@ -83,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
     return this_object->value_of();

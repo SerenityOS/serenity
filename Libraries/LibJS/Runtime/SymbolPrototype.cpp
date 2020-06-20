@@ -58,7 +58,7 @@ SymbolPrototype::~SymbolPrototype()
 
 static SymbolObject* typed_this(Interpreter& interpreter, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return nullptr;
     if (!this_object->is_symbol_object()) {

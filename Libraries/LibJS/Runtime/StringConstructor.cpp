@@ -78,7 +78,7 @@ Value StringConstructor::construct(Interpreter& interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 {
-    auto* template_object = interpreter.argument(0).to_object(interpreter);
+    auto* template_object = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
 
@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     if (!raw.is_array())
         return js_string(interpreter, "");
 
-    auto* array = static_cast<Array*>(raw.to_object(interpreter));
+    auto* array = static_cast<Array*>(raw.to_object(interpreter, global_object));
     auto& raw_array_elements = array->indexed_properties();
     StringBuilder builder;
 
