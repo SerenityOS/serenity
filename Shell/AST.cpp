@@ -35,6 +35,18 @@
 
 namespace AST {
 
+template<typename T, typename... Args>
+static inline RefPtr<T> create(Args... args)
+{
+    return adopt(*new T(args...));
+}
+
+template<typename T>
+static inline RefPtr<T> create(std::initializer_list<RefPtr<Value>> arg)
+{
+    return adopt(*new T(arg));
+}
+
 static inline void print_indented(const String& str, int indent)
 {
     dbgprintf("%.*c%s\n", indent * 2, ' ', str.characters());
@@ -155,7 +167,7 @@ RefPtr<Value> ListConcatenate::run(TheExecutionInputType input_value)
     auto list = m_list->run(input_value);
     auto element = m_element->run(input_value);
 
-    return adopt(*new ListValue({ move(element), move(list) }));
+    return create<ListValue>({ move(element), move(list) });
 }
 
 void ListConcatenate::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -204,7 +216,7 @@ RefPtr<Value> Background::run(TheExecutionInputType input_value)
     auto& last = commands.last();
     last.should_wait = false;
 
-    return adopt(*new CommandSequenceValue(move(commands)));
+    return create<CommandSequenceValue>(move(commands));
 }
 
 void Background::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -238,7 +250,7 @@ void BarewordLiteral::dump(int level) const
 
 RefPtr<Value> BarewordLiteral::run(TheExecutionInputType)
 {
-    return adopt(*new StringValue(m_text));
+    return create<StringValue>(m_text);
 }
 
 void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -294,7 +306,7 @@ RefPtr<Value> CastToCommand::run(TheExecutionInputType input_value)
     auto shell = input_value;
     auto argv = m_inner->run(input_value)->resolve_as_list(input_value);
 
-    return adopt(*new CommandValue(move(argv)));
+    return create<CommandValue>(move(argv));
 }
 
 void CastToCommand::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -350,9 +362,9 @@ RefPtr<Value> CastToList::run(TheExecutionInputType input_value)
     auto values = m_inner->run(input_value)->resolve_as_list(input_value);
     Vector<RefPtr<Value>> cast_values;
     for (auto& value : values)
-        cast_values.append(adopt(*new StringValue(value)));
+        cast_values.append(create<StringValue>(value));
 
-    return adopt(*new ListValue(cast_values));
+    return create<ListValue>(cast_values);
 }
 
 void CastToList::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -388,7 +400,7 @@ RefPtr<Value> CloseFdRedirection::run(TheExecutionInputType)
 {
     Command command;
     command.redirections.append(*new CloseRedirection(m_fd));
-    return adopt(*new CommandValue(move(command)));
+    return create<CommandValue>(move(command));
 }
 
 void CloseFdRedirection::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -415,7 +427,7 @@ void CommandLiteral::dump(int level) const
 
 RefPtr<Value> CommandLiteral::run(TheExecutionInputType)
 {
-    return adopt(*new CommandValue(m_command));
+    return create<CommandValue>(m_command);
 }
 
 CommandLiteral::CommandLiteral(Position position, Command command)
@@ -436,7 +448,7 @@ void Comment::dump(int level) const
 
 RefPtr<Value> Comment::run(TheExecutionInputType)
 {
-    return adopt(*new StringValue(""));
+    return create<StringValue>("");
 }
 
 void Comment::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -468,7 +480,7 @@ RefPtr<Value> DoubleQuotedString::run(TheExecutionInputType input_value)
 
     builder.join("", values);
 
-    return adopt(*new StringValue(builder.to_string()));
+    return create<StringValue>(builder.to_string());
 }
 
 void DoubleQuotedString::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -514,12 +526,12 @@ RefPtr<Value> DynamicEvaluate::run(TheExecutionInputType input_value)
     if (result->is_string()) {
         auto name_part = result->resolve_as_list(input_value);
         ASSERT(name_part.size() == 1);
-        return adopt(*new SimpleVariableValue(name_part[0]));
+        return create<SimpleVariableValue>(name_part[0]);
     }
 
     // If it's anything else, we're just gonna cast it to a list.
     auto list = result->resolve_as_list(input_value);
-    return adopt(*new CommandValue(move(list)));
+    return create<CommandValue>(move(list));
 }
 
 void DynamicEvaluate::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -556,7 +568,7 @@ RefPtr<Value> Fd2FdRedirection::run(TheExecutionInputType)
 {
     Command command;
     command.redirections.append(*new FdRedirection(source_fd, dest_fd, Rewiring::Close::None));
-    return adopt(*new CommandValue(move(command)));
+    return create<CommandValue>(move(command));
 }
 
 void Fd2FdRedirection::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -583,7 +595,7 @@ void Glob::dump(int level) const
 
 RefPtr<Value> Glob::run(TheExecutionInputType)
 {
-    return adopt(*new GlobValue(m_text));
+    return create<GlobValue>(m_text);
 }
 
 void Glob::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
@@ -631,7 +643,7 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
                         auto* ast = static_cast<Execute*>(subcommand_ast.ptr());
                         subcommand_ast = ast->command();
                     }
-                    RefPtr<Node> substitute = adopt(*new Join(position(), move(subcommand_ast), adopt(*new CommandLiteral(position(), command))));
+                    RefPtr<Node> substitute = create<Join>(position(), move(subcommand_ast), create<CommandLiteral>(position(), command));
                     commands.append(substitute->run(input_value)->resolve_as_commands(input_value));
                 } else {
                     commands.append(command);
@@ -685,7 +697,7 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
         int rc = pipe(pipefd);
         if (rc < 0) {
             dbg() << "Error: cannot pipe(): " << strerror(errno);
-            return adopt(*new StringValue(""));
+            return create<StringValue>("");
         }
         auto last_in_commands = commands.take_last();
 
@@ -731,7 +743,7 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
             dbg() << "close() failed: " << strerror(errno);
         }
 
-        return adopt(*new StringValue(builder.build(), shell->local_variable_or("IFS", "\n")));
+        return create<StringValue>(builder.build(), shell->local_variable_or("IFS", "\n"));
     }
 
     run_commands(commands);
@@ -739,7 +751,7 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
         shell->block_on_job(job);
     }
 
-    return adopt(*new JobValue(move(job)));
+    return create<JobValue>(move(job));
 }
 
 void Execute::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -817,7 +829,7 @@ RefPtr<Value> Join::run(TheExecutionInputType input_value)
     commands.append(command);
     commands.append(right);
 
-    return adopt(*new CommandSequenceValue(move(commands)));
+    return create<CommandSequenceValue>(move(commands));
 }
 
 void Join::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -920,7 +932,7 @@ RefPtr<Value> Pipe::run(TheExecutionInputType input_value)
     int rc = pipe(pipefd);
     if (rc < 0) {
         dbg() << "Error: cannot pipe(): " << strerror(errno);
-        return adopt(*new StringValue(""));
+        return create<StringValue>("");
     }
     auto left = m_left->run(input_value)->resolve_as_commands(input_value);
     auto right = m_right->run(input_value)->resolve_as_commands(input_value);
@@ -939,7 +951,7 @@ RefPtr<Value> Pipe::run(TheExecutionInputType input_value)
     commands.append(first_in_right);
     commands.append(right);
 
-    return adopt(*new CommandSequenceValue(move(commands)));
+    return create<CommandSequenceValue>(move(commands));
 }
 
 void Pipe::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1041,7 +1053,7 @@ RefPtr<Value> ReadRedirection::run(TheExecutionInputType input_value)
     builder.join(" ", path_segments);
 
     command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Read));
-    return adopt(*new CommandValue(move(command)));
+    return create<CommandValue>(move(command));
 }
 
 ReadRedirection::ReadRedirection(Position position, int fd, RefPtr<Node> path)
@@ -1068,7 +1080,7 @@ RefPtr<Value> ReadWriteRedirection::run(TheExecutionInputType input_value)
     builder.join(" ", path_segments);
 
     command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::ReadWrite));
-    return adopt(*new CommandValue(move(command)));
+    return create<CommandValue>(move(command));
 }
 
 ReadWriteRedirection::ReadWriteRedirection(Position position, int fd, RefPtr<Node> path)
@@ -1096,7 +1108,7 @@ RefPtr<Value> Sequence::run(TheExecutionInputType input_value)
     commands.append(left);
     commands.append(right);
 
-    return adopt(*new CommandSequenceValue(move(commands)));
+    return create<CommandSequenceValue>(move(commands));
 }
 
 void Sequence::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1135,7 +1147,7 @@ void SimpleVariable::dump(int level) const
 
 RefPtr<Value> SimpleVariable::run(TheExecutionInputType)
 {
-    return adopt(*new SimpleVariableValue(m_name));
+    return create<SimpleVariableValue>(m_name);
 }
 
 void SimpleVariable::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
@@ -1188,7 +1200,7 @@ void SpecialVariable::dump(int level) const
 
 RefPtr<Value> SpecialVariable::run(TheExecutionInputType)
 {
-    return adopt(*new SpecialVariableValue(m_name));
+    return create<SpecialVariableValue>(m_name);
 }
 
 void SpecialVariable::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -1219,26 +1231,54 @@ SpecialVariable::~SpecialVariable()
 {
 }
 
-void StringConcatenate::dump(int level) const
+void Juxtaposition::dump(int level) const
 {
     Node::dump(level);
     m_left->dump(level + 1);
     m_right->dump(level + 1);
 }
 
-RefPtr<Value> StringConcatenate::run(TheExecutionInputType input_value)
+RefPtr<Value> Juxtaposition::run(TheExecutionInputType input_value)
 {
-    auto left = m_left->run(input_value)->resolve_as_list(input_value);
-    auto right = m_right->run(input_value)->resolve_as_list(input_value);
+    auto left_value = m_left->run(input_value);
+    auto right_value = m_right->run(input_value);
+
+    auto left = left_value->resolve_as_list(input_value);
+    auto right = right_value->resolve_as_list(input_value);
+
+    if (left_value->is_string() && right_value->is_string()) {
+
+        ASSERT(left.size() == 1);
+        ASSERT(right.size() == 1);
+
+        StringBuilder builder;
+        builder.append(left[0]);
+        builder.append(right[0]);
+
+        return create<StringValue>(builder.to_string());
+    }
+
+    // Otherwise, treat them as lists and create a list product.
+    if (left.is_empty() || right.is_empty())
+        return create<ListValue>({});
+
+    Vector<String> result;
+    result.ensure_capacity(left.size() * right.size());
 
     StringBuilder builder;
-    builder.join(" ", left);
-    builder.join(" ", right);
+    for (auto& left_element : left) {
+        for (auto& right_element : right) {
+            builder.append(left_element);
+            builder.append(right_element);
+            result.append(builder.to_string());
+            builder.clear();
+        }
+    }
 
-    return adopt(*new StringValue(builder.to_string()));
+    return create<ListValue>(move(result));
 }
 
-void StringConcatenate::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
     m_left->highlight_in_editor(editor, shell, metadata);
 
@@ -1247,7 +1287,7 @@ void StringConcatenate::highlight_in_editor(Line::Editor& editor, Shell& shell, 
         m_right->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult StringConcatenate::hit_test_position(size_t offset)
+HitTestResult Juxtaposition::hit_test_position(size_t offset)
 {
     if (!position().contains(offset))
         return {};
@@ -1258,14 +1298,14 @@ HitTestResult StringConcatenate::hit_test_position(size_t offset)
     return m_right->hit_test_position(offset);
 }
 
-StringConcatenate::StringConcatenate(Position position, RefPtr<Node> left, RefPtr<Node> right)
+Juxtaposition::Juxtaposition(Position position, RefPtr<Node> left, RefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
 {
 }
 
-StringConcatenate::~StringConcatenate()
+Juxtaposition::~Juxtaposition()
 {
 }
 
@@ -1277,7 +1317,7 @@ void StringLiteral::dump(int level) const
 
 RefPtr<Value> StringLiteral::run(TheExecutionInputType)
 {
-    return adopt(*new StringValue(m_text));
+    return create<StringValue>(m_text);
 }
 
 void StringLiteral::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
@@ -1314,7 +1354,7 @@ RefPtr<Value> StringPartCompose::run(TheExecutionInputType input_value)
     builder.join(" ", left);
     builder.join(" ", right);
 
-    return adopt(*new StringValue(builder.to_string()));
+    return create<StringValue>(builder.to_string());
 }
 
 void StringPartCompose::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1353,7 +1393,7 @@ void SyntaxError::dump(int level) const
 RefPtr<Value> SyntaxError::run(TheExecutionInputType)
 {
     dbg() << "SYNTAX ERROR AAAA";
-    return adopt(*new StringValue(""));
+    return create<StringValue>("");
 }
 
 void SyntaxError::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -1378,7 +1418,7 @@ void Tilde::dump(int level) const
 
 RefPtr<Value> Tilde::run(TheExecutionInputType)
 {
-    return adopt(*new TildeValue(m_username));
+    return create<TildeValue>(m_username);
 }
 
 void Tilde::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -1432,7 +1472,7 @@ RefPtr<Value> WriteAppendRedirection::run(TheExecutionInputType input_value)
     builder.join(" ", path_segments);
 
     command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::WriteAppend));
-    return adopt(*new CommandValue(move(command)));
+    return create<CommandValue>(move(command));
 }
 
 WriteAppendRedirection::WriteAppendRedirection(Position position, int fd, RefPtr<Node> path)
@@ -1459,7 +1499,7 @@ RefPtr<Value> WriteRedirection::run(TheExecutionInputType input_value)
     builder.join(" ", path_segments);
 
     command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Write));
-    return adopt(*new CommandValue(move(command)));
+    return create<CommandValue>(move(command));
 }
 
 WriteRedirection::WriteRedirection(Position position, int fd, RefPtr<Node> path)
@@ -1498,7 +1538,7 @@ RefPtr<Value> VariableDeclarations::run(TheExecutionInputType input_value)
         }
     }
 
-    return adopt(*new ListValue(Vector<String> {}));
+    return create<ListValue>({});
 }
 
 void VariableDeclarations::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1546,15 +1586,15 @@ Vector<AST::Command> Value::resolve_as_commands(TheExecutionInputType input_valu
     return { command };
 }
 
-ListValue::~ListValue()
-{
-}
-
 ListValue::ListValue(Vector<String> values)
 {
     m_contained_values.ensure_capacity(values.size());
     for (auto& str : values)
         m_contained_values.append(adopt(*new StringValue(move(str))));
+}
+
+ListValue::~ListValue()
+{
 }
 
 Vector<String> ListValue::resolve_as_list(TheExecutionInputType input_value)
