@@ -32,7 +32,8 @@ namespace JS {
 
 class MathObject final : public Object {
 public:
-    MathObject();
+    explicit MathObject(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~MathObject() override;
 
 private:

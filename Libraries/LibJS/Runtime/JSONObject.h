@@ -32,7 +32,8 @@ namespace JS {
 
 class JSONObject final : public Object {
 public:
-    JSONObject();
+    explicit JSONObject(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~JSONObject() override;
 
 private:

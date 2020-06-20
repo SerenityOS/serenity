@@ -37,8 +37,12 @@
 
 namespace JS {
 
-JSONObject::JSONObject()
-    : Object(interpreter().global_object().object_prototype())
+JSONObject::JSONObject(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void JSONObject::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("stringify", stringify, 3, attr);

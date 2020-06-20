@@ -32,8 +32,8 @@ namespace JS {
 
 class BoundFunction final : public Function {
 public:
-    BoundFunction(Function& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype);
-
+    BoundFunction(GlobalObject&, Function& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~BoundFunction();
 
     virtual Value call(Interpreter& interpreter) override;
@@ -61,6 +61,7 @@ private:
     Function* m_target_function = nullptr;
     Object* m_constructor_prototype = nullptr;
     FlyString m_name;
+    i32 m_length { 0 };
 };
 
 }

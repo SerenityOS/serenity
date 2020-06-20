@@ -49,11 +49,11 @@ static ScriptFunction* typed_this(Interpreter& interpreter, GlobalObject& global
 
 ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, bool is_arrow_function)
 {
-    return global_object.heap().allocate<ScriptFunction>(global_object, name, body, move(parameters), m_function_length, parent_environment, *global_object.function_prototype(), is_arrow_function);
+    return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_environment, *global_object.function_prototype(), is_arrow_function);
 }
 
-ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype, bool is_arrow_function)
-    : Function(prototype, is_arrow_function ? interpreter().this_value(interpreter().global_object()) : Value(), {})
+ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype, bool is_arrow_function)
+    : Function(prototype, is_arrow_function ? interpreter().this_value(global_object) : Value(), {})
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
@@ -61,8 +61,12 @@ ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vec
     , m_function_length(m_function_length)
     , m_is_arrow_function(is_arrow_function)
 {
-    if (!is_arrow_function)
-        define_property("prototype", Object::create_empty(interpreter(), interpreter().global_object()), 0);
+}
+
+void ScriptFunction::initialize(Interpreter& interpreter, GlobalObject& global_object)
+{
+    if (!m_is_arrow_function)
+        define_property("prototype", Object::create_empty(interpreter, global_object), 0);
     define_native_property("length", length_getter, nullptr, Attribute::Configurable);
     define_native_property("name", name_getter, nullptr, Attribute::Configurable);
 }

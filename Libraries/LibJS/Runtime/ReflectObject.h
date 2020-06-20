@@ -32,7 +32,8 @@ namespace JS {
 
 class ReflectObject final : public Object {
 public:
-    ReflectObject();
+    explicit ReflectObject(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ReflectObject() override;
 
 private:

@@ -95,10 +95,10 @@ void GlobalObject::initialize()
     define_property("undefined", js_undefined(), 0);
 
     define_property("globalThis", this, attr);
-    define_property("console", heap().allocate<ConsoleObject>(*this), attr);
-    define_property("Math", heap().allocate<MathObject>(*this), attr);
-    define_property("JSON", heap().allocate<JSONObject>(*this), attr);
-    define_property("Reflect", heap().allocate<ReflectObject>(*this), attr);
+    define_property("console", heap().allocate<ConsoleObject>(*this, *this), attr);
+    define_property("Math", heap().allocate<MathObject>(*this, *this), attr);
+    define_property("JSON", heap().allocate<JSONObject>(*this, *this), attr);
+    define_property("Reflect", heap().allocate<ReflectObject>(*this, *this), attr);
 
     add_constructor("Array", m_array_constructor, *m_array_prototype);
     add_constructor("BigInt", m_bigint_constructor, *m_bigint_prototype);

@@ -30,13 +30,18 @@
 
 namespace JS {
 
-BoundFunction::BoundFunction(Function& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype)
-    : Function::Function(*interpreter().global_object().function_prototype(), bound_this, move(arguments))
+BoundFunction::BoundFunction(GlobalObject& global_object, Function& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype)
+    : Function::Function(*global_object.function_prototype(), bound_this, move(arguments))
     , m_target_function(&target_function)
     , m_constructor_prototype(constructor_prototype)
     , m_name(String::format("bound %s", target_function.name().characters()))
+    , m_length(length)
 {
-    define_property("length", Value(length), Attribute::Configurable);
+}
+
+void BoundFunction::initialize(Interpreter&, GlobalObject&)
+{
+    define_property("length", Value(m_length), Attribute::Configurable);
 }
 
 BoundFunction::~BoundFunction()
