@@ -33,7 +33,8 @@ namespace Bindings {
 
 class XMLHttpRequestConstructor final : public JS::NativeFunction {
 public:
-    XMLHttpRequestConstructor();
+    explicit XMLHttpRequestConstructor(JS::GlobalObject&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~XMLHttpRequestConstructor() override;
 
     virtual JS::Value call(JS::Interpreter&) override;

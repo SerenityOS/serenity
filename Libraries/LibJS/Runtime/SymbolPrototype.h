@@ -32,7 +32,8 @@ namespace JS {
 
 class SymbolPrototype final : public Object {
 public:
-    SymbolPrototype();
+    explicit SymbolPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~SymbolPrototype() override;
 
 private:

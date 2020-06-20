@@ -32,7 +32,7 @@ namespace JS {
 
 class ProxyPrototype final : public Object {
 public:
-    ProxyPrototype();
+    explicit ProxyPrototype(GlobalObject&);
     virtual ~ProxyPrototype() override;
 
 private:

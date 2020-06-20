@@ -32,7 +32,8 @@ namespace JS {
 
 class ErrorPrototype final : public Object {
 public:
-    ErrorPrototype();
+    explicit ErrorPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ErrorPrototype() override;
 
 private:
@@ -49,7 +50,8 @@ private:
 #define DECLARE_ERROR_SUBCLASS_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \
     class PrototypeName final : public Object {                                                 \
     public:                                                                                     \
-        PrototypeName();                                                                        \
+        explicit PrototypeName(GlobalObject&);                                                  \
+        virtual void initialize(Interpreter&, GlobalObject&) override { }                       \
         virtual ~PrototypeName() override;                                                      \
                                                                                                 \
     private:                                                                                    \

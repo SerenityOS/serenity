@@ -46,11 +46,21 @@ public:
     ~Heap();
 
     template<typename T, typename... Args>
-    T* allocate(Args&&... args)
+    T* allocate_without_global_object(Args&&... args)
     {
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         return static_cast<T*>(memory);
+    }
+
+    template<typename T, typename... Args>
+    T* allocate(GlobalObject& global_object, Args&&... args)
+    {
+        auto* memory = allocate_cell(sizeof(T));
+        new (memory) T(forward<Args>(args)...);
+        auto* cell = static_cast<T*>(memory);
+        cell->initialize(m_interpreter, global_object);
+        return cell;
     }
 
     enum class CollectionType {

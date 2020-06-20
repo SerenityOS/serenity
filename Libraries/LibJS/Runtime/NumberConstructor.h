@@ -32,7 +32,8 @@ namespace JS {
 
 class NumberConstructor final : public NativeFunction {
 public:
-    NumberConstructor();
+    explicit NumberConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~NumberConstructor() override;
 
     virtual Value call(Interpreter&) override;

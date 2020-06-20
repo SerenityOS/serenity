@@ -32,7 +32,8 @@ namespace JS {
 
 class StringPrototype final : public StringObject {
 public:
-    StringPrototype();
+    explicit StringPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~StringPrototype() override;
 
 private:

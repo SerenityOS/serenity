@@ -32,7 +32,8 @@ namespace JS {
 
 class StringConstructor final : public NativeFunction {
 public:
-    StringConstructor();
+    explicit StringConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~StringConstructor() override;
 
     virtual Value call(Interpreter&) override;

@@ -48,8 +48,12 @@ static Date* this_date_from_interpreter(Interpreter& interpreter)
     return static_cast<Date*>(this_object);
 }
 
-DatePrototype::DatePrototype()
-    : Object(interpreter().global_object().object_prototype())
+DatePrototype::DatePrototype(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void DatePrototype::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("getDate", get_date, 0, attr);

@@ -60,11 +60,11 @@ void WindowObject::initialize()
     define_native_function("requestAnimationFrame", request_animation_frame, 1);
     define_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
 
-    define_property("navigator", heap().allocate<NavigatorObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_property("location", heap().allocate<LocationObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_property("navigator", heap().allocate<NavigatorObject>(*this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_property("location", heap().allocate<LocationObject>(*this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
-    m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>();
-    m_xhr_constructor = heap().allocate<XMLHttpRequestConstructor>();
+    m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>(*this, *this);
+    m_xhr_constructor = heap().allocate<XMLHttpRequestConstructor>(*this, *this);
     m_xhr_constructor->define_property("prototype", m_xhr_prototype, 0);
     add_constructor("XMLHttpRequest", m_xhr_constructor, *m_xhr_prototype);
 }

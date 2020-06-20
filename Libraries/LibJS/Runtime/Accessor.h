@@ -37,7 +37,7 @@ class Accessor final : public Cell {
 public:
     static Accessor* create(Interpreter& interpreter, Function* getter, Function* setter)
     {
-        return interpreter.heap().allocate<Accessor>(getter, setter);
+        return interpreter.heap().allocate<Accessor>(interpreter.global_object(), getter, setter);
     }
 
     Accessor(Function* getter, Function* setter)

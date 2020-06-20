@@ -28,6 +28,7 @@
 
 #include <AK/WeakPtr.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
@@ -49,7 +50,7 @@ template<class NativeObject>
 inline Wrapper* wrap_impl(JS::Heap& heap, NativeObject& native_object)
 {
     if (!native_object.wrapper())
-        native_object.set_wrapper(*heap.allocate<typename NativeObject::WrapperType>(native_object));
+        native_object.set_wrapper(*heap.allocate<typename NativeObject::WrapperType>(heap.interpreter().global_object(), native_object));
     return native_object.wrapper();
 }
 

@@ -49,7 +49,7 @@ static ScriptFunction* script_function_from(Interpreter& interpreter)
 
 ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, bool is_arrow_function)
 {
-    return global_object.heap().allocate<ScriptFunction>(name, body, move(parameters), m_function_length, parent_environment, *global_object.function_prototype(), is_arrow_function);
+    return global_object.heap().allocate<ScriptFunction>(global_object, name, body, move(parameters), m_function_length, parent_environment, *global_object.function_prototype(), is_arrow_function);
 }
 
 ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype, bool is_arrow_function)
@@ -93,7 +93,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
     }
     if (variables.is_empty())
         return m_parent_environment;
-    return heap().allocate<LexicalEnvironment>(move(variables), m_parent_environment);
+    return heap().allocate<LexicalEnvironment>(global_object(), move(variables), m_parent_environment);
 }
 
 Value ScriptFunction::call(Interpreter& interpreter)

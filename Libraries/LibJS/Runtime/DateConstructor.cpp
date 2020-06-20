@@ -34,8 +34,12 @@
 
 namespace JS {
 
-DateConstructor::DateConstructor()
-    : NativeFunction("Date", *interpreter().global_object().function_prototype())
+DateConstructor::DateConstructor(GlobalObject& global_object)
+    : NativeFunction("Date", *global_object.function_prototype())
+{
+}
+
+void DateConstructor::initialize(Interpreter&, GlobalObject&)
 {
     define_property("prototype", interpreter().global_object().date_prototype(), 0);
     define_property("length", Value(7), Attribute::Configurable);

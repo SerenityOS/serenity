@@ -32,7 +32,8 @@ namespace JS {
 
 class SymbolConstructor final : public NativeFunction {
 public:
-    SymbolConstructor();
+    explicit SymbolConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~SymbolConstructor() override;
 
     virtual Value call(Interpreter&) override;

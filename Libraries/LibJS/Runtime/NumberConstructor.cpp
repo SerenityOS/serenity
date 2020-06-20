@@ -37,8 +37,12 @@
 
 namespace JS {
 
-NumberConstructor::NumberConstructor()
-    : NativeFunction("Number", *interpreter().global_object().function_prototype())
+NumberConstructor::NumberConstructor(GlobalObject& global_object)
+    : NativeFunction("Number", *global_object.function_prototype())
+{
+}
+
+void NumberConstructor::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("isFinite", is_finite, 1, attr);

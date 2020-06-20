@@ -71,16 +71,16 @@ GlobalObject::GlobalObject()
 void GlobalObject::initialize()
 {
     // These are done first since other prototypes depend on their presence.
-    m_empty_object_shape = heap().allocate<Shape>(*this);
-    m_object_prototype = heap().allocate<ObjectPrototype>();
-    m_function_prototype = heap().allocate<FunctionPrototype>();
+    m_empty_object_shape = heap().allocate<Shape>(*this, *this);
+    m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
+    m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
-    static_cast<FunctionPrototype*>(m_function_prototype)->initialize();
-    static_cast<ObjectPrototype*>(m_object_prototype)->initialize();
+    static_cast<FunctionPrototype*>(m_function_prototype)->initialize(heap().interpreter(), *this);
+    static_cast<ObjectPrototype*>(m_object_prototype)->initialize(heap().interpreter(), *this);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     if (!m_##snake_name##_prototype)                                          \
-        m_##snake_name##_prototype = heap().allocate<PrototypeName>();
+        m_##snake_name##_prototype = heap().allocate<PrototypeName>(*this, *this);
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
@@ -95,10 +95,10 @@ void GlobalObject::initialize()
     define_property("undefined", js_undefined(), 0);
 
     define_property("globalThis", this, attr);
-    define_property("console", heap().allocate<ConsoleObject>(), attr);
-    define_property("Math", heap().allocate<MathObject>(), attr);
-    define_property("JSON", heap().allocate<JSONObject>(), attr);
-    define_property("Reflect", heap().allocate<ReflectObject>(), attr);
+    define_property("console", heap().allocate<ConsoleObject>(*this), attr);
+    define_property("Math", heap().allocate<MathObject>(*this), attr);
+    define_property("JSON", heap().allocate<JSONObject>(*this), attr);
+    define_property("Reflect", heap().allocate<ReflectObject>(*this), attr);
 
     add_constructor("Array", m_array_constructor, *m_array_prototype);
     add_constructor("BigInt", m_bigint_constructor, *m_bigint_prototype);

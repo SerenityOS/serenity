@@ -59,7 +59,7 @@ Value Interpreter::run(GlobalObject& global_object, const Statement& statement, 
             CallFrame global_call_frame;
             global_call_frame.this_value = &global_object;
             global_call_frame.function_name = "(global execution context)";
-            global_call_frame.environment = heap().allocate<LexicalEnvironment>();
+            global_call_frame.environment = heap().allocate<LexicalEnvironment>(global_object);
             m_call_stack.append(move(global_call_frame));
         }
     }
@@ -126,7 +126,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
     bool pushed_lexical_environment = false;
 
     if (!scope_variables_with_declaration_kind.is_empty()) {
-        auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(move(scope_variables_with_declaration_kind), current_environment());
+        auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(global_object, move(scope_variables_with_declaration_kind), current_environment());
         m_call_stack.last().environment = block_lexical_environment;
         pushed_lexical_environment = true;
     }

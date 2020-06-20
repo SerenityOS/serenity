@@ -32,7 +32,8 @@ namespace JS {
 
 class ProxyConstructor final : public NativeFunction {
 public:
-    ProxyConstructor();
+    explicit ProxyConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ProxyConstructor() override;
 
     virtual Value call(Interpreter&) override;

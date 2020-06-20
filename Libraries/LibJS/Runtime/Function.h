@@ -34,6 +34,7 @@ namespace JS {
 class Function : public Object {
 public:
     virtual ~Function();
+    virtual void initialize(Interpreter&, GlobalObject&) override { }
 
     virtual Value call(Interpreter&) = 0;
     virtual Value construct(Interpreter&) = 0;

@@ -36,7 +36,7 @@ namespace JS {
 
 StringObject* StringObject::create(GlobalObject& global_object, PrimitiveString& primitive_string)
 {
-    return global_object.heap().allocate<StringObject>(primitive_string, *global_object.string_prototype());
+    return global_object.heap().allocate<StringObject>(global_object, primitive_string, *global_object.string_prototype());
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)

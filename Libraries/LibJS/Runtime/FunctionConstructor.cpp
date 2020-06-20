@@ -35,10 +35,14 @@
 
 namespace JS {
 
-FunctionConstructor::FunctionConstructor()
-    : NativeFunction("Function", *interpreter().global_object().function_prototype())
+FunctionConstructor::FunctionConstructor(GlobalObject& global_object)
+    : NativeFunction("Function", *global_object.function_prototype())
 {
-    define_property("prototype", interpreter().global_object().function_prototype(), 0);
+}
+
+void FunctionConstructor::initialize(Interpreter&, GlobalObject& global_object)
+{
+    define_property("prototype", global_object.function_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 }
 

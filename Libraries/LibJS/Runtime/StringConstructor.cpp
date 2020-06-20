@@ -35,10 +35,14 @@
 
 namespace JS {
 
-StringConstructor::StringConstructor()
-    : NativeFunction("String", *interpreter().global_object().function_prototype())
+StringConstructor::StringConstructor(GlobalObject& global_object)
+    : NativeFunction("String", *global_object.function_prototype())
 {
-    define_property("prototype", interpreter().global_object().string_prototype(), 0);
+}
+
+void StringConstructor::initialize(Interpreter&, GlobalObject& global_object)
+{
+    define_property("prototype", global_object.string_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

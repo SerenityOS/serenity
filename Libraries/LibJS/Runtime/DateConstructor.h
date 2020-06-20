@@ -32,7 +32,8 @@ namespace JS {
 
 class DateConstructor final : public NativeFunction {
 public:
-    DateConstructor();
+    explicit DateConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~DateConstructor() override;
 
     virtual Value call(Interpreter&) override;

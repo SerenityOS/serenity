@@ -42,7 +42,7 @@ Symbol::~Symbol()
 
 Symbol* js_symbol(Heap& heap, String description, bool is_global)
 {
-    return heap.allocate<Symbol>(move(description), is_global);
+    return heap.allocate<Symbol>(heap.interpreter().global_object(), move(description), is_global);
 }
 
 Symbol* js_symbol(Interpreter& interpreter, String description, bool is_global)

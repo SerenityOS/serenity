@@ -30,8 +30,8 @@
 
 namespace JS {
 
-NumberPrototype::NumberPrototype()
-    : NumberObject(0, *interpreter().global_object().object_prototype())
+NumberPrototype::NumberPrototype(GlobalObject& global_object)
+    : NumberObject(0, *global_object.object_prototype())
 {
 }
 

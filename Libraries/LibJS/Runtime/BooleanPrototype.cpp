@@ -32,8 +32,12 @@
 
 namespace JS {
 
-BooleanPrototype::BooleanPrototype()
-    : BooleanObject(false, *interpreter().global_object().object_prototype())
+BooleanPrototype::BooleanPrototype(GlobalObject& global_object)
+    : BooleanObject(false, *global_object.object_prototype())
+{
+}
+
+void BooleanPrototype::initialize(Interpreter&, GlobalObject&)
 {
     define_native_function("toString", to_string, 0, Attribute::Writable | Attribute::Configurable);
     define_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);

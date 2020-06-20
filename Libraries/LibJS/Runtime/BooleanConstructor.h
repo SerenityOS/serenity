@@ -32,7 +32,8 @@ namespace JS {
 
 class BooleanConstructor final : public NativeFunction {
 public:
-    BooleanConstructor();
+    explicit BooleanConstructor(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~BooleanConstructor() override;
 
     virtual Value call(Interpreter&) override;

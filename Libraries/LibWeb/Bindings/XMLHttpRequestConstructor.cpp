@@ -36,8 +36,12 @@
 namespace Web {
 namespace Bindings {
 
-XMLHttpRequestConstructor::XMLHttpRequestConstructor()
-    : NativeFunction(*interpreter().global_object().function_prototype())
+XMLHttpRequestConstructor::XMLHttpRequestConstructor(JS::GlobalObject& global_object)
+    : NativeFunction(*global_object.function_prototype())
+{
+}
+
+void XMLHttpRequestConstructor::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_property("length", JS::Value(1), JS::Attribute::Configurable);
 
@@ -60,7 +64,7 @@ JS::Value XMLHttpRequestConstructor::call(JS::Interpreter& interpreter)
 JS::Value XMLHttpRequestConstructor::construct(JS::Interpreter& interpreter)
 {
     auto& window = static_cast<WindowObject&>(global_object());
-    return interpreter.heap().allocate<XMLHttpRequestWrapper>(XMLHttpRequest::create(window.impl()));
+    return interpreter.heap().allocate<XMLHttpRequestWrapper>(window, XMLHttpRequest::create(window.impl()));
 }
 
 }
