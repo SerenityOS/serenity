@@ -1,0 +1,10 @@
+interface Node : EventTarget {
+
+    readonly attribute DOMString nodeName;
+    readonly attribute Node? firstChild;
+    readonly attribute Node? lastChild;
+    readonly attribute Node? previousSibling;
+    readonly attribute Node? nextSibling;
+
+}
+
