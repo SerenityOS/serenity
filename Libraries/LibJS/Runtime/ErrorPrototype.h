@@ -38,12 +38,12 @@ public:
 private:
     virtual const char* class_name() const override { return "ErrorPrototype"; }
 
-    static Value to_string(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
 
-    static Value name_getter(Interpreter&);
-    static void name_setter(Interpreter&, Value);
+    JS_DECLARE_NATIVE_GETTER(name_getter);
+    JS_DECLARE_NATIVE_SETTER(name_setter);
 
-    static Value message_getter(Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(message_getter);
 };
 
 #define DECLARE_ERROR_SUBCLASS_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \

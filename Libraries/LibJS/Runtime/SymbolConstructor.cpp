@@ -75,7 +75,7 @@ Value SymbolConstructor::construct(Interpreter& interpreter)
     return {};
 }
 
-Value SymbolConstructor::for_(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
     String description;
     if (!interpreter.argument_count()) {
@@ -87,7 +87,7 @@ Value SymbolConstructor::for_(Interpreter& interpreter)
     return SymbolObject::get_global(interpreter, description);
 }
 
-Value SymbolConstructor::key_for(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = interpreter.argument(0);
     if (!argument.is_symbol()) {

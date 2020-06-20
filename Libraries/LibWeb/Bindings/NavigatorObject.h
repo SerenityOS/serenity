@@ -40,7 +40,7 @@ public:
 private:
     virtual const char* class_name() const override { return "NavigatorObject"; }
 
-    static JS::Value user_agent_getter(JS::Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(user_agent_getter);
 };
 
 }

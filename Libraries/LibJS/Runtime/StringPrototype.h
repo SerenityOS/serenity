@@ -38,26 +38,26 @@ public:
 private:
     virtual const char* class_name() const override { return "StringPrototype"; }
 
-    static Value char_at(Interpreter&);
-    static Value repeat(Interpreter&);
-    static Value starts_with(Interpreter&);
-    static Value index_of(Interpreter&);
-    static Value to_lowercase(Interpreter&);
-    static Value to_uppercase(Interpreter&);
-    static Value to_string(Interpreter&);
-    static Value pad_start(Interpreter&);
-    static Value pad_end(Interpreter&);
-    static Value substring(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(char_at);
+    JS_DECLARE_NATIVE_FUNCTION(repeat);
+    JS_DECLARE_NATIVE_FUNCTION(starts_with);
+    JS_DECLARE_NATIVE_FUNCTION(index_of);
+    JS_DECLARE_NATIVE_FUNCTION(to_lowercase);
+    JS_DECLARE_NATIVE_FUNCTION(to_uppercase);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(pad_start);
+    JS_DECLARE_NATIVE_FUNCTION(pad_end);
+    JS_DECLARE_NATIVE_FUNCTION(substring);
 
-    static Value length_getter(Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(length_getter);
 
-    static Value trim(Interpreter&);
-    static Value trim_start(Interpreter&);
-    static Value trim_end(Interpreter&);
-    static Value concat(Interpreter&);
-    static Value includes(Interpreter&);
-    static Value slice(Interpreter&);
-    static Value last_index_of(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(trim);
+    JS_DECLARE_NATIVE_FUNCTION(trim_start);
+    JS_DECLARE_NATIVE_FUNCTION(trim_end);
+    JS_DECLARE_NATIVE_FUNCTION(concat);
+    JS_DECLARE_NATIVE_FUNCTION(includes);
+    JS_DECLARE_NATIVE_FUNCTION(slice);
+    JS_DECLARE_NATIVE_FUNCTION(last_index_of);
 };
 
 }

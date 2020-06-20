@@ -42,8 +42,8 @@ private:
     virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "SymbolConstructor"; }
 
-    static Value for_(Interpreter&);
-    static Value key_for(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(for_);
+    JS_DECLARE_NATIVE_FUNCTION(key_for);
 };
 
 }

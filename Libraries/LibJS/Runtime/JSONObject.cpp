@@ -49,7 +49,7 @@ JSONObject::~JSONObject()
 {
 }
 
-Value JSONObject::stringify(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 {
     if (!interpreter.argument_count())
         return js_undefined();
@@ -116,7 +116,7 @@ Value JSONObject::stringify(Interpreter& interpreter)
         state.gap = String::empty();
     }
 
-    auto* wrapper = Object::create_empty(interpreter, interpreter.global_object());
+    auto* wrapper = Object::create_empty(interpreter, global_object);
     wrapper->define_property(String::empty(), value);
     if (interpreter.exception())
         return {};
@@ -368,7 +368,7 @@ String JSONObject::quote_json_string(String string)
     return builder.to_string();
 }
 
-Value JSONObject::parse(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
     if (!interpreter.argument_count())
         return js_undefined();
@@ -384,7 +384,7 @@ Value JSONObject::parse(Interpreter& interpreter)
     }
     Value result = parse_json_value(interpreter, json.value());
     if (reviver.is_function()) {
-        auto* holder_object = Object::create_empty(interpreter, interpreter.global_object());
+        auto* holder_object = Object::create_empty(interpreter, global_object);
         holder_object->define_property(String::empty(), result);
         if (interpreter.exception())
             return {};

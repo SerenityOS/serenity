@@ -64,7 +64,7 @@ static SymbolObject* this_symbol_from_interpreter(Interpreter& interpreter)
     return static_cast<SymbolObject*>(this_object);
 }
 
-Value SymbolPrototype::description_getter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(SymbolPrototype::description_getter)
 {
     auto* this_object = this_symbol_from_interpreter(interpreter);
     if (!this_object)
@@ -72,7 +72,7 @@ Value SymbolPrototype::description_getter(Interpreter& interpreter)
     return js_string(interpreter, this_object->description());
 }
 
-Value SymbolPrototype::to_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
     auto* this_object = this_symbol_from_interpreter(interpreter);
     if (!this_object)
@@ -81,7 +81,7 @@ Value SymbolPrototype::to_string(Interpreter& interpreter)
     return js_string(interpreter, move(string));
 }
 
-Value SymbolPrototype::value_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::value_of)
 {
     auto* this_object = this_symbol_from_interpreter(interpreter);
     if (!this_object)

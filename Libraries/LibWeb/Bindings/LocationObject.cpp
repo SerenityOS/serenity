@@ -54,36 +54,36 @@ LocationObject::~LocationObject()
 {
 }
 
-JS::Value LocationObject::href_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(LocationObject::href_getter)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     return JS::js_string(interpreter, window.impl().document().url().to_string());
 }
 
-void LocationObject::href_setter(JS::Interpreter& interpreter, JS::Value value)
+JS_DEFINE_NATIVE_SETTER(LocationObject::href_setter)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     auto new_href = value.to_string(interpreter);
     if (interpreter.exception())
         return;
     window.impl().did_set_location_href({}, new_href);
 }
 
-JS::Value LocationObject::pathname_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(LocationObject::pathname_getter)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     return JS::js_string(interpreter, window.impl().document().url().path());
 }
 
-JS::Value LocationObject::hostname_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(LocationObject::hostname_getter)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     return JS::js_string(interpreter, window.impl().document().url().host());
 }
 
-JS::Value LocationObject::host_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(LocationObject::host_getter)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     auto url = window.impl().document().url();
     StringBuilder builder;
     builder.append(url.host());
@@ -92,9 +92,9 @@ JS::Value LocationObject::host_getter(JS::Interpreter& interpreter)
     return JS::js_string(interpreter, builder.to_string());
 }
 
-JS::Value LocationObject::hash_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(LocationObject::hash_getter)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     auto fragment = window.impl().document().url().fragment();
     if (!fragment.length())
         return JS::js_string(interpreter, "");
@@ -104,9 +104,9 @@ JS::Value LocationObject::hash_getter(JS::Interpreter& interpreter)
     return JS::js_string(interpreter, builder.to_string());
 }
 
-JS::Value LocationObject::search_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(LocationObject::search_getter)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     auto query = window.impl().document().url().query();
     if (!query.length())
         return JS::js_string(interpreter, "");
@@ -116,18 +116,18 @@ JS::Value LocationObject::search_getter(JS::Interpreter& interpreter)
     return JS::js_string(interpreter, builder.to_string());
 }
 
-JS::Value LocationObject::protocol_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(LocationObject::protocol_getter)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     StringBuilder builder;
     builder.append(window.impl().document().url().protocol());
     builder.append(':');
     return JS::js_string(interpreter, builder.to_string());
 }
 
-JS::Value LocationObject::reload(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 {
-    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    auto& window = static_cast<WindowObject&>(global_object);
     window.impl().did_call_location_reload({});
     return JS::js_undefined();
 }

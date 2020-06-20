@@ -42,14 +42,14 @@ public:
 private:
     virtual const char* class_name() const override { return "ElementWrapper"; }
 
-    static JS::Value inner_html_getter(JS::Interpreter&);
-    static void inner_html_setter(JS::Interpreter&, JS::Value);
+    JS_DECLARE_NATIVE_GETTER(inner_html_getter);
+    JS_DECLARE_NATIVE_SETTER(inner_html_setter);
 
-    static JS::Value id_getter(JS::Interpreter&);
-    static void id_setter(JS::Interpreter&, JS::Value);
+    JS_DECLARE_NATIVE_GETTER(id_getter);
+    JS_DECLARE_NATIVE_SETTER(id_setter);
 
-    static JS::Value get_attribute(JS::Interpreter&);
-    static JS::Value set_attribute(JS::Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(get_attribute);
+    JS_DECLARE_NATIVE_FUNCTION(set_attribute);
 };
 
 }

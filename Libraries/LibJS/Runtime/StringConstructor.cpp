@@ -72,7 +72,7 @@ Value StringConstructor::construct(Interpreter& interpreter)
     return StringObject::create(global_object(), *primitive_string);
 }
 
-Value StringConstructor::raw(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 {
     auto* template_object = interpreter.argument(0).to_object(interpreter);
     if (interpreter.exception())
@@ -111,7 +111,7 @@ Value StringConstructor::raw(Interpreter& interpreter)
     return js_string(interpreter, builder.build());
 }
 
-Value StringConstructor::from_char_code(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
 {
     StringBuilder builder;
     for (size_t i = 0; i < interpreter.argument_count(); ++i) {

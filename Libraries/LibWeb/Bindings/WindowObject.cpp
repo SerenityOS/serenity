@@ -94,7 +94,7 @@ static Window* impl_from(JS::Interpreter& interpreter)
     return &static_cast<WindowObject*>(this_object)->impl();
 }
 
-JS::Value WindowObject::alert(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -109,7 +109,7 @@ JS::Value WindowObject::alert(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value WindowObject::confirm(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -123,7 +123,7 @@ JS::Value WindowObject::confirm(JS::Interpreter& interpreter)
     return JS::Value(impl->confirm(message));
 }
 
-JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -149,7 +149,7 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -175,7 +175,7 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value WindowObject::request_animation_frame(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -190,7 +190,7 @@ JS::Value WindowObject::request_animation_frame(JS::Interpreter& interpreter)
     return JS::Value(impl->request_animation_frame(*static_cast<JS::Function*>(callback_object)));
 }
 
-JS::Value WindowObject::cancel_animation_frame(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -204,7 +204,7 @@ JS::Value WindowObject::cancel_animation_frame(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value WindowObject::document_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -212,9 +212,10 @@ JS::Value WindowObject::document_getter(JS::Interpreter& interpreter)
     return wrap(interpreter.heap(), impl->document());
 }
 
-void WindowObject::document_setter(JS::Interpreter&, JS::Value)
+JS_DEFINE_NATIVE_SETTER(WindowObject::document_setter)
 {
     // FIXME: Figure out what we should do here. Just ignore attempts to set window.document for now.
+    UNUSED_PARAM(value);
 }
 
 }

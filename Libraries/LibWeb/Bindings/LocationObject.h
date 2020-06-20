@@ -40,17 +40,17 @@ public:
 private:
     virtual const char* class_name() const override { return "LocationObject"; }
 
-    static JS::Value reload(JS::Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(reload);
 
-    static JS::Value href_getter(JS::Interpreter&);
-    static void href_setter(JS::Interpreter&, JS::Value);
+    JS_DECLARE_NATIVE_GETTER(href_getter);
+    JS_DECLARE_NATIVE_SETTER(href_setter);
 
-    static JS::Value host_getter(JS::Interpreter&);
-    static JS::Value hostname_getter(JS::Interpreter&);
-    static JS::Value pathname_getter(JS::Interpreter&);
-    static JS::Value hash_getter(JS::Interpreter&);
-    static JS::Value search_getter(JS::Interpreter&);
-    static JS::Value protocol_getter(JS::Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(host_getter);
+    JS_DECLARE_NATIVE_GETTER(hostname_getter);
+    JS_DECLARE_NATIVE_GETTER(pathname_getter);
+    JS_DECLARE_NATIVE_GETTER(hash_getter);
+    JS_DECLARE_NATIVE_GETTER(search_getter);
+    JS_DECLARE_NATIVE_GETTER(protocol_getter);
 };
 
 }

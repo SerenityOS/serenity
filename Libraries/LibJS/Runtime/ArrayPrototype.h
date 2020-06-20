@@ -39,30 +39,30 @@ public:
 private:
     virtual const char* class_name() const override { return "ArrayPrototype"; }
 
-    static Value filter(Interpreter&);
-    static Value for_each(Interpreter&);
-    static Value map(Interpreter&);
-    static Value pop(Interpreter&);
-    static Value push(Interpreter&);
-    static Value shift(Interpreter&);
-    static Value to_string(Interpreter&);
-    static Value to_locale_string(Interpreter&);
-    static Value unshift(Interpreter&);
-    static Value join(Interpreter&);
-    static Value concat(Interpreter&);
-    static Value slice(Interpreter&);
-    static Value index_of(Interpreter&);
-    static Value reduce(Interpreter&);
-    static Value reduce_right(Interpreter&);
-    static Value reverse(Interpreter&);
-    static Value last_index_of(Interpreter&);
-    static Value includes(Interpreter&);
-    static Value find(Interpreter&);
-    static Value find_index(Interpreter&);
-    static Value some(Interpreter&);
-    static Value every(Interpreter&);
-    static Value splice(Interpreter&);
-    static Value fill(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(filter);
+    JS_DECLARE_NATIVE_FUNCTION(for_each);
+    JS_DECLARE_NATIVE_FUNCTION(map);
+    JS_DECLARE_NATIVE_FUNCTION(pop);
+    JS_DECLARE_NATIVE_FUNCTION(push);
+    JS_DECLARE_NATIVE_FUNCTION(shift);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
+    JS_DECLARE_NATIVE_FUNCTION(unshift);
+    JS_DECLARE_NATIVE_FUNCTION(join);
+    JS_DECLARE_NATIVE_FUNCTION(concat);
+    JS_DECLARE_NATIVE_FUNCTION(slice);
+    JS_DECLARE_NATIVE_FUNCTION(index_of);
+    JS_DECLARE_NATIVE_FUNCTION(reduce);
+    JS_DECLARE_NATIVE_FUNCTION(reduce_right);
+    JS_DECLARE_NATIVE_FUNCTION(reverse);
+    JS_DECLARE_NATIVE_FUNCTION(last_index_of);
+    JS_DECLARE_NATIVE_FUNCTION(includes);
+    JS_DECLARE_NATIVE_FUNCTION(find);
+    JS_DECLARE_NATIVE_FUNCTION(find_index);
+    JS_DECLARE_NATIVE_FUNCTION(some);
+    JS_DECLARE_NATIVE_FUNCTION(every);
+    JS_DECLARE_NATIVE_FUNCTION(splice);
+    JS_DECLARE_NATIVE_FUNCTION(fill);
 };
 
 }

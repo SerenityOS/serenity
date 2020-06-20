@@ -85,7 +85,7 @@ static CanvasRenderingContext2D* impl_from(JS::Interpreter& interpreter)
     return &static_cast<CanvasRenderingContext2DWrapper*>(this_object)->impl();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::fill_rect)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -108,7 +108,7 @@ JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interprete
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::stroke_rect(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::stroke_rect)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -131,7 +131,7 @@ JS::Value CanvasRenderingContext2DWrapper::stroke_rect(JS::Interpreter& interpre
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::draw_image(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::draw_image)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -154,7 +154,7 @@ JS::Value CanvasRenderingContext2DWrapper::draw_image(JS::Interpreter& interpret
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::scale(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::scale)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -172,7 +172,7 @@ JS::Value CanvasRenderingContext2DWrapper::scale(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::translate(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::translate)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -190,7 +190,7 @@ JS::Value CanvasRenderingContext2DWrapper::translate(JS::Interpreter& interprete
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::fill_style_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::fill_style_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -198,7 +198,7 @@ JS::Value CanvasRenderingContext2DWrapper::fill_style_getter(JS::Interpreter& in
     return JS::js_string(interpreter, impl->fill_style());
 }
 
-void CanvasRenderingContext2DWrapper::fill_style_setter(JS::Interpreter& interpreter, JS::Value value)
+JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::fill_style_setter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -209,7 +209,7 @@ void CanvasRenderingContext2DWrapper::fill_style_setter(JS::Interpreter& interpr
     impl->set_fill_style(string);
 }
 
-JS::Value CanvasRenderingContext2DWrapper::stroke_style_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::stroke_style_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -217,7 +217,7 @@ JS::Value CanvasRenderingContext2DWrapper::stroke_style_getter(JS::Interpreter& 
     return JS::js_string(interpreter, impl->stroke_style());
 }
 
-void CanvasRenderingContext2DWrapper::stroke_style_setter(JS::Interpreter& interpreter, JS::Value value)
+JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::stroke_style_setter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -228,7 +228,7 @@ void CanvasRenderingContext2DWrapper::stroke_style_setter(JS::Interpreter& inter
     impl->set_stroke_style(string);
 }
 
-JS::Value CanvasRenderingContext2DWrapper::line_width_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::line_width_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -236,7 +236,7 @@ JS::Value CanvasRenderingContext2DWrapper::line_width_getter(JS::Interpreter& in
     return JS::Value(impl->line_width());
 }
 
-void CanvasRenderingContext2DWrapper::line_width_setter(JS::Interpreter& interpreter, JS::Value value)
+JS_DEFINE_NATIVE_SETTER(CanvasRenderingContext2DWrapper::line_width_setter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -247,7 +247,7 @@ void CanvasRenderingContext2DWrapper::line_width_setter(JS::Interpreter& interpr
     impl->set_line_width(line_width);
 }
 
-JS::Value CanvasRenderingContext2DWrapper::begin_path(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::begin_path)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -256,7 +256,7 @@ JS::Value CanvasRenderingContext2DWrapper::begin_path(JS::Interpreter& interpret
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::close_path(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::close_path)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -265,7 +265,7 @@ JS::Value CanvasRenderingContext2DWrapper::close_path(JS::Interpreter& interpret
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::stroke(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::stroke)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -274,7 +274,7 @@ JS::Value CanvasRenderingContext2DWrapper::stroke(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::fill(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::fill)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -301,7 +301,7 @@ JS::Value CanvasRenderingContext2DWrapper::fill(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::move_to(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::move_to)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -316,7 +316,7 @@ JS::Value CanvasRenderingContext2DWrapper::move_to(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::line_to(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::line_to)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -331,7 +331,7 @@ JS::Value CanvasRenderingContext2DWrapper::line_to(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::quadratic_curve_to(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::quadratic_curve_to)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -352,7 +352,7 @@ JS::Value CanvasRenderingContext2DWrapper::quadratic_curve_to(JS::Interpreter& i
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::create_image_data(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::create_image_data)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -363,11 +363,11 @@ JS::Value CanvasRenderingContext2DWrapper::create_image_data(JS::Interpreter& in
     auto height = interpreter.argument(1).to_i32(interpreter);
     if (interpreter.exception())
         return {};
-    auto image_data = impl->create_image_data(interpreter.global_object(), width, height);
+    auto image_data = impl->create_image_data(global_object, width, height);
     return wrap(interpreter.heap(), *image_data);
 }
 
-JS::Value CanvasRenderingContext2DWrapper::put_image_data(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::put_image_data)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -392,7 +392,7 @@ JS::Value CanvasRenderingContext2DWrapper::put_image_data(JS::Interpreter& inter
     return JS::js_undefined();
 }
 
-JS::Value CanvasRenderingContext2DWrapper::canvas_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(CanvasRenderingContext2DWrapper::canvas_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)

@@ -42,10 +42,10 @@ private:
     virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "NumberConstructor"; }
 
-    static Value is_finite(Interpreter&);
-    static Value is_integer(Interpreter&);
-    static Value is_nan(Interpreter&);
-    static Value is_safe_integer(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(is_finite);
+    JS_DECLARE_NATIVE_FUNCTION(is_integer);
+    JS_DECLARE_NATIVE_FUNCTION(is_nan);
+    JS_DECLARE_NATIVE_FUNCTION(is_safe_integer);
 };
 
 }

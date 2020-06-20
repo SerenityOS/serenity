@@ -66,7 +66,7 @@ static XMLHttpRequest* impl_from(JS::Interpreter& interpreter)
     return &static_cast<XMLHttpRequestWrapper*>(this_object)->impl();
 }
 
-JS::Value XMLHttpRequestPrototype::open(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(XMLHttpRequestPrototype::open)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -81,7 +81,7 @@ JS::Value XMLHttpRequestPrototype::open(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value XMLHttpRequestPrototype::send(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(XMLHttpRequestPrototype::send)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -90,7 +90,7 @@ JS::Value XMLHttpRequestPrototype::send(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value XMLHttpRequestPrototype::ready_state_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(XMLHttpRequestPrototype::ready_state_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -98,7 +98,7 @@ JS::Value XMLHttpRequestPrototype::ready_state_getter(JS::Interpreter& interpret
     return JS::Value((i32)impl->ready_state());
 }
 
-JS::Value XMLHttpRequestPrototype::response_text_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(XMLHttpRequestPrototype::response_text_getter)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)

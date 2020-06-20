@@ -58,9 +58,9 @@ FunctionPrototype::~FunctionPrototype()
 {
 }
 
-Value FunctionPrototype::apply(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -88,9 +88,9 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
     return interpreter.call(function, this_arg, move(arguments));
 }
 
-Value FunctionPrototype::bind(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -108,9 +108,9 @@ Value FunctionPrototype::bind(Interpreter& interpreter)
     return this_function.bind(bound_this_arg, move(arguments));
 }
 
-Value FunctionPrototype::call(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_function())
@@ -125,9 +125,9 @@ Value FunctionPrototype::call(Interpreter& interpreter)
     return interpreter.call(function, this_arg, move(arguments));
 }
 
-Value FunctionPrototype::to_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_function())

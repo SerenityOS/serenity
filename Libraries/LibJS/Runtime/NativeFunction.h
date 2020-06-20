@@ -33,9 +33,9 @@ namespace JS {
 
 class NativeFunction : public Function {
 public:
-    static NativeFunction* create(Interpreter&, GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&)>);
+    static NativeFunction* create(Interpreter&, GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>);
 
-    explicit NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&)>, Object& prototype);
+    explicit NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>, Object& prototype);
     virtual ~NativeFunction() override;
 
     virtual Value call(Interpreter&) override;
@@ -54,7 +54,7 @@ private:
     virtual LexicalEnvironment* create_environment() override final { return nullptr; }
 
     FlyString m_name;
-    AK::Function<Value(Interpreter&)> m_native_function;
+    AK::Function<Value(Interpreter&, GlobalObject&)> m_native_function;
 };
 
 }

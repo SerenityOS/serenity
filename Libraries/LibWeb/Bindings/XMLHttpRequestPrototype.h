@@ -39,11 +39,11 @@ public:
 private:
     virtual const char* class_name() const override { return "XMLHttpRequestPrototype"; }
 
-    static JS::Value open(JS::Interpreter&);
-    static JS::Value send(JS::Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(open);
+    JS_DECLARE_NATIVE_FUNCTION(send);
 
-    static JS::Value ready_state_getter(JS::Interpreter&);
-    static JS::Value response_text_getter(JS::Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(ready_state_getter);
+    JS_DECLARE_NATIVE_GETTER(response_text_getter);
 };
 
 }

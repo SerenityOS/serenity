@@ -57,22 +57,22 @@ static BigIntObject* bigint_object_from(Interpreter& interpreter, GlobalObject& 
     return static_cast<BigIntObject*>(this_object);
 }
 
-Value BigIntPrototype::to_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
-    auto* bigint_object = bigint_object_from(interpreter, interpreter.global_object());
+    auto* bigint_object = bigint_object_from(interpreter, global_object);
     if (!bigint_object)
         return {};
     return js_string(interpreter, bigint_object->bigint().big_integer().to_base10());
 }
 
-Value BigIntPrototype::to_locale_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 {
-    return to_string(interpreter);
+    return to_string(interpreter, global_object);
 }
 
-Value BigIntPrototype::value_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
-    auto* bigint_object = bigint_object_from(interpreter, interpreter.global_object());
+    auto* bigint_object = bigint_object_from(interpreter, global_object);
     if (!bigint_object)
         return {};
     return bigint_object->value_of();

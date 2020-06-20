@@ -130,7 +130,7 @@ Value ScriptFunction::construct(Interpreter& interpreter)
     return call(interpreter);
 }
 
-Value ScriptFunction::length_getter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ScriptFunction::length_getter)
 {
     auto* function = script_function_from(interpreter);
     if (!function)
@@ -138,7 +138,7 @@ Value ScriptFunction::length_getter(Interpreter& interpreter)
     return Value(static_cast<i32>(function->m_function_length));
 }
 
-Value ScriptFunction::name_getter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ScriptFunction::name_getter)
 {
     auto* function = script_function_from(interpreter);
     if (!function)

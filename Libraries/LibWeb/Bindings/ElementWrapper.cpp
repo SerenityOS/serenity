@@ -72,7 +72,7 @@ static Element* impl_from(JS::Interpreter& interpreter)
     return &static_cast<ElementWrapper*>(this_object)->node();
 }
 
-JS::Value ElementWrapper::get_attribute(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ElementWrapper::get_attribute)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -92,7 +92,7 @@ JS::Value ElementWrapper::get_attribute(JS::Interpreter& interpreter)
     return JS::js_string(interpreter, attribute_value);
 }
 
-JS::Value ElementWrapper::set_attribute(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ElementWrapper::set_attribute)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -113,14 +113,14 @@ JS::Value ElementWrapper::set_attribute(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value ElementWrapper::inner_html_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ElementWrapper::inner_html_getter)
 {
     if (auto* impl = impl_from(interpreter))
         return JS::js_string(interpreter, impl->inner_html());
     return {};
 }
 
-void ElementWrapper::inner_html_setter(JS::Interpreter& interpreter, JS::Value value)
+JS_DEFINE_NATIVE_SETTER(ElementWrapper::inner_html_setter)
 {
     if (auto* impl = impl_from(interpreter)) {
         auto string = value.to_string(interpreter);
@@ -130,14 +130,14 @@ void ElementWrapper::inner_html_setter(JS::Interpreter& interpreter, JS::Value v
     }
 }
 
-JS::Value ElementWrapper::id_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ElementWrapper::id_getter)
 {
     if (auto* impl = impl_from(interpreter))
         return JS::js_string(interpreter, impl->attribute(HTML::AttributeNames::id));
     return {};
 }
 
-void ElementWrapper::id_setter(JS::Interpreter& interpreter, JS::Value value)
+JS_DEFINE_NATIVE_SETTER(ElementWrapper::id_setter)
 {
     if (auto* impl = impl_from(interpreter)) {
         auto string = value.to_string(interpreter);

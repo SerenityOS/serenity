@@ -78,15 +78,15 @@ Value ArrayConstructor::construct(Interpreter& interpreter)
     return call(interpreter);
 }
 
-Value ArrayConstructor::is_array(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 {
     auto value = interpreter.argument(0);
     return Value(value.is_array());
 }
 
-Value ArrayConstructor::of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
-    auto* array = Array::create(interpreter.global_object());
+    auto* array = Array::create(global_object);
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
         array->indexed_properties().append(interpreter.argument(i));
     return array;

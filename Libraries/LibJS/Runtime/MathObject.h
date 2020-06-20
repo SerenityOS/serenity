@@ -38,23 +38,23 @@ public:
 private:
     virtual const char* class_name() const override { return "MathObject"; }
 
-    static Value abs(Interpreter&);
-    static Value random(Interpreter&);
-    static Value sqrt(Interpreter&);
-    static Value floor(Interpreter&);
-    static Value ceil(Interpreter&);
-    static Value round(Interpreter&);
-    static Value max(Interpreter&);
-    static Value min(Interpreter&);
-    static Value trunc(Interpreter&);
-    static Value sin(Interpreter&);
-    static Value cos(Interpreter&);
-    static Value tan(Interpreter&);
-    static Value pow(Interpreter&);
-    static Value exp(Interpreter&);
-    static Value expm1(Interpreter&);
-    static Value sign(Interpreter&);
-    static Value clz32(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(abs);
+    JS_DECLARE_NATIVE_FUNCTION(random);
+    JS_DECLARE_NATIVE_FUNCTION(sqrt);
+    JS_DECLARE_NATIVE_FUNCTION(floor);
+    JS_DECLARE_NATIVE_FUNCTION(ceil);
+    JS_DECLARE_NATIVE_FUNCTION(round);
+    JS_DECLARE_NATIVE_FUNCTION(max);
+    JS_DECLARE_NATIVE_FUNCTION(min);
+    JS_DECLARE_NATIVE_FUNCTION(trunc);
+    JS_DECLARE_NATIVE_FUNCTION(sin);
+    JS_DECLARE_NATIVE_FUNCTION(cos);
+    JS_DECLARE_NATIVE_FUNCTION(tan);
+    JS_DECLARE_NATIVE_FUNCTION(pow);
+    JS_DECLARE_NATIVE_FUNCTION(exp);
+    JS_DECLARE_NATIVE_FUNCTION(expm1);
+    JS_DECLARE_NATIVE_FUNCTION(sign);
+    JS_DECLARE_NATIVE_FUNCTION(clz32);
 };
 
 }

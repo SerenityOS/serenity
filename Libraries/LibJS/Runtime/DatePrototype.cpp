@@ -70,7 +70,7 @@ DatePrototype::~DatePrototype()
 {
 }
 
-Value DatePrototype::get_date(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -79,7 +79,7 @@ Value DatePrototype::get_date(Interpreter& interpreter)
     return Value(static_cast<double>(date));
 }
 
-Value DatePrototype::get_day(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -88,7 +88,7 @@ Value DatePrototype::get_day(Interpreter& interpreter)
     return Value(static_cast<double>(day));
 }
 
-Value DatePrototype::get_full_year(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -97,7 +97,7 @@ Value DatePrototype::get_full_year(Interpreter& interpreter)
     return Value(static_cast<double>(full_year));
 }
 
-Value DatePrototype::get_hours(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -106,7 +106,7 @@ Value DatePrototype::get_hours(Interpreter& interpreter)
     return Value(static_cast<double>(hours));
 }
 
-Value DatePrototype::get_milliseconds(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -115,7 +115,7 @@ Value DatePrototype::get_milliseconds(Interpreter& interpreter)
     return Value(static_cast<double>(milliseconds));
 }
 
-Value DatePrototype::get_minutes(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -124,7 +124,7 @@ Value DatePrototype::get_minutes(Interpreter& interpreter)
     return Value(static_cast<double>(minutes));
 }
 
-Value DatePrototype::get_month(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -133,7 +133,7 @@ Value DatePrototype::get_month(Interpreter& interpreter)
     return Value(static_cast<double>(months));
 }
 
-Value DatePrototype::get_seconds(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -142,7 +142,7 @@ Value DatePrototype::get_seconds(Interpreter& interpreter)
     return Value(static_cast<double>(seconds));
 }
 
-Value DatePrototype::get_time(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -152,7 +152,7 @@ Value DatePrototype::get_time(Interpreter& interpreter)
     return Value(static_cast<double>(seconds * 1000 + milliseconds));
 }
 
-Value DatePrototype::to_date_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -161,7 +161,7 @@ Value DatePrototype::to_date_string(Interpreter& interpreter)
     return js_string(interpreter, move(string));
 }
 
-Value DatePrototype::to_time_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_time_string)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
@@ -170,7 +170,7 @@ Value DatePrototype::to_time_string(Interpreter& interpreter)
     return js_string(interpreter, move(string));
 }
 
-Value DatePrototype::to_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)

@@ -70,7 +70,7 @@ MathObject::~MathObject()
 {
 }
 
-Value MathObject::abs(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -80,7 +80,7 @@ Value MathObject::abs(Interpreter& interpreter)
     return Value(number.as_double() >= 0 ? number.as_double() : -number.as_double());
 }
 
-Value MathObject::random(Interpreter&)
+Value MathObject::random(Interpreter&, GlobalObject&)
 {
 #ifdef __serenity__
     double r = (double)arc4random() / (double)UINT32_MAX;
@@ -90,7 +90,7 @@ Value MathObject::random(Interpreter&)
     return Value(r);
 }
 
-Value MathObject::sqrt(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -100,7 +100,7 @@ Value MathObject::sqrt(Interpreter& interpreter)
     return Value(::sqrt(number.as_double()));
 }
 
-Value MathObject::floor(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -110,7 +110,7 @@ Value MathObject::floor(Interpreter& interpreter)
     return Value(::floor(number.as_double()));
 }
 
-Value MathObject::ceil(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -120,7 +120,7 @@ Value MathObject::ceil(Interpreter& interpreter)
     return Value(::ceil(number.as_double()));
 }
 
-Value MathObject::round(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -130,7 +130,7 @@ Value MathObject::round(Interpreter& interpreter)
     return Value(::round(number.as_double()));
 }
 
-Value MathObject::max(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
 {
     if (!interpreter.argument_count())
         return js_negative_infinity();
@@ -147,7 +147,7 @@ Value MathObject::max(Interpreter& interpreter)
     return max;
 }
 
-Value MathObject::min(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 {
     if (!interpreter.argument_count())
         return js_infinity();
@@ -164,7 +164,7 @@ Value MathObject::min(Interpreter& interpreter)
     return min;
 }
 
-Value MathObject::trunc(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -172,11 +172,11 @@ Value MathObject::trunc(Interpreter& interpreter)
     if (number.is_nan())
         return js_nan();
     if (number.as_double() < 0)
-        return MathObject::ceil(interpreter);
-    return MathObject::floor(interpreter);
+        return MathObject::ceil(interpreter, global_object);
+    return MathObject::floor(interpreter, global_object);
 }
 
-Value MathObject::sin(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::sin)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -186,7 +186,7 @@ Value MathObject::sin(Interpreter& interpreter)
     return Value(::sin(number.as_double()));
 }
 
-Value MathObject::cos(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::cos)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -196,7 +196,7 @@ Value MathObject::cos(Interpreter& interpreter)
     return Value(::cos(number.as_double()));
 }
 
-Value MathObject::tan(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::tan)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -206,12 +206,12 @@ Value MathObject::tan(Interpreter& interpreter)
     return Value(::tan(number.as_double()));
 }
 
-Value MathObject::pow(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
 {
     return JS::exp(interpreter, interpreter.argument(0), interpreter.argument(1));
 }
 
-Value MathObject::exp(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -221,7 +221,7 @@ Value MathObject::exp(Interpreter& interpreter)
     return Value(::pow(M_E, number.as_double()));
 }
 
-Value MathObject::expm1(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -231,7 +231,7 @@ Value MathObject::expm1(Interpreter& interpreter)
     return Value(::pow(M_E, number.as_double()) - 1);
 }
 
-Value MathObject::sign(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
@@ -247,7 +247,7 @@ Value MathObject::sign(Interpreter& interpreter)
     return js_nan();
 }
 
-Value MathObject::clz32(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
 {
     auto number = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())

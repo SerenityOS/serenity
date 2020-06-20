@@ -62,8 +62,8 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
     ConstructorName::ConstructorName()                                                                                 \
         : NativeFunction(*interpreter().global_object().function_prototype())                                          \
     {                                                                                                                  \
-        define_property("prototype", interpreter().global_object().snake_name##_prototype(), 0);                                   \
-        define_property("length", Value(1), Attribute::Configurable);                                                              \
+        define_property("prototype", interpreter().global_object().snake_name##_prototype(), 0);                       \
+        define_property("length", Value(1), Attribute::Configurable);                                                  \
     }                                                                                                                  \
     ConstructorName::~ConstructorName() { }                                                                            \
     Value ConstructorName::call(Interpreter& interpreter)                                                              \
@@ -78,7 +78,7 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
             if (interpreter.exception())                                                                               \
                 return {};                                                                                             \
         }                                                                                                              \
-        return ClassName::create(interpreter.global_object(), message);                                                \
+        return ClassName::create(global_object(), message);                                                            \
     }
 
 JS_ENUMERATE_ERROR_SUBCLASSES

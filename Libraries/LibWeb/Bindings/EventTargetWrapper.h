@@ -42,7 +42,7 @@ public:
 private:
     virtual const char* class_name() const override { return "EventTargetWrapper"; }
 
-    static JS::Value add_event_listener(JS::Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(add_event_listener);
 
     NonnullRefPtr<EventTarget> m_impl;
 };

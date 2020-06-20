@@ -73,12 +73,12 @@ Value BigIntConstructor::construct(Interpreter& interpreter)
     return {};
 }
 
-Value BigIntConstructor::as_int_n(Interpreter&)
+JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
 {
     TODO();
 }
 
-Value BigIntConstructor::as_uint_n(Interpreter&)
+JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
 {
     TODO();
 }

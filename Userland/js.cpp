@@ -55,14 +55,15 @@ public:
     virtual void initialize() override;
     virtual ~ReplObject() override;
 
-    static JS::Value load_file(JS::Interpreter&);
-    static JS::Value is_strict_mode(JS::Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(load_file);
+    JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
 
 private:
     virtual const char* class_name() const override { return "ReplObject"; }
-    static JS::Value exit_interpreter(JS::Interpreter&);
-    static JS::Value repl_help(JS::Interpreter&);
-    static JS::Value save_to_file(JS::Interpreter&);
+
+    JS_DECLARE_NATIVE_FUNCTION(exit_interpreter);
+    JS_DECLARE_NATIVE_FUNCTION(repl_help);
+    JS_DECLARE_NATIVE_FUNCTION(save_to_file);
 };
 
 static bool s_dump_ast = false;
@@ -384,7 +385,7 @@ ReplObject::~ReplObject()
 {
 }
 
-JS::Value ReplObject::save_to_file(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 {
     if (!interpreter.argument_count())
         return JS::Value(false);
@@ -396,7 +397,7 @@ JS::Value ReplObject::save_to_file(JS::Interpreter& interpreter)
     return JS::Value(false);
 }
 
-JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
     if (!interpreter.argument_count())
         exit(0);
@@ -406,7 +407,7 @@ JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
     exit(exit_code.as_double());
 }
 
-JS::Value ReplObject::repl_help(JS::Interpreter&)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
 {
     printf("REPL commands:\n");
     printf("    exit(code): exit the REPL with specified code. Defaults to 0.\n");
@@ -416,7 +417,7 @@ JS::Value ReplObject::repl_help(JS::Interpreter&)
     return JS::js_undefined();
 }
 
-JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
 {
     if (!interpreter.argument_count())
         return JS::Value(false);
@@ -440,7 +441,7 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
     return JS::Value(true);
 }
 
-JS::Value ReplObject::is_strict_mode(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::is_strict_mode)
 {
     return JS::Value(interpreter.in_strict_mode());
 }

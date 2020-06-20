@@ -48,9 +48,9 @@ ErrorPrototype::~ErrorPrototype()
 {
 }
 
-Value ErrorPrototype::name_getter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ErrorPrototype::name_getter)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_error())
@@ -58,9 +58,9 @@ Value ErrorPrototype::name_getter(Interpreter& interpreter)
     return js_string(interpreter, static_cast<const Error*>(this_object)->name());
 }
 
-void ErrorPrototype::name_setter(Interpreter& interpreter, Value value)
+JS_DEFINE_NATIVE_SETTER(ErrorPrototype::name_setter)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return;
     if (!this_object->is_error()) {
@@ -73,9 +73,9 @@ void ErrorPrototype::name_setter(Interpreter& interpreter, Value value)
     static_cast<Error*>(this_object)->set_name(name);
 }
 
-Value ErrorPrototype::message_getter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(ErrorPrototype::message_getter)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (!this_object->is_error())
@@ -83,11 +83,11 @@ Value ErrorPrototype::message_getter(Interpreter& interpreter)
     return js_string(interpreter, static_cast<const Error*>(this_object)->message());
 }
 
-Value ErrorPrototype::to_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
-    if (!interpreter.this_value(interpreter.global_object()).is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, interpreter.this_value(interpreter.global_object()).to_string_without_side_effects().characters());
-    auto& this_object = interpreter.this_value(interpreter.global_object()).as_object();
+    if (!interpreter.this_value(global_object).is_object())
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, interpreter.this_value(global_object).to_string_without_side_effects().characters());
+    auto& this_object = interpreter.this_value(global_object).as_object();
 
     String name = "Error";
     auto name_property = this_object.get("name");

@@ -70,7 +70,7 @@ static HTMLCanvasElement* impl_from(JS::Interpreter& interpreter)
     return &static_cast<HTMLCanvasElementWrapper*>(this_object)->node();
 }
 
-JS::Value HTMLCanvasElementWrapper::get_context(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(HTMLCanvasElementWrapper::get_context)
 {
     auto* impl = impl_from(interpreter);
     if (!impl)
@@ -84,14 +84,14 @@ JS::Value HTMLCanvasElementWrapper::get_context(JS::Interpreter& interpreter)
     return wrap(interpreter.heap(), *context);
 }
 
-JS::Value HTMLCanvasElementWrapper::width_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(HTMLCanvasElementWrapper::width_getter)
 {
     if (auto* impl = impl_from(interpreter))
         return JS::Value(impl->requested_width());
     return {};
 }
 
-JS::Value HTMLCanvasElementWrapper::height_getter(JS::Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(HTMLCanvasElementWrapper::height_getter)
 {
     if (auto* impl = impl_from(interpreter))
         return JS::Value(impl->requested_height());

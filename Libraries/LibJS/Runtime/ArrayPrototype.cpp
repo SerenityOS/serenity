@@ -139,10 +139,10 @@ static void for_each_item(Interpreter& interpreter, GlobalObject& global_object,
     }
 }
 
-Value ArrayPrototype::filter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
 {
-    auto* new_array = Array::create(interpreter.global_object());
-    for_each_item(interpreter, interpreter.global_object(), "filter", [&](auto, auto value, auto callback_result) {
+    auto* new_array = Array::create(global_object);
+    for_each_item(interpreter, global_object, "filter", [&](auto, auto value, auto callback_result) {
         if (callback_result.to_boolean())
             new_array->indexed_properties().append(value);
         return IterationDecision::Continue;
@@ -150,25 +150,25 @@ Value ArrayPrototype::filter(Interpreter& interpreter)
     return Value(new_array);
 }
 
-Value ArrayPrototype::for_each(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
 {
-    for_each_item(interpreter, interpreter.global_object(), "forEach", [](auto, auto, auto) {
+    for_each_item(interpreter, global_object, "forEach", [](auto, auto, auto) {
         return IterationDecision::Continue;
     });
     return js_undefined();
 }
 
-Value ArrayPrototype::map(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     auto initial_length = get_length(interpreter, *this_object);
     if (interpreter.exception())
         return {};
-    auto* new_array = Array::create(interpreter.global_object());
+    auto* new_array = Array::create(global_object);
     new_array->indexed_properties().set_array_like_size(initial_length);
-    for_each_item(interpreter, interpreter.global_object(), "map", [&](auto index, auto, auto callback_result) {
+    for_each_item(interpreter, global_object, "map", [&](auto index, auto, auto callback_result) {
         new_array->put(index, callback_result);
         if (interpreter.exception())
             return IterationDecision::Break;
@@ -177,9 +177,9 @@ Value ArrayPrototype::map(Interpreter& interpreter)
     return Value(new_array);
 }
 
-Value ArrayPrototype::push(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (this_object->is_array()) {
@@ -207,9 +207,9 @@ Value ArrayPrototype::push(Interpreter& interpreter)
     return new_length_value;
 }
 
-Value ArrayPrototype::unshift(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 {
-    auto* array = array_from(interpreter, interpreter.global_object());
+    auto* array = array_from(interpreter, global_object);
     if (!array)
         return {};
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
@@ -217,9 +217,9 @@ Value ArrayPrototype::unshift(Interpreter& interpreter)
     return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
 }
 
-Value ArrayPrototype::pop(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     if (this_object->is_array()) {
@@ -246,9 +246,9 @@ Value ArrayPrototype::pop(Interpreter& interpreter)
     return element;
 }
 
-Value ArrayPrototype::shift(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
 {
-    auto* array = array_from(interpreter, interpreter.global_object());
+    auto* array = array_from(interpreter, global_object);
     if (!array)
         return {};
     if (array->indexed_properties().is_empty())
@@ -259,22 +259,22 @@ Value ArrayPrototype::shift(Interpreter& interpreter)
     return result.value.value_or(js_undefined());
 }
 
-Value ArrayPrototype::to_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     auto join_function = this_object->get("join");
     if (interpreter.exception())
         return {};
     if (!join_function.is_function())
-        return ObjectPrototype::to_string(interpreter);
+        return ObjectPrototype::to_string(interpreter, global_object);
     return interpreter.call(join_function.as_function(), this_object);
 }
 
-Value ArrayPrototype::to_locale_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     String separator = ","; // NOTE: This is implementation-specific.
@@ -303,9 +303,9 @@ Value ArrayPrototype::to_locale_string(Interpreter& interpreter)
     return js_string(interpreter, builder.to_string());
 }
 
-Value ArrayPrototype::join(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     String separator = ",";
@@ -334,13 +334,13 @@ Value ArrayPrototype::join(Interpreter& interpreter)
     return js_string(interpreter, builder.to_string());
 }
 
-Value ArrayPrototype::concat(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 {
-    auto* array = array_from(interpreter, interpreter.global_object());
+    auto* array = array_from(interpreter, global_object);
     if (!array)
         return {};
 
-    auto* new_array = Array::create(interpreter.global_object());
+    auto* new_array = Array::create(global_object);
     new_array->indexed_properties().append_all(array, array->indexed_properties());
     if (interpreter.exception())
         return {};
@@ -360,13 +360,13 @@ Value ArrayPrototype::concat(Interpreter& interpreter)
     return Value(new_array);
 }
 
-Value ArrayPrototype::slice(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 {
-    auto* array = array_from(interpreter, interpreter.global_object());
+    auto* array = array_from(interpreter, global_object);
     if (!array)
         return {};
 
-    auto* new_array = Array::create(interpreter.global_object());
+    auto* new_array = Array::create(global_object);
     if (interpreter.argument_count() == 0) {
         new_array->indexed_properties().append_all(array, array->indexed_properties());
         if (interpreter.exception())
@@ -405,9 +405,9 @@ Value ArrayPrototype::slice(Interpreter& interpreter)
     return new_array;
 }
 
-Value ArrayPrototype::index_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -436,9 +436,9 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
     return Value(-1);
 }
 
-Value ArrayPrototype::reduce(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
 
@@ -495,9 +495,9 @@ Value ArrayPrototype::reduce(Interpreter& interpreter)
     return accumulator;
 }
 
-Value ArrayPrototype::reduce_right(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
 
@@ -554,9 +554,9 @@ Value ArrayPrototype::reduce_right(Interpreter& interpreter)
     return accumulator;
 }
 
-Value ArrayPrototype::reverse(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
 {
-    auto* array = array_from(interpreter, interpreter.global_object());
+    auto* array = array_from(interpreter, global_object);
     if (!array)
         return {};
 
@@ -578,9 +578,9 @@ Value ArrayPrototype::reverse(Interpreter& interpreter)
     return array;
 }
 
-Value ArrayPrototype::last_index_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -609,9 +609,9 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
     return Value(-1);
 }
 
-Value ArrayPrototype::includes(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
     i32 length = get_length(interpreter, *this_object);
@@ -640,11 +640,11 @@ Value ArrayPrototype::includes(Interpreter& interpreter)
     return Value(false);
 }
 
-Value ArrayPrototype::find(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
 {
     auto result = js_undefined();
     for_each_item(
-        interpreter, interpreter.global_object(), "find", [&](auto, auto value, auto callback_result) {
+        interpreter, global_object, "find", [&](auto, auto value, auto callback_result) {
             if (callback_result.to_boolean()) {
                 result = value;
                 return IterationDecision::Break;
@@ -655,11 +655,11 @@ Value ArrayPrototype::find(Interpreter& interpreter)
     return result;
 }
 
-Value ArrayPrototype::find_index(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
 {
     auto result_index = -1;
     for_each_item(
-        interpreter, interpreter.global_object(), "findIndex", [&](auto index, auto, auto callback_result) {
+        interpreter, global_object, "findIndex", [&](auto index, auto, auto callback_result) {
             if (callback_result.to_boolean()) {
                 result_index = index;
                 return IterationDecision::Break;
@@ -670,10 +670,10 @@ Value ArrayPrototype::find_index(Interpreter& interpreter)
     return Value(result_index);
 }
 
-Value ArrayPrototype::some(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
 {
     auto result = false;
-    for_each_item(interpreter, interpreter.global_object(), "some", [&](auto, auto, auto callback_result) {
+    for_each_item(interpreter, global_object, "some", [&](auto, auto, auto callback_result) {
         if (callback_result.to_boolean()) {
             result = true;
             return IterationDecision::Break;
@@ -683,10 +683,10 @@ Value ArrayPrototype::some(Interpreter& interpreter)
     return Value(result);
 }
 
-Value ArrayPrototype::every(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
 {
     auto result = true;
-    for_each_item(interpreter, interpreter.global_object(), "every", [&](auto, auto, auto callback_result) {
+    for_each_item(interpreter, global_object, "every", [&](auto, auto, auto callback_result) {
         if (!callback_result.to_boolean()) {
             result = false;
             return IterationDecision::Break;
@@ -696,9 +696,9 @@ Value ArrayPrototype::every(Interpreter& interpreter)
     return Value(result);
 }
 
-Value ArrayPrototype::splice(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
 
@@ -736,7 +736,7 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
     if (new_length > MAX_ARRAY_LIKE_INDEX)
         return interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
 
-    auto removed_elements = Array::create(interpreter.global_object());
+    auto removed_elements = Array::create(global_object);
 
     for (size_t i = 0; i < actual_delete_count; ++i) {
         auto value = this_object->get(actual_start + i);
@@ -799,9 +799,9 @@ Value ArrayPrototype::splice(Interpreter& interpreter)
     return removed_elements;
 }
 
-Value ArrayPrototype::fill(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
 {
-    auto* this_object = interpreter.this_value(interpreter.global_object()).to_object(interpreter);
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter);
     if (!this_object)
         return {};
 

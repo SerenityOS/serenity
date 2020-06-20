@@ -42,8 +42,8 @@ private:
     virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "StringConstructor"; }
 
-    static Value raw(Interpreter&);
-    static Value from_char_code(Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(raw);
+    JS_DECLARE_NATIVE_FUNCTION(from_char_code);
 };
 
 }

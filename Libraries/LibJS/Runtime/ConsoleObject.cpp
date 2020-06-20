@@ -53,47 +53,47 @@ ConsoleObject::~ConsoleObject()
 {
 }
 
-Value ConsoleObject::log(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::log)
 {
     return interpreter.console().log();
 }
 
-Value ConsoleObject::debug(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::debug)
 {
     return interpreter.console().debug();
 }
 
-Value ConsoleObject::info(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::info)
 {
     return interpreter.console().info();
 }
 
-Value ConsoleObject::warn(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::warn)
 {
     return interpreter.console().warn();
 }
 
-Value ConsoleObject::error(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::error)
 {
     return interpreter.console().error();
 }
 
-Value ConsoleObject::trace(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::trace)
 {
     return interpreter.console().trace();
 }
 
-Value ConsoleObject::count(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::count)
 {
     return interpreter.console().count();
 }
 
-Value ConsoleObject::count_reset(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::count_reset)
 {
     return interpreter.console().count_reset();
 }
 
-Value ConsoleObject::clear(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::clear)
 {
     return interpreter.console().clear();
 }

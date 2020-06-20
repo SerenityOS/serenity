@@ -42,31 +42,31 @@ public:
 private:
     virtual const char* class_name() const override { return "CanvasRenderingContext2DWrapper"; }
 
-    static JS::Value fill_rect(JS::Interpreter&);
-    static JS::Value stroke_rect(JS::Interpreter&);
-    static JS::Value draw_image(JS::Interpreter&);
-    static JS::Value scale(JS::Interpreter&);
-    static JS::Value translate(JS::Interpreter&);
-    static JS::Value begin_path(JS::Interpreter&);
-    static JS::Value close_path(JS::Interpreter&);
-    static JS::Value stroke(JS::Interpreter&);
-    static JS::Value fill(JS::Interpreter&);
-    static JS::Value move_to(JS::Interpreter&);
-    static JS::Value line_to(JS::Interpreter&);
-    static JS::Value quadratic_curve_to(JS::Interpreter&);
-    static JS::Value create_image_data(JS::Interpreter&);
-    static JS::Value put_image_data(JS::Interpreter&);
+    JS_DECLARE_NATIVE_FUNCTION(fill_rect);
+    JS_DECLARE_NATIVE_FUNCTION(stroke_rect);
+    JS_DECLARE_NATIVE_FUNCTION(draw_image);
+    JS_DECLARE_NATIVE_FUNCTION(scale);
+    JS_DECLARE_NATIVE_FUNCTION(translate);
+    JS_DECLARE_NATIVE_FUNCTION(begin_path);
+    JS_DECLARE_NATIVE_FUNCTION(close_path);
+    JS_DECLARE_NATIVE_FUNCTION(stroke);
+    JS_DECLARE_NATIVE_FUNCTION(fill);
+    JS_DECLARE_NATIVE_FUNCTION(move_to);
+    JS_DECLARE_NATIVE_FUNCTION(line_to);
+    JS_DECLARE_NATIVE_FUNCTION(quadratic_curve_to);
+    JS_DECLARE_NATIVE_FUNCTION(create_image_data);
+    JS_DECLARE_NATIVE_FUNCTION(put_image_data);
 
-    static JS::Value fill_style_getter(JS::Interpreter&);
-    static void fill_style_setter(JS::Interpreter&, JS::Value);
+    JS_DECLARE_NATIVE_GETTER(fill_style_getter);
+    JS_DECLARE_NATIVE_SETTER(fill_style_setter);
 
-    static JS::Value stroke_style_getter(JS::Interpreter&);
-    static void stroke_style_setter(JS::Interpreter&, JS::Value);
+    JS_DECLARE_NATIVE_GETTER(stroke_style_getter);
+    JS_DECLARE_NATIVE_SETTER(stroke_style_setter);
 
-    static void line_width_setter(JS::Interpreter&, JS::Value);
-    static JS::Value line_width_getter(JS::Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(line_width_getter);
+    JS_DECLARE_NATIVE_SETTER(line_width_setter);
 
-    static JS::Value canvas_getter(JS::Interpreter&);
+    JS_DECLARE_NATIVE_GETTER(canvas_getter);
 
     NonnullRefPtr<CanvasRenderingContext2D> m_impl;
 };

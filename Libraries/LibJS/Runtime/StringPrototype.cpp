@@ -88,7 +88,7 @@ StringPrototype::~StringPrototype()
 {
 }
 
-Value StringPrototype::char_at(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -104,7 +104,7 @@ Value StringPrototype::char_at(Interpreter& interpreter)
     return js_string(interpreter, string.substring(index, 1));
 }
 
-Value StringPrototype::repeat(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -127,7 +127,7 @@ Value StringPrototype::repeat(Interpreter& interpreter)
     return js_string(interpreter, builder.to_string());
 }
 
-Value StringPrototype::starts_with(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -154,7 +154,7 @@ Value StringPrototype::starts_with(Interpreter& interpreter)
     return Value(string.substring(start, search_string_length) == search_string);
 }
 
-Value StringPrototype::index_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -165,7 +165,7 @@ Value StringPrototype::index_of(Interpreter& interpreter)
     return Value((i32)string.index_of(needle).value_or(-1));
 }
 
-Value StringPrototype::to_lowercase(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -173,7 +173,7 @@ Value StringPrototype::to_lowercase(Interpreter& interpreter)
     return js_string(interpreter, string.to_lowercase());
 }
 
-Value StringPrototype::to_uppercase(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -181,7 +181,7 @@ Value StringPrototype::to_uppercase(Interpreter& interpreter)
     return js_string(interpreter, string.to_uppercase());
 }
 
-Value StringPrototype::length_getter(Interpreter& interpreter)
+JS_DEFINE_NATIVE_GETTER(StringPrototype::length_getter)
 {
     auto* string_object = string_object_from(interpreter);
     if (!string_object)
@@ -189,7 +189,7 @@ Value StringPrototype::length_getter(Interpreter& interpreter)
     return Value((i32)string_object->primitive_string().string().length());
 }
 
-Value StringPrototype::to_string(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 {
     auto* string_object = string_object_from(interpreter);
     if (!string_object)
@@ -231,7 +231,7 @@ static Value pad_string(Interpreter& interpreter, const String& string, PadPlace
     return js_string(interpreter, String::format("%s%s", string.characters(), filler.characters()));
 }
 
-Value StringPrototype::pad_start(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -239,7 +239,7 @@ Value StringPrototype::pad_start(Interpreter& interpreter)
     return pad_string(interpreter, string, PadPlacement::Start);
 }
 
-Value StringPrototype::pad_end(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -247,7 +247,7 @@ Value StringPrototype::pad_end(Interpreter& interpreter)
     return pad_string(interpreter, string, PadPlacement::End);
 }
 
-Value StringPrototype::trim(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -255,7 +255,7 @@ Value StringPrototype::trim(Interpreter& interpreter)
     return js_string(interpreter, string.trim_whitespace(String::TrimMode::Both));
 }
 
-Value StringPrototype::trim_start(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -263,7 +263,7 @@ Value StringPrototype::trim_start(Interpreter& interpreter)
     return js_string(interpreter, string.trim_whitespace(String::TrimMode::Left));
 }
 
-Value StringPrototype::trim_end(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -271,7 +271,7 @@ Value StringPrototype::trim_end(Interpreter& interpreter)
     return js_string(interpreter, string.trim_whitespace(String::TrimMode::Right));
 }
 
-Value StringPrototype::concat(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -287,7 +287,7 @@ Value StringPrototype::concat(Interpreter& interpreter)
     return js_string(interpreter, builder.to_string());
 }
 
-Value StringPrototype::substring(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -322,7 +322,7 @@ Value StringPrototype::substring(Interpreter& interpreter)
     return js_string(interpreter, string_part);
 }
 
-Value StringPrototype::includes(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -348,7 +348,7 @@ Value StringPrototype::includes(Interpreter& interpreter)
     return Value(substring_search.contains(search_string));
 }
 
-Value StringPrototype::slice(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
@@ -391,7 +391,7 @@ Value StringPrototype::slice(Interpreter& interpreter)
     return js_string(interpreter, string_part);
 }
 
-Value StringPrototype::last_index_of(Interpreter& interpreter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 {
     auto string = string_from(interpreter);
     if (string.is_null())
