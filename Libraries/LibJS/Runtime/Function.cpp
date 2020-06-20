@@ -82,7 +82,7 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
     auto all_bound_arguments = bound_arguments();
     all_bound_arguments.append(move(arguments));
 
-    return interpreter().heap().allocate<BoundFunction>(global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length, constructor_prototype);
+    return interpreter().heap().allocate<BoundFunction>(global_object(), global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length, constructor_prototype);
 }
 
 void Function::visit_children(Visitor& visitor)

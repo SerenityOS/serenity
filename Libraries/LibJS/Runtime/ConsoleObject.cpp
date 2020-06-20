@@ -35,8 +35,12 @@
 
 namespace JS {
 
-ConsoleObject::ConsoleObject()
-    : Object(interpreter().global_object().object_prototype())
+ConsoleObject::ConsoleObject(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void ConsoleObject::initialize(Interpreter&, GlobalObject&)
 {
     define_native_function("log", log);
     define_native_function("debug", debug);

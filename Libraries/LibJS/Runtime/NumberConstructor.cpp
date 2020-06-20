@@ -42,15 +42,15 @@ NumberConstructor::NumberConstructor(GlobalObject& global_object)
 {
 }
 
-void NumberConstructor::initialize(Interpreter&, GlobalObject&)
+void NumberConstructor::initialize(Interpreter&, GlobalObject& global_object)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("isFinite", is_finite, 1, attr);
     define_native_function("isInteger", is_integer, 1, attr);
     define_native_function("isNaN", is_nan, 1, attr);
     define_native_function("isSafeInteger", is_safe_integer, 1, attr);
-    define_property("parseFloat", interpreter().global_object().get("parseFloat"));
-    define_property("prototype", interpreter().global_object().number_prototype(), 0);
+    define_property("parseFloat", global_object.get("parseFloat"));
+    define_property("prototype", global_object.number_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
     define_property("EPSILON", Value(EPSILON), 0);
     define_property("MAX_SAFE_INTEGER", Value(MAX_SAFE_INTEGER), 0);

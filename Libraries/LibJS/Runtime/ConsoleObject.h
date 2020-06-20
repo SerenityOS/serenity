@@ -32,7 +32,8 @@ namespace JS {
 
 class ConsoleObject final : public Object {
 public:
-    ConsoleObject();
+    explicit ConsoleObject(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ConsoleObject() override;
 
 private:

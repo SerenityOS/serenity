@@ -75,8 +75,12 @@ static void prepare_arguments_list(Interpreter& interpreter, Value value, Marked
     }
 }
 
-ReflectObject::ReflectObject()
-    : Object(interpreter().global_object().object_prototype())
+ReflectObject::ReflectObject(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void ReflectObject::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("apply", apply, 3, attr);

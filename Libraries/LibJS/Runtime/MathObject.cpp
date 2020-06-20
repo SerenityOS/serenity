@@ -34,8 +34,12 @@
 
 namespace JS {
 
-MathObject::MathObject()
-    : Object(interpreter().global_object().object_prototype())
+MathObject::MathObject(GlobalObject& global_object)
+    : Object(global_object.object_prototype())
+{
+}
+
+void MathObject::initialize(Interpreter&, GlobalObject&)
 {
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("abs", abs, 1, attr);
