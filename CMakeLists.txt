@@ -12,17 +12,19 @@ set(CMAKE_INSTALL_MESSAGE NEVER)
 
 enable_testing()
 
-add_custom_target(image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" ${CMAKE_SOURCE_DIR}/Meta/build-image-qemu.sh
-    BYPRODUCTS ${CMAKE_BINARY_DIR}/_disk_image
-    USES_TERMINAL
-)
-
 add_custom_target(run
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
     USES_TERMINAL
 )
 
+add_custom_target(image
+    DEPENDS qemu-image
+)
+add_custom_target(qemu-image
+    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" ${CMAKE_SOURCE_DIR}/Meta/build-image-qemu.sh
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/_disk_image
+    USES_TERMINAL
+)
 add_custom_target(grub-image
     COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" ${CMAKE_SOURCE_DIR}/Meta/build-image-grub.sh
     BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
