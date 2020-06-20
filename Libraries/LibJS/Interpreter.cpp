@@ -231,7 +231,7 @@ Value Interpreter::call(Function& function, Value this_value, Optional<MarkedVal
     return result;
 }
 
-Value Interpreter::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
+Value Interpreter::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject& global_object)
 {
     auto& call_frame = push_call_frame();
     call_frame.function_name = function.name();
@@ -239,7 +239,7 @@ Value Interpreter::construct(Function& function, Function& new_target, Optional<
         call_frame.arguments = arguments.value().values();
     call_frame.environment = function.create_environment();
 
-    auto* new_object = Object::create_empty(*this, global_object());
+    auto* new_object = Object::create_empty(*this, global_object);
     auto prototype = new_target.get("prototype");
     if (exception())
         return {};

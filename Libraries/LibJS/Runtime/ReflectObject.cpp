@@ -135,7 +135,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
         }
         new_target = &new_target_value.as_function();
     }
-    return interpreter.construct(*target, *new_target, move(arguments));
+    return interpreter.construct(*target, *new_target, move(arguments), global_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
