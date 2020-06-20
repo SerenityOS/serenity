@@ -388,7 +388,7 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
               << "getter=" << getter.to_string_without_side_effects() << ", "
               << "setter=" << setter.to_string_without_side_effects() << "}";
 
-        return define_property(property_name, Accessor::create(interpreter(), getter_function, setter_function), attributes, throw_exceptions);
+        return define_property(property_name, Accessor::create(interpreter(), global_object(), getter_function, setter_function), attributes, throw_exceptions);
     }
 
     auto value = descriptor.get("value");
