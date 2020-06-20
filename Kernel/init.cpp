@@ -25,7 +25,6 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/ACPI/DMIDecoder.h>
 #include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
@@ -228,13 +227,6 @@ void init_stage2()
     new PTYMultiplexer;
     new SB16;
     VMWareBackdoor::initialize();
-
-    bool dmi_unreliable = kernel_command_line().contains("dmi_unreliable");
-    if (dmi_unreliable) {
-        DMIDecoder::initialize_untrusted();
-    } else {
-        DMIDecoder::initialize();
-    }
 
     bool force_pio = kernel_command_line().contains("force_pio");
 
