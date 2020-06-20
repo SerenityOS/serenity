@@ -8,7 +8,7 @@ die() {
 }
 
 if [ "$(id -u)" != 0 ]; then
-    die "this script needs to run as root"
+    exec sudo -E -- "$0" "$@" || die "this script needs to run as root"
 fi
 
 grub=$(command -v grub-install 2>/dev/null) || true
