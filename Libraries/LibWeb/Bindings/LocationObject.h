@@ -34,7 +34,8 @@ namespace Bindings {
 
 class LocationObject final : public JS::Object {
 public:
-    LocationObject();
+    explicit LocationObject(JS::GlobalObject&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~LocationObject() override;
 
 private:

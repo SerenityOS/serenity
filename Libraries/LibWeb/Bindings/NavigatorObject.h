@@ -34,7 +34,8 @@ namespace Bindings {
 
 class NavigatorObject final : public JS::Object {
 public:
-    NavigatorObject();
+    NavigatorObject(JS::GlobalObject&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~NavigatorObject() override;
 
 private:

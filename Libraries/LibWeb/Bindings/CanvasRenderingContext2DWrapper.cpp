@@ -47,9 +47,13 @@ CanvasRenderingContext2DWrapper* wrap(JS::Heap& heap, CanvasRenderingContext2D& 
     return static_cast<CanvasRenderingContext2DWrapper*>(wrap_impl(heap, impl));
 }
 
-CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRenderingContext2D& impl)
-    : Wrapper(*interpreter().global_object().object_prototype())
+CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(JS::GlobalObject& global_object, CanvasRenderingContext2D& impl)
+    : Wrapper(*global_object.object_prototype())
     , m_impl(impl)
+{
+}
+
+void CanvasRenderingContext2DWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_native_function("fillRect", fill_rect, 4);
     define_native_function("scale", scale, 2);

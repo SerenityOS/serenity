@@ -40,8 +40,8 @@ EventWrapper* wrap(JS::Heap& heap, Event& event)
     return static_cast<EventWrapper*>(wrap_impl(heap, event));
 }
 
-EventWrapper::EventWrapper(Event& event)
-    : Wrapper(*interpreter().global_object().object_prototype())
+EventWrapper::EventWrapper(JS::GlobalObject& global_object, Event& event)
+    : Wrapper(*global_object.object_prototype())
     , m_event(event)
 {
 }

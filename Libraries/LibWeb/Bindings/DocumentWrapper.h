@@ -33,7 +33,8 @@ namespace Bindings {
 
 class DocumentWrapper : public NodeWrapper {
 public:
-    explicit DocumentWrapper(Document&);
+    DocumentWrapper(JS::GlobalObject&, Document&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~DocumentWrapper() override;
 
     Document& node();

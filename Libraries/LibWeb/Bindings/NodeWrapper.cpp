@@ -52,10 +52,14 @@ NodeWrapper* wrap(JS::Heap& heap, Node& node)
     return static_cast<NodeWrapper*>(wrap_impl(heap, node));
 }
 
-NodeWrapper::NodeWrapper(Node& node)
-    : EventTargetWrapper(node)
+NodeWrapper::NodeWrapper(JS::GlobalObject& global_object, Node& node)
+    : EventTargetWrapper(global_object, node)
 {
-    put("nodeName", JS::js_string(heap(), node.node_name()));
+}
+
+void NodeWrapper::initialize(JS::Interpreter& interpreter, JS::GlobalObject&)
+{
+    put("nodeName", JS::js_string(interpreter.heap(), node().node_name()));
 }
 
 NodeWrapper::~NodeWrapper()

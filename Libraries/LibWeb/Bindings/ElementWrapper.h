@@ -33,7 +33,8 @@ namespace Bindings {
 
 class ElementWrapper : public NodeWrapper {
 public:
-    explicit ElementWrapper(Element&);
+    ElementWrapper(JS::GlobalObject&, Element&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~ElementWrapper() override;
 
     Element& node();

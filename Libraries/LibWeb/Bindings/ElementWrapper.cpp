@@ -38,8 +38,12 @@
 namespace Web {
 namespace Bindings {
 
-ElementWrapper::ElementWrapper(Element& element)
-    : NodeWrapper(element)
+ElementWrapper::ElementWrapper(JS::GlobalObject& global_object, Element& element)
+    : NodeWrapper(global_object, element)
+{
+}
+
+void ElementWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_native_property("innerHTML", inner_html_getter, inner_html_setter);
     define_native_property("id", id_getter, id_setter);

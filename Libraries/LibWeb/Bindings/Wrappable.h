@@ -49,8 +49,10 @@ private:
 template<class NativeObject>
 inline Wrapper* wrap_impl(JS::Heap& heap, NativeObject& native_object)
 {
-    if (!native_object.wrapper())
-        native_object.set_wrapper(*heap.allocate<typename NativeObject::WrapperType>(heap.interpreter().global_object(), native_object));
+    if (!native_object.wrapper()) {
+        auto& global_object = heap.interpreter().global_object();
+        native_object.set_wrapper(*heap.allocate<typename NativeObject::WrapperType>(global_object, global_object, native_object));
+    }
     return native_object.wrapper();
 }
 

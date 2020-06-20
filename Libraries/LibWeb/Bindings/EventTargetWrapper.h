@@ -33,7 +33,8 @@ namespace Bindings {
 
 class EventTargetWrapper : public Wrapper {
 public:
-    explicit EventTargetWrapper(EventTarget&);
+    EventTargetWrapper(JS::GlobalObject&, EventTarget&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~EventTargetWrapper() override;
 
     EventTarget& impl() { return *m_impl; }

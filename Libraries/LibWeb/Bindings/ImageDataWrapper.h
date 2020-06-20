@@ -33,7 +33,8 @@ namespace Bindings {
 
 class ImageDataWrapper : public Wrapper {
 public:
-    explicit ImageDataWrapper(ImageData&);
+    ImageDataWrapper(JS::GlobalObject&, ImageData&);
+    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~ImageDataWrapper() override;
 
     ImageData& impl() { return m_impl; }

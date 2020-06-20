@@ -38,8 +38,12 @@
 namespace Web {
 namespace Bindings {
 
-HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
-    : ElementWrapper(element)
+HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(JS::GlobalObject& global_object, HTMLCanvasElement& element)
+    : ElementWrapper(global_object, element)
+{
+}
+
+void HTMLCanvasElementWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_native_function("getContext", get_context, 1);
 

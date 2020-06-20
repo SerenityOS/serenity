@@ -33,8 +33,8 @@
 namespace Web {
 namespace Bindings {
 
-EventListenerWrapper::EventListenerWrapper(EventListener& impl)
-    : Wrapper(*interpreter().global_object().object_prototype())
+EventListenerWrapper::EventListenerWrapper(JS::GlobalObject& global_object, EventListener& impl)
+    : Wrapper(*global_object.object_prototype())
     , m_impl(impl)
 {
 }

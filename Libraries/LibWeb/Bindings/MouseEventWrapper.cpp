@@ -35,8 +35,12 @@
 namespace Web {
 namespace Bindings {
 
-MouseEventWrapper::MouseEventWrapper(MouseEvent& event)
-    : EventWrapper(event)
+MouseEventWrapper::MouseEventWrapper(JS::GlobalObject& global_object, MouseEvent& event)
+    : EventWrapper(global_object, event)
+{
+}
+
+void MouseEventWrapper::initialize(JS::Interpreter&, JS::GlobalObject&)
 {
     define_native_property("offsetX", offset_x_getter, nullptr);
     define_native_property("offsetY", offset_y_getter, nullptr);
