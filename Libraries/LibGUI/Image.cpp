@@ -53,7 +53,7 @@ void Image::set_bitmap(const Gfx::Bitmap* bitmap)
         return;
 
     m_bitmap = bitmap;
-    if (m_auto_resize)
+    if (m_bitmap && m_auto_resize)
         set_preferred_size(m_bitmap->width(), m_bitmap->height());
 
     update();
