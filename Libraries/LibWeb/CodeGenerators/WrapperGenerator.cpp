@@ -376,6 +376,7 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/Bindings/NodeWrapperFactory.h>";
     out() << "#include <LibWeb/Bindings/" << wrapper_class << ".h>";
     out() << "#include <LibWeb/DOM/Element.h>";
+    out() << "#include <LibWeb/DOM/HTMLElement.h>";
 
     out() << "namespace Web {";
     out() << "namespace Bindings {";

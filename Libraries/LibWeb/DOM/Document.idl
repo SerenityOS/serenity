@@ -5,4 +5,6 @@ interface Document : Node {
     ArrayFromVector querySelectorAll(DOMString selectors);
     Element createElement(DOMString tagName);
 
+    readonly attribute HTMLElement? body;
+
 }

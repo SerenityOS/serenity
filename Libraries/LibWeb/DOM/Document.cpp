@@ -138,7 +138,7 @@ const HTMLHeadElement* Document::head() const
     return html->first_child_of_type<HTMLHeadElement>();
 }
 
-const HTMLBodyElement* Document::body() const
+const HTMLElement* Document::body() const
 {
     auto* html = document_element();
     if (!html)
