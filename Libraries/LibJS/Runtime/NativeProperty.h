@@ -36,8 +36,8 @@ public:
     NativeProperty(AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter);
     virtual ~NativeProperty() override;
 
-    Value get(Interpreter&) const;
-    void set(Interpreter&, Value);
+    Value get(Interpreter&, GlobalObject&) const;
+    void set(Interpreter&, GlobalObject&, Value);
 
 private:
     virtual bool is_native_property() const override { return true; }

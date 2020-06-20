@@ -40,18 +40,18 @@ NativeProperty::~NativeProperty()
 {
 }
 
-Value NativeProperty::get(Interpreter& interpreter) const
+Value NativeProperty::get(Interpreter& interpreter, GlobalObject& global_object) const
 {
     if (!m_getter)
         return js_undefined();
-    return m_getter(interpreter, global_object());
+    return m_getter(interpreter, global_object);
 }
 
-void NativeProperty::set(Interpreter& interpreter, Value value)
+void NativeProperty::set(Interpreter& interpreter, GlobalObject& global_object, Value value)
 {
     if (!m_setter)
         return;
-    m_setter(interpreter, global_object(), move(value));
+    m_setter(interpreter, global_object, move(value));
 }
 
 }
