@@ -111,6 +111,8 @@ public:
     virtual bool is_symbol_object() const { return false; }
     virtual bool is_bigint_object() const { return false; }
 
+    virtual bool is_web_wrapper() const { return false; }
+
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_children(Cell::Visitor&) override;
 
