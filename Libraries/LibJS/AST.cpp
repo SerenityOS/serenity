@@ -103,7 +103,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         auto callee = this_value->get(member_expression.computed_property_name(interpreter, global_object)).value_or(js_undefined());
         return { this_value, callee };
     }
-    return { &interpreter.global_object(), m_callee->execute(interpreter, global_object) };
+    return { &global_object, m_callee->execute(interpreter, global_object) };
 }
 
 Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -171,7 +171,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     Object* new_object = nullptr;
     Value result;
     if (is_new_expression()) {
-        new_object = Object::create_empty(interpreter, interpreter.global_object());
+        new_object = Object::create_empty(interpreter, global_object);
         auto prototype = function.get("prototype");
         if (interpreter.exception())
             return {};
@@ -586,7 +586,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         // FIXME: Support deleting locals
         ASSERT(!reference.is_local_variable());
         if (reference.is_global_variable())
-            return interpreter.global_object().delete_property(reference.name());
+            return global_object.delete_property(reference.name());
         auto* base_object = reference.base().to_object(interpreter);
         if (!base_object)
             return {};
@@ -1492,7 +1492,7 @@ void ArrayExpression::dump(int indent) const
 
 Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    auto* array = Array::create(interpreter.global_object());
+    auto* array = Array::create(global_object);
     for (auto& element : m_elements) {
         auto value = Value();
         if (element) {
@@ -1578,7 +1578,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
     }
     auto& tag_function = tag.as_function();
     auto& expressions = m_template_literal->expressions();
-    auto* strings = Array::create(interpreter.global_object());
+    auto* strings = Array::create(global_object);
     MarkedValueList arguments(interpreter.heap());
     arguments.append(strings);
     for (size_t i = 0; i < expressions.size(); ++i) {

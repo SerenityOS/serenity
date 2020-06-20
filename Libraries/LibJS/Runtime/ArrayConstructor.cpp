@@ -54,7 +54,7 @@ ArrayConstructor::~ArrayConstructor()
 Value ArrayConstructor::call(Interpreter& interpreter)
 {
     if (interpreter.argument_count() <= 0)
-        return Array::create(interpreter.global_object());
+        return Array::create(global_object());
 
     if (interpreter.argument_count() == 1 && interpreter.argument(0).is_number()) {
         auto array_length_value = interpreter.argument(0);
@@ -62,12 +62,12 @@ Value ArrayConstructor::call(Interpreter& interpreter)
             interpreter.throw_exception<TypeError>(ErrorType::ArrayInvalidLength);
             return {};
         }
-        auto* array = Array::create(interpreter.global_object());
+        auto* array = Array::create(global_object());
         array->indexed_properties().set_array_like_size(array_length_value.as_i32());
         return array;
     }
 
-    auto* array = Array::create(interpreter.global_object());
+    auto* array = Array::create(global_object());
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
         array->indexed_properties().append(interpreter.argument(i));
     return array;
