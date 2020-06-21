@@ -1,0 +1,19 @@
+diff --git a/src/util.cc b/src/util.cc
+index ae94d34..72cf501 100644
+--- a/src/util.cc
++++ b/src/util.cc
+@@ -566,11 +566,14 @@ double GetLoadAverage() {
+ #else
+ double GetLoadAverage() {
+   double loadavg[3] = { 0.0f, 0.0f, 0.0f };
++  /*
++   * FIXME: serenity way of getting loadavg
+   if (getloadavg(loadavg, 3) < 0) {
+     // Maybe we should return an error here or the availability of
+     // getloadavg(3) should be checked when ninja is configured.
+     return -0.0f;
+   }
++  */
+   return loadavg[0];
+ }
+ #endif // _WIN32

@@ -1,0 +1,13 @@
+diff --git a/configure.py b/configure.py
+index a443748..064e9df 100755
+--- a/configure.py
++++ b/configure.py
+@@ -657,7 +657,7 @@ n.build('all', 'phony', all_targets)
+ n.close()
+ print('wrote %s.' % BUILD_FILENAME)
+ 
+-if options.bootstrap:
++if options.bootstrap and False:
+     print('bootstrap complete.  rebuilding...')
+ 
+     rebuild_args = []
