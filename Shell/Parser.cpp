@@ -633,18 +633,24 @@ RefPtr<AST::Node> Parser::parse_evaluate()
         return nullptr;
 
     consume();
+    if (peek() == '(') {
+        consume();
+        auto inner = parse_pipe_sequence();
+        if (!inner || !expect(')'))
+            inner = create<AST::SyntaxError>();
+        else
+            inner = create<AST::Execute>(move(inner), true);
+        return inner;
+    }
     auto inner = parse_expression();
 
     if (!inner) {
         inner = create<AST::SyntaxError>();
     } else {
         if (inner->is_list()) {
-            auto execute_inner = create<AST::Execute>(move(inner));
-            execute_inner->capture_stdout();
+            auto execute_inner = create<AST::Execute>(move(inner), true);
             inner = execute_inner;
         } else {
-            // Trying to evaluate something other than a list
-            // FIXME: This bit be dynamic, what do?
             auto dyn_inner = create<AST::DynamicEvaluate>(move(inner));
             inner = dyn_inner;
         }
