@@ -253,13 +253,19 @@ Element& HTMLDocumentParser::node_before_current_node()
     return m_stack_of_open_elements.elements().at(m_stack_of_open_elements.elements().size() - 2);
 }
 
-RefPtr<Node> HTMLDocumentParser::find_appropriate_place_for_inserting_node()
+HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropriate_place_for_inserting_node()
 {
     auto& target = current_node();
-    if (m_foster_parenting) {
-        TODO();
+    if (m_foster_parenting && target.tag_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
+        // FIXME: There's a bunch of steps for <template> elements here.
+        auto last_table = m_stack_of_open_elements.last_element_with_tag_name(HTML::TagNames::table);
+        if (!last_table)
+            return { m_stack_of_open_elements.elements().first(), nullptr };
+        if (last_table->parent_node())
+            return { last_table->parent_node(), last_table };
+        return { m_stack_of_open_elements.element_before(*last_table), nullptr };
     }
-    return target;
+    return { target, nullptr };
 }
 
 NonnullRefPtr<Element> HTMLDocumentParser::create_element_for(HTMLToken& token)
@@ -276,7 +282,7 @@ RefPtr<Element> HTMLDocumentParser::insert_html_element(HTMLToken& token)
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     auto element = create_element_for(token);
     // FIXME: Check if it's possible to insert `element` at `adjusted_insertion_location`
-    adjusted_insertion_location->append_child(element);
+    adjusted_insertion_location.parent->insert_before(element, adjusted_insertion_location.insert_before_sibling);
     m_stack_of_open_elements.push(element);
     return element;
 }
@@ -332,7 +338,7 @@ void HTMLDocumentParser::insert_comment(HTMLToken& token)
 {
     auto data = token.m_comment_or_character.data.to_string();
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location->append_child(adopt(*new Comment(document(), data)));
+    adjusted_insertion_location.parent->insert_before(adopt(*new Comment(document(), data)), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLDocumentParser::handle_in_head(HTMLToken& token)
@@ -387,6 +393,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::noscript && !m_scripting_enabled) {
         insert_html_element(token);
         m_insertion_mode = InsertionMode::InHeadNoscript;
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::script) {
@@ -404,7 +411,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
             TODO();
         }
 
-        adjusted_insertion_location->append_child(element, false);
+        adjusted_insertion_location.parent->insert_before(element, adjusted_insertion_location.insert_before_sibling, false);
         m_stack_of_open_elements.push(element);
         m_tokenizer.switch_to({}, HTMLTokenizer::State::ScriptData);
         m_original_insertion_mode = m_insertion_mode;
@@ -495,12 +502,15 @@ void HTMLDocumentParser::parse_generic_raw_text_element(HTMLToken& token)
 Text* HTMLDocumentParser::find_character_insertion_node()
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    if (adjusted_insertion_location->is_document())
+    if (adjusted_insertion_location.insert_before_sibling) {
+        TODO();
+    }
+    if (adjusted_insertion_location.parent->is_document())
         return nullptr;
-    if (adjusted_insertion_location->last_child() && adjusted_insertion_location->last_child()->is_text())
-        return to<Text>(adjusted_insertion_location->last_child());
+    if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
+        return to<Text>(adjusted_insertion_location.parent->last_child());
     auto new_text_node = adopt(*new Text(document(), ""));
-    adjusted_insertion_location->append_child(new_text_node);
+    adjusted_insertion_location.parent->append_child(new_text_node);
     return new_text_node;
 }
 
@@ -577,6 +587,7 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
 
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_) {
         process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::body, HTML::TagNames::html, HTML::TagNames::br)) {
@@ -1423,6 +1434,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             PARSE_ERROR();
 
         insert_html_element(token);
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::rp, HTML::TagNames::rt)) {
@@ -1433,6 +1445,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             PARSE_ERROR();
 
         insert_html_element(token);
+        return;
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::math) {
