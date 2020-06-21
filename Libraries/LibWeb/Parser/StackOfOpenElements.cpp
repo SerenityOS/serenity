@@ -79,11 +79,7 @@ bool StackOfOpenElements::has_in_button_scope(const FlyString& tag_name) const
 
 bool StackOfOpenElements::has_in_table_scope(const FlyString& tag_name) const
 {
-    auto list = s_base_list;
-    list.append("html");
-    list.append("table");
-    list.append("template");
-    return has_in_scope_impl(tag_name, list);
+    return has_in_scope_impl(tag_name, { "html", "table", "template" });
 }
 
 bool StackOfOpenElements::has_in_list_item_scope(const FlyString& tag_name) const
@@ -96,10 +92,7 @@ bool StackOfOpenElements::has_in_list_item_scope(const FlyString& tag_name) cons
 
 bool StackOfOpenElements::has_in_select_scope(const FlyString& tag_name) const
 {
-    auto list = s_base_list;
-    list.append("option");
-    list.append("optgroup");
-    return has_in_scope_impl(tag_name, list);
+    return has_in_scope_impl(tag_name, { "option", "optgroup" });
 }
 
 bool StackOfOpenElements::contains(const Element& element) const
