@@ -100,6 +100,10 @@ private:
     void handle_in_select(HTMLToken&);
     void handle_in_caption(HTMLToken&);
     void handle_in_column_group(HTMLToken&);
+    void handle_in_template(HTMLToken&);
+    void handle_in_frameset(HTMLToken&);
+    void handle_after_frameset(HTMLToken&);
+    void handle_after_after_frameset(HTMLToken&);
 
     void stop_parsing() { m_stop_parsing = true; }
 
@@ -123,6 +127,10 @@ private:
     size_t script_nesting_level() const { return m_script_nesting_level; }
     void reset_the_insertion_mode_appropriately();
 
+    void adjust_mathml_attributes(HTMLToken&);
+    void adjust_svg_attributes(HTMLToken&);
+    void adjust_foreign_attributes(HTMLToken&);
+
     enum AdoptionAgencyAlgorithmOutcome {
         DoNothing,
         RunAnyOtherEndTagSteps,
@@ -138,6 +146,7 @@ private:
     InsertionMode m_original_insertion_mode { InsertionMode::Initial };
 
     StackOfOpenElements m_stack_of_open_elements;
+    Vector<InsertionMode> m_stack_of_template_insertion_modes;
     ListOfActiveFormattingElements m_list_of_active_formatting_elements;
 
     HTMLTokenizer m_tokenizer;

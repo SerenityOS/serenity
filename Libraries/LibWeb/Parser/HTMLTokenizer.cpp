@@ -1037,7 +1037,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.last().name_builder.append_codepoint(current_input_character.value());
+                    m_current_token.m_tag.attributes.last().local_name_builder.append_codepoint(current_input_character.value());
                     continue;
                 }
             }

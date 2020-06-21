@@ -87,6 +87,7 @@ void initialize();
     __ENUMERATE_HTML_TAG(html)       \
     __ENUMERATE_HTML_TAG(i)          \
     __ENUMERATE_HTML_TAG(iframe)     \
+    __ENUMERATE_HTML_TAG(image)      \
     __ENUMERATE_HTML_TAG(img)        \
     __ENUMERATE_HTML_TAG(input)      \
     __ENUMERATE_HTML_TAG(keygen)     \
@@ -95,6 +96,7 @@ void initialize();
     __ENUMERATE_HTML_TAG(listing)    \
     __ENUMERATE_HTML_TAG(main)       \
     __ENUMERATE_HTML_TAG(marquee)    \
+    __ENUMERATE_HTML_TAG(math)       \
     __ENUMERATE_HTML_TAG(menu)       \
     __ENUMERATE_HTML_TAG(meta)       \
     __ENUMERATE_HTML_TAG(nav)        \
@@ -110,6 +112,7 @@ void initialize();
     __ENUMERATE_HTML_TAG(param)      \
     __ENUMERATE_HTML_TAG(plaintext)  \
     __ENUMERATE_HTML_TAG(pre)        \
+    __ENUMERATE_HTML_TAG(ruby)       \
     __ENUMERATE_HTML_TAG(rb)         \
     __ENUMERATE_HTML_TAG(rp)         \
     __ENUMERATE_HTML_TAG(rt)         \
@@ -125,6 +128,7 @@ void initialize();
     __ENUMERATE_HTML_TAG(strong)     \
     __ENUMERATE_HTML_TAG(style)      \
     __ENUMERATE_HTML_TAG(summary)    \
+    __ENUMERATE_HTML_TAG(svg)        \
     __ENUMERATE_HTML_TAG(table)      \
     __ENUMERATE_HTML_TAG(tbody)      \
     __ENUMERATE_HTML_TAG(td)         \
