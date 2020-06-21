@@ -35,3 +35,5 @@ compile_commands.json
 .clang_complete
 *Endpoint.h
 Ports/packages.db
+.idea/
+cmake-build-debug/
