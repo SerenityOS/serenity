@@ -33,14 +33,14 @@ namespace Web {
 namespace Bindings {
 
 class LocationObject final : public JS::Object {
+    JS_OBJECT(LocationObject, JS::Object);
+
 public:
     explicit LocationObject(JS::GlobalObject&);
     virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~LocationObject() override;
 
 private:
-    virtual const char* class_name() const override { return "LocationObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(reload);
 
     JS_DECLARE_NATIVE_GETTER(href_getter);

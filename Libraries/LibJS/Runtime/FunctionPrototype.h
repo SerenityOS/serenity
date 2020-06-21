@@ -31,14 +31,14 @@
 namespace JS {
 
 class FunctionPrototype final : public Object {
+    JS_OBJECT(FunctionPrototype, Object);
+
 public:
     explicit FunctionPrototype(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~FunctionPrototype() override;
 
 private:
-    virtual const char* class_name() const override { return "FunctionPrototype"; }
-
     JS_DECLARE_NATIVE_FUNCTION(apply);
     JS_DECLARE_NATIVE_FUNCTION(bind);
     JS_DECLARE_NATIVE_FUNCTION(call);

@@ -31,6 +31,8 @@
 namespace JS {
 
 class ArrayConstructor final : public NativeFunction {
+    JS_OBJECT(ArrayConstructor, NativeFunction);
+
 public:
     explicit ArrayConstructor(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -41,7 +43,6 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "ArrayConstructor"; }
 
     JS_DECLARE_NATIVE_FUNCTION(is_array);
     JS_DECLARE_NATIVE_FUNCTION(of);

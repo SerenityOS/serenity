@@ -31,6 +31,8 @@
 namespace JS {
 
 class ObjectConstructor final : public NativeFunction {
+    JS_OBJECT(ObjectConstructor, NativeFunction);
+
 public:
     explicit ObjectConstructor(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -41,7 +43,6 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "ObjectConstructor"; }
 
     JS_DECLARE_NATIVE_FUNCTION(define_property_);
     JS_DECLARE_NATIVE_FUNCTION(is);

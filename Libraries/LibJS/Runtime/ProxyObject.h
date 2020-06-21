@@ -31,6 +31,8 @@
 namespace JS {
 
 class ProxyObject : public Object {
+    JS_OBJECT(ProxyObject, Object);
+
 public:
     static ProxyObject* create(GlobalObject&, Object& target, Object& handler);
 
@@ -56,7 +58,6 @@ public:
 
 private:
     virtual void visit_children(Visitor&) override;
-    virtual const char* class_name() const override { return "ProxyObject"; }
     virtual bool is_proxy_object() const override { return true; }
     virtual bool is_array() const override { return m_target.is_array(); };
 

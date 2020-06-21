@@ -32,6 +32,8 @@
 namespace JS {
 
 class Error : public Object {
+    JS_OBJECT(Error, Object);
+
 public:
     static Error* create(GlobalObject&, const FlyString& name, const String& message);
 
@@ -45,7 +47,6 @@ public:
 
 private:
     virtual bool is_error() const final { return true; }
-    virtual const char* class_name() const override { return "Error"; }
 
     FlyString m_name;
     String m_message;
@@ -53,14 +54,13 @@ private:
 
 #define DECLARE_ERROR_SUBCLASS(ClassName, snake_name, PrototypeName, ConstructorName) \
     class ClassName final : public Error {                                            \
+        JS_OBJECT(ClassName, Error);                                                  \
+                                                                                      \
     public:                                                                           \
         static ClassName* create(GlobalObject&, const String& message);               \
                                                                                       \
         ClassName(const String& message, Object& prototype);                          \
         virtual ~ClassName() override;                                                \
-                                                                                      \
-    private:                                                                          \
-        virtual const char* class_name() const override;                              \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \

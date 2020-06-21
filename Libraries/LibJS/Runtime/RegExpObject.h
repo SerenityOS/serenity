@@ -32,6 +32,8 @@
 namespace JS {
 
 class RegExpObject : public Object {
+    JS_OBJECT(RegExpObject, Object);
+
 public:
     static RegExpObject* create(GlobalObject&, String content, String flags);
 
@@ -44,7 +46,6 @@ public:
     Value to_string() const override;
 
 private:
-    virtual const char* class_name() const override { return "RegExpObject"; }
     virtual bool is_regexp_object() const override { return true; }
 
     String m_content;

@@ -31,6 +31,8 @@
 namespace JS {
 
 class BigIntConstructor final : public NativeFunction {
+    JS_OBJECT(BigIntConstructor, NativeFunction);
+
 public:
     explicit BigIntConstructor(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -41,7 +43,6 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "BigIntConstructor"; }
 
     JS_DECLARE_NATIVE_FUNCTION(as_int_n);
     JS_DECLARE_NATIVE_FUNCTION(as_uint_n);

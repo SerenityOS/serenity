@@ -33,14 +33,14 @@ namespace Web {
 namespace Bindings {
 
 class NavigatorObject final : public JS::Object {
+    JS_OBJECT(NavigatorObject, JS::Object);
+
 public:
     NavigatorObject(JS::GlobalObject&);
     virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
     virtual ~NavigatorObject() override;
 
 private:
-    virtual const char* class_name() const override { return "NavigatorObject"; }
-
     JS_DECLARE_NATIVE_GETTER(user_agent_getter);
 };
 

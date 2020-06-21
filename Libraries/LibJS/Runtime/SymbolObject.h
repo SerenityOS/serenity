@@ -32,6 +32,8 @@
 namespace JS {
 
 class SymbolObject : public Object {
+    JS_OBJECT(SymbolObject, Object);
+
 public:
     static SymbolObject* create(GlobalObject&, Symbol&);
 
@@ -70,7 +72,6 @@ public:
 
 private:
     virtual void visit_children(Visitor&) override;
-    virtual const char* class_name() const override { return "SymbolObject"; }
     virtual bool is_symbol_object() const override { return true; }
 
     Symbol& m_symbol;

@@ -31,14 +31,14 @@
 namespace JS {
 
 class ReflectObject final : public Object {
+    JS_OBJECT(ReflectObject, Object);
+
 public:
     explicit ReflectObject(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ReflectObject() override;
 
 private:
-    virtual const char* class_name() const override { return "ReflectObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(apply);
     JS_DECLARE_NATIVE_FUNCTION(construct);
     JS_DECLARE_NATIVE_FUNCTION(define_property);

@@ -31,14 +31,14 @@
 namespace JS {
 
 class SymbolPrototype final : public Object {
+    JS_OBJECT(SymbolPrototype, Object);
+
 public:
     explicit SymbolPrototype(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~SymbolPrototype() override;
 
 private:
-    virtual const char* class_name() const override { return "SymbolPrototype"; }
-
     JS_DECLARE_NATIVE_GETTER(description_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(to_string);

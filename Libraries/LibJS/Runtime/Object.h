@@ -39,6 +39,12 @@
 
 namespace JS {
 
+#define JS_OBJECT(class_, base_class)                                   \
+public:                                                                 \
+    using Base = base_class;                                            \
+    virtual const char* class_name() const override { return #class_; } \
+    virtual bool inherits(const StringView& class_name) const override { return class_name == #class_ || Base::inherits(class_name); }
+
 struct PropertyDescriptor {
     PropertyAttributes attributes;
     Value value;
@@ -59,6 +65,8 @@ public:
     explicit Object(Object* prototype);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~Object();
+
+    virtual bool inherits(const StringView& class_name) const { return class_name == this->class_name(); }
 
     enum class GetOwnPropertyMode {
         Key,
@@ -110,8 +118,6 @@ public:
     virtual bool is_number_object() const { return false; }
     virtual bool is_symbol_object() const { return false; }
     virtual bool is_bigint_object() const { return false; }
-
-    virtual bool is_web_wrapper() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_children(Cell::Visitor&) override;

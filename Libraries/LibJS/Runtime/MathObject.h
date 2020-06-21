@@ -31,14 +31,14 @@
 namespace JS {
 
 class MathObject final : public Object {
+    JS_OBJECT(MathObject, Object);
+
 public:
     explicit MathObject(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~MathObject() override;
 
 private:
-    virtual const char* class_name() const override { return "MathObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(abs);
     JS_DECLARE_NATIVE_FUNCTION(random);
     JS_DECLARE_NATIVE_FUNCTION(sqrt);

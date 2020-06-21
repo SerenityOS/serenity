@@ -31,6 +31,8 @@
 namespace JS {
 
 class ProxyConstructor final : public NativeFunction {
+    JS_OBJECT(ProxyConstructor, NativeFunction);
+
 public:
     explicit ProxyConstructor(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -41,7 +43,6 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "ProxyConstructor"; }
 };
 
 }

@@ -31,14 +31,14 @@
 namespace JS {
 
 class StringPrototype final : public StringObject {
+    JS_OBJECT(StringPrototype, StringObject);
+
 public:
     explicit StringPrototype(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~StringPrototype() override;
 
 private:
-    virtual const char* class_name() const override { return "StringPrototype"; }
-
     JS_DECLARE_NATIVE_FUNCTION(char_at);
     JS_DECLARE_NATIVE_FUNCTION(repeat);
     JS_DECLARE_NATIVE_FUNCTION(starts_with);

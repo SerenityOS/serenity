@@ -32,6 +32,8 @@
 namespace JS {
 
 class NativeProperty final : public Object {
+    JS_OBJECT(NativeProperty, Object);
+
 public:
     NativeProperty(AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter);
     virtual ~NativeProperty() override;
@@ -41,7 +43,6 @@ public:
 
 private:
     virtual bool is_native_property() const override { return true; }
-    virtual const char* class_name() const override { return "NativeProperty"; }
 
     AK::Function<Value(Interpreter&, GlobalObject&)> m_getter;
     AK::Function<void(Interpreter&, GlobalObject&, Value)> m_setter;

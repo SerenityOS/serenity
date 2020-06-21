@@ -32,14 +32,14 @@
 namespace JS {
 
 class ArrayPrototype final : public Object {
+    JS_OBJECT(ArrayPrototype, Object);
+
 public:
     ArrayPrototype(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ArrayPrototype() override;
 
 private:
-    virtual const char* class_name() const override { return "ArrayPrototype"; }
-
     JS_DECLARE_NATIVE_FUNCTION(filter);
     JS_DECLARE_NATIVE_FUNCTION(for_each);
     JS_DECLARE_NATIVE_FUNCTION(map);

@@ -31,6 +31,8 @@
 namespace JS {
 
 class NumberObject : public Object {
+    JS_OBJECT(NumberObject, Object);
+
 public:
     static NumberObject* create(GlobalObject&, double);
 
@@ -41,8 +43,6 @@ public:
     virtual Value value_of() const override { return Value(m_value); }
 
 private:
-    virtual const char* class_name() const override { return "NumberObject"; }
-
     double m_value { 0 };
 };
 

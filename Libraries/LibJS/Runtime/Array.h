@@ -31,6 +31,8 @@
 namespace JS {
 
 class Array final : public Object {
+    JS_OBJECT(Array, Object);
+
 public:
     static Array* create(GlobalObject&);
 
@@ -40,7 +42,6 @@ public:
     static Array* typed_this(Interpreter&, GlobalObject&);
 
 private:
-    virtual const char* class_name() const override { return "Array"; }
     virtual bool is_array() const override { return true; }
 
     JS_DECLARE_NATIVE_GETTER(length_getter);

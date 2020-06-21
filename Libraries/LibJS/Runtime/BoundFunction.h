@@ -31,6 +31,8 @@
 namespace JS {
 
 class BoundFunction final : public Function {
+    JS_OBJECT(BoundFunction, Function);
+
 public:
     BoundFunction(GlobalObject&, Function& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -56,7 +58,6 @@ public:
 
 private:
     virtual bool is_bound_function() const override { return true; }
-    virtual const char* class_name() const override { return "BoundFunction"; }
 
     Function* m_target_function = nullptr;
     Object* m_constructor_prototype = nullptr;

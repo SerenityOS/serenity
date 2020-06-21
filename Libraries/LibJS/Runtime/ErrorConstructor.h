@@ -32,6 +32,8 @@
 namespace JS {
 
 class ErrorConstructor final : public NativeFunction {
+    JS_OBJECT(ErrorConstructor, NativeFunction);
+
 public:
     explicit ErrorConstructor(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -42,11 +44,12 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "ErrorConstructor"; }
 };
 
 #define DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName) \
     class ConstructorName final : public NativeFunction {                                         \
+        JS_OBJECT(ConstructorName, NativeFunction);                                               \
+                                                                                                  \
     public:                                                                                       \
         explicit ConstructorName(GlobalObject&);                                                  \
         virtual void initialize(Interpreter&, GlobalObject&) override;                            \
@@ -56,7 +59,6 @@ private:
                                                                                                   \
     private:                                                                                      \
         virtual bool has_constructor() const override { return true; }                            \
-        virtual const char* class_name() const override { return #ClassName "Constructor"; }      \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
