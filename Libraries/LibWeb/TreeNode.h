@@ -110,6 +110,7 @@ public:
 
     void prepend_child(NonnullRefPtr<T> node);
     void append_child(NonnullRefPtr<T> node, bool notify = true);
+    void insert_before(NonnullRefPtr<T> node, RefPtr<T> child, bool notify = true);
     NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node);
     void donate_all_children_to(T& node);
 
@@ -244,6 +245,33 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool notify)
     m_last_child = node.ptr();
     if (!m_first_child)
         m_first_child = m_last_child;
+    if (notify)
+        node->inserted_into(static_cast<T&>(*this));
+    (void)node.leak_ref();
+
+    if (notify)
+        static_cast<T*>(this)->children_changed();
+}
+
+template<typename T>
+inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, bool notify)
+{
+    if (!child)
+        return append_child(move(node), notify);
+
+    ASSERT(!node->m_parent);
+    ASSERT(child->parent() == this);
+
+    if (!static_cast<T*>(this)->is_child_allowed(*node))
+        return;
+
+    node->m_previous_sibling = child->m_previous_sibling;
+    node->m_next_sibling = child;
+
+    if (m_first_child == child)
+        m_first_child = node;
+
+    node->m_parent = static_cast<T*>(this);
     if (notify)
         node->inserted_into(static_cast<T&>(*this));
     (void)node.leak_ref();
