@@ -41,7 +41,6 @@
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/Parser/HTMLParser.h>
 
 // #define EDITOR_DEBUG
 
@@ -173,22 +172,12 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 
     auto html_text = man_document->render_to_html();
 
-    auto html_document = Web::parse_html_document(html_text);
-    if (!html_document) {
-        dbg() << "failed to parse HTML";
-        return;
+    m_documentation_page_view->load_html(html_text, {});
+
+    if (auto* document = m_documentation_page_view->document()) {
+        const_cast<Web::HTMLElement*>(document->body())->set_attribute(Web::HTML::AttributeNames::style, "background-color: #dac7b5;");
     }
 
-    // FIXME: LibWeb needs a friendlier DOM manipulation API. Something like innerHTML :^)
-    auto style_element = create_element(*html_document, "style");
-    style_element->append_child(adopt(*new Web::Text(*html_document, "body { background-color: #dac7b5; }")));
-
-    // FIXME: This const_cast should not be necessary.
-    auto* head_element = const_cast<Web::HTMLHeadElement*>(html_document->head());
-    ASSERT(head_element);
-    head_element->append_child(style_element);
-
-    m_documentation_page_view->set_document(html_document);
     m_documentation_tooltip_window->move_to(screen_location.translated(4, 4));
     m_documentation_tooltip_window->show();
 
