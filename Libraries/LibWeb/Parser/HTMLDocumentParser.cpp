@@ -46,6 +46,13 @@
 
 namespace Web {
 
+RefPtr<Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
+{
+    HTMLDocumentParser parser(data, encoding);
+    parser.run(url);
+    return parser.document();
+}
+
 HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding)
     : m_tokenizer(input, encoding)
 {

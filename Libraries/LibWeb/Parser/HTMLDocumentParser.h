@@ -59,6 +59,8 @@
 
 namespace Web {
 
+RefPtr<Document> parse_html_document(const StringView&, const URL&, const String& encoding);
+
 class HTMLDocumentParser {
 public:
     HTMLDocumentParser(const StringView& input, const String& encoding);
