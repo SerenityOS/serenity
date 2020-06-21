@@ -8,4 +8,4 @@ Category=Graphics
 32x32=/res/icons/32x32/filetype-image.png
 
 [Launcher]
-FileTypes=png,gif
+FileTypes=pbm,png,gif
