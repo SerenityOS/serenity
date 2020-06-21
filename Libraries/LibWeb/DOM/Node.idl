@@ -9,5 +9,7 @@ interface Node : EventTarget {
     readonly attribute Element? parentElement;
 
     Node appendChild(Node node);
+    Node insertBefore(Node node, Node? child);
+
 }
 

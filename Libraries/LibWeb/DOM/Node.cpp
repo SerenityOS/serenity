@@ -200,4 +200,16 @@ RefPtr<Node> Node::append_child(NonnullRefPtr<Node> node, bool notify)
     return node;
 }
 
+RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify)
+{
+    if (!child)
+        return append_child(move(node), notify);
+    if (child->parent_node() != this) {
+        dbg() << "FIXME: Trying to insert_before() a bogus child";
+        return nullptr;
+    }
+    TreeNode<Node>::insert_before(node, child, notify);
+    return node;
+}
+
 }
