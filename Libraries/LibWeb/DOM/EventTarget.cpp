@@ -42,4 +42,11 @@ void EventTarget::add_event_listener(const FlyString& event_name, NonnullRefPtr<
     m_listeners.append({ event_name, move(listener) });
 }
 
+void EventTarget::remove_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
+{
+    m_listeners.remove_first_matching([&](auto& entry) {
+        return entry.event_name == event_name && &entry.listener->function() == &listener->function();
+    });
+}
+
 }
