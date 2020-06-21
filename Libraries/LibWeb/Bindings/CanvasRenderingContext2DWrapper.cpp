@@ -156,7 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(CanvasRenderingContext2DWrapper::draw_image)
     auto y = interpreter.argument(2).to_double(interpreter);
     if (interpreter.exception())
         return {};
-    impl->draw_image(static_cast<const HTMLImageElementWrapper&>(*image_argument).node(), x, y);
+    impl->draw_image(static_cast<const HTMLImageElementWrapper&>(*image_argument).impl(), x, y);
     return JS::js_undefined();
 }
 
