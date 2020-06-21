@@ -27,6 +27,7 @@
 #include "History.h"
 #include "ManualModel.h"
 #include <AK/ByteBuffer.h>
+#include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -42,10 +43,8 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/PageView.h>
 #include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Parser/CSSParser.h>
-#include <LibWeb/Parser/HTMLParser.h>
+#include <LibWeb/PageView.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
@@ -135,8 +134,7 @@ int main(int argc, char* argv[])
             html = md_document->render_to_html();
         }
 
-        auto html_document = Web::parse_html_document(html);
-        page_view.set_document(html_document);
+        page_view.load_html(html, URL::create_with_file_protocol(path));
 
         String page_and_section = model->page_and_section(tree_view.selection().first());
         window->set_title(String::format("%s - Help", page_and_section.characters()));
