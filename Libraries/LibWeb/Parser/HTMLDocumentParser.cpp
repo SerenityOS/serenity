@@ -1899,8 +1899,8 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
         || (token.is_end_tag() && token.tag_name() == HTML::TagNames::table)) {
 
         if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tbody)
-            || !m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::thead)
-            || !m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tfoot)) {
+            && !m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::thead)
+            && !m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tfoot)) {
             PARSE_ERROR();
             return;
         }
