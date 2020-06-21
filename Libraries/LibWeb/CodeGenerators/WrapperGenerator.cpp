@@ -34,15 +34,17 @@ static String snake_name(const StringView& title_name)
 {
     StringBuilder builder;
     bool first = true;
+    bool last_was_uppercase = false;
     for (auto ch : title_name) {
         if (isupper(ch)) {
-            if (!first)
+            if (!first && !last_was_uppercase)
                 builder.append('_');
             builder.append(tolower(ch));
         } else {
             builder.append(ch);
         }
         first = false;
+        last_was_uppercase = isupper(ch);
     }
     return builder.to_string();
 }
@@ -92,20 +94,6 @@ struct Interface {
     String wrapper_class;
     String wrapper_base_class;
 };
-
-static String snake_name(const StringView& camel_name)
-{
-    StringBuilder builder;
-    for (auto ch : camel_name) {
-        if (isupper(ch)) {
-            builder.append('_');
-            builder.append(tolower(ch));
-        } else {
-            builder.append(ch);
-        }
-    }
-    return builder.to_string();
-}
 
 OwnPtr<Interface> parse_interface(const StringView& input)
 {
@@ -422,9 +410,55 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "    return &static_cast<" << wrapper_class << "*>(this_object)->impl();";
     out() << "}";
 
+    auto generate_to_cpp = [&](auto& parameter, auto& js_name, auto& js_suffix, auto cpp_name, bool return_void = false) {
+        auto generate_return = [&] {
+            if (return_void)
+                out() << "        return;";
+            else
+                out() << "        return {};";
+        };
+        if (parameter.type.name == "DOMString") {
+            out() << "    auto " << cpp_name << " = " << js_name << js_suffix << ".to_string(interpreter);";
+            out() << "    if (interpreter.exception())";
+            generate_return();
+        } else if (parameter.type.name == "Node") {
+            out() << "    auto " << cpp_name << "_object = " << js_name << js_suffix << ".to_object(interpreter, global_object);";
+            out() << "    if (interpreter.exception())";
+            generate_return();
+            auto is_foo_wrapper_name = snake_name(String::format("Is%sWrapper", parameter.type.name.characters()));
+            out() << "    if (!" << cpp_name << "_object->is_web_wrapper() || !static_cast<Wrapper*>(" << cpp_name << "_object)->" << is_foo_wrapper_name << "()) {";
+            out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << parameter.type.name << "\");";
+            generate_return();
+            out() << "    }";
+            out() << "    auto& " << cpp_name << " = static_cast<" << parameter.type.name << "Wrapper*>(" << cpp_name << "_object)->impl();";
+        }
+    };
+
+    auto generate_arguments = [&](auto& parameters, auto& arguments_builder, bool return_void = false) {
+        Vector<String> parameter_names;
+        size_t argument_index = 0;
+        for (auto& parameter : parameters) {
+            parameter_names.append(snake_name(parameter.name));
+            out() << "    auto arg" << argument_index << " = interpreter.argument(" << argument_index << ");";
+            generate_to_cpp(parameter, "arg", argument_index, snake_name(parameter.name), return_void);
+            ++argument_index;
+        }
+
+        arguments_builder.join(", ", parameter_names);
+    };
+
     auto generate_return_statement = [&](auto& return_type) {
+        if (return_type.name == "void") {
+            out() << "    return JS::js_undefined();";
+            return;
+        }
+
         if (return_type.nullable) {
-            out() << "    if (!retval)";
+            if (return_type.name == "DOMString") {
+                out() << "    if (retval.is_null())";
+            } else {
+                out() << "    if (!retval)";
+            }
             out() << "        return JS::js_null();";
         }
 
@@ -445,7 +479,7 @@ void generate_implementation(const IDL::Interface& interface)
 
     // Implementation: Attributes
     for (auto& attribute : interface.attributes) {
-        out() << "JS_DEFINE_NATIVE_GETTER(" << wrapper_class << "::" << snake_name(attribute.name) << "_getter)";
+        out() << "JS_DEFINE_NATIVE_GETTER(" << wrapper_class << "::" << attribute.getter_callback_name << ")";
         out() << "{";
         out() << "    auto* impl = impl_from(interpreter, global_object);";
         out() << "    if (!impl)";
@@ -453,6 +487,19 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "    auto retval = impl->" << snake_name(attribute.name) << "();";
         generate_return_statement(attribute.type);
         out() << "}";
+
+        if (!attribute.readonly) {
+            out() << "JS_DEFINE_NATIVE_SETTER(" << wrapper_class << "::" << attribute.setter_callback_name << ")";
+            out() << "{";
+            out() << "    auto* impl = impl_from(interpreter, global_object);";
+            out() << "    if (!impl)";
+            out() << "        return;";
+
+            generate_to_cpp(attribute, "value", "", "cpp_value", true);
+
+            out() << "    impl->set_" << snake_name(attribute.name) << "(cpp_value);";
+            out() << "}";
+        }
     }
 
     // Implementation: Functions
@@ -465,27 +512,8 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "    if (interpreter.argument_count() < " << function.length() << ")";
         out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
 
-        Vector<String> parameter_names;
-        size_t argument_index = 0;
-        for (auto& parameter : function.parameters) {
-            parameter_names.append(snake_name(parameter.name));
-            if (parameter.type.name == "DOMString") {
-                out() << "    auto " << snake_name(parameter.name) << " = interpreter.argument(" << argument_index << ").to_string(interpreter);";
-                out() << "    if (interpreter.exception())";
-                out() << "        return {};";
-            } else if (parameter.type.name == "Node") {
-                out() << "    auto " << snake_name(parameter.name) << "_object = interpreter.argument(" << argument_index << ").to_object(interpreter, global_object);";
-                out() << "    if (interpreter.exception())";
-                out() << "        return {};";
-                out() << "    if (!" << snake_name(parameter.name) << "_object->is_web_wrapper() || !static_cast<Wrapper*>(" << snake_name(parameter.name) << "_object)->is_node_wrapper())";
-                out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << parameter.type.name << "\");";
-                out() << "    auto& " << snake_name(parameter.name) << " = static_cast<" << wrapper_class << "*>(" << snake_name(parameter.name) << "_object)->impl();";
-            }
-            ++argument_index;
-        }
-
         StringBuilder arguments_builder;
-        arguments_builder.join(", ", parameter_names);
+        generate_arguments(function.parameters, arguments_builder);
 
         if (function.return_type.name != "void") {
             out() << "    auto retval = impl->" << snake_name(function.name) << "(" << arguments_builder.to_string() << ");";

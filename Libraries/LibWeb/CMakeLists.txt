@@ -3,6 +3,7 @@ set(SOURCES
     Bindings/DocumentWrapper.cpp
     Bindings/DocumentWrapper.h
     Bindings/ElementWrapper.cpp
+    Bindings/ElementWrapper.h
     Bindings/EventListenerWrapper.cpp
     Bindings/EventTargetWrapper.cpp
     Bindings/EventWrapper.cpp
@@ -126,45 +127,29 @@ set(GENERATED_SOURCES
     ../../Services/ProtocolServer/ProtocolServerEndpoint.h
 )
 
-add_custom_command(
-    OUTPUT Bindings/NodeWrapper.h
-    COMMAND /bin/mkdir -p Bindings
-    COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/DOM/Node.idl > Bindings/NodeWrapper.h
-    VERBATIM
-    DEPENDS WrapperGenerator
-    MAIN_DEPENDENCY DOM/Node.idl
-)
-add_custom_target(generate_NodeWrapper.h DEPENDS Bindings/NodeWrapper.h)
+function(libweb_js_wrapper class)
+    add_custom_command(
+        OUTPUT Bindings/${class}Wrapper.h
+        COMMAND /bin/mkdir -p Bindings
+        COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/DOM/${class}.idl > Bindings/${class}Wrapper.h
+        VERBATIM
+        DEPENDS WrapperGenerator
+        MAIN_DEPENDENCY DOM/${class}.idl
+    )
+    add_custom_command(
+        OUTPUT Bindings/${class}Wrapper.cpp
+        COMMAND /bin/mkdir -p Bindings
+        COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/DOM/${class}.idl > Bindings/${class}Wrapper.cpp
+        VERBATIM
+        DEPENDS WrapperGenerator
+        MAIN_DEPENDENCY DOM/${class}.idl
+    )
+    add_custom_target(generate_${class}Wrapper.h DEPENDS Bindings/${class}Wrapper.h)
+endfunction()
 
-add_custom_command(
-    OUTPUT Bindings/NodeWrapper.cpp
-    COMMAND /bin/mkdir -p Bindings
-    COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/DOM/Node.idl > Bindings/NodeWrapper.cpp
-    VERBATIM
-    DEPENDS WrapperGenerator
-    MAIN_DEPENDENCY DOM/Node.idl
-)
-add_custom_target(generate_NodeWrapper.cpp DEPENDS Bindings/NodeWrapper.cpp)
-
-add_custom_command(
-    OUTPUT Bindings/DocumentWrapper.h
-    COMMAND /bin/mkdir -p Bindings
-    COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/DOM/Document.idl > Bindings/DocumentWrapper.h
-    VERBATIM
-    DEPENDS WrapperGenerator
-    MAIN_DEPENDENCY DOM/Document.idl
-)
-add_custom_target(generate_DocumentWrapper.h DEPENDS Bindings/DocumentWrapper.h)
-
-add_custom_command(
-    OUTPUT Bindings/DocumentWrapper.cpp
-    COMMAND /bin/mkdir -p Bindings
-    COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/DOM/Document.idl > Bindings/DocumentWrapper.cpp
-    VERBATIM
-    DEPENDS WrapperGenerator
-    MAIN_DEPENDENCY DOM/Document.idl
-)
-add_custom_target(generate_DocumentWrapper.cpp DEPENDS Bindings/DocumentWrapper.cpp)
+libweb_js_wrapper(Node)
+libweb_js_wrapper(Document)
+libweb_js_wrapper(Element)
 
 add_custom_command(
     OUTPUT CSS/PropertyID.h

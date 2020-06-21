@@ -40,6 +40,7 @@ class Wrapper
 public:
     virtual bool is_node_wrapper() const { return false; }
     virtual bool is_document_wrapper() const { return false; }
+    virtual bool is_element_wrapper() const { return false; }
 
 protected:
     explicit Wrapper(Object& prototype)
