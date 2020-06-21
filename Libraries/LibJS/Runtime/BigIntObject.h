@@ -32,6 +32,8 @@
 namespace JS {
 
 class BigIntObject final : public Object {
+    JS_OBJECT(BigIntObject, Object);
+
 public:
     static BigIntObject* create(GlobalObject&, BigInt&);
 
@@ -46,7 +48,6 @@ public:
 
 private:
     virtual void visit_children(Visitor&) override;
-    virtual const char* class_name() const override { return "BigIntObject"; }
     virtual bool is_bigint_object() const override { return true; }
 
     BigInt& m_bigint;

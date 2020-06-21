@@ -57,7 +57,6 @@ Error::~Error()
     {                                                                                                                     \
     }                                                                                                                     \
     ClassName::~ClassName() { }                                                                                           \
-    const char* ClassName::class_name() const { return #ClassName; }
 
 JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE

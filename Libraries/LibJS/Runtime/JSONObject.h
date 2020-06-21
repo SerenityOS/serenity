@@ -31,6 +31,8 @@
 namespace JS {
 
 class JSONObject final : public Object {
+    JS_OBJECT(JSONObject, Object);
+
 public:
     explicit JSONObject(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -44,8 +46,6 @@ private:
         String gap;
         Optional<Vector<String>> property_list;
     };
-
-    virtual const char* class_name() const override { return "JSONObject"; }
 
     // Stringify helpers
     static String serialize_json_property(Interpreter&, StringifyState&, const PropertyName& key, Object* holder);

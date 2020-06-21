@@ -32,6 +32,8 @@
 namespace JS {
 
 class Date final : public Object {
+    JS_OBJECT(Date, Object);
+
 public:
     static Date* create(GlobalObject&, Core::DateTime, u16 milliseconds);
 
@@ -57,7 +59,6 @@ public:
 
 private:
     virtual bool is_date() const final { return true; }
-    virtual const char* class_name() const override { return "Date"; }
 
     Core::DateTime m_datetime;
     u16 m_milliseconds;

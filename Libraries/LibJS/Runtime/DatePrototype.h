@@ -31,14 +31,13 @@
 namespace JS {
 
 class DatePrototype final : public Object {
+    JS_OBJECT(DatePrototype, Object);
 public:
     explicit DatePrototype(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~DatePrototype() override;
 
 private:
-    virtual const char* class_name() const override { return "DatePrototype"; }
-
     JS_DECLARE_NATIVE_FUNCTION(get_date);
     JS_DECLARE_NATIVE_FUNCTION(get_day);
     JS_DECLARE_NATIVE_FUNCTION(get_full_year);

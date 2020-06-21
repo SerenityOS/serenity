@@ -32,6 +32,8 @@
 namespace JS {
 
 class ScriptFunction final : public Function {
+    JS_OBJECT(ScriptFunction, Function);
+
 public:
     static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, bool is_arrow_function = false);
 
@@ -50,7 +52,6 @@ public:
 
 private:
     virtual bool is_script_function() const override { return true; }
-    virtual const char* class_name() const override { return "ScriptFunction"; }
     virtual LexicalEnvironment* create_environment() override;
     virtual void visit_children(Visitor&) override;
 

@@ -31,14 +31,14 @@
 namespace JS {
 
 class ConsoleObject final : public Object {
+    JS_OBJECT(ConsoleObject, Object);
+
 public:
     explicit ConsoleObject(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ConsoleObject() override;
 
 private:
-    virtual const char* class_name() const override { return "ConsoleObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(log);
     JS_DECLARE_NATIVE_FUNCTION(debug);
     JS_DECLARE_NATIVE_FUNCTION(info);

@@ -31,14 +31,14 @@
 namespace JS {
 
 class ErrorPrototype final : public Object {
+    JS_OBJECT(ErrorPrototype, Object);
+
 public:
     explicit ErrorPrototype(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~ErrorPrototype() override;
 
 private:
-    virtual const char* class_name() const override { return "ErrorPrototype"; }
-
     JS_DECLARE_NATIVE_FUNCTION(to_string);
 
     JS_DECLARE_NATIVE_GETTER(name_getter);
@@ -49,13 +49,12 @@ private:
 
 #define DECLARE_ERROR_SUBCLASS_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \
     class PrototypeName final : public Object {                                                 \
+        JS_OBJECT(PrototypeName, Object);                                                       \
+                                                                                                \
     public:                                                                                     \
         explicit PrototypeName(GlobalObject&);                                                  \
         virtual void initialize(Interpreter&, GlobalObject&) override { }                       \
         virtual ~PrototypeName() override;                                                      \
-                                                                                                \
-    private:                                                                                    \
-        virtual const char* class_name() const override;                                        \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \

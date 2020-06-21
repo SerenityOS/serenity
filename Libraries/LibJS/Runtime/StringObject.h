@@ -31,6 +31,8 @@
 namespace JS {
 
 class StringObject : public Object {
+    JS_OBJECT(StringObject, Object);
+
 public:
     static StringObject* create(GlobalObject&, PrimitiveString&);
 
@@ -45,7 +47,6 @@ public:
 
 private:
     virtual void visit_children(Visitor&) override;
-    virtual const char* class_name() const override { return "StringObject"; }
     virtual bool is_string_object() const override { return true; }
 
     PrimitiveString& m_string;

@@ -31,12 +31,11 @@
 namespace JS {
 
 class NumberPrototype final : public NumberObject {
+    JS_OBJECT(NumberPrototype, NumberObject);
+
 public:
     explicit NumberPrototype(GlobalObject&);
     virtual ~NumberPrototype() override;
-
-private:
-    virtual const char* class_name() const override { return "NumberPrototype"; }
 };
 
 }

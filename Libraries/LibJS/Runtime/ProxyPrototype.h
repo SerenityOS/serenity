@@ -31,12 +31,11 @@
 namespace JS {
 
 class ProxyPrototype final : public Object {
+    JS_OBJECT(ProxyPrototype, Object);
+
 public:
     explicit ProxyPrototype(GlobalObject&);
     virtual ~ProxyPrototype() override;
-
-private:
-    virtual const char* class_name() const override { return "ProxyPrototype"; }
 };
 
 }

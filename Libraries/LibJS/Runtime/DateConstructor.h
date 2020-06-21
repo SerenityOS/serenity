@@ -31,6 +31,8 @@
 namespace JS {
 
 class DateConstructor final : public NativeFunction {
+    JS_OBJECT(DateConstructor, NativeFunction);
+
 public:
     explicit DateConstructor(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -41,7 +43,6 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "DateConstructor"; }
 
     JS_DECLARE_NATIVE_FUNCTION(now);
 };

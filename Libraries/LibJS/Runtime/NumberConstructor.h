@@ -31,6 +31,8 @@
 namespace JS {
 
 class NumberConstructor final : public NativeFunction {
+    JS_OBJECT(NumberConstructor, NativeFunction);
+
 public:
     explicit NumberConstructor(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
@@ -41,7 +43,6 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "NumberConstructor"; }
 
     JS_DECLARE_NATIVE_FUNCTION(is_finite);
     JS_DECLARE_NATIVE_FUNCTION(is_integer);

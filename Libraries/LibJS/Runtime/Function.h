@@ -32,6 +32,8 @@
 namespace JS {
 
 class Function : public Object {
+    JS_OBJECT(Function, Object);
+
 public:
     virtual ~Function();
     virtual void initialize(Interpreter&, GlobalObject&) override { }
@@ -60,7 +62,6 @@ public:
 protected:
     explicit Function(Object& prototype);
     Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments);
-    virtual const char* class_name() const override { return "Function"; }
 
 private:
     virtual bool is_function() const final { return true; }

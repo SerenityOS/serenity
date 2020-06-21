@@ -32,6 +32,8 @@
 namespace JS {
 
 class GlobalObject : public Object {
+    JS_OBJECT(GlobalObject, Object);
+
 public:
     explicit GlobalObject();
     virtual void initialize();
@@ -53,8 +55,6 @@ protected:
     void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);
 
 private:
-    virtual const char* class_name() const override { return "GlobalObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(gc);
     JS_DECLARE_NATIVE_FUNCTION(is_nan);
     JS_DECLARE_NATIVE_FUNCTION(is_finite);

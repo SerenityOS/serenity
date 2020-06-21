@@ -31,6 +31,8 @@
 namespace JS {
 
 class Uint8ClampedArray final : public Object {
+    JS_OBJECT(Uint8ClampedArray, Object);
+
 public:
     static Uint8ClampedArray* create(GlobalObject&, u32 length);
 
@@ -46,8 +48,6 @@ public:
     const u8* data() const { return m_data; }
 
 private:
-    virtual const char* class_name() const override { return "Uint8ClampedArray"; }
-
     JS_DECLARE_NATIVE_GETTER(length_getter);
 
     u8* m_data { nullptr };

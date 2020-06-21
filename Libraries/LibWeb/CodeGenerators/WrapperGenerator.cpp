@@ -315,6 +315,7 @@ static void generate_header(const IDL::Interface& interface)
     out() << "namespace Bindings {";
 
     out() << "class " << wrapper_class << " : public " << wrapper_base_class << " {";
+    out() << "    JS_OBJECT(" << wrapper_class << ", " << wrapper_base_class << ");";
     out() << "public:";
     out() << "    " << wrapper_class << "(JS::GlobalObject&, " << interface.name << "&);";
     out() << "    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;";
@@ -332,7 +333,6 @@ static void generate_header(const IDL::Interface& interface)
     out() << "    virtual bool " << is_foo_wrapper_name << "() const final { return true; }";
 
     out() << "private:";
-    out() << "    virtual const char* class_name() const override { return \"" << interface.name << "\"; }";
 
     for (auto& function : interface.functions) {
         out() << "    JS_DECLARE_NATIVE_FUNCTION(" << snake_name(function.name) << ");";
@@ -412,8 +412,7 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);";
     out() << "    if (!this_object)";
     out() << "        return {};";
-    auto is_foo_wrapper_name = snake_name(String::format("Is%s", wrapper_class.characters()));
-    out() << "    if (!this_object->is_web_wrapper() || !static_cast<Wrapper*>(this_object)->" << is_foo_wrapper_name << "()) {";
+    out() << "    if (!this_object->inherits(\"" << wrapper_class << "\")) {";
     out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << interface.name << "\");";
     out() << "        return nullptr;";
     out() << "    }";
@@ -441,8 +440,7 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "    auto " << cpp_name << "_object = " << js_name << js_suffix << ".to_object(interpreter, global_object);";
             out() << "    if (interpreter.exception())";
             generate_return();
-            auto is_foo_wrapper_name = snake_name(String::format("Is%sWrapper", parameter.type.name.characters()));
-            out() << "    if (!" << cpp_name << "_object->is_web_wrapper() || !static_cast<Wrapper*>(" << cpp_name << "_object)->" << is_foo_wrapper_name << "()) {";
+            out() << "    if (!" << cpp_name << "_object->inherits(\"" << parameter.type.name << "Wrapper\")) {";
             out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << parameter.type.name << "\");";
             generate_return();
             out() << "    }";

@@ -37,20 +37,14 @@ namespace Bindings {
 class Wrapper
     : public JS::Object
     , public Weakable<Wrapper> {
-public:
-    virtual bool is_event_target_wrapper() const { return false; }
-    virtual bool is_node_wrapper() const { return false; }
-    virtual bool is_document_wrapper() const { return false; }
-    virtual bool is_element_wrapper() const { return false; }
-    virtual bool is_htmlelement_wrapper() const { return false; }
+    JS_OBJECT(Wrapper, JS::Object);
 
+public:
 protected:
     explicit Wrapper(Object& prototype)
         : Object(&prototype)
     {
     }
-
-    virtual bool is_web_wrapper() const final { return true; }
 };
 
 }

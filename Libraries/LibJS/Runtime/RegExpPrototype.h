@@ -31,12 +31,11 @@
 namespace JS {
 
 class RegExpPrototype final : public RegExpObject {
+    JS_OBJECT(RegExpPrototype, RegExpObject);
+
 public:
     explicit RegExpPrototype(GlobalObject&);
     virtual ~RegExpPrototype() override;
-
-private:
-    virtual const char* class_name() const override { return "RegExpPrototype"; }
 };
 
 }

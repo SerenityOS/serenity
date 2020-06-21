@@ -32,6 +32,8 @@
 namespace JS {
 
 class NativeFunction : public Function {
+    JS_OBJECT(NativeFunction, Function);
+
 public:
     static NativeFunction* create(Interpreter&, GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>);
 
@@ -51,7 +53,6 @@ protected:
 
 private:
     virtual bool is_native_function() const override { return true; }
-    virtual const char* class_name() const override { return "NativeFunction"; }
     virtual LexicalEnvironment* create_environment() override final { return nullptr; }
 
     FlyString m_name;

@@ -32,6 +32,7 @@ namespace Web {
 namespace Bindings {
 
 class CanvasRenderingContext2DWrapper final : public Wrapper {
+    JS_OBJECT(CanvasRenderingContext2DWrapper, Wrapper);
 public:
     CanvasRenderingContext2DWrapper(JS::GlobalObject&, CanvasRenderingContext2D&);
     virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
@@ -41,8 +42,6 @@ public:
     const CanvasRenderingContext2D& impl() const { return m_impl; }
 
 private:
-    virtual const char* class_name() const override { return "CanvasRenderingContext2DWrapper"; }
-
     JS_DECLARE_NATIVE_FUNCTION(fill_rect);
     JS_DECLARE_NATIVE_FUNCTION(stroke_rect);
     JS_DECLARE_NATIVE_FUNCTION(draw_image);

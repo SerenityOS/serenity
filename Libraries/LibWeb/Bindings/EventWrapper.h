@@ -32,6 +32,8 @@ namespace Web {
 namespace Bindings {
 
 class EventWrapper : public Wrapper {
+    JS_OBJECT(EventWrapper, Wrapper);
+
 public:
     EventWrapper(JS::GlobalObject&, Event&);
     virtual ~EventWrapper() override;
@@ -40,8 +42,6 @@ public:
     const Event& event() const { return m_event; }
 
 private:
-    virtual const char* class_name() const override { return "EventWrapper"; }
-
     NonnullRefPtr<Event> m_event;
 };
 

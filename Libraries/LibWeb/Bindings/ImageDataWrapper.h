@@ -32,6 +32,8 @@ namespace Web {
 namespace Bindings {
 
 class ImageDataWrapper : public Wrapper {
+    JS_OBJECT(ImageDataWrapper, Wrapper);
+
 public:
     ImageDataWrapper(JS::GlobalObject&, ImageData&);
     virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
@@ -41,8 +43,6 @@ public:
     const ImageData& impl() const { return m_impl; }
 
 private:
-    virtual const char* class_name() const override { return "ImageDataWrapper"; }
-
     JS_DECLARE_NATIVE_GETTER(width_getter);
     JS_DECLARE_NATIVE_GETTER(height_getter);
     JS_DECLARE_NATIVE_GETTER(data_getter);
