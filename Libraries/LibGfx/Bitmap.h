@@ -34,6 +34,7 @@
 #include <LibGfx/Rect.h>
 
 #define ENUMERATE_IMAGE_FORMATS           \
+    __ENUMERATE_IMAGE_FORMAT(pbm, ".pbm") \
     __ENUMERATE_IMAGE_FORMAT(png, ".png") \
     __ENUMERATE_IMAGE_FORMAT(gif, ".gif") \
     __ENUMERATE_IMAGE_FORMAT(bmp, ".bmp")

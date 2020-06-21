@@ -31,6 +31,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/GIFLoader.h>
+#include <LibGfx/PBMLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <fcntl.h>

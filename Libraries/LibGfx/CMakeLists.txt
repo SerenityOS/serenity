@@ -13,6 +13,7 @@ set(SOURCES
     Painter.cpp
     Palette.cpp
     Path.cpp
+    PBMLoader.cpp
     PNGLoader.cpp
     Point.cpp
     Rect.cpp
