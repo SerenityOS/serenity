@@ -219,12 +219,12 @@ public:
     class SelectBlocker final : public Blocker {
     public:
         typedef Vector<int, FD_SETSIZE> FDVector;
-        SelectBlocker(const timeval& tv, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds);
+        SelectBlocker(const timespec& ts, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Selecting"; }
 
     private:
-        timeval m_select_timeout;
+        timespec m_select_timeout;
         bool m_select_has_timeout { false };
         const FDVector& m_select_read_fds;
         const FDVector& m_select_write_fds;

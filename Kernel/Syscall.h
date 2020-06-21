@@ -269,7 +269,8 @@ struct SC_select_params {
     fd_set* readfds;
     fd_set* writefds;
     fd_set* exceptfds;
-    struct timeval* timeout;
+    const struct timespec* timeout;
+    const u32* sigmask;
 };
 
 struct SC_clock_nanosleep_params {
