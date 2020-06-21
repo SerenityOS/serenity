@@ -474,4 +474,66 @@ double modf(double x, double* intpart)
     *intpart = (double)((int)(x));
     return x - (int)x;
 }
+
+double gamma(double x)
+{
+    // Stirling approximation
+    return sqrt(2.0 * M_PI / x) * pow(x / M_E, x);
+}
+
+double expm1(double x)
+{
+    return pow(M_E, x) - 1;
+}
+
+double cbrt(double x)
+{
+    if (x > 0) {
+        return pow(x, 1.0 / 3.0);
+    }
+
+    return -pow(-x, 1.0 / 3.0);
+}
+
+double log1p(double x)
+{
+    return log(1 + x);
+}
+
+double acosh(double x)
+{
+    return log(x + sqrt(x * x - 1));
+}
+
+double asinh(double x)
+{
+    return log(x + sqrt(x * x + 1));
+}
+
+double atanh(double x)
+{
+    return log((1 + x) / (1 - x)) / 2.0;
+}
+
+double hypot(double x, double y)
+{
+    return sqrt(x * x + y * y);
+}
+
+double erf(double x)
+{
+    // algorithm taken from Abramowitz and Stegun (no. 26.2.17)
+    double t = 1 / (1 + 0.47047 * abs(x));
+    double poly = t * (0.3480242 + t * (-0.958798 + t * 0.7478556));
+    double answer = 1 - poly * exp(-x * x);
+    if (x < 0)
+        return -answer;
+
+    return answer;
+}
+
+double erfc(double x)
+{
+    return 1 - erf(x);
+}
 }
