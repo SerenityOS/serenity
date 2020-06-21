@@ -125,7 +125,8 @@ expression :: evaluate expression?
             | comment expession?
             | '(' list_expression ')' expression?
 
-evaluate :: '$' expression {eval / dynamic resolve}
+evaluate :: '$' '(' pipe_sequence ')'
+          | '$' expression          {eval / dynamic resolve}
 
 string_composite :: string string_composite?
                   | variable string_composite?

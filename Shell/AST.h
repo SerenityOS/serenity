@@ -124,6 +124,7 @@ struct Command {
     Vector<NonnullRefPtr<Redirection>> redirections;
     bool should_wait { true };
     bool is_pipe_source { false };
+    bool should_notify_if_in_background { true };
 };
 
 struct HitTestResult {
@@ -155,7 +156,7 @@ public:
     }
 
     CommandValue(Vector<String> argv)
-        : m_command({ move(argv), {}, true, false })
+        : m_command({ move(argv), {}, true, false, true })
     {
     }
 
@@ -245,8 +246,6 @@ class SimpleVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
     virtual ~SimpleVariableValue();
-    // FIXME: Should override is_list and is_string,
-    //        as it might have different types of values.
     SimpleVariableValue(String name)
         : m_name(name)
     {
@@ -260,8 +259,6 @@ class SpecialVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
     virtual ~SpecialVariableValue();
-    // FIXME: Should override is_list and is_string,
-    //        as it might have different types of values.
     SpecialVariableValue(char name)
         : m_name(name)
     {
