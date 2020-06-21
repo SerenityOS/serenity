@@ -27,6 +27,7 @@
 #include <AK/Demangle.h>
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -2958,7 +2959,8 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     fd_set* readfds = params->readfds;
     fd_set* writefds = params->writefds;
     fd_set* exceptfds = params->exceptfds;
-    timeval* timeout = params->timeout;
+    const timespec* timeout = params->timeout;
+    const sigset_t* sigmask = params->sigmask;
 
     if (writefds && !validate_write_typed(writefds))
         return -EFAULT;
@@ -2968,15 +2970,23 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         return -EFAULT;
     if (timeout && !validate_read_typed(timeout))
         return -EFAULT;
+    if (sigmask && !validate_read_typed(sigmask))
+        return -EFAULT;
     if (nfds < 0)
         return -EINVAL;
 
-    timeval computed_timeout;
+    timespec computed_timeout;
     bool select_has_timeout = false;
-    if (timeout && (timeout->tv_sec || timeout->tv_usec)) {
-        timeval_add(Scheduler::time_since_boot(), *timeout, computed_timeout);
+    if (timeout && (timeout->tv_sec || timeout->tv_nsec)) {
+        timespec ts_since_boot;
+        timeval_to_timespec(Scheduler::time_since_boot(), ts_since_boot);
+        timespec_add(ts_since_boot, *timeout, computed_timeout);
         select_has_timeout = true;
     }
+
+    ScopedValueRollback scoped_sigmask(Thread::current->m_signal_mask);
+    if (sigmask)
+        Thread::current->m_signal_mask = *sigmask;
 
     Thread::SelectBlocker::FDVector rfds;
     Thread::SelectBlocker::FDVector wfds;
@@ -3061,18 +3071,20 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             wfds.append(fds[i].fd);
     }
 
-    timeval actual_timeout;
+    timespec actual_timeout;
     bool has_timeout = false;
     if (timeout >= 0) {
-        // poll is in ms, we want s/us.
-        struct timeval tvtimeout;
-        tvtimeout.tv_sec = 0;
+        // poll is in ms, we want s/ns.
+        struct timespec tstimeout;
+        tstimeout.tv_sec = 0;
         while (timeout >= 1000) {
-            tvtimeout.tv_sec += 1;
+            tstimeout.tv_sec += 1;
             timeout -= 1000;
         }
-        tvtimeout.tv_usec = timeout * 1000;
-        timeval_add(Scheduler::time_since_boot(), tvtimeout, actual_timeout);
+        tstimeout.tv_nsec = timeout * 1000 * 1000;
+        timespec ts_since_boot;
+        timeval_to_timespec(Scheduler::time_since_boot(), ts_since_boot);
+        timespec_add(ts_since_boot, tstimeout, actual_timeout);
         has_timeout = true;
     }
 

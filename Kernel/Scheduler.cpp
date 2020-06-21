@@ -210,8 +210,8 @@ bool Thread::SleepBlocker::should_unblock(Thread&, time_t, long)
     return m_wakeup_time <= g_uptime;
 }
 
-Thread::SelectBlocker::SelectBlocker(const timeval& tv, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
-    : m_select_timeout(tv)
+Thread::SelectBlocker::SelectBlocker(const timespec& ts, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
+    : m_select_timeout(ts)
     , m_select_has_timeout(select_has_timeout)
     , m_select_read_fds(read_fds)
     , m_select_write_fds(write_fds)
@@ -222,7 +222,7 @@ Thread::SelectBlocker::SelectBlocker(const timeval& tv, bool select_has_timeout,
 bool Thread::SelectBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
 {
     if (m_select_has_timeout) {
-        if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec >= m_select_timeout.tv_usec))
+        if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec * 1000 >= m_select_timeout.tv_nsec))
             return true;
     }
 
