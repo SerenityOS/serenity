@@ -1,0 +1,12 @@
+diff --git a/src/disk_interface.cc b/src/disk_interface.cc
+index 28530b1..4da9a38 100644
+--- a/src/disk_interface.cc
++++ b/src/disk_interface.cc
+@@ -21,6 +21,7 @@
+ #include <string.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
++#include <unistd.h>
+ 
+ #ifdef _WIN32
+ #include <sstream>
