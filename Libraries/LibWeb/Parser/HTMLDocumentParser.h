@@ -110,7 +110,14 @@ private:
     void generate_implied_end_tags(const FlyString& exception = {});
     bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
     NonnullRefPtr<Element> create_element_for(HTMLToken&);
-    RefPtr<Node> find_appropriate_place_for_inserting_node();
+
+    struct AdjustedInsertionLocation {
+        RefPtr<Node> parent;
+        RefPtr<Node> insert_before_sibling;
+    };
+
+    AdjustedInsertionLocation find_appropriate_place_for_inserting_node();
+
     Text* find_character_insertion_node();
     void flush_character_insertions();
     RefPtr<Element> insert_html_element(HTMLToken&);

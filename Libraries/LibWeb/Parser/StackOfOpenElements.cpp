@@ -140,4 +140,27 @@ Element* StackOfOpenElements::topmost_special_node_below(const Element& formatti
     return found_element;
 }
 
+Element* StackOfOpenElements::last_element_with_tag_name(const FlyString& tag_name)
+{
+    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
+        auto& element = m_elements[i];
+        if (element.tag_name() == tag_name)
+            return &element;
+    }
+    return nullptr;
+}
+
+Element* StackOfOpenElements::element_before(const Element& target)
+{
+    bool found_target = false;
+    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
+        auto& element = m_elements[i];
+        if (&element == &target) {
+            found_target = true;
+        } else if (found_target)
+            return &element;
+    }
+    return nullptr;
+}
+
 }

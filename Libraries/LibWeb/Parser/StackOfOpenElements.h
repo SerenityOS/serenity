@@ -65,6 +65,9 @@ public:
 
     Element* topmost_special_node_below(const Element&);
 
+    Element* last_element_with_tag_name(const FlyString&);
+    Element* element_before(const Element&);
+
 private:
     bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
     bool has_in_scope_impl(const Element& target_node, const Vector<FlyString>&) const;
