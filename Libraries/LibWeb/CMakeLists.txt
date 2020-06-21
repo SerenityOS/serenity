@@ -1,9 +1,8 @@
 set(SOURCES
     Bindings/CanvasRenderingContext2DWrapper.cpp
     Bindings/EventListenerWrapper.cpp
-    Bindings/EventWrapper.cpp
+    Bindings/EventWrapperFactory.cpp
     Bindings/LocationObject.cpp
-    Bindings/MouseEventWrapper.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
     Bindings/WindowObject.cpp
@@ -158,6 +157,8 @@ libweb_js_wrapper(HTMLElement)
 libweb_js_wrapper(HTMLImageElement)
 libweb_js_wrapper(HTMLCanvasElement)
 libweb_js_wrapper(ImageData)
+libweb_js_wrapper(Event)
+libweb_js_wrapper(MouseEvent)
 
 get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
 set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})

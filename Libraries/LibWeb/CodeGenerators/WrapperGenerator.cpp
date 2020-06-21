@@ -322,6 +322,8 @@ static bool should_emit_wrapper_factory(const IDL::Interface& interface)
         return false;
     if (interface.name.ends_with("Element"))
         return false;
+    if (interface.name.ends_with("Event"))
+        return false;
     return true;
 }
 
@@ -521,7 +523,7 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "        new_array->indexed_properties().append(wrap(interpreter.heap(), element));";
             out() << "    }";
             out() << "    return new_array;";
-        } else if (return_type.name == "long") {
+        } else if (return_type.name == "long" || return_type.name == "double") {
             out() << "    return JS::Value(retval);";
         } else if (return_type.name == "Uint8ClampedArray") {
             out() << "    return retval;";

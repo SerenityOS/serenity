@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <LibWeb/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibWeb/Forward.h>
 
 namespace Web {
 namespace Bindings {

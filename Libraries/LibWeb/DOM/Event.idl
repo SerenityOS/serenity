@@ -1,0 +1,5 @@
+interface Event {
+
+    readonly attribute DOMString type;
+
+}
