@@ -99,4 +99,15 @@ double frexp(double, int*);
 float frexpf(float, int*);
 long double frexpl(long double, int*);
 
+double gamma(double);
+double expm1(double);
+double cbrt(double);
+double log1p(double);
+double acosh(double);
+double asinh(double);
+double atanh(double);
+double hypot(double, double);
+double erf(double);
+double erfc(double);
+
 __END_DECLS
