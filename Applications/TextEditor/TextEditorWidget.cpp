@@ -52,7 +52,6 @@
 #include <LibGfx/Font.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/Parser/HTMLParser.h>
 #include <string.h>
 
 TextEditorWidget::TextEditorWidget()
@@ -563,7 +562,6 @@ void TextEditorWidget::update_markdown_preview()
     auto document = Markdown::Document::parse(m_editor->text());
     if (document) {
         auto html = document->render_to_html();
-        auto html_document = Web::parse_html_document(html, URL::create_with_file_protocol(m_path));
-        m_page_view->set_document(html_document);
+        m_page_view->load_html(html, URL::create_with_file_protocol(m_path));
     }
 }
