@@ -87,6 +87,8 @@ static String guess_mime_type_based_on_filename(const URL& url)
         return "text/markdown";
     if (url.path().ends_with(".html") || url.path().ends_with(".htm"))
         return "text/html";
+    if (url.path().ends_with("/"))
+        return "text/html";
     return "text/plain";
 }
 
