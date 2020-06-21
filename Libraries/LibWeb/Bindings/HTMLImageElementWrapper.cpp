@@ -36,7 +36,7 @@ namespace Web {
 namespace Bindings {
 
 HTMLImageElementWrapper::HTMLImageElementWrapper(JS::GlobalObject& global_object, HTMLImageElement& element)
-    : ElementWrapper(global_object, element)
+    : HTMLElementWrapper(global_object, element)
 {
 }
 

@@ -1,12 +1,6 @@
 set(SOURCES
     Bindings/CanvasRenderingContext2DWrapper.cpp
-    Bindings/DocumentWrapper.cpp
-    Bindings/DocumentWrapper.h
-    Bindings/ElementWrapper.cpp
-    Bindings/ElementWrapper.h
     Bindings/EventListenerWrapper.cpp
-    Bindings/EventTargetWrapper.cpp
-    Bindings/EventTargetWrapper.h
     Bindings/EventWrapper.cpp
     Bindings/HTMLCanvasElementWrapper.cpp
     Bindings/HTMLImageElementWrapper.cpp
@@ -14,8 +8,6 @@ set(SOURCES
     Bindings/LocationObject.cpp
     Bindings/MouseEventWrapper.cpp
     Bindings/NavigatorObject.cpp
-    Bindings/NodeWrapper.cpp
-    Bindings/NodeWrapper.h
     Bindings/NodeWrapperFactory.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
@@ -128,7 +120,19 @@ set(GENERATED_SOURCES
     ../../Services/ProtocolServer/ProtocolServerEndpoint.h
 )
 
+set_property(GLOBAL PROPERTY wrapper_sources)
+function(add_wrapper_sources)
+    get_property(tmp GLOBAL PROPERTY wrapper_sources)
+    foreach(arg ${ARGV})
+        set(tmp ${tmp}
+            ${arg}
+        )
+    endforeach()
+    set_property(GLOBAL PROPERTY wrapper_sources "${tmp}")
+endfunction(add_wrapper_sources)
+
 function(libweb_js_wrapper class)
+    add_wrapper_sources(Bindings/${class}Wrapper.cpp Bindings/${class}Wrapper.h)
     add_custom_command(
         OUTPUT Bindings/${class}Wrapper.h
         COMMAND /bin/mkdir -p Bindings
@@ -146,12 +150,17 @@ function(libweb_js_wrapper class)
         MAIN_DEPENDENCY DOM/${class}.idl
     )
     add_custom_target(generate_${class}Wrapper.h DEPENDS Bindings/${class}Wrapper.h)
+    add_custom_target(generate_${class}Wrapper.cpp DEPENDS Bindings/${class}Wrapper.cpp)
 endfunction()
 
 libweb_js_wrapper(EventTarget)
 libweb_js_wrapper(Node)
 libweb_js_wrapper(Document)
 libweb_js_wrapper(Element)
+libweb_js_wrapper(HTMLElement)
+
+get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
+set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})
 
 add_custom_command(
     OUTPUT CSS/PropertyID.h

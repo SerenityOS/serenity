@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/ElementWrapper.h>
+#include <LibWeb/Bindings/HTMLElementWrapper.h>
 
 namespace Web {
 namespace Bindings {
 
-class HTMLCanvasElementWrapper : public ElementWrapper {
+class HTMLCanvasElementWrapper : public HTMLElementWrapper {
 public:
     HTMLCanvasElementWrapper(JS::GlobalObject&, HTMLCanvasElement&);
     virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;

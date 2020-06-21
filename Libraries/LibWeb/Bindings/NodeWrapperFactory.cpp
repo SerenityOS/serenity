@@ -28,6 +28,7 @@
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
+#include <LibWeb/Bindings/HTMLElementWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLCanvasElement.h>
@@ -45,6 +46,8 @@ NodeWrapper* wrap(JS::Heap& heap, Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLCanvasElement>(node)));
     if (is<HTMLImageElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLImageElement>(node)));
+    if (is<HTMLElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLElement>(node)));
     if (is<Element>(node))
         return static_cast<NodeWrapper*>(wrap_impl(heap, to<Element>(node)));
     return static_cast<NodeWrapper*>(wrap_impl(heap, node));
