@@ -48,6 +48,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/Painting/PaintContext.h>
+#include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <stdio.h>
 
 //#define SELECTION_DEBUG
@@ -270,6 +271,13 @@ void PageView::keydown_event(GUI::KeyEvent& event)
 void PageView::reload()
 {
     load(page().main_frame().document()->url());
+}
+
+void PageView::load_html(const StringView& html, const URL& url)
+{
+    HTMLDocumentParser parser(html, "utf-8");
+    parser.run(url);
+    set_document(&parser.document());
 }
 
 bool PageView::load(const URL& url)
