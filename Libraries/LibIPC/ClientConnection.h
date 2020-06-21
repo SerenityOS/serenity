@@ -198,7 +198,9 @@ public:
     }
 
     int client_id() const { return m_client_id; }
+
     pid_t client_pid() const { return m_client_pid; }
+    void set_client_pid(pid_t pid) { m_client_pid = pid; }
 
     virtual void die() = 0;
 
