@@ -27,6 +27,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -91,7 +92,7 @@ void XMLHttpRequest::send()
 void XMLHttpRequest::dispatch_event(NonnullRefPtr<Event> event)
 {
     for (auto& listener : listeners()) {
-        if (listener.event_name == event->name()) {
+        if (listener.event_name == event->type()) {
             auto& function = const_cast<EventListener&>(*listener.listener).function();
             auto& heap = function.heap();
             auto* this_value = wrap(heap, *this);

@@ -44,18 +44,18 @@ public:
 
     virtual ~Event() {}
 
-    const FlyString& name() const { return m_event_name; }
+    const FlyString& type() const { return m_type; }
 
     virtual bool is_mouse_event() const { return false; }
 
 protected:
-    Event(const FlyString& event_name)
-        : m_event_name(event_name)
+    explicit Event(const FlyString& type)
+        : m_type(type)
     {
     }
 
 private:
-    FlyString m_event_name;
+    FlyString m_type;
 };
 
 }

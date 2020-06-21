@@ -31,6 +31,7 @@
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/CSS/StyleResolver.h>
@@ -131,7 +132,7 @@ bool Node::is_link() const
 void Node::dispatch_event(NonnullRefPtr<Event> event)
 {
     for (auto& listener : listeners()) {
-        if (listener.event_name == event->name()) {
+        if (listener.event_name == event->type()) {
             auto& function = const_cast<EventListener&>(*listener.listener).function();
 #ifdef EVENT_DEBUG
             static_cast<const JS::ScriptFunction*>(function)->body().dump(0);
