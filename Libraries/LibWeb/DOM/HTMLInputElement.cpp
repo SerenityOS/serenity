@@ -46,13 +46,18 @@ HTMLInputElement::~HTMLInputElement()
 {
 }
 
-RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) const
+RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties* parent_style) const
 {
     ASSERT(document().frame());
     auto& frame = *document().frame();
     auto& page_view = const_cast<PageView&>(static_cast<const PageView&>(frame.page().client()));
 
     if (type() == "hidden")
+        return nullptr;
+
+    auto style = document().style_resolver().resolve_style(*this, parent_style);
+    auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
+    if (display == "none")
         return nullptr;
 
     RefPtr<GUI::Widget> widget;
