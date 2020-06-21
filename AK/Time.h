@@ -35,7 +35,7 @@ inline void timeval_sub(const TimevalType& a, const TimevalType& b, TimevalType&
     result.tv_usec = a.tv_usec - b.tv_usec;
     if (result.tv_usec < 0) {
         --result.tv_sec;
-        result.tv_usec += 1000000;
+        result.tv_usec += 1'000'000;
     }
 }
 
@@ -44,9 +44,31 @@ inline void timeval_add(const TimevalType& a, const TimevalType& b, TimevalType&
 {
     result.tv_sec = a.tv_sec + b.tv_sec;
     result.tv_usec = a.tv_usec + b.tv_usec;
-    if (result.tv_usec > 1000000) {
+    if (result.tv_usec > 1'000'000) {
         ++result.tv_sec;
-        result.tv_usec -= 1000000;
+        result.tv_usec -= 1'000'000;
+    }
+}
+
+template<typename TimespecType>
+inline void timespec_sub(const TimespecType& a, const TimespecType& b, TimespecType& result)
+{
+    result.tv_sec = a.tv_sec - b.tv_sec;
+    result.tv_nsec = a.tv_nsec - b.tv_nsec;
+    if (result.tv_nsec < 0) {
+        --result.tv_sec;
+        result.tv_nsec += 1'000'000'000;
+    }
+}
+
+template<typename TimespecType>
+inline void timespec_add(const TimespecType& a, const TimespecType& b, TimespecType& result)
+{
+    result.tv_sec = a.tv_sec + b.tv_sec;
+    result.tv_nsec = a.tv_nsec + b.tv_nsec;
+    if (result.tv_nsec > 1000'000'000) {
+        ++result.tv_sec;
+        result.tv_nsec -= 1000'000'000;
     }
 }
 
@@ -66,7 +88,9 @@ inline void timespec_to_timeval(const TimespecType& ts, TimevalType& tv)
 
 }
 
+using AK::timespec_add;
+using AK::timespec_sub;
+using AK::timespec_to_timeval;
 using AK::timeval_add;
 using AK::timeval_sub;
 using AK::timeval_to_timespec;
-using AK::timespec_to_timeval;
