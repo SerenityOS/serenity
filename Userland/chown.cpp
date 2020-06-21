@@ -48,9 +48,13 @@ int main(int argc, char** argv)
     uid_t new_uid = -1;
     gid_t new_gid = -1;
 
-    auto parts = String(argv[1]).split(':');
+    auto parts = String(argv[1]).split(':', true);
     if (parts.is_empty()) {
         fprintf(stderr, "Empty uid/gid spec\n");
+        return 1;
+    }
+    if (parts[0].is_empty() || (parts.size() == 2 && parts[1].is_empty()) || parts.size() > 2) {
+        fprintf(stderr, "Invalid uid/gid spec\n");
         return 1;
     }
 
