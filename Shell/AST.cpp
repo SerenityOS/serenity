@@ -658,7 +658,7 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
     auto run_commands = [&](auto& commands) {
         for (auto& command : commands) {
 #ifdef EXECUTE_DEBUG
-            dbg() << "Command " << (m_capture_stdout ? "Capturing stdout " : "") << (command.should_wait ? "" : "In background ");
+            dbg() << "Command";
             for (auto& arg : command.argv)
                 dbg() << "argv: " << arg;
             for (auto& redir : command.redirections) {
@@ -683,7 +683,7 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
             } else {
                 if (command.is_pipe_source) {
                     jobs_to_wait_for.append(job);
-                } else {
+                } else if (command.should_notify_if_in_background) {
                     if (job)
                         job->set_running_in_background(true);
                     shell->take_back_stdin();
@@ -699,31 +699,30 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
             dbg() << "Error: cannot pipe(): " << strerror(errno);
             return create<StringValue>("");
         }
-        auto last_in_commands = commands.take_last();
+        auto& last_in_commands = commands.last();
 
-        last_in_commands.redirections.append(*new FdRedirection(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
-        last_in_commands.should_wait = false;
-        last_in_commands.is_pipe_source = true;
-
-        Vector<Command> commands;
-        commands.append(commands);
-        commands.append(last_in_commands);
-
-        run_commands(commands);
+        last_in_commands.redirections.prepend(*new FdRedirection(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
+        last_in_commands.should_wait = true;
+        last_in_commands.should_notify_if_in_background = false;
+        last_in_commands.is_pipe_source = false;
 
         auto notifier = Core::Notifier::construct(pipefd[0], Core::Notifier::Read);
         StringBuilder builder;
 
-        notifier->on_ready_to_read = [&] {
+        auto try_read = [&] {
             u8 buffer[4096];
             size_t remaining_size = 4096;
             for (;;) {
                 if (remaining_size == 0)
-                    return;
+                    break;
                 auto read_size = read(pipefd[0], buffer, remaining_size);
                 if (read_size < 0) {
+                    if (errno == EINTR)
+                        continue;
+                    if (errno == 0)
+                        break;
                     dbg() << "read() failed: " << strerror(errno);
-                    return;
+                    break;
                 }
                 if (read_size == 0)
                     break;
@@ -733,11 +732,19 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
             builder.append(StringView { buffer, 4096 - remaining_size });
         };
 
+        notifier->on_ready_to_read = [&] {
+            try_read();
+        };
+
+        run_commands(commands);
+
         for (auto job : jobs_to_wait_for) {
             shell->block_on_job(job);
         }
 
         notifier->on_ready_to_read = nullptr;
+
+        try_read();
 
         if (close(pipefd[0]) < 0) {
             dbg() << "close() failed: " << strerror(errno);
