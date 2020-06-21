@@ -1515,7 +1515,6 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
         return;
     }
-
 }
 
 void HTMLDocumentParser::adjust_mathml_attributes(HTMLToken& token)
@@ -1733,8 +1732,9 @@ void HTMLDocumentParser::handle_in_row(HTMLToken& token)
         return;
     }
 
-    if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
-        if (m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tr)) {
+    if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr))
+        || (token.is_end_tag() && token.tag_name() == HTML::TagNames::table)) {
+        if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tr)) {
             PARSE_ERROR();
             return;
         }
@@ -1817,7 +1817,7 @@ void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
-        if (m_stack_of_open_elements.has_in_table_scope(token.tag_name())) {
+        if (!m_stack_of_open_elements.has_in_table_scope(token.tag_name())) {
             PARSE_ERROR();
             return;
         }
