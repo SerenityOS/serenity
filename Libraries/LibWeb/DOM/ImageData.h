@@ -42,8 +42,8 @@ public:
 
     ~ImageData();
 
-    int width() const;
-    int height() const;
+    unsigned width() const;
+    unsigned height() const;
 
     Gfx::Bitmap& bitmap() { return m_bitmap; }
     const Gfx::Bitmap& bitmap() const { return m_bitmap; }
