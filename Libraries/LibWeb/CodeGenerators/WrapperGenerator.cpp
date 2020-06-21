@@ -75,6 +75,7 @@ struct Function {
 
 struct Attribute {
     bool readonly { false };
+    bool unsigned_ { false };
     Type type;
     String name;
 
@@ -175,6 +176,7 @@ OwnPtr<Interface> parse_interface(const StringView& input)
 
     auto parse_attribute = [&] {
         bool readonly = false;
+        bool unsigned_ = false;
         if (next_is("readonly")) {
             consume_string("readonly");
             readonly = true;
@@ -184,12 +186,18 @@ OwnPtr<Interface> parse_interface(const StringView& input)
             consume_string("attribute");
             consume_whitespace();
         }
+        if (next_is("unsigned")) {
+            consume_string("unsigned");
+            unsigned_ = true;
+            consume_whitespace();
+        }
         auto type = parse_type();
         consume_whitespace();
         auto name = consume_while([](auto ch) { return !isspace(ch) && ch != ';'; });
         consume_specific(';');
         Attribute attribute;
         attribute.readonly = readonly;
+        attribute.unsigned_ = unsigned_;
         attribute.type = type;
         attribute.name = name;
         attribute.getter_callback_name = String::format("%s_getter", snake_name(attribute.name).characters());
@@ -370,6 +378,7 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/DOM/Element.h>";
     out() << "#include <LibWeb/DOM/HTMLElement.h>";
     out() << "#include <LibWeb/DOM/EventListener.h>";
+    out() << "#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>";
 
     out() << "namespace Web {";
     out() << "namespace Bindings {";
@@ -488,6 +497,8 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "        new_array->indexed_properties().append(wrap(interpreter.heap(), element));";
             out() << "    }";
             out() << "    return new_array;";
+        } else if (return_type.name == "long") {
+            out() << "    return JS::Value(retval);";
         } else {
             out() << "    return wrap(interpreter.heap(), const_cast<" << return_type.name << "&>(*retval));";
         }

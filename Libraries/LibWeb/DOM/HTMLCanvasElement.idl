@@ -1,0 +1,7 @@
+interface HTMLCanvasElement : HTMLElement {
+
+    CanvasRenderingContext2D? getContext(DOMString contextId);
+    readonly attribute unsigned long width;
+    readonly attribute unsigned long height;
+
+}

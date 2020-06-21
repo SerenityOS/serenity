@@ -45,14 +45,14 @@ HTMLCanvasElement::~HTMLCanvasElement()
 {
 }
 
-int HTMLCanvasElement::requested_width() const
+unsigned HTMLCanvasElement::width() const
 {
-    return attribute(HTML::AttributeNames::width).to_int().value_or(300);
+    return attribute(HTML::AttributeNames::width).to_uint().value_or(300);
 }
 
-int HTMLCanvasElement::requested_height() const
+unsigned HTMLCanvasElement::height() const
 {
-    return attribute(HTML::AttributeNames::height).to_int().value_or(150);
+    return attribute(HTML::AttributeNames::height).to_uint().value_or(150);
 }
 
 RefPtr<LayoutNode> HTMLCanvasElement::create_layout_node(const StyleProperties* parent_style) const
@@ -74,12 +74,8 @@ CanvasRenderingContext2D* HTMLCanvasElement::get_context(String type)
 
 static Gfx::IntSize bitmap_size_for_canvas(const HTMLCanvasElement& canvas)
 {
-    int width = canvas.requested_width();
-    int height = canvas.requested_height();
-    if (width < 0 || height < 0) {
-        dbg() << "Refusing to create canvas with negative size";
-        return {};
-    }
+    auto width = canvas.width();
+    auto height = canvas.height();
 
     Checked<size_t> area = width;
     area *= height;
@@ -92,7 +88,7 @@ static Gfx::IntSize bitmap_size_for_canvas(const HTMLCanvasElement& canvas)
         dbg() << "Refusing to create " << width << "x" << height << " canvas (exceeds maximum size)";
         return {};
     }
-    return { width, height };
+    return Gfx::IntSize(width, height);
 }
 
 bool HTMLCanvasElement::create_bitmap()
