@@ -26,7 +26,9 @@
 
 #include <LibCore/LocalSocket.h>
 #include <errno.h>
+#include <stdio.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 
 #ifndef SOCK_NONBLOCK
 #    include <sys/ioctl.h>
@@ -68,6 +70,40 @@ LocalSocket::LocalSocket(Object* parent)
 
 LocalSocket::~LocalSocket()
 {
+}
+
+RefPtr<LocalSocket> LocalSocket::take_over_accepted_socket_from_system_server()
+{
+    constexpr auto socket_takeover = "SOCKET_TAKEOVER";
+    if (!getenv(socket_takeover))
+        return nullptr;
+
+    dbg() << "Taking the accepted socket over from SystemServer";
+
+    // The SystemServer has passed us the socket as fd 3,
+    // so use that instead of creating our own.
+    constexpr int fd = 3;
+
+    // Sanity check: it has to be a socket.
+    struct stat stat;
+    int rc = fstat(fd, &stat);
+    if (rc < 0 || !S_ISSOCK(stat.st_mode)) {
+        if (rc != 0)
+            perror("fstat");
+        dbg() << "ERROR: The fd we got from SystemServer is not a socket";
+        return nullptr;
+    }
+
+    auto socket = LocalSocket::construct(fd);
+
+    // It had to be !CLOEXEC for obvious reasons, but we
+    // don't need it to be !CLOEXEC anymore, so set the
+    // CLOEXEC flag now.
+    fcntl(fd, F_SETFD, FD_CLOEXEC);
+    // We wouldn't want our children to think we're passing
+    // them a socket either, so unset the env variable.
+    unsetenv(socket_takeover);
+    return socket;
 }
 
 }

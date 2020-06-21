@@ -35,6 +35,8 @@ class LocalSocket final : public Socket {
 public:
     virtual ~LocalSocket() override;
 
+    static RefPtr<LocalSocket> take_over_accepted_socket_from_system_server();
+
 private:
     explicit LocalSocket(Object* parent = nullptr);
     LocalSocket(int fd, Object* parent = nullptr);
