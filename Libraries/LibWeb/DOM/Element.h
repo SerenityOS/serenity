@@ -50,6 +50,7 @@ public:
 
     bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
     String attribute(const FlyString& name) const;
+    String get_attribute(const FlyString& name) const { return attribute(name); }
     void set_attribute(const FlyString& name, const String& value);
 
     void set_attributes(Vector<Attribute>&&);
@@ -79,6 +80,9 @@ public:
 
     String inner_html() const;
     void set_inner_html(StringView);
+
+    String id() const { return attribute(HTML::AttributeNames::id); }
+    void set_id(const String& value) { set_attribute(HTML::AttributeNames::id, value); }
 
 protected:
     RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;

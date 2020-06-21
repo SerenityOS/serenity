@@ -1,0 +1,10 @@
+interface Element : Node {
+
+    DOMString? getAttribute(DOMString qualifiedName);
+    void setAttribute(DOMString qualifiedName, DOMString value);
+
+    attribute DOMString innerHTML;
+    attribute DOMString id;
+
+}
+
