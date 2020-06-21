@@ -307,6 +307,24 @@ int main(int argc, char** argv)
     return 0;
 }
 
+static bool should_emit_wrapper_factory(const IDL::Interface& interface)
+{
+    // FIXME: This is very hackish.
+    if (interface.name == "EventTarget")
+        return false;
+    if (interface.name == "Node")
+        return false;
+    if (interface.name == "Text")
+        return false;
+    if (interface.name == "Document")
+        return false;
+    if (interface.name == "DocumentType")
+        return false;
+    if (interface.name.ends_with("Element"))
+        return false;
+    return true;
+}
+
 static void generate_header(const IDL::Interface& interface)
 {
     auto& wrapper_class = interface.wrapper_class;
@@ -357,6 +375,11 @@ static void generate_header(const IDL::Interface& interface)
     }
 
     out() << "};";
+
+    if (should_emit_wrapper_factory(interface)) {
+        out() << wrapper_class << "* wrap(JS::Heap&, " << interface.name << "&);";
+    }
+
     out() << "}";
     out() << "}";
 }
@@ -373,6 +396,7 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibJS/Runtime/GlobalObject.h>";
     out() << "#include <LibJS/Runtime/Error.h>";
     out() << "#include <LibJS/Runtime/Function.h>";
+    out() << "#include <LibJS/Runtime/Uint8ClampedArray.h>";
     out() << "#include <LibWeb/Bindings/NodeWrapperFactory.h>";
     out() << "#include <LibWeb/Bindings/" << wrapper_class << ".h>";
     out() << "#include <LibWeb/DOM/Element.h>";
@@ -499,6 +523,8 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "    return new_array;";
         } else if (return_type.name == "long") {
             out() << "    return JS::Value(retval);";
+        } else if (return_type.name == "Uint8ClampedArray") {
+            out() << "    return retval;";
         } else {
             out() << "    return wrap(interpreter.heap(), const_cast<" << return_type.name << "&>(*retval));";
         }
@@ -549,6 +575,14 @@ void generate_implementation(const IDL::Interface& interface)
         }
 
         generate_return_statement(function.return_type);
+        out() << "}";
+    }
+
+    // Implementation: Wrapper factory
+    if (should_emit_wrapper_factory(interface)) {
+        out() << wrapper_class << "* wrap(JS::Heap& heap, " << interface.name << "& impl)";
+        out() << "{";
+        out() << "    return static_cast<" << wrapper_class << "*>(wrap_impl(heap, impl));";
         out() << "}";
     }
 

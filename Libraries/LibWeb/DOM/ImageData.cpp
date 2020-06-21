@@ -38,7 +38,6 @@ RefPtr<ImageData> ImageData::create_with_size(JS::GlobalObject& global_object, i
     if (width > 16384 || height > 16384)
         return nullptr;
 
-
     dbg() << "Creating ImageData with " << width << "x" << height;
 
     auto* data = JS::Uint8ClampedArray::create(global_object, width * height * 4);
@@ -63,12 +62,12 @@ ImageData::~ImageData()
 {
 }
 
-int ImageData::width() const
+unsigned ImageData::width() const
 {
     return m_bitmap->width();
 }
 
-int ImageData::height() const
+unsigned ImageData::height() const
 {
     return m_bitmap->height();
 }
