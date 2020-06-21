@@ -49,18 +49,7 @@ int main(int, char**)
         return 1;
     }
 
-    auto server = Core::LocalServer::construct();
-    bool ok = server->take_over_from_system_server();
-    ASSERT(ok);
-    server->on_ready_to_accept = [&] {
-        auto client_socket = server->accept();
-        if (!client_socket) {
-            dbg() << "WebContent: accept failed.";
-            return;
-        }
-        static int s_next_client_id = 0;
-        int client_id = ++s_next_client_id;
-        IPC::new_client_connection<WebContent::ClientConnection>(*client_socket, client_id);
-    };
+    auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
+    IPC::new_client_connection<WebContent::ClientConnection>(*socket, 1);
     return event_loop.exec();
 }
