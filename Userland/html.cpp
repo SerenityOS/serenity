@@ -32,15 +32,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/CSS/StyleResolver.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/Layout/LayoutBlock.h>
-#include <LibWeb/Layout/LayoutInline.h>
-#include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Parser/CSSParser.h>
-#include <LibWeb/Parser/HTMLParser.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -60,12 +52,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    String html = String::copy(f->read_all());
-    auto document = Web::parse_html_document(html);
+    auto html = f->read_all();
 
     auto window = GUI::Window::construct();
     auto& widget = window->set_main_widget<Web::PageView>();
-    widget.set_document(document);
+    widget.load_html(html, URL());
     if (!widget.document()->title().is_null())
         window->set_title(String::format("%s - HTML", widget.document()->title().characters()));
     else
