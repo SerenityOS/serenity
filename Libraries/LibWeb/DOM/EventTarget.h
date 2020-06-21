@@ -44,6 +44,7 @@ public:
     void unref() { unref_event_target(); }
 
     void add_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener>);
+    void remove_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener>);
 
     virtual void dispatch_event(NonnullRefPtr<Event>) = 0;
 
