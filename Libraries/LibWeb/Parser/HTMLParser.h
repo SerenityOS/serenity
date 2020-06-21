@@ -33,7 +33,6 @@ namespace Web {
 
 class DocumentFragment;
 
-RefPtr<Document> parse_html_document(const StringView&, const URL& = URL(), const String& encoding = "utf-8");
 RefPtr<DocumentFragment> parse_html_fragment(Document&, const StringView&, const String& encoding = "utf-8");
 
 }

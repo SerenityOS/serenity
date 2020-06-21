@@ -54,7 +54,7 @@ static RefPtr<Document> create_markdown_document(const ByteBuffer& data, const U
     if (!markdown_document)
         return nullptr;
 
-    return parse_html_document(markdown_document->render_to_html(), url);
+    return parse_html_document(markdown_document->render_to_html(), url, "utf-8");
 }
 
 static RefPtr<Document> create_text_document(const ByteBuffer& data, const URL& url)
@@ -116,7 +116,7 @@ static RefPtr<Document> create_gemini_document(const ByteBuffer& data, const URL
 {
     auto markdown_document = Gemini::Document::parse({ (const char*)data.data(), data.size() }, url);
 
-    return parse_html_document(markdown_document->render_to_html(), url);
+    return parse_html_document(markdown_document->render_to_html(), url, "utf-8");
 }
 
 RefPtr<Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
@@ -190,7 +190,7 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
                 String::copy(data).characters(),
                 escape_html_entities(failed_url.to_string()).characters(),
                 escape_html_entities(error).characters());
-            auto document = parse_html_document(html, failed_url);
+            auto document = parse_html_document(html, failed_url, "utf-8");
             ASSERT(document);
             frame().set_document(document);
             frame().page().client().page_did_change_title(document->title());

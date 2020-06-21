@@ -82,7 +82,7 @@ static Vector<char> codepoint_to_bytes(const u32 codepoint)
     return bytes;
 }
 
-static bool parse_html_document(const StringView& html, Document& document, ParentNode& root)
+static bool deprecated_parse_html_document(const StringView& html, Document& document, ParentNode& root)
 {
     NonnullRefPtrVector<ParentNode> node_stack;
     node_stack.append(root);
@@ -466,19 +466,19 @@ String to_utf8(const StringView& input, const String& encoding)
 RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringView& raw_html, const String& encoding)
 {
     auto fragment = adopt(*new DocumentFragment(document));
-    if (!parse_html_document(to_utf8(raw_html, encoding), document, *fragment))
+    if (!deprecated_parse_html_document(to_utf8(raw_html, encoding), document, *fragment))
         return nullptr;
     return fragment;
 }
 
-RefPtr<Document> parse_html_document(const StringView& raw_html, const URL& url, const String& encoding)
+RefPtr<Document> deprecated_parse_html_document(const StringView& raw_html, const URL& url, const String& encoding)
 {
     String html = to_utf8(raw_html, encoding);
 
     auto document = adopt(*new Document(url));
     document->set_source(html);
 
-    if (!parse_html_document(html, *document, *document))
+    if (!deprecated_parse_html_document(html, *document, *document))
         return nullptr;
 
     document->fixup();
