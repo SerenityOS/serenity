@@ -155,6 +155,18 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     case InsertionMode::InColumnGroup:
         handle_in_column_group(token);
         break;
+    case InsertionMode::InTemplate:
+        handle_in_template(token);
+        break;
+    case InsertionMode::InFrameset:
+        handle_in_frameset(token);
+        break;
+    case InsertionMode::AfterFrameset:
+        handle_after_frameset(token);
+        break;
+    case InsertionMode::AfterAfterFrameset:
+        handle_after_after_frameset(token);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -254,7 +266,7 @@ NonnullRefPtr<Element> HTMLDocumentParser::create_element_for(HTMLToken& token)
 {
     auto element = create_element(document(), token.tag_name());
     for (auto& attribute : token.m_tag.attributes) {
-        element->set_attribute(attribute.name_builder.to_string(), attribute.value_builder.to_string());
+        element->set_attribute(attribute.local_name_builder.to_string(), attribute.value_builder.to_string());
     }
     return element;
 }
@@ -372,6 +384,11 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
         return;
     }
 
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::noscript && !m_scripting_enabled) {
+        insert_html_element(token);
+        m_insertion_mode = InsertionMode::InHeadNoscript;
+    }
+
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::script) {
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
         auto element = create_element_for(token);
@@ -401,7 +418,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::body, HTML::TagNames::html, HTML::TagNames::br)) {
-        TODO();
+        goto AnythingElse;
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::template_) {
@@ -422,14 +439,49 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
         return;
     }
 
+AnythingElse:
     m_stack_of_open_elements.pop();
     m_insertion_mode = InsertionMode::AfterHead;
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLDocumentParser::handle_in_head_noscript(HTMLToken&)
+void HTMLDocumentParser::handle_in_head_noscript(HTMLToken& token)
 {
-    TODO();
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::noscript) {
+        m_stack_of_open_elements.pop();
+        m_insertion_mode = InsertionMode::InHead;
+        return;
+    }
+
+    if (token.is_parser_whitespace() || token.is_comment() || (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::basefont, HTML::TagNames::bgsound, HTML::TagNames::link, HTML::TagNames::meta, HTML::TagNames::noframes, HTML::TagNames::style))) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::br) {
+        goto AnythingElse;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::head, HTML::TagNames::noscript)) {
+        PARSE_ERROR();
+        return;
+    }
+
+AnythingElse:
+    PARSE_ERROR();
+    m_stack_of_open_elements.pop();
+    m_insertion_mode = InsertionMode::InHead;
+    process_using_the_rules_for(m_insertion_mode, token);
 }
 
 void HTMLDocumentParser::parse_generic_raw_text_element(HTMLToken& token)
@@ -524,7 +576,7 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_) {
-        TODO();
+        process_using_the_rules_for(InsertionMode::InHead, token);
     }
 
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::body, HTML::TagNames::html, HTML::TagNames::br)) {
@@ -568,7 +620,10 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        TODO();
+        auto data = token.m_comment_or_character.data.to_string();
+        auto& insertion_location = m_stack_of_open_elements.first();
+        insertion_location.append_child(adopt(*new Comment(document(), data)));
+        return;
     }
 
     if (token.is_doctype()) {
@@ -581,16 +636,16 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
         return;
     }
 
-    if (token.is_end_of_file()) {
-        stop_parsing();
-        return;
-    }
-
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::html) {
         if (m_parsing_fragment) {
             TODO();
         }
         m_insertion_mode = InsertionMode::AfterAfterBody;
+        return;
+    }
+
+    if (token.is_end_of_file()) {
+        stop_parsing();
         return;
     }
 
@@ -845,9 +900,9 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         if (m_stack_of_open_elements.contains(HTML::TagNames::template_))
             return;
         for (auto& attribute : token.m_tag.attributes) {
-            if (current_node().has_attribute(attribute.name_builder.string_view()))
+            if (current_node().has_attribute(attribute.local_name_builder.string_view()))
                 continue;
-            current_node().set_attribute(attribute.name_builder.to_string(), attribute.value_builder.to_string());
+            current_node().set_attribute(attribute.local_name_builder.to_string(), attribute.value_builder.to_string());
         }
         return;
     }
@@ -870,9 +925,9 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
         m_frameset_ok = false;
         for (auto& attribute : token.m_tag.attributes) {
-            if (node_before_current_node().has_attribute(attribute.name_builder.string_view()))
+            if (node_before_current_node().has_attribute(attribute.local_name_builder.string_view()))
                 continue;
-            node_before_current_node().set_attribute(attribute.name_builder.to_string(), attribute.value_builder.to_string());
+            node_before_current_node().set_attribute(attribute.local_name_builder.to_string(), attribute.value_builder.to_string());
         }
         return;
     }
@@ -1281,7 +1336,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
-    if (token.is_start_tag() && token.tag_name().equals_ignoring_case("image")) {
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::image) {
         // Parse error. Change the token's tag name to HTML::TagNames::img and reprocess it. (Don't ask.)
         PARSE_ERROR();
         token.m_tag.tag_name.clear();
@@ -1361,24 +1416,54 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::rb, HTML::TagNames::rtc)) {
-        TODO();
+        if (m_stack_of_open_elements.has_in_scope(HTML::TagNames::ruby))
+            generate_implied_end_tags();
+
+        if (current_node().tag_name() != HTML::TagNames::ruby)
+            PARSE_ERROR();
+
+        insert_html_element(token);
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::rp, HTML::TagNames::rt)) {
-        TODO();
+        if (m_stack_of_open_elements.has_in_scope(HTML::TagNames::ruby))
+            generate_implied_end_tags(HTML::TagNames::rtc);
+
+        if (current_node().tag_name() != HTML::TagNames::rtc || current_node().tag_name() != HTML::TagNames::ruby)
+            PARSE_ERROR();
+
+        insert_html_element(token);
     }
 
-    if (token.is_start_tag() && token.tag_name() == "math") {
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::math) {
         dbg() << "<math> element encountered.";
         reconstruct_the_active_formatting_elements();
+        adjust_mathml_attributes(token);
+        adjust_foreign_attributes(token);
+
+        // FIXME: this should insert a foreign element, but lets just insert it normally for now :^)
         insert_html_element(token);
+
+        if (token.is_self_closing()) {
+            m_stack_of_open_elements.pop();
+            token.acknowledge_self_closing_flag_if_set();
+        }
         return;
     }
 
-    if (token.is_start_tag() && token.tag_name() == "svg") {
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::svg) {
         dbg() << "<svg> element encountered.";
         reconstruct_the_active_formatting_elements();
+        adjust_svg_attributes(token);
+        adjust_foreign_attributes(token);
+
+        // FIXME: this should insert a foreign element, but lets just insert it normally for now :^)
         insert_html_element(token);
+
+        if (token.is_self_closing()) {
+            m_stack_of_open_elements.pop();
+            token.acknowledge_self_closing_flag_if_set();
+        }
         return;
     }
 
@@ -1418,7 +1503,92 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         return;
     }
 
-    TODO();
+}
+
+void HTMLDocumentParser::adjust_mathml_attributes(HTMLToken& token)
+{
+    token.adjust_attribute_name("definitionurl", "definitionURL");
+}
+
+void HTMLDocumentParser::adjust_svg_attributes(HTMLToken& token)
+{
+    token.adjust_attribute_name("attributename", "attributeName");
+    token.adjust_attribute_name("attributetype", "attributeType");
+    token.adjust_attribute_name("basefrequency", "baseFrequency");
+    token.adjust_attribute_name("baseprofile", "baseProfile");
+    token.adjust_attribute_name("calcmode", "calcMode");
+    token.adjust_attribute_name("clippathunits", "clipPathUnits");
+    token.adjust_attribute_name("diffuseconstant", "diffuseConstant");
+    token.adjust_attribute_name("edgemode", "edgeMode");
+    token.adjust_attribute_name("filterunits", "filterUnits");
+    token.adjust_attribute_name("glyphref", "glyphRef");
+    token.adjust_attribute_name("gradienttransform", "gradientTransform");
+    token.adjust_attribute_name("gradientunits", "gradientUnits");
+    token.adjust_attribute_name("kernelmatrix", "kernelMatrix");
+    token.adjust_attribute_name("kernelunitlength", "kernelUnitLength");
+    token.adjust_attribute_name("keypoints", "keyPoints");
+    token.adjust_attribute_name("keysplines", "keySplines");
+    token.adjust_attribute_name("keytimes", "keyTimes");
+    token.adjust_attribute_name("lengthadjust", "lengthAdjust");
+    token.adjust_attribute_name("limitingconeangle", "limitingConeAngle");
+    token.adjust_attribute_name("markerheight", "markerHeight");
+    token.adjust_attribute_name("markerunits", "markerUnits");
+    token.adjust_attribute_name("markerwidth", "markerWidth");
+    token.adjust_attribute_name("maskcontentunits", "maskContentUnits");
+    token.adjust_attribute_name("maskunits", "maskUnits");
+    token.adjust_attribute_name("numoctaves", "numOctaves");
+    token.adjust_attribute_name("pathlength", "pathLength");
+    token.adjust_attribute_name("patterncontentunits", "patternContentUnits");
+    token.adjust_attribute_name("patterntransform", "patternTransform");
+    token.adjust_attribute_name("patternunits", "patternUnits");
+    token.adjust_attribute_name("pointsatx", "pointsAtX");
+    token.adjust_attribute_name("pointsaty", "pointsAtY");
+    token.adjust_attribute_name("pointsatz", "pointsAtZ");
+    token.adjust_attribute_name("preservealpha", "preserveAlpha");
+    token.adjust_attribute_name("preserveaspectratio", "preserveAspectRatio");
+    token.adjust_attribute_name("primitiveunits", "primitiveUnits");
+    token.adjust_attribute_name("refx", "refX");
+    token.adjust_attribute_name("refy", "refY");
+    token.adjust_attribute_name("repeatcount", "repeatCount");
+    token.adjust_attribute_name("repeatdur", "repeatDur");
+    token.adjust_attribute_name("requiredextensions", "requiredExtensions");
+    token.adjust_attribute_name("requiredfeatures", "requiredFeatures");
+    token.adjust_attribute_name("specularconstant", "specularConstant");
+    token.adjust_attribute_name("specularexponent", "specularExponent");
+    token.adjust_attribute_name("spreadmethod", "spreadMethod");
+    token.adjust_attribute_name("startoffset", "startOffset");
+    token.adjust_attribute_name("stddeviation", "stdDeviation");
+    token.adjust_attribute_name("stitchtiles", "stitchTiles");
+    token.adjust_attribute_name("surfacescale", "surfaceScale");
+    token.adjust_attribute_name("systemlanguage", "systemLanguage");
+    token.adjust_attribute_name("tablevalues", "tableValues");
+    token.adjust_attribute_name("targetx", "targetX");
+    token.adjust_attribute_name("targety", "targetY");
+    token.adjust_attribute_name("textlength", "textLength");
+    token.adjust_attribute_name("viewbox", "viewBox");
+    token.adjust_attribute_name("viewtarget", "viewTarget");
+    token.adjust_attribute_name("xchannelselector", "xChannelSelector");
+    token.adjust_attribute_name("ychannelselector", "yChannelSelector");
+    token.adjust_attribute_name("zoomandpan", "zoomAndPan");
+}
+void HTMLDocumentParser::adjust_foreign_attributes(HTMLToken& token)
+{
+    auto xlink_namespace = "http://www.w3.org/1999/xlink";
+    token.adjust_foreign_attribute("xlink:actuate", "xlink", "actuate", xlink_namespace);
+    token.adjust_foreign_attribute("xlink:arcrole", "xlink", "arcrole", xlink_namespace);
+    token.adjust_foreign_attribute("xlink:href", "xlink", "href", xlink_namespace);
+    token.adjust_foreign_attribute("xlink:role", "xlink", "role", xlink_namespace);
+    token.adjust_foreign_attribute("xlink:show", "xlink", "show", xlink_namespace);
+    token.adjust_foreign_attribute("xlink:title", "xlink", "title", xlink_namespace);
+    token.adjust_foreign_attribute("xlink:type", "xlink", "type", xlink_namespace);
+
+    auto xml_namespace = "http://www.w3.org/XML/1998/namespace";
+    token.adjust_foreign_attribute("xml:lang", "xml", "lang", xml_namespace);
+    token.adjust_foreign_attribute("xml:space", "xml", "space", xml_namespace);
+
+    auto xmlns_namespace = "http://www.w3.org/2000/xmlns/";
+    token.adjust_foreign_attribute("xmlns", "", "xmlns", xmlns_namespace);
+    token.adjust_foreign_attribute("xmlns:xlink", "xmlns", "xlink", xmlns_namespace);
 }
 
 void HTMLDocumentParser::increment_script_nesting_level()
@@ -1714,7 +1884,13 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
 
     if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead))
         || (token.is_end_tag() && token.tag_name() == HTML::TagNames::table)) {
-        // FIXME: If the stack of open elements does not have a tbody, thead, or tfoot element in table scope, this is a parse error; ignore the token.
+
+        if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tbody)
+            || !m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::thead)
+            || !m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tfoot)) {
+            PARSE_ERROR();
+            return;
+        }
 
         clear_the_stack_back_to_a_table_body_context();
         m_stack_of_open_elements.pop();
@@ -1814,7 +1990,7 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
         return;
     }
     if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::style, HTML::TagNames::script, HTML::TagNames::template_))
-         || (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_)) {
+        || (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_)) {
         process_using_the_rules_for(InsertionMode::InHead, token);
         return;
     }
@@ -1860,8 +2036,27 @@ AnythingElse:
 
 void HTMLDocumentParser::handle_in_select_in_table(HTMLToken& token)
 {
-    (void)token;
-    TODO();
+    if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::td, HTML::TagNames::th)) {
+        PARSE_ERROR();
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::select);
+        reset_the_insertion_mode_appropriately();
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::td, HTML::TagNames::th)) {
+        PARSE_ERROR();
+
+        if (!m_stack_of_open_elements.has_in_table_scope(token.tag_name()))
+            return;
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::select);
+        reset_the_insertion_mode_appropriately();
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    process_using_the_rules_for(InsertionMode::InSelect, token);
 }
 
 void HTMLDocumentParser::handle_in_select(HTMLToken& token)
@@ -2005,7 +2200,7 @@ void HTMLDocumentParser::handle_in_caption(HTMLToken& token)
     }
 
     if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr))
-         || (token.is_end_tag() && token.tag_name() == HTML::TagNames::table)) {
+        || (token.is_end_tag() && token.tag_name() == HTML::TagNames::table)) {
         if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::caption)) {
             PARSE_ERROR();
             return;
@@ -2095,6 +2290,209 @@ void HTMLDocumentParser::handle_in_column_group(HTMLToken& token)
     m_stack_of_open_elements.pop();
     m_insertion_mode = InsertionMode::InTable;
     process_using_the_rules_for(m_insertion_mode, token);
+}
+
+void HTMLDocumentParser::handle_in_template(HTMLToken& token)
+{
+    if (token.is_character() || token.is_comment() || token.is_doctype()) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::base, HTML::TagNames::basefont, HTML::TagNames::bgsound, HTML::TagNames::link, HTML::TagNames::meta, HTML::TagNames::noframes, HTML::TagNames::script, HTML::TagNames::style, HTML::TagNames::template_, HTML::TagNames::title)) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::colgroup, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead)) {
+        m_stack_of_template_insertion_modes.take_last();
+        m_stack_of_template_insertion_modes.append(InsertionMode::InTable);
+        m_insertion_mode = InsertionMode::InTable;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::col) {
+        m_stack_of_template_insertion_modes.take_last();
+        m_stack_of_template_insertion_modes.append(InsertionMode::InColumnGroup);
+        m_insertion_mode = InsertionMode::InColumnGroup;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::tr) {
+        m_stack_of_template_insertion_modes.take_last();
+        m_stack_of_template_insertion_modes.append(InsertionMode::InTableBody);
+        m_insertion_mode = InsertionMode::InTableBody;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th)) {
+        m_stack_of_template_insertion_modes.take_last();
+        m_stack_of_template_insertion_modes.append(InsertionMode::InRow);
+        m_insertion_mode = InsertionMode::InRow;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_start_tag()) {
+        m_stack_of_template_insertion_modes.take_last();
+        m_stack_of_template_insertion_modes.append(InsertionMode::InBody);
+        m_insertion_mode = InsertionMode::InBody;
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
+    }
+
+    if (token.is_end_tag()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_end_of_file()) {
+        if (!m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
+            stop_parsing();
+        } else {
+            PARSE_ERROR();
+        }
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::template_);
+        m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
+        m_stack_of_template_insertion_modes.take_last();
+        reset_the_insertion_mode_appropriately();
+        process_using_the_rules_for(m_insertion_mode, token);
+    }
+}
+
+void HTMLDocumentParser::handle_in_frameset(HTMLToken& token)
+{
+    if (token.is_character() && token.is_parser_whitespace()) {
+        insert_character(token.codepoint());
+        return;
+    }
+
+    if (token.is_comment()) {
+        insert_comment(token);
+        return;
+    }
+
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::frameset) {
+        insert_html_element(token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::frameset) {
+        // FIXME: If the current node is the root html element, then this is a parse error; ignore the token. (fragment case)
+
+        m_stack_of_open_elements.pop();
+
+        if (m_parsing_fragment && current_node().tag_name() != HTML::TagNames::frameset) {
+            m_insertion_mode = InsertionMode::AfterFrameset;
+        }
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::frame) {
+        insert_html_element(token);
+        m_stack_of_open_elements.pop();
+        token.acknowledge_self_closing_flag_if_set();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::noframes) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_end_of_file()) {
+        //FIXME: If the current node is not the root html element, then this is a parse error.
+
+        stop_parsing();
+        return;
+    }
+
+    PARSE_ERROR();
+}
+
+void HTMLDocumentParser::handle_after_frameset(HTMLToken& token)
+{
+    if (token.is_character() && token.is_parser_whitespace()) {
+        insert_character(token.codepoint());
+        return;
+    }
+
+    if (token.is_comment()) {
+        insert_comment(token);
+        return;
+    }
+
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_end_tag() && token.tag_name() == HTML::TagNames::html) {
+        m_insertion_mode = InsertionMode::AfterAfterFrameset;
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::noframes) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    if (token.is_end_of_file()) {
+        stop_parsing();
+        return;
+    }
+
+    PARSE_ERROR();
+}
+
+void HTMLDocumentParser::handle_after_after_frameset(HTMLToken& token)
+{
+    if (token.is_comment()) {
+        auto comment = adopt(*new Comment(document(), token.m_comment_or_character.data.to_string()));
+        document().append_child(move(comment));
+        return;
+    }
+
+    if (token.is_doctype() || token.is_parser_whitespace() || (token.is_start_tag() && token.tag_name() == HTML::TagNames::html)) {
+        process_using_the_rules_for(InsertionMode::InBody, token);
+        return;
+    }
+
+    if (token.is_end_of_file()) {
+        stop_parsing();
+        return;
+    }
+
+    if (token.is_start_tag() && token.tag_name() == HTML::TagNames::noframes) {
+        process_using_the_rules_for(InsertionMode::InHead, token);
+        return;
+    }
+
+    PARSE_ERROR();
 }
 
 void HTMLDocumentParser::reset_the_insertion_mode_appropriately()

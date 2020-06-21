@@ -118,10 +118,38 @@ public:
     {
         ASSERT(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
-            if (attribute_name == attribute.name_builder.string_view())
+            if (attribute_name == attribute.local_name_builder.string_view())
                 return attribute.value_builder.string_view();
         }
         return {};
+    }
+
+    void adjust_attribute_name(const FlyString& old_name, const FlyString& new_name)
+    {
+        ASSERT(is_start_tag() || is_end_tag());
+        for (auto& attribute : m_tag.attributes) {
+            if (old_name == attribute.local_name_builder.string_view()) {
+                attribute.local_name_builder.clear();
+                attribute.local_name_builder.append(new_name);
+            }
+        }
+    }
+
+    void adjust_foreign_attribute(const FlyString& old_name, const FlyString& prefix, const FlyString& local_name, const FlyString& namespace_)
+    {
+        ASSERT(is_start_tag() || is_end_tag());
+        for (auto& attribute : m_tag.attributes) {
+            if (old_name == attribute.local_name_builder.string_view()) {
+                attribute.prefix_builder.clear();
+                attribute.prefix_builder.append(prefix);
+
+                attribute.local_name_builder.clear();
+                attribute.local_name_builder.append(local_name);
+
+                attribute.namespace_builder.clear();
+                attribute.namespace_builder.append(namespace_);
+            }
+        }
     }
 
     void drop_attributes()
@@ -136,7 +164,9 @@ public:
 
 private:
     struct AttributeBuilder {
-        StringBuilder name_builder;
+        StringBuilder prefix_builder;
+        StringBuilder local_name_builder;
+        StringBuilder namespace_builder;
         StringBuilder value_builder;
     };
 
