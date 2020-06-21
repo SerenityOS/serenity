@@ -81,6 +81,7 @@ class EventWrapper;
 class EventListenerWrapper;
 class EventTargetWrapper;
 class HTMLCanvasElementWrapper;
+class HTMLElementWrapper;
 class HTMLImageElementWrapper;
 class ImageDataWrapper;
 class LocationObject;

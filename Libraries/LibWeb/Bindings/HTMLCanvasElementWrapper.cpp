@@ -39,7 +39,7 @@ namespace Web {
 namespace Bindings {
 
 HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(JS::GlobalObject& global_object, HTMLCanvasElement& element)
-    : ElementWrapper(global_object, element)
+    : HTMLElementWrapper(global_object, element)
 {
 }
 

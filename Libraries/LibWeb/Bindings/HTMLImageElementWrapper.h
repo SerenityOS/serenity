@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/ElementWrapper.h>
+#include <LibWeb/Bindings/HTMLElementWrapper.h>
 
 namespace Web {
 namespace Bindings {
 
-class HTMLImageElementWrapper : public ElementWrapper {
+class HTMLImageElementWrapper : public HTMLElementWrapper {
 public:
     HTMLImageElementWrapper(JS::GlobalObject&, HTMLImageElement&);
     virtual ~HTMLImageElementWrapper() override;

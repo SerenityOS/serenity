@@ -32,10 +32,13 @@ namespace Web {
 
 class HTMLElement : public Element {
 public:
+    using WrapperType = Bindings::HTMLElementWrapper;
+
     HTMLElement(Document&, const FlyString& tag_name);
     virtual ~HTMLElement() override;
 
     String title() const { return attribute(HTML::AttributeNames::title); }
+    void set_title(const String& value) { set_attribute(HTML::AttributeNames::title, value); }
 
 private:
     virtual bool is_html_element() const final { return true; }

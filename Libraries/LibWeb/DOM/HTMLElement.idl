@@ -1,0 +1,5 @@
+interface HTMLElement : Element {
+
+    attribute DOMString title;
+
+}
