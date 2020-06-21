@@ -3,7 +3,6 @@ set(SOURCES
     Bindings/EventListenerWrapper.cpp
     Bindings/EventWrapper.cpp
     Bindings/HTMLCanvasElementWrapper.cpp
-    Bindings/HTMLImageElementWrapper.cpp
     Bindings/ImageDataWrapper.cpp
     Bindings/LocationObject.cpp
     Bindings/MouseEventWrapper.cpp
@@ -158,6 +157,7 @@ libweb_js_wrapper(Node)
 libweb_js_wrapper(Document)
 libweb_js_wrapper(Element)
 libweb_js_wrapper(HTMLElement)
+libweb_js_wrapper(HTMLImageElement)
 
 get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
 set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})

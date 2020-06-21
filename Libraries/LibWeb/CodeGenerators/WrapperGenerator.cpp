@@ -407,17 +407,19 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "}";
 
     // Implementation: impl_from()
-    out() << "static " << interface.name << "* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)";
-    out() << "{";
-    out() << "    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);";
-    out() << "    if (!this_object)";
-    out() << "        return {};";
-    out() << "    if (!this_object->inherits(\"" << wrapper_class << "\")) {";
-    out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << interface.name << "\");";
-    out() << "        return nullptr;";
-    out() << "    }";
-    out() << "    return &static_cast<" << wrapper_class << "*>(this_object)->impl();";
-    out() << "}";
+    if (!interface.attributes.is_empty() || !interface.functions.is_empty()) {
+        out() << "static " << interface.name << "* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)";
+        out() << "{";
+        out() << "    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);";
+        out() << "    if (!this_object)";
+        out() << "        return {};";
+        out() << "    if (!this_object->inherits(\"" << wrapper_class << "\")) {";
+        out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << interface.name << "\");";
+        out() << "        return nullptr;";
+        out() << "    }";
+        out() << "    return &static_cast<" << wrapper_class << "*>(this_object)->impl();";
+        out() << "}";
+    }
 
     auto generate_to_cpp = [&](auto& parameter, auto& js_name, auto& js_suffix, auto cpp_name, bool return_void = false) {
         auto generate_return = [&] {
