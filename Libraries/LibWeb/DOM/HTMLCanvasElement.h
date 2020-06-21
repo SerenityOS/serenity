@@ -47,8 +47,8 @@ public:
 
     CanvasRenderingContext2D* get_context(String type);
 
-    int requested_width() const;
-    int requested_height() const;
+    unsigned width() const;
+    unsigned height() const;
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;

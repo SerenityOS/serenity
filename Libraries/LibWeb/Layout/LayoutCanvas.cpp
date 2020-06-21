@@ -44,8 +44,8 @@ void LayoutCanvas::layout(LayoutMode layout_mode)
 {
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
-    set_intrinsic_width(node().requested_width());
-    set_intrinsic_height(node().requested_height());
+    set_intrinsic_width(node().width());
+    set_intrinsic_height(node().height());
     LayoutReplaced::layout(layout_mode);
 }
 
