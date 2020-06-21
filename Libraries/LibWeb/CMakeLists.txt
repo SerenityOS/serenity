@@ -6,6 +6,7 @@ set(SOURCES
     Bindings/ElementWrapper.h
     Bindings/EventListenerWrapper.cpp
     Bindings/EventTargetWrapper.cpp
+    Bindings/EventTargetWrapper.h
     Bindings/EventWrapper.cpp
     Bindings/HTMLCanvasElementWrapper.cpp
     Bindings/HTMLImageElementWrapper.cpp
@@ -147,6 +148,7 @@ function(libweb_js_wrapper class)
     add_custom_target(generate_${class}Wrapper.h DEPENDS Bindings/${class}Wrapper.h)
 endfunction()
 
+libweb_js_wrapper(EventTarget)
 libweb_js_wrapper(Node)
 libweb_js_wrapper(Document)
 libweb_js_wrapper(Element)

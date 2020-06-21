@@ -38,6 +38,7 @@ class Wrapper
     : public JS::Object
     , public Weakable<Wrapper> {
 public:
+    virtual bool is_event_target_wrapper() const { return false; }
     virtual bool is_node_wrapper() const { return false; }
     virtual bool is_document_wrapper() const { return false; }
     virtual bool is_element_wrapper() const { return false; }
