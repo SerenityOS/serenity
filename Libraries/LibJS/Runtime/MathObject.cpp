@@ -60,6 +60,11 @@ void MathObject::initialize(Interpreter& interpreter, GlobalObject& global_objec
     define_native_function("expm1", expm1, 1, attr);
     define_native_function("sign", sign, 1, attr);
     define_native_function("clz32", clz32, 1, attr);
+    define_native_function("acosh", acosh, 1, attr);
+    define_native_function("asinh", asinh, 1, attr);
+    define_native_function("atanh", atanh, 1, attr);
+    define_native_function("log1p", log1p, 1, attr);
+    define_native_function("cbrt", cbrt, 1, attr);
 
     define_property("E", Value(M_E), 0);
     define_property("LN2", Value(M_LN2), 0);
@@ -223,7 +228,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
         return {};
     if (number.is_nan())
         return js_nan();
-    return Value(::pow(M_E, number.as_double()));
+    return Value(::exp(number.as_double()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
@@ -233,7 +238,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
         return {};
     if (number.is_nan())
         return js_nan();
-    return Value(::pow(M_E, number.as_double()) - 1);
+    return Value(::expm1(number.as_double()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
@@ -260,6 +265,52 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
     if (!number.is_finite_number() || (unsigned)number.as_double() == 0)
         return Value(32);
     return Value(__builtin_clz((unsigned)number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
+{
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (number.as_double() < 1)
+        return JS::js_nan();
+    return Value(::acosh(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::asinh)
+{
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(::asinh(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
+{
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (number.as_double() > 1 || number.as_double() < -1)
+        return JS::js_nan();
+    return Value(::atanh(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::log1p)
+{
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    if (number.as_double() < -1)
+        return JS::js_nan();
+    return Value(::log1p(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
+{
+    auto number = interpreter.argument(0).to_number(interpreter);
+    if (interpreter.exception())
+        return {};
+    return Value(::cbrt(number.as_double()));
 }
 
 }
