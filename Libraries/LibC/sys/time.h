@@ -28,31 +28,9 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <time.h>
 
 __BEGIN_DECLS
-
-#define timerclear(tvp) (tvp)->tv_sec = (tvp)->tv_usec = 0
-#define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
-#define timercmp(tvp, uvp, cmp) \
-    (((tvp)->tv_sec == (uvp)->tv_sec) ? ((tvp)->tv_usec cmp(uvp)->tv_usec) : ((tvp)->tv_sec cmp(uvp)->tv_sec))
-#define timeradd(a, b, out)                           \
-    do {                                              \
-        (out)->tv_sec = (a)->tv_sec + (b)->tv_sec;    \
-        (out)->tv_usec = (a)->tv_usec + (b)->tv_usec; \
-        if ((out)->tv_usec >= 1000000) {              \
-            (out)->tv_sec++;                          \
-            (out)->tv_usec -= 1000000;                \
-        }                                             \
-    } while (0)
-#define timersub(a, b, out)                           \
-    do {                                              \
-        (out)->tv_sec = (a)->tv_sec - (b)->tv_sec;    \
-        (out)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
-        if ((out)->tv_usec < 0) {                     \
-            (out)->tv_sec--;                          \
-            (out)->tv_usec += 1000000;                \
-        }                                             \
-    } while (0)
 
 struct timeval {
     time_t tv_sec;
@@ -65,5 +43,91 @@ struct timezone {
 };
 
 int gettimeofday(struct timeval* __restrict__, void* __restrict__) __attribute__((nonnull(1)));
+
+static inline void timeradd(const struct timeval* a, const struct timeval* b, struct timeval* out)
+{
+    out->tv_sec = a->tv_sec + b->tv_sec;
+    out->tv_usec = a->tv_usec + b->tv_usec;
+    if (out->tv_usec >= 1000 * 1000) {
+        out->tv_sec++;
+        out->tv_usec -= 1000 * 1000;
+    }
+}
+
+static inline void timersub(const struct timeval* a, const struct timeval* b, struct timeval* out)
+{
+    out->tv_sec = a->tv_sec - b->tv_sec;
+    out->tv_usec = a->tv_usec - b->tv_usec;
+    if (out->tv_usec < 0) {
+        out->tv_sec--;
+        out->tv_usec += 1000 * 1000;
+    }
+}
+
+static inline void timerclear(struct timeval* out)
+{
+    out->tv_sec = out->tv_usec = 0;
+}
+
+static inline int timerisset(const struct timeval* tv)
+{
+    return tv->tv_sec || tv->tv_usec;
+}
+
+#define timeradd timeradd
+#define timersub timersub
+#define timerclear timerclear
+#define timerisset timerisset
+#define timercmp(tvp, uvp, cmp) \
+    (((tvp)->tv_sec == (uvp)->tv_sec) ? ((tvp)->tv_usec cmp(uvp)->tv_usec) : ((tvp)->tv_sec cmp(uvp)->tv_sec))
+
+static inline void timespecadd(const struct timespec* a, const struct timespec* b, struct timespec* out)
+{
+    out->tv_sec = a->tv_sec + b->tv_sec;
+    out->tv_nsec = a->tv_nsec + b->tv_nsec;
+    if (out->tv_nsec >= 1000 * 1000 * 1000) {
+        out->tv_sec++;
+        out->tv_nsec -= 1000 * 1000 * 1000;
+    }
+}
+
+static inline void timespecsub(const struct timespec* a, const struct timespec* b, struct timespec* out)
+{
+    out->tv_sec = a->tv_sec - b->tv_sec;
+    out->tv_nsec = a->tv_nsec - b->tv_nsec;
+    if (out->tv_nsec < 0) {
+        out->tv_sec--;
+        out->tv_nsec += 1000 * 1000 * 1000;
+    }
+}
+
+static inline void timespecclear(struct timespec* out)
+{
+    out->tv_sec = out->tv_nsec = 0;
+}
+
+static inline int timespecisset(const struct timespec* ts)
+{
+    return ts->tv_sec || ts->tv_nsec;
+}
+
+static inline void TIMEVAL_TO_TIMESPEC(const struct timeval* tv, struct timespec* ts)
+{
+    ts->tv_sec = tv->tv_sec;
+    ts->tv_nsec = tv->tv_usec * 1000;
+}
+
+static inline void TIMESPEC_TO_TIMEVAL(struct timeval* tv, const struct timespec* ts)
+{
+    tv->tv_sec = ts->tv_sec;
+    tv->tv_usec = ts->tv_nsec / 1000;
+}
+
+#define timespecadd timespecadd
+#define timespecsub timespecsub
+#define timespecclear timespecclear
+#define timespecisset timespecisset
+#define timespeccmp(ts, us, cmp) \
+    (((ts)->tv_sec == (us)->tv_sec) ? ((ts)->vf_nsec cmp(us)->tv_nsec) : ((ts)->tv_sec cmp(us)->tv_sec))
 
 __END_DECLS
