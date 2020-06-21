@@ -237,7 +237,7 @@ OwnPtr<Interface> parse_interface(const StringView& input)
     }
 
     interface->wrapper_class = String::format("%sWrapper", interface->name.characters());
-    interface->wrapper_base_class = String::format("%sWrapper", interface->parent_name.characters());
+    interface->wrapper_base_class = String::format("%sWrapper", interface->parent_name.is_empty() ? "" : interface->parent_name.characters());
 
     return interface;
 }
@@ -308,9 +308,8 @@ static void generate_header(const IDL::Interface& interface)
     out() << "#include <LibWeb/Bindings/Wrapper.h>";
     out() << "#include <LibWeb/DOM/" << interface.name << ".h>";
 
-    if (!wrapper_base_class.is_empty()) {
+    if (wrapper_base_class != "Wrapper")
         out() << "#include <LibWeb/Bindings/" << wrapper_base_class << ".h>";
-    }
 
     out() << "namespace Web {";
     out() << "namespace Bindings {";
@@ -321,7 +320,7 @@ static void generate_header(const IDL::Interface& interface)
     out() << "    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;";
     out() << "    virtual ~" << wrapper_class << "() override;";
 
-    if (wrapper_base_class.is_empty()) {
+    if (wrapper_base_class == "Wrapper") {
         out() << "    " << interface.name << "& impl() { return *m_impl; }";
         out() << "    const " << interface.name << "& impl() const { return *m_impl; }";
     } else {
@@ -345,6 +344,10 @@ static void generate_header(const IDL::Interface& interface)
             out() << "    JS_DECLARE_NATIVE_SETTER(" << snake_name(attribute.name) << "_setter);";
     }
 
+    if (wrapper_base_class == "Wrapper") {
+        out() << "    NonnullRefPtr<" << interface.name << "> m_impl;";
+    }
+
     out() << "};";
     out() << "}";
     out() << "}";
@@ -361,17 +364,24 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibJS/Runtime/Value.h>";
     out() << "#include <LibJS/Runtime/GlobalObject.h>";
     out() << "#include <LibJS/Runtime/Error.h>";
+    out() << "#include <LibJS/Runtime/Function.h>";
     out() << "#include <LibWeb/Bindings/NodeWrapperFactory.h>";
     out() << "#include <LibWeb/Bindings/" << wrapper_class << ".h>";
     out() << "#include <LibWeb/DOM/Element.h>";
     out() << "#include <LibWeb/DOM/HTMLElement.h>";
+    out() << "#include <LibWeb/DOM/EventListener.h>";
 
     out() << "namespace Web {";
     out() << "namespace Bindings {";
 
     // Implementation: Wrapper constructor
     out() << wrapper_class << "::" << wrapper_class << "(JS::GlobalObject& global_object, " << interface.name << "& impl)";
-    out() << "    : " << wrapper_base_class << "(global_object, impl)";
+    if (wrapper_base_class == "Wrapper") {
+        out() << "    : Wrapper(*global_object.object_prototype())";
+        out() << "    , m_impl(impl)";
+    } else {
+        out() << "    : " << wrapper_base_class << "(global_object, impl)";
+    }
     out() << "{";
     out() << "}";
 
@@ -421,6 +431,12 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "    auto " << cpp_name << " = " << js_name << js_suffix << ".to_string(interpreter);";
             out() << "    if (interpreter.exception())";
             generate_return();
+        } else if (parameter.type.name == "EventListener") {
+            out() << "    if (!" << js_name << js_suffix << ".is_function()) {";
+            out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"Function\");";
+            generate_return();
+            out() << "    }";
+            out() << "    auto " << cpp_name << " = adopt(*new EventListener(JS::make_handle(&" << js_name << js_suffix << ".as_function())));";
         } else if (parameter.type.name == "Node") {
             out() << "    auto " << cpp_name << "_object = " << js_name << js_suffix << ".to_object(interpreter, global_object);";
             out() << "    if (interpreter.exception())";

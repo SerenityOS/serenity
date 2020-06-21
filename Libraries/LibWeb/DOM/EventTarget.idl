@@ -1,0 +1,5 @@
+interface EventTarget {
+
+    void addEventListener(DOMString type, EventListener? callback);
+
+}
