@@ -49,7 +49,6 @@ public:
     String src() const { return attribute(HTML::AttributeNames::src); }
 
     const Gfx::Bitmap* bitmap() const;
-    const Gfx::ImageDecoder* image_decoder() const;
 
 private:
     void animate();

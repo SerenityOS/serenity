@@ -77,11 +77,6 @@ RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* p
     return adopt(*new LayoutImage(*this, move(style), m_image_loader));
 }
 
-const Gfx::ImageDecoder* HTMLImageElement::image_decoder() const
-{
-    return m_image_loader.image_decoder();
-}
-
 const Gfx::Bitmap* HTMLImageElement::bitmap() const
 {
     return m_image_loader.bitmap();

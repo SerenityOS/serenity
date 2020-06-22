@@ -102,6 +102,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/tmp/portal/image", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
     auto m_config = Core::ConfigFile::get_for_app("Browser");

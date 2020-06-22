@@ -67,18 +67,23 @@ void ImageLoader::resource_did_load()
         return;
     }
 
+#ifdef IMAGE_LOADER_DEBUG
     if (!resource()->has_encoded_data()) {
         dbg() << "ImageLoader: Resource did load, no encoded data. URL: " << resource()->url();
     } else {
         dbg() << "ImageLoader: Resource did load, has encoded data. URL: " << resource()->url();
     }
-    m_decoder = resource()->ensure_decoder();
+#endif
 
-    if (m_decoder->is_animated() && m_decoder->frame_count() > 1) {
-        const auto& first_frame = m_decoder->frame(0);
-        m_timer->set_interval(first_frame.duration);
-        m_timer->on_timeout = [this] { animate(); };
-        m_timer->start();
+    if (resource()->should_decode_in_process()) {
+        m_decoder = resource()->ensure_decoder();
+
+        if (m_decoder->is_animated() && m_decoder->frame_count() > 1) {
+            const auto& first_frame = m_decoder->frame(0);
+            m_timer->set_interval(first_frame.duration);
+            m_timer->on_timeout = [this] { animate(); };
+            m_timer->start();
+        }
     }
 
     if (on_load)
@@ -120,16 +125,43 @@ void ImageLoader::resource_did_fail()
 
 void ImageLoader::resource_did_replace_decoder()
 {
-    m_decoder = resource()->ensure_decoder();
+    if (resource()->should_decode_in_process()) {
+        m_decoder = resource()->ensure_decoder();
+    }
+}
+
+bool ImageLoader::has_image() const
+{
+    if (!resource())
+        return false;
+    if (resource()->should_decode_in_process())
+        return image_decoder();
+    return true;
+}
+
+unsigned ImageLoader::width() const
+{
+    if (!resource())
+        return 0;
+    if (resource()->should_decode_in_process())
+        return image_decoder() ? image_decoder()->width() : 0;
+    return bitmap() ? bitmap()->width() : 0;
+}
+
+unsigned ImageLoader::height() const
+{
+    if (!resource())
+        return 0;
+    if (resource()->should_decode_in_process())
+        return image_decoder() ? image_decoder()->height() : 0;
+    return bitmap() ? bitmap()->height() : 0;
 }
 
 const Gfx::Bitmap* ImageLoader::bitmap() const
 {
-    if (!m_decoder)
+    if (!resource())
         return nullptr;
-    if (m_decoder->is_animated())
-        return m_decoder->frame(m_current_frame_index).image;
-    return m_decoder->bitmap();
+    return resource()->bitmap(0);
 }
 
 const Gfx::ImageDecoder* ImageLoader::image_decoder() const

@@ -41,7 +41,12 @@ public:
     const Gfx::Bitmap* bitmap() const;
     const Gfx::ImageDecoder* image_decoder() const;
 
+    bool has_image() const;
+
     void set_visible_in_viewport(bool) const;
+
+    unsigned width() const;
+    unsigned height() const;
 
     Function<void()> on_load;
     Function<void()> on_fail;

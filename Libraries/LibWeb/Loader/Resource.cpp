@@ -107,15 +107,21 @@ void Resource::did_load(Badge<ResourceLoader>, const ByteBuffer& data, const Has
 
     auto content_type = headers.get("Content-Type");
     if (content_type.has_value()) {
+#ifdef RESOURCE_DEBUG
         dbg() << "Content-Type header: _" << content_type.value() << "_";
+#endif
         m_encoding = encoding_from_content_type(content_type.value());
         m_mime_type = mime_type_from_content_type(content_type.value());
     } else if (url().protocol() == "data" && !url().data_mime_type().is_empty()) {
+#ifdef RESOURCE_DEBUG
         dbg() << "This is a data URL with mime-type _" << url().data_mime_type() << "_";
+#endif
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = url().data_mime_type();
     } else {
+#ifdef RESOURCE_DEBUG
         dbg() << "No Content-Type header to go on! Guessing based on filename...";
+#endif
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = guess_mime_type_based_on_filename(url());
     }
