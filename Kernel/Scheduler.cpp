@@ -388,7 +388,9 @@ bool Scheduler::pick_next()
         if (thread.dispatch_one_pending_signal() == ShouldUnblockThread::No)
             return IterationDecision::Continue;
         if (was_blocked) {
+#ifdef SCHEDULER_DEBUG
             dbg() << "Unblock " << thread << " due to signal";
+#endif
             ASSERT(thread.m_blocker != nullptr);
             thread.m_blocker->set_interrupted_by_signal();
             thread.unblock();
