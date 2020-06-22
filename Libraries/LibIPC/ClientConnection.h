@@ -208,8 +208,10 @@ protected:
     void event(Core::Event& event) override
     {
         if (event.type() == Event::Disconnected) {
+#ifdef IPC_DEBUG
             int client_id = static_cast<const DisconnectedEvent&>(event).client_id();
             dbg() << *this << ": Client disconnected: " << client_id;
+#endif
             die();
             return;
         }
