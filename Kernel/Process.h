@@ -217,7 +217,7 @@ public:
     int sys$minherit(void*, size_t, int inherit);
     int sys$purge(int mode);
     int sys$select(const Syscall::SC_select_params*);
-    int sys$poll(pollfd*, int nfds, int timeout);
+    int sys$poll(const Syscall::SC_poll_params*);
     ssize_t sys$get_dir_entries(int fd, void*, ssize_t);
     int sys$getcwd(char*, ssize_t);
     int sys$chdir(const char*, size_t);
