@@ -822,7 +822,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 {
     ASSERT(is_ring3());
     auto path = main_program_description->absolute_path();
+#ifdef EXEC_DEBUG
     dbg() << "do_exec(" << path << ")";
+#endif
 
     size_t total_blob_size = 0;
     for (auto& a : arguments)
