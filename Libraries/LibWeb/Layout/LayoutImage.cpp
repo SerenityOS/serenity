@@ -44,14 +44,12 @@ LayoutImage::~LayoutImage()
 
 int LayoutImage::preferred_width() const
 {
-    auto* decoder = m_image_loader.image_decoder();
-    return node().attribute(HTML::AttributeNames::width).to_int().value_or(decoder ? decoder->width() : 0);
+    return node().attribute(HTML::AttributeNames::width).to_int().value_or(m_image_loader.width());
 }
 
 int LayoutImage::preferred_height() const
 {
-    auto* decoder = m_image_loader.image_decoder();
-    return node().attribute(HTML::AttributeNames::height).to_int().value_or(decoder ? decoder->height() : 0);
+    return node().attribute(HTML::AttributeNames::height).to_int().value_or(m_image_loader.height());
 }
 
 void LayoutImage::layout(LayoutMode layout_mode)
@@ -97,8 +95,8 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
             if (alt.is_empty())
                 alt = image_element.src();
             context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), Gfx::TextElision::Right);
-        } else if (m_image_loader.bitmap()) {
-            context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *m_image_loader.bitmap(), m_image_loader.bitmap()->rect());
+        } else if (auto* bitmap = m_image_loader.bitmap()) {
+            context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *bitmap, bitmap->rect());
         }
     }
 }
@@ -106,7 +104,7 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
 bool LayoutImage::renders_as_alt_text() const
 {
     if (is<HTMLImageElement>(node()))
-        return !m_image_loader.image_decoder();
+        return !m_image_loader.has_image();
     return false;
 }
 

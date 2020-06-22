@@ -36,12 +36,17 @@ class ImageResource final : public Resource {
 public:
     virtual ~ImageResource() override;
     Gfx::ImageDecoder& ensure_decoder();
+    const Gfx::Bitmap* bitmap(size_t frame_index) const;
+
+    bool should_decode_in_process() const;
 
     void update_volatility();
 
 private:
     explicit ImageResource(const LoadRequest&);
     RefPtr<Gfx::ImageDecoder> m_decoder;
+    mutable RefPtr<Gfx::Bitmap> m_decoded_image;
+    mutable bool m_has_attempted_decode { false };
 };
 
 class ImageResourceClient : public ResourceClient {

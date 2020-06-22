@@ -27,6 +27,7 @@
 #include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibImageDecoderClient/Client.h>
 #include <LibWeb/Loader/ImageResource.h>
 
 namespace Web {
@@ -40,11 +41,36 @@ ImageResource::~ImageResource()
 {
 }
 
+bool ImageResource::should_decode_in_process() const
+{
+    return mime_type() == "image/gif";
+}
+
 Gfx::ImageDecoder& ImageResource::ensure_decoder()
 {
     if (!m_decoder)
         m_decoder = Gfx::ImageDecoder::create(encoded_data());
     return *m_decoder;
+}
+
+const Gfx::Bitmap* ImageResource::bitmap(size_t frame_index) const
+{
+    if (!has_encoded_data())
+        return nullptr;
+
+    if (should_decode_in_process()) {
+        if (!m_decoder)
+            return nullptr;
+        if (m_decoder->is_animated())
+            return m_decoder->frame(frame_index).image;
+        return m_decoder->bitmap();
+    }
+    if (!m_decoded_image && !m_has_attempted_decode) {
+        auto image_decoder_client = ImageDecoderClient::Client::construct();
+        m_decoded_image = image_decoder_client->decode_image(encoded_data());
+        m_has_attempted_decode = true;
+    }
+    return m_decoded_image;
 }
 
 void ImageResource::update_volatility()
