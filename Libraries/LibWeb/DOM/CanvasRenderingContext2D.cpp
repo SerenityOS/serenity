@@ -26,6 +26,7 @@
 
 #include <AK/OwnPtr.h>
 #include <LibGfx/Painter.h>
+#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/DOM/CanvasRenderingContext2D.h>
 #include <LibWeb/DOM/HTMLCanvasElement.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
@@ -190,9 +191,20 @@ void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
     painter->fill_path(path, m_fill_style, winding);
 }
 
-RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(JS::GlobalObject& global_object, int width, int height) const
+void CanvasRenderingContext2D::fill(const String& fill_rule)
 {
-    return ImageData::create_with_size(global_object, width, height);
+    if (fill_rule == "evenodd")
+        return fill(Gfx::Painter::WindingRule::EvenOdd);
+    return fill(Gfx::Painter::WindingRule::Nonzero);
+}
+
+RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
+{
+    if (!wrapper()) {
+        dbg() << "Hmm! Attempted to create ImageData for wrapper-less CRC2D.";
+        return nullptr;
+    }
+    return ImageData::create_with_size(wrapper()->global_object(), width, height);
 }
 
 void CanvasRenderingContext2D::put_image_data(const ImageData& image_data, float x, float y)

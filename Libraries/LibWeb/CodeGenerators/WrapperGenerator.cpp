@@ -214,6 +214,8 @@ OwnPtr<Interface> parse_interface(const StringView& input)
         Vector<Parameter> parameters;
 
         for (;;) {
+            if (consume_if(')'))
+                break;
             auto type = parse_type();
             consume_whitespace();
             auto name = consume_while([](auto ch) { return !isspace(ch) && ch != ',' && ch != ')'; });
@@ -327,6 +329,23 @@ static bool should_emit_wrapper_factory(const IDL::Interface& interface)
     return true;
 }
 
+static bool is_wrappable_type(const IDL::Type& type)
+{
+    if (type.name == "Node")
+        return true;
+    if (type.name == "Document")
+        return true;
+    if (type.name == "Text")
+        return true;
+    if (type.name == "DocumentType")
+        return true;
+    if (type.name.ends_with("Element"))
+        return true;
+    if (type.name == "ImageData")
+        return true;
+    return false;
+}
+
 static void generate_header(const IDL::Interface& interface)
 {
     auto& wrapper_class = interface.wrapper_class;
@@ -404,6 +423,9 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/DOM/Element.h>";
     out() << "#include <LibWeb/DOM/HTMLElement.h>";
     out() << "#include <LibWeb/DOM/EventListener.h>";
+    out() << "#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>";
+    out() << "#include <LibWeb/Bindings/HTMLImageElementWrapper.h>";
+    out() << "#include <LibWeb/Bindings/ImageDataWrapper.h>";
     out() << "#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>";
 
     out() << "namespace Web {";
@@ -473,7 +495,7 @@ void generate_implementation(const IDL::Interface& interface)
             generate_return();
             out() << "    }";
             out() << "    auto " << cpp_name << " = adopt(*new EventListener(JS::make_handle(&" << js_name << js_suffix << ".as_function())));";
-        } else if (parameter.type.name == "Node") {
+        } else if (is_wrappable_type(parameter.type)) {
             out() << "    auto " << cpp_name << "_object = " << js_name << js_suffix << ".to_object(interpreter, global_object);";
             out() << "    if (interpreter.exception())";
             generate_return();
@@ -482,6 +504,13 @@ void generate_implementation(const IDL::Interface& interface)
             generate_return();
             out() << "    }";
             out() << "    auto& " << cpp_name << " = static_cast<" << parameter.type.name << "Wrapper*>(" << cpp_name << "_object)->impl();";
+        } else if (parameter.type.name == "double") {
+            out() << "    auto " << cpp_name << " = " << js_name << js_suffix << ".to_double(interpreter);";
+            out() << "    if (interpreter.exception())";
+            generate_return();
+        } else {
+            dbg() << "Unimplemented JS-to-C++ conversion: " << parameter.type.name;
+            ASSERT_NOT_REACHED();
         }
     };
 
@@ -564,8 +593,10 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "    auto* impl = impl_from(interpreter, global_object);";
         out() << "    if (!impl)";
         out() << "        return {};";
-        out() << "    if (interpreter.argument_count() < " << function.length() << ")";
-        out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
+        if (function.length() > 0) {
+            out() << "    if (interpreter.argument_count() < " << function.length() << ")";
+            out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
+        }
 
         StringBuilder arguments_builder;
         generate_arguments(function.parameters, arguments_builder);
