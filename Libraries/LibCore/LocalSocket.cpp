@@ -78,8 +78,6 @@ RefPtr<LocalSocket> LocalSocket::take_over_accepted_socket_from_system_server()
     if (!getenv(socket_takeover))
         return nullptr;
 
-    dbg() << "Taking the accepted socket over from SystemServer";
-
     // The SystemServer has passed us the socket as fd 3,
     // so use that instead of creating our own.
     constexpr int fd = 3;
