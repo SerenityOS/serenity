@@ -55,8 +55,6 @@ bool LocalServer::take_over_from_system_server()
     constexpr auto socket_takeover = "SOCKET_TAKEOVER";
 
     if (getenv(socket_takeover)) {
-        dbg() << "Taking the socket over from SystemServer";
-
         // Sanity check: it has to be a socket.
         struct stat stat;
         int rc = fstat(3, &stat);
