@@ -33,6 +33,7 @@
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/PBMLoader.h>
 #include <LibGfx/PNGLoader.h>
+#include <LibGfx/PPMLoader.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <fcntl.h>
