@@ -47,7 +47,10 @@ static void sigchld_handler(int)
     if (!pid)
         return;
 
+#ifdef SYSTEMSERVER_DEBUG
     dbg() << "Reaped child with pid " << pid << ", exist status " << status;
+#endif
+
     Service* service = Service::find_by_pid(pid);
     if (service == nullptr) {
         // This can happen for multi-instance services.

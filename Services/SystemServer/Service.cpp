@@ -164,7 +164,9 @@ void Service::setup_notifier()
 
 void Service::handle_socket_connection()
 {
+#ifdef SERVICE_DEBUG
     dbg() << "Ready to read on behalf of " << name();
+#endif
     if (m_accept_socket_connections) {
        int accepted_fd = accept(m_socket_fd, nullptr, nullptr);
        if (accepted_fd < 0) {
@@ -192,7 +194,9 @@ void Service::activate()
 
 void Service::spawn(int socket_fd)
 {
+#ifdef SERVICE_DEBUG
     dbg() << "Spawning " << name();
+#endif
 
     m_run_timer.start();
     pid_t pid = fork();
