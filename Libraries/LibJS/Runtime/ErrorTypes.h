@@ -143,12 +143,7 @@
     /* LibWeb bindings */                                                                              \
     M(BadArgCountOne, "%s() needs one argument")                                                       \
     M(BadArgCountAtLeastOne, "%s() needs at least one argument")                                       \
-    M(BadArgCountMany, "%s() needs %s arguments")                                                      \
-    M(DrawImageArgumentCount, "drawImage() needs three arguments")                                     \
-    M(FillBadWindingRule, "fill() winding rule must be either 'nonzero' or 'evenodd'")                 \
-    M(FillNonString, "fill() called with non-string")                                                  \
-    M(ImageIsAn, "Image is not an HTMLImageElement, it's an %s")                                       \
-    M(PutImageDataBadCall, "putImageData() called with non-ImageData")                                 \
+    M(BadArgCountMany, "%s() needs %s arguments")
 
 
 namespace JS {
