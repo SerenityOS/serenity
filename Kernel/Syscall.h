@@ -35,6 +35,7 @@
 constexpr int syscall_vector = 0x82;
 
 extern "C" {
+struct pollfd;
 struct timeval;
 struct timespec;
 struct sockaddr;
@@ -269,6 +270,13 @@ struct SC_select_params {
     fd_set* readfds;
     fd_set* writefds;
     fd_set* exceptfds;
+    const struct timespec* timeout;
+    const u32* sigmask;
+};
+
+struct SC_poll_params {
+    struct pollfd* fds;
+    unsigned nfds;
     const struct timespec* timeout;
     const u32* sigmask;
 };
