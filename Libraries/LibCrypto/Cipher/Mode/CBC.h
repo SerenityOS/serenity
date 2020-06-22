@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/StringBuilder.h>
 #include <LibCrypto/Cipher/Mode/Mode.h>
 
