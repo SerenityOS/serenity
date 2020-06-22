@@ -50,18 +50,36 @@ struct Position {
     bool contains(size_t offset) const { return start_offset <= offset && offset <= end_offset; }
 };
 
-struct Rewiring {
+struct Rewiring : public RefCounted<Rewiring> {
     int source_fd { -1 };
     int dest_fd { -1 };
+    Rewiring* other_pipe_end { nullptr };
     enum class Close {
         None,
         Source,
         Destination,
-    } must_be_closed { Close::None };
+        RefreshDestination,
+        ImmediatelyCloseDestination,
+    } fd_action { Close::None };
+
+    Rewiring(int source, int dest, Close close = Close::None)
+        : source_fd(source)
+        , dest_fd(dest)
+        , fd_action(close)
+    {
+    }
+
+    Rewiring(int source, int dest, Rewiring* other_end, Close close)
+        : source_fd(source)
+        , dest_fd(dest)
+        , other_pipe_end(other_end)
+        , fd_action(close)
+    {
+    }
 };
 
 struct Redirection : public RefCounted<Redirection> {
-    virtual Result<Rewiring, String> apply() const = 0;
+    virtual Result<RefPtr<Rewiring>, String> apply() = 0;
     virtual ~Redirection();
     virtual bool is_path_redirection() const { return false; }
     virtual bool is_fd_redirection() const { return false; }
@@ -71,7 +89,7 @@ struct Redirection : public RefCounted<Redirection> {
 struct CloseRedirection : public Redirection {
     int fd { -1 };
 
-    virtual Result<Rewiring, String> apply() const override;
+    virtual Result<RefPtr<Rewiring>, String> apply() override;
     virtual ~CloseRedirection();
     CloseRedirection(int fd)
         : fd(fd)
@@ -92,7 +110,7 @@ struct PathRedirection : public Redirection {
         ReadWrite,
     } direction { Read };
 
-    virtual Result<Rewiring, String> apply() const override;
+    virtual Result<RefPtr<Rewiring>, String> apply() override;
     virtual ~PathRedirection();
     PathRedirection(String path, int fd, decltype(direction) direction)
         : path(move(path))
@@ -108,10 +126,14 @@ private:
 struct FdRedirection : public Redirection
     , public Rewiring {
 
-    virtual Result<Rewiring, String> apply() const override { return *this; }
+    virtual Result<RefPtr<Rewiring>, String> apply() override { return static_cast<RefPtr<Rewiring>>(this); }
     virtual ~FdRedirection();
     FdRedirection(int source, int dest, Rewiring::Close close)
-        : Rewiring({ source, dest, close })
+        : Rewiring(source, dest, close)
+    {
+    }
+    FdRedirection(int source, int dest, Rewiring* pipe_end, Rewiring::Close close)
+        : Rewiring(source, dest, pipe_end, close)
     {
     }
 
@@ -136,6 +158,7 @@ class Value : public RefCounted<Value> {
 public:
     virtual Vector<String> resolve_as_list(TheExecutionInputType) = 0;
     virtual Vector<Command> resolve_as_commands(TheExecutionInputType);
+    virtual RefPtr<Value> resolve_without_cast(TheExecutionInputType) { return this; }
     virtual ~Value();
     virtual bool is_command() const { return false; }
     virtual bool is_glob() const { return false; }
@@ -245,6 +268,7 @@ private:
 class SimpleVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
+    RefPtr<Value> resolve_without_cast(TheExecutionInputType) override;
     virtual ~SimpleVariableValue();
     SimpleVariableValue(String name)
         : m_name(name)
@@ -305,6 +329,7 @@ public:
     virtual bool is_glob() const { return false; }
     virtual bool is_tilde() const { return false; }
     virtual bool is_variable_decls() const { return false; }
+    virtual bool is_syntax_error() const { return false; }
 
     virtual bool is_list() const { return false; }
 
@@ -745,6 +770,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override { return { nullptr, nullptr }; }
     virtual String class_name() const override { return "SyntaxError"; }
+    virtual bool is_syntax_error() const override { return true; }
 };
 
 class Tilde final : public Node {

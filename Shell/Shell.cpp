@@ -324,7 +324,7 @@ int Shell::run_command(const StringView& cmd)
     if (!command)
         return 0;
 
-#ifndef SH_DEBUG
+#ifdef SH_DEBUG
     dbg() << "Command follows";
     command->dump(0);
 #endif
@@ -349,7 +349,7 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
     FileDescriptionCollector fds;
 
     // Resolve redirections.
-    Vector<AST::Rewiring> rewirings;
+    NonnullRefPtrVector<AST::Rewiring> rewirings;
     for (auto& redirection : command.redirections) {
         auto rewiring_result = redirection->apply();
         if (rewiring_result.is_error()) {
@@ -358,12 +358,29 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
             continue;
         }
         auto& rewiring = rewiring_result.value();
-        rewirings.append(rewiring);
 
-        if (rewiring.must_be_closed == AST::Rewiring::Close::Source) {
-            fds.add(rewiring.source_fd);
-        } else if (rewiring.must_be_closed == AST::Rewiring::Close::Destination) {
-            fds.add(rewiring.dest_fd);
+        if (rewiring->fd_action != AST::Rewiring::Close::ImmediatelyCloseDestination)
+            rewirings.append(*rewiring);
+
+        if (rewiring->fd_action == AST::Rewiring::Close::Source) {
+            fds.add(rewiring->source_fd);
+        } else if (rewiring->fd_action == AST::Rewiring::Close::Destination) {
+            if (rewiring->dest_fd != -1)
+                fds.add(rewiring->dest_fd);
+        } else if (rewiring->fd_action == AST::Rewiring::Close::ImmediatelyCloseDestination) {
+            fds.add(rewiring->dest_fd);
+        } else if (rewiring->fd_action == AST::Rewiring::Close::RefreshDestination) {
+            ASSERT(rewiring->other_pipe_end);
+
+            int pipe_fd[2];
+            int rc = pipe(pipe_fd);
+            if (rc < 0) {
+                perror("pipe(RedirRefresh)");
+                return nullptr;
+            }
+            rewiring->dest_fd = pipe_fd[1];
+            rewiring->other_pipe_end->dest_fd = pipe_fd[0]; // This fd will be added to the collection on one of the next iterations.
+            fds.add(pipe_fd[1]);
         }
     }
 
@@ -377,7 +394,7 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
 #endif
             int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
             if (rc < 0) {
-                perror("dup2");
+                perror("dup2(run)");
                 return nullptr;
             }
         }
@@ -410,7 +427,7 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
 #endif
             int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
             if (rc < 0) {
-                perror("dup2");
+                perror("dup2(run)");
                 return nullptr;
             }
         }
@@ -456,6 +473,8 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
             fprintf(stderr, "Shell: Job %d(%s) exited\n", job->pid(), job->cmd().characters());
         job->disown();
     };
+
+    fds.collect();
 
     return *job;
 }

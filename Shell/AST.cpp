@@ -52,6 +52,31 @@ static inline void print_indented(const String& str, int indent)
     dbgprintf("%.*c%s\n", indent * 2, ' ', str.characters());
 }
 
+static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command> right)
+{
+    Command command;
+
+    auto last_in_left = left.take_last();
+    auto first_in_right = right.take_first();
+
+    command.argv.append(last_in_left.argv);
+    command.argv.append(first_in_right.argv);
+
+    command.redirections.append(last_in_left.redirections);
+    command.redirections.append(first_in_right.redirections);
+
+    command.should_wait = first_in_right.should_wait && last_in_left.should_wait;
+    command.is_pipe_source = first_in_right.is_pipe_source;
+    command.should_notify_if_in_background = first_in_right.should_wait && last_in_left.should_notify_if_in_background;
+
+    Vector<Command> commands;
+    commands.append(left);
+    commands.append(command);
+    commands.append(right);
+
+    return commands;
+}
+
 void Node::dump(int level) const
 {
     print_indented(String::format("%s at %d:%d", class_name().characters(), m_position.start_offset, m_position.end_offset), level);
@@ -164,8 +189,16 @@ void ListConcatenate::dump(int level) const
 
 RefPtr<Value> ListConcatenate::run(TheExecutionInputType input_value)
 {
-    auto list = m_list->run(input_value);
-    auto element = m_element->run(input_value);
+    auto list = m_list->run(input_value)->resolve_without_cast(input_value);
+    auto element = m_element->run(input_value)->resolve_without_cast(input_value);
+
+    if (list->is_command() || element->is_command()) {
+        auto joined_commands = join_commands(element->resolve_as_commands(input_value), list->resolve_as_commands(input_value));
+
+        if (joined_commands.size() == 1)
+            return create<CommandValue>(joined_commands[0]);
+        return create<CommandSequenceValue>(move(joined_commands));
+    }
 
     return create<ListValue>({ move(element), move(list) });
 }
@@ -304,8 +337,11 @@ RefPtr<Value> CastToCommand::run(TheExecutionInputType input_value)
         return m_inner->run(input_value);
 
     auto shell = input_value;
-    auto argv = m_inner->run(input_value)->resolve_as_list(input_value);
+    auto value = m_inner->run(input_value)->resolve_without_cast(input_value);
+    if (value->is_command())
+        return value;
 
+    auto argv = value->resolve_as_list(input_value);
     return create<CommandValue>(move(argv));
 }
 
@@ -353,13 +389,24 @@ CastToCommand::~CastToCommand()
 void CastToList::dump(int level) const
 {
     Node::dump(level);
-    m_inner->dump(level + 1);
+    if (m_inner)
+        m_inner->dump(level + 1);
+    else
+        print_indented("(empty)", level + 1);
 }
 
 RefPtr<Value> CastToList::run(TheExecutionInputType input_value)
 {
+    if (!m_inner)
+        return create<ListValue>({});
+
     auto shell = input_value;
-    auto values = m_inner->run(input_value)->resolve_as_list(input_value);
+    auto inner_value = m_inner->run(input_value);
+
+    if (inner_value->is_command())
+        return inner_value;
+
+    auto values = inner_value->resolve_as_list(input_value);
     Vector<RefPtr<Value>> cast_values;
     for (auto& value : values)
         cast_values.append(create<StringValue>(value));
@@ -369,12 +416,16 @@ RefPtr<Value> CastToList::run(TheExecutionInputType input_value)
 
 void CastToList::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
-    m_inner->highlight_in_editor(editor, shell, metadata);
+    if (m_inner)
+        m_inner->highlight_in_editor(editor, shell, metadata);
 }
 
 HitTestResult CastToList::hit_test_position(size_t offset)
 {
     if (!position().contains(offset))
+        return {};
+
+    if (!m_inner)
         return {};
 
     return m_inner->hit_test_position(offset);
@@ -520,7 +571,7 @@ void DynamicEvaluate::dump(int level) const
 
 RefPtr<Value> DynamicEvaluate::run(TheExecutionInputType input_value)
 {
-    auto result = m_inner->run(input_value);
+    auto result = m_inner->run(input_value)->resolve_without_cast(input_value);
     // Dynamic Evaluation behaves differently between strings and lists.
     // Strings are treated as variables, and Lists are treated as commands.
     if (result->is_string()) {
@@ -815,28 +866,10 @@ void Join::dump(int level) const
 
 RefPtr<Value> Join::run(TheExecutionInputType input_value)
 {
-    Command command;
-
     auto left = m_left->run(input_value)->resolve_as_commands(input_value);
     auto right = m_right->run(input_value)->resolve_as_commands(input_value);
 
-    auto last_in_left = left.take_last();
-    auto first_in_right = right.take_first();
-
-    command.argv.append(last_in_left.argv);
-    command.argv.append(first_in_right.argv);
-
-    command.redirections.append(last_in_left.redirections);
-    command.redirections.append(first_in_right.redirections);
-
-    command.should_wait = first_in_right.should_wait && last_in_left.should_wait;
-
-    Vector<Command> commands;
-    commands.append(left);
-    commands.append(command);
-    commands.append(right);
-
-    return create<CommandSequenceValue>(move(commands));
+    return create<CommandSequenceValue>(join_commands(move(left), move(right)));
 }
 
 void Join::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -935,22 +968,18 @@ void Pipe::dump(int level) const
 
 RefPtr<Value> Pipe::run(TheExecutionInputType input_value)
 {
-    int pipefd[2];
-    int rc = pipe(pipefd);
-    if (rc < 0) {
-        dbg() << "Error: cannot pipe(): " << strerror(errno);
-        return create<StringValue>("");
-    }
     auto left = m_left->run(input_value)->resolve_as_commands(input_value);
     auto right = m_right->run(input_value)->resolve_as_commands(input_value);
 
     auto last_in_left = left.take_last();
     auto first_in_right = right.take_first();
 
-    last_in_left.redirections.append(*new FdRedirection(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
+    auto pipe_write_end = new FdRedirection(STDIN_FILENO, -1, Rewiring::Close::Destination);
+    auto pipe_read_end = new FdRedirection(STDOUT_FILENO, -1, pipe_write_end, Rewiring::Close::RefreshDestination);
+    first_in_right.redirections.append(*pipe_write_end);
+    last_in_left.redirections.append(*pipe_read_end);
     last_in_left.should_wait = false;
     last_in_left.is_pipe_source = true;
-    first_in_right.redirections.append(*new FdRedirection(STDIN_FILENO, pipefd[0], Rewiring::Close::Destination));
 
     Vector<Command> commands;
     commands.append(left);
@@ -1247,8 +1276,8 @@ void Juxtaposition::dump(int level) const
 
 RefPtr<Value> Juxtaposition::run(TheExecutionInputType input_value)
 {
-    auto left_value = m_left->run(input_value);
-    auto right_value = m_right->run(input_value);
+    auto left_value = m_left->run(input_value)->resolve_without_cast(input_value);
+    auto right_value = m_right->run(input_value)->resolve_without_cast(input_value);
 
     auto left = left_value->resolve_as_list(input_value);
     auto right = right_value->resolve_as_list(input_value);
@@ -1539,6 +1568,8 @@ RefPtr<Value> VariableDeclarations::run(TheExecutionInputType input_value)
         if (value->is_list()) {
             auto parts = value->resolve_as_list(input_value);
             shell->set_local_variable(name, adopt(*new ListValue(move(parts))));
+        } else if (value->is_command()) {
+            shell->set_local_variable(name, value);
         } else {
             auto part = value->resolve_as_list(input_value);
             shell->set_local_variable(name, adopt(*new StringValue(part[0])));
@@ -1678,9 +1709,7 @@ SimpleVariableValue::~SimpleVariableValue()
 }
 Vector<String> SimpleVariableValue::resolve_as_list(TheExecutionInputType input_value)
 {
-    auto shell = input_value;
-
-    if (auto value = shell->lookup_local_variable(m_name))
+    if (auto value = resolve_without_cast(input_value); value != this)
         return value->resolve_as_list(input_value);
 
     char* env_value = getenv(m_name.characters());
@@ -1693,6 +1722,16 @@ Vector<String> SimpleVariableValue::resolve_as_list(TheExecutionInputType input_
     for (auto& part : split_text)
         res.append(part);
     return res;
+}
+
+RefPtr<Value> SimpleVariableValue::resolve_without_cast(TheExecutionInputType input_value)
+{
+    auto shell = input_value;
+
+    if (auto value = shell->lookup_local_variable(m_name))
+        return value;
+
+    return this;
 }
 
 SpecialVariableValue::~SpecialVariableValue()
@@ -1723,28 +1762,24 @@ Vector<String> TildeValue::resolve_as_list(TheExecutionInputType input_value)
     return { shell->expand_tilde(builder.to_string()) };
 }
 
-Result<Rewiring, String> CloseRedirection::apply() const
+Result<RefPtr<Rewiring>, String> CloseRedirection::apply()
 {
-    auto rc = close(fd);
-    if (rc < 0)
-        return String { strerror(errno) };
-
-    return String {};
+    return static_cast<RefPtr<Rewiring>>((adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseDestination))));
 }
 
 CloseRedirection::~CloseRedirection()
 {
 }
 
-Result<Rewiring, String> PathRedirection::apply() const
+Result<RefPtr<Rewiring>, String> PathRedirection::apply()
 {
-    auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<Rewiring, String> {
+    auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<RefPtr<Rewiring>, String> {
         if (fd < 0) {
             String error = strerror(errno);
             dbg() << "open() failed for '" << path << "' with " << error;
             return error;
         }
-        return Rewiring { my_fd, fd };
+        return static_cast<RefPtr<Rewiring>>((adopt(*new Rewiring(my_fd, fd, Rewiring::Close::Destination))));
     };
     switch (direction) {
     case AST::PathRedirection::WriteAppend:

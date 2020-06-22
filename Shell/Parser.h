@@ -107,6 +107,7 @@ sequence :: variable_decls? pipe_sequence ';' sequence
           | variable_decls? pipe_sequence
 
 variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
+                | identifier '=' '(' pipe_sequence ')' (' '+ variable_decls)? ' '*
 
 pipe_sequence :: command '|' pipe_sequence
                | command

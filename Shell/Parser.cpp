@@ -200,7 +200,19 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
 
     auto name_expr = create<AST::BarewordLiteral>(move(var_name));
 
+    auto start = push_start();
     auto expression = parse_expression();
+    if (!expression || expression->is_syntax_error()) {
+        m_offset = start->offset;
+        if (peek() == '(') {
+            consume();
+            auto command = parse_pipe_sequence();
+            expect(')');
+            if (!command)
+                m_offset = start->offset;
+            expression = command;
+        }
+    }
     if (!expression) {
         if (is_whitespace(peek())) {
             auto string_start = push_start();
@@ -432,10 +444,10 @@ RefPtr<AST::Node> Parser::parse_expression()
     if (starting_char == '(') {
         consume();
         auto list = parse_list_expression();
-        if (!list)
-            list = create<AST::SyntaxError>();
-        if (!expect(')'))
-            return read_concat(create<AST::SyntaxError>());
+        if (!expect(')')) {
+            m_offset = rule_start->offset;
+            return nullptr;
+        }
         return read_concat(create<AST::CastToList>(move(list))); // Cast To List
     }
 
