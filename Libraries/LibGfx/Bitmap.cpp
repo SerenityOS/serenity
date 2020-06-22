@@ -28,13 +28,13 @@
 #include <AK/Memory.h>
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/BMPLoader.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/GIFLoader.h>
+#include <LibGfx/ICOLoader.h>
 #include <LibGfx/PBMLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PPMLoader.h>
-#include <LibGfx/ICOLoader.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -71,7 +71,7 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
 {
     ASSERT(!m_size.is_empty());
     ASSERT(!size_would_overflow(format, size));
-    allocate_palette_from_format(format);
+    allocate_palette_from_format(format, {});
     int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
     m_data = (RGBA32*)mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
     ASSERT(m_data && m_data != (void*)-1);
@@ -103,25 +103,35 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, size_t pitch, RGBA32* d
     , m_format(format)
 {
     ASSERT(!size_would_overflow(format, size));
-    allocate_palette_from_format(format);
+    allocate_palette_from_format(format, {});
 }
 
 RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size)
 {
     if (size_would_overflow(format, size))
         return nullptr;
-    return adopt(*new Bitmap(format, move(shared_buffer), size));
+    return adopt(*new Bitmap(format, move(shared_buffer), size, {}));
 }
 
-Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size)
+RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
+{
+    if (size_would_overflow(format, size))
+        return nullptr;
+    return adopt(*new Bitmap(format, move(shared_buffer), size, palette));
+}
+
+Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
     : m_size(size)
     , m_data((RGBA32*)shared_buffer->data())
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
     , m_shared_buffer(move(shared_buffer))
 {
-    ASSERT(!is_indexed(format));
+    ASSERT(!is_indexed() || !palette.is_empty());
     ASSERT(!size_would_overflow(format, size));
+
+    if (is_indexed(m_format))
+        allocate_palette_from_format(m_format, palette);
 }
 
 RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
@@ -175,7 +185,7 @@ RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
     if (m_shared_buffer)
         return *this;
     auto buffer = SharedBuffer::create_with_size(size_in_bytes());
-    auto bitmap = Bitmap::create_with_shared_buffer(m_format, *buffer, m_size);
+    auto bitmap = Bitmap::create_with_shared_buffer(m_format, *buffer, m_size, palette_to_vector());
     if (!bitmap)
         return nullptr;
     memcpy(buffer->data(), scanline(0), size_in_bytes());
@@ -249,17 +259,26 @@ ShareableBitmap Bitmap::to_shareable_bitmap(pid_t peer_pid) const
     return ShareableBitmap(*bitmap);
 }
 
-void Bitmap::allocate_palette_from_format(BitmapFormat format)
+void Bitmap::allocate_palette_from_format(BitmapFormat format, const Vector<RGBA32>& source_palette)
 {
-    if (format == BitmapFormat::Indexed1) {
-        m_palette = new RGBA32[2];
-    } else if (format == BitmapFormat::Indexed2) {
-        m_palette = new RGBA32[4];
-    } else if (format == BitmapFormat::Indexed4) {
-        m_palette = new RGBA32[16];
-    } else if (format == BitmapFormat::Indexed8) {
-        m_palette = new RGBA32[256];
+    size_t size = palette_size(format);
+    if (size == 0)
+        return;
+    m_palette = new RGBA32[size];
+    if (!source_palette.is_empty()) {
+        ASSERT(source_palette.size() == size);
+        memcpy(m_palette, source_palette.data(), size * sizeof(RGBA32));
     }
+}
+
+Vector<RGBA32> Bitmap::palette_to_vector() const
+{
+    Vector<RGBA32> vector;
+    auto size = palette_size(m_format);
+    vector.ensure_capacity(size);
+    for (size_t i = 0; i < size; ++i)
+        vector.unchecked_append(palette_color(i).value());
+    return vector;
 }
 
 }

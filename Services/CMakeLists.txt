@@ -1,6 +1,7 @@
 add_subdirectory(AudioServer)
 add_subdirectory(Clipboard)
 add_subdirectory(DHCPClient)
+add_subdirectory(ImageDecoder)
 add_subdirectory(LaunchServer)
 add_subdirectory(LookupServer)
 add_subdirectory(NotificationServer)

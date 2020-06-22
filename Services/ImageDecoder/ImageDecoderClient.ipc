@@ -1,0 +1,4 @@
+endpoint ImageDecoderClient = 7002
+{
+    Dummy() =|
+}
