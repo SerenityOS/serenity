@@ -88,7 +88,9 @@ static String guess_mime_type_based_on_filename(const URL& url)
     String lowercase_url = url.path().to_lowercase();
     if (lowercase_url.ends_with(".pbm"))
         return "image/x‑portable‑bitmap";
-    if (lowercase_url.ends_with(".png"))
+    if (url.path().ends_with(".pgm"))
+        return "image/x‑portable‑graymap";
+    if (url.path().ends_with(".png"))
         return "image/png";
     if (lowercase_url.ends_with(".ppm"))
         return "image/x‑portable‑pixmap";
