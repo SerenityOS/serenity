@@ -8,7 +8,7 @@ build() {
     CXX=i686-pc-serenity-g++ CXXFLAGS="--sysroot=${SERENITY_ROOT}/Build/Root" \
     LDFLAGS="--sysroot=${SERENITY_ROOT}/Build/Root" \
     # platform=linux is close enough.
-    run ./configure.py --bootstrap --platform=linux --force-pselect
+    run ./configure.py --bootstrap --platform=linux
     strip "${workdir}/ninja"
 }
 
