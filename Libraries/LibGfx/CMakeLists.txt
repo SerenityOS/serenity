@@ -16,6 +16,7 @@ set(SOURCES
     Palette.cpp
     Path.cpp
     PBMLoader.cpp
+    PGMLoader.cpp
     PNGLoader.cpp
     PPMLoader.cpp
     Point.cpp
