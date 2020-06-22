@@ -87,6 +87,9 @@
 
 namespace Gfx {
 
+RefPtr<Gfx::Bitmap> load_jpg(const StringView& path);
+RefPtr<Gfx::Bitmap> load_jpg_from_memory(const u8* data, size_t length);
+
 /**
  * MCU means group of data units that are coded together. A data unit is an 8x8
  * block of component data. In interleaved scans, number of non-interleaved data
@@ -165,8 +168,8 @@ struct JPGLoadingContext {
     };
 
     State state { State::NotDecoded };
-    const u8* compressed_data { nullptr };
-    size_t compressed_size { 0 };
+    const u8* data { nullptr };
+    size_t data_size { 0 };
     u32 luma_table[64];
     u32 chroma_table[64];
     StartOfFrame frame;

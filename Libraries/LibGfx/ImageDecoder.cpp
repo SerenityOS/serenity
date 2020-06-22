@@ -66,7 +66,6 @@ ImageDecoder::ImageDecoder(const u8* data, size_t size)
         return;
 
     m_plugin = nullptr;
-    return;
 }
 
 ImageDecoder::~ImageDecoder()
