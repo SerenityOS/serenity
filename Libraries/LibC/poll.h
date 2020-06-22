@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <signal.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -43,6 +44,9 @@ struct pollfd {
     short revents;
 };
 
-int poll(struct pollfd* fds, int nfds, int timeout);
+typedef unsigned nfds_t;
+
+int poll(struct pollfd* fds, nfds_t nfds, int timeout);
+int ppoll(struct pollfd* fds, nfds_t nfds, const struct timespec* timeout, const sigset_t* sigmask);
 
 __END_DECLS

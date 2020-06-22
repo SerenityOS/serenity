@@ -3055,18 +3055,33 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     return marked_fd_count;
 }
 
-int Process::sys$poll(pollfd* fds, int nfds, int timeout)
+int Process::sys$poll(const Syscall::SC_poll_params* params)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_read_typed(fds))
+    // FIXME: Return -EINVAL if timeout is invalid.
+    if (!validate_read_typed(params))
         return -EFAULT;
 
     SmapDisabler disabler;
 
+    pollfd* fds = params->fds;
+    unsigned nfds = params->nfds;
+    const timespec* timeout = params->timeout;
+    const sigset_t* sigmask = params->sigmask;
+
+    if (fds && !validate_read_typed(fds, nfds))
+        return -EFAULT;
+    if (timeout && !validate_read_typed(timeout))
+        return -EFAULT;
+    if (sigmask && !validate_read_typed(sigmask))
+        return -EFAULT;
+    if (!validate_read_typed(fds))
+        return -EFAULT;
+
     Thread::SelectBlocker::FDVector rfds;
     Thread::SelectBlocker::FDVector wfds;
 
-    for (int i = 0; i < nfds; ++i) {
+    for (unsigned i = 0; i < nfds; ++i) {
         if (fds[i].events & POLLIN)
             rfds.append(fds[i].fd);
         if (fds[i].events & POLLOUT)
@@ -3075,33 +3090,29 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
 
     timespec actual_timeout;
     bool has_timeout = false;
-    if (timeout >= 0) {
-        // poll is in ms, we want s/ns.
-        struct timespec tstimeout;
-        tstimeout.tv_sec = 0;
-        while (timeout >= 1000) {
-            tstimeout.tv_sec += 1;
-            timeout -= 1000;
-        }
-        tstimeout.tv_nsec = timeout * 1000 * 1000;
+    if (timeout && (timeout->tv_sec || timeout->tv_nsec)) {
         timespec ts_since_boot;
         timeval_to_timespec(Scheduler::time_since_boot(), ts_since_boot);
-        timespec_add(ts_since_boot, tstimeout, actual_timeout);
+        timespec_add(ts_since_boot, *timeout, actual_timeout);
         has_timeout = true;
     }
+
+    ScopedValueRollback scoped_sigmask(Thread::current->m_signal_mask);
+    if (sigmask)
+        Thread::current->m_signal_mask = *sigmask;
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
     dbg() << "polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
 #endif
 
-    if (has_timeout || timeout < 0) {
+    if (!timeout || has_timeout) {
         if (Thread::current->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()) != Thread::BlockResult::WokeNormally)
             return -EINTR;
     }
 
     int fds_with_revents = 0;
 
-    for (int i = 0; i < nfds; ++i) {
+    for (unsigned i = 0; i < nfds; ++i) {
         auto description = file_description(fds[i].fd);
         if (!description) {
             fds[i].revents = POLLNVAL;
