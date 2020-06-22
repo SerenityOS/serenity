@@ -16,6 +16,7 @@ set(SOURCES
     Path.cpp
     PBMLoader.cpp
     PNGLoader.cpp
+    PPMLoader.cpp
     Point.cpp
     Rect.cpp
     ShareableBitmap.cpp
