@@ -34,6 +34,7 @@
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/JPGLoader.h>
 #include <LibGfx/PBMLoader.h>
+#include <LibGfx/PGMLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PPMLoader.h>
 #include <LibGfx/ShareableBitmap.h>
