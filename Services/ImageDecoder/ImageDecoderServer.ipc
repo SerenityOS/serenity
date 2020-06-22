@@ -1,0 +1,7 @@
+endpoint ImageDecoderServer = 7001
+{
+    Greet(i32 client_pid) => (i32 client_id, i32 server_pid)
+
+    DecodeImage(i32 encoded_shbuf_id, u32 encoded_size) => (i32 decoded_shbuf_id, Gfx::IntSize size, i32 bitmap_format, Vector<u32> palette)
+
+}

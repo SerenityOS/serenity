@@ -65,6 +65,7 @@ public:
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, size_t pitch, RGBA32*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);
     static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
+    static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
     static bool is_path_a_supported_image_format(const StringView& path)
     {
 #define __ENUMERATE_IMAGE_FORMAT(Name, Ext) \
@@ -102,11 +103,34 @@ public:
     SharedBuffer* shared_buffer() { return m_shared_buffer.ptr(); }
     const SharedBuffer* shared_buffer() const { return m_shared_buffer.ptr(); }
 
+    ALWAYS_INLINE bool is_indexed() const
+    {
+        return is_indexed(m_format);
+    }
+
     ALWAYS_INLINE static bool is_indexed(BitmapFormat format)
     {
         return format == BitmapFormat::Indexed8 || format == BitmapFormat::Indexed4
             || format == BitmapFormat::Indexed2 || format == BitmapFormat::Indexed1;
     }
+
+    size_t palette_size(BitmapFormat format) const
+    {
+        switch (format) {
+        case BitmapFormat::Indexed1:
+            return 2;
+        case BitmapFormat::Indexed2:
+            return 4;
+        case BitmapFormat::Indexed4:
+            return 16;
+        case BitmapFormat::Indexed8:
+            return 256;
+        default:
+            return 0;
+        }
+    }
+
+    Vector<RGBA32> palette_to_vector() const;
 
     static unsigned bpp_for_format(BitmapFormat format)
     {
@@ -186,9 +210,9 @@ private:
         Yes };
     Bitmap(BitmapFormat, const IntSize&, Purgeable);
     Bitmap(BitmapFormat, const IntSize&, size_t pitch, RGBA32*);
-    Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
+    Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
 
-    void allocate_palette_from_format(BitmapFormat);
+    void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette );
 
     IntSize m_size;
     RGBA32* m_data { nullptr };
