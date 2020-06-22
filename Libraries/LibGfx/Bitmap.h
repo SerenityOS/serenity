@@ -39,7 +39,9 @@
     __ENUMERATE_IMAGE_FORMAT(ppm, ".ppm") \
     __ENUMERATE_IMAGE_FORMAT(gif, ".gif") \
     __ENUMERATE_IMAGE_FORMAT(bmp, ".bmp") \
-    __ENUMERATE_IMAGE_FORMAT(ico, ".ico")
+    __ENUMERATE_IMAGE_FORMAT(ico, ".ico") \
+    __ENUMERATE_IMAGE_FORMAT(jpg, ".jpg") \
+    __ENUMERATE_IMAGE_FORMAT(jpg, ".jpeg")
 
 namespace Gfx {
 

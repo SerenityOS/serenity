@@ -329,7 +329,7 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
     if (stream.handle_read_failure())
         return false;
     bytes_to_read -= 2;
-    if (!bounds_okay(stream.offset(), bytes_to_read, context.compressed_size))
+    if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
         return false;
     u8 component_count;
     stream >> component_count;
@@ -395,7 +395,7 @@ static bool read_reset_marker(BufferStream& stream, JPGLoadingContext& context)
 static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = read_be_word(stream);
-    if (!bounds_okay(stream.offset(), bytes_to_read, context.compressed_size))
+    if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
         return false;
     bytes_to_read -= 2;
     while (bytes_to_read > 0) {
@@ -485,7 +485,7 @@ static bool read_start_of_frame(BufferStream& stream, JPGLoadingContext& context
         return false;
 
     bytes_to_read -= 2;
-    if (!bounds_okay(stream.offset(), bytes_to_read, context.compressed_size))
+    if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
         return false;
 
     stream >> context.frame.precision;
@@ -555,7 +555,7 @@ static bool read_quantization_table(BufferStream& stream, JPGLoadingContext& con
     if (stream.handle_read_failure())
         return false;
     bytes_to_read -= 2;
-    if (!bounds_okay(stream.offset(), bytes_to_read, context.compressed_size))
+    if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
         return false;
     while (bytes_to_read > 0) {
         u8 info_byte;
@@ -935,9 +935,9 @@ static bool scan_huffman_stream(BufferStream& stream, JPGLoadingContext& context
     ASSERT_NOT_REACHED();
 }
 
-static bool load_jpg_impl(JPGLoadingContext& context)
+static bool decode_jpg(JPGLoadingContext& context)
 {
-    ByteBuffer buffer = ByteBuffer::wrap(context.compressed_data, context.compressed_size);
+    ByteBuffer buffer = ByteBuffer::wrap(context.data, context.data_size);
     BufferStream stream(buffer);
     if (!parse_header(stream, context))
         return false;
@@ -959,11 +959,44 @@ static bool load_jpg_impl(JPGLoadingContext& context)
     return true;
 }
 
+static RefPtr<Gfx::Bitmap> load_jpg_impl(const u8* data, size_t data_size)
+{
+    JPGLoadingContext context;
+    context.data = data;
+    context.data_size = data_size;
+
+    if (!decode_jpg(context))
+        return nullptr;
+
+    return context.bitmap;
+}
+
+RefPtr<Gfx::Bitmap> load_jpg(const StringView& path)
+{
+    MappedFile mapped_file(path);
+    if (!mapped_file.is_valid()) {
+        return nullptr;
+    }
+
+    auto bitmap = load_jpg_impl((const u8*)mapped_file.data(), mapped_file.size());
+    if (bitmap)
+        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded JPG: %s", bitmap->width(), bitmap->height(), LexicalPath::canonicalized_path(path).characters()));
+    return bitmap;
+}
+
+RefPtr<Gfx::Bitmap> load_jpg_from_memory(const u8* data, size_t length)
+{
+    auto bitmap = load_jpg_impl(data, length);
+    if (bitmap)
+        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded jpg: <memory>", bitmap->width(), bitmap->height()));
+    return bitmap;
+}
+
 JPGImageDecoderPlugin::JPGImageDecoderPlugin(const u8* data, size_t size)
 {
     m_context = make<JPGLoadingContext>();
-    m_context->compressed_data = data;
-    m_context->compressed_size = size;
+    m_context->data = data;
+    m_context->data_size = size;
     m_context->huffman_stream.stream.ensure_capacity(50 * KB);
 }
 
@@ -986,7 +1019,7 @@ RefPtr<Gfx::Bitmap> JPGImageDecoderPlugin::bitmap()
     if (m_context->state == JPGLoadingContext::State::Error)
         return nullptr;
     if (m_context->state < JPGLoadingContext::State::BitmapDecoded) {
-        if (!load_jpg_impl(*m_context)) {
+        if (!decode_jpg(*m_context)) {
             m_context->state = JPGLoadingContext::State::Error;
             return nullptr;
         }
@@ -1011,10 +1044,10 @@ bool JPGImageDecoderPlugin::set_nonvolatile()
 
 bool JPGImageDecoderPlugin::sniff()
 {
-    return m_context->compressed_size > 3
-        && m_context->compressed_data[0] == 0xFF
-        && m_context->compressed_data[1] == 0xD8
-        && m_context->compressed_data[2] == 0xFF;
+    return m_context->data_size > 3
+        && m_context->data[0] == 0xFF
+        && m_context->data[1] == 0xD8
+        && m_context->data[2] == 0xFF;
 }
 
 bool JPGImageDecoderPlugin::is_animated()
@@ -1038,18 +1071,5 @@ ImageFrameDescriptor JPGImageDecoderPlugin::frame(size_t i)
         return { bitmap(), 0 };
     }
     return {};
-}
-
-RefPtr<Gfx::Bitmap> load_jpg(const StringView& path)
-{
-    MappedFile mapped_file(path);
-    if (!mapped_file.is_valid())
-        return nullptr;
-    JPGImageDecoderPlugin jpg_decoder((const u8*)mapped_file.data(), mapped_file.size());
-    auto bitmap = jpg_decoder.bitmap();
-    if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded JPG: %s",
-            bitmap->width(), bitmap->height(), LexicalPath::canonicalized_path(path).characters()));
-    return bitmap;
 }
 }
