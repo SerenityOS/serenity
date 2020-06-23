@@ -32,7 +32,7 @@
 namespace Web {
 namespace Bindings {
 
-EventWrapper* wrap(JS::Heap&, Event&);
+EventWrapper* wrap(JS::GlobalObject&, Event&);
 
 }
 }

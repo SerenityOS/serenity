@@ -28,7 +28,7 @@
 
 #include <AK/WeakPtr.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
@@ -47,11 +47,10 @@ private:
 };
 
 template<class NativeObject>
-inline Wrapper* wrap_impl(JS::Heap& heap, NativeObject& native_object)
+inline Wrapper* wrap_impl(JS::GlobalObject& global_object, NativeObject& native_object)
 {
     if (!native_object.wrapper()) {
-        auto& global_object = heap.interpreter().global_object();
-        native_object.set_wrapper(*heap.allocate<typename NativeObject::WrapperType>(global_object, global_object, native_object));
+        native_object.set_wrapper(*global_object.heap().allocate<typename NativeObject::WrapperType>(global_object, global_object, native_object));
     }
     return native_object.wrapper();
 }

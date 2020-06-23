@@ -398,7 +398,7 @@ static void generate_header(const IDL::Interface& interface)
     out() << "};";
 
     if (should_emit_wrapper_factory(interface)) {
-        out() << wrapper_class << "* wrap(JS::Heap&, " << interface.name << "&);";
+        out() << wrapper_class << "* wrap(JS::GlobalObject&, " << interface.name << "&);";
     }
 
     out() << "}";
@@ -549,7 +549,7 @@ void generate_implementation(const IDL::Interface& interface)
             //        Basically once we have NodeList we can throw this out.
             out() << "    auto* new_array = JS::Array::create(global_object);";
             out() << "    for (auto& element : retval) {";
-            out() << "        new_array->indexed_properties().append(wrap(interpreter.heap(), element));";
+            out() << "        new_array->indexed_properties().append(wrap(global_object, element));";
             out() << "    }";
             out() << "    return new_array;";
         } else if (return_type.name == "long" || return_type.name == "double") {
@@ -557,7 +557,7 @@ void generate_implementation(const IDL::Interface& interface)
         } else if (return_type.name == "Uint8ClampedArray") {
             out() << "    return retval;";
         } else {
-            out() << "    return wrap(interpreter.heap(), const_cast<" << return_type.name << "&>(*retval));";
+            out() << "    return wrap(global_object, const_cast<" << return_type.name << "&>(*retval));";
         }
     };
 
@@ -613,9 +613,9 @@ void generate_implementation(const IDL::Interface& interface)
 
     // Implementation: Wrapper factory
     if (should_emit_wrapper_factory(interface)) {
-        out() << wrapper_class << "* wrap(JS::Heap& heap, " << interface.name << "& impl)";
+        out() << wrapper_class << "* wrap(JS::GlobalObject& global_object, " << interface.name << "& impl)";
         out() << "{";
-        out() << "    return static_cast<" << wrapper_class << "*>(wrap_impl(heap, impl));";
+        out() << "    return static_cast<" << wrapper_class << "*>(wrap_impl(global_object, impl));";
         out() << "}";
     }
 

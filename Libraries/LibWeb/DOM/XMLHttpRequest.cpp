@@ -94,10 +94,10 @@ void XMLHttpRequest::dispatch_event(NonnullRefPtr<Event> event)
     for (auto& listener : listeners()) {
         if (listener.event_name == event->type()) {
             auto& function = const_cast<EventListener&>(*listener.listener).function();
-            auto& heap = function.heap();
-            auto* this_value = wrap(heap, *this);
-            JS::MarkedValueList arguments(heap);
-            arguments.append(wrap(heap, *event));
+            auto& global_object = function.global_object();
+            auto* this_value = wrap(global_object, *this);
+            JS::MarkedValueList arguments(global_object.heap());
+            arguments.append(wrap(global_object, *event));
             function.interpreter().call(function, this_value, move(arguments));
         }
     }
