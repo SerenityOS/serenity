@@ -31,8 +31,8 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 #include <Kernel/StdLib.h>
-#include <LibCrypto/Cipher/Cipher.h>
 #include <LibCrypto/Cipher/AES.h>
+#include <LibCrypto/Cipher/Cipher.h>
 #include <LibCrypto/Hash/SHA2.h>
 
 namespace Kernel {
@@ -48,31 +48,30 @@ public:
     using HashType = HashT;
     using DigestType = HashT::DigestType;
 
+    FortunaPRNG()
+        : m_counter(ByteBuffer::create_zeroed(BlockType::block_size()))
+    {
+    }
+
     void get_random_bytes(u8* buffer, size_t n)
     {
         if (m_p0_len >= reseed_threshold) {
             this->reseed();
         }
 
-        ASSERT(m_counter != 0);
+        ASSERT(m_reseed_number > 0);
 
         // FIXME: More than 2^20 bytes cannot be generated without refreshing the key.
         ASSERT(n < (1 << 20));
 
-        CipherType cipher(m_key, KeySize);
+        typename CipherType::CTRMode cipher(m_key, KeySize);
 
-        size_t block_size = CipherType::BlockSizeInBits / 8;
-
-        for (size_t i = 0; i < n; i += block_size) {
-            this->generate_block(cipher, &buffer[i], min(block_size, n - i));
-        }
+        auto wrapped_buffer = ByteBuffer::wrap(buffer, n);
+        m_counter = cipher.key_stream(wrapped_buffer, m_counter).value();
 
         // Extract a new key from the prng stream.
 
-        for (size_t i = 0; i < KeySize/8; i += block_size) {
-            this->generate_block(cipher, &(m_key[i]), min(block_size, KeySize - i));
-        }
-
+        m_counter = cipher.key_stream(m_key, m_counter).value();
     }
 
     template<typename T>
@@ -86,17 +85,6 @@ public:
     }
 
 private:
-    void generate_block(CipherType cipher, u8* buffer, size_t size)
-    {
-
-        BlockType input((u8*)&m_counter, sizeof(m_counter));
-        BlockType output;
-        cipher.encrypt_block(input, output);
-        m_counter++;
-
-        memcpy(buffer, output.get().data(), size);
-    }
-
     void reseed()
     {
         HashType new_key;
@@ -111,12 +99,11 @@ private:
         m_key = ByteBuffer::copy(digest.immutable_data(),
             digest.data_length());
 
-        m_counter++;
         m_reseed_number++;
         m_p0_len = 0;
     }
 
-    size_t m_counter { 0 };
+    ByteBuffer m_counter;
     size_t m_reseed_number { 0 };
     size_t m_p0_len { 0 };
     ByteBuffer m_key;
@@ -125,12 +112,12 @@ private:
 
 class KernelRng : public FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256> {
     AK_MAKE_ETERNAL;
+
 public:
     static KernelRng& the();
 
 private:
     KernelRng();
-
 };
 
 // NOTE: These API's are primarily about expressing intent/needs in the calling code.

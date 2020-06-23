@@ -30,6 +30,7 @@
 #include <AK/Vector.h>
 #include <LibCrypto/Cipher/Cipher.h>
 #include <LibCrypto/Cipher/Mode/CBC.h>
+#include <LibCrypto/Cipher/Mode/CTR.h>
 
 namespace Crypto {
 namespace Cipher {
@@ -110,6 +111,7 @@ private:
 class AESCipher final : public Cipher<AESCipherKey, AESCipherBlock> {
 public:
     using CBCMode = CBC<AESCipher>;
+    using CTRMode = CTR<AESCipher>;
 
     constexpr static size_t BlockSizeInBits = BlockType::BlockSizeInBits;
 
