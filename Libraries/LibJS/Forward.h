@@ -89,6 +89,7 @@ class HeapBlock;
 class Interpreter;
 class LexicalEnvironment;
 class MarkedValueList;
+class NativeProperty;
 class PrimitiveString;
 class Reference;
 class ScopeNode;
