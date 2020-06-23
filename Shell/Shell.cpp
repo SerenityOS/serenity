@@ -324,6 +324,12 @@ int Shell::run_command(const StringView& cmd)
     if (!command)
         return 0;
 
+    if (command->is_syntax_error()) {
+        // FIXME: Provide descriptive messages for syntax errors.
+        fprintf(stderr, "Shell: Syntax error in command\n");
+        return 1;
+    }
+
 #ifdef SH_DEBUG
     dbg() << "Command follows";
     command->dump(0);
@@ -664,9 +670,9 @@ Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
     return ast->complete_for_editor(*this, line.length());
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_path(const String& part, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, const String& part, size_t offset)
 {
-    auto token = part.substring_view(0, offset);
+    auto token = offset ? part.substring_view(0, offset) : "";
     StringView original_token = token;
     String path;
 
@@ -674,19 +680,30 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& part, size
     while (last_slash >= 0 && token[last_slash] != '/')
         --last_slash;
 
-    if (last_slash >= 0) {
-        // Split on the last slash. We'll use the first part as the directory
-        // to search and the second part as the token to complete.
-        path = token.substring_view(0, last_slash + 1);
-        if (path[0] != '/')
-            path = String::format("%s/%s", cwd.characters(), path.characters());
-        path = LexicalPath::canonicalized_path(path);
-        token = token.substring_view(last_slash + 1, token.length() - last_slash - 1);
+    StringBuilder path_builder;
+    auto init_slash_part = token.substring_view(0, last_slash + 1);
+    auto last_slash_part = token.substring_view(last_slash + 1, token.length() - last_slash - 1);
+
+    // Depending on the base, we will have to prepend cwd.
+    if (base.is_empty()) {
+        // '' /foo -> absolute
+        // '' foo -> relative
+        if (!token.starts_with('/'))
+            path_builder.append(cwd);
+        path_builder.append('/');
+        path_builder.append(init_slash_part);
     } else {
-        // We have no slashes, so the directory to search is the current
-        // directory and the token to complete is just the original token.
-        path = cwd;
+        // /foo * -> absolute
+        // foo * -> relative
+        if (!base.starts_with('/'))
+            path_builder.append(cwd);
+        path_builder.append('/');
+        path_builder.append(base);
+        path_builder.append('/');
+        path_builder.append(init_slash_part);
     }
+    path = path_builder.build();
+    token = last_slash_part;
 
     // the invariant part of the token is actually just the last segment
     // e. in `cd /foo/bar', 'bar' is the invariant
@@ -727,7 +744,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
     });
 
     if (!match)
-        return complete_path(name, offset);
+        return complete_path("", name, offset);
 
     String completion = *match;
     editor->suggest(escape_token(name).length(), 0);
@@ -753,7 +770,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
 Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
-    auto pattern = name.substring_view(0, offset);
+    auto pattern = offset ? name.substring_view(0, offset) : "";
 
     editor->suggest(offset);
 
@@ -775,6 +792,27 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, 
                 continue;
             suggestions.append(move(name));
         }
+    }
+
+    return suggestions;
+}
+
+Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size_t offset)
+{
+    Vector<Line::CompletionSuggestion> suggestions;
+    auto pattern = offset ? name.substring_view(0, offset) : "";
+
+    editor->suggest(offset);
+
+    Core::DirIterator di("/home", Core::DirIterator::SkipParentAndBaseDir);
+
+    if (di.has_error())
+        return suggestions;
+
+    while (di.has_next()) {
+        String name = di.next_path();
+        if (name.starts_with(pattern))
+            suggestions.append(name);
     }
 
     return suggestions;

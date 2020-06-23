@@ -36,8 +36,6 @@
 #include <AK/Vector.h>
 #include <LibLine/Editor.h>
 
-using TheExecutionInputType = RefPtr<Shell>;
-
 namespace AST {
 
 struct HighlightMetadata {
@@ -156,9 +154,9 @@ struct HitTestResult {
 
 class Value : public RefCounted<Value> {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) = 0;
-    virtual Vector<Command> resolve_as_commands(TheExecutionInputType);
-    virtual RefPtr<Value> resolve_without_cast(TheExecutionInputType) { return this; }
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) = 0;
+    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>);
+    virtual RefPtr<Value> resolve_without_cast(RefPtr<Shell>) { return this; }
     virtual ~Value();
     virtual bool is_command() const { return false; }
     virtual bool is_glob() const { return false; }
@@ -169,8 +167,8 @@ public:
 
 class CommandValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
-    virtual Vector<Command> resolve_as_commands(TheExecutionInputType) override;
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override;
     virtual ~CommandValue();
     virtual bool is_command() const override { return true; }
     CommandValue(Command command)
@@ -189,8 +187,8 @@ private:
 
 class CommandSequenceValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
-    virtual Vector<Command> resolve_as_commands(TheExecutionInputType) override;
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override;
     virtual ~CommandSequenceValue();
     virtual bool is_command() const override { return true; }
     CommandSequenceValue(Vector<Command> commands)
@@ -204,8 +202,8 @@ private:
 
 class JobValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override { ASSERT_NOT_REACHED(); }
-    virtual Vector<Command> resolve_as_commands(TheExecutionInputType) override { ASSERT_NOT_REACHED(); }
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override { ASSERT_NOT_REACHED(); }
+    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override { ASSERT_NOT_REACHED(); }
     virtual ~JobValue();
     virtual bool is_job() const override { return true; }
     JobValue(RefPtr<Job> job)
@@ -221,7 +219,7 @@ private:
 
 class ListValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual ~ListValue();
     virtual bool is_list() const override { return true; }
     ListValue(Vector<String> values);
@@ -236,7 +234,7 @@ private:
 
 class StringValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual ~StringValue();
     virtual bool is_string() const override { return m_split.is_null(); }
     virtual bool is_list() const override { return !m_split.is_null(); }
@@ -253,7 +251,7 @@ private:
 
 class GlobValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual ~GlobValue();
     virtual bool is_glob() const override { return true; }
     GlobValue(String glob)
@@ -267,8 +265,8 @@ private:
 
 class SimpleVariableValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
-    RefPtr<Value> resolve_without_cast(TheExecutionInputType) override;
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    RefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual ~SimpleVariableValue();
     SimpleVariableValue(String name)
         : m_name(name)
@@ -281,7 +279,7 @@ private:
 
 class SpecialVariableValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual ~SpecialVariableValue();
     SpecialVariableValue(char name)
         : m_name(name)
@@ -294,7 +292,7 @@ private:
 
 class TildeValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(TheExecutionInputType) override;
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual ~TildeValue();
     virtual bool is_string() const override { return true; }
     TildeValue(String name)
@@ -308,8 +306,8 @@ private:
 
 class Node : public RefCounted<Node> {
 public:
-    virtual void dump(int level) = const 0;
-    virtual RefPtr<Value> run(TheExecutionInputType) = 0;
+    virtual void dump(int level) const = 0;
+    virtual RefPtr<Value> run(RefPtr<Shell>) = 0;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) = 0;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, RefPtr<Node> matching_node);
     Vector<Line::CompletionSuggestion> complete_for_editor(Shell& shell, size_t offset);
@@ -329,14 +327,16 @@ public:
     virtual bool is_glob() const { return false; }
     virtual bool is_tilde() const { return false; }
     virtual bool is_variable_decls() const { return false; }
-    virtual bool is_syntax_error() const { return false; }
+    virtual bool is_syntax_error() const { return m_is_syntax_error; }
 
     virtual bool is_list() const { return false; }
 
     const Position& position() const { return m_position; }
+    void set_is_syntax_error() { m_is_syntax_error = true; }
 
 protected:
     Position m_position;
+    bool m_is_syntax_error { false };
 };
 
 class PathRedirectionNode : public Node {
@@ -361,7 +361,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "And"; }
@@ -377,6 +377,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "ListConcatenate"; }
@@ -393,7 +394,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Background"; }
@@ -409,7 +410,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual String class_name() const override { return "BarewordLiteral"; }
     virtual bool is_bareword() const override { return true; }
@@ -424,7 +425,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, RefPtr<Node> matching_node) override;
@@ -442,7 +443,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "CastToList"; }
@@ -458,7 +459,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual String class_name() const override { return "CloseFdRedirection"; }
     virtual bool is_command() const override { return true; }
@@ -473,7 +474,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override { ASSERT_NOT_REACHED(); }
     virtual String class_name() const override { return "CommandLiteral"; }
     virtual bool is_command() const override { return true; }
@@ -490,7 +491,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual String class_name() const override { return "Comment"; }
 
@@ -504,7 +505,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "DynamicEvaluate"; }
@@ -528,7 +529,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "DoubleQuotedString"; }
@@ -543,7 +544,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual String class_name() const override { return "Fd2FdRedirection"; }
     virtual bool is_command() const override { return true; }
@@ -560,7 +561,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual String class_name() const override { return "Glob"; }
     virtual bool is_glob() const override { return true; }
@@ -578,7 +579,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, RefPtr<Node> matching_node) override;
@@ -596,7 +597,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Join"; }
@@ -614,7 +615,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Or"; }
@@ -631,7 +632,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Pipe"; }
@@ -648,7 +649,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual String class_name() const override { return "ReadRedirection"; }
 };
 
@@ -659,7 +660,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual String class_name() const override { return "ReadWriteRedirection"; }
 };
 
@@ -670,7 +671,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Sequence"; }
@@ -687,7 +688,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, RefPtr<Node> matching_node) override;
     virtual HitTestResult hit_test_position(size_t) override;
@@ -703,7 +704,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, RefPtr<Node> matching_node) override;
     virtual HitTestResult hit_test_position(size_t) override;
@@ -719,9 +720,10 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
+    virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, RefPtr<Node> matching_node) override;
     virtual String class_name() const override { return "Juxtaposition"; }
 
     RefPtr<Node> m_left;
@@ -736,7 +738,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual String class_name() const override { return "StringLiteral"; }
 
@@ -750,7 +752,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "StringPartCompose"; }
@@ -766,7 +768,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override { return { nullptr, nullptr }; }
     virtual String class_name() const override { return "SyntaxError"; }
@@ -781,7 +783,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, RefPtr<Node> matching_node) override;
     virtual HitTestResult hit_test_position(size_t) override;
@@ -804,7 +806,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "VariableDeclarations"; }
@@ -820,7 +822,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual String class_name() const override { return "WriteAppendRedirection"; }
 };
 
@@ -831,7 +833,7 @@ public:
 
 private:
     virtual void dump(int level) const override;
-    virtual RefPtr<Value> run(TheExecutionInputType) override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual String class_name() const override { return "WriteRedirection"; }
 };
 

@@ -112,7 +112,16 @@ RefPtr<AST::Node> Parser::parse()
 {
     m_offset = 0;
 
-    return parse_toplevel();
+    auto toplevel = parse_toplevel();
+
+    if (m_offset < m_input.length()) {
+        // Parsing stopped midway, this is a syntax error.
+        auto error_start = push_start();
+        m_offset = m_input.length();
+        return create<AST::Join>(move(toplevel), create<AST::SyntaxError>());
+    }
+
+    return toplevel;
 }
 
 RefPtr<AST::Node> Parser::parse_toplevel()
@@ -207,9 +216,10 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
         if (peek() == '(') {
             consume();
             auto command = parse_pipe_sequence();
-            expect(')');
             if (!command)
                 m_offset = start->offset;
+            else if (!expect(')'))
+                command->set_is_syntax_error();
             expression = command;
         }
     }
@@ -504,18 +514,26 @@ RefPtr<AST::Node> Parser::parse_string()
     if (peek() == '"') {
         consume();
         auto inner = parse_doublequoted_string_inner();
-        if (!expect('"') || !inner)
-            return create<AST::SyntaxError>();
+        if (!inner)
+            inner = create<AST::SyntaxError>();
+        if (!expect('"')) {
+            inner = create<AST::DoubleQuotedString>(move(inner));
+            inner->set_is_syntax_error();
+            return inner;
+        }
         return create<AST::DoubleQuotedString>(move(inner)); // Double Quoted String
     }
 
     if (peek() == '\'') {
         consume();
         auto text = consume_while(is_not('\''));
+        bool is_error = false;
         if (!expect('\''))
-            return create<AST::SyntaxError>();
-
-        return create<AST::StringLiteral>(move(text)); // String Literal
+            is_error = true;
+        auto result = create<AST::StringLiteral>(move(text)); // String Literal
+        if (is_error)
+            result->set_is_syntax_error();
+        return move(result);
     }
 
     return nullptr;
@@ -648,11 +666,11 @@ RefPtr<AST::Node> Parser::parse_evaluate()
     if (peek() == '(') {
         consume();
         auto inner = parse_pipe_sequence();
-        if (!inner || !expect(')'))
+        if (!inner)
             inner = create<AST::SyntaxError>();
-        else
-            inner = create<AST::Execute>(move(inner), true);
-        return inner;
+        if (!expect(')'))
+            inner->set_is_syntax_error();
+        return create<AST::Execute>(move(inner), true);
     }
     auto inner = parse_expression();
 
@@ -718,9 +736,12 @@ RefPtr<AST::Node> Parser::parse_bareword()
     if (builder.is_empty())
         return nullptr;
 
+    auto current_end = m_offset;
     auto string = builder.to_string();
     if (string.starts_with('~')) {
         String username;
+        RefPtr<AST::Node> tilde, text;
+
         auto first_slash_index = string.index_of("/");
         if (first_slash_index.has_value()) {
             username = string.substring_view(1, first_slash_index.value() - 1);
@@ -729,21 +750,33 @@ RefPtr<AST::Node> Parser::parse_bareword()
             username = string.substring_view(1, string.length() - 1);
             string = "";
         }
-        auto current_end = m_offset;
-        m_offset -= string.length();
-        auto tilde = create<AST::Tilde>(move(username));
-        auto text_start = push_start();
-        m_offset = current_end;
+
+        // Synthesize a Tilde Node with the correct positioning information.
+        {
+            m_offset -= string.length();
+            tilde = create<AST::Tilde>(move(username));
+        }
+
         if (string.is_empty())
             return tilde;
-        return create<AST::StringPartCompose>(move(tilde), create<AST::BarewordLiteral>(move(string))); // Compose Varible Bareword
+
+        // Synthesize a BarewordLiteral Node with the correct positioning information.
+        {
+            m_offset = tilde->position().end_offset;
+            auto text_start = push_start();
+            m_offset = current_end;
+            text = create<AST::BarewordLiteral>(move(string));
+        }
+
+        return create<AST::Juxtaposition>(move(tilde), move(text)); // Juxtaposition Varible Bareword
     }
 
     if (string.starts_with("\\~")) {
         // Un-escape the tilde, but only at the start (where it would be an expansion)
+        string = string.substring(1, string.length() - 1);
     }
 
-    return create<AST::BarewordLiteral>(builder.to_string()); // Bareword Literal
+    return create<AST::BarewordLiteral>(move(string)); // Bareword Literal
 }
 
 RefPtr<AST::Node> Parser::parse_glob()
@@ -757,17 +790,17 @@ RefPtr<AST::Node> Parser::parse_glob()
     char ch = peek();
     if (ch == '*' || ch == '?') {
         consume();
-        // FIXME: Join all parts before making AST nodes
         StringBuilder textbuilder;
         if (bareword_part) {
-            ASSERT(bareword_part->is_bareword() || bareword_part->is_tilde());
             StringView text;
-            if (bareword_part->is_tilde()) {
+            if (bareword_part->is_bareword()) {
                 auto bareword = static_cast<AST::BarewordLiteral*>(bareword_part.ptr());
                 text = bareword->text();
             } else {
-                auto tilde = static_cast<AST::Tilde*>(bareword_part.ptr());
-                text = tilde->text();
+                // FIXME: Allow composition of tilde+bareword with globs: '~/foo/bar/baz*'
+                putback();
+                bareword_part->set_is_syntax_error();
+                return bareword_part;
             }
             textbuilder.append(text);
         }

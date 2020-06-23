@@ -92,9 +92,10 @@ public:
 
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete(const Line::Editor&);
-    Vector<Line::CompletionSuggestion> complete_path(const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_path(const String& base, const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_program_name(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
 
     void take_back_stdin();
 
