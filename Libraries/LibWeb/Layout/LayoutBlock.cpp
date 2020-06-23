@@ -155,8 +155,11 @@ void LayoutBlock::layout_contained_boxes(LayoutMode layout_mode)
         return IterationDecision::Continue;
     });
 
-    if (layout_mode != LayoutMode::Default)
-        set_width(content_width);
+    if (layout_mode != LayoutMode::Default) {
+        auto specified_width = style().length_or_fallback(CSS::PropertyID::Width, Length(), containing_block()->width());
+        if (specified_width.is_auto())
+            set_width(content_width);
+    }
 
     set_height(content_height);
 }
