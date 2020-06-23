@@ -39,7 +39,6 @@ public:
     void load(const URL&);
 
     const Gfx::Bitmap* bitmap() const;
-    const Gfx::ImageDecoder* image_decoder() const;
 
     bool has_image() const;
 
@@ -56,12 +55,10 @@ private:
     // ^ImageResourceClient
     virtual void resource_did_load() override;
     virtual void resource_did_fail() override;
-    virtual void resource_did_replace_decoder() override;
     virtual bool is_visible_in_viewport() const override { return m_visible_in_viewport; }
 
     void animate();
 
-    RefPtr<Gfx::ImageDecoder> m_decoder;
     mutable bool m_visible_in_viewport { false };
 
     size_t m_current_frame_index { 0 };

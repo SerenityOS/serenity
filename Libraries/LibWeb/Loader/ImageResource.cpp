@@ -94,9 +94,6 @@ void ImageResource::update_volatility()
         return;
 
     m_decoder = nullptr;
-    for_each_client([&](auto& client) {
-        static_cast<ImageResourceClient&>(client).resource_did_replace_decoder();
-    });
 }
 
 ImageResourceClient::~ImageResourceClient()

@@ -54,7 +54,6 @@ public:
     virtual ~ImageResourceClient();
 
     virtual bool is_visible_in_viewport() const { return false; }
-    virtual void resource_did_replace_decoder() {}
 
 protected:
     ImageResource* resource() { return static_cast<ImageResource*>(ResourceClient::resource()); }
