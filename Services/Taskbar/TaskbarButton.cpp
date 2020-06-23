@@ -60,7 +60,7 @@ void TaskbarButton::resize_event(GUI::ResizeEvent& event)
 static void paint_custom_progress_bar(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& text_rect, const Palette& palette, int min, int max, int value, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
 {
     float range_size = max - min;
-    float progress = (value - min) / range_size;
+    float progress = (value - min) / (range_size > 0.0f ? range_size : 1.0f);
     float progress_width = progress * rect.width();
 
     Gfx::IntRect progress_rect { rect.x(), rect.y(), (int)progress_width, rect.height() };
