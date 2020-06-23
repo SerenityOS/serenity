@@ -161,7 +161,7 @@ const Gfx::Bitmap* ImageLoader::bitmap() const
 {
     if (!resource())
         return nullptr;
-    return resource()->bitmap(0);
+    return resource()->bitmap();
 }
 
 const Gfx::ImageDecoder* ImageLoader::image_decoder() const
