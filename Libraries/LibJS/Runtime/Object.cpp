@@ -97,6 +97,7 @@ Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
 }
 
 Object::Object(Object& prototype)
+    : Cell()
 {
     m_shape = prototype.global_object().empty_object_shape();
     set_prototype(&prototype);
