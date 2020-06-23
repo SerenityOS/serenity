@@ -70,7 +70,7 @@ RefPtr<LayoutNode> HTMLObjectElement::create_layout_node(const StyleProperties* 
     auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
     if (display == "none")
         return nullptr;
-    if (m_image_loader.image_decoder())
+    if (m_image_loader.has_image())
         return adopt(*new LayoutImage(*this, move(style), m_image_loader));
     return nullptr;
 }
