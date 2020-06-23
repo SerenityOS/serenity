@@ -642,7 +642,7 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
 
     auto* relevant_sibling = block.previous_sibling();
     while (relevant_sibling != nullptr) {
-        if (relevant_sibling->style().position() != CSS::Position::Absolute)
+        if (relevant_sibling->position() != CSS::Position::Absolute)
             break;
         relevant_sibling = relevant_sibling->previous_sibling();
     }
