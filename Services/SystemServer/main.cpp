@@ -48,7 +48,7 @@ static void sigchld_handler(int)
         return;
 
 #ifdef SYSTEMSERVER_DEBUG
-    dbg() << "Reaped child with pid " << pid << ", exist status " << status;
+    dbg() << "Reaped child with pid " << pid << ", exit status " << status;
 #endif
 
     Service* service = Service::find_by_pid(pid);
