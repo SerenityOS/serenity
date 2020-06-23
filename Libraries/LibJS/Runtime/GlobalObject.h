@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {

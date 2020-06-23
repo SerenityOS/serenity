@@ -24,18 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 
 namespace Web {
 namespace Bindings {
 
-EventWrapper* wrap(JS::Heap& heap, Event& event)
+EventWrapper* wrap(JS::GlobalObject& global_object, Event& event)
 {
     if (event.is_mouse_event())
-        return static_cast<MouseEventWrapper*>(wrap_impl(heap, static_cast<MouseEvent&>(event)));
-    return static_cast<EventWrapper*>(wrap_impl(heap, event));
+        return static_cast<MouseEventWrapper*>(wrap_impl(global_object, static_cast<MouseEvent&>(event)));
+    return static_cast<EventWrapper*>(wrap_impl(global_object, event));
 }
 
 }

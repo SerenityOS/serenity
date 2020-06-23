@@ -244,7 +244,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
     auto* impl = impl_from(interpreter, global_object);
     if (!impl)
         return {};
-    return wrap(interpreter.heap(), impl->document());
+    return wrap(global_object, impl->document());
 }
 
 JS_DEFINE_NATIVE_SETTER(WindowObject::document_setter)

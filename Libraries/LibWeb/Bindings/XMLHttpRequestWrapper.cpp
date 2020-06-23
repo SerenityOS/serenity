@@ -25,7 +25,6 @@
  */
 
 #include <AK/FlyString.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -36,9 +35,9 @@
 namespace Web {
 namespace Bindings {
 
-XMLHttpRequestWrapper* wrap(JS::Heap& heap, XMLHttpRequest& impl)
+XMLHttpRequestWrapper* wrap(JS::GlobalObject& global_object, XMLHttpRequest& impl)
 {
-    return static_cast<XMLHttpRequestWrapper*>(wrap_impl(heap, impl));
+    return static_cast<XMLHttpRequestWrapper*>(wrap_impl(global_object, impl));
 }
 
 XMLHttpRequestWrapper::XMLHttpRequestWrapper(JS::GlobalObject& global_object, XMLHttpRequest& impl)

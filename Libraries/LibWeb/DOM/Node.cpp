@@ -137,13 +137,13 @@ void Node::dispatch_event(NonnullRefPtr<Event> event)
 #ifdef EVENT_DEBUG
             static_cast<const JS::ScriptFunction*>(function)->body().dump(0);
 #endif
-            auto& heap = function.heap();
-            auto* this_value = wrap(heap, *this);
+            auto& global_object = function.global_object();
+            auto* this_value = wrap(global_object, *this);
 #ifdef EVENT_DEBUG
             dbg() << "calling event listener with this=" << this_value;
 #endif
-            auto* event_wrapper = wrap(heap, *event);
-            JS::MarkedValueList arguments(heap);
+            auto* event_wrapper = wrap(global_object, *event);
+            JS::MarkedValueList arguments(global_object.heap());
             arguments.append(event_wrapper);
             document().interpreter().call(function, this_value, move(arguments));
         }

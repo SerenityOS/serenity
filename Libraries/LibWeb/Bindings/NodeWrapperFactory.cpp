@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
@@ -38,19 +37,19 @@
 namespace Web {
 namespace Bindings {
 
-NodeWrapper* wrap(JS::Heap& heap, Node& node)
+NodeWrapper* wrap(JS::GlobalObject& global_object, Node& node)
 {
     if (is<Document>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Document>(node)));
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, to<Document>(node)));
     if (is<HTMLCanvasElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLCanvasElement>(node)));
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, to<HTMLCanvasElement>(node)));
     if (is<HTMLImageElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLImageElement>(node)));
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, to<HTMLImageElement>(node)));
     if (is<HTMLElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLElement>(node)));
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, to<HTMLElement>(node)));
     if (is<Element>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Element>(node)));
-    return static_cast<NodeWrapper*>(wrap_impl(heap, node));
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, to<Element>(node)));
+    return static_cast<NodeWrapper*>(wrap_impl(global_object, node));
 }
 
 }

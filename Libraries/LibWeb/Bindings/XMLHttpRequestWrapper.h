@@ -43,7 +43,7 @@ private:
     virtual const char* class_name() const override { return "XMLHttpRequestWrapper"; }
 };
 
-XMLHttpRequestWrapper* wrap(JS::Heap&, XMLHttpRequest&);
+XMLHttpRequestWrapper* wrap(JS::GlobalObject&, XMLHttpRequest&);
 
 }
 }
