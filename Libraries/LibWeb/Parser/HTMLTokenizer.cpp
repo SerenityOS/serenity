@@ -1458,6 +1458,14 @@ _StartOfFunction:
                     for (auto ch : match.value().entity)
                         m_temporary_buffer.append(ch);
 
+                    if (consumed_as_part_of_an_attribute() && match.value().codepoints.last() != ';') {
+                        auto next = peek_codepoint(0);
+                        if (next.has_value() && (next.value() == '=' || isalnum(next.value()))) {
+                            FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
+                            SWITCH_TO_RETURN_STATE;
+                        }
+                    }
+
                     if (consumed_as_part_of_an_attribute() && match.value().entity.ends_with(';')) {
                         auto next_codepoint = peek_codepoint(0);
                         if (next_codepoint.has_value() && next_codepoint.value() == '=') {
