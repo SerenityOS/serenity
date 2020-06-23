@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca
+ * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,11 +32,14 @@
 #include <AK/Types.h>
 #include <Kernel/StdLib.h>
 #include <LibCrypto/Cipher/Cipher.h>
+#include <LibCrypto/Cipher/AES.h>
+#include <LibCrypto/Hash/SHA2.h>
 
 namespace Kernel {
 
 template<typename CipherT, typename HashT, int KeySize>
 class FortunaPRNG {
+public:
     constexpr static size_t pool_count = 32;
     constexpr static size_t reseed_threshold = 16;
 
@@ -45,7 +48,6 @@ class FortunaPRNG {
     using HashType = HashT;
     using DigestType = HashT::DigestType;
 
-public:
     void get_random_bytes(u8* buffer, size_t n)
     {
         if (m_p0_len >= reseed_threshold) {
@@ -57,7 +59,7 @@ public:
         // FIXME: More than 2^20 bytes cannot be generated without refreshing the key.
         ASSERT(n < (1 << 20));
 
-        CipherType cipher(m_key, m_key.size());
+        CipherType cipher(m_key, KeySize);
 
         size_t block_size = CipherType::BlockSizeInBits / 8;
 
@@ -67,9 +69,10 @@ public:
 
         // Extract a new key from the prng stream.
 
-        for (size_t i = 0; i < KeySize; i += block_size) {
+        for (size_t i = 0; i < KeySize/8; i += block_size) {
             this->generate_block(cipher, &(m_key[i]), min(block_size, KeySize - i));
         }
+
     }
 
     template<typename T>
@@ -79,13 +82,14 @@ public:
         if (pool == 0) {
             m_p0_len++;
         }
-        m_pools[pool].update(reinterpret_cast<u8*>(&event_data), sizeof(T));
+        m_pools[pool].update(reinterpret_cast<const u8*>(&event_data), sizeof(T));
     }
 
 private:
     void generate_block(CipherType cipher, u8* buffer, size_t size)
     {
-        BlockType input((u8*)m_counter, sizeof(m_counter));
+
+        BlockType input((u8*)&m_counter, sizeof(m_counter));
         BlockType output;
         cipher.encrypt_block(input, output);
         m_counter++;
@@ -117,6 +121,16 @@ private:
     size_t m_p0_len { 0 };
     ByteBuffer m_key;
     HashType m_pools[pool_count];
+};
+
+class KernelRng : public FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256> {
+    AK_MAKE_ETERNAL;
+public:
+    static KernelRng& the();
+
+private:
+    KernelRng();
+
 };
 
 // NOTE: These API's are primarily about expressing intent/needs in the calling code.

@@ -148,12 +148,18 @@ set(KEYBOARD_SOURCES
     ../Libraries/LibKeyboard/CharacterMap.cpp
 )
 
+set(CRYPTO_SOURCES
+    ../Libraries/LibCrypto/Cipher/AES.cpp
+    ../Libraries/LibCrypto/Hash/SHA2.cpp
+)
+
 set(SOURCES
     ${KERNEL_SOURCES}
     ${AK_SOURCES}
     ${ELF_SOURCES}
     ${VT_SOURCES}
     ${KEYBOARD_SOURCES}
+    ${CRYPTO_SOURCES}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKERNEL")

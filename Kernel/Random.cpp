@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,37 +31,35 @@
 
 namespace Kernel {
 
-static u32 random32()
+static KernelRng* s_the;
+
+KernelRng& KernelRng::the()
+{
+    if (!s_the) {
+        s_the = new KernelRng;
+    }
+    return *s_the;
+}
+
+KernelRng::KernelRng()
 {
     if (g_cpu_supports_rdrand) {
-        u32 value = 0;
-        asm volatile(
-            "1:\n"
-            "rdrand %0\n"
-            "jnc 1b\n"
-            : "=r"(value));
-        return value;
+        for (size_t i = 0; i < KernelRng::pool_count * KernelRng::reseed_threshold; ++i) {
+            u32 value = 0;
+            asm volatile(
+                "1:\n"
+                "rdseed %0\n"
+                "jnc 1b\n"
+                : "=r"(value));
+
+            this->add_random_event(value, i % 32);
+        }
     }
-    // FIXME: This sucks lol
-    static u32 next = 1;
-    next = next * 1103515245 + 12345;
-    return next;
 }
 
 void get_good_random_bytes(u8* buffer, size_t buffer_size)
 {
-    union {
-        u8 bytes[4];
-        u32 value;
-    } u;
-    size_t offset = 4;
-    for (size_t i = 0; i < buffer_size; ++i) {
-        if (offset >= 4) {
-            u.value = random32();
-            offset = 0;
-        }
-        buffer[i] = u.bytes[offset++];
-    }
+    KernelRng::the().get_random_bytes(buffer, buffer_size);
 }
 
 void get_fast_random_bytes(u8* buffer, size_t buffer_size)
