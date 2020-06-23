@@ -103,9 +103,9 @@ void LayoutBlock::layout_absolutely_positioned_descendant(LayoutBox& box)
         - box_model.offset().bottom.to_px(box)
         - box_model.border_box(box).bottom;
 
-    if (!box_model.offset().left.is_auto()) {
+    if (!box_model.offset().left.is_auto() || !box_model.margin().left.is_auto()) {
         used_offset.set_x(x_offset + box_model.margin().left.to_px(box));
-    } else if (!box_model.offset().right.is_auto()) {
+    } else if (!box_model.offset().right.is_auto() || !box_model.margin().right.is_auto()) {
         used_offset.set_x(width() + x_offset - box.width() - box_model.margin().right.to_px(box));
     }
 
