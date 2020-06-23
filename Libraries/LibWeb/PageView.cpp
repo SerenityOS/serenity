@@ -66,6 +66,11 @@ PageView::~PageView()
 {
 }
 
+void PageView::page_did_layout()
+{
+    set_content_size(layout_root()->size().to_int_size());
+}
+
 void PageView::page_did_change_title(const String& title)
 {
     if (on_title_change)

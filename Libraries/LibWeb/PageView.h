@@ -108,6 +108,7 @@ private:
     virtual void page_did_request_scroll_to_anchor(const String& fragment) override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_favicon(const Gfx::Bitmap&) override;
+    virtual void page_did_layout() override;
 
     void layout_and_sync_size();
 
