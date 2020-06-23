@@ -412,8 +412,6 @@ JS::Value Document::run_javascript(const StringView& source)
         parser.print_errors();
         return JS::js_undefined();
     }
-    dbg() << "Document::run_javascript('" << source << "') will run:";
-    program->dump(0);
     return document().interpreter().run(document().interpreter().global_object(), *program);
 }
 
