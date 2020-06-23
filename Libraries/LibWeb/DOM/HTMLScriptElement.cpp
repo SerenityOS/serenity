@@ -53,68 +53,6 @@ void HTMLScriptElement::set_non_blocking(Badge<HTMLDocumentParser>, bool non_blo
     m_non_blocking = non_blocking;
 }
 
-void HTMLScriptElement::children_changed()
-{
-    HTMLElement::children_changed();
-
-    if (has_attribute(HTML::AttributeNames::src))
-        return;
-
-    StringBuilder builder;
-    for_each_child([&](auto& child) {
-        if (is<Text>(child))
-            builder.append(to<Text>(child).text_content());
-    });
-    auto source = builder.to_string();
-    if (source.is_empty())
-        return;
-
-    auto parser = JS::Parser(JS::Lexer(source));
-    auto program = parser.parse_program();
-    if (parser.has_errors()) {
-        parser.print_errors();
-        return;
-    }
-    document().interpreter().run(document().interpreter().global_object(), *program);
-}
-
-void HTMLScriptElement::inserted_into(Node& new_parent)
-{
-    HTMLElement::inserted_into(new_parent);
-
-    auto src = attribute(HTML::AttributeNames::src);
-    if (src.is_null())
-        return;
-
-    URL src_url = document().complete_url(src);
-    if (src_url.protocol() == "file" && document().url().protocol() != src_url.protocol()) {
-        dbg() << "HTMLScriptElement: Forbidden to load " << src_url << " from " << document().url();
-        return;
-    }
-
-    String source;
-    ResourceLoader::the().load_sync(src_url, [&](auto& data, auto&) {
-        if (data.is_null()) {
-            dbg() << "HTMLScriptElement: Failed to load " << src;
-            return;
-        }
-        source = String::copy(data);
-    });
-    if (source.is_empty()) {
-        dbg() << "HTMLScriptElement: No source to parse :(";
-        return;
-    }
-
-    dbg() << "Parsing and running script from " << src_url;
-    auto parser = JS::Parser(JS::Lexer(source));
-    auto program = parser.parse_program();
-    if (parser.has_errors()) {
-        parser.print_errors();
-        return;
-    }
-    document().interpreter().run(document().interpreter().global_object(), *program);
-}
-
 void HTMLScriptElement::execute_script()
 {
     auto parser = JS::Parser(JS::Lexer(m_script_source));

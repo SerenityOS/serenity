@@ -36,9 +36,6 @@ public:
     HTMLScriptElement(Document&, const FlyString& tag_name);
     virtual ~HTMLScriptElement() override;
 
-    virtual void inserted_into(Node&) override;
-    virtual void children_changed() override;
-
     bool is_non_blocking() const { return m_non_blocking; }
     bool is_ready_to_be_parser_executed() const { return m_ready_to_be_parser_executed; }
     bool failed_to_load() const { return m_failed_to_load; }

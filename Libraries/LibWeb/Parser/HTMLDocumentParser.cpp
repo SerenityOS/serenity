@@ -1637,6 +1637,9 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         return;
     }
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::script) {
+        // Make sure the <script> element has up-to-date text content before preparing the script.
+        flush_character_insertions();
+
         NonnullRefPtr<HTMLScriptElement> script = to<HTMLScriptElement>(current_node());
         m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
