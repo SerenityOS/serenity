@@ -98,7 +98,7 @@ private:
 };
 
 template<>
-inline bool is<LayoutBox>(const LayoutNode& node)
+ALWAYS_INLINE bool is<LayoutBox>(const LayoutNode& node)
 {
     return node.is_box();
 }
