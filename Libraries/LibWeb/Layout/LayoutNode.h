@@ -191,6 +191,7 @@ public:
 
     const StyleProperties& style() const;
     CSS::Position position() const;
+    CSS::TextAlign text_align() const;
 
     LayoutNodeWithStyle* parent();
     const LayoutNodeWithStyle* parent() const;
@@ -297,6 +298,13 @@ inline CSS::Position LayoutNode::position() const
     if (m_has_style)
         return static_cast<const LayoutNodeWithStyle*>(this)->position();
     return parent()->position();
+}
+
+inline CSS::TextAlign LayoutNode::text_align() const
+{
+    if (m_has_style)
+        return static_cast<const LayoutNodeWithStyle*>(this)->text_align();
+    return parent()->text_align();
 }
 
 inline const LayoutNodeWithStyle* LayoutNode::parent() const
