@@ -55,13 +55,7 @@ void HTMLScriptElement::set_non_blocking(Badge<HTMLDocumentParser>, bool non_blo
 
 void HTMLScriptElement::execute_script()
 {
-    auto parser = JS::Parser(JS::Lexer(m_script_source));
-    auto program = parser.parse_program();
-    if (parser.has_errors()) {
-        parser.print_errors();
-        return;
-    }
-    document().interpreter().run(document().interpreter().global_object(), *program);
+    document().run_javascript(m_script_source);
 }
 
 void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
