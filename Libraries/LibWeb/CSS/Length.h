@@ -57,7 +57,19 @@ public:
     bool is_relative() const { return m_type == Type::Em || m_type == Type::Rem; }
 
     float raw_value() const { return m_value; }
-    float to_px(const LayoutNode&) const;
+    ALWAYS_INLINE float to_px(const LayoutNode& layout_node) const
+    {
+        if (is_relative())
+            return relative_length_to_px(layout_node);
+        switch (m_type) {
+        case Type::Auto:
+            return 0;
+        case Type::Px:
+            return m_value;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
 
     String to_string() const
     {
@@ -67,6 +79,8 @@ public:
     }
 
 private:
+    float relative_length_to_px(const LayoutNode&) const;
+
     const char* unit_name() const;
 
     Type m_type { Type::Auto };
