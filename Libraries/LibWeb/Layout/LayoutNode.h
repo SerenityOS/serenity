@@ -190,6 +190,7 @@ public:
     virtual LayoutNode& inline_wrapper() { return *this; }
 
     const StyleProperties& style() const;
+    CSS::Position position() const;
 
     LayoutNodeWithStyle* parent();
     const LayoutNodeWithStyle* parent() const;
@@ -257,16 +258,14 @@ public:
     const StyleProperties& style() const { return m_style; }
     void set_style(const StyleProperties& style) { m_style = style; }
 
+    CSS::Position position() const { return m_position; }
+
 protected:
-    explicit LayoutNodeWithStyle(const Node* node, NonnullRefPtr<StyleProperties> style)
-        : LayoutNode(node)
-        , m_style(move(style))
-    {
-        m_has_style = true;
-    }
+    explicit LayoutNodeWithStyle(const Node*, NonnullRefPtr<StyleProperties>);
 
 private:
     NonnullRefPtr<StyleProperties> m_style;
+    CSS::Position m_position;
 };
 
 class LayoutNodeWithStyleAndBoxModelMetrics : public LayoutNodeWithStyle {
@@ -289,6 +288,13 @@ inline const StyleProperties& LayoutNode::style() const
     if (m_has_style)
         return static_cast<const LayoutNodeWithStyle*>(this)->style();
     return parent()->style();
+}
+
+inline CSS::Position LayoutNode::position() const
+{
+    if (m_has_style)
+        return static_cast<const LayoutNodeWithStyle*>(this)->position();
+    return parent()->position();
 }
 
 inline const LayoutNodeWithStyle* LayoutNode::parent() const
