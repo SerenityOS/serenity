@@ -36,7 +36,7 @@ class ImageResource final : public Resource {
 public:
     virtual ~ImageResource() override;
     Gfx::ImageDecoder& ensure_decoder();
-    const Gfx::Bitmap* bitmap(size_t frame_index) const;
+    const Gfx::Bitmap* bitmap(size_t frame_index = 0) const;
 
     bool should_decode_in_process() const;
 
