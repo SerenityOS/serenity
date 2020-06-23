@@ -25,7 +25,6 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/Palette.h>
 #include <LibWeb/CSS/StyleValue.h>
@@ -302,10 +301,7 @@ void ImageStyleValue::resource_did_load()
 {
     if (!m_document)
         return;
-    // FIXME: Use the shared decoder from ImageResource!
-    m_bitmap = Gfx::load_png_from_memory(resource()->encoded_data().data(), resource()->encoded_data().size());
-    if (!m_bitmap)
-        return;
+    m_bitmap = resource()->bitmap();
     // FIXME: Do less than a full repaint if possible?
     if (m_document->frame())
         m_document->frame()->set_needs_display({});
