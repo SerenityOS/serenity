@@ -96,7 +96,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
 
             if (corrected_offset > node->text().length())
                 return {};
-            return shell.complete_path(node->text(), corrected_offset);
+            return shell.complete_path("", node->text(), corrected_offset);
         }
         return {};
     }
@@ -129,11 +129,9 @@ void And::dump(int level) const
     m_right->dump(level + 1);
 }
 
-RefPtr<Value> And::run(TheExecutionInputType input_value)
+RefPtr<Value> And::run(RefPtr<Shell> shell)
 {
-    auto shell = input_value;
-
-    auto left = m_left->run(input_value);
+    auto left = m_left->run(shell);
     ASSERT(left->is_job());
 
     auto* job_value = static_cast<JobValue*>(left.ptr());
@@ -146,7 +144,7 @@ RefPtr<Value> And::run(TheExecutionInputType input_value)
     shell->block_on_job(job);
 
     if (job->exit_code() == 0)
-        return m_right->run(input_value);
+        return m_right->run(shell);
 
     return job_value;
 }
@@ -174,6 +172,8 @@ And::And(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
+    if (m_left->is_syntax_error() || m_right->is_syntax_error())
+        set_is_syntax_error();
 }
 
 And::~And()
@@ -187,13 +187,13 @@ void ListConcatenate::dump(int level) const
     m_list->dump(level + 1);
 }
 
-RefPtr<Value> ListConcatenate::run(TheExecutionInputType input_value)
+RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
 {
-    auto list = m_list->run(input_value)->resolve_without_cast(input_value);
-    auto element = m_element->run(input_value)->resolve_without_cast(input_value);
+    auto list = m_list->run(shell)->resolve_without_cast(shell);
+    auto element = m_element->run(shell)->resolve_without_cast(shell);
 
     if (list->is_command() || element->is_command()) {
-        auto joined_commands = join_commands(element->resolve_as_commands(input_value), list->resolve_as_commands(input_value));
+        auto joined_commands = join_commands(element->resolve_as_commands(shell), list->resolve_as_commands(shell));
 
         if (joined_commands.size() == 1)
             return create<CommandValue>(joined_commands[0]);
@@ -231,6 +231,8 @@ ListConcatenate::ListConcatenate(Position position, RefPtr<Node> element, RefPtr
     , m_element(move(element))
     , m_list(move(list))
 {
+    if (m_element->is_syntax_error() || m_list->is_syntax_error())
+        set_is_syntax_error();
 }
 
 ListConcatenate::~ListConcatenate()
@@ -243,9 +245,9 @@ void Background::dump(int level) const
     m_command->dump(level + 1);
 }
 
-RefPtr<Value> Background::run(TheExecutionInputType input_value)
+RefPtr<Value> Background::run(RefPtr<Shell> shell)
 {
-    auto commands = m_command->run(input_value)->resolve_as_commands(input_value);
+    auto commands = m_command->run(shell)->resolve_as_commands(shell);
     auto& last = commands.last();
     last.should_wait = false;
 
@@ -269,6 +271,8 @@ Background::Background(Position position, RefPtr<Node> command)
     : Node(move(position))
     , m_command(move(command))
 {
+    if (m_command->is_syntax_error())
+        set_is_syntax_error();
 }
 
 Background::~Background()
@@ -281,7 +285,7 @@ void BarewordLiteral::dump(int level) const
     print_indented(m_text, level + 1);
 }
 
-RefPtr<Value> BarewordLiteral::run(TheExecutionInputType)
+RefPtr<Value> BarewordLiteral::run(RefPtr<Shell>)
 {
     return create<StringValue>(m_text);
 }
@@ -331,17 +335,16 @@ void CastToCommand::dump(int level) const
     m_inner->dump(level + 1);
 }
 
-RefPtr<Value> CastToCommand::run(TheExecutionInputType input_value)
+RefPtr<Value> CastToCommand::run(RefPtr<Shell> shell)
 {
     if (m_inner->is_command())
-        return m_inner->run(input_value);
+        return m_inner->run(shell);
 
-    auto shell = input_value;
-    auto value = m_inner->run(input_value)->resolve_without_cast(input_value);
+    auto value = m_inner->run(shell)->resolve_without_cast(shell);
     if (value->is_command())
         return value;
 
-    auto argv = value->resolve_as_list(input_value);
+    auto argv = value->resolve_as_list(shell);
     return create<CommandValue>(move(argv));
 }
 
@@ -380,6 +383,8 @@ CastToCommand::CastToCommand(Position position, RefPtr<Node> inner)
     : Node(move(position))
     , m_inner(move(inner))
 {
+    if (m_inner->is_syntax_error())
+        set_is_syntax_error();
 }
 
 CastToCommand::~CastToCommand()
@@ -395,18 +400,17 @@ void CastToList::dump(int level) const
         print_indented("(empty)", level + 1);
 }
 
-RefPtr<Value> CastToList::run(TheExecutionInputType input_value)
+RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
 {
     if (!m_inner)
         return create<ListValue>({});
 
-    auto shell = input_value;
-    auto inner_value = m_inner->run(input_value);
+    auto inner_value = m_inner->run(shell);
 
     if (inner_value->is_command())
         return inner_value;
 
-    auto values = inner_value->resolve_as_list(input_value);
+    auto values = inner_value->resolve_as_list(shell);
     Vector<RefPtr<Value>> cast_values;
     for (auto& value : values)
         cast_values.append(create<StringValue>(value));
@@ -435,6 +439,8 @@ CastToList::CastToList(Position position, RefPtr<Node> inner)
     : Node(move(position))
     , m_inner(move(inner))
 {
+    if (m_inner && m_inner->is_syntax_error())
+        set_is_syntax_error();
 }
 
 CastToList::~CastToList()
@@ -447,7 +453,7 @@ void CloseFdRedirection::dump(int level) const
     print_indented(String::format("%d -> Close", m_fd), level);
 }
 
-RefPtr<Value> CloseFdRedirection::run(TheExecutionInputType)
+RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
 {
     Command command;
     command.redirections.append(*new CloseRedirection(m_fd));
@@ -476,7 +482,7 @@ void CommandLiteral::dump(int level) const
     print_indented("(Generated command literal)", level + 1);
 }
 
-RefPtr<Value> CommandLiteral::run(TheExecutionInputType)
+RefPtr<Value> CommandLiteral::run(RefPtr<Shell>)
 {
     return create<CommandValue>(m_command);
 }
@@ -497,7 +503,7 @@ void Comment::dump(int level) const
     print_indented(m_text, level + 1);
 }
 
-RefPtr<Value> Comment::run(TheExecutionInputType)
+RefPtr<Value> Comment::run(RefPtr<Shell>)
 {
     return create<StringValue>("");
 }
@@ -523,11 +529,10 @@ void DoubleQuotedString::dump(int level) const
     m_inner->dump(level + 1);
 }
 
-RefPtr<Value> DoubleQuotedString::run(TheExecutionInputType input_value)
+RefPtr<Value> DoubleQuotedString::run(RefPtr<Shell> shell)
 {
     StringBuilder builder;
-    auto shell = input_value;
-    auto values = m_inner->run(input_value)->resolve_as_list(input_value);
+    auto values = m_inner->run(shell)->resolve_as_list(shell);
 
     builder.join("", values);
 
@@ -557,6 +562,8 @@ DoubleQuotedString::DoubleQuotedString(Position position, RefPtr<Node> inner)
     : Node(move(position))
     , m_inner(move(inner))
 {
+    if (m_inner->is_syntax_error())
+        set_is_syntax_error();
 }
 
 DoubleQuotedString::~DoubleQuotedString()
@@ -569,19 +576,19 @@ void DynamicEvaluate::dump(int level) const
     m_inner->dump(level + 1);
 }
 
-RefPtr<Value> DynamicEvaluate::run(TheExecutionInputType input_value)
+RefPtr<Value> DynamicEvaluate::run(RefPtr<Shell> shell)
 {
-    auto result = m_inner->run(input_value)->resolve_without_cast(input_value);
+    auto result = m_inner->run(shell)->resolve_without_cast(shell);
     // Dynamic Evaluation behaves differently between strings and lists.
     // Strings are treated as variables, and Lists are treated as commands.
     if (result->is_string()) {
-        auto name_part = result->resolve_as_list(input_value);
+        auto name_part = result->resolve_as_list(shell);
         ASSERT(name_part.size() == 1);
         return create<SimpleVariableValue>(name_part[0]);
     }
 
     // If it's anything else, we're just gonna cast it to a list.
-    auto list = result->resolve_as_list(input_value);
+    auto list = result->resolve_as_list(shell);
     return create<CommandValue>(move(list));
 }
 
@@ -603,6 +610,8 @@ DynamicEvaluate::DynamicEvaluate(Position position, RefPtr<Node> inner)
     : Node(move(position))
     , m_inner(move(inner))
 {
+    if (m_inner->is_syntax_error())
+        set_is_syntax_error();
 }
 
 DynamicEvaluate::~DynamicEvaluate()
@@ -615,7 +624,7 @@ void Fd2FdRedirection::dump(int level) const
     print_indented(String::format("%d -> %d", source_fd, dest_fd), level);
 }
 
-RefPtr<Value> Fd2FdRedirection::run(TheExecutionInputType)
+RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
 {
     Command command;
     command.redirections.append(*new FdRedirection(source_fd, dest_fd, Rewiring::Close::None));
@@ -644,7 +653,7 @@ void Glob::dump(int level) const
     print_indented(m_text, level + 1);
 }
 
-RefPtr<Value> Glob::run(TheExecutionInputType)
+RefPtr<Value> Glob::run(RefPtr<Shell>)
 {
     return create<GlobValue>(m_text);
 }
@@ -675,12 +684,11 @@ void Execute::dump(int level) const
     m_command->dump(level + 1);
 }
 
-RefPtr<Value> Execute::run(TheExecutionInputType input_value)
+RefPtr<Value> Execute::run(RefPtr<Shell> shell)
 {
     RefPtr<Job> job;
 
-    auto shell = input_value;
-    auto initial_commands = m_command->run(input_value)->resolve_as_commands(input_value);
+    auto initial_commands = m_command->run(shell)->resolve_as_commands(shell);
     decltype(initial_commands) commands;
 
     for (auto& command : initial_commands) {
@@ -695,7 +703,7 @@ RefPtr<Value> Execute::run(TheExecutionInputType input_value)
                         subcommand_ast = ast->command();
                     }
                     RefPtr<Node> substitute = create<Join>(position(), move(subcommand_ast), create<CommandLiteral>(position(), command));
-                    commands.append(substitute->run(input_value)->resolve_as_commands(input_value));
+                    commands.append(substitute->run(shell)->resolve_as_commands(shell));
                 } else {
                     commands.append(command);
                 }
@@ -851,6 +859,8 @@ Execute::Execute(Position position, RefPtr<Node> command, bool capture_stdout)
     , m_command(move(command))
     , m_capture_stdout(capture_stdout)
 {
+    if (m_command->is_syntax_error())
+        set_is_syntax_error();
 }
 
 Execute::~Execute()
@@ -864,10 +874,10 @@ void Join::dump(int level) const
     m_right->dump(level + 1);
 }
 
-RefPtr<Value> Join::run(TheExecutionInputType input_value)
+RefPtr<Value> Join::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->run(input_value)->resolve_as_commands(input_value);
-    auto right = m_right->run(input_value)->resolve_as_commands(input_value);
+    auto left = m_left->run(shell)->resolve_as_commands(shell);
+    auto right = m_right->run(shell)->resolve_as_commands(shell);
 
     return create<CommandSequenceValue>(join_commands(move(left), move(right)));
 }
@@ -896,6 +906,8 @@ Join::Join(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
+    if (m_left->is_syntax_error() || m_right->is_syntax_error())
+        set_is_syntax_error();
 }
 
 Join::~Join()
@@ -909,18 +921,17 @@ void Or::dump(int level) const
     m_right->dump(level + 1);
 }
 
-RefPtr<Value> Or::run(TheExecutionInputType input_value)
+RefPtr<Value> Or::run(RefPtr<Shell> shell)
 {
-    auto shell = input_value;
 
-    auto left = m_left->run(input_value);
+    auto left = m_left->run(shell);
     ASSERT(left->is_job());
 
     auto* job_value = static_cast<JobValue*>(left.ptr());
     const auto job = job_value->job();
     if (!job) {
         // Something has gone wrong, let's just pretend that the job failed.
-        return m_right->run(input_value);
+        return m_right->run(shell);
     }
 
     shell->block_on_job(job);
@@ -928,7 +939,7 @@ RefPtr<Value> Or::run(TheExecutionInputType input_value)
     if (job->exit_code() == 0)
         return job_value;
 
-    return m_right->run(input_value);
+    return m_right->run(shell);
 }
 
 void Or::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -953,6 +964,8 @@ Or::Or(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
+    if (m_left->is_syntax_error() || m_right->is_syntax_error())
+        set_is_syntax_error();
 }
 
 Or::~Or()
@@ -966,10 +979,10 @@ void Pipe::dump(int level) const
     m_right->dump(level + 1);
 }
 
-RefPtr<Value> Pipe::run(TheExecutionInputType input_value)
+RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->run(input_value)->resolve_as_commands(input_value);
-    auto right = m_right->run(input_value)->resolve_as_commands(input_value);
+    auto left = m_left->run(shell)->resolve_as_commands(shell);
+    auto right = m_right->run(shell)->resolve_as_commands(shell);
 
     auto last_in_left = left.take_last();
     auto first_in_right = right.take_first();
@@ -1012,6 +1025,8 @@ Pipe::Pipe(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
+    if (m_left->is_syntax_error() || m_right->is_syntax_error())
+        set_is_syntax_error();
 }
 
 Pipe::~Pipe()
@@ -1067,7 +1082,7 @@ Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shel
     if (corrected_offset > node->text().length())
         return {};
 
-    return shell.complete_path(node->text(), corrected_offset);
+    return shell.complete_path("", node->text(), corrected_offset);
 }
 
 PathRedirectionNode::~PathRedirectionNode()
@@ -1081,10 +1096,10 @@ void ReadRedirection::dump(int level) const
     print_indented(String::format("To %d", m_fd), level + 1);
 }
 
-RefPtr<Value> ReadRedirection::run(TheExecutionInputType input_value)
+RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
-    auto path_segments = m_path->run(input_value)->resolve_as_list(input_value);
+    auto path_segments = m_path->run(shell)->resolve_as_list(shell);
     StringBuilder builder;
     builder.join(" ", path_segments);
 
@@ -1108,10 +1123,10 @@ void ReadWriteRedirection::dump(int level) const
     print_indented(String::format("To/From %d", m_fd), level + 1);
 }
 
-RefPtr<Value> ReadWriteRedirection::run(TheExecutionInputType input_value)
+RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
-    auto path_segments = m_path->run(input_value)->resolve_as_list(input_value);
+    auto path_segments = m_path->run(shell)->resolve_as_list(shell);
     StringBuilder builder;
     builder.join(" ", path_segments);
 
@@ -1135,10 +1150,10 @@ void Sequence::dump(int level) const
     m_right->dump(level + 1);
 }
 
-RefPtr<Value> Sequence::run(TheExecutionInputType input_value)
+RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->run(input_value)->resolve_as_commands(input_value);
-    auto right = m_right->run(input_value)->resolve_as_commands(input_value);
+    auto left = m_left->run(shell)->resolve_as_commands(shell);
+    auto right = m_right->run(shell)->resolve_as_commands(shell);
 
     Vector<Command> commands;
     commands.append(left);
@@ -1169,6 +1184,8 @@ Sequence::Sequence(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
+    if (m_left->is_syntax_error() || m_right->is_syntax_error())
+        set_is_syntax_error();
 }
 
 Sequence::~Sequence()
@@ -1181,7 +1198,7 @@ void SimpleVariable::dump(int level) const
     print_indented(m_name, level + 1);
 }
 
-RefPtr<Value> SimpleVariable::run(TheExecutionInputType)
+RefPtr<Value> SimpleVariable::run(RefPtr<Shell>)
 {
     return create<SimpleVariableValue>(m_name);
 }
@@ -1234,7 +1251,7 @@ void SpecialVariable::dump(int level) const
     print_indented(String { &m_name, 1 }, level + 1);
 }
 
-RefPtr<Value> SpecialVariable::run(TheExecutionInputType)
+RefPtr<Value> SpecialVariable::run(RefPtr<Shell>)
 {
     return create<SpecialVariableValue>(m_name);
 }
@@ -1274,13 +1291,13 @@ void Juxtaposition::dump(int level) const
     m_right->dump(level + 1);
 }
 
-RefPtr<Value> Juxtaposition::run(TheExecutionInputType input_value)
+RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
 {
-    auto left_value = m_left->run(input_value)->resolve_without_cast(input_value);
-    auto right_value = m_right->run(input_value)->resolve_without_cast(input_value);
+    auto left_value = m_left->run(shell)->resolve_without_cast(shell);
+    auto right_value = m_right->run(shell)->resolve_without_cast(shell);
 
-    auto left = left_value->resolve_as_list(input_value);
-    auto right = right_value->resolve_as_list(input_value);
+    auto left = left_value->resolve_as_list(shell);
+    auto right = right_value->resolve_as_list(shell);
 
     if (left_value->is_string() && right_value->is_string()) {
 
@@ -1318,9 +1335,50 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
 {
     m_left->highlight_in_editor(editor, shell, metadata);
 
-    // Do not highlight '/foo/bar' in '~/foo/bar'
-    if (!(m_right->is_bareword() && m_left->is_tilde()))
+    // '~/foo/bar' is special, we have to actually resolve the tilde
+    // since that resolution is a pure operation, we can just go ahead
+    // and do it to get the value :)
+    if (m_right->is_bareword() && m_left->is_tilde()) {
+        auto tilde_value = m_left->run(shell)->resolve_as_list(shell)[0];
+        auto bareword_value = m_right->run(shell)->resolve_as_list(shell)[0];
+
+        StringBuilder path_builder;
+        path_builder.append(tilde_value);
+        path_builder.append("/");
+        path_builder.append(bareword_value);
+        auto path = path_builder.to_string();
+
+        if (Core::File::exists(path)) {
+            auto realpath = shell.resolve_path(path);
+            auto url = URL::create_with_file_protocol(realpath);
+            url.set_host(shell.hostname);
+            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_string()) });
+        }
+
+    } else {
         m_right->highlight_in_editor(editor, shell, metadata);
+    }
+}
+
+Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
+{
+    // '~/foo/bar' is special, we have to actually resolve the tilde
+    // then complete the bareword with that path prefix.
+    if (m_right->is_bareword() && m_left->is_tilde()) {
+        auto tilde_value = m_left->run(shell)->resolve_as_list(shell)[0];
+
+        auto corrected_offset = offset - matching_node->position().start_offset;
+        auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
+
+        if (corrected_offset > node->text().length())
+            return {};
+
+        auto text = node->text().substring(1, node->text().length() - 1);
+
+        return shell.complete_path(tilde_value, text, corrected_offset - 1);
+    }
+
+    return Node::complete_for_editor(shell, offset, matching_node);
 }
 
 HitTestResult Juxtaposition::hit_test_position(size_t offset)
@@ -1329,9 +1387,15 @@ HitTestResult Juxtaposition::hit_test_position(size_t offset)
         return {};
 
     auto result = m_left->hit_test_position(offset);
+    if (!result.closest_node_with_semantic_meaning)
+        result.closest_node_with_semantic_meaning = this;
     if (result.matching_node)
         return result;
-    return m_right->hit_test_position(offset);
+
+    result = m_right->hit_test_position(offset);
+    if (!result.closest_node_with_semantic_meaning)
+        result.closest_node_with_semantic_meaning = this;
+    return result;
 }
 
 Juxtaposition::Juxtaposition(Position position, RefPtr<Node> left, RefPtr<Node> right)
@@ -1339,6 +1403,8 @@ Juxtaposition::Juxtaposition(Position position, RefPtr<Node> left, RefPtr<Node> 
     , m_left(move(left))
     , m_right(move(right))
 {
+    if (m_left->is_syntax_error() || m_right->is_syntax_error())
+        set_is_syntax_error();
 }
 
 Juxtaposition::~Juxtaposition()
@@ -1351,7 +1417,7 @@ void StringLiteral::dump(int level) const
     print_indented(m_text, level + 1);
 }
 
-RefPtr<Value> StringLiteral::run(TheExecutionInputType)
+RefPtr<Value> StringLiteral::run(RefPtr<Shell>)
 {
     return create<StringValue>(m_text);
 }
@@ -1381,10 +1447,10 @@ void StringPartCompose::dump(int level) const
     m_right->dump(level + 1);
 }
 
-RefPtr<Value> StringPartCompose::run(TheExecutionInputType input_value)
+RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->run(input_value)->resolve_as_list(input_value);
-    auto right = m_right->run(input_value)->resolve_as_list(input_value);
+    auto left = m_left->run(shell)->resolve_as_list(shell);
+    auto right = m_right->run(shell)->resolve_as_list(shell);
 
     StringBuilder builder;
     builder.join(" ", left);
@@ -1415,6 +1481,8 @@ StringPartCompose::StringPartCompose(Position position, RefPtr<Node> left, RefPt
     , m_left(move(left))
     , m_right(move(right))
 {
+    if (m_left->is_syntax_error() || m_right->is_syntax_error())
+        set_is_syntax_error();
 }
 
 StringPartCompose::~StringPartCompose()
@@ -1426,7 +1494,7 @@ void SyntaxError::dump(int level) const
     Node::dump(level);
 }
 
-RefPtr<Value> SyntaxError::run(TheExecutionInputType)
+RefPtr<Value> SyntaxError::run(RefPtr<Shell>)
 {
     dbg() << "SYNTAX ERROR AAAA";
     return create<StringValue>("");
@@ -1440,6 +1508,7 @@ void SyntaxError::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMet
 SyntaxError::SyntaxError(Position position)
     : Node(move(position))
 {
+    set_is_syntax_error();
 }
 
 SyntaxError::~SyntaxError()
@@ -1452,14 +1521,13 @@ void Tilde::dump(int level) const
     print_indented(m_username, level + 1);
 }
 
-RefPtr<Value> Tilde::run(TheExecutionInputType)
+RefPtr<Value> Tilde::run(RefPtr<Shell>)
 {
     return create<TildeValue>(m_username);
 }
 
-void Tilde::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
+void Tilde::highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata)
 {
-    editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
 }
 
 HitTestResult Tilde::hit_test_position(size_t offset)
@@ -1470,9 +1538,20 @@ HitTestResult Tilde::hit_test_position(size_t offset)
     return { this, this };
 }
 
-Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell&, size_t, RefPtr<Node>)
+Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
 {
-    return {};
+    if (!matching_node)
+        return {};
+
+    if (matching_node != this)
+        return {};
+
+    auto corrected_offset = offset - matching_node->position().start_offset - 1;
+
+    if (corrected_offset > m_username.length() + 1)
+        return {};
+
+    return shell.complete_user(m_username, corrected_offset);
 }
 
 String Tilde::text() const
@@ -1500,10 +1579,10 @@ void WriteAppendRedirection::dump(int level) const
     print_indented(String::format("From %d", m_fd), level + 1);
 }
 
-RefPtr<Value> WriteAppendRedirection::run(TheExecutionInputType input_value)
+RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
-    auto path_segments = m_path->run(input_value)->resolve_as_list(input_value);
+    auto path_segments = m_path->run(shell)->resolve_as_list(shell);
     StringBuilder builder;
     builder.join(" ", path_segments);
 
@@ -1527,10 +1606,10 @@ void WriteRedirection::dump(int level) const
     print_indented(String::format("From %d", m_fd), level + 1);
 }
 
-RefPtr<Value> WriteRedirection::run(TheExecutionInputType input_value)
+RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
-    auto path_segments = m_path->run(input_value)->resolve_as_list(input_value);
+    auto path_segments = m_path->run(shell)->resolve_as_list(shell);
     StringBuilder builder;
     builder.join(" ", path_segments);
 
@@ -1557,21 +1636,20 @@ void VariableDeclarations::dump(int level) const
     }
 }
 
-RefPtr<Value> VariableDeclarations::run(TheExecutionInputType input_value)
+RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
 {
-    auto shell = input_value;
     for (auto& var : m_variables) {
-        auto name_value = var.name->run(input_value)->resolve_as_list(input_value);
+        auto name_value = var.name->run(shell)->resolve_as_list(shell);
         ASSERT(name_value.size() == 1);
         auto name = name_value[0];
-        auto value = var.value->run(input_value);
+        auto value = var.value->run(shell);
         if (value->is_list()) {
-            auto parts = value->resolve_as_list(input_value);
+            auto parts = value->resolve_as_list(shell);
             shell->set_local_variable(name, adopt(*new ListValue(move(parts))));
         } else if (value->is_command()) {
             shell->set_local_variable(name, value);
         } else {
-            auto part = value->resolve_as_list(input_value);
+            auto part = value->resolve_as_list(shell);
             shell->set_local_variable(name, adopt(*new StringValue(part[0])));
         }
     }
@@ -1608,6 +1686,12 @@ VariableDeclarations::VariableDeclarations(Position position, Vector<Variable> v
     : Node(move(position))
     , m_variables(move(variables))
 {
+    for (auto& decl : m_variables) {
+        if (decl.name->is_syntax_error() || decl.value->is_syntax_error()) {
+            set_is_syntax_error();
+            break;
+        }
+    }
 }
 
 VariableDeclarations::~VariableDeclarations()
@@ -1617,10 +1701,10 @@ VariableDeclarations::~VariableDeclarations()
 Value::~Value()
 {
 }
-Vector<AST::Command> Value::resolve_as_commands(TheExecutionInputType input_value)
+Vector<AST::Command> Value::resolve_as_commands(RefPtr<Shell> shell)
 {
     Command command;
-    command.argv = resolve_as_list(input_value);
+    command.argv = resolve_as_list(shell);
     return { command };
 }
 
@@ -1635,11 +1719,11 @@ ListValue::~ListValue()
 {
 }
 
-Vector<String> ListValue::resolve_as_list(TheExecutionInputType input_value)
+Vector<String> ListValue::resolve_as_list(RefPtr<Shell> shell)
 {
     Vector<String> values;
     for (auto& value : m_contained_values)
-        values.append(value->resolve_as_list(input_value));
+        values.append(value->resolve_as_list(shell));
 
     return values;
 }
@@ -1652,24 +1736,24 @@ CommandSequenceValue::~CommandSequenceValue()
 {
 }
 
-Vector<String> CommandSequenceValue::resolve_as_list(TheExecutionInputType)
+Vector<String> CommandSequenceValue::resolve_as_list(RefPtr<Shell>)
 {
     // TODO: Somehow raise an "error".
     return {};
 }
 
-Vector<Command> CommandSequenceValue::resolve_as_commands(TheExecutionInputType)
+Vector<Command> CommandSequenceValue::resolve_as_commands(RefPtr<Shell>)
 {
     return m_contained_values;
 }
 
-Vector<String> CommandValue::resolve_as_list(TheExecutionInputType)
+Vector<String> CommandValue::resolve_as_list(RefPtr<Shell>)
 {
     // TODO: Somehow raise an "error".
     return {};
 }
 
-Vector<Command> CommandValue::resolve_as_commands(TheExecutionInputType)
+Vector<Command> CommandValue::resolve_as_commands(RefPtr<Shell>)
 {
     return { m_command };
 }
@@ -1681,7 +1765,7 @@ JobValue::~JobValue()
 StringValue::~StringValue()
 {
 }
-Vector<String> StringValue::resolve_as_list(TheExecutionInputType)
+Vector<String> StringValue::resolve_as_list(RefPtr<Shell>)
 {
     if (is_list()) {
         auto parts = StringView(m_string).split_view(m_split);
@@ -1698,19 +1782,18 @@ Vector<String> StringValue::resolve_as_list(TheExecutionInputType)
 GlobValue::~GlobValue()
 {
 }
-Vector<String> GlobValue::resolve_as_list(TheExecutionInputType input_value)
+Vector<String> GlobValue::resolve_as_list(RefPtr<Shell> shell)
 {
-    auto shell = input_value;
     return shell->expand_globs(m_glob, shell->cwd);
 }
 
 SimpleVariableValue::~SimpleVariableValue()
 {
 }
-Vector<String> SimpleVariableValue::resolve_as_list(TheExecutionInputType input_value)
+Vector<String> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
-    if (auto value = resolve_without_cast(input_value); value != this)
-        return value->resolve_as_list(input_value);
+    if (auto value = resolve_without_cast(shell); value != this)
+        return value->resolve_as_list(shell);
 
     char* env_value = getenv(m_name.characters());
     if (env_value == nullptr)
@@ -1724,9 +1807,8 @@ Vector<String> SimpleVariableValue::resolve_as_list(TheExecutionInputType input_
     return res;
 }
 
-RefPtr<Value> SimpleVariableValue::resolve_without_cast(TheExecutionInputType input_value)
+RefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
 {
-    auto shell = input_value;
 
     if (auto value = shell->lookup_local_variable(m_name))
         return value;
@@ -1737,9 +1819,8 @@ RefPtr<Value> SimpleVariableValue::resolve_without_cast(TheExecutionInputType in
 SpecialVariableValue::~SpecialVariableValue()
 {
 }
-Vector<String> SpecialVariableValue::resolve_as_list(TheExecutionInputType input_value)
+Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
-    auto shell = input_value;
     switch (m_name) {
     case '?':
         return { String::number(shell->last_return_code) };
@@ -1753,9 +1834,8 @@ Vector<String> SpecialVariableValue::resolve_as_list(TheExecutionInputType input
 TildeValue::~TildeValue()
 {
 }
-Vector<String> TildeValue::resolve_as_list(TheExecutionInputType input_value)
+Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 {
-    auto shell = input_value;
     StringBuilder builder;
     builder.append("~");
     builder.append(m_username);
