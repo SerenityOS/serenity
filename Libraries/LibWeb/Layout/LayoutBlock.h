@@ -117,7 +117,7 @@ void LayoutBlock::for_each_fragment(Callback callback) const
 }
 
 template<>
-inline bool is<LayoutBlock>(const LayoutNode& node)
+ALWAYS_INLINE bool is<LayoutBlock>(const LayoutNode& node)
 {
     return node.is_block();
 }
