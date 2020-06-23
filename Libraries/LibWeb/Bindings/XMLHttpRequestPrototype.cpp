@@ -36,7 +36,7 @@ namespace Web {
 namespace Bindings {
 
 XMLHttpRequestPrototype::XMLHttpRequestPrototype(JS::GlobalObject& global_object)
-    : Object(global_object.object_prototype())
+    : Object(*global_object.object_prototype())
 {
 }
 

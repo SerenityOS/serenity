@@ -76,7 +76,7 @@ static void prepare_arguments_list(Interpreter& interpreter, Value value, Marked
 }
 
 ReflectObject::ReflectObject(GlobalObject& global_object)
-    : Object(global_object.object_prototype())
+    : Object(*global_object.object_prototype())
 {
 }
 

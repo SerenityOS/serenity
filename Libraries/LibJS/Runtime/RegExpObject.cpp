@@ -41,7 +41,7 @@ RegExpObject* RegExpObject::create(GlobalObject& global_object, String content, 
 }
 
 RegExpObject::RegExpObject(String content, String flags, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_content(content)
     , m_flags(flags)
 {

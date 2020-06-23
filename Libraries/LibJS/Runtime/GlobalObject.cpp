@@ -64,7 +64,7 @@
 namespace JS {
 
 GlobalObject::GlobalObject()
-    : Object(nullptr)
+    : Object(GlobalObjectTag::Tag)
 {
 }
 

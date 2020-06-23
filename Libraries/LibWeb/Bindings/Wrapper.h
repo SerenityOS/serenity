@@ -42,7 +42,7 @@ class Wrapper
 public:
 protected:
     explicit Wrapper(Object& prototype)
-        : Object(&prototype)
+        : Object(prototype)
     {
     }
 };

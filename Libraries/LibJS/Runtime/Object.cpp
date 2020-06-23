@@ -82,18 +82,24 @@ PropertyDescriptor PropertyDescriptor::from_dictionary(Interpreter& interpreter,
 
 Object* Object::create_empty(Interpreter&, GlobalObject& global_object)
 {
-    return global_object.heap().allocate<Object>(global_object, global_object.object_prototype());
+    return global_object.heap().allocate<Object>(global_object, *global_object.object_prototype());
 }
 
-Object::Object(Object* prototype)
+Object::Object(GlobalObjectTag)
 {
-    if (prototype) {
-        m_shape = interpreter().global_object().empty_object_shape();
-        set_prototype(prototype);
-    } else {
-        // This is the global object
-        m_shape = interpreter().heap().allocate<Shape>(static_cast<GlobalObject&>(*this), static_cast<GlobalObject&>(*this));
-    }
+    // This is the global object
+    m_shape = interpreter().heap().allocate<Shape>(static_cast<GlobalObject&>(*this), static_cast<GlobalObject&>(*this));
+}
+
+Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
+{
+    m_shape = interpreter().heap().allocate<Shape>(global_object, global_object);
+}
+
+Object::Object(Object& prototype)
+{
+    m_shape = prototype.global_object().empty_object_shape();
+    set_prototype(&prototype);
 }
 
 void Object::initialize(Interpreter&, GlobalObject&)
@@ -698,7 +704,7 @@ bool Object::define_native_function(const FlyString& property_name, AK::Function
 
 bool Object::define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
-    return define_property(property_name, heap().allocate<NativeProperty>(global_object(), move(getter), move(setter)), attribute);
+    return define_property(property_name, heap().allocate<NativeProperty>(global_object(), global_object(), move(getter), move(setter)), attribute);
 }
 
 void Object::visit_children(Cell::Visitor& visitor)

@@ -37,7 +37,7 @@ BooleanObject* BooleanObject::create(GlobalObject& global_object, bool value)
 }
 
 BooleanObject::BooleanObject(bool value, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_value(value)
 {
 }

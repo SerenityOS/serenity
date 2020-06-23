@@ -49,7 +49,7 @@ static Date* typed_this(Interpreter& interpreter, GlobalObject& global_object)
 }
 
 DatePrototype::DatePrototype(GlobalObject& global_object)
-    : Object(global_object.object_prototype())
+    : Object(*global_object.object_prototype())
 {
 }
 

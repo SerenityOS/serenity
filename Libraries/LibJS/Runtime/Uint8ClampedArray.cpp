@@ -39,7 +39,7 @@ Uint8ClampedArray* Uint8ClampedArray::create(GlobalObject& global_object, u32 le
 }
 
 Uint8ClampedArray::Uint8ClampedArray(u32 length, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_length(length)
 {
     define_native_property("length", length_getter, nullptr);

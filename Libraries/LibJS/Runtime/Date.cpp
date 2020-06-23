@@ -38,7 +38,7 @@ Date* Date::create(GlobalObject& global_object, Core::DateTime datetime, u16 mil
 }
 
 Date::Date(Core::DateTime datetime, u16 milliseconds, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_datetime(datetime)
     , m_milliseconds(milliseconds)
 {

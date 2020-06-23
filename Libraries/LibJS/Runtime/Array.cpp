@@ -40,7 +40,7 @@ Array* Array::create(GlobalObject& global_object)
 }
 
 Array::Array(Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
 {
     define_native_property("length", length_getter, length_setter, Attribute::Writable);
 }

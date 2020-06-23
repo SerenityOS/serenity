@@ -35,7 +35,7 @@
 namespace JS {
 
 MathObject::MathObject(GlobalObject& global_object)
-    : Object(global_object.object_prototype())
+    : Object(*global_object.object_prototype())
 {
 }
 
