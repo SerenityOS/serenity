@@ -59,7 +59,7 @@ public:
     Length length_or_fallback(CSS::PropertyID, const Length& fallback, float reference_for_percentages) const;
     String string_or_fallback(CSS::PropertyID, const StringView& fallback) const;
     Color color_or_fallback(CSS::PropertyID, const Document&, Color fallback) const;
-    CSS::ValueID text_align() const;
+    CSS::TextAlign text_align() const;
 
     const Gfx::Font& font() const
     {

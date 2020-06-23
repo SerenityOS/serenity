@@ -187,7 +187,7 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
         line_box.trim_trailing_whitespace();
     }
 
-    auto text_align = style().text_align();
+    auto text_align = this->text_align();
     float min_line_height = style().line_height(*this);
     float line_spacing = min_line_height - style().font().glyph_height();
     float content_height = 0;
@@ -203,22 +203,22 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
         float excess_horizontal_space = (float)width() - line_box.width();
 
         switch (text_align) {
-        case CSS::ValueID::Center:
-        case CSS::ValueID::VendorSpecificCenter:
+        case CSS::TextAlign::Center:
+        case CSS::TextAlign::VendorSpecificCenter:
             x_offset += excess_horizontal_space / 2;
             break;
-        case CSS::ValueID::Right:
+        case CSS::TextAlign::Right:
             x_offset += excess_horizontal_space;
             break;
-        case CSS::ValueID::Left:
-        case CSS::ValueID::Justify:
+        case CSS::TextAlign::Left:
+        case CSS::TextAlign::Justify:
         default:
             break;
         }
 
         float excess_horizontal_space_including_whitespace = excess_horizontal_space;
         int whitespace_count = 0;
-        if (text_align == CSS::ValueID::Justify) {
+        if (text_align == CSS::TextAlign::Justify) {
             for (auto& fragment : line_box.fragments()) {
                 if (fragment.is_justifiable_whitespace()) {
                     ++whitespace_count;
@@ -236,7 +236,7 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
             // FIXME: Support other kinds of vertical alignment.
             fragment.set_offset({ roundf(x_offset + fragment.offset().x()), content_height + (max_height - fragment.height()) - (line_spacing / 2) });
 
-            if (text_align == CSS::ValueID::Justify) {
+            if (text_align == CSS::TextAlign::Justify) {
                 if (fragment.is_justifiable_whitespace()) {
                     if (fragment.width() != justified_space_width) {
                         float diff = justified_space_width - fragment.width();
@@ -633,7 +633,7 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
         + box.padding().left.to_px(*this)
         + box.offset().left.to_px(*this);
 
-    if (this->style().text_align() == CSS::ValueID::VendorSpecificCenter) {
+    if (text_align() == CSS::TextAlign::VendorSpecificCenter) {
         x = (containing_block.width() / 2) - block.width() / 2;
     }
 

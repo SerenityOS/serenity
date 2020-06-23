@@ -114,6 +114,15 @@ enum class Position {
     Fixed,
     Sticky,
 };
+
+enum class TextAlign {
+    Left,
+    Center,
+    Right,
+    Justify,
+    VendorSpecificCenter,
+};
+
 }
 
 class StyleValue : public RefCounted<StyleValue> {

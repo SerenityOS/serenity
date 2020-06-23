@@ -217,6 +217,7 @@ LayoutNodeWithStyle::LayoutNodeWithStyle(const Node* node, NonnullRefPtr<StylePr
 {
     m_has_style = true;
     m_position = m_style->position();
+    m_text_align = m_style->text_align();
 }
 
 }

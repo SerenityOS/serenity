@@ -259,6 +259,7 @@ public:
     void set_style(const StyleProperties& style) { m_style = style; }
 
     CSS::Position position() const { return m_position; }
+    CSS::TextAlign text_align() const { return m_text_align; }
 
 protected:
     explicit LayoutNodeWithStyle(const Node*, NonnullRefPtr<StyleProperties>);
@@ -266,6 +267,7 @@ protected:
 private:
     NonnullRefPtr<StyleProperties> m_style;
     CSS::Position m_position;
+    CSS::TextAlign m_text_align;
 };
 
 class LayoutNodeWithStyleAndBoxModelMetrics : public LayoutNodeWithStyle {
