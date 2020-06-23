@@ -110,7 +110,6 @@ public:
     virtual bool is_function() const { return false; }
     virtual bool is_native_function() const { return false; }
     virtual bool is_bound_function() const { return false; }
-    virtual bool is_native_property() const { return false; }
     virtual bool is_proxy_object() const { return false; }
     virtual bool is_regexp_object() const { return false; }
     virtual bool is_boolean_object() const { return false; }

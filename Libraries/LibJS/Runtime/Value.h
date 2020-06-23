@@ -51,6 +51,7 @@ public:
         Symbol,
         Accessor,
         BigInt,
+        NativeProperty,
     };
 
     enum class PreferredType {
@@ -69,7 +70,8 @@ public:
     bool is_symbol() const { return m_type == Type::Symbol; }
     bool is_accessor() const { return m_type == Type::Accessor; };
     bool is_bigint() const { return m_type == Type::BigInt; };
-    bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol(); }
+    bool is_native_property() const { return m_type == Type::NativeProperty; }
+    bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol() || is_native_property(); }
     bool is_array() const;
     bool is_function() const;
 
@@ -147,6 +149,12 @@ public:
         m_value.as_bigint = bigint;
     }
 
+    Value(NativeProperty* native_property)
+        : m_type(Type::NativeProperty)
+    {
+        m_value.as_native_property = native_property;
+    }
+
     explicit Value(Type type)
         : m_type(type)
     {
@@ -220,6 +228,12 @@ public:
         return *m_value.as_bigint;
     }
 
+    NativeProperty& as_native_property()
+    {
+        ASSERT(is_native_property());
+        return *m_value.as_native_property;
+    }
+
     Array& as_array();
     Function& as_function();
 
@@ -259,6 +273,7 @@ private:
         Cell* as_cell;
         Accessor* as_accessor;
         BigInt* as_bigint;
+        NativeProperty* as_native_property;
     } m_value;
 };
 
