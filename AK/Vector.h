@@ -54,7 +54,7 @@ public:
     bool operator<(const VectorIterator& other) const { return m_index < other.m_index; }
     bool operator>(const VectorIterator& other) const { return m_index > other.m_index; }
     bool operator>=(const VectorIterator& other) const { return m_index >= other.m_index; }
-    VectorIterator& operator++()
+    ALWAYS_INLINE VectorIterator& operator++()
     {
         ++m_index;
         return *this;
@@ -71,7 +71,7 @@ public:
         m_index = other.m_index;
         return *this;
     }
-    ElementType& operator*() { return m_vector[m_index]; }
+    ALWAYS_INLINE ElementType& operator*() { return m_vector[m_index]; }
     size_t operator-(const VectorIterator& other) { return m_index - other.m_index; }
 
     bool is_end() const { return m_index == m_vector.size(); }
