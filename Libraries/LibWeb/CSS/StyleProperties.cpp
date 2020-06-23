@@ -229,19 +229,19 @@ bool StyleProperties::operator==(const StyleProperties& other) const
     return true;
 }
 
-CSS::ValueID StyleProperties::text_align() const
+CSS::TextAlign StyleProperties::text_align() const
 {
     auto string = string_or_fallback(CSS::PropertyID::TextAlign, "left");
     if (string == "center")
-        return CSS::ValueID::Center;
+        return CSS::TextAlign::Center;
     if (string == "right")
-        return CSS::ValueID::Right;
+        return CSS::TextAlign::Right;
     if (string == "justify")
-        return CSS::ValueID::Justify;
+        return CSS::TextAlign::Justify;
     if (string == "-libweb-center")
-        return CSS::ValueID::VendorSpecificCenter;
+        return CSS::TextAlign::VendorSpecificCenter;
     // Otherwise, just assume "left"..
-    return CSS::ValueID::Left;
+    return CSS::TextAlign::Left;
 }
 
 }
