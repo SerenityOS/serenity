@@ -34,8 +34,8 @@
 
 namespace JS {
 
-ObjectPrototype::ObjectPrototype(GlobalObject&)
-    : Object(nullptr)
+ObjectPrototype::ObjectPrototype(GlobalObject& global_object)
+    : Object(Object::ConstructWithoutPrototypeTag::Tag, global_object)
 {
 }
 

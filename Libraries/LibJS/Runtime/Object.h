@@ -62,7 +62,7 @@ class Object : public Cell {
 public:
     static Object* create_empty(Interpreter&, GlobalObject&);
 
-    explicit Object(Object* prototype);
+    explicit Object(Object& prototype);
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~Object();
 
@@ -141,6 +141,12 @@ public:
     void set_indexed_property_elements(Vector<Value>&& values) { m_indexed_properties = IndexedProperties(move(values)); }
 
     Value invoke(const FlyString& property_name, Optional<MarkedValueList> arguments = {});
+
+protected:
+    enum class GlobalObjectTag { Tag };
+    enum class ConstructWithoutPrototypeTag { Tag };
+    explicit Object(GlobalObjectTag);
+    Object(ConstructWithoutPrototypeTag, GlobalObject&);
 
 private:
     virtual Value get_by_index(u32 property_index) const;

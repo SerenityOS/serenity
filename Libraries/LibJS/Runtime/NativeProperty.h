@@ -35,7 +35,7 @@ class NativeProperty final : public Object {
     JS_OBJECT(NativeProperty, Object);
 
 public:
-    NativeProperty(AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter);
+    NativeProperty(GlobalObject&, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter);
     virtual ~NativeProperty() override;
 
     Value get(Interpreter&, GlobalObject&) const;

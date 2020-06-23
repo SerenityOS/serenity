@@ -40,7 +40,7 @@ StringObject* StringObject::create(GlobalObject& global_object, PrimitiveString&
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_string(string)
 {
 }

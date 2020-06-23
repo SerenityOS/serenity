@@ -56,7 +56,7 @@ SymbolObject* SymbolObject::create(GlobalObject& global_object, Symbol& primitiv
 }
 
 SymbolObject::SymbolObject(Symbol& symbol, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_symbol(symbol)
 {
 }

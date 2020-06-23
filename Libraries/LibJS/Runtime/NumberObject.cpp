@@ -39,7 +39,7 @@ NumberObject* NumberObject::create(GlobalObject& global_object, double value)
 }
 
 NumberObject::NumberObject(double value, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_value(value)
 {
 }

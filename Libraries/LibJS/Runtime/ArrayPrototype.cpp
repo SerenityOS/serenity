@@ -42,7 +42,7 @@
 namespace JS {
 
 ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
-    : Object(global_object.object_prototype())
+    : Object(*global_object.object_prototype())
 {
 }
 

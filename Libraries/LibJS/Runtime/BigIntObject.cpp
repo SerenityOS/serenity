@@ -37,7 +37,7 @@ BigIntObject* BigIntObject::create(GlobalObject& global_object, BigInt& bigint)
 }
 
 BigIntObject::BigIntObject(BigInt& bigint, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_bigint(bigint)
 {
 }

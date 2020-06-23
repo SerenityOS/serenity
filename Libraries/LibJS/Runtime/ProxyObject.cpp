@@ -63,7 +63,7 @@ ProxyObject* ProxyObject::create(GlobalObject& global_object, Object& target, Ob
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)
-    : Object(&prototype)
+    : Object(prototype)
     , m_target(target)
     , m_handler(handler)
 {

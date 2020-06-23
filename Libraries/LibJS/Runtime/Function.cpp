@@ -37,7 +37,7 @@ Function::Function(Object& prototype)
 }
 
 Function::Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments)
-    : Object(&prototype)
+    : Object(prototype)
     , m_bound_this(bound_this)
     , m_bound_arguments(move(bound_arguments))
 {
