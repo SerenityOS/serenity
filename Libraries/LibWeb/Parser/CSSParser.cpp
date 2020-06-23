@@ -859,12 +859,16 @@ Optional<Selector> parse_selector(const StringView& selector_text)
 
 RefPtr<StyleSheet> parse_css(const StringView& css)
 {
+    if (css.is_empty())
+        return StyleSheet::create({});
     CSSParser parser(css);
     return parser.parse_sheet();
 }
 
 RefPtr<StyleDeclaration> parse_css_declaration(const StringView& css)
 {
+    if (css.is_empty())
+        return StyleDeclaration::create({});
     CSSParser parser(css);
     return parser.parse_standalone_declaration();
 }
