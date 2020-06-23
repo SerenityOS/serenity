@@ -30,13 +30,9 @@
 
 namespace Web {
 
-float Length::to_px(const LayoutNode& layout_node) const
+float Length::relative_length_to_px(const LayoutNode& layout_node) const
 {
     switch (m_type) {
-    case Type::Auto:
-        return 0;
-    case Type::Px:
-        return m_value;
     case Type::Em:
         return m_value * layout_node.font_size();
     case Type::Rem:
