@@ -237,6 +237,10 @@ void LayoutNodeWithStyle::apply_style(const StyleProperties& specified_style)
     style.set_height(specified_style.length_or_fallback(CSS::PropertyID::Height, {}));
     style.set_min_height(specified_style.length_or_fallback(CSS::PropertyID::MinHeight, {}));
     style.set_max_height(specified_style.length_or_fallback(CSS::PropertyID::MaxHeight, {}));
+
+    style.set_offset(specified_style.length_box(CSS::PropertyID::Left, CSS::PropertyID::Top, CSS::PropertyID::Right, CSS::PropertyID::Bottom));
+    style.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom));
+    style.set_padding(specified_style.length_box(CSS::PropertyID::PaddingLeft, CSS::PropertyID::PaddingTop, CSS::PropertyID::PaddingRight, CSS::PropertyID::PaddingBottom));
 }
 
 }

@@ -30,6 +30,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Forward.h>
+#include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web {
@@ -56,7 +57,7 @@ public:
     Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
 
     Length length_or_fallback(CSS::PropertyID, const Length& fallback) const;
-    Length length_or_fallback(CSS::PropertyID, const Length& fallback, float reference_for_percentages) const;
+    LengthBox length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id) const;
     String string_or_fallback(CSS::PropertyID, const StringView& fallback) const;
     Color color_or_fallback(CSS::PropertyID, const Document&, Color fallback) const;
     CSS::TextAlign text_align() const;

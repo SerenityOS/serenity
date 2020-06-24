@@ -73,6 +73,11 @@ public:
         return resolved(make_auto(), layout_node, reference_for_percent);
     }
 
+    Length resolved_or_zero(const LayoutNode& layout_node, float reference_for_percent) const
+    {
+        return resolved(make_px(0), layout_node, reference_for_percent);
+    }
+
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_auto() const { return m_type == Type::Auto; }

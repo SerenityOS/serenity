@@ -45,12 +45,11 @@ float LayoutReplaced::calculate_width() const
 {
     // 10.3.2 [Inline,] replaced elements
 
-    auto& specified_style = this->specified_style();
     auto zero_value = Length::make_px(0);
     auto& containing_block = *this->containing_block();
 
-    auto margin_left = specified_style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value, containing_block.width());
-    auto margin_right = specified_style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value, containing_block.width());
+    auto margin_left = style().margin().left.resolved_or_zero(*this, containing_block.width());
+    auto margin_right = style().margin().right.resolved_or_zero(*this, containing_block.width());
 
     // A computed value of 'auto' for 'margin-left' or 'margin-right' becomes a used value of '0'.
     if (margin_left.is_auto())
