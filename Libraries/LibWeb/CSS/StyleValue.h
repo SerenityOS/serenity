@@ -155,7 +155,7 @@ public:
     bool is_position() const { return type() == Type::Position; }
 
     virtual String to_string() const = 0;
-    virtual Length to_length() const { return {}; }
+    virtual Length to_length() const { return Length::make_auto(); }
     virtual Color to_color(const Document&) const { return {}; }
 
     virtual bool is_auto() const { return false; }
@@ -225,7 +225,7 @@ public:
     Length to_length(float reference) const { return Length((m_percentage / 100.0f) * reference, Length::Type::Px); }
 
 private:
-    virtual Length to_length() const override { return {}; }
+    virtual Length to_length() const override { return Length::make_auto(); }
     virtual bool is_auto() const override { return false; }
 
     explicit PercentageStyleValue(float percentage)

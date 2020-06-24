@@ -31,10 +31,10 @@
 namespace Web {
 
 struct LengthBox {
-    Length top;
-    Length right;
-    Length bottom;
-    Length left;
+    Length top { Length::make_auto() };
+    Length right { Length::make_auto() };
+    Length bottom { Length::make_auto() };
+    Length left { Length::make_auto() };
 };
 
 }

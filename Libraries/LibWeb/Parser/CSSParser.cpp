@@ -279,7 +279,7 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
     if (string.equals_ignoring_case("initial"))
         return InitialStyleValue::create();
     if (string.equals_ignoring_case("auto"))
-        return LengthStyleValue::create(Length());
+        return LengthStyleValue::create(Length::make_auto());
 
     auto color = parse_css_color(string);
     if (color.has_value())

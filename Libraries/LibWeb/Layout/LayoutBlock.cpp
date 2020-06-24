@@ -70,19 +70,19 @@ void LayoutBlock::layout_absolutely_positioned_descendant(LayoutBox& box)
     box.layout(LayoutMode::Default);
     auto& box_model = box.box_model();
     auto& style = box.style();
-    auto zero_value = Length(0, Length::Type::Px);
+    auto zero_value = Length::make_px(0);
 
-    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, Length(), width());
+    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, Length::make_auto(), width());
 
-    box_model.margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, {}, height());
-    box_model.margin().right = style.length_or_fallback(CSS::PropertyID::MarginRight, {}, width());
-    box_model.margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, {}, height());
-    box_model.margin().left = style.length_or_fallback(CSS::PropertyID::MarginLeft, {}, width());
+    box_model.margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, Length::make_auto(), height());
+    box_model.margin().right = style.length_or_fallback(CSS::PropertyID::MarginRight, Length::make_auto(), width());
+    box_model.margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, Length::make_auto(), height());
+    box_model.margin().left = style.length_or_fallback(CSS::PropertyID::MarginLeft, Length::make_auto(), width());
 
-    box_model.offset().top = style.length_or_fallback(CSS::PropertyID::Top, {}, height());
-    box_model.offset().right = style.length_or_fallback(CSS::PropertyID::Right, {}, width());
-    box_model.offset().bottom = style.length_or_fallback(CSS::PropertyID::Bottom, {}, height());
-    box_model.offset().left = style.length_or_fallback(CSS::PropertyID::Left, {}, width());
+    box_model.offset().top = style.length_or_fallback(CSS::PropertyID::Top, Length::make_auto(), height());
+    box_model.offset().right = style.length_or_fallback(CSS::PropertyID::Right, Length::make_auto(), width());
+    box_model.offset().bottom = style.length_or_fallback(CSS::PropertyID::Bottom, Length::make_auto(), height());
+    box_model.offset().left = style.length_or_fallback(CSS::PropertyID::Left, Length::make_auto(), width());
 
     if (box_model.offset().left.is_auto() && specified_width.is_auto() && box_model.offset().right.is_auto()) {
         if (box_model.margin().left.is_auto())
@@ -164,7 +164,7 @@ void LayoutBlock::layout_contained_boxes(LayoutMode layout_mode)
     });
 
     if (layout_mode != LayoutMode::Default) {
-        auto specified_width = style().length_or_fallback(CSS::PropertyID::Width, Length(), containing_block()->width());
+        auto specified_width = style().length_or_fallback(CSS::PropertyID::Width, Length::make_auto(), containing_block()->width());
         if (specified_width.is_auto())
             set_width(content_width);
     }
@@ -279,14 +279,14 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
 {
     auto& style = this->style();
     auto& containing_block = *this->containing_block();
-    auto zero_value = Length(0, Length::Type::Px);
+    auto zero_value = Length::make_px(0);
 
-    Length margin_left;
-    Length margin_right;
-    Length border_left;
-    Length border_right;
-    Length padding_left;
-    Length padding_right;
+    Length margin_left = Length::make_auto();
+    Length margin_right = Length::make_auto();
+    Length border_left = Length::make_auto();
+    Length border_right = Length::make_auto();
+    Length padding_left = Length::make_auto();
+    Length padding_right = Length::make_auto();
 
     auto try_compute_width = [&](const auto& a_width) {
         margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value, containing_block.width());
@@ -296,8 +296,8 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
         padding_left = style.length_or_fallback(CSS::PropertyID::PaddingLeft, zero_value, containing_block.width());
         padding_right = style.length_or_fallback(CSS::PropertyID::PaddingRight, zero_value, containing_block.width());
 
-        auto left = style.length_or_fallback(CSS::PropertyID::Left, {}, containing_block.width());
-        auto right = style.length_or_fallback(CSS::PropertyID::Right, {}, containing_block.width());
+        auto left = style.length_or_fallback(CSS::PropertyID::Left, Length::make_auto(), containing_block.width());
+        auto right = style.length_or_fallback(CSS::PropertyID::Right, Length::make_auto(), containing_block.width());
         auto width = a_width;
 
         auto solve_for_left = [&] {
@@ -316,14 +316,14 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
         if (left.is_auto() && width.is_auto() && right.is_auto()) {
             // First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
             if (margin_left.is_auto())
-                margin_left = Length(0, Length::Type::Px);
+                margin_left = Length::make_px(0);
             if (margin_right.is_auto())
-                margin_right = Length(0, Length::Type::Px);
+                margin_right = Length::make_px(0);
             // Then, if the 'direction' property of the element establishing the static-position containing block
             // is 'ltr' set 'left' to the static position and apply rule number three below;
             // otherwise, set 'right' to the static position and apply rule number one below.
             // FIXME: This is very hackish.
-            left = Length(0, Length::Type::Px);
+            left = Length::make_px(0);
             goto Rule3;
         }
 
@@ -333,9 +333,9 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
         }
 
         if (margin_left.is_auto())
-            margin_left = Length(0, Length::Type::Px);
+            margin_left = Length::make_px(0);
         if (margin_right.is_auto())
-            margin_right = Length(0, Length::Type::Px);
+            margin_right = Length::make_px(0);
 
         // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto',
         //    then the width is shrink-to-fit. Then solve for 'left'
@@ -386,14 +386,14 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
         return width;
     };
 
-    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, {}, containing_block.width());
+    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, Length::make_auto(), containing_block.width());
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = try_compute_width(specified_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = style.length_or_fallback(CSS::PropertyID::MaxWidth, {}, containing_block.width());
+    auto specified_max_width = style.length_or_fallback(CSS::PropertyID::MaxWidth, Length::make_auto(), containing_block.width());
     if (!specified_max_width.is_auto()) {
         if (used_width.to_px(*this) > specified_max_width.to_px(*this)) {
             used_width = try_compute_width(specified_max_width);
@@ -402,7 +402,7 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
 
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = style.length_or_fallback(CSS::PropertyID::MinWidth, {}, containing_block.width());
+    auto specified_min_width = style.length_or_fallback(CSS::PropertyID::MinWidth, Length::make_auto(), containing_block.width());
     if (!specified_min_width.is_auto()) {
         if (used_width.to_px(*this) < specified_min_width.to_px(*this)) {
             used_width = try_compute_width(specified_min_width);
@@ -425,15 +425,15 @@ void LayoutBlock::compute_width()
         return compute_width_for_absolutely_positioned_block();
 
     auto& style = this->style();
-    auto auto_value = Length();
-    auto zero_value = Length(0, Length::Type::Px);
+    auto auto_value = Length::make_auto();
+    auto zero_value = Length::make_px(0);
 
-    Length margin_left;
-    Length margin_right;
-    Length border_left;
-    Length border_right;
-    Length padding_left;
-    Length padding_right;
+    Length margin_left = Length::make_auto();
+    Length margin_right = Length::make_auto();
+    Length border_left = Length::make_auto();
+    Length border_right = Length::make_auto();
+    Length padding_left = Length::make_auto();
+    Length padding_right = Length::make_auto();
 
     auto& containing_block = *this->containing_block();
 
@@ -562,7 +562,7 @@ void LayoutBlock::place_block_level_replaced_element_in_normal_flow(LayoutReplac
 {
     ASSERT(!is_absolutely_positioned());
     auto& style = box.style();
-    auto zero_value = Length(0, Length::Type::Px);
+    auto zero_value = Length::make_px(0);
     auto& containing_block = *this;
     auto& replaced_element_box_model = box.box_model();
 
@@ -617,7 +617,7 @@ LayoutBlock::ShrinkToFitResult LayoutBlock::calculate_shrink_to_fit_width()
 void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBlock& block)
 {
     auto& style = block.style();
-    auto zero_value = Length(0, Length::Type::Px);
+    auto zero_value = Length::make_px(0);
     auto& containing_block = *this;
     auto& box = block.box_model();
 
@@ -674,17 +674,17 @@ void LayoutBlock::compute_height()
 {
     auto& style = this->style();
 
-    auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, Length(), containing_block()->height());
-    auto specified_max_height = style.length_or_fallback(CSS::PropertyID::MaxHeight, Length(), containing_block()->height());
+    auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, Length::make_auto(), containing_block()->height());
+    auto specified_max_height = style.length_or_fallback(CSS::PropertyID::MaxHeight, Length::make_auto(), containing_block()->height());
 
     auto& containing_block = *this->containing_block();
 
-    box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, Length(0, Length::Type::Px), containing_block.width());
-    box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, Length(0, Length::Type::Px), containing_block.width());
-    box_model().border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, Length(0, Length::Type::Px));
-    box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, Length(0, Length::Type::Px));
-    box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, Length(0, Length::Type::Px), containing_block.width());
-    box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, Length(0, Length::Type::Px), containing_block.width());
+    box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, Length::make_px(0), containing_block.width());
+    box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, Length::make_px(0), containing_block.width());
+    box_model().border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, Length::make_px(0));
+    box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, Length::make_px(0));
+    box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, Length::make_px(0), containing_block.width());
+    box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, Length::make_px(0), containing_block.width());
 
     if (!specified_height.is_auto()) {
         float used_height = specified_height.to_px(*this);
