@@ -39,6 +39,6 @@ In a 64-bit machine, it's located at `/mnt/c/Program Files/qemu/qemu-system-i386
 
 - Edit `serenity/Meta/CLion/run.sh`. Set **SERENITY_QEMU_BIN**  to point to the windows installation of `qemu-system-i386.exe`.
 Also verify that the value of **SERENITY_BUILD** is valid.
-In a 64-bit machine, if qemu was installed in the default location you shouldn't need to alter anything.
+In a 64-bit machine, if qemu was installed in the default location you should only need to alter user name in the script.
 
 - Execute `serenity/Meta/CLion/run.sh`.

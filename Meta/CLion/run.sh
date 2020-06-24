@@ -47,7 +47,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 "
 
 # set this to the Build directory in serenity
-SERENITY_BUILD="/mnt/c/Users/Ragnarok/serenity-project/serenity/Build"
+SERENITY_BUILD="/mnt/c/Users/{user-name-here}/serenity-project/serenity/Build"
 
 cd  "$SERENITY_BUILD" || exit
 make install
