@@ -34,6 +34,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
 #include <LibWeb/Layout/LayoutPosition.h>
+#include <LibWeb/Layout/LayoutStyle.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/TreeNode.h>
 
@@ -190,6 +191,7 @@ public:
     virtual LayoutNode& inline_wrapper() { return *this; }
 
     const StyleProperties& specified_style() const;
+    const ImmutableLayoutStyle& style() const;
     CSS::Position position() const;
     CSS::TextAlign text_align() const;
 
@@ -259,6 +261,8 @@ public:
     const StyleProperties& specified_style() const { return m_specified_style; }
     void set_specified_style(const StyleProperties& style) { m_specified_style = style; }
 
+    const ImmutableLayoutStyle& style() const { return static_cast<const ImmutableLayoutStyle&>(m_style); }
+
     CSS::Position position() const { return m_position; }
     CSS::TextAlign text_align() const { return m_text_align; }
 
@@ -266,6 +270,10 @@ protected:
     explicit LayoutNodeWithStyle(const Node*, NonnullRefPtr<StyleProperties>);
 
 private:
+    void apply_style(const StyleProperties&);
+
+    LayoutStyle m_style;
+
     NonnullRefPtr<StyleProperties> m_specified_style;
     CSS::Position m_position;
     CSS::TextAlign m_text_align;
@@ -291,6 +299,13 @@ inline const StyleProperties& LayoutNode::specified_style() const
     if (m_has_style)
         return static_cast<const LayoutNodeWithStyle*>(this)->specified_style();
     return parent()->specified_style();
+}
+
+inline const ImmutableLayoutStyle& LayoutNode::style() const
+{
+    if (m_has_style)
+        return static_cast<const LayoutNodeWithStyle*>(this)->style();
+    return parent()->style();
 }
 
 inline CSS::Position LayoutNode::position() const

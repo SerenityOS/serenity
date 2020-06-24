@@ -216,8 +216,16 @@ LayoutNodeWithStyle::LayoutNodeWithStyle(const Node* node, NonnullRefPtr<StylePr
     , m_specified_style(move(style))
 {
     m_has_style = true;
-    m_position = m_specified_style->position();
-    m_text_align = m_specified_style->text_align();
+    apply_style(this->specified_style());
+}
+
+void LayoutNodeWithStyle::apply_style(const StyleProperties& specified_style)
+{
+    auto& style = static_cast<MutableLayoutStyle&>(m_style);
+
+    m_position = specified_style.position();
+    m_text_align = specified_style.text_align();
+    style.set_z_index(specified_style.z_index());
 }
 
 }
