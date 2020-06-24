@@ -163,6 +163,7 @@ ln -s ProfileViewer mnt/bin/pv
 ln -s WebServer mnt/bin/ws
 ln -s Solitaire mnt/bin/sl
 ln -s WebView mnt/bin/wv
+ln -s test mnt/bin/[
 echo "done"
 
 # Run local sync script, if it exists
