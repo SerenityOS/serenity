@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.0)
 project (Lagom)
 
+enable_testing()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++17 -fPIC -g")
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -87,6 +89,8 @@ if (BUILD_LAGOM)
     set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
     target_link_libraries(disasm_lagom Lagom)
     target_link_libraries(disasm_lagom stdc++)
+
+    add_subdirectory(../../AK/Tests AK/Tests)
 endif()
 
 if (ENABLE_FUZZER_SANITIZER)
