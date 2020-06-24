@@ -123,6 +123,18 @@ enum class TextAlign {
     VendorSpecificCenter,
 };
 
+enum class Display {
+    None,
+    Block,
+    Inline,
+    InlineBlock,
+    ListItem,
+    Table,
+    TableRow,
+    TableCell,
+    TableRowGroup,
+};
+
 }
 
 class StyleValue : public RefCounted<StyleValue> {

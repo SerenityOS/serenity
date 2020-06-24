@@ -58,8 +58,7 @@ unsigned HTMLCanvasElement::height() const
 RefPtr<LayoutNode> HTMLCanvasElement::create_layout_node(const StyleProperties* parent_style) const
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
-    auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
-    if (display == "none")
+    if (style->display() == CSS::Display::None)
         return nullptr;
     return adopt(*new LayoutCanvas(*this, move(style)));
 }

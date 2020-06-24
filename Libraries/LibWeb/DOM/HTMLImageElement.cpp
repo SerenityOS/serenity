@@ -71,8 +71,7 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
 RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style) const
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
-    auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
-    if (display == "none")
+    if (style->display() == CSS::Display::None)
         return nullptr;
     return adopt(*new LayoutImage(*this, move(style), m_image_loader));
 }

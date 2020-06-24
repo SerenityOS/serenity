@@ -60,6 +60,7 @@ public:
     String string_or_fallback(CSS::PropertyID, const StringView& fallback) const;
     Color color_or_fallback(CSS::PropertyID, const Document&, Color fallback) const;
     CSS::TextAlign text_align() const;
+    CSS::Display display() const;
 
     const Gfx::Font& font() const
     {
