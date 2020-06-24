@@ -46,7 +46,6 @@ float LayoutReplaced::calculate_width() const
     // 10.3.2 [Inline,] replaced elements
 
     auto& specified_style = this->specified_style();
-    auto auto_value = Length::make_auto();
     auto zero_value = Length::make_px(0);
     auto& containing_block = *this->containing_block();
 
@@ -60,7 +59,7 @@ float LayoutReplaced::calculate_width() const
         margin_right = zero_value;
 
     auto specified_width = style().width().resolved_or_auto(*this, containing_block.width());
-    auto specified_height = specified_style.length_or_fallback(CSS::PropertyID::Height, auto_value, containing_block.height());
+    auto specified_height = style().height().resolved_or_auto(*this, containing_block.height());
 
     // FIXME: Actually compute 'width'
     auto computed_width = specified_width;
@@ -98,12 +97,10 @@ float LayoutReplaced::calculate_height() const
 {
     // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow,
     // 'inline-block' replaced elements in normal flow and floating replaced elements
-    auto& style = this->specified_style();
-    auto auto_value = Length::make_auto();
     auto& containing_block = *this->containing_block();
 
-    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, auto_value, containing_block.width());
-    auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, auto_value, containing_block.height());
+    auto specified_width = style().width().resolved_or_auto(*this, containing_block.width());
+    auto specified_height = style().height().resolved_or_auto(*this, containing_block.height());
 
     float used_height = specified_height.to_px(*this);
 

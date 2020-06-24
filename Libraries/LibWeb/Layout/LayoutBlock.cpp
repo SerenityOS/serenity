@@ -670,19 +670,19 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
 
 void LayoutBlock::compute_height()
 {
-    auto& style = this->specified_style();
-
-    auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, Length::make_auto(), containing_block()->height());
-    auto specified_max_height = style.length_or_fallback(CSS::PropertyID::MaxHeight, Length::make_auto(), containing_block()->height());
-
+    auto& specified_style = this->specified_style();
     auto& containing_block = *this->containing_block();
 
-    box_model().margin.top = style.length_or_fallback(CSS::PropertyID::MarginTop, Length::make_px(0), containing_block.width());
-    box_model().margin.bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, Length::make_px(0), containing_block.width());
-    box_model().border.top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, Length::make_px(0));
-    box_model().border.bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, Length::make_px(0));
-    box_model().padding.top = style.length_or_fallback(CSS::PropertyID::PaddingTop, Length::make_px(0), containing_block.width());
-    box_model().padding.bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, Length::make_px(0), containing_block.width());
+    auto specified_height = style().height().resolved_or_auto(*this, containing_block.height());
+    auto specified_max_height = style().max_height().resolved_or_auto(*this, containing_block.height());
+
+
+    box_model().margin.top = specified_style.length_or_fallback(CSS::PropertyID::MarginTop, Length::make_px(0), containing_block.width());
+    box_model().margin.bottom = specified_style.length_or_fallback(CSS::PropertyID::MarginBottom, Length::make_px(0), containing_block.width());
+    box_model().border.top = specified_style.length_or_fallback(CSS::PropertyID::BorderTopWidth, Length::make_px(0));
+    box_model().border.bottom = specified_style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, Length::make_px(0));
+    box_model().padding.top = specified_style.length_or_fallback(CSS::PropertyID::PaddingTop, Length::make_px(0), containing_block.width());
+    box_model().padding.bottom = specified_style.length_or_fallback(CSS::PropertyID::PaddingBottom, Length::make_px(0), containing_block.width());
 
     if (!specified_height.is_auto()) {
         float used_height = specified_height.to_px(*this);

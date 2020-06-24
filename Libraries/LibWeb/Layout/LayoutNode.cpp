@@ -229,6 +229,9 @@ void LayoutNodeWithStyle::apply_style(const StyleProperties& specified_style)
     style.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
     style.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));
     style.set_max_width(specified_style.length_or_fallback(CSS::PropertyID::MaxWidth, {}));
+    style.set_height(specified_style.length_or_fallback(CSS::PropertyID::Height, {}));
+    style.set_min_height(specified_style.length_or_fallback(CSS::PropertyID::MinHeight, {}));
+    style.set_max_height(specified_style.length_or_fallback(CSS::PropertyID::MaxHeight, {}));
 }
 
 }
