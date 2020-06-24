@@ -266,7 +266,7 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
     auto number = parse_number(string);
     if (number.has_value()) {
         if (string.ends_with('%'))
-            return PercentageStyleValue::create(number.value());
+            return LengthStyleValue::create(Length(number.value(), Length::Type::Percentage));
         if (string.ends_with("em"))
             return LengthStyleValue::create(Length(number.value(), Length::Type::Em));
         if (string.ends_with("rem"))

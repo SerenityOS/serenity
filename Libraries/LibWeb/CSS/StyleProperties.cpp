@@ -76,14 +76,14 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fal
     return value.value()->to_length();
 }
 
-Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fallback, float reference_for_percentages) const
+LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id) const
 {
-    auto value = property(id);
-    if (!value.has_value())
-        return fallback;
-    if (value.value()->is_percentage())
-        return static_cast<const PercentageStyleValue&>(*value.value()).to_length(reference_for_percentages);
-    return value.value()->to_length();
+    LengthBox box;
+    box.left = length_or_fallback(left_id, {});
+    box.top = length_or_fallback(top_id, {});
+    box.right = length_or_fallback(right_id, {});
+    box.bottom = length_or_fallback(bottom_id, {});
+    return box;
 }
 
 String StyleProperties::string_or_fallback(CSS::PropertyID id, const StringView& fallback) const

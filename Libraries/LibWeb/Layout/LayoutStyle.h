@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web {
@@ -49,6 +50,10 @@ public:
     const Length& min_height() const { return m_min_height; }
     const Length& max_height() const { return m_max_height; }
 
+    const LengthBox& offset() const { return m_offset; }
+    const LengthBox& margin() const { return m_margin; }
+    const LengthBox& padding() const { return m_padding; }
+
 protected:
     Optional<int> m_z_index;
     CSS::TextAlign m_text_align;
@@ -60,6 +65,9 @@ protected:
     Length m_height;
     Length m_min_height;
     Length m_max_height;
+    LengthBox m_offset;
+    LengthBox m_margin;
+    LengthBox m_padding;
 };
 
 class ImmutableLayoutStyle final : public LayoutStyle {
@@ -77,6 +85,9 @@ public:
     void set_height(const Length& height) { m_height = height; }
     void set_min_height(const Length& height) { m_min_height = height; }
     void set_max_height(const Length& height) { m_max_height = height; }
+    void set_offset(const LengthBox& offset) { m_offset = offset; }
+    void set_margin(const LengthBox& margin) { m_margin = margin; }
+    void set_padding(const LengthBox& padding) { m_padding = padding; }
 };
 
 }
