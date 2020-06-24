@@ -29,9 +29,9 @@
 #include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/Devices/PATADiskDevice.h>
 #include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/IO.h>
 
 namespace Kernel {
 
@@ -186,6 +186,9 @@ void PATAChannel::handle_irq(const RegisterState&)
     // FIXME: We might get random interrupts due to malfunctioning hardware, so we should check that we actually requested something to happen.
 
     u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
+
+    m_entropy_source.add_random_event(status);
+
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
         m_device_error = m_io_base.offset(ATA_REG_ERROR).in<u8>();

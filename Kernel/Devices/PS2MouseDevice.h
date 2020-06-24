@@ -30,6 +30,7 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/MousePacket.h>
+#include <Kernel/Random.h>
 
 namespace Kernel {
 
@@ -77,6 +78,7 @@ private:
     u8 m_data[4];
     bool m_has_wheel { false };
     bool m_has_five_buttons { false };
+    EntropySource m_entropy_source;
 };
 
 }

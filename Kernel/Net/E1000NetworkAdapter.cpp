@@ -204,6 +204,9 @@ void E1000NetworkAdapter::handle_irq(const RegisterState&)
     out32(REG_INTERRUPT_MASK_CLEAR, 0xffffffff);
 
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
+
+    m_entropy_source.add_random_event(status);
+
     if (status & 4) {
         u32 flags = in32(REG_CTRL);
         out32(REG_CTRL, flags | ECTRL_SLU);

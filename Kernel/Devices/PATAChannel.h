@@ -44,6 +44,7 @@
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/Random.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 
@@ -103,6 +104,7 @@ private:
     RefPtr<PhysicalPage> m_dma_buffer_page;
     IOAddress m_bus_master_base;
     Lockable<bool> m_dma_enabled;
+    EntropySource m_entropy_source;
 
     RefPtr<PATADiskDevice> m_master;
     RefPtr<PATADiskDevice> m_slave;

@@ -28,11 +28,12 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
-#include <Kernel/IO.h>
+#include <Kernel/Random.h>
 
 namespace Kernel {
 
@@ -103,6 +104,7 @@ private:
     u8 m_interrupt_line { 0 };
     bool m_has_eeprom { false };
     bool m_use_mmio { false };
+    EntropySource m_entropy_source;
 
     static const size_t number_of_rx_descriptors = 32;
     static const size_t number_of_tx_descriptors = 8;

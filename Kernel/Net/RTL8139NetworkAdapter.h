@@ -27,10 +27,11 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <Kernel/IO.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
-#include <Kernel/IO.h>
+#include <Kernel/Random.h>
 
 namespace Kernel {
 
@@ -73,5 +74,6 @@ private:
     u8 m_tx_next_buffer { 0 };
     OwnPtr<Region> m_packet_buffer;
     bool m_link_up { false };
+    EntropySource m_entropy_source;
 };
 }
