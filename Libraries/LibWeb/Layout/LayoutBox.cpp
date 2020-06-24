@@ -35,11 +35,11 @@ namespace Web {
 
 void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
 {
-    auto border_width = style().property(width_property_id);
+    auto border_width = specified_style().property(width_property_id);
     if (!border_width.has_value())
         return;
 
-    auto border_style = style().property(style_property_id);
+    auto border_style = specified_style().property(style_property_id);
     float width = border_width.value()->to_length().to_px(*this);
     if (width <= 0)
         return;
@@ -47,13 +47,13 @@ void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatR
     int int_width = max((int)width, 1);
 
     Color color;
-    auto border_color = style().property(color_property_id);
+    auto border_color = specified_style().property(color_property_id);
     if (border_color.has_value()) {
         color = border_color.value()->to_color(document());
     } else {
         // FIXME: This is basically CSS "currentColor" which should be handled elsewhere
         //        in a much more reusable way.
-        auto current_color = style().property(CSS::PropertyID::Color);
+        auto current_color = specified_style().property(CSS::PropertyID::Color);
         if (current_color.has_value())
             color = current_color.value()->to_color(document());
         else
@@ -137,7 +137,7 @@ void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatR
     };
 
     auto width_for = [&](CSS::PropertyID property_id) -> float {
-        auto width = style().property(property_id);
+        auto width = specified_style().property(property_id);
         if (!width.has_value())
             return 0;
         return width.value()->to_length().to_px(*this);
@@ -203,12 +203,12 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Background && !is_body()) {
         // FIXME: We should paint the body here too, but that currently happens at the view layer.
-        auto bgcolor = style().property(CSS::PropertyID::BackgroundColor);
+        auto bgcolor = specified_style().property(CSS::PropertyID::BackgroundColor);
         if (bgcolor.has_value() && bgcolor.value()->is_color()) {
             context.painter().fill_rect(enclosing_int_rect(padded_rect), bgcolor.value()->to_color(document()));
         }
 
-        auto bgimage = style().property(CSS::PropertyID::BackgroundImage);
+        auto bgimage = specified_style().property(CSS::PropertyID::BackgroundImage);
         if (bgimage.has_value() && bgimage.value()->is_image()) {
             auto& image_value = static_cast<const ImageStyleValue&>(*bgimage.value());
             if (image_value.bitmap()) {
@@ -324,7 +324,7 @@ bool LayoutBox::establishes_stacking_context() const
     if (node() == document().root())
         return true;
     auto position = this->position();
-    auto z_index = style().z_index();
+    auto z_index = specified_style().z_index();
     if (position == CSS::Position::Absolute || position == CSS::Position::Relative) {
         if (z_index.has_value())
             return true;

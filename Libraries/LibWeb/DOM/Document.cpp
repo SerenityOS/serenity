@@ -190,7 +190,7 @@ Color Document::background_color(const Palette& palette) const
     if (!body_layout_node)
         return default_color;
 
-    auto background_color = body_layout_node->style().property(CSS::PropertyID::BackgroundColor);
+    auto background_color = body_layout_node->specified_style().property(CSS::PropertyID::BackgroundColor);
     if (!background_color.has_value() || !background_color.value()->is_color())
         return default_color;
 
@@ -207,7 +207,7 @@ RefPtr<Gfx::Bitmap> Document::background_image() const
     if (!body_layout_node)
         return {};
 
-    auto background_image = body_layout_node->style().property(CSS::PropertyID::BackgroundImage);
+    auto background_image = body_layout_node->specified_style().property(CSS::PropertyID::BackgroundImage);
     if (!background_image.has_value() || !background_image.value()->is_image())
         return {};
 

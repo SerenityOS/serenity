@@ -189,7 +189,7 @@ public:
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 
-    const StyleProperties& style() const;
+    const StyleProperties& specified_style() const;
     CSS::Position position() const;
     CSS::TextAlign text_align() const;
 
@@ -256,8 +256,8 @@ class LayoutNodeWithStyle : public LayoutNode {
 public:
     virtual ~LayoutNodeWithStyle() override { }
 
-    const StyleProperties& style() const { return m_style; }
-    void set_style(const StyleProperties& style) { m_style = style; }
+    const StyleProperties& specified_style() const { return m_specified_style; }
+    void set_specified_style(const StyleProperties& style) { m_specified_style = style; }
 
     CSS::Position position() const { return m_position; }
     CSS::TextAlign text_align() const { return m_text_align; }
@@ -266,7 +266,7 @@ protected:
     explicit LayoutNodeWithStyle(const Node*, NonnullRefPtr<StyleProperties>);
 
 private:
-    NonnullRefPtr<StyleProperties> m_style;
+    NonnullRefPtr<StyleProperties> m_specified_style;
     CSS::Position m_position;
     CSS::TextAlign m_text_align;
 };
@@ -286,11 +286,11 @@ private:
     BoxModelMetrics m_box_model;
 };
 
-inline const StyleProperties& LayoutNode::style() const
+inline const StyleProperties& LayoutNode::specified_style() const
 {
     if (m_has_style)
-        return static_cast<const LayoutNodeWithStyle*>(this)->style();
-    return parent()->style();
+        return static_cast<const LayoutNodeWithStyle*>(this)->specified_style();
+    return parent()->specified_style();
 }
 
 inline CSS::Position LayoutNode::position() const

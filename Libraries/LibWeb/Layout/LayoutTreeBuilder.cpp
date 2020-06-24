@@ -51,7 +51,7 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
     bool have_noninline_children = false;
 
     to<ParentNode>(node).for_each_child([&](Node& child) {
-        auto layout_child = create_layout_tree(child, &layout_node->style());
+        auto layout_child = create_layout_tree(child, &layout_node->specified_style());
         if (!layout_child)
             return;
         if (layout_child->is_inline())

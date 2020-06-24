@@ -173,7 +173,7 @@ void LayoutNode::set_needs_display()
 float LayoutNode::font_size() const
 {
     // FIXME: This doesn't work right for relative font-sizes
-    auto length = style().length_or_fallback(CSS::PropertyID::FontSize, Length(10, Length::Type::Px));
+    auto length = specified_style().length_or_fallback(CSS::PropertyID::FontSize, Length(10, Length::Type::Px));
     return length.raw_value();
 }
 
@@ -213,11 +213,11 @@ bool LayoutNode::is_fixed_position() const
 
 LayoutNodeWithStyle::LayoutNodeWithStyle(const Node* node, NonnullRefPtr<StyleProperties> style)
     : LayoutNode(node)
-    , m_style(move(style))
+    , m_specified_style(move(style))
 {
     m_has_style = true;
-    m_position = m_style->position();
-    m_text_align = m_style->text_align();
+    m_position = m_specified_style->position();
+    m_text_align = m_specified_style->text_align();
 }
 
 }

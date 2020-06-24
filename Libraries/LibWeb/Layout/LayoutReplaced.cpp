@@ -45,7 +45,7 @@ float LayoutReplaced::calculate_width() const
 {
     // 10.3.2 [Inline,] replaced elements
 
-    auto& style = this->style();
+    auto& style = this->specified_style();
     auto auto_value = Length::make_auto();
     auto zero_value = Length::make_px(0);
     auto& containing_block = *this->containing_block();
@@ -98,7 +98,7 @@ float LayoutReplaced::calculate_height() const
 {
     // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow,
     // 'inline-block' replaced elements in normal flow and floating replaced elements
-    auto& style = this->style();
+    auto& style = this->specified_style();
     auto auto_value = Length::make_auto();
     auto& containing_block = *this->containing_block();
 
