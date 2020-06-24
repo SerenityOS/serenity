@@ -37,12 +37,16 @@ public:
     CSS::TextAlign text_align() const { return m_text_align; }
     CSS::Position position() const { return m_position; }
     const Length& width() const { return m_width; }
+    const Length& min_width() const { return m_min_width; }
+    const Length& max_width() const { return m_max_width; }
 
 protected:
     Optional<int> m_z_index;
     CSS::TextAlign m_text_align;
     CSS::Position m_position;
     Length m_width;
+    Length m_min_width;
+    Length m_max_width;
 };
 
 class ImmutableLayoutStyle final : public LayoutStyle {
@@ -54,6 +58,8 @@ public:
     void set_text_align(CSS::TextAlign text_align) { m_text_align = text_align; }
     void set_position(CSS::Position position) { m_position = position; }
     void set_width(const Length& width) { m_width = width; }
+    void set_min_width(const Length& width) { m_min_width = width; }
+    void set_max_width(const Length& width) { m_max_width = width; }
 };
 
 }
