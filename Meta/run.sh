@@ -56,7 +56,7 @@ export SDL_VIDEO_X11_DGAMOUSE=0
 cd -P -- "$SERENITY_BUILD" || die "Could not cd to \"$SERENITY_BUILD\""
 
 if [ "$1" = "b" ]; then
-    # ./run b: bochs
+    # Meta/run.sh b: bochs
     [ -z "$SERENITY_BOCHSRC" ] && {
         # Make sure that SERENITY_ROOT is set and not empty
         [ -z "$SERENITY_ROOT" ] && die 'SERENITY_ROOT not set or empty'
@@ -64,14 +64,14 @@ if [ "$1" = "b" ]; then
     }
     "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_BOCHSRC"
 elif [ "$1" = "qn" ]; then
-    # ./run qn: qemu without network
+    # Meta/run.sh qn: qemu without network
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         -device e1000 \
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$1" = "qtap" ]; then
-    # ./run qtap: qemu with tap
+    # Meta/run.sh qtap: qemu with tap
     sudo "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_KVM_ARG \
@@ -81,7 +81,7 @@ elif [ "$1" = "qtap" ]; then
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$1" = "qgrub" ]; then
-    # ./run qgrub: qemu with grub
+    # Meta/run.sh qgrub: qemu with grub
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_KVM_ARG \
@@ -89,10 +89,10 @@ elif [ "$1" = "qgrub" ]; then
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh
 elif [ "$1" = "q35_cmd" ]; then
+    # Meta/run.sh q35_cmd: qemu (q35 chipset) with SerenityOS with custom commandline
     shift
     SERENITY_KERNEL_CMDLINE="$*"
     echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    # ./run: qemu with SerenityOS with custom commandline
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_KVM_ARG \
@@ -101,10 +101,10 @@ elif [ "$1" = "q35_cmd" ]; then
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$1" = "qcmd" ]; then
+    # Meta/run.sh qcmd: qemu with SerenityOS with custom commandline
     shift
     SERENITY_KERNEL_CMDLINE="$*"
     echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    # ./run: qemu with SerenityOS with custom commandline
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_KVM_ARG \
@@ -113,7 +113,7 @@ elif [ "$1" = "qcmd" ]; then
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 else
-    # ./run: qemu with user networking
+    # Meta/run.sh: qemu with user networking
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_KVM_ARG \
