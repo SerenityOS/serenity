@@ -78,8 +78,6 @@ public:
         u8 file_type { 0 };
     };
 
-    virtual RefPtr<Inode> get_inode(InodeIdentifier) const = 0;
-
     virtual void flush_writes() { }
 
     size_t block_size() const { return m_block_size; }

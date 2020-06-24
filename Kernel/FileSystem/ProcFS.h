@@ -50,7 +50,6 @@ public:
     virtual const char* class_name() const override;
 
     virtual NonnullRefPtr<Inode> root_inode() const override;
-    virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
     static void add_sys_bool(String&&, Lockable<bool>&, Function<void()>&& notify_callback = nullptr);
     static void add_sys_string(String&&, Lockable<String>&, Function<void()>&& notify_callback = nullptr);
@@ -79,6 +78,7 @@ private:
         InodeIdentifier identifier(unsigned fsid) const;
     };
 
+    RefPtr<Inode> get_inode(InodeIdentifier) const;
     ProcFSDirectoryEntry* get_directory_entry(InodeIdentifier) const;
 
     Vector<ProcFSDirectoryEntry> m_entries;

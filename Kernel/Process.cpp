@@ -4309,12 +4309,12 @@ int Process::sys$umount(const char* user_mountpoint, size_t mountpoint_length)
     if (mountpoint.is_error())
         return mountpoint.error();
 
-    auto metadata_or_error = VFS::the().lookup_metadata(mountpoint.value(), current_directory());
-    if (metadata_or_error.is_error())
-        return metadata_or_error.error();
+    auto custody_or_error = VFS::the().resolve_path(mountpoint.value(), current_directory());
+    if (custody_or_error.is_error())
+        return custody_or_error.error();
 
-    auto guest_inode_id = metadata_or_error.value().inode;
-    return VFS::the().unmount(guest_inode_id);
+    auto& guest_inode = custody_or_error.value()->inode();
+    return VFS::the().unmount(guest_inode);
 }
 
 void Process::FileDescriptionAndFlags::clear()

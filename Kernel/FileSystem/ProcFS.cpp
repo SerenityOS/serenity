@@ -716,10 +716,10 @@ Optional<KBuffer> procfs$mounts(InodeIdentifier)
     VFS::the().for_each_mount([&builder](auto& mount) {
         auto& fs = mount.guest_fs();
         builder.appendf("%s @ ", fs.class_name());
-        if (!mount.host().is_valid())
+        if (mount.host() == nullptr)
             builder.appendf("/");
         else {
-            builder.appendf("%u:%u", mount.host().fsid(), mount.host().index());
+            builder.appendf("%u:%u", mount.host()->fsid(), mount.host()->index());
             builder.append(' ');
             builder.append(mount.absolute_path());
         }
