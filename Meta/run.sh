@@ -49,7 +49,7 @@ export SDL_VIDEO_X11_DGAMOUSE=0
 
 if [ "$1" = "b" ]; then
     # ./run b: bochs
-    "$SERENITY_BOCHS_BIN" -q -f .bochsrc
+    "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_ROOT/Meta/bochsrc"
 elif [ "$1" = "qn" ]; then
     # ./run qn: qemu without network
     "$SERENITY_QEMU_BIN" \
