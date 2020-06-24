@@ -36,11 +36,13 @@ public:
     Optional<int> z_index() const { return m_z_index; }
     CSS::TextAlign text_align() const { return m_text_align; }
     CSS::Position position() const { return m_position; }
+    const Length& width() const { return m_width; }
 
 protected:
     Optional<int> m_z_index;
     CSS::TextAlign m_text_align;
     CSS::Position m_position;
+    Length m_width;
 };
 
 class ImmutableLayoutStyle final : public LayoutStyle {
@@ -51,6 +53,7 @@ public:
     void set_z_index(Optional<int> value) { m_z_index = value; }
     void set_text_align(CSS::TextAlign text_align) { m_text_align = text_align; }
     void set_position(CSS::Position position) { m_position = position; }
+    void set_width(const Length& width) { m_width = width; }
 };
 
 }

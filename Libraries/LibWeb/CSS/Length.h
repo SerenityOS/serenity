@@ -35,6 +35,7 @@ class Length {
 public:
     enum class Type {
         Undefined,
+        Percentage,
         Auto,
         Px,
         Em,
@@ -56,7 +57,24 @@ public:
     static Length make_auto() { return Length(0, Type::Auto); }
     static Length make_px(float value) { return Length(value, Type::Px); }
 
+    Length resolved(const Length& fallback_for_undefined, const LayoutNode& layout_node, float reference_for_percent) const
+    {
+        if (is_undefined())
+            return fallback_for_undefined;
+        if (is_percentage())
+            return make_px(raw_value() / 100.0 * reference_for_percent);
+        if (is_relative())
+            return make_px(to_px(layout_node));
+        return *this;
+    }
+
+    Length resolved_or_auto(const LayoutNode& layout_node, float reference_for_percent) const
+    {
+        return resolved(make_auto(), layout_node, reference_for_percent);
+    }
+
     bool is_undefined() const { return m_type == Type::Undefined; }
+    bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_absolute() const { return m_type == Type::Px; }
     bool is_relative() const { return m_type == Type::Em || m_type == Type::Rem; }
@@ -72,6 +90,7 @@ public:
         case Type::Px:
             return m_value;
         case Type::Undefined:
+        case Type::Percentage:
         default:
             ASSERT_NOT_REACHED();
         }

@@ -45,13 +45,13 @@ float LayoutReplaced::calculate_width() const
 {
     // 10.3.2 [Inline,] replaced elements
 
-    auto& style = this->specified_style();
+    auto& specified_style = this->specified_style();
     auto auto_value = Length::make_auto();
     auto zero_value = Length::make_px(0);
     auto& containing_block = *this->containing_block();
 
-    auto margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value, containing_block.width());
-    auto margin_right = style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value, containing_block.width());
+    auto margin_left = specified_style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value, containing_block.width());
+    auto margin_right = specified_style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value, containing_block.width());
 
     // A computed value of 'auto' for 'margin-left' or 'margin-right' becomes a used value of '0'.
     if (margin_left.is_auto())
@@ -59,8 +59,8 @@ float LayoutReplaced::calculate_width() const
     if (margin_right.is_auto())
         margin_right = zero_value;
 
-    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, auto_value, containing_block.width());
-    auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, auto_value, containing_block.height());
+    auto specified_width = style().width().resolved_or_auto(*this, containing_block.width());
+    auto specified_height = specified_style.length_or_fallback(CSS::PropertyID::Height, auto_value, containing_block.height());
 
     // FIXME: Actually compute 'width'
     auto computed_width = specified_width;

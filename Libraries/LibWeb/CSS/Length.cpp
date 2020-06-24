@@ -53,6 +53,8 @@ const char* Length::unit_name() const
         return "rem";
     case Type::Auto:
         return "auto";
+    case Type::Percentage:
+        return "percentage";
     case Type::Undefined:
         return "undefined";
     }
