@@ -18,6 +18,7 @@ done < <(git ls-files -- \
     '*.sh' \
     ':!:Toolchain' \
     ':!:Ports' \
+    ':!:Shell/Tests' \
 )
 
 if (( ${#ERRORS[@]} )); then
