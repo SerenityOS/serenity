@@ -226,6 +226,7 @@ void LayoutNodeWithStyle::apply_style(const StyleProperties& specified_style)
     style.set_position(specified_style.position());
     style.set_text_align(specified_style.text_align());
     style.set_z_index(specified_style.z_index());
+    style.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
 }
 
 }
