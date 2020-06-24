@@ -135,6 +135,14 @@ enum class Display {
     TableRowGroup,
 };
 
+enum class WhiteSpace {
+    Normal,
+    Pre,
+    Nowrap,
+    PreLine,
+    PreWrap,
+};
+
 }
 
 class StyleValue : public RefCounted<StyleValue> {

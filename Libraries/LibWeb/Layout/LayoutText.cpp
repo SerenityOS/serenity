@@ -253,21 +253,20 @@ void LayoutText::split_into_lines(LayoutBlock& container, LayoutMode layout_mode
     bool do_collapse = true;
     bool do_wrap_lines = true;
     bool do_wrap_breaks = false;
-    auto white_space_prop = specified_style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal");
 
-    if (white_space_prop == "nowrap") {
+    if (style().white_space() == CSS::WhiteSpace::Nowrap) {
         do_collapse = true;
         do_wrap_lines = false;
         do_wrap_breaks = false;
-    } else if (white_space_prop == "pre") {
+    } else if (style().white_space() == CSS::WhiteSpace::Pre) {
         do_collapse = false;
         do_wrap_lines = false;
         do_wrap_breaks = true;
-    } else if (white_space_prop == "pre-line") {
+    } else if (style().white_space() == CSS::WhiteSpace::PreLine) {
         do_collapse = true;
         do_wrap_lines = true;
         do_wrap_breaks = true;
-    } else if (white_space_prop == "pre-wrap") {
+    } else if (style().white_space() == CSS::WhiteSpace::PreWrap) {
         do_collapse = false;
         do_wrap_lines = true;
         do_wrap_breaks = true;
