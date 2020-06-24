@@ -55,6 +55,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
@@ -5176,6 +5177,54 @@ KResult Process::poke_user_data(u32* address, u32 data)
         region->remap();
     }
     return KResult(KSuccess);
+}
+
+int Process::sys$sendfd(int sockfd, int fd)
+{
+    REQUIRE_PROMISE(sendfd);
+    auto socket_description = file_description(sockfd);
+    if (!socket_description)
+        return -EBADF;
+    if (!socket_description->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *socket_description->socket();
+    if (!socket.is_local())
+        return -EAFNOSUPPORT;
+    if (!socket.is_connected())
+        return -ENOTCONN;
+
+    auto passing_descriptor = file_description(fd);
+    if (!passing_descriptor)
+        return -EBADF;
+
+    auto& local_socket = static_cast<LocalSocket&>(socket);
+    return local_socket.sendfd(*socket_description, *passing_descriptor);
+}
+
+int Process::sys$recvfd(int sockfd)
+{
+    REQUIRE_PROMISE(recvfd);
+    auto socket_description = file_description(sockfd);
+    if (!socket_description)
+        return -EBADF;
+    if (!socket_description->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *socket_description->socket();
+    if (!socket.is_local())
+        return -EAFNOSUPPORT;
+
+    int new_fd = alloc_fd();
+    if (new_fd < 0)
+        return new_fd;
+
+    auto& local_socket = static_cast<LocalSocket&>(socket);
+    auto received_descriptor_or_error = local_socket.recvfd(*socket_description);
+
+    if (received_descriptor_or_error.is_error())
+        return received_descriptor_or_error.error();
+
+    m_fds[new_fd].set(*received_descriptor_or_error.value(), 0);
+    return new_fd;
 }
 
 }

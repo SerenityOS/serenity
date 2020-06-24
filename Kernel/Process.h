@@ -65,6 +65,8 @@ extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
     __ENUMERATE_PLEDGE_PROMISE(proc)      \
     __ENUMERATE_PLEDGE_PROMISE(exec)      \
     __ENUMERATE_PLEDGE_PROMISE(unix)      \
+    __ENUMERATE_PLEDGE_PROMISE(recvfd)    \
+    __ENUMERATE_PLEDGE_PROMISE(sendfd)    \
     __ENUMERATE_PLEDGE_PROMISE(fattr)     \
     __ENUMERATE_PLEDGE_PROMISE(tty)       \
     __ENUMERATE_PLEDGE_PROMISE(chown)     \
@@ -316,6 +318,8 @@ public:
     int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     int sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
     int sys$ptrace(const Syscall::SC_ptrace_params*);
+    int sys$sendfd(int sockfd, int fd);
+    int sys$recvfd(int sockfd);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);

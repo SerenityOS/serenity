@@ -100,5 +100,7 @@ int getsockopt(int sockfd, int level, int option, void*, socklen_t*);
 int setsockopt(int sockfd, int level, int option, const void*, socklen_t);
 int getsockname(int sockfd, struct sockaddr*, socklen_t*);
 int getpeername(int sockfd, struct sockaddr*, socklen_t*);
+int sendfd(int sockfd, int fd);
+int recvfd(int sockfd);
 
 __END_DECLS

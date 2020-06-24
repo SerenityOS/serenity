@@ -189,7 +189,9 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(shutdown)           \
     __ENUMERATE_SYSCALL(get_stack_bounds)   \
     __ENUMERATE_SYSCALL(ptrace)             \
-    __ENUMERATE_SYSCALL(minherit)
+    __ENUMERATE_SYSCALL(minherit)           \
+    __ENUMERATE_SYSCALL(sendfd)             \
+    __ENUMERATE_SYSCALL(recvfd)
 
 namespace Syscall {
 

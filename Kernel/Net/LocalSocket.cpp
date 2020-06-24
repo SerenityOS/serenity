@@ -29,8 +29,8 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
-#include <Kernel/UnixTypes.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
 //#define DEBUG_LOCAL_SOCKET
@@ -395,6 +395,54 @@ KResult LocalSocket::chown(FileDescription&, uid_t uid, gid_t gid)
     m_prebind_uid = uid;
     m_prebind_gid = gid;
     return KSuccess;
+}
+
+NonnullRefPtrVector<FileDescription>& LocalSocket::recvfd_queue_for(FileDescription& description)
+{
+    auto role = this->role(description);
+    if (role == Role::Connected)
+        return m_fds_for_client;
+    if (role == Role::Accepted)
+        return m_fds_for_server;
+    ASSERT_NOT_REACHED();
+}
+
+NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(FileDescription& description)
+{
+    auto role = this->role(description);
+    if (role == Role::Connected)
+        return m_fds_for_server;
+    if (role == Role::Accepted)
+        return m_fds_for_client;
+    ASSERT_NOT_REACHED();
+}
+
+KResult LocalSocket::sendfd(FileDescription& socket_description, NonnullRefPtr<FileDescription> passing_description)
+{
+    LOCKER(lock());
+    auto role = this->role(socket_description);
+    if (role != Role::Connected && role != Role::Accepted)
+        return KResult(-EINVAL);
+    auto& queue = sendfd_queue_for(socket_description);
+    // FIXME: Figure out how we should limit this properly.
+    if (queue.size() > 16)
+        return KResult(-EBUSY);
+    queue.append(move(passing_description));
+    return KSuccess;
+}
+
+KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(FileDescription& socket_description)
+{
+    LOCKER(lock());
+    auto role = this->role(socket_description);
+    if (role != Role::Connected && role != Role::Accepted)
+        return KResult(-EINVAL);
+    auto& queue = recvfd_queue_for(socket_description);
+    if (queue.is_empty()) {
+        // FIXME: Figure out the perfect error code for this.
+        return KResult(-EAGAIN);
+    }
+    return queue.take_first();
 }
 
 }
