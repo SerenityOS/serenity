@@ -49,10 +49,11 @@ bool TmpFS::initialize()
     return true;
 }
 
-InodeIdentifier TmpFS::root_inode() const
+NonnullRefPtr<Inode> TmpFS::root_inode() const
 {
     ASSERT(!m_root_inode.is_null());
-    return m_root_inode->identifier();
+
+    return *m_root_inode;
 }
 
 void TmpFS::register_inode(TmpFSInode& inode)
@@ -88,49 +89,6 @@ RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
     if (it == m_inodes.end())
         return nullptr;
     return it->value;
-}
-
-KResultOr<NonnullRefPtr<Inode>> TmpFS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid)
-{
-    LOCKER(m_lock);
-    ASSERT(parent_id.fsid() == fsid());
-
-    ASSERT(size == 0);
-    ASSERT(dev == 0);
-
-    struct timeval now;
-    kgettimeofday(now);
-
-    InodeMetadata metadata;
-    metadata.mode = mode;
-    metadata.uid = uid;
-    metadata.gid = gid;
-    metadata.atime = now.tv_sec;
-    metadata.ctime = now.tv_sec;
-    metadata.mtime = now.tv_sec;
-
-    auto inode = TmpFSInode::create(*this, metadata, parent_id);
-
-    auto it = m_inodes.find(parent_id.index());
-    ASSERT(it != m_inodes.end());
-    auto parent_inode = it->value;
-
-    auto result = parent_inode->add_child(inode->identifier(), name, mode);
-    if (result.is_error())
-        return result;
-
-    return inode;
-}
-
-KResult TmpFS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid)
-{
-    // Ensure it's a directory.
-    mode &= ~S_IFMT;
-    mode |= S_IFDIR;
-    auto result = create_inode(parent_id, name, mode, 0, 0, uid, gid);
-    if (result.is_error())
-        return result.error();
-    return KSuccess;
 }
 
 TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)
@@ -251,7 +209,7 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
     ASSERT(is_directory());
 
     if (name == ".")
-        return fs().get_inode(identifier());
+        return this;
     if (name == "..")
         return fs().get_inode(m_parent);
 
@@ -266,6 +224,12 @@ size_t TmpFSInode::directory_entry_count() const
     LOCKER(m_lock, Lock::Mode::Shared);
     ASSERT(is_directory());
     return 2 + m_children.size();
+}
+
+void TmpFSInode::notify_watchers()
+{
+    set_metadata_dirty(true);
+    set_metadata_dirty(false);
 }
 
 void TmpFSInode::flush_metadata()
@@ -283,8 +247,7 @@ KResult TmpFSInode::chmod(mode_t mode)
     LOCKER(m_lock);
 
     m_metadata.mode = mode;
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
+    notify_watchers();
     return KSuccess;
 }
 
@@ -294,25 +257,47 @@ KResult TmpFSInode::chown(uid_t uid, gid_t gid)
 
     m_metadata.uid = uid;
     m_metadata.gid = gid;
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
+    notify_watchers();
     return KSuccess;
 }
 
-KResult TmpFSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t)
+KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+{
+    LOCKER(m_lock);
+
+    // TODO: Support creating devices on TmpFS.
+    if (dev != 0)
+        return KResult(-ENOTSUP);
+
+    struct timeval now;
+    kgettimeofday(now);
+
+    InodeMetadata metadata;
+    metadata.mode = mode;
+    metadata.uid = uid;
+    metadata.gid = gid;
+    metadata.atime = now.tv_sec;
+    metadata.ctime = now.tv_sec;
+    metadata.mtime = now.tv_sec;
+
+    auto child = TmpFSInode::create(fs(), metadata, identifier());
+    auto result = add_child(child, name, mode);
+    if (result.is_error())
+        return result;
+    return child;
+}
+
+KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
-    ASSERT(child_id.fsid() == fsid());
+    ASSERT(child.fsid() == fsid());
 
     String owned_name = name;
-    FS::DirectoryEntry entry = { owned_name.characters(), owned_name.length(), child_id, 0 };
-    auto child_tmp = fs().get_inode(child_id);
-    auto child = static_ptr_cast<TmpFSInode>(child_tmp.release_nonnull());
+    FS::DirectoryEntry entry = { owned_name.characters(), owned_name.length(), child.identifier(), 0 };
 
-    m_children.set(owned_name, { entry, move(child) });
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
+    m_children.set(owned_name, { entry, static_cast<TmpFSInode&>(child) });
+    notify_watchers();
     return KSuccess;
 }
 
@@ -328,8 +313,7 @@ KResult TmpFSInode::remove_child(const StringView& name)
     if (it == m_children.end())
         return KResult(-ENOENT);
     m_children.remove(it);
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
+    notify_watchers();
     return KSuccess;
 }
 
@@ -356,8 +340,7 @@ KResult TmpFSInode::truncate(u64 size)
 
     size_t old_size = m_metadata.size;
     m_metadata.size = size;
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
+    notify_watchers();
 
     if (old_size != (size_t)size) {
         inode_size_changed(old_size, size);
@@ -383,8 +366,7 @@ int TmpFSInode::set_ctime(time_t time)
     LOCKER(m_lock);
 
     m_metadata.ctime = time;
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
+    notify_watchers();
     return KSuccess;
 }
 
@@ -393,8 +375,7 @@ int TmpFSInode::set_mtime(time_t time)
     LOCKER(m_lock);
 
     m_metadata.mtime = time;
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
+    notify_watchers();
     return KSuccess;
 }
 

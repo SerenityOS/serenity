@@ -49,11 +49,8 @@ public:
     virtual bool initialize() override;
     virtual const char* class_name() const override;
 
-    virtual InodeIdentifier root_inode() const override;
+    virtual NonnullRefPtr<Inode> root_inode() const override;
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
-
-    virtual KResultOr<NonnullRefPtr<Inode>> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t) override;
-    virtual KResult create_directory(InodeIdentifier parent_id, const String& name, mode_t, uid_t, gid_t) override;
 
     static void add_sys_bool(String&&, Lockable<bool>&, Function<void()>&& notify_callback = nullptr);
     static void add_sys_string(String&&, Lockable<String>&, Function<void()>&& notify_callback = nullptr);
@@ -105,7 +102,8 @@ private:
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const u8* buffer, FileDescription*) override;
-    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
@@ -131,7 +129,8 @@ private:
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override {};
     virtual ssize_t write_bytes(off_t, ssize_t, const u8*, FileDescription*) override { ASSERT_NOT_REACHED(); }
-    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override { return KResult(-EINVAL); }

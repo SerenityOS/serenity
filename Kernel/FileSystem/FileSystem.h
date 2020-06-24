@@ -56,7 +56,7 @@ public:
 
     virtual bool initialize() = 0;
     virtual const char* class_name() const = 0;
-    virtual InodeIdentifier root_inode() const = 0;
+    virtual NonnullRefPtr<Inode> root_inode() const = 0;
     virtual bool supports_watchers() const { return false; }
 
     bool is_readonly() const { return m_readonly; }
@@ -77,9 +77,6 @@ public:
         InodeIdentifier inode;
         u8 file_type { 0 };
     };
-
-    virtual KResultOr<NonnullRefPtr<Inode>> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t) = 0;
-    virtual KResult create_directory(InodeIdentifier parent_inode, const String& name, mode_t, uid_t, gid_t) = 0;
 
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const = 0;
 
@@ -110,11 +107,6 @@ inline FS* InodeIdentifier::fs()
 inline const FS* InodeIdentifier::fs() const
 {
     return FS::from_fsid(m_fsid);
-}
-
-inline bool InodeIdentifier::is_root_inode() const
-{
-    return (*this) == fs()->root_inode();
 }
 
 }

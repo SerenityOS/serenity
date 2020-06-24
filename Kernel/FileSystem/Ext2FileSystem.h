@@ -63,7 +63,8 @@ private:
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const u8* data, FileDescription*) override;
-    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResult add_child(Inode& child, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual int set_atime(time_t) override;
     virtual int set_ctime(time_t) override;
@@ -128,9 +129,9 @@ private:
     bool flush_super_block();
 
     virtual const char* class_name() const override;
-    virtual InodeIdentifier root_inode() const override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t) override;
-    virtual KResult create_directory(InodeIdentifier parent_inode, const String& name, mode_t, uid_t, gid_t) override;
+    virtual NonnullRefPtr<Inode> root_inode() const override;
+    KResultOr<NonnullRefPtr<Inode>> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t);
+    KResult create_directory(InodeIdentifier parent_inode, const String& name, mode_t, uid_t, gid_t);
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
     virtual void flush_writes() override;
 

@@ -1075,19 +1075,9 @@ const char* ProcFS::class_name() const
     return "ProcFS";
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, uid_t, gid_t)
+NonnullRefPtr<Inode> ProcFS::root_inode() const
 {
-    return KResult(-EROFS);
-}
-
-KResult ProcFS::create_directory(InodeIdentifier, const String&, mode_t, uid_t, gid_t)
-{
-    return KResult(-EROFS);
-}
-
-InodeIdentifier ProcFS::root_inode() const
-{
-    return { fsid(), FI_Root };
+    return *m_root_inode;
 }
 
 RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
@@ -1095,7 +1085,7 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
 #ifdef PROCFS_DEBUG
     dbg() << "ProcFS::get_inode(" << inode_id.index() << ")";
 #endif
-    if (inode_id == root_inode())
+    if (inode_id == root_inode()->identifier())
         return m_root_inode;
 
     LOCKER(m_inodes_lock);
@@ -1340,7 +1330,7 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
 {
     ASSERT(is_directory());
     if (name == ".")
-        return fs().get_inode(identifier());
+        return this;
     if (name == "..")
         return fs().get_inode(to_parent_id(identifier()));
 
@@ -1555,11 +1545,18 @@ InodeMetadata ProcFSProxyInode::metadata() const
     return metadata;
 }
 
-KResult ProcFSProxyInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t mode)
+KResultOr<NonnullRefPtr<Inode>> ProcFSProxyInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
     if (!m_fd->inode())
         return KResult(-EINVAL);
-    return m_fd->inode()->add_child(child_id, name, mode);
+    return m_fd->inode()->create_child(name, mode, dev, uid, gid);
+}
+
+KResult ProcFSProxyInode::add_child(Inode& child, const StringView& name, mode_t mode)
+{
+    if (!m_fd->inode())
+        return KResult(-EINVAL);
+    return m_fd->inode()->add_child(child, name, mode);
 }
 
 KResult ProcFSProxyInode::remove_child(const StringView& name)
@@ -1583,10 +1580,13 @@ size_t ProcFSProxyInode::directory_entry_count() const
     return m_fd->inode()->directory_entry_count();
 }
 
-KResult ProcFSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t)
+KResultOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
 {
-    (void)child_id;
-    (void)name;
+    return KResult(-EPERM);
+}
+
+KResult ProcFSInode::add_child(Inode&, const StringView&, mode_t)
+{
     return KResult(-EPERM);
 }
 

@@ -36,6 +36,8 @@ class SlavePTY;
 class DevPtsFSInode;
 
 class DevPtsFS final : public FS {
+    friend class DevPtsFSInode;
+
 public:
     virtual ~DevPtsFS() override;
     static NonnullRefPtr<DevPtsFS> create();
@@ -43,9 +45,7 @@ public:
     virtual bool initialize() override;
     virtual const char* class_name() const override { return "DevPtsFS"; }
 
-    virtual InodeIdentifier root_inode() const override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t) override;
-    virtual KResult create_directory(InodeIdentifier parent_inode, const String& name, mode_t, uid_t, gid_t) override;
+    virtual NonnullRefPtr<Inode> root_inode() const override;
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
     static void register_slave_pty(SlavePTY&);
@@ -73,7 +73,8 @@ private:
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const u8* buffer, FileDescription*) override;
-    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
