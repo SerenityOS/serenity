@@ -58,8 +58,11 @@ public:
         Mount(FS&, Custody* host_custody, int flags);
         Mount(Inode& source, Custody& host_custody, int flags);
 
-        InodeIdentifier host() const;
-        InodeIdentifier guest() const { return m_guest; }
+        const Inode* host() const;
+        Inode* host();
+
+        const Inode& guest() const { return *m_guest; }
+        Inode& guest() { return *m_guest; }
 
         const FS& guest_fs() const { return *m_guest_fs; }
 
@@ -69,8 +72,7 @@ public:
         void set_flags(int flags) { m_flags = flags; }
 
     private:
-        InodeIdentifier m_host;
-        InodeIdentifier m_guest;
+        NonnullRefPtr<Inode> m_guest;
         NonnullRefPtr<FS> m_guest_fs;
         RefPtr<Custody> m_host_custody;
         int m_flags;
@@ -85,7 +87,7 @@ public:
     KResult mount(FS&, Custody& mount_point, int flags);
     KResult bind_mount(Custody& source, Custody& mount_point, int flags);
     KResult remount(Custody& mount_point, int new_flags);
-    KResult unmount(InodeIdentifier guest_inode_id);
+    KResult unmount(Inode& guest_inode);
 
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
     KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
@@ -122,13 +124,13 @@ private:
     const UnveiledPath* find_matching_unveiled_path(StringView path);
     KResult validate_path_against_process_veil(StringView path, int options);
 
-    RefPtr<Inode> get_inode(InodeIdentifier);
-
     bool is_vfs_root(InodeIdentifier) const;
 
     void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
 
+    Mount* find_mount_for_host(Inode&);
     Mount* find_mount_for_host(InodeIdentifier);
+    Mount* find_mount_for_guest(Inode&);
     Mount* find_mount_for_guest(InodeIdentifier);
 
     Lock m_lock { "VFSLock" };
