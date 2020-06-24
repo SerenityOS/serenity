@@ -28,6 +28,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
+#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
@@ -44,7 +45,7 @@ KernelRng& KernelRng::the()
 KernelRng::KernelRng()
 {
     if (g_cpu_supports_rdrand) {
-        for (size_t i = 0; i < KernelRng::pool_count * KernelRng::reseed_threshold; ++i) {
+        for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             u32 value = 0;
             asm volatile(
                 "1:\n"
@@ -52,14 +53,22 @@ KernelRng::KernelRng()
                 "jnc 1b\n"
                 : "=r"(value));
 
-            this->add_random_event(value, i % 32);
+            this->resource().add_random_event(value, i % 32);
         }
     }
 }
 
+size_t EntropySource::next_source { 0 };
+
 void get_good_random_bytes(u8* buffer, size_t buffer_size)
 {
-    KernelRng::the().get_random_bytes(buffer, buffer_size);
+    // FIXME: What if interrupts are disabled because we're in an interrupt?
+    if (are_interrupts_enabled()) {
+        LOCKER(KernelRng::the().lock());
+        KernelRng::the().resource().get_random_bytes(buffer, buffer_size);
+    } else {
+        KernelRng::the().resource().get_random_bytes(buffer, buffer_size);
+    }
 }
 
 void get_fast_random_bytes(u8* buffer, size_t buffer_size)

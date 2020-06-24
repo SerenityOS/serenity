@@ -287,6 +287,8 @@ void KeyboardDevice::handle_irq(const RegisterState&)
         u8 ch = raw & 0x7f;
         bool pressed = !(raw & 0x80);
 
+        m_entropy_source.add_random_event(raw);
+
         if (raw == 0xe0) {
             m_has_e0_prefix = true;
             return;

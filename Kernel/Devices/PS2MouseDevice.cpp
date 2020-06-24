@@ -81,6 +81,7 @@ void PS2MouseDevice::handle_irq(const RegisterState&)
         if (backdoor->vmmouse_is_absolute()) {
             IO::in8(I8042_BUFFER);
             auto packet = backdoor->receive_mouse_packet();
+            m_entropy_source.add_random_event(packet);
             if (packet.has_value())
                 m_queue.enqueue(packet.value());
             return;
@@ -99,6 +100,8 @@ void PS2MouseDevice::handle_irq(const RegisterState&)
 #ifdef PS2MOUSE_DEBUG
             dbg() << "PS2Mouse: " << m_data[1] << ", " << m_data[2] << " " << ((m_data[0] & 1) ? "Left" : "") << " " << ((m_data[0] & 2) ? "Right" : "") << " (buffered: " << m_queue.size() << ")";
 #endif
+            m_entropy_source.add_random_event(*(u32*)m_data);
+
             parse_data_packet();
         };
 

@@ -32,6 +32,7 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/KeyCode.h>
+#include <Kernel/Random.h>
 #include <LibKeyboard/CharacterMap.h>
 
 namespace Kernel {
@@ -82,6 +83,7 @@ private:
     bool m_caps_lock_on { false };
     bool m_num_lock_on { false };
     bool m_has_e0_prefix { false };
+    EntropySource m_entropy_source;
 
     Keyboard::CharacterMap m_character_map = Keyboard::CharacterMap("en");
 };

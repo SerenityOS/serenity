@@ -30,6 +30,8 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Lock.h>
 #include <Kernel/StdLib.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Cipher/Cipher.h>
@@ -110,7 +112,7 @@ private:
     HashType m_pools[pool_count];
 };
 
-class KernelRng : public FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256> {
+class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256>> {
     AK_MAKE_ETERNAL;
 
 public:
@@ -118,6 +120,36 @@ public:
 
 private:
     KernelRng();
+};
+
+class EntropySource {
+    template<typename T>
+    struct Event {
+        u64 timestamp;
+        size_t source;
+        T event_data;
+    };
+
+public:
+    EntropySource()
+        : m_source(next_source++)
+    {
+    }
+
+    template<typename T>
+    void add_random_event(const T& event_data)
+    {
+        // We don't lock this because on the off chance a pool is corrupted, entropy isn't lost.
+        Event<T> event = { read_tsc(), m_source, event_data };
+        KernelRng::the().resource().add_random_event(event, m_pool);
+        m_pool++;
+    }
+
+private:
+    static size_t next_source;
+    size_t m_pool { 0 };
+    size_t m_source;
+    Lock m_lock;
 };
 
 // NOTE: These API's are primarily about expressing intent/needs in the calling code.
