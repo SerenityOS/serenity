@@ -324,7 +324,7 @@ bool LayoutBox::establishes_stacking_context() const
     if (node() == document().root())
         return true;
     auto position = this->position();
-    auto z_index = specified_style().z_index();
+    auto z_index = style().z_index();
     if (position == CSS::Position::Absolute || position == CSS::Position::Relative) {
         if (z_index.has_value())
             return true;
