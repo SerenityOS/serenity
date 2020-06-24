@@ -119,4 +119,16 @@ int getpeername(int sockfd, struct sockaddr* addr, socklen_t* addrlen)
     int rc = syscall(SC_getpeername, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+int sendfd(int sockfd, int fd)
+{
+    int rc = syscall(SC_sendfd, sockfd, fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int recvfd(int sockfd)
+{
+    int rc = syscall(SC_recvfd, sockfd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }

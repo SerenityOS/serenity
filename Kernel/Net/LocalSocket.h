@@ -42,6 +42,9 @@ public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type);
     virtual ~LocalSocket() override;
 
+    KResult sendfd(FileDescription& socket_description, NonnullRefPtr<FileDescription> passing_description);
+    KResultOr<NonnullRefPtr<FileDescription>> recvfd(FileDescription& socket_description);
+
     static void for_each(Function<void(const LocalSocket&)>);
 
     StringView socket_path() const;
@@ -71,6 +74,8 @@ private:
     static Lockable<InlineLinkedList<LocalSocket>>& all_sockets();
     DoubleBuffer& receive_buffer_for(FileDescription&);
     DoubleBuffer& send_buffer_for(FileDescription&);
+    NonnullRefPtrVector<FileDescription>& sendfd_queue_for(FileDescription&);
+    NonnullRefPtrVector<FileDescription>& recvfd_queue_for(FileDescription&);
 
     // An open socket file on the filesystem.
     RefPtr<FileDescription> m_file;
@@ -99,6 +104,9 @@ private:
 
     DoubleBuffer m_for_client;
     DoubleBuffer m_for_server;
+
+    NonnullRefPtrVector<FileDescription> m_fds_for_client;
+    NonnullRefPtrVector<FileDescription> m_fds_for_server;
 
     // for InlineLinkedList
     LocalSocket* m_prev { nullptr };
