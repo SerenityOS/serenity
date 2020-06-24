@@ -49,7 +49,6 @@ public:
     virtual bool supports_watchers() const override { return true; }
 
     virtual NonnullRefPtr<Inode> root_inode() const override;
-    virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
 private:
     TmpFS();
@@ -57,6 +56,7 @@ private:
     RefPtr<TmpFSInode> m_root_inode;
 
     HashMap<unsigned, NonnullRefPtr<TmpFSInode>> m_inodes;
+    RefPtr<Inode> get_inode(InodeIdentifier identifier) const;
     void register_inode(TmpFSInode&);
     void unregister_inode(InodeIdentifier);
 

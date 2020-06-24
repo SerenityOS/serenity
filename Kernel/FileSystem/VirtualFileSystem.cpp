@@ -97,7 +97,7 @@ KResult VFS::remount(Custody& mount_point, int new_flags)
 
     dbg() << "VFS: Remounting " << mount_point.absolute_path();
 
-    Mount* mount = find_mount_for_guest(mount_point.inode().identifier());
+    Mount* mount = find_mount_for_guest(mount_point.inode());
     if (!mount)
         return KResult(-ENODEV);
 
@@ -105,14 +105,14 @@ KResult VFS::remount(Custody& mount_point, int new_flags)
     return KSuccess;
 }
 
-KResult VFS::unmount(InodeIdentifier guest_inode_id)
+KResult VFS::unmount(Inode& guest_inode)
 {
     LOCKER(m_lock);
-    dbg() << "VFS: unmount called with inode " << guest_inode_id;
+    dbg() << "VFS: unmount called with inode " << guest_inode.identifier();
 
     for (size_t i = 0; i < m_mounts.size(); ++i) {
         auto& mount = m_mounts.at(i);
-        if (mount.guest() == guest_inode_id) {
+        if (&mount.guest() == &guest_inode) {
             auto result = mount.guest_fs().prepare_to_unmount();
             if (result.is_error()) {
                 dbg() << "VFS: Failed to unmount!";
@@ -124,7 +124,7 @@ KResult VFS::unmount(InodeIdentifier guest_inode_id)
         }
     }
 
-    dbg() << "VFS: Nothing mounted on inode " << guest_inode_id;
+    dbg() << "VFS: Nothing mounted on inode " << guest_inode.identifier();
     return KResult(-ENODEV);
 }
 
@@ -150,19 +150,37 @@ bool VFS::mount_root(FS& file_system)
     return true;
 }
 
-auto VFS::find_mount_for_host(InodeIdentifier inode) -> Mount*
+auto VFS::find_mount_for_host(Inode& inode) -> Mount*
 {
     for (auto& mount : m_mounts) {
-        if (mount.host() == inode)
+        if (mount.host() == &inode)
             return &mount;
     }
     return nullptr;
 }
 
-auto VFS::find_mount_for_guest(InodeIdentifier inode) -> Mount*
+auto VFS::find_mount_for_host(InodeIdentifier id) -> Mount*
 {
     for (auto& mount : m_mounts) {
-        if (mount.guest() == inode)
+        if (mount.host() && mount.host()->identifier() == id)
+            return &mount;
+    }
+    return nullptr;
+}
+
+auto VFS::find_mount_for_guest(Inode& inode) -> Mount*
+{
+    for (auto& mount : m_mounts) {
+        if (&mount.guest() == &inode)
+            return &mount;
+    }
+    return nullptr;
+}
+
+auto VFS::find_mount_for_guest(InodeIdentifier id) -> Mount*
+{
+    for (auto& mount : m_mounts) {
+        if (mount.guest().identifier() == id)
             return &mount;
     }
     return nullptr;
@@ -178,7 +196,7 @@ void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::Dir
     dir_inode.traverse_as_directory([&](const FS::DirectoryEntry& entry) {
         InodeIdentifier resolved_inode;
         if (auto mount = find_mount_for_host(entry.inode))
-            resolved_inode = mount->guest();
+            resolved_inode = mount->guest().identifier();
         else
             resolved_inode = entry.inode;
 
@@ -187,7 +205,8 @@ void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::Dir
         if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && !strcmp(entry.name, "..")) {
             auto mount = find_mount_for_guest(entry.inode);
             ASSERT(mount);
-            resolved_inode = mount->host();
+            ASSERT(mount->host());
+            resolved_inode = mount->host()->identifier();
         }
         callback(FS::DirectoryEntry(entry.name, entry.name_length, resolved_inode, entry.file_type));
         return true;
@@ -701,15 +720,8 @@ KResult VFS::rmdir(StringView path, Custody& base)
     return parent_inode.remove_child(LexicalPath(path).basename());
 }
 
-RefPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
-{
-    if (!inode_id.is_valid())
-        return nullptr;
-    return inode_id.fs()->get_inode(inode_id);
-}
-
 VFS::Mount::Mount(FS& guest_fs, Custody* host_custody, int flags)
-    : m_guest(guest_fs.root_inode()->identifier())
+    : m_guest(guest_fs.root_inode())
     , m_guest_fs(guest_fs)
     , m_host_custody(host_custody)
     , m_flags(flags)
@@ -717,7 +729,7 @@ VFS::Mount::Mount(FS& guest_fs, Custody* host_custody, int flags)
 }
 
 VFS::Mount::Mount(Inode& source, Custody& host_custody, int flags)
-    : m_guest(source.identifier())
+    : m_guest(source)
     , m_guest_fs(source.fs())
     , m_host_custody(host_custody)
     , m_flags(flags)
@@ -731,11 +743,18 @@ String VFS::Mount::absolute_path() const
     return m_host_custody->absolute_path();
 }
 
-InodeIdentifier VFS::Mount::host() const
+Inode* VFS::Mount::host()
 {
     if (!m_host_custody)
-        return {};
-    return m_host_custody->inode().identifier();
+        return nullptr;
+    return &m_host_custody->inode();
+}
+
+const Inode* VFS::Mount::host() const
+{
+    if (!m_host_custody)
+        return nullptr;
+    return &m_host_custody->inode();
 }
 
 void VFS::for_each_mount(Function<void(const Mount&)> callback) const
@@ -887,8 +906,8 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
 
         // See if there's something mounted on the child; in that case
         // we would need to return the guest inode, not the host inode.
-        if (auto mount = find_mount_for_host(child_inode->identifier())) {
-            child_inode = get_inode(mount->guest());
+        if (auto mount = find_mount_for_host(*child_inode)) {
+            child_inode = mount->guest();
             mount_flags_for_child = mount->flags();
         }
 

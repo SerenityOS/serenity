@@ -46,13 +46,13 @@ public:
     virtual const char* class_name() const override { return "DevPtsFS"; }
 
     virtual NonnullRefPtr<Inode> root_inode() const override;
-    virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
     static void register_slave_pty(SlavePTY&);
     static void unregister_slave_pty(SlavePTY&);
 
 private:
     DevPtsFS();
+    RefPtr<Inode> get_inode(InodeIdentifier) const;
 
     RefPtr<DevPtsFSInode> m_root_inode;
 };
