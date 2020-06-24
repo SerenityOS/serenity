@@ -20,6 +20,14 @@ die() {
 
 [ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=256M
 
+[ -z "$SERENITY_DISK_IMAGE" ] && {
+    if [ "$1" = qgrub ]; then
+        SERENITY_DISK_IMAGE="grub_disk_image"
+    else
+        SERENITY_DISK_IMAGE="_disk_image"
+    fi
+}
+
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
@@ -27,7 +35,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -d cpu_reset,guest_errors
 -smp 2
 -device VGA,vgamem_mb=64
--drive file=_disk_image,format=raw,index=0,media=disk
+-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
 -device ich9-ahci
 -debugcon stdio
 -soundhw pcspk
@@ -43,7 +51,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -smp 2
 -device VGA,vgamem_mb=64
 -device piix3-ide
--drive file=_disk_image,id=disk,if=none
+-drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
 -device ide-hd,bus=ide.6,drive=disk,unit=0
 -debugcon stdio
 -soundhw pcspk
