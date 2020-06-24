@@ -187,7 +187,7 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
         line_box.trim_trailing_whitespace();
     }
 
-    auto text_align = this->text_align();
+    auto text_align = style().text_align();
     float min_line_height = specified_style().line_height(*this);
     float line_spacing = min_line_height - specified_style().font().glyph_height();
     float content_height = 0;
@@ -616,24 +616,24 @@ LayoutBlock::ShrinkToFitResult LayoutBlock::calculate_shrink_to_fit_width()
 
 void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBlock& block)
 {
-    auto& style = block.specified_style();
+    auto& specified_style = block.specified_style();
     auto zero_value = Length::make_px(0);
     auto& containing_block = *this;
     auto& box = block.box_model();
 
-    box.margin.top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
-    box.margin.bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
-    box.border.top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
-    box.border.bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
-    box.padding.top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
-    box.padding.bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
+    box.margin.top = specified_style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
+    box.margin.bottom = specified_style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
+    box.border.top = specified_style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
+    box.border.bottom = specified_style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
+    box.padding.top = specified_style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
+    box.padding.bottom = specified_style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
 
     float x = box.margin.left.to_px(*this)
         + box.border.left.to_px(*this)
         + box.padding.left.to_px(*this)
         + box.offset.left.to_px(*this);
 
-    if (text_align() == CSS::TextAlign::VendorSpecificCenter) {
+    if (this->style().text_align() == CSS::TextAlign::VendorSpecificCenter) {
         x = (containing_block.width() / 2) - block.width() / 2;
     }
 
@@ -642,7 +642,7 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
 
     auto* relevant_sibling = block.previous_sibling();
     while (relevant_sibling != nullptr) {
-        if (relevant_sibling->position() != CSS::Position::Absolute)
+        if (relevant_sibling->style().position() != CSS::Position::Absolute)
             break;
         relevant_sibling = relevant_sibling->previous_sibling();
     }
