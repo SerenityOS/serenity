@@ -67,8 +67,7 @@ RefPtr<LayoutNode> HTMLObjectElement::create_layout_node(const StyleProperties* 
         return HTMLElement::create_layout_node(parent_style);
 
     auto style = document().style_resolver().resolve_style(*this, parent_style);
-    auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
-    if (display == "none")
+    if (style->display() == CSS::Display::None)
         return nullptr;
     if (m_image_loader.has_image())
         return adopt(*new LayoutImage(*this, move(style), m_image_loader));

@@ -244,4 +244,29 @@ CSS::TextAlign StyleProperties::text_align() const
     return CSS::TextAlign::Left;
 }
 
+CSS::Display StyleProperties::display() const
+{
+    auto display = string_or_fallback(CSS::PropertyID::Display, "inline");
+    if (display == "none")
+        return CSS::Display::None;
+    if (display == "block")
+        return CSS::Display::Block;
+    if (display == "inline")
+        return CSS::Display::Inline;
+    if (display == "inline-block")
+        return CSS::Display::InlineBlock;
+    if (display == "list-item")
+        return CSS::Display::ListItem;
+    if (display == "table")
+        return CSS::Display::Table;
+    if (display == "table-row")
+        return CSS::Display::TableRow;
+    if (display == "table-cell")
+        return CSS::Display::TableCell;
+    if (display == "table-row-group")
+        return CSS::Display::TableRowGroup;
+    dbg() << "Unknown display type: _" << display << "_";
+    return CSS::Display::Block;
+}
+
 }

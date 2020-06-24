@@ -111,36 +111,34 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     const_cast<Element&>(*this).m_resolved_style = style;
-    auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
+    auto display = style->display();
 
-    if (display == "none")
+    if (display == CSS::Display::None)
         return nullptr;
 
     if (tag_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;
 
-    if (display == "block")
+    if (display == CSS::Display::Block)
         return adopt(*new LayoutBlock(this, move(style)));
-    if (display == "inline")
+    if (display == CSS::Display::Inline)
         return adopt(*new LayoutInline(*this, move(style)));
-    if (display == "list-item")
+    if (display == CSS::Display::ListItem)
         return adopt(*new LayoutListItem(*this, move(style)));
-    if (display == "table")
+    if (display == CSS::Display::Table)
         return adopt(*new LayoutTable(*this, move(style)));
-    if (display == "table-row")
+    if (display == CSS::Display::TableRow)
         return adopt(*new LayoutTableRow(*this, move(style)));
-    if (display == "table-cell")
+    if (display == CSS::Display::TableCell)
         return adopt(*new LayoutTableCell(*this, move(style)));
-    if (display == "table-row-group")
+    if (display == CSS::Display::TableRowGroup)
         return adopt(*new LayoutTableRowGroup(*this, move(style)));
-    if (display == "inline-block") {
+    if (display == CSS::Display::InlineBlock) {
         auto inline_block = adopt(*new LayoutBlock(this, move(style)));
         inline_block->set_inline(true);
         return inline_block;
     }
-
-    dbg() << "Unknown display type: _" << display << "_";
-    return adopt(*new LayoutBlock(this, move(style)));
+    ASSERT_NOT_REACHED();
 }
 
 void Element::parse_attribute(const FlyString& name, const String& value)
@@ -169,7 +167,7 @@ static StyleDifference compute_style_difference(const StyleProperties& old_style
     bool needs_repaint = false;
     bool needs_relayout = false;
 
-    if (new_style.string_or_fallback(CSS::PropertyID::Display, "block") != old_style.string_or_fallback(CSS::PropertyID::Color, "block"))
+    if (new_style.display() != old_style.display())
         needs_relayout = true;
 
     if (new_style.color_or_fallback(CSS::PropertyID::Color, document, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::Color, document, Color::Black))
@@ -195,7 +193,7 @@ void Element::recompute_style()
     auto style = document().style_resolver().resolve_style(*this, &parent_layout_node->specified_style());
     m_resolved_style = style;
     if (!layout_node()) {
-        if (style->string_or_fallback(CSS::PropertyID::Display, "inline") == "none")
+        if (style->display() == CSS::Display::None)
             return;
         // We need a new layout tree here!
         LayoutTreeBuilder tree_builder;

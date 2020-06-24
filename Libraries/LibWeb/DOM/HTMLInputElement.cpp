@@ -56,8 +56,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties* p
         return nullptr;
 
     auto style = document().style_resolver().resolve_style(*this, parent_style);
-    auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
-    if (display == "none")
+    if (style->display() == CSS::Display::None)
         return nullptr;
 
     RefPtr<GUI::Widget> widget;
