@@ -39,6 +39,9 @@ public:
     const Length& width() const { return m_width; }
     const Length& min_width() const { return m_min_width; }
     const Length& max_width() const { return m_max_width; }
+    const Length& height() const { return m_height; }
+    const Length& min_height() const { return m_min_height; }
+    const Length& max_height() const { return m_max_height; }
 
 protected:
     Optional<int> m_z_index;
@@ -47,6 +50,9 @@ protected:
     Length m_width;
     Length m_min_width;
     Length m_max_width;
+    Length m_height;
+    Length m_min_height;
+    Length m_max_height;
 };
 
 class ImmutableLayoutStyle final : public LayoutStyle {
@@ -60,6 +66,9 @@ public:
     void set_width(const Length& width) { m_width = width; }
     void set_min_width(const Length& width) { m_min_width = width; }
     void set_max_width(const Length& width) { m_max_width = width; }
+    void set_height(const Length& height) { m_height = height; }
+    void set_min_height(const Length& height) { m_min_height = height; }
+    void set_max_height(const Length& height) { m_max_height = height; }
 };
 
 }
