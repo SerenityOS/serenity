@@ -72,7 +72,8 @@ public:
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const = 0;
     virtual RefPtr<Inode> lookup(StringView name) = 0;
     virtual ssize_t write_bytes(off_t, ssize_t, const u8* data, FileDescription*) = 0;
-    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) = 0;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) = 0;
+    virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;
     virtual KResult remove_child(const StringView& name) = 0;
     virtual size_t directory_entry_count() const = 0;
     virtual KResult chmod(mode_t) = 0;

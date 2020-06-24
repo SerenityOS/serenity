@@ -62,8 +62,6 @@ public:
         return m_fsid != other.m_fsid || m_index != other.m_index;
     }
 
-    bool is_root_inode() const;
-
     String to_string() const { return String::format("%u:%u", m_fsid, m_index); }
 
 private:

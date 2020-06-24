@@ -137,15 +137,14 @@ bool VFS::mount_root(FS& file_system)
 
     Mount mount { file_system, nullptr, root_mount_flags };
 
-    auto root_inode_id = mount.guest().fs()->root_inode();
-    auto root_inode = mount.guest().fs()->get_inode(root_inode_id);
+    auto root_inode = file_system.root_inode();
     if (!root_inode->is_directory()) {
-        klog() << "VFS: root inode (" << String::format("%02u", root_inode_id.fsid()) << ":" << String::format("%08u", root_inode_id.index()) << ") for / is not a directory :(";
+        klog() << "VFS: root inode (" << String::format("%02u", file_system.fsid()) << ":" << String::format("%08u", root_inode->index()) << ") for / is not a directory :(";
         return false;
     }
 
     m_root_inode = move(root_inode);
-    klog() << "VFS: mounted root from " << m_root_inode->fs().class_name() << " (" << static_cast<FileBackedFS&>(m_root_inode->fs()).file_description().absolute_path() << ")";
+    klog() << "VFS: mounted root from " << file_system.class_name() << " (" << static_cast<FileBackedFS&>(file_system).file_description().absolute_path() << ")";
 
     m_mounts.append(move(mount));
     return true;
@@ -184,7 +183,8 @@ void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::Dir
             resolved_inode = entry.inode;
 
         // FIXME: This is now broken considering chroot and bind mounts.
-        if (dir_inode.identifier().is_root_inode() && !is_vfs_root(dir_inode.identifier()) && !strcmp(entry.name, "..")) {
+        bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode()->identifier();
+        if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && !strcmp(entry.name, "..")) {
             auto mount = find_mount_for_guest(entry.inode);
             ASSERT(mount);
             resolved_inode = mount->host();
@@ -321,7 +321,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 
     LexicalPath p(path);
     dbg() << "VFS::mknod: '" << p.basename() << "' mode=" << mode << " dev=" << dev << " in " << parent_inode.identifier();
-    return parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, dev, Process::current->uid(), Process::current->gid()).result();
+    return parent_inode.create_child(p.basename(), mode, dev, Process::current->uid(), Process::current->gid()).result();
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
@@ -347,7 +347,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
 #endif
     uid_t uid = owner.has_value() ? owner.value().uid : Process::current->uid();
     gid_t gid = owner.has_value() ? owner.value().gid : Process::current->gid();
-    auto inode_or_error = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, 0, uid, gid);
+    auto inode_or_error = parent_inode.create_child(p.basename(), mode, 0, uid, gid);
     if (inode_or_error.is_error())
         return inode_or_error.error();
 
@@ -386,7 +386,7 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
 #ifdef VFS_DEBUG
     dbg() << "VFS::mkdir: '" << p.basename() << "' in " << parent_inode.identifier();
 #endif
-    return parent_inode.fs().create_directory(parent_inode.identifier(), p.basename(), mode, Process::current->uid(), Process::current->gid());
+    return parent_inode.create_child(p.basename(), S_IFDIR | mode, 0, Process::current->uid(), Process::current->gid()).result();
 }
 
 KResult VFS::access(StringView path, int mode, Custody& base)
@@ -506,7 +506,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
             return result;
     }
 
-    auto result = new_parent_inode.add_child(old_inode.identifier(), new_basename, old_inode.mode());
+    auto result = new_parent_inode.add_child(old_inode, new_basename, old_inode.mode());
     if (result.is_error())
         return result;
 
@@ -593,7 +593,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
     if (parent_custody->is_readonly())
         return KResult(-EROFS);
 
-    return parent_inode.add_child(old_inode.identifier(), LexicalPath(new_path).basename(), old_inode.mode());
+    return parent_inode.add_child(old_inode, LexicalPath(new_path).basename(), old_inode.mode());
 }
 
 KResult VFS::unlink(StringView path, Custody& base)
@@ -650,7 +650,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
 
     LexicalPath p(linkpath);
     dbg() << "VFS::symlink: '" << p.basename() << "' (-> '" << target << "') in " << parent_inode.identifier();
-    auto inode_or_error = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), 0120644, 0, 0, Process::current->uid(), Process::current->gid());
+    auto inode_or_error = parent_inode.create_child(p.basename(), S_IFLNK | 0644, 0, Process::current->uid(), Process::current->gid());
     if (inode_or_error.is_error())
         return inode_or_error.error();
     auto& inode = inode_or_error.value();
@@ -709,7 +709,7 @@ RefPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
 }
 
 VFS::Mount::Mount(FS& guest_fs, Custody* host_custody, int flags)
-    : m_guest(guest_fs.root_inode())
+    : m_guest(guest_fs.root_inode()->identifier())
     , m_guest_fs(guest_fs)
     , m_host_custody(host_custody)
     , m_flags(flags)
