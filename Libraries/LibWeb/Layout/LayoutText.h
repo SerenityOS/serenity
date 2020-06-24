@@ -50,7 +50,7 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
 
-    const StyleProperties& style() const { return parent()->style(); }
+    const StyleProperties& specified_style() const { return parent()->specified_style(); }
 
 private:
     void split_into_lines_by_rules(LayoutBlock& container, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);

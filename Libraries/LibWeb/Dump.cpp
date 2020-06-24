@@ -181,7 +181,7 @@ void dump_tree(const LayoutNode& layout_node)
         String value;
     };
     Vector<NameAndValue> properties;
-    layout_node.style().for_each_property([&](auto property_id, auto& value) {
+    layout_node.specified_style().for_each_property([&](auto property_id, auto& value) {
         properties.append({ CSS::string_from_property_id(property_id), value.to_string() });
     });
     quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });

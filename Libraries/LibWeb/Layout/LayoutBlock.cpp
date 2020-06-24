@@ -69,7 +69,7 @@ void LayoutBlock::layout_absolutely_positioned_descendant(LayoutBox& box)
 {
     box.layout(LayoutMode::Default);
     auto& box_model = box.box_model();
-    auto& style = box.style();
+    auto& style = box.specified_style();
     auto zero_value = Length::make_px(0);
 
     auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, Length::make_auto(), width());
@@ -164,7 +164,7 @@ void LayoutBlock::layout_contained_boxes(LayoutMode layout_mode)
     });
 
     if (layout_mode != LayoutMode::Default) {
-        auto specified_width = style().length_or_fallback(CSS::PropertyID::Width, Length::make_auto(), containing_block()->width());
+        auto specified_width = specified_style().length_or_fallback(CSS::PropertyID::Width, Length::make_auto(), containing_block()->width());
         if (specified_width.is_auto())
             set_width(content_width);
     }
@@ -188,8 +188,8 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
     }
 
     auto text_align = this->text_align();
-    float min_line_height = style().line_height(*this);
-    float line_spacing = min_line_height - style().font().glyph_height();
+    float min_line_height = specified_style().line_height(*this);
+    float line_spacing = min_line_height - specified_style().font().glyph_height();
     float content_height = 0;
     float max_linebox_width = 0;
 
@@ -277,7 +277,7 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
 
 void LayoutBlock::compute_width_for_absolutely_positioned_block()
 {
-    auto& style = this->style();
+    auto& style = this->specified_style();
     auto& containing_block = *this->containing_block();
     auto zero_value = Length::make_px(0);
 
@@ -424,7 +424,7 @@ void LayoutBlock::compute_width()
     if (is_absolutely_positioned())
         return compute_width_for_absolutely_positioned_block();
 
-    auto& style = this->style();
+    auto& style = this->specified_style();
     auto auto_value = Length::make_auto();
     auto zero_value = Length::make_px(0);
 
@@ -561,7 +561,7 @@ void LayoutBlock::compute_width()
 void LayoutBlock::place_block_level_replaced_element_in_normal_flow(LayoutReplaced& box)
 {
     ASSERT(!is_absolutely_positioned());
-    auto& style = box.style();
+    auto& style = box.specified_style();
     auto zero_value = Length::make_px(0);
     auto& containing_block = *this;
     auto& replaced_element_box_model = box.box_model();
@@ -616,7 +616,7 @@ LayoutBlock::ShrinkToFitResult LayoutBlock::calculate_shrink_to_fit_width()
 
 void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBlock& block)
 {
-    auto& style = block.style();
+    auto& style = block.specified_style();
     auto zero_value = Length::make_px(0);
     auto& containing_block = *this;
     auto& box = block.box_model();
@@ -672,7 +672,7 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
 
 void LayoutBlock::compute_height()
 {
-    auto& style = this->style();
+    auto& style = this->specified_style();
 
     auto specified_height = style.length_or_fallback(CSS::PropertyID::Height, Length::make_auto(), containing_block()->height());
     auto specified_max_height = style.length_or_fallback(CSS::PropertyID::MaxHeight, Length::make_auto(), containing_block()->height());
@@ -740,7 +740,7 @@ NonnullRefPtr<StyleProperties> LayoutBlock::style_for_anonymous_block() const
 {
     auto new_style = StyleProperties::create();
 
-    style().for_each_property([&](auto property_id, auto& value) {
+    specified_style().for_each_property([&](auto property_id, auto& value) {
         if (StyleResolver::is_inherited_property(property_id))
             new_style->set_property(property_id, value);
     });

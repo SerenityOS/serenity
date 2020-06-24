@@ -192,7 +192,7 @@ void Element::recompute_style()
     if (!parent_layout_node)
         return;
     ASSERT(parent_layout_node);
-    auto style = document().style_resolver().resolve_style(*this, &parent_layout_node->style());
+    auto style = document().style_resolver().resolve_style(*this, &parent_layout_node->specified_style());
     m_resolved_style = style;
     if (!layout_node()) {
         if (style->string_or_fallback(CSS::PropertyID::Display, "inline") == "none")
@@ -207,10 +207,10 @@ void Element::recompute_style()
     if (layout_node()->is_widget())
         return;
 
-    auto diff = compute_style_difference(layout_node()->style(), *style, document());
+    auto diff = compute_style_difference(layout_node()->specified_style(), *style, document());
     if (diff == StyleDifference::None)
         return;
-    layout_node()->set_style(*style);
+    layout_node()->set_specified_style(*style);
     if (diff == StyleDifference::NeedsRelayout) {
         document().force_layout();
         return;
@@ -239,7 +239,7 @@ NonnullRefPtr<StyleProperties> Element::computed_style()
             CSS::PropertyID::BorderRightWidth,
         };
         for (CSS::PropertyID id : box_model_metrics) {
-            auto prop = layout_node()->style().property(id);
+            auto prop = layout_node()->specified_style().property(id);
             if (prop.has_value())
                 properties->set_property(id, prop.value());
         }

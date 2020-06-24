@@ -68,14 +68,14 @@ const String& LayoutText::text_for_style(const StyleProperties& style) const
 void LayoutText::render_fragment(PaintContext& context, const LineBoxFragment& fragment) const
 {
     auto& painter = context.painter();
-    painter.set_font(style().font());
+    painter.set_font(specified_style().font());
 
-    auto background_color = style().property(CSS::PropertyID::BackgroundColor);
+    auto background_color = specified_style().property(CSS::PropertyID::BackgroundColor);
     if (background_color.has_value() && background_color.value()->is_color())
         painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), background_color.value()->to_color(document()));
 
-    auto color = style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
-    auto text_decoration = style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
+    auto color = specified_style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
+    auto text_decoration = specified_style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
 
     if (document().inspected_node() == &node())
         context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
@@ -85,7 +85,7 @@ void LayoutText::render_fragment(PaintContext& context, const LineBoxFragment& f
         painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), color);
 
     auto text = m_text_for_rendering;
-    auto text_transform = style().string_or_fallback(CSS::PropertyID::TextTransform, "none");
+    auto text_transform = specified_style().string_or_fallback(CSS::PropertyID::TextTransform, "none");
     if (text_transform == "uppercase")
         text = m_text_for_rendering.to_uppercase();
     if (text_transform == "lowercase")
@@ -149,7 +149,7 @@ void LayoutText::for_each_chunk(Callback callback, LayoutMode layout_mode, bool 
 
 void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode layout_mode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
 {
-    auto& font = style().font();
+    auto& font = specified_style().font();
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
 
     auto& line_boxes = container.line_boxes();
@@ -253,7 +253,7 @@ void LayoutText::split_into_lines(LayoutBlock& container, LayoutMode layout_mode
     bool do_collapse = true;
     bool do_wrap_lines = true;
     bool do_wrap_breaks = false;
-    auto white_space_prop = style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal");
+    auto white_space_prop = specified_style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal");
 
     if (white_space_prop == "nowrap") {
         do_collapse = true;

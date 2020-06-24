@@ -47,7 +47,7 @@ void LayoutListItem::layout(LayoutMode layout_mode)
 
     LayoutBlock::layout(layout_mode);
 
-    if (style().string_or_fallback(CSS::PropertyID::ListStyleType, "disc") == "none") {
+    if (specified_style().string_or_fallback(CSS::PropertyID::ListStyleType, "disc") == "none") {
         return;
     }
 

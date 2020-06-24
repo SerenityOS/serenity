@@ -79,7 +79,7 @@ int LineBoxFragment::text_index_at(float x) const
     if (!layout_node().is_text())
         return 0;
     auto& layout_text = to<LayoutText>(layout_node());
-    auto& font = layout_text.style().font();
+    auto& font = layout_text.specified_style().font();
     Utf8View view(text());
 
     float relative_x = x - absolute_x();
