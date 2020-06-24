@@ -150,9 +150,9 @@ const char* Ext2FS::class_name() const
     return "Ext2FS";
 }
 
-InodeIdentifier Ext2FS::root_inode() const
+NonnullRefPtr<Inode> Ext2FS::root_inode() const
 {
-    return { fsid(), EXT2_ROOT_INO };
+    return *get_inode({ fsid(), EXT2_ROOT_INO });
 }
 
 bool Ext2FS::find_block_containing_inode(unsigned inode, unsigned& block_index, unsigned& offset) const
@@ -935,7 +935,14 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
     return static_cast<size_t>(nwritten) == directory_data.size();
 }
 
-KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t mode)
+KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+{
+    if (mode & S_IFDIR)
+        return fs().create_directory(identifier(), name, mode, uid, gid);
+    return fs().create_inode(identifier(), name, mode, 0, dev, uid, gid);
+}
+
+KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
@@ -944,7 +951,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
         return KResult(-ENAMETOOLONG);
 
 #ifdef EXT2_DEBUG
-    dbg() << "Ext2FSInode::add_child(): Adding inode " << child_id.index() << " with name '" << name << "' and mode " << mode << " to directory " << index();
+    dbg() << "Ext2FSInode::add_child(): Adding inode " << child.index() << " with name '" << name << "' and mode " << mode << " to directory " << index();
 #endif
 
     Vector<FS::DirectoryEntry> entries;
@@ -966,17 +973,14 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
         return KResult(-EEXIST);
     }
 
-    auto child_inode = fs().get_inode(child_id);
-    if (child_inode) {
-        result = child_inode->increment_link_count();
-        if (result.is_error())
-            return result;
-    }
+    result = child.increment_link_count();
+    if (result.is_error())
+        return result;
 
-    entries.empend(name.characters_without_null_termination(), name.length(), child_id, to_ext2_file_type(mode));
+    entries.empend(name.characters_without_null_termination(), name.length(), child.identifier(), to_ext2_file_type(mode));
     bool success = write_directory(entries);
     if (success)
-        m_lookup_cache.set(name, child_id.index());
+        m_lookup_cache.set(name, child.index());
     return KSuccess;
 }
 
@@ -1405,11 +1409,6 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
         return KResult(-ENOSPC);
     }
 
-    // Try adding it to the directory first, in case the name is already in use.
-    auto result = parent_inode->add_child({ fsid(), inode_id }, name, mode);
-    if (result.is_error())
-        return result;
-
     auto blocks = allocate_blocks(group_index_from_inode(inode_id), needed_blocks);
     ASSERT(blocks.size() == needed_blocks);
 
@@ -1458,6 +1457,10 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     auto inode = get_inode({ fsid(), inode_id });
     // If we've already computed a block list, no sense in throwing it away.
     static_cast<Ext2FSInode&>(*inode).m_block_list = move(blocks);
+
+    auto result = parent_inode->add_child(*inode, name, mode);
+    ASSERT(result.is_success());
+
     return inode.release_nonnull();
 }
 
