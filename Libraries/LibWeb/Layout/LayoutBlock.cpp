@@ -74,53 +74,53 @@ void LayoutBlock::layout_absolutely_positioned_descendant(LayoutBox& box)
 
     auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, Length::make_auto(), width());
 
-    box_model.margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, Length::make_auto(), height());
-    box_model.margin().right = style.length_or_fallback(CSS::PropertyID::MarginRight, Length::make_auto(), width());
-    box_model.margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, Length::make_auto(), height());
-    box_model.margin().left = style.length_or_fallback(CSS::PropertyID::MarginLeft, Length::make_auto(), width());
+    box_model.margin.top = style.length_or_fallback(CSS::PropertyID::MarginTop, Length::make_auto(), height());
+    box_model.margin.right = style.length_or_fallback(CSS::PropertyID::MarginRight, Length::make_auto(), width());
+    box_model.margin.bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, Length::make_auto(), height());
+    box_model.margin.left = style.length_or_fallback(CSS::PropertyID::MarginLeft, Length::make_auto(), width());
 
-    box_model.offset().top = style.length_or_fallback(CSS::PropertyID::Top, Length::make_auto(), height());
-    box_model.offset().right = style.length_or_fallback(CSS::PropertyID::Right, Length::make_auto(), width());
-    box_model.offset().bottom = style.length_or_fallback(CSS::PropertyID::Bottom, Length::make_auto(), height());
-    box_model.offset().left = style.length_or_fallback(CSS::PropertyID::Left, Length::make_auto(), width());
+    box_model.offset.top = style.length_or_fallback(CSS::PropertyID::Top, Length::make_auto(), height());
+    box_model.offset.right = style.length_or_fallback(CSS::PropertyID::Right, Length::make_auto(), width());
+    box_model.offset.bottom = style.length_or_fallback(CSS::PropertyID::Bottom, Length::make_auto(), height());
+    box_model.offset.left = style.length_or_fallback(CSS::PropertyID::Left, Length::make_auto(), width());
 
-    if (box_model.offset().left.is_auto() && specified_width.is_auto() && box_model.offset().right.is_auto()) {
-        if (box_model.margin().left.is_auto())
-            box_model.margin().left = zero_value;
-        if (box_model.margin().right.is_auto())
-            box_model.margin().right = zero_value;
+    if (box_model.offset.left.is_auto() && specified_width.is_auto() && box_model.offset.right.is_auto()) {
+        if (box_model.margin.left.is_auto())
+            box_model.margin.left = zero_value;
+        if (box_model.margin.right.is_auto())
+            box_model.margin.right = zero_value;
     }
 
     Gfx::FloatPoint used_offset;
 
-    float x_offset = box_model.offset().left.to_px(box)
+    float x_offset = box_model.offset.left.to_px(box)
         + box_model.border_box(box).left
-        - box_model.offset().right.to_px(box)
+        - box_model.offset.right.to_px(box)
         - box_model.border_box(box).right;
 
-    float y_offset = box_model.offset().top.to_px(box)
+    float y_offset = box_model.offset.top.to_px(box)
         + box_model.border_box(box).top
-        - box_model.offset().bottom.to_px(box)
+        - box_model.offset.bottom.to_px(box)
         - box_model.border_box(box).bottom;
 
-    bool has_left_side_constraints = !box_model.offset().left.is_auto() || !box_model.margin().left.is_auto();
-    bool has_right_side_constraints = !box_model.offset().right.is_auto() || !box_model.margin().right.is_auto();
+    bool has_left_side_constraints = !box_model.offset.left.is_auto() || !box_model.margin.left.is_auto();
+    bool has_right_side_constraints = !box_model.offset.right.is_auto() || !box_model.margin.right.is_auto();
 
     if (has_left_side_constraints && has_right_side_constraints) {
         // If both 'left' and 'right' are set, we will have stretched the width to accomodate both.
-        x_offset += box_model.offset().right.to_px(box);
+        x_offset += box_model.offset.right.to_px(box);
     }
 
     if (has_left_side_constraints) {
-        used_offset.set_x(x_offset + box_model.margin().left.to_px(box));
+        used_offset.set_x(x_offset + box_model.margin.left.to_px(box));
     } else if (has_right_side_constraints) {
-        used_offset.set_x(width() + x_offset - box.width() - box_model.margin().right.to_px(box));
+        used_offset.set_x(width() + x_offset - box.width() - box_model.margin.right.to_px(box));
     }
 
-    if (!box_model.offset().top.is_auto()) {
-        used_offset.set_y(y_offset + box_model.margin().top.to_px(box));
-    } else if (!box_model.offset().bottom.is_auto()) {
-        used_offset.set_y(height() + y_offset - box.height() - box_model.margin().bottom.to_px(box));
+    if (!box_model.offset.top.is_auto()) {
+        used_offset.set_y(y_offset + box_model.margin.top.to_px(box));
+    } else if (!box_model.offset.bottom.is_auto()) {
+        used_offset.set_y(height() + y_offset - box.height() - box_model.margin.bottom.to_px(box));
     }
 
     box.set_offset(used_offset);
@@ -411,12 +411,12 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
 
     set_width(used_width.to_px(*this));
 
-    box_model().margin().left = margin_left;
-    box_model().margin().right = margin_right;
-    box_model().border().left = border_left;
-    box_model().border().right = border_right;
-    box_model().padding().left = padding_left;
-    box_model().padding().right = padding_right;
+    box_model().margin.left = margin_left;
+    box_model().margin.right = margin_right;
+    box_model().border.left = border_left;
+    box_model().border.right = border_right;
+    box_model().padding.left = padding_left;
+    box_model().padding.right = padding_right;
 }
 
 void LayoutBlock::compute_width()
@@ -550,12 +550,12 @@ void LayoutBlock::compute_width()
     }
 
     set_width(used_width.to_px(*this));
-    box_model().margin().left = margin_left;
-    box_model().margin().right = margin_right;
-    box_model().border().left = border_left;
-    box_model().border().right = border_right;
-    box_model().padding().left = padding_left;
-    box_model().padding().right = padding_right;
+    box_model().margin.left = margin_left;
+    box_model().margin.right = margin_right;
+    box_model().border.left = border_left;
+    box_model().border.right = border_right;
+    box_model().padding.left = padding_left;
+    box_model().padding.right = padding_right;
 }
 
 void LayoutBlock::place_block_level_replaced_element_in_normal_flow(LayoutReplaced& box)
@@ -566,19 +566,19 @@ void LayoutBlock::place_block_level_replaced_element_in_normal_flow(LayoutReplac
     auto& containing_block = *this;
     auto& replaced_element_box_model = box.box_model();
 
-    replaced_element_box_model.margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
-    replaced_element_box_model.margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
-    replaced_element_box_model.border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
-    replaced_element_box_model.border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
-    replaced_element_box_model.padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
-    replaced_element_box_model.padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
+    replaced_element_box_model.margin.top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
+    replaced_element_box_model.margin.bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
+    replaced_element_box_model.border.top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
+    replaced_element_box_model.border.bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
+    replaced_element_box_model.padding.top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
+    replaced_element_box_model.padding.bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
 
-    float x = replaced_element_box_model.margin().left.to_px(*this)
-        + replaced_element_box_model.border().left.to_px(*this)
-        + replaced_element_box_model.padding().left.to_px(*this)
-        + replaced_element_box_model.offset().left.to_px(*this);
+    float x = replaced_element_box_model.margin.left.to_px(*this)
+        + replaced_element_box_model.border.left.to_px(*this)
+        + replaced_element_box_model.padding.left.to_px(*this)
+        + replaced_element_box_model.offset.left.to_px(*this);
 
-    float y = replaced_element_box_model.margin_box(*this).top + box_model().offset().top.to_px(*this);
+    float y = replaced_element_box_model.margin_box(*this).top + box_model().offset.top.to_px(*this);
 
     box.set_offset(x, y);
 }
@@ -621,24 +621,24 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
     auto& containing_block = *this;
     auto& box = block.box_model();
 
-    box.margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
-    box.margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
-    box.border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
-    box.border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
-    box.padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
-    box.padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
+    box.margin.top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value, containing_block.width());
+    box.margin.bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value, containing_block.width());
+    box.border.top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
+    box.border.bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
+    box.padding.top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value, containing_block.width());
+    box.padding.bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value, containing_block.width());
 
-    float x = box.margin().left.to_px(*this)
-        + box.border().left.to_px(*this)
-        + box.padding().left.to_px(*this)
-        + box.offset().left.to_px(*this);
+    float x = box.margin.left.to_px(*this)
+        + box.border.left.to_px(*this)
+        + box.padding.left.to_px(*this)
+        + box.offset.left.to_px(*this);
 
     if (text_align() == CSS::TextAlign::VendorSpecificCenter) {
         x = (containing_block.width() / 2) - block.width() / 2;
     }
 
     float y = box.margin_box(*this).top
-        + box.offset().top.to_px(*this);
+        + box.offset.top.to_px(*this);
 
     auto* relevant_sibling = block.previous_sibling();
     while (relevant_sibling != nullptr) {
@@ -652,8 +652,8 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
         y += relevant_sibling->effective_offset().y() + relevant_sibling->height();
 
         // Collapse top margin with bottom margin of previous sibling if necessary
-        float previous_sibling_margin_bottom = sibling_box.margin().bottom.to_px(*relevant_sibling);
-        float my_margin_top = box.margin().top.to_px(*this);
+        float previous_sibling_margin_bottom = sibling_box.margin.bottom.to_px(*relevant_sibling);
+        float my_margin_top = box.margin.top.to_px(*this);
 
         if (my_margin_top < 0 || previous_sibling_margin_bottom < 0) {
             // Negative margins present.
@@ -679,12 +679,12 @@ void LayoutBlock::compute_height()
 
     auto& containing_block = *this->containing_block();
 
-    box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, Length::make_px(0), containing_block.width());
-    box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, Length::make_px(0), containing_block.width());
-    box_model().border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, Length::make_px(0));
-    box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, Length::make_px(0));
-    box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, Length::make_px(0), containing_block.width());
-    box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, Length::make_px(0), containing_block.width());
+    box_model().margin.top = style.length_or_fallback(CSS::PropertyID::MarginTop, Length::make_px(0), containing_block.width());
+    box_model().margin.bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, Length::make_px(0), containing_block.width());
+    box_model().border.top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, Length::make_px(0));
+    box_model().border.bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, Length::make_px(0));
+    box_model().padding.top = style.length_or_fallback(CSS::PropertyID::PaddingTop, Length::make_px(0), containing_block.width());
+    box_model().padding.bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, Length::make_px(0), containing_block.width());
 
     if (!specified_height.is_auto()) {
         float used_height = specified_height.to_px(*this);
