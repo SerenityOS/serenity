@@ -53,6 +53,8 @@ const char* Length::unit_name() const
         return "rem";
     case Type::Auto:
         return "auto";
+    case Type::Undefined:
+        return "undefined";
     }
     ASSERT_NOT_REACHED();
 }
