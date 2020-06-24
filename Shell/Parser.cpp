@@ -161,7 +161,7 @@ RefPtr<AST::Node> Parser::parse_sequence()
         if (peek() == '&') {
             consume();
             if (auto expr = parse_sequence()) {
-                return create<AST::And>(move(execute_pipe_seq), move(expr)); // And
+                return create<AST::And>(move(execute_pipe_seq), create<AST::Execute>(move(expr))); // And
             }
             return execute_pipe_seq;
         }
@@ -181,7 +181,7 @@ RefPtr<AST::Node> Parser::parse_sequence()
         }
         consume();
         if (auto expr = parse_sequence()) {
-            return create<AST::Or>(move(execute_pipe_seq), move(expr)); // Or
+            return create<AST::Or>(move(execute_pipe_seq), create<AST::Execute>(move(expr))); // Or
         }
         putback();
         return execute_pipe_seq;

@@ -688,6 +688,9 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
 {
     RefPtr<Job> job;
 
+    if (m_command->would_execute())
+        return m_command->run(shell);
+
     auto initial_commands = m_command->run(shell)->resolve_as_commands(shell);
     decltype(initial_commands) commands;
 

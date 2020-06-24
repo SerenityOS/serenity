@@ -330,6 +330,7 @@ public:
     virtual bool is_syntax_error() const { return m_is_syntax_error; }
 
     virtual bool is_list() const { return false; }
+    virtual bool would_execute() const { return false; }
 
     const Position& position() const { return m_position; }
     void set_is_syntax_error() { m_is_syntax_error = true; }
@@ -365,6 +366,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "And"; }
+    virtual bool would_execute() const override { return true; }
 
     RefPtr<Node> m_left;
     RefPtr<Node> m_right;
@@ -585,6 +587,7 @@ private:
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, RefPtr<Node> matching_node) override;
     virtual String class_name() const override { return "Execute"; }
     virtual bool is_execute() const override { return true; }
+    virtual bool would_execute() const override { return true; }
 
     RefPtr<Node> m_command;
     bool m_capture_stdout { false };
@@ -619,7 +622,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Or"; }
-    virtual bool is_list() const override { return true; }
+    virtual bool would_execute() const override { return true; }
 
     RefPtr<Node> m_left;
     RefPtr<Node> m_right;
