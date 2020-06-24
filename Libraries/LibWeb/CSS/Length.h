@@ -40,7 +40,6 @@ public:
         Rem,
     };
 
-    Length() { }
     Length(int value, Type type)
         : m_type(type)
         , m_value(value)
@@ -51,6 +50,9 @@ public:
         , m_value(value)
     {
     }
+
+    static Length make_auto() { return Length(0, Type::Auto); }
+    static Length make_px(float value) { return Length(value, Type::Px); }
 
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_absolute() const { return m_type == Type::Px; }
