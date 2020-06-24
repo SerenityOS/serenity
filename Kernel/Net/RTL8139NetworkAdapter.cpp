@@ -184,6 +184,8 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
         int status = in16(REG_ISR);
         out16(REG_ISR, status);
 
+        m_entropy_source.add_random_event(status);
+
 #ifdef RTL8139_DEBUG
         klog() << "RTL8139NetworkAdapter::handle_irq status=0x" << String::format("%x", status);
 #endif
