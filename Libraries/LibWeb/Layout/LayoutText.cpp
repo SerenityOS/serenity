@@ -59,7 +59,7 @@ const String& LayoutText::text_for_style(const StyleProperties& style) const
 {
     static String one_space = " ";
     if (is_all_whitespace(node().data())) {
-        if (style.string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "normal")
+        if (style.white_space().value_or(CSS::WhiteSpace::Normal) == CSS::WhiteSpace::Normal)
             return one_space;
     }
     return node().data();
