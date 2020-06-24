@@ -34,12 +34,14 @@ namespace Web {
 class Length {
 public:
     enum class Type {
+        Undefined,
         Auto,
         Px,
         Em,
         Rem,
     };
 
+    Length() { }
     Length(int value, Type type)
         : m_type(type)
         , m_value(value)
@@ -54,6 +56,7 @@ public:
     static Length make_auto() { return Length(0, Type::Auto); }
     static Length make_px(float value) { return Length(value, Type::Px); }
 
+    bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_absolute() const { return m_type == Type::Px; }
     bool is_relative() const { return m_type == Type::Em || m_type == Type::Rem; }
@@ -68,6 +71,7 @@ public:
             return 0;
         case Type::Px:
             return m_value;
+        case Type::Undefined:
         default:
             ASSERT_NOT_REACHED();
         }
@@ -85,7 +89,7 @@ private:
 
     const char* unit_name() const;
 
-    Type m_type { Type::Auto };
+    Type m_type { Type::Undefined };
     float m_value { 0 };
 };
 
