@@ -29,8 +29,8 @@
 
 namespace Web {
 
-LayoutTableCell::LayoutTableCell(const Element& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutBlock(&element, move(style))
+LayoutTableCell::LayoutTableCell(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutBlock(document, &element, move(style))
 {
 }
 

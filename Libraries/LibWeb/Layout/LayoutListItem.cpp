@@ -29,8 +29,8 @@
 
 namespace Web {
 
-LayoutListItem::LayoutListItem(const Element& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutBlock(&element, move(style))
+LayoutListItem::LayoutListItem(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutBlock(document, &element, move(style))
 {
 }
 
@@ -52,7 +52,7 @@ void LayoutListItem::layout(LayoutMode layout_mode)
     }
 
     if (!m_marker) {
-        m_marker = adopt(*new LayoutListItemMarker);
+        m_marker = adopt(*new LayoutListItemMarker(document()));
         if (first_child())
             m_marker->set_inline(first_child()->is_inline());
         append_child(*m_marker);

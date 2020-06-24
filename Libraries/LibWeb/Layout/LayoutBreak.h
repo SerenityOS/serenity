@@ -33,7 +33,7 @@ namespace Web {
 
 class LayoutBreak final : public LayoutNodeWithStyleAndBoxModelMetrics {
 public:
-    explicit LayoutBreak(const HTMLBRElement&);
+    LayoutBreak(Document&, const HTMLBRElement&);
     virtual ~LayoutBreak() override;
 
     const HTMLBRElement& node() const { return to<HTMLBRElement>(*LayoutNode::node()); }

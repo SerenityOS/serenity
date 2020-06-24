@@ -107,7 +107,7 @@ bool Element::has_class(const FlyString& class_name) const
     return false;
 }
 
-RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_style) const
+RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     const_cast<Element&>(*this).m_resolved_style = style;
@@ -120,21 +120,21 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
         return nullptr;
 
     if (display == CSS::Display::Block)
-        return adopt(*new LayoutBlock(this, move(style)));
+        return adopt(*new LayoutBlock(document(), this, move(style)));
     if (display == CSS::Display::Inline)
-        return adopt(*new LayoutInline(*this, move(style)));
+        return adopt(*new LayoutInline(document(), *this, move(style)));
     if (display == CSS::Display::ListItem)
-        return adopt(*new LayoutListItem(*this, move(style)));
+        return adopt(*new LayoutListItem(document(), *this, move(style)));
     if (display == CSS::Display::Table)
-        return adopt(*new LayoutTable(*this, move(style)));
+        return adopt(*new LayoutTable(document(), *this, move(style)));
     if (display == CSS::Display::TableRow)
-        return adopt(*new LayoutTableRow(*this, move(style)));
+        return adopt(*new LayoutTableRow(document(), *this, move(style)));
     if (display == CSS::Display::TableCell)
-        return adopt(*new LayoutTableCell(*this, move(style)));
+        return adopt(*new LayoutTableCell(document(), *this, move(style)));
     if (display == CSS::Display::TableRowGroup)
-        return adopt(*new LayoutTableRowGroup(*this, move(style)));
+        return adopt(*new LayoutTableRowGroup(document(), *this, move(style)));
     if (display == CSS::Display::InlineBlock) {
-        auto inline_block = adopt(*new LayoutBlock(this, move(style)));
+        auto inline_block = adopt(*new LayoutBlock(document(), this, move(style)));
         inline_block->set_inline(true);
         return inline_block;
     }

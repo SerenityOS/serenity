@@ -46,7 +46,7 @@ public:
     String type() const { return attribute(HTML::AttributeNames::type); }
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 
     ImageLoader m_image_loader;
     bool m_should_show_fallback_content { false };

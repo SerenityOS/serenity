@@ -31,8 +31,8 @@
 
 namespace Web {
 
-LayoutTableRowGroup::LayoutTableRowGroup(const Element& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutBlock(&element, move(style))
+LayoutTableRowGroup::LayoutTableRowGroup(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutBlock(document, &element, move(style))
 {
 }
 

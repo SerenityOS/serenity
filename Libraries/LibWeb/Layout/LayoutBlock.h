@@ -35,7 +35,7 @@ class Element;
 
 class LayoutBlock : public LayoutBox {
 public:
-    LayoutBlock(const Node*, NonnullRefPtr<StyleProperties>);
+    LayoutBlock(Document&, const Node*, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutBlock() override;
 
     virtual const char* class_name() const override { return "LayoutBlock"; }

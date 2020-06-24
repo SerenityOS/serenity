@@ -88,7 +88,7 @@ public:
     void set_class_name(const String& value) { set_attribute(HTML::AttributeNames::class_, value); }
 
 protected:
-    RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
+    RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 
 private:
     Attribute* find_attribute(const FlyString& name);

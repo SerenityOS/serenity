@@ -46,7 +46,7 @@ HTMLInputElement::~HTMLInputElement()
 {
 }
 
-RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties* parent_style) const
+RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties* parent_style)
 {
     ASSERT(document().frame());
     auto& frame = *document().frame();
@@ -97,7 +97,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties* p
         widget = text_box;
     }
 
-    return adopt(*new LayoutWidget(*this, *widget));
+    return adopt(*new LayoutWidget(document(), *this, *widget));
 }
 
 }

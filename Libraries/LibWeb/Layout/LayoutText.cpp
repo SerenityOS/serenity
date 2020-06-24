@@ -36,8 +36,8 @@
 
 namespace Web {
 
-LayoutText::LayoutText(const Text& text)
-    : LayoutNode(&text)
+LayoutText::LayoutText(Document& document, const Text& text)
+    : LayoutNode(document, &text)
 {
     set_inline(true);
 }

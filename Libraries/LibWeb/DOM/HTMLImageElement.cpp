@@ -68,12 +68,12 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
         m_image_loader.load(document().complete_url(value));
 }
 
-RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style) const
+RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new LayoutImage(*this, move(style), m_image_loader));
+    return adopt(*new LayoutImage(document(), *this, move(style), m_image_loader));
 }
 
 const Gfx::Bitmap* HTMLImageElement::bitmap() const

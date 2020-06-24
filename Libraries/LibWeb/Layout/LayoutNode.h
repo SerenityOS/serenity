@@ -101,8 +101,8 @@ public:
     const Node* node() const { return m_node; }
     Node* node() { return const_cast<Node*>(m_node); }
 
-    Document& document();
-    const Document& document() const;
+    Document& document() { return m_document; }
+    const Document& document() const { return m_document; }
 
     const Frame& frame() const;
     Frame& frame();
@@ -239,11 +239,12 @@ public:
     float font_size() const;
 
 protected:
-    explicit LayoutNode(const Node*);
+    LayoutNode(Document&, const Node*);
 
 private:
     friend class LayoutNodeWithStyle;
 
+    Document& m_document;
     const Node* m_node { nullptr };
 
     bool m_inline { false };
@@ -261,11 +262,12 @@ public:
 
     const ImmutableLayoutStyle& style() const { return static_cast<const ImmutableLayoutStyle&>(m_style); }
 
+    void apply_style(const StyleProperties&);
+
 protected:
-    explicit LayoutNodeWithStyle(const Node*, NonnullRefPtr<StyleProperties>);
+    LayoutNodeWithStyle(Document&, const Node*, NonnullRefPtr<StyleProperties>);
 
 private:
-    void apply_style(const StyleProperties&);
 
     LayoutStyle m_style;
 
@@ -280,8 +282,8 @@ public:
     const BoxModelMetrics& box_model() const { return m_box_model; }
 
 protected:
-    LayoutNodeWithStyleAndBoxModelMetrics(const Node* node, NonnullRefPtr<StyleProperties> style)
-        : LayoutNodeWithStyle(node, move(style))
+    LayoutNodeWithStyleAndBoxModelMetrics(Document& document, const Node* node, NonnullRefPtr<StyleProperties> style)
+        : LayoutNodeWithStyle(document, node, move(style))
     {
     }
 

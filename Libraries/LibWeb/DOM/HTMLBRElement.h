@@ -35,7 +35,7 @@ public:
     HTMLBRElement(Document&, const FlyString& tag_name);
     virtual ~HTMLBRElement() override;
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 };
 
 template<>

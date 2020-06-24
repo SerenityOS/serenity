@@ -35,7 +35,7 @@ class LineBoxFragment;
 
 class LayoutText : public LayoutNode {
 public:
-    explicit LayoutText(const Text&);
+    LayoutText(Document&, const Text&);
     virtual ~LayoutText() override;
 
     const Text& node() const { return static_cast<const Text&>(*LayoutNode::node()); }

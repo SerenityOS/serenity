@@ -35,7 +35,7 @@ public:
     HTMLIFrameElement(Document&, const FlyString& tag_name);
     virtual ~HTMLIFrameElement() override;
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 
     Frame* hosted_frame() { return m_hosted_frame; }
     const Frame* hosted_frame() const { return m_hosted_frame; }

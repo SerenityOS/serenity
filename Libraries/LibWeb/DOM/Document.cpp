@@ -267,7 +267,7 @@ void Document::update_layout()
     layout();
 }
 
-RefPtr<LayoutNode> Document::create_layout_node(const StyleProperties*) const
+RefPtr<LayoutNode> Document::create_layout_node(const StyleProperties*)
 {
     return adopt(*new LayoutDocument(*this, StyleProperties::create()));
 }

@@ -38,9 +38,9 @@ Text::~Text()
 {
 }
 
-RefPtr<LayoutNode> Text::create_layout_node(const StyleProperties*) const
+RefPtr<LayoutNode> Text::create_layout_node(const StyleProperties*)
 {
-    return adopt(*new LayoutText(*this));
+    return adopt(*new LayoutText(document(), *this));
 }
 
 }

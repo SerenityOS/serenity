@@ -55,12 +55,12 @@ unsigned HTMLCanvasElement::height() const
     return attribute(HTML::AttributeNames::height).to_uint().value_or(150);
 }
 
-RefPtr<LayoutNode> HTMLCanvasElement::create_layout_node(const StyleProperties* parent_style) const
+RefPtr<LayoutNode> HTMLCanvasElement::create_layout_node(const StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new LayoutCanvas(*this, move(style)));
+    return adopt(*new LayoutCanvas(document(), *this, move(style)));
 }
 
 CanvasRenderingContext2D* HTMLCanvasElement::get_context(String type)

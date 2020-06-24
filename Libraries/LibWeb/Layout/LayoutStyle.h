@@ -37,6 +37,12 @@ public:
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
 };
 
+struct BorderData {
+public:
+    Color color { Color::Transparent };
+    float width { 0 };
+};
+
 class LayoutStyle {
 public:
     Optional<int> z_index() const { return m_z_index; }
@@ -54,6 +60,11 @@ public:
     const LengthBox& margin() const { return m_margin; }
     const LengthBox& padding() const { return m_padding; }
 
+    const BorderData& border_left() const { return m_border_left; }
+    const BorderData& border_top() const { return m_border_top; }
+    const BorderData& border_right() const { return m_border_right; }
+    const BorderData& border_bottom() const { return m_border_bottom; }
+
 protected:
     Optional<int> m_z_index;
     CSS::TextAlign m_text_align;
@@ -68,6 +79,10 @@ protected:
     LengthBox m_offset;
     LengthBox m_margin;
     LengthBox m_padding;
+    BorderData m_border_left;
+    BorderData m_border_top;
+    BorderData m_border_right;
+    BorderData m_border_bottom;
 };
 
 class ImmutableLayoutStyle final : public LayoutStyle {
@@ -88,6 +103,10 @@ public:
     void set_offset(const LengthBox& offset) { m_offset = offset; }
     void set_margin(const LengthBox& margin) { m_margin = margin; }
     void set_padding(const LengthBox& padding) { m_padding = padding; }
+    BorderData& border_left() { return m_border_left; }
+    BorderData& border_top() { return m_border_top; }
+    BorderData& border_right() { return m_border_right; }
+    BorderData& border_bottom() { return m_border_bottom; }
 };
 
 }

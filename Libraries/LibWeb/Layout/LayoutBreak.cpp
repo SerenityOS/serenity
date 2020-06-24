@@ -29,8 +29,8 @@
 
 namespace Web {
 
-LayoutBreak::LayoutBreak(const HTMLBRElement& element)
-    : LayoutNodeWithStyleAndBoxModelMetrics(&element, StyleProperties::create())
+LayoutBreak::LayoutBreak(Document& document, const HTMLBRElement& element)
+    : LayoutNodeWithStyleAndBoxModelMetrics(document, &element, StyleProperties::create())
 {
     set_inline(true);
 }
