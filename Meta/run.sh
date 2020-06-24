@@ -76,12 +76,8 @@ elif [ "$1" = "qgrub" ]; then
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh
 elif [ "$1" = "q35_cmd" ]; then
-    SERENITY_KERNEL_CMDLINE=""
-    # FIXME: Someone who knows sh syntax better, please help:
-    for _ in $(seq 2 $#); do
-        shift
-        SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE $1"
-    done
+    shift
+    SERENITY_KERNEL_CMDLINE="$*"
     echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
     # ./run: qemu with SerenityOS with custom commandline
     "$SERENITY_QEMU_BIN" \
@@ -92,12 +88,8 @@ elif [ "$1" = "q35_cmd" ]; then
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$1" = "qcmd" ]; then
-    SERENITY_KERNEL_CMDLINE=""
-    # FIXME: Someone who knows sh syntax better, please help:
-    for _ in $(seq 2 $#); do
-        shift
-        SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE $1"
-    done
+    shift
+    SERENITY_KERNEL_CMDLINE="$*"
     echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
     # ./run: qemu with SerenityOS with custom commandline
     "$SERENITY_QEMU_BIN" \
