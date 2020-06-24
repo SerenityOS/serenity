@@ -31,37 +31,24 @@
 
 namespace Web {
 
-class BoxModelMetrics {
+struct PixelBox {
+    float top;
+    float right;
+    float bottom;
+    float left;
+};
+
+struct BoxModelMetrics {
 public:
-    BoxModelMetrics();
-    ~BoxModelMetrics();
-
-    LengthBox& margin() { return m_margin; }
-    LengthBox& padding() { return m_padding; }
-    LengthBox& border() { return m_border; }
-    LengthBox& offset() { return m_offset; }
-
-    const LengthBox& margin() const { return m_margin; }
-    const LengthBox& padding() const { return m_padding; }
-    const LengthBox& border() const { return m_border; }
-    const LengthBox& offset() const { return m_offset; }
-
-    struct PixelBox {
-        float top;
-        float right;
-        float bottom;
-        float left;
-    };
+    LengthBox margin;
+    LengthBox padding;
+    LengthBox border;
+    LengthBox offset;
 
     PixelBox margin_box(const LayoutNode&) const;
     PixelBox padding_box(const LayoutNode&) const;
     PixelBox border_box(const LayoutNode&) const;
 
-private:
-    LengthBox m_margin;
-    LengthBox m_padding;
-    LengthBox m_border;
-    LengthBox m_offset;
 };
 
 }

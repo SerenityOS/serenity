@@ -196,10 +196,10 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
         context.painter().translate(context.scroll_offset());
 
     Gfx::FloatRect padded_rect;
-    padded_rect.set_x(absolute_x() - box_model().padding().left.to_px(*this));
-    padded_rect.set_width(width() + box_model().padding().left.to_px(*this) + box_model().padding().right.to_px(*this));
-    padded_rect.set_y(absolute_y() - box_model().padding().top.to_px(*this));
-    padded_rect.set_height(height() + box_model().padding().top.to_px(*this) + box_model().padding().bottom.to_px(*this));
+    padded_rect.set_x(absolute_x() - box_model().padding.left.to_px(*this));
+    padded_rect.set_width(width() + box_model().padding.left.to_px(*this) + box_model().padding.right.to_px(*this));
+    padded_rect.set_y(absolute_y() - box_model().padding.top.to_px(*this));
+    padded_rect.set_height(height() + box_model().padding.top.to_px(*this) + box_model().padding.bottom.to_px(*this));
 
     if (phase == PaintPhase::Background && !is_body()) {
         // FIXME: We should paint the body here too, but that currently happens at the view layer.
@@ -219,10 +219,10 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Border) {
         Gfx::FloatRect bordered_rect;
-        bordered_rect.set_x(padded_rect.x() - box_model().border().left.to_px(*this));
-        bordered_rect.set_width(padded_rect.width() + box_model().border().left.to_px(*this) + box_model().border().right.to_px(*this));
-        bordered_rect.set_y(padded_rect.y() - box_model().border().top.to_px(*this));
-        bordered_rect.set_height(padded_rect.height() + box_model().border().top.to_px(*this) + box_model().border().bottom.to_px(*this));
+        bordered_rect.set_x(padded_rect.x() - box_model().border.left.to_px(*this));
+        bordered_rect.set_width(padded_rect.width() + box_model().border.left.to_px(*this) + box_model().border.right.to_px(*this));
+        bordered_rect.set_y(padded_rect.y() - box_model().border.top.to_px(*this));
+        bordered_rect.set_height(padded_rect.height() + box_model().border.top.to_px(*this) + box_model().border.bottom.to_px(*this));
 
         paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftWidth);
         paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightWidth);

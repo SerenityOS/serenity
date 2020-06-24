@@ -28,41 +28,33 @@
 
 namespace Web {
 
-BoxModelMetrics::BoxModelMetrics()
-{
-}
-
-BoxModelMetrics::~BoxModelMetrics()
-{
-}
-
-BoxModelMetrics::PixelBox BoxModelMetrics::margin_box(const LayoutNode& layout_node) const
+PixelBox BoxModelMetrics::margin_box(const LayoutNode& layout_node) const
 {
     return {
-        m_margin.top.to_px(layout_node) + m_border.top.to_px(layout_node) + m_padding.top.to_px(layout_node),
-        m_margin.right.to_px(layout_node) + m_border.right.to_px(layout_node) + m_padding.right.to_px(layout_node),
-        m_margin.bottom.to_px(layout_node) + m_border.bottom.to_px(layout_node) + m_padding.bottom.to_px(layout_node),
-        m_margin.left.to_px(layout_node) + m_border.left.to_px(layout_node) + m_padding.left.to_px(layout_node),
+        margin.top.to_px(layout_node) + border.top.to_px(layout_node) + padding.top.to_px(layout_node),
+        margin.right.to_px(layout_node) + border.right.to_px(layout_node) + padding.right.to_px(layout_node),
+        margin.bottom.to_px(layout_node) + border.bottom.to_px(layout_node) + padding.bottom.to_px(layout_node),
+        margin.left.to_px(layout_node) + border.left.to_px(layout_node) + padding.left.to_px(layout_node),
     };
 }
 
-BoxModelMetrics::PixelBox BoxModelMetrics::padding_box(const LayoutNode& layout_node) const
+PixelBox BoxModelMetrics::padding_box(const LayoutNode& layout_node) const
 {
     return {
-        m_padding.top.to_px(layout_node),
-        m_padding.right.to_px(layout_node),
-        m_padding.bottom.to_px(layout_node),
-        m_padding.left.to_px(layout_node),
+        padding.top.to_px(layout_node),
+        padding.right.to_px(layout_node),
+        padding.bottom.to_px(layout_node),
+        padding.left.to_px(layout_node),
     };
 }
 
-BoxModelMetrics::PixelBox BoxModelMetrics::border_box(const LayoutNode& layout_node) const
+PixelBox BoxModelMetrics::border_box(const LayoutNode& layout_node) const
 {
     return {
-        m_border.top.to_px(layout_node) + m_padding.top.to_px(layout_node),
-        m_border.right.to_px(layout_node) + m_padding.right.to_px(layout_node),
-        m_border.bottom.to_px(layout_node) + m_padding.bottom.to_px(layout_node),
-        m_border.left.to_px(layout_node) + m_padding.left.to_px(layout_node),
+        border.top.to_px(layout_node) + padding.top.to_px(layout_node),
+        border.right.to_px(layout_node) + padding.right.to_px(layout_node),
+        border.bottom.to_px(layout_node) + padding.bottom.to_px(layout_node),
+        border.left.to_px(layout_node) + padding.left.to_px(layout_node),
     };
 }
 
