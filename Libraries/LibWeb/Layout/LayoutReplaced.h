@@ -33,7 +33,7 @@ namespace Web {
 
 class LayoutReplaced : public LayoutBox {
 public:
-    LayoutReplaced(const Element&, NonnullRefPtr<StyleProperties>);
+    LayoutReplaced(Document&, const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutReplaced() override;
 
     const Element& node() const { return to<Element>(*LayoutNode::node()); }

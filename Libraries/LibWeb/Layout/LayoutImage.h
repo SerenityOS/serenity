@@ -35,7 +35,7 @@ class HTMLImageElement;
 
 class LayoutImage : public LayoutReplaced {
 public:
-    LayoutImage(const Element&, NonnullRefPtr<StyleProperties>, const ImageLoader&);
+    LayoutImage(Document&, const Element&, NonnullRefPtr<StyleProperties>, const ImageLoader&);
     virtual ~LayoutImage() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;

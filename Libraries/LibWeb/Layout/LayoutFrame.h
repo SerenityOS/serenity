@@ -33,7 +33,7 @@ namespace Web {
 
 class LayoutFrame final : public LayoutReplaced {
 public:
-    LayoutFrame(const Element&, NonnullRefPtr<StyleProperties>);
+    LayoutFrame(Document&, const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutFrame() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;

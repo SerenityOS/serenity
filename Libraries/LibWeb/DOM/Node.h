@@ -85,7 +85,7 @@ public:
     RefPtr<Node> append_child(NonnullRefPtr<Node>, bool notify = true);
     RefPtr<Node> insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify = true);
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style);
 
     virtual FlyString node_name() const = 0;
 

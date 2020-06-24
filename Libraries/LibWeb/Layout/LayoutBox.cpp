@@ -33,32 +33,15 @@
 
 namespace Web {
 
-void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
+void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, const BorderData& border_data)
 {
-    auto border_width = specified_style().property(width_property_id);
-    if (!border_width.has_value())
-        return;
-
-    auto border_style = specified_style().property(style_property_id);
-    float width = border_width.value()->to_length().to_px(*this);
+    float width = border_data.width;
     if (width <= 0)
         return;
 
+    auto color = border_data.color;
+    auto border_style = specified_style().property(style_property_id);
     int int_width = max((int)width, 1);
-
-    Color color;
-    auto border_color = specified_style().property(color_property_id);
-    if (border_color.has_value()) {
-        color = border_color.value()->to_color(document());
-    } else {
-        // FIXME: This is basically CSS "currentColor" which should be handled elsewhere
-        //        in a much more reusable way.
-        auto current_color = specified_style().property(CSS::PropertyID::Color);
-        if (current_color.has_value())
-            color = current_color.value()->to_color(document());
-        else
-            color = Color::Black;
-    }
 
     auto first_point_for_edge = [](Edge edge, const Gfx::FloatRect& rect) {
         switch (edge) {
@@ -136,20 +119,13 @@ void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatR
         context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1, line_style);
     };
 
-    auto width_for = [&](CSS::PropertyID property_id) -> float {
-        auto width = specified_style().property(property_id);
-        if (!width.has_value())
-            return 0;
-        return width.value()->to_length().to_px(*this);
-    };
-
     float p1_step = 0;
     float p2_step = 0;
 
     switch (edge) {
     case Edge::Top:
-        p1_step = width_for(CSS::PropertyID::BorderLeftWidth) / (float)int_width;
-        p2_step = width_for(CSS::PropertyID::BorderRightWidth) / (float)int_width;
+        p1_step = style().border_left().width / (float)int_width;
+        p2_step = style().border_right().width / (float)int_width;
         for (int i = 0; i < int_width; ++i) {
             draw_line(p1, p2);
             p1.move_by(p1_step, 1);
@@ -157,8 +133,8 @@ void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatR
         }
         break;
     case Edge::Right:
-        p1_step = width_for(CSS::PropertyID::BorderTopWidth) / (float)int_width;
-        p2_step = width_for(CSS::PropertyID::BorderBottomWidth) / (float)int_width;
+        p1_step = style().border_top().width / (float)int_width;
+        p2_step = style().border_bottom().width / (float)int_width;
         for (int i = int_width - 1; i >= 0; --i) {
             draw_line(p1, p2);
             p1.move_by(-1, p1_step);
@@ -166,8 +142,8 @@ void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatR
         }
         break;
     case Edge::Bottom:
-        p1_step = width_for(CSS::PropertyID::BorderLeftWidth) / (float)int_width;
-        p2_step = width_for(CSS::PropertyID::BorderRightWidth) / (float)int_width;
+        p1_step = style().border_left().width / (float)int_width;
+        p2_step = style().border_right().width / (float)int_width;
         for (int i = int_width - 1; i >= 0; --i) {
             draw_line(p1, p2);
             p1.move_by(p1_step, -1);
@@ -175,8 +151,8 @@ void LayoutBox::paint_border(PaintContext& context, Edge edge, const Gfx::FloatR
         }
         break;
     case Edge::Left:
-        p1_step = width_for(CSS::PropertyID::BorderTopWidth) / (float)int_width;
-        p2_step = width_for(CSS::PropertyID::BorderBottomWidth) / (float)int_width;
+        p1_step = style().border_top().width / (float)int_width;
+        p2_step = style().border_bottom().width / (float)int_width;
         for (int i = 0; i < int_width; ++i) {
             draw_line(p1, p2);
             p1.move_by(1, p1_step);
@@ -224,10 +200,10 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
         bordered_rect.set_y(padded_rect.y() - box_model().border.top.to_px(*this));
         bordered_rect.set_height(padded_rect.height() + box_model().border.top.to_px(*this) + box_model().border.bottom.to_px(*this));
 
-        paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftWidth);
-        paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightWidth);
-        paint_border(context, Edge::Top, bordered_rect, CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopWidth);
-        paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomWidth);
+        paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, style().border_left());
+        paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, style().border_right());
+        paint_border(context, Edge::Top, bordered_rect, CSS::PropertyID::BorderTopStyle, style().border_top());
+        paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, style().border_bottom());
     }
 
     LayoutNodeWithStyleAndBoxModelMetrics::paint(context, phase);

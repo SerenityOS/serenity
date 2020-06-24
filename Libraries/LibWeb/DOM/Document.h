@@ -145,7 +145,7 @@ public:
     void set_quirks_mode(bool mode) { m_quirks_mode = mode; }
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 
     OwnPtr<StyleResolver> m_style_resolver;
     RefPtr<CSS::StyleSheetList> m_style_sheets;

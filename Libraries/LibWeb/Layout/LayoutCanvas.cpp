@@ -31,8 +31,8 @@
 
 namespace Web {
 
-LayoutCanvas::LayoutCanvas(const HTMLCanvasElement& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutReplaced(element, move(style))
+LayoutCanvas::LayoutCanvas(Document& document, const HTMLCanvasElement& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutReplaced(document, element, move(style))
 {
 }
 

@@ -30,8 +30,8 @@
 
 namespace Web {
 
-LayoutReplaced::LayoutReplaced(const Element& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutBox(&element, move(style))
+LayoutReplaced::LayoutReplaced(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutBox(document, &element, move(style))
 {
     // FIXME: Allow non-inline replaced elements.
     set_inline(true);

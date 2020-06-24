@@ -29,8 +29,8 @@
 
 namespace Web {
 
-LayoutListItemMarker::LayoutListItemMarker()
-    : LayoutBox(nullptr, StyleProperties::create())
+LayoutListItemMarker::LayoutListItemMarker(Document& document)
+    : LayoutBox(document, nullptr, StyleProperties::create())
 {
 }
 

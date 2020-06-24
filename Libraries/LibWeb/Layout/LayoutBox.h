@@ -70,8 +70,8 @@ public:
     virtual void paint(PaintContext&, PaintPhase) override;
 
 protected:
-    LayoutBox(const Node* node, NonnullRefPtr<StyleProperties> style)
-        : LayoutNodeWithStyleAndBoxModelMetrics(node, move(style))
+    LayoutBox(Document& document, const Node* node, NonnullRefPtr<StyleProperties> style)
+        : LayoutNodeWithStyleAndBoxModelMetrics(document, node, move(style))
     {
     }
 
@@ -86,7 +86,7 @@ private:
         Bottom,
         Left,
     };
-    void paint_border(PaintContext&, Edge, const Gfx::FloatRect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
+    void paint_border(PaintContext&, Edge, const Gfx::FloatRect&, CSS::PropertyID style_property_id, const BorderData&);
 
     Gfx::FloatPoint m_offset;
     Gfx::FloatSize m_size;

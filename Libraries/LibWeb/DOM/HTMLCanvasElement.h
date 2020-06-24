@@ -51,7 +51,7 @@ public:
     unsigned height() const;
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 
     RefPtr<Gfx::Bitmap> m_bitmap;
     RefPtr<CanvasRenderingContext2D> m_context;

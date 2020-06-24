@@ -30,8 +30,8 @@
 
 namespace Web {
 
-LayoutTableRow::LayoutTableRow(const Element& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutBox(&element, move(style))
+LayoutTableRow::LayoutTableRow(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutBox(document, &element, move(style))
 {
 }
 

@@ -50,10 +50,10 @@ HTMLIFrameElement::~HTMLIFrameElement()
 {
 }
 
-RefPtr<LayoutNode> HTMLIFrameElement::create_layout_node(const StyleProperties* parent_style) const
+RefPtr<LayoutNode> HTMLIFrameElement::create_layout_node(const StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
-    return adopt(*new LayoutFrame(*this, move(style)));
+    return adopt(*new LayoutFrame(document(), *this, move(style)));
 }
 
 void HTMLIFrameElement::document_did_attach_to_frame(Frame& frame)

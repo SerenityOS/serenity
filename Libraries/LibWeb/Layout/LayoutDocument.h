@@ -33,7 +33,7 @@ namespace Web {
 
 class LayoutDocument final : public LayoutBlock {
 public:
-    explicit LayoutDocument(const Document&, NonnullRefPtr<StyleProperties>);
+    explicit LayoutDocument(Document&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutDocument() override;
 
     const Document& node() const { return static_cast<const Document&>(*LayoutNode::node()); }

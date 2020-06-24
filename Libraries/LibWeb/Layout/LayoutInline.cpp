@@ -30,8 +30,8 @@
 
 namespace Web {
 
-LayoutInline::LayoutInline(const Element& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutNodeWithStyleAndBoxModelMetrics(&element, move(style))
+LayoutInline::LayoutInline(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutNodeWithStyleAndBoxModelMetrics(document, &element, move(style))
 {
     set_inline(true);
 }

@@ -61,7 +61,7 @@ void HTMLObjectElement::parse_attribute(const FlyString& name, const String& val
         m_image_loader.load(document().complete_url(value));
 }
 
-RefPtr<LayoutNode> HTMLObjectElement::create_layout_node(const StyleProperties* parent_style) const
+RefPtr<LayoutNode> HTMLObjectElement::create_layout_node(const StyleProperties* parent_style)
 {
     if (m_should_show_fallback_content)
         return HTMLElement::create_layout_node(parent_style);
@@ -70,7 +70,7 @@ RefPtr<LayoutNode> HTMLObjectElement::create_layout_node(const StyleProperties* 
     if (style->display() == CSS::Display::None)
         return nullptr;
     if (m_image_loader.has_image())
-        return adopt(*new LayoutImage(*this, move(style), m_image_loader));
+        return adopt(*new LayoutImage(document(), *this, move(style), m_image_loader));
     return nullptr;
 }
 

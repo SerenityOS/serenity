@@ -38,9 +38,9 @@ HTMLBRElement::~HTMLBRElement()
 {
 }
 
-RefPtr<LayoutNode> HTMLBRElement::create_layout_node(const StyleProperties*) const
+RefPtr<LayoutNode> HTMLBRElement::create_layout_node(const StyleProperties*)
 {
-    return adopt(*new LayoutBreak(*this));
+    return adopt(*new LayoutBreak(document(), *this));
 }
 
 }
