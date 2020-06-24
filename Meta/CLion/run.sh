@@ -5,9 +5,10 @@ set -e
 : "${SERENITY_RAM_SIZE:='256M'}"
 export SERENITY_RAM_SIZE
 
-# set this to the Build directory in serenity
-: "${SERENITY_BUILD:='/mnt/c/Users/Ragnarok/serenity-project/serenity/Build'}"
-export SERENITY_BUILD
+# set SERENITY_ROOT to the path to the serenity directory
+: "${SERENITY_ROOT:='/mnt/c/Users/Ragnarok/serenity-project/serenity'}"
+: "${SERENITY_BUILD:="$SERENITY_ROOT/Build"}"
+export SERENITY_ROOT SERENITY_BUILD
 
 cd -P -- "$SERENITY_BUILD" || exit
 make install
