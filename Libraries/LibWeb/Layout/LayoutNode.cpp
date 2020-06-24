@@ -57,7 +57,7 @@ void LayoutNode::layout(LayoutMode layout_mode)
 
 bool LayoutNode::can_contain_boxes_with_position_absolute() const
 {
-    return position() != CSS::Position::Static || is_root();
+    return style().position() != CSS::Position::Static || is_root();
 }
 
 const LayoutBlock* LayoutNode::containing_block() const
@@ -72,7 +72,7 @@ const LayoutBlock* LayoutNode::containing_block() const
     if (is_text())
         return nearest_block_ancestor();
 
-    auto position = this->position();
+    auto position = style().position();
 
     if (position == CSS::Position::Absolute) {
         auto* ancestor = parent();
@@ -199,7 +199,7 @@ bool LayoutNode::is_absolutely_positioned() const
 {
     if (!has_style())
         return false;
-    auto position = this->position();
+    auto position = style().position();
     return position == CSS::Position::Absolute || position == CSS::Position::Fixed;
 }
 
@@ -207,7 +207,7 @@ bool LayoutNode::is_fixed_position() const
 {
     if (!has_style())
         return false;
-    auto position = this->position();
+    auto position = style().position();
     return position == CSS::Position::Fixed;
 }
 
@@ -223,8 +223,8 @@ void LayoutNodeWithStyle::apply_style(const StyleProperties& specified_style)
 {
     auto& style = static_cast<MutableLayoutStyle&>(m_style);
 
-    m_position = specified_style.position();
-    m_text_align = specified_style.text_align();
+    style.set_position(specified_style.position());
+    style.set_text_align(specified_style.text_align());
     style.set_z_index(specified_style.z_index());
 }
 

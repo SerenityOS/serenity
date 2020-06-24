@@ -192,8 +192,6 @@ public:
 
     const StyleProperties& specified_style() const;
     const ImmutableLayoutStyle& style() const;
-    CSS::Position position() const;
-    CSS::TextAlign text_align() const;
 
     LayoutNodeWithStyle* parent();
     const LayoutNodeWithStyle* parent() const;
@@ -263,9 +261,6 @@ public:
 
     const ImmutableLayoutStyle& style() const { return static_cast<const ImmutableLayoutStyle&>(m_style); }
 
-    CSS::Position position() const { return m_position; }
-    CSS::TextAlign text_align() const { return m_text_align; }
-
 protected:
     explicit LayoutNodeWithStyle(const Node*, NonnullRefPtr<StyleProperties>);
 
@@ -306,20 +301,6 @@ inline const ImmutableLayoutStyle& LayoutNode::style() const
     if (m_has_style)
         return static_cast<const LayoutNodeWithStyle*>(this)->style();
     return parent()->style();
-}
-
-inline CSS::Position LayoutNode::position() const
-{
-    if (m_has_style)
-        return static_cast<const LayoutNodeWithStyle*>(this)->position();
-    return parent()->position();
-}
-
-inline CSS::TextAlign LayoutNode::text_align() const
-{
-    if (m_has_style)
-        return static_cast<const LayoutNodeWithStyle*>(this)->text_align();
-    return parent()->text_align();
 }
 
 inline const LayoutNodeWithStyle* LayoutNode::parent() const
