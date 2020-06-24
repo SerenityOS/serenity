@@ -7,6 +7,7 @@ export SERENITY_RAM_SIZE
 
 # set this to the Build directory in serenity
 : "${SERENITY_BUILD:='/mnt/c/Users/Ragnarok/serenity-project/serenity/Build'}"
+export SERENITY_BUILD
 
 cd -P -- "$SERENITY_BUILD" || exit
 make install

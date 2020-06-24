@@ -3,6 +3,11 @@
 
 set -e
 
+die() {
+    echo "die: $*"
+    exit 1
+}
+
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
 [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && SERENITY_KVM_ARG="-enable-kvm"
@@ -47,9 +52,17 @@ $SERENITY_EXTRA_QEMU_ARGS
 
 export SDL_VIDEO_X11_DGAMOUSE=0
 
+: "${SERENITY_BUILD:=.}"
+cd -P -- "$SERENITY_BUILD" || die "Could not cd to \"$SERENITY_BUILD\""
+
 if [ "$1" = "b" ]; then
     # ./run b: bochs
-    "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_ROOT/Meta/bochsrc"
+    [ -z "$SERENITY_BOCHSRC" ] && {
+        # Make sure that SERENITY_ROOT is set and not empty
+        [ -z "$SERENITY_ROOT" ] && die 'SERENITY_ROOT not set or empty'
+        SERENITY_BOCHSRC="$SERENITY_ROOT/Meta/bochsrc"
+    }
+    "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_BOCHSRC"
 elif [ "$1" = "qn" ]; then
     # ./run qn: qemu without network
     "$SERENITY_QEMU_BIN" \
