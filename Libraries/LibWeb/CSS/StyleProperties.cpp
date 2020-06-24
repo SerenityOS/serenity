@@ -244,6 +244,25 @@ CSS::TextAlign StyleProperties::text_align() const
     return CSS::TextAlign::Left;
 }
 
+Optional<CSS::WhiteSpace> StyleProperties::white_space() const
+{
+    auto value = property(CSS::PropertyID::WhiteSpace);
+    if (!value.has_value() || !value.value()->is_string())
+        return {};
+    auto string = value.value()->to_string();
+    if (string == "normal")
+        return CSS::WhiteSpace::Normal;
+    if (string == "nowrap")
+        return CSS::WhiteSpace::Nowrap;
+    if (string == "pre")
+        return CSS::WhiteSpace::Pre;
+    if (string == "pre-line")
+        return CSS::WhiteSpace::PreLine;
+    if (string == "pre-wrap")
+        return CSS::WhiteSpace::PreWrap;
+    return {};
+}
+
 CSS::Display StyleProperties::display() const
 {
     auto display = string_or_fallback(CSS::PropertyID::Display, "inline");
