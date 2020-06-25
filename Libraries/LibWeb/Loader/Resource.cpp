@@ -62,8 +62,14 @@ void Resource::for_each_client(Function<void(ResourceClient&)> callback)
 String encoding_from_content_type(const String& content_type)
 {
     auto offset = content_type.index_of("charset=");
-    if (offset.has_value())
-        return content_type.substring(offset.value() + 8, content_type.length() - offset.value() - 8).to_lowercase();
+    if (offset.has_value()) {
+        auto encoding = content_type.substring(offset.value() + 8, content_type.length() - offset.value() - 8).to_lowercase();
+        if (encoding.length() >= 2 && encoding.starts_with('"') && encoding.ends_with('"'))
+            return encoding.substring(1, encoding.length() - 2);
+        if (encoding.length() >= 2 && encoding.starts_with('\'') && encoding.ends_with('\''))
+            return encoding.substring(1, encoding.length() - 2);
+        return encoding;
+    }
 
     return "utf-8";
 }
