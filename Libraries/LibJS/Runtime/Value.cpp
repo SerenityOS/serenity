@@ -125,6 +125,8 @@ String Value::to_string_without_side_effects() const
         return String::format("[object %s]", as_object().class_name());
     case Type::Accessor:
         return "<accessor>";
+    case Type::NativeProperty:
+        return "<native-property>";
     default:
         ASSERT_NOT_REACHED();
     }
