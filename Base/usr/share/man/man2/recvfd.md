@@ -28,6 +28,10 @@ If a file descriptor is successfully received, it is returned as a non-negative 
 * `EINVAL`: `sockfd` does not refer to a connected or accepted socket.
 * `EAGAIN`: There is no file descriptor queued on this socket.
 
+## History
+
+`recvfd()` was first introduced in Plan 9 from User Space.
+
 ## See also
 
 * [`sendfd`(2)](sendfd.md)
