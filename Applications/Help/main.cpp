@@ -42,6 +42,7 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
+#include <LibDesktop/Launcher.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/PageView.h>
@@ -102,6 +103,9 @@ int main(int argc, char* argv[])
 
     RefPtr<GUI::Action> go_back_action;
     RefPtr<GUI::Action> go_forward_action;
+    RefPtr<GUI::Action> edit_on_github;
+
+    String last_path;
 
     auto update_actions = [&]() {
         go_back_action->set_enabled(history.can_go_back());
@@ -124,7 +128,9 @@ int main(int argc, char* argv[])
             GUI::MessageBox::show(strerror(saved_errno), "Failed to open man page", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
             return;
         }
+        last_path = path;
         auto buffer = file->read_all();
+
         StringView source { (const char*)buffer.data(), buffer.size() };
 
         String html;
@@ -185,6 +191,25 @@ int main(int argc, char* argv[])
 
     toolbar.add_action(*go_back_action);
     toolbar.add_action(*go_forward_action);
+
+    edit_on_github = GUI::Action::create("Edit On GitHub", Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-markdown.png"), [&](const GUI::Action&) {
+
+        if (last_path.is_null()) {
+            return;
+        }
+
+        // Open a browser to the man page on github.
+        StringBuilder builder;
+        builder.append("https://github.com/SerenityOS/serenity/blob/master/Base");
+        builder.append(last_path);
+
+        auto edit_on_gh = builder.build();
+        Desktop::Launcher::open(edit_on_gh);
+    });
+
+    edit_on_github->set_enabled(true);
+    toolbar.add_separator();
+    toolbar.add_action(*edit_on_github);
 
     auto menubar = GUI::MenuBar::construct();
 
