@@ -48,6 +48,8 @@ file(GLOB LIBJS_SUBDIR_SOURCES "../../Libraries/LibJS/*/*.cpp")
 file(GLOB LIBCRYPTO_SOURCES "../../Libraries/LibCrypto/*.cpp")
 file(GLOB LIBCRYPTO_SUBDIR_SOURCES "../../Libraries/LibCrypto/*/*.cpp")
 file(GLOB LIBTLS_SOURCES "../../Libraries/LibTLS/*.cpp")
+file(GLOB SHELL_SOURCES "../../Shell/*.cpp")
+file(GLOB SHELL_TESTS "../../Shell/Tests/*.sh")
 
 set(LAGOM_CORE_SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
 set(LAGOM_MORE_SOURCES ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBTLS_SOURCES})
@@ -87,6 +89,20 @@ if (BUILD_LAGOM)
     set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
     target_link_libraries(disasm_lagom Lagom)
     target_link_libraries(disasm_lagom stdc++)
+
+    add_executable(shell_lagom ${SHELL_SOURCES})
+    set_target_properties(shell_lagom PROPERTIES OUTPUT_NAME shell)
+    target_link_libraries(shell_lagom Lagom)
+    target_link_libraries(shell_lagom stdc++)
+    target_link_libraries(shell_lagom pthread)
+    foreach(TEST_PATH ${SHELL_TESTS})
+        get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
+        add_test(
+            NAME "Shell-${TEST_NAME}"
+            COMMAND shell_lagom "${TEST_PATH}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+    endforeach()
 endif()
 
 if (ENABLE_FUZZER_SANITIZER)

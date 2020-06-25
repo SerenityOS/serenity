@@ -49,7 +49,9 @@ static inline RefPtr<T> create(std::initializer_list<RefPtr<Value>> arg)
 
 static inline void print_indented(const String& str, int indent)
 {
-    dbgprintf("%.*c%s\n", indent * 2, ' ', str.characters());
+    for (auto i = 0; i < indent; ++i)
+        dbgprintf("  ");
+    dbgprintf("%s\n", str.characters());
 }
 
 static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command> right)
