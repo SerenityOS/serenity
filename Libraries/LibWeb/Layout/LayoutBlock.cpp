@@ -659,7 +659,14 @@ void LayoutBlock::compute_height()
 {
     auto& containing_block = *this->containing_block();
 
-    auto specified_height = style().height().resolved_or_auto(*this, containing_block.height());
+    Length specified_height;
+
+    if (style().height().is_percentage() && !containing_block.style().height().is_absolute()) {
+        specified_height = Length::make_auto();
+    } else {
+        specified_height = style().height().resolved_or_auto(*this, containing_block.height());
+    }
+
     auto specified_max_height = style().max_height().resolved_or_auto(*this, containing_block.height());
 
     box_model().margin.top = style().margin().top.resolved_or_zero(*this, containing_block.width());
