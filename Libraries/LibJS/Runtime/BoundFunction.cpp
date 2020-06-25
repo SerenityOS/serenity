@@ -54,14 +54,14 @@ Value BoundFunction::call(Interpreter& interpreter)
     return m_target_function->call(interpreter);
 }
 
-Value BoundFunction::construct(Interpreter& interpreter)
+Value BoundFunction::construct(Interpreter& interpreter, Function& new_target)
 {
     if (auto this_value = interpreter.this_value(global_object()); m_constructor_prototype && this_value.is_object()) {
         this_value.as_object().set_prototype(m_constructor_prototype);
         if (interpreter.exception())
             return {};
     }
-    return m_target_function->construct(interpreter);
+    return m_target_function->construct(interpreter, new_target);
 }
 
 LexicalEnvironment* BoundFunction::create_environment()

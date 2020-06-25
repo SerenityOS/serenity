@@ -74,7 +74,7 @@ Value SymbolConstructor::call(Interpreter& interpreter)
     return js_symbol(interpreter, interpreter.argument(0).to_string(interpreter), false);
 }
 
-Value SymbolConstructor::construct(Interpreter& interpreter)
+Value SymbolConstructor::construct(Interpreter& interpreter, Function&)
 {
     interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "Symbol");
     return {};

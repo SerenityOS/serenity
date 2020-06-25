@@ -49,10 +49,10 @@ ErrorConstructor::~ErrorConstructor()
 
 Value ErrorConstructor::call(Interpreter& interpreter)
 {
-    return construct(interpreter);
+    return construct(interpreter, *this);
 }
 
-Value ErrorConstructor::construct(Interpreter& interpreter)
+Value ErrorConstructor::construct(Interpreter& interpreter, Function&)
 {
     String message = "";
     if (!interpreter.call_frame().arguments.is_empty() && !interpreter.call_frame().arguments[0].is_undefined()) {
@@ -77,9 +77,9 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
     ConstructorName::~ConstructorName() { }                                                                            \
     Value ConstructorName::call(Interpreter& interpreter)                                                              \
     {                                                                                                                  \
-        return construct(interpreter);                                                                                 \
+        return construct(interpreter, *this);                                                                                 \
     }                                                                                                                  \
-    Value ConstructorName::construct(Interpreter& interpreter)                                                         \
+    Value ConstructorName::construct(Interpreter& interpreter, Function&)                                              \
     {                                                                                                                  \
         String message = "";                                                                                           \
         if (!interpreter.call_frame().arguments.is_empty() && !interpreter.call_frame().arguments[0].is_undefined()) { \

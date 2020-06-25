@@ -27,6 +27,21 @@ try {
     assert(new p(15).x === 15);
     assert(new p(15, true).x === 30);
 
+    let p;
+    function theNewTarget() {};
+    const handler = {
+        construct(target, arguments, newTarget) {
+            assert(target === f);
+            assert(newTarget === theNewTarget);
+            if (arguments[1])
+                return Reflect.construct(target, [arguments[0] * 2], newTarget);
+            return Reflect.construct(target, arguments, newTarget);
+        },
+    };
+    p = new Proxy(f, handler);
+
+    Reflect.construct(p, [15], theNewTarget);
+
     // Invariants
     [{}, [], new Proxy({}, {})].forEach(item => {
         assertThrowsError(() => {

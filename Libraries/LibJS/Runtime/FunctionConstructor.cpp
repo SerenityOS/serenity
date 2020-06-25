@@ -53,10 +53,10 @@ FunctionConstructor::~FunctionConstructor()
 
 Value FunctionConstructor::call(Interpreter& interpreter)
 {
-    return construct(interpreter);
+    return construct(interpreter, *this);
 }
 
-Value FunctionConstructor::construct(Interpreter& interpreter)
+Value FunctionConstructor::construct(Interpreter& interpreter, Function&)
 {
     String parameters_source = "";
     String body_source = "";

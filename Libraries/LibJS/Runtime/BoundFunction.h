@@ -40,7 +40,7 @@ public:
 
     virtual Value call(Interpreter& interpreter) override;
 
-    virtual Value construct(Interpreter& interpreter) override;
+    virtual Value construct(Interpreter&, Function& new_target) override;
 
     virtual LexicalEnvironment* create_environment() override;
 
