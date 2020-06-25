@@ -145,6 +145,8 @@ public:
     bool in_quirks_mode() const { return m_quirks_mode; }
     void set_quirks_mode(bool mode) { m_quirks_mode = mode; }
 
+    void adopt_node(Node&);
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 

@@ -41,7 +41,7 @@
 #include <LibWeb/Layout/LayoutTableRow.h>
 #include <LibWeb/Layout/LayoutTableRowGroup.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
-#include <LibWeb/Parser/HTMLParser.h>
+#include <LibWeb/Parser/HTMLDocumentParser.h>
 
 namespace Web {
 
@@ -247,13 +247,10 @@ NonnullRefPtr<StyleProperties> Element::computed_style()
 
 void Element::set_inner_html(StringView markup)
 {
-    auto fragment = parse_html_fragment(document(), markup);
+    auto new_children = HTMLDocumentParser::parse_html_fragment(*this, markup);
     remove_all_children();
-    if (!fragment)
-        return;
-    while (RefPtr<Node> child = fragment->first_child()) {
-        fragment->remove_child(*child);
-        append_child(*child);
+    while (!new_children.is_empty()) {
+        append_child(new_children.take_first());
     }
 
     set_needs_style_update(true);

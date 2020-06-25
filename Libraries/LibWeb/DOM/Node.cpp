@@ -51,7 +51,7 @@
 namespace Web {
 
 Node::Node(Document& document, NodeType type)
-    : m_document(document)
+    : m_document(&document)
     , m_type(type)
 {
 }
@@ -210,6 +210,11 @@ RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, b
     }
     TreeNode<Node>::insert_before(node, child, notify);
     return node;
+}
+
+void Node::set_document(Badge<Document>, Document& document)
+{
+    m_document = &document;
 }
 
 }

@@ -468,4 +468,12 @@ NonnullRefPtrVector<HTMLScriptElement> Document::take_scripts_to_execute_as_soon
     return move(m_scripts_to_execute_as_soon_as_possible);
 }
 
+void Document::adopt_node(Node& subtree_root)
+{
+    subtree_root.for_each_in_subtree([&](auto& node) {
+        node.set_document({}, *this);
+        return IterationDecision::Continue;
+    });
+}
+
 }

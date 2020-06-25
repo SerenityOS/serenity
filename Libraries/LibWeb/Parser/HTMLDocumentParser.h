@@ -70,6 +70,8 @@ public:
 
     Document& document();
 
+    static NonnullRefPtrVector<Node> parse_html_fragment(Element& context_element, const StringView&);
+
     enum class InsertionMode {
 #define __ENUMERATE_INSERTION_MODE(mode) mode,
         ENUMERATE_INSERTION_MODES
@@ -134,7 +136,7 @@ private:
     void increment_script_nesting_level();
     void decrement_script_nesting_level();
     size_t script_nesting_level() const { return m_script_nesting_level; }
-    void reset_the_insertion_mode_appropriately();
+    void reset_the_insertion_mode_appropriately(const Element* context_element = nullptr);
 
     void adjust_mathml_attributes(HTMLToken&);
     void adjust_svg_attributes(HTMLToken&);
