@@ -63,17 +63,19 @@ HTMLImageElement::~HTMLImageElement()
 
 void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
+    (void)style;
+    // FIXME
+    /*
     for_each_attribute([&](auto& name, auto& value) {
+        auto parsed_value = CSSParser(value).parse_as_component_value();
+
         if (name == HTML::AttributeNames::width) {
-            if (auto parsed_value = parse_html_length(document(), value)) {
-                style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
-            }
+            style.set_property(CSS::PropertyID::Width, parsed_value.value());
         } else if (name == HTML::AttributeNames::height) {
-            if (auto parsed_value = parse_html_length(document(), value)) {
-                style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
-            }
+            style.set_property(CSS::PropertyID::Height, parsed_value.value());
         }
     });
+    */
 }
 
 void HTMLImageElement::parse_attribute(const FlyString& name, const String& value)

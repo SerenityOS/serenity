@@ -63,6 +63,8 @@ void HTMLLinkElement::resource_did_load()
 
     dbg() << "HTMLLinkElement: Resource did load, looks good! " << href();
 
+    /*    
+FIX ME:
     auto sheet = parse_css(CSS::ParsingContext(document()), resource()->encoded_data());
     if (!sheet) {
         dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
@@ -71,6 +73,7 @@ void HTMLLinkElement::resource_did_load()
 
     // Transfer the rules from the successfully parsed sheet into the sheet we've already inserted.
     m_style_sheet->rules() = sheet->rules();
+*/
 
     document().update_style();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,48 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/StringBuilder.h>
-#include <LibWeb/CSS/Parser/CSSParser.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Text.h>
-#include <LibWeb/HTML/HTMLStyleElement.h>
+#pragma once
 
-namespace Web::HTML {
+#include <AK/String.h>
+#include <LibWeb/CSS/Parser/Rules/QualifiedStyleRule.h>
 
-HTMLStyleElement::HTMLStyleElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
-{
-}
+namespace Web {
 
-HTMLStyleElement::~HTMLStyleElement()
-{
-}
+class AtStyleRule : public QualifiedStyleRule {
+    friend class CSSParser;
 
-void HTMLStyleElement::children_changed()
-{
-    StringBuilder builder;
-    for_each_child([&](auto& child) {
-        if (is<DOM::Text>(child))
-            builder.append(downcast<DOM::Text>(child).text_content());
-    });
+public:
+    AtStyleRule();
+    ~AtStyleRule();
+    String to_string();
 
-    // FIXME
-    /*
-    m_stylesheet = CSSParser(builder.to_string()).parse_as_stylesheet();
-    if (m_stylesheet)
-        document().style_sheets().add_sheet(*m_stylesheet);
-    else
-    */
-    document().style_sheets().add_sheet(CSS::StyleSheet::create({}));
-    HTMLElement::children_changed();
-}
-
-void HTMLStyleElement::removed_from(Node& old_parent)
-{
-    if (m_stylesheet) {
-        // FIXME: Remove the sheet from the document
-    }
-    return HTMLElement::removed_from(old_parent);
-}
+private:
+    String m_name;
+};
 
 }

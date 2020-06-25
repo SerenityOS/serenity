@@ -40,24 +40,30 @@ HTMLTableElement::~HTMLTableElement()
 
 void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
+    (void)style;
+    // FIXME:
+    /*
     for_each_attribute([&](auto& name, auto& value) {
+        auto parsed_value = CSSParser(value).parse_as_component_value();
+        if (!parsed_value.has_value()) 
+            return;
+
         if (name == HTML::AttributeNames::width) {
-            if (auto parsed_value = parse_html_length(document(), value))
-                style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
+            style.set_property(CSS::PropertyID::Width, parsed_value.value());
             return;
         }
         if (name == HTML::AttributeNames::height) {
-            if (auto parsed_value = parse_html_length(document(), value))
-                style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
+            style.set_property(CSS::PropertyID::Height, parsed_value.value());
             return;
         }
         if (name == HTML::AttributeNames::bgcolor) {
-            auto color = Color::from_string(value);
+            auto color = Color::from_string(parsed_value.value().to_string());
             if (color.has_value())
                 style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()));
             return;
         }
     });
+    */
 }
 
 }

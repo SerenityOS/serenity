@@ -33,13 +33,16 @@ namespace Web::DOM {
 
 RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 {
-    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
+    CSSParser parser(selector_text, "utf-8");
+    auto selector = parser.parse_a_selector();
     if (!selector.has_value())
         return {};
 
-    dump_selector(selector.value());
+    // FIXME
+    //dump_selector(selector.value());
 
     RefPtr<Element> result;
+    /*
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         if (SelectorEngine::matches(selector.value(), element)) {
             result = element;
@@ -47,26 +50,29 @@ RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
         }
         return IterationDecision::Continue;
     });
-
+    */
     return result;
 }
 
 NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& selector_text)
 {
-    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
+    CSSParser parser(selector_text, "utf-8");
+    auto selector = parser.parse_a_selector();
     if (!selector.has_value())
         return {};
 
-    dump_selector(selector.value());
+    // FIXME
+    //dump_selector(selector.value());
 
     NonnullRefPtrVector<Element> elements;
+    /*
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         if (SelectorEngine::matches(selector.value(), element)) {
             elements.append(element);
         }
         return IterationDecision::Continue;
     });
-
+    */
     return elements;
 }
 
