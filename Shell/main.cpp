@@ -78,6 +78,12 @@ int main(int argc, char** argv)
         for (auto& job : jobs) {
             int wstatus = 0;
             auto child_pid = waitpid(job.value->pid(), &wstatus, WNOHANG);
+#ifndef __serenity__
+            if (child_pid == 0) {
+                // Linux: if child didn't "change state", but existed.
+                child_pid = job.value->pid();
+            }
+#endif
             if (child_pid == job.value->pid()) {
                 if (WIFEXITED(wstatus)) {
                     job.value->set_has_exit(WEXITSTATUS(wstatus));
@@ -95,10 +101,18 @@ int main(int argc, char** argv)
     // Ignore SIGTSTP as the shell should not be suspended with ^Z.
     signal(SIGTSTP, [](auto) {});
 
+#ifndef __serenity__
+    sigset_t blocked;
+    sigemptyset(&blocked);
+    sigaddset(&blocked, SIGTTOU);
+    pthread_sigmask(SIG_BLOCK, &blocked, NULL);
+#endif
+#ifdef __serenity__
     if (pledge("stdio rpath wpath cpath proc exec tty accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     editor = Line::Editor::construct(Line::Configuration { Line::Configuration::UnescapedSpaces });
 

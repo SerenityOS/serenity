@@ -28,6 +28,7 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <sys/wait.h>
 
@@ -94,7 +95,7 @@ int Shell::builtin_bg(int argc, const char** argv)
     job->set_running_in_background(true);
 
     dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
-    fprintf(stderr, "Resuming job %llu - %s\n", job->job_id(), job->cmd().characters());
+    fprintf(stderr, "Resuming job %" PRIu64 " - %s\n", job->job_id(), job->cmd().characters());
 
     if (killpg(job->pgid(), SIGCONT) < 0) {
         perror("killpg");
@@ -340,7 +341,7 @@ int Shell::builtin_fg(int argc, const char** argv)
     job->set_running_in_background(false);
 
     dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
-    fprintf(stderr, "Resuming job %llu - %s\n", job->job_id(), job->cmd().characters());
+    fprintf(stderr, "Resuming job %" PRIu64 " - %s\n", job->job_id(), job->cmd().characters());
 
     if (killpg(job->pgid(), SIGCONT) < 0) {
         perror("killpg");
@@ -406,7 +407,7 @@ int Shell::builtin_disown(int argc, const char** argv)
         job->deactivate();
 
         if (!job->is_running_in_background())
-            fprintf(stderr, "disown warning: job %llu is currently not running, 'kill -%d %d' to make it continue\n", job->job_id(), SIGCONT, job->pid());
+            fprintf(stderr, "disown warning: job %" PRIu64 " is currently not running, 'kill -%d %d' to make it continue\n", job->job_id(), SIGCONT, job->pid());
 
         jobs.remove(job_index);
     }
@@ -473,13 +474,13 @@ int Shell::builtin_jobs(int argc, const char** argv)
 
         switch (mode) {
         case Basic:
-            printf("[%llu] %c %s %s\n", job.value->job_id(), background_indicator, status, job.value->cmd().characters());
+            printf("[%" PRIu64 "] %c %s %s\n", job.value->job_id(), background_indicator, status, job.value->cmd().characters());
             break;
         case OnlyPID:
-            printf("[%llu] %c %d %s %s\n", job.value->job_id(), background_indicator, pid, status, job.value->cmd().characters());
+            printf("[%" PRIu64 "] %c %d %s %s\n", job.value->job_id(), background_indicator, pid, status, job.value->cmd().characters());
             break;
         case ListAll:
-            printf("[%llu] %c %d %d %s %s\n", job.value->job_id(), background_indicator, pid, job.value->pgid(), status, job.value->cmd().characters());
+            printf("[%" PRIu64 "] %c %d %d %s %s\n", job.value->job_id(), background_indicator, pid, job.value->pgid(), status, job.value->cmd().characters());
             break;
         }
     }

@@ -423,7 +423,11 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
         return nullptr;
 
     pid_t child = fork();
-    if (!child) {
+    if (child < 0) {
+        perror("fork");
+        return nullptr;
+    }
+    if (child == 0) {
         setpgid(0, 0);
         tcsetpgrp(0, getpid());
         tcsetattr(0, TCSANOW, &default_termios);
