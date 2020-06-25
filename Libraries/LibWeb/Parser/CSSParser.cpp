@@ -718,6 +718,11 @@ public:
             }
             if (!ch)
                 break;
+            if (ch == '\\') {
+                consume_one();
+                buffer.append(consume_one());
+                continue;
+            }
             if (ch == '}')
                 break;
             if (ch == ';')
