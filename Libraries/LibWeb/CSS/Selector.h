@@ -28,7 +28,6 @@
 
 #include <AK/FlyString.h>
 #include <AK/Vector.h>
-#include <LibWeb/CSS/Specificity.h>
 
 namespace Web {
 
