@@ -37,7 +37,7 @@ Selector::~Selector()
 {
 }
 
-Specificity Selector::specificity() const
+u32 Selector::specificity() const
 {
     unsigned ids = 0;
     unsigned tag_names = 0;
@@ -61,7 +61,7 @@ Specificity Selector::specificity() const
         }
     }
 
-    return { ids, classes, tag_names };
+    return ids * 0x10000 + classes * 0x100 + tag_names;
 }
 
 }
