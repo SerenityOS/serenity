@@ -48,6 +48,24 @@ try {
     assert(a[3] === undefined);
     assert(a[4] === "bar");
 
+
+    const foo = {
+        set prop(value) {
+            this.setPropCalled = true;
+        }
+    };
+    const bar = {};
+    Object.setPrototypeOf(bar, foo);
+
+    assert(foo.setPropCalled === undefined);
+    assert(bar.setPropCalled === undefined);
+    Reflect.set(bar, "prop", 42);
+    assert(foo.setPropCalled === undefined);
+    assert(bar.setPropCalled === true);
+    Reflect.set(bar, "prop", 42, foo);
+    assert(foo.setPropCalled === true);
+    assert(bar.setPropCalled === true);
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);

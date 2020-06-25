@@ -84,14 +84,14 @@ public:
 
     GlobalObject& global_object() const { return shape().global_object(); }
 
-    virtual Value get(PropertyName) const;
+    virtual Value get(PropertyName, Value receiver = {}) const;
 
     virtual bool has_property(PropertyName) const;
     bool has_own_property(PropertyName) const;
 
-    virtual bool put(PropertyName, Value);
+    virtual bool put(PropertyName, Value, Value receiver = {});
 
-    Value get_own_property(const Object& this_object, PropertyName) const;
+    Value get_own_property(const Object& this_object, PropertyName, Value receiver) const;
     Value get_own_properties(const Object& this_object, GetOwnPropertyMode, bool only_enumerable_properties = false) const;
     virtual Optional<PropertyDescriptor> get_own_property_descriptor(PropertyName) const;
     Value get_own_property_descriptor_object(PropertyName) const;
