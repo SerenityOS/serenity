@@ -118,6 +118,7 @@ public:
     void schedule_style_update();
 
     Vector<const Element*> get_elements_by_name(const String&) const;
+    NonnullRefPtrVector<Element> get_elements_by_tag_name(const String&) const;
     RefPtr<Element> query_selector(const StringView&);
     NonnullRefPtrVector<Element> query_selector_all(const StringView&);
 
