@@ -331,6 +331,11 @@ void PageView::scroll_to_anchor(const StringView& name)
     }
     auto& layout_node = *element->layout_node();
     Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)visible_content_rect().width(), (float)visible_content_rect().height() } };
+    if (is<LayoutBox>(layout_node)) {
+        auto& layout_box = to<LayoutBox>(layout_node);
+        auto padding_box = layout_box.box_model().padding_box(layout_box);
+        float_rect.move_by(-padding_box.left, -padding_box.top);
+    }
     scroll_into_view(enclosing_int_rect(float_rect), true, true);
     window()->set_override_cursor(GUI::StandardCursor::None);
 }
