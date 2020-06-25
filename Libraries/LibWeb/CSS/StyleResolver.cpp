@@ -353,8 +353,15 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         for (auto& part : parts) {
             values.append(parse_css_value(part));
         }
-        if (values[0].is_color())
+
+        // HACK: Disallow more than one color value in a 'background' shorthand
+        size_t color_value_count = 0;
+        for (auto& value : values)
+            color_value_count += value.is_color();
+
+        if (values[0].is_color() && color_value_count == 1)
             style.set_property(CSS::PropertyID::BackgroundColor, values[0]);
+
         for (auto& value : values) {
             if (!value.is_string())
                 continue;
