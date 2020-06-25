@@ -31,7 +31,6 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLBodyElement.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Parser/HTMLParser.h>
 #include <time.h>
 
 NonnullRefPtr<IRCLogBuffer> IRCLogBuffer::create()
@@ -70,17 +69,17 @@ void IRCLogBuffer::add_message(char prefix, const String& name, const String& te
 {
     auto nick_string = String::format("<%c%s> ", prefix ? prefix : ' ', name.characters());
     auto html = String::format(
-        "<div style=\"color: %s\">"
         "<span>%s</span>"
         "<b>%s</b>"
-        "<span>%s</span>"
-        "</div>",
-        color.to_string().characters(),
+        "<span>%s</span>",
         timestamp_string().characters(),
         escape_html_entities(nick_string).characters(),
         escape_html_entities(text).characters());
-    auto fragment = parse_html_fragment(*m_document, html);
-    m_container_element->append_child(fragment->remove_child(*fragment->first_child()));
+
+    auto wrapper = Web::create_element(*m_document, Web::HTML::TagNames::div);
+    wrapper->set_attribute(Web::HTML::AttributeNames::style, String::format("color: %s", color.to_string().characters()));
+    wrapper->set_inner_html(html);
+    m_container_element->append_child(wrapper);
     m_document->force_layout();
 }
 
@@ -94,8 +93,10 @@ void IRCLogBuffer::add_message(const String& text, Color color)
         color.to_string().characters(),
         timestamp_string().characters(),
         escape_html_entities(text).characters());
-    auto fragment = parse_html_fragment(*m_document, html);
-    m_container_element->append_child(fragment->remove_child(*fragment->first_child()));
+    auto wrapper = Web::create_element(*m_document, Web::HTML::TagNames::div);
+    wrapper->set_attribute(Web::HTML::AttributeNames::style, String::format("color: %s", color.to_string().characters()));
+    wrapper->set_inner_html(html);
+    m_container_element->append_child(wrapper);
     m_document->force_layout();
 }
 
