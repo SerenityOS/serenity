@@ -254,12 +254,14 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
     GUI::Painter painter(*this);
 
+    auto visual_beep_active = m_visual_beep_timer->is_active();
+
     painter.add_clip_rect(event.rect());
 
     Gfx::IntRect terminal_buffer_rect(frame_inner_rect().top_left(), { frame_inner_rect().width() - m_scrollbar->width(), frame_inner_rect().height() });
     painter.add_clip_rect(terminal_buffer_rect);
 
-    if (m_visual_beep_timer->is_active())
+    if (visual_beep_active)
         painter.clear_rect(frame_inner_rect(), Color::Red);
     else
         painter.clear_rect(frame_inner_rect(), Color(Color::Black).with_alpha(m_opacity));
@@ -280,7 +282,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             continue;
         auto& line = m_terminal.line(first_row_from_history + visual_row);
         bool has_only_one_background_color = line.has_only_one_background_color();
-        if (m_visual_beep_timer->is_active())
+        if (visual_beep_active)
             painter.clear_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
             painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].background_color).with_alpha(m_opacity));
@@ -296,7 +298,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
             auto character_rect = glyph_rect(visual_row, column);
             auto cell_rect = character_rect.inflated(0, m_line_spacing);
-            if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
+            if ((!visual_beep_active && !has_only_one_background_color) || should_reverse_fill_for_cursor_or_selection) {
                 painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
             }
 
