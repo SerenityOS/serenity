@@ -91,7 +91,7 @@ public:
 
     const Vector<ComplexSelector>& complex_selectors() const { return m_complex_selectors; }
 
-    Specificity specificity() const;
+    u32 specificity() const;
 
 private:
     Vector<ComplexSelector> m_complex_selectors;
