@@ -18,7 +18,7 @@ File descriptors are sent out-of-band and do not affect the regular data streams
 
 ## Return value
 
-If a file descriptor is successfully received, it is returned as a positive integer. Otherwise, -1 is returned and `errno` is set to indicate the error.
+If a file descriptor is successfully received, it is returned as a non-negative integer. Otherwise, -1 is returned and `errno` is set to indicate the error.
 
 ## Errors
 
