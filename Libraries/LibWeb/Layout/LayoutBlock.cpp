@@ -278,19 +278,16 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
     auto& containing_block = *this->containing_block();
     auto zero_value = Length::make_px(0);
 
-    Length margin_left = Length::make_auto();
-    Length margin_right = Length::make_auto();
+    auto margin_left = Length::make_auto();
+    auto margin_right = Length::make_auto();
     const auto border_left = style().border_left().width;
     const auto border_right = style().border_right().width;
-    Length padding_left = Length::make_auto();
-    Length padding_right = Length::make_auto();
+    const auto padding_left = style().padding().left.resolved(zero_value, *this, containing_block.width());
+    const auto padding_right = style().padding().right.resolved(zero_value, *this, containing_block.width());
 
     auto try_compute_width = [&](const auto& a_width) {
         margin_left = style().margin().left.resolved(zero_value, *this, containing_block.width());
         margin_right = style().margin().right.resolved(zero_value, *this, containing_block.width());
-
-        padding_left = style().padding().left.resolved(zero_value, *this, containing_block.width());
-        padding_right = style().padding().right.resolved(zero_value, *this, containing_block.width());
 
         auto left = style().offset().left.resolved_or_auto(*this, containing_block.width());
         auto right = style().offset().right.resolved_or_auto(*this, containing_block.width());
@@ -420,21 +417,18 @@ void LayoutBlock::compute_width()
     if (is_absolutely_positioned())
         return compute_width_for_absolutely_positioned_block();
 
+    auto& containing_block = *this->containing_block();
     auto zero_value = Length::make_px(0);
 
-    Length margin_left = Length::make_auto();
-    Length margin_right = Length::make_auto();
-    Length padding_left = Length::make_auto();
-    Length padding_right = Length::make_auto();
-
-    auto& containing_block = *this->containing_block();
+    auto margin_left = Length::make_auto();
+    auto margin_right = Length::make_auto();
+    const auto padding_left = style().padding().left.resolved_or_zero(*this, containing_block.width());
+    const auto padding_right = style().padding().right.resolved_or_zero(*this, containing_block.width());
 
     auto try_compute_width = [&](const auto& a_width) {
         Length width = a_width;
         margin_left = style().margin().left.resolved_or_zero(*this, containing_block.width());
         margin_right = style().margin().right.resolved_or_zero(*this, containing_block.width());
-        padding_left = style().padding().left.resolved_or_zero(*this, containing_block.width());
-        padding_right = style().padding().right.resolved_or_zero(*this, containing_block.width());
 
         float total_px = style().border_left().width + style().border_right().width;
         for (auto& value : { margin_left, padding_left, width, padding_right, margin_right }) {
