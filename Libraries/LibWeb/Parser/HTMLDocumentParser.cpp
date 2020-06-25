@@ -56,6 +56,7 @@ RefPtr<Document> parse_html_document(const StringView& data, const URL& url, con
 HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding)
     : m_tokenizer(input, encoding)
 {
+    m_document = adopt(*new Document);
 }
 
 HTMLDocumentParser::~HTMLDocumentParser()
@@ -64,7 +65,6 @@ HTMLDocumentParser::~HTMLDocumentParser()
 
 void HTMLDocumentParser::run(const URL& url)
 {
-    m_document = adopt(*new Document);
     m_document->set_url(url);
     m_document->set_source(m_tokenizer.source());
 
@@ -2518,10 +2518,17 @@ void HTMLDocumentParser::handle_after_after_frameset(HTMLToken& token)
     PARSE_ERROR();
 }
 
-void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
+void HTMLDocumentParser::reset_the_insertion_mode_appropriately(const Element* context_element)
 {
     for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
-        RefPtr<Element> node = m_stack_of_open_elements.elements().at(i);
+
+        // NOTE: When parsing fragments, we substitute the context element for the root of the stack of open elements.
+        RefPtr<Element> node;
+        if (i == 0 && context_element) {
+            node = context_element;
+        } else {
+            node = m_stack_of_open_elements.elements().at(i);
+        }
 
         if (node->tag_name() == HTML::TagNames::select) {
             TODO();
@@ -2580,9 +2587,6 @@ void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
     }
 
     m_insertion_mode = InsertionMode::InBody;
-    if (m_parsing_fragment) {
-        TODO();
-    }
 }
 
 const char* HTMLDocumentParser::insertion_mode_name() const
@@ -2601,4 +2605,57 @@ Document& HTMLDocumentParser::document()
 {
     return *m_document;
 }
+
+NonnullRefPtrVector<Node> HTMLDocumentParser::parse_html_fragment(Element& context_element, const StringView& markup)
+{
+    HTMLDocumentParser parser(markup, "utf-8");
+    parser.m_parsing_fragment = true;
+    parser.document().set_quirks_mode(context_element.document().in_quirks_mode());
+
+    if (context_element.tag_name().is_one_of(HTML::TagNames::title, HTML::TagNames::textarea)) {
+        parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);
+    } else if (context_element.tag_name().is_one_of(HTML::TagNames::style, HTML::TagNames::xmp, HTML::TagNames::iframe, HTML::TagNames::noembed, HTML::TagNames::noframes)) {
+        parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
+    } else if (context_element.tag_name().is_one_of(HTML::TagNames::script)) {
+        parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::ScriptData);
+    } else if (context_element.tag_name().is_one_of(HTML::TagNames::noscript)) {
+        if (context_element.document().is_scripting_enabled())
+            parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
+    } else if (context_element.tag_name().is_one_of(HTML::TagNames::noscript)) {
+        if (context_element.document().is_scripting_enabled())
+            parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
+    } else if (context_element.tag_name().is_one_of(HTML::TagNames::plaintext)) {
+        parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::PLAINTEXT);
+    }
+
+    auto root = create_element(context_element.document(), HTML::TagNames::html);
+    parser.document().append_child(root);
+    parser.m_stack_of_open_elements.push(root);
+
+    if (context_element.tag_name() == HTML::TagNames::template_) {
+        TODO();
+    }
+
+    // FIXME: Create a start tag token whose name is the local name of context and whose attributes are the attributes of context.
+
+    parser.reset_the_insertion_mode_appropriately(&context_element);
+
+    for (auto* form_candidate = &context_element; form_candidate; form_candidate = form_candidate->parent_element()) {
+        if (is<HTMLFormElement>(*form_candidate)) {
+            parser.m_form_element = to<HTMLFormElement>(*form_candidate);
+            break;
+        }
+    }
+
+    parser.run(context_element.document().url());
+
+    NonnullRefPtrVector<Node> children;
+    while (RefPtr<Node> child = root->first_child()) {
+        root->remove_child(*child);
+        context_element.document().adopt_node(*child);
+        children.append(*child);
+    }
+    return children;
+}
+
 }
