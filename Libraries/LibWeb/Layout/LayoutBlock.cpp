@@ -78,6 +78,11 @@ void LayoutBlock::layout_absolutely_positioned_descendant(LayoutBox& box)
     box_model.margin.right = box.style().margin().right.resolved_or_auto(box, width());
     box_model.margin.bottom = box.style().margin().bottom.resolved_or_auto(box, height());
 
+    box_model.border.left = Length::make_px(box.style().border_left().width);
+    box_model.border.right = Length::make_px(box.style().border_right().width);
+    box_model.border.top = Length::make_px(box.style().border_top().width);
+    box_model.border.bottom = Length::make_px(box.style().border_bottom().width);
+
     box_model.offset.left = box.style().offset().left.resolved_or_auto(box, width());
     box_model.offset.top = box.style().offset().top.resolved_or_auto(box, height());
     box_model.offset.right = box.style().offset().right.resolved_or_auto(box, width());
