@@ -29,6 +29,10 @@ If a file descriptor is successfully received, it is returned as a positive inte
 * `EINVAL`: `sockfd` does not refer to a connected or accepted socket.
 * `EBUSY`: There are too many file descriptors already waiting to be received by the peer.
 
+## History
+
+`sendfd()` was first introduced in Plan 9 from User Space.
+
 ## See also
 
 * [`recvfd`(2)](recvfd.md)
