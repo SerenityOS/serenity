@@ -363,7 +363,7 @@ bool ProxyObject::has_property(PropertyName name) const
     return trap_result;
 }
 
-Value ProxyObject::get(PropertyName name) const
+Value ProxyObject::get(PropertyName name, Value) const
 {
     if (m_is_revoked) {
         interpreter().throw_exception<TypeError>(ErrorType::ProxyRevoked);
@@ -395,7 +395,7 @@ Value ProxyObject::get(PropertyName name) const
     return trap_result;
 }
 
-bool ProxyObject::put(PropertyName name, Value value)
+bool ProxyObject::put(PropertyName name, Value value, Value)
 {
     if (m_is_revoked) {
         interpreter().throw_exception<TypeError>(ErrorType::ProxyRevoked);

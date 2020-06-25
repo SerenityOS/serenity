@@ -152,7 +152,7 @@ bool Object::prevent_extensions()
     return true;
 }
 
-Value Object::get_own_property(const Object& this_object, PropertyName property_name) const
+Value Object::get_own_property(const Object& this_object, PropertyName property_name, Value receiver) const
 {
     Value value_here;
 
@@ -170,7 +170,7 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
 
     ASSERT(!value_here.is_empty());
     if (value_here.is_accessor()) {
-        return value_here.as_accessor().call_getter(Value(const_cast<Object*>(this)));
+        return value_here.as_accessor().call_getter(receiver);
     }
     if (value_here.is_native_property())
         return call_native_property_getter(const_cast<Object*>(&this_object), value_here);
@@ -605,7 +605,7 @@ Value Object::get_by_index(u32 property_index) const
     return {};
 }
 
-Value Object::get(PropertyName property_name) const
+Value Object::get(PropertyName property_name, Value receiver) const
 {
     if (property_name.is_number())
         return get_by_index(property_name.as_number());
@@ -617,7 +617,9 @@ Value Object::get(PropertyName property_name) const
 
     const Object* object = this;
     while (object) {
-        auto value = object->get_own_property(*this, property_name);
+        if (receiver.is_empty())
+            receiver = Value(const_cast<Object*>(this));
+        auto value = object->get_own_property(*this, property_name, receiver);
         if (interpreter().exception())
             return {};
         if (!value.is_empty())
@@ -656,7 +658,7 @@ bool Object::put_by_index(u32 property_index, Value value)
     return put_own_property_by_index(*this, property_index, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
-bool Object::put(PropertyName property_name, Value value)
+bool Object::put(PropertyName property_name, Value value, Value receiver)
 {
     if (property_name.is_number())
         return put_by_index(property_name.as_number(), value);
@@ -676,7 +678,9 @@ bool Object::put(PropertyName property_name, Value value)
         if (metadata.has_value()) {
             auto value_here = object->m_storage[metadata.value().offset];
             if (value_here.is_accessor()) {
-                value_here.as_accessor().call_setter(Value(this), value);
+                if (receiver.is_empty())
+                    receiver = Value(this);
+                value_here.as_accessor().call_setter(receiver, value);
                 return true;
             }
             if (value_here.is_native_property()) {
