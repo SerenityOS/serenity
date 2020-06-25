@@ -51,6 +51,8 @@ If the process later attempts to use any system functionality it has previously 
 * `settime`: Changing the system time and date
 * `setkeymap`: Changing the system keyboard layout (\*)
 * `sigaction`: Change signal handlers and dispositions (\*)
+* `sendfd`: Send file descriptors over a local socket
+* `recvfd`: Receive file descriptors over a local socket
 
 Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
 
