@@ -397,7 +397,7 @@ KResult LocalSocket::chown(FileDescription&, uid_t uid, gid_t gid)
     return KSuccess;
 }
 
-NonnullRefPtrVector<FileDescription>& LocalSocket::recvfd_queue_for(FileDescription& description)
+NonnullRefPtrVector<FileDescription>& LocalSocket::recvfd_queue_for(const FileDescription& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
@@ -407,7 +407,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::recvfd_queue_for(FileDescript
     ASSERT_NOT_REACHED();
 }
 
-NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(FileDescription& description)
+NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(const FileDescription& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
@@ -417,7 +417,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(FileDescript
     ASSERT_NOT_REACHED();
 }
 
-KResult LocalSocket::sendfd(FileDescription& socket_description, NonnullRefPtr<FileDescription> passing_description)
+KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescription& passing_description)
 {
     LOCKER(lock());
     auto role = this->role(socket_description);
@@ -431,7 +431,7 @@ KResult LocalSocket::sendfd(FileDescription& socket_description, NonnullRefPtr<F
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(FileDescription& socket_description)
+KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(const FileDescription& socket_description)
 {
     LOCKER(lock());
     auto role = this->role(socket_description);
