@@ -174,7 +174,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
             }
             if (status_code.has_value() && status_code.value() >= 400 && status_code.value() <= 499) {
                 if (error_callback)
-                    error_callback(String("HTTP error (%u)", status_code.value()));
+                    error_callback(String::format("HTTP error (%u)", status_code.value()));
                 return;
             }
             success_callback(ByteBuffer::copy(payload.data(), payload.size()), response_headers);
