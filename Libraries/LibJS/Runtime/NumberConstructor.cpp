@@ -72,7 +72,7 @@ Value NumberConstructor::call(Interpreter& interpreter)
     return interpreter.argument(0).to_number(interpreter);
 }
 
-Value NumberConstructor::construct(Interpreter& interpreter)
+Value NumberConstructor::construct(Interpreter& interpreter, Function&)
 {
     double number = 0;
     if (interpreter.argument_count()) {

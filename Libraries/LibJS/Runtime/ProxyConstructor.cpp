@@ -54,7 +54,7 @@ Value ProxyConstructor::call(Interpreter& interpreter)
     return interpreter.throw_exception<TypeError>(ErrorType::ProxyCallWithNew);
 }
 
-Value ProxyConstructor::construct(Interpreter& interpreter)
+Value ProxyConstructor::construct(Interpreter& interpreter, Function&)
 {
     if (interpreter.argument_count() < 2)
         return interpreter.throw_exception<TypeError>(ErrorType::ProxyTwoArguments);

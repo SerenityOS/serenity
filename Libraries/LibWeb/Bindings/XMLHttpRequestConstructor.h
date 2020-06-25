@@ -38,7 +38,7 @@ public:
     virtual ~XMLHttpRequestConstructor() override;
 
     virtual JS::Value call(JS::Interpreter&) override;
-    virtual JS::Value construct(JS::Interpreter&) override;
+    virtual JS::Value construct(JS::Interpreter& interpreter, Function& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }

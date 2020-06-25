@@ -44,7 +44,7 @@ public:
     virtual void initialize(Interpreter&, GlobalObject&) override { }
 
     virtual Value call(Interpreter&) = 0;
-    virtual Value construct(Interpreter&) = 0;
+    virtual Value construct(Interpreter&, Function& new_target) = 0;
     virtual const FlyString& name() const = 0;
     virtual LexicalEnvironment* create_environment() = 0;
 
