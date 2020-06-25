@@ -208,8 +208,20 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
 
     LayoutNodeWithStyleAndBoxModelMetrics::paint(context, phase);
 
-    if (phase == PaintPhase::Overlay && node() && document().inspected_node() == node())
-        context.painter().draw_rect(enclosing_int_rect(absolute_rect()), Color::Magenta);
+    if (phase == PaintPhase::Overlay && node() && document().inspected_node() == node()) {
+        auto content_rect = absolute_rect();
+
+        auto margin_box = box_model().margin_box(*this);
+        Gfx::FloatRect margin_rect;
+        margin_rect.set_x(absolute_x() - margin_box.left);
+        margin_rect.set_width(width() + margin_box.left + margin_box.right);
+        margin_rect.set_y(absolute_y() - margin_box.top);
+        margin_rect.set_height(height() + margin_box.top + margin_box.bottom);
+
+        context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
+        context.painter().draw_rect(enclosing_int_rect(padded_rect), Color::Cyan);
+        context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
+    }
 }
 
 HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position) const
