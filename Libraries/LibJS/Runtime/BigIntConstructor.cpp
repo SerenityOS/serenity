@@ -72,7 +72,7 @@ Value BigIntConstructor::call(Interpreter& interpreter)
     return bigint;
 }
 
-Value BigIntConstructor::construct(Interpreter& interpreter)
+Value BigIntConstructor::construct(Interpreter& interpreter, Function&)
 {
     interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "BigInt");
     return {};

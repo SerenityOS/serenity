@@ -65,7 +65,7 @@ Value StringConstructor::call(Interpreter& interpreter)
     return string;
 }
 
-Value StringConstructor::construct(Interpreter& interpreter)
+Value StringConstructor::construct(Interpreter& interpreter, Function&)
 {
     PrimitiveString* primitive_string = nullptr;
     if (!interpreter.argument_count())

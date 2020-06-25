@@ -79,7 +79,7 @@ Value ArrayConstructor::call(Interpreter& interpreter)
     return array;
 }
 
-Value ArrayConstructor::construct(Interpreter& interpreter)
+Value ArrayConstructor::construct(Interpreter& interpreter, Function&)
 {
     return call(interpreter);
 }

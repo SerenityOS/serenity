@@ -39,7 +39,7 @@ public:
     virtual ~ProxyConstructor() override;
 
     virtual Value call(Interpreter&) override;
-    virtual Value construct(Interpreter&) override;
+    virtual Value construct(Interpreter&, Function& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }

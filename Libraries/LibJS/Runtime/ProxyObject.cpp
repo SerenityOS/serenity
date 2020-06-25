@@ -501,7 +501,7 @@ Value ProxyObject::call(Interpreter& interpreter) {
     return interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
 }
 
-Value ProxyObject::construct(Interpreter& interpreter) {
+Value ProxyObject::construct(Interpreter& interpreter, Function& new_target) {
     if (!is_function())
         return interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, Value(this).to_string_without_side_effects().characters());
 
@@ -513,7 +513,7 @@ Value ProxyObject::construct(Interpreter& interpreter) {
     if (interpreter.exception())
         return {};
     if (trap.is_empty() || trap.is_undefined() || trap.is_null())
-        return static_cast<Function&>(m_target).construct(interpreter);
+        return static_cast<Function&>(m_target).construct(interpreter, new_target);
     if (!trap.is_function())
         return interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "construct");
 
@@ -524,9 +524,7 @@ Value ProxyObject::construct(Interpreter& interpreter) {
         arguments_array->indexed_properties().append(argument);
     });
     arguments.values().append(arguments_array);
-    // FIXME: We need access to the actual newTarget property here. This is just
-    // a quick fix
-    arguments.values().append(Value(this));
+    arguments.values().append(Value(&new_target));
     auto result = interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
     if (!result.is_object())
         return interpreter.throw_exception<TypeError>(ErrorType::ProxyConstructBadReturnType);
