@@ -333,6 +333,17 @@ Vector<const Element*> Document::get_elements_by_name(const String& name) const
     return elements;
 }
 
+NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const String& tag_name) const
+{
+    NonnullRefPtrVector<Element> elements;
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (element.tag_name() == tag_name)
+            elements.append(element);
+        return IterationDecision::Continue;
+    });
+    return elements;
+}
+
 RefPtr<Element> Document::query_selector(const StringView& selector_text)
 {
     auto selector = parse_selector(selector_text);
