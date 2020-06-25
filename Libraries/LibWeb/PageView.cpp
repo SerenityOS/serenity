@@ -340,11 +340,6 @@ void PageView::scroll_to_anchor(const StringView& name)
     window()->set_override_cursor(GUI::StandardCursor::None);
 }
 
-void PageView::set_use_old_parser(bool use_old_parser)
-{
-    page().main_frame().loader().set_use_old_parser(use_old_parser);
-}
-
 void PageView::load_empty_document()
 {
     page().main_frame().set_document(nullptr);

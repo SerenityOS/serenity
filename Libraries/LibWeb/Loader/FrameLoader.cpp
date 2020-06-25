@@ -28,6 +28,7 @@
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Frame/Frame.h>
@@ -35,7 +36,6 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
-#include <LibWeb/Parser/HTMLParser.h>
 
 namespace Web {
 
@@ -130,8 +130,6 @@ RefPtr<Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& d
     if (mime_type == "text/gemini")
         return create_gemini_document(data, url);
     if (mime_type == "text/html") {
-        if (m_use_old_parser)
-            return parse_html_document(data, url, encoding);
         HTMLDocumentParser parser(data, encoding);
         parser.run(url);
         return parser.document();

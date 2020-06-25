@@ -98,7 +98,6 @@ set(SOURCES
     Parser/CSSParser.cpp
     Parser/Entities.cpp
     Parser/HTMLDocumentParser.cpp
-    Parser/HTMLParser.cpp
     Parser/HTMLToken.cpp
     Parser/HTMLTokenizer.cpp
     Parser/ListOfActiveFormattingElements.cpp

@@ -41,9 +41,6 @@ class PageView final
 public:
     virtual ~PageView() override;
 
-    // FIXME: Remove this once the new parser is ready.
-    void set_use_old_parser(bool use_old_parser);
-
     void load_html(const StringView&, const URL&);
     void load_empty_document();
 

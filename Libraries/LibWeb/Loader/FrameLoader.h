@@ -43,8 +43,6 @@ public:
     Frame& frame() { return m_frame; }
     const Frame& frame() const { return m_frame; }
 
-    void set_use_old_parser(bool b) { m_use_old_parser = b; }
-
 private:
     // ^ResourceClient
     virtual void resource_did_load() override;
@@ -54,8 +52,6 @@ private:
     RefPtr<Document> create_document_from_mime_type(const ByteBuffer&, const URL&, const String& mime_type, const String& encoding);
 
     Frame& m_frame;
-
-    bool m_use_old_parser { false };
 };
 
 }

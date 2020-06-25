@@ -46,7 +46,6 @@ namespace Browser {
 
 static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 String g_home_url;
-bool g_use_old_html_parser = false;
 URL url_from_user_input(const String& input);
 
 }
@@ -66,7 +65,6 @@ int main(int argc, char** argv)
     const char* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(Browser::g_use_old_html_parser, "Use old HTML parser", "old-parser", 'O');
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
