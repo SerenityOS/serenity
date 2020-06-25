@@ -69,7 +69,7 @@ protected:
     Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments);
 
 private:
-    virtual bool is_function() const final { return true; }
+    virtual bool is_function() const override { return true; }
     Value m_bound_this;
     Vector<Value> m_bound_arguments;
     Value m_home_object;

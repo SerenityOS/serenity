@@ -26,18 +26,23 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Function.h>
 
 namespace JS {
 
-class ProxyObject : public Object {
-    JS_OBJECT(ProxyObject, Object);
+class ProxyObject final : public Function {
+    JS_OBJECT(ProxyObject, Function);
 
 public:
     static ProxyObject* create(GlobalObject&, Object& target, Object& handler);
 
     ProxyObject(Object& target, Object& handler, Object& prototype);
     virtual ~ProxyObject() override;
+
+    virtual Value call(Interpreter&) override;
+    virtual Value construct(Interpreter&) override;
+    virtual const FlyString& name() const override;
+    virtual LexicalEnvironment* create_environment() override;
 
     const Object& target() const { return m_target; }
     const Object& handler() const { return m_handler; }
@@ -59,6 +64,8 @@ public:
 private:
     virtual void visit_children(Visitor&) override;
     virtual bool is_proxy_object() const override { return true; }
+    virtual bool is_function() const override { return m_target.is_function(); }
+
     virtual bool is_array() const override { return m_target.is_array(); };
 
     Object& m_target;

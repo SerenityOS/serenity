@@ -136,6 +136,15 @@ public:
 
     bool in_strict_mode() const { return m_scope_stack.last().scope_node->in_strict_mode(); }
 
+    template<typename Callback>
+    void for_each_argument(Callback callback)
+    {
+        if (m_call_stack.is_empty())
+            return;
+        for (auto& value : m_call_stack.last().arguments)
+            callback(value);
+    }
+
     size_t argument_count() const
     {
         if (m_call_stack.is_empty())
