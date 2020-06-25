@@ -97,34 +97,32 @@ void LayoutBlock::layout_absolutely_positioned_descendant(LayoutBox& box)
 
     Gfx::FloatPoint used_offset;
 
-    float x_offset = box_model.offset.left.to_px(box)
-        + box_model.border_box(box).left
-        - box_model.offset.right.to_px(box)
-        - box_model.border_box(box).right;
-
-    float y_offset = box_model.offset.top.to_px(box)
-        + box_model.border_box(box).top
-        - box_model.offset.bottom.to_px(box)
-        - box_model.border_box(box).bottom;
-
-    bool has_left_side_constraints = !box_model.offset.left.is_auto() || !box_model.margin.left.is_auto();
-    bool has_right_side_constraints = !box_model.offset.right.is_auto() || !box_model.margin.right.is_auto();
-
-    if (has_left_side_constraints && has_right_side_constraints) {
-        // If both 'left' and 'right' are set, we will have stretched the width to accomodate both.
-        x_offset += box_model.offset.right.to_px(box);
-    }
-
-    if (has_left_side_constraints) {
+    if (!box_model.offset.left.is_auto()) {
+        float x_offset = box_model.offset.left.to_px(box)
+            + box_model.border_box(box).left;
         used_offset.set_x(x_offset + box_model.margin.left.to_px(box));
-    } else if (has_right_side_constraints) {
+    } else if (!box_model.offset.right.is_auto()) {
+        float x_offset = 0
+            - box_model.offset.right.to_px(box)
+            - box_model.border_box(box).right;
         used_offset.set_x(width() + x_offset - box.width() - box_model.margin.right.to_px(box));
+    } else {
+        float x_offset = box_model.margin_box(box).left;
+        used_offset.set_x(x_offset);
     }
 
     if (!box_model.offset.top.is_auto()) {
+        float y_offset = box_model.offset.top.to_px(box)
+            + box_model.border_box(box).top;
         used_offset.set_y(y_offset + box_model.margin.top.to_px(box));
     } else if (!box_model.offset.bottom.is_auto()) {
+        float y_offset = 0
+            - box_model.offset.bottom.to_px(box)
+            - box_model.border_box(box).bottom;
         used_offset.set_y(height() + y_offset - box.height() - box_model.margin.bottom.to_px(box));
+    } else {
+        float y_offset = box_model.margin_box(box).top;
+        used_offset.set_y(y_offset);
     }
 
     box.set_offset(used_offset);
