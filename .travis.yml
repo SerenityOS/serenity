@@ -13,6 +13,7 @@ cache:
 
 notifications:
   irc:
+    if: repo = SerenityOS/serenity
     channels:
       - "chat.freenode.net#serenityos"
     template:
