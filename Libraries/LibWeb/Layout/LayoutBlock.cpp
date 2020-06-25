@@ -185,6 +185,10 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
         line_box.trim_trailing_whitespace();
     }
 
+    // If there's an empty line box at the bottom, just remove it instead of giving it height.
+    if (!m_line_boxes.is_empty() && m_line_boxes.last().fragments().is_empty())
+        m_line_boxes.take_last();
+
     auto text_align = style().text_align();
     float min_line_height = specified_style().line_height(*this);
     float line_spacing = min_line_height - specified_style().font().glyph_height();
