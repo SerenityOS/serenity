@@ -54,7 +54,7 @@ const char* Length::unit_name() const
     case Type::Auto:
         return "auto";
     case Type::Percentage:
-        return "percentage";
+        return "%";
     case Type::Undefined:
         return "undefined";
     }
