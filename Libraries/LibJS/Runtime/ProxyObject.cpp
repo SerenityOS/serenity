@@ -26,6 +26,7 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ProxyObject.h>
@@ -63,7 +64,7 @@ ProxyObject* ProxyObject::create(GlobalObject& global_object, Object& target, Ob
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)
-    : Object(prototype)
+    : Function(prototype)
     , m_target(target)
     , m_handler(handler)
 {
@@ -466,9 +467,82 @@ Value ProxyObject::delete_property(PropertyName name)
 
 void ProxyObject::visit_children(Cell::Visitor& visitor)
 {
-    Object::visit_children(visitor);
+    Function::visit_children(visitor);
     visitor.visit(&m_target);
     visitor.visit(&m_handler);
+}
+
+Value ProxyObject::call(Interpreter& interpreter) {
+    if (!is_function())
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, Value(this).to_string_without_side_effects().characters());
+
+    if (m_is_revoked) {
+        interpreter.throw_exception<TypeError>(ErrorType::ProxyRevoked);
+        return {};
+    }
+    auto trap = m_handler.get("apply");
+    if (interpreter.exception())
+        return {};
+    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+        return static_cast<Function&>(m_target).call(interpreter);
+    if (!trap.is_function())
+        return interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "apply");
+
+    MarkedValueList arguments(interpreter.heap());
+    arguments.values().append(Value(&m_target));
+    arguments.values().append(Value(&m_handler));
+    // FIXME: Pass global object
+    auto arguments_array = Array::create(interpreter.global_object());
+    interpreter.for_each_argument([&](auto& argument) {
+        arguments_array->indexed_properties().append(argument);
+    });
+    arguments.values().append(arguments_array);
+
+    return interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
+}
+
+Value ProxyObject::construct(Interpreter& interpreter) {
+    if (!is_function())
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, Value(this).to_string_without_side_effects().characters());
+
+    if (m_is_revoked) {
+        interpreter.throw_exception<TypeError>(ErrorType::ProxyRevoked);
+        return {};
+    }
+    auto trap = m_handler.get("construct");
+    if (interpreter.exception())
+        return {};
+    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+        return static_cast<Function&>(m_target).construct(interpreter);
+    if (!trap.is_function())
+        return interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "construct");
+
+    MarkedValueList arguments(interpreter.heap());
+    arguments.values().append(Value(&m_target));
+    auto arguments_array = Array::create(interpreter.global_object());
+    interpreter.for_each_argument([&](auto& argument) {
+        arguments_array->indexed_properties().append(argument);
+    });
+    arguments.values().append(arguments_array);
+    // FIXME: We need access to the actual newTarget property here. This is just
+    // a quick fix
+    arguments.values().append(Value(this));
+    auto result = interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
+    if (!result.is_object())
+        return interpreter.throw_exception<TypeError>(ErrorType::ProxyConstructBadReturnType);
+    return result;
+}
+
+const FlyString& ProxyObject::name() const
+{
+    ASSERT(is_function());
+    return static_cast<Function&>(m_target).name();
+}
+
+LexicalEnvironment* ProxyObject::create_environment()
+{
+    ASSERT(is_function());
+    return static_cast<Function&>(m_target).create_environment();
 }
 
 }

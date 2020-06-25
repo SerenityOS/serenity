@@ -68,6 +68,8 @@
         "Object prototype must not be %s on a super property access")                                  \
     M(ObjectPrototypeWrongType, "Prototype must be an object or null")                                 \
     M(ProxyCallWithNew, "Proxy must be called with the 'new' operator")                                \
+    M(ProxyConstructBadReturnType, "Proxy handler's construct trap violates invariant: must return"    \
+        "an object")                                                                                   \
     M(ProxyConstructorBadType, "Expected %s argument of Proxy constructor to be object, got %s")       \
     M(ProxyDefinePropExistingConfigurable, "Proxy handler's defineProperty trap violates "             \
         "invariant: a property cannot be defined as non-configurable if it already exists on the "     \
