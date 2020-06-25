@@ -31,6 +31,22 @@ for f in *.js; do
     fi
     echo -ne "\033]9;${count};${test_count}\033\\"
     echo "$f"
+
+    if [ "$result" != "PASS" ]; then
+        if [ -z "$result" ]; then
+            echo -e "    \033[31;1mNo output. Did you forget 'console.log(\"PASS\");'?\033[0m"
+        else
+            readarray -t split_result <<< "$result";
+
+            echo -ne "    \033[31;1mOutput:\033[0m: "
+            echo "${split_result[0]}";
+
+            for (( i = 1; i < ${#split_result[@]}; i++ )); do
+                echo "             ${split_result[i]}"
+            done
+        fi
+    fi
+
     (( ++count ))
 done
 
