@@ -50,8 +50,8 @@ public:
     virtual Optional<PropertyDescriptor> get_own_property_descriptor(PropertyName) const override;
     virtual bool define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions = true) override;
     virtual bool has_property(PropertyName name) const override;
-    virtual Value get(PropertyName name) const override;
-    virtual bool put(PropertyName name, Value value) override;
+    virtual Value get(PropertyName name, Value receiver) const override;
+    virtual bool put(PropertyName name, Value value, Value receiver) override;
     virtual Value delete_property(PropertyName name) override;
 
     void revoke() { m_is_revoked = true; }

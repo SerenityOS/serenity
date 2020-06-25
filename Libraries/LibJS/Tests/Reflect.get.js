@@ -33,6 +33,23 @@ try {
     assert(Reflect.get(new String("foo"), 2) === "o");
     assert(Reflect.get(new String("foo"), 3) === undefined);
 
+    const foo = {
+        get prop() {
+            this.getPropCalled = true;
+        }
+    };
+    const bar = {};
+    Object.setPrototypeOf(bar, foo);
+
+    assert(foo.getPropCalled === undefined);
+    assert(bar.getPropCalled === undefined);
+    Reflect.get(bar, "prop");
+    assert(foo.getPropCalled === undefined);
+    assert(bar.getPropCalled === true);
+    Reflect.get(bar, "prop", foo);
+    assert(foo.getPropCalled === true);
+    assert(bar.getPropCalled === true);
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);

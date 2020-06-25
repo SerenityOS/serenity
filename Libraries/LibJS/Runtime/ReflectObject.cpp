@@ -178,14 +178,16 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
 {
-    // FIXME: There's a third argument, receiver, for getters - use it once we have those.
     auto* target = get_target_object_from(interpreter, "get");
     if (!target)
         return {};
     auto property_key = interpreter.argument(1).to_string(interpreter);
     if (interpreter.exception())
         return {};
-    return target->get(property_key).value_or(js_undefined());
+    Value receiver = {};
+    if (interpreter.argument_count() > 2)
+        receiver = interpreter.argument(2);
+    return target->get(property_key, receiver).value_or(js_undefined());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
@@ -244,7 +246,6 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
 {
-    // FIXME: There's a fourth argument, receiver, for setters - use it once we have those.
     auto* target = get_target_object_from(interpreter, "set");
     if (!target)
         return {};
@@ -252,7 +253,10 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
     if (interpreter.exception())
         return {};
     auto value = interpreter.argument(2);
-    return Value(target->put(property_key, value));
+    Value receiver = {};
+    if (interpreter.argument_count() > 3)
+        receiver = interpreter.argument(3);
+    return Value(target->put(property_key, value, receiver));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set_prototype_of)
