@@ -104,7 +104,22 @@ public:
     const Vector<String>& history() const { return m_history; }
 
     void register_character_input_callback(char ch, Function<bool(Editor&)> callback);
-    size_t actual_rendered_string_length(const StringView& string) const;
+    struct StringMetrics {
+        Vector<size_t> line_lengths;
+        size_t total_length { 0 };
+        size_t max_line_length { 0 };
+
+        size_t lines_with_addition(const StringMetrics& offset, size_t column_width) const;
+        void reset()
+        {
+            line_lengths.clear();
+            total_length = 0;
+            max_line_length = 0;
+            line_lengths.append(0);
+        }
+    };
+    StringMetrics actual_rendered_string_metrics(const StringView&) const;
+    StringMetrics actual_rendered_string_metrics(const Utf32View&) const;
 
     Function<Vector<CompletionSuggestion>(const Editor&)> on_tab_complete;
     Function<void()> on_interrupt_handled;
@@ -135,9 +150,9 @@ public:
     void set_prompt(const String& prompt)
     {
         if (m_cached_prompt_valid)
-            m_old_prompt_length = m_cached_prompt_length;
+            m_old_prompt_metrics = m_cached_prompt_metrics;
         m_cached_prompt_valid = false;
-        m_cached_prompt_length = actual_rendered_string_length(prompt);
+        m_cached_prompt_metrics = actual_rendered_string_metrics(prompt);
         m_new_prompt = prompt;
     }
 
@@ -168,8 +183,20 @@ public:
 
     bool is_editing() const { return m_is_editing; }
 
+    const Utf32View buffer_view() const { return { m_buffer.data(), m_buffer.size() }; }
+
 private:
     explicit Editor(Configuration configuration = {});
+
+    enum VTState {
+        Free = 1,
+        Escape = 3,
+        Bracket = 5,
+        BracketArgsSemi = 7,
+        Title = 9,
+    };
+
+    VTState actual_rendered_string_length_step(StringMetrics&, size_t& length, u32, u32, VTState) const;
 
     // ^Core::Object
     virtual void save_to(JsonObject&) override;
@@ -215,12 +242,12 @@ private:
 
     void reset()
     {
-        m_cached_buffer_size = 0;
+        m_cached_buffer_metrics.reset();
         m_cached_prompt_valid = false;
         m_cursor = 0;
         m_drawn_cursor = 0;
         m_inline_search_cursor = 0;
-        m_old_prompt_length = m_cached_prompt_length;
+        m_old_prompt_metrics = m_cached_prompt_metrics;
         set_origin(0, 0);
         m_prompt_lines_at_suggestion_initiation = 0;
         m_refresh_needed = true;
@@ -238,24 +265,36 @@ private:
         m_initialized = false;
     }
 
-    size_t current_prompt_length() const
+    const StringMetrics& current_prompt_metrics() const
     {
-        return m_cached_prompt_valid ? m_cached_prompt_length : m_old_prompt_length;
+        return m_cached_prompt_valid ? m_cached_prompt_metrics : m_old_prompt_metrics;
     }
 
     size_t num_lines() const
     {
-        return (m_cached_buffer_size + m_num_columns + current_prompt_length() - 1) / m_num_columns;
+        return current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);
     }
 
     size_t cursor_line() const
     {
-        return (m_drawn_cursor + m_num_columns + current_prompt_length()) / m_num_columns;
+        auto cursor = m_drawn_cursor;
+        if (cursor > m_cursor)
+            cursor = m_cursor;
+        return current_prompt_metrics().lines_with_addition(
+            actual_rendered_string_metrics(buffer_view().substring_view(0, cursor)),
+            m_num_columns);
     }
 
     size_t offset_in_line() const
     {
-        return (m_drawn_cursor + current_prompt_length()) % m_num_columns;
+        auto cursor = m_drawn_cursor;
+        if (cursor > m_cursor)
+            cursor = m_cursor;
+        auto buffer_metrics = actual_rendered_string_metrics(buffer_view().substring_view(0, cursor));
+        if (buffer_metrics.line_lengths.size() > 1)
+            return buffer_metrics.line_lengths.last() % m_num_columns;
+
+        return (buffer_metrics.line_lengths.last() + current_prompt_metrics().line_lengths.last()) % m_num_columns;
     }
 
     void set_origin()
@@ -305,9 +344,10 @@ private:
     size_t m_times_tab_pressed { 0 };
     size_t m_num_columns { 0 };
     size_t m_num_lines { 1 };
-    size_t m_cached_prompt_length { 0 };
-    size_t m_old_prompt_length { 0 };
-    size_t m_cached_buffer_size { 0 };
+    size_t m_extra_forward_lines { 0 };
+    StringMetrics m_cached_prompt_metrics;
+    StringMetrics m_old_prompt_metrics;
+    StringMetrics m_cached_buffer_metrics;
     size_t m_prompt_lines_at_suggestion_initiation { 0 };
     bool m_cached_prompt_valid { false };
 
