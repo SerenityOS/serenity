@@ -123,6 +123,12 @@ void CanvasRenderingContext2D::translate(float tx, float ty)
     m_transform.translate(tx, ty);
 }
 
+void CanvasRenderingContext2D::rotate(float radians)
+{
+    dbg() << "CanvasRenderingContext2D::rotate(): " << radians;
+    m_transform.rotate_radians(radians);
+}
+
 void CanvasRenderingContext2D::did_draw(const Gfx::FloatRect&)
 {
     // FIXME: Make use of the rect to reduce the invalidated area when possible.

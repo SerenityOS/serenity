@@ -5,6 +5,7 @@ interface CanvasRenderingContext2D {
 
     void scale(double x, double y);
     void translate(double x, double y);
+    void rotate(double radians);
 
     void beginPath();
     void closePath();
