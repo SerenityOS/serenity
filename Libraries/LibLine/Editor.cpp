@@ -847,12 +847,13 @@ void Editor::handle_read_event()
 
                 // Manually cleanup the search line.
                 reposition_cursor();
-                auto search_string_codepoint_length = Utf8View { search_string }.length_in_codepoints();
-                VT::clear_lines(0, (search_string_codepoint_length + actual_rendered_string_length(search_prompt) + m_num_columns - 1) / m_num_columns);
+                auto search_metrics = actual_rendered_string_metrics(search_string);
+                auto metrics = actual_rendered_string_metrics(search_prompt);
+                VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns));
 
                 reposition_cursor();
 
-                if (!m_reset_buffer_on_search_end || search_string_codepoint_length == 0) {
+                if (!m_reset_buffer_on_search_end || search_metrics.total_length == 0) {
                     // If the entry was empty, or we purposely quit without a newline,
                     // do not return anything; instead, just end the search.
                     end_search();
@@ -938,8 +939,8 @@ void Editor::recalculate_origin()
     // the new size is smaller than our prompt, which would
     // cause said prompt to take up more space, so we should
     // compensate for that.
-    if (m_cached_prompt_length >= m_num_columns) {
-        auto added_lines = (m_cached_prompt_length + 1) / m_num_columns - 1;
+    if (m_cached_prompt_metrics.max_line_length >= m_num_columns) {
+        auto added_lines = (m_cached_prompt_metrics.max_line_length + 1) / m_num_columns - 1;
         m_origin_row += added_lines;
     }
 
@@ -949,11 +950,15 @@ void Editor::recalculate_origin()
 }
 void Editor::cleanup()
 {
-    VT::move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
+    VT::move_relative(-m_extra_forward_lines, m_pending_chars.size() - m_chars_inserted_in_the_middle);
     auto current_line = cursor_line();
 
-    VT::clear_lines(current_line - 1, num_lines() - current_line);
-    VT::move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length - m_pending_chars.size() + m_chars_inserted_in_the_middle);
+    // There's a newline at the top, don't clear that line.
+    if (current_prompt_metrics().line_lengths.first() == 0)
+        --current_line;
+    VT::clear_lines(current_line - 1, num_lines() - current_line + m_extra_forward_lines);
+    m_extra_forward_lines = 0;
+    reposition_cursor();
 };
 
 void Editor::refresh_display()
@@ -990,7 +995,7 @@ void Editor::refresh_display()
     if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
         // Probably just moving around.
         reposition_cursor();
-        m_cached_buffer_size = m_buffer.size();
+        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
         return;
     }
     // We might be at the last line, and have more than one line;
@@ -1016,14 +1021,13 @@ void Editor::refresh_display()
             fputs((char*)m_pending_chars.data(), stdout);
             m_pending_chars.clear();
             m_drawn_cursor = m_cursor;
-            m_cached_buffer_size = m_buffer.size();
+            m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
             fflush(stdout);
             return;
         }
     }
 
     // Ouch, reflow entire line.
-    // FIXME: handle multiline stuff
     if (!has_cleaned_up) {
         cleanup();
     }
@@ -1078,7 +1082,7 @@ void Editor::refresh_display()
 
     m_pending_chars.clear();
     m_refresh_needed = false;
-    m_cached_buffer_size = m_buffer.size();
+    m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
     m_chars_inserted_in_the_middle = 0;
     if (!m_cached_prompt_valid) {
         m_cached_prompt_valid = true;
@@ -1303,70 +1307,101 @@ void VT::clear_to_end_of_line()
     fflush(stdout);
 }
 
-size_t Editor::actual_rendered_string_length(const StringView& string) const
+Editor::StringMetrics Editor::actual_rendered_string_metrics(const StringView& string) const
 {
     size_t length { 0 };
-    enum VTState {
-        Free = 1,
-        Escape = 3,
-        Bracket = 5,
-        BracketArgsSemi = 7,
-        Title = 9,
-    } state { Free };
+    StringMetrics metrics;
+    VTState state { Free };
     Utf8View view { string };
     auto it = view.begin();
 
-    for (size_t i = 0; i < view.length_in_codepoints(); ++i, ++it) {
+    for (; it != view.end(); ++it) {
         auto c = *it;
-        switch (state) {
-        case Free:
-            if (c == '\x1b') { // escape
-                state = Escape;
-                continue;
-            }
-            if (c == '\r' || c == '\n') { // return or carriage return
-                // Reset length to 0, since we either overwrite, or are on a newline.
-                length = 0;
-                continue;
-            }
-            // FIXME: This will not support anything sophisticated
-            ++length;
-            break;
-        case Escape:
-            if (c == ']') {
-                ++i;
-                ++it;
-                if (*it == '0')
-                    state = Title;
-                continue;
-            }
-            if (c == '[') {
-                state = Bracket;
-                continue;
-            }
-            // FIXME: This does not support non-VT (aside from set-title) escapes
-            break;
-        case Bracket:
-            if (isdigit(c)) {
-                state = BracketArgsSemi;
-                continue;
-            }
-            break;
-        case BracketArgsSemi:
-            if (c == ';') {
-                state = Bracket;
-                continue;
-            }
-            if (!isdigit(c))
-                state = Free;
-            break;
-        case Title:
-            if (c == 7)
-                state = Free;
-            break;
-        }
+        auto it_copy = it;
+        ++it_copy;
+        auto next_c = it_copy == view.end() ? 0 : *it_copy;
+        state = actual_rendered_string_length_step(metrics, length, c, next_c, state);
     }
-    return length;
+
+    metrics.line_lengths.append(length);
+
+    for (auto& line : metrics.line_lengths)
+        metrics.max_line_length = max(line, metrics.max_line_length);
+
+    return metrics;
+}
+
+Editor::StringMetrics Editor::actual_rendered_string_metrics(const Utf32View& view) const
+{
+    size_t length { 0 };
+    StringMetrics metrics;
+    VTState state { Free };
+
+    for (size_t i = 0; i < view.length(); ++i) {
+        auto c = view.codepoints()[i];
+        auto next_c = i + 1 < view.length() ? view.codepoints()[i + 1] : 0;
+        state = actual_rendered_string_length_step(metrics, length, c, next_c, state);
+    }
+
+    metrics.line_lengths.append(length);
+
+    for (auto& line : metrics.line_lengths)
+        metrics.max_line_length = max(line, metrics.max_line_length);
+
+    return metrics;
+}
+
+Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metrics, size_t& length, u32 c, u32 next_c, VTState state) const
+{
+    switch (state) {
+    case Free:
+        if (c == '\x1b') { // escape
+            return Escape;
+        }
+        if (c == '\r') { // carriage return
+            length = 0;
+            if (!metrics.line_lengths.is_empty())
+                metrics.line_lengths.last() = 0;
+            return state;
+        }
+        if (c == '\n') { // return
+            metrics.line_lengths.append(length);
+            length = 0;
+            return state;
+        }
+        // FIXME: This will not support anything sophisticated
+        ++length;
+        ++metrics.total_length;
+        return state;
+    case Escape:
+        if (c == ']') {
+            if (next_c == '0')
+                state = Title;
+            return state;
+        }
+        if (c == '[') {
+            return Bracket;
+        }
+        // FIXME: This does not support non-VT (aside from set-title) escapes
+        return state;
+    case Bracket:
+        if (isdigit(c)) {
+            return BracketArgsSemi;
+        }
+        return state;
+    case BracketArgsSemi:
+        if (c == ';') {
+            return Bracket;
+        }
+        if (!isdigit(c))
+            state = Free;
+        return state;
+    case Title:
+        if (c == 7)
+            state = Free;
+        return state;
+    }
+    return state;
 }
 
 Vector<size_t, 2> Editor::vt_dsr()
@@ -1471,7 +1506,10 @@ void Editor::remove_at_index(size_t index)
 {
     // See if we have any anchored styles, and reposition them if needed.
     readjust_anchored_styles(index, ModificationKind::Removal);
+    auto cp = m_buffer[index];
     m_buffer.remove(index);
+    if (cp == '\n')
+        ++m_extra_forward_lines;
 }
 
 void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modification)
@@ -1517,5 +1555,22 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
     for (auto& relocation : anchors_to_relocate) {
         stylize(relocation.new_span, relocation.style);
     }
+}
+
+size_t Editor::StringMetrics::lines_with_addition(const StringMetrics& offset, size_t column_width) const
+{
+    size_t lines = 0;
+
+    for (size_t i = 0; i < line_lengths.size() - 1; ++i)
+        lines += (line_lengths[i] + column_width) / column_width;
+
+    auto last = line_lengths.last();
+    last += offset.line_lengths.first();
+    lines += (last + column_width) / column_width;
+
+    for (size_t i = 1; i < offset.line_lengths.size(); ++i)
+        lines += (offset.line_lengths[i] + column_width) / column_width;
+
+    return lines;
 }
 }

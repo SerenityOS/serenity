@@ -126,7 +126,8 @@ String Shell::prompt() const
     };
 
     auto the_prompt = build_prompt();
-    auto prompt_length = editor->actual_rendered_string_length(the_prompt);
+    auto prompt_metrics = editor->actual_rendered_string_metrics(the_prompt);
+    auto prompt_length = prompt_metrics.line_lengths.last();
 
     if (m_should_continue != ExitCodeOrContinuationRequest::Nothing) {
         const auto format_string = "\033[34m%.*-s\033[m";
@@ -1769,10 +1770,8 @@ bool Shell::read_single_line()
     if (line.is_empty())
         return true;
 
-    // FIXME: This might be a bit counter-intuitive, since we put nothing
-    //        between the two lines, even though the user has pressed enter
-    //        but since the LineEditor cannot yet handle literal newlines
-    //        inside the text, we opt to do this the wrong way (for the time being)
+    if (!m_complete_line_builder.is_empty())
+        m_complete_line_builder.append("\n");
     m_complete_line_builder.append(line);
 
     auto complete_or_exit_code = run_command(m_complete_line_builder.string_view());
