@@ -39,6 +39,11 @@ public:
     {
     }
 
+    AffineTransform(float a, float b, float c, float d, float e, float f)
+        : m_values { a, b, c, d, e, f }
+    {
+    }
+
     bool is_identity() const;
 
     void map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const;
@@ -64,6 +69,8 @@ public:
 
     AffineTransform& scale(float sx, float sy);
     AffineTransform& translate(float tx, float ty);
+    AffineTransform& rotate_radians(float);
+    AffineTransform& multiply(const AffineTransform&);
 
 private:
     float m_values[6] { 0 };
