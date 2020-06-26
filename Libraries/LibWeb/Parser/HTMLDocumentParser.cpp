@@ -2621,9 +2621,6 @@ NonnullRefPtrVector<Node> HTMLDocumentParser::parse_html_fragment(Element& conte
     } else if (context_element.tag_name().is_one_of(HTML::TagNames::noscript)) {
         if (context_element.document().is_scripting_enabled())
             parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
-    } else if (context_element.tag_name().is_one_of(HTML::TagNames::noscript)) {
-        if (context_element.document().is_scripting_enabled())
-            parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
     } else if (context_element.tag_name().is_one_of(HTML::TagNames::plaintext)) {
         parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::PLAINTEXT);
     }
