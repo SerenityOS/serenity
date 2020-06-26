@@ -69,6 +69,28 @@ AffineTransform& AffineTransform::translate(float tx, float ty)
     return *this;
 }
 
+AffineTransform& AffineTransform::multiply(const AffineTransform& other)
+{
+    AffineTransform result;
+    result.m_values[0] = other.a() * a() + other.b() * c();
+    result.m_values[1] = other.a() * b() + other.b() * d();
+    result.m_values[2] = other.c() * a() + other.d() * c();
+    result.m_values[3] = other.c() * b() + other.d() * d();
+    result.m_values[4] = other.e() * a() + other.f() * c() + e();
+    result.m_values[5] = other.e() * b() + other.f() * d() + f();
+    *this = result;
+    return *this;
+}
+
+AffineTransform& AffineTransform::rotate_radians(float radians)
+{
+    float sin_angle = sinf(radians);
+    float cos_angle = cosf(radians);
+    AffineTransform rotation(cos_angle, sin_angle, -sin_angle, cos_angle, 0, 0);
+    multiply(rotation);
+    return *this;
+}
+
 void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const
 {
     mapped_x = (m_values[0] * unmapped_x + m_values[2] * unmapped_y + m_values[4]);
