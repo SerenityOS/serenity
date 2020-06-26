@@ -62,6 +62,7 @@ public:
     Color color_or_fallback(CSS::PropertyID, const Document&, Color fallback) const;
     CSS::TextAlign text_align() const;
     CSS::Display display() const;
+    Optional<CSS::Float> float_() const;
     Optional<CSS::WhiteSpace> white_space() const;
 
     const Gfx::Font& font() const
