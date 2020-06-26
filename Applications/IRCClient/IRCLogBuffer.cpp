@@ -86,11 +86,8 @@ void IRCLogBuffer::add_message(char prefix, const String& name, const String& te
 void IRCLogBuffer::add_message(const String& text, Color color)
 {
     auto html = String::format(
-        "<div style=\"color: %s\">"
         "<span>%s</span>"
-        "<span>%s</span>"
-        "</div>",
-        color.to_string().characters(),
+        "<span>%s</span>",
         timestamp_string().characters(),
         escape_html_entities(text).characters());
     auto wrapper = Web::create_element(*m_document, Web::HTML::TagNames::div);
