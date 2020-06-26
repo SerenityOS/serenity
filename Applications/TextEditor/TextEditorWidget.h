@@ -45,12 +45,14 @@ public:
     GUI::TextEditor& editor() { return *m_editor; }
 
     void set_markdown_preview_enabled(bool);
+    void set_html_preview_enabled(bool);
 
 private:
     TextEditorWidget();
     void set_path(const LexicalPath& file);
     void update_title();
     void update_markdown_preview();
+    void update_html_preview();
 
     virtual void drop_event(GUI::DropEvent&) override;
 
@@ -64,12 +66,16 @@ private:
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_find_replace_action;
     RefPtr<GUI::Action> m_line_wrapping_setting_action;
-    RefPtr<GUI::Action> m_markdown_preview_action;
+
     RefPtr<GUI::Action> m_find_next_action;
     RefPtr<GUI::Action> m_find_previous_action;
     RefPtr<GUI::Action> m_replace_next_action;
     RefPtr<GUI::Action> m_replace_previous_action;
     RefPtr<GUI::Action> m_replace_all_action;
+
+    GUI::ActionGroup m_preview_actions;
+    RefPtr<GUI::Action> m_markdown_preview_action;
+    RefPtr<GUI::Action> m_html_preview_action;
 
     RefPtr<GUI::StatusBar> m_statusbar;
 
@@ -95,4 +101,5 @@ private:
     bool m_document_dirty { false };
     bool m_document_opening { false };
     bool m_markdown_preview_enabled { false };
+    bool m_html_preview_enabled { false };
 };
