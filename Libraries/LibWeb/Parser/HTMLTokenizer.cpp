@@ -294,7 +294,9 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -357,8 +359,9 @@ _StartOfFunction:
                 ON_EOF
                 {
                     PARSE_ERROR();
-                    // FIXME: Emit a U+003C LESS-THAN SIGN character token, a U+002F SOLIDUS character token and an end-of-file token.
-                    continue;
+                    m_queued_tokens.enqueue(HTMLToken::make_character('<'));
+                    m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1063,7 +1066,8 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
