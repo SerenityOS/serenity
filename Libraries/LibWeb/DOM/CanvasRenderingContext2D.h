@@ -62,6 +62,7 @@ public:
 
     void scale(float sx, float sy);
     void translate(float x, float y);
+    void rotate(float degrees);
 
     void set_line_width(float line_width) { m_line_width = line_width; }
     float line_width() const { return m_line_width; }
