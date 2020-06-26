@@ -181,6 +181,7 @@ public:
     };
     virtual void paint(PaintContext&, PaintPhase);
 
+    bool is_floating() const;
     bool is_absolutely_positioned() const;
     bool is_fixed_position() const;
 

@@ -263,6 +263,21 @@ Optional<CSS::WhiteSpace> StyleProperties::white_space() const
     return {};
 }
 
+Optional<CSS::Float> StyleProperties::float_() const
+{
+    auto value = property(CSS::PropertyID::Float);
+    if (!value.has_value() || !value.value()->is_string())
+        return {};
+    auto string = value.value()->to_string();
+    if (string == "none")
+        return CSS::Float::None;
+    if (string == "left")
+        return CSS::Float::Left;
+    if (string == "right")
+        return CSS::Float::Right;
+    return {};
+}
+
 CSS::Display StyleProperties::display() const
 {
     auto display = string_or_fallback(CSS::PropertyID::Display, "inline");

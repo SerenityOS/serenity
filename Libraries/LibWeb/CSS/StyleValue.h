@@ -143,6 +143,12 @@ enum class WhiteSpace {
     PreWrap,
 };
 
+enum class Float {
+    None,
+    Left,
+    Right,
+};
+
 }
 
 class StyleValue : public RefCounted<StyleValue> {

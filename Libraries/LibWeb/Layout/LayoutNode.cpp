@@ -181,6 +181,13 @@ Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
     return position;
 }
 
+bool LayoutNode::is_floating() const
+{
+    if (!has_style())
+        return false;
+    return style().float_() != CSS::Float::None;
+}
+
 bool LayoutNode::is_absolutely_positioned() const
 {
     if (!has_style())
@@ -215,6 +222,10 @@ void LayoutNodeWithStyle::apply_style(const StyleProperties& specified_style)
     auto white_space = specified_style.white_space();
     if (white_space.has_value())
         style.set_white_space(white_space.value());
+
+    auto float_ = specified_style.float_();
+    if (float_.has_value())
+        style.set_float(float_.value());
 
     style.set_z_index(specified_style.z_index());
     style.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
