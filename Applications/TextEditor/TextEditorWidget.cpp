@@ -74,6 +74,9 @@ TextEditorWidget::TextEditorWidget()
         if (m_markdown_preview_enabled)
             update_markdown_preview();
 
+        if (m_html_preview_enabled)
+            update_html_preview();
+
         // Do not mark as dirty on the first change (When document is first opened.)
         if (m_document_opening) {
             m_document_opening = false;
@@ -390,10 +393,21 @@ TextEditorWidget::TextEditorWidget()
         },
         this);
 
+    m_html_preview_action = GUI::Action::create_checkable(
+        "HTML preview", [this](auto& action) {
+            set_html_preview_enabled(action.is_checked());
+        },
+        this);
+
+    m_preview_actions.add_action(*m_markdown_preview_action);
+    m_preview_actions.add_action(*m_html_preview_action);
+    m_preview_actions.set_exclusive(true);
+
     auto& view_menu = menubar->add_menu("View");
     view_menu.add_action(*m_line_wrapping_setting_action);
     view_menu.add_separator();
     view_menu.add_action(*m_markdown_preview_action);
+    view_menu.add_action(*m_html_preview_action);
     view_menu.add_separator();
 
     auto& font_menu = view_menu.add_submenu("Font");
@@ -481,6 +495,7 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
     }
 
     set_markdown_preview_enabled(m_extension == "md");
+    set_html_preview_enabled(m_extension == "html");
 
     update_title();
 }
@@ -546,6 +561,17 @@ void TextEditorWidget::drop_event(GUI::DropEvent& event)
     }
 }
 
+void TextEditorWidget::set_html_preview_enabled(bool enabled)
+{
+    if (m_html_preview_enabled == enabled)
+        return;
+    m_html_preview_enabled = enabled;
+    m_html_preview_action->set_checked(enabled);
+    m_page_view->set_visible(enabled);
+    if (enabled)
+        update_html_preview();
+}
+
 void TextEditorWidget::set_markdown_preview_enabled(bool enabled)
 {
     if (m_markdown_preview_enabled == enabled)
@@ -564,4 +590,9 @@ void TextEditorWidget::update_markdown_preview()
         auto html = document->render_to_html();
         m_page_view->load_html(html, URL::create_with_file_protocol(m_path));
     }
+}
+
+void TextEditorWidget::update_html_preview()
+{
+    m_page_view->load_html(m_editor->text(), URL::create_with_file_protocol(m_path));
 }
