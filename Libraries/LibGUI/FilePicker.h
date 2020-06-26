@@ -74,7 +74,7 @@ private:
     LexicalPath m_selected_file;
 
     RefPtr<TextBox> m_filename_textbox;
-    RefPtr<Image> m_preview_image_label;
+    RefPtr<Image> m_preview_image;
     RefPtr<Label> m_preview_name_label;
     RefPtr<Label> m_preview_geometry_label;
     Mode m_mode { Mode::Open };
