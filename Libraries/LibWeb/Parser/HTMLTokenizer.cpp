@@ -986,7 +986,11 @@ _StartOfFunction:
                 }
                 ON('=')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    auto new_attribute = HTMLToken::AttributeBuilder();
+                    new_attribute.local_name_builder.append_codepoint(current_input_character.value());
+                    m_current_token.m_tag.attributes.append(new_attribute);
+                    SWITCH_TO(AttributeName);
                 }
                 ANYTHING_ELSE
                 {
@@ -1038,8 +1042,35 @@ _StartOfFunction:
                 {
                     SWITCH_TO(BeforeAttributeValue);
                 }
+                ON_ASCII_UPPER_ALPHA
+                {
+                    m_current_token.m_tag.attributes.last().local_name_builder.append_codepoint(tolower(current_input_character.value()));
+                    continue;
+                }
+                ON(0)
+                {
+                    PARSE_ERROR();
+                    m_current_token.m_tag.attributes.last().local_name_builder.append_codepoint(0xFFFD);
+                    continue;
+                }
+                ON('"')
+                {
+                    PARSE_ERROR();
+                    goto AnythingElseAttributeName;
+                }
+                ON('\'')
+                {
+                    PARSE_ERROR();
+                    goto AnythingElseAttributeName;
+                }
+                ON('<')
+                {
+                    PARSE_ERROR();
+                    goto AnythingElseAttributeName;
+                }
                 ANYTHING_ELSE
                 {
+                AnythingElseAttributeName:
                     m_current_token.m_tag.attributes.last().local_name_builder.append_codepoint(current_input_character.value());
                     continue;
                 }
@@ -1116,7 +1147,9 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_tag.attributes.last().value_builder.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ON_EOF
                 {
@@ -1144,7 +1177,9 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_tag.attributes.last().value_builder.append_codepoint(0xFFFD);
+                    continue;
                 }
                 ON_EOF
                 {
@@ -1176,7 +1211,34 @@ _StartOfFunction:
                 }
                 ON(0)
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    m_current_token.m_tag.attributes.last().value_builder.append_codepoint(0xFFFD);
+                    continue;
+                }
+                ON('"')
+                {
+                    PARSE_ERROR();
+                    goto AnythingElseAttributeValueUnquoted;
+                }
+                ON('\'')
+                {
+                    PARSE_ERROR();
+                    goto AnythingElseAttributeValueUnquoted;
+                }
+                ON('<')
+                {
+                    PARSE_ERROR();
+                    goto AnythingElseAttributeValueUnquoted;
+                }
+                ON('=')
+                {
+                    PARSE_ERROR();
+                    goto AnythingElseAttributeValueUnquoted;
+                }
+                ON('`')
+                {
+                    PARSE_ERROR();
+                    goto AnythingElseAttributeValueUnquoted;
                 }
                 ON_EOF
                 {
@@ -1185,6 +1247,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
+                AnythingElseAttributeValueUnquoted:
                     m_current_token.m_tag.attributes.last().value_builder.append_codepoint(current_input_character.value());
                     continue;
                 }
@@ -1510,7 +1573,8 @@ _StartOfFunction:
                 }
                 ON(';')
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    RECONSUME_IN_RETURN_STATE;
                 }
                 ANYTHING_ELSE
                 {
@@ -1548,7 +1612,9 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
+                    RECONSUME_IN_RETURN_STATE;
                 }
             }
             END_STATE
@@ -1561,7 +1627,9 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
+                    RECONSUME_IN_RETURN_STATE;
                 }
             }
             END_STATE
@@ -1592,7 +1660,8 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    RECONSUME_IN(NumericCharacterReferenceEnd);
                 }
             }
             END_STATE
@@ -1611,7 +1680,8 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    RECONSUME_IN(NumericCharacterReferenceEnd);
                 }
             }
             END_STATE
@@ -1621,22 +1691,22 @@ _StartOfFunction:
                 DONT_CONSUME_NEXT_INPUT_CHARACTER;
 
                 if (m_character_reference_code == 0) {
-                    TODO();
+                    PARSE_ERROR();
+                    m_character_reference_code = 0xFFFD;
                 }
                 if (m_character_reference_code > 0x10ffff) {
-                    TODO();
+                    PARSE_ERROR();
+                    m_character_reference_code = 0xFFFD;
                 }
                 if (is_surrogate(m_character_reference_code)) {
-                    TODO();
+                    PARSE_ERROR();
+                    m_character_reference_code = 0xFFFD;
                 }
                 if (is_noncharacter(m_character_reference_code)) {
-                    TODO();
+                    PARSE_ERROR();
                 }
                 if (m_character_reference_code == 0xd || (is_control(m_character_reference_code) && !isspace(m_character_reference_code))) {
-                    TODO();
-                }
-
-                if (is_control(m_character_reference_code)) {
+                    PARSE_ERROR();
                     constexpr struct {
                         u32 number;
                         u32 codepoint;
