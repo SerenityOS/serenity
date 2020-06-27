@@ -76,6 +76,7 @@ private:
     String m_link_context_menu_href;
 
     RefPtr<GUI::Menu> m_tab_context_menu;
+    RefPtr<GUI::Menu> m_page_context_menu;
 
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;
