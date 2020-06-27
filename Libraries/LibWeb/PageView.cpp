@@ -103,6 +103,12 @@ void PageView::page_did_request_cursor_change(GUI::StandardCursor cursor)
         window()->set_override_cursor(cursor);
 }
 
+void PageView::page_did_request_context_menu(const Gfx::IntPoint& content_position)
+{
+    if (on_context_menu_request)
+        on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
+}
+
 void PageView::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
 {
     if (on_link_context_menu_request)
