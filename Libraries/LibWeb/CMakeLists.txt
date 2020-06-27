@@ -57,6 +57,7 @@ set(SOURCES
     DOM/ParentNode.cpp
     DOM/TagNames.cpp
     DOM/Text.cpp
+    DOM/Timer.cpp
     DOM/Window.cpp
     DOM/XMLHttpRequest.cpp
     DOMTreeModel.cpp

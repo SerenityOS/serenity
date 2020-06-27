@@ -24,77 +24,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibCore/Timer.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Function.h>
+#include <LibWeb/DOM/Timer.h>
+#include <LibWeb/DOM/Window.h>
 
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventHandler;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLDocumentParser;
-class HTMLElement;
-class HTMLFormElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HTMLImageElement;
-class HTMLScriptElement;
-class PageView;
-class ImageData;
-class LineBox;
-class LineBoxFragment;
-class LayoutBlock;
-class LayoutDocument;
-class LayoutNode;
-class LayoutNodeWithStyle;
-class LayoutReplaced;
-class LoadRequest;
-class MouseEvent;
-class Node;
-class Origin;
-class Page;
-class PageClient;
-class PaintContext;
-class Resource;
-class ResourceLoader;
-class Selector;
-class StackingContext;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Text;
-class Timer;
-class Window;
-class XMLHttpRequest;
+NonnullRefPtr<Timer> Timer::create_interval(Window& window, int milliseconds, JS::Function& callback)
+{
+    return adopt(*new Timer(window, Type::Interval, milliseconds, callback));
+}
 
-namespace Bindings {
+NonnullRefPtr<Timer> Timer::create_timeout(Window& window, int milliseconds, JS::Function& callback)
+{
+    return adopt(*new Timer(window, Type::Timeout, milliseconds, callback));
+}
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class HTMLElementWrapper;
-class HTMLImageElementWrapper;
-class ImageDataWrapper;
-class LocationObject;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+Timer::Timer(Window& window, Type type, int milliseconds, JS::Function& callback)
+    : m_window(window)
+    , m_type(type)
+    , m_callback(JS::make_handle(&callback))
+{
+    m_id = window.allocate_timer_id({});
+    m_timer = Core::Timer::construct(milliseconds, [this] { m_window.timer_did_fire({}, *this); });
+    if (m_type == Type::Timeout)
+        m_timer->set_single_shot(true);
+}
 
+Timer::~Timer()
+{
 }
 
 }

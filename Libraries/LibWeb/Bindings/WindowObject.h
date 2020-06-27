@@ -58,6 +58,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(confirm);
     JS_DECLARE_NATIVE_FUNCTION(set_interval);
     JS_DECLARE_NATIVE_FUNCTION(set_timeout);
+    JS_DECLARE_NATIVE_FUNCTION(clear_interval);
+    JS_DECLARE_NATIVE_FUNCTION(clear_timeout);
     JS_DECLARE_NATIVE_FUNCTION(request_animation_frame);
     JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
     JS_DECLARE_NATIVE_FUNCTION(atob);
