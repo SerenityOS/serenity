@@ -714,6 +714,7 @@ bool g_cpu_supports_nx;
 bool g_cpu_supports_pae;
 bool g_cpu_supports_pge;
 bool g_cpu_supports_rdrand;
+bool g_cpu_supports_rdseed;
 bool g_cpu_supports_smap;
 bool g_cpu_supports_smep;
 bool g_cpu_supports_sse;
@@ -736,6 +737,7 @@ void cpu_detect()
     g_cpu_supports_smap = (extended_features.ebx() & (1 << 20));
     g_cpu_supports_smep = (extended_features.ebx() & (1 << 7));
     g_cpu_supports_umip = (extended_features.ecx() & (1 << 2));
+    g_cpu_supports_rdseed = (extended_features.ebx() & (1 << 18));
 }
 
 void cpu_setup()
