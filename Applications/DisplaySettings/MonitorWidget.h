@@ -35,7 +35,7 @@ class MonitorWidget final : public GUI::Widget {
 public:
     MonitorWidget();
 
-    void set_wallpaper(String path);
+    bool set_wallpaper(String path);
     String wallpaper();
 
     void set_wallpaper_mode(String mode);

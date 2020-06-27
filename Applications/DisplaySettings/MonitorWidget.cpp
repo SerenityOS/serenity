@@ -33,10 +33,14 @@ MonitorWidget::MonitorWidget()
     m_monitor_rect = { 8, 9, 320, 180 };
 }
 
-void MonitorWidget::set_wallpaper(String path)
+bool MonitorWidget::set_wallpaper(String path)
 {
     m_desktop_wallpaper_path = path;
-    m_desktop_wallpaper_bitmap = Gfx::Bitmap::load_from_file(path);
+    auto bitmap_ptr = Gfx::Bitmap::load_from_file(path);
+    if (!bitmap_ptr)
+        return false;
+    m_desktop_wallpaper_bitmap = bitmap_ptr;
+    return true;
 }
 
 String MonitorWidget::wallpaper()
