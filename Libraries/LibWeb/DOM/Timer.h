@@ -26,75 +26,38 @@
 
 #pragma once
 
+#include <AK/Forward.h>
+#include <LibCore/Forward.h>
+#include <LibJS/Heap/Handle.h>
+#include <LibWeb/Forward.h>
+
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventHandler;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLDocumentParser;
-class HTMLElement;
-class HTMLFormElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HTMLImageElement;
-class HTMLScriptElement;
-class PageView;
-class ImageData;
-class LineBox;
-class LineBoxFragment;
-class LayoutBlock;
-class LayoutDocument;
-class LayoutNode;
-class LayoutNodeWithStyle;
-class LayoutReplaced;
-class LoadRequest;
-class MouseEvent;
-class Node;
-class Origin;
-class Page;
-class PageClient;
-class PaintContext;
-class Resource;
-class ResourceLoader;
-class Selector;
-class StackingContext;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Text;
-class Timer;
-class Window;
-class XMLHttpRequest;
+class Timer final : public RefCounted<Timer> {
+public:
+    enum class Type {
+        Interval,
+        Timeout,
+    };
 
-namespace Bindings {
+    static NonnullRefPtr<Timer> create_interval(Window&, int milliseconds, JS::Function&);
+    static NonnullRefPtr<Timer> create_timeout(Window&, int milliseconds, JS::Function&);
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class HTMLElementWrapper;
-class HTMLImageElementWrapper;
-class ImageDataWrapper;
-class LocationObject;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+    ~Timer();
 
-}
+    i32 id() const { return m_id; }
+    Type type() const { return m_type; }
+
+    JS::Function& callback() { return *m_callback.cell(); }
+
+private:
+    Timer(Window&, Type, int ms, JS::Function&);
+
+    Window& m_window;
+    RefPtr<Core::Timer> m_timer;
+    Type m_type;
+    int m_id { 0 };
+    JS::Handle<JS::Function> m_callback;
+};
 
 }

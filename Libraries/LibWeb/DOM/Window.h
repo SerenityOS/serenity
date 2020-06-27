@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/IDAllocator.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -46,8 +47,11 @@ public:
     bool confirm(const String&);
     i32 request_animation_frame(JS::Function&);
     void cancel_animation_frame(i32);
-    void set_interval(JS::Function&, i32);
-    void set_timeout(JS::Function&, i32);
+
+    i32 set_timeout(JS::Function&, i32);
+    i32 set_interval(JS::Function&, i32);
+    void clear_timeout(i32);
+    void clear_interval(i32);
 
     void did_set_location_href(Badge<Bindings::LocationObject>, const String& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
@@ -57,11 +61,17 @@ public:
 
     void set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject&);
 
+    i32 allocate_timer_id(Badge<Timer>);
+    void timer_did_fire(Badge<Timer>, Timer&);
+
 private:
     explicit Window(Document&);
 
     Document& m_document;
     WeakPtr<Bindings::WindowObject> m_wrapper;
+
+    IDAllocator m_timer_id_allocator;
+    HashMap<int, NonnullRefPtr<Timer>> m_timers;
 };
 
 }

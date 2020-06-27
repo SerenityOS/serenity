@@ -62,6 +62,8 @@ void WindowObject::initialize()
     define_native_function("confirm", confirm);
     define_native_function("setInterval", set_interval, 1);
     define_native_function("setTimeout", set_timeout, 1);
+    define_native_function("clearInterval", clear_interval, 1);
+    define_native_function("clearTimeout", clear_timeout, 1);
     define_native_function("requestAnimationFrame", request_animation_frame, 1);
     define_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
     define_native_function("atob", atob, 1);
@@ -152,8 +154,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
             interval = 0;
     }
 
-    impl->set_interval(*static_cast<JS::Function*>(callback_object), interval);
-    return JS::js_undefined();
+    auto timer_id = impl->set_interval(*static_cast<JS::Function*>(callback_object), interval);
+    return JS::Value(timer_id);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
@@ -178,7 +180,35 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
             interval = 0;
     }
 
-    impl->set_timeout(*static_cast<JS::Function*>(callback_object), interval);
+    auto timer_id = impl->set_timeout(*static_cast<JS::Function*>(callback_object), interval);
+    return JS::Value(timer_id);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_timeout)
+{
+    auto* impl = impl_from(interpreter, global_object);
+    if (!impl)
+        return {};
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "clearTimeout");
+    i32 timer_id = interpreter.argument(0).to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
+    impl->clear_timeout(timer_id);
+    return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_interval)
+{
+    auto* impl = impl_from(interpreter, global_object);
+    if (!impl)
+        return {};
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "clearInterval");
+    i32 timer_id = interpreter.argument(0).to_i32(interpreter);
+    if (interpreter.exception())
+        return {};
+    impl->clear_timeout(timer_id);
     return JS::js_undefined();
 }
 

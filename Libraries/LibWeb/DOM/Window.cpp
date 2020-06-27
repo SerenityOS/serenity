@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/Timer.h>
 #include <LibGUI/DisplayLink.h>
 #include <LibGUI/MessageBox.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/PageView.h>
@@ -67,25 +67,49 @@ bool Window::confirm(const String& message)
     return confirm_result == GUI::Dialog::ExecResult::ExecOK;
 }
 
-void Window::set_interval(JS::Function& callback, i32 interval)
+i32 Window::set_interval(JS::Function& callback, i32 interval)
 {
-    // FIXME: This leaks the interval timer and makes it unstoppable.
-    (void)Core::Timer::construct(interval, [this, handle = make_handle(&callback)] {
-        auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
-        auto& interpreter = function.interpreter();
-        interpreter.call(function, wrapper());
-    }).leak_ref();
+    auto timer = Timer::create_interval(*this, interval, callback);
+    m_timers.set(timer->id(), timer);
+    return timer->id();
 }
 
-void Window::set_timeout(JS::Function& callback, i32 interval)
+i32 Window::set_timeout(JS::Function& callback, i32 interval)
 {
-    // FIXME: This leaks the interval timer and makes it unstoppable.
-    auto& timer = Core::Timer::construct(interval, [this, handle = make_handle(&callback)] {
-        auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
-        auto& interpreter = function.interpreter();
-        interpreter.call(function, wrapper());
-    }).leak_ref();
-    timer.set_single_shot(true);
+    auto timer = Timer::create_timeout(*this, interval, callback);
+    m_timers.set(timer->id(), timer);
+    return timer->id();
+}
+
+void Window::timer_did_fire(Badge<Timer>, Timer& timer)
+{
+    // We should not be here if there's no JS wrapper for the Window object.
+    ASSERT(wrapper());
+
+    // NOTE: This protector pointer keeps the timer alive until the end of this function no matter what.
+    NonnullRefPtr protector(timer);
+
+    if (timer.type() == Timer::Type::Timeout) {
+        m_timers.remove(timer.id());
+    }
+
+    auto& interpreter = wrapper()->interpreter();
+    interpreter.call(timer.callback(), wrapper());
+}
+
+i32 Window::allocate_timer_id(Badge<Timer>)
+{
+    return m_timer_id_allocator.allocate();
+}
+
+void Window::clear_timeout(i32 timer_id)
+{
+    m_timers.remove(timer_id);
+}
+
+void Window::clear_interval(i32 timer_id)
+{
+    m_timers.remove(timer_id);
 }
 
 i32 Window::request_animation_frame(JS::Function& callback)
