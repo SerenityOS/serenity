@@ -61,7 +61,7 @@ public:
             this->reseed();
         }
 
-        ASSERT(m_reseed_number > 0);
+        ASSERT(is_seeded());
 
         // FIXME: More than 2^20 bytes cannot be generated without refreshing the key.
         ASSERT(n < (1 << 20));
@@ -84,6 +84,16 @@ public:
             m_p0_len++;
         }
         m_pools[pool].update(reinterpret_cast<const u8*>(&event_data), sizeof(T));
+    }
+
+    bool is_seeded() const
+    {
+        return m_reseed_number > 0;
+    }
+
+    bool is_ready() const
+    {
+        return is_seeded() || m_p0_len >= reseed_threshold;
     }
 
 private:
@@ -118,8 +128,14 @@ class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto:
 public:
     static KernelRng& the();
 
+    void wait_for_entropy();
+
+    void wake_if_ready();
+
 private:
     KernelRng();
+
+    WaitQueue m_seed_queue;
 };
 
 class EntropySource {
@@ -143,6 +159,7 @@ public:
         Event<T> event = { read_tsc(), m_source, event_data };
         KernelRng::the().resource().add_random_event(event, m_pool);
         m_pool++;
+        KernelRng::the().wake_if_ready();
     }
 
 private:
@@ -153,7 +170,7 @@ private:
 };
 
 // NOTE: These API's are primarily about expressing intent/needs in the calling code.
-//       We don't make any guarantees about actual fastness or goodness yet.
+//       The only difference is that get_fast_random is guaranteed not to block.
 
 void get_fast_random_bytes(u8*, size_t);
 void get_good_random_bytes(u8*, size_t);

@@ -44,17 +44,39 @@ KernelRng& KernelRng::the()
 
 KernelRng::KernelRng()
 {
-    if (g_cpu_supports_rdseed) {
+    if (g_cpu_supports_rdseed || g_cpu_supports_rdrand) {
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             u32 value = 0;
-            asm volatile(
-                "1:\n"
-                "rdseed %0\n"
-                "jnc 1b\n"
-                : "=r"(value));
+            if (g_cpu_supports_rdseed) {
+                asm volatile(
+                    "1:\n"
+                    "rdseed %0\n"
+                    "jnc 1b\n"
+                    : "=r"(value));
+            } else {
+                asm volatile(
+                    "1:\n"
+                    "rdrand %0\n"
+                    "jnc 1b\n"
+                    : "=r"(value));
+            }
 
             this->resource().add_random_event(value, i % 32);
         }
+    }
+}
+
+void KernelRng::wait_for_entropy()
+{
+    if (!resource().is_ready()) {
+        Thread::current->wait_on(m_seed_queue);
+    }
+}
+
+void KernelRng::wake_if_ready()
+{
+    if (resource().is_ready()) {
+        m_seed_queue.wake_all();
     }
 }
 
@@ -62,6 +84,8 @@ size_t EntropySource::next_source { 0 };
 
 void get_good_random_bytes(u8* buffer, size_t buffer_size)
 {
+    KernelRng::the().wait_for_entropy();
+
     // FIXME: What if interrupts are disabled because we're in an interrupt?
     if (are_interrupts_enabled()) {
         LOCKER(KernelRng::the().lock());
@@ -73,7 +97,25 @@ void get_good_random_bytes(u8* buffer, size_t buffer_size)
 
 void get_fast_random_bytes(u8* buffer, size_t buffer_size)
 {
-    return get_good_random_bytes(buffer, buffer_size);
+    if (KernelRng::the().resource().is_ready()) {
+        return get_good_random_bytes(buffer, buffer_size);
+    }
+
+    static u32 next = 1;
+
+    union {
+        u8 bytes[4];
+        u32 value;
+    } u;
+    size_t offset = 4;
+    for (size_t i = 0; i < buffer_size; ++i) {
+        if (offset >= 4) {
+            next = next * 1103515245 + 12345;
+            u.value = next;
+            offset = 0;
+        }
+        buffer[i] = u.bytes[offset++];
+    }
 }
 
 }

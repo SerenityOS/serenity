@@ -79,7 +79,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     if (parent_range_allocator) {
         m_range_allocator.initialize_from_parent(*parent_range_allocator);
     } else {
-        size_t random_offset = (get_good_random<u32>() % 32 * MB) & PAGE_MASK;
+        size_t random_offset = (get_fast_random<u32>() % 32 * MB) & PAGE_MASK;
         u32 base = userspace_range_base + random_offset;
         m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base);
     }
