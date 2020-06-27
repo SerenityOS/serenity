@@ -135,21 +135,21 @@ struct Macroblock {
 };
 
 struct MacroblockMeta {
-    u32 total;
-    u32 padded_total;
-    u32 hcount;
-    u32 vcount;
-    u32 hpadded_count;
-    u32 vpadded_count;
+    u32 total { 0 };
+    u32 padded_total { 0 };
+    u32 hcount { 0 };
+    u32 vcount { 0 };
+    u32 hpadded_count { 0 };
+    u32 vpadded_count { 0 };
 };
 
 struct ComponentSpec {
     i8 id { -1 };
     u8 hsample_factor { 1 }; // Horizontal sampling factor.
     u8 vsample_factor { 1 }; // Vertical sampling factor.
-    u8 ac_destination_id;
-    u8 dc_destination_id;
-    u8 qtable_id; // Quantization table id.
+    u8 ac_destination_id { 0 };
+    u8 dc_destination_id { 0 };
+    u8 qtable_id { 0 }; // Quantization table id.
 };
 
 struct StartOfFrame {
@@ -159,14 +159,14 @@ struct StartOfFrame {
     };
 
     FrameType type { FrameType::Baseline };
-    u8 precision;
-    u16 height;
-    u16 width;
+    u8 precision { 0 };
+    u16 height { 0 };
+    u16 width { 0 };
 };
 
 struct HuffmanTableSpec {
-    u8 type;
-    u8 destination_id;
+    u8 type { 0 };
+    u8 destination_id { 0 };
     u8 code_counts[16] = { 0 };
     Vector<u8> symbols;
     Vector<u16> codes;
@@ -189,16 +189,16 @@ struct JPGLoadingContext {
     State state { State::NotDecoded };
     const u8* data { nullptr };
     size_t data_size { 0 };
-    u32 luma_table[64];
-    u32 chroma_table[64];
+    u32 luma_table[64] = { 0 };
+    u32 chroma_table[64] = { 0 };
     StartOfFrame frame;
-    u8 hsample_factor;
-    u8 vsample_factor;
-    bool has_zero_based_ids;
-    u8 component_count;
+    u8 hsample_factor { 0 };
+    u8 vsample_factor { 0 };
+    bool has_zero_based_ids { false };
+    u8 component_count { 0 };
     ComponentSpec components[3];
     RefPtr<Gfx::Bitmap> bitmap;
-    u16 dc_reset_interval;
+    u16 dc_reset_interval { 0 };
     Vector<HuffmanTableSpec> dc_tables;
     Vector<HuffmanTableSpec> ac_tables;
     HuffmanStreamState huffman_stream;
