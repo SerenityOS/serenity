@@ -3,10 +3,7 @@
 SerenityOS can also be built and run under WSL Version 2.
 WSL Version 1 is not supported since Version 1 does not support ext2, which is needed for the setup.
 
-WSL Version 2 is currently only available for Insider Builds of Windows which are more unstable and prone to crashes.
-Therefore, running SerenityOS on WSL Version 2 and running Insider Builds, in general, is not recommended on production systems.
-
-Nevertheless, here is a guide on how to [get an Insider Build](https://insider.windows.com/en-us/how-to-pc/) and how to [get WSL2](https://docs.microsoft.com/en-us/windows/wsl/wsl2-install).
+WSL Version 2 requires Windows version 2004 or higher, with OS Build 19041 or greater. Here is a guide on how to [get WSL2](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 Once installed, you will need to make sure the distribution you want to use (and the new default) is using Version 2:
 - `wsl -l -v` will list distros and versions,<br/>
 - `wsl --set-version <distro> <version>` is used to convert a distro to another version, and<br/>
@@ -42,3 +39,19 @@ Also verify that the value of **SERENITY_BUILD** is valid.
 In a 64-bit machine, if qemu was installed in the default location you shouldn't need to alter anything.
 
 - Execute `serenity/Meta/CLion/run.sh`.
+
+### Note on filesystems
+
+WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is terrible.
+This is because WSL2 runs as a Hyper-V virtual machine and uses the 9p file system protocol to access host windows files, over Hyper-V sockets.
+
+For a more in depth explaination of the technical limitations of their approach, see [this issue on the WSL github](https://github.com/microsoft/WSL/issues/4197#issuecomment-604592340)
+
+The recommendation from the Microsoft team on that issue is:
+
+> [I]f it's at all possible, store your projects in the Linux file system in WSL2.
+
+In practice, this means cloning and building the project to somewhere such as `/home/username/serenity`.
+
+If you're using the native Windows QEMU binary from the above steps, QEMU is not able to access the ext4 root partition of the
+WSL2 installation without proper massaging. To avoid this, you might copy or symlink `Build/_disk_image` and `Build/Kernel/Kernel` to a native Windows partition (e.g. `/mnt/c`) before running the QEUMU launch commands in `Meta/CLion/run.sh`.
