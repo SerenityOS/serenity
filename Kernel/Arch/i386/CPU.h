@@ -588,6 +588,7 @@ extern bool g_cpu_supports_nx;
 extern bool g_cpu_supports_pae;
 extern bool g_cpu_supports_pge;
 extern bool g_cpu_supports_rdrand;
+extern bool g_cpu_supports_rdseed;
 extern bool g_cpu_supports_smap;
 extern bool g_cpu_supports_smep;
 extern bool g_cpu_supports_sse;
