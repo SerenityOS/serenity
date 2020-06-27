@@ -31,6 +31,7 @@
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Forward.h>
+#include <Kernel/SpinLock.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
@@ -200,6 +201,8 @@ private:
     InlineLinkedList<Region> m_kernel_regions;
 
     InlineLinkedList<VMObject> m_vmobjects;
+
+    static RecursiveSpinLock s_lock;
 
     bool m_quickmap_in_use { false };
 

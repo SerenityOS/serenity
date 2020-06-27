@@ -59,6 +59,7 @@ class Scheduler;
 class SharedBuffer;
 class Socket;
 template <typename BaseType> class SpinLock;
+class RecursiveSpinLock;
 template <typename BaseType, typename LockType> class ScopedSpinLock;
 class TCPSocket;
 class TTY;

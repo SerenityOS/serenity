@@ -252,15 +252,6 @@ apic_ap_start:
     mov %cs, %ax
     mov %ax, %ds
 
-    /* Generate a new processor id. This is not the APIC id. We just
-       need a way to find ourselves a stack without stomping on other
-       APs that may be doing this concurrently. */
-    xor %ax, %ax
-    mov %ax, %bp
-    inc %ax
-    lock; xaddw %ax, %ds:(ap_cpu_id - apic_ap_start)(%bp) /* avoid relocation entries */
-    mov %ax, %bx
-
     xor %ax, %ax
     mov %ax, %sp
 
@@ -281,14 +272,18 @@ apic_ap_start32:
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
-    
+
     movl $0x8000, %ebp
-    
+
+    /* generate a unique ap cpu id (0 means 1st ap, not bsp!) */
+    xorl %eax, %eax
+    incl %eax
+    lock; xaddl %eax, (ap_cpu_id - apic_ap_start)(%ebp) /* avoid relocation entries */
+    movl %eax, %esi
+
     /* find our allocated stack based on the generated id */
-    andl 0x0000FFFF, %ebx
-    movl %ebx, %esi
-    movl (ap_cpu_init_stacks - apic_ap_start)(%ebp, %ebx, 4), %esp
-    
+    movl (ap_cpu_init_stacks - apic_ap_start)(%ebp, %eax, 4), %esp
+
     /* check if we support NX and enable it if we do */
     movl $0x80000001, %eax
     cpuid
@@ -319,8 +314,8 @@ apic_ap_start32:
     lgdt (ap_cpu_gdtr_initial2 - apic_ap_start + 0xc0008000)
 
     /* jump above 3GB into our identity mapped area now */
-    ljmp $8, $(1f - apic_ap_start + 0xc0008000)
-1:
+    ljmp $8, $(apic_ap_start32_2 - apic_ap_start + 0xc0008000)
+apic_ap_start32_2:
     /* flush the TLB */
     movl %cr3, %eax
     movl %eax, %cr3
@@ -338,13 +333,20 @@ apic_ap_start32:
     movl %eax, %cr0
     movl (ap_cpu_init_cr4 - apic_ap_start)(%ebp), %eax
     movl %eax, %cr4
-
+    
+    /* push the Processor pointer this CPU is going to use */
+    movl (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %eax
+    addl $0xc0000000, %eax
+    movl 0(%eax, %esi, 4), %eax
+    push %eax
+    
+    /* push the cpu id, 0 representing the bsp and call into c++ */
+    incl %esi
+    push %esi
+    
     xor %ebp, %ebp
     cld
     
-    /* push the arbitrary cpu id, 0 representing the bsp and call into c++ */
-    inc %esi
-    push %esi
     /* We are in identity mapped P0x8000 and the BSP will unload this code
        once all APs are initialized, so call init_ap but return to our
        infinite loop */
@@ -356,7 +358,7 @@ apic_ap_start32:
 apic_ap_start_size:
     .2byte end_apic_ap_start - apic_ap_start
 ap_cpu_id:
-    .2byte 0x0
+    .4byte 0x0
 ap_cpu_gdt:
     /* null */
     .8byte 0x0
@@ -387,6 +389,9 @@ ap_cpu_init_cr3:
     .4byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_cr4
 ap_cpu_init_cr4:
+    .4byte 0x0 /* will be set at runtime */
+.global ap_cpu_init_processor_info_array
+ap_cpu_init_processor_info_array:
     .4byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_stacks
 ap_cpu_init_stacks:

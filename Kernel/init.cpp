@@ -103,17 +103,18 @@ extern "C" [[noreturn]] void init()
 {
     setup_serial_debug();
 
-    cpu_setup();
+    cpu_setup(0);
 
     kmalloc_init();
     slab_alloc_init();
 
+    {
+        static Processor s_bsp_processor_info; // global but let's keep it "private"
+        s_bsp_processor_info.initialize(0);
+    }
+
     CommandLine::initialize(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline)));
-
     MemoryManager::initialize();
-
-    gdt_init();
-    idt_init();
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.
@@ -148,16 +149,12 @@ extern "C" [[noreturn]] void init()
     VirtualConsole::switch_to(0);
 
     Process::initialize();
-    Thread::initialize();
+    Scheduler::initialize(0);
 
     Thread* init_stage2_thread = nullptr;
     Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
 
-    Scheduler::pick_next();
-
-    sti();
-
-    Scheduler::idle_loop();
+    Scheduler::start();
     ASSERT_NOT_REACHED();
 }
 
@@ -166,8 +163,12 @@ extern "C" [[noreturn]] void init()
 //
 // The purpose of init_ap() is to initialize APs for multi-tasking.
 //
-extern "C" [[noreturn]] void init_ap(u32 cpu)
+extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
 {
+    klog() << "CPU #" << cpu << " processor_info at " << VirtualAddress(FlatPtr(processor_info));
+    cpu_setup(cpu);
+    processor_info->initialize(cpu);
+
     APIC::the().enable(cpu);
 
 #if 0

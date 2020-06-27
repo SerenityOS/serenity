@@ -38,6 +38,8 @@
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/TypedMapping.h>
 
+//#define APIC_DEBUG
+
 #define IRQ_APIC_SPURIOUS 0x7f
 
 #define APIC_BASE_MSR 0x1b
@@ -118,6 +120,7 @@ void APIC::write_icr(const ICRReg& icr)
 extern "C" void apic_ap_start(void);
 extern "C" u16 apic_ap_start_size;
 extern "C" u32 ap_cpu_init_stacks;
+extern "C" u32 ap_cpu_init_processor_info_array;
 extern "C" u32 ap_cpu_init_cr0;
 extern "C" u32 ap_cpu_init_cr3;
 extern "C" u32 ap_cpu_init_cr4;
@@ -151,7 +154,9 @@ bool APIC::init_bsp()
         return false;
 
     PhysicalAddress apic_base = get_base();
+#ifdef APIC_DEBUG
     klog() << "Initializing APIC, base: " << apic_base;
+#endif
     set_base(apic_base);
 
     m_apic_base = MM.allocate_kernel_region(apic_base.page_base(), PAGE_ROUND_UP(1), {}, Region::Access::Read | Region::Access::Write);
@@ -177,8 +182,10 @@ bool APIC::init_bsp()
         size_t entry_length = madt_entry->length;
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::LocalAPIC) {
             auto* plapic_entry = (const ACPI::Structures::MADTEntries::ProcessorLocalAPIC*)madt_entry;
+#ifdef APIC_DEBUG
             klog() << "APIC: AP found @ MADT entry " << entry_index << ", Processor Id: " << String::format("%02x", plapic_entry->acpi_processor_id)
                 << " APIC Id: " << String::format("%02x", plapic_entry->apic_id) << " Flags: " << String::format("%08x", plapic_entry->flags);
+#endif
             processor_cnt++;
             if ((plapic_entry->flags & 0x1) != 0)
                 processor_enabled_cnt++;
@@ -201,7 +208,10 @@ bool APIC::init_bsp()
         u32 aps_to_enable = processor_enabled_cnt - 1;
         
         // Copy the APIC startup code and variables to P0x00008000
-        auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), PAGE_ROUND_UP(apic_ap_start_size), {}, Region::Access::Read | Region::Access::Write | Region::Access::Execute);
+        // Also account for the data appended to:
+        // * aps_to_enable u32 values for ap_cpu_init_stacks
+        // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
+        auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), PAGE_ROUND_UP(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))), {}, Region::Access::Read | Region::Access::Write | Region::Access::Execute);
         memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
 
         // Allocate enough stacks for all APs
@@ -212,20 +222,35 @@ bool APIC::init_bsp()
                 return false;
             }
             stack_region->set_stack(true);
-            klog() << "APIC: Allocated AP #" << i << " stack at " << stack_region->vaddr();
             m_apic_ap_stacks.append(stack_region.release_nonnull());
         }
 
         // Store pointers to all stacks for the APs to use
         auto ap_stack_array = APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_stacks);
-        for (size_t i = 0; i < m_apic_ap_stacks.size(); i++)
+        ASSERT(aps_to_enable == m_apic_ap_stacks.size());
+        for (size_t i = 0; i < aps_to_enable; i++) {
             ap_stack_array[i] = m_apic_ap_stacks[i].vaddr().get() + Thread::default_kernel_stack_size;
+#ifdef APIC_DEBUG
+            klog() << "APIC: CPU[" << (i + 1) << "] stack at " << VirtualAddress(ap_stack_array[i]);
+#endif
+        }
+
+        // Allocate Processor structures for all APs and store the pointer to the data
+        m_ap_processor_info.resize(aps_to_enable);
+        auto ap_processor_info_array = &ap_stack_array[aps_to_enable];
+        for (size_t i = 0; i < aps_to_enable; i++) {
+            ap_processor_info_array[i] = FlatPtr(&m_ap_processor_info.at(i));
+#ifdef APIC_DEBUG
+            klog() << "APIC: CPU[" << (i + 1) << "] Processor at " << VirtualAddress(ap_processor_info_array[i]);
+#endif
+        }
+        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_processor_info_array) = FlatPtr(&ap_processor_info_array[0]);
 
         // Store the BSP's CR3 value for the APs to use
         *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
         
         // Store the BSP's GDT and IDT for the APs to use
-        const auto& gdtr = get_gdtr();
+        const auto& gdtr = Processor::current().get_gdtr();
         *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_gdtr) = FlatPtr(&gdtr);
         const auto& idtr = get_idtr();
         *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_idtr) = FlatPtr(&idtr);
@@ -233,8 +258,10 @@ bool APIC::init_bsp()
         // Store the BSP's CR0 and CR4 values for the APs to use
         *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr0) = read_cr0();
         *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr4) = read_cr4();
-        
+
+#ifdef APIC_DEBUG
         klog() << "APIC: Starting " << aps_to_enable << " AP(s)";
+#endif
 
         // INIT
         write_icr(ICRReg(0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
@@ -250,14 +277,18 @@ bool APIC::init_bsp()
 
         // Now wait until the ap_cpu_init_pending variable dropped to 0, which means all APs are initialized and no longer need these special mappings
         if (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable) {
+#ifdef APIC_DEBUG
             klog() << "APIC: Waiting for " << aps_to_enable << " AP(s) to finish initialization...";
+#endif
             do {
                 // Wait a little bit
                 IO::delay(200);
             } while (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable);
         }
-        
+
+#ifdef APIC_DEBUG
         klog() << "APIC: " << processor_enabled_cnt << " processors are initialized and running";
+#endif
     }
     return true;
 }
@@ -270,8 +301,9 @@ void APIC::enable_bsp()
 
 void APIC::enable(u32 cpu)
 {
-    if (cpu == 0)// FIXME: once memory management can deal with it, re-enable for all
-        klog() << "Enabling local APIC for cpu #" << cpu;
+#ifdef APIC_DEBUG
+    klog() << "Enabling local APIC for cpu #" << cpu;
+#endif
 
     if (cpu == 0) {
         // dummy read, apparently to avoid a bug in old CPUs.

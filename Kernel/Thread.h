@@ -77,7 +77,6 @@ public:
     ~Thread();
 
     static Thread* from_tid(int);
-    static void initialize();
     static void finalize_dying_threads();
 
     static Vector<Thread*> all_threads();
@@ -287,6 +286,7 @@ public:
     u32 ticks() const { return m_ticks; }
 
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
+    size_t thread_specific_region_size() const { return m_thread_specific_region_size; }
 
     u64 sleep(u32 ticks);
     u64 sleep_until(u64 wakeup_time);
@@ -353,6 +353,9 @@ public:
 
     void set_selector(u16 s) { m_far_ptr.selector = s; }
     void set_state(State);
+
+    bool is_initialized() const { return m_initialized; }
+    void set_initialized(bool initialized) { m_initialized = initialized; }
 
     void send_urgent_signal_to_self(u8 signal);
     void send_signal(u8 signal, Process* sender);
@@ -472,6 +475,7 @@ private:
     u32 m_kernel_stack_top { 0 };
     OwnPtr<Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
+    size_t m_thread_specific_region_size { 0 };
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
 
@@ -506,9 +510,11 @@ private:
 
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
+    bool m_initialized {false};
 
     OwnPtr<ThreadTracer> m_tracer;
 
+    void notify_finalizer();
     void yield_without_holding_big_lock();
 };
 
@@ -594,8 +600,5 @@ inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
 
     return IterationDecision::Continue;
 }
-
-u16 thread_specific_selector();
-Descriptor& thread_specific_descriptor();
 
 }
