@@ -150,6 +150,9 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             dump_selection("MouseDown");
             m_in_mouse_selection = true;
         }
+        else if (button == GUI::MouseButton::Right) {
+            page_client.page_did_request_context_menu(m_frame.to_main_frame_position(position));
+        }
     }
     return true;
 }

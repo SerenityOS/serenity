@@ -60,6 +60,7 @@ public:
 
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
+    Function<void(const Gfx::IntPoint& screen_position)> on_context_menu_request;
     Function<void(const String& href, const String& target, unsigned modifiers)> on_link_click;
     Function<void(const String& href, const Gfx::IntPoint& screen_position)> on_link_context_menu_request;
     Function<void(const String& href)> on_link_middle_click;
@@ -95,6 +96,7 @@ private:
     virtual void page_did_start_loading(const URL&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(GUI::StandardCursor) override;
+    virtual void page_did_request_context_menu(const Gfx::IntPoint&) override;
     virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const String& href, const String& target, unsigned modifiers) override;
     virtual void page_did_click_link(const String& href, const String& target, unsigned modifiers) override;
     virtual void page_did_middle_click_link(const String& href, const String& target, unsigned modifiers) override;
