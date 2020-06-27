@@ -268,8 +268,7 @@ Tab::Tab()
         },
         this));
 
-    auto& inspect_menu = m_menubar->add_menu("Inspect");
-    inspect_menu.add_action(GUI::Action::create(
+    auto view_source_action = GUI::Action::create(
         "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
             ASSERT(m_page_view->document());
             auto url = m_page_view->document()->url().to_string();
@@ -284,8 +283,9 @@ Tab::Tab()
             window->show();
             (void)window.leak_ref();
         },
-        this));
-    inspect_menu.add_action(GUI::Action::create(
+        this);
+
+    auto inspect_dom_tree_action = GUI::Action::create(
         "Inspect DOM tree", { Mod_None, Key_F12 }, [this](auto&) {
             if (!m_dom_inspector_window) {
                 m_dom_inspector_window = GUI::Window::construct();
@@ -298,7 +298,11 @@ Tab::Tab()
             m_dom_inspector_window->show();
             m_dom_inspector_window->move_to_front();
         },
-        this));
+        this);
+
+    auto& inspect_menu = m_menubar->add_menu("Inspect");
+    inspect_menu.add_action(*view_source_action);
+    inspect_menu.add_action(*inspect_dom_tree_action);
 
     inspect_menu.add_action(GUI::Action::create(
         "Open JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
@@ -356,6 +360,17 @@ Tab::Tab()
     m_tab_context_menu->add_action(GUI::Action::create("Close Tab", [this](auto&) {
         on_tab_close_request(*this);
     }));
+
+    m_page_context_menu = GUI::Menu::construct();
+    m_page_context_menu->add_action(*m_go_back_action);
+    m_page_context_menu->add_action(*m_go_forward_action);
+    m_page_context_menu->add_action(*m_reload_action);
+    m_page_context_menu->add_separator();
+    m_page_context_menu->add_action(*view_source_action);
+    m_page_context_menu->add_action(*inspect_dom_tree_action);
+    m_page_view->on_context_menu_request = [&](auto& screen_position) {
+        m_page_context_menu->popup(screen_position);
+    };
 }
 
 Tab::~Tab()
