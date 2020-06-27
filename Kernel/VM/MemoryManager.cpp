@@ -51,6 +51,7 @@ extern FlatPtr end_of_kernel_bss;
 namespace Kernel {
 
 static MemoryManager* s_the;
+RecursiveSpinLock MemoryManager::s_lock;
 
 MemoryManager& MM
 {
@@ -164,6 +165,7 @@ void MemoryManager::parse_memory_map()
 const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ScopedSpinLock lock(s_lock);
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -179,6 +181,7 @@ const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, Vi
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ScopedSpinLock lock(s_lock);
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -211,6 +214,7 @@ void MemoryManager::initialize()
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 {
+    ScopedSpinLock lock(s_lock);
     for (auto& region : MM.m_kernel_regions) {
         if (region.contains(vaddr))
             return &region;
@@ -220,6 +224,7 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 
 Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress vaddr)
 {
+    ScopedSpinLock lock(s_lock);
     // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
     for (auto& region : process.m_regions) {
         if (region.contains(vaddr))
@@ -233,6 +238,7 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
 
 Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
 {
+    ScopedSpinLock lock(s_lock);
     if (auto* region = user_region_from_vaddr(process, vaddr))
         return region;
     return kernel_region_from_vaddr(vaddr);
@@ -240,6 +246,7 @@ Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
 
 const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAddress vaddr)
 {
+    ScopedSpinLock lock(s_lock);
     if (auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr))
         return region;
     return kernel_region_from_vaddr(vaddr);
@@ -247,6 +254,7 @@ const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAd
 
 Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
 {
+    ScopedSpinLock lock(s_lock);
     if (auto* region = kernel_region_from_vaddr(vaddr))
         return region;
     auto page_directory = PageDirectory::find_by_cr3(read_cr3());
@@ -260,16 +268,18 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Thread::current);
-    if (g_in_irq) {
-        dbg() << "BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr();
+    ScopedSpinLock lock(s_lock);
+    if (Processor::current().in_irq()) {
+        dbg() << "CPU[" << Processor::id() << "] BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr() << ", irq level: " << Processor::current().in_irq();
         dump_kernel_regions();
+        return PageFaultResponse::ShouldCrash;
     }
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "MM: handle_page_fault(" << String::format("%w", fault.code()) << ") at " << fault.vaddr();
+    dbg() << "MM: CPU[" << Processor::id() << "] handle_page_fault(" << String::format("%w", fault.code()) << ") at " << fault.vaddr();
 #endif
     auto* region = region_from_vaddr(fault.vaddr());
     if (!region) {
-        klog() << "NP(error) fault at invalid address " << fault.vaddr();
+        klog() << "CPU[" << Processor::id() << "] NP(error) fault at invalid address " << fault.vaddr();
         return PageFaultResponse::ShouldCrash;
     }
 
@@ -279,6 +289,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
+    ScopedSpinLock lock(s_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.is_valid())
         return nullptr;
@@ -292,6 +303,7 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, con
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool should_commit, bool cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
+    ScopedSpinLock lock(s_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.is_valid())
         return nullptr;
@@ -307,6 +319,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
 OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
+    ScopedSpinLock lock(s_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.is_valid())
         return nullptr;
@@ -319,6 +332,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
 OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
+    ScopedSpinLock lock(s_lock);
     auto range = kernel_page_directory().identity_range_allocator().allocate_specific(VirtualAddress(paddr.get()), size);
     if (!range.is_valid())
         return nullptr;
@@ -335,7 +349,7 @@ OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& range, VMObject& vmobject, const StringView& name, u8 access, bool user_accessible, bool cacheable)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     OwnPtr<Region> region;
     if (user_accessible)
         region = Region::create_user_accessible(range, vmobject, 0, name, access, cacheable);
@@ -349,6 +363,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
+    ScopedSpinLock lock(s_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.is_valid())
         return nullptr;
@@ -357,6 +372,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmo
 
 void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
 {
+    ScopedSpinLock lock(s_lock);
     for (auto& region : m_user_physical_regions) {
         if (!region.contains(page)) {
             klog() << "MM: deallocate_user_physical_page: " << page.paddr() << " not in " << region.lower() << " -> " << region.upper();
@@ -375,6 +391,7 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
 
 RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page()
 {
+    ASSERT(s_lock.is_locked());
     RefPtr<PhysicalPage> page;
     for (auto& region : m_user_physical_regions) {
         page = region.take_free_page(false);
@@ -386,7 +403,7 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page()
 
 RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     auto page = find_free_user_physical_page();
 
     if (!page) {
@@ -425,6 +442,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 
 void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
 {
+    ASSERT(s_lock.is_locked());
     for (auto& region : m_super_physical_regions) {
         if (!region.contains(page)) {
             klog() << "MM: deallocate_supervisor_physical_page: " << page.paddr() << " not in " << region.lower() << " -> " << region.upper();
@@ -443,7 +461,7 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
 NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
 {
     ASSERT(!(size % PAGE_SIZE));
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     size_t count = ceil_div(size, PAGE_SIZE);
     NonnullRefPtrVector<PhysicalPage> physical_pages;
 
@@ -471,7 +489,7 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
 
 RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     RefPtr<PhysicalPage> page;
 
     for (auto& region : m_super_physical_regions) {
@@ -502,7 +520,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
     ASSERT(Thread::current);
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
 
     Thread::current->tss().cr3 = process.page_directory().cr3();
     write_cr3(process.page_directory().cr3());
@@ -528,6 +546,7 @@ extern "C" PageTableEntry boot_pd3_pt1023[1024];
 
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
+    ScopedSpinLock lock(s_lock);
     auto& pte = boot_pd3_pt1023[4];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.as_ptr()) {
@@ -545,6 +564,7 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
+    ScopedSpinLock lock(s_lock);
     auto& pte = boot_pd3_pt1023[8];
     if (pte.physical_page_base() != pt_paddr.as_ptr()) {
 #ifdef MM_DEBUG
@@ -562,6 +582,7 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ScopedSpinLock lock(s_lock);
     ASSERT(!m_quickmap_in_use);
     m_quickmap_in_use = true;
 
@@ -582,6 +603,7 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 void MemoryManager::unquickmap_page()
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ScopedSpinLock lock(s_lock);
     ASSERT(m_quickmap_in_use);
     auto& pte = boot_pd3_pt1023[0];
     pte.clear();
@@ -592,6 +614,7 @@ void MemoryManager::unquickmap_page()
 template<MemoryManager::AccessSpace space, MemoryManager::AccessType access_type>
 bool MemoryManager::validate_range(const Process& process, VirtualAddress base_vaddr, size_t size) const
 {
+    ASSERT(s_lock.is_locked());
     ASSERT(size);
     if (base_vaddr > base_vaddr.offset(size)) {
         dbg() << "Shenanigans! Asked to validate wrappy " << base_vaddr << " size=" << size;
@@ -627,12 +650,14 @@ bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress v
 {
     if (!is_user_address(vaddr))
         return false;
+    ScopedSpinLock lock(s_lock);
     auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
     return region && region->is_user_accessible() && region->is_stack();
 }
 
 bool MemoryManager::validate_kernel_read(const Process& process, VirtualAddress vaddr, size_t size) const
 {
+    ScopedSpinLock lock(s_lock);
     return validate_range<AccessSpace::Kernel, AccessType::Read>(process, vaddr, size);
 }
 
@@ -640,6 +665,7 @@ bool MemoryManager::can_read_without_faulting(const Process& process, VirtualAdd
 {
     // FIXME: Use the size argument!
     UNUSED_PARAM(size);
+    ScopedSpinLock lock(s_lock);
     auto* pte = const_cast<MemoryManager*>(this)->pte(process.page_directory(), vaddr);
     if (!pte)
         return false;
@@ -650,6 +676,7 @@ bool MemoryManager::validate_user_read(const Process& process, VirtualAddress va
 {
     if (!is_user_address(vaddr))
         return false;
+    ScopedSpinLock lock(s_lock);
     return validate_range<AccessSpace::User, AccessType::Read>(process, vaddr, size);
 }
 
@@ -657,24 +684,25 @@ bool MemoryManager::validate_user_write(const Process& process, VirtualAddress v
 {
     if (!is_user_address(vaddr))
         return false;
+    ScopedSpinLock lock(s_lock);
     return validate_range<AccessSpace::User, AccessType::Write>(process, vaddr, size);
 }
 
 void MemoryManager::register_vmobject(VMObject& vmobject)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     m_vmobjects.append(&vmobject);
 }
 
 void MemoryManager::unregister_vmobject(VMObject& vmobject)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     m_vmobjects.remove(&vmobject);
 }
 
 void MemoryManager::register_region(Region& region)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     if (region.is_kernel())
         m_kernel_regions.append(&region);
     else
@@ -683,7 +711,7 @@ void MemoryManager::register_region(Region& region)
 
 void MemoryManager::unregister_region(Region& region)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     if (region.is_kernel())
         m_kernel_regions.remove(&region);
     else

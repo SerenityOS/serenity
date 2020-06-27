@@ -106,6 +106,14 @@ union [[gnu::packed]] Descriptor
         TrapGate_32bit = 0xf,
     };
 
+    void* get_base() const
+    {
+        u32 b = base_lo;
+        b |= base_hi << 16;
+        b |= base_hi2 << 24;
+        return reinterpret_cast<void*>(b);
+    }
+
     void set_base(void* b)
     {
         base_lo = (u32)(b)&0xffff;
@@ -256,8 +264,6 @@ struct RegisterState;
 
 const DescriptorTablePointer& get_gdtr();
 const DescriptorTablePointer& get_idtr();
-void gdt_init();
-void idt_init();
 void sse_init();
 void register_interrupt_handler(u8 number, void (*f)());
 void register_user_callable_interrupt_handler(u8 number, void (*f)());
@@ -267,12 +273,7 @@ void replace_single_handler_with_shared(GenericInterruptHandler&);
 void replace_shared_handler_with_single(GenericInterruptHandler&);
 void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 void flush_idt();
-void flush_gdt();
 void load_task_register(u16 selector);
-u16 gdt_alloc_entry();
-void gdt_free_entry(u16);
-Descriptor& get_gdt_entry(u16 selector);
-void write_gdt_entry(u16 selector, Descriptor&);
 void handle_crash(RegisterState&, const char* description, int signal, bool out_of_memory = false);
 
 [[noreturn]] static inline void hang()
@@ -301,6 +302,39 @@ inline u32 cpu_flags()
         "pop %0\n"
         : "=rm"(flags)::"memory");
     return flags;
+}
+
+inline void set_fs(u32 segment)
+{
+    asm volatile(
+        "movl %%eax, %%fs" :: "a"(segment)
+        : "memory"
+    );
+}
+
+inline void set_gs(u32 segment)
+{
+    asm volatile(
+        "movl %%eax, %%gs" :: "a"(segment)
+        : "memory"
+    );
+}
+
+
+inline u32 get_fs()
+{
+    u32 fs;
+    asm("mov %%fs, %%eax"
+        : "=a"(fs));
+    return fs;
+}
+
+inline u32 get_gs()
+{
+    u32 gs;
+    asm("mov %%gs, %%eax"
+        : "=a"(gs));
+    return gs;
 }
 
 inline u32 read_fs_u32(u32 offset)
@@ -460,6 +494,9 @@ struct [[gnu::packed]] RegisterState
     u32 userspace_ss;
 };
 
+#define REGISTER_STATE_SIZE (19 * 4)
+static_assert(REGISTER_STATE_SIZE == sizeof(RegisterState));
+
 struct [[gnu::aligned(16)]] FPUState
 {
     u8 buffer[512];
@@ -491,6 +528,15 @@ void write_cr3(u32);
 u32 read_cr4();
 
 u32 read_dr6();
+
+static inline bool is_kernel_mode()
+{
+    u32 cs;
+    asm volatile (
+        "movl %%cs, %[cs] \n"
+        : [cs] "=g" (cs));
+    return (cs & 3) == 0;
+}
 
 class CPUID {
 public:
@@ -552,6 +598,94 @@ private:
     SplitQword m_start;
 };
 
+class Thread;
+struct TrapFrame;
+
+#define GDT_SELECTOR_CODE0 0x08
+#define GDT_SELECTOR_DATA0 0x10
+#define GDT_SELECTOR_CODE3 0x18
+#define GDT_SELECTOR_DATA3 0x20
+#define GDT_SELECTOR_TLS 0x28
+#define GDT_SELECTOR_PROC 0x30
+#define GDT_SELECTOR_TSS 0x38
+
+class Processor {
+    Processor* m_self; // must be first field (%fs offset 0x0)
+
+    DescriptorTablePointer m_gdtr;
+    Descriptor m_gdt[256];
+    u32 m_gdt_length;
+
+    u32 m_cpu;
+    u32 m_in_irq;
+
+    TSS32 m_tss;
+    static FPUState s_clean_fpu_state;
+
+    bool m_invoke_scheduler_async;
+
+    void gdt_init();
+    void write_raw_gdt_entry(u16 selector, u32 low, u32 high);
+    void write_gdt_entry(u16 selector, Descriptor& descriptor);
+
+public:
+    void initialize(u32 cpu);
+
+    Descriptor& get_gdt_entry(u16 selector);
+    void flush_gdt();
+    const DescriptorTablePointer& get_gdtr();
+    
+    ALWAYS_INLINE static Processor& current()
+    {
+        return *(Processor*)read_fs_u32(0);
+    }
+
+    ALWAYS_INLINE static u32 id()
+    {
+        return current().m_cpu;
+    }
+    
+    ALWAYS_INLINE u32& in_irq()
+    {
+        return m_in_irq;
+    }
+    
+    ALWAYS_INLINE const FPUState& clean_fpu_state() const
+    {
+        return s_clean_fpu_state;
+    }
+    
+    void invoke_scheduler_async() { m_invoke_scheduler_async = true; }
+    
+    void enter_trap(TrapFrame& trap, bool raise_irq);
+    void exit_trap(TrapFrame& trap);
+    
+    [[noreturn]] void initialize_context_switching(Thread& initial_thread);
+    void switch_context(Thread* from_thread, Thread* to_thread);
+    [[noreturn]] static void assume_context(Thread& thread);
+    static u32 init_context(Thread& thread);
+    
+    void set_thread_specific(u8* data, size_t len);
+};
+
+struct TrapFrame {
+    u32 prev_irq_level;
+    RegisterState* regs; // must be last
+    
+    TrapFrame() = delete;
+    TrapFrame(const TrapFrame&) = delete;
+    TrapFrame(TrapFrame&&) = delete;
+    TrapFrame& operator=(const TrapFrame&) = delete;
+    TrapFrame& operator=(TrapFrame&&) = delete;
+};
+
+#define TRAP_FRAME_SIZE (2 * 4)
+static_assert(TRAP_FRAME_SIZE == sizeof(TrapFrame));
+
+extern "C" void enter_trap_no_irq(TrapFrame*);
+extern "C" void enter_trap(TrapFrame*);
+extern "C" void exit_trap(TrapFrame*);
+
 class MSR {
     uint32_t m_msr;
 
@@ -583,7 +717,8 @@ public:
     }
 };
 
-void cpu_setup();
+void cpu_setup(u32 cpu);
+
 extern bool g_cpu_supports_nx;
 extern bool g_cpu_supports_pae;
 extern bool g_cpu_supports_pge;
@@ -628,7 +763,5 @@ public:
 private:
     u32 m_flags;
 };
-
-extern u32 g_in_irq;
 
 }

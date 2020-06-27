@@ -52,7 +52,7 @@ void WaitQueue::wake_one(Atomic<bool>* lock)
         return;
     if (auto* thread = m_threads.take_first())
         thread->wake_from_queue();
-    Scheduler::stop_idling();
+    Scheduler::yield();
 }
 
 void WaitQueue::wake_n(i32 wake_count)
@@ -67,7 +67,7 @@ void WaitQueue::wake_n(i32 wake_count)
             break;
         thread->wake_from_queue();
     }
-    Scheduler::stop_idling();
+    Scheduler::yield();
 }
 
 void WaitQueue::wake_all()
@@ -77,7 +77,7 @@ void WaitQueue::wake_all()
         return;
     while (!m_threads.is_empty())
         m_threads.take_first()->wake_from_queue();
-    Scheduler::stop_idling();
+    Scheduler::yield();
 }
 
 void WaitQueue::clear()

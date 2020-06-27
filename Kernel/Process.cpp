@@ -859,9 +859,17 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     // No other thread from this process will be scheduled to run
     m_exec_tid = Thread::current->tid();
 
-    auto old_page_directory = move(m_page_directory);
-    auto old_regions = move(m_regions);
-    m_page_directory = PageDirectory::create_for_userspace(*this);
+    RefPtr<PageDirectory> old_page_directory;
+    NonnullOwnPtrVector<Region> old_regions;
+
+    {
+        // Need to make sure we don't swap contexts in the middle
+        InterruptDisabler disabler;
+        old_page_directory = move(m_page_directory);
+        old_regions = move(m_regions);
+        m_page_directory = PageDirectory::create_for_userspace(*this);
+    }
+
 #ifdef MM_DEBUG
     dbg() << "Process " << pid() << " exec: PD=" << m_page_directory.ptr() << " created";
 #endif
@@ -898,6 +906,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     {
         ArmedScopeGuard rollback_regions_guard([&]() {
             ASSERT(Process::current == this);
+            // Need to make sure we don't swap contexts in the middle
+            InterruptDisabler disabler;
             m_page_directory = move(old_page_directory);
             m_regions = move(old_regions);
             MM.enter_process_paging_scope(*this);
@@ -1028,7 +1038,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     //       and we don't want to deal with faults after this point.
     u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment));
 
-    // We cli() manually here because we don't want to get interrupted between do_exec() and Schedule::yield().
+    // We cli() manually here because we don't want to get interrupted between do_exec() and Processor::assume_context().
     // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
     if (Process::current == this)
@@ -1036,14 +1046,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     // NOTE: Be careful to not trigger any page faults below!
 
-    Scheduler::prepare_to_modify_tss(*new_main_thread);
-
     m_name = parts.take_last();
     new_main_thread->set_name(m_name);
-
-    auto& tss = new_main_thread->m_tss;
-
-    u32 old_esp0 = tss.esp0;
 
     m_master_tls_size = master_tls_size;
     m_master_tls_alignment = master_tls_alignment;
@@ -1052,25 +1056,21 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     new_main_thread->make_thread_specific_region({});
     new_main_thread->reset_fpu_state();
 
-    memset(&tss, 0, sizeof(TSS32));
-    tss.iomapbase = sizeof(TSS32);
-
-    tss.eflags = 0x0202;
+    // NOTE: if a context switch were to happen, tss.eip and tss.esp would get overwritten!!!
+    auto& tss = new_main_thread->m_tss;
+    tss.cs = GDT_SELECTOR_CODE3 | 3;
+    tss.ds = GDT_SELECTOR_DATA3 | 3;
+    tss.es = GDT_SELECTOR_DATA3 | 3;
+    tss.ss = GDT_SELECTOR_DATA3 | 3;
+    tss.fs = GDT_SELECTOR_DATA3 | 3;
+    tss.gs = GDT_SELECTOR_TLS | 3;
     tss.eip = entry_eip;
-    tss.cs = 0x1b;
-    tss.ds = 0x23;
-    tss.es = 0x23;
-    tss.fs = 0x23;
-    tss.gs = thread_specific_selector() | 3;
-    tss.ss = 0x23;
-    tss.cr3 = page_directory().cr3();
     tss.esp = new_userspace_esp;
-    tss.ss0 = 0x10;
-    tss.esp0 = old_esp0;
+    tss.cr3 = m_page_directory->cr3();
     tss.ss2 = m_pid;
 
 #ifdef TASK_DEBUG
-    klog() << "Process exec'd " << path.characters() << " @ " << String::format("%p", tss.eip);
+    klog() << "Process exec'd " << path.characters() << " @ " << String::format("%p", entry_eip);
 #endif
 
     if (was_profiling)
@@ -1261,7 +1261,8 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     }
 
     if (Process::current == this) {
-        Scheduler::yield();
+        Thread::current->set_state(Thread::State::Running);
+        Processor::assume_context(*Thread::current);
         ASSERT_NOT_REACHED();
     }
     return 0;

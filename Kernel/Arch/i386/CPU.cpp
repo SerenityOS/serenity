@@ -38,42 +38,28 @@
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
+#include <Kernel/SpinLock.h>
+#include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PageDirectory.h>
 #include <Kernel/IO.h>
 #include <LibC/mallocdefs.h>
 
 //#define PAGE_FAULT_DEBUG
+//#define CONTEXT_SWITCH_DEBUG
 
 namespace Kernel {
 
 static DescriptorTablePointer s_idtr;
-static DescriptorTablePointer s_gdtr;
 static Descriptor s_idt[256];
-static Descriptor s_gdt[256];
 
 static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
 
-static Vector<u16>* s_gdt_freelist;
-
-static u16 s_gdt_length;
-
-u16 gdt_alloc_entry()
-{
-    ASSERT(s_gdt_freelist);
-    ASSERT(!s_gdt_freelist->is_empty());
-    return s_gdt_freelist->take_last();
-}
-
-void gdt_free_entry(u16 entry)
-{
-    s_gdt_freelist->append(entry);
-}
-
-extern "C" void handle_interrupt(RegisterState);
+extern "C" void handle_interrupt(TrapFrame*);
 
 #define EH_ENTRY(ec, title)                         \
     extern "C" void title##_asm_entry();            \
-    extern "C" void title##_handler(RegisterState); \
+    extern "C" void title##_handler(TrapFrame*); \
     asm(                                            \
         ".globl " #title "_asm_entry\n"             \
         "" #title "_asm_entry: \n"                  \
@@ -83,22 +69,21 @@ extern "C" void handle_interrupt(RegisterState);
         "    pushl %fs\n"                           \
         "    pushl %gs\n"                           \
         "    pushl %ss\n"                           \
-        "    mov $0x10, %ax\n"                      \
+        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n" \
         "    mov %ax, %ds\n"                        \
         "    mov %ax, %es\n"                        \
+        "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
+        "    mov %ax, %fs\n"                        \
+        "    pushl %esp \n" /* set TrapFrame::regs */ \
+        "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
+        "    pushl %esp \n"                         \
         "    cld\n"                                 \
+        "    call enter_trap_no_irq \n"             \
         "    call " #title "_handler\n"             \
-        "    add $0x4, %esp \n"                     \
-        "    popl %gs\n"                            \
-        "    popl %fs\n"                            \
-        "    popl %es\n"                            \
-        "    popl %ds\n"                            \
-        "    popa\n"                                \
-        "    add $0x4, %esp\n"                      \
-        "    iret\n");
+        "    jmp common_trap_exit \n");
 
 #define EH_ENTRY_NO_CODE(ec, title)                 \
-    extern "C" void title##_handler(RegisterState); \
+    extern "C" void title##_handler(TrapFrame*); \
     extern "C" void title##_asm_entry();            \
     asm(                                            \
         ".globl " #title "_asm_entry\n"             \
@@ -110,19 +95,18 @@ extern "C" void handle_interrupt(RegisterState);
         "    pushl %fs\n"                           \
         "    pushl %gs\n"                           \
         "    pushl %ss\n"                           \
-        "    mov $0x10, %ax\n"                      \
+        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n" \
         "    mov %ax, %ds\n"                        \
         "    mov %ax, %es\n"                        \
+        "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
+        "    mov %ax, %fs\n"                        \
+        "    pushl %esp \n" /* set TrapFrame::regs */ \
+        "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
+        "    pushl %esp \n"                         \
         "    cld\n"                                 \
+        "    call enter_trap_no_irq \n"             \
         "    call " #title "_handler\n"             \
-        "    add $0x4, %esp\n"                      \
-        "    popl %gs\n"                            \
-        "    popl %fs\n"                            \
-        "    popl %es\n"                            \
-        "    popl %ds\n"                            \
-        "    popa\n"                                \
-        "    add $0x4, %esp\n"                      \
-        "    iret\n");
+        "    jmp common_trap_exit \n");
 
 static void dump(const RegisterState& regs)
 {
@@ -172,7 +156,7 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
     // make sure we switch back to the right page tables.
     MM.enter_process_paging_scope(*Process::current);
 
-    klog() << "CRASH: " << description << ". Ring " << (Process::current->is_ring0() ? 0 : 3) << ".";
+    klog() << "CRASH: CPU #" << Processor::current().id() << " " << description << ". Ring " << (Process::current->is_ring0() ? 0 : 3) << ".";
     dump(regs);
 
     if (Process::current->is_ring0()) {
@@ -186,29 +170,29 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
 }
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);
-void illegal_instruction_handler(RegisterState regs)
+void illegal_instruction_handler(TrapFrame* trap)
 {
     clac();
-    handle_crash(regs, "Illegal instruction", SIGILL);
+    handle_crash(*trap->regs, "Illegal instruction", SIGILL);
 }
 
 EH_ENTRY_NO_CODE(0, divide_error);
-void divide_error_handler(RegisterState regs)
+void divide_error_handler(TrapFrame* trap)
 {
     clac();
-    handle_crash(regs, "Divide error", SIGFPE);
+    handle_crash(*trap->regs, "Divide error", SIGFPE);
 }
 
 EH_ENTRY(13, general_protection_fault);
-void general_protection_fault_handler(RegisterState regs)
+void general_protection_fault_handler(TrapFrame* trap)
 {
     clac();
-    handle_crash(regs, "General protection fault", SIGSEGV);
+    handle_crash(*trap->regs, "General protection fault", SIGSEGV);
 }
 
 // 7: FPU not available exception
 EH_ENTRY_NO_CODE(7, fpu_exception);
-void fpu_exception_handler(RegisterState)
+void fpu_exception_handler(TrapFrame*)
 {
     // Just clear the TS flag. We've already restored the FPU state eagerly.
     // FIXME: It would be nice if we didn't have to do this at all.
@@ -217,10 +201,11 @@ void fpu_exception_handler(RegisterState)
 
 // 14: Page Fault
 EH_ENTRY(14, page_fault);
-void page_fault_handler(RegisterState regs)
+void page_fault_handler(TrapFrame* trap)
 {
     clac();
 
+    auto& regs = *trap->regs;
     u32 fault_address;
     asm("movl %%cr2, %%eax"
         : "=a"(fault_address));
@@ -294,9 +279,10 @@ void page_fault_handler(RegisterState regs)
 }
 
 EH_ENTRY_NO_CODE(1, debug);
-void debug_handler(RegisterState regs)
+void debug_handler(TrapFrame* trap)
 {
     clac();
+    auto& regs = *trap->regs;
     if (!Process::current || (regs.cs & 3) == 0) {
         klog() << "Debug Exception in Ring0";
         hang();
@@ -314,9 +300,10 @@ void debug_handler(RegisterState regs)
 }
 
 EH_ENTRY_NO_CODE(3, breakpoint);
-void breakpoint_handler(RegisterState regs)
+void breakpoint_handler(TrapFrame* trap)
 {
     clac();
+    auto& regs = *trap->regs;
     if (!Process::current || (regs.cs & 3) == 0) {
         klog() << "Breakpoint Trap in Ring0";
         hang();
@@ -356,78 +343,9 @@ EH(12, "Stack exception")
 EH(15, "Unknown error")
 EH(16, "Coprocessor error")
 
-static void write_raw_gdt_entry(u16 selector, u32 low, u32 high)
-{
-    u16 i = (selector & 0xfffc) >> 3;
-    s_gdt[i].low = low;
-    s_gdt[i].high = high;
-
-    if (i > s_gdt_length)
-        s_gdtr.limit = (s_gdt_length + 1) * 8 - 1;
-}
-
-void write_gdt_entry(u16 selector, Descriptor& descriptor)
-{
-    write_raw_gdt_entry(selector, descriptor.low, descriptor.high);
-}
-
-Descriptor& get_gdt_entry(u16 selector)
-{
-    u16 i = (selector & 0xfffc) >> 3;
-    return *(Descriptor*)(&s_gdt[i]);
-}
-
-void flush_gdt()
-{
-    s_gdtr.address = s_gdt;
-    s_gdtr.limit = (s_gdt_length * 8) - 1;
-    asm("lgdt %0" ::"m"(s_gdtr)
-        : "memory");
-}
-
-const DescriptorTablePointer& get_gdtr()
-{
-    return s_gdtr;
-}
-
 const DescriptorTablePointer& get_idtr()
 {
     return s_idtr;
-}
-
-void gdt_init()
-{
-    s_gdt_length = 5;
-
-    s_gdt_freelist = new Vector<u16>();
-    s_gdt_freelist->ensure_capacity(256);
-    for (size_t i = s_gdt_length; i < 256; ++i)
-        s_gdt_freelist->append(i * 8);
-
-    s_gdt_length = 256;
-    s_gdtr.address = s_gdt;
-    s_gdtr.limit = (s_gdt_length * 8) - 1;
-
-    write_raw_gdt_entry(0x0000, 0x00000000, 0x00000000);
-    write_raw_gdt_entry(0x0008, 0x0000ffff, 0x00cf9a00);
-    write_raw_gdt_entry(0x0010, 0x0000ffff, 0x00cf9200);
-    write_raw_gdt_entry(0x0018, 0x0000ffff, 0x00cffa00);
-    write_raw_gdt_entry(0x0020, 0x0000ffff, 0x00cff200);
-
-    flush_gdt();
-
-    asm volatile(
-        "mov %%ax, %%ds\n"
-        "mov %%ax, %%es\n"
-        "mov %%ax, %%fs\n"
-        "mov %%ax, %%gs\n"
-        "mov %%ax, %%ss\n" ::"a"(0x10)
-        : "memory");
-
-    // Make sure CS points to the kernel code descriptor.
-    asm volatile(
-        "ljmpl $0x8, $sanity\n"
-        "sanity:\n");
 }
 
 static void unimp_trap()
@@ -514,7 +432,7 @@ void flush_idt()
     asm("lidt %0" ::"m"(s_idtr));
 }
 
-void idt_init()
+static void idt_init()
 {
     s_idtr.address = s_idt;
     s_idtr.limit = 0x100 * 8 - 1;
@@ -683,19 +601,30 @@ void load_task_register(u16 selector)
     asm("ltr %0" ::"r"(selector));
 }
 
-u32 g_in_irq;
-
-void handle_interrupt(RegisterState regs)
+void handle_interrupt(TrapFrame* trap)
 {
     clac();
-    ++g_in_irq;
+    auto& regs = *trap->regs;
     ASSERT(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
     u8 irq = (u8)(regs.isr_number - 0x50);
     ASSERT(s_interrupt_handler[irq]);
     s_interrupt_handler[irq]->handle_interrupt(regs);
-    s_interrupt_handler[irq]->increment_invoking_counter();
-    --g_in_irq;
     s_interrupt_handler[irq]->eoi();
+}
+
+void enter_trap_no_irq(TrapFrame* trap)
+{
+    Processor::current().enter_trap(*trap, false);
+}
+
+void enter_trap(TrapFrame* trap)
+{
+    Processor::current().enter_trap(*trap, true);
+}
+
+void exit_trap(TrapFrame* trap)
+{
+    return Processor::current().exit_trap(*trap);
 }
 
 void sse_init()
@@ -740,9 +669,10 @@ void cpu_detect()
     g_cpu_supports_rdseed = (extended_features.ebx() & (1 << 18));
 }
 
-void cpu_setup()
+void cpu_setup(u32 cpu)
 {
-    cpu_detect();
+    if (cpu == 0)
+        cpu_detect();
 
     if (g_cpu_supports_sse) {
         sse_init();
@@ -861,6 +791,424 @@ u32 read_dr6()
     asm("movl %%dr6, %%eax"
         : "=a"(dr6));
     return dr6;
+}
+
+FPUState Processor::s_clean_fpu_state;
+
+void Processor::initialize(u32 cpu)
+{
+    m_self = this;
+
+    m_cpu = cpu;
+    m_in_irq = 0;
+
+    gdt_init();
+    if (cpu == 0)
+        idt_init();
+    else
+        flush_idt();
+
+    ASSERT(&current() == this); // sanity check
+
+    if (cpu == 0) {
+        ASSERT((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
+        asm volatile("fninit");
+        asm volatile("fxsave %0"
+            : "=m"(s_clean_fpu_state));
+    }
+
+    klog() << "CPU #" << cpu << " using Processor at " << VirtualAddress(FlatPtr(this));
+}
+
+void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
+{
+    u16 i = (selector & 0xfffc) >> 3;
+    u32 prev_gdt_length = m_gdt_length;
+    
+    if (i > m_gdt_length) {
+        m_gdt_length = i + 1;
+        ASSERT(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
+        m_gdtr.limit = (m_gdt_length + 1) * 8 - 1;
+    }
+    m_gdt[i].low = low;
+    m_gdt[i].high = high;
+
+    // clear selectors we may have skipped
+    while (i < prev_gdt_length) {
+        m_gdt[i].low = 0;
+        m_gdt[i].high = 0;
+        i++;
+    }
+}
+
+void Processor::write_gdt_entry(u16 selector, Descriptor& descriptor)
+{
+    write_raw_gdt_entry(selector, descriptor.low, descriptor.high);
+}
+
+Descriptor& Processor::get_gdt_entry(u16 selector)
+{
+    u16 i = (selector & 0xfffc) >> 3;
+    return *(Descriptor*)(&m_gdt[i]);
+}
+
+void Processor::flush_gdt()
+{
+    m_gdtr.address = m_gdt;
+    m_gdtr.limit = (m_gdt_length * 8) - 1;
+    asm volatile("lgdt %0" ::"m"(m_gdtr)
+        : "memory");
+}
+
+const DescriptorTablePointer& Processor::get_gdtr()
+{
+    return m_gdtr;
+}
+
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
+{
+    ASSERT(from_thread == to_thread || from_thread->state() != Thread::Running);
+    ASSERT(to_thread->state() == Thread::Running);
+    auto& from_tss = from_thread->tss();
+    auto& to_tss = to_thread->tss();
+    asm volatile("fxsave %0"
+        : "=m"(from_thread->fpu_state()));
+
+    from_tss.fs = get_fs();
+    from_tss.gs = get_gs();
+    set_fs(to_tss.fs);
+    set_gs(to_tss.gs);
+
+    auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
+    tls_descriptor.set_base(to_thread->thread_specific_data().as_ptr());
+    tls_descriptor.set_limit(to_thread->thread_specific_region_size());
+
+    if (from_tss.cr3 != to_tss.cr3)
+        write_cr3(to_tss.cr3);
+
+    asm volatile("fxrstor %0"
+        ::"m"(to_thread->fpu_state()));
+
+    // TODO: debug registers
+    // TODO: ioperm?
+}
+
+#define ENTER_THREAD_CONTEXT_ARGS_SIZE (2 * 4) //  to_thread, from_thread
+
+void Processor::switch_context(Thread* from_thread, Thread* to_thread)
+{
+    ASSERT(!in_irq());
+    ASSERT(is_kernel_mode());
+#ifdef CONTEXT_SWITCH_DEBUG
+    dbg() << "switch_context --> switching out of: " << *from_thread;
+#endif
+
+    // Switch to new thread context, passing from_thread and to_thread
+    // through to the new context using registers edx and eax
+    asm volatile(
+        // NOTE: changing how much we push to the stack affects
+        //       SWITCH_CONTEXT_TO_STACK_SIZE and thread_context_first_enter()!
+        "pushfl \n"
+        "pushl %%ebx \n"
+        "pushl %%esi \n"
+        "pushl %%edi \n"
+        "pushl %%ebp \n"
+        "movl %%esp, %[from_esp] \n"
+        "movl $1f, %[from_eip] \n"
+        "movl %[to_esp0], %%ebx \n"
+        "movl %%ebx, %[tss_esp0] \n"
+        "movl %[to_esp], %%esp \n"
+        "pushl %[to_thread] \n"
+        "pushl %[from_thread] \n"
+        "pushl %[to_eip] \n"
+        "cld \n"
+        "jmp enter_thread_context \n"
+        "1: \n"
+        "popl %%edx \n"
+        "popl %%eax \n"
+        "popl %%ebp \n"
+        "popl %%edi \n"
+        "popl %%esi \n"
+        "popl %%ebx \n"
+        "popfl \n"
+        : [from_esp] "=m" (from_thread->tss().esp),
+          [from_eip] "=m" (from_thread->tss().eip),
+          [tss_esp0] "=m" (m_tss.esp0),
+          "=d" (from_thread), // needed so that from_thread retains the correct value
+          "=a" (to_thread) // needed so that to_thread retains the correct value
+        : [to_esp] "g" (to_thread->tss().esp),
+          [to_esp0] "g" (to_thread->tss().esp0),
+          [to_eip] "c" (to_thread->tss().eip),
+          [from_thread] "d" (from_thread),
+          [to_thread] "a" (to_thread)
+    );
+#ifdef CONTEXT_SWITCH_DEBUG
+    dbg() << "switch_context <-- from " << *from_thread << " to " << *to_thread;
+#endif
+}
+
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap)
+{
+    ASSERT(!are_interrupts_enabled());
+    ASSERT(is_kernel_mode());
+    (void)from_thread;
+    (void)to_thread;
+    (void)trap;
+#ifdef CONTEXT_SWITCH_DEBUG
+    dbg() << "switch_context <-- from " << *from_thread << " to " << *to_thread << " (context_first_init)";
+#endif
+}
+
+extern "C" void thread_context_first_enter(void);
+asm(
+// enter_thread_context returns to here first time a thread is executing
+".globl thread_context_first_enter \n"
+"thread_context_first_enter: \n"
+// switch_context will have pushed from_thread and to_thread to our new
+// stack prior to thread_context_first_enter() being called, and the
+// pointer to TrapFrame was the top of the stack before that
+"    movl 8(%esp), %ebx \n" // save pointer to TrapFrame
+"    cld \n"
+"    call context_first_init \n"
+"    addl $" __STRINGIFY(ENTER_THREAD_CONTEXT_ARGS_SIZE) ", %esp \n"
+"    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
+"    jmp common_trap_exit \n"
+);
+
+u32 Processor::init_context(Thread& thread)
+{
+    ASSERT(is_kernel_mode());
+    const u32 kernel_stack_top = thread.kernel_stack_top();
+    u32 stack_top = kernel_stack_top;
+
+    // TODO: handle NT?
+    ASSERT((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
+
+    auto& tss = thread.tss();
+    bool return_to_user = (tss.cs & 3) != 0;
+    
+    // make room for an interrupt frame
+    if (!return_to_user) {
+        // userspace_esp and userspace_ss are not popped off by iret
+        // unless we're switching back to user mode
+        stack_top -= sizeof(RegisterState) - 2 * sizeof(u32);
+    } else {
+        stack_top -= sizeof(RegisterState);
+    }
+
+    // we want to end up 16-byte aligned, %esp + 4 should be aligned
+    stack_top -= sizeof(u32);
+    *reinterpret_cast<u32*>(kernel_stack_top - 4) = 0;
+
+    // set up the stack so that after returning from thread_context_first_enter()
+    // we will end up either in kernel mode or user mode, depending on how the thread is set up
+    // However, the first step is to always start in kernel mode with thread_context_first_enter
+    RegisterState& iretframe = *reinterpret_cast<RegisterState*>(stack_top);
+    iretframe.ss = tss.ss;
+    iretframe.gs = tss.gs;
+    iretframe.fs = tss.fs;
+    iretframe.es = tss.es;
+    iretframe.ds = tss.ds;
+    iretframe.edi = tss.edi;
+    iretframe.esi = tss.esi;
+    iretframe.ebp = tss.ebp;
+    iretframe.esp = 0;
+    iretframe.ebx = tss.ebx;
+    iretframe.edx = tss.edx;
+    iretframe.ecx = tss.ecx;
+    iretframe.eax = tss.eax;
+    iretframe.eflags = tss.eflags;
+    iretframe.eip = tss.eip;
+    iretframe.cs = tss.cs;
+    if (return_to_user) {
+        iretframe.userspace_esp = tss.esp;
+        iretframe.userspace_ss = tss.ss;
+    }
+
+    // make space for a trap frame
+    stack_top -= sizeof(TrapFrame);
+    TrapFrame& trap = *reinterpret_cast<TrapFrame*>(stack_top);
+    trap.regs = &iretframe;
+    trap.prev_irq_level = 0;
+
+    stack_top -= sizeof(u32); // pointer to TrapFrame
+    *reinterpret_cast<u32*>(stack_top) = stack_top + 4;
+
+#ifdef CONTEXT_SWITCH_DEBUG
+    dbg() << "init_context " << thread << " set up to execute at eip: " << VirtualAddress(tss.eip) << " esp: " << VirtualAddress(tss.esp) << " stack top: " << VirtualAddress(stack_top);
+#endif
+
+    // make switch_context() always first return to thread_context_first_enter()
+    // in kernel mode, so set up these values so that we end up popping iretframe
+    // off the stack right after the context switch completed, at which point
+    // control is transferred to what iretframe is pointing to.
+    tss.eip = FlatPtr(&thread_context_first_enter);
+    tss.esp0 = kernel_stack_top;
+    tss.esp = stack_top;
+    tss.cs = GDT_SELECTOR_CODE0;
+    tss.ds = GDT_SELECTOR_DATA0;
+    tss.es = GDT_SELECTOR_DATA0;
+    tss.gs = GDT_SELECTOR_DATA0;
+    tss.ss = GDT_SELECTOR_DATA0;
+    tss.fs = GDT_SELECTOR_PROC;
+    return stack_top;
+}
+
+
+extern "C" u32 do_init_context(Thread* thread)
+{
+    return Processor::init_context(*thread);
+}
+
+extern "C" void do_assume_context(Thread* thread);
+
+asm(
+".global do_assume_context \n"
+"do_assume_context: \n"
+"    movl 4(%esp), %ebx \n"
+// We're going to call Processor::init_context, so just make sure
+// we have enough stack space so we don't stomp over it
+"    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
+"    pushl %ebx \n"
+"    cld \n"
+"    call do_init_context \n"
+"    addl $4, %esp \n"
+"    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
+"    pushl %ebx \n" // push to_thread
+"    pushl %ebx \n" // push from_thread
+"    pushl $thread_context_first_enter \n" // should be same as tss.eip
+"    jmp enter_thread_context \n"
+);
+
+void Processor::assume_context(Thread& thread)
+{
+    do_assume_context(&thread);
+    ASSERT_NOT_REACHED();
+}
+
+void Processor::initialize_context_switching(Thread& initial_thread)
+{
+    ASSERT(initial_thread.process().is_ring0());
+    
+    auto& tss = initial_thread.tss();
+    m_tss = tss;
+    m_tss.esp0 = tss.esp0;
+    m_tss.ss0 = GDT_SELECTOR_DATA0;
+    // user mode needs to be able to switch to kernel mode:
+    m_tss.cs = m_tss.ds = m_tss.es = m_tss.gs = m_tss.ss = GDT_SELECTOR_CODE0 | 3;
+    m_tss.fs = GDT_SELECTOR_PROC | 3;
+    
+    
+    asm volatile(
+        "movl %[new_esp], %%esp \n" // swich to new stack
+        "pushl %[from_to_thread] \n" // to_thread
+        "pushl %[from_to_thread] \n" // from_thread
+        "pushl $" __STRINGIFY(GDT_SELECTOR_CODE0) " \n"
+        "pushl %[new_eip] \n" // save the entry eip to the stack
+        "movl %%esp, %%ebx \n"
+        "addl $20, %%ebx \n" // calculate pointer to TrapFrame
+        "pushl %%ebx \n"
+        "cld \n"
+        "call enter_trap_no_irq \n"
+        "addl $4, %%esp \n"
+        "lret \n"
+        :: [new_esp] "g" (tss.esp),
+           [new_eip] "a" (tss.eip),
+           [from_to_thread] "b" (&initial_thread)
+    );
+    
+    ASSERT_NOT_REACHED();
+}
+
+void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
+{
+    InterruptDisabler disabler;
+    trap.prev_irq_level = m_in_irq;
+    if (raise_irq)
+        m_in_irq++;
+}
+
+void Processor::exit_trap(TrapFrame& trap)
+{
+    InterruptDisabler disabler;
+    ASSERT(m_in_irq >= trap.prev_irq_level);
+    m_in_irq = trap.prev_irq_level;
+    
+    if (m_invoke_scheduler_async && !m_in_irq) {
+        m_invoke_scheduler_async = false;
+        Scheduler::invoke_async();
+    }
+}
+
+void Processor::gdt_init()
+{
+    m_gdt_length = 0;
+    m_gdtr.address = nullptr;
+    m_gdtr.limit = 0;
+
+    write_raw_gdt_entry(0x0000, 0x00000000, 0x00000000);
+    write_raw_gdt_entry(GDT_SELECTOR_CODE0, 0x0000ffff, 0x00cf9a00); // code0
+    write_raw_gdt_entry(GDT_SELECTOR_DATA0, 0x0000ffff, 0x00cf9200); // data0
+    write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00cffa00); // code3
+    write_raw_gdt_entry(GDT_SELECTOR_DATA3, 0x0000ffff, 0x00cff200); // data3
+
+    Descriptor tls_descriptor;
+    tls_descriptor.low = tls_descriptor.high = 0;
+    tls_descriptor.dpl = 3;
+    tls_descriptor.segment_present = 1;
+    tls_descriptor.granularity = 0;
+    tls_descriptor.zero = 0;
+    tls_descriptor.operation_size = 1;
+    tls_descriptor.descriptor_type = 1;
+    tls_descriptor.type = 2;
+    write_gdt_entry(GDT_SELECTOR_TLS, tls_descriptor); // tls3
+
+    Descriptor fs_descriptor;
+    fs_descriptor.set_base(this);
+    fs_descriptor.set_limit(sizeof(Processor));
+    fs_descriptor.dpl = 0;
+    fs_descriptor.segment_present = 1;
+    fs_descriptor.granularity = 0;
+    fs_descriptor.zero = 0;
+    fs_descriptor.operation_size = 1;
+    fs_descriptor.descriptor_type = 1;
+    fs_descriptor.type = 2;
+    write_gdt_entry(GDT_SELECTOR_PROC, fs_descriptor); // fs0
+
+    Descriptor tss_descriptor;
+    tss_descriptor.set_base(&m_tss);
+    tss_descriptor.set_limit(sizeof(TSS32));
+    tss_descriptor.dpl = 0;
+    tss_descriptor.segment_present = 1;
+    tss_descriptor.granularity = 0;
+    tss_descriptor.zero = 0;
+    tss_descriptor.operation_size = 1;
+    tss_descriptor.descriptor_type = 0;
+    tss_descriptor.type = 9;
+    write_gdt_entry(GDT_SELECTOR_TSS, tss_descriptor); // tss
+
+    flush_gdt();
+    load_task_register(GDT_SELECTOR_TSS);
+
+    asm volatile(
+        "mov %%ax, %%ds\n"
+        "mov %%ax, %%es\n"
+        "mov %%ax, %%gs\n"
+        "mov %%ax, %%ss\n" ::"a"(GDT_SELECTOR_DATA0)
+        : "memory");
+    set_fs(GDT_SELECTOR_PROC);
+
+    // Make sure CS points to the kernel code descriptor.
+    asm volatile(
+        "ljmpl $" __STRINGIFY(GDT_SELECTOR_CODE0) ", $sanity\n"
+        "sanity:\n");
+}
+
+void Processor::set_thread_specific(u8* data, size_t len)
+{
+    auto& descriptor = get_gdt_entry(GDT_SELECTOR_TLS);
+    descriptor.set_base(data);
+    descriptor.set_limit(len);
 }
 
 }
