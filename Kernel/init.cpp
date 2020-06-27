@@ -131,7 +131,7 @@ extern "C" [[noreturn]] void init()
 
     klog() << "Starting SerenityOS...";
 
-    __stack_chk_guard = get_good_random<u32>();
+    __stack_chk_guard = get_fast_random<u32>();
 
     TimeManagement::initialize();
 
@@ -169,7 +169,7 @@ extern "C" [[noreturn]] void init()
 extern "C" [[noreturn]] void init_ap(u32 cpu)
 {
     APIC::the().enable(cpu);
-    
+
 #if 0
     Scheduler::idle_loop();
 #else
