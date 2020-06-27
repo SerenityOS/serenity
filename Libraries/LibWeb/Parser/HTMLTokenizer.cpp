@@ -1120,7 +1120,8 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1147,7 +1148,8 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1178,7 +1180,8 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    TODO();
+                    PARSE_ERROR();
+                    EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
