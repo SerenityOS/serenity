@@ -270,16 +270,16 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     ASSERT(Thread::current);
     ScopedSpinLock lock(s_lock);
     if (Processor::current().in_irq()) {
-        dbg() << "CPU[" << Processor::id() << "] BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr() << ", irq level: " << Processor::current().in_irq();
+        dbg() << "CPU[" << Processor::current().id() << "] BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr() << ", irq level: " << Processor::current().in_irq();
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "MM: CPU[" << Processor::id() << "] handle_page_fault(" << String::format("%w", fault.code()) << ") at " << fault.vaddr();
+    dbg() << "MM: CPU[" << Processor::current().id() << "] handle_page_fault(" << String::format("%w", fault.code()) << ") at " << fault.vaddr();
 #endif
     auto* region = region_from_vaddr(fault.vaddr());
     if (!region) {
-        klog() << "CPU[" << Processor::id() << "] NP(error) fault at invalid address " << fault.vaddr();
+        klog() << "CPU[" << Processor::current().id() << "] NP(error) fault at invalid address " << fault.vaddr();
         return PageFaultResponse::ShouldCrash;
     }
 

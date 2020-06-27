@@ -26,8 +26,6 @@
 
 #pragma once
 
-#include <Kernel/Arch/i386/CPU.h>
-
 #define __STRINGIFY_HELPER(x) #x
 #define __STRINGIFY(x) __STRINGIFY_HELPER(x)
 
@@ -48,6 +46,7 @@
         if (!(x))         \
             CRASH();      \
     } while (0)
+
 #define ASSERT_INTERRUPTS_DISABLED() ASSERT(!(cpu_flags() & 0x200))
 #define ASSERT_INTERRUPTS_ENABLED() ASSERT(cpu_flags() & 0x200)
 #define TODO ASSERT_NOT_REACHED

@@ -26,55 +26,31 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Assertions.h>
-#include <Kernel/Heap/SlabAllocator.h>
-#include <Kernel/PhysicalAddress.h>
+#include <AK/String.h>
 
 namespace Kernel {
 
-class PhysicalPage {
-    friend class MemoryManager;
-    friend class PageDirectory;
-    friend class VMObject;
+class Processor;
 
-    MAKE_SLAB_ALLOCATED(PhysicalPage)
+class ProcessorInfo
+{
+    Processor& m_processor;
+    String m_cpuid;
+    String m_brandstr;
+    u32 m_display_model;
+    u32 m_display_family;
+    u32 m_stepping;
+    u32 m_type;
+
 public:
-    PhysicalAddress paddr() const { return m_paddr; }
-
-    void ref()
-    {
-        ASSERT(m_ref_count);
-        ++m_ref_count;
-    }
-
-    void unref()
-    {
-        ASSERT(m_ref_count);
-        if (!--m_ref_count) {
-            if (m_may_return_to_freelist)
-                move(*this).return_to_freelist();
-            delete this;
-        }
-    }
-
-    static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, bool supervisor, bool may_return_to_freelist = true);
-
-    u32 ref_count() const { return m_ref_count; }
-
-    bool is_shared_zero_page() const;
-
-private:
-    PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
-    ~PhysicalPage() {}
-
-    void return_to_freelist() &&;
-
-    u32 m_ref_count { 1 };
-    bool m_may_return_to_freelist { true };
-    bool m_supervisor { false };
-    PhysicalAddress m_paddr;
+    ProcessorInfo(Processor& processor);
+    
+    const String& cpuid() const { return m_cpuid; }
+    const String& brandstr() const { return m_brandstr; }
+    u32 display_model() const { return m_display_model; }
+    u32 display_family() const { return m_display_family; }
+    u32 stepping() const { return m_stepping; }
+    u32 type() const { return m_type; }
 };
 
 }

@@ -36,6 +36,7 @@
 //   - CharacterDevice (sequential)
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/UnixTypes.h>
 

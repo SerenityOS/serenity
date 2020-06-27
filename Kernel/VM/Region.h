@@ -29,6 +29,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
 #include <AK/Weakable.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/VM/VMObject.h>
