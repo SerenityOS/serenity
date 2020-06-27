@@ -221,16 +221,18 @@ void QSWidget::mousemove_event(GUI::MouseEvent& event)
 
 void QSWidget::mousewheel_event(GUI::MouseEvent& event)
 {
-    auto old_scale = m_scale;
+    int new_scale = m_scale - event.wheel_delta() * 10;
+    if (new_scale < 10)
+        new_scale = 10;
+    if (new_scale > 1000)
+        new_scale = 1000;
+
+    if (new_scale == m_scale) {
+        return;
+    }
+
     auto old_scale_factor = (float)m_scale / 100.0f;
-
-    m_scale += -event.wheel_delta() * 10;
-    if (m_scale < 10)
-        m_scale = 10;
-    if (m_scale > 1000)
-        m_scale = 1000;
-
-    auto new_scale_factor = (float)m_scale / 100.0f;
+    auto new_scale_factor = (float)new_scale / 100.0f;
 
     auto focus_point = Gfx::FloatPoint(
         m_pan_origin.x() - ((float)event.x() - (float)width() / 2.0) / old_scale_factor,
@@ -240,9 +242,7 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
         focus_point.x() - new_scale_factor / old_scale_factor * (focus_point.x() - m_pan_origin.x()),
         focus_point.y() - new_scale_factor / old_scale_factor * (focus_point.y() - m_pan_origin.y()));
 
-    if (old_scale != m_scale) {
-        relayout();
-    }
+    set_scale(new_scale);
 }
 
 void QSWidget::load_from_file(const String& path)
