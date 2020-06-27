@@ -69,6 +69,42 @@ public:
     }
 };
 
+class RecursiveSpinLock
+{
+    AK::Atomic<FlatPtr> m_lock{0};
+    u32 m_recursions{0};
+
+public:
+    RecursiveSpinLock() = default;
+    RecursiveSpinLock(const RecursiveSpinLock&) = delete;
+    RecursiveSpinLock(RecursiveSpinLock&&) = delete;
+
+    ALWAYS_INLINE void lock()
+    {
+        FlatPtr cpu = FlatPtr(&Processor::current());
+        FlatPtr expected = 0;
+        while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
+            if (expected == cpu)
+                break;
+            expected = 0;
+        } 
+        m_recursions++;
+    }
+
+    ALWAYS_INLINE void unlock()
+    {
+        ASSERT(m_recursions > 0);
+        ASSERT(m_lock.load(AK::memory_order_consume) == FlatPtr(&Processor::current()));
+        if (--m_recursions == 0)
+            m_lock.store(0, AK::memory_order_release);
+    }
+
+    ALWAYS_INLINE bool is_locked() const
+    {
+        return m_lock.load(AK::memory_order_consume) != 0;
+    }
+};
+
 template <typename BaseType = u32, typename LockType = SpinLock<BaseType>>
 class ScopedSpinLock
 {

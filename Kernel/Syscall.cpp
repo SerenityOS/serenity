@@ -33,7 +33,7 @@
 
 namespace Kernel {
 
-extern "C" void syscall_handler(RegisterState&);
+extern "C" void syscall_handler(TrapFrame*);
 extern "C" void syscall_asm_entry();
 
 asm(
@@ -46,22 +46,23 @@ asm(
     "    pushl %fs\n"
     "    pushl %gs\n"
     "    pushl %ss\n"
-    "    mov $0x10, %ax\n"
+    "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"
     "    mov %ax, %ds\n"
     "    mov %ax, %es\n"
+    "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"
+    "    mov %ax, %fs\n"
     "    cld\n"
     "    xor %esi, %esi\n"
     "    xor %edi, %edi\n"
-    "    push %esp\n"
-    "    call syscall_handler\n"
-    "    add $0x8, %esp\n"
-    "    popl %gs\n"
-    "    popl %fs\n"
-    "    popl %es\n"
-    "    popl %ds\n"
-    "    popa\n"
-    "    add $0x4, %esp\n"
-    "    iret\n");
+    "    pushl %esp \n" // set TrapFrame::regs
+    "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"
+    "    movl %esp, %ebx \n"
+    "    pushl %ebx \n" // push pointer to TrapFrame
+    "    call enter_trap_no_irq \n"
+    "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
+    "    call syscall_handler \n"
+    "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
+    "    jmp common_trap_exit \n");
 
 namespace Syscall {
 
@@ -120,8 +121,9 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 }
 
-void syscall_handler(RegisterState& regs)
+void syscall_handler(TrapFrame* trap)
 {
+    auto& regs = *trap->regs;
     // Special handling of the "gettid" syscall since it's extremely hot.
     // FIXME: Remove this hack once userspace locks stop calling it so damn much.
     if (regs.eax == SC_gettid) {

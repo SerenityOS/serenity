@@ -48,30 +48,6 @@ namespace Kernel {
 
 Thread* Thread::current;
 
-static FPUState s_clean_fpu_state;
-
-u16 thread_specific_selector()
-{
-    static u16 selector;
-    if (!selector) {
-        selector = gdt_alloc_entry();
-        auto& descriptor = get_gdt_entry(selector);
-        descriptor.dpl = 3;
-        descriptor.segment_present = 1;
-        descriptor.granularity = 0;
-        descriptor.zero = 0;
-        descriptor.operation_size = 1;
-        descriptor.descriptor_type = 1;
-        descriptor.type = 2;
-    }
-    return selector;
-}
-
-Descriptor& thread_specific_descriptor()
-{
-    return get_gdt_entry(thread_specific_selector());
-}
-
 HashTable<Thread*>& thread_table()
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -103,26 +79,22 @@ Thread::Thread(Process& process)
 
     // Only IF is set when a process boots.
     m_tss.eflags = 0x0202;
-    u16 cs, ds, ss, gs;
 
     if (m_process.is_ring0()) {
-        cs = 0x08;
-        ds = 0x10;
-        ss = 0x10;
-        gs = 0;
+        m_tss.cs = GDT_SELECTOR_CODE0;
+        m_tss.ds = GDT_SELECTOR_DATA0;
+        m_tss.es = GDT_SELECTOR_DATA0;
+        m_tss.fs = GDT_SELECTOR_PROC;
+        m_tss.ss = GDT_SELECTOR_DATA0;
+        m_tss.gs = 0;
     } else {
-        cs = 0x1b;
-        ds = 0x23;
-        ss = 0x23;
-        gs = thread_specific_selector() | 3;
+        m_tss.cs = GDT_SELECTOR_CODE3 | 3;
+        m_tss.ds = GDT_SELECTOR_DATA3 | 3;
+        m_tss.es = GDT_SELECTOR_DATA3 | 3;
+        m_tss.fs = GDT_SELECTOR_DATA3 | 3;
+        m_tss.ss = GDT_SELECTOR_DATA3 | 3;
+        m_tss.gs = GDT_SELECTOR_TLS | 3;
     }
-
-    m_tss.ds = ds;
-    m_tss.es = ds;
-    m_tss.fs = ds;
-    m_tss.gs = gs;
-    m_tss.ss = ss;
-    m_tss.cs = cs;
 
     m_tss.cr3 = m_process.page_directory().cr3();
 
@@ -132,11 +104,11 @@ Thread::Thread(Process& process)
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
 
     if (m_process.is_ring0()) {
-        m_tss.esp = m_kernel_stack_top;
+        m_tss.esp = m_tss.esp0 = m_kernel_stack_top;
     } else {
         // Ring 3 processes get a separate stack for ring 0.
         // The ring 3 stack will be assigned by exec().
-        m_tss.ss0 = 0x10;
+        m_tss.ss0 = GDT_SELECTOR_DATA0;
         m_tss.esp0 = m_kernel_stack_top;
     }
 
@@ -154,9 +126,6 @@ Thread::~Thread()
         InterruptDisabler disabler;
         thread_table().remove(this);
     }
-
-    if (selector())
-        gdt_free_entry(selector());
 
     ASSERT(m_process.m_thread_count);
     m_process.m_thread_count--;
@@ -219,9 +188,7 @@ void Thread::die_if_needed()
 
     InterruptDisabler disabler;
     set_state(Thread::State::Dying);
-
-    if (!Scheduler::is_active())
-        Scheduler::pick_next_and_switch_now();
+    Scheduler::yield();
 }
 
 void Thread::yield_without_holding_big_lock()
@@ -613,12 +580,11 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         u32* stack = &m_tss.esp;
         setup_stack(m_tss, stack);
 
-        Scheduler::prepare_to_modify_tss(*this);
-        m_tss.cs = 0x1b;
-        m_tss.ds = 0x23;
-        m_tss.es = 0x23;
-        m_tss.fs = 0x23;
-        m_tss.gs = thread_specific_selector() | 3;
+        m_tss.cs = GDT_SELECTOR_CODE3 | 3;
+        m_tss.ds = GDT_SELECTOR_DATA3 | 3;
+        m_tss.es = GDT_SELECTOR_DATA3 | 3;
+        m_tss.fs = GDT_SELECTOR_DATA3 | 3;
+        m_tss.gs = GDT_SELECTOR_TLS | 3;
         m_tss.eip = g_return_to_ring3_from_signal_trampoline.get();
         // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
         set_state(Skip1SchedulerPass);
@@ -713,15 +679,8 @@ Thread* Thread::clone(Process& process)
     clone->m_signal_mask = m_signal_mask;
     memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));
     clone->m_thread_specific_data = m_thread_specific_data;
+    clone->m_thread_specific_region_size = m_thread_specific_region_size;
     return clone;
-}
-
-void Thread::initialize()
-{
-    Scheduler::initialize();
-    asm volatile("fninit");
-    asm volatile("fxsave %0"
-                 : "=m"(s_clean_fpu_state));
 }
 
 Vector<Thread*> Thread::all_threads()
@@ -760,10 +719,14 @@ void Thread::set_state(State new_state)
         Scheduler::update_state_for_thread(*this);
     }
 
-    if (new_state == Dying) {
-        g_finalizer_has_work = true;
-        g_finalizer_wait_queue->wake_all();
-    }
+    if (new_state == Dying)
+        notify_finalizer();
+}
+
+void Thread::notify_finalizer()
+{
+    g_finalizer_has_work.store(true, AK::MemoryOrder::memory_order_release);
+    g_finalizer_wait_queue->wake_all();
 }
 
 String Thread::backtrace(ProcessInspectionHandle&) const
@@ -786,7 +749,7 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
         if (!is_user_address(VirtualAddress(symbol.address))) {
             builder.append("0xdeadc0de\n");
         } else {
-            if (!Scheduler::is_active() && elf_bundle && elf_bundle->elf_loader->has_symbols())
+            if (elf_bundle && elf_bundle->elf_loader->has_symbols())
                 builder.appendf("%p  %s\n", symbol.address, elf_bundle->elf_loader->symbolicate(symbol.address).characters());
             else
                 builder.appendf("%p\n", symbol.address);
@@ -863,8 +826,8 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
 void Thread::make_thread_specific_region(Badge<Process>)
 {
     size_t thread_specific_region_alignment = max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
-    size_t thread_specific_region_size = align_up_to(process().m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
-    auto* region = process().allocate_region({}, thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
+    m_thread_specific_region_size = align_up_to(process().m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
+    auto* region = process().allocate_region({}, m_thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
     SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment)).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
@@ -881,25 +844,34 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
 
 Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary, const char* reason)
 {
-    cli();
-    bool did_unlock = unlock_process_if_locked();
-    if (lock)
-        *lock = false;
-    set_state(State::Queued);
-    queue.enqueue(*current);
-
     TimerId timer_id {};
-    if (timeout) {
-        timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
-            wake_from_queue();
-        });
+    bool did_unlock;
+
+    {
+        InterruptDisabler disable;
+        did_unlock = unlock_process_if_locked();
+        if (lock)
+            *lock = false;
+        set_state(State::Queued);
+        queue.enqueue(*current);
+
+    
+        if (timeout) {
+            timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
+                wake_from_queue();
+            });
+        }
+
+        // Yield and wait for the queue to wake us up again.
+        if (beneficiary)
+            Scheduler::donate_to(beneficiary, reason);
+        else
+            Scheduler::yield();
     }
 
-    // Yield and wait for the queue to wake us up again.
-    if (beneficiary)
-        Scheduler::donate_to(beneficiary, reason);
-    else
-        Scheduler::yield();
+    if (!are_interrupts_enabled())
+        sti();
+
     // We've unblocked, relock the process if needed and carry on.
     if (did_unlock)
         relock_process();
@@ -916,7 +888,10 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<b
 void Thread::wake_from_queue()
 {
     ASSERT(state() == State::Queued);
-    set_state(State::Runnable);
+    if (this != Thread::current)
+        set_state(State::Runnable);
+    else
+        set_state(State::Running);
 }
 
 Thread* Thread::from_tid(int tid)
@@ -935,7 +910,7 @@ Thread* Thread::from_tid(int tid)
 
 void Thread::reset_fpu_state()
 {
-    memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
+    memcpy(m_fpu_state, &Processor::current().clean_fpu_state(), sizeof(FPUState));
 }
 
 void Thread::start_tracing_from(pid_t tracer)

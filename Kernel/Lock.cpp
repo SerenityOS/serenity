@@ -44,7 +44,6 @@ static bool modes_conflict(Lock::Mode mode1, Lock::Mode mode2)
 void Lock::lock(Mode mode)
 {
     ASSERT(mode != Mode::Unlocked);
-    ASSERT(!Scheduler::is_active());
     if (!are_interrupts_enabled()) {
         klog() << "Interrupts disabled when trying to take Lock{" << m_name << "}";
         dump_backtrace();

@@ -35,6 +35,7 @@ void SyncTask::spawn()
 {
     Thread* syncd_thread = nullptr;
     Process::create_kernel_process(syncd_thread, "SyncTask", [] {
+        dbg() << "SyncTask is running";
         for (;;) {
             VFS::the().sync();
             Thread::current->sleep(1 * TimeManagement::the().ticks_per_second());

@@ -87,6 +87,7 @@ private:
 
     OwnPtr<Region> m_apic_base;
     NonnullOwnPtrVector<Region> m_apic_ap_stacks;
+    Vector<Processor> m_ap_processor_info;
     AK::Atomic<u32> m_apic_ap_count{0};
     
     static PhysicalAddress get_base();
