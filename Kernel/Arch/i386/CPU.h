@@ -28,6 +28,7 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
+#include <AK/Vector.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VirtualAddress.h>
 
@@ -609,6 +610,8 @@ struct TrapFrame;
 #define GDT_SELECTOR_PROC 0x30
 #define GDT_SELECTOR_TSS 0x38
 
+class ProcessorInfo;
+
 class Processor {
     Processor* m_self; // must be first field (%fs offset 0x0)
 
@@ -622,11 +625,14 @@ class Processor {
     TSS32 m_tss;
     static FPUState s_clean_fpu_state;
 
+    ProcessorInfo* m_info;
+
     bool m_invoke_scheduler_async;
 
     void gdt_init();
     void write_raw_gdt_entry(u16 selector, u32 low, u32 high);
     void write_gdt_entry(u16 selector, Descriptor& descriptor);
+    static Vector<Processor*>& processors();
 
 public:
     void initialize(u32 cpu);
@@ -634,15 +640,30 @@ public:
     Descriptor& get_gdt_entry(u16 selector);
     void flush_gdt();
     const DescriptorTablePointer& get_gdtr();
+
+    static Processor& by_id(u32 cpu);
+
+    template <typename Callback>
+    static inline IterationDecision for_each(Callback callback)
+    {
+        auto& procs = processors();
+        for (auto it = procs.begin(); it != procs.end(); ++it) {
+            if (callback(**it) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+    
+    ALWAYS_INLINE ProcessorInfo& info() { return *m_info; }
     
     ALWAYS_INLINE static Processor& current()
     {
         return *(Processor*)read_fs_u32(0);
     }
 
-    ALWAYS_INLINE static u32 id()
+    ALWAYS_INLINE u32 id()
     {
-        return current().m_cpu;
+        return m_cpu;
     }
     
     ALWAYS_INLINE u32& in_irq()

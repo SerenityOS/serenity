@@ -28,6 +28,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/ProcessorInfo.h>
 #include <Kernel/Arch/i386/ISRStubs.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
@@ -795,6 +796,22 @@ u32 read_dr6()
 
 FPUState Processor::s_clean_fpu_state;
 
+static Vector<Processor*>* s_processors;
+
+Vector<Processor*>& Processor::processors()
+{
+    ASSERT(s_processors);
+    return *s_processors;
+}
+
+Processor& Processor::by_id(u32 cpu)
+{
+    auto& procs = processors();
+    ASSERT(procs[cpu] != nullptr);
+    ASSERT(procs.size() > cpu);
+    return *procs[cpu];
+}
+
 void Processor::initialize(u32 cpu)
 {
     m_self = this;
@@ -816,6 +833,14 @@ void Processor::initialize(u32 cpu)
         asm volatile("fxsave %0"
             : "=m"(s_clean_fpu_state));
     }
+
+    m_info = new ProcessorInfo(*this);
+
+    if (!s_processors)
+        s_processors = new Vector<Processor*>();
+    if (cpu >= s_processors->size())
+        s_processors->resize(cpu + 1);
+    (*s_processors)[cpu] = this;
 
     klog() << "CPU #" << cpu << " using Processor at " << VirtualAddress(FlatPtr(this));
 }
