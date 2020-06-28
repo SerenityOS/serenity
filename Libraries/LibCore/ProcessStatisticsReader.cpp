@@ -85,6 +85,7 @@ HashMap<pid_t, Core::ProcessStatistics> ProcessStatisticsReader::get_all()
             thread.name = thread_object.get("name").to_string();
             thread.state = thread_object.get("state").to_string();
             thread.ticks = thread_object.get("ticks").to_u32();
+            thread.cpu = thread_object.get("cpu").to_u32();
             thread.priority = thread_object.get("priority").to_u32();
             thread.effective_priority = thread_object.get("effective_priority").to_u32();
             thread.syscall_count = thread_object.get("syscall_count").to_u32();

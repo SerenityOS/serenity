@@ -47,6 +47,7 @@ struct ThreadStatistics {
     unsigned file_read_bytes;
     unsigned file_write_bytes;
     String state;
+    u32 cpu;
     u32 priority;
     u32 effective_priority;
     String name;
