@@ -7,10 +7,7 @@ head, link, meta, script, style, title {
 }
 
 body {
-    margin-left: 8;
-    margin-top: 8;
-    margin-right: 8;
-    margin-bottom: 8;
+    margin: 8px;
 }
 
 h1, h2 {
@@ -25,8 +22,8 @@ h3 {
 pre {
     font-family: Csilla;
     font-weight: lighter;
-    margin-bottom: 8;
-    margin-top: 8;
+    margin-bottom: 8px;
+    margin-top: 8px;
     white-space: pre;
 }
 
@@ -63,10 +60,7 @@ center {
 }
 
 h1, h2, h3 {
-    margin-top: 8;
-    margin-bottom: 8;
-    margin-left: 0;
-    margin-right: 0;
+    margin: 8px 0 8px 0;
 }
 
 h4, p,
@@ -74,24 +68,18 @@ blockquote, ul,
 fieldset, form,
 ol, dl, dir,
 menu {
-    margin-top: 4;
-    margin-bottom: 4;
-    margin-left: 0;
-    margin-right: 0;
+    margin: 4px 0 4px 0;
 }
 
 h5, h6 {
-    margin-top: 2;
-    margin-bottom: 2;
-    margin-left: 0;
-    margin-right: 0;
+    margin: 2px 0 2px 0;
 }
 
 li {
     display: list-item;
-    margin-left: 8;
-    margin-top: 2;
-    margin-bottom: 2;
+    margin-left: 8px;
+    margin-top: 2px;
+    margin-bottom: 2px;
 }
 
 a:link {
@@ -104,20 +92,9 @@ a:hover {
 }
 
 hr {
-    margin-top: 4;
-    margin-bottom: 4;
-    border-top-width: 1;
-    border-left-width: 1;
-    border-right-width: 1;
-    border-bottom-width: 1;
-    border-top-color: #888888;
-    border-left-color: #888888;
-    border-right-color: #888888;
-    border-bottom-color: #888888;
-    border-top-style: inset;
-    border-left-style: inset;
-    border-right-style: inset;
-    border-bottom-style: inset;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    border: 1px inset #888888;
 }
 
 blink {
