@@ -310,7 +310,7 @@ void init_stage2()
         hang();
     }
 
-    Process::current->set_root_directory(VFS::the().root_custody());
+    Process::current()->set_root_directory(VFS::the().root_custody());
 
     load_kernel_symbol_table();
 
@@ -329,7 +329,7 @@ void init_stage2()
 
     NetworkTask::spawn();
 
-    Process::current->sys$exit(0);
+    Process::current()->sys$exit(0);
     ASSERT_NOT_REACHED();
 }
 

@@ -67,7 +67,7 @@ Region::~Region()
 
 NonnullOwnPtr<Region> Region::clone()
 {
-    ASSERT(Process::current);
+    ASSERT(Process::current());
 
     if (m_inherit_mode == InheritMode::ZeroedOnFork) {
         ASSERT(m_mmap);
@@ -367,8 +367,9 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (Thread::current)
-        Thread::current->did_zero_fault();
+    auto current_thread = Thread::current();
+    if (current_thread != nullptr)
+        current_thread->did_zero_fault();
 
     auto page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
     if (page.is_null()) {
@@ -397,8 +398,9 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (Thread::current)
-        Thread::current->did_cow_fault();
+    auto current_thread = Thread::current();
+    if (current_thread)
+        current_thread->did_cow_fault();
 
 #ifdef PAGE_FAULT_DEBUG
     dbg() << "    >> It's a COW page and it's time to COW!";
@@ -446,8 +448,9 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (Thread::current)
-        Thread::current->did_inode_fault();
+    auto current_thread = Thread::current();
+    if (current_thread)
+        current_thread->did_inode_fault();
 
 #ifdef MM_DEBUG
     dbg() << "MM: page_in_from_inode ready to read from inode";

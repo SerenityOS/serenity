@@ -296,7 +296,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     for (auto& region : process.regions()) {
-        if (!region.is_user_accessible() && !Process::current->is_superuser())
+        if (!region.is_user_accessible() && !Process::current()->is_superuser())
             continue;
         auto region_object = array.add_object();
         region_object.add("readable", region.is_readable());
@@ -439,7 +439,7 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
     object.add("executable", Profiling::executable_path());
 
     auto array = object.add_array("events");
-    bool mask_kernel_addresses = !Process::current->is_superuser();
+    bool mask_kernel_addresses = !Process::current()->is_superuser();
     Profiling::for_each_sample([&](auto& sample) {
         auto object = array.add_object();
         object.add("type", "sample");
@@ -677,7 +677,7 @@ Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
 Optional<KBuffer> procfs$self(InodeIdentifier)
 {
     char buffer[16];
-    sprintf(buffer, "%u", Process::current->pid());
+    sprintf(buffer, "%u", Process::current()->pid());
     return KBuffer::copy((const u8*)buffer, strlen(buffer));
 }
 
@@ -807,7 +807,7 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
 
 Optional<KBuffer> procfs$all(InodeIdentifier)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(g_scheduler_lock);
     auto processes = Process::all_processes();
     KBufferBuilder builder;
     JsonArraySerializer array { builder };

@@ -267,7 +267,7 @@ Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(Thread::current);
+    ASSERT(Thread::current() != nullptr);
     ScopedSpinLock lock(s_lock);
     if (Processor::current().in_irq()) {
         dbg() << "CPU[" << Processor::current().id() << "] BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr() << ", irq level: " << Processor::current().in_irq();
@@ -519,10 +519,11 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
-    ASSERT(Thread::current);
+    auto current_thread = Thread::current();
+    ASSERT(current_thread != nullptr);
     ScopedSpinLock lock(s_lock);
 
-    Thread::current->tss().cr3 = process.page_directory().cr3();
+    current_thread->tss().cr3 = process.page_directory().cr3();
     write_cr3(process.page_directory().cr3());
 }
 

@@ -133,7 +133,7 @@ ssize_t FIFO::read(FileDescription&, size_t, u8* buffer, ssize_t size)
 ssize_t FIFO::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
 {
     if (!m_readers) {
-        Thread::current->send_signal(SIGPIPE, Process::current);
+        Thread::current()->send_signal(SIGPIPE, Process::current());
         return -EPIPE;
     }
 #ifdef FIFO_DEBUG

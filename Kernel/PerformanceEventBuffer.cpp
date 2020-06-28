@@ -67,11 +67,12 @@ KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
     FlatPtr eip;
-    copy_from_user(&eip, (FlatPtr*)&Thread::current->get_register_dump_from_stack().eip);
+    auto current_thread = Thread::current();
+    copy_from_user(&eip, (FlatPtr*)&current_thread->get_register_dump_from_stack().eip);
     Vector<FlatPtr> backtrace;
     {
         SmapDisabler disabler;
-        backtrace = Thread::current->raw_backtrace(ebp, eip);
+        backtrace = current_thread->raw_backtrace(ebp, eip);
     }
     event.stack_size = min(sizeof(event.stack) / sizeof(FlatPtr), static_cast<size_t>(backtrace.size()));
     memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(FlatPtr));
