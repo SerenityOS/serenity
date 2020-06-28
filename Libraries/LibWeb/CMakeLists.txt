@@ -77,6 +77,7 @@ set(SOURCES
     Layout/LayoutListItem.cpp
     Layout/LayoutListItemMarker.cpp
     Layout/LayoutNode.cpp
+    Layout/LayoutPosition.cpp
     Layout/LayoutReplaced.cpp
     Layout/LayoutTable.cpp
     Layout/LayoutTableCell.cpp

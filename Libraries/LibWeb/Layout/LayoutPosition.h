@@ -78,6 +78,8 @@ public:
     const LayoutPosition& start() const { return m_start; }
     const LayoutPosition& end() const { return m_end; }
 
+    LayoutRange normalized() const;
+
 private:
     LayoutPosition m_start;
     LayoutPosition m_end;
