@@ -722,7 +722,7 @@ HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position) const
     if (!children_are_inline())
         return LayoutBox::hit_test(position);
 
-    HitTestResult result;
+    HitTestResult last_good_candidate;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
@@ -730,11 +730,13 @@ HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position) const
                     return to<LayoutBlock>(fragment.layout_node()).hit_test(position);
                 return { fragment.layout_node(), fragment.text_index_at(position.x()) };
             }
+            if (fragment.absolute_rect().top() <= position.y())
+                last_good_candidate = { fragment.layout_node(), fragment.text_index_at(position.x()) };
         }
     }
 
-    // FIXME: This should be smarter about the text position if we're hitting a block
-    //        that has text inside it, but `position` is to the right of the text box.
+    if (last_good_candidate.layout_node)
+        return last_good_candidate;
     return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
