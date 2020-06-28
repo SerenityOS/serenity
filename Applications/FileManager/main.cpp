@@ -58,6 +58,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <signal.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -337,16 +338,13 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     });
 
     auto open_terminal_action = GUI::Action::create("Open Terminal here...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](const GUI::Action&) {
-        if (!fork()) {
-            if (chdir(directory_view.path().characters()) < 0) {
-                perror("chdir");
-                exit(1);
-            }
-
-            if (execl("/bin/Terminal", "Terminal", nullptr) < 0)
-                perror("execl");
-            exit(1);
-        }
+        posix_spawn_file_actions_t spawn_actions;
+        posix_spawn_file_actions_init(&spawn_actions);
+        posix_spawn_file_actions_addchdir(&spawn_actions, directory_view.path().characters());
+        pid_t pid;
+        const char* argv[] = { "Terminal", nullptr };
+        posix_spawn(&pid, "/bin/Terminal", &spawn_actions, nullptr, const_cast<char**>(argv), environ);
+        posix_spawn_file_actions_destroy(&spawn_actions);
     });
 
     RefPtr<GUI::Action> view_as_table_action;
@@ -719,13 +717,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     auto open_in_text_editor_action = GUI::Action::create("Open in TextEditor...", Gfx::Bitmap::load_from_file("/res/icons/TextEditor16.png"), [&](auto&) {
+        pid_t child;
         for (auto& path : selected_file_paths()) {
-            if (!fork()) {
-                int rc = execl("/bin/TextEditor", "TextEditor", path.characters(), nullptr);
-                if (rc < 0)
-                    perror("execl");
-                exit(1);
-            }
+            const char* argv[] = { "TextEditor", path.characters(), nullptr };
+            posix_spawn(&child, "/bin/TextEditor", nullptr, nullptr, const_cast<char**>(argv), environ);
         }
     });
 

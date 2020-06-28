@@ -40,6 +40,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibKeyboard/CharacterMap.h>
+#include <spawn.h>
 
 int main(int argc, char** argv)
 {
@@ -123,17 +124,11 @@ int main(int argc, char** argv)
             GUI::MessageBox::show("Please select character mapping file.", "Keyboard settings", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
             return;
         }
-
-        pid_t child_pid = fork();
-        if (child_pid < 0) {
-            perror("fork");
+        pid_t child_pid;
+        const char* argv[] = { "/bin/keymap", character_map_file.characters(), nullptr };
+        if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
             exit(1);
-        }
-        if (child_pid == 0) {
-            if (execl("/bin/keymap", "/bin/keymap", character_map_file.characters(), nullptr) < 0) {
-                perror("execl");
-                exit(1);
-            }
         }
         if (quit)
             app.quit();

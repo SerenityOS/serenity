@@ -36,6 +36,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
+#include <spawn.h>
 
 //#define SYSTEM_MENU_DEBUG
 
@@ -149,12 +150,11 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         auto parent_menu = g_app_category_menus.get(app.category).value_or(*system_menu);
         parent_menu->add_action(GUI::Action::create(app.name, icon.ptr(), [app_identifier](auto&) {
             dbg() << "Activated app with ID " << app_identifier;
-            if (fork() == 0) {
-                const auto& bin = g_apps[app_identifier].executable;
-                if (execl(bin.characters(), bin.characters(), nullptr) < 0)
-                    perror("execl");
-                ASSERT_NOT_REACHED();
-            }
+            const auto& bin = g_apps[app_identifier].executable;
+            pid_t child_pid;
+            const char* argv[] = { bin.characters(), nullptr };
+            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), environ)))
+                perror("posix_spawn");
         }));
         ++app_identifier;
     }
@@ -197,10 +197,9 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
 
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("About...", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"), [](auto&) {
-        if (fork() == 0) {
-            execl("/bin/About", "/bin/About", nullptr);
-            ASSERT_NOT_REACHED();
-        }
+        pid_t child_pid;
+        const char* argv[] = { "/bin/About", nullptr };
+        posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ);
     }));
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("Exit...", [](auto&) {
@@ -209,10 +208,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         if (command.size() == 0)
             return;
 
-        if (fork() == 0) {
-            execv(command[0], const_cast<char* const*>(command.data()));
-            ASSERT_NOT_REACHED();
-        }
+        pid_t child_pid;
+        posix_spawn(&child_pid, command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ);
     }));
 
     return system_menu;

@@ -31,6 +31,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <pwd.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -121,20 +122,12 @@ int main(int argc, char** argv)
         }
 
         if (access(home_directory.characters(), F_OK) != -1) {
-            auto child = fork();
-
-            if (child < 0) {
-                perror("fork");
+            pid_t child;
+            const char* argv[] = { "rm", "-r", home_directory.characters(), nullptr };
+            if ((errno = posix_spawn(&child, "/bin/rm", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+                perror("posix_spawn");
                 return 12;
             }
-
-            if (!child) {
-                int rc = execl("/bin/rm", "rm", "-r", home_directory.characters(), nullptr);
-                ASSERT(rc < 0);
-                perror("execl");
-                exit(127);
-            }
-
             int wstatus;
             if (waitpid(child, &wstatus, 0) < 0) {
                 perror("waitpid");
