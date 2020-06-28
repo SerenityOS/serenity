@@ -864,6 +864,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
             thread_object.add("times_scheduled", thread.times_scheduled());
             thread_object.add("ticks", thread.ticks());
             thread_object.add("state", thread.state_string());
+            thread_object.add("cpu", thread.cpu());
             thread_object.add("priority", thread.priority());
             thread_object.add("effective_priority", thread.effective_priority());
             thread_object.add("syscall_count", thread.syscall_count());

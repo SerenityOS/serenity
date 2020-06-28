@@ -904,12 +904,15 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     set_fs(to_tss.fs);
     set_gs(to_tss.gs);
 
-    auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
+    auto& processor = Processor::current();
+    auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(to_thread->thread_specific_data().as_ptr());
     tls_descriptor.set_limit(to_thread->thread_specific_region_size());
 
     if (from_tss.cr3 != to_tss.cr3)
         write_cr3(to_tss.cr3);
+
+    to_thread->set_cpu(processor.id());
 
     asm volatile("fxrstor %0"
         ::"m"(to_thread->fpu_state()));
