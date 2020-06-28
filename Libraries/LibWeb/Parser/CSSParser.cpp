@@ -27,6 +27,7 @@
 #include <AK/HashMap.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/Parser/CSSParser.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -45,6 +46,24 @@
     } while (0)
 
 namespace Web {
+
+namespace CSS {
+
+ParsingContext::ParsingContext()
+{
+}
+
+ParsingContext::ParsingContext(const Document& document)
+    : m_document(&document)
+{
+}
+
+bool ParsingContext::in_quirks_mode() const
+{
+    return m_document ? m_document->in_quirks_mode() : false;
+}
+
+}
 
 static CSS::ValueID value_id_for_palette_string(const StringView& string)
 {
@@ -160,7 +179,7 @@ static CSS::ValueID value_id_for_palette_string(const StringView& string)
         return CSS::ValueID::Invalid;
 }
 
-static Optional<Color> parse_css_color(const StringView& view)
+static Optional<Color> parse_css_color(const CSS::ParsingContext&, const StringView& view)
 {
     if (view.equals_ignoring_case("transparent"))
         return Color::from_rgba(0x00000000);
@@ -245,34 +264,71 @@ static Optional<float> try_parse_float(const StringView& string)
     return is_negative ? -value : value;
 }
 
-static Optional<float> parse_number(const StringView& view)
+static Optional<float> parse_number(const CSS::ParsingContext& context, const StringView& view)
 {
     if (view.ends_with('%'))
-        return parse_number(view.substring_view(0, view.length() - 1));
+        return parse_number(context, view.substring_view(0, view.length() - 1));
 
     // FIXME: Maybe we should have "ends_with_ignoring_case()" ?
     if (view.to_string().to_lowercase().ends_with("px"))
-        return parse_number(view.substring_view(0, view.length() - 2));
+        return parse_number(context, view.substring_view(0, view.length() - 2));
     if (view.to_string().to_lowercase().ends_with("rem"))
-        return parse_number(view.substring_view(0, view.length() - 3));
+        return parse_number(context, view.substring_view(0, view.length() - 3));
     if (view.to_string().to_lowercase().ends_with("em"))
-        return parse_number(view.substring_view(0, view.length() - 2));
+        return parse_number(context, view.substring_view(0, view.length() - 2));
+    if (view == "0")
+        return 0;
+
+    // NOTE: We don't allow things like "width: 100" in standards mode.
+    if (!context.in_quirks_mode())
+        return {};
 
     return try_parse_float(view);
 }
 
-NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
+static Length parse_length(const CSS::ParsingContext& context, const StringView& view, bool& is_bad_length)
 {
-    auto number = parse_number(string);
-    if (number.has_value()) {
-        if (string.ends_with('%'))
-            return LengthStyleValue::create(Length(number.value(), Length::Type::Percentage));
-        if (string.ends_with("em"))
-            return LengthStyleValue::create(Length(number.value(), Length::Type::Em));
-        if (string.ends_with("rem"))
-            return LengthStyleValue::create(Length(number.value(), Length::Type::Rem));
-        return LengthStyleValue::create(Length(number.value(), Length::Type::Px));
+    Length::Type type = Length::Type::Undefined;
+    Optional<float> value;
+
+    if (view.ends_with('%')) {
+        type = Length::Type::Percentage;
+        value = try_parse_float(view.substring_view(0, view.length() - 1));
+    } else if (view.to_string().to_lowercase().ends_with("px")) {
+        type = Length::Type::Px;
+        value = try_parse_float(view.substring_view(0, view.length() - 2));
+    } else if (view.to_string().to_lowercase().ends_with("rem")) {
+        type = Length::Type::Rem;
+        value = try_parse_float(view.substring_view(0, view.length() - 3));
+    } else if (view.to_string().to_lowercase().ends_with("em")) {
+        type = Length::Type::Em;
+        value = try_parse_float(view.substring_view(0, view.length() - 2));
+    } else if (view == "0") {
+        type = Length::Type::Px;
+        value = 0;
+    } else if (context.in_quirks_mode()) {
+        type = Length::Type::Px;
+        value = try_parse_float(view);
+    } else {
+        value = try_parse_float(view);
+        if (value.has_value())
+            is_bad_length = true;
     }
+
+    if (!value.has_value())
+        return {};
+
+    return Length(value.value(), type);
+}
+
+RefPtr<StyleValue> parse_css_value(const CSS::ParsingContext& context, const StringView& string)
+{
+    bool is_bad_length = false;
+    auto length = parse_length(context, string, is_bad_length);
+    if (is_bad_length)
+        return nullptr;
+    if (!length.is_undefined())
+        return LengthStyleValue::create(length);
 
     if (string.equals_ignoring_case("inherit"))
         return InheritStyleValue::create();
@@ -281,7 +337,7 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
     if (string.equals_ignoring_case("auto"))
         return LengthStyleValue::create(Length::make_auto());
 
-    auto color = parse_css_color(string);
+    auto color = parse_css_color(context, string);
     if (color.has_value())
         return ColorStyleValue::create(color.value());
 
@@ -295,26 +351,26 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
     return StringStyleValue::create(string);
 }
 
-RefPtr<LengthStyleValue> parse_line_width(const StringView& part)
+RefPtr<LengthStyleValue> parse_line_width(const CSS::ParsingContext& context, const StringView& part)
 {
-    NonnullRefPtr<StyleValue> value = parse_css_value(part);
-    if (value->is_length())
+    auto value = parse_css_value(context, part);
+    if (value && value->is_length())
         return static_ptr_cast<LengthStyleValue>(value);
     return nullptr;
 }
 
-RefPtr<ColorStyleValue> parse_color(const StringView& part)
+RefPtr<ColorStyleValue> parse_color(const CSS::ParsingContext& context, const StringView& part)
 {
-    NonnullRefPtr<StyleValue> value = parse_css_value(part);
-    if (value->is_color())
+    auto value = parse_css_value(context, part);
+    if (value && value->is_color())
         return static_ptr_cast<ColorStyleValue>(value);
     return nullptr;
 }
 
-RefPtr<StringStyleValue> parse_line_style(const StringView& part)
+RefPtr<StringStyleValue> parse_line_style(const CSS::ParsingContext& context, const StringView& part)
 {
-    NonnullRefPtr<StyleValue> parsed_value = parse_css_value(part);
-    if (!parsed_value->is_string())
+    auto parsed_value = parse_css_value(context, part);
+    if (!parsed_value || !parsed_value->is_string())
         return nullptr;
     auto value = static_ptr_cast<StringStyleValue>(parsed_value);
     if (value->to_string() == "dotted")
@@ -334,8 +390,9 @@ RefPtr<StringStyleValue> parse_line_style(const StringView& part)
 
 class CSSParser {
 public:
-    CSSParser(const StringView& input)
-        : css(input)
+    CSSParser(const CSS::ParsingContext& context, const StringView& input)
+        : m_context(context)
+        , css(input)
     {
     }
 
@@ -769,7 +826,10 @@ public:
         if (property_id == CSS::PropertyID::Invalid) {
             dbg() << "CSSParser: Unrecognized property '" << property_name << "'";
         }
-        return StyleProperty { property_id, parse_css_value(property_value), important };
+        auto value = parse_css_value(m_context, property_value);
+        if (!value)
+            return {};
+        return StyleProperty { property_id, value.release_nonnull(), important };
     }
 
     void parse_declaration()
@@ -841,6 +901,8 @@ public:
     }
 
 private:
+    CSS::ParsingContext m_context;
+
     NonnullRefPtrVector<StyleRule> rules;
 
     struct CurrentRule {
@@ -856,25 +918,25 @@ private:
     StringView css;
 };
 
-Optional<Selector> parse_selector(const StringView& selector_text)
+Optional<Selector> parse_selector(const CSS::ParsingContext& context, const StringView& selector_text)
 {
-    CSSParser parser(selector_text);
+    CSSParser parser(context, selector_text);
     return parser.parse_individual_selector();
 }
 
-RefPtr<StyleSheet> parse_css(const StringView& css)
+RefPtr<StyleSheet> parse_css(const CSS::ParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
         return StyleSheet::create({});
-    CSSParser parser(css);
+    CSSParser parser(context, css);
     return parser.parse_sheet();
 }
 
-RefPtr<StyleDeclaration> parse_css_declaration(const StringView& css)
+RefPtr<StyleDeclaration> parse_css_declaration(const CSS::ParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
         return StyleDeclaration::create({});
-    CSSParser parser(css);
+    CSSParser parser(context, css);
     return parser.parse_standalone_declaration();
 }
 

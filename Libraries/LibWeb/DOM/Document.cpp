@@ -346,7 +346,7 @@ NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const String& ta
 
 RefPtr<Element> Document::query_selector(const StringView& selector_text)
 {
-    auto selector = parse_selector(selector_text);
+    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
     if (!selector.has_value())
         return {};
 
@@ -366,7 +366,7 @@ RefPtr<Element> Document::query_selector(const StringView& selector_text)
 
 NonnullRefPtrVector<Element> Document::query_selector_all(const StringView& selector_text)
 {
-    auto selector = parse_selector(selector_text);
+    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
     if (!selector.has_value())
         return {};
 
