@@ -29,6 +29,7 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -125,17 +126,11 @@ bool Launcher::open_with_handler_name(const URL& url, const String& handler_name
 
 bool spawn(String executable, String argument)
 {
-    pid_t child_pid = fork();
-    if (child_pid < 0) {
-        perror("fork");
+    pid_t child_pid;
+    const char* argv[] = { executable.characters(), argument.characters(), nullptr };
+    if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
+        perror("posix_spawn");
         return false;
-    }
-    if (child_pid == 0) {
-        if (execl(executable.characters(), executable.characters(), argument.characters(), nullptr) < 0) {
-            perror("execl");
-            return false;
-        }
-        ASSERT_NOT_REACHED();
     }
     return true;
 }
