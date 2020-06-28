@@ -70,6 +70,8 @@ protected:
     void compute_height();
     void layout_absolutely_positioned_descendants();
 
+    virtual float width_of_logical_containing_block() const;
+
 private:
     virtual bool is_block() const override { return true; }
 

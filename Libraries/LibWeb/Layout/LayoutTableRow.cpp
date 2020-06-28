@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Layout/LayoutTable.h>
 #include <LibWeb/Layout/LayoutTableCell.h>
 #include <LibWeb/Layout/LayoutTableRow.h>
 
@@ -47,7 +48,12 @@ void LayoutTableRow::calculate_column_widths(Vector<float>& column_widths)
 {
     size_t column_index = 0;
     for_each_child_of_type<LayoutTableCell>([&](auto& cell) {
-        cell.layout(LayoutMode::OnlyRequiredLineBreaks);
+        auto* table = first_ancestor_of_type<LayoutTable>();
+        if (table && !table->style().width().is_undefined_or_auto()) {
+            cell.layout(LayoutMode::Default);
+        } else {
+            cell.layout(LayoutMode::OnlyRequiredLineBreaks);
+        }
         column_widths[column_index] = max(column_widths[column_index], cell.width());
         column_index += cell.colspan();
     });
@@ -67,7 +73,14 @@ void LayoutTableRow::layout_row(const Vector<float>& column_widths)
             content_width += column_widths[column_index++];
         tallest_cell_height = max(tallest_cell_height, cell.height());
     });
-    set_width(content_width);
+
+    auto* table = first_ancestor_of_type<LayoutTable>();
+    if (table && !table->style().width().is_undefined_or_auto()) {
+        set_width(table->width());
+    } else {
+        set_width(content_width);
+    }
+
     set_height(tallest_cell_height);
 }
 
