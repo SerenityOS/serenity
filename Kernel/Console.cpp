@@ -27,11 +27,13 @@
 #include <Kernel/Console.h>
 #include <Kernel/IO.h>
 #include <Kernel/kstdio.h>
+#include <Kernel/SpinLock.h>
 
 // Bytes output to 0xE9 end up on the Bochs console. It's very handy.
 #define CONSOLE_OUT_TO_E9
 
 static Console* s_the;
+static Kernel::SpinLock g_console_lock;
 
 Console& Console::the()
 {
@@ -77,6 +79,7 @@ ssize_t Console::write(Kernel::FileDescription&, size_t, const u8* data, ssize_t
 
 void Console::put_char(char ch)
 {
+    Kernel::ScopedSpinLock lock(g_console_lock);
 #ifdef CONSOLE_OUT_TO_E9
     //if (ch != 27)
     IO::out8(0xe9, ch);
