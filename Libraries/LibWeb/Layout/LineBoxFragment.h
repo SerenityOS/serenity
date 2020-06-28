@@ -60,7 +60,7 @@ public:
 
     float absolute_x() const { return absolute_rect().x(); }
 
-    void render(PaintContext&);
+    void paint(PaintContext&);
 
     bool ends_in_whitespace() const;
     bool is_justifiable_whitespace() const;

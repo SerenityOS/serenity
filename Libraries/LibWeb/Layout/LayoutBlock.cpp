@@ -710,7 +710,7 @@ void LayoutBlock::paint(PaintContext& context, PaintPhase phase)
                 for (auto& fragment : line_box.fragments()) {
                     if (context.should_show_line_box_borders())
                         context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
-                    fragment.render(context);
+                    fragment.paint(context);
                 }
             }
         }

@@ -65,7 +65,7 @@ const String& LayoutText::text_for_style(const StyleProperties& style) const
     return node().data();
 }
 
-void LayoutText::render_fragment(PaintContext& context, const LineBoxFragment& fragment) const
+void LayoutText::paint_fragment(PaintContext& context, const LineBoxFragment& fragment) const
 {
     auto& painter = context.painter();
     painter.set_font(specified_style().font());
