@@ -63,8 +63,9 @@ LocalSocket::LocalSocket(int type)
     LOCKER(all_sockets().lock());
     all_sockets().resource().append(this);
 
-    m_prebind_uid = Process::current->uid();
-    m_prebind_gid = Process::current->gid();
+    auto current_process = Process::current();
+    m_prebind_uid = current_process->uid();
+    m_prebind_gid = current_process->gid();
     m_prebind_mode = 0666;
 
 #ifdef DEBUG_LOCAL_SOCKET
@@ -110,7 +111,7 @@ KResult LocalSocket::bind(const sockaddr* user_address, socklen_t address_size)
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 04777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
-    auto result = VFS::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current->current_directory(), owner);
+    auto result = VFS::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current()->current_directory(), owner);
     if (result.is_error()) {
         if (result.error() == -EEXIST)
             return KResult(-EADDRINUSE);
@@ -148,7 +149,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
     dbg() << "LocalSocket{" << this << "} connect(" << safe_address << ")";
 #endif
 
-    auto description_or_error = VFS::the().open(safe_address, O_RDWR, 0, Process::current->current_directory());
+    auto description_or_error = VFS::the().open(safe_address, O_RDWR, 0, Process::current()->current_directory());
     if (description_or_error.is_error())
         return KResult(-ECONNREFUSED);
 
@@ -175,7 +176,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
         return KSuccess;
     }
 
-    if (Thread::current->block<Thread::ConnectBlocker>(description) != Thread::BlockResult::WokeNormally) {
+    if (Thread::current()->block<Thread::ConnectBlocker>(description) != Thread::BlockResult::WokeNormally) {
         m_connect_side_role = Role::None;
         return KResult(-EINTR);
     }
@@ -265,7 +266,7 @@ ssize_t LocalSocket::sendto(FileDescription& description, const void* data, size
         return -EPIPE;
     ssize_t nwritten = send_buffer_for(description).write((const u8*)data, data_size);
     if (nwritten > 0)
-        Thread::current->did_unix_socket_write(nwritten);
+        Thread::current()->did_unix_socket_write(nwritten);
     return nwritten;
 }
 
@@ -299,7 +300,7 @@ ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t
             return -EAGAIN;
         }
     } else if (!can_read(description, 0)) {
-        auto result = Thread::current->block<Thread::ReadBlocker>(description);
+        auto result = Thread::current()->block<Thread::ReadBlocker>(description);
         if (result != Thread::BlockResult::WokeNormally)
             return -EINTR;
     }
@@ -308,7 +309,7 @@ ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t
     ASSERT(!buffer_for_me.is_empty());
     int nread = buffer_for_me.read((u8*)buffer, buffer_size);
     if (nread > 0)
-        Thread::current->did_unix_socket_read(nread);
+        Thread::current()->did_unix_socket_read(nread);
     return nread;
 }
 
@@ -389,7 +390,8 @@ KResult LocalSocket::chown(FileDescription&, uid_t uid, gid_t gid)
     if (m_file)
         return m_file->chown(uid, gid);
 
-    if (!Process::current->is_superuser() && (Process::current->euid() != uid || !Process::current->in_group(gid)))
+    auto current_process = Process::current();
+    if (!current_process->is_superuser() && (current_process->euid() != uid || !current_process->in_group(gid)))
         return KResult(-EPERM);
 
     m_prebind_uid = uid;

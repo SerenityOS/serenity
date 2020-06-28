@@ -36,7 +36,7 @@ namespace Ptrace {
 KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, Process& caller)
 {
     if (params.request == PT_TRACE_ME) {
-        if (Thread::current->tracer())
+        if (Thread::current()->tracer())
             return KResult(-EBUSY);
 
         caller.set_wait_for_tracer_at_next_execve(true);

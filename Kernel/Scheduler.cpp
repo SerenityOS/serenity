@@ -43,6 +43,7 @@ namespace Kernel {
 
 SchedulerData* g_scheduler_data;
 timeval g_timeofday;
+RecursiveSpinLock g_scheduler_lock;
 
 void Scheduler::init_thread(Thread& thread)
 {
@@ -63,7 +64,7 @@ void Scheduler::update_state_for_thread(Thread& thread)
 static u32 time_slice_for(const Thread& thread)
 {
     // One time slice unit == 1ms
-    if (&thread == g_colonel)
+    if (&thread == Processor::current().idle_thread())
         return 1;
     return 10;
 }
@@ -74,7 +75,6 @@ timeval Scheduler::time_since_boot()
 }
 
 Thread* g_finalizer;
-Thread* g_colonel;
 WaitQueue* g_finalizer_wait_queue;
 Atomic<bool> g_finalizer_has_work{false};
 static Process* s_colonel_process;
@@ -85,8 +85,9 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, void*& joinee_exit_value)
     , m_joinee_exit_value(joinee_exit_value)
 {
     ASSERT(m_joinee.m_joiner == nullptr);
-    m_joinee.m_joiner = Thread::current;
-    Thread::current->m_joinee = &joinee;
+    auto current_thread = Thread::current();
+    m_joinee.m_joiner = current_thread;
+    current_thread->m_joinee = &joinee;
 }
 
 bool Thread::JoinBlocker::should_unblock(Thread& joiner, time_t, long)
@@ -268,7 +269,6 @@ bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
             return IterationDecision::Continue;
 
         m_waitee_pid = child.pid();
-        dbg() << "Unblocking thread " << thread << " process " << thread.process() << " child exited: " << m_waitee_pid;
         should_unblock = true;
         return IterationDecision::Break;
     });
@@ -317,15 +317,16 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
 void Scheduler::start()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(!Thread::current);
-    Thread::current = g_colonel;
-    Process::current = &g_colonel->process();
-    g_colonel->set_ticks_left(time_slice_for(*g_colonel));
-    g_colonel->did_schedule();
-    g_colonel->set_initialized(true);
-    Processor::init_context(*g_colonel);
-    g_colonel->set_state(Thread::Running);
-    Processor::current().initialize_context_switching(*g_colonel);
+    auto& processor = Processor::current();
+    ASSERT(processor.current_thread() == nullptr);
+    auto& idle_thread = *processor.idle_thread();
+    processor.set_current_thread(idle_thread);
+    idle_thread.set_ticks_left(time_slice_for(idle_thread));
+    idle_thread.did_schedule();
+    idle_thread.set_initialized(true);
+    Processor::init_context(idle_thread);
+    idle_thread.set_state(Thread::Running);
+    processor.initialize_context_switching(idle_thread);
     ASSERT_NOT_REACHED();
 }
 
@@ -333,11 +334,13 @@ bool Scheduler::pick_next()
 {
     ASSERT_INTERRUPTS_DISABLED();
 
-    ASSERT(Thread::current);
+    auto current_thread = Thread::current();
     auto now = time_since_boot();
 
     auto now_sec = now.tv_sec;
     auto now_usec = now.tv_usec;
+
+    ScopedSpinLock lock(g_scheduler_lock);
 
     // Check and unblock threads whose wait conditions have been met.
     Scheduler::for_each_nonrunnable([&](Thread& thread) {
@@ -347,7 +350,7 @@ bool Scheduler::pick_next()
 
     Process::for_each([&](Process& process) {
         if (process.is_dead()) {
-            if (Process::current->pid() != process.pid() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
+            if (current_thread->process().pid() != process.pid() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
                 auto name = process.name();
                 auto pid = process.pid();
                 auto exit_status = Process::reap(process);
@@ -363,13 +366,13 @@ bool Scheduler::pick_next()
     });
 
     // Dispatch any pending signals.
-    Thread::for_each_living([](Thread& thread) -> IterationDecision {
+    Thread::for_each_living([&](Thread& thread) -> IterationDecision {
         if (!thread.has_unmasked_pending_signals())
             return IterationDecision::Continue;
         // FIXME: It would be nice if the Scheduler didn't have to worry about who is "current"
         //        For now, avoid dispatching signals to "current" and do it in a scheduling pass
         //        while some other process is interrupted. Otherwise a mess will be made.
-        if (&thread == Thread::current)
+        if (&thread == current_thread)
             return IterationDecision::Continue;
         // We know how to interrupt blocked processes, but if they are just executing
         // at some random point in the kernel, let them continue.
@@ -433,32 +436,33 @@ bool Scheduler::pick_next()
     }
 
     if (!thread_to_schedule)
-        thread_to_schedule = g_colonel;
+        thread_to_schedule = Processor::current().idle_thread();
 
 #ifdef SCHEDULER_DEBUG
     dbg() << "Scheduler: Switch to " << *thread_to_schedule << " @ " << String::format("%04x:%08x", thread_to_schedule->tss().cs, thread_to_schedule->tss().eip);
 #endif
 
+    lock.unlock();
     return context_switch(*thread_to_schedule);
 }
 
 bool Scheduler::yield()
 {
-//#ifdef SCHEDULER_DEBUG
-#if 0
-    dbg() << "Scheduler: yielding thread " << *Thread::current << " in_trap: " << Processor::current().in_trap() << " in_irq: " << Processor::current().in_irq();
+    auto& proc = Processor::current();
+    auto current_thread = Thread::current();
+#ifdef SCHEDULER_DEBUG
+    dbg() << "Scheduler: yielding thread " << *current_thread << " in_trap: " << proc.in_trap() << " in_irq: " << proc.in_irq();
 #endif
     InterruptDisabler disabler;
-    ASSERT(Thread::current);
-    if (Processor::current().in_irq()) {
+    ASSERT(current_thread != nullptr);
+    if (proc.in_irq()) {
         // If we're handling an IRQ we can't switch context, delay until
         // exiting the trap
-        Processor::current().invoke_scheduler_async();
+        proc.invoke_scheduler_async();
     } else if (!Scheduler::pick_next())
         return false;
-//#ifdef SCHEDULER_DEBUG
-#if 0
-    dbg() << "Scheduler: yield returns to thread " << *Thread::current << " in_trap: " << Processor::current().in_trap() << " in_irq: " << Processor::current().in_irq();
+#ifdef SCHEDULER_DEBUG
+    dbg() << "Scheduler: yield returns to thread " << *current_thread << " in_trap: " << proc.in_trap() << " in_irq: " << proc.in_irq();
 #endif
     return true;
 }
@@ -471,7 +475,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
         return false;
 
     (void)reason;
-    unsigned ticks_left = Thread::current->ticks_left();
+    unsigned ticks_left = Thread::current()->ticks_left();
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
          return Scheduler::yield();
 
@@ -489,30 +493,28 @@ bool Scheduler::context_switch(Thread& thread)
     thread.set_ticks_left(time_slice_for(thread));
     thread.did_schedule();
 
-    if (Thread::current == &thread)
+    auto current_thread = Thread::current();
+    if (current_thread == &thread)
         return false;
 
-    if (Thread::current) {
+    if (current_thread) {
         // If the last process hasn't blocked (still marked as running),
         // mark it as runnable for the next round.
-        if (Thread::current->state() == Thread::Running)
-            Thread::current->set_state(Thread::Runnable);
+        if (current_thread->state() == Thread::Running)
+            current_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbg() << "Scheduler: " << *Thread::current << " -> " << thread << " [" << thread.priority() << "] " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
+        dbg() << "Scheduler: " << *current_thread << " -> " << thread << " [" << thread.priority() << "] " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
 #endif
     }
 
-    Thread* from = Thread::current;
-    Thread::current = &thread;
-    Process::current = &thread.process();
     if (!thread.is_initialized()) {
         Processor::init_context(thread);
         thread.set_initialized(true);
     }
     thread.set_state(Thread::Running);
 
-    Processor::current().switch_context(from, &thread);
+    Processor::current().switch_context(current_thread, &thread);
     return true;
 }
 
@@ -527,11 +529,21 @@ void Scheduler::initialize(u32 cpu)
     g_scheduler_data = new SchedulerData;
     g_finalizer_wait_queue = new WaitQueue;
 
+    Thread* idle_thread = nullptr;
     if (cpu == 0) {
         g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-        s_colonel_process = Process::create_kernel_process(g_colonel, "colonel", idle_loop);
-        g_colonel->set_priority(THREAD_PRIORITY_MIN);
+        s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop);
+        ASSERT(s_colonel_process);
+        ASSERT(idle_thread);
+        idle_thread->set_priority(THREAD_PRIORITY_MIN);
+        idle_thread->set_name(String::format("idle thread #%u", cpu));
+    } else {
+        ASSERT(s_colonel_process);
+        idle_thread = s_colonel_process->create_kernel_thread(idle_loop, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), false);
+        ASSERT(idle_thread);
     }
+
+    Processor::current().set_idle_thread(*idle_thread);
 }
 
 void Scheduler::timer_tick(const RegisterState& regs)
@@ -539,19 +551,20 @@ void Scheduler::timer_tick(const RegisterState& regs)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_irq());
 
-    if (!Thread::current)
+    auto current_thread = Processor::current().current_thread();
+    if (!current_thread)
         return;
 
     ++g_uptime;
 
     g_timeofday = TimeManagement::now_as_timeval();
 
-    if (Process::current->is_profiling()) {
+    if (current_thread->process().is_profiling()) {
         SmapDisabler disabler;
-        auto backtrace = Thread::current->raw_backtrace(regs.ebp, regs.eip);
+        auto backtrace = current_thread->raw_backtrace(regs.ebp, regs.eip);
         auto& sample = Profiling::next_sample_slot();
-        sample.pid = Process::current->pid();
-        sample.tid = Thread::current->tid();
+        sample.pid = current_thread->process().pid();
+        sample.tid = current_thread->tid();
         sample.timestamp = g_uptime;
         for (size_t i = 0; i < min(backtrace.size(), Profiling::max_stack_frame_count); ++i) {
             sample.frames[i] = backtrace[i];
@@ -560,7 +573,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
 
     TimerQueue::the().fire();
 
-    if (Thread::current->tick())
+    if (current_thread->tick())
         return;
 
     ASSERT_INTERRUPTS_DISABLED();

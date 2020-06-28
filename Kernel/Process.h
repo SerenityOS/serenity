@@ -111,14 +111,20 @@ class Process : public InlineLinkedListNode<Process> {
     friend class Thread;
 
 public:
-    static Process* current;
+    inline static Process* current()
+    {
+        auto current_thread = Processor::current().current_thread();
+        return current_thread ? &current_thread->process() : nullptr;
+    }
 
-    static Process* create_kernel_process(Thread*& first_thread, String&& name, void (*entry)());
+    static Process* create_kernel_process(Thread*& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
     static Process* create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
+
+    Thread* create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }
@@ -417,7 +423,7 @@ public:
     void terminate_due_to_signal(u8 signal);
     KResult send_signal(u8 signal, Process* sender);
 
-    u16 thread_count() const { return m_thread_count; }
+    u16 thread_count() const { return m_thread_count.load(AK::MemoryOrder::memory_order_consume); }
 
     Lock& big_lock() { return m_big_lock; }
 
@@ -518,7 +524,7 @@ private:
     RingLevel m_ring { Ring0 };
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
-    u16 m_thread_count { 0 };
+    Atomic<u16> m_thread_count { 0 };
 
     bool m_dead { false };
     bool m_profiling { false };
@@ -550,6 +556,7 @@ private:
     size_t m_master_tls_alignment { 0 };
 
     Lock m_big_lock { "Process" };
+    SpinLock<u32> m_lock;
 
     u64 m_alarm_deadline { 0 };
 
@@ -581,14 +588,14 @@ public:
     ProcessInspectionHandle(Process& process)
         : m_process(process)
     {
-        if (&process != Process::current) {
+        if (&process != Process::current()) {
             InterruptDisabler disabler;
             m_process.increment_inspector_count({});
         }
     }
     ~ProcessInspectionHandle()
     {
-        if (&m_process != Process::current) {
+        if (&m_process != Process::current()) {
             InterruptDisabler disabler;
             m_process.decrement_inspector_count({});
         }
@@ -613,11 +620,13 @@ private:
 };
 
 extern InlineLinkedList<Process>* g_processes;
+extern RecursiveSpinLock g_processes_lock;
 
 template<typename Callback>
 inline void Process::for_each(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
         if (callback(*process) == IterationDecision::Break)
@@ -631,6 +640,7 @@ inline void Process::for_each_child(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     pid_t my_pid = pid();
+    ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
         if (process->ppid() == my_pid || process->has_tracee_thread(m_pid)) {
@@ -649,7 +659,14 @@ inline void Process::for_each_thread(Callback callback) const
 
     if (my_pid == 0) {
         // NOTE: Special case the colonel process, since its main thread is not in the global thread table.
-        callback(*g_colonel);
+        Processor::for_each(
+            [&](Processor& proc) -> IterationDecision
+            {
+                auto idle_thread = proc.idle_thread();
+                if (idle_thread != nullptr)
+                    return callback(*idle_thread);
+                return IterationDecision::Continue;
+            });
         return;
     }
 
@@ -665,6 +682,7 @@ template<typename Callback>
 inline void Process::for_each_in_pgrp(pid_t pgid, Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
         if (!process->is_dead() && process->pgid() == pgid) {
@@ -705,25 +723,25 @@ inline u32 Thread::effective_priority() const
     return m_priority + m_process.priority_boost() + m_priority_boost + m_extra_priority;
 }
 
-#define REQUIRE_NO_PROMISES                      \
-    do {                                         \
-        if (Process::current->has_promises()) {  \
-            dbg() << "Has made a promise";       \
-            cli();                               \
-            Process::current->crash(SIGABRT, 0); \
-            ASSERT_NOT_REACHED();                \
-        }                                        \
+#define REQUIRE_NO_PROMISES                        \
+    do {                                           \
+        if (Process::current()->has_promises()) {  \
+            dbg() << "Has made a promise";         \
+            cli();                                 \
+            Process::current()->crash(SIGABRT, 0); \
+            ASSERT_NOT_REACHED();                  \
+        }                                          \
     } while (0)
 
-#define REQUIRE_PROMISE(promise)                                   \
-    do {                                                           \
-        if (Process::current->has_promises()                       \
-            && !Process::current->has_promised(Pledge::promise)) { \
-            dbg() << "Has not pledged " << #promise;               \
-            cli();                                                 \
-            Process::current->crash(SIGABRT, 0);                   \
-            ASSERT_NOT_REACHED();                                  \
-        }                                                          \
+#define REQUIRE_PROMISE(promise)                                     \
+    do {                                                             \
+        if (Process::current()->has_promises()                       \
+            && !Process::current()->has_promised(Pledge::promise)) { \
+            dbg() << "Has not pledged " << #promise;                 \
+            cli();                                                   \
+            Process::current()->crash(SIGABRT, 0);                   \
+            ASSERT_NOT_REACHED();                                    \
+        }                                                            \
     } while (0)
 
 }

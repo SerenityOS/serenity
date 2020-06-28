@@ -31,7 +31,7 @@ namespace Kernel {
 
 ProcessPagingScope::ProcessPagingScope(Process& process)
 {
-    ASSERT(Thread::current);
+    ASSERT(Thread::current() != nullptr);
     m_previous_cr3 = read_cr3();
     MM.enter_process_paging_scope(process);
 }
@@ -39,7 +39,7 @@ ProcessPagingScope::ProcessPagingScope(Process& process)
 ProcessPagingScope::~ProcessPagingScope()
 {
     InterruptDisabler disabler;
-    Thread::current->tss().cr3 = m_previous_cr3;
+    Thread::current()->tss().cr3 = m_previous_cr3;
     write_cr3(m_previous_cr3);
 }
 

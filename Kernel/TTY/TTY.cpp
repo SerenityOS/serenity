@@ -282,7 +282,7 @@ void TTY::set_termios(const termios& t)
 int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(tty);
-    auto& process = *Process::current;
+    auto& current_process = *Process::current();
     pid_t pgid;
     termios* tp;
     winsize* ws;
@@ -290,7 +290,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 #if 0
     // FIXME: When should we block things?
     //        How do we make this work together with MasterPTY forwarding to us?
-    if (process.tty() && process.tty() != this) {
+    if (current_process.tty() && current_process.tty() != this) {
         return -ENOTTY;
     }
 #endif
@@ -308,14 +308,14 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
                 return -EPERM;
             if (pgid != process->pgid())
                 return -EPERM;
-            if (Process::current->sid() != process->sid())
+            if (current_process.sid() != process->sid())
                 return -EPERM;
         }
         m_pgid = pgid;
         return 0;
     case TCGETS:
         tp = reinterpret_cast<termios*>(arg);
-        if (!process.validate_write(tp, sizeof(termios)))
+        if (!current_process.validate_write(tp, sizeof(termios)))
             return -EFAULT;
         *tp = m_termios;
         return 0;
@@ -323,7 +323,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     case TCSETSF:
     case TCSETSW:
         tp = reinterpret_cast<termios*>(arg);
-        if (!process.validate_read(tp, sizeof(termios)))
+        if (!current_process.validate_read(tp, sizeof(termios)))
             return -EFAULT;
         set_termios(*tp);
         if (request == TCSETSF)
@@ -331,14 +331,14 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     case TIOCGWINSZ:
         ws = reinterpret_cast<winsize*>(arg);
-        if (!process.validate_write(ws, sizeof(winsize)))
+        if (!current_process.validate_write(ws, sizeof(winsize)))
             return -EFAULT;
         ws->ws_row = m_rows;
         ws->ws_col = m_columns;
         return 0;
     case TIOCSWINSZ:
         ws = reinterpret_cast<winsize*>(arg);
-        if (!process.validate_read(ws, sizeof(winsize)))
+        if (!current_process.validate_read(ws, sizeof(winsize)))
             return -EFAULT;
         if (ws->ws_col == m_columns && ws->ws_row == m_rows)
             return 0;
@@ -347,10 +347,10 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         generate_signal(SIGWINCH);
         return 0;
     case TIOCSCTTY:
-        process.set_tty(this);
+        current_process.set_tty(this);
         return 0;
     case TIOCNOTTY:
-        process.set_tty(nullptr);
+        current_process.set_tty(nullptr);
         return 0;
     }
     ASSERT_NOT_REACHED();

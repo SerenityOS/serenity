@@ -113,7 +113,8 @@ static void dump(const RegisterState& regs)
 {
     u16 ss;
     u32 esp;
-    if (!Process::current || Process::current->is_ring0()) {
+    auto process = Process::current();
+    if (!process || process->is_ring0()) {
         ss = regs.ss;
         esp = regs.esp;
     } else {
@@ -139,7 +140,7 @@ static void dump(const RegisterState& regs)
         : "=a"(cr4));
     klog() << "cr0=" << String::format("%08x", cr0) << " cr2=" << String::format("%08x", cr2) << " cr3=" << String::format("%08x", cr3) << " cr4=" << String::format("%08x", cr4);
 
-    if (Process::current && Process::current->validate_read((void*)regs.eip, 8)) {
+    if (process && process->validate_read((void*)regs.eip, 8)) {
         SmapDisabler disabler;
         u8* codeptr = (u8*)regs.eip;
         klog() << "code: " << String::format("%02x", codeptr[0]) << " " << String::format("%02x", codeptr[1]) << " " << String::format("%02x", codeptr[2]) << " " << String::format("%02x", codeptr[3]) << " " << String::format("%02x", codeptr[4]) << " " << String::format("%02x", codeptr[5]) << " " << String::format("%02x", codeptr[6]) << " " << String::format("%02x", codeptr[7]);
@@ -148,26 +149,27 @@ static void dump(const RegisterState& regs)
 
 void handle_crash(RegisterState& regs, const char* description, int signal, bool out_of_memory)
 {
-    if (!Process::current) {
+    auto process = Process::current();
+    if (!process) {
         klog() << description << " with !current";
         hang();
     }
 
     // If a process crashed while inspecting another process,
     // make sure we switch back to the right page tables.
-    MM.enter_process_paging_scope(*Process::current);
+    MM.enter_process_paging_scope(*process);
 
-    klog() << "CRASH: CPU #" << Processor::current().id() << " " << description << ". Ring " << (Process::current->is_ring0() ? 0 : 3) << ".";
+    klog() << "CRASH: CPU #" << Processor::current().id() << " " << description << ". Ring " << (process->is_ring0() ? 0 : 3) << ".";
     dump(regs);
 
-    if (Process::current->is_ring0()) {
+    if (process->is_ring0()) {
         klog() << "Crash in ring 0 :(";
         dump_backtrace();
         hang();
     }
 
     cli();
-    Process::current->crash(signal, regs.eip, out_of_memory);
+    process->crash(signal, regs.eip, out_of_memory);
 }
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);
@@ -226,7 +228,8 @@ void page_fault_handler(TrapFrame* trap)
 #endif
 
     bool faulted_in_userspace = (regs.cs & 3) == 3;
-    if (faulted_in_userspace && !MM.validate_user_stack(*Process::current, VirtualAddress(regs.userspace_esp))) {
+    auto current_thread = Thread::current();
+    if (faulted_in_userspace && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
         dbg() << "Invalid stack pointer: " << VirtualAddress(regs.userspace_esp);
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
         ASSERT_NOT_REACHED();
@@ -236,8 +239,8 @@ void page_fault_handler(TrapFrame* trap)
 
     if (response == PageFaultResponse::ShouldCrash || response == PageFaultResponse::OutOfMemory) {
         if (response != PageFaultResponse::OutOfMemory) {
-            if (Thread::current->has_signal_handler(SIGSEGV)) {
-                Thread::current->send_urgent_signal_to_self(SIGSEGV);
+            if (current_thread->has_signal_handler(SIGSEGV)) {
+                current_thread->send_urgent_signal_to_self(SIGSEGV);
                 return;
             }
         }
@@ -284,7 +287,8 @@ void debug_handler(TrapFrame* trap)
 {
     clac();
     auto& regs = *trap->regs;
-    if (!Process::current || (regs.cs & 3) == 0) {
+    auto current_thread = Thread::current();
+    if (&current_thread->process() == nullptr || (regs.cs & 3) == 0) {
         klog() << "Debug Exception in Ring0";
         hang();
         return;
@@ -294,10 +298,10 @@ void debug_handler(TrapFrame* trap)
     if (!is_reason_singlestep)
         return;
 
-    if (Thread::current->tracer()) {
-        Thread::current->tracer()->set_regs(regs);
+    if (current_thread->tracer()) {
+        current_thread->tracer()->set_regs(regs);
     }
-    Thread::current->send_urgent_signal_to_self(SIGTRAP);
+    current_thread->send_urgent_signal_to_self(SIGTRAP);
 }
 
 EH_ENTRY_NO_CODE(3, breakpoint);
@@ -305,15 +309,16 @@ void breakpoint_handler(TrapFrame* trap)
 {
     clac();
     auto& regs = *trap->regs;
-    if (!Process::current || (regs.cs & 3) == 0) {
+    auto current_thread = Thread::current();
+    if (&current_thread->process() == nullptr || (regs.cs & 3) == 0) {
         klog() << "Breakpoint Trap in Ring0";
         hang();
         return;
     }
-    if (Thread::current->tracer()) {
-        Thread::current->tracer()->set_regs(regs);
+    if (current_thread->tracer()) {
+        current_thread->tracer()->set_regs(regs);
     }
-    Thread::current->send_urgent_signal_to_self(SIGTRAP);
+    current_thread->send_urgent_signal_to_self(SIGTRAP);
 }
 
 #define EH(i, msg)                                                                                                                                                             \
@@ -797,6 +802,7 @@ u32 read_dr6()
 FPUState Processor::s_clean_fpu_state;
 
 static Vector<Processor*>* s_processors;
+static SpinLock s_processor_lock;
 
 Vector<Processor*>& Processor::processors()
 {
@@ -806,6 +812,10 @@ Vector<Processor*>& Processor::processors()
 
 Processor& Processor::by_id(u32 cpu)
 {
+    // s_processors does not need to be protected by a lock of any kind.
+    // It is populated early in the boot process, and the BSP is waiting
+    // for all APs to finish, after which this array never gets modified
+    // again, so it's safe to not protect access to it here
     auto& procs = processors();
     ASSERT(procs[cpu] != nullptr);
     ASSERT(procs.size() > cpu);
@@ -818,6 +828,9 @@ void Processor::initialize(u32 cpu)
 
     m_cpu = cpu;
     m_in_irq = 0;
+
+    m_idle_thread = nullptr;
+    m_current_thread = nullptr;
 
     gdt_init();
     if (cpu == 0)
@@ -836,11 +849,15 @@ void Processor::initialize(u32 cpu)
 
     m_info = new ProcessorInfo(*this);
 
-    if (!s_processors)
-        s_processors = new Vector<Processor*>();
-    if (cpu >= s_processors->size())
-        s_processors->resize(cpu + 1);
-    (*s_processors)[cpu] = this;
+    {
+        ScopedSpinLock lock(s_processor_lock);
+        // We need to prevent races between APs starting up at the same time
+        if (!s_processors)
+            s_processors = new Vector<Processor*>();
+        if (cpu >= s_processors->size())
+            s_processors->resize(cpu + 1);
+        (*s_processors)[cpu] = this;
+    }
 
     klog() << "CPU #" << cpu << " using Processor at " << VirtualAddress(FlatPtr(this));
 }
@@ -894,6 +911,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 {
     ASSERT(from_thread == to_thread || from_thread->state() != Thread::Running);
     ASSERT(to_thread->state() == Thread::Running);
+
+    auto& processor = Processor::current();
+    processor.set_current_thread(*to_thread);
+
     auto& from_tss = from_thread->tss();
     auto& to_tss = to_thread->tss();
     asm volatile("fxsave %0"
@@ -904,7 +925,6 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     set_fs(to_tss.fs);
     set_gs(to_tss.gs);
 
-    auto& processor = Processor::current();
     auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(to_thread->thread_specific_data().as_ptr());
     tls_descriptor.set_limit(to_thread->thread_specific_region_size());
@@ -1250,8 +1270,9 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.
-    if (Process::current)
-        MM.enter_process_paging_scope(*Process::current);
+    auto process = Process::current();
+    if (process)
+        MM.enter_process_paging_scope(*process);
 
     Kernel::dump_backtrace();
     asm volatile("hlt");

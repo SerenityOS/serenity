@@ -177,7 +177,7 @@ static void print_ide_status(u8 status)
 
 void PATAChannel::wait_for_irq()
 {
-    Thread::current->wait_on(m_irq_queue);
+    Thread::current()->wait_on(m_irq_queue);
     disable_irq();
 }
 

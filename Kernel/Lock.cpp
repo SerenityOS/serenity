@@ -49,29 +49,31 @@ void Lock::lock(Mode mode)
         dump_backtrace();
         hang();
     }
+    auto current_thread = Thread::current();
     for (;;) {
         bool expected = false;
         if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
             // FIXME: Do not add new readers if writers are queued.
             bool modes_dont_conflict = !modes_conflict(m_mode, mode);
-            bool already_hold_exclusive_lock = m_mode == Mode::Exclusive && m_holder == Thread::current;
+            bool already_hold_exclusive_lock = m_mode == Mode::Exclusive && m_holder == current_thread;
             if (modes_dont_conflict || already_hold_exclusive_lock) {
                 // We got the lock!
                 if (!already_hold_exclusive_lock)
                     m_mode = mode;
-                m_holder = Thread::current;
+                m_holder = current_thread;
                 m_times_locked++;
                 m_lock.store(false, AK::memory_order_release);
                 return;
             }
             timeval* timeout = nullptr;
-            Thread::current->wait_on(m_queue, timeout, &m_lock, m_holder, m_name);
+            current_thread->wait_on(m_queue, timeout, &m_lock, m_holder, m_name);
         }
     }
 }
 
 void Lock::unlock()
 {
+    auto current_thread = Thread::current();
     for (;;) {
         bool expected = false;
         if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
@@ -80,8 +82,8 @@ void Lock::unlock()
 
             ASSERT(m_mode != Mode::Unlocked);
             if (m_mode == Mode::Exclusive)
-                ASSERT(m_holder == Thread::current);
-            if (m_holder == Thread::current && (m_mode == Mode::Shared || m_times_locked == 0))
+                ASSERT(m_holder == current_thread);
+            if (m_holder == current_thread && (m_mode == Mode::Shared || m_times_locked == 0))
                 m_holder = nullptr;
 
             if (m_times_locked > 0) {
@@ -101,7 +103,7 @@ bool Lock::force_unlock_if_locked()
 {
     ASSERT(m_mode != Mode::Shared);
     InterruptDisabler disabler;
-    if (m_holder != Thread::current)
+    if (m_holder != Thread::current())
         return false;
     ASSERT(m_times_locked == 1);
     m_holder = nullptr;
