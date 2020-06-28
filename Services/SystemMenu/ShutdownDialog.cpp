@@ -51,9 +51,10 @@ static const Vector<Option> options = {
 
 Vector<char const*> ShutdownDialog::show()
 {
-    auto rc = ShutdownDialog::construct()->exec();
-    if (rc == ExecResult::ExecOK)
-        return options[rc].cmd;
+    auto dialog = ShutdownDialog::construct();
+    auto rc = dialog->exec();
+    if (rc == ExecResult::ExecOK && dialog->m_selected_option != -1)
+        return options[dialog->m_selected_option].cmd;
 
     return {};
 }
