@@ -215,7 +215,7 @@ void page_fault_handler(TrapFrame* trap)
 
 #ifdef PAGE_FAULT_DEBUG
     u32 fault_page_directory = read_cr3();
-    dbg() << "Ring " << (regs.cs & 3)
+    dbg() << "CPU #" << (Processor::is_initialized() ? Processor::current().id() : 0) << " ring " << (regs.cs & 3)
           << " " << (regs.exception_code & 1 ? "PV" : "NP")
           << " page fault in PD=" << String::format("%x", fault_page_directory) << ", "
           << (regs.exception_code & 8 ? "reserved-bit " : "")
@@ -831,6 +831,7 @@ void Processor::initialize(u32 cpu)
 
     m_idle_thread = nullptr;
     m_current_thread = nullptr;
+    m_mm_data = nullptr;
 
     gdt_init();
     if (cpu == 0)
@@ -859,7 +860,7 @@ void Processor::initialize(u32 cpu)
         (*s_processors)[cpu] = this;
     }
 
-    klog() << "CPU #" << cpu << " using Processor at " << VirtualAddress(FlatPtr(this));
+    klog() << "CPU[" << cpu << "]: initialized Processor at " << VirtualAddress(FlatPtr(this));
 }
 
 void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)

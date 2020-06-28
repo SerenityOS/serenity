@@ -114,7 +114,7 @@ extern "C" [[noreturn]] void init()
     }
 
     CommandLine::initialize(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline)));
-    MemoryManager::initialize();
+    MemoryManager::initialize(0);
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.
@@ -168,6 +168,7 @@ extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
     klog() << "CPU #" << cpu << " processor_info at " << VirtualAddress(FlatPtr(processor_info));
     cpu_setup(cpu);
     processor_info->initialize(cpu);
+    MemoryManager::initialize(cpu);
 
     APIC::the().enable(cpu);
 

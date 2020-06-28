@@ -207,9 +207,16 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     return quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
 }
 
-void MemoryManager::initialize()
+void MemoryManager::initialize(u32 cpu)
 {
-    s_the = new MemoryManager;
+    auto mm_data = new MemoryManagerData;
+#ifdef MM_DEBUG
+    dbg() << "MM: Processor #" << cpu << " specific data at " << VirtualAddress(mm_data);
+#endif
+    Processor::current().set_mm_data(*mm_data);
+
+    if (cpu == 0)
+        s_the = new MemoryManager;
 }
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
@@ -566,50 +573,56 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
     ScopedSpinLock lock(s_lock);
-    auto& pte = boot_pd3_pt1023[8];
+    auto& pte = boot_pd3_pt1023[0];
     if (pte.physical_page_base() != pt_paddr.as_ptr()) {
 #ifdef MM_DEBUG
-        dbg() << "quickmap_pt: Mapping P" << (void*)pt_paddr.as_ptr() << " at 0xffe08000 in pte @ " << &pte;
+        dbg() << "quickmap_pt: Mapping P" << (void*)pt_paddr.as_ptr() << " at 0xffe00000 in pte @ " << &pte;
 #endif
         pte.set_physical_page_base(pt_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
-        flush_tlb(VirtualAddress(0xffe08000));
+        flush_tlb(VirtualAddress(0xffe00000));
     }
-    return (PageTableEntry*)0xffe08000;
+    return (PageTableEntry*)0xffe00000;
 }
 
 u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    auto& mm_data = get_data();
+    mm_data.m_quickmap_in_use.lock();
     ScopedSpinLock lock(s_lock);
-    ASSERT(!m_quickmap_in_use);
-    m_quickmap_in_use = true;
 
-    auto& pte = boot_pd3_pt1023[0];
+    u32 pte_idx = 8 + Processor::current().id();
+    VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
+
+    auto& pte = boot_pd3_pt1023[pte_idx];
     if (pte.physical_page_base() != physical_page.paddr().as_ptr()) {
 #ifdef MM_DEBUG
-        dbg() << "quickmap_page: Mapping P" << (void*)physical_page.paddr().as_ptr() << " at 0xffe00000 in pte @ " << &pte;
+        dbg() << "quickmap_page: Mapping P" << (void*)physical_page.paddr().as_ptr() << " at 0xffe08000 in pte @ " << &pte;
 #endif
         pte.set_physical_page_base(physical_page.paddr().get());
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
-        flush_tlb(VirtualAddress(0xffe00000));
+        flush_tlb(vaddr);
     }
-    return (u8*)0xffe00000;
+    return vaddr.as_ptr();
 }
 
 void MemoryManager::unquickmap_page()
 {
     ASSERT_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(s_lock);
-    ASSERT(m_quickmap_in_use);
-    auto& pte = boot_pd3_pt1023[0];
+    auto& mm_data = get_data();
+    ASSERT(mm_data.m_quickmap_in_use.is_locked());
+    u32 pte_idx = 8 + Processor::current().id();
+    VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
+    auto& pte = boot_pd3_pt1023[pte_idx];
     pte.clear();
-    flush_tlb(VirtualAddress(0xffe00000));
-    m_quickmap_in_use = false;
+    flush_tlb(vaddr);
+    mm_data.m_quickmap_in_use.unlock();
 }
 
 template<MemoryManager::AccessSpace space, MemoryManager::AccessType access_type>
