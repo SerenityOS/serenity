@@ -47,6 +47,8 @@ const char* Length::unit_name() const
     switch (m_type) {
     case Type::Px:
         return "px";
+    case Type::Pt:
+        return "pt";
     case Type::Em:
         return "em";
     case Type::Rem:

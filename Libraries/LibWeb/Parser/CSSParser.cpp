@@ -264,28 +264,6 @@ static Optional<float> try_parse_float(const StringView& string)
     return is_negative ? -value : value;
 }
 
-static Optional<float> parse_number(const CSS::ParsingContext& context, const StringView& view)
-{
-    if (view.ends_with('%'))
-        return parse_number(context, view.substring_view(0, view.length() - 1));
-
-    // FIXME: Maybe we should have "ends_with_ignoring_case()" ?
-    if (view.to_string().to_lowercase().ends_with("px"))
-        return parse_number(context, view.substring_view(0, view.length() - 2));
-    if (view.to_string().to_lowercase().ends_with("rem"))
-        return parse_number(context, view.substring_view(0, view.length() - 3));
-    if (view.to_string().to_lowercase().ends_with("em"))
-        return parse_number(context, view.substring_view(0, view.length() - 2));
-    if (view == "0")
-        return 0;
-
-    // NOTE: We don't allow things like "width: 100" in standards mode.
-    if (!context.in_quirks_mode())
-        return {};
-
-    return try_parse_float(view);
-}
-
 static Length parse_length(const CSS::ParsingContext& context, const StringView& view, bool& is_bad_length)
 {
     Length::Type type = Length::Type::Undefined;
@@ -296,6 +274,9 @@ static Length parse_length(const CSS::ParsingContext& context, const StringView&
         value = try_parse_float(view.substring_view(0, view.length() - 1));
     } else if (view.to_string().to_lowercase().ends_with("px")) {
         type = Length::Type::Px;
+        value = try_parse_float(view.substring_view(0, view.length() - 2));
+    } else if (view.to_string().to_lowercase().ends_with("pt")) {
+        type = Length::Type::Pt;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
     } else if (view.to_string().to_lowercase().ends_with("rem")) {
         type = Length::Type::Rem;
