@@ -38,6 +38,7 @@ public:
         Percentage,
         Auto,
         Px,
+        Pt,
         Em,
         Rem,
     };
@@ -82,7 +83,7 @@ public:
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_auto() const { return m_type == Type::Auto; }
-    bool is_absolute() const { return m_type == Type::Px; }
+    bool is_absolute() const { return m_type == Type::Px || m_type == Type::Pt; }
     bool is_relative() const { return m_type == Type::Em || m_type == Type::Rem; }
 
     float raw_value() const { return m_value; }
@@ -95,6 +96,8 @@ public:
             return 0;
         case Type::Px:
             return m_value;
+        case Type::Pt:
+            return m_value * 1.33333333f;
         case Type::Undefined:
         case Type::Percentage:
         default:
