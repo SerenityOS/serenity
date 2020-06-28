@@ -273,6 +273,9 @@ public:
 
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
+    u32 cpu() const { return m_cpu.load(AK::MemoryOrder::memory_order_consume); }
+    void set_cpu(u32 cpu) { m_cpu.store(cpu, AK::MemoryOrder::memory_order_release); }
+
     u32 frame_ptr() const { return m_tss.ebp; }
     u32 stack_ptr() const { return m_tss.esp; }
 
@@ -466,6 +469,7 @@ private:
     int m_tid { -1 };
     TSS32 m_tss;
     FarPtr m_far_ptr;
+    Atomic<u32> m_cpu { 0 };
     u32 m_ticks { 0 };
     u32 m_ticks_left { 0 };
     u32 m_times_scheduled { 0 };
