@@ -611,6 +611,7 @@ struct TrapFrame;
 #define GDT_SELECTOR_TSS 0x38
 
 class ProcessorInfo;
+struct MemoryManagerData;
 
 class Processor {
     Processor* m_self; // must be first field (%fs offset 0x0)
@@ -626,6 +627,7 @@ class Processor {
     static FPUState s_clean_fpu_state;
 
     ProcessorInfo* m_info;
+    MemoryManagerData* m_mm_data;
     Thread* m_current_thread;
     Thread* m_idle_thread;
 
@@ -666,6 +668,16 @@ public:
     ALWAYS_INLINE static bool is_initialized()
     {
         return get_fs() == GDT_SELECTOR_PROC && read_fs_u32(0) != 0;
+    }
+
+    ALWAYS_INLINE void set_mm_data(MemoryManagerData& mm_data)
+    {
+        m_mm_data = &mm_data;
+    }
+
+    ALWAYS_INLINE MemoryManagerData& get_mm_data() const
+    {
+        return *m_mm_data;
     }
 
     ALWAYS_INLINE Thread* idle_thread() const

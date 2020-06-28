@@ -67,6 +67,10 @@ class SynthFSInode;
 
 #define MM Kernel::MemoryManager::the()
 
+struct MemoryManagerData {
+    SpinLock<u8> m_quickmap_in_use;
+};
+
 class MemoryManager {
     AK_MAKE_ETERNAL
     friend class PageDirectory;
@@ -80,7 +84,12 @@ class MemoryManager {
 public:
     static MemoryManager& the();
 
-    static void initialize();
+    static void initialize(u32 cpu);
+    
+    static inline MemoryManagerData& get_data()
+    {
+        return Processor::current().get_mm_data();
+    }
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
@@ -203,8 +212,6 @@ private:
     InlineLinkedList<VMObject> m_vmobjects;
 
     static RecursiveSpinLock s_lock;
-
-    bool m_quickmap_in_use { false };
 
     RefPtr<PhysicalPage> m_low_pseudo_identity_mapping_pages[4];
 };
