@@ -333,11 +333,21 @@ public:
     virtual bool would_execute() const { return false; }
 
     const Position& position() const { return m_position; }
-    void set_is_syntax_error() { m_is_syntax_error = true; }
+    void set_is_syntax_error(const SyntaxError& error_node)
+    {
+        m_is_syntax_error = true;
+        m_syntax_error_node = error_node;
+    }
+    virtual const SyntaxError& syntax_error_node() const
+    {
+        ASSERT(is_syntax_error());
+        return *m_syntax_error_node;
+    }
 
 protected:
     Position m_position;
     bool m_is_syntax_error { false };
+    RefPtr<const SyntaxError> m_syntax_error_node;
 };
 
 class PathRedirectionNode : public Node {
@@ -766,8 +776,10 @@ private:
 
 class SyntaxError final : public Node {
 public:
-    SyntaxError(Position);
+    SyntaxError(Position, String);
     virtual ~SyntaxError();
+
+    const String& error_text() const { return m_syntax_error_text; }
 
 private:
     virtual void dump(int level) const override;
@@ -776,6 +788,9 @@ private:
     virtual HitTestResult hit_test_position(size_t) override { return { nullptr, nullptr }; }
     virtual String class_name() const override { return "SyntaxError"; }
     virtual bool is_syntax_error() const override { return true; }
+    virtual const SyntaxError& syntax_error_node() const override;
+
+    String m_syntax_error_text;
 };
 
 class Tilde final : public Node {

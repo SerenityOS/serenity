@@ -174,8 +174,10 @@ And::And(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
-    if (m_left->is_syntax_error() || m_right->is_syntax_error())
-        set_is_syntax_error();
+    if (m_left->is_syntax_error())
+        set_is_syntax_error(m_left->syntax_error_node());
+    else if (m_right->is_syntax_error())
+        set_is_syntax_error(m_right->syntax_error_node());
 }
 
 And::~And()
@@ -233,8 +235,10 @@ ListConcatenate::ListConcatenate(Position position, RefPtr<Node> element, RefPtr
     , m_element(move(element))
     , m_list(move(list))
 {
-    if (m_element->is_syntax_error() || m_list->is_syntax_error())
-        set_is_syntax_error();
+    if (m_element->is_syntax_error())
+        set_is_syntax_error(m_element->syntax_error_node());
+    else if (m_list->is_syntax_error())
+        set_is_syntax_error(m_list->syntax_error_node());
 }
 
 ListConcatenate::~ListConcatenate()
@@ -274,7 +278,7 @@ Background::Background(Position position, RefPtr<Node> command)
     , m_command(move(command))
 {
     if (m_command->is_syntax_error())
-        set_is_syntax_error();
+        set_is_syntax_error(m_command->syntax_error_node());
 }
 
 Background::~Background()
@@ -386,7 +390,7 @@ CastToCommand::CastToCommand(Position position, RefPtr<Node> inner)
     , m_inner(move(inner))
 {
     if (m_inner->is_syntax_error())
-        set_is_syntax_error();
+        set_is_syntax_error(m_inner->syntax_error_node());
 }
 
 CastToCommand::~CastToCommand()
@@ -442,7 +446,7 @@ CastToList::CastToList(Position position, RefPtr<Node> inner)
     , m_inner(move(inner))
 {
     if (m_inner && m_inner->is_syntax_error())
-        set_is_syntax_error();
+        set_is_syntax_error(m_inner->syntax_error_node());
 }
 
 CastToList::~CastToList()
@@ -565,7 +569,7 @@ DoubleQuotedString::DoubleQuotedString(Position position, RefPtr<Node> inner)
     , m_inner(move(inner))
 {
     if (m_inner->is_syntax_error())
-        set_is_syntax_error();
+        set_is_syntax_error(m_inner->syntax_error_node());
 }
 
 DoubleQuotedString::~DoubleQuotedString()
@@ -613,7 +617,7 @@ DynamicEvaluate::DynamicEvaluate(Position position, RefPtr<Node> inner)
     , m_inner(move(inner))
 {
     if (m_inner->is_syntax_error())
-        set_is_syntax_error();
+        set_is_syntax_error(m_inner->syntax_error_node());
 }
 
 DynamicEvaluate::~DynamicEvaluate()
@@ -865,7 +869,7 @@ Execute::Execute(Position position, RefPtr<Node> command, bool capture_stdout)
     , m_capture_stdout(capture_stdout)
 {
     if (m_command->is_syntax_error())
-        set_is_syntax_error();
+        set_is_syntax_error(m_command->syntax_error_node());
 }
 
 Execute::~Execute()
@@ -911,8 +915,10 @@ Join::Join(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
-    if (m_left->is_syntax_error() || m_right->is_syntax_error())
-        set_is_syntax_error();
+    if (m_left->is_syntax_error())
+        set_is_syntax_error(m_left->syntax_error_node());
+    else if (m_right->is_syntax_error())
+        set_is_syntax_error(m_right->syntax_error_node());
 }
 
 Join::~Join()
@@ -969,8 +975,10 @@ Or::Or(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
-    if (m_left->is_syntax_error() || m_right->is_syntax_error())
-        set_is_syntax_error();
+    if (m_left->is_syntax_error())
+        set_is_syntax_error(m_left->syntax_error_node());
+    else if (m_right->is_syntax_error())
+        set_is_syntax_error(m_right->syntax_error_node());
 }
 
 Or::~Or()
@@ -1030,8 +1038,10 @@ Pipe::Pipe(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
-    if (m_left->is_syntax_error() || m_right->is_syntax_error())
-        set_is_syntax_error();
+    if (m_left->is_syntax_error())
+        set_is_syntax_error(m_left->syntax_error_node());
+    else if (m_right->is_syntax_error())
+        set_is_syntax_error(m_right->syntax_error_node());
 }
 
 Pipe::~Pipe()
@@ -1189,8 +1199,10 @@ Sequence::Sequence(Position position, RefPtr<Node> left, RefPtr<Node> right)
     , m_left(move(left))
     , m_right(move(right))
 {
-    if (m_left->is_syntax_error() || m_right->is_syntax_error())
-        set_is_syntax_error();
+    if (m_left->is_syntax_error())
+        set_is_syntax_error(m_left->syntax_error_node());
+    else if (m_right->is_syntax_error())
+        set_is_syntax_error(m_right->syntax_error_node());
 }
 
 Sequence::~Sequence()
@@ -1408,8 +1420,10 @@ Juxtaposition::Juxtaposition(Position position, RefPtr<Node> left, RefPtr<Node> 
     , m_left(move(left))
     , m_right(move(right))
 {
-    if (m_left->is_syntax_error() || m_right->is_syntax_error())
-        set_is_syntax_error();
+    if (m_left->is_syntax_error())
+        set_is_syntax_error(m_left->syntax_error_node());
+    else if (m_right->is_syntax_error())
+        set_is_syntax_error(m_right->syntax_error_node());
 }
 
 Juxtaposition::~Juxtaposition()
@@ -1486,8 +1500,10 @@ StringPartCompose::StringPartCompose(Position position, RefPtr<Node> left, RefPt
     , m_left(move(left))
     , m_right(move(right))
 {
-    if (m_left->is_syntax_error() || m_right->is_syntax_error())
-        set_is_syntax_error();
+    if (m_left->is_syntax_error())
+        set_is_syntax_error(m_left->syntax_error_node());
+    else if (m_right->is_syntax_error())
+        set_is_syntax_error(m_right->syntax_error_node());
 }
 
 StringPartCompose::~StringPartCompose()
@@ -1510,10 +1526,16 @@ void SyntaxError::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMet
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Bold });
 }
 
-SyntaxError::SyntaxError(Position position)
+SyntaxError::SyntaxError(Position position, String error)
     : Node(move(position))
+    , m_syntax_error_text(move(error))
 {
-    set_is_syntax_error();
+    m_is_syntax_error = true;
+}
+
+const SyntaxError& SyntaxError::syntax_error_node() const
+{
+    return *this;
 }
 
 SyntaxError::~SyntaxError()
@@ -1692,8 +1714,12 @@ VariableDeclarations::VariableDeclarations(Position position, Vector<Variable> v
     , m_variables(move(variables))
 {
     for (auto& decl : m_variables) {
-        if (decl.name->is_syntax_error() || decl.value->is_syntax_error()) {
-            set_is_syntax_error();
+        if (decl.name->is_syntax_error()) {
+            set_is_syntax_error(decl.name->syntax_error_node());
+            break;
+        }
+        if (decl.value->is_syntax_error()) {
+            set_is_syntax_error(decl.value->syntax_error_node());
             break;
         }
     }
