@@ -102,6 +102,11 @@ static constexpr auto is_not(char c)
     return [c](char ch) { return ch != c; };
 }
 
+static constexpr auto is_any_of(StringView s)
+{
+    return [s](char ch) { return s.contains(ch); };
+}
+
 static inline char to_byte(char a, char b)
 {
     char buf[3] { a, b, 0 };
@@ -139,6 +144,15 @@ RefPtr<AST::Node> Parser::parse_sequence()
     auto rule_start = push_start();
     auto var_decls = parse_variable_decls();
 
+    switch (peek()) {
+    case ';':
+    case '\n':
+        consume_while(is_any_of("\n;"));
+        break;
+    default:
+        break;
+    }
+
     auto pipe_seq = parse_pipe_sequence();
     if (!pipe_seq)
         return var_decls;
@@ -150,7 +164,8 @@ RefPtr<AST::Node> Parser::parse_sequence()
 
     switch (peek()) {
     case ';':
-        consume();
+    case '\n':
+        consume_while(is_any_of("\n;"));
         if (auto expr = parse_sequence()) {
             return create<AST::Sequence>(move(pipe_seq), move(expr)); // Sequence
         }
@@ -429,7 +444,7 @@ RefPtr<AST::Node> Parser::parse_expression()
         return expr;
     };
 
-    if (strchr("&|[]){} ;<>", starting_char) != nullptr)
+    if (strchr("&|[]){} ;<>\n", starting_char) != nullptr)
         return nullptr;
 
     if (isdigit(starting_char)) {
@@ -710,7 +725,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
     auto rule_start = push_start();
     StringBuilder builder;
     auto is_acceptable_bareword_character = [](char c) {
-        return strchr("\\\"'*$&#|()[]{} ?;<>", c) == nullptr;
+        return strchr("\\\"'*$&#|()[]{} ?;<>\n", c) == nullptr;
     };
     while (!at_end()) {
         char ch = peek();
