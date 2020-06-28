@@ -419,23 +419,31 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
     box_model().padding.right = padding_right;
 }
 
+float LayoutBlock::width_of_logical_containing_block() const
+{
+    auto* containing_block = this->containing_block();
+    ASSERT(containing_block);
+    return containing_block->width();
+}
+
 void LayoutBlock::compute_width()
 {
     if (is_absolutely_positioned())
         return compute_width_for_absolutely_positioned_block();
 
-    auto& containing_block = *this->containing_block();
+    float width_of_containing_block = this->width_of_logical_containing_block();
+
     auto zero_value = Length::make_px(0);
 
     auto margin_left = Length::make_auto();
     auto margin_right = Length::make_auto();
-    const auto padding_left = style().padding().left.resolved_or_zero(*this, containing_block.width());
-    const auto padding_right = style().padding().right.resolved_or_zero(*this, containing_block.width());
+    const auto padding_left = style().padding().left.resolved_or_zero(*this, width_of_containing_block);
+    const auto padding_right = style().padding().right.resolved_or_zero(*this, width_of_containing_block);
 
     auto try_compute_width = [&](const auto& a_width) {
         Length width = a_width;
-        margin_left = style().margin().left.resolved_or_zero(*this, containing_block.width());
-        margin_right = style().margin().right.resolved_or_zero(*this, containing_block.width());
+        margin_left = style().margin().left.resolved_or_zero(*this, width_of_containing_block);
+        margin_right = style().margin().right.resolved_or_zero(*this, width_of_containing_block);
 
         float total_px = style().border_left().width + style().border_right().width;
         for (auto& value : { margin_left, padding_left, width, padding_right, margin_right }) {
@@ -449,7 +457,7 @@ void LayoutBlock::compute_width()
         if (!is_replaced() && !is_inline()) {
             // 10.3.3 Block-level, non-replaced elements in normal flow
             // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
-            if (width.is_auto() && total_px > containing_block.width()) {
+            if (width.is_auto() && total_px > width_of_containing_block) {
                 if (margin_left.is_auto())
                     margin_left = zero_value;
                 if (margin_right.is_auto())
@@ -457,7 +465,7 @@ void LayoutBlock::compute_width()
             }
 
             // 10.3.3 cont'd.
-            auto underflow_px = containing_block.width() - total_px;
+            auto underflow_px = width_of_containing_block - total_px;
 
             if (width.is_auto()) {
                 if (margin_left.is_auto())
@@ -499,7 +507,7 @@ void LayoutBlock::compute_width()
                 // Find the available width: in this case, this is the width of the containing
                 // block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
                 // 'padding-right', 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
-                float available_width = containing_block.width()
+                float available_width = width_of_containing_block
                     - margin_left.to_px(*this) - style().border_left().width - padding_left.to_px(*this)
                     - padding_right.to_px(*this) - style().border_right().width - margin_right.to_px(*this);
 
@@ -513,14 +521,14 @@ void LayoutBlock::compute_width()
         return width;
     };
 
-    auto specified_width = style().width().resolved_or_auto(*this, containing_block.width());
+    auto specified_width = style().width().resolved_or_auto(*this, width_of_containing_block);
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = try_compute_width(specified_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = style().max_width().resolved_or_auto(*this, containing_block.width());
+    auto specified_max_width = style().max_width().resolved_or_auto(*this, width_of_containing_block);
     if (!specified_max_width.is_auto()) {
         if (used_width.to_px(*this) > specified_max_width.to_px(*this)) {
             used_width = try_compute_width(specified_max_width);
@@ -529,7 +537,7 @@ void LayoutBlock::compute_width()
 
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = style().min_width().resolved_or_auto(*this, containing_block.width());
+    auto specified_min_width = style().min_width().resolved_or_auto(*this, width_of_containing_block);
     if (!specified_min_width.is_auto()) {
         if (used_width.to_px(*this) < specified_min_width.to_px(*this)) {
             used_width = try_compute_width(specified_min_width);
