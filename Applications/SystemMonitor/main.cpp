@@ -480,20 +480,24 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
         auto& cpu_graph_group_box = self.add<GUI::GroupBox>("CPU usage");
-        cpu_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
+        cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
         cpu_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
         cpu_graph_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         cpu_graph_group_box.set_preferred_size(0, 120);
-        auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
-        cpu_graph.set_max(100);
-        cpu_graph.set_text_color(Color::Green);
-        cpu_graph.set_graph_color(Color::from_rgb(0x00bb00));
-        cpu_graph.text_formatter = [](int value, int) {
-            return String::format("%d%%", value);
-        };
-
-        ProcessModel::the().on_new_cpu_data_point = [graph = &cpu_graph](float cpu_percent) {
-            graph->add_value(cpu_percent);
+        Vector<GraphWidget*> cpu_graphs;
+        for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
+            auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
+            cpu_graph.set_max(100);
+            cpu_graph.set_text_color(Color::Green);
+            cpu_graph.set_graph_color(Color::from_rgb(0x00bb00));
+            cpu_graph.text_formatter = [](int value, int) {
+                return String::format("%d%%", value);
+            };
+            cpu_graphs.append(&cpu_graph);
+        }
+        ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
+            for (size_t i = 0; i < cpus.size(); i++)
+                cpu_graphs[i]->add_value(cpus[i].total_cpu_percent);
         };
 
         auto& memory_graph_group_box = self.add<GUI::GroupBox>("Memory usage");
