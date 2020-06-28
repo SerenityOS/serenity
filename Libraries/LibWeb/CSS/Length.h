@@ -78,6 +78,7 @@ public:
         return resolved(make_px(0), layout_node, reference_for_percent);
     }
 
+    bool is_undefined_or_auto() const { return m_type == Type::Undefined || m_type == Type::Auto; }
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_auto() const { return m_type == Type::Auto; }
