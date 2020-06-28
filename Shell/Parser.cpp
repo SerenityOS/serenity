@@ -123,7 +123,7 @@ RefPtr<AST::Node> Parser::parse()
         // Parsing stopped midway, this is a syntax error.
         auto error_start = push_start();
         m_offset = m_input.length();
-        return create<AST::Join>(move(toplevel), create<AST::SyntaxError>());
+        return create<AST::Join>(move(toplevel), create<AST::SyntaxError>("Unexpected tokens past the end"));
     }
 
     return toplevel;
@@ -234,7 +234,7 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
             if (!command)
                 m_offset = start->offset;
             else if (!expect(')'))
-                command->set_is_syntax_error();
+                command->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating close paren"));
             expression = command;
         }
     }
@@ -341,7 +341,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
                     // Eat a character and hope the problem goes away
                     consume();
                 }
-                return create<AST::SyntaxError>();
+                return create<AST::SyntaxError>("Expected a path");
             }
             return create<AST::WriteAppendRedirection>(pipe_fd, move(path)); // Redirection WriteAppend
         }
@@ -363,7 +363,10 @@ RefPtr<AST::Node> Parser::parse_redirection()
                 ASSERT(fd.has_value());
                 dest_pipe_fd = fd.value();
             }
-            return create<AST::Fd2FdRedirection>(pipe_fd, dest_pipe_fd); // Redirection Fd2Fd
+            auto redir = create<AST::Fd2FdRedirection>(pipe_fd, dest_pipe_fd); // Redirection Fd2Fd
+            if (dest_pipe_fd == -1)
+                redir->set_is_syntax_error(*create<AST::SyntaxError>("Expected a file descriptor"));
+            return redir;
         }
         consume_while(is_whitespace);
         pipe_fd = pipe_fd >= 0 ? pipe_fd : STDOUT_FILENO;
@@ -373,7 +376,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
                 // Eat a character and hope the problem goes away
                 consume();
             }
-            return create<AST::SyntaxError>();
+            return create<AST::SyntaxError>("Expected a path");
         }
         return create<AST::WriteRedirection>(pipe_fd, move(path)); // Redirection Write
     }
@@ -397,7 +400,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
                 // Eat a character and hope the problem goes away
                 consume();
             }
-            return create<AST::SyntaxError>();
+            return create<AST::SyntaxError>("Expected a path");
         }
         if (mode == Read)
             return create<AST::ReadRedirection>(pipe_fd, move(path)); // Redirection Read
@@ -530,10 +533,10 @@ RefPtr<AST::Node> Parser::parse_string()
         consume();
         auto inner = parse_doublequoted_string_inner();
         if (!inner)
-            inner = create<AST::SyntaxError>();
+            inner = create<AST::SyntaxError>("Unexpected EOF in string");
         if (!expect('"')) {
             inner = create<AST::DoubleQuotedString>(move(inner));
-            inner->set_is_syntax_error();
+            inner->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating double quote"));
             return inner;
         }
         return create<AST::DoubleQuotedString>(move(inner)); // Double Quoted String
@@ -547,7 +550,7 @@ RefPtr<AST::Node> Parser::parse_string()
             is_error = true;
         auto result = create<AST::StringLiteral>(move(text)); // String Literal
         if (is_error)
-            result->set_is_syntax_error();
+            result->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating single quote"));
         return move(result);
     }
 
@@ -682,15 +685,15 @@ RefPtr<AST::Node> Parser::parse_evaluate()
         consume();
         auto inner = parse_pipe_sequence();
         if (!inner)
-            inner = create<AST::SyntaxError>();
+            inner = create<AST::SyntaxError>("Unexpected EOF in list");
         if (!expect(')'))
-            inner->set_is_syntax_error();
+            inner->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating close paren"));
         return create<AST::Execute>(move(inner), true);
     }
     auto inner = parse_expression();
 
     if (!inner) {
-        inner = create<AST::SyntaxError>();
+        inner = create<AST::SyntaxError>("Expected a command");
     } else {
         if (inner->is_list()) {
             auto execute_inner = create<AST::Execute>(move(inner), true);
@@ -814,7 +817,7 @@ RefPtr<AST::Node> Parser::parse_glob()
             } else {
                 // FIXME: Allow composition of tilde+bareword with globs: '~/foo/bar/baz*'
                 putback();
-                bareword_part->set_is_syntax_error();
+                bareword_part->set_is_syntax_error(*create<AST::SyntaxError>(String::format("Unexpected %s inside a glob", bareword_part->class_name().characters())));
                 return bareword_part;
             }
             textbuilder.append(text);
