@@ -95,4 +95,80 @@ int LineBoxFragment::text_index_at(float x) const
     return m_start + m_length - 1;
 }
 
+Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
+{
+    auto& selection = layout_node().root().selection();
+    if (!selection.is_valid())
+        return {};
+    if (!layout_node().is_text())
+        return {};
+
+    const auto start_index = m_start;
+    const auto end_index = m_start + m_length;
+
+    if (&layout_node() == selection.start().layout_node && &layout_node() == selection.end().layout_node) {
+        // we are in the start/end node (both the same)
+        if (start_index > selection.end().index_in_node)
+            return {};
+        if (end_index < selection.start().index_in_node)
+            return {};
+
+        auto selection_start_in_this_fragment = selection.start().index_in_node - m_start;
+        auto selection_end_in_this_fragment = selection.end().index_in_node - m_start + 1;
+        auto pixel_distance_to_first_selected_character = font.width(text().substring_view(0, selection_start_in_this_fragment));
+        auto pixel_width_of_selection = font.width(text().substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment));
+
+        auto rect = absolute_rect();
+        rect.set_x(rect.x() + pixel_distance_to_first_selected_character);
+        rect.set_width(pixel_width_of_selection);
+
+        return rect;
+    }
+    if (&layout_node() == selection.start().layout_node) {
+        // we are in the start node
+        if (end_index < selection.start().index_in_node)
+            return {};
+
+        auto selection_start_in_this_fragment = selection.start().index_in_node - m_start;
+        auto selection_end_in_this_fragment = m_length;
+        auto pixel_distance_to_first_selected_character = font.width(text().substring_view(0, selection_start_in_this_fragment));
+        auto pixel_width_of_selection = font.width(text().substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment));
+
+        auto rect = absolute_rect();
+        rect.set_x(rect.x() + pixel_distance_to_first_selected_character);
+        rect.set_width(pixel_width_of_selection);
+
+        return rect;
+    }
+    if (&layout_node() == selection.end().layout_node) {
+        // we are in the end node
+        if (start_index > selection.end().index_in_node)
+            return {};
+
+        auto selection_start_in_this_fragment = 0;
+        auto selection_end_in_this_fragment = selection.end().index_in_node + 1;
+        auto pixel_distance_to_first_selected_character = font.width(text().substring_view(0, selection_start_in_this_fragment));
+        auto pixel_width_of_selection = font.width(text().substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment));
+
+        auto rect = absolute_rect();
+        rect.set_x(rect.x() + pixel_distance_to_first_selected_character);
+        rect.set_width(pixel_width_of_selection);
+
+        return rect;
+    }
+
+    // are we in between start and end?
+    auto* node = selection.start().layout_node.ptr();
+    bool is_fully_selected = false;
+    for (; node && node != selection.end().layout_node.ptr(); node = node->next_in_pre_order()) {
+        if (node == &layout_node()) {
+            is_fully_selected = true;
+            break;
+        }
+    }
+    if (is_fully_selected)
+        return absolute_rect();
+    return {};
+}
+
 }

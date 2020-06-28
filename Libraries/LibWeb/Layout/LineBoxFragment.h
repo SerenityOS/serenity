@@ -28,6 +28,7 @@
 
 #include <AK/Weakable.h>
 #include <LibGfx/FloatRect.h>
+#include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
@@ -67,6 +68,8 @@ public:
     StringView text() const;
 
     int text_index_at(float x) const;
+
+    Gfx::FloatRect selection_rect(const Gfx::Font&) const;
 
 private:
     const LayoutNode& m_layout_node;

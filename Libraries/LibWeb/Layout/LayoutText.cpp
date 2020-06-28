@@ -84,6 +84,7 @@ void LayoutText::paint_fragment(PaintContext& context, const LineBoxFragment& fr
     if (is_underline)
         painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), color);
 
+    // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
     auto text = m_text_for_rendering;
     auto text_transform = specified_style().string_or_fallback(CSS::PropertyID::TextTransform, "none");
     if (text_transform == "uppercase")
@@ -92,6 +93,14 @@ void LayoutText::paint_fragment(PaintContext& context, const LineBoxFragment& fr
         text = m_text_for_rendering.to_lowercase();
 
     painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::TopLeft, color);
+
+    auto selection_rect = fragment.selection_rect(specified_style().font());
+    if (!selection_rect.is_empty()) {
+        painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
+        Gfx::PainterStateSaver saver(painter);
+        painter.add_clip_rect(enclosing_int_rect(selection_rect));
+        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::TopLeft, context.palette().selection_text());
+    }
 }
 
 template<typename Callback>
