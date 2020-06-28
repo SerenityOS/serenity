@@ -42,7 +42,8 @@ void HTMLTableElement::apply_presentational_hints(StyleProperties& style) const
 {
     for_each_attribute([&](auto& name, auto& value) {
         if (name == HTML::AttributeNames::width) {
-            style.set_property(CSS::PropertyID::Width, parse_css_value(value));
+            if (auto parsed_value = parse_css_value(CSS::ParsingContext(document()), value))
+                style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
             return;
         }
         if (name == HTML::AttributeNames::bgcolor) {

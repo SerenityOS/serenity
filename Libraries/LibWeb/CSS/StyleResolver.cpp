@@ -52,7 +52,7 @@ static StyleSheet& default_stylesheet()
     if (!sheet) {
         extern const char default_stylesheet_source[];
         String css = default_stylesheet_source;
-        sheet = parse_css(css).leak_ref();
+        sheet = parse_css(CSS::ParsingContext(), css).leak_ref();
     }
     return *sheet;
 }
@@ -205,6 +205,8 @@ static inline void set_property_border_style(StyleProperties& style, const Style
 
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, Document& document)
 {
+    CSS::ParsingContext context(document);
+
     if (property_id == CSS::PropertyID::Border) {
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document);
@@ -248,7 +250,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             auto parts = split_on_whitespace(value.to_string());
 
             if (parts.size() == 1) {
-                if (auto value = parse_line_style(parts[0])) {
+                if (auto value = parse_line_style(context, parts[0])) {
                     set_property_border_style(style, value.release_nonnull(), edge);
                     set_property_border_color(style, ColorStyleValue::create(Gfx::Color::Black), edge);
                     set_property_border_width(style, LengthStyleValue::create(Length(3, Length::Type::Px)), edge);
@@ -261,19 +263,19 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             RefPtr<StringStyleValue> line_style_value;
 
             for (auto& part : parts) {
-                if (auto value = parse_line_width(part)) {
+                if (auto value = parse_line_width(context, part)) {
                     if (line_width_value)
                         return;
                     line_width_value = move(value);
                     continue;
                 }
-                if (auto value = parse_color(part)) {
+                if (auto value = parse_color(context, part)) {
                     if (color_value)
                         return;
                     color_value = move(value);
                     continue;
                 }
-                if (auto value = parse_line_style(part)) {
+                if (auto value = parse_line_style(context, part)) {
                     if (line_style_value)
                         return;
                     line_style_value = move(value);
@@ -296,10 +298,16 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::BorderStyle) {
         auto parts = split_on_whitespace(value.to_string());
         if (value.is_string() && parts.size() == 3) {
-            style.set_property(CSS::PropertyID::BorderTopStyle, parse_css_value(parts[0]));
-            style.set_property(CSS::PropertyID::BorderRightStyle, parse_css_value(parts[1]));
-            style.set_property(CSS::PropertyID::BorderBottomStyle, parse_css_value(parts[2]));
-            style.set_property(CSS::PropertyID::BorderLeftStyle, parse_css_value(parts[1]));
+            auto top = parse_css_value(context, parts[0]);
+            auto right = parse_css_value(context, parts[1]);
+            auto bottom = parse_css_value(context, parts[2]);
+            auto left = parse_css_value(context, parts[1]);
+            if (top && right && bottom && left) {
+                style.set_property(CSS::PropertyID::BorderTopStyle, *top);
+                style.set_property(CSS::PropertyID::BorderRightStyle, *right);
+                style.set_property(CSS::PropertyID::BorderBottomStyle, *bottom);
+                style.set_property(CSS::PropertyID::BorderLeftStyle, *left);
+            }
         } else {
             style.set_property(CSS::PropertyID::BorderTopStyle, value);
             style.set_property(CSS::PropertyID::BorderRightStyle, value);
@@ -312,12 +320,14 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::BorderWidth) {
         auto parts = split_on_whitespace(value.to_string());
         if (value.is_string() && parts.size() == 2) {
-            auto vertical_border_width = parse_css_value(parts[0]);
-            auto horizontal_border_width = parse_css_value(parts[1]);
-            style.set_property(CSS::PropertyID::BorderTopWidth, vertical_border_width);
-            style.set_property(CSS::PropertyID::BorderRightWidth, horizontal_border_width);
-            style.set_property(CSS::PropertyID::BorderBottomWidth, vertical_border_width);
-            style.set_property(CSS::PropertyID::BorderLeftWidth, horizontal_border_width);
+            auto vertical_border_width = parse_css_value(context, parts[0]);
+            auto horizontal_border_width = parse_css_value(context, parts[1]);
+            if (vertical_border_width && horizontal_border_width) {
+                style.set_property(CSS::PropertyID::BorderTopWidth, *vertical_border_width);
+                style.set_property(CSS::PropertyID::BorderRightWidth, *horizontal_border_width);
+                style.set_property(CSS::PropertyID::BorderBottomWidth, *vertical_border_width);
+                style.set_property(CSS::PropertyID::BorderLeftWidth, *horizontal_border_width);
+            }
         } else {
             style.set_property(CSS::PropertyID::BorderTopWidth, value);
             style.set_property(CSS::PropertyID::BorderRightWidth, value);
@@ -330,10 +340,16 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::BorderColor) {
         auto parts = split_on_whitespace(value.to_string());
         if (value.is_string() && parts.size() == 4) {
-            style.set_property(CSS::PropertyID::BorderTopColor, parse_css_value(parts[0]));
-            style.set_property(CSS::PropertyID::BorderRightColor, parse_css_value(parts[1]));
-            style.set_property(CSS::PropertyID::BorderBottomColor, parse_css_value(parts[2]));
-            style.set_property(CSS::PropertyID::BorderLeftColor, parse_css_value(parts[3]));
+            auto top = parse_css_value(context, parts[0]);
+            auto right = parse_css_value(context, parts[1]);
+            auto bottom = parse_css_value(context, parts[2]);
+            auto left = parse_css_value(context, parts[3]);
+            if (top && right && bottom &&left) {
+                style.set_property(CSS::PropertyID::BorderTopColor, *top);
+                style.set_property(CSS::PropertyID::BorderRightColor, *right);
+                style.set_property(CSS::PropertyID::BorderBottomColor, *bottom);
+                style.set_property(CSS::PropertyID::BorderLeftColor, *left);
+            }
         } else {
             style.set_property(CSS::PropertyID::BorderTopColor, value);
             style.set_property(CSS::PropertyID::BorderRightColor, value);
@@ -351,7 +367,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         auto parts = split_on_whitespace(value.to_string());
         NonnullRefPtrVector<StyleValue> values;
         for (auto& part : parts) {
-            values.append(parse_css_value(part));
+            auto value = parse_css_value(context, part);
+            if (!value)
+                return;
+            values.append(value.release_nonnull());
         }
 
         // HACK: Disallow more than one color value in a 'background' shorthand
@@ -393,33 +412,39 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (value.is_string()) {
             auto parts = split_on_whitespace(value.to_string());
             if (value.is_string() && parts.size() == 2) {
-                auto vertical = parse_css_value(parts[0]);
-                auto horizontal = parse_css_value(parts[1]);
-                style.set_property(CSS::PropertyID::MarginTop, vertical);
-                style.set_property(CSS::PropertyID::MarginBottom, vertical);
-                style.set_property(CSS::PropertyID::MarginLeft, horizontal);
-                style.set_property(CSS::PropertyID::MarginRight, horizontal);
+                auto vertical = parse_css_value(context, parts[0]);
+                auto horizontal = parse_css_value(context, parts[1]);
+                if (vertical && horizontal) {
+                    style.set_property(CSS::PropertyID::MarginTop, *vertical);
+                    style.set_property(CSS::PropertyID::MarginBottom, *vertical);
+                    style.set_property(CSS::PropertyID::MarginLeft, *horizontal);
+                    style.set_property(CSS::PropertyID::MarginRight, *horizontal);
+                }
                 return;
             }
             if (value.is_string() && parts.size() == 3) {
-                auto top = parse_css_value(parts[0]);
-                auto horizontal = parse_css_value(parts[1]);
-                auto bottom = parse_css_value(parts[2]);
-                style.set_property(CSS::PropertyID::MarginTop, top);
-                style.set_property(CSS::PropertyID::MarginBottom, bottom);
-                style.set_property(CSS::PropertyID::MarginLeft, horizontal);
-                style.set_property(CSS::PropertyID::MarginRight, horizontal);
+                auto top = parse_css_value(context, parts[0]);
+                auto horizontal = parse_css_value(context, parts[1]);
+                auto bottom = parse_css_value(context, parts[2]);
+                if (top && horizontal && bottom) {
+                    style.set_property(CSS::PropertyID::MarginTop, *top);
+                    style.set_property(CSS::PropertyID::MarginBottom, *bottom);
+                    style.set_property(CSS::PropertyID::MarginLeft, *horizontal);
+                    style.set_property(CSS::PropertyID::MarginRight, *horizontal);
+                }
                 return;
             }
             if (value.is_string() && parts.size() == 4) {
-                auto top = parse_css_value(parts[0]);
-                auto right = parse_css_value(parts[1]);
-                auto bottom = parse_css_value(parts[2]);
-                auto left = parse_css_value(parts[3]);
-                style.set_property(CSS::PropertyID::MarginTop, top);
-                style.set_property(CSS::PropertyID::MarginBottom, bottom);
-                style.set_property(CSS::PropertyID::MarginLeft, left);
-                style.set_property(CSS::PropertyID::MarginRight, right);
+                auto top = parse_css_value(context, parts[0]);
+                auto right = parse_css_value(context, parts[1]);
+                auto bottom = parse_css_value(context, parts[2]);
+                auto left = parse_css_value(context, parts[3]);
+                if (top && right && bottom && left) {
+                    style.set_property(CSS::PropertyID::MarginTop, *top);
+                    style.set_property(CSS::PropertyID::MarginBottom, *bottom);
+                    style.set_property(CSS::PropertyID::MarginLeft, *left);
+                    style.set_property(CSS::PropertyID::MarginRight, *right);
+                }
                 return;
             }
             dbg() << "Unsure what to do with CSS margin value '" << value.to_string() << "'";
@@ -439,33 +464,39 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (value.is_string()) {
             auto parts = split_on_whitespace(value.to_string());
             if (value.is_string() && parts.size() == 2) {
-                auto vertical = parse_css_value(parts[0]);
-                auto horizontal = parse_css_value(parts[1]);
-                style.set_property(CSS::PropertyID::PaddingTop, vertical);
-                style.set_property(CSS::PropertyID::PaddingBottom, vertical);
-                style.set_property(CSS::PropertyID::PaddingLeft, horizontal);
-                style.set_property(CSS::PropertyID::PaddingRight, horizontal);
+                auto vertical = parse_css_value(context, parts[0]);
+                auto horizontal = parse_css_value(context, parts[1]);
+                if (vertical && horizontal) {
+                    style.set_property(CSS::PropertyID::PaddingTop, *vertical);
+                    style.set_property(CSS::PropertyID::PaddingBottom, *vertical);
+                    style.set_property(CSS::PropertyID::PaddingLeft, *horizontal);
+                    style.set_property(CSS::PropertyID::PaddingRight, *horizontal);
+                }
                 return;
             }
             if (value.is_string() && parts.size() == 3) {
-                auto top = parse_css_value(parts[0]);
-                auto horizontal = parse_css_value(parts[1]);
-                auto bottom = parse_css_value(parts[2]);
-                style.set_property(CSS::PropertyID::PaddingTop, top);
-                style.set_property(CSS::PropertyID::PaddingBottom, bottom);
-                style.set_property(CSS::PropertyID::PaddingLeft, horizontal);
-                style.set_property(CSS::PropertyID::PaddingRight, horizontal);
+                auto top = parse_css_value(context, parts[0]);
+                auto horizontal = parse_css_value(context, parts[1]);
+                auto bottom = parse_css_value(context, parts[2]);
+                if (top && bottom && horizontal) {
+                    style.set_property(CSS::PropertyID::PaddingTop, *top);
+                    style.set_property(CSS::PropertyID::PaddingBottom, *bottom);
+                    style.set_property(CSS::PropertyID::PaddingLeft, *horizontal);
+                    style.set_property(CSS::PropertyID::PaddingRight, *horizontal);
+                }
                 return;
             }
             if (value.is_string() && parts.size() == 4) {
-                auto top = parse_css_value(parts[0]);
-                auto right = parse_css_value(parts[1]);
-                auto bottom = parse_css_value(parts[2]);
-                auto left = parse_css_value(parts[3]);
-                style.set_property(CSS::PropertyID::PaddingTop, top);
-                style.set_property(CSS::PropertyID::PaddingBottom, bottom);
-                style.set_property(CSS::PropertyID::PaddingLeft, left);
-                style.set_property(CSS::PropertyID::PaddingRight, right);
+                auto top = parse_css_value(context, parts[0]);
+                auto right = parse_css_value(context, parts[1]);
+                auto bottom = parse_css_value(context, parts[2]);
+                auto left = parse_css_value(context, parts[3]);
+                if (top && bottom && left && right) {
+                    style.set_property(CSS::PropertyID::PaddingTop, *top);
+                    style.set_property(CSS::PropertyID::PaddingBottom, *bottom);
+                    style.set_property(CSS::PropertyID::PaddingLeft, *left);
+                    style.set_property(CSS::PropertyID::PaddingRight, *right);
+                }
                 return;
             }
             dbg() << "Unsure what to do with CSS padding value '" << value.to_string() << "'";
@@ -477,8 +508,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::ListStyle) {
         auto parts = split_on_whitespace(value.to_string());
         if (!parts.is_empty()) {
-            auto value = parse_css_value(parts[0]);
-            style.set_property(CSS::PropertyID::ListStyleType, value);
+            auto value = parse_css_value(context, parts[0]);
+            if (!value)
+                return;
+            style.set_property(CSS::PropertyID::ListStyleType, value.release_nonnull());
         }
         return;
     }
@@ -522,7 +555,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
 
     auto style_attribute = element.attribute(HTML::AttributeNames::style);
     if (!style_attribute.is_null()) {
-        if (auto declaration = parse_css_declaration(style_attribute)) {
+        if (auto declaration = parse_css_declaration(CSS::ParsingContext(document()), style_attribute)) {
             for (auto& property : declaration->properties()) {
                 set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
             }

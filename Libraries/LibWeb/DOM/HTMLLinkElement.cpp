@@ -63,7 +63,7 @@ void HTMLLinkElement::resource_did_load()
 
     dbg() << "HTMLLinkElement: Resource did load, looks good! " << href();
 
-    auto sheet = parse_css(resource()->encoded_data());
+    auto sheet = parse_css(CSS::ParsingContext(document()), resource()->encoded_data());
     if (!sheet) {
         dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
         return;

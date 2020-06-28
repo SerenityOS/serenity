@@ -31,13 +31,26 @@
 
 namespace Web {
 
-RefPtr<StyleSheet> parse_css(const StringView&);
-RefPtr<StyleDeclaration> parse_css_declaration(const StringView&);
-NonnullRefPtr<StyleValue> parse_css_value(const StringView&);
-Optional<Selector> parse_selector(const StringView&);
+namespace CSS {
+class ParsingContext {
+public:
+    ParsingContext();
+    explicit ParsingContext(const Document&);
 
-RefPtr<LengthStyleValue> parse_line_width(const StringView&);
-RefPtr<ColorStyleValue> parse_color(const StringView&);
-RefPtr<StringStyleValue> parse_line_style(const StringView&);
+    bool in_quirks_mode() const;
+
+private:
+    const Document* m_document { nullptr };
+};
+}
+
+RefPtr<StyleSheet> parse_css(const CSS::ParsingContext&, const StringView&);
+RefPtr<StyleDeclaration> parse_css_declaration(const CSS::ParsingContext&, const StringView&);
+RefPtr<StyleValue> parse_css_value(const CSS::ParsingContext&, const StringView&);
+Optional<Selector> parse_selector(const CSS::ParsingContext&, const StringView&);
+
+RefPtr<LengthStyleValue> parse_line_width(const CSS::ParsingContext&, const StringView&);
+RefPtr<ColorStyleValue> parse_color(const CSS::ParsingContext&, const StringView&);
+RefPtr<StringStyleValue> parse_line_style(const CSS::ParsingContext&, const StringView&);
 
 }

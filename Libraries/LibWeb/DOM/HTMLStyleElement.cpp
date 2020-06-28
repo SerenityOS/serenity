@@ -48,7 +48,7 @@ void HTMLStyleElement::children_changed()
         if (is<Text>(child))
             builder.append(to<Text>(child).text_content());
     });
-    m_stylesheet = parse_css(builder.to_string());
+    m_stylesheet = parse_css(CSS::ParsingContext(document()), builder.to_string());
     if (m_stylesheet)
         document().style_sheets().add_sheet(*m_stylesheet);
     else
