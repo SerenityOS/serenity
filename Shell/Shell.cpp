@@ -497,12 +497,8 @@ bool Shell::run_file(const String& filename)
         return false;
     }
     auto file = file_result.value();
-    for (;;) {
-        auto line = file->read_line(4096);
-        if (line.is_null())
-            break;
-        run_command(String::copy(line, Chomp));
-    }
+    auto data = file->read_all();
+    run_command(data);
     return true;
 }
 void Shell::take_back_stdin()
