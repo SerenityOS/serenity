@@ -100,11 +100,15 @@ private:
 constexpr auto the_grammar = R"(
 toplevel :: sequence?
 
-sequence :: variable_decls? pipe_sequence ';' sequence
+sequence :: variable_decls? pipe_sequence terminator sequence
           | variable_decls? pipe_sequence '&'
           | variable_decls? pipe_sequence '&' '&' sequence
           | variable_decls? pipe_sequence '|' '|' sequence
           | variable_decls? pipe_sequence
+          | variable_decls? terminator pipe_sequence
+
+terminator :: ';'
+            | '\n'
 
 variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
                 | identifier '=' '(' pipe_sequence ')' (' '+ variable_decls)? ' '*
@@ -118,6 +122,7 @@ command :: redirection command
 redirection :: number? '>'{1,2} ' '* string_composite
              | number? '<' ' '* string_composite
              | number? '>' '&' number
+             | number? '>' '&' '-'
 
 list_expression :: ' '* expression (' '+ list_expression)?
 
