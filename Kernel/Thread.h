@@ -63,6 +63,8 @@ struct ThreadSpecificData {
 #define THREAD_PRIORITY_HIGH 50
 #define THREAD_PRIORITY_MAX 99
 
+#define THREAD_AFFINITY_DEFAULT 0xffffffff
+
 class Thread {
     AK_MAKE_NONCOPYABLE(Thread);
     AK_MAKE_NONMOVABLE(Thread);
@@ -71,7 +73,10 @@ class Thread {
     friend class Scheduler;
 
 public:
-    static Thread* current;
+    inline static Thread* current()
+    {
+        return Processor::current().current_thread();
+    }
 
     explicit Thread(Process&);
     ~Thread();
@@ -275,6 +280,8 @@ public:
 
     u32 cpu() const { return m_cpu.load(AK::MemoryOrder::memory_order_consume); }
     void set_cpu(u32 cpu) { m_cpu.store(cpu, AK::MemoryOrder::memory_order_release); }
+    u32 affinity() const { return m_cpu_affinity; }
+    void set_affinity(u32 affinity) { m_cpu_affinity = affinity; }
 
     u32 frame_ptr() const { return m_tss.ebp; }
     u32 stack_ptr() const { return m_tss.esp; }
@@ -470,6 +477,7 @@ private:
     TSS32 m_tss;
     FarPtr m_far_ptr;
     Atomic<u32> m_cpu { 0 };
+    u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     u32 m_ticks { 0 };
     u32 m_ticks_left { 0 };
     u32 m_times_scheduled { 0 };
@@ -539,6 +547,7 @@ template<typename Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ScopedSpinLock lock(g_scheduler_lock);
     auto ret = Scheduler::for_each_runnable(callback);
     if (ret == IterationDecision::Break)
         return ret;
@@ -549,6 +558,7 @@ template<typename Callback>
 inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ScopedSpinLock lock(g_scheduler_lock);
     auto new_callback = [=](Thread& thread) -> IterationDecision {
         if (thread.state() == state)
             return callback(thread);
@@ -579,6 +589,7 @@ template<typename Callback>
 inline IterationDecision Scheduler::for_each_runnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(g_scheduler_lock.is_locked());
     auto& tl = g_scheduler_data->m_runnable_threads;
     for (auto it = tl.begin(); it != tl.end();) {
         auto& thread = *it;
@@ -594,6 +605,7 @@ template<typename Callback>
 inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(g_scheduler_lock.is_locked());
     auto& tl = g_scheduler_data->m_nonrunnable_threads;
     for (auto it = tl.begin(); it != tl.end();) {
         auto& thread = *it;

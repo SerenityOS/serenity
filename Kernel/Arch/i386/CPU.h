@@ -626,6 +626,8 @@ class Processor {
     static FPUState s_clean_fpu_state;
 
     ProcessorInfo* m_info;
+    Thread* m_current_thread;
+    Thread* m_idle_thread;
 
     bool m_invoke_scheduler_async;
 
@@ -659,6 +661,33 @@ public:
     ALWAYS_INLINE static Processor& current()
     {
         return *(Processor*)read_fs_u32(0);
+    }
+
+    ALWAYS_INLINE static bool is_initialized()
+    {
+        return get_fs() == GDT_SELECTOR_PROC && read_fs_u32(0) != 0;
+    }
+
+    ALWAYS_INLINE Thread* idle_thread() const
+    {
+        return m_idle_thread;
+    }
+
+    ALWAYS_INLINE void set_idle_thread(Thread& idle_thread)
+    {
+        m_idle_thread = &idle_thread;
+    }
+
+    ALWAYS_INLINE Thread* current_thread() const
+    {
+        // NOTE: NOT safe to call from another processor!
+        ASSERT(&Processor::current() == this);
+        return m_current_thread;
+    }
+
+    ALWAYS_INLINE void set_current_thread(Thread& current_thread)
+    {
+        m_current_thread = &current_thread;
     }
 
     ALWAYS_INLINE u32 id()

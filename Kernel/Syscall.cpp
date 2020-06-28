@@ -87,8 +87,9 @@ static Handler s_syscall_table[] = {
 int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
     ASSERT_INTERRUPTS_ENABLED();
-    auto& process = *Process::current;
-    Thread::current->did_syscall();
+    auto current_thread = Thread::current();
+    auto& process = current_thread->process();
+    current_thread->did_syscall();
 
     if (function == SC_exit || function == SC_exit_thread) {
         // These syscalls need special handling since they never return to the caller.
@@ -126,15 +127,17 @@ void syscall_handler(TrapFrame* trap)
     auto& regs = *trap->regs;
     // Special handling of the "gettid" syscall since it's extremely hot.
     // FIXME: Remove this hack once userspace locks stop calling it so damn much.
+    auto current_thread = Thread::current();
+    auto& process = current_thread->process();
     if (regs.eax == SC_gettid) {
-        regs.eax = Process::current->sys$gettid();
-        Thread::current->did_syscall();
+        regs.eax = process.sys$gettid();
+        current_thread->did_syscall();
         return;
     }
 
-    if (Thread::current->tracer() && Thread::current->tracer()->is_tracing_syscalls()) {
-        Thread::current->tracer()->set_trace_syscalls(false);
-        Thread::current->tracer_trap(regs);
+    if (current_thread->tracer() && current_thread->tracer()->is_tracing_syscalls()) {
+        current_thread->tracer()->set_trace_syscalls(false);
+        current_thread->tracer_trap(regs);
     }
 
     // Make sure SMAP protection is enabled on syscall entry.
@@ -145,8 +148,6 @@ void syscall_handler(TrapFrame* trap)
     auto* ptr = (char*)__builtin_alloca(get_fast_random<u8>());
     asm volatile(""
                  : "=m"(*ptr));
-
-    auto& process = *Process::current;
 
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
         dbg() << "Invalid stack pointer: " << String::format("%p", regs.userspace_esp);
@@ -174,18 +175,18 @@ void syscall_handler(TrapFrame* trap)
     u32 arg3 = regs.ebx;
     regs.eax = (u32)Syscall::handle(regs, function, arg1, arg2, arg3);
 
-    if (Thread::current->tracer() && Thread::current->tracer()->is_tracing_syscalls()) {
-        Thread::current->tracer()->set_trace_syscalls(false);
-        Thread::current->tracer_trap(regs);
+    if (current_thread->tracer() && current_thread->tracer()->is_tracing_syscalls()) {
+        current_thread->tracer()->set_trace_syscalls(false);
+        current_thread->tracer_trap(regs);
     }
 
     process.big_lock().unlock();
 
     // Check if we're supposed to return to userspace or just die.
-    Thread::current->die_if_needed();
+    current_thread->die_if_needed();
 
-    if (Thread::current->has_unmasked_pending_signals())
-        (void)Thread::current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+    if (current_thread->has_unmasked_pending_signals())
+        (void)current_thread->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
 }
 
 }

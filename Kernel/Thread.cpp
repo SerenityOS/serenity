@@ -46,8 +46,6 @@
 
 namespace Kernel {
 
-Thread* Thread::current;
-
 HashTable<Thread*>& thread_table()
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -61,13 +59,12 @@ Thread::Thread(Process& process)
     : m_process(process)
     , m_name(process.name())
 {
-    if (m_process.m_thread_count == 0) {
+    if (m_process.m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel) == 0) {
         // First thread gets TID == PID
         m_tid = process.pid();
     } else {
         m_tid = Process::allocate_pid();
     }
-    process.m_thread_count++;
 #ifdef THREAD_DEBUG
     dbg() << "Created new thread " << process.name() << "(" << process.pid() << ":" << m_tid << ")";
 #endif
@@ -127,14 +124,14 @@ Thread::~Thread()
         thread_table().remove(this);
     }
 
-    ASSERT(m_process.m_thread_count);
-    m_process.m_thread_count--;
+    auto thread_cnt_before = m_process.m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+    ASSERT(thread_cnt_before != 0);
 }
 
 void Thread::unblock()
 {
     m_blocker = nullptr;
-    if (current == this) {
+    if (Thread::current() == this) {
         if (m_should_die)
             set_state(Thread::Dying);
         else
@@ -179,7 +176,7 @@ void Thread::set_should_die()
 
 void Thread::die_if_needed()
 {
-    ASSERT(current == this);
+    ASSERT(Thread::current() == this);
 
     if (!m_should_die)
         return;
@@ -213,7 +210,7 @@ u64 Thread::sleep(u32 ticks)
 {
     ASSERT(state() == Thread::Running);
     u64 wakeup_time = g_uptime + ticks;
-    auto ret = Thread::current->block<Thread::SleepBlocker>(wakeup_time);
+    auto ret = Thread::current()->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime) {
         ASSERT(ret != Thread::BlockResult::WokeNormally);
     }
@@ -223,7 +220,7 @@ u64 Thread::sleep(u32 ticks)
 u64 Thread::sleep_until(u64 wakeup_time)
 {
     ASSERT(state() == Thread::Running);
-    auto ret = Thread::current->block<Thread::SleepBlocker>(wakeup_time);
+    auto ret = Thread::current()->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime)
         ASSERT(ret != Thread::BlockResult::WokeNormally);
     return wakeup_time;
@@ -261,7 +258,7 @@ const char* Thread::state_string() const
 
 void Thread::finalize()
 {
-    ASSERT(current == g_finalizer);
+    ASSERT(Thread::current() == g_finalizer);
 
 #ifdef THREAD_DEBUG
     dbg() << "Finalizing thread " << *this;
@@ -283,7 +280,7 @@ void Thread::finalize()
 
 void Thread::finalize_dying_threads()
 {
-    ASSERT(current == g_finalizer);
+    ASSERT(Thread::current() == g_finalizer);
     Vector<Thread*, 32> dying_threads;
     {
         InterruptDisabler disabler;
@@ -296,7 +293,7 @@ void Thread::finalize_dying_threads()
         auto& process = thread->process();
         thread->finalize();
         delete thread;
-        if (process.m_thread_count == 0)
+        if (process.m_thread_count.load(AK::MemoryOrder::memory_order_consume) == 0)
             process.finalize();
     }
 }
@@ -770,7 +767,7 @@ String Thread::backtrace_impl() const
     Vector<RecognizedSymbol, 128> recognized_symbols;
 
     u32 start_frame;
-    if (current == this) {
+    if (Thread::current() == this) {
         asm volatile("movl %%ebp, %%eax"
                      : "=a"(start_frame));
     } else {
@@ -853,7 +850,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<b
         if (lock)
             *lock = false;
         set_state(State::Queued);
-        queue.enqueue(*current);
+        queue.enqueue(*Thread::current());
 
     
         if (timeout) {
@@ -888,7 +885,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<b
 void Thread::wake_from_queue()
 {
     ASSERT(state() == State::Queued);
-    if (this != Thread::current)
+    if (this != Thread::current())
         set_state(State::Runnable);
     else
         set_state(State::Running);

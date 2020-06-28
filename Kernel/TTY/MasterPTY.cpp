@@ -42,8 +42,9 @@ MasterPTY::MasterPTY(unsigned index)
     , m_index(index)
 {
     m_pts_name = String::format("/dev/pts/%u", m_index);
-    set_uid(Process::current->uid());
-    set_gid(Process::current->gid());
+    auto process = Process::current();
+    set_uid(process->uid());
+    set_gid(process->gid());
 }
 
 MasterPTY::~MasterPTY()

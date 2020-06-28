@@ -135,7 +135,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     request.set_sender_protocol_address(adapter->ipv4_address());
     adapter->send({ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }, request);
 
-    (void)Thread::current->block_until("Routing (ARP)", [next_hop_ip] {
+    (void)Thread::current()->block_until("Routing (ARP)", [next_hop_ip] {
         return arp_table().resource().get(next_hop_ip).has_value();
     });
 
