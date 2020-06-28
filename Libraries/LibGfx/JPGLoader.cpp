@@ -90,6 +90,7 @@
 #define JPG_EOI 0xFFD9
 #define JPG_RST 0XFFDD
 #define JPG_SOF0 0XFFC0
+#define JPG_SOF2 0xFFC2
 #define JPG_SOI 0XFFD8
 #define JPG_SOS 0XFFDA
 #define JPG_COM 0xFFFE
@@ -438,6 +439,9 @@ static inline bool is_valid_marker(const Marker marker)
     case JPG_SOI:
     case JPG_SOS:
         return true;
+    case JPG_SOF2:
+        dbg() << "Progressive JPEGs are not supported yet. Decoder will fail!";
+        return false;
     default:
         return false;
     }
