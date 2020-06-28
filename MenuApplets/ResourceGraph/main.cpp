@@ -35,6 +35,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
+#include <spawn.h>
 #include <stdio.h>
 
 enum class GraphType {
@@ -106,14 +107,10 @@ private:
     {
         if (event.button() != GUI::MouseButton::Left)
             return;
-        pid_t pid = fork();
-        if (pid < 0) {
-            perror("fork");
-        } else if (pid == 0) {
-            execl("/bin/SystemMonitor", "SystemMonitor", nullptr);
-            perror("execl");
-            ASSERT_NOT_REACHED();
-        }
+        pid_t child_pid;
+        const char* argv[] = { "SystemMonitor", nullptr };
+        if ((errno = posix_spawn(&child_pid, "/bin/SystemMonitor", nullptr, nullptr, const_cast<char**>(argv), environ)))
+            perror("posix_spawn");
     }
 
     static void get_cpu_usage(unsigned& busy, unsigned& idle)

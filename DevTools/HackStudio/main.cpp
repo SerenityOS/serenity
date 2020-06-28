@@ -71,6 +71,7 @@
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 #include <LibVT/TerminalWidget.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -766,15 +767,11 @@ void open_file(const String& filename)
 
 bool make_is_available()
 {
-    auto pid = fork();
-    if (pid < 0)
+    pid_t pid;
+    const char* argv[] = { "make", "--version", nullptr };
+    if ((errno = posix_spawnp(&pid, "make", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+        perror("posix_spawn");
         return false;
-
-    if (!pid) {
-        int rc = execlp("make", "make", "--version", nullptr);
-        ASSERT(rc < 0);
-        perror("execl");
-        exit(127);
     }
 
     int wstatus;

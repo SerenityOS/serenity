@@ -44,6 +44,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -110,11 +111,10 @@ int main(int argc, char** argv)
                 widget.load_from_file(url.path());
             }
 
+            pid_t child;
             for (size_t i = 1; i < urls.size(); ++i) {
-                if (fork() == 0) {
-                    execl("/bin/QuickShow", "/bin/QuickShow", urls[i].path().characters(), nullptr);
-                    ASSERT_NOT_REACHED();
-                }
+                const char* argv[] = { "/bin/QuickShow", urls[i].path().characters(), nullptr };
+                posix_spawn(&child, "/bin/QuickShow", nullptr, nullptr, const_cast<char**>(argv), environ);
             }
         }
     };

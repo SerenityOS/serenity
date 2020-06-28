@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -36,15 +37,14 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (!fork()) {
-        if (execvp(argv[2], &argv[2]) < 0) {
-            perror("execvp");
-            exit(1);
-        }
+    pid_t child_pid;
+    if ((errno = posix_spawnp(&child_pid, argv[2], nullptr, nullptr, &argv[2], environ))) {
+        perror("posix_spawn");
+        return 1;
     }
 
     int status;
-    if (waitpid(-1, &status, 0) < 0) {
+    if (waitpid(child_pid, &status, 0) < 0) {
         perror("waitpid");
         return 1;
     }

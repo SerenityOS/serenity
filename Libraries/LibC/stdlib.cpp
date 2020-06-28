@@ -36,6 +36,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -706,16 +707,10 @@ int system(const char* command)
     if (!command)
         return 1;
 
-    auto child = fork();
-    if (child < 0)
+    pid_t child;
+    const char* argv[] = { "sh", "-c", command, nullptr };
+    if ((errno = posix_spawn(&child, "/bin/sh", nullptr, nullptr, const_cast<char**>(argv), environ)))
         return -1;
-
-    if (!child) {
-        int rc = execl("/bin/sh", "sh", "-c", command, nullptr);
-        ASSERT(rc < 0);
-        perror("execl");
-        exit(127);
-    }
     int wstatus;
     waitpid(child, &wstatus, 0);
     return WEXITSTATUS(wstatus);

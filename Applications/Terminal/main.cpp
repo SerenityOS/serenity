@@ -47,6 +47,7 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <signal.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -257,10 +258,9 @@ int main(int argc, char** argv)
 
     auto& app_menu = menubar->add_menu("Terminal");
     app_menu.add_action(GUI::Action::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
-        if (!fork()) {
-            execl("/bin/Terminal", "Terminal", nullptr);
-            exit(1);
-        }
+        pid_t child;
+        const char* argv[] = { "Terminal", nullptr };
+        posix_spawn(&child, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ);
     }));
     app_menu.add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/gear16.png"),
         [&](const GUI::Action&) {
