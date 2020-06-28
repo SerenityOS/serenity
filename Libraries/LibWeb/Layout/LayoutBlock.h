@@ -65,6 +65,8 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
 
+    void layout_inside(LayoutMode);
+
 protected:
     void compute_width();
     void compute_height();
@@ -89,7 +91,6 @@ private:
 
     NonnullRefPtr<StyleProperties> style_for_anonymous_block() const;
 
-    void layout_inside(LayoutMode);
     void layout_inline_children(LayoutMode);
     void layout_contained_boxes(LayoutMode);
 
