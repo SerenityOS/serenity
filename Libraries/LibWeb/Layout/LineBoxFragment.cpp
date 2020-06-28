@@ -34,7 +34,7 @@
 
 namespace Web {
 
-void LineBoxFragment::render(PaintContext& context)
+void LineBoxFragment::paint(PaintContext& context)
 {
     for (auto* ancestor = layout_node().parent(); ancestor; ancestor = ancestor->parent()) {
         if (!ancestor->is_visible())
@@ -42,7 +42,7 @@ void LineBoxFragment::render(PaintContext& context)
     }
 
     if (is<LayoutText>(layout_node())) {
-        to<LayoutText>(layout_node()).render_fragment(context, *this);
+        to<LayoutText>(layout_node()).paint_fragment(context, *this);
     }
 }
 
