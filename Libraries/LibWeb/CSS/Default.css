@@ -92,8 +92,8 @@ a:hover {
 }
 
 hr {
-    margin-top: 4px;
-    margin-bottom: 4px;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
     border: 1px inset #888888;
 }
 
