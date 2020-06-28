@@ -30,6 +30,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/SharedBuffer.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -50,6 +51,45 @@ ProcessModel::ProcessModel()
     m_high_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/highpriority16.png");
     m_low_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/lowpriority16.png");
     m_normal_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/normalpriority16.png");
+
+    auto file = Core::File::construct("/proc/cpuinfo");
+    if (file->open(Core::IODevice::ReadOnly)) {
+        OwnPtr<CpuInfo> cpu;
+        u32 cpu_id = 0;
+        while (file->can_read_line()) {
+            auto line = file->read_line(1024);
+            if (line.is_null())
+                continue;
+
+            auto str = String::copy(line, Chomp);
+            if (str.is_empty() && cpu)
+                m_cpus.append(cpu.release_nonnull());
+
+            size_t i;
+            bool have_val = false;
+            for (i = 0; i < str.length(); i++) {
+                if (str[i] == ':') {
+                    have_val = true;
+                    break;
+                }
+            }
+            if (!have_val)
+                continue;
+            auto key = str.substring(0, i);
+            auto val = str.substring(i + 1, str.length() - i - 1).trim_whitespace();
+            
+            if (!cpu)
+                cpu = make<CpuInfo>(cpu_id++);
+                
+            cpu->values.set(key, val);
+        }
+
+        if (cpu)
+            m_cpus.append(cpu.release_nonnull());
+    }
+
+    if (m_cpus.is_empty())
+        m_cpus.append(make<CpuInfo>(0));
 }
 
 ProcessModel::~ProcessModel()
@@ -97,6 +137,8 @@ String ProcessModel::column_name(int column) const
         return "Purg:N";
     case Column::CPU:
         return "CPU";
+    case Column::Processor:
+        return "Processor";
     case Column::Name:
         return "Name";
     case Column::Syscalls:
@@ -157,6 +199,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
         case Column::PurgeableVolatile:
         case Column::PurgeableNonvolatile:
         case Column::CPU:
+        case Column::Processor:
         case Column::Syscalls:
         case Column::InodeFaults:
         case Column::ZeroFaults:
@@ -206,6 +249,8 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
             return (int)thread.current_state.amount_purgeable_nonvolatile;
         case Column::CPU:
             return thread.current_state.cpu_percent;
+        case Column::Processor:
+            return thread.current_state.cpu;
         case Column::Name:
             return thread.current_state.name;
         case Column::Syscalls:
@@ -275,6 +320,8 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
             return pretty_byte_size(thread.current_state.amount_purgeable_nonvolatile);
         case Column::CPU:
             return thread.current_state.cpu_percent;
+        case Column::Processor:
+            return thread.current_state.cpu;
         case Column::Name:
             return thread.current_state.name;
         case Column::Syscalls:
@@ -346,6 +393,7 @@ void ProcessModel::update()
 
             state.tid = thread.tid;
             state.times_scheduled = thread.times_scheduled;
+            state.cpu = thread.cpu;
             state.priority = thread.priority;
             state.effective_priority = thread.effective_priority;
             state.state = thread.state;
@@ -365,7 +413,8 @@ void ProcessModel::update()
     }
 
     m_pids.clear();
-    float total_cpu_percent = 0;
+    for (auto& c : m_cpus)
+        c.total_cpu_percent = 0.0;
     Vector<PidAndTid, 16> pids_to_remove;
     for (auto& it : m_threads) {
         if (!live_pids.contains(it.key)) {
@@ -376,15 +425,15 @@ void ProcessModel::update()
         u32 times_scheduled_diff = process.current_state.times_scheduled - process.previous_state.times_scheduled;
         process.current_state.cpu_percent = ((float)times_scheduled_diff * 100) / (float)(sum_times_scheduled - last_sum_times_scheduled);
         if (it.key.pid != 0) {
-            total_cpu_percent += process.current_state.cpu_percent;
+            m_cpus[process.current_state.cpu].total_cpu_percent += process.current_state.cpu_percent;
             m_pids.append(it.key);
         }
     }
     for (auto pid : pids_to_remove)
         m_threads.remove(pid);
 
-    if (on_new_cpu_data_point)
-        on_new_cpu_data_point(total_cpu_percent);
+    if (on_cpu_info_change)
+        on_cpu_info_change(m_cpus);
 
     did_update(GUI::Model::UpdateFlag::DontInvalidateIndexes);
 }
