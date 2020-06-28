@@ -830,6 +830,8 @@ void build_opcode_tables_if_needed()
     build_0f(0xBD, "BSR", OP_reg16_RM16, OP_reg32_RM32);
     build_0f(0xBE, "MOVSX", OP_reg16_RM8, OP_reg32_RM8);
     build_0f(0xBF, "0xBF", OP, "MOVSX", OP_reg32_RM16);
+    build_0f(0xC0, "XADD", OP_RM8_reg8, LockPrefixAllowed);
+    build_0f(0xC1, "XADD", OP_RM16_reg16, OP_RM32_reg32, LockPrefixAllowed);
 
     for (u8 i = 0xc8; i <= 0xcf; ++i)
         build_0f(i, "BSWAP", OP_reg32);
