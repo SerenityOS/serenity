@@ -510,10 +510,17 @@ public:
             PARSE_ASSERT(!buffer.is_null());
         }
 
+        auto value = String::copy(buffer);
+
+        if (type == Selector::SimpleSelector::Type::TagName) {
+            // Some stylesheets use uppercase tag names, so here's a hack to just lowercase them internally.
+            value = value.to_lowercase();
+        }
+
         Selector::SimpleSelector simple_selector {
             type,
             Selector::SimpleSelector::PseudoClass::None,
-            String::copy(buffer),
+            value,
             Selector::SimpleSelector::AttributeMatchType::None,
             String(),
             String()
