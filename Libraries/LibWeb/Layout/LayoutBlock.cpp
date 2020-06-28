@@ -625,30 +625,34 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
     float y = box.margin_box(*this).top
         + box.offset.top.to_px(*this);
 
+    // NOTE: Empty (0-height) preceding siblings have their margins collapsed with *their* preceding sibling, etc.
+    float collapsed_bottom_margin_of_preceding_siblings = 0;
+
     auto* relevant_sibling = block.previous_sibling();
     while (relevant_sibling != nullptr) {
-        if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating())
-            break;
+        if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
+            collapsed_bottom_margin_of_preceding_siblings = max(collapsed_bottom_margin_of_preceding_siblings, relevant_sibling->box_model().margin.bottom.to_px(*relevant_sibling));
+            if (relevant_sibling->height() > 0)
+                break;
+        }
         relevant_sibling = relevant_sibling->previous_sibling();
     }
 
     if (relevant_sibling) {
-        auto& sibling_box = relevant_sibling->box_model();
         y += relevant_sibling->effective_offset().y() + relevant_sibling->height();
 
-        // Collapse top margin with bottom margin of previous sibling if necessary
-        float previous_sibling_margin_bottom = sibling_box.margin.bottom.to_px(*relevant_sibling);
+        // Collapse top margin with bottom margin of preceding siblings if needed
         float my_margin_top = box.margin.top.to_px(*this);
 
-        if (my_margin_top < 0 || previous_sibling_margin_bottom < 0) {
+        if (my_margin_top < 0 || collapsed_bottom_margin_of_preceding_siblings < 0) {
             // Negative margins present.
-            float largest_negative_margin = -min(my_margin_top, previous_sibling_margin_bottom);
-            float largest_positive_margin = (my_margin_top < 0 && previous_sibling_margin_bottom < 0) ? 0 : max(my_margin_top, previous_sibling_margin_bottom);
+            float largest_negative_margin = -min(my_margin_top, collapsed_bottom_margin_of_preceding_siblings);
+            float largest_positive_margin = (my_margin_top < 0 && collapsed_bottom_margin_of_preceding_siblings < 0) ? 0 : max(my_margin_top, collapsed_bottom_margin_of_preceding_siblings);
             float final_margin = largest_positive_margin - largest_negative_margin;
             y += final_margin - my_margin_top;
-        } else if (previous_sibling_margin_bottom > my_margin_top) {
+        } else if (collapsed_bottom_margin_of_preceding_siblings > my_margin_top) {
             // Sibling's margin is larger than mine, adjust so we use sibling's.
-            y += previous_sibling_margin_bottom - my_margin_top;
+            y += collapsed_bottom_margin_of_preceding_siblings - my_margin_top;
         }
     }
 
