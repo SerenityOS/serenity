@@ -525,12 +525,16 @@ Process* Scheduler::colonel()
 
 void Scheduler::initialize(u32 cpu)
 {
+    static Atomic<u32> s_bsp_is_initialized;
+
     ASSERT(&Processor::current() != nullptr); // sanity check
-    g_scheduler_data = new SchedulerData;
-    g_finalizer_wait_queue = new WaitQueue;
 
     Thread* idle_thread = nullptr;
     if (cpu == 0) {
+        ASSERT(s_bsp_is_initialized.load(AK::MemoryOrder::memory_order_consume) == 0);
+        g_scheduler_data = new SchedulerData;
+        g_finalizer_wait_queue = new WaitQueue;
+
         g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
         s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop);
         ASSERT(s_colonel_process);
@@ -538,12 +542,22 @@ void Scheduler::initialize(u32 cpu)
         idle_thread->set_priority(THREAD_PRIORITY_MIN);
         idle_thread->set_name(String::format("idle thread #%u", cpu));
     } else {
+        // We need to make sure the BSP initialized the global data first
+        if (s_bsp_is_initialized.load(AK::MemoryOrder::memory_order_consume) == 0) {
+            dbg() << "Scheduler CPU #" << cpu << " waiting for BSP to initialize first";
+            while (s_bsp_is_initialized.load(AK::MemoryOrder::memory_order_consume) == 0) {
+            }
+        }
+
         ASSERT(s_colonel_process);
         idle_thread = s_colonel_process->create_kernel_thread(idle_loop, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), false);
         ASSERT(idle_thread);
     }
 
     Processor::current().set_idle_thread(*idle_thread);
+
+    if (cpu == 0)
+        s_bsp_is_initialized.store(1, AK::MemoryOrder::memory_order_release);
 }
 
 void Scheduler::timer_tick(const RegisterState& regs)
