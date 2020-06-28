@@ -136,6 +136,17 @@ public:
         return const_cast<TreeNode*>(this)->next_in_pre_order();
     }
 
+    bool is_before(const T& other) const
+    {
+        if (this == &other)
+            return false;
+        for (auto* node = this; node; node = node->next_in_pre_order()) {
+            if (node == &other)
+                return true;
+        }
+        return false;
+    }
+
     template<typename Callback>
     IterationDecision for_each_in_subtree(Callback callback) const
     {

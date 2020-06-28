@@ -97,7 +97,7 @@ int LineBoxFragment::text_index_at(float x) const
 
 Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 {
-    auto& selection = layout_node().root().selection();
+    auto selection = layout_node().root().selection().normalized();
     if (!selection.is_valid())
         return {};
     if (!layout_node().is_text())
