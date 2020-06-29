@@ -41,6 +41,7 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibLine/Span.h>
+#include <LibLine/StringMetrics.h>
 #include <LibLine/Style.h>
 #include <LibLine/SuggestionDisplay.h>
 #include <LibLine/SuggestionManager.h>
@@ -104,20 +105,6 @@ public:
     const Vector<String>& history() const { return m_history; }
 
     void register_character_input_callback(char ch, Function<bool(Editor&)> callback);
-    struct StringMetrics {
-        Vector<size_t> line_lengths;
-        size_t total_length { 0 };
-        size_t max_line_length { 0 };
-
-        size_t lines_with_addition(const StringMetrics& offset, size_t column_width) const;
-        void reset()
-        {
-            line_lengths.clear();
-            total_length = 0;
-            max_line_length = 0;
-            line_lengths.append(0);
-        }
-    };
     StringMetrics actual_rendered_string_metrics(const StringView&) const;
     StringMetrics actual_rendered_string_metrics(const Utf32View&) const;
 
@@ -313,7 +300,7 @@ private:
     bool should_break_token(Vector<u32, 1024>& buffer, size_t index);
 
     void recalculate_origin();
-    void reposition_cursor();
+    void reposition_cursor(bool to_end = false);
 
     struct CodepointRange {
         size_t start { 0 };
