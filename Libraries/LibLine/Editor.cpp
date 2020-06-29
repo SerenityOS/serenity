@@ -56,7 +56,7 @@ Editor::Editor(Configuration configuration)
         m_num_columns = ws.ws_col;
         m_num_lines = ws.ws_row;
     }
-    m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns);
+    m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns, m_cached_prompt_metrics);
 }
 
 Editor::~Editor()
@@ -304,6 +304,7 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 
         if (m_finish) {
             m_finish = false;
+            reposition_cursor(true);
             printf("\n");
             fflush(stdout);
             auto string = line();
@@ -950,6 +951,12 @@ void Editor::recalculate_origin()
 }
 void Editor::cleanup()
 {
+    auto current_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+    auto new_lines = current_prompt_metrics().lines_with_addition(current_buffer_metrics, m_num_columns);
+    auto shown_lines = num_lines();
+    if (new_lines < shown_lines)
+        m_extra_forward_lines = max(shown_lines - new_lines, m_extra_forward_lines);
+
     VT::move_relative(-m_extra_forward_lines, m_pending_chars.size() - m_chars_inserted_in_the_middle);
     auto current_line = cursor_line();
 
@@ -1105,14 +1112,22 @@ void Editor::strip_styles(bool strip_anchored)
     m_refresh_needed = true;
 }
 
-void Editor::reposition_cursor()
+void Editor::reposition_cursor(bool to_end)
 {
-    m_drawn_cursor = m_cursor;
+    auto cursor = m_cursor;
+    auto saved_cursor = m_cursor;
+    if (to_end)
+        cursor = m_buffer.size();
+
+    m_cursor = cursor;
+    m_drawn_cursor = cursor;
 
     auto line = cursor_line() - 1;
     auto column = offset_in_line();
 
     VT::move_absolute(line + m_origin_row, column + m_origin_column);
+
+    m_cursor = saved_cursor;
 }
 
 void VT::move_absolute(u32 row, u32 col)
@@ -1307,7 +1322,7 @@ void VT::clear_to_end_of_line()
     fflush(stdout);
 }
 
-Editor::StringMetrics Editor::actual_rendered_string_metrics(const StringView& string) const
+StringMetrics Editor::actual_rendered_string_metrics(const StringView& string) const
 {
     size_t length { 0 };
     StringMetrics metrics;
@@ -1331,7 +1346,7 @@ Editor::StringMetrics Editor::actual_rendered_string_metrics(const StringView& s
     return metrics;
 }
 
-Editor::StringMetrics Editor::actual_rendered_string_metrics(const Utf32View& view) const
+StringMetrics Editor::actual_rendered_string_metrics(const Utf32View& view) const
 {
     size_t length { 0 };
     StringMetrics metrics;
@@ -1557,7 +1572,7 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
     }
 }
 
-size_t Editor::StringMetrics::lines_with_addition(const StringMetrics& offset, size_t column_width) const
+size_t StringMetrics::lines_with_addition(const StringMetrics& offset, size_t column_width) const
 {
     size_t lines = 0;
 

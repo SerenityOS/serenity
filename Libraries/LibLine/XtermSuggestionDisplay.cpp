@@ -52,7 +52,11 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     VT::restore_cursor();
 
     auto spans_entire_line { false };
-    auto max_line_count = (m_prompt_length + longest_suggestion_length + m_num_columns - 1) / m_num_columns;
+    Vector<size_t> lines;
+    for (size_t i = 0; i < m_prompt_lines_at_suggestion_initiation - 1; ++i)
+        lines.append(0);
+    lines.append(longest_suggestion_length);
+    auto max_line_count = StringMetrics { move(lines) }.lines_with_addition({ { 0 } }, m_num_columns);
     if (longest_suggestion_length >= m_num_columns - 2) {
         spans_entire_line = true;
         // We should make enough space for the biggest entry in
@@ -126,9 +130,9 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
         if (spans_entire_line) {
             num_printed += m_num_columns;
-            fprintf(stderr, "%s", suggestion.text_string.characters());
+            fprintf(stdout, "%s", suggestion.text_string.characters());
         } else {
-            fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_byte_length) + 2, suggestion.text_string.characters());
+            fprintf(stdout, "%-*s", static_cast<int>(longest_suggestion_byte_length) + 2, suggestion.text_string.characters());
             num_printed += longest_suggestion_length + 2;
         }
 
@@ -153,6 +157,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
         if (string.length() > m_num_columns - 1) {
             // This would overflow into the next line, so just don't print an indicator.
+            fflush(stdout);
             return;
         }
 
@@ -160,8 +165,9 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         VT::apply_style({ Style::Background(Style::XtermColor::Green) });
         fputs(string.characters(), stdout);
         VT::apply_style(Style::reset_style());
-        fflush(stdout);
     }
+
+    fflush(stdout);
 }
 
 bool XtermSuggestionDisplay::cleanup()
