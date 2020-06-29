@@ -85,6 +85,9 @@ int LineBoxFragment::text_index_at(float x) const
     float relative_x = x - absolute_x();
     float glyph_spacing = font.glyph_spacing();
 
+    if (relative_x < 0)
+        return 0;
+
     float width_so_far = 0;
     for (auto it = view.begin(); it != view.end(); ++it) {
         float glyph_width = font.glyph_or_emoji_width(*it);
@@ -105,6 +108,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 
     const auto start_index = m_start;
     const auto end_index = m_start + m_length;
+    auto text = this->text();
 
     if (&layout_node() == selection.start().layout_node && &layout_node() == selection.end().layout_node) {
         // we are in the start/end node (both the same)
@@ -113,10 +117,10 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
         if (end_index < selection.start().index_in_node)
             return {};
 
-        auto selection_start_in_this_fragment = selection.start().index_in_node - m_start;
-        auto selection_end_in_this_fragment = selection.end().index_in_node - m_start + 1;
-        auto pixel_distance_to_first_selected_character = font.width(text().substring_view(0, selection_start_in_this_fragment));
-        auto pixel_width_of_selection = font.width(text().substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment));
+        auto selection_start_in_this_fragment = max(0, selection.start().index_in_node - m_start);
+        auto selection_end_in_this_fragment = min(m_length, selection.end().index_in_node - m_start + 1);
+        auto pixel_distance_to_first_selected_character = font.width(text.substring_view(0, selection_start_in_this_fragment));
+        auto pixel_width_of_selection = font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment)) + 1;
 
         auto rect = absolute_rect();
         rect.set_x(rect.x() + pixel_distance_to_first_selected_character);
@@ -129,10 +133,10 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
         if (end_index < selection.start().index_in_node)
             return {};
 
-        auto selection_start_in_this_fragment = selection.start().index_in_node - m_start;
+        auto selection_start_in_this_fragment = max(0, selection.start().index_in_node - m_start);
         auto selection_end_in_this_fragment = m_length;
-        auto pixel_distance_to_first_selected_character = font.width(text().substring_view(0, selection_start_in_this_fragment));
-        auto pixel_width_of_selection = font.width(text().substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment));
+        auto pixel_distance_to_first_selected_character = font.width(text.substring_view(0, selection_start_in_this_fragment));
+        auto pixel_width_of_selection = font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment)) + 1;
 
         auto rect = absolute_rect();
         rect.set_x(rect.x() + pixel_distance_to_first_selected_character);
@@ -146,9 +150,9 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
             return {};
 
         auto selection_start_in_this_fragment = 0;
-        auto selection_end_in_this_fragment = selection.end().index_in_node + 1;
-        auto pixel_distance_to_first_selected_character = font.width(text().substring_view(0, selection_start_in_this_fragment));
-        auto pixel_width_of_selection = font.width(text().substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment));
+        auto selection_end_in_this_fragment = min(selection.end().index_in_node + 1, m_length);
+        auto pixel_distance_to_first_selected_character = font.width(text.substring_view(0, selection_start_in_this_fragment));
+        auto pixel_width_of_selection = font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment)) + 1;
 
         auto rect = absolute_rect();
         rect.set_x(rect.x() + pixel_distance_to_first_selected_character);
