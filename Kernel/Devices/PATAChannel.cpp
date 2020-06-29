@@ -183,11 +183,18 @@ void PATAChannel::wait_for_irq()
 
 void PATAChannel::handle_irq(const RegisterState&)
 {
-    // FIXME: We might get random interrupts due to malfunctioning hardware, so we should check that we actually requested something to happen.
-
     u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
 
     m_entropy_source.add_random_event(status);
+
+    u8 bstatus = m_bus_master_base.offset(2).in<u8>();
+    if (!(bstatus & 0x4)) {
+        // interrupt not from this device, ignore
+#ifdef PATA_DEBUG
+        klog() << "PATAChannel: ignore interrupt";
+#endif
+        return;
+    }
 
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
