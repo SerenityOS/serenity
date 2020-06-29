@@ -211,6 +211,7 @@ Tab::Tab()
 
     m_page_view->on_favicon_change = [this](auto& icon) {
         m_icon = icon;
+        m_location_box->set_icon(&icon);
         if (on_favicon_change)
             on_favicon_change(icon);
     };
