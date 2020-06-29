@@ -142,8 +142,6 @@ bool WindowManager::set_resolution(int width, int height)
     });
     if (success) {
         for_each_window([](Window& window) {
-            if (window.type() == WindowType::Desktop)
-                window.set_rect(WindowManager::the().desktop_rect());
             window.recalculate_rect();
             return IterationDecision::Continue;
         });
