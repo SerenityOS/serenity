@@ -47,12 +47,14 @@ RecursiveSpinLock g_scheduler_lock;
 
 void Scheduler::init_thread(Thread& thread)
 {
+    ASSERT(g_scheduler_data);
     g_scheduler_data->m_nonrunnable_threads.append(thread);
 }
 
 void Scheduler::update_state_for_thread(Thread& thread)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(g_scheduler_data);
     auto& list = g_scheduler_data->thread_list_for_state(thread.state());
 
     if (list.contains(thread))
@@ -318,14 +320,16 @@ void Scheduler::start()
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto& processor = Processor::current();
-    ASSERT(processor.current_thread() == nullptr);
+    ASSERT(processor.is_initialized());
     auto& idle_thread = *processor.idle_thread();
-    processor.set_current_thread(idle_thread);
+    ASSERT(processor.current_thread() == &idle_thread);
+    ASSERT(processor.idle_thread() == &idle_thread);
     idle_thread.set_ticks_left(time_slice_for(idle_thread));
     idle_thread.did_schedule();
     idle_thread.set_initialized(true);
     Processor::init_context(idle_thread);
     idle_thread.set_state(Thread::Running);
+    ASSERT(idle_thread.affinity() == (1u << processor.id()));
     processor.initialize_context_switching(idle_thread);
     ASSERT_NOT_REACHED();
 }
@@ -354,7 +358,7 @@ bool Scheduler::pick_next()
                 auto name = process.name();
                 auto pid = process.pid();
                 auto exit_status = Process::reap(process);
-                dbg() << "Scheduler: Reaped unparented process " << name << "(" << pid << "), exit status: " << exit_status.si_status;
+                dbg() << "Scheduler[" << Processor::current().id() << "]: Reaped unparented process " << name << "(" << pid << "), exit status: " << exit_status.si_status;
             }
             return IterationDecision::Continue;
         }
@@ -386,7 +390,7 @@ bool Scheduler::pick_next()
             return IterationDecision::Continue;
         if (was_blocked) {
 #ifdef SCHEDULER_DEBUG
-            dbg() << "Unblock " << thread << " due to signal";
+            dbg() << "Scheduler[" << Processor::current().id() << "]:Unblock " << thread << " due to signal";
 #endif
             ASSERT(thread.m_blocker != nullptr);
             thread.m_blocker->set_interrupted_by_signal();
@@ -411,7 +415,8 @@ bool Scheduler::pick_next()
 
     Vector<Thread*, 128> sorted_runnables;
     for_each_runnable([&sorted_runnables](auto& thread) {
-        sorted_runnables.append(&thread);
+        if ((thread.affinity() & (1u << Processor::current().id())) != 0)
+            sorted_runnables.append(&thread);
         return IterationDecision::Continue;
     });
     quick_sort(sorted_runnables, [](auto& a, auto& b) { return a->effective_priority() >= b->effective_priority(); });
@@ -439,7 +444,7 @@ bool Scheduler::pick_next()
         thread_to_schedule = Processor::current().idle_thread();
 
 #ifdef SCHEDULER_DEBUG
-    dbg() << "Scheduler: Switch to " << *thread_to_schedule << " @ " << String::format("%04x:%08x", thread_to_schedule->tss().cs, thread_to_schedule->tss().eip);
+    dbg() << "Scheduler[" << Processor::current().id() << "]: Switch to " << *thread_to_schedule << " @ " << String::format("%04x:%08x", thread_to_schedule->tss().cs, thread_to_schedule->tss().eip);
 #endif
 
     lock.unlock();
@@ -451,7 +456,7 @@ bool Scheduler::yield()
     auto& proc = Processor::current();
     auto current_thread = Thread::current();
 #ifdef SCHEDULER_DEBUG
-    dbg() << "Scheduler: yielding thread " << *current_thread << " in_trap: " << proc.in_trap() << " in_irq: " << proc.in_irq();
+    dbg() << "Scheduler[" << Processor::current().id() << "]: yielding thread " << *current_thread << " in_irq: " << proc.in_irq();
 #endif
     InterruptDisabler disabler;
     ASSERT(current_thread != nullptr);
@@ -462,7 +467,7 @@ bool Scheduler::yield()
     } else if (!Scheduler::pick_next())
         return false;
 #ifdef SCHEDULER_DEBUG
-    dbg() << "Scheduler: yield returns to thread " << *current_thread << " in_trap: " << proc.in_trap() << " in_irq: " << proc.in_irq();
+    dbg() << "Scheduler[" << Processor::current().id() << "]: yield returns to thread " << *current_thread << " in_irq: " << proc.in_irq();
 #endif
     return true;
 }
@@ -481,7 +486,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
 #ifdef SCHEDULER_DEBUG
-    dbg() << "Scheduler: Donating " << ticks_to_donate << " ticks to " << *beneficiary << ", reason=" << reason;
+    dbg() << "Scheduler[" << Processor::current().id() << "]: Donating " << ticks_to_donate << " ticks to " << *beneficiary << ", reason=" << reason;
 #endif
     beneficiary->set_ticks_left(ticks_to_donate);
     Scheduler::context_switch(*beneficiary);
@@ -504,7 +509,7 @@ bool Scheduler::context_switch(Thread& thread)
             current_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbg() << "Scheduler: " << *current_thread << " -> " << thread << " [" << thread.priority() << "] " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
+        dbg() << "Scheduler[" << Processor::current().id() << "]: " << *current_thread << " -> " << thread << " [" << thread.priority() << "] " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
 #endif
     }
 
@@ -536,7 +541,7 @@ void Scheduler::initialize(u32 cpu)
         g_finalizer_wait_queue = new WaitQueue;
 
         g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-        s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop);
+        s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, 1 << cpu);
         ASSERT(s_colonel_process);
         ASSERT(idle_thread);
         idle_thread->set_priority(THREAD_PRIORITY_MIN);
@@ -544,17 +549,23 @@ void Scheduler::initialize(u32 cpu)
     } else {
         // We need to make sure the BSP initialized the global data first
         if (s_bsp_is_initialized.load(AK::MemoryOrder::memory_order_consume) == 0) {
-            dbg() << "Scheduler CPU #" << cpu << " waiting for BSP to initialize first";
+#ifdef SCHEDULER_DEBUG
+            dbg() << "Scheduler[" << cpu << "]: waiting for BSP to initialize...";
+#endif
             while (s_bsp_is_initialized.load(AK::MemoryOrder::memory_order_consume) == 0) {
             }
+#ifdef SCHEDULER_DEBUG
+            dbg() << "Scheduler[" << cpu << "]: initializing now";
+#endif
         }
 
         ASSERT(s_colonel_process);
-        idle_thread = s_colonel_process->create_kernel_thread(idle_loop, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), false);
+        idle_thread = s_colonel_process->create_kernel_thread(idle_loop, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), 1 << cpu, false);
         ASSERT(idle_thread);
     }
 
     Processor::current().set_idle_thread(*idle_thread);
+    Processor::current().set_current_thread(*idle_thread);
 
     if (cpu == 0)
         s_bsp_is_initialized.store(1, AK::MemoryOrder::memory_order_release);
@@ -604,7 +615,7 @@ void Scheduler::invoke_async()
 
 void Scheduler::idle_loop()
 {
-    dbg() << "Scheduler: idle loop on CPU #" << Processor::current().id();
+    dbg() << "Scheduler[" << Processor::current().id() << "]: idle loop running";
     ASSERT(are_interrupts_enabled());
     for (;;) {
         asm("hlt");
