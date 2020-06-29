@@ -50,7 +50,8 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& file_n
 
     auto file_contents = file->read_all();
     auto json_result = JsonValue::from_string(file_contents);
-    ASSERT(json_result.has_value());
+    if (!json_result.has_value())
+        return {};
     auto json = json_result.value().as_object();
 
     Vector<u32> map = read_map(json, "map");
