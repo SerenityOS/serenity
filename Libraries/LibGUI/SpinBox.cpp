@@ -80,8 +80,11 @@ void SpinBox::set_range(int min, int max)
 
     int old_value = m_value;
     m_value = clamp(m_value, m_min, m_max);
-    if (on_change && m_value != old_value)
-        on_change(m_value);
+    if (m_value != old_value) {
+        m_editor->set_text(String::number(m_value));
+        if (on_change)
+            on_change(m_value);
+    }
 
     update();
 }
