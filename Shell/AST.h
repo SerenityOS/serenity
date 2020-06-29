@@ -238,15 +238,17 @@ public:
     virtual ~StringValue();
     virtual bool is_string() const override { return m_split.is_null(); }
     virtual bool is_list() const override { return !m_split.is_null(); }
-    StringValue(String string, String split_by = {})
+    StringValue(String string, String split_by = {}, bool keep_empty = false)
         : m_string(string)
         , m_split(move(split_by))
+        , m_keep_empty(keep_empty)
     {
     }
 
 private:
     String m_string;
     String m_split;
+    bool m_keep_empty { false };
 };
 
 class GlobValue final : public Value {
