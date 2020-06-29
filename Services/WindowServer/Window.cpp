@@ -520,11 +520,20 @@ void Window::recalculate_rect()
         return;
 
     auto old_rect = m_rect;
-    if (m_tiled != WindowTileType::None)
+    bool send_event = true;
+    if (m_tiled != WindowTileType::None) {
         set_rect(tiled_rect(m_tiled));
-    else if (is_maximized())
+    } else if (is_maximized()) {
         set_rect(WindowManager::the().maximized_window_rect(*this));
-    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
+    } else if (type() == WindowType::Desktop) {
+        set_rect(WindowManager::the().desktop_rect());
+    } else {
+        send_event = false;
+    }
+
+    if (send_event) {
+        Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
+    }
 }
 
 void Window::add_child_window(Window& child_window)
