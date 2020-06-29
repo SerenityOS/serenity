@@ -172,14 +172,8 @@ extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
 
     APIC::the().enable(cpu);
 
-#if 0
-    Scheduler::idle_loop();
-#else
-    // FIXME: remove once schedule can handle APs
-    cli();
-    for (;;)
-        asm volatile("hlt");
-#endif
+    Scheduler::initialize(cpu);
+    Scheduler::start();
     ASSERT_NOT_REACHED();
 }
 
