@@ -74,6 +74,8 @@ public:
     VT::Position normalized_selection_end() const;
 
     bool is_scrollable() const;
+    int scroll_length() const;
+    void set_scroll_length(int);
 
     GUI::Action& copy_action() { return *m_copy_action; }
     GUI::Action& paste_action() { return *m_paste_action; }
