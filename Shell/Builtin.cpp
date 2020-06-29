@@ -776,3 +776,16 @@ bool Shell::run_builtin(int argc, const char** argv, int& retval)
 
     return false;
 }
+
+bool Shell::has_builtin(const StringView& name) const
+{
+#define __ENUMERATE_SHELL_BUILTIN(builtin) \
+    if (name == #builtin) {                \
+        return true;                       \
+    }
+
+    ENUMERATE_SHELL_BUILTINS();
+
+#undef __ENUMERATE_SHELL_BUILTIN
+    return false;
+}

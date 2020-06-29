@@ -89,8 +89,9 @@ Node::Node(Position position)
 {
 }
 
-Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
+Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
+    auto matching_node = hit_test_result.matching_node;
     if (matching_node) {
         if (matching_node->is_bareword()) {
             auto corrected_offset = offset - matching_node->position().start_offset;
@@ -98,7 +99,29 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
 
             if (corrected_offset > node->text().length())
                 return {};
-            return shell.complete_path("", node->text(), corrected_offset);
+            auto& text = node->text();
+
+            // If the literal isn't an option, treat it as a path.
+            if (!(text.starts_with("-") || text == "--" || text == "-"))
+                return shell.complete_path("", text, corrected_offset);
+
+            // If the literal is an option, we have to know the program name
+            // should we have no way to get that, bail early.
+
+            if (!hit_test_result.closest_command_node)
+                return {};
+
+            auto program_name_node = hit_test_result.closest_command_node->leftmost_trivial_literal();
+            if (!program_name_node)
+                return {};
+
+            String program_name;
+            if (program_name_node->is_bareword())
+                program_name = static_cast<BarewordLiteral*>(program_name_node.ptr())->text();
+            else
+                program_name = static_cast<StringLiteral*>(program_name_node.ptr())->text();
+
+            return shell.complete_option(program_name, text, corrected_offset);
         }
         return {};
     }
@@ -112,12 +135,12 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
     if (!node)
         return {};
 
-    return node->complete_for_editor(shell, offset, result.matching_node);
+    return node->complete_for_editor(shell, offset, result);
 }
 
 Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_t offset)
 {
-    return Node::complete_for_editor(shell, offset, nullptr);
+    return Node::complete_for_editor(shell, offset, { nullptr, nullptr, nullptr });
 }
 
 Node::~Node()
@@ -164,9 +187,15 @@ HitTestResult And::hit_test_position(size_t offset)
         return {};
 
     auto result = m_left->hit_test_position(offset);
-    if (result.matching_node)
+    if (result.matching_node) {
+        if (!result.closest_command_node)
+            result.closest_command_node = m_right;
         return result;
-    return m_right->hit_test_position(offset);
+    }
+    result = m_right->hit_test_position(offset);
+    if (!result.closest_command_node)
+        result.closest_command_node = m_right;
+    return result;
 }
 
 And::And(Position position, RefPtr<Node> left, RefPtr<Node> right)
@@ -228,6 +257,11 @@ HitTestResult ListConcatenate::hit_test_position(size_t offset)
     if (!result.closest_node_with_semantic_meaning)
         result.closest_node_with_semantic_meaning = this;
     return result;
+}
+
+RefPtr<Node> ListConcatenate::leftmost_trivial_literal() const
+{
+    return m_element->leftmost_trivial_literal();
 }
 
 ListConcatenate::ListConcatenate(Position position, RefPtr<Node> element, RefPtr<Node> list)
@@ -370,8 +404,9 @@ HitTestResult CastToCommand::hit_test_position(size_t offset)
     return result;
 }
 
-Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
+Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
+    auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
         return {};
 
@@ -383,6 +418,11 @@ Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& she
         return {};
 
     return shell.complete_program_name(node->text(), corrected_offset);
+}
+
+RefPtr<Node> CastToCommand::leftmost_trivial_literal() const
+{
+    return m_inner->leftmost_trivial_literal();
 }
 
 CastToCommand::CastToCommand(Position position, RefPtr<Node> inner)
@@ -439,6 +479,11 @@ HitTestResult CastToList::hit_test_position(size_t offset)
         return {};
 
     return m_inner->hit_test_position(offset);
+}
+
+RefPtr<Node> CastToList::leftmost_trivial_literal() const
+{
+    return m_inner->leftmost_trivial_literal();
 }
 
 CastToList::CastToList(Position position, RefPtr<Node> inner)
@@ -845,11 +890,14 @@ HitTestResult Execute::hit_test_position(size_t offset)
     auto result = m_command->hit_test_position(offset);
     if (!result.closest_node_with_semantic_meaning)
         result.closest_node_with_semantic_meaning = this;
+    if (!result.closest_command_node)
+        result.closest_command_node = m_command;
     return result;
 }
 
-Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
+Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
+    auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
         return {};
 
@@ -910,6 +958,13 @@ HitTestResult Join::hit_test_position(size_t offset)
     return m_right->hit_test_position(offset);
 }
 
+RefPtr<Node> Join::leftmost_trivial_literal() const
+{
+    if (auto value = m_left->leftmost_trivial_literal())
+        return value;
+    return m_right->leftmost_trivial_literal();
+}
+
 Join::Join(Position position, RefPtr<Node> left, RefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
@@ -965,9 +1020,15 @@ HitTestResult Or::hit_test_position(size_t offset)
         return {};
 
     auto result = m_left->hit_test_position(offset);
-    if (result.matching_node)
+    if (result.matching_node) {
+        if (!result.closest_command_node)
+            result.closest_command_node = m_right;
         return result;
-    return m_right->hit_test_position(offset);
+    }
+    result = m_right->hit_test_position(offset);
+    if (!result.closest_command_node)
+        result.closest_command_node = m_right;
+    return result;
 }
 
 Or::Or(Position position, RefPtr<Node> left, RefPtr<Node> right)
@@ -1085,8 +1146,9 @@ HitTestResult PathRedirectionNode::hit_test_position(size_t offset)
     return result;
 }
 
-Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
+Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
+    auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
         return {};
 
@@ -1233,11 +1295,12 @@ HitTestResult SimpleVariable::hit_test_position(size_t offset)
     if (!position().contains(offset))
         return {};
 
-    return { this, this };
+    return { this, this, nullptr };
 }
 
-Vector<Line::CompletionSuggestion> SimpleVariable::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
+Vector<Line::CompletionSuggestion> SimpleVariable::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
+    auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
         return {};
 
@@ -1278,7 +1341,7 @@ void SpecialVariable::highlight_in_editor(Line::Editor& editor, Shell&, Highligh
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(214, 112, 214) });
 }
 
-Vector<Line::CompletionSuggestion> SpecialVariable::complete_for_editor(Shell&, size_t, RefPtr<Node>)
+Vector<Line::CompletionSuggestion> SpecialVariable::complete_for_editor(Shell&, size_t, const HitTestResult&)
 {
     return {};
 }
@@ -1288,7 +1351,7 @@ HitTestResult SpecialVariable::hit_test_position(size_t offset)
     if (!position().contains(offset))
         return {};
 
-    return { this, this };
+    return { this, this, nullptr };
 }
 
 SpecialVariable::SpecialVariable(Position position, char name)
@@ -1377,8 +1440,9 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
     }
 }
 
-Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
+Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
+    auto matching_node = hit_test_result.matching_node;
     // '~/foo/bar' is special, we have to actually resolve the tilde
     // then complete the bareword with that path prefix.
     if (m_right->is_bareword() && m_left->is_tilde()) {
@@ -1395,7 +1459,7 @@ Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& she
         return shell.complete_path(tilde_value, text, corrected_offset - 1);
     }
 
-    return Node::complete_for_editor(shell, offset, matching_node);
+    return Node::complete_for_editor(shell, offset, hit_test_result);
 }
 
 HitTestResult Juxtaposition::hit_test_position(size_t offset)
@@ -1562,11 +1626,12 @@ HitTestResult Tilde::hit_test_position(size_t offset)
     if (!position().contains(offset))
         return {};
 
-    return { this, this };
+    return { this, this, nullptr };
 }
 
-Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size_t offset, RefPtr<Node> matching_node)
+Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
+    auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
         return {};
 
@@ -1706,7 +1771,7 @@ HitTestResult VariableDeclarations::hit_test_position(size_t offset)
             return result;
     }
 
-    return { nullptr, nullptr };
+    return { nullptr, nullptr, nullptr };
 }
 
 VariableDeclarations::VariableDeclarations(Position position, Vector<Variable> variables)
