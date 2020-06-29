@@ -52,11 +52,16 @@
     __ENUMERATE_SHELL_BUILTIN(dirs)    \
     __ENUMERATE_SHELL_BUILTIN(pushd)   \
     __ENUMERATE_SHELL_BUILTIN(popd)    \
+    __ENUMERATE_SHELL_BUILTIN(setopt)  \
     __ENUMERATE_SHELL_BUILTIN(time)    \
     __ENUMERATE_SHELL_BUILTIN(jobs)    \
     __ENUMERATE_SHELL_BUILTIN(disown)  \
     __ENUMERATE_SHELL_BUILTIN(fg)      \
     __ENUMERATE_SHELL_BUILTIN(bg)
+
+#define ENUMERATE_SHELL_OPTIONS()                                                                                    \
+    __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
+    __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")
 
 class Shell;
 
@@ -134,6 +139,15 @@ public:
     enum ShellEventType {
         ReadLine,
     };
+
+#define __ENUMERATE_SHELL_OPTION(name, default_, description) \
+    bool name { default_ };
+
+    struct Options {
+        ENUMERATE_SHELL_OPTIONS();
+    } options;
+
+#undef __ENUMERATE_SHELL_OPTION
 
 private:
     Shell();
