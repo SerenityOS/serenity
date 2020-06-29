@@ -74,6 +74,9 @@ public:
     bool is_ruler_visible() const { return m_ruler_visible; }
     void set_ruler_visible(bool b) { m_ruler_visible = b; }
 
+    void set_icon(const Gfx::Bitmap*);
+    const Gfx::Bitmap* icon() const { return m_icon; }
+
     Function<void()> on_cursor_change;
     Function<void()> on_selection_change;
 
@@ -177,6 +180,9 @@ private:
     void defer_reflow();
     void undefer_reflow();
 
+    int icon_size() const { return 16; }
+    int icon_padding() const { return 2; }
+
     class ReflowDeferrer {
     public:
         ReflowDeferrer(TextEditor& editor)
@@ -279,6 +285,8 @@ private:
 
     RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
     Gfx::IntPoint m_last_mousemove_position;
+
+    RefPtr<Gfx::Bitmap> m_icon;
 };
 
 }
