@@ -75,6 +75,7 @@ public:
     RefPtr<Job> run_command(AST::Command&);
     bool run_file(const String&);
     bool run_builtin(int argc, const char** argv, int& retval);
+    bool has_builtin(const StringView&) const;
     void block_on_job(RefPtr<Job>);
     String prompt() const;
 
@@ -101,6 +102,7 @@ public:
     Vector<Line::CompletionSuggestion> complete_program_name(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);
 
     void take_back_stdin();
 
