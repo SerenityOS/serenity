@@ -818,7 +818,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
             dbg() << "close() failed: " << strerror(errno);
         }
 
-        return create<StringValue>(builder.build(), shell->local_variable_or("IFS", "\n"));
+        return create<StringValue>(builder.build(), shell->local_variable_or("IFS", "\n"), shell->options.inline_exec_keep_empty_segments);
     }
 
     run_commands(commands);
@@ -1799,7 +1799,7 @@ StringValue::~StringValue()
 Vector<String> StringValue::resolve_as_list(RefPtr<Shell>)
 {
     if (is_list()) {
-        auto parts = StringView(m_string).split_view(m_split);
+        auto parts = StringView(m_string).split_view(m_split, m_keep_empty);
         Vector<String> result;
         result.ensure_capacity(parts.size());
         for (auto& part : parts)

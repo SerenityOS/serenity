@@ -356,6 +356,14 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
 {
     FileDescriptionCollector fds;
 
+    if (options.verbose) {
+        fprintf(stderr, "+ ");
+        for (auto& arg : command.argv)
+            fprintf(stderr, "%s ", escape_token(arg).characters());
+        fprintf(stderr, "\n");
+        fflush(stderr);
+    }
+
     // Resolve redirections.
     NonnullRefPtrVector<AST::Rewiring> rewirings;
     for (auto& redirection : command.redirections) {

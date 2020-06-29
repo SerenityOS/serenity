@@ -645,6 +645,45 @@ int Shell::builtin_pwd(int, const char**)
     return 0;
 }
 
+int Shell::builtin_setopt(int argc, const char** argv)
+{
+    if (argc == 1) {
+#define __ENUMERATE_SHELL_OPTION(name, default_, description) \
+    if (options.name)                                         \
+        fprintf(stderr, #name "\n");
+
+        ENUMERATE_SHELL_OPTIONS();
+
+#undef __ENUMERATE_SHELL_OPTION
+    }
+
+    Core::ArgsParser parser;
+#define __ENUMERATE_SHELL_OPTION(name, default_, description)     \
+    bool name = false;                                            \
+    bool not_##name = false;                                      \
+    parser.add_option(name, "Enable: " description, #name, '\0'); \
+    parser.add_option(not_##name, "Disable: " description, "no_" #name, '\0');
+
+    ENUMERATE_SHELL_OPTIONS();
+
+#undef __ENUMERATE_SHELL_OPTION
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+#define __ENUMERATE_SHELL_OPTION(name, default_, description) \
+    if (name)                                                 \
+        options.name = true;                                  \
+    if (not_##name)                                           \
+        options.name = false;
+
+    ENUMERATE_SHELL_OPTIONS();
+
+#undef __ENUMERATE_SHELL_OPTION
+
+    return 0;
+}
+
 int Shell::builtin_time(int argc, const char** argv)
 {
     Vector<const char*> args;
