@@ -37,6 +37,7 @@
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Slider.h>
+#include <LibGUI/SpinBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
@@ -138,7 +139,7 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto window = GUI::Window::construct();
     window->set_title("Terminal Settings");
     window->set_resizable(false);
-    window->set_rect(50, 50, 200, 140);
+    window->set_rect(50, 50, 200, 185);
     window->set_modal(true);
 
     auto& settings = window->set_main_widget<GUI::Widget>();
@@ -174,6 +175,19 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 
     slider.set_range(0, 255);
     slider.set_value(terminal.opacity());
+
+    auto& spinbox_container = settings.add<GUI::GroupBox>("Scroll Length");
+    spinbox_container.set_layout<GUI::VerticalBoxLayout>();
+    spinbox_container.layout()->set_margins({ 6, 16, 6, 6 });
+    spinbox_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    spinbox_container.set_preferred_size(100, 46);
+
+    auto& spinbox = spinbox_container.add<GUI::SpinBox>();
+    spinbox.set_min(1);
+    spinbox.set_value(terminal.scroll_length());
+    spinbox.on_change = [&terminal](int value) {
+        terminal.set_scroll_length(value);
+    };
 
     return window;
 }
