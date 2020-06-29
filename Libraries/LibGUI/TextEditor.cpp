@@ -141,6 +141,9 @@ TextPosition TextEditor::text_position_at(const Gfx::IntPoint& a_position) const
     position.move_by(-(m_horizontal_content_padding + ruler_width()), 0);
     position.move_by(-frame_thickness(), -frame_thickness());
 
+    if (is_single_line() && icon())
+        position.move_by(-(icon_size() + icon_padding()), 0);
+
     size_t line_index = 0;
 
     if (is_line_wrapping_enabled()) {
@@ -513,6 +516,11 @@ void TextEditor::paint_event(PaintEvent& event)
             ++visual_line_index;
             return IterationDecision::Continue;
         });
+    }
+
+    if (!is_multi_line() && m_icon) {
+        Gfx::IntRect icon_rect { icon_padding(), 1, icon_size(), icon_size() };
+        painter.draw_scaled_bitmap(icon_rect, *m_icon, m_icon->rect());
     }
 
     if (is_focused() && m_cursor_state)
@@ -963,7 +971,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
             }
             return IterationDecision::Continue;
         });
-        return m_horizontal_content_padding + x_offset;
+        return m_horizontal_content_padding + ((is_single_line() && icon()) ? (icon_size() + icon_padding()) : 0) + x_offset;
     case Gfx::TextAlignment::CenterRight:
         // FIXME
         ASSERT(!is_line_wrapping_enabled());
@@ -1481,8 +1489,11 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
         };
         if (is_right_text_alignment(text_alignment()))
             visual_line_rect.set_right_without_resize(editor_visible_text_rect.right());
-        if (!is_multi_line())
+        if (is_single_line()) {
             visual_line_rect.center_vertically_within(editor_visible_text_rect);
+            if (m_icon)
+                visual_line_rect.move_by(icon_size() + icon_padding(), 0);
+        }
         if (callback(visual_line_rect, visual_line_view, start_of_line) == IterationDecision::Break)
             break;
         start_of_line = visual_line_break;
@@ -1618,6 +1629,14 @@ int TextEditor::fixed_glyph_width() const
 {
     ASSERT(font().is_fixed_width());
     return font().glyph_width(' ');
+}
+
+void TextEditor::set_icon(const Gfx::Bitmap* icon)
+{
+    if (m_icon == icon)
+        return;
+    m_icon = icon;
+    update();
 }
 
 }
