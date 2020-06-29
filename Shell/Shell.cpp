@@ -828,6 +828,48 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size
     return suggestions;
 }
 
+Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_name, const String& option, size_t offset)
+{
+    size_t start = 0;
+    while (start < option.length() && option[start] == '-')
+        ++start;
+    auto option_pattern = offset > start ? option.substring_view(start, offset - start) : "";
+    editor->suggest(offset);
+
+    Vector<Line::CompletionSuggestion> suggestions;
+
+    dbg() << "Shell::complete_option(" << program_name << ", " << option_pattern << ")";
+
+    // FIXME: Figure out how to do this stuff.
+    if (has_builtin(program_name)) {
+        // Complete builtins.
+        if (program_name == "setopt") {
+            bool negate = false;
+            if (option_pattern.starts_with("no_")) {
+                negate = true;
+                option_pattern = option_pattern.substring_view(3, option_pattern.length() - 3);
+            }
+            auto maybe_negate = [&](const StringView& view) {
+                static StringBuilder builder;
+                builder.clear();
+                builder.append("--");
+                if (negate)
+                    builder.append("no_");
+                builder.append(view);
+                return builder.to_string();
+            };
+#define __ENUMERATE_SHELL_OPTION(name, d_, descr_)        \
+    if (StringView { #name }.starts_with(option_pattern)) \
+        suggestions.append(maybe_negate(#name));
+
+            ENUMERATE_SHELL_OPTIONS();
+#undef __ENUMERATE_SHELL_OPTION
+            return suggestions;
+        }
+    }
+    return suggestions;
+}
+
 bool Shell::read_single_line()
 {
     take_back_stdin();
