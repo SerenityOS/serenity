@@ -294,15 +294,11 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
     while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
         ;
 
-    u8 devsel = 0xe0;
-    if (slave_request)
-        devsel |= 0x10;
-
     m_control_base.offset(ATA_CTL_CONTROL).out<u8>(0);
-    m_io_base.offset(ATA_REG_HDDEVSEL).out<u8>(devsel | (static_cast<u8>(slave_request) << 4));
+    m_io_base.offset(ATA_REG_HDDEVSEL).out<u8>(0x40 | (static_cast<u8>(slave_request) << 4));
     io_delay();
 
-    m_io_base.offset(ATA_REG_FEATURES).out<u8>(0);
+    m_io_base.offset(ATA_REG_FEATURES).out<u16>(0);
 
     m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(0);
     m_io_base.offset(ATA_REG_LBA0).out<u8>(0);
@@ -365,15 +361,11 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
     while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
         ;
 
-    u8 devsel = 0xe0;
-    if (slave_request)
-        devsel |= 0x10;
-
     m_control_base.offset(ATA_CTL_CONTROL).out<u8>(0);
-    m_io_base.offset(ATA_REG_HDDEVSEL).out<u8>(devsel | (static_cast<u8>(slave_request) << 4));
+    m_io_base.offset(ATA_REG_HDDEVSEL).out<u8>(0x40 | (static_cast<u8>(slave_request) << 4));
     io_delay();
 
-    m_io_base.offset(ATA_REG_FEATURES).out<u8>(0);
+    m_io_base.offset(ATA_REG_FEATURES).out<u16>(0);
 
     m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(0);
     m_io_base.offset(ATA_REG_LBA0).out<u8>(0);
