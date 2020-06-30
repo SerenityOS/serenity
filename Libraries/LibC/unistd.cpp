@@ -212,7 +212,7 @@ int getresuid(uid_t* ruid, uid_t* euid, uid_t* suid)
     return syscall(SC_getresuid, ruid, euid, suid);
 }
 
-int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid)
+int getresgid(gid_t* rgid, gid_t* egid, gid_t* sgid)
 {
     return syscall(SC_getresgid, rgid, egid, sgid);
 }
