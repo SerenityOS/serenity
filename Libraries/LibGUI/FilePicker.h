@@ -74,6 +74,7 @@ private:
     LexicalPath m_selected_file;
 
     RefPtr<TextBox> m_filename_textbox;
+    RefPtr<Frame> m_preview_container;
     RefPtr<Image> m_preview_image;
     RefPtr<Label> m_preview_name_label;
     RefPtr<Label> m_preview_geometry_label;

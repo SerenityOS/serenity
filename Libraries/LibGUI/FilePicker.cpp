@@ -242,23 +242,24 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         }
     };
 
-    auto& preview_container = horizontal_container.add<Frame>();
-    preview_container.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    preview_container.set_preferred_size(180, 0);
-    preview_container.set_layout<VerticalBoxLayout>();
-    preview_container.layout()->set_margins({ 8, 8, 8, 8 });
+    m_preview_container = horizontal_container.add<Frame>();
+    m_preview_container->set_visible(false);
+    m_preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_preview_container->set_preferred_size(180, 0);
+    m_preview_container->set_layout<VerticalBoxLayout>();
+    m_preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 
-    m_preview_image = preview_container.add<Image>();
+    m_preview_image = m_preview_container->add<Image>();
     m_preview_image->set_should_stretch(true);
     m_preview_image->set_auto_resize(false);
     m_preview_image->set_preferred_size(160, 160);
 
-    m_preview_name_label = preview_container.add<Label>();
+    m_preview_name_label = m_preview_container->add<Label>();
     m_preview_name_label->set_font(Gfx::Font::default_bold_font());
     m_preview_name_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_preview_name_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
 
-    m_preview_geometry_label = preview_container.add<Label>();
+    m_preview_geometry_label = m_preview_container->add<Label>();
     m_preview_geometry_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_preview_geometry_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
 }
@@ -280,6 +281,7 @@ void FilePicker::set_preview(const LexicalPath& path)
         m_preview_geometry_label->set_text(bitmap->size().to_string());
         m_preview_image->set_should_stretch(should_stretch);
         m_preview_image->set_bitmap(move(bitmap));
+        m_preview_container->set_visible(true);
     }
 }
 
@@ -288,6 +290,7 @@ void FilePicker::clear_preview()
     m_preview_image->set_bitmap(nullptr);
     m_preview_name_label->set_text(String::empty());
     m_preview_geometry_label->set_text(String::empty());
+    m_preview_container->set_visible(false);
 }
 
 void FilePicker::on_file_return()
