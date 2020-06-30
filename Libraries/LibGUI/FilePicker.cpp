@@ -171,7 +171,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     lower_container.set_layout<VerticalBoxLayout>();
     lower_container.layout()->set_spacing(4);
     lower_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    lower_container.set_preferred_size(0, 60);
+    lower_container.set_preferred_size(0, 45);
 
     auto& filename_container = lower_container.add<Widget>();
     filename_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
