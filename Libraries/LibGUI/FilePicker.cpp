@@ -122,14 +122,17 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     m_view->set_column_hidden(FileSystemModel::Column::SymlinkTarget, true);
     m_model->set_root_path(path);
 
+    m_model->on_update = [&] {
+        location_textbox.set_text(m_model->root_path());
+        clear_preview();
+    };
+
     location_textbox.on_return_pressed = [&] {
         m_model->set_root_path(location_textbox.text());
-        clear_preview();
     };
 
     auto open_parent_directory_action = Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
         m_model->set_root_path(String::format("%s/..", m_model->root_path().characters()));
-        clear_preview();
     });
     toolbar.add_action(*open_parent_directory_action);
 
