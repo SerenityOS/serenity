@@ -2135,8 +2135,6 @@ int Process::sys$seteuid(uid_t euid)
 {
     REQUIRE_PROMISE(id);
 
-    // This has FreeBSD semantics.
-    // Linux and Solaris also allow m_euid.
     if (euid != m_uid && euid != m_suid && !is_superuser())
         return -EPERM;
 
@@ -2148,8 +2146,6 @@ int Process::sys$setegid(gid_t egid)
 {
     REQUIRE_PROMISE(id);
 
-    // This has FreeBSD semantics.
-    // Linux and Solaris also allow m_egid.
     if (egid != m_gid && egid != m_sgid && !is_superuser())
         return -EPERM;
 
@@ -2161,13 +2157,9 @@ int Process::sys$setuid(uid_t uid)
 {
     REQUIRE_PROMISE(id);
 
-    // Linux and Solaris require real or saved.
-    // FreeBSD requires real or effective.
     if (uid != m_uid && uid != m_euid && !is_superuser())
         return -EPERM;
 
-    // Solaris and Linux only set uid and suid if is_superuser(),
-    // FreeBSD always sets all 3.
     m_uid = uid;
     m_euid = uid;
     m_suid = uid;
@@ -2178,13 +2170,9 @@ int Process::sys$setgid(gid_t gid)
 {
     REQUIRE_PROMISE(id);
 
-    // Linux and Solaris require real or saved.
-    // FreeBSD requires real or effective.
     if (gid != m_gid && gid != m_egid && !is_superuser())
         return -EPERM;
 
-    // Solaris and Linux only set uid and suid if is_superuser(),
-    // FreeBSD always sets all 3.
     m_gid = gid;
     m_egid = gid;
     m_sgid = gid;
