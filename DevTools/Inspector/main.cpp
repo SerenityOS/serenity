@@ -94,15 +94,15 @@ int main(int argc, char** argv)
     tree_view.set_model(remote_process.object_graph_model());
     tree_view.set_activates_on_selection(true);
 
-    auto& properties_table_view = splitter.add<GUI::TableView>();
-    properties_table_view.set_editable(true);
-    properties_table_view.aid_create_editing_delegate = [](auto&) {
+    auto& properties_tree_view = splitter.add<GUI::TreeView>();
+    properties_tree_view.set_editable(true);
+    properties_tree_view.aid_create_editing_delegate = [](auto&) {
         return make<GUI::StringModelEditingDelegate>();
     };
 
     tree_view.on_activation = [&](auto& index) {
         auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
-        properties_table_view.set_model(remote_object->property_model());
+        properties_tree_view.set_model(remote_object->property_model());
         remote_process.set_inspected_object(remote_object->address);
     };
 
