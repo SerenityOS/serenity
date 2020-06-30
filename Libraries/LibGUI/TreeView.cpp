@@ -183,6 +183,9 @@ void TreeView::traverse_in_paint_order(Callback callback) const
                 return IterationDecision::Continue;
         }
 
+        if (indent_level > 0 && !index.is_valid())
+            return IterationDecision::Continue;
+
         ++indent_level;
         int row_count = model.row_count(index);
         for (int i = 0; i < row_count; ++i) {
