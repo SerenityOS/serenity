@@ -421,7 +421,10 @@ bool Compositor::set_resolution(int desired_width, int desired_height)
         return true;
 
     // Make sure it's impossible to set an invalid resolution
-    ASSERT(desired_width >= 640 && desired_height >= 480);
+    if (!(desired_width >= 640 && desired_height >= 480)) {
+        dbg() << "Compositor: Tried to set invalid resolution: " << desired_width << "x" << desired_height;
+        return false;
+    }
     bool success = Screen::the().set_resolution(desired_width, desired_height);
     init_bitmaps();
     compose();
@@ -532,7 +535,6 @@ bool Compositor::any_opaque_window_contains_rect(const Gfx::IntRect& rect)
     });
     return found_containing_window;
 };
-
 
 bool Compositor::any_opaque_window_above_this_one_contains_rect(const Window& a_window, const Gfx::IntRect& rect)
 {
