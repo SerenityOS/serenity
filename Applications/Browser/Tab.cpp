@@ -146,6 +146,7 @@ Tab::Tab()
     };
 
     m_page_view->on_load_start = [this](auto& url) {
+        m_location_box->set_icon(nullptr);
         m_location_box->set_text(url.to_string());
         if (m_should_push_loads_to_history)
             m_history.push(url);
