@@ -110,6 +110,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenType::Const:
     case JS::TokenType::Delete:
     case JS::TokenType::Debugger:
+    case JS::TokenType::Extends:
     case JS::TokenType::Function:
     case JS::TokenType::In:
     case JS::TokenType::Instanceof:
@@ -117,6 +118,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenType::Let:
     case JS::TokenType::New:
     case JS::TokenType::NullLiteral:
+    case JS::TokenType::Super:
     case JS::TokenType::Typeof:
     case JS::TokenType::Var:
     case JS::TokenType::Void:
