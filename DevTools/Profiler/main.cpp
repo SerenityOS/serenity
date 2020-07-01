@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     GUI::Application app(argc, argv);
 
     auto window = GUI::Window::construct();
-    window->set_title("ProfileViewer");
+    window->set_title("Profiler");
     window->set_rect(100, 100, 800, 600);
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     };
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("ProfileViewer");
+    auto& app_menu = menubar->add_menu("Profiler");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
 
     auto& view_menu = menubar->add_menu("View");
