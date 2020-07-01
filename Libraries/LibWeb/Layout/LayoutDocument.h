@@ -41,8 +41,9 @@ public:
     virtual void layout(LayoutMode = LayoutMode::Default) override;
 
     void paint_all_phases(PaintContext&);
-
     virtual void paint(PaintContext&, PaintPhase) override;
+
+    virtual HitTestResult hit_test(const Gfx::IntPoint&) const override;
 
     const LayoutRange& selection() const { return m_selection; }
     LayoutRange& selection() { return m_selection; }

@@ -725,6 +725,8 @@ HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position) const
     HitTestResult last_good_candidate;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
+            if (is<LayoutBox>(fragment.layout_node()) && to<LayoutBox>(fragment.layout_node()).stacking_context())
+                continue;
             if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
                 if (fragment.layout_node().is_block())
                     return to<LayoutBlock>(fragment.layout_node()).hit_test(position);

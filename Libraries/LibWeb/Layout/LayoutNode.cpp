@@ -106,6 +106,10 @@ HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position) const
 {
     HitTestResult result;
     for_each_child([&](auto& child) {
+        // Skip over children that establish their own stacking context.
+        // The outer loop who called us will take care of those.
+        if (is<LayoutBox>(child) && to<LayoutBox>(child).stacking_context())
+            return;
         auto child_result = child.hit_test(position);
         if (child_result.layout_node)
             result = child_result;

@@ -61,6 +61,25 @@ void StackingContext::paint(PaintContext& context, LayoutNode::PaintPhase phase)
     }
 }
 
+HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position) const
+{
+    HitTestResult result;
+    if (!m_box.is_root()) {
+        result = m_box.hit_test(position);
+    } else {
+        // NOTE: LayoutDocument::hit_test() merely calls StackingContext::hit_test()
+        //       so we call its base class instead.
+        result = to<LayoutDocument>(m_box).LayoutBlock::hit_test(position);
+    }
+
+    for (auto* child : m_children) {
+        auto result_here = child->hit_test(position);
+        if (result_here.layout_node)
+            result = result_here;
+    }
+    return result;
+}
+
 void StackingContext::dump(int indent) const
 {
     for (int i = 0; i < indent; ++i)
