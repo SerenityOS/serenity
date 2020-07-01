@@ -56,6 +56,7 @@
 #include <LibGfx/Palette.h>
 #include <LibPCIDB/Database.h>
 #include <signal.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -111,14 +112,14 @@ can_access_pid(pid_t pid)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio proc shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio proc shared_buffer accept rpath exec unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio proc shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio proc shared_buffer accept rpath exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -139,6 +140,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/dev", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/bin/Profiler", "x") < 0) {
         perror("unveil");
         return 1;
     }
@@ -202,6 +208,18 @@ int main(int argc, char** argv)
             kill(pid, SIGCONT);
     });
 
+    auto profile_action = GUI::Action::create("Profile process", { Mod_Ctrl, Key_P }, [&process_table_view](auto&) {
+        pid_t pid = process_table_view.selected_pid();
+        if (pid != -1) {
+            auto pid_string = String::format("%d", pid);
+            pid_t child;
+            const char* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
+            if (posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ) < 0) {
+                perror("posix_spawn");
+            }
+        }
+    });
+
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("System Monitor");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -213,11 +231,15 @@ int main(int argc, char** argv)
     process_menu.add_action(kill_action);
     process_menu.add_action(stop_action);
     process_menu.add_action(continue_action);
+    process_menu.add_separator();
+    process_menu.add_action(profile_action);
 
     auto process_context_menu = GUI::Menu::construct();
     process_context_menu->add_action(kill_action);
     process_context_menu->add_action(stop_action);
     process_context_menu->add_action(continue_action);
+    process_context_menu->add_separator();
+    process_context_menu->add_action(profile_action);
     process_table_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         (void)index;
         process_context_menu->popup(event.screen_position());
