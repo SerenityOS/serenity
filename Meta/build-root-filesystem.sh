@@ -159,7 +159,7 @@ ln -s Browser mnt/bin/br
 ln -s HackStudio mnt/bin/hs
 ln -s Debugger mnt/bin/sdb
 ln -s SystemMonitor mnt/bin/sm
-ln -s ProfileViewer mnt/bin/pv
+ln -s Profiler mnt/bin/pv
 ln -s WebServer mnt/bin/ws
 ln -s Solitaire mnt/bin/sl
 ln -s WebView mnt/bin/wv

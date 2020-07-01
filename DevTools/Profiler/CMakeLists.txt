@@ -6,5 +6,5 @@ set(SOURCES
     ProfileTimelineWidget.cpp
 )
 
-serenity_bin(ProfileViewer)
-target_link_libraries(ProfileViewer LibGUI LibX86)
+serenity_bin(Profiler)
+target_link_libraries(Profiler LibGUI LibX86)
