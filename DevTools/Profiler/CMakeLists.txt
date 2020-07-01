@@ -4,6 +4,7 @@ set(SOURCES
     Profile.cpp
     ProfileModel.cpp
     ProfileTimelineWidget.cpp
+    RunningProcessesModel.cpp
 )
 
 serenity_bin(Profiler)
