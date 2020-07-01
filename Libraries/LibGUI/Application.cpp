@@ -75,11 +75,7 @@ Application::~Application()
 
 int Application::exec()
 {
-    int exit_code = m_event_loop->exec();
-    // NOTE: Maybe it would be cool to return instead of exit()?
-    //       This would require cleaning up all the Core::Objects on the heap.
-    exit(exit_code);
-    return exit_code;
+    return m_event_loop->exec();
 }
 
 void Application::quit(int exit_code)
