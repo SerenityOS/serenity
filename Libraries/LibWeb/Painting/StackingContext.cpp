@@ -41,7 +41,7 @@ StackingContext::StackingContext(LayoutBox& box, StackingContext* parent)
         m_parent->m_children.append(this);
 
         // FIXME: Don't sort on every append..
-        quick_sort(m_children, [](auto& a, auto& b) {
+        quick_sort(m_parent->m_children, [](auto& a, auto& b) {
             return a->m_box.style().z_index().value_or(0) < b->m_box.style().z_index().value_or(0);
         });
     }
