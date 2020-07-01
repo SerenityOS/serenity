@@ -27,6 +27,7 @@
 #include "Profile.h"
 #include "ProfileTimelineWidget.h"
 #include "RunningProcessesModel.h"
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
@@ -49,22 +50,25 @@
 #include <stdio.h>
 #include <string.h>
 
-static bool generate_profile();
+static bool generate_profile(pid_t specified_pid);
 
 int main(int argc, char** argv)
 {
+    Core::ArgsParser args_parser;
+    int pid = 0;
+    args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
+    args_parser.parse(argc, argv, false);
+
     GUI::Application app(argc, argv);
 
     const char* path = nullptr;
     if (argc != 2) {
-        if (!generate_profile())
+        if (!generate_profile(pid))
             return 0;
         path = "/proc/profile";
     } else {
         path = argv[1];
     }
-
-    printf("We're here!\n");
 
     auto profile = Profile::load_from_perfcore_file(path);
 
@@ -121,9 +125,9 @@ int main(int argc, char** argv)
     return app.exec();
 }
 
-bool prompt_for_process_to_profile()
+pid_t prompt_for_process_to_profile()
 {
-    bool success = false;
+    pid_t pid = 0;
     auto window = GUI::Window::construct();
     window->set_title("Profiler");
     Gfx::IntRect window_rect { 0, 0, 480, 360 };
@@ -147,24 +151,18 @@ bool prompt_for_process_to_profile()
         }
         auto index = table_view.selection().first();
         auto pid_as_variant = table_view.model()->data(index, GUI::Model::Role::Custom);
-        auto pid = pid_as_variant.as_i32();
-        if (profiling_enable(pid) < 0) {
-            int saved_errno = errno;
-            GUI::MessageBox::show(String::format("Unable to profile PID %d: %s", pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
-            return;
-        }
-
-        success = true;
+        pid = pid_as_variant.as_i32();
         GUI::Application::the().quit(0);
     };
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.on_click = [](auto) {
-        GUI::Application::the().quit(1);
+        GUI::Application::the().quit();
     };
 
     table_view.model()->update();
     window->show();
-    return GUI::Application::the().exec() == 0;
+    GUI::Application::the().exec();
+    return pid;
 }
 
 bool prompt_to_stop_profiling()
@@ -194,10 +192,19 @@ bool prompt_to_stop_profiling()
     return GUI::Application::the().exec() == 0;
 }
 
-bool generate_profile()
+bool generate_profile(pid_t pid)
 {
-    if (!prompt_for_process_to_profile())
+    if (!pid) {
+        pid = prompt_for_process_to_profile();
+        if (!pid)
+            return false;
+    }
+
+    if (profiling_enable(pid) < 0) {
+        int saved_errno = errno;
+        GUI::MessageBox::show(String::format("Unable to profile PID %d: %s", pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
         return false;
+    }
 
     if (!prompt_to_stop_profiling())
         return false;
