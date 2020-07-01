@@ -695,12 +695,14 @@ int main(int argc, char** argv)
                 case JS::TokenType::Const:
                 case JS::TokenType::Debugger:
                 case JS::TokenType::Delete:
+                case JS::TokenType::Extends:
                 case JS::TokenType::Function:
                 case JS::TokenType::In:
                 case JS::TokenType::Instanceof:
                 case JS::TokenType::Interface:
                 case JS::TokenType::Let:
                 case JS::TokenType::New:
+                case JS::TokenType::Super:
                 case JS::TokenType::TemplateLiteralExprStart:
                 case JS::TokenType::TemplateLiteralExprEnd:
                 case JS::TokenType::Throw:
