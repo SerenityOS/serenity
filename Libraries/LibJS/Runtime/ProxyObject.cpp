@@ -90,7 +90,7 @@ Object* ProxyObject::prototype()
         return nullptr;
     }
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
+    arguments.append(Value(&m_target));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments));
     if (interpreter().exception())
         return nullptr;
@@ -140,8 +140,8 @@ bool ProxyObject::set_prototype(Object* object)
         return false;
     }
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
-    arguments.values().append(Value(object));
+    arguments.append(Value(&m_target));
+    arguments.append(Value(object));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
     if (interpreter().exception() || !trap_result)
         return false;
@@ -173,7 +173,7 @@ bool ProxyObject::is_extensible() const
         return {};
     }
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
+    arguments.append(Value(&m_target));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
     if (interpreter().exception())
         return false;
@@ -201,7 +201,7 @@ bool ProxyObject::prevent_extensions()
         return {};
     }
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
+    arguments.append(Value(&m_target));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
     if (interpreter().exception())
         return false;
@@ -229,8 +229,8 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(PropertyNa
         return {};
     }
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
-    arguments.values().append(js_string(interpreter(), name.to_string()));
+    arguments.append(Value(&m_target));
+    arguments.append(js_string(interpreter(), name.to_string()));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments));
     if (interpreter().exception())
         return {};
@@ -286,9 +286,9 @@ bool ProxyObject::define_property(const FlyString& property_name, const Object& 
         return false;
     }
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
-    arguments.values().append(js_string(interpreter(), property_name));
-    arguments.values().append(Value(const_cast<Object*>(&descriptor)));
+    arguments.append(Value(&m_target));
+    arguments.append(js_string(interpreter(), property_name));
+    arguments.append(Value(const_cast<Object*>(&descriptor)));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
     if (interpreter().exception() || !trap_result)
         return false;
@@ -340,8 +340,8 @@ bool ProxyObject::has_property(PropertyName name) const
         return false;
     }
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
-    arguments.values().append(js_string(interpreter(), name.to_string()));
+    arguments.append(Value(&m_target));
+    arguments.append(js_string(interpreter(), name.to_string()));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
     if (interpreter().exception())
         return false;
@@ -378,9 +378,9 @@ Value ProxyObject::get(PropertyName name, Value) const
     if (!trap.is_function())
         return interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "get");
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
-    arguments.values().append(js_string(interpreter(), name.to_string()));
-    arguments.values().append(Value(const_cast<ProxyObject*>(this)));
+    arguments.append(Value(&m_target));
+    arguments.append(js_string(interpreter(), name.to_string()));
+    arguments.append(Value(const_cast<ProxyObject*>(this)));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments));
     if (interpreter().exception())
         return {};
@@ -412,10 +412,10 @@ bool ProxyObject::put(PropertyName name, Value value, Value)
         return false;
     }
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
-    arguments.values().append(js_string(interpreter(), name.to_string()));
-    arguments.values().append(value);
-    arguments.values().append(Value(const_cast<ProxyObject*>(this)));
+    arguments.append(Value(&m_target));
+    arguments.append(js_string(interpreter(), name.to_string()));
+    arguments.append(value);
+    arguments.append(Value(const_cast<ProxyObject*>(this)));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
     if (interpreter().exception() || !trap_result)
         return false;
@@ -448,8 +448,8 @@ Value ProxyObject::delete_property(PropertyName name)
     if (!trap.is_function())
         return interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "deleteProperty");
     MarkedValueList arguments(interpreter().heap());
-    arguments.values().append(Value(&m_target));
-    arguments.values().append(js_string(interpreter(), name.to_string()));
+    arguments.append(Value(&m_target));
+    arguments.append(js_string(interpreter(), name.to_string()));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
     if (interpreter().exception())
         return {};
@@ -489,14 +489,14 @@ Value ProxyObject::call(Interpreter& interpreter) {
         return interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "apply");
 
     MarkedValueList arguments(interpreter.heap());
-    arguments.values().append(Value(&m_target));
-    arguments.values().append(Value(&m_handler));
+    arguments.append(Value(&m_target));
+    arguments.append(Value(&m_handler));
     // FIXME: Pass global object
     auto arguments_array = Array::create(interpreter.global_object());
     interpreter.for_each_argument([&](auto& argument) {
         arguments_array->indexed_properties().append(argument);
     });
-    arguments.values().append(arguments_array);
+    arguments.append(arguments_array);
 
     return interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
 }
@@ -518,13 +518,13 @@ Value ProxyObject::construct(Interpreter& interpreter, Function& new_target) {
         return interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "construct");
 
     MarkedValueList arguments(interpreter.heap());
-    arguments.values().append(Value(&m_target));
+    arguments.append(Value(&m_target));
     auto arguments_array = Array::create(interpreter.global_object());
     interpreter.for_each_argument([&](auto& argument) {
         arguments_array->indexed_properties().append(argument);
     });
-    arguments.values().append(arguments_array);
-    arguments.values().append(Value(&new_target));
+    arguments.append(arguments_array);
+    arguments.append(Value(&new_target));
     auto result = interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
     if (!result.is_object())
         return interpreter.throw_exception<TypeError>(ErrorType::ProxyConstructBadReturnType);
