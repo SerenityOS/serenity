@@ -28,6 +28,7 @@
 
 #include <AK/Forward.h>
 #include <AK/Types.h>
+#include <AK/kmalloc.h>
 #include <AK/kstdio.h>
 
 #if !defined(KERNEL)
@@ -47,7 +48,7 @@ public:
 #endif
     {
     }
-    virtual ~LogStream() {}
+    virtual ~LogStream() { }
 
     virtual void write(const char*, int) const = 0;
 
@@ -57,15 +58,63 @@ private:
 #endif
 };
 
-class DebugLogStream final : public LogStream {
-public:
-    DebugLogStream() {}
-    virtual ~DebugLogStream() override;
+class BufferedLogStream : public LogStream {
+    mutable size_t m_size { 0 };
+    mutable size_t m_capacity { 128 };
+    union {
+        mutable u8* m_buffer { nullptr };
+        mutable u8 m_local_buffer[128];
+    } u;
 
-    virtual void write(const char* characters, int length) const override
+    void grow(size_t bytes_needed) const
     {
-        dbgputstr(characters, length);
+        size_t new_capacity = (m_size + bytes_needed + 0x7F) & ~0x7F;
+        u8* new_data = static_cast<u8*>(kmalloc(new_capacity));
+        if (m_capacity <= sizeof(u.m_local_buffer)) {
+            __builtin_memcpy(new_data, u.m_local_buffer, m_size);
+        } else if (u.m_buffer) {
+            __builtin_memcpy(new_data, u.m_buffer, m_size);
+            kfree(u.m_buffer);
+        }
+        u.m_buffer = new_data;
+        m_capacity = new_capacity;
     }
+
+protected:
+    u8* data() const
+    {
+        if (m_capacity <= sizeof(u.m_local_buffer))
+            return u.m_local_buffer;
+        return u.m_buffer;
+    }
+
+    size_t size() const { return m_size; }
+
+    bool empty() const { return m_size == 0; }
+
+public:
+    BufferedLogStream() { }
+
+    virtual ~BufferedLogStream() override
+    {
+        if (m_capacity > sizeof(u.m_local_buffer))
+            kfree(u.m_buffer);
+    }
+
+    virtual void write(const char* str, int len) const override
+    {
+        size_t new_size = m_size + len;
+        if (new_size > m_capacity)
+            grow(len);
+        __builtin_memcpy(data() + m_size, str, len);
+        m_size = new_size;
+    }
+};
+
+class DebugLogStream final : public BufferedLogStream {
+public:
+    DebugLogStream() { }
+    virtual ~DebugLogStream() override;
 };
 
 #if !defined(KERNEL)
@@ -87,15 +136,10 @@ inline StdLogStream warn() { return StdLogStream(STDERR_FILENO); }
 #endif
 
 #ifdef KERNEL
-class KernelLogStream final : public LogStream {
+class KernelLogStream final : public BufferedLogStream {
 public:
-    KernelLogStream() {}
+    KernelLogStream() { }
     virtual ~KernelLogStream() override;
-
-    virtual void write(const char* characters, int length) const override
-    {
-        kernelputstr(characters, length);
-    }
 };
 #endif
 

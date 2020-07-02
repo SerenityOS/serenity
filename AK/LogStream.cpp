@@ -153,15 +153,21 @@ DebugLogStream klog()
 #ifdef KERNEL
 KernelLogStream::~KernelLogStream()
 {
-    char newline = '\n';
-    write(&newline, 1);
+    if (!empty()) {
+        char newline = '\n';
+        write(&newline, 1);
+        kernelputstr(reinterpret_cast<char*>(data()), size());
+    }
 }
 #endif
 
 DebugLogStream::~DebugLogStream()
 {
-    char newline = '\n';
-    write(&newline, 1);
+    if (!empty()) {
+        char newline = '\n';
+        write(&newline, 1);
+        dbgputstr(reinterpret_cast<char*>(data()), size());
+    }
 }
 
 #ifndef KERNEL
