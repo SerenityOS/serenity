@@ -65,7 +65,7 @@ void KBufferBuilder::append(const char* characters, int length)
         return;
     if (!can_append(length))
         return;
-    memcpy(insertion_ptr() + m_size, characters, length);
+    memcpy(insertion_ptr(), characters, length);
     m_size += length;
 }
 
