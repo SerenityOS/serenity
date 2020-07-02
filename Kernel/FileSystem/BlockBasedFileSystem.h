@@ -26,27 +26,41 @@
 
 #pragma once
 
-#include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/FileBackedFileSystem.h>
 
 namespace Kernel {
 
-class FileBackedFS : public FS {
+class BlockBasedFS : public FileBackedFS {
 public:
-    virtual ~FileBackedFS() override;
+    virtual ~BlockBasedFS() override;
 
-    File& file() { return m_file_description->file(); }
-    FileDescription& file_description() { return *m_file_description; }
-    const File& file() const { return m_file_description->file(); }
-    FileDescription& file_description() const { return *m_file_description; }
+    size_t logical_block_size() const { return m_logical_block_size; };
+
+    virtual void flush_writes() override;
+    void flush_writes_impl();
 
 protected:
-    explicit FileBackedFS(FileDescription&);
+    explicit BlockBasedFS(FileDescription&);
+
+    bool read_block(unsigned index, u8* buffer, size_t count, size_t offset = 0, bool allow_cache = true) const;
+    bool read_blocks(unsigned index, unsigned count, u8* buffer, bool allow_cache = true) const;
+
+    bool raw_read(unsigned index, u8* buffer);
+    bool raw_write(unsigned index, const u8* buffer);
+
+    bool raw_read_blocks(unsigned index, size_t count, u8* buffer);
+    bool raw_write_blocks(unsigned index, size_t count, const u8* buffer);
+
+    bool write_block(unsigned index, const u8* buffer, size_t count, size_t offset = 0, bool allow_cache = true);
+    bool write_blocks(unsigned index, unsigned count, const u8*, bool allow_cache = true);
+
+    size_t m_logical_block_size { 512 };
 
 private:
-    virtual bool is_file_backed() const override { return true; }
+    DiskCache& cache() const;
+    void flush_specific_block_if_needed(unsigned index);
 
-    mutable NonnullRefPtr<FileDescription> m_file_description;
+    mutable OwnPtr<DiskCache> m_cache;
 };
 
 }

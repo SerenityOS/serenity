@@ -70,7 +70,7 @@ NonnullRefPtr<Ext2FS> Ext2FS::create(FileDescription& file_description)
 }
 
 Ext2FS::Ext2FS(FileDescription& file_description)
-    : FileBackedFS(file_description)
+    : BlockBasedFS(file_description)
 {
 }
 
@@ -548,7 +548,7 @@ void Ext2FS::flush_writes()
         }
     }
 
-    FileBackedFS::flush_writes();
+    BlockBasedFS::flush_writes();
 
     // Uncache Inodes that are only kept alive by the index-to-inode lookup cache.
     // We don't uncache Inodes that are being watched by at least one InodeWatcher.

@@ -28,7 +28,7 @@
 
 #include <AK/Bitmap.h>
 #include <AK/HashMap.h>
-#include <Kernel/FileSystem/FileBackedFileSystem.h>
+#include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/KBuffer.h>
@@ -89,7 +89,7 @@ private:
     ext2_inode m_raw_inode;
 };
 
-class Ext2FS final : public FileBackedFS {
+class Ext2FS final : public BlockBasedFS {
     friend class Ext2FSInode;
 
 public:
