@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "ProcessChooser.h"
 #include "Profile.h"
 #include "ProfileTimelineWidget.h"
-#include "RunningProcessesModel.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
@@ -41,7 +41,6 @@
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
@@ -125,46 +124,6 @@ int main(int argc, char** argv)
     return app.exec();
 }
 
-pid_t prompt_for_process_to_profile()
-{
-    pid_t pid = 0;
-    auto window = GUI::Window::construct();
-    window->set_title("Profiler");
-    Gfx::IntRect window_rect { 0, 0, 480, 360 };
-    window_rect.center_within(GUI::Desktop::the().rect());
-    window->set_rect(window_rect);
-    auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::VerticalBoxLayout>();
-    auto& table_view = widget.add<GUI::TableView>();
-    table_view.set_model(GUI::SortingProxyModel::create(Profiler::RunningProcessesModel::create()));
-    table_view.model()->set_key_column_and_sort_order(Profiler::RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
-    auto& button_container = widget.add<GUI::Widget>();
-    button_container.set_preferred_size(0, 30);
-    button_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    button_container.set_layout<GUI::HorizontalBoxLayout>();
-    auto& profile_button = button_container.add<GUI::Button>("Profile");
-    profile_button.on_click = [&](auto) {
-        if (table_view.selection().is_empty()) {
-            GUI::MessageBox::show("No process selected!", "Profiler", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
-            return;
-        }
-        auto index = table_view.selection().first();
-        auto pid_as_variant = table_view.model()->data(index, GUI::Model::Role::Custom);
-        pid = pid_as_variant.as_i32();
-        GUI::Application::the().quit(0);
-    };
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel");
-    cancel_button.on_click = [](auto) {
-        GUI::Application::the().quit();
-    };
-
-    table_view.model()->update();
-    window->show();
-    GUI::Application::the().exec();
-    return pid;
-}
-
 bool prompt_to_stop_profiling()
 {
     auto window = GUI::Window::construct();
@@ -195,9 +154,10 @@ bool prompt_to_stop_profiling()
 bool generate_profile(pid_t pid)
 {
     if (!pid) {
-        pid = prompt_for_process_to_profile();
-        if (!pid)
+        auto process_chooser = Profiler::ProcessChooser::construct();
+        if (process_chooser->exec() == GUI::Dialog::ExecCancel)
             return false;
+        pid = process_chooser->pid();
     }
 
     if (profiling_enable(pid) < 0) {
