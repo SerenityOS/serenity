@@ -67,7 +67,7 @@ bool g_dump_kmalloc_stacks;
 static u8* s_next_eternal_ptr;
 static u8* s_end_of_eternal_range;
 
-static SpinLock s_lock;
+static RecursiveSpinLock s_lock; // needs to be recursive because of dump_backtrace()
 
 void kmalloc_init()
 {

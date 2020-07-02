@@ -103,6 +103,11 @@ public:
     {
         return m_lock.load(AK::memory_order_consume) != 0;
     }
+
+    ALWAYS_INLINE void initialize()
+    {
+        m_lock.store(0, AK::memory_order_release);
+    }
 };
 
 template <typename BaseType = u32, typename LockType = SpinLock<BaseType>>
