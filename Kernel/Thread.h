@@ -288,7 +288,6 @@ public:
 
     RegisterState& get_register_dump_from_stack();
 
-    u16 selector() const { return m_far_ptr.selector; }
     TSS32& tss() { return m_tss; }
     const TSS32& tss() const { return m_tss; }
     State state() const { return m_state; }
@@ -352,8 +351,6 @@ public:
     void set_should_die();
     void die_if_needed();
 
-    const FarPtr& far_ptr() const { return m_far_ptr; }
-
     bool tick();
     void set_ticks_left(u32 t) { m_ticks_left = t; }
     u32 ticks_left() const { return m_ticks_left; }
@@ -361,7 +358,6 @@ public:
     u32 kernel_stack_base() const { return m_kernel_stack_base; }
     u32 kernel_stack_top() const { return m_kernel_stack_top; }
 
-    void set_selector(u16 s) { m_far_ptr.selector = s; }
     void set_state(State);
 
     bool is_initialized() const { return m_initialized; }
@@ -475,7 +471,6 @@ private:
     Process& m_process;
     int m_tid { -1 };
     TSS32 m_tss;
-    FarPtr m_far_ptr;
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     u32 m_ticks { 0 };

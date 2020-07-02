@@ -534,12 +534,6 @@ struct utsname {
     char machine[UTSNAME_ENTRY_LEN];
 };
 
-struct [[gnu::packed]] FarPtr
-{
-    u32 offset { 0 };
-    u16 selector { 0 };
-};
-
 struct iovec {
     void* iov_base;
     size_t iov_len;
