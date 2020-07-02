@@ -38,11 +38,11 @@ for f in *.js; do
         else
             readarray -t split_result <<< "$result";
 
-            echo -ne "    \033[31;1mOutput:\033[0m: "
+            echo -ne "    \033[31;1mOutput:\033[0m "
             echo "${split_result[0]}";
 
             for (( i = 1; i < ${#split_result[@]}; i++ )); do
-                echo "             ${split_result[i]}"
+                echo "            ${split_result[i]}"
             done
         fi
     fi
