@@ -64,7 +64,7 @@ public:
         if (!m_setter)
             return;
         MarkedValueList arguments(interpreter().heap());
-        arguments.values().append(setter_value);
+        arguments.append(setter_value);
         interpreter().call(*m_setter, this_value, move(arguments));
     }
 

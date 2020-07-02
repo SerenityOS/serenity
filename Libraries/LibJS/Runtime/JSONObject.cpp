@@ -151,8 +151,8 @@ String JSONObject::serialize_json_property(Interpreter& interpreter, StringifySt
 
     if (state.replacer_function) {
         MarkedValueList arguments(interpreter.heap());
-        arguments.values().append(js_string(interpreter, key.to_string()));
-        arguments.values().append(value);
+        arguments.append(js_string(interpreter, key.to_string()));
+        arguments.append(value);
         value = interpreter.call(*state.replacer_function, holder, move(arguments));
         if (interpreter.exception())
             return {};
@@ -482,8 +482,8 @@ Value JSONObject::internalize_json_property(Interpreter& interpreter, Object* ho
         }
     }
     MarkedValueList arguments(interpreter.heap());
-    arguments.values().append(js_string(interpreter, name.to_string()));
-    arguments.values().append(value);
+    arguments.append(js_string(interpreter, name.to_string()));
+    arguments.append(value);
     return interpreter.call(reviver, Value(holder), move(arguments));
 }
 
