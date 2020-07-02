@@ -21,11 +21,13 @@ over `target`.
 * `ProcFS` (or `proc`): The process pseudo-filesystem (normally mounted at `/proc`).
 * `DevPtsFS` (or `devpts`): The pseudoterminal pseudo-filesystem (normally mounted at `/dev/pts`).
 * `TmpFS` (or `tmp`): A non-persistent filesystem that stores all its data in RAM. An instance of this filesystem is normally mounted at `/tmp`.
+* `Plan9FS` (or `9p`): A remote filesystem served over the 9P protocol.
 
-For Ext2FS, `source_fd` must refer to an open file descriptor to a file containing
-the filesystem image. This may be a device file or any other seekable file. All
-the other filesystems ignore the `source_fd` - you can even pass an invalid file
-descriptor such as -1.
+For Ext2FS, `source_fd` must refer to an open file descriptor to a file
+containing the filesystem image. This may be a device file or any other seekable
+file. For Plan9FS, `source_fd` must refer to a socket or a device connected to a
+9P server. All the other filesystems ignore the `source_fd` - you can even pass
+an invalid file descriptor such as -1.
 
 The following `flags` are supported:
 
@@ -80,8 +82,13 @@ launch the initial userspace process.
 
 * `EFAULT`: The `fs_type` or `target` are invalid strings.
 * `EPERM`: The current process does not have superuser privileges.
-* `ENODEV`: The `fs_type` is unrecognized, or the file descriptor to source is not found, or the source doesn't contain a valid filesystem image. Also, this error occurs if `fs_type` is valid, but the file descriptor from `source_fd` is not seekable.
-* `EBADF`: If the `source_fd` is not valid, and either `fs_type` specifies a file-backed filesystem (and not a pseudo filesystem), or `MS_BIND` is specified in flags.
+* `ENODEV`: The `fs_type` is unrecognized, or the file descriptor to source is
+  not found, or the source doesn't contain a valid filesystem image. Also, this
+  error occurs if `fs_type` is valid and required to be seekable, but the file
+  descriptor from `source_fd` is not seekable.
+* `EBADF`: If the `source_fd` is not valid, and either `fs_type` specifies a
+  file-backed filesystem (and not a pseudo filesystem), or `MS_BIND` is
+  specified in flags.
 
 All of the usual path resolution errors may also occur.
 
