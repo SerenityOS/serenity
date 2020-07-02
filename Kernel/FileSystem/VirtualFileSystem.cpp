@@ -119,7 +119,7 @@ KResult VFS::unmount(Inode& guest_inode)
                 return result;
             }
             dbg() << "VFS: found fs " << mount.guest_fs().fsid() << " at mount index " << i << "! Unmounting...";
-            m_mounts.unstable_remove(i);
+            m_mounts.unstable_take(i);
             return KSuccess;
         }
     }
