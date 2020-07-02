@@ -156,7 +156,7 @@ void SharedBuffer::disown(pid_t pid)
             dbg() << "Disowning shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid;
 #endif
             m_total_refs -= ref.count;
-            m_refs.unstable_remove(i);
+            m_refs.unstable_take(i);
 #ifdef SHARED_BUFFER_DEBUG
             dbg() << "Disowned shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid;
 #endif

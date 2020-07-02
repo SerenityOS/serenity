@@ -310,11 +310,11 @@ public:
         return value;
     }
 
-    void unstable_remove(size_t index)
+    T unstable_take(size_t index)
     {
         ASSERT(index < m_size);
         swap(at(index), at(m_size - 1));
-        take_last();
+        return take_last();
     }
 
     void remove(size_t index)
