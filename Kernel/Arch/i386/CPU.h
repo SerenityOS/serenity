@@ -639,6 +639,7 @@ class Processor {
     static Vector<Processor*>& processors();
 
 public:
+    void early_initialize(u32 cpu);
     void initialize(u32 cpu);
 
     Descriptor& get_gdt_entry(u16 selector);
