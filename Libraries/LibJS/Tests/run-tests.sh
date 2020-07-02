@@ -16,11 +16,19 @@ test_count=0
 
 GLOBIGNORE=test-common.js
 
-for f in *.js; do
+test_files=$(find . -type f -name "*.js" | cut -c 3- | sort)
+
+for f in $test_files; do
+    if [ "$f" = "test-common.js" ]; then
+        continue
+    fi
     (( ++test_count ))
 done
 
-for f in *.js; do
+for f in $test_files; do
+    if [ "$f" = "test-common.js" ]; then
+        continue
+    fi
     result="$("$js_program" "$@" -t "$f" 2>/dev/null)"
     if [ "$result" = "PASS" ]; then
         (( ++pass_count ))
