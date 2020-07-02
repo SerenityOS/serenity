@@ -43,6 +43,7 @@ set(KERNEL_SOURCES
     FileSystem/Inode.cpp
     FileSystem/InodeFile.cpp
     FileSystem/InodeWatcher.cpp
+    FileSystem/Plan9FileSystem.cpp
     FileSystem/ProcFS.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp

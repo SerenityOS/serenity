@@ -46,6 +46,7 @@
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
+#include <Kernel/FileSystem/Plan9FileSystem.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -4302,6 +4303,11 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
         dbg() << "mount: attempting to mount " << description->absolute_path() << " on " << target;
 
         fs = Ext2FS::create(*description);
+    } else if (fs_type == "9p" || fs_type == "Plan9FS") {
+        if (description.is_null())
+            return -EBADF;
+
+        fs = Plan9FS::create(*description);
     } else if (fs_type == "proc" || fs_type == "ProcFS") {
         fs = ProcFS::create();
     } else if (fs_type == "devpts" || fs_type == "DevPtsFS") {
