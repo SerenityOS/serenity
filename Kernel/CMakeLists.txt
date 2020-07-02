@@ -31,6 +31,7 @@ set(KERNEL_SOURCES
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     DoubleBuffer.cpp
+    FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
     FileSystem/DevPtsFS.cpp
     FileSystem/Ext2FileSystem.cpp
