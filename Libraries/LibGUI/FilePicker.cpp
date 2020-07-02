@@ -110,6 +110,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     location_textbox.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     location_textbox.set_preferred_size(0, 22);
     location_textbox.set_text(path);
+    location_textbox.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
 
     m_view = vertical_container.add<MultiView>();
     m_view->set_model(SortingProxyModel::create(*m_model));
