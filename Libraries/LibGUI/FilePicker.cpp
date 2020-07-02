@@ -93,7 +93,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
 
     auto& upper_container = vertical_container.add<Widget>();
     upper_container.set_layout<HorizontalBoxLayout>();
-    upper_container.layout()->set_spacing(4);
+    upper_container.layout()->set_spacing(2);
     upper_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     upper_container.set_preferred_size(0, 26);
 
@@ -108,7 +108,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
 
     auto& location_textbox = upper_container.add<TextBox>();
     location_textbox.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    location_textbox.set_preferred_size(0, 20);
+    location_textbox.set_preferred_size(0, 22);
     location_textbox.set_text(path);
 
     m_view = vertical_container.add<MultiView>();
