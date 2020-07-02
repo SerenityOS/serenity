@@ -822,7 +822,7 @@ Processor& Processor::by_id(u32 cpu)
     return *procs[cpu];
 }
 
-void Processor::initialize(u32 cpu)
+void Processor::early_initialize(u32 cpu)
 {
     m_self = this;
 
@@ -832,14 +832,28 @@ void Processor::initialize(u32 cpu)
     m_idle_thread = nullptr;
     m_current_thread = nullptr;
     m_mm_data = nullptr;
+    m_info = nullptr;
 
     gdt_init();
+    ASSERT(&current() == this); // sanity check
+}
+
+void Processor::initialize(u32 cpu)
+{
+    ASSERT(m_self == this);
+    ASSERT(&current() == this); // sanity check
+
+    m_cpu = cpu;
+    m_in_irq = 0;
+
+    m_idle_thread = nullptr;
+    m_current_thread = nullptr;
+    m_mm_data = nullptr;
+
     if (cpu == 0)
         idt_init();
     else
         flush_idt();
-
-    ASSERT(&current() == this); // sanity check
 
     if (cpu == 0) {
         ASSERT((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);

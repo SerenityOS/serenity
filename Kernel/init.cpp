@@ -89,6 +89,8 @@ static void setup_serial_debug();
 
 VirtualConsole* tty0;
 
+static Processor s_bsp_processor; // global but let's keep it "private"
+
 // SerenityOS Kernel C++ entry point :^)
 //
 // This is where C++ execution begins, after boot.S transfers control here.
@@ -103,15 +105,13 @@ extern "C" [[noreturn]] void init()
 {
     setup_serial_debug();
 
+    s_bsp_processor.early_initialize(0);
     cpu_setup(0);
 
     kmalloc_init();
     slab_alloc_init();
 
-    {
-        static Processor s_bsp_processor_info; // global but let's keep it "private"
-        s_bsp_processor_info.initialize(0);
-    }
+    s_bsp_processor.initialize(0);
 
     CommandLine::initialize(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline)));
     MemoryManager::initialize(0);
@@ -165,7 +165,10 @@ extern "C" [[noreturn]] void init()
 //
 extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
 {
+    processor_info->early_initialize(cpu);
+
     klog() << "CPU #" << cpu << " processor_info at " << VirtualAddress(FlatPtr(processor_info));
+
     cpu_setup(cpu);
     processor_info->initialize(cpu);
     MemoryManager::initialize(cpu);
