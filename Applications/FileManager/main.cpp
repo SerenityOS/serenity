@@ -622,6 +622,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     app_menu.add_action(copy_action);
     app_menu.add_action(paste_action);
     app_menu.add_action(delete_action);
+    app_menu.add_action(open_terminal_action);
     app_menu.add_separator();
     app_menu.add_action(properties_action);
     app_menu.add_separator();
@@ -657,6 +658,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(copy_action);
     main_toolbar.add_action(paste_action);
     main_toolbar.add_action(delete_action);
+    main_toolbar.add_action(open_terminal_action);
 
     main_toolbar.add_separator();
     main_toolbar.add_action(*view_as_icons_action);
