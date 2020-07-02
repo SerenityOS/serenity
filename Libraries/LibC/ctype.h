@@ -51,6 +51,7 @@ int iscntrl(int);
 int isdigit(int);
 int isxdigit(int);
 int isspace(int);
+int isblank(int);
 int ispunct(int);
 int isprint(int);
 int isgraph(int);
@@ -63,6 +64,7 @@ int isupper(int);
 #define isdigit(c) (_ctype_[(unsigned char)(c)] & (_N))
 #define isxdigit(c) (_ctype_[(unsigned char)(c)] & (_N | _X))
 #define isspace(c) (_ctype_[(unsigned char)(c)] & (_S))
+#define isblank(c) ((_ctype_[(unsigned char)(c)] & _B) || (c == '\t'))
 #define ispunct(c) (_ctype_[(unsigned char)(c)] & (_P))
 #define isprint(c) (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N | _B))
 #define isgraph(c) (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N))
