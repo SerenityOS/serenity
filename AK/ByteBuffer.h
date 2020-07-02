@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
