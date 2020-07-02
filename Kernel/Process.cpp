@@ -232,12 +232,14 @@ Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size
 
 bool Process::deallocate_region(Region& region)
 {
+    OwnPtr<Region> region_protector;
     ScopedSpinLock lock(m_lock);
+
     if (m_region_lookup_cache.region == &region)
         m_region_lookup_cache.region = nullptr;
     for (size_t i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
-            m_regions.unstable_take(i);
+            region_protector = m_regions.unstable_take(i);
             return true;
         }
     }
