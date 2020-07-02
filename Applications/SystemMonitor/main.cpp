@@ -214,7 +214,7 @@ int main(int argc, char** argv)
             auto pid_string = String::format("%d", pid);
             pid_t child;
             const char* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
-            if (posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ) < 0) {
+            if ((errno = posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ))) {
                 perror("posix_spawn");
             }
         }
