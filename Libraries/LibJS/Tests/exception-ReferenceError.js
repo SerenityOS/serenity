@@ -1,9 +1,3 @@
-load("test-common.js");
-
-try {
-    i < 3;
-} catch (e) {
-    assert(e.name === "ReferenceError");
-}
-
-console.log("PASS");
+test("unknown variable produces ReferenceError", () => {
+    expect(new Function("i < 3")).toThrow(ReferenceError);
+});

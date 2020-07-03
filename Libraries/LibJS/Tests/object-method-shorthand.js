@@ -1,29 +1,39 @@
-load("test-common.js");
-
-try {
+test("basic method shorthand", () => {
     const o = {
         foo: "bar",
-        getFoo() {
+        getFoo() { 
             return this.foo;
         },
-        12() {
-            return this.getFoo();
-        },
-        "hello friends"() {
-            return this.getFoo();
-        },
-        [4 + 10]() {
-            return this.getFoo();
+    };
+    expect(o.getFoo()).toBe("bar");
+});
+
+test("numeric literal method shorthand", () => {
+    const o = {
+        foo: "bar",
+        12() { 
+            return this.foo;
         },
     };
+    expect(o[12]()).toBe("bar");
+});
 
-    assert(o.foo === "bar");
-    assert(o.getFoo() === "bar");
-    assert(o[12]() === "bar");
-    assert(o["hello friends"]() === "bar");
-    assert(o[14]() === "bar");
+test("string literal method shorthand", () => {
+    const o = {
+        foo: "bar",
+        "hello friends"() { 
+            return this.foo;
+        },
+    };
+    expect(o["hello friends"]()).toBe("bar");
+});
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+test("computed property method shorthand", () => {
+    const o = {
+        foo: "bar",
+        [4 + 10]() { 
+            return this.foo;
+        },
+    };
+    expect(o[14]()).toBe("bar");
+});

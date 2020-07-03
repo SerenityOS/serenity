@@ -1,35 +1,38 @@
-load("test-common.js");
+const testObjSpread = obj => {
+    expect(obj).toEqual({
+        foo: 0,
+        bar: 1,
+        baz: 2,
+        qux: 3
+    });
+};
 
-function testObjSpread(obj) {
-    return obj.foo === 0 && 
-        obj.bar === 1 &&
-        obj.baz === 2 &&
-        obj.qux === 3;
-}
+const testObjStrSpread = obj => {
+    expect(obj).toEqual(["a", "b", "c", "d"]);
+};
 
-function testObjStrSpread(obj) {
-    return obj[0] === "a" && 
-        obj[1] === "b" && 
-        obj[2] === "c" &&
-        obj[3] === "d";
-}
-
-try {
+test("spread object literal inside object literal", () => {
     let obj = { 
         foo: 0, 
         ...{ bar: 1, baz: 2 }, 
         qux: 3,
     };
-    assert(testObjSpread(obj));
+    testObjSpread(obj);
+});
 
+test("spread object with assigned property inside object literal", () => {
     obj = { foo: 0, bar: 1, baz: 2 };
     obj.qux = 3;
-    assert(testObjSpread({ ...obj }));
+    testObjSpread({ ...obj });
+});
 
+test("spread object inside object literal", () => {
     let a = { bar: 1, baz: 2 };
     obj = { foo: 0, ...a, qux: 3 };
-    assert(testObjSpread(obj));
+    testObjSpread(obj);
+});
 
+test("complex nested object spreading", () => {
     obj = {
         ...{},
         ...{
@@ -37,25 +40,36 @@ try {
         },
         qux: 3,
     };
-    assert(testObjSpread(obj));
+    testObjSpread(obj);
+});
 
+test("spread string in object literal", () => {
     obj = { ..."abcd" };
-    assert(testObjStrSpread(obj));
-    
-    obj = { ...["a", "b", "c", "d"] };
-    assert(testObjStrSpread(obj));
-    
-    obj = { ...String("abcd") };
-    assert(testObjStrSpread(obj));
+    testObjStrSpread(obj);
+});
 
+test("spread array in object literal", () => {
+    obj = { ...["a", "b", "c", "d"] };
+    testObjStrSpread(obj);
+});
+
+test("spread string object in object literal", () => {
+    obj = { ...String("abcd") };
+    testObjStrSpread(obj);
+});
+
+test("spread object with non-enumerable property", () => {
     a = { foo: 0 };
-    Object.defineProperty(a, 'bar', {
+    Object.defineProperty(a, "bar", {
         value: 1,
         enumerable: false,
     });
     obj = { ...a };
-    assert(obj.foo === 0 && obj.bar === undefined);
+    expect(obj.foo).toBe(0);
+    expect(obj).not.toHaveProperty("bar");
+});
 
+test("spreading non-spreadable values", () => {
     let empty = ({
         ...undefined,
         ...null,
@@ -64,9 +78,5 @@ try {
         ...function(){},
         ...Date,
     });
-    assert(Object.getOwnPropertyNames(empty).length === 0);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Object.getOwnPropertyNames(empty)).toHaveLength(0);
+});

@@ -1,22 +1,24 @@
-load("test-common.js")
-
-try {
+test("normal methods named get and set", () => {
     let o = {
         get() { return 5; },
         set() { return 10; },
     };
-    assert(o.get() === 5);
-    assert(o.set() === 10);
+    expect(o.get()).toBe(5);
+    expect(o.set()).toBe(10);
+});
 
-    o = {
+test("basic get and set", () => {
+    let o = {
         get x() { return 5; },
         set x(_) { },
     };
-    assert(o.x === 5);
+    expect(o.x).toBe(5);
     o.x = 10;
-    assert(o.x === 5);
+    expect(o.x).toBe(5);
+});
 
-    o = {
+test("get and set with 'this'", () => {
+    let o = {
         get x() {
             return this._x + 1;
         },
@@ -25,26 +27,24 @@ try {
         },
     };
 
-    assert(isNaN(o.x));
+    expect(o.x).toBeNaN();
     o.x = 10;
-    assert(o.x === 12);
+    expect(o.x).toBe(12);
     o.x = 20;
-    assert(o.x === 22);
+    expect(o.x).toBe(22);
+});
 
-    o = {
+test("multiple getters", () => {
+    let o = {
         get x() { return 5; },
         get x() { return 10; },
     };
+    expect(o.x).toBe(10);
+});
 
-    assert(o.x === 10);
-
+test("setter return value", () => {
     o = {
         set x(value) { return 10; },
     };
-
-    assert((o.x = 20) === 20);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(o.x = 20).toBe(20);
+});

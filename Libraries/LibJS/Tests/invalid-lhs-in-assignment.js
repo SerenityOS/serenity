@@ -1,23 +1,13 @@
-load("test-common.js");
 
-try {
-    function foo() { }
-
-    assertThrowsError(() => {
+test("assignment to function call", () => {
+    expect(() => {
+        function foo() {};
         foo() = "foo";
-    }, {
-        error: ReferenceError,
-        message: "Invalid left-hand side in assignment"
-    });
+    }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
+});
 
-    assertThrowsError(() => {
+test("assignment to inline function call", () => {
+    expect(() => {
         (function () { })() = "foo";
-    }, {
-        error: ReferenceError,
-        message: "Invalid left-hand side in assignment"
-    });
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
+});

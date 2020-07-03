@@ -1,30 +1,26 @@
-load("test-common.js");
+test("Issue #1829, if-else without braces or semicolons", () => {
+    const source = 
+`if (1)
+    return 1;
+else
+    return 0;
 
-/**
- * This file tests automatic semicolon insertion rules.
- * If this file produces syntax errors, something is wrong.
- */
+if (1)
+    return 1
+else
+    return 0
 
-function bar() {
-    // https://github.com/SerenityOS/serenity/issues/1829
-    if (1)
-        return 1;
-    else
-        return 0;
+if (1)
+    return 1
+else
+    return 0;`;
 
-    if (1)
-        return 1
-    else
-        return 0
+    expect(source).toEval();
+});
 
-    if (1)
-        return 1
-    else
-        return 0;
-    
-}
-
-function foo() {
+test("break/continue, variable declaration, do-while, and return asi", () => {
+    const source = 
+`function foo() {
     label:
     for (var i = 0; i < 4; i++) {
         break // semicolon inserted here
@@ -43,30 +39,30 @@ function foo() {
     1;
 var curly/* semicolon inserted here */}
 
-function baz() {
-    let counter = 0;
-    let outer;
+return foo();`;
 
-    outer:
-    for (let i = 0; i < 5; ++i) {
-        for (let j = 0; j < 5; ++j) {
-            continue // semicolon inserted here
-            outer // semicolon inserted here
-        }
-        counter++;
+    expect(source).toEvalTo(undefined);
+});
+
+test("more break and continue asi", () => {
+    const source =
+`let counter = 0;
+let outer;
+
+outer:
+for (let i = 0; i < 5; ++i) {
+    for (let j = 0; j < 5; ++j) {
+        continue // semicolon inserted here
+        outer // semicolon inserted here
     }
-
-    return counter;
+    counter++;
 }
 
-try {
-    assert(foo() === undefined);
-    assert(baz() === 5);
+return counter;`;
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(source).toEvalTo(5);
+});
 
-// This vardecl must appear exactly at the end of the file (no newline or whitespace after it)
-var eof
+test("eof with no semicolon", () => {
+    expect("var eof").toEval();
+});
