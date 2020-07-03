@@ -16,25 +16,26 @@ test_count=0
 
 GLOBIGNORE=test-common.js
 
-test_files=$(find . -type f -name "*.js" | cut -c 3- | sort)
+# FIXME: Support "find -name" in Serenity to remove the file name checks below
+test_files=$(find . -type f | cut -b 3- | sort)
 
 for f in $test_files; do
-    if [ "$f" = "test-common.js" ]; then
+    if [ "$f" = "test-common.js" ] || [ "$f" = "run-tests.sh" ]; then
         continue
     fi
     (( ++test_count ))
 done
 
 for f in $test_files; do
-    if [ "$f" = "test-common.js" ]; then
+    if [ "$f" = "test-common.js" ] || [ "$f" = "run-tests.sh" ]; then
         continue
     fi
     result="$("$js_program" "$@" -t "$f" 2>/dev/null)"
     if [ "$result" = "PASS" ]; then
         (( ++pass_count ))
-        echo -ne "( \033[32;1mPass\033[0m ) "
+        echo -ne "  ✅  "
     else
-        echo -ne "( \033[31;1mFail\033[0m ) "
+        echo -ne "  ❌  "
         (( ++fail_count ))
     fi
     echo -ne "\033]9;${count};${test_count}\033\\"
@@ -42,15 +43,14 @@ for f in $test_files; do
 
     if [ "$result" != "PASS" ]; then
         if [ -z "$result" ]; then
-            echo -e "    \033[31;1mNo output. Did you forget 'console.log(\"PASS\");'?\033[0m"
+            echo -e "        \033[31;1mNo output. Did you forget 'console.log(\"PASS\");'?\033[0m"
         else
             readarray -t split_result <<< "$result";
 
-            echo -ne "    \033[31;1mOutput:\033[0m "
-            echo "${split_result[0]}";
+            echo -e "        \033[31;1mOutput:\033[0m "
 
-            for (( i = 1; i < ${#split_result[@]}; i++ )); do
-                echo "            ${split_result[i]}"
+            for (( i = 0; i < ${#split_result[@]}; i++ )); do
+                echo "          ${split_result[i]}"
             done
         fi
     fi
