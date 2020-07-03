@@ -1,51 +1,49 @@
-load("test-common.js");
-
-try {
+test("new-expression parsing", () => {
     function Foo() { this.x = 1; }
-
+    
     let foo = new Foo();
-    assert(foo.x === 1);
-
+    expect(foo.x).toBe(1);
+    
     foo = new Foo
-    assert(foo.x === 1);
-
+    expect(foo.x).toBe(1);
+    
     foo = new
     Foo
     ()
-    assert(foo.x === 1);
-
+    expect(foo.x).toBe(1);
+    
     foo = new Foo + 2
-    assert(foo === "[object Object]2");
+    expect(foo).toBe("[object Object]2");
+});
 
+test("new-expressions with object keys", () => {
     let a = {
         b: function() {
             this.x = 2;
         },
     };
-
+    
     foo = new a.b();
-    assert(foo.x === 2);
-
+    expect(foo.x).toBe(2);
+    
     foo = new a.b;
-    assert(foo.x === 2);
-
+    expect(foo.x).toBe(2);
+    
     foo = new
     a.b();
-    assert(foo.x === 2);
+    expect(foo.x).toBe(2);
+});
 
+test("new-expressions with function calls", () => {
     function funcGetter() {
         return function(a, b) {
             this.x = a + b;
         };
     };
-
+    
     foo = new funcGetter()(1, 5);
-    assert(foo === undefined);
-
+    expect(foo).toBeUndefined();
+    
     foo = new (funcGetter())(1, 5);
-    assert(foo.x === 6);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(foo.x).toBe(6);
+});
