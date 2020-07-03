@@ -40,6 +40,8 @@
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
 
+//#define INTERPRETER_DEBUG
+
 namespace JS {
 
 Interpreter::Interpreter()
@@ -299,7 +301,7 @@ Value Interpreter::construct(Function& function, Function& new_target, Optional<
 
 Value Interpreter::throw_exception(Exception* exception)
 {
-#ifdef __serenity__
+#ifdef INTERPRETER_DEBUG
     if (exception->value().is_object() && exception->value().as_object().is_error()) {
         auto& error = static_cast<Error&>(exception->value().as_object());
         dbg() << "Throwing JavaScript Error: " << error.name() << ", " << error.message();
