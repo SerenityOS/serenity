@@ -98,13 +98,13 @@ static TextStyle style_for_token_type(Gfx::Palette palette, CppToken::Type type)
     case CppToken::Type::Ellipsis:
     case CppToken::Type::Period:
     case CppToken::Type::Semicolon:
-        return {palette.syntax_punctuation()};
     case CppToken::Type::LeftBracket:
     case CppToken::Type::LeftCurly:
     case CppToken::Type::LeftParen:
     case CppToken::Type::RightBracket:
     case CppToken::Type::RightCurly:
     case CppToken::Type::RightParen:
+        return {palette.syntax_punctuation()};
     case CppToken::Type::Unknown:
     case CppToken::Type::Whitespace:
         return { palette.base_text() };
