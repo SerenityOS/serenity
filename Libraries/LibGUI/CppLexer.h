@@ -44,7 +44,6 @@ namespace GUI {
     __TOKEN(LeftBracket)           \
     __TOKEN(RightBracket)          \
     __TOKEN(Comma)                 \
-    __TOKEN(Asterisk)              \
     __TOKEN(Semicolon)             \
     __TOKEN(DoubleQuotedString)    \
     __TOKEN(SingleQuotedString)    \
@@ -54,6 +53,45 @@ namespace GUI {
     __TOKEN(Float)                 \
     __TOKEN(Keyword)               \
     __TOKEN(KnownType)             \
+    __TOKEN(Ellipsis)              \
+    __TOKEN(Period)                \
+    __TOKEN(Plus)                  \
+    __TOKEN(PlusEquals)            \
+    __TOKEN(PlusPlus)              \
+    __TOKEN(Arrow)                 \
+    __TOKEN(Minus)                 \
+    __TOKEN(MinusEquals)           \
+    __TOKEN(MinusMinus)            \
+    __TOKEN(Equals)                \
+    __TOKEN(EqualsEquals)          \
+    __TOKEN(Ampersand)             \
+    __TOKEN(AmpersandEquals)       \
+    __TOKEN(DoubleAmpersand)       \
+    __TOKEN(Tilde)                 \
+    __TOKEN(Pipe)                  \
+    __TOKEN(DoublePipe)            \
+    __TOKEN(PipeEquals)            \
+    __TOKEN(Caret)                 \
+    __TOKEN(CaretEquals)           \
+    __TOKEN(Percent)               \
+    __TOKEN(PercentEquals)         \
+    __TOKEN(Asterisk)              \
+    __TOKEN(AsteriskEquals)        \
+    __TOKEN(Slash)                 \
+    __TOKEN(SlashEquals)           \
+    __TOKEN(ExclamationMark)       \
+    __TOKEN(ExclamationMarkEquals) \
+    __TOKEN(LessThan)              \
+    __TOKEN(LessThanEquals)        \
+    __TOKEN(ShiftLeft)             \
+    __TOKEN(ShiftLeftEquals)       \
+    __TOKEN(GreaterThan)           \
+    __TOKEN(GreaterThanEquals)     \
+    __TOKEN(ShiftRight)            \
+    __TOKEN(ShiftRightEquals)      \
+    __TOKEN(QuestionMark)          \
+    __TOKEN(Colon)                 \
+    __TOKEN(ColonColon)            \
     __TOKEN(Identifier)
 
 struct CppPosition {
