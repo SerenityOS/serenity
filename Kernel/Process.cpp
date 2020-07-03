@@ -1716,6 +1716,11 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
         dbg() << "while " << nwritten << " < " << size;
 #endif
         if (!description.can_write()) {
+            if (!description.is_blocking()) {
+                // Short write: We can no longer write to this non-blocking description.
+                ASSERT(nwritten > 0);
+                return nwritten;
+            }
 #ifdef IO_DEBUG
             dbg() << "block write on " << description.absolute_path();
 #endif
