@@ -98,8 +98,7 @@ void TextEditor::create_actions()
             },
             this);
     }
-    m_select_all_action = Action::create(
-        "Select all", { Mod_Ctrl, Key_A }, Gfx::Bitmap::load_from_file("/res/icons/16x16/select-all.png"), [this](auto&) { select_all(); }, this);
+    m_select_all_action = CommonActions::make_select_all_action([this](auto&) { select_all(); }, this);
 }
 
 void TextEditor::set_text(const StringView& text)
