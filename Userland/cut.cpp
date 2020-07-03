@@ -164,12 +164,13 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
 
 static void cut_file(const String& file, const Vector<Index>& byte_vector)
 {
-    FILE* fp = nullptr;
-    fp = fopen(file.characters(), "r");
-
-    if (!fp) {
-        fprintf(stderr, "cut: Could not open file '%s'\n", file.characters());
-        return;
+    FILE* fp = stdin;
+    if (!file.is_null()) {
+        fp = fopen(file.characters(), "r");
+        if (!fp) {
+            fprintf(stderr, "cut: Could not open file '%s'\n", file.characters());
+            return;
+        }
     }
 
     char* line = nullptr;
@@ -195,7 +196,9 @@ static void cut_file(const String& file, const Vector<Index>& byte_vector)
 
     if (line)
         free(line);
-    fclose(fp);
+
+    if (!file.is_null())
+        fclose(fp);
 }
 
 int main(int argc, char** argv)
@@ -227,12 +230,16 @@ int main(int argc, char** argv)
         }
     }
 
-    if (files.is_empty() || byte_list == "")
+    if (byte_list == "")
         print_usage_and_exit(1);
 
     Vector<Index> byte_vector;
     expand_list(tokens, byte_vector);
     quick_sort(byte_vector, [](auto& a, auto& b) { return a.m_from < b.m_from; });
+
+    if (files.is_empty())
+        files.append(String());
+
     /* Process each file */
     for (auto& file : files)
         cut_file(file, byte_vector);
