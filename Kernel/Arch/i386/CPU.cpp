@@ -960,6 +960,45 @@ const DescriptorTablePointer& Processor::get_gdtr()
     return m_gdtr;
 }
 
+bool Processor::get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip)
+{
+    ScopedCritical critical;
+    auto& proc = Processor::current();
+    if (&thread == proc.current_thread()) {
+        ASSERT(thread.state() == Thread::Running);
+        asm volatile("movl %%ebp, %%eax"
+                     : "=g"(frame_ptr));
+    } else {
+        // Since the thread may be running on another processor, there
+        // is a chance a context switch may happen while we're trying
+        // to get it. It also won't be entirely accurate and merely
+        // reflect the status at the last context switch.
+        ScopedSpinLock lock(g_scheduler_lock);
+        if (thread.state() == Thread::Running) {
+            ASSERT(thread.cpu() != proc.id());
+            // TODO: If this is the case, the thread is currently running
+            // on another processor. We can't trust the kernel stack as
+            // it may be changing at any time. We need to probably send
+            // an ICI to that processor, have it walk the stack and wait
+            // until it returns the data back to us
+            dbg() << "CPU[" << proc.id() << "] getting stack for "
+                << thread << " on other CPU# " << thread.cpu() << " not yet implemented!";
+            frame_ptr = eip = 0; // TODO
+            return false;
+        } else {
+            // We need to retrieve ebp from what was last pushed to the kernel
+            // stack. Before switching out of that thread, it switch_context
+            // pushed the callee-saved registers, and the last of them happens
+            // to be ebp.
+            auto& tss = thread.tss();
+            u32* stack_top = reinterpret_cast<u32*>(tss.esp);
+            frame_ptr = stack_top[0];
+            eip = tss.eip;
+        }
+    }
+    return true;
+}
+
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 {
     ASSERT(from_thread == to_thread || from_thread->state() != Thread::Running);
