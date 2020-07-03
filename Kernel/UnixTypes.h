@@ -450,11 +450,11 @@ struct pollfd {
 
 #define SO_RCVTIMEO 1
 #define SO_SNDTIMEO 2
-#define SO_KEEPALIVE 3
 #define SO_ERROR 4
 #define SO_PEERCRED 5
 #define SO_REUSEADDR 6
 #define SO_BINDTODEVICE 7
+#define SO_KEEPALIVE 9
 
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1
