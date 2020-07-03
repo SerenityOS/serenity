@@ -46,6 +46,7 @@
 #include <LibWeb/Frame/EventHandler.h>
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Layout/LayoutBreak.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -141,6 +142,9 @@ String PageView::selected_text() const
     while (layout_node && layout_node != selection.end().layout_node) {
         if (is<LayoutText>(*layout_node))
             builder.append(to<LayoutText>(*layout_node).text_for_rendering());
+        else if (is<LayoutBreak>(*layout_node) || is<LayoutBlock>(*layout_node))
+            builder.append('\n');
+
         layout_node = layout_node->next_in_pre_order();
     }
 
