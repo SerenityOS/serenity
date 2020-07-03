@@ -110,7 +110,6 @@ enum ProcFileType {
     FI_PID_vm,
     FI_PID_vmobjects,
     FI_PID_stack,
-    FI_PID_regs,
     FI_PID_fds,
     FI_PID_unveil,
     FI_PID_exe,  // symlink
@@ -619,32 +618,6 @@ Optional<KBuffer> procfs$pid_stack(InodeIdentifier identifier)
         return {};
     auto& process = handle->process();
     return process.backtrace(*handle);
-}
-
-Optional<KBuffer> procfs$pid_regs(InodeIdentifier identifier)
-{
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
-        return {};
-    auto& process = handle->process();
-    KBufferBuilder builder;
-    process.for_each_thread([&](Thread& thread) {
-        builder.appendf("Thread %d:\n", thread.tid());
-        auto& tss = thread.tss();
-        builder.appendf("eax: %x\n", tss.eax);
-        builder.appendf("ebx: %x\n", tss.ebx);
-        builder.appendf("ecx: %x\n", tss.ecx);
-        builder.appendf("edx: %x\n", tss.edx);
-        builder.appendf("esi: %x\n", tss.esi);
-        builder.appendf("edi: %x\n", tss.edi);
-        builder.appendf("ebp: %x\n", tss.ebp);
-        builder.appendf("cr3: %x\n", tss.cr3);
-        builder.appendf("flg: %x\n", tss.eflags);
-        builder.appendf("sp:  %w:%x\n", tss.ss, tss.esp);
-        builder.appendf("pc:  %w:%x\n", tss.cs, tss.eip);
-        return IterationDecision::Continue;
-    });
-    return builder.build();
 }
 
 Optional<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
@@ -1610,7 +1583,6 @@ ProcFS::ProcFS()
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, false, procfs$pid_vm };
     m_entries[FI_PID_vmobjects] = { "vmobjects", FI_PID_vmobjects, true, procfs$pid_vmobjects };
     m_entries[FI_PID_stack] = { "stack", FI_PID_stack, false, procfs$pid_stack };
-    m_entries[FI_PID_regs] = { "regs", FI_PID_regs, true, procfs$pid_regs };
     m_entries[FI_PID_fds] = { "fds", FI_PID_fds, false, procfs$pid_fds };
     m_entries[FI_PID_exe] = { "exe", FI_PID_exe, false, procfs$pid_exe };
     m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, false, procfs$pid_cwd };
