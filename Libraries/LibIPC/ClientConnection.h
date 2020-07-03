@@ -112,25 +112,27 @@ public:
 
         auto buffer = message.encode();
 
-        int nwritten = write(m_socket->fd(), buffer.data(), buffer.size());
-        if (nwritten < 0) {
-            switch (errno) {
-            case EPIPE:
-                dbg() << *this << "::post_message: Disconnected from peer";
-                shutdown();
-                return;
-            case EAGAIN:
-                dbg() << *this << "::post_message: Client buffer overflowed.";
-                did_misbehave();
-                return;
-            default:
-                perror("Connection::post_message write");
-                shutdown();
-                return;
+        auto bytes_remaining = buffer.size();
+        while (bytes_remaining) {
+            auto nwritten = write(m_socket->fd(), buffer.data(), buffer.size());
+            if (nwritten < 0) {
+                switch (errno) {
+                case EPIPE:
+                    dbg() << *this << "::post_message: Disconnected from peer";
+                    shutdown();
+                    return;
+                case EAGAIN:
+                    dbg() << *this << "::post_message: Client buffer overflowed.";
+                    did_misbehave();
+                    return;
+                default:
+                    perror("Connection::post_message write");
+                    shutdown();
+                    return;
+                }
             }
+            bytes_remaining -= nwritten;
         }
-
-        ASSERT(static_cast<size_t>(nwritten) == buffer.size());
 
         m_responsiveness_timer->start();
     }
