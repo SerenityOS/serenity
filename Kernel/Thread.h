@@ -104,7 +104,7 @@ public:
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
 
-    String backtrace(ProcessInspectionHandle&) const;
+    String backtrace(ProcessInspectionHandle&);
     Vector<FlatPtr> raw_backtrace(FlatPtr ebp, FlatPtr eip) const;
 
     const String& name() const { return m_name; }
@@ -283,7 +283,6 @@ public:
     u32 affinity() const { return m_cpu_affinity; }
     void set_affinity(u32 affinity) { m_cpu_affinity = affinity; }
 
-    u32 frame_ptr() const { return m_tss.ebp; }
     u32 stack_ptr() const { return m_tss.esp; }
 
     RegisterState& get_register_dump_from_stack();
@@ -465,7 +464,7 @@ private:
     friend class WaitQueue;
     bool unlock_process_if_locked(u32& prev_crit);
     void relock_process(bool did_unlock, u32 prev_crit);
-    String backtrace_impl() const;
+    String backtrace_impl();
     void reset_fpu_state();
 
     Process& m_process;

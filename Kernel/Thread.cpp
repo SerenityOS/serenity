@@ -739,7 +739,7 @@ void Thread::notify_finalizer()
     g_finalizer_wait_queue->wake_all();
 }
 
-String Thread::backtrace(ProcessInspectionHandle&) const
+String Thread::backtrace(ProcessInspectionHandle&)
 {
     return backtrace_impl();
 }
@@ -775,37 +775,37 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
     return true;
 }
 
-String Thread::backtrace_impl() const
+String Thread::backtrace_impl()
 {
     Vector<RecognizedSymbol, 128> recognized_symbols;
-
-    u32 start_frame;
-    if (Thread::current() == this) {
-        asm volatile("movl %%ebp, %%eax"
-                     : "=a"(start_frame));
-    } else {
-        start_frame = frame_ptr();
-        recognized_symbols.append({ tss().eip, symbolicate_kernel_address(tss().eip) });
-    }
 
     auto& process = const_cast<Process&>(this->process());
     auto elf_bundle = process.elf_bundle();
     ProcessPagingScope paging_scope(process);
 
-    FlatPtr stack_ptr = start_frame;
-    for (;;) {
-        if (!process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2))
-            break;
-        FlatPtr retaddr;
-
-        if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
-            copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]);
-            recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
-            copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr);
-        } else {
-            memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr));
-            recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
-            memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr));
+    // To prevent a context switch involving this thread, which may happen
+    // on another processor, we need to acquire the scheduler lock while
+    // walking the stack
+    {
+        ScopedSpinLock lock(g_scheduler_lock);
+        FlatPtr stack_ptr, eip;
+        if (Processor::get_context_frame_ptr(*this, stack_ptr, eip)) {
+            recognized_symbols.append({ eip, symbolicate_kernel_address(eip) });
+            for (;;) {
+                if (!process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2))
+                    break;
+                FlatPtr retaddr;
+ 
+                if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
+                    copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]);
+                    recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
+                    copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr);
+                } else {
+                    memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr));
+                    recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
+                    memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr));
+                }
+            }
         }
     }
 
