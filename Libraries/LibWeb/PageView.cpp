@@ -28,7 +28,9 @@
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
@@ -45,6 +47,7 @@
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/Painting/PaintContext.h>
@@ -60,10 +63,56 @@ PageView::PageView()
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_background_role(ColorRole::Base);
+
+    m_copy_action = GUI::CommonActions::make_copy_action([this](auto&) {
+        GUI::Clipboard::the().set_data(selected_text(), "text/plain");
+    });
 }
 
 PageView::~PageView()
 {
+}
+
+String PageView::selected_text() const
+{
+    StringBuilder builder;
+    auto* layout_root = this->layout_root();
+    if (!layout_root)
+        return {};
+    if (!layout_root->selection().is_valid())
+        return {};
+
+    auto selection = layout_root->selection().normalized();
+
+    if (selection.start().layout_node == selection.end().layout_node) {
+        if (!is<LayoutText>(*selection.start().layout_node))
+            return "";
+        return to<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node + 1);
+    }
+
+    // Start node
+    auto layout_node = selection.start().layout_node;
+    if (is<LayoutText>(*layout_node)) {
+        auto& text = to<LayoutText>(*layout_node).text_for_rendering();
+        builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
+    }
+
+    // Middle nodes
+    layout_node = layout_node->next_in_pre_order();
+    while (layout_node && layout_node != selection.end().layout_node) {
+        if (is<LayoutText>(*layout_node))
+            builder.append(to<LayoutText>(*layout_node).text_for_rendering());
+        layout_node = layout_node->next_in_pre_order();
+    }
+
+    // End node
+    ASSERT(layout_node == selection.end().layout_node);
+    if (is<LayoutText>(*layout_node)) {
+        auto& text = to<LayoutText>(*layout_node).text_for_rendering();
+        builder.append(text.substring(0, selection.end().index_in_node + 1));
+    }
+
+    return builder.to_string();
 }
 
 void PageView::page_did_layout()

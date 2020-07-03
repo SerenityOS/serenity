@@ -73,6 +73,9 @@ public:
 
     virtual bool accepts_focus() const override { return true; }
 
+    GUI::Action& copy_action() { return *m_copy_action; }
+    String selected_text() const;
+
 private:
     PageView();
 
@@ -114,6 +117,8 @@ private:
     bool m_should_show_line_box_borders { false };
 
     NonnullOwnPtr<Page> m_page;
+
+    RefPtr<GUI::Action> m_copy_action;
 };
 
 }
