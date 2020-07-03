@@ -114,6 +114,11 @@ NonnullRefPtr<Action> make_reload_action(Function<void(Action&)> callback, Core:
     return Action::create("Reload", { Mod_Ctrl, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), move(callback), parent);
 }
 
+NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return Action::create("Select all", { Mod_Ctrl, Key_A }, Gfx::Bitmap::load_from_file("/res/icons/16x16/select-all.png"), move(callback), parent);
+}
+
 }
 
 Action::Action(const StringView& text, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
