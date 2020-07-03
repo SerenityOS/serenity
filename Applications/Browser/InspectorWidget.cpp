@@ -40,7 +40,7 @@ namespace Browser {
 
 void InspectorWidget::set_inspected_node(Web::Node* node)
 {
-    node->document().set_inspected_node(node);
+    m_document->set_inspected_node(node);
     if (node && node->is_element()) {
         auto& element = Web::to<Web::Element>(*node);
         if (element.resolved_style()) {
