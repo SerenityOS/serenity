@@ -37,6 +37,7 @@ class ProcessorInfo
     Processor& m_processor;
     String m_cpuid;
     String m_brandstr;
+    String m_features;
     u32 m_display_model;
     u32 m_display_family;
     u32 m_stepping;
@@ -47,6 +48,7 @@ public:
     
     const String& cpuid() const { return m_cpuid; }
     const String& brandstr() const { return m_brandstr; }
+    const String& features() const { return m_features; }
     u32 display_model() const { return m_display_model; }
     u32 display_family() const { return m_display_family; }
     u32 stepping() const { return m_stepping; }

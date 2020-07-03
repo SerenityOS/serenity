@@ -80,7 +80,7 @@ void MemoryManager::protect_kernel_image()
         pte.set_writable(false);
     }
 
-    if (g_cpu_supports_nx) {
+    if (Processor::current().has_feature(CPUFeature::NX)) {
         // Disable execution of the kernel data and bss segments.
         for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_bss; i += PAGE_SIZE) {
             auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));

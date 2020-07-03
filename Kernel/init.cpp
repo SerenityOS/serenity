@@ -106,7 +106,6 @@ extern "C" [[noreturn]] void init()
     setup_serial_debug();
 
     s_bsp_processor.early_initialize(0);
-    cpu_setup(0);
 
     kmalloc_init();
     slab_alloc_init();
@@ -169,7 +168,6 @@ extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
 
     klog() << "CPU #" << cpu << " processor_info at " << VirtualAddress(FlatPtr(processor_info));
 
-    cpu_setup(cpu);
     processor_info->initialize(cpu);
     MemoryManager::initialize(cpu);
 

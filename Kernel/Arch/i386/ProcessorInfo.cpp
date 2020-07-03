@@ -88,6 +88,9 @@ ProcessorInfo::ProcessorInfo(Processor& processor):
         copy_brand_string_part_to_buffer(2);
         m_brandstr = buffer;
     }
+
+    // Cache the CPU feature string
+    m_features = m_processor.features_string();
 }
 
 }
