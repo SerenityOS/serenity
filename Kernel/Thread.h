@@ -463,8 +463,8 @@ private:
 private:
     friend class SchedulerData;
     friend class WaitQueue;
-    bool unlock_process_if_locked();
-    void relock_process();
+    bool unlock_process_if_locked(u32& prev_crit);
+    void relock_process(bool did_unlock, u32 prev_crit);
     String backtrace_impl() const;
     void reset_fpu_state();
 

@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/TemporaryChange.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Thread.h>
@@ -67,6 +68,13 @@ void Lock::lock(Mode mode)
             }
             timeval* timeout = nullptr;
             current_thread->wait_on(m_queue, timeout, &m_lock, m_holder, m_name);
+        } else if (Processor::current().in_critical()) {
+            // If we're in a critical section and trying to lock, no context
+            // switch will happen, so yield.
+            // The assumption is that if we call this from a critical section
+            // that we DO want to temporarily leave it
+            TemporaryChange change(Processor::current().in_critical(), 0u);
+            Scheduler::yield();
         }
     }
 }
@@ -95,6 +103,9 @@ void Lock::unlock()
             return;
         }
         // I don't know *who* is using "m_lock", so just yield.
+        // The assumption is that if we call this from a critical section
+        // that we DO want to temporarily leave it
+        TemporaryChange change(Processor::current().in_critical(), 0u);
         Scheduler::yield();
     }
 }
@@ -102,7 +113,7 @@ void Lock::unlock()
 bool Lock::force_unlock_if_locked()
 {
     ASSERT(m_mode != Mode::Shared);
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     if (m_holder != Thread::current())
         return false;
     ASSERT(m_times_locked == 1);
@@ -116,7 +127,7 @@ bool Lock::force_unlock_if_locked()
 void Lock::clear_waiters()
 {
     ASSERT(m_mode != Mode::Shared);
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     m_queue.clear();
 }
 
