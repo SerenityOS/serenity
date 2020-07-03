@@ -27,6 +27,7 @@
 #include "CppLexer.h"
 #include <AK/HashTable.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <ctype.h>
 
 namespace GUI {
@@ -49,8 +50,6 @@ char CppLexer::peek(size_t offset) const
 char CppLexer::consume()
 {
     ASSERT(m_index < m_input.length());
-    m_previous_position = m_position;
-
     while ((m_index) < m_input.length() && m_input[m_index] == '\\'
            && (m_index + 1) < m_input.length() && m_input[m_index + 1] == '\n') {
         m_index += 2;
@@ -59,6 +58,7 @@ char CppLexer::consume()
     }
 
     ASSERT(m_index <= m_input.length());
+    m_previous_position = m_position;
     if (m_index == m_input.length()) {
         return 0;
     }
@@ -81,7 +81,7 @@ static bool is_valid_nonfirst_character_of_identifier(char ch)
     return is_valid_first_character_of_identifier(ch) || isdigit(ch);
 }
 
-static bool is_keyword(const StringView& string)
+static bool is_keyword(const StringBuilder& string)
 {
     static HashTable<String> keywords;
     if (keywords.is_empty()) {
@@ -160,10 +160,10 @@ static bool is_keyword(const StringView& string)
         keywords.set("xor");
         keywords.set("xor_eq");
     }
-    return keywords.contains(string);
+    return keywords.contains(string.build());
 }
 
-static bool is_known_type(const StringView& string)
+static bool is_known_type(const StringBuilder& string)
 {
     static HashTable<String> types;
     if (types.is_empty()) {
@@ -225,7 +225,7 @@ static bool is_known_type(const StringView& string)
         types.set("void");
         types.set("wchar_t");
     }
-    return types.contains(string);
+    return types.contains(string.build());
 }
 
 Vector<CppToken> CppLexer::lex()
@@ -562,12 +562,12 @@ Vector<CppToken> CppLexer::lex()
         }
         if (is_valid_first_character_of_identifier(ch)) {
             begin_token();
+            auto token = StringBuilder();
             while (peek() && is_valid_nonfirst_character_of_identifier(peek()))
-                consume();
-            auto token_view = StringView(m_input.characters_without_null_termination() + token_start_index, m_index - token_start_index);
-            if (is_keyword(token_view))
+                token.append(consume());
+            if (is_keyword(token))
                 commit_token(CppToken::Type::Keyword);
-            else if (is_known_type(token_view))
+            else if (is_known_type(token))
                 commit_token(CppToken::Type::KnownType);
             else
                 commit_token(CppToken::Type::Identifier);
