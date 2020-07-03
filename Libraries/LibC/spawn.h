@@ -70,8 +70,8 @@ typedef struct {
     sigset_t sigmask;
 } posix_spawnattr_t;
 
-int posix_spawn(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const[], char* const[]);
-int posix_spawnp(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const[], char* const[]);
+int posix_spawn(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const argv[], char* const envp[]);
+int posix_spawnp(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const argv[], char* const envp[]);
 
 int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t*, const char*);
 int posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t*, int);
