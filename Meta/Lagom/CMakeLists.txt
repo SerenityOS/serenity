@@ -75,6 +75,12 @@ if (BUILD_LAGOM)
     target_link_libraries(js_lagom stdc++)
     target_link_libraries(js_lagom pthread)
 
+    add_executable(test-js_lagom ../../Userland/test-js.cpp)
+    set_target_properties(test-js_lagom PROPERTIES OUTPUT_NAME test-js)
+    target_link_libraries(test-js_lagom Lagom)
+    target_link_libraries(test-js_lagom stdc++)
+    target_link_libraries(test-js_lagom pthread)
+
     add_executable(test-crypto_lagom ../../Userland/test-crypto.cpp)
     set_target_properties(test-crypto_lagom PROPERTIES OUTPUT_NAME test-crypto)
     target_link_libraries(test-crypto_lagom Lagom)
