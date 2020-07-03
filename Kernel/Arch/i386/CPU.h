@@ -622,6 +622,7 @@ class Processor {
 
     u32 m_cpu;
     u32 m_in_irq;
+    u32 m_in_critical;
 
     TSS32 m_tss;
     static FPUState s_clean_fpu_state;
@@ -632,6 +633,7 @@ class Processor {
     Thread* m_idle_thread;
 
     bool m_invoke_scheduler_async;
+    bool m_scheduler_initialized;
 
     void gdt_init();
     void write_raw_gdt_entry(u16 selector, u32 low, u32 high);
@@ -713,11 +715,32 @@ public:
         return m_in_irq;
     }
     
+    ALWAYS_INLINE void enter_critical(u32& prev_flags)
+    {
+        m_in_critical++;
+        prev_flags = cpu_flags();
+        cli();
+    }
+    
+    ALWAYS_INLINE void leave_critical(u32 prev_flags)
+    {
+        ASSERT(m_in_critical > 0);
+        if (--m_in_critical == 0) {
+            if (!m_in_irq)
+                check_invoke_scheduler();
+        }
+        if (prev_flags & 0x200)
+            sti();
+    }
+    
+    ALWAYS_INLINE u32& in_critical() { return m_in_critical; }
+    
     ALWAYS_INLINE const FPUState& clean_fpu_state() const
     {
         return s_clean_fpu_state;
     }
     
+    void check_invoke_scheduler();
     void invoke_scheduler_async() { m_invoke_scheduler_async = true; }
     
     void enter_trap(TrapFrame& trap, bool raise_irq);
@@ -725,10 +748,53 @@ public:
     
     [[noreturn]] void initialize_context_switching(Thread& initial_thread);
     void switch_context(Thread* from_thread, Thread* to_thread);
-    [[noreturn]] static void assume_context(Thread& thread);
-    static u32 init_context(Thread& thread);
+    [[noreturn]] static void assume_context(Thread& thread, u32 flags);
+    u32 init_context(Thread& thread, bool leave_crit);
     
     void set_thread_specific(u8* data, size_t len);
+};
+
+class ScopedCritical
+{
+    u32 m_prev_flags;
+    bool m_valid;
+
+public:
+    ScopedCritical(const ScopedCritical&) = delete;
+    ScopedCritical& operator=(const ScopedCritical&) = delete;
+
+    ScopedCritical()
+    {
+        m_valid = true;
+        Processor::current().enter_critical(m_prev_flags);
+    }
+    
+    ~ScopedCritical()
+    {
+        if (m_valid) {
+            m_valid = false;
+            Processor::current().leave_critical(m_prev_flags);
+        }
+    }
+
+    ScopedCritical(ScopedCritical&& from):
+        m_prev_flags(from.m_prev_flags),
+        m_valid(from.m_valid)
+    {
+        from.m_prev_flags = 0;
+        from.m_valid = false;
+    }
+
+    ScopedCritical& operator=(ScopedCritical&& from)
+    {
+        if (&from != this) {
+            m_prev_flags = from.m_prev_flags;
+            m_valid = from.m_valid;
+            from.m_prev_flags = 0;
+            from.m_valid = false;
+        }
+        return *this;
+    }
 };
 
 struct TrapFrame {

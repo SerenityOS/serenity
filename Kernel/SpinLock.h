@@ -43,19 +43,23 @@ public:
     SpinLock(const SpinLock&) = delete;
     SpinLock(SpinLock&&) = delete;
 
-    ALWAYS_INLINE void lock()
+    ALWAYS_INLINE u32 lock()
     {
+        u32 prev_flags;
+        Processor::current().enter_critical(prev_flags);
         BaseType expected;
         do {
             expected = 0;
         } while (!m_lock.compare_exchange_strong(expected, 1, AK::memory_order_acq_rel));
+        return prev_flags;
         
     }
 
-    ALWAYS_INLINE void unlock()
+    ALWAYS_INLINE void unlock(u32 prev_flags)
     {
         ASSERT(is_locked());
         m_lock.store(0, AK::memory_order_release);
+        Processor::current().leave_critical(prev_flags);
     }
 
     ALWAYS_INLINE bool is_locked() const
@@ -79,9 +83,12 @@ public:
     RecursiveSpinLock(const RecursiveSpinLock&) = delete;
     RecursiveSpinLock(RecursiveSpinLock&&) = delete;
 
-    ALWAYS_INLINE void lock()
+    ALWAYS_INLINE u32 lock()
     {
-        FlatPtr cpu = FlatPtr(&Processor::current());
+        auto& proc = Processor::current();
+        FlatPtr cpu = FlatPtr(&proc);
+        u32 prev_flags;
+        proc.enter_critical(prev_flags);
         FlatPtr expected = 0;
         while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
             if (expected == cpu)
@@ -89,14 +96,16 @@ public:
             expected = 0;
         } 
         m_recursions++;
+        return prev_flags;
     }
 
-    ALWAYS_INLINE void unlock()
+    ALWAYS_INLINE void unlock(u32 prev_flags)
     {
         ASSERT(m_recursions > 0);
         ASSERT(m_lock.load(AK::memory_order_consume) == FlatPtr(&Processor::current()));
         if (--m_recursions == 0)
             m_lock.store(0, AK::memory_order_release);
+        Processor::current().leave_critical(prev_flags);
     }
 
     ALWAYS_INLINE bool is_locked() const
@@ -114,8 +123,8 @@ template <typename BaseType = u32, typename LockType = SpinLock<BaseType>>
 class ScopedSpinLock
 {
     LockType* m_lock;
+    u32 m_prev_flags{0};
     bool m_have_lock{false};
-    bool m_flag{false};
 
 public:
     ScopedSpinLock() = delete;
@@ -124,19 +133,18 @@ public:
         m_lock(&lock)
     {
         ASSERT(m_lock);
-        m_flag = cli_and_save_interrupt_flag();
-        m_lock->lock();
+        m_prev_flags = m_lock->lock();
         m_have_lock = true;
     }
 
     ScopedSpinLock(ScopedSpinLock&& from):
         m_lock(from.m_lock),
-        m_have_lock(from.m_have_lock),
-        m_flag(from.m_flag)
+        m_prev_flags(from.m_prev_flags),
+        m_have_lock(from.m_have_lock)
     {
         from.m_lock = nullptr;
+        from.m_prev_flags = 0;
         from.m_have_lock = false;
-        from.m_flag = false;
     }
 
     ScopedSpinLock(const ScopedSpinLock&) = delete;
@@ -144,8 +152,7 @@ public:
     ~ScopedSpinLock()
     {
         if (m_lock && m_have_lock) {
-            m_lock->unlock();
-            restore_interrupt_flag(m_flag);
+            m_lock->unlock(m_prev_flags);
         }
     }
 
@@ -153,8 +160,7 @@ public:
     {
         ASSERT(m_lock);
         ASSERT(!m_have_lock);
-        m_flag = cli_and_save_interrupt_flag();
-        m_lock->lock();
+        m_prev_flags = m_lock->lock();
         m_have_lock = true;
     }
 
@@ -162,10 +168,9 @@ public:
     {
         ASSERT(m_lock);
         ASSERT(m_have_lock);
-        m_lock->unlock();
+        m_lock->unlock(m_prev_flags);
+        m_prev_flags = 0;
         m_have_lock = false;
-        restore_interrupt_flag(m_flag);
-        m_flag = false;
     }
 
     ALWAYS_INLINE bool have_lock() const

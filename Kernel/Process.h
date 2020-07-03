@@ -450,6 +450,7 @@ public:
     void increment_inspector_count(Badge<ProcessInspectionHandle>) { ++m_inspector_count; }
     void decrement_inspector_count(Badge<ProcessInspectionHandle>) { --m_inspector_count; }
 
+    bool wait_for_tracer_at_next_execve() const { return m_wait_for_tracer_at_next_execve; }
     void set_wait_for_tracer_at_next_execve(bool val) { m_wait_for_tracer_at_next_execve = val; }
 
     KResultOr<u32> peek_user_data(u32* address);
@@ -470,7 +471,7 @@ private:
     void kill_threads_except_self();
     void kill_all_threads();
 
-    int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description);
+    int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags);
     ssize_t do_write(FileDescription&, const u8*, int data_size);
 
     KResultOr<NonnullRefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size);

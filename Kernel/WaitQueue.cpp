@@ -39,13 +39,13 @@ WaitQueue::~WaitQueue()
 
 void WaitQueue::enqueue(Thread& thread)
 {
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     m_threads.append(thread);
 }
 
 void WaitQueue::wake_one(Atomic<bool>* lock)
 {
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     if (lock)
         *lock = false;
     if (m_threads.is_empty())
@@ -57,7 +57,7 @@ void WaitQueue::wake_one(Atomic<bool>* lock)
 
 void WaitQueue::wake_n(i32 wake_count)
 {
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     if (m_threads.is_empty())
         return;
 
@@ -72,7 +72,7 @@ void WaitQueue::wake_n(i32 wake_count)
 
 void WaitQueue::wake_all()
 {
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     if (m_threads.is_empty())
         return;
     while (!m_threads.is_empty())
@@ -82,7 +82,7 @@ void WaitQueue::wake_all()
 
 void WaitQueue::clear()
 {
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     m_threads.clear();
 }
 

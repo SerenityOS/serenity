@@ -591,7 +591,7 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto& mm_data = get_data();
-    mm_data.m_quickmap_in_use.lock();
+    mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
     ScopedSpinLock lock(s_lock);
 
     u32 pte_idx = 8 + Processor::current().id();
@@ -622,7 +622,7 @@ void MemoryManager::unquickmap_page()
     auto& pte = boot_pd3_pt1023[pte_idx];
     pte.clear();
     flush_tlb(vaddr);
-    mm_data.m_quickmap_in_use.unlock();
+    mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_prev_flags);
 }
 
 template<MemoryManager::AccessSpace space, MemoryManager::AccessType access_type>
@@ -736,6 +736,7 @@ void MemoryManager::dump_kernel_regions()
 {
     klog() << "Kernel regions:";
     klog() << "BEGIN       END         SIZE        ACCESS  NAME";
+    ScopedSpinLock lock(s_lock);
     for (auto& region : MM.m_kernel_regions) {
         klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_purgeable() ? 'P' : ' ') << "    " << region.name().characters();
     }

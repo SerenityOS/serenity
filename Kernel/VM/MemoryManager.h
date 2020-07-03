@@ -69,6 +69,7 @@ class SynthFSInode;
 
 struct MemoryManagerData {
     SpinLock<u8> m_quickmap_in_use;
+    u32 m_quickmap_prev_flags;
 };
 
 class MemoryManager {

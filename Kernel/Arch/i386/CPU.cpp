@@ -828,6 +828,10 @@ void Processor::early_initialize(u32 cpu)
 
     m_cpu = cpu;
     m_in_irq = 0;
+    m_in_critical = 0;
+
+    m_invoke_scheduler_async = false;
+    m_scheduler_initialized = false;
 
     m_idle_thread = nullptr;
     m_current_thread = nullptr;
@@ -961,9 +965,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 void Processor::switch_context(Thread* from_thread, Thread* to_thread)
 {
     ASSERT(!in_irq());
+    ASSERT(!m_in_critical);
     ASSERT(is_kernel_mode());
 #ifdef CONTEXT_SWITCH_DEBUG
-    dbg() << "switch_context --> switching out of: " << *from_thread;
+    dbg() << "switch_context --> switching out of: " << VirtualAddress(from_thread) << " " << *from_thread;
 #endif
 
     // Switch to new thread context, passing from_thread and to_thread
@@ -1006,7 +1011,7 @@ void Processor::switch_context(Thread* from_thread, Thread* to_thread)
           [to_thread] "a" (to_thread)
     );
 #ifdef CONTEXT_SWITCH_DEBUG
-    dbg() << "switch_context <-- from " << *from_thread << " to " << *to_thread;
+    dbg() << "switch_context <-- from " << VirtualAddress(from_thread) << " " << *from_thread << " to " << VirtualAddress(to_thread) << " " << *to_thread;
 #endif
 }
 
@@ -1017,9 +1022,14 @@ extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapF
     (void)from_thread;
     (void)to_thread;
     (void)trap;
+    
+    ASSERT(to_thread == Thread::current());
 #ifdef CONTEXT_SWITCH_DEBUG
-    dbg() << "switch_context <-- from " << *from_thread << " to " << *to_thread << " (context_first_init)";
+        dbg() << "switch_context <-- from " << VirtualAddress(from_thread) << " " << *from_thread << " to " << VirtualAddress(to_thread) << " " << *to_thread << " (context_first_init)";
 #endif
+    if (to_thread->process().wait_for_tracer_at_next_execve()) {
+        to_thread->send_urgent_signal_to_self(SIGSTOP);
+    }
 }
 
 extern "C" void thread_context_first_enter(void);
@@ -1038,9 +1048,15 @@ asm(
 "    jmp common_trap_exit \n"
 );
 
-u32 Processor::init_context(Thread& thread)
+u32 Processor::init_context(Thread& thread, bool leave_crit)
 {
     ASSERT(is_kernel_mode());
+    if (leave_crit) {
+        ASSERT(in_critical());
+        m_in_critical--; // leave it without triggering anything
+        ASSERT(!in_critical());
+    }
+
     const u32 kernel_stack_top = thread.kernel_stack_top();
     u32 stack_top = kernel_stack_top;
 
@@ -1098,7 +1114,10 @@ u32 Processor::init_context(Thread& thread)
     *reinterpret_cast<u32*>(stack_top) = stack_top + 4;
 
 #ifdef CONTEXT_SWITCH_DEBUG
-    dbg() << "init_context " << thread << " set up to execute at eip: " << VirtualAddress(tss.eip) << " esp: " << VirtualAddress(tss.esp) << " stack top: " << VirtualAddress(stack_top);
+    if (return_to_user)
+        dbg() << "init_context " << thread << " (" << VirtualAddress(&thread) << ") set up to execute at eip: " << String::format("%02x:%08x", iretframe.cs, (u32)tss.eip) << " esp: " << VirtualAddress(tss.esp) << " stack top: " << VirtualAddress(stack_top) << " user esp: " << String::format("%02x:%08x", iretframe.userspace_ss, (u32)iretframe.userspace_esp);
+    else
+        dbg() << "init_context " << thread << " (" << VirtualAddress(&thread) << ") set up to execute at eip: " << String::format("%02x:%08x", iretframe.cs, (u32)tss.eip) << " esp: " << VirtualAddress(tss.esp) << " stack top: " << VirtualAddress(stack_top);
 #endif
 
     // make switch_context() always first return to thread_context_first_enter()
@@ -1118,24 +1137,29 @@ u32 Processor::init_context(Thread& thread)
 }
 
 
-extern "C" u32 do_init_context(Thread* thread)
+extern "C" u32 do_init_context(Thread* thread, u32 flags)
 {
-    return Processor::init_context(*thread);
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(Processor::current().in_critical());
+    thread->tss().eflags = flags;
+    return Processor::current().init_context(*thread, true);
 }
 
-extern "C" void do_assume_context(Thread* thread);
+extern "C" void do_assume_context(Thread* thread, u32 flags);
 
 asm(
 ".global do_assume_context \n"
 "do_assume_context: \n"
 "    movl 4(%esp), %ebx \n"
+"    movl 8(%esp), %esi \n"
 // We're going to call Processor::init_context, so just make sure
 // we have enough stack space so we don't stomp over it
 "    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
+"    pushl %esi \n"
 "    pushl %ebx \n"
 "    cld \n"
 "    call do_init_context \n"
-"    addl $4, %esp \n"
+"    addl $8, %esp \n"
 "    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
 "    pushl %ebx \n" // push to_thread
 "    pushl %ebx \n" // push from_thread
@@ -1143,9 +1167,13 @@ asm(
 "    jmp enter_thread_context \n"
 );
 
-void Processor::assume_context(Thread& thread)
+void Processor::assume_context(Thread& thread, u32 flags)
 {
-    do_assume_context(&thread);
+#ifdef CONTEXT_SWITCH_DEBUG
+    dbg() << "Assume context for thread " << VirtualAddress(&thread) << " " << thread;
+#endif
+    ASSERT_INTERRUPTS_DISABLED();
+    do_assume_context(&thread, flags);
     ASSERT_NOT_REACHED();
 }
 
@@ -1161,6 +1189,7 @@ void Processor::initialize_context_switching(Thread& initial_thread)
     m_tss.cs = m_tss.ds = m_tss.es = m_tss.gs = m_tss.ss = GDT_SELECTOR_CODE0 | 3;
     m_tss.fs = GDT_SELECTOR_PROC | 3;
     
+    m_scheduler_initialized = true;
     
     asm volatile(
         "movl %[new_esp], %%esp \n" // swich to new stack
@@ -1197,7 +1226,15 @@ void Processor::exit_trap(TrapFrame& trap)
     ASSERT(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
     
-    if (m_invoke_scheduler_async && !m_in_irq) {
+    if (!m_in_irq && !m_in_critical)
+        check_invoke_scheduler();
+}
+
+void Processor::check_invoke_scheduler()
+{
+    ASSERT(!m_in_irq);
+    ASSERT(!m_in_critical);
+    if (m_invoke_scheduler_async && m_scheduler_initialized) {
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
     }
