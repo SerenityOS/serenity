@@ -181,7 +181,8 @@ void Thread::die_if_needed()
     if (!m_should_die)
         return;
 
-    unlock_process_if_locked();
+    u32 prev_crit;
+    unlock_process_if_locked(prev_crit);
 
     InterruptDisabler disabler;
     set_state(Thread::State::Dying);
@@ -190,20 +191,26 @@ void Thread::die_if_needed()
 
 void Thread::yield_without_holding_big_lock()
 {
-    bool did_unlock = unlock_process_if_locked();
+    u32 prev_crit;
+    bool did_unlock = unlock_process_if_locked(prev_crit);
     Scheduler::yield();
-    if (did_unlock)
-        relock_process();
+    relock_process(did_unlock, prev_crit);
 }
 
-bool Thread::unlock_process_if_locked()
+bool Thread::unlock_process_if_locked(u32& prev_crit)
 {
+    auto& in_critical = Processor::current().in_critical();
+    prev_crit = in_critical;
+    in_critical = 0;
     return process().big_lock().force_unlock_if_locked();
 }
 
-void Thread::relock_process()
+void Thread::relock_process(bool did_unlock, u32 prev_crit)
 {
-    process().big_lock().lock();
+    if (did_unlock)
+        process().big_lock().lock();
+    ASSERT(!Processor::current().in_critical());
+    Processor::current().in_critical() = prev_crit;
 }
 
 u64 Thread::sleep(u32 ticks)
@@ -328,6 +335,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
         dbg() << "Signal: Kernel sent " << signal << " to " << process();
 #endif
 
+    ScopedSpinLock lock(g_scheduler_lock);
     m_pending_signals |= 1 << (signal - 1);
 }
 
@@ -339,13 +347,10 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 // the appropriate signal handler.
 void Thread::send_urgent_signal_to_self(u8 signal)
 {
-    // FIXME: because of a bug in dispatch_signal we can't
-    // setup a signal while we are the current thread. Because of
-    // this we use a work-around where we send the signal and then
-    // block, allowing the scheduler to properly dispatch the signal
-    // before the thread is next run.
-    send_signal(signal, &process());
-    (void)block<SemiPermanentBlocker>(SemiPermanentBlocker::Reason::Signal);
+    ASSERT(Thread::current() == this);
+    ScopedSpinLock lock(g_scheduler_lock);
+    if (dispatch_signal(signal) == ShouldUnblockThread::No)
+        Scheduler::yield();
 }
 
 ShouldUnblockThread Thread::dispatch_one_pending_signal()
@@ -443,6 +448,7 @@ static void push_value_on_user_stack(u32* stack, u32 data)
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(g_scheduler_lock.is_locked());
     ASSERT(signal > 0 && signal <= 32);
     ASSERT(!process().is_ring0());
 
@@ -539,6 +545,10 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         u32 old_esp = *stack;
         u32 ret_eip = state.eip;
         u32 ret_eflags = state.eflags;
+
+#ifdef SIGNAL_DEBUG
+        klog() << "signal: setting up user stack to return to eip: " << String::format("%p", ret_eip) << " esp: " << String::format("%p", old_esp);
+#endif
 
         // Align the stack to 16 bytes.
         // Note that we push 56 bytes (4 * 14) on to the stack,
@@ -698,7 +708,7 @@ bool Thread::is_thread(void* ptr)
 
 void Thread::set_state(State new_state)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(g_scheduler_lock);
     if (new_state == m_state)
         return;
 
@@ -712,6 +722,9 @@ void Thread::set_state(State new_state)
     }
 
     m_state = new_state;
+#ifdef THREAD_DEBUG
+    dbg() << "Set Thread " << VirtualAddress(this) << " " << *this << " state to " << state_string();
+#endif
     if (m_process.pid() != 0) {
         Scheduler::update_state_for_thread(*this);
     }
@@ -842,11 +855,12 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
 Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary, const char* reason)
 {
     TimerId timer_id {};
+    u32 prev_crit;
     bool did_unlock;
 
     {
         InterruptDisabler disable;
-        did_unlock = unlock_process_if_locked();
+        did_unlock = unlock_process_if_locked(prev_crit);
         if (lock)
             *lock = false;
         set_state(State::Queued);
@@ -870,8 +884,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<b
         sti();
 
     // We've unblocked, relock the process if needed and carry on.
-    if (did_unlock)
-        relock_process();
+    relock_process(did_unlock, prev_crit);
 
     BlockResult result = m_wait_queue_node.is_in_list() ? BlockResult::InterruptedByTimeout : BlockResult::WokeNormally;
 
@@ -884,6 +897,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<b
 
 void Thread::wake_from_queue()
 {
+    ScopedSpinLock lock(g_scheduler_lock);
     ASSERT(state() == State::Queued);
     if (this != Thread::current())
         set_state(State::Runnable);

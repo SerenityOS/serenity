@@ -84,10 +84,10 @@
 #include <LibELF/Validation.h>
 #include <LibKeyboard/CharacterMapData.h>
 
-#define PROCESS_DEBUG
+//#define PROCESS_DEBUG
 //#define DEBUG_POLL_SELECT
 //#define DEBUG_IO
-#define TASK_DEBUG
+//#define TASK_DEBUG
 //#define FORK_DEBUG
 //#define EXEC_DEBUG
 //#define SIGNAL_DEBUG
@@ -821,9 +821,10 @@ void Process::kill_all_threads()
     });
 }
 
-int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description)
+int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags)
 {
     ASSERT(is_ring3());
+    ASSERT(!Processor::current().in_critical());
     auto path = main_program_description->absolute_path();
 #ifdef EXEC_DEBUG
     dbg() << "do_exec(" << path << ")";
@@ -867,7 +868,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     {
         // Need to make sure we don't swap contexts in the middle
-        InterruptDisabler disabler;
+        ScopedCritical critical;
         old_page_directory = move(m_page_directory);
         old_regions = move(m_regions);
         m_page_directory = PageDirectory::create_for_userspace(*this);
@@ -910,7 +911,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         ArmedScopeGuard rollback_regions_guard([&]() {
             ASSERT(Process::current() == this);
             // Need to make sure we don't swap contexts in the middle
-            InterruptDisabler disabler;
+            ScopedCritical critical;
             m_page_directory = move(old_page_directory);
             m_regions = move(old_regions);
             MM.enter_process_paging_scope(*this);
@@ -963,6 +964,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             master_tls_alignment = alignment;
             return master_tls_region->vaddr().as_ptr();
         };
+        ASSERT(!Processor::current().in_critical());
         bool success = loader->load();
         if (!success) {
             klog() << "do_exec: Failure loading " << path.characters();
@@ -1026,7 +1028,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         }
     }
 
-    Thread* new_main_thread = nullptr;
+    new_main_thread = nullptr;
     if (&current_thread->process() == this) {
         new_main_thread = current_thread;
     } else {
@@ -1041,11 +1043,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     //       and we don't want to deal with faults after this point.
     u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment));
 
-    // We cli() manually here because we don't want to get interrupted between do_exec() and Processor::assume_context().
-    // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
+    // We cli() manually here because we don't want to get interrupted between do_exec()
+    // and Processor::assume_context() or the next context switch.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
-    if (&current_thread->process() == this)
-        cli();
+    Processor::current().enter_critical(prev_flags);
 
     // NOTE: Be careful to not trigger any page faults below!
 
@@ -1059,7 +1060,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     new_main_thread->make_thread_specific_region({});
     new_main_thread->reset_fpu_state();
 
-    // NOTE: if a context switch were to happen, tss.eip and tss.esp would get overwritten!!!
     auto& tss = new_main_thread->m_tss;
     tss.cs = GDT_SELECTOR_CODE3 | 3;
     tss.ds = GDT_SELECTOR_DATA3 | 3;
@@ -1073,7 +1073,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     tss.ss2 = m_pid;
 
 #ifdef TASK_DEBUG
-    klog() << "Process exec'd " << path.characters() << " @ " << String::format("%p", entry_eip);
+    klog() << "Process " << VirtualAddress(this) << " thread " << VirtualAddress(new_main_thread) << " exec'd " << path.characters() << " @ " << String::format("%p", entry_eip);
 #endif
 
     if (was_profiling)
@@ -1081,6 +1081,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     new_main_thread->set_state(Thread::State::Skip1SchedulerPass);
     big_lock().force_unlock_if_locked();
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(Processor::current().in_critical());
     return 0;
 }
 
@@ -1249,26 +1251,26 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
 
     // The bulk of exec() is done by do_exec(), which ensures that all locals
     // are cleaned up by the time we yield-teleport below.
-    int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description));
+    Thread* new_main_thread = nullptr;
+    u32 prev_flags = 0;
+    int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags);
 
     m_exec_tid = 0;
 
     if (rc < 0)
         return rc;
 
-    auto current_thread = Thread::current();
-    if (m_wait_for_tracer_at_next_execve) {
-        ASSERT(current_thread->state() == Thread::State::Skip1SchedulerPass);
-        // State::Skip1SchedulerPass is irrelevant since we block the thread
-        current_thread->set_state(Thread::State::Running);
-        current_thread->send_urgent_signal_to_self(SIGSTOP);
-    }
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(Processor::current().in_critical());
 
-    if (&current_thread->process() == this) {
+    auto current_thread = Thread::current();
+    if (current_thread == new_main_thread) {
         current_thread->set_state(Thread::State::Running);
-        Processor::assume_context(*current_thread);
+        Processor::assume_context(*current_thread, prev_flags);
         ASSERT_NOT_REACHED();
     }
+
+    Processor::current().leave_critical(prev_flags);
     return 0;
 }
 

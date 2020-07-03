@@ -327,7 +327,7 @@ void Scheduler::start()
     idle_thread.set_ticks_left(time_slice_for(idle_thread));
     idle_thread.did_schedule();
     idle_thread.set_initialized(true);
-    Processor::init_context(idle_thread);
+    processor.init_context(idle_thread, false);
     idle_thread.set_state(Thread::Running);
     ASSERT(idle_thread.affinity() == (1u << processor.id()));
     processor.initialize_context_switching(idle_thread);
@@ -453,21 +453,23 @@ bool Scheduler::pick_next()
 
 bool Scheduler::yield()
 {
+    InterruptDisabler disabler;
     auto& proc = Processor::current();
     auto current_thread = Thread::current();
 #ifdef SCHEDULER_DEBUG
-    dbg() << "Scheduler[" << Processor::current().id() << "]: yielding thread " << *current_thread << " in_irq: " << proc.in_irq();
+    dbg() << "Scheduler[" << proc.id() << "]: yielding thread " << *current_thread << " in_irq: " << proc.in_irq();
 #endif
-    InterruptDisabler disabler;
     ASSERT(current_thread != nullptr);
-    if (proc.in_irq()) {
-        // If we're handling an IRQ we can't switch context, delay until
-        // exiting the trap
+    if (proc.in_irq() || proc.in_critical()) {
+        // If we're handling an IRQ we can't switch context, or we're in
+        // a critical section where we don't want to switch contexts, then
+        // delay until exiting the trap or critical section
         proc.invoke_scheduler_async();
+        return false;
     } else if (!Scheduler::pick_next())
         return false;
 #ifdef SCHEDULER_DEBUG
-    dbg() << "Scheduler[" << Processor::current().id() << "]: yield returns to thread " << *current_thread << " in_irq: " << proc.in_irq();
+    dbg() << "Scheduler[" << proc.id() << "]: yield returns to thread " << *current_thread << " in_irq: " << proc.in_irq();
 #endif
     return true;
 }
@@ -475,9 +477,15 @@ bool Scheduler::yield()
 bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 {
     InterruptDisabler disabler;
-    ASSERT(!Processor::current().in_irq());
+    auto& proc = Processor::current();
+    ASSERT(!proc.in_irq());
     if (!Thread::is_thread(beneficiary))
         return false;
+
+    if (proc.in_critical()) {
+        proc.invoke_scheduler_async();
+        return false;
+    }
 
     (void)reason;
     unsigned ticks_left = Thread::current()->ticks_left();
@@ -486,7 +494,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
 #ifdef SCHEDULER_DEBUG
-    dbg() << "Scheduler[" << Processor::current().id() << "]: Donating " << ticks_to_donate << " ticks to " << *beneficiary << ", reason=" << reason;
+    dbg() << "Scheduler[" << proc.id() << "]: Donating " << ticks_to_donate << " ticks to " << *beneficiary << ", reason=" << reason;
 #endif
     beneficiary->set_ticks_left(ticks_to_donate);
     Scheduler::context_switch(*beneficiary);
@@ -513,13 +521,14 @@ bool Scheduler::context_switch(Thread& thread)
 #endif
     }
 
+    auto& proc = Processor::current();
     if (!thread.is_initialized()) {
-        Processor::init_context(thread);
+        proc.init_context(thread, false);
         thread.set_initialized(true);
     }
     thread.set_state(Thread::Running);
 
-    Processor::current().switch_context(current_thread, &thread);
+    proc.switch_context(current_thread, &thread);
     return true;
 }
 
