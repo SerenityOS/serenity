@@ -773,6 +773,7 @@ Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
             builder.appendf("processor: %u\n", proc.id());
             builder.appendf("cpuid:     %s\n", info.cpuid().characters());
             builder.appendf("family:    %u\n", info.display_family());
+            builder.appendf("features:  %s\n", info.features().characters());
             builder.appendf("model:     %u\n", info.display_model());
             builder.appendf("stepping:  %u\n", info.stepping());
             builder.appendf("type:      %u\n", info.type());
