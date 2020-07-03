@@ -237,7 +237,7 @@ void Region::map_individual_page_impl(size_t page_index)
             pte.set_writable(false);
         else
             pte.set_writable(is_writable());
-        if (g_cpu_supports_nx)
+        if (Processor::current().has_feature(CPUFeature::NX))
             pte.set_execute_disabled(!is_executable());
         pte.set_user_allowed(is_user_accessible());
 #ifdef MM_DEBUG

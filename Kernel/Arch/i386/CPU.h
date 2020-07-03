@@ -265,7 +265,6 @@ struct RegisterState;
 
 const DescriptorTablePointer& get_gdtr();
 const DescriptorTablePointer& get_idtr();
-void sse_init();
 void register_interrupt_handler(u8 number, void (*f)());
 void register_user_callable_interrupt_handler(u8 number, void (*f)());
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
@@ -599,6 +598,19 @@ private:
     SplitQword m_start;
 };
 
+enum class CPUFeature : u32 {
+    NX = (1 << 0),
+    PAE = (1 << 1),
+    PGE = (1 << 2),
+    RDRAND = (1 << 3),
+    RDSEED = (1 << 4),
+    SMAP = (1 << 5),
+    SMEP = (1 << 6),
+    SSE = (1 << 7),
+    TSC = (1 << 8),
+    UMIP = (1 << 9)
+};
+
 class Thread;
 struct TrapFrame;
 
@@ -614,6 +626,8 @@ class ProcessorInfo;
 struct MemoryManagerData;
 
 class Processor {
+    friend class ProcessorInfo;
+
     Processor* m_self; // must be first field (%fs offset 0x0)
 
     DescriptorTablePointer m_gdtr;
@@ -626,6 +640,7 @@ class Processor {
 
     TSS32 m_tss;
     static FPUState s_clean_fpu_state;
+    CPUFeature m_features;
 
     ProcessorInfo* m_info;
     MemoryManagerData* m_mm_data;
@@ -639,6 +654,11 @@ class Processor {
     void write_raw_gdt_entry(u16 selector, u32 low, u32 high);
     void write_gdt_entry(u16 selector, Descriptor& descriptor);
     static Vector<Processor*>& processors();
+
+    void cpu_detect();
+    void cpu_setup();
+
+    String features_string() const;
 
 public:
     void early_initialize(u32 cpu);
@@ -738,6 +758,11 @@ public:
     ALWAYS_INLINE const FPUState& clean_fpu_state() const
     {
         return s_clean_fpu_state;
+    }
+    
+    ALWAYS_INLINE bool has_feature(CPUFeature f) const
+    {
+        return (static_cast<u32>(m_features) & static_cast<u32>(f)) != 0;
     }
     
     void check_invoke_scheduler();
@@ -846,22 +871,9 @@ public:
     }
 };
 
-void cpu_setup(u32 cpu);
-
-extern bool g_cpu_supports_nx;
-extern bool g_cpu_supports_pae;
-extern bool g_cpu_supports_pge;
-extern bool g_cpu_supports_rdrand;
-extern bool g_cpu_supports_rdseed;
-extern bool g_cpu_supports_smap;
-extern bool g_cpu_supports_smep;
-extern bool g_cpu_supports_sse;
-extern bool g_cpu_supports_tsc;
-extern bool g_cpu_supports_umip;
-
 ALWAYS_INLINE void stac()
 {
-    if (!g_cpu_supports_smap)
+    if (!Processor::current().has_feature(CPUFeature::SMAP))
         return;
     asm volatile("stac" ::
                      : "cc");
@@ -869,7 +881,7 @@ ALWAYS_INLINE void stac()
 
 ALWAYS_INLINE void clac()
 {
-    if (!g_cpu_supports_smap)
+    if (!Processor::current().has_feature(CPUFeature::SMAP))
         return;
     asm volatile("clac" ::
                      : "cc");

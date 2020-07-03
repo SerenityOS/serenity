@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/ProcessorInfo.h>
@@ -633,7 +634,7 @@ void exit_trap(TrapFrame* trap)
     return Processor::current().exit_trap(*trap);
 }
 
-void sse_init()
+static void sse_init()
 {
     asm volatile(
         "mov %cr0, %eax\n"
@@ -643,122 +644,6 @@ void sse_init()
         "mov %cr4, %eax\n"
         "orl $0x600, %eax\n"
         "mov %eax, %cr4\n");
-}
-
-bool g_cpu_supports_nx;
-bool g_cpu_supports_pae;
-bool g_cpu_supports_pge;
-bool g_cpu_supports_rdrand;
-bool g_cpu_supports_rdseed;
-bool g_cpu_supports_smap;
-bool g_cpu_supports_smep;
-bool g_cpu_supports_sse;
-bool g_cpu_supports_tsc;
-bool g_cpu_supports_umip;
-
-void cpu_detect()
-{
-    CPUID processor_info(0x1);
-    g_cpu_supports_pae = (processor_info.edx() & (1 << 6));
-    g_cpu_supports_pge = (processor_info.edx() & (1 << 13));
-    g_cpu_supports_sse = (processor_info.edx() & (1 << 25));
-    g_cpu_supports_tsc = (processor_info.edx() & (1 << 4));
-    g_cpu_supports_rdrand = (processor_info.ecx() & (1 << 30));
-
-    CPUID extended_processor_info(0x80000001);
-    g_cpu_supports_nx = (extended_processor_info.edx() & (1 << 20));
-
-    CPUID extended_features(0x7);
-    g_cpu_supports_smap = (extended_features.ebx() & (1 << 20));
-    g_cpu_supports_smep = (extended_features.ebx() & (1 << 7));
-    g_cpu_supports_umip = (extended_features.ecx() & (1 << 2));
-    g_cpu_supports_rdseed = (extended_features.ebx() & (1 << 18));
-}
-
-void cpu_setup(u32 cpu)
-{
-    if (cpu == 0)
-        cpu_detect();
-
-    if (g_cpu_supports_sse) {
-        sse_init();
-        klog() << "x86: SSE support enabled";
-    }
-
-    asm volatile(
-        "movl %%cr0, %%eax\n"
-        "orl $0x00010000, %%eax\n"
-        "movl %%eax, %%cr0\n" ::
-            : "%eax", "memory");
-    klog() << "x86: WP support enabled";
-
-    if (g_cpu_supports_pge) {
-        // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x80, %eax\n"
-            "mov %eax, %cr4\n");
-        klog() << "x86: PGE support enabled";
-    } else {
-        klog() << "x86: PGE support not detected";
-    }
-
-    if (g_cpu_supports_nx) {
-        // Turn on IA32_EFER.NXE
-        asm volatile(
-            "movl $0xc0000080, %ecx\n"
-            "rdmsr\n"
-            "orl $0x800, %eax\n"
-            "wrmsr\n");
-        klog() << "x86: NX support enabled";
-    } else {
-        klog() << "x86: NX support not detected";
-    }
-
-    if (g_cpu_supports_smep) {
-        // Turn on CR4.SMEP
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x100000, %eax\n"
-            "mov %eax, %cr4\n");
-        klog() << "x86: SMEP support enabled";
-    } else {
-        klog() << "x86: SMEP support not detected";
-    }
-
-    if (g_cpu_supports_smap) {
-        // Turn on CR4.SMAP
-        klog() << "x86: Enabling SMAP";
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x200000, %eax\n"
-            "mov %eax, %cr4\n");
-        klog() << "x86: SMAP support enabled";
-    } else {
-        klog() << "x86: SMAP support not detected";
-    }
-
-    if (g_cpu_supports_umip) {
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x800, %eax\n"
-            "mov %eax, %cr4\n");
-        klog() << "x86: UMIP support enabled";
-    }
-
-    if (g_cpu_supports_tsc) {
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x4, %eax\n"
-            "mov %eax, %cr4\n");
-        klog() << "x86: RDTSC support restricted";
-    }
-
-    if (g_cpu_supports_rdrand) {
-        klog() << "x86: Using RDRAND for good randomness";
-    } else {
-        klog() << "x86: No RDRAND support detected, randomness will be poor";
-    }
 }
 
 u32 read_cr0()
@@ -822,6 +707,156 @@ Processor& Processor::by_id(u32 cpu)
     return *procs[cpu];
 }
 
+
+void Processor::cpu_detect()
+{
+    // NOTE: This is called during Processor::early_initialize, we cannot
+    //       safely log at this point because we don't have kmalloc
+    //       initialized yet!
+    auto set_feature =
+        [&](CPUFeature f) {
+            m_features = static_cast<CPUFeature>(static_cast<u32>(m_features) | static_cast<u32>(f));
+        };
+    m_features = static_cast<CPUFeature>(0);
+
+    CPUID processor_info(0x1);
+    if (processor_info.edx() & (1 << 6))
+        set_feature(CPUFeature::PAE);
+    if (processor_info.edx() & (1 << 13))
+        set_feature(CPUFeature::PGE);
+    if (processor_info.edx() & (1 << 25))
+        set_feature(CPUFeature::SSE);
+    if (processor_info.edx() & (1 << 4))
+        set_feature(CPUFeature::TSC);
+    if (processor_info.ecx() & (1 << 30))
+        set_feature(CPUFeature::RDRAND);
+
+    CPUID extended_processor_info(0x80000001);
+    if (extended_processor_info.edx() & (1 << 20))
+        set_feature(CPUFeature::NX);
+
+    CPUID extended_features(0x7);
+    if (extended_features.ebx() & (1 << 20))
+        set_feature(CPUFeature::SMAP);
+    if (extended_features.ebx() & (1 << 7))
+        set_feature(CPUFeature::SMEP);
+    if (extended_features.ecx() & (1 << 2))
+        set_feature(CPUFeature::UMIP);
+    if (extended_features.ebx() & (1 << 18))
+        set_feature(CPUFeature::RDSEED);
+}
+
+void Processor::cpu_setup()
+{
+    // NOTE: This is called during Processor::early_initialize, we cannot
+    //       safely log at this point because we don't have kmalloc
+    //       initialized yet!
+    cpu_detect();
+
+    if (has_feature(CPUFeature::SSE))
+        sse_init();
+
+    asm volatile(
+        "movl %%cr0, %%eax\n"
+        "orl $0x00010000, %%eax\n"
+        "movl %%eax, %%cr0\n" ::
+            : "%eax", "memory");
+
+    if (has_feature(CPUFeature::PGE)) {
+        // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x80, %eax\n"
+            "mov %eax, %cr4\n");
+    }
+
+    if (has_feature(CPUFeature::NX)) {
+        // Turn on IA32_EFER.NXE
+        asm volatile(
+            "movl $0xc0000080, %ecx\n"
+            "rdmsr\n"
+            "orl $0x800, %eax\n"
+            "wrmsr\n");
+    }
+
+    if (has_feature(CPUFeature::SMEP)) {
+        // Turn on CR4.SMEP
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x100000, %eax\n"
+            "mov %eax, %cr4\n");
+    }
+
+    if (has_feature(CPUFeature::SMAP)) {
+        // Turn on CR4.SMAP
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x200000, %eax\n"
+            "mov %eax, %cr4\n");
+    }
+
+    if (has_feature(CPUFeature::UMIP)) {
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x800, %eax\n"
+            "mov %eax, %cr4\n");
+    }
+
+    if (has_feature(CPUFeature::TSC)) {
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x4, %eax\n"
+            "mov %eax, %cr4\n");
+    }
+}
+
+String Processor::features_string() const
+{
+    StringBuilder builder;
+    auto feature_to_str =
+        [](CPUFeature f) -> const char*
+        {
+            switch (f) {
+                case CPUFeature::NX:
+                    return "nx";
+                case CPUFeature::PAE:
+                    return "pae";
+                case CPUFeature::PGE:
+                    return "pge";
+                case CPUFeature::RDRAND:
+                    return "rdrand";
+                case CPUFeature::RDSEED:
+                    return "rdseed";
+                case CPUFeature::SMAP:
+                    return "smap";
+                case CPUFeature::SMEP:
+                    return "smep";
+                case CPUFeature::SSE:
+                    return "sse";
+                case CPUFeature::TSC:
+                    return "tsc";
+                case CPUFeature::UMIP:
+                    return "umip";
+                // no default statement here intentionally so that we get
+                // a warning if a new feature is forgotten to be added here
+            }
+            // Shouldn't ever happen
+            return "???";
+        };
+    bool first = true;
+    for (u32 flag = 1; flag < sizeof(m_features) * 8; flag <<= 1) {
+       if ((static_cast<u32>(m_features) & flag) != 0) {
+           if (first)
+               first = false;
+           else
+               builder.append(' ');
+           auto str = feature_to_str(static_cast<CPUFeature>(flag));
+           builder.append(str, strlen(str));
+       }
+    }
+    return builder.build();
+}
+
 void Processor::early_initialize(u32 cpu)
 {
     m_self = this;
@@ -838,6 +873,8 @@ void Processor::early_initialize(u32 cpu)
     m_mm_data = nullptr;
     m_info = nullptr;
 
+    cpu_setup();
+
     gdt_init();
     ASSERT(&current() == this); // sanity check
 }
@@ -847,12 +884,9 @@ void Processor::initialize(u32 cpu)
     ASSERT(m_self == this);
     ASSERT(&current() == this); // sanity check
 
-    m_cpu = cpu;
-    m_in_irq = 0;
-
-    m_idle_thread = nullptr;
-    m_current_thread = nullptr;
-    m_mm_data = nullptr;
+    klog() << "CPU[" << id() << "]: Supported features: " << features_string();
+    if (!has_feature(CPUFeature::RDRAND))
+        klog() << "CPU[" << id() << "]: No RDRAND support detected, randomness will be poor";
 
     if (cpu == 0)
         idt_init();

@@ -44,10 +44,12 @@ KernelRng& KernelRng::the()
 
 KernelRng::KernelRng()
 {
-    if (g_cpu_supports_rdseed || g_cpu_supports_rdrand) {
+    bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
+    bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);
+    if (supports_rdseed || supports_rdrand) {
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             u32 value = 0;
-            if (g_cpu_supports_rdseed) {
+            if (supports_rdseed) {
                 asm volatile(
                     "1:\n"
                     "rdseed %0\n"
