@@ -67,10 +67,49 @@ PageView::PageView()
     m_copy_action = GUI::CommonActions::make_copy_action([this](auto&) {
         GUI::Clipboard::the().set_data(selected_text(), "text/plain");
     });
+
+    m_select_all_action = GUI::CommonActions::make_select_all_action([this](auto&) {
+        select_all();
+    });
 }
 
 PageView::~PageView()
 {
+}
+
+void PageView::select_all()
+{
+    auto* layout_root = this->layout_root();
+    if (!layout_root)
+        return;
+
+    const LayoutNode* first_layout_node = layout_root;
+
+    for (;;) {
+        auto* next = first_layout_node->next_in_pre_order();
+        if (!next)
+            break;
+        first_layout_node = next;
+        if (is<LayoutText>(*first_layout_node))
+            break;
+    }
+
+    const LayoutNode* last_layout_node = first_layout_node;
+
+    for (const LayoutNode* layout_node = first_layout_node; layout_node; layout_node = layout_node->next_in_pre_order()) {
+        if (is<LayoutText>(*layout_node))
+            last_layout_node = layout_node;
+    }
+
+    ASSERT(first_layout_node);
+    ASSERT(last_layout_node);
+
+    int last_layout_node_index_in_node = 0;
+    if (is<LayoutText>(*last_layout_node))
+        last_layout_node_index_in_node = to<LayoutText>(*last_layout_node).text_for_rendering().length() - 1;
+
+    layout_root->selection().set({ first_layout_node, 0 }, { last_layout_node, last_layout_node_index_in_node });
+    update();
 }
 
 String PageView::selected_text() const

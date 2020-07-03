@@ -73,8 +73,11 @@ public:
 
     virtual bool accepts_focus() const override { return true; }
 
+    GUI::Action& select_all_action() { return *m_select_all_action; }
     GUI::Action& copy_action() { return *m_copy_action; }
+
     String selected_text() const;
+    void select_all();
 
 private:
     PageView();
@@ -119,6 +122,7 @@ private:
     NonnullOwnPtr<Page> m_page;
 
     RefPtr<GUI::Action> m_copy_action;
+    RefPtr<GUI::Action> m_select_all_action;
 };
 
 }
