@@ -56,9 +56,60 @@ static TextStyle style_for_token_type(Gfx::Palette palette, CppToken::Type type)
         return { palette.syntax_preprocessor_statement() };
     case CppToken::Type::Comment:
         return { palette.syntax_comment() };
-    default:
+    case CppToken::Type::Caret:
+    case CppToken::Type::CaretEquals:
+    case CppToken::Type::Plus:
+    case CppToken::Type::PlusEquals:
+    case CppToken::Type::PlusPlus:
+    case CppToken::Type::Minus:
+    case CppToken::Type::MinusEquals:
+    case CppToken::Type::MinusMinus:
+    case CppToken::Type::Equals:
+    case CppToken::Type::EqualsEquals:
+    case CppToken::Type::Ampersand:
+    case CppToken::Type::AmpersandEquals:
+    case CppToken::Type::DoubleAmpersand:
+    case CppToken::Type::Tilde:
+    case CppToken::Type::Pipe:
+    case CppToken::Type::DoublePipe:
+    case CppToken::Type::PipeEquals:
+    case CppToken::Type::Percent:
+    case CppToken::Type::PercentEquals:
+    case CppToken::Type::Asterisk:
+    case CppToken::Type::AsteriskEquals:
+    case CppToken::Type::Slash:
+    case CppToken::Type::SlashEquals:
+    case CppToken::Type::ExclamationMark:
+    case CppToken::Type::ExclamationMarkEquals:
+    case CppToken::Type::LessThan:
+    case CppToken::Type::LessThanEquals:
+    case CppToken::Type::GreaterThan:
+    case CppToken::Type::GreaterThanEquals:
+    case CppToken::Type::ShiftLeft:
+    case CppToken::Type::ShiftLeftEquals:
+    case CppToken::Type::ShiftRight:
+    case CppToken::Type::ShiftRightEquals:
+    case CppToken::Type::QuestionMark:
+    case CppToken::Type::Colon:
+        return { palette.syntax_operator() };
+    case CppToken::Type::Arrow:
+    case CppToken::Type::ColonColon:
+    case CppToken::Type::Comma:
+    case CppToken::Type::Ellipsis:
+    case CppToken::Type::Period:
+    case CppToken::Type::Semicolon:
+    case CppToken::Type::LeftBracket:
+    case CppToken::Type::LeftCurly:
+    case CppToken::Type::LeftParen:
+    case CppToken::Type::RightBracket:
+    case CppToken::Type::RightCurly:
+    case CppToken::Type::RightParen:
+        return { palette.syntax_punctuation()} ;
+    case CppToken::Type::Unknown:
+    case CppToken::Type::Whitespace:
         return { palette.base_text() };
     }
+    ASSERT_NOT_REACHED();
 }
 
 bool CppSyntaxHighlighter::is_identifier(void* token) const
