@@ -38,6 +38,9 @@ CppLexer::CppLexer(const StringView& input)
 
 char CppLexer::peek(size_t offset) const
 {
+    while ((m_index + offset) < m_input.length() && m_input[m_index + offset] == '\\'
+           && (m_index + offset + 1) < m_input.length() && m_input[m_index + offset + 1] == '\n')
+        offset += 2;
     if ((m_index + offset) >= m_input.length())
         return 0;
     return m_input[m_index + offset];
@@ -46,14 +49,25 @@ char CppLexer::peek(size_t offset) const
 char CppLexer::consume()
 {
     ASSERT(m_index < m_input.length());
-    char ch = m_input[m_index++];
     m_previous_position = m_position;
+
+    while ((m_index) < m_input.length() && m_input[m_index] == '\\'
+           && (m_index + 1) < m_input.length() && m_input[m_index + 1] == '\n') {
+        m_index += 2;
+        m_position.line++;
+        m_position.column = 0;
+    }
+
+    ASSERT(m_index <= m_input.length());
+    if (m_index == m_input.length()) {
+        return 0;
+    }
+    char ch = m_input[m_index++];
     if (ch == '\n') {
         m_position.line++;
         m_position.column = 0;
-    } else {
+    } else
         m_position.column++;
-    }
     return ch;
 }
 
@@ -303,8 +317,8 @@ Vector<CppToken> CppLexer::lex()
         }
     };
 
-    while (m_index < m_input.length()) {
-        auto ch = peek();
+    char ch;
+    while ((ch = peek())) {
         if (isspace(ch)) {
             begin_token();
             while (isspace(peek()))
@@ -675,6 +689,7 @@ Vector<CppToken> CppLexer::lex()
                 emit_token(CppToken::Type::GreaterThan);
             continue;
         }
+
         dbg() << "Unimplemented token character: " << ch;
         emit_token(CppToken::Type::Unknown);
     }
