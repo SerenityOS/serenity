@@ -1,29 +1,37 @@
-load("test-common.js");
+test("hex literals", () => {
+    expect(0xff).toBe(255);
+    expect(0xFF).toBe(255);
+});
 
-try {
-    assert(0xff === 255);
-    assert(0XFF === 255);
-    assert(0o10 === 8);
-    assert(0O10 === 8);
-    assert(0b10 === 2);
-    assert(0B10 === 2);
-    assert(1e3 === 1000);
-    assert(1e+3 === 1000);
-    assert(1e-3 === 0.001);
-    assert(1. === 1);
-    assert(1.e1 === 10);
-    assert(.1 === 0.1);
-    assert(.1e1 === 1);
-    assert(0.1e1 === 1);
-    assert(.1e+1 === 1);
-    assert(0.1e+1 === 1);
+test("octal literals", () => {
+    expect(0o10).toBe(8);
+    expect(0O10).toBe(8);
+});
 
-    Number.prototype.foo = 'LOL';
-    assert(1..foo === 'LOL');
-    assert(1.1.foo === 'LOL');
-    assert(.1.foo === 'LOL');
+test("binary literals", () => {
+    expect(0b10).toBe(2);
+    expect(0B10).toBe(2);
+});
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+test("exponential literals", () => {
+    expect(1e3).toBe(1000);
+    expect(1e+3).toBe(1000);
+    expect(1e-3).toBe(0.001);
+    expect(1.e1).toBe(10);
+    expect(.1e1).toBe(1);
+    expect(0.1e1).toBe(1);
+    expect(.1e+1).toBe(1);
+    expect(0.1e+1).toBe(1);
+});
+
+test("decimal numbers", () => {
+    expect(1.).toBe(1);
+    expect(.1).toBe(0.1);
+});
+
+test("accessing properties of decimal numbers", () => {
+    Number.prototype.foo = "foo";
+    expect(1..foo).toBe("foo");
+    expect(1.1.foo).toBe("foo");
+    expect(.1.foo).toBe("foo");
+});

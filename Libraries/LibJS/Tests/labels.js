@@ -1,20 +1,22 @@
-load("test-common.js");
-
-try {
+test("labeled plain scope", () => {
     test: {
         let o = 1;
-        assert(o === 1);
+        expect(o).toBe(1);
         break test;
-        assertNotReached();
+        expect().fail();
     }
+});
 
+test("break on plain scope from inner scope", () => {
     outer: {
         {
             break outer;
         }
-        assertNotReached();
+        expect().fail();
     }
+});
 
+test("labeled for loop with break", () => {
     let counter = 0;
     outer:
     for (a of [1, 2, 3]) {
@@ -24,8 +26,10 @@ try {
             counter++;
         }
     }
-    assert(counter === 4);
+    expect(counter).toBe(4);
+});
 
+test("labeled for loop with continue", () => {
     let counter = 0;
     outer:
     for (a of [1, 2, 3]) {
@@ -35,9 +39,5 @@ try {
             counter++;
         }
     }
-    assert(counter === 6);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(counter).toBe(6);
+});

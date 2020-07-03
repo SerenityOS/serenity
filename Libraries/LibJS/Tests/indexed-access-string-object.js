@@ -1,19 +1,15 @@
-load("test-common.js");
-
-try {
+test("string literal indexing", () => {
     var s = "foo";
-    assert(s[0] === "f");
-    assert(s[1] === "o");
-    assert(s[2] === "o");
-    assert(s[3] === undefined);
+    expect(s[0]).toBe("f");
+    expect(s[1]).toBe("o");
+    expect(s[2]).toBe("o");
+    expect(s[3]).toBeUndefined();
+});
 
-    var o = new String("bar");
-    assert(o[0] === "b");
-    assert(o[1] === "a");
-    assert(o[2] === "r");
-    assert(o[3] === undefined);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+test("string object indexing", () => {
+    var s = new String("bar");
+    expect(s[0]).toBe("b");
+    expect(s[1]).toBe("a");
+    expect(s[2]).toBe("r");
+    expect(s[3]).toBeUndefined();
+});

@@ -1,23 +1,14 @@
-load("test-common.js");
-
-try {
-
+test("let scoping", () => {
     let i = 1;
     {
         let i = 3;
-        assert(i === 3);
+        expect(i).toBe(3);
     }
-
-    assert(i === 1);
+    expect(i).toBe(1);
 
     {
         const i = 2;
-        assert(i === 2);
+        expect(i).toBe(2);
     }
-
-    assert(i === 1);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(i).toBe(1);
+});

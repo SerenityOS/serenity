@@ -1,14 +1,8 @@
-load("test-common.js");
-
-try {
+test("basic update expression", () => {
     var o = {};
     o.f = 1;
 
-    assert(o.f++ === 1);
-    assert(++o.f === 3);
-    assert(isNaN(++o.missing));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(o.f++).toBe(1);
+    expect(++o.f).toBe(3);
+    expect(++o.missing).toBeNaN();
+});

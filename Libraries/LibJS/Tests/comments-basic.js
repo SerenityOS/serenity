@@ -1,22 +1,25 @@
-load("test-common.js")
+test("regular comments", () => {
+    const source =
+`var i = 0;
 
-try {
-    var i = 0;
+// i++;
+/* i++; */
+/*
+i++;
+*/
+return i;`;
 
-    // i++;
-    /* i++; */
-    /*
-    i++;
-    */
-    <!-- i++; --> i++;
-    <!-- i++;
-    i++;
-    --> i++;
+    expect(source).toEvalTo(0);
+});
 
-    assert(i === 1);
+test("html comments", () => {
+    const source =
+`var i = 0;
+<!-- i++; --> i++;
+<!-- i++;
+i++;
+--> i++;
+return i;`
 
-    console.log('PASS');
-} catch (e) {
-    console.log('FAIL: ' + e);
-}
-
+    expect(source).toEvalTo(1);
+});

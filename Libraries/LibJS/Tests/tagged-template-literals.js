@@ -1,100 +1,106 @@
-load("test-common.js");
+describe("tagged template literal errors", () => {
+    test("undefined variables in template expression throw a ReferenceError", () => {
+        expect(() => {
+            foo`bar${baz}`;
+        }).toThrowWithMessage(ReferenceError, "'foo' is not defined");
 
-try {
-    assertThrowsError(() => {
-        foo`bar${baz}`;
-    }, {
-        error: ReferenceError,
-        message: "'foo' is not defined"
+        expect(() => {
+            function foo() {};
+            foo`bar${baz}`;
+        }).toThrowWithMessage(ReferenceError, "'baz' is not defined");
     });
 
-    assertThrowsError(() => {
-        function foo() { }
-        foo`bar${baz}`;
-    }, {
-        error: ReferenceError,
-        message: "'baz' is not defined"
+    test("cannot tag a non-function", () => {
+        expect(() => {
+            undefined``;
+        }).toThrowWithMessage(TypeError, "undefined is not a function");
     });
+});
 
-    assertThrowsError(() => {
-        undefined``````;
-    }, {
-        error: TypeError,
-        message: "undefined is not a function"
-    });
-
-    function test1(strings) {
-        assert(strings instanceof Array);
-        assert(strings.length === 1);
-        assert(strings[0] === "");
-        return 42;
-    }
-    assert(test1`` === 42);
-
-    function test2(s) {
-        return function (strings) {
-            assert(strings instanceof Array);
-            assert(strings.length === 1);
-            assert(strings[0] === "bar");
-            return s + strings[0];
+describe("tagged template literal functionality", () => {
+    test("empty template tag", () => {
+        function test1(strings) {
+            expect(strings).toBeInstanceOf(Array);
+            expect(strings).toHaveLength(1);
+            expect(strings[0]).toBe("");
+            return 42;
         }
-    }
-    assert(test2("foo")`bar` === "foobar");
+        expect(test1``).toBe(42);
+    });
 
-    var test3 = {
-        foo(strings, p1) {
-            assert(strings instanceof Array);
-            assert(strings.length === 2);
-            assert(strings[0] === "");
-            assert(strings[1] === "");
-            assert(p1 === "bar");
+    test("tagging a template literal", () => {
+        function test2(s) {
+            return function (strings) {
+                expect(strings).toBeInstanceOf(Array);
+                expect(strings).toHaveLength(1);
+                expect(strings[0]).toBe("bar");
+                return s + strings[0];
+            }
         }
-    };
-    test3.foo`${"bar"}`;
+        expect(test2("foo")`bar`).toBe("foobar");
+    });
 
-    function test4(strings, p1) {
-        assert(strings instanceof Array);
-        assert(strings.length === 2);
-        assert(strings[0] === "foo");
-        assert(strings[1] === "");
-        assert(p1 === 42);
-    }
-    var bar = 42;
-    test4`foo${bar}`;
+    test("tagging an object function key", () => {
+        var test3 = {
+            foo(strings, p1) {
+                expect(strings).toBeInstanceOf(Array);
+                expect(strings).toHaveLength(2);
+                expect(strings[0]).toBe("");
+                expect(strings[1]).toBe("");
+                expect(p1).toBe("bar");
+            }
+        };
+        test3.foo`${"bar"}`;
+    });
 
-    function test5(strings, p1, p2) {
-        assert(strings instanceof Array);
-        assert(strings.length === 3);
-        assert(strings[0] === "foo");
-        assert(strings[1] === "baz");
-        assert(strings[2] === "");
-        assert(p1 === 42);
-        assert(p2 === "qux");
-        return (strings, value) => `${value}${strings[0]}`;
-    }
-    var bar = 42;
-    assert(test5`foo${bar}baz${"qux"}``test${123}` === "123test");
+    test("tagging with a variable in a template expression", () => {
+        function test4(strings, p1) {
+            expect(strings).toBeInstanceOf(Array);
+            expect(strings).toHaveLength(2);
+            expect(strings[0]).toBe("foo");
+            expect(strings[1]).toBe("");
+            expect(p1).toBe(42);
+        }
+        var bar = 42;
+        test4`foo${bar}`;
+    });
 
-    function review(strings, name, rating) {
-        return `${strings[0]}**${name}**${strings[1]}_${rating}_${strings[2]}`;
-    }
-    var name = "SerenityOS";
-    var rating = "great";
-    assert(review`${name} is a ${rating} project!` === "**SerenityOS** is a _great_ project!");
+    test("template tag result of another template tag", () => {
+        function test5(strings, p1, p2) {
+            expect(strings).toBeInstanceOf(Array);
+            expect(strings).toHaveLength(3);
+            expect(strings[0]).toBe("foo");
+            expect(strings[1]).toBe("baz");
+            expect(strings[2]).toBe("");
+            expect(p1).toBe(42);
+            expect(p2).toBe("qux");
+            return (strings, value) => `${value}${strings[0]}`;
+        }
+        var bar = 42;
+        expect(test5`foo${bar}baz${"qux"}``test${123}`).toBe("123test");
+    });
 
-    const getTemplateObject = (...rest) => rest;
-    const getRawTemplateStrings = arr => arr.raw;
+    test("general test", () => {
+        function review(strings, name, rating) {
+            return `${strings[0]}**${name}**${strings[1]}_${rating}_${strings[2]}`;
+        }
+        var name = "SerenityOS";
+        var rating = "great";
+        expect(review`${name} is a ${rating} project!`).toBe("**SerenityOS** is a _great_ project!");
+    });
 
-    let o = getTemplateObject`foo\nbar`;
-    assert(Object.getOwnPropertyNames(o[0]).includes('raw'));
-
-    let raw = getRawTemplateStrings`foo${1 + 3}\nbar`;
-    assert(!Object.getOwnPropertyNames(raw).includes('raw'));
-    assert(raw.length === 2);
-    assert(raw[0] === 'foo');
-    assert(raw[1].length === 5 && raw[1] === '\\nbar');
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("template object structure", () => {
+        const getTemplateObject = (...rest) => rest;
+        const getRawTemplateStrings = arr => arr.raw;
+        
+        let o = getTemplateObject`foo\nbar`;
+        expect(Object.getOwnPropertyNames(o[0])).toContain("raw");
+        
+        let raw = getRawTemplateStrings`foo${1 + 3}\nbar`;
+        expect(Object.getOwnPropertyNames(raw)).not.toContain("raw");
+        expect(raw).toHaveLength(2);
+        expect(raw[0]).toBe("foo");
+        expect(raw[1]).toHaveLength(5);
+        expect(raw[1]).toBe("\\nbar");
+    });
+});
