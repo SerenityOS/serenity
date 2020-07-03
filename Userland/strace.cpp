@@ -29,6 +29,7 @@
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
 #include <LibC/sys/arch/i386/regs.h>
+#include <LibCore/ArgsParser.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,12 +37,6 @@
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-static int usage()
-{
-    printf("usage: strace [-p pid] [command...]\n");
-    return 1;
-}
 
 static int g_pid = -1;
 
@@ -57,35 +52,47 @@ static void handle_sigint(int)
 
 int main(int argc, char** argv)
 {
-    if (argc == 1)
-        return usage();
-
+    Vector<const char*> child_argv;
     bool spawned_new_process = false;
 
-    if (!strcmp(argv[1], "-p")) {
-        if (argc != 3)
-            return usage();
-        g_pid = atoi(argv[2]);
-    } else {
+    Core::ArgsParser parser;
+    parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid");
+    parser.add_positional_argument(child_argv, "Arguments to exec", "argument", Core::ArgsParser::Required::No);
+
+    parser.parse(argc, argv);
+
+    if (g_pid == -1) {
+        if (child_argv.is_empty()) {
+            fprintf(stderr, "strace: Expected either a pid or some arguments\n");
+            return 1;
+        }
+
+        child_argv.append(nullptr);
         spawned_new_process = true;
         int pid = fork();
+        if (pid < 0) {
+            perror("fork");
+            return 1;
+        }
+
         if (!pid) {
             if (ptrace(PT_TRACE_ME, 0, 0, 0) == -1) {
                 perror("traceme");
                 return 1;
             }
-            int rc = execvp(argv[1], &argv[1]);
+            int rc = execvp(child_argv.first(), const_cast<char**>(child_argv.data()));
             if (rc < 0) {
                 perror("execvp");
                 exit(1);
             }
             ASSERT_NOT_REACHED();
         }
+
+        g_pid = pid;
         if (waitpid(pid, nullptr, WSTOPPED) != pid) {
             perror("waitpid");
             return 1;
         }
-        g_pid = pid;
     }
 
     struct sigaction sa;
@@ -169,8 +176,6 @@ int main(int argc, char** argv)
             arg3,
             res);
     }
-
-    return 0;
 
     return 0;
 }
