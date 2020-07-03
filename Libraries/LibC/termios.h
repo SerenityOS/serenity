@@ -52,6 +52,11 @@ int tcsetattr(int fd, int optional_actions, const struct termios*);
 int tcflow(int fd, int action);
 int tcflush(int fd, int queue_selector);
 
+speed_t cfgetispeed(const struct termios*);
+speed_t cfgetospeed(const struct termios*);
+int cfsetispeed(struct termios*, speed_t);
+int cfsetospeed(struct termios*, speed_t);
+
 /* c_cc characters */
 #define VINTR 0
 #define VQUIT 1
