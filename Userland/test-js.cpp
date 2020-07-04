@@ -192,6 +192,7 @@ Vector<String> tests_to_run = {
 enum class TestResult {
     Pass,
     Fail,
+    Skip,
 };
 
 struct JSTest {
@@ -201,7 +202,9 @@ struct JSTest {
 
 struct JSSuite {
     String name;
-    bool has_failed_tests { false };
+    // A failed test takes precedence over a skipped test, which both have
+    // precedence over a passed test
+    TestResult most_severe_test_result { TestResult::Pass };
     Vector<JSTest> tests {};
 };
 
@@ -213,13 +216,16 @@ struct ParserError {
 struct JSFileResult {
     String name;
     Optional<ParserError> error {};
-    bool has_failed_tests { false };
+    // A failed test takes precedence over a skipped test, which both have
+    // precedence over a passed test
+    TestResult most_severe_test_result { TestResult::Pass };
     Vector<JSSuite> suites {};
 };
 
 struct JSTestRunnerCounts {
     int tests_failed { 0 };
     int tests_passed { 0 };
+    int tests_skipped { 0 };
     int suites_failed { 0 };
     int suites_passed { 0 };
     int files_total { 0 };
@@ -361,19 +367,26 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             if (result_string == "pass") {
                 test.result = TestResult::Pass;
                 m_counts.tests_passed++;
-            } else {
+            } else if (result_string == "fail") {
                 test.result = TestResult::Fail;
                 m_counts.tests_failed++;
-                suite.has_failed_tests = true;
+                suite.most_severe_test_result = TestResult::Fail;
+            } else {
+                test.result = TestResult::Skip;
+                if (suite.most_severe_test_result == TestResult::Pass)
+                    suite.most_severe_test_result = TestResult::Skip;
+                m_counts.tests_skipped++;
             }
 
             suite.tests.append(test);
         });
 
-        if (suite.has_failed_tests) {
+        if (suite.most_severe_test_result == TestResult::Fail) {
             m_counts.suites_failed++;
-            file_result.has_failed_tests = true;
+            file_result.most_severe_test_result = TestResult::Fail;
         } else {
+            if (suite.most_severe_test_result == TestResult::Skip && file_result.most_severe_test_result == TestResult::Pass)
+                file_result.most_severe_test_result = TestResult::Skip;
             m_counts.suites_passed++;
         }
 
@@ -390,6 +403,7 @@ enum Modifier {
     BG_GREEN,
     FG_RED,
     FG_GREEN,
+    FG_ORANGE,
     FG_GRAY,
     FG_BLACK,
     FG_BOLD,
@@ -409,6 +423,8 @@ void print_modifiers(Vector<Modifier> modifiers)
                 return "\033[38;2;255;0;102m";
             case FG_GREEN:
                 return "\033[38;2;102;255;0m";
+            case FG_ORANGE:
+                return "\033[38;2;255;102;0m";
             case FG_GRAY:
                 return "\033[38;2;135;139;148m";
             case FG_BLACK:
@@ -426,7 +442,8 @@ void print_modifiers(Vector<Modifier> modifiers)
 
 void TestRunner::print_file_result(const JSFileResult& file_result)
 {
-    if (file_result.has_failed_tests || file_result.error.has_value()) {
+
+    if (file_result.most_severe_test_result == TestResult::Fail || file_result.error.has_value()) {
         print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
         printf(" FAIL ");
         print_modifiers({ CLEAR });
@@ -453,18 +470,26 @@ void TestRunner::print_file_result(const JSFileResult& file_result)
         return;
     }
 
-    if (file_result.has_failed_tests) {
+    if (file_result.most_severe_test_result != TestResult::Pass) {
         for (auto& suite : file_result.suites) {
-            if (!suite.has_failed_tests)
+            if (suite.most_severe_test_result == TestResult::Pass)
                 continue;
 
+            bool failed = suite.most_severe_test_result == TestResult::Fail;
+
             print_modifiers({ FG_GRAY, FG_BOLD });
-            printf("       ❌ Suite:  ");
+
+            if (failed) {
+                printf("       ❌  Suite:  ");
+            } else {
+                printf("       ⚠️️  Suite:  ");
+            }
+
+            print_modifiers({ CLEAR, FG_GRAY });
+
             if (suite.name == TOP_LEVEL_TEST_NAME) {
-                print_modifiers({ CLEAR, FG_GRAY });
                 printf("<top-level>\n");
             } else {
-                print_modifiers({ CLEAR, FG_RED });
                 printf("%s\n", suite.name.characters());
             }
             print_modifiers({ CLEAR });
@@ -474,9 +499,14 @@ void TestRunner::print_file_result(const JSFileResult& file_result)
                     continue;
 
                 print_modifiers({ FG_GRAY, FG_BOLD });
-                printf("            Test:   ");
-                print_modifiers({ CLEAR, FG_RED });
-                printf("%s\n", test.name.characters());
+                printf("             Test:   ");
+                if (test.result == TestResult::Fail) {
+                    print_modifiers({ CLEAR, FG_RED });
+                    printf("%s (failed)\n", test.name.characters());
+                } else {
+                    print_modifiers({ CLEAR, FG_ORANGE });
+                    printf("%s (skipped)\n", test.name.characters());
+                }
                 print_modifiers({ CLEAR });
             }
         }
@@ -502,6 +532,11 @@ void TestRunner::print_test_results() const
     if (m_counts.tests_failed) {
         print_modifiers({ FG_RED });
         printf("%d failed, ", m_counts.tests_failed);
+        print_modifiers({ CLEAR });
+    }
+    if (m_counts.tests_skipped) {
+        print_modifiers({ FG_ORANGE });
+        printf("%d skipped, ", m_counts.tests_skipped);
         print_modifiers({ CLEAR });
     }
     if (m_counts.tests_passed) {
