@@ -16,6 +16,13 @@ console.log = (...args) => {
     __UserOutput__.push(args.join(" "));
 };
 
+class ExpectationError extends Error {
+    constructor(message, fileName, lineNumber) {
+        super(message, fileName, lineNumber);
+        this.name = "ExpectationError";
+    }
+}
+
 // Use an IIFE to avoid polluting the global namespace as much as possible
 (() => {
 
@@ -48,13 +55,6 @@ const deepObjectEquals = (a, b) => {
     return true;
 }
 
-class ExpectationError extends Error {
-    constructor(message, fileName, lineNumber) {
-        super(message, fileName, lineNumber);
-        this.name = "ExpectationError";
-    }
-}
-
 class Expector {
     constructor(target, inverted) {
         this.target = target;
@@ -72,6 +72,8 @@ class Expector {
     }
 
     toHaveLength(length) {
+        this.__expect(typeof this.target.length === "number");
+
         this.__doMatcher(() => {
             this.__expect(Object.is(this.target.length, length));
         });
@@ -80,31 +82,26 @@ class Expector {
     toHaveProperty(property, value) {
         this.__doMatcher(() => {
             let object = this.target;
-    
+
             if (typeof property === "string" && property.includes(".")) {
                 let propertyArray = [];
-    
-                while (true) {
+
+                while (property.includes(".")) {
                     let index = property.indexOf(".");
-                    if (index === -1) {
-                        propertyArray.push(property);
-                        break;
-                    }
-    
                     propertyArray.push(property.substring(0, index));
-                    property = property.substring(index, property.length);
+                    if (index + 1 >= property.length)
+                        break;
+                    property = property.substring(index + 1, property.length);
                 }
-    
+
+                propertyArray.push(property);
+
                 property = propertyArray;
             }
-    
+
             if (Array.isArray(property)) {
                 for (let key of property) {
-                    if (object === undefined || object === null) {
-                        if (this.inverted)
-                            return;
-                        throw new ExpectationError();
-                    }
+                    this.__expect(object !== undefined && object !== null);
                     object = object[key];
                 }
             } else {
@@ -117,48 +114,9 @@ class Expector {
         });
     }
 
-    toBeCloseTo(number, numDigits) {
-        if (numDigits === undefined)
-            numDigits = 2;
-
-        this.__doMatcher(() => {
-            this.__expect(Math.abs(number - this.target) < (10 ** -numDigits / numDigits));
-        });
-    }
-
     toBeDefined() {
         this.__doMatcher(() => {
             this.__expect(this.target !== undefined);
-        });
-    }
-
-    toBeFalsey() {
-        this.__doMatcher(() => {
-            this.__expect(!this.target);
-        });
-    }
-
-    toBeGreaterThan(number) {
-        this.__doMatcher(() => {
-            this.__expect(this.target > number);
-        });
-    }
-
-    toBeGreaterThanOrEqual(number) {
-        this.__doMatcher(() => {
-            this.__expect(this.target >= number);
-        });
-    }
-
-    toBeLessThan(number) {
-        this.__doMatcher(() => {
-            this.__expect(this.target < number);
-        });
-    }
-
-    toBeLessThanOrEqual(number) {
-        this.__doMatcher(() => {
-            this.__expect(this.target <= number);
         });
     }
 
@@ -171,12 +129,6 @@ class Expector {
     toBeNull() {
         this.__doMatcher(() => {
             this.__expect(this.target === null);
-        });
-    }
-
-    toBeTruthy() {
-        this.__doMatcher(() => {
-            this.__expect(!!this.target);
         });
     }
 
@@ -199,7 +151,7 @@ class Expector {
                 if (item === element)
                     return;
             }
-            
+
             throw new ExpectationError();
         });
     }
@@ -211,7 +163,7 @@ class Expector {
                 if (deepEquals(item, element))
                     return;
             }
-            
+
             throw new ExpectationError();
         });
     }
@@ -224,19 +176,26 @@ class Expector {
 
     toThrow(value) {
         this.__expect(typeof this.target === "function");
-        this.__expect(typeof value === "string" || typeof value === "function" || value === undefined);
+        this.__expect(typeof value === "string"
+                   || typeof value === "function"
+                   || typeof value === "object"
+                   || value === undefined);
 
         this.__doMatcher(() => {
+            let threw = true;
             try {
                 this.target();
-                this.__expect(false);
+                threw = false;
             } catch (e) {
                 if (typeof value === "string") {
                     this.__expect(e.message.includes(value));
                 } else if (typeof value === "function") {
                     this.__expect(e instanceof value);
+                } else if (typeof value === "object") {
+                    this.__expect(e.message === value.message);
                 }
             }
+            this.__expect(threw);
         });
     }
 
@@ -281,13 +240,14 @@ class Expector {
                 throw new ExpectationError();
             }
         } else {
+            let threw;
             try {
                 new Function(this.target)();
-                throw new ExpectationError();
+                threw = false;
             } catch (e) {
-                if (e.name !== "SyntaxError") 
-                    throw new ExpectationError();
+                threw = true;
             }
+            this.__expect(threw);
         }
     }
 

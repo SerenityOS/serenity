@@ -1,0 +1,224 @@
+test("toBe", () => {
+    expect(null).toBe(null);
+    expect(undefined).toBe(undefined);
+    expect(null).not.toBe(undefined);
+
+    expect(1).toBe(1);
+    expect(1).not.toBe(2);
+
+    expect("1").toBe("1");
+    expect("1").not.toBe("2");
+
+    expect(true).toBe(true);
+    expect(true).not.toBe(false);
+
+    expect({}).not.toBe({});
+    expect([]).not.toBe([]);
+
+    function foo() {};
+    expect(foo).toBe(foo);
+    expect(function(){}).not.toBe(function(){});
+
+    let s = Symbol("foo");
+    expect(s).toBe(s);
+    expect(Symbol("foo")).not.toBe(Symbol("foo"));
+
+    expect(1n).toBe(1n);
+    expect(1n).not.toBe(1);
+});
+
+test("toHaveLength", () => {
+    expect([]).toHaveLength(0);
+    expect([]).not.toHaveLength(1);
+    expect([1]).toHaveLength(1);
+    expect({ length: 1 }).toHaveLength(1);
+
+    expect(() => {
+        expect(1).toHaveLength();
+    }).toThrow(ExpectationError);
+});
+
+test("toHaveProperty", () => {
+    expect([]).toHaveProperty("length");
+    expect([]).toHaveProperty("length", 0);
+    expect([1]).not.toHaveProperty("length", 0);
+    expect({ foo: "bar" }).toHaveProperty("foo")
+    expect({ foo: "bar" }).toHaveProperty("foo", "bar");
+
+    expect({ foo: { bar: "baz" } }).toHaveProperty(["foo", "bar"]);
+    expect({ foo: { bar: "baz" } }).toHaveProperty(["foo", "bar"], "baz");
+    expect({ foo: { bar: "baz" } }).toHaveProperty("foo.bar");
+    expect({ foo: { bar: "baz" } }).toHaveProperty("foo.bar", "baz");
+
+    expect({ foo: { bar: "baz" } }).toHaveProperty(["foo", "bar"]);
+    expect({ foo: { bar: "baz" } }).toHaveProperty(["foo", "bar"], "baz");
+    expect({ foo: { bar: "baz" } }).not.toHaveProperty(["foo", "baz"]);
+    expect({ foo: { bar: "baz" } }).not.toHaveProperty(["foo", "baz"], "qux");
+    expect({ foo: { bar: "baz" } }).not.toHaveProperty("foo.baz");
+    expect({ foo: { bar: "baz" } }).not.toHaveProperty("foo.baz", "qux");
+});
+
+test("toBeDefined", () => {
+    expect(1).toBeDefined();
+    expect(true).toBeDefined();
+    expect(false).toBeDefined();
+    expect({}).toBeDefined();
+    expect([]).toBeDefined();
+    expect("a").toBeDefined();
+    expect(null).toBeDefined();
+    expect(undefined).not.toBeDefined();
+});
+
+test("toBeInstanceOf", () => {
+    expect(new Error).toBeInstanceOf(Error);
+    expect(Error).not.toBeInstanceOf(Error);
+
+    class Parent {};
+    class Child extends Parent {};
+
+    expect(new Child).toBeInstanceOf(Child);
+    expect(new Child).toBeInstanceOf(Parent);
+    expect(new Parent).toBeInstanceOf(Parent);
+    expect(new Parent).not.toBeInstanceOf(Child);
+});
+
+test("toBeNull", () => {
+    expect(null).toBeNull();
+    expect(undefined).not.toBeNull();
+    expect(5).not.toBeNull();
+});
+
+test("toBeUndefined", () => {
+    expect(undefined).toBeUndefined();
+    expect(null).not.toBeUndefined();
+    expect().toBeUndefined();
+    expect(5).not.toBeUndefined();
+});
+
+test("toBeNaN", () => {
+    expect(NaN).toBeNaN();
+    expect(5).not.toBeNaN();
+});
+
+test("toContain", () => {
+    expect([1, 2, 3]).toContain(1);
+    expect([1, 2, 3]).toContain(2);
+    expect([1, 2, 3]).toContain(3);
+    expect([{ foo: 1 }]).not.toContain({ foo: 1 });
+});
+
+test("toContainEqual", () => {
+    expect([1, 2, 3]).toContainEqual(1);
+    expect([1, 2, 3]).toContainEqual(2);
+    expect([1, 2, 3]).toContainEqual(3);
+    expect([{ foo: 1 }]).toContainEqual({ foo: 1 });
+});
+
+test("toEqual", () => {
+    expect(undefined).toEqual(undefined);
+    expect(null).toEqual(null);
+    expect(undefined).not.toEqual(null);
+    expect(null).not.toEqual(undefined);
+    expect(NaN).toEqual(NaN);
+
+    expect(1).toEqual(1);
+    expect("abcd").toEqual("abcd");
+
+    let s = Symbol();
+    expect(s).toEqual(s);
+    expect(Symbol()).not.toEqual(Symbol());
+    expect(Symbol.for("foo")).toEqual(Symbol.for("foo"));
+
+    expect({ foo: 1, bar: { baz: [1, 2, 3 ] } })
+        .toEqual({ foo: 1, bar: { baz: [1, 2, 3 ] } });
+    expect([1, 2, { foo: 1 }, [3, [4, 5]]])
+        .toEqual([1, 2, { foo: 1 }, [3, [4, 5]]]);
+
+    function foo() {}
+    expect(foo).toEqual(foo);
+    expect(function(){}).not.toEqual(function(){});
+});
+
+test("toThrow", () => {
+    expect(() => {}).not.toThrow();
+    expect(() => {}).not.toThrow("foo");
+    expect(() => {}).not.toThrow(TypeError);
+    expect(() => {}).not.toThrow(new TypeError("foo"));
+
+    let thrower = () => {
+        throw new TypeError("foo bar");
+    };
+
+    expect(thrower).toThrow();
+    expect(thrower).toThrow(TypeError);
+    expect(thrower).toThrow("o ba");
+    expect(thrower).toThrow("foo bar");
+    expect(thrower).not.toThrow("baz");
+    expect(thrower).not.toThrow(ReferenceError);
+    expect(thrower).toThrow(new TypeError("foo bar"));
+    expect(thrower).not.toThrow(new TypeError("o ba"));
+    expect(thrower).toThrow(new ReferenceError("foo bar"));
+    expect(thrower).toThrow({ message: "foo bar" });
+});
+
+test("pass", () => {
+    expect().pass();
+    expect({}).pass();
+});
+
+test("fail", () => {
+    // FIXME: Doesn't really make sense; this is a great candidate
+    // for expect.assertions()
+    try {
+        expect().fail();
+    } catch (e) {
+        expect(e.name).toBe("ExpectationError");
+    }
+});
+
+test("toThrowWithMessage", () => {
+    let incorrectUsages = [
+        [1, undefined, undefined],
+        [() => {}, undefined, undefined],
+        [() => {}, function(){}, undefined],
+        [() => {}, undefined, "test"]
+    ];
+
+    incorrectUsages.forEach(arr => {
+        expect(() => {
+            expect(arr[0]).toThrowWithMessage(arr[1], arr[2]);
+        }).toThrow();
+    });
+
+    let thrower = () => {
+        throw new TypeError("foo bar");
+    };
+
+    expect(thrower).toThrowWithMessage(TypeError, "foo bar");
+    expect(thrower).toThrowWithMessage(TypeError, "foo");
+    expect(thrower).toThrowWithMessage(TypeError, "o ba");
+    expect(thrower).not.toThrowWithMessage(ReferenceError, "foo bar");
+    expect(thrower).not.toThrowWithMessage(TypeError, "foo baz");
+});
+
+// FIXME: Will have to change when this matcher changes to use the
+// "eval" function
+test("toEval", () => {
+    expect("let a = 1").toEval();
+    expect("a < 1").not.toEval();
+    expect("&&*^%#%@").not.toEval();
+    expect("function foo() { return 1; }; return foo();").toEval();
+});
+
+// FIXME: Will have to change when this matcher changes to use the
+// "eval" function
+test("toEvalTo", () => {
+    expect("let a = 1").toEvalTo();
+    expect("let a = 1").toEvalTo(undefined);
+    expect("return 10").toEvalTo(10);
+    expect("return 10").not.toEvalTo(5);
+
+    expect(() => {
+        expect("*^&%%").not.toEvalTo();
+    }).toThrow();
+});
