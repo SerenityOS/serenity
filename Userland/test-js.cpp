@@ -28,6 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/LogStream.h>
 #include <LibCore/File.h>
+#include <LibCore/ArgsParser.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
@@ -216,6 +217,7 @@ struct ParserError {
 struct JSFileResult {
     String name;
     Optional<ParserError> error {};
+    double time_taken { 0 };
     // A failed test takes precedence over a skipped test, which both have
     // precedence over a passed test
     TestResult most_severe_test_result { TestResult::Pass };
@@ -239,13 +241,14 @@ double get_time()
     struct timezone tz1;
     auto return_code = gettimeofday(&tv1, &tz1);
     ASSERT(return_code >= 0);
-    return static_cast<double>(tv1.tv_sec) + static_cast<double>(tv1.tv_usec) / 1'000'000;
+    return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
 }
 
 class TestRunner {
 public:
-    TestRunner(String test_root)
+    TestRunner(String test_root, bool print_times)
         : m_test_root(move(test_root))
+        , m_print_times(print_times)
     {
     }
 
@@ -253,30 +256,20 @@ public:
 
 private:
     JSFileResult run_file_test(const String& test_path);
-    static void print_file_result(const JSFileResult& file_result);
+    void print_file_result(const JSFileResult& file_result) const;
     void print_test_results() const;
 
     String m_test_root;
+    bool m_print_times;
 
-    double m_start_time;
-    double m_end_time;
+    double m_total_elapsed_time_in_ms { 0 };
     JSTestRunnerCounts m_counts;
 };
 
 void TestRunner::run()
 {
-    m_start_time = get_time();
-
-    // FIXME: The way this currently works, the time it takes to print is
-    // counted in the total test duration. In order to change this, we'd have to
-    // loop over the paths and collect the results, record then time, and then
-    // print. However, doing it this way provides no feedback to the user at
-    // first, and then all the feedback at once. Both ways have their pros and
-    // cons, but which one we prefer still needs to be decided.
     for (auto& test_path : tests_to_run)
         print_file_result(run_file_test(test_path));
-
-    m_end_time = get_time();
 
     print_test_results();
 }
@@ -321,6 +314,7 @@ Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 
 JSFileResult TestRunner::run_file_test(const String& test_path)
 {
+    double start_time = get_time();
     auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
 
     if (parse_and_run_file(*interpreter, String::format("%s/test-common.js", m_test_root.characters())).has_value()) {
@@ -395,6 +389,9 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
 
     m_counts.files_total++;
 
+    file_result.time_taken = get_time() - start_time;
+    m_total_elapsed_time_in_ms += file_result.time_taken;
+
     return file_result;
 }
 
@@ -407,6 +404,7 @@ enum Modifier {
     FG_GRAY,
     FG_BLACK,
     FG_BOLD,
+    ITALIC,
     CLEAR,
 };
 
@@ -431,6 +429,8 @@ void print_modifiers(Vector<Modifier> modifiers)
                 return "\033[30m";
             case FG_BOLD:
                 return "\033[1m";
+            case ITALIC:
+                return "\033[3m";
             case CLEAR:
                 return "\033[0m";
             }
@@ -440,7 +440,7 @@ void print_modifiers(Vector<Modifier> modifiers)
     }
 }
 
-void TestRunner::print_file_result(const JSFileResult& file_result)
+void TestRunner::print_file_result(const JSFileResult& file_result) const
 {
 
     if (file_result.most_severe_test_result == TestResult::Fail || file_result.error.has_value()) {
@@ -453,7 +453,19 @@ void TestRunner::print_file_result(const JSFileResult& file_result)
         print_modifiers({ CLEAR });
     }
 
-    printf(" %s\n", file_result.name.characters());
+    printf(" %s", file_result.name.characters());
+
+    if (m_print_times) {
+        print_modifiers({ CLEAR, ITALIC, FG_GRAY });
+        if (file_result.time_taken < 1000) {
+            printf(" (%dms)\n", static_cast<int>(file_result.time_taken));
+        } else {
+            printf(" (%.3fs)\n", file_result.time_taken / 1000.0);
+        }
+        print_modifiers({ CLEAR });
+    } else {
+        printf("\n");
+    }
 
     if (file_result.error.has_value()) {
         auto test_error = file_result.error.value();
@@ -547,20 +559,32 @@ void TestRunner::print_test_results() const
     printf("%d total\n", m_counts.tests_failed + m_counts.tests_passed);
 
     printf("Files:       %d total\n", m_counts.files_total);
-    printf("Time:        %-.3fs\n\n", m_end_time - m_start_time);
+
+    printf("Time:        ");
+    if (m_total_elapsed_time_in_ms < 1000.0) {
+        printf("%dms\n\n", static_cast<int>(m_total_elapsed_time_in_ms));
+    } else {
+        printf("%-.3fs\n\n", m_total_elapsed_time_in_ms / 1000.0);
+    }
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
+    bool print_times = false;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
+    args_parser.parse(argc, argv);
+
 #ifdef __serenity__
-    TestRunner("/home/anon/js-tests").run();
+    TestRunner("/home/anon/js-tests", print_times).run();
 #else
     char* serenity_root = getenv("SERENITY_ROOT");
     if (!serenity_root) {
         printf("test-js requires the SERENITY_ROOT environment variable to be set");
         return 1;
     }
-    TestRunner(String::format("%s/Libraries/LibJS/Tests", serenity_root)).run();
+    TestRunner(String::format("%s/Libraries/LibJS/Tests", serenity_root), print_times).run();
 #endif
 
     return 0;
