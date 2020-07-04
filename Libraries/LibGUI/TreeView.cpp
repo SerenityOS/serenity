@@ -167,7 +167,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
             auto node_text = model.data(index, Model::Role::Display).to_string();
             Gfx::IntRect rect = {
                 x_offset, y_offset,
-                icon_size() + icon_spacing() + text_padding() + font().width(node_text) + text_padding(), item_height()
+                icon_size() + icon_spacing() + text_padding() + font_for_index(index)->width(node_text) + text_padding(), item_height()
             };
             Gfx::IntRect toggle_rect;
             if (row_count_at_index > 0) {
