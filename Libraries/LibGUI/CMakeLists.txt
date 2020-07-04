@@ -26,6 +26,7 @@ set(SOURCES
     Event.cpp
     FilePicker.cpp
     FileSystemModel.cpp
+    FilteringProxyModel.cpp
     FontDatabase.cpp
     Frame.cpp
     GroupBox.cpp
