@@ -1,5 +1,3 @@
-load("test-common.js");
-
 function isPositiveZero(value) {
     return value === 0 && 1 / value === Infinity;
 }
@@ -8,35 +6,33 @@ function isNegativeZero(value) {
     return value === 0 && 1 / value === -Infinity;
 }
 
-try {
-    assert(Math.sign.length === 1);
+test("basic functionality", () => {
+    expect(Math.sign).toHaveLength(1);
 
-    assert(Math.sign(0.0001) === 1);
-    assert(Math.sign(1) === 1);
-    assert(Math.sign(42) === 1);
-    assert(Math.sign(Infinity) === 1);
-    assert(isPositiveZero(Math.sign(0)));
-    assert(isPositiveZero(Math.sign(null)));
-    assert(isPositiveZero(Math.sign('')));
-    assert(isPositiveZero(Math.sign([])));
+    expect(Math.sign.length).toBe(1);
 
-    assert(Math.sign(-0.0001) === -1);
-    assert(Math.sign(-1) === -1);
-    assert(Math.sign(-42) === -1);
-    assert(Math.sign(-Infinity) === -1);
-    assert(isNegativeZero(Math.sign(-0)));
-    assert(isNegativeZero(Math.sign(-null)));
-    assert(isNegativeZero(Math.sign(-'')));
-    assert(isNegativeZero(Math.sign(-[])));
+    expect(Math.sign(0.0001)).toBe(1);
+    expect(Math.sign(1)).toBe(1);
+    expect(Math.sign(42)).toBe(1);
+    expect(Math.sign(Infinity)).toBe(1);
+    expect(isPositiveZero(Math.sign(0))).toBeTrue();
+    expect(isPositiveZero(Math.sign(null))).toBeTrue();
+    expect(isPositiveZero(Math.sign(''))).toBeTrue();
+    expect(isPositiveZero(Math.sign([]))).toBeTrue();
 
-    assert(isNaN(Math.sign()));
-    assert(isNaN(Math.sign(undefined)));
-    assert(isNaN(Math.sign([1, 2, 3])));
-    assert(isNaN(Math.sign({})));
-    assert(isNaN(Math.sign(NaN)));
-    assert(isNaN(Math.sign("foo")));
+    expect(Math.sign(-0.0001)).toBe(-1);
+    expect(Math.sign(-1)).toBe(-1);
+    expect(Math.sign(-42)).toBe(-1);
+    expect(Math.sign(-Infinity)).toBe(-1);
+    expect(isNegativeZero(Math.sign(-0))).toBeTrue();
+    expect(isNegativeZero(Math.sign(-null))).toBeTrue();
+    expect(isNegativeZero(Math.sign(-''))).toBeTrue();
+    expect(isNegativeZero(Math.sign(-[]))).toBeTrue();
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.sign()).toBeNaN();
+    expect(Math.sign(undefined)).toBeNaN();
+    expect(Math.sign([1, 2, 3])).toBeNaN();
+    expect(Math.sign({})).toBeNaN();
+    expect(Math.sign(NaN)).toBeNaN();
+    expect(Math.sign("foo")).toBeNaN();
+});

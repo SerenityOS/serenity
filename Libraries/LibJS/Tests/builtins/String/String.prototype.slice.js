@@ -1,22 +1,18 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype.slice).toHaveLength(2);
 
-try {
-    assert(String.prototype.slice.length === 2);
-    assert("hello friends".slice() === "hello friends");
-    assert("hello friends".slice(1) === "ello friends");
-    assert("hello friends".slice(0, 5) === "hello");
-    assert("hello friends".slice(13, 6) === "");
-    assert("hello friends".slice('', 5) === "hello");
-    assert("hello friends".slice(3, 3) === "");
-    assert("hello friends".slice(-1, 13) === "s");
-    assert("hello friends".slice(0, 50) === "hello friends");
-    assert("hello friends".slice(0, "5") === "hello");
-    assert("hello friends".slice("6", "13") === "friends");
-    assert("hello friends".slice(-7) === "friends");
-    assert("hello friends".slice(1000) === "");
-    assert("hello friends".slice(-1000) === "hello friends");
+    expect("hello friends".slice()).toBe("hello friends");
+    expect("hello friends".slice(1)).toBe("ello friends");
+    expect("hello friends".slice(0, 5)).toBe("hello");
+    expect("hello friends".slice(13, 6)).toBe("");
+    expect("hello friends".slice("", 5)).toBe("hello");
+    expect("hello friends".slice(3, 3)).toBe("");
+    expect("hello friends".slice(-1, 13)).toBe("s");
+    expect("hello friends".slice(0, 50)).toBe("hello friends");
+    expect("hello friends".slice(0, "5")).toBe("hello");
+    expect("hello friends".slice("6", "13")).toBe("friends");
+    expect("hello friends".slice(-7)).toBe("friends");
+    expect("hello friends".slice(1000)).toBe("");
+    expect("hello friends".slice(-1000)).toBe("hello friends");
+});
 
-    console.log("PASS");
-} catch (err) {
-    console.log("FAIL: " + err);
-}

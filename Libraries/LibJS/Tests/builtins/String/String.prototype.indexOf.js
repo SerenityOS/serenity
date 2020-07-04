@@ -1,12 +1,8 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype.indexOf).toHaveLength(1);
 
-try {
     var s = "hello friends"
 
-    assert(s.indexOf("friends") === 6);
-    assert(s.indexOf("enemies") === -1);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(s.indexOf("friends")).toBe(6);
+    expect(s.indexOf("enemies")).toBe(-1);
+});

@@ -1,13 +1,9 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype).toHaveLength(0);
+    
+    expect(typeof Object.getPrototypeOf("")).toBe("object");
+    expect(Object.getPrototypeOf("").valueOf()).toBe("");
 
-try {
-    assert(typeof Object.getPrototypeOf("") === "object");
-    assert(Object.getPrototypeOf("").valueOf() === '');
-
-    assert(typeof String.prototype === "object");
-    assert(String.prototype.valueOf() === '');
-
-    console.log("PASS");
-} catch (err) {
-    console.log("FAIL: " + err);
-}
+    expect(typeof String.prototype).toBe("object");
+    expect(String.prototype.valueOf()).toBe("");
+});

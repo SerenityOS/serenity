@@ -1,42 +1,44 @@
-load("test-common.js");
-
-try {
-    assert(Object.values.length === 1);
-    assert(Object.values(true).length === 0);
-    assert(Object.values(45).length === 0);
-    assert(Object.values(-998).length === 0);
-    assert(Object.values("abcd").length === 4);
-    assert(Object.values([1, 2, 3]).length === 3);
-    assert(Object.values({ a: 1, b: 2, c: 3 }).length === 3);
-
-    assertThrowsError(() => {
-        Object.values(null);
-    }, {
-        error: TypeError,
-        message: "ToObject on null or undefined",
+describe("correct behavior", () => {
+    test("lengths", () => {
+        expect(Object.values).toHaveLength(1);
+        expect(Object.values(true)).toHaveLength(0);
+        expect(Object.values(45)).toHaveLength(0);
+        expect(Object.values(-998)).toHaveLength(0);
+        expect(Object.values("abcd")).toHaveLength(4);
+        expect(Object.values([1, 2, 3])).toHaveLength(3);
+        expect(Object.values({ a: 1, b: 2, c: 3 })).toHaveLength(3);
     });
 
-    assertThrowsError(() => {
-        Object.values(undefined);
-    }, {
-        error: TypeError,
-        message: "ToObject on null or undefined",
+    test("object argument", () => {
+        let values = Object.values({ foo: 1, bar: 2, baz: 3 });
+        expect(values).toEqual([1, 2, 3]);
     });
 
-    let values = Object.values({ foo: 1, bar: 2, baz: 3 });
-    assert(values[0] === 1 && values[1] === 2 && values[2] === 3);
-
-    values = Object.values(["a", "b", "c"]);
-    assert(values[0] === "a" && values[1] === "b" && values[2] === "c");
-
-    let obj = { foo: 1 };
-    Object.defineProperty(obj, 'getFoo', {
-        value: function() { return this.foo; },
+    test("array argument", () => {
+        let values = Object.values(["a", "b", "c"]);
+        expect(values).toEqual(["a", "b", "c"]);
     });
-    let values = Object.values(obj);
-    assert(values.length === 1 && values[0] === 1);
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-} 
+    test("ignores non-enumerable properties", () => {
+        let obj = { foo: 1 };
+        Object.defineProperty(obj, 'getFoo', {
+            value: function() { return this.foo; },
+        });
+        let values = Object.values(obj);
+        expect(values).toEqual([1]);
+    });
+});
+
+describe("errors", () => {
+    test("null argument", () => {
+        expect(() => {
+            Object.values(null);
+        }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+    });
+
+    test("undefined argument", () => {
+        expect(() => {
+            Object.values(undefined);
+        }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+    });
+});

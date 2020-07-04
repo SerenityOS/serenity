@@ -1,15 +1,10 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var last = 0;
     for (var i = 0; i < 100; ++i) {
         var now = Date.now();
-        assert(!isNaN(now))
-        assert(now > 1580000000000);
-        assert(now >= last);
+        expect(now).not.toBeNaN();
+        expect(now).toBeGreaterThan(1580000000000);
+        expect(now).toBeGreaterThanOrEqual(last);
         last = now;
     }
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+});

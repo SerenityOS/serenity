@@ -1,11 +1,7 @@
-load("test-common.js");
-
-try {
-    var d = new Date();
-    assert(!isNaN(d.getDate()));
-    assert(1 <= d.getDate() <= 31);
-    assert(d.getDate() === d.getDate());
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+test("basic functionality", () => {
+    let d = new Date();
+    expect(d.getDate()).toBe(d.getDate());
+    expect(d.getDate()).not.toBeNaN();
+    expect(d.getDate()).toBeGreaterThanOrEqual(1);
+    expect(d.getDate()).toBeLessThanOrEqual(31);
+});

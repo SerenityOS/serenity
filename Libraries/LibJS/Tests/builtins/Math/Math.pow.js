@@ -1,29 +1,25 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.pow).toHaveLength(2);
 
-try {
-    assert(Math.pow(2, 0) === 1);
-    assert(Math.pow(2, 1) === 2);
-    assert(Math.pow(2, 2) === 4);
-    assert(Math.pow(2, 3) === 8);
-    assert(Math.pow(2, -3) === 0.125);
-    assert(Math.pow(3, 2) === 9);
-    assert(Math.pow(0, 0) === 1);
-    assert(Math.pow(2, Math.pow(3, 2)) === 512);
-    assert(Math.pow(Math.pow(2, 3), 2) === 64);
-    assert(Math.pow("2", "3") === 8);
-    assert(Math.pow("", []) === 1);
-    assert(Math.pow([], null) === 1);
-    assert(Math.pow(null, null) === 1);
-    assert(Math.pow(undefined, null) === 1);
-    assert(isNaN(Math.pow(NaN, 2)));
-    assert(isNaN(Math.pow(2, NaN)));
-    assert(isNaN(Math.pow(undefined, 2)));
-    assert(isNaN(Math.pow(2, undefined)));
-    assert(isNaN(Math.pow(null, undefined)));
-    assert(isNaN(Math.pow(2, "foo")));
-    assert(isNaN(Math.pow("foo", 2)));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.pow(2, 0)).toBe(1);
+    expect(Math.pow(2, 1)).toBe(2);
+    expect(Math.pow(2, 2)).toBe(4);
+    expect(Math.pow(2, 3)).toBe(8);
+    expect(Math.pow(2, -3)).toBe(0.125);
+    expect(Math.pow(3, 2)).toBe(9);
+    expect(Math.pow(0, 0)).toBe(1);
+    expect(Math.pow(2, Math.pow(3, 2))).toBe(512);
+    expect(Math.pow(Math.pow(2, 3), 2)).toBe(64);
+    expect(Math.pow("2", "3")).toBe(8);
+    expect(Math.pow("", [])).toBe(1);
+    expect(Math.pow([], null)).toBe(1);
+    expect(Math.pow(null, null)).toBe(1);
+    expect(Math.pow(undefined, null)).toBe(1);
+    expect(Math.pow(NaN, 2)).toBeNaN();
+    expect(Math.pow(2, NaN)).toBeNaN();
+    expect(Math.pow(undefined, 2)).toBeNaN();
+    expect(Math.pow(2, undefined)).toBeNaN();
+    expect(Math.pow(null, undefined)).toBeNaN();
+    expect(Math.pow(2, "foo")).toBeNaN();
+    expect(Math.pow("foo", 2)).toBeNaN();
+});

@@ -1,11 +1,6 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.asinh).toHaveLength(1);
 
-try {
-    assert(isClose(Math.asinh(0), 0));
-
-    // FIXME: assert(isClose(Math.asinh(1), 0.881373));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.asinh(0)).toBeCloseTo(0);
+    // FIXME: expect(Math.asinh(1)).toBeCloseTo(0.881373);
+});

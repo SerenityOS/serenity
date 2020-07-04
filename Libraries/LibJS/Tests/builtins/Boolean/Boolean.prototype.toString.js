@@ -1,21 +1,17 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var foo = true;
-    assert(foo.toString() === "true");
-    assert(true.toString() === "true");
+    expect(foo.toString()).toBe("true");
+    expect(true.toString()).toBe("true");
 
-    assert(Boolean.prototype.toString.call(true) === "true");
-    assert(Boolean.prototype.toString.call(false) === "false");
+    expect(Boolean.prototype.toString.call(true)).toBe("true");
+    expect(Boolean.prototype.toString.call(false)).toBe("false");
 
-    assertThrowsError(() => {
+    expect(new Boolean(true).toString()).toBe("true");
+    expect(new Boolean(false).toString()).toBe("false");
+});
+
+test("errors on non-boolean |this|", () => {
+    expect(() => {
         Boolean.prototype.toString.call("foo");
-    }, {
-        error: TypeError,
-        message: "Not a Boolean object"
-    });
-
-    console.log("PASS");
-} catch (err) {
-    console.log("FAIL: " + err);
-}
+    }).toThrowWithMessage(TypeError, "Not a Boolean object");
+});

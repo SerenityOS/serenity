@@ -1,11 +1,5 @@
-load("test-common.js");
-
-try {
-    assert(Date.length === 7);
-    assert(Date.name === "Date");
-    assert(Date.prototype.length === undefined);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+test("basic functionality", () => {
+    expect(Date).toHaveLength(7);
+    expect(Date.name === "Date");
+    expect(Date.prototype).not.toHaveProperty("length");
+});

@@ -1,23 +1,17 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.fromCharCode).toHaveLength(1);
 
-try {
-    assert(String.fromCharCode.length === 1);
-    
-    assert(String.fromCharCode() === "");
-    assert(String.fromCharCode(0) === "\u0000");
-    assert(String.fromCharCode(false) === "\u0000");
-    assert(String.fromCharCode(null) === "\u0000");
-    assert(String.fromCharCode(undefined) === "\u0000");
-    assert(String.fromCharCode(1) === "\u0001");
-    assert(String.fromCharCode(true) === "\u0001");
-    assert(String.fromCharCode(-1) === "\uffff");
-    assert(String.fromCharCode(0xffff) === "\uffff");
-    assert(String.fromCharCode(0x123ffff) === "\uffff");
-    assert(String.fromCharCode(65) === "A");
-    assert(String.fromCharCode(65, 66, 67) === "ABC");
-    assert(String.fromCharCode(228, 246, 252) === "äöü");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(String.fromCharCode()).toBe("");
+    expect(String.fromCharCode(0)).toBe("\u0000");
+    expect(String.fromCharCode(false)).toBe("\u0000");
+    expect(String.fromCharCode(null)).toBe("\u0000");
+    expect(String.fromCharCode(undefined)).toBe("\u0000");
+    expect(String.fromCharCode(1)).toBe("\u0001");
+    expect(String.fromCharCode(true)).toBe("\u0001");
+    expect(String.fromCharCode(-1)).toBe("\uffff");
+    expect(String.fromCharCode(0xffff)).toBe("\uffff");
+    expect(String.fromCharCode(0x123ffff)).toBe("\uffff");
+    expect(String.fromCharCode(65)).toBe("A");
+    expect(String.fromCharCode(65, 66, 67)).toBe("ABC");
+    expect(String.fromCharCode(228, 246, 252)).toBe("äöü");
+});

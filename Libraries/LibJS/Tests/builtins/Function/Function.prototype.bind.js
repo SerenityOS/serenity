@@ -1,124 +1,138 @@
-load("test-common.js");
+describe("basic behavior", () => {
+    test("basic binding", () => {
+        expect(Function.prototype.bind.length).toBe(1);
 
-try {
-    assert(Function.prototype.bind.length === 1);
+        var charAt = String.prototype.charAt.bind("bar");
+        expect(charAt(0) + charAt(1) + charAt(2)).toBe("bar");
 
-    var charAt = String.prototype.charAt.bind("bar");
-    assert(charAt(0) + charAt(1) + charAt(2) === "bar");
+        function getB() {
+            return this.toUpperCase().charAt(0);
+        }
+        expect(getB.bind("bar")()).toBe("B");
+    });
 
-    function getB() {
-        return this.toUpperCase().charAt(0);
-    }
-    assert(getB.bind("bar")() === "B");
+    test("bound functions work with array functions", () => {
+        var Make3 = Number.bind(null, 3);
+        expect([55].map(Make3)[0]).toBe(3);
 
-    // Bound functions should work with array functions
-    var Make3 = Number.bind(null, 3);
-    assert([55].map(Make3)[0] === 3);
+        var MakeTrue = Boolean.bind(null, true);
 
-    var MakeTrue = Boolean.bind(null, true);
-    assert([1, 2, 3].filter(MakeTrue).length === 3);
+        expect([1, 2, 3].filter(MakeTrue).length).toBe(3);
+        expect([1, 2, 3].reduce((function (acc, x) { return acc + x }).bind(null, 4, 5))).toBe(9);
+        expect([1, 2, 3].reduce((function (acc, x) { return acc + x + this; }).bind(3))).toBe(12);
+    });
+});
 
-    assert([1, 2, 3].reduce((function (acc, x) { return acc + x }).bind(null, 4, 5)) === 9);
-
-    assert([1, 2, 3].reduce((function (acc, x) { return acc + x + this; }).bind(3)) === 12);
-
+describe("bound function arguments", () => {
     function sum(a, b, c) {
         return a + b + c;
     }
-
-    // Arguments should be able to be bound to a function.
     var boundSum = sum.bind(null, 10, 5);
-    assert(isNaN(boundSum()));
 
-    assert(boundSum(5) === 20);
-    assert(boundSum(5, 6, 7) === 20);
+    test("arguments are bound to the function", () => {
+        expect(boundSum()).toBeNaN();
+        expect(boundSum(5)).toBe(20);
+        expect(boundSum(5, 6, 7)).toBe(20);
+    });
 
-    // Arguments should be appended to a BoundFunction's bound arguments.
-    assert(boundSum.bind(null, 5)() === 20);
+    test("arguments are appended to a BoundFunction's bound arguments", () => {
+        expect(boundSum.bind(null, 5)()).toBe(20);
+    });
 
-    // A BoundFunction's length property should be adjusted based on the number
-    // of bound arguments.
-    assert(sum.length === 3);
-    assert(boundSum.length === 1);
-    assert(boundSum.bind(null, 5).length === 0);
-    assert(boundSum.bind(null, 5, 6, 7, 8).length === 0);
+    test("binding a constructor's arguments", () => {
+        var Make5 = Number.bind(null, 5);
+        expect(Make5()).toBe(5);
+        expect(new Make5().valueOf()).toBe(5);
+    });
 
+    test("length property", () => {
+        expect(sum).toHaveLength(3);
+        expect(boundSum).toHaveLength(1);
+        expect(boundSum.bind(null, 5)).toHaveLength(0);
+        expect(boundSum.bind(null, 5, 6, 7, 8)).toHaveLength(0);
+    });
+})
+
+describe("bound function |this|", () => {
     function identity() {
         return this;
     }
 
-    // It should capture the global object if the |this| value is null or undefined.
-    assert(identity.bind()() === globalThis);
-    assert(identity.bind(null)() === globalThis);
-    assert(identity.bind(undefined)() === globalThis);
+    test("captures global object as |this| if |this| is null or undefined", () => {
+        expect(identity.bind()()).toBe(globalThis);
+        expect(identity.bind(null)()).toBe(globalThis);
+        expect(identity.bind(undefined)()).toBe(globalThis);
 
-    function Foo() {
-        assert(identity.bind()() === globalThis);
-        assert(identity.bind(this)() === this);
-    }
-    new Foo();
+        function Foo() {
+            expect(identity.bind()()).toBe(globalThis);
+            expect(identity.bind(this)()).toBe(this);
+        }
+        new Foo();
+    });
 
-    // Primitive |this| values should be converted to objects.
-    assert(identity.bind("foo")() instanceof String);
-    assert(identity.bind(123)() instanceof Number);
-    assert(identity.bind(true)() instanceof Boolean);
+    test("does not capture global object as |this| if |this| is null or undefined in strict mode", () => {
+        "use strict";
 
-    // It should retain |this| values passed to it.
-    var obj = { foo: "bar" };
+        function strictIdentity() {
+            return this;
+        }
 
-    assert(identity.bind(obj)() === obj);
+        expect(strictIdentity.bind()()).toBeUndefined();
+        expect(strictIdentity.bind(null)()).toBeNull();
+        expect(strictIdentity.bind(undefined)()).toBeUndefined();
+    });
 
-    // The bound |this| can not be changed once set
-    assert(identity.bind("foo").bind(123)() instanceof String);
+    test("primitive |this| values are converted to objects", () => {
+        expect(identity.bind("foo")()).toBeInstanceOf(String);
+        expect(identity.bind(123)()).toBeInstanceOf(Number);
+        expect(identity.bind(true)()).toBeInstanceOf(Boolean);
+    });
 
-    // The bound |this| value should have no effect on a constructor.
+    test("bound functions retain |this| values passed to them", () => {
+        var obj = { foo: "bar" };
+        expect(identity.bind(obj)()).toBe(obj);
+    });
+
+    test("bound |this| cannot be changed after being set", () => {
+        expect(identity.bind("foo").bind(123)()).toBeInstanceOf(String);
+    });
+
+    test("arrow functions cannot be bound", () => {
+        expect((() => this).bind("foo")()).toBe(globalThis)
+    });
+})
+
+describe("bound function constructors", () => {
     function Bar() {
         this.x = 3;
         this.y = 4;
     }
+
     Bar.prototype.baz = "baz";
-
     var BoundBar = Bar.bind({ u: 5, v: 6 });
-
     var bar = new BoundBar();
-    assert(bar.x === 3);
-    assert(bar.y === 4);
-    assert(typeof bar.u === "undefined");
-    assert(typeof bar.v === "undefined");
-    // Objects constructed from BoundFunctions should retain the prototype of the original function.
-    assert(bar.baz === "baz");
-    // BoundFunctions should not have a prototype property.
-    assert(typeof BoundBar.prototype === "undefined");
 
-    // Function.prototype.bind should not accept non-function values.
-    assertThrowsError(() => {
-        Function.prototype.bind.call("foo");
-    }, {
-        error: TypeError,
-        message: "Not a Function object"
+
+    test("bound |this| value does not affect constructor", () => {
+        expect(bar.x).toBe(3);
+        expect(bar.y).toBe(4);
+        expect(typeof bar.u).toBe("undefined");
+        expect(typeof bar.v).toBe("undefined");
     });
 
-    // A constructor's arguments should be able to be bound.
-    var Make5 = Number.bind(null, 5);
-    assert(Make5() === 5);
-    assert(new Make5().valueOf() === 5);
+    test("bound functions retain original prototype", () => {
+        expect(bar.baz).toBe("baz");
+    });
 
-    // Null or undefined should be passed through as a |this| value in strict mode.
-    (() => {
-      "use strict";
-      function strictIdentity() {
-        return this;
-      }
+    test("bound functions do not have a prototype property", () => {
+        expect(BoundBar).not.toHaveProperty("prototype");
+    });
+});
 
-      assert(strictIdentity.bind()() === undefined);
-      assert(strictIdentity.bind(null)() === null);
-      assert(strictIdentity.bind(undefined)() === undefined);
-    })();
-
-    // Arrow functions can not have their |this| value set.
-    assert((() => this).bind("foo")() === globalThis)
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+describe("errors", () => {
+    test("does not accept non-function values", () => {
+        expect(() => {
+            Function.prototype.bind.call("foo");
+        }).toThrowWithMessage(TypeError, "Not a Function object");
+    });
+});

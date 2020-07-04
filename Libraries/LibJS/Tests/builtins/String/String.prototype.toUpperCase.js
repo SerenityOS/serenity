@@ -1,15 +1,9 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype.toUpperCase).toHaveLength(0);
 
-try {
-    assert(String.prototype.toUpperCase.length === 0);
+    expect("foo".toUpperCase()).toBe("FOO");
+    expect("Foo".toUpperCase()).toBe("FOO");
+    expect("FOO".toUpperCase()).toBe("FOO");
 
-    assert("foo".toUpperCase() === "FOO");
-    assert("Foo".toUpperCase() === "FOO");
-    assert("FOO".toUpperCase() === "FOO");
-
-    assert(('b' + 'a' + + 'n' + 'a').toUpperCase() === "BANANA");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(('b' + 'a' + + 'n' + 'a').toUpperCase()).toBe("BANANA");
+});

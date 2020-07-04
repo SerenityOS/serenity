@@ -1,6 +1,4 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     const genericStringPrototypeFunctions = [
         "charAt",
         "repeat",
@@ -24,29 +22,16 @@ try {
         String.prototype[name].call({ toString: () => 123 });
         String.prototype[name].call({ toString: () => undefined });
 
-        assertThrowsError(() => {
+        expect(() => {
             String.prototype[name].call({ toString: () => new String() });
-        }, {
-            error: TypeError,
-            message: "Cannot convert object to string"
-        });
+        }).toThrowWithMessage(TypeError, "Cannot convert object to string");
 
-        assertThrowsError(() => {
+        expect(() => {
             String.prototype[name].call({ toString: () => [] });
-        }, {
-            error: TypeError,
-            message: "Cannot convert object to string"
-        });
+        }).toThrowWithMessage(TypeError, "Cannot convert object to string");
 
-        assertThrowsError(() => {
+        expect(() => {
             String.prototype[name].call({ toString: () => ({}) });
-        }, {
-            error: TypeError,
-            message: "Cannot convert object to string"
-        });
+        }).toThrowWithMessage(TypeError, "Cannot convert object to string");
     });
-
-    console.log("PASS");
-} catch (err) {
-    console.log("FAIL: " + err);
-}
+});

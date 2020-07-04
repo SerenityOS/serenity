@@ -1,19 +1,13 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.floor).toHaveLength(1);
 
-try {
-    assert(Math.floor(0.95) === 0);
-    assert(Math.floor(4) === 4);
-    assert(Math.floor(7.004) == 7);
-    assert(Math.floor(-0.95) === -1);
-    assert(Math.floor(-4)    === -4);
-    assert(Math.floor(-7.004) === -8);
+    expect(Math.floor(0.95)).toBe(0);
+    expect(Math.floor(4)).toBe(4);
+    expect(Math.floor(7.004)).toBe(7);
+    expect(Math.floor(-0.95)).toBe(-1);
+    expect(Math.floor(-4)).toBe(-4);
+    expect(Math.floor(-7.004)).toBe(-8);
 
-    assert(isNaN(Math.floor()));
-    assert(isNaN(Math.floor(NaN)));
-
-    assert(Math.floor.length === 1);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.floor()).toBeNaN();
+    expect(Math.floor(NaN)).toBeNaN();
+});

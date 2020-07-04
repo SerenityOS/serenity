@@ -1,6 +1,8 @@
-load("test-common.js");
+test("length", () => {
+    expect(Function.prototype.call).toHaveLength(1);
+});
 
-try {
+test("basic functionality", () => {
     function Foo(arg) {
         this.foo = arg;
     }
@@ -17,39 +19,33 @@ try {
         this.baz = arg;
     }
 
-    assert(Function.prototype.call.length === 1);
-
     var foo = new Foo("test");
-    assert(foo.foo === "test");
-    assert(foo.bar === undefined);
-    assert(foo.baz === undefined);
+    expect(foo.foo).toBe("test");
+    expect(foo.bar).toBeUndefined();
+    expect(foo.baz).toBeUndefined();
 
     var bar = new Bar("test");
-    assert(bar.foo === undefined);
-    assert(bar.bar === "test");
-    assert(bar.baz === undefined);
+    expect(bar.foo).toBeUndefined();
+    expect(bar.bar).toBe("test");
+    expect(bar.baz).toBeUndefined();
 
     var foobar = new FooBar("test");
-    assert(foobar.foo === "test");
-    assert(foobar.bar === "test");
-    assert(foobar.baz === undefined);
+    expect(foobar.foo).toBe("test");
+    expect(foobar.bar).toBe("test");
+    expect(foobar.baz).toBeUndefined();
 
     var foobarbaz = new FooBarBaz("test");
-    assert(foobarbaz.foo === "test");
-    assert(foobarbaz.bar === "test");
-    assert(foobarbaz.baz === "test");
+    expect(foobarbaz.foo).toBe("test");
+    expect(foobarbaz.bar).toBe("test");
+    expect(foobarbaz.baz).toBe("test");
 
-    assert(Math.abs.call(null, -1) === 1);
+    expect(Math.abs.call(null, -1)).toBe(1);
 
     var add = (x, y) => x + y;
-    assert(add.call(null, 1, 2) === 3);
+    expect(add.call(null, 1, 2)).toBe(3);
 
     var multiply = function (x, y) { return x * y; };
-    assert(multiply.call(null, 3, 4) === 12);
+    expect(multiply.call(null, 3, 4)).toBe(12);
 
-    assert((() => this).call("foo") === globalThis);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect((() => this).call("foo")).toBe(globalThis);
+});

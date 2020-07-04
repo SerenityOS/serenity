@@ -1,10 +1,4 @@
-load("test-common.js");
-
-try {
-  assert(typeof Number.prototype === "object");
-  assert(Number.prototype.valueOf() === 0);
-
-  console.log("PASS");
-} catch (err) {
-  console.log("FAIL: " + err);
-}
+test("basic functionality", () => {
+  expect(typeof Number.prototype).toBe("object");
+  expect(Number.prototype.valueOf()).toBe(0);
+});

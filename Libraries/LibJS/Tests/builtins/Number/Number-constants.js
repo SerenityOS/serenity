@@ -1,17 +1,11 @@
-load("test-common.js");
-
-try {
-    assert(Number.EPSILON === 2 ** -52);
-    assert(Number.EPSILON > 0);
-    assert(Number.MAX_SAFE_INTEGER === 2 ** 53 - 1);
-    assert(Number.MAX_SAFE_INTEGER + 1 === Number.MAX_SAFE_INTEGER + 2);
-    assert(Number.MIN_SAFE_INTEGER === -(2 ** 53 - 1));
-    assert(Number.MIN_SAFE_INTEGER - 1 === Number.MIN_SAFE_INTEGER - 2);
-    assert(Number.POSITIVE_INFINITY === Infinity);
-    assert(Number.NEGATIVE_INFINITY === -Infinity);
-    assert(isNaN(Number.NaN));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+test("basic functionality", () => {
+    expect(Number.EPSILON).toBe(2 ** -52);
+    expect(Number.EPSILON).toBeGreaterThan(0);
+    expect(Number.MAX_SAFE_INTEGER).toBe(2 ** 53 - 1);
+    expect(Number.MAX_SAFE_INTEGER + 1).toBe(Number.MAX_SAFE_INTEGER + 2);
+    expect(Number.MIN_SAFE_INTEGER).toBe(-(2 ** 53 - 1));
+    expect(Number.MIN_SAFE_INTEGER - 1).toBe(Number.MIN_SAFE_INTEGER - 2);
+    expect(Number.POSITIVE_INFINITY).toBe(Infinity);
+    expect(Number.NEGATIVE_INFINITY).toBe(-Infinity);
+    expect(Number.NaN).toBeNaN();
+});

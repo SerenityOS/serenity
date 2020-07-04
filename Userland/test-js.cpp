@@ -42,6 +42,86 @@
 
 // FIXME: Will eventually not be necessary when all tests are converted
 Vector<String> tests_to_run = {
+    "builtins/Boolean/Boolean.js",
+    "builtins/Boolean/Boolean.prototype.js",
+    "builtins/Boolean/Boolean.prototype.toString.js",
+    "builtins/Boolean/Boolean.prototype.valueOf.js",
+    "builtins/Date/Date.js",
+    "builtins/Date/Date.now.js",
+    "builtins/Date/Date.prototype.getDate.js",
+    "builtins/Date/Date.prototype.getDay.js",
+    "builtins/Date/Date.prototype.getFullYear.js",
+    "builtins/Date/Date.prototype.getHours.js",
+    "builtins/Date/Date.prototype.getMilliseconds.js",
+    "builtins/Date/Date.prototype.getMinutes.js",
+    "builtins/Date/Date.prototype.getMonth.js",
+    "builtins/Date/Date.prototype.getSeconds.js",
+    "builtins/Date/Date.prototype.getTime.js",
+    "builtins/Error/Error.js",
+    "builtins/Error/Error.prototype.name.js",
+    "builtins/Error/Error.prototype.toString.js",
+    "builtins/Function/Function.js",
+    "builtins/Function/Function.prototype.apply.js",
+    "builtins/Function/Function.prototype.bind.js",
+    "builtins/Function/Function.prototype.call.js",
+    "builtins/Function/Function.prototype.toString.js",
+    "builtins/functions/isFinite.js",
+    "builtins/functions/isNaN.js",
+    "builtins/functions/parseFloat.js",
+    "builtins/Infinity/Infinity.js",
+    "builtins/JSON/JSON.parse.js",
+    "builtins/JSON/JSON.parse-reviver.js",
+    "builtins/JSON/JSON.stringify.js",
+    "builtins/JSON/JSON.stringify-order.js",
+    "builtins/JSON/JSON.stringify-proxy.js",
+    "builtins/JSON/JSON.stringify-replacer.js",
+    "builtins/JSON/JSON.stringify-space.js",
+    "builtins/Math/Math-constants.js",
+    "builtins/Math/Math.abs.js",
+    "builtins/Math/Math.acosh.js",
+    "builtins/Math/Math.asinh.js",
+    "builtins/Math/Math.atanh.js",
+    "builtins/Math/Math.cbrt.js",
+    "builtins/Math/Math.ceil.js",
+    "builtins/Math/Math.clz32.js",
+    "builtins/Math/Math.cos.js",
+    "builtins/Math/Math.exp.js",
+    "builtins/Math/Math.expm1.js",
+    "builtins/Math/Math.floor.js",
+    "builtins/Math/Math.log1p.js",
+    "builtins/Math/Math.max.js",
+    "builtins/Math/Math.min.js",
+    "builtins/Math/Math.pow.js",
+    "builtins/Math/Math.sign.js",
+    "builtins/Math/Math.sqrt.js",
+    "builtins/Math/Math.tan.js",
+    "builtins/Math/Math.trunc.js",
+    "builtins/NaN/NaN.js",
+    "builtins/Number/Number.js",
+    "builtins/Number/Number-constants.js",
+    "builtins/Number/Number.isFinite.js",
+    "builtins/Number/Number.isInteger.js",
+    "builtins/Number/Number.isNaN.js",
+    "builtins/Number/Number.isSafeInteger.js",
+    "builtins/Number/Number.parseFloat.js",
+    "builtins/Number/Number.prototype.js",
+    "builtins/Object/Object.js",
+    "builtins/Object/Object.defineProperty.js",
+    "builtins/Object/Object.entries.js",
+    "builtins/Object/Object.getOwnPropertyDescriptor.js",
+    "builtins/Object/Object.getOwnPropertyNames.js",
+    "builtins/Object/Object.getPrototypeOf.js",
+    "builtins/Object/Object.is.js",
+    "builtins/Object/Object.isExtensible.js",
+    "builtins/Object/Object.keys.js",
+    "builtins/Object/Object.preventExtensions.js",
+    "builtins/Object/Object.prototype.js",
+    "builtins/Object/Object.prototype.constructor.js",
+    "builtins/Object/Object.prototype.hasOwnProperty.js",
+    "builtins/Object/Object.prototype.toLocaleString.js",
+    "builtins/Object/Object.prototype.toString.js",
+    "builtins/Object/Object.setPrototypeOf.js",
+    "builtins/Object/Object.values.js",
     "builtins/Proxy/Proxy.js",
     "builtins/Proxy/Proxy.handler-apply.js",
     "builtins/Proxy/Proxy.handler-construct.js",
@@ -54,7 +134,7 @@ Vector<String> tests_to_run = {
     "builtins/Proxy/Proxy.handler-isExtensible.js",
     "builtins/Proxy/Proxy.handler-preventExtensions.js",
     "builtins/Proxy/Proxy.handler-set.js",
-    "builtins/Proxy/Proxy.handler-setPrototypeOf.js",
+    "builtins/Proxy/Proxy.handler-setPrototypeOf.js",\
     "builtins/Reflect/Reflect.apply.js",
     "builtins/Reflect/Reflect.construct.js",
     "builtins/Reflect/Reflect.defineProperty.js",
@@ -67,7 +147,27 @@ Vector<String> tests_to_run = {
     "builtins/Reflect/Reflect.ownKeys.js",
     "builtins/Reflect/Reflect.preventExtensions.js",
     "builtins/Reflect/Reflect.set.js",
-    "builtins/Reflect/Reflect.setPrototypeOf.js",
+    "builtins/Reflect/Reflect.setPrototypeOf.js",\
+    "builtins/String/String.js",
+    "builtins/String/String.fromCharCode.js",
+    "builtins/String/String.prototype.js",
+    "builtins/String/String.prototype-generic-functions.js",
+    "builtins/String/String.prototype.charAt.js",
+    "builtins/String/String.prototype.includes.js",
+    "builtins/String/String.prototype.indexOf.js",
+    "builtins/String/String.prototype.lastIndexOf.js",
+    "builtins/String/String.prototype.padEnd.js",
+    "builtins/String/String.prototype.padStart.js",
+    "builtins/String/String.prototype.repeat.js",
+    "builtins/String/String.prototype.slice.js",
+    "builtins/String/String.prototype.startsWith.js",
+    "builtins/String/String.prototype.substring.js",
+    "builtins/String/String.prototype.toLowerCase.js",
+    "builtins/String/String.prototype.toString.js",
+    "builtins/String/String.prototype.toUpperCase.js",
+    "builtins/String/String.prototype.trim.js",
+    "builtins/String/String.prototype.valueOf.js",
+    "builtins/String/String.raw.js",\
     "add-values-to-primitive.js",
     "automatic-semicolon-insertion.js",
     "comments-basic.js",
@@ -122,7 +222,10 @@ Optional<TestError> parse_and_run_file(JS::Interpreter& interpreter, const Strin
 {
     auto file = Core::File::construct(path);
     auto result = file->open(Core::IODevice::ReadOnly);
-    ASSERT(result);
+    if (!result) {
+        dbg() << "Failed to open file " << path;
+        exit(1);
+    }
 
     auto contents = file->read_all();
     String test_file_string(reinterpret_cast<const char*>(contents.data()), contents.size());
@@ -158,7 +261,7 @@ FileResults run_test(const String& path, const String& test_root)
     // FIXME: Should be printed to stdout in a nice format
     auto& arr = interpreter->get_variable("__UserOutput__", interpreter->global_object()).as_array();
     for (auto& entry : arr.indexed_properties()) {
-        dbg() << "OUTPUT: " << entry.value_and_attributes(&interpreter->global_object()).value.to_string_without_side_effects();
+        dbg() << path << ": " << entry.value_and_attributes(&interpreter->global_object()).value.to_string_without_side_effects();
     }
 
     // FIXME: This is _so_ scuffed

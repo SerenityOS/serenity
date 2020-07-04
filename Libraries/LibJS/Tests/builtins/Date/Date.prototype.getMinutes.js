@@ -1,11 +1,7 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var d = new Date();
-    assert(!isNaN(d.getMinutes()));
-    assert(0 <= d.getMinutes() <= 59);
-    assert(d.getMinutes() === d.getMinutes());
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(d.getMinutes()).toBe(d.getMinutes());
+    expect(d.getMinutes()).not.toBeNaN();
+    expect(d.getMinutes()).toBeGreaterThanOrEqual(0);
+    expect(d.getMinutes()).toBeLessThanOrEqual(59);
+});

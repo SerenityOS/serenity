@@ -1,7 +1,5 @@
-load("test-common.js");
-
-try {
-    assert(JSON.parse.length === 2);
+test("basic functionality", () => {
+    expect(JSON.parse).toHaveLength(2);
 
     const properties = [
         ["5", 5],
@@ -14,10 +12,12 @@ try {
     ];
 
     properties.forEach(testCase => {
-        assertDeepEquals(JSON.parse(testCase[0]), testCase[1]);
+        expect(JSON.parse(testCase[0])).toEqual(testCase[1]);
     });
+});
 
-    let syntaxErrors = [
+test("syntax errors", () => {
+    [
         undefined,
         NaN,
         -NaN,
@@ -29,15 +29,9 @@ try {
         "[1,2,3, ]",
         '{ "foo": "bar",}',
         '{ "foo": "bar", }',
-    ];
-
-    syntaxErrors.forEach(error => assertThrowsError(() => {
-        JSON.parse(error);
-    }, {
-        error: SyntaxError,
-    }));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    ].forEach(test => {
+        expect(() => {
+            JSON.parse(test);
+        }).toThrow(SyntaxError);
+    });
+});

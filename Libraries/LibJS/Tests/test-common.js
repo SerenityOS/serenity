@@ -71,6 +71,16 @@ class Expector {
         });
     }
 
+    // FIXME: Take a precision argument like jest's toBeCloseTo matcher
+    toBeCloseTo(value) {
+        this.__expect(typeof this.target === "number");
+        this.__expect(typeof value === "number");
+
+        this.__doMatcher(() => {
+            this.__expect(Math.abs(this.target - value) < 0.000001);
+        })
+    }
+
     toHaveLength(length) {
         this.__expect(typeof this.target.length === "number");
 
@@ -153,7 +163,45 @@ class Expector {
     toBeFalse() {
         this.__doMatcher(() => {
             this.__expect(this.target === false);
-        })
+        });
+    }
+
+    __validateNumericComparisonTypes(value) {
+        this.__expect(typeof this.target === "number" || typeof this.target === "bigint");
+        this.__expect(typeof value === "number" || typeof value === "bigint");
+        this.__expect(typeof this.target === typeof value);
+    }
+
+    toBeLessThan(value) {
+        this.__validateNumericComparisonTypes(value);
+
+        this.__doMatcher(() => {
+            this.__expect(this.target < value);
+        });
+    }
+
+    toBeLessThanOrEqual(value) {
+        this.__validateNumericComparisonTypes(value);
+
+        this.__doMatcher(() => {
+            this.__expect(this.target <= value);
+        });
+    }
+
+    toBeGreaterThan(value) {
+        this.__validateNumericComparisonTypes(value);
+
+        this.__doMatcher(() => {
+            this.__expect(this.target > value);
+        });
+    }
+
+    toBeGreaterThanOrEqual(value) {
+        this.__validateNumericComparisonTypes(value);
+
+        this.__doMatcher(() => {
+            this.__expect(this.target >= value);
+        });
     }
 
     toContain(item) {

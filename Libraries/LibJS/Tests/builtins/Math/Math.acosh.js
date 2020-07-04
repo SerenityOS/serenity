@@ -1,13 +1,9 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.acosh).toHaveLength(1);
 
-try {
-    assert(isNaN(Math.acosh(-1)));
-    assert(isNaN(Math.acosh(0)));
-    assert(isNaN(Math.acosh(0.5)));
-    assert(isClose(Math.acosh(1), 0));
-    // FIXME: assert(isClose(Math.acosh(2), 1.316957));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.acosh(-1)).toBeNaN();
+    expect(Math.acosh(0)).toBeNaN();
+    expect(Math.acosh(0.5)).toBeNaN();
+    expect(Math.acosh(1)).toBeCloseTo(0);
+    // FIXME: expect(Math.acosh(2)).toBeCloseTo(1.316957);
+});

@@ -1,18 +1,12 @@
-load("test-common.js")
+test("basic functionality", () => {
+    expect(Math.trunc).toHaveLength(1);
 
-try {
-    assert(Math.trunc(13.37) === 13);
-    assert(Math.trunc(42.84) === 42);
-    assert(Math.trunc(0.123) ===  0);
-    assert(Math.trunc(-0.123) === -0);
+    expect(Math.trunc(13.37)).toBe(13);
+    expect(Math.trunc(42.84)).toBe(42);
+    expect(Math.trunc(0.123)).toBe( 0);
+    expect(Math.trunc(-0.123)).toBe(-0);
 
-    assert(isNaN(Math.trunc(NaN)));
-    assert(isNaN(Math.trunc('foo')));
-    assert(isNaN(Math.trunc()));
-
-    assert(Math.trunc.length === 1);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.trunc(NaN)).toBeNaN();
+    expect(Math.trunc('foo')).toBeNaN();
+    expect(Math.trunc()).toBeNaN();
+});

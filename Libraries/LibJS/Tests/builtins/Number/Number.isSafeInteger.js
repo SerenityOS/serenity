@@ -1,30 +1,24 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Number.isSafeInteger).toHaveLength(1);
 
-try {
-    assert(Number.isSafeInteger.length === 1);
+    expect(Number.isSafeInteger(0)).toBeTrue();
+    expect(Number.isSafeInteger(1)).toBeTrue();
+    expect(Number.isSafeInteger(2.0)).toBeTrue();
+    expect(Number.isSafeInteger(42)).toBeTrue();
+    expect(Number.isSafeInteger(Number.MAX_SAFE_INTEGER)).toBeTrue();
+    expect(Number.isSafeInteger(Number.MIN_SAFE_INTEGER)).toBeTrue();
 
-    assert(Number.isSafeInteger(0) === true);
-    assert(Number.isSafeInteger(1) === true);
-    assert(Number.isSafeInteger(2.0) === true);
-    assert(Number.isSafeInteger(42) === true);
-    assert(Number.isSafeInteger(Number.MAX_SAFE_INTEGER) === true);
-    assert(Number.isSafeInteger(Number.MIN_SAFE_INTEGER) === true);
-
-    assert(Number.isSafeInteger() === false);
-    assert(Number.isSafeInteger("1") === false);
-    assert(Number.isSafeInteger(2.1) === false);
-    assert(Number.isSafeInteger(42.42) === false);
-    assert(Number.isSafeInteger("") === false);
-    assert(Number.isSafeInteger([]) === false);
-    assert(Number.isSafeInteger(null) === false);
-    assert(Number.isSafeInteger(undefined) === false);
-    assert(Number.isSafeInteger(NaN) === false);
-    assert(Number.isSafeInteger(Infinity) === false);
-    assert(Number.isSafeInteger(-Infinity) === false);
-    assert(Number.isSafeInteger(Number.MAX_SAFE_INTEGER + 1) === false);
-    assert(Number.isSafeInteger(Number.MIN_SAFE_INTEGER - 1) === false);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e.message);
-}
+    expect(Number.isSafeInteger()).toBeFalse();
+    expect(Number.isSafeInteger("1")).toBeFalse();
+    expect(Number.isSafeInteger(2.1)).toBeFalse();
+    expect(Number.isSafeInteger(42.42)).toBeFalse();
+    expect(Number.isSafeInteger("")).toBeFalse();
+    expect(Number.isSafeInteger([])).toBeFalse();
+    expect(Number.isSafeInteger(null)).toBeFalse();
+    expect(Number.isSafeInteger(undefined)).toBeFalse();
+    expect(Number.isSafeInteger(NaN)).toBeFalse();
+    expect(Number.isSafeInteger(Infinity)).toBeFalse();
+    expect(Number.isSafeInteger(-Infinity)).toBeFalse();
+    expect(Number.isSafeInteger(Number.MAX_SAFE_INTEGER + 1)).toBeFalse();
+    expect(Number.isSafeInteger(Number.MIN_SAFE_INTEGER - 1)).toBeFalse();
+});

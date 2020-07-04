@@ -1,11 +1,7 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var d = new Date();
-    assert(!isNaN(d.getMonth()));
-    assert(0 <= d.getMonth() <= 11);
-    assert(d.getMonth() === d.getMonth());
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(d.getMonth()).toBe(d.getMonth());
+    expect(d.getMonth()).not.toBeNaN();
+    expect(d.getMonth()).toBeGreaterThanOrEqual(0);
+    expect(d.getMonth()).toBeLessThanOrEqual(11);
+});

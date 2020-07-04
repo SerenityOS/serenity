@@ -1,16 +1,14 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.abs).toHaveLength(1);
 
-try {
-    assert(Math.abs('-1') === 1);
-    assert(Math.abs(-2) === 2);
-    assert(Math.abs(null) === 0);
-    assert(Math.abs('') === 0);
-    assert(Math.abs([]) === 0);
-    assert(Math.abs([2]) === 2);
-    assert(isNaN(Math.abs([1, 2])));
-    assert(isNaN(Math.abs({})));
-    assert(isNaN(Math.abs('string')));
-    assert(isNaN(Math.abs()));
-    console.log("PASS");
-} catch {
-}
+    expect(Math.abs('-1')).toBe(1);
+    expect(Math.abs(-2)).toBe(2);
+    expect(Math.abs(null)).toBe(0);
+    expect(Math.abs('')).toBe(0);
+    expect(Math.abs([])).toBe(0);
+    expect(Math.abs([2])).toBe(2);
+    expect(Math.abs([1, 2])).toBeNaN();
+    expect(Math.abs({})).toBeNaN();
+    expect(Math.abs('string')).toBeNaN();
+    expect(Math.abs()).toBeNaN();
+});

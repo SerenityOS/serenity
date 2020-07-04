@@ -1,6 +1,4 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     let o = {
         var1: "foo",
         var2: 42,
@@ -25,15 +23,11 @@ try {
         return value;
     });
 
-    assert(string === '{"var1":"foo","var2":42,"arr":[1,2,{"nested":{},"x":20}],"obj":{"subarr":[3,4,5]}}');
+    expect(string).toBe('{"var1":"foo","var2":42,"arr":[1,2,{"nested":{},"x":20}],"obj":{"subarr":[3,4,5]}}');
 
     string = JSON.stringify(o, ["var1", "var1", "var2", "obj"]);
-    assert(string == '{"var1":"foo","var2":42,"obj":{}}');
+    expect(string).toBe('{"var1":"foo","var2":42,"obj":{}}');
 
     string = JSON.stringify(o, ["var1", "var1", "var2", "obj", "subarr"]);
-    assert(string == '{"var1":"foo","var2":42,"obj":{"subarr":[3]}}');
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(string).toBe('{"var1":"foo","var2":42,"obj":{"subarr":[3]}}');
+});

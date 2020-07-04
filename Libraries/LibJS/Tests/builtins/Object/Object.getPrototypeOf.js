@@ -1,11 +1,10 @@
-load("test-common.js");
+test("basic functionality", () => {
+    let o1 = new Object();
+    let o2 = {};
 
-try {
-    var o1 = new Object();
-    var o2 = {};
-    assert(Object.getPrototypeOf(o1) === Object.getPrototypeOf(o2));
-    assert(Object.getPrototypeOf(Object.getPrototypeOf(o1)) === null);
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Object.getPrototypeOf(o1)).toBe(Object.getPrototypeOf(o2));
+    expect(Object.getPrototypeOf(Object.getPrototypeOf(o1))).toBe(null);
+
+    Object.setPrototypeOf(o1, o2);
+    expect(Object.getPrototypeOf(o1)).toBe(o2);
+});

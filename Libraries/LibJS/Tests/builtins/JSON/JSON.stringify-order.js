@@ -1,8 +1,4 @@
-load("test-common.js");
-
-try {
-    assert(JSON.stringify.length === 3);
-
+test("basic functionality", () => {
     let o = {
         key1: "key1",
         key2: "key2",
@@ -28,9 +24,5 @@ try {
 
     o.key1 = "key1";
 
-    assert(JSON.stringify(o) === '{"0":0,"1":1,"2":2,"key2":"key2","defined":"defined","key4":"key4","key1":"key1"}');
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(JSON.stringify(o)).toBe('{"0":0,"1":1,"2":2,"key2":"key2","defined":"defined","key4":"key4","key1":"key1"}');
+});

@@ -1,27 +1,22 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype.lastIndexOf).toHaveLength(1);
 
-try {
-    assert(String.prototype.lastIndexOf.length === 1);
-    assert("hello friends".lastIndexOf() === -1);
-    assert("hello friends".lastIndexOf("e") === 9);
-    assert("hello friends".lastIndexOf("e", -7) === -1);
-    assert("hello friends".lastIndexOf("e", 100) === 9);
-    assert("hello friends".lastIndexOf("") === 13);
-    assert("hello friends".lastIndexOf("Z") === -1);
-    assert("hello friends".lastIndexOf("serenity") === -1);
-    assert("hello friends".lastIndexOf("", 4) === 4);
-    assert("hello serenity friends".lastIndexOf("serenity") === 6);
-    assert("hello serenity friends serenity".lastIndexOf("serenity") === 23);
-    assert("hello serenity friends serenity".lastIndexOf("serenity", 14) === 6);
-    assert("".lastIndexOf("") === 0);
-    assert("".lastIndexOf("", 1) === 0);
-    assert("".lastIndexOf("", -1) === 0);
-    assert("hello friends serenity".lastIndexOf("h", 10) === 0);
-    assert("hello friends serenity".lastIndexOf("l", 4) === 3);
-    assert("hello friends serenity".lastIndexOf("s", 13) === 12);
-    assert("hello".lastIndexOf("serenity") === -1);
-
-    console.log("PASS");
-} catch (err) {
-    console.log("FAIL: " + err);
-}
+    expect("hello friends".lastIndexOf()).toBe(-1);
+    expect("hello friends".lastIndexOf("e")).toBe(9);
+    expect("hello friends".lastIndexOf("e", -7)).toBe(-1);
+    expect("hello friends".lastIndexOf("e", 100)).toBe(9);
+    expect("hello friends".lastIndexOf("")).toBe(13);
+    expect("hello friends".lastIndexOf("Z")).toBe(-1);
+    expect("hello friends".lastIndexOf("serenity")).toBe(-1);
+    expect("hello friends".lastIndexOf("", 4)).toBe(4);
+    expect("hello serenity friends".lastIndexOf("serenity")).toBe(6);
+    expect("hello serenity friends serenity".lastIndexOf("serenity")).toBe(23);
+    expect("hello serenity friends serenity".lastIndexOf("serenity", 14)).toBe(6);
+    expect("".lastIndexOf("")).toBe(0);
+    expect("".lastIndexOf("", 1)).toBe(0);
+    expect("".lastIndexOf("", -1)).toBe(0);
+    expect("hello friends serenity".lastIndexOf("h", 10)).toBe(0);
+    expect("hello friends serenity".lastIndexOf("l", 4)).toBe(3);
+    expect("hello friends serenity".lastIndexOf("s", 13)).toBe(12);
+    expect("hello".lastIndexOf("serenity")).toBe(-1);
+});

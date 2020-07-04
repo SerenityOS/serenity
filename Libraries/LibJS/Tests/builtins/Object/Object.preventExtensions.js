@@ -1,54 +1,53 @@
-load("test-common.js");
+describe("correct behavior", () => {
+    test("non-object arguments", () => {
+        expect(Object.preventExtensions()).toBeUndefined();
+        expect(Object.preventExtensions(undefined)).toBeUndefined();
+        expect(Object.preventExtensions(null)).toBeNull();
+        expect(Object.preventExtensions(true)).toBeTrue();
+        expect(Object.preventExtensions(6)).toBe(6);
+        expect(Object.preventExtensions("test")).toBe("test");
 
-try {
-    assert(Object.preventExtensions() === undefined);
-    assert(Object.preventExtensions(undefined) === undefined);
-    assert(Object.preventExtensions(null) === null);
-    assert(Object.preventExtensions(true) === true);
-    assert(Object.preventExtensions(6) === 6);
-    assert(Object.preventExtensions("test") === "test");
-
-    let s = Symbol();
-    assert(Object.preventExtensions(s) === s);
-
-    let o = { foo: "foo" };
-    assert(o.foo === "foo");
-    o.bar = "bar";
-    assert(o.bar === "bar");
-
-    assert(Object.preventExtensions(o) === o);
-    assert(o.foo === "foo");
-    assert(o.bar === "bar");
-
-    o.baz = "baz";
-    assert(o.baz === undefined);
-
-    assertThrowsError(() => {
-        Object.defineProperty(o, "baz", { value: "baz" });
-    }, {
-        error: TypeError,
-        message: "Cannot define property baz on non-extensible object",
+        let s = Symbol();
+        expect(Object.preventExtensions(s)).toBe(s);
     });
 
-    assert(o.baz === undefined);
+    test("basic functionality", () => {
+        let o = { foo: "foo" };
+        expect(o.foo).toBe("foo");
+        o.bar = "bar";
+        expect(o.bar).toBe("bar");
 
-    assertThrowsError(() => {
-        "use strict";
+        expect(Object.preventExtensions(o)).toBe(o);
+        expect(o.foo).toBe("foo");
+        expect(o.bar).toBe("bar");
+
         o.baz = "baz";
-    }, {
-        error: TypeError,
-        message: "Cannot define property baz on non-extensible object",
+        expect(o.baz).toBeUndefined();
+    });
+});
+
+describe("errors", () => {
+    test("defining a property on a non-extensible object", () => {
+        let o = {};
+        Object.preventExtensions(o);
+
+        expect(() => {
+            Object.defineProperty(o, "baz", { value: "baz" });
+        }).toThrowWithMessage(TypeError, "Cannot define property baz on non-extensible object");
+
+        expect(o.baz).toBeUndefined();
     });
 
-    assertThrowsError(() => {
-        "use strict";
-        Object.defineProperty(o, "baz", { value: "baz" });
-    }, {
-        error: TypeError,
-        message: "Cannot define property baz on non-extensible object",
-    });
+    test("putting property on a non-extensible object", () => {
+        let o = {};
+        Object.preventExtensions(o);
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        expect(() => {
+            "use strict";
+            o.foo = "foo";
+        }).toThrowWithMessage(TypeError, "Cannot define property foo on non-extensible object");
+
+        expect(o.foo = "foo").toBe("foo");
+        expect(o.foo).toBeUndefined();
+    });
+});
