@@ -1,47 +1,63 @@
-load("test-common.js");
+test("length is 2", () => {
+    expect(Reflect.deleteProperty).toHaveLength(2);
+});
 
-try {
-    assert(Reflect.deleteProperty.length === 2);
-
-    [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
-        assertThrowsError(() => {
-            Reflect.deleteProperty(value);
-        }, {
-            error: TypeError,
-            message: "First argument of Reflect.deleteProperty() must be an object"
+describe("errors", () => {
+    test("target must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.deleteProperty(value);
+            }).toThrowWithMessage(TypeError, "First argument of Reflect.deleteProperty() must be an object");
         });
     });
+});
 
-    assert(Reflect.deleteProperty({}) === true);
-    assert(Reflect.deleteProperty({}, "foo") === true);
+describe("normal behavior", () => {
+    test("deleting non-existent property", () => {
+        expect(Reflect.deleteProperty({})).toBeTrue();
+        expect(Reflect.deleteProperty({}, "foo")).toBeTrue();
+    });
 
-    var o = { foo: 1 };
-    assert(o.foo === 1);
-    assert(Reflect.deleteProperty(o, "foo") === true);
-    assert(o.foo === undefined);
-    assert(Reflect.deleteProperty(o, "foo") === true);
-    assert(o.foo === undefined);
+    test("deleting existent property", () => {
+        var o = { foo: 1 };
+        expect(o.foo).toBe(1);
+        expect(Reflect.deleteProperty(o, "foo")).toBeTrue();
+        expect(o.foo).toBeUndefined();
+        expect(Reflect.deleteProperty(o, "foo")).toBeTrue();
+        expect(o.foo).toBeUndefined();
+    });
 
-    Object.defineProperty(o, "bar", { value: 2, configurable: true, writable: false });
-    assert(Reflect.deleteProperty(o, "bar") === true);
-    assert(o.bar === undefined);
+    test("deleting existent, configurable, non-writable property", () => {
+        var o = {};
+        Object.defineProperty(o, "foo", { value: 1, configurable: true, writable: false });
+        expect(Reflect.deleteProperty(o, "foo")).toBeTrue();
+        expect(o.foo).toBeUndefined();
+    });
 
-    Object.defineProperty(o, "baz", { value: 3, configurable: false, writable: true });
-    assert(Reflect.deleteProperty(o, "baz") === false);
-    assert(o.baz === 3);
+    test("deleting existent, non-configurable, writable property", () => {
+        var o = {};
+        Object.defineProperty(o, "foo", { value: 1, configurable: false, writable: true });
+        expect(Reflect.deleteProperty(o, "foo")).toBeFalse();
+        expect(o.foo).toBe(1);
+    });
 
-    var a = [1, 2, 3];
-    assert(a.length === 3);
-    assert(a[0] === 1);
-    assert(a[1] === 2);
-    assert(a[2] === 3);
-    assert(Reflect.deleteProperty(a, 1) === true);
-    assert(a.length === 3);
-    assert(a[0] === 1);
-    assert(a[1] === undefined);
-    assert(a[2] === 3);
+    test("deleting existent, non-configurable, non-writable property", () => {
+        var o = {};
+        Object.defineProperty(o, "foo", { value: 1, configurable: false, writable: false });
+        expect(Reflect.deleteProperty(o, "foo")).toBeFalse();
+        expect(o.foo).toBe(1);
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("deleting array index", () => {
+        var a = [1, 2, 3];
+        expect(a).toHaveLength(3);
+        expect(a[0]).toBe(1);
+        expect(a[1]).toBe(2);
+        expect(a[2]).toBe(3);
+        expect(Reflect.deleteProperty(a, 1)).toBeTrue();
+        expect(a).toHaveLength(3);
+        expect(a[0]).toBe(1);
+        expect(a[1]).toBeUndefined();
+        expect(a[2]).toBe(3);
+    });
+});

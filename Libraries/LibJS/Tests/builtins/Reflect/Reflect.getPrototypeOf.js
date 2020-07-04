@@ -1,26 +1,34 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Reflect.getPrototypeOf).toHaveLength(1);
+});
 
-try {
-    assert(Reflect.getPrototypeOf.length === 1);
-
-    [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
-        assertThrowsError(() => {
-            Reflect.getPrototypeOf(value);
-        }, {
-            error: TypeError,
-            message: "First argument of Reflect.getPrototypeOf() must be an object"
+describe("errors", () => {
+    test("target must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.getPrototypeOf(value);
+            }).toThrowWithMessage(TypeError, "First argument of Reflect.getPrototypeOf() must be an object");
         });
     });
+});
 
-    assert(Reflect.getPrototypeOf({}) === Object.prototype);
-    assert(Reflect.getPrototypeOf([]) === Array.prototype);
-    assert(Reflect.getPrototypeOf(new String()) === String.prototype);
+describe("normal behavior", () => {
+    test("get prototype of regular object", () => {
+        expect(Reflect.getPrototypeOf({})).toBe(Object.prototype);
+    });
 
-    var o = {};
-    Reflect.setPrototypeOf(o, { foo: "bar" });
-    assert(Reflect.getPrototypeOf(o).foo === "bar");
+    test("get prototype of array", () => {
+        expect(Reflect.getPrototypeOf([])).toBe(Array.prototype);
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("get prototype of string object", () => {
+        expect(Reflect.getPrototypeOf(new String())).toBe(String.prototype);
+    });
+
+    test("get user-defined prototype of regular object", () => {
+        var o = {};
+        var p = { foo: "bar" };
+        Reflect.setPrototypeOf(o, p);
+        expect(Reflect.getPrototypeOf(o)).toBe(p);
+    });
+});

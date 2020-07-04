@@ -1,37 +1,39 @@
-load("test-common.js");
+test("length is 3", () => {
+    expect(Reflect.apply).toHaveLength(3);
+});
 
-try {
-    assert(Reflect.apply.length === 3);
-
-    [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
-        assertThrowsError(() => {
-            Reflect.apply(value);
-        }, {
-            error: TypeError,
-            message: "First argument of Reflect.apply() must be a function"
-        });
-
-        assertThrowsError(() => {
-            Reflect.apply(() => {}, undefined, value);
-        }, {
-            error: TypeError,
-            message: "Arguments list must be an object"
+describe("errors", () => {
+    test("target must be a function", () => {
+        [null, undefined, "foo", 123, NaN, Infinity, {}].forEach(value => {
+            expect(() => {
+                Reflect.apply(value);
+            }).toThrowWithMessage(TypeError, "First argument of Reflect.apply() must be a function");
         });
     });
 
-    assert(Reflect.apply(String.prototype.charAt, "foo", [0]) === "f");
-    assert(Reflect.apply(Array.prototype.indexOf, ["hello", 123, "foo", "bar"], ["foo"]) === 2);
+    test("arguments list must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.apply(() => {}, undefined, value);
+            }).toThrowWithMessage(TypeError, "Arguments list must be an object");
+        });
+    });
+});
 
-    function Foo(foo) {
-        this.foo = foo;
-    }
+describe("normal behavior", () => {
+    test("calling built-in functions", () => {
+        expect(Reflect.apply(String.prototype.charAt, "foo", [0])).toBe("f");
+        expect(Reflect.apply(Array.prototype.indexOf, ["hello", 123, "foo", "bar"], ["foo"])).toBe(2);
+    });
 
-    var o = {};
-    assert(o.foo === undefined);
-    assert(Reflect.apply(Foo, o, ["bar"]) === undefined);
-    assert(o.foo === "bar");
+    test("|this| argument is forwarded to called function", () => {
+        function Foo(foo) {
+            this.foo = foo;
+        }
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        var o = {};
+        expect(o.foo).toBeUndefined();
+        Reflect.apply(Foo, o, ["bar"]);
+        expect(o.foo).toBe("bar");
+    });
+});

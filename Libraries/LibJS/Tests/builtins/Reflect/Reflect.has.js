@@ -1,42 +1,45 @@
-load("test-common.js");
+test("length is 2", () => {
+    expect(Reflect.has).toHaveLength(2);
+});
 
-try {
-    assert(Reflect.has.length === 2);
-
-    [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
-        assertThrowsError(() => {
-            Reflect.has(value);
-        }, {
-            error: TypeError,
-            message: "First argument of Reflect.has() must be an object"
+describe("errors", () => {
+    test("target must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.has(value);
+            }).toThrowWithMessage(TypeError, "First argument of Reflect.has() must be an object");
         });
     });
+});
 
-    assert(Reflect.has({}) === false);
-    assert(Reflect.has({ undefined }) === true);
-    assert(Reflect.has({ 0: "1" }, "0") === true);
-    assert(Reflect.has({ foo: "bar" }, "foo") === true);
-    assert(Reflect.has({ bar: "baz" }, "foo") === false);
-    assert(Reflect.has({}, "toString") === true);
+describe("normal behavior", () => {
+    test("regular object has property", () => {
+        expect(Reflect.has({})).toBeFalse();
+        expect(Reflect.has({ undefined })).toBeTrue();
+        expect(Reflect.has({ 0: "1" }, "0")).toBeTrue();
+        expect(Reflect.has({ foo: "bar" }, "foo")).toBeTrue();
+        expect(Reflect.has({ bar: "baz" }, "foo")).toBeFalse();
+        expect(Reflect.has({}, "toString")).toBeTrue();
+    });
 
-    assert(Reflect.has([]) === false);
-    assert(Reflect.has([], 0) === false);
-    assert(Reflect.has([1, 2, 3], "0") === true);
-    assert(Reflect.has([1, 2, 3], 0) === true);
-    assert(Reflect.has([1, 2, 3], 1) === true);
-    assert(Reflect.has([1, 2, 3], 2) === true);
-    assert(Reflect.has([1, 2, 3], 3) === false);
-    assert(Reflect.has([], "pop") === true);
+    test("array has property", () => {
+        expect(Reflect.has([])).toBeFalse();
+        expect(Reflect.has([], 0)).toBeFalse();
+        expect(Reflect.has([1, 2, 3], "0")).toBeTrue();
+        expect(Reflect.has([1, 2, 3], 0)).toBeTrue();
+        expect(Reflect.has([1, 2, 3], 1)).toBeTrue();
+        expect(Reflect.has([1, 2, 3], 2)).toBeTrue();
+        expect(Reflect.has([1, 2, 3], 3)).toBeFalse();
+        expect(Reflect.has([], "pop")).toBeTrue();
+    });
 
-    assert(Reflect.has(new String()) === false);
-    assert(Reflect.has(new String("foo"), "0") === true);
-    assert(Reflect.has(new String("foo"), 0) === true);
-    assert(Reflect.has(new String("foo"), 1) === true);
-    assert(Reflect.has(new String("foo"), 2) === true);
-    assert(Reflect.has(new String("foo"), 3) === false);
-    assert(Reflect.has(new String("foo"), "charAt") === true);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("string object has property", () => {
+        expect(Reflect.has(new String())).toBeFalse();
+        expect(Reflect.has(new String("foo"), "0")).toBeTrue();
+        expect(Reflect.has(new String("foo"), 0)).toBeTrue();
+        expect(Reflect.has(new String("foo"), 1)).toBeTrue();
+        expect(Reflect.has(new String("foo"), 2)).toBeTrue();
+        expect(Reflect.has(new String("foo"), 3)).toBeFalse();
+        expect(Reflect.has(new String("foo"), "charAt")).toBeTrue();
+    });
+});

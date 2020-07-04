@@ -1,72 +1,96 @@
-load("test-common.js");
+test("length is 3", () => {
+    expect(Reflect.set).toHaveLength(3);
+});
 
-try {
-    assert(Reflect.set.length === 3);
-
-    [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
-        assertThrowsError(() => {
-            Reflect.set(value);
-        }, {
-            error: TypeError,
-            message: "First argument of Reflect.set() must be an object"
+describe("errors", () => {
+    test("target must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.set(value);
+            }).toThrowWithMessage(TypeError, "First argument of Reflect.set() must be an object");
         });
     });
+});
 
-    assert(Reflect.set({}) === true);
-    assert(Reflect.set({}, "foo") === true);
-    assert(Reflect.set({}, "foo", "bar") === true);
+describe("normal behavior", () => {
+    test("setting properties of regular object", () => {
+        var o = {};
 
-    var o = {};
-    assert(o.foo === undefined);
-    assert(Reflect.set(o, "foo", 1) === true);
-    assert(o.foo === 1);
-    assert(Reflect.set(o, "foo", 2) === true);
-    assert(o.foo === 2);
+        expect(Reflect.set(o)).toBeTrue();
+        expect(o.undefined).toBeUndefined();
 
-    Object.defineProperty(o, "bar", { value: 2, configurable: true, writable: false });
-    assert(Reflect.set(o, "bar") === false);
-    assert(o.bar === 2);
+        expect(Reflect.set(o, "foo")).toBeTrue();
+        expect(o.foo).toBeUndefined();
 
-    Object.defineProperty(o, "baz", { value: 3, configurable: false, writable: true });
-    assert(Reflect.set(o, "baz") === true);
-    assert(o.baz === undefined);
+        expect(Reflect.set(o, "foo", "bar")).toBeTrue();
+        expect(o.foo).toBe("bar");
 
-    var a = [];
-    assert(a.length === 0);
-    assert(Reflect.set(a, "0") === true);
-    assert(a.length === 1);
-    assert(a[0] === undefined);
-    assert(Reflect.set(a, 1, "foo") === true);
-    assert(a.length === 2);
-    assert(a[0] === undefined);
-    assert(a[1] === "foo");
-    assert(Reflect.set(a, 4, "bar") === true);
-    assert(a.length === 5);
-    assert(a[0] === undefined);
-    assert(a[1] === "foo");
-    assert(a[2] === undefined);
-    assert(a[3] === undefined);
-    assert(a[4] === "bar");
+        expect(Reflect.set(o, "foo", 42)).toBeTrue();
+        expect(o.foo).toBe(42);
+    });
 
+    test("setting configurable, non-writable property of regular object", () => {
+        var o = {};
+        Object.defineProperty(o, "foo", { value: 1, configurable: true, writable: false });
+        expect(Reflect.set(o, "foo", 2)).toBeFalse();
+        expect(o.foo).toBe(1);
+    });
 
-    const foo = {
-        set prop(value) {
-            this.setPropCalled = true;
-        }
-    };
-    const bar = {};
-    Object.setPrototypeOf(bar, foo);
+    test("setting non-configurable, writable property of regular object", () => {
+        var o = {};
+        Object.defineProperty(o, "foo", { value: 1, configurable: false, writable: true });
+        expect(Reflect.set(o, "foo", 2)).toBeTrue();
+        expect(o.foo).toBe(2);
+    });
 
-    assert(foo.setPropCalled === undefined);
-    assert(bar.setPropCalled === undefined);
-    Reflect.set(bar, "prop", 42);
-    assert(foo.setPropCalled === undefined);
-    assert(bar.setPropCalled === true);
-    Reflect.set(bar, "prop", 42, foo);
-    assert(foo.setPropCalled === true);
-    assert(bar.setPropCalled === true);
+    test("", () => {
+        var a = [];
+        expect(a.length === 0);
+        expect(Reflect.set(a, "0")).toBeTrue();
+        expect(a.length === 1);
+        expect(a[0]).toBeUndefined();
+        expect(Reflect.set(a, 1, "foo")).toBeTrue();
+        expect(a.length === 2);
+        expect(a[0]).toBeUndefined();
+        expect(a[1] === "foo");
+        expect(Reflect.set(a, 4, "bar")).toBeTrue();
+        expect(a.length === 5);
+        expect(a[0]).toBeUndefined();
+        expect(a[1] === "foo");
+        expect(a[2]).toBeUndefined();
+        expect(a[3]).toBeUndefined();
+        expect(a[4] === "bar");
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("setting setter property of regular object", () => {
+        const foo = {
+            set prop(value) {
+                this.setPropCalled = true;
+            }
+        };
+        expect(foo.setPropCalled).toBeUndefined();
+        Reflect.set(foo, "prop", 42);
+        expect(foo.setPropCalled).toBeTrue();
+    });
+
+    test("setting setter property of regular object with different receiver", () => {
+        const foo = {
+            set prop(value) {
+                this.setPropCalled = true;
+            }
+        };
+        const bar = {};
+        Object.setPrototypeOf(bar, foo);
+    
+        expect(foo.setPropCalled).toBeUndefined();
+        expect(bar.setPropCalled).toBeUndefined();
+
+        Reflect.set(bar, "prop", 42);
+        expect(foo.setPropCalled).toBeUndefined();
+        expect(bar.setPropCalled).toBeTrue();
+
+        Reflect.set(bar, "prop", 42, foo);
+        expect(foo.setPropCalled).toBeTrue();
+        expect(bar.setPropCalled).toBeTrue();
+    });
+});
