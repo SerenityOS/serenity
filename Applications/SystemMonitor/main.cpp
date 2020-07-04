@@ -184,7 +184,7 @@ int main(int argc, char** argv)
     auto& process_table_view = process_table_container.add<ProcessTableView>();
 
     auto& refresh_timer = window->add<Core::Timer>(
-        1000, [&] {
+        3000, [&] {
             process_table_view.refresh();
             if (auto* memory_stats_widget = MemoryStatsWidget::the())
                 memory_stats_widget->refresh();
@@ -258,10 +258,8 @@ int main(int argc, char** argv)
         frequency_menu.add_action(*action);
     };
 
-    make_frequency_action("0.25 sec", 250);
-    make_frequency_action("0.5 sec", 500);
-    make_frequency_action("1 sec", 1000, true);
-    make_frequency_action("3 sec", 3000);
+    make_frequency_action("1 sec", 1000);
+    make_frequency_action("3 sec", 3000, true);
     make_frequency_action("5 sec", 5000);
 
     auto& help_menu = menubar->add_menu("Help");
