@@ -1,0 +1,12 @@
+Server                                     Client
+
+WebContent                                 GUI process (WebContentView embedder) 
+
+                                           WebContentView
+WebContent::ClientConnection     <--->       WebContentClient
+  WebContent::PageHost
+    Web::Page
+      Web::Frame
+        Web::Document
+          ..
+
