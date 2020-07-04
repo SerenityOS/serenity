@@ -415,7 +415,7 @@ class Expector {
 expect = value => new Expector(value);
 
 // describe is able to lump test results inside of it by using this context
-// variable. Top level tests are assumed to be in the default context
+// variable. Top level tests have the default suite message
 const defaultSuiteMessage = "__$$TOP_LEVEL$$__";
 let suiteMessage = defaultSuiteMessage;
 
@@ -425,19 +425,18 @@ describe = (message, callback) => {
     suiteMessage = defaultSuiteMessage;
 }
 
-const getTestFunction = successMessage => (message, callback) => {
+test = (message, callback) => {
     if (!__TestResults__[suiteMessage])
         __TestResults__[suiteMessage] = {};
 
     const suite = __TestResults__[suiteMessage];
-
-    if (!suite[message])
-        suite[message] = {};
+    if (suite[message])
+        throw new Error("Duplicate test name: " + message);
 
     try {
         callback();
         suite[message] = {
-            result: successMessage,
+            result: "pass",
         };
     } catch (e) {
         suite[message] = {
@@ -446,6 +445,20 @@ const getTestFunction = successMessage => (message, callback) => {
     }
 }
 
-test = getTestFunction("pass");
+test.skip = (message, callback) => {
+    if (typeof callback !== "function")
+        throw new Error("test.skip has invalid second argument (must be a function)");
+
+    if (!__TestResults__[suiteMessage])
+        __TestResults__[suiteMessage] = {};
+
+    const suite = __TestResults__[suiteMessage];
+    if (suite[message])
+        throw new Error("Duplicate test name: " + message);
+
+    suite[message] = {
+        result: "skip",
+    }
+}
 
 })();
