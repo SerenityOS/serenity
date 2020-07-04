@@ -20,7 +20,7 @@ sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Deve
 sudo pacman -S base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
 ```
 
-**ALT Linux **
+**ALT Linux**
 ```bash
 apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel patch gcc
 ```
