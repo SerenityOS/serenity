@@ -33,15 +33,16 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
+#include <Kernel/API/Syscall.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/API/Syscall.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
+#include <LibELF/AuxiliaryVector.h>
 
 namespace ELF {
 class Loader;
@@ -475,6 +476,7 @@ private:
     ssize_t do_write(FileDescription&, const u8*, int data_size);
 
     KResultOr<NonnullRefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size);
+    Vector<AuxiliaryValue> generate_auxiliary_vector() const;
 
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
@@ -510,6 +512,8 @@ private:
     gid_t m_sgid { 0 };
 
     pid_t m_exec_tid { 0 };
+    FlatPtr m_load_offset { 0U };
+    FlatPtr m_entry_eip { 0U };
 
     static const int m_max_open_file_descriptors { FD_SETSIZE };
 
@@ -661,8 +665,7 @@ inline void Process::for_each_thread(Callback callback) const
     if (my_pid == 0) {
         // NOTE: Special case the colonel process, since its main thread is not in the global thread table.
         Processor::for_each(
-            [&](Processor& proc) -> IterationDecision
-            {
+            [&](Processor& proc) -> IterationDecision {
                 auto idle_thread = proc.idle_thread();
                 if (idle_thread != nullptr)
                     return callback(*idle_thread);
