@@ -37,6 +37,7 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibCore/SyscallUtils.h>
+#include <LibCore/SystemTime.h>
 #include <LibThread/Lock.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -447,8 +448,7 @@ void EventLoop::wait_for_event(WaitMode mode)
     if (mode == WaitMode::WaitForEvents && queued_events_is_empty) {
         auto next_timer_expiration = get_next_timer_expiration();
         if (next_timer_expiration.has_value()) {
-            timespec now_spec;
-            clock_gettime(CLOCK_MONOTONIC, &now_spec);
+            timespec now_spec = SystemTime::monotonic();
             now.tv_sec = now_spec.tv_sec;
             now.tv_usec = now_spec.tv_nsec / 1000;
             timeval_sub(next_timer_expiration.value(), now, timeout);
@@ -473,8 +473,7 @@ void EventLoop::wait_for_event(WaitMode mode)
     }
 
     if (!s_timers->is_empty()) {
-        timespec now_spec;
-        clock_gettime(CLOCK_MONOTONIC, &now_spec);
+        timespec now_spec = SystemTime::monotonic();
         now.tv_sec = now_spec.tv_sec;
         now.tv_usec = now_spec.tv_nsec / 1000;
     }
@@ -550,8 +549,7 @@ int EventLoop::register_timer(Object& object, int milliseconds, bool should_relo
     timer->owner = object.make_weak_ptr();
     timer->interval = milliseconds;
     timeval now;
-    timespec now_spec;
-    clock_gettime(CLOCK_MONOTONIC, &now_spec);
+    timespec now_spec = SystemTime::monotonic();
     now.tv_sec = now_spec.tv_sec;
     now.tv_usec = now_spec.tv_nsec / 1000;
     timer->reload(now);
