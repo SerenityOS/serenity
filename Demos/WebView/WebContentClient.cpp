@@ -74,3 +74,11 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeSelecti
 #endif
     m_view.notify_server_did_change_selection({});
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidLayout& message)
+{
+#ifdef DEBUG_SPAM
+    dbg() << "handle: WebContentClient::DidLayout! content_size=" << message.content_size();
+#endif
+    m_view.notify_server_did_layout({}, message.content_size());
+}

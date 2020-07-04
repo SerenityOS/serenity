@@ -53,9 +53,11 @@ private:
     virtual Gfx::Palette palette() const override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_selection() override;
+    virtual void page_did_layout() override;
 
     explicit PageHost(ClientConnection&);
 
+    Web::LayoutDocument* layout_root();
     void setup_palette();
 
     ClientConnection& m_client;

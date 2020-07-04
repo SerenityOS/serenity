@@ -28,6 +28,7 @@
 #include "WebContentClient.h"
 #include <AK/SharedBuffer.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/ScrollBar.h>
 #include <LibGfx/SystemTheme.h>
 
 WebContentView::WebContentView()
@@ -59,8 +60,8 @@ void WebContentView::resize_event(GUI::ResizeEvent& event)
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, event.size());
     m_bitmap = bitmap->to_bitmap_backed_by_shared_buffer();
     m_bitmap->shared_buffer()->share_with(client().server_pid());
-    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ 0, 0 }, event.size())));
-    client().post_message(Messages::WebContentServer::Paint(m_bitmap->rect(), m_bitmap->shbuf_id()));
+    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, event.size())));
+    request_repaint();
 }
 
 void WebContentView::mousedown_event(GUI::MouseEvent& event)
@@ -97,9 +98,20 @@ void WebContentView::notify_server_did_change_selection(Badge<WebContentClient>)
     request_repaint();
 }
 
+void WebContentView::notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size)
+{
+    set_content_size(content_size);
+}
+
+void WebContentView::did_scroll()
+{
+    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, size())));
+    request_repaint();
+}
+
 void WebContentView::request_repaint()
 {
-    client().post_message(Messages::WebContentServer::Paint(m_bitmap->rect(), m_bitmap->shbuf_id()));
+    client().post_message(Messages::WebContentServer::Paint(m_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_bitmap->shbuf_id()));
 }
 
 WebContentClient& WebContentView::client()

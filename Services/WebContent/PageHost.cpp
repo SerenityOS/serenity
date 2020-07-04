@@ -66,25 +66,32 @@ void PageHost::set_palette_impl(const Gfx::PaletteImpl& impl)
     m_palette_impl = impl;
 }
 
+Web::LayoutDocument* PageHost::layout_root()
+{
+    auto* document = page().main_frame().document();
+    if (!document)
+        return nullptr;
+    return document->layout_node();
+}
+
 void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
 {
     Gfx::Painter painter(target);
+    Gfx::IntRect bitmap_rect { {}, content_rect.size() };
 
-    auto* document = page().main_frame().document();
-    if (!document)
-        return;
-
-    auto* layout_root = document->layout_node();
+    auto* layout_root = this->layout_root();
     if (!layout_root) {
-        painter.fill_rect(content_rect, Color::White);
+        painter.fill_rect(bitmap_rect, Color::White);
         return;
     }
 
-    painter.fill_rect(content_rect, document->background_color(palette()));
+    painter.fill_rect(bitmap_rect, layout_root->document().background_color(palette()));
 
-    if (auto background_bitmap = document->background_image()) {
-        painter.draw_tiled_bitmap(content_rect, *background_bitmap);
+    if (auto background_bitmap = layout_root->document().background_image()) {
+        painter.draw_tiled_bitmap(bitmap_rect, *background_bitmap);
     }
+
+    painter.translate(-content_rect.x(), -content_rect.y());
 
     Web::PaintContext context(painter, palette(), Gfx::IntPoint());
     context.set_viewport_rect(content_rect);
@@ -107,6 +114,14 @@ void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)
 void PageHost::page_did_change_selection()
 {
     m_client.post_message(Messages::WebContentClient::DidChangeSelection());
+}
+
+void PageHost::page_did_layout()
+{
+    auto* layout_root = this->layout_root();
+    ASSERT(layout_root);
+    auto content_size = enclosing_int_rect(layout_root->absolute_rect()).size();
+    m_client.post_message(Messages::WebContentClient::DidLayout(content_size));
 }
 
 }

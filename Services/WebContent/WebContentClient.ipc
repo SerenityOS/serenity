@@ -4,4 +4,5 @@ endpoint WebContentClient = 90
     DidPaint(Gfx::IntRect content_rect, i32 shbuf_id) =|
     DidInvalidateContentRect(Gfx::IntRect content_rect) =|
     DidChangeSelection() =|
+    DidLayout(Gfx::IntSize content_size) =|
 }
