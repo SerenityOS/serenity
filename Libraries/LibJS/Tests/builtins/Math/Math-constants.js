@@ -1,16 +1,10 @@
-load("test-common.js");
-
-try {
-    assert(isClose(Math.E, 2.718281));
-    assert(isClose(Math.LN2, 0.693147));
-    assert(isClose(Math.LN10, 2.302585));
-    assert(isClose(Math.LOG2E, 1.442695));
-    assert(isClose(Math.LOG10E, 0.434294));
-    assert(isClose(Math.PI, 3.1415926));
-    assert(isClose(Math.SQRT1_2, 0.707106));
-    assert(isClose(Math.SQRT2, 1.414213));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+test("basic functionality", () => {
+    expect(Math.E).toBeCloseTo(2.718281);
+    expect(Math.LN2).toBeCloseTo(0.693147);
+    expect(Math.LN10).toBeCloseTo(2.302585);
+    expect(Math.LOG2E).toBeCloseTo(1.442695);
+    expect(Math.LOG10E).toBeCloseTo(0.434294);
+    expect(Math.PI).toBeCloseTo(3.1415926);
+    expect(Math.SQRT1_2).toBeCloseTo(0.707106);
+    expect(Math.SQRT2).toBeCloseTo(1.414213);
+});

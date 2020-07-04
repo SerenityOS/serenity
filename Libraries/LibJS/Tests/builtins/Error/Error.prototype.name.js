@@ -1,14 +1,10 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
+    expect(Error.prototype).not.toHaveProperty("length");
+    
     var changedInstance = new Error("");
-    changedInstance.name = 'NewCustomError';
-    assert(changedInstance.name === "NewCustomError");
+    changedInstance.name = "NewCustomError";
+    expect(changedInstance.name).toBe("NewCustomError");
 
     var normalInstance = new Error("");
-    assert(normalInstance.name === "Error");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e.message);
-}
+    expect(normalInstance.name).toBe("Error");
+});

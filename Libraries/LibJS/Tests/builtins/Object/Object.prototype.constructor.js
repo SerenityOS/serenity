@@ -1,36 +1,18 @@
-load("test-common.js");
+test("basic functionality", () => {
+    [Array, BigInt, Boolean, Date, Error, Function, Number, Object, String].forEach(constructor => {
+        expect(constructor.prototype.constructor).toBe(constructor);
+        if (constructor !== BigInt)
+            expect(Reflect.construct(constructor, []).constructor).toBe(constructor);
+    });
 
-try {
-    assert(Array.prototype.constructor === Array);
-    assert(Boolean.prototype.constructor === Boolean);
-    assert(Date.prototype.constructor === Date);
-    assert(Error.prototype.constructor === Error);
-    assert(Function.prototype.constructor === Function);
-    assert(Number.prototype.constructor === Number);
-    assert(Object.prototype.constructor === Object);
-
-    o = {};
-    assert(o.constructor === Object);
-
-    o = new Object();
-    assert(o.constructor === Object);
+    let o = {};
+    expect(o.constructor).toBe(Object);
 
     a = [];
-    assert(a.constructor === Array);
+    expect(a.constructor).toBe(Array);
 
-    a = new Array();
-    assert(a.constructor === Array);
-
-    n = new Number(3);
-    assert(n.constructor === Number);
-
-    d = Object.getOwnPropertyDescriptor(Object.prototype, "constructor");
-    assert(d.configurable === true);
-    assert(d.enumerable === false);
-    assert(d.writable === true);
-    assert(d.value === Object);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Object.prototype).toHaveConfigurableProperty("constructor");
+    expect(Object.prototype).not.toHaveEnumerableProperty("constructor");
+    expect(Object.prototype).toHaveWritableProperty("constructor");
+    expect(Object.prototype).toHaveValueProperty("constructor", Object);
+});

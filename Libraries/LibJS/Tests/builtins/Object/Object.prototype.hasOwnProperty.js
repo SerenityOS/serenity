@@ -1,17 +1,13 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var o = {};
-    o.foo = 1;
-    assert(o.hasOwnProperty("foo") === true);
-    assert(o.hasOwnProperty("bar") === false);
-    assert(o.hasOwnProperty() === false);
-    assert(o.hasOwnProperty(undefined) === false);
-    o.undefined = 2;
-    assert(o.hasOwnProperty() === true);
-    assert(o.hasOwnProperty(undefined) === true);
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    o.foo = 1;
+    expect(o.hasOwnProperty("foo")).toBeTrue();
+    expect(o.hasOwnProperty("bar")).toBeFalse();
+    expect(o.hasOwnProperty()).toBeFalse();
+    expect(o.hasOwnProperty(undefined)).toBeFalse();
+
+    o.undefined = 2;
+    expect(o.hasOwnProperty()).toBeTrue();
+    expect(o.hasOwnProperty(undefined)).toBeTrue();
+});

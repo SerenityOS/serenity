@@ -1,7 +1,4 @@
-load("test-common.js");
-
-try {
-    assert(Math.sqrt(9) === 3);
-    console.log("PASS");
-} catch {
-}
+test("basic functionality", () => {
+    expect(Math.sqrt).toHaveLength(1);
+    expect(Math.sqrt(9)).toBe(3);
+});

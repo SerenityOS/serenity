@@ -1,6 +1,4 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     let o = {
         foo: 1,
         bar: "baz",
@@ -26,7 +24,7 @@ try {
     }
 }`;
 
-    assert(string === expected);
+    expect(string).toBe(expected);
 
     string = JSON.stringify(o, null, "abcd");
     expected =
@@ -43,9 +41,5 @@ abcdabcd]
 abcd}
 }`;
 
-    assert(string === expected);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(string).toBe(expected);
+});

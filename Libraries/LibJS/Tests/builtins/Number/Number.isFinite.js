@@ -1,30 +1,24 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Number.isFinite).toHaveLength(1);
+    expect(Number.isFinite).not.toBe(isFinite);
 
-try {
-    assert(Number.isFinite !== isFinite);
-    assert(Number.isFinite.length === 1);
+    expect(Number.isFinite(0)).toBeTrue();
+    expect(Number.isFinite(1.23)).toBeTrue();
+    expect(Number.isFinite(42)).toBeTrue();
 
-    assert(Number.isFinite(0) === true);
-    assert(Number.isFinite(1.23) === true);
-    assert(Number.isFinite(42) === true);
-
-    assert(Number.isFinite("") === false);
-    assert(Number.isFinite("0") === false);
-    assert(Number.isFinite("42") === false);
-    assert(Number.isFinite(true) === false);
-    assert(Number.isFinite(false) === false);
-    assert(Number.isFinite(null) === false);
-    assert(Number.isFinite([]) === false);
-    assert(Number.isFinite() === false);
-    assert(Number.isFinite(NaN) === false);
-    assert(Number.isFinite(undefined) === false);
-    assert(Number.isFinite(Infinity) === false);
-    assert(Number.isFinite(-Infinity) === false);
-    assert(Number.isFinite("foo") === false);
-    assert(Number.isFinite({}) === false);
-    assert(Number.isFinite([1, 2, 3]) === false);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e.message);
-}
+    expect(Number.isFinite("")).toBeFalse();
+    expect(Number.isFinite("0")).toBeFalse();
+    expect(Number.isFinite("42")).toBeFalse();
+    expect(Number.isFinite(true)).toBeFalse();
+    expect(Number.isFinite(false)).toBeFalse();
+    expect(Number.isFinite(null)).toBeFalse();
+    expect(Number.isFinite([])).toBeFalse();
+    expect(Number.isFinite()).toBeFalse();
+    expect(Number.isFinite(NaN)).toBeFalse();
+    expect(Number.isFinite(undefined)).toBeFalse();
+    expect(Number.isFinite(Infinity)).toBeFalse();
+    expect(Number.isFinite(-Infinity)).toBeFalse();
+    expect(Number.isFinite("foo")).toBeFalse();
+    expect(Number.isFinite({})).toBeFalse();
+    expect(Number.isFinite([1, 2, 3])).toBeFalse();
+});

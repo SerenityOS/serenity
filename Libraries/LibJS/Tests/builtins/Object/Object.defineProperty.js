@@ -1,123 +1,127 @@
-load("test-common.js");
+describe("normal functionality", () => {
+    test("non-configurable property", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: 1, writable: false, enumerable: false });
 
-try {
-    var o = {};
-    Object.defineProperty(o, "foo", { value: 1, writable: false, enumerable: false });
+        expect(o.foo).toBe(1);
+        o.foo = 2;
+        expect(o.foo).toBe(1);
 
-    assert(o.foo === 1);
-    o.foo = 2;
-    assert(o.foo === 1);
-    Object.defineProperty(o, 2, { get() { return 10; } });
-    assert(o[2] === 10);
-
-    var d = Object.getOwnPropertyDescriptor(o, "foo");
-    assert(d.configurable === false);
-    assert(d.enumerable === false);
-    assert(d.writable === false);
-    assert(d.value === 1);
-
-    Object.defineProperty(o, "bar", { value: "hi", writable: true, enumerable: true });
-
-    assert(o.bar === "hi");
-    o.bar = "ho";
-    assert(o.bar === "ho");
-
-    d = Object.getOwnPropertyDescriptor(o, "bar");
-    assert(d.configurable === false);
-    assert(d.enumerable === true);
-    assert(d.writable === true);
-    assert(d.value === "ho");
-
-    assertThrowsError(() => {
-        Object.defineProperty(o, "bar", { value: "xx", enumerable: false });
-    }, {
-        error: TypeError
+        expect(o).not.toHaveConfigurableProperty("foo");
+        expect(o).not.toHaveEnumerableProperty("foo");
+        expect(o).not.toHaveWritableProperty("foo");
+        expect(o).toHaveValueProperty("foo", 1);
     });
 
-    Object.defineProperty(o, "baz", { value: 9, configurable: true, writable: false });
-    Object.defineProperty(o, "baz", { configurable: true, writable: true });
-
-    d = Object.getOwnPropertyDescriptor(o, "baz");
-    assert(d.configurable === true);
-    assert(d.writable === true);
-    assert(d.value === 9);
-
-    Object.defineProperty(o, "qux", {
-        configurable: true,
-        get() {
-            return o.secret_qux + 1;
-        },
-        set(value) {
-            this.secret_qux = value + 1;
-        },
+    test("array index getter", () => {
+        let o = {};
+        Object.defineProperty(o, 2, { get() { return 10; } });
+        expect(o[2]).toBe(10);
     });
 
-    o.qux = 10;
-    assert(o.qux === 12);
-    o.qux = 20;
-    assert(o.qux = 22);
+    test("configurable property", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: "hi", writable: true, enumerable: true });
 
-    Object.defineProperty(o, "qux", { configurable: true, value: 4 });
+        expect(o.foo).toBe("hi");
+        o.foo = "ho";
+        expect(o.foo).toBe("ho");
 
-    assert(o.qux === 4);
-    o.qux = 5;
-    assert(o.qux = 4);
-
-    Object.defineProperty(o, "qux", {
-        configurable: false,
-        get() {
-            return this.secret_qux + 2;
-        },
-        set(value) {
-            o.secret_qux = value + 2;
-        },
+        expect(o).not.toHaveConfigurableProperty("foo");
+        expect(o).toHaveEnumerableProperty("foo");
+        expect(o).toHaveWritableProperty("foo");
+        expect(o).toHaveValueProperty("foo", "ho");
     });
 
-    o.qux = 10;
-    assert(o.qux === 14);
-    o.qux = 20;
-    assert(o.qux = 24);
+    test("reconfigure configurable property", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: 9, configurable: true, writable: false });
+        Object.defineProperty(o, "foo", { configurable: true, writable: true });
 
-    assertThrowsError(() => {
-        Object.defineProperty(o, "qux", {
-            configurable: false,
+        expect(o).toHaveConfigurableProperty("foo");
+        expect(o).toHaveWritableProperty("foo");
+        expect(o).not.toHaveEnumerableProperty("foo");
+        expect(o).toHaveValueProperty("foo", 9);
+    });
+
+    test("define accessor", () => {
+        let o = {};
+
+        Object.defineProperty(o, "foo", {
+            configurable: true,
             get() {
-                return this.secret_qux + 2;
+                return o.secret_foo + 1;
+            },
+            set(value) {
+                this.secret_foo = value + 1;
             },
         });
-    }, {
-        error: TypeError,
-        message: "Cannot change attributes of non-configurable property 'qux'",
+
+        o.foo = 10;
+        expect(o.foo).toBe(12);
+        o.foo = 20;
+        expect(o.foo).toBe(22);
+
+        Object.defineProperty(o, "foo", { configurable: true, value: 4 });
+
+        expect(o.foo).toBe(4);
+        expect(o.foo = 5).toBe(5);
+        expect(o.foo = 4).toBe(4);
+    });
+});
+
+describe("errors", () => {
+    test("redefine non-configurable property", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: 1, writable: true, enumerable: true });
+
+        expect(() => {
+            Object.defineProperty(o, "foo", { value: 2, writable: false, enumerable: true });
+        }).toThrowWithMessage(TypeError, "Cannot change attributes of non-configurable property 'foo'");
     });
 
-    assertThrowsError(() => {
-        Object.defineProperty(o, "qux", { value: 2 });
-    }, {
-        error: TypeError,
-        message: "Cannot change attributes of non-configurable property 'qux'",
+    test("cannot define 'value' and 'get' in the same descriptor", () => {
+        let o = {};
+
+        expect(() => {
+            Object.defineProperty(o, "a", {
+                get() {},
+                value: 9,
+            });
+        }).toThrowWithMessage(TypeError, "Accessor property descriptor cannot specify a value or writable key");
     });
 
-    assertThrowsError(() => {
-        Object.defineProperty(o, "a", {
-            get() {},
-            value: 9,
+    test("cannot define 'value' and 'set' in the same descriptor", () => {
+        let o = {};
+
+        expect(() => {
+            Object.defineProperty(o, "a", {
+                set() {},
+                writable: true,
+            });
+        }).toThrowWithMessage(TypeError, "Accessor property descriptor cannot specify a value or writable key");
+    });
+
+    test("redefine non-configurable accessor", () => {
+        let o = {};
+
+        Object.defineProperty(o, "foo", {
+            configurable: false,
+            get() {
+                return this.secret_foo + 2;
+            },
+            set(value) {
+                o.secret_foo = value + 2;
+            },
         });
-    }, {
-        error: TypeError,
-        message: "Accessor property descriptor cannot specify a value or writable key",
-    });
 
-    assertThrowsError(() => {
-        Object.defineProperty(o, "a", {
-            set() {},
-            writable: true,
-        });
-    }, {
-        error: TypeError,
-        message: "Accessor property descriptor cannot specify a value or writable key",
+        expect(() => {
+            Object.defineProperty(o, "foo", {
+                configurable: false,
+                get() {
+                    return this.secret_foo + 2;
+                },
+            });
+        }).toThrowWithMessage(TypeError, "Cannot change attributes of non-configurable property 'foo'");
     });
-
-    console.log("PASS");
-} catch (e) {
-    console.log(e)
-}
+});

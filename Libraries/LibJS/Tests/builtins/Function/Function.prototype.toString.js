@@ -1,21 +1,15 @@
-load("test-common.js");
-
-try {
-    assert((function() {}).toString() === "function () {\n  ???\n}");
-    assert((function(foo) {}).toString() === "function (foo) {\n  ???\n}");
-    assert((function(foo, bar, baz) {}).toString() === "function (foo, bar, baz) {\n  ???\n}");
-    assert((function(foo, bar, baz) {
+test("basic functionality", () => {
+    expect((function() {}).toString()).toBe("function () {\n  ???\n}");
+    expect((function(foo) {}).toString()).toBe("function (foo) {\n  ???\n}");
+    expect((function(foo, bar, baz) {}).toString()).toBe("function (foo, bar, baz) {\n  ???\n}");
+    expect((function(foo, bar, baz) {
         if (foo) {
             return baz;
         } else if (bar) {
             return foo;
         }
         return bar + 42;
-    }).toString() === "function (foo, bar, baz) {\n  ???\n}");
-    assert(console.log.toString() === "function log() {\n  [NativeFunction]\n}");
-    assert(Function.toString() === "function Function() {\n  [FunctionConstructor]\n}");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    }).toString()).toBe("function (foo, bar, baz) {\n  ???\n}");
+    expect(console.debug.toString()).toBe("function debug() {\n  [NativeFunction]\n}");
+    expect(Function.toString()).toBe("function Function() {\n  [FunctionConstructor]\n}");
+});

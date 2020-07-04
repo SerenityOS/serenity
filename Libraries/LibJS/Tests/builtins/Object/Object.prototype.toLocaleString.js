@@ -1,32 +1,31 @@
-load("test-common.js");
+describe("correct behavior", () => {
+    test("length", () => {
+        expect(Object.prototype.toLocaleString).toHaveLength(0);
+    })
 
-try {
-    assert(Object.prototype.toLocaleString.length === 0);
+    test("basic functionality", () => {
+        let o;
 
-    var o;
+        o = {};
+        expect(o.toString()).toBe(o.toLocaleString());
 
-    o = {};
-    assert(o.toString() === o.toLocaleString());
+        o = { toString: () => 42 };
+        expect(o.toString()).toBe(42);
+    });
+});
 
-    o = { toString: () => 42 };
-    assert(o.toString() === 42);
-
-    o = { toString: () => { throw Error(); } };
-    assertThrowsError(() => {
-        o.toLocaleString();
-    }, {
-        error: Error
+describe("errors", () => {
+    test("toString that throws error", () => {
+        let o = { toString: () => { throw new Error(); } };
+        expect(() => {
+            o.toLocaleString();
+        }).toThrow(Error);
     });
 
-    o = { toString: "foo" };
-    assertThrowsError(() => {
-        o.toLocaleString();
-    }, {
-        error: TypeError,
-        message: "foo is not a function"
+    test("toString that is not a function", () => {
+        let o = { toString: "foo" };
+        expect(() => {
+            o.toLocaleString();
+        }).toThrowWithMessage(TypeError, "foo is not a function");
     });
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+});

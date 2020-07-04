@@ -1,24 +1,20 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype.charAt).toHaveLength(1);
 
-try {
     var s = "foobar"
-    assert(typeof s === "string");
-    assert(s.length === 6);
+    expect(typeof s).toBe("string");
+    expect(s).toHaveLength(6);
 
-    assert(s.charAt(0) === 'f');
-    assert(s.charAt(1) === 'o');
-    assert(s.charAt(2) === 'o');
-    assert(s.charAt(3) === 'b');
-    assert(s.charAt(4) === 'a');
-    assert(s.charAt(5) === 'r');
-    assert(s.charAt(6) === '');
+    expect(s.charAt(0)).toBe("f");
+    expect(s.charAt(1)).toBe("o");
+    expect(s.charAt(2)).toBe("o");
+    expect(s.charAt(3)).toBe("b");
+    expect(s.charAt(4)).toBe("a");
+    expect(s.charAt(5)).toBe("r");
+    expect(s.charAt(6)).toBe("");
 
-    assert(s.charAt() === 'f');
-    assert(s.charAt(NaN) === 'f');
-    assert(s.charAt("foo") === 'f');
-    assert(s.charAt(undefined) === 'f');
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(s.charAt()).toBe("f");
+    expect(s.charAt(NaN)).toBe("f");
+    expect(s.charAt("foo")).toBe("f");
+    expect(s.charAt(undefined)).toBe("f");
+});

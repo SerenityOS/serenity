@@ -1,35 +1,31 @@
-load("test-common.js")
+test("basic functionality", () => {
+    expect(String.raw).toHaveLength(1);
 
-try {
     let str = String.raw`foo\nbar`;
-    assert(str.length === 8 && str === "foo\\nbar");
+    expect(str).toHaveLength(8);
+    expect(str).toBe("foo\\nbar");
 
     str = String.raw`foo ${1 + 9}\nbar${"hf!"}`;
-    assert(str === "foo 10\\nbarhf!");
+    expect(str).toBe("foo 10\\nbarhf!");
 
     str = String.raw`${10}${20}${30}`;
-    assert(str === "102030");
+    expect(str).toBe("102030");
 
     str = String.raw({ raw: ["foo ", "\\nbar"] }, 10, "hf!");
-    assert(str === "foo 10\\nbar");
+    expect(str).toBe("foo 10\\nbar");
 
     str = String.raw({ raw: ["foo ", "\\nbar"] });
-    assert(str === "foo \\nbar");
+    expect(str).toBe("foo \\nbar");
 
     str = String.raw({ raw: [] }, 10, "hf!");
-    assert(str === "");
+    expect(str).toBe("");
 
     str = String.raw({ raw: 1 });
-    assert(str === "");
+    expect(str).toBe("");
+});
 
-    assertThrowsError(() => {
+test("passing object with no 'raw' property", () => {
+    expect(() => {
         String.raw({});
-    }, {
-        error: TypeError,
-        message: "Cannot convert property 'raw' to object from undefined",
-    });
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    }).toThrowWithMessage(TypeError, "Cannot convert property 'raw' to object from undefined");
+});

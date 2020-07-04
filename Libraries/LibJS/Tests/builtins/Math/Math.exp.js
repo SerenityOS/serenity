@@ -1,19 +1,13 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.exp).toHaveLength(1);
 
-try {
-    assert(Math.exp.length === 1);
+    expect(Math.exp(0)).toBe(1);
+    expect(Math.exp(-2)).toBeCloseTo(0.135335);
+    expect(Math.exp(-1)).toBeCloseTo(0.367879);
+    expect(Math.exp(1)).toBeCloseTo(2.718281);
+    expect(Math.exp(2)).toBeCloseTo(7.389056);
 
-    assert(Math.exp(0) === 1);
-    assert(isClose(Math.exp(-2), 0.135335));
-    assert(isClose(Math.exp(-1), 0.367879));
-    assert(isClose(Math.exp(1), 2.718281));
-    assert(isClose(Math.exp(2), 7.389056));
-
-    assert(isNaN(Math.exp()));
-    assert(isNaN(Math.exp(undefined)));
-    assert(isNaN(Math.exp("foo")));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.exp()).toBeNaN();
+    expect(Math.exp(undefined)).toBeNaN();
+    expect(Math.exp("foo")).toBeNaN();
+});

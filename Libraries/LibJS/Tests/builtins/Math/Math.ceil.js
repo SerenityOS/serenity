@@ -1,19 +1,13 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.ceil).toHaveLength(1);
 
-try {
-    assert(Math.ceil(0.95) === 1);
-    assert(Math.ceil(4) === 4);
-    assert(Math.ceil(7.004) == 8);
-    assert(Math.ceil(-0.95) === -0);
-    assert(Math.ceil(-4)    === -4);
-    assert(Math.ceil(-7.004) === -7);
+    expect(Math.ceil(0.95)).toBe(1);
+    expect(Math.ceil(4)).toBe(4);
+    expect(Math.ceil(7.004)).toBe(8);
+    expect(Math.ceil(-0.95)).toBe(-0);
+    expect(Math.ceil(-4)   ).toBe(-4);
+    expect(Math.ceil(-7.004)).toBe(-7);
 
-    assert(isNaN(Math.ceil()));
-    assert(isNaN(Math.ceil(NaN)));
-
-    assert(Math.ceil.length === 1);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.ceil()).toBeNaN();
+    expect(Math.ceil(NaN)).toBeNaN();
+});

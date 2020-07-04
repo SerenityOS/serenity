@@ -1,11 +1,7 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var d = new Date();
-    assert(!isNaN(d.getFullYear()));
-    assert(d.getFullYear() >= 2020);
-    assert(d.getFullYear() === d.getFullYear());
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(d.getFullYear()).toBe(d.getFullYear());
+    expect(d.getFullYear()).not.toBeNaN();
+    expect(d.getFullYear()).toBe(d.getFullYear());
+    expect(d.getFullYear()).toBeGreaterThanOrEqual(2020);
+});

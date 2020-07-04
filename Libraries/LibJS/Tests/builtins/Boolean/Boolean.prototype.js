@@ -1,10 +1,5 @@
-load("test-common.js");
-
-try {
-    assert(typeof Boolean.prototype === "object");
-    assert(Boolean.prototype.valueOf() === false);
-
-    console.log("PASS");
-} catch (err) {
-    console.log("FAIL: " + err);
-}
+test("basic functionality", () => {
+    expect(typeof Boolean.prototype).toBe("object");
+    expect(Boolean.prototype.valueOf()).toBeFalse();
+    expect(Boolean.prototype.length).toBeUndefined();
+});

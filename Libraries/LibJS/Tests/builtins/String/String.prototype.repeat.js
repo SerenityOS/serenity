@@ -1,37 +1,25 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype.repeat).toHaveLength(1);
 
-try {
-    assert(String.prototype.repeat.length === 1);
+    expect("foo".repeat(0)).toBe("");
+    expect("foo".repeat(1)).toBe("foo");
+    expect("foo".repeat(2)).toBe("foofoo");
+    expect("foo".repeat(3)).toBe("foofoofoo");
+    expect("foo".repeat(3.1)).toBe("foofoofoo");
+    expect("foo".repeat(3.5)).toBe("foofoofoo");
+    expect("foo".repeat(3.9)).toBe("foofoofoo");
+    expect("foo".repeat(null)).toBe("");
+    expect("foo".repeat(undefined)).toBe("");
+    expect("foo".repeat([])).toBe("");
+    expect("foo".repeat("")).toBe("");
+});
 
-    try {
+test("throws correct range errors", () => {
+    expect(() => {
         "foo".repeat(-1);
-        assertNotReached();
-    } catch (e) {
-        assert(e.name === "RangeError");
-        assert(e.message === "repeat count must be a positive number");
-    }
+    }).toThrowWithMessage(RangeError, "repeat count must be a positive number");
 
-    try {
+    expect(() => {
         "foo".repeat(Infinity);
-        assertNotReached();
-    } catch (e) {
-        assert(e.name === "RangeError");
-        assert(e.message === "repeat count must be a finite number");
-    }
-
-    assert("foo".repeat(0) === "");
-    assert("foo".repeat(1) === "foo");
-    assert("foo".repeat(2) === "foofoo");
-    assert("foo".repeat(3) === "foofoofoo");
-    assert("foo".repeat(3.1) === "foofoofoo");
-    assert("foo".repeat(3.5) === "foofoofoo");
-    assert("foo".repeat(3.9) === "foofoofoo");
-    assert("foo".repeat(null) === "");
-    assert("foo".repeat(undefined) === "");
-    assert("foo".repeat([]) === "");
-    assert("foo".repeat("") === "");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    }).toThrowWithMessage(RangeError, "repeat count must be a finite number");
+});

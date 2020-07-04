@@ -1,14 +1,10 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.atanh).toHaveLength(1);
 
-try {
-    assert(isNaN(Math.atanh(-2)));
-    assert(Math.atanh(-1) === -Infinity);
-    // FIXME: assert(Math.atanh(0) === 0);
-    assert(isClose(Math.atanh(0.5), 0.549306));
-    // FIXME: assert(Math.atanh(1) === Infinity);
-    assert(isNaN(Math.atanh(2)));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.atanh(-2)).toBeNaN();
+    expect(Math.atanh(2)).toBeNaN();
+    expect(Math.atanh(-1)).toBe(-Infinity);
+    // FIXME: expect(Math.atanh(0)).toBe(0);
+    expect(Math.atanh(0.5)).toBeCloseTo(0.549306);
+    // FIXME: expect(Math.atanh(1)).toBe(Infinity);
+});

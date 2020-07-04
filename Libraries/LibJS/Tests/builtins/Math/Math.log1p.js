@@ -1,13 +1,8 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.log1p).toHaveLength(1);
 
-try {
-    assert(isNaN(Math.log1p(-2)));
-    assert(Math.log1p(-1) === -Infinity);
-    // FIXME: assert(Math.log1p(0) === 0);
-    // FIXME: assert(isClose(Math.log1p(1), 0.693147));
-
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.log1p(-2)).toBeNaN();
+    expect(Math.log1p(-1)).toBe(-Infinity);
+    // FIXME: expect(Math.log1p(0)).toBe(0);
+    // FIXME: expect(Math.log1p(1)).toBeCloseTo(0.693147);
+});

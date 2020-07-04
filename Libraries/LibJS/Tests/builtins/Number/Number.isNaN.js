@@ -1,31 +1,25 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Number.isNaN).toHaveLength(1);
+    expect(Number.isNaN).not.toBe(isNaN);
 
-try {
-    assert(Number.isNaN !== isNaN);
-    assert(Number.isNaN.length === 1);
+    expect(Number.isNaN(0)).toBeFalse();
+    expect(Number.isNaN(42)).toBeFalse();
+    expect(Number.isNaN("")).toBeFalse();
+    expect(Number.isNaN("0")).toBeFalse();
+    expect(Number.isNaN("42")).toBeFalse();
+    expect(Number.isNaN(true)).toBeFalse();
+    expect(Number.isNaN(false)).toBeFalse();
+    expect(Number.isNaN(null)).toBeFalse();
+    expect(Number.isNaN([])).toBeFalse();
+    expect(Number.isNaN(Infinity)).toBeFalse();
+    expect(Number.isNaN(-Infinity)).toBeFalse();
+    expect(Number.isNaN()).toBeFalse();
+    expect(Number.isNaN(undefined)).toBeFalse();
+    expect(Number.isNaN("foo")).toBeFalse();
+    expect(Number.isNaN({})).toBeFalse();
+    expect(Number.isNaN([1, 2, 3])).toBeFalse();
 
-    assert(Number.isNaN(0) === false);
-    assert(Number.isNaN(42) === false);
-    assert(Number.isNaN("") === false);
-    assert(Number.isNaN("0") === false);
-    assert(Number.isNaN("42") === false);
-    assert(Number.isNaN(true) === false);
-    assert(Number.isNaN(false) === false);
-    assert(Number.isNaN(null) === false);
-    assert(Number.isNaN([]) === false);
-    assert(Number.isNaN(Infinity) === false);
-    assert(Number.isNaN(-Infinity) === false);
-    assert(Number.isNaN() === false);
-    assert(Number.isNaN(undefined) === false);
-    assert(Number.isNaN("foo") === false);
-    assert(Number.isNaN({}) === false);
-    assert(Number.isNaN([1, 2, 3]) === false);
-
-    assert(Number.isNaN(NaN) === true);
-    assert(Number.isNaN(Number.NaN) === true);
-    assert(Number.isNaN(0 / 0) === true);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e.message);
-}
+    expect(Number.isNaN(NaN)).toBeTrue();
+    expect(Number.isNaN(Number.NaN)).toBeTrue();
+    expect(Number.isNaN(0 / 0)).toBeTrue();
+});
