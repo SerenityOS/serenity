@@ -174,9 +174,9 @@ Gfx::IntRect WindowFrame::title_bar_text_rect() const
     auto titlebar_rect = title_bar_rect();
     auto titlebar_icon_rect = title_bar_icon_rect();
     return {
-        titlebar_rect.x() + 2 + titlebar_icon_rect.width() + 2,
+        titlebar_rect.x() + 3 + titlebar_icon_rect.width() + 2,
         titlebar_rect.y(),
-        titlebar_rect.width() - 4 - titlebar_icon_rect.width() - 2,
+        titlebar_rect.width() - 5 - titlebar_icon_rect.width() - 2,
         titlebar_rect.height()
     };
 }
