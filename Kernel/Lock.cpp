@@ -67,7 +67,7 @@ void Lock::lock(Mode mode)
                 return;
             }
             timeval* timeout = nullptr;
-            current_thread->wait_on(m_queue, timeout, &m_lock, m_holder, m_name);
+            current_thread->wait_on(m_queue, m_name, timeout, &m_lock, m_holder);
         } else if (Processor::current().in_critical()) {
             // If we're in a critical section and trying to lock, no context
             // switch will happen, so yield.
