@@ -1152,11 +1152,15 @@ void TextEditor::focusin_event(Core::Event&)
     m_cursor_state = true;
     update_cursor();
     start_timer(500);
+    if (on_focusin)
+        on_focusin();
 }
 
 void TextEditor::focusout_event(Core::Event&)
 {
     stop_timer();
+    if (on_focusout)
+        on_focusout();
 }
 
 void TextEditor::timer_event(Core::TimerEvent&)

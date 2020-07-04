@@ -94,6 +94,8 @@ public:
 
     Function<void()> on_cursor_change;
     Function<void()> on_selection_change;
+    Function<void()> on_focusin;
+    Function<void()> on_focusout;
 
     void set_text(const StringView&);
     void scroll_cursor_into_view();
