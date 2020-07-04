@@ -82,19 +82,25 @@ void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemThem
 
 void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message)
 {
+#ifdef DEBUG_SPAM
     dbg() << "handle: WebContentServer::LoadURL: url=" << message.url();
+#endif
     page().load(message.url());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::SetViewportRect& message)
 {
+#ifdef DEBUG_SPAM
     dbg() << "handle: WebContentServer::SetViewportRect: rect=" << message.rect();
+#endif
     m_page_host->set_viewport_rect(message.rect());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::Paint& message)
 {
+#ifdef DEBUG_SPAM
     dbg() << "handle: WebContentServer::Paint: content_rect=" << message.content_rect() << ", shbuf_id=" << message.shbuf_id();
+#endif
 
     auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
     if (!shared_buffer) {
