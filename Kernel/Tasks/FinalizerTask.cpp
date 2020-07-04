@@ -34,7 +34,6 @@ void FinalizerTask::spawn()
     Process::create_kernel_process(g_finalizer, "FinalizerTask", [] {
         Thread::current()->set_priority(THREAD_PRIORITY_LOW);
         for (;;) {
-			dbg() << "Finalizer task is running";
             Thread::current()->wait_on(*g_finalizer_wait_queue);
             
             bool expected = true;
