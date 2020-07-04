@@ -26,6 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/SystemTime.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -33,7 +34,7 @@ namespace Core {
 
 DateTime DateTime::now()
 {
-    return from_timestamp(time(nullptr));
+    return from_timestamp(SystemTime::timeofday().tv_sec);
 }
 
 DateTime DateTime::create(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
