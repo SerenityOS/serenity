@@ -38,6 +38,10 @@ public:
     virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~JSONObject() override;
 
+    // The base implementation of stringify is exposed because it is used by
+    // test-js to communicate between the JS tests and the C++ test runner.
+    static String stringify_impl(Interpreter&, GlobalObject&, Value value, Value replacer, Value space);
+
 private:
     struct StringifyState {
         Function* replacer_function { nullptr };

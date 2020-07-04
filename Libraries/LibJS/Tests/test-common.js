@@ -425,7 +425,7 @@ describe = (message, callback) => {
     suiteMessage = defaultSuiteMessage;
 }
 
-test = (message, callback) => {
+const getTestFunction = successMessage => (message, callback) => {
     if (!__TestResults__[suiteMessage])
         __TestResults__[suiteMessage] = {};
 
@@ -437,13 +437,15 @@ test = (message, callback) => {
     try {
         callback();
         suite[message] = {
-            passed: true,
+            result: successMessage,
         };
     } catch (e) {
         suite[message] = {
-            passed: false,
+            result: "fail",
         };
     }
 }
+
+test = getTestFunction("pass");
 
 })();
