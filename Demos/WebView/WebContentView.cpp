@@ -87,6 +87,16 @@ void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_
 void WebContentView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, const Gfx::IntRect& content_rect)
 {
     dbg() << "server did invalidate content_rect: " << content_rect << ", current shbuf_id=" << m_bitmap->shbuf_id();
+    request_repaint();
+}
+
+void WebContentView::notify_server_did_change_selection(Badge<WebContentClient>)
+{
+    request_repaint();
+}
+
+void WebContentView::request_repaint()
+{
     client().post_message(Messages::WebContentServer::Paint(m_bitmap->rect(), m_bitmap->shbuf_id()));
 }
 

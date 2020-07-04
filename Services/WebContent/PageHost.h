@@ -52,6 +52,7 @@ private:
     // ^PageHost
     virtual Gfx::Palette palette() const override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
+    virtual void page_did_change_selection() override;
 
     explicit PageHost(ClientConnection&);
 

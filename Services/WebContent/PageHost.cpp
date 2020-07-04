@@ -104,4 +104,9 @@ void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)
     m_client.post_message(Messages::WebContentClient::DidInvalidateContentRect(content_rect));
 }
 
+void PageHost::page_did_change_selection()
+{
+    m_client.post_message(Messages::WebContentClient::DidChangeSelection());
+}
+
 }
