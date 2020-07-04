@@ -5,4 +5,5 @@ endpoint WebContentClient = 90
     DidInvalidateContentRect(Gfx::IntRect content_rect) =|
     DidChangeSelection() =|
     DidLayout(Gfx::IntSize content_size) =|
+    DidChangeTitle(String title) =|
 }

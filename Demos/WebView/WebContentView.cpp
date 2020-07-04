@@ -108,6 +108,12 @@ void WebContentView::notify_server_did_layout(Badge<WebContentClient>, const Gfx
     set_content_size(content_size);
 }
 
+void WebContentView::notify_server_did_change_title(Badge<WebContentClient>, const String& title)
+{
+    if (on_title_change)
+        on_title_change(title);
+}
+
 void WebContentView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, size())));
