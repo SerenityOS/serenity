@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <sys/wait.h>
 #include <unistd.h>

@@ -66,7 +66,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/SharedBuffer.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>

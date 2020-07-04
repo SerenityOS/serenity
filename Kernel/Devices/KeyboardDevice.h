@@ -31,7 +31,7 @@
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <Kernel/Random.h>
 #include <LibKeyboard/CharacterMap.h>
 

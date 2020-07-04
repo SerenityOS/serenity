@@ -26,7 +26,7 @@
 
 #include "HexEditor.h"
 #include <AK/StringBuilder.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>

@@ -27,7 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
 #include <AK/Types.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <signal.h>

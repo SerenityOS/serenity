@@ -25,7 +25,7 @@
  */
 
 #ifdef __serenity__
-#    include <Kernel/Syscall.h>
+#    include <Kernel/API/Syscall.h>
 #endif
 #include <LibCore/File.h>
 #include <errno.h>

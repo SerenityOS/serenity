@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibCore/Event.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>

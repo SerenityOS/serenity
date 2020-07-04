@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/KeyCode.h>
-#include <Kernel/MousePacket.h>
+#include <Kernel/API/KeyCode.h>
+#include <Kernel/API/MousePacket.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Object.h>
 #include <WindowServer/ClientConnection.h>

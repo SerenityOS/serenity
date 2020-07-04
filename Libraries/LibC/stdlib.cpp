@@ -30,7 +30,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <alloca.h>
 #include <assert.h>
 #include <ctype.h>

@@ -37,7 +37,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>

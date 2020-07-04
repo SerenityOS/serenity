@@ -27,7 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <limits.h>
 #include <pthread.h>
 #include <serenity.h>
