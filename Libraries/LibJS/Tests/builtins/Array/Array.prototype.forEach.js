@@ -1,70 +1,70 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.forEach).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.forEach.length === 1);
-
-    assertThrowsError(
-        () => {
+describe("errors", () => {
+    test("requires at least one argument", () => {
+        expect(() => {
             [].forEach();
-        },
-        {
-            error: TypeError,
-            message: "Array.prototype.forEach() requires at least one argument",
-        }
-    );
+        }).toThrowWithMessage(
+            TypeError,
+            "Array.prototype.forEach() requires at least one argument"
+        );
+    });
 
-    assertThrowsError(
-        () => {
+    test("callback must be a function", () => {
+        expect(() => {
             [].forEach(undefined);
-        },
-        {
-            error: TypeError,
-            message: "undefined is not a function",
-        }
-    );
+        }).toThrowWithMessage(TypeError, "undefined is not a function");
+    });
+});
 
-    var a = [1, 2, 3];
-    var o = {};
-    var callbackCalled = 0;
-    var callback = () => {
-        callbackCalled++;
-    };
-
-    assert([].forEach(callback) === undefined);
-    assert(callbackCalled === 0);
-
-    assert(a.forEach(callback) === undefined);
-    assert(callbackCalled === 3);
-
-    callbackCalled = 0;
-    a.forEach(function (value, index) {
-        assert(value === a[index]);
-        assert(index === a[index] - 1);
+describe("normal behavior", () => {
+    test("never calls callback with empty array", () => {
+        var callbackCalled = 0;
+        expect(
+            [].forEach(() => {
+                callbackCalled++;
+            })
+        ).toBeUndefined();
+        expect(callbackCalled).toBe(0);
     });
 
-    callbackCalled = 0;
-    a.forEach(function (_, _, array) {
-        callbackCalled++;
-        assert(a.length === array.length);
-        a.push("test");
+    test("calls callback once for every item", () => {
+        var callbackCalled = 0;
+        expect(
+            [1, 2, 3].forEach(() => {
+                callbackCalled++;
+            })
+        ).toBeUndefined();
+        expect(callbackCalled).toBe(3);
     });
-    assert(callbackCalled === 3);
-    assert(a.length === 6);
 
-    callbackCalled = 0;
-    a.forEach(function (value, index) {
-        callbackCalled++;
-        this[index] = value;
-    }, o);
-    assert(callbackCalled === 6);
-    assert(o[0] === 1);
-    assert(o[1] === 2);
-    assert(o[2] === 3);
-    assert(o[3] === "test");
-    assert(o[4] === "test");
-    assert(o[5] === "test");
+    test("callback receives value and index", () => {
+        var a = [1, 2, 3];
+        a.forEach((value, index) => {
+            expect(value).toBe(a[index]);
+            expect(index).toBe(a[index] - 1);
+        });
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("callback receives array", () => {
+        var callbackCalled = 0;
+        var a = [1, 2, 3];
+        a.forEach((_, _, array) => {
+            callbackCalled++;
+            expect(a).toEqual(array);
+            a.push("test");
+        });
+        expect(callbackCalled).toBe(3);
+        expect(a).toEqual([1, 2, 3, "test", "test", "test"]);
+    });
+
+    test("this value can be modified", () => {
+        var t = [];
+        [1, 2, 3].forEach(function (value) {
+            this.push(value);
+        }, t);
+        expect(t).toEqual([1, 2, 3]);
+    });
+});

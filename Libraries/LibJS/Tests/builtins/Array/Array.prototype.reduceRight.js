@@ -1,134 +1,118 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.reduceRight).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.reduceRight.length === 1);
+describe("errors", () => {
+    test("requires at least one argument", () => {
+        expect(() => {
+            [].reduceRight();
+        }).toThrowWithMessage(
+            TypeError,
+            "Array.prototype.reduceRight() requires at least one argument"
+        );
+    });
 
-    assertThrowsError(
-        () => {
-            [1].reduceRight();
-        },
-        {
-            error: TypeError,
-            message: "Array.prototype.reduceRight() requires at least one argument",
-        }
-    );
+    test("callback must be a function", () => {
+        expect(() => {
+            [].reduceRight(undefined);
+        }).toThrowWithMessage(TypeError, "undefined is not a function");
+    });
 
-    assertThrowsError(
-        () => {
-            [1].reduceRight(undefined);
-        },
-        {
-            error: TypeError,
-            message: "undefined is not a function",
-        }
-    );
-
-    assertThrowsError(
-        () => {
+    test("reduce of empty array with no initial value", () => {
+        expect(() => {
             [].reduceRight((a, x) => x);
-        },
-        {
-            error: TypeError,
-            message: "Reduce of empty array with no initial value",
-        }
-    );
+        }).toThrowWithMessage(TypeError, "Reduce of empty array with no initial value");
+    });
 
-    assertThrowsError(
-        () => {
+    test("reduce of array with only empty slots and no initial value", () => {
+        expect(() => {
             [, ,].reduceRight((a, x) => x);
-        },
-        {
-            error: TypeError,
-            message: "Reduce of empty array with no initial value",
-        }
-    );
-
-    [1, 2].reduceRight(function () {
-        assert(this === undefined);
+        }).toThrowWithMessage(TypeError, "Reduce of empty array with no initial value");
     });
+});
 
-    var callbackCalled = 0;
-    var callback = () => {
-        callbackCalled++;
-        return true;
-    };
+describe("normal behavior", () => {
+    test("basic functionality", () => {
+        [1, 2].reduceRight(function () {
+            expect(this).toBeUndefined();
+        });
 
-    assert([1].reduceRight(callback) === 1);
-    assert(callbackCalled === 0);
+        var callbackCalled = 0;
+        var callback = () => {
+            callbackCalled++;
+            return true;
+        };
 
-    assert([1].reduceRight(callback) === 1);
-    assert(callbackCalled === 0);
+        expect([1].reduceRight(callback)).toBe(1);
+        expect(callbackCalled).toBe(0);
 
-    callbackCalled = 0;
-    assert([1, 2, 3].reduceRight(callback) === true);
-    assert(callbackCalled === 2);
+        expect([1].reduceRight(callback)).toBe(1);
+        expect(callbackCalled).toBe(0);
 
-    callbackCalled = 0;
-    assert([1, 2, 3, ,].reduceRight(callback) === true);
-    assert(callbackCalled === 2);
+        callbackCalled = 0;
+        expect([1, 2, 3].reduceRight(callback)).toBe(true);
+        expect(callbackCalled).toBe(2);
 
-    callbackCalled = 0;
-    assert([, , , 1, , , 10, , 100, , ,].reduceRight(callback) === true);
-    assert(callbackCalled === 2);
+        callbackCalled = 0;
+        expect([1, 2, 3, ,].reduceRight(callback)).toBe(true);
+        expect(callbackCalled).toBe(2);
 
-    var constantlySad = () => ":^(";
-    var result = [].reduceRight(constantlySad, ":^)");
-    assert(result === ":^)");
+        callbackCalled = 0;
+        expect([, , , 1, , , 10, , 100, , ,].reduceRight(callback)).toBe(true);
+        expect(callbackCalled).toBe(2);
 
-    result = [":^0"].reduceRight(constantlySad, ":^)");
-    assert(result === ":^(");
+        var constantlySad = () => ":^(";
+        var result = [].reduceRight(constantlySad, ":^)");
+        expect(result).toBe(":^)");
 
-    result = [":^0"].reduceRight(constantlySad);
-    assert(result === ":^0");
+        result = [":^0"].reduceRight(constantlySad, ":^)");
+        expect(result).toBe(":^(");
 
-    result = [5, 4, 3, 2, 1].reduceRight((accum, elem) => "" + accum + elem);
-    assert(result === "12345");
+        result = [":^0"].reduceRight(constantlySad);
+        expect(result).toBe(":^0");
 
-    result = [1, 2, 3, 4, 5, 6].reduceRight((accum, elem) => {
-        return "" + accum + elem;
-    }, 100);
-    assert(result === "100654321");
+        result = [5, 4, 3, 2, 1].reduceRight((accum, elem) => "" + accum + elem);
+        expect(result).toBe("12345");
 
-    result = [6, 5, 4, 3, 2, 1].reduceRight((accum, elem) => {
-        return "" + accum + elem;
-    }, 100);
-    assert(result === "100123456");
+        result = [1, 2, 3, 4, 5, 6].reduceRight((accum, elem) => {
+            return "" + accum + elem;
+        }, 100);
+        expect(result).toBe("100654321");
 
-    var indexes = [];
-    result = ["foo", 1, true].reduceRight((a, v, i) => {
-        indexes.push(i);
+        result = [6, 5, 4, 3, 2, 1].reduceRight((accum, elem) => {
+            return "" + accum + elem;
+        }, 100);
+        expect(result).toBe("100123456");
+
+        var indexes = [];
+        result = ["foo", 1, true].reduceRight((a, v, i) => {
+            indexes.push(i);
+        });
+        expect(result).toBeUndefined();
+        expect(indexes.length).toBe(2);
+        expect(indexes[0]).toBe(1);
+        expect(indexes[1]).toBe(0);
+
+        indexes = [];
+        result = ["foo", 1, true].reduceRight((a, v, i) => {
+            indexes.push(i);
+        }, "foo");
+        expect(result).toBeUndefined();
+        expect(indexes).toEqual([2, 1, 0]);
+
+        var mutable = { prop: 0 };
+        result = ["foo", 1, true].reduceRight((a, v) => {
+            a.prop = v;
+            return a;
+        }, mutable);
+        expect(result).toBe(mutable);
+        expect(result.prop).toBe("foo");
+
+        var a1 = [1, 2];
+        var a2 = null;
+        a1.reduceRight((a, v, i, t) => {
+            a2 = t;
+        });
+        expect(a1).toBe(a2);
     });
-    assert(result === undefined);
-    assert(indexes.length === 2);
-    assert(indexes[0] === 1);
-    assert(indexes[1] === 0);
-
-    indexes = [];
-    result = ["foo", 1, true].reduceRight((a, v, i) => {
-        indexes.push(i);
-    }, "foo");
-    assert(result === undefined);
-    assert(indexes.length === 3);
-    assert(indexes[0] === 2);
-    assert(indexes[1] === 1);
-    assert(indexes[2] === 0);
-
-    var mutable = { prop: 0 };
-    result = ["foo", 1, true].reduceRight((a, v) => {
-        a.prop = v;
-        return a;
-    }, mutable);
-    assert(result === mutable);
-    assert(result.prop === "foo");
-
-    var a1 = [1, 2];
-    var a2 = null;
-    a1.reduceRight((a, v, i, t) => {
-        a2 = t;
-    });
-    assert(a1 === a2);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+});
