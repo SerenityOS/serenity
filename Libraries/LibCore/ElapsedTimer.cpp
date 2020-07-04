@@ -27,6 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/Time.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/SystemTime.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -35,8 +36,7 @@ namespace Core {
 void ElapsedTimer::start()
 {
     m_valid = true;
-    timespec now_spec;
-    clock_gettime(CLOCK_MONOTONIC, &now_spec);
+    timespec now_spec = SystemTime::monotonic();
     m_start_time.tv_sec = now_spec.tv_sec;
     m_start_time.tv_usec = now_spec.tv_nsec / 1000;
 }
@@ -45,8 +45,7 @@ int ElapsedTimer::elapsed() const
 {
     ASSERT(is_valid());
     struct timeval now;
-    timespec now_spec;
-    clock_gettime(CLOCK_MONOTONIC, &now_spec);
+    timespec now_spec = SystemTime::monotonic();
     now.tv_sec = now_spec.tv_sec;
     now.tv_usec = now_spec.tv_nsec / 1000;
     struct timeval diff;
