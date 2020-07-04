@@ -60,7 +60,7 @@ int main(int argc, char** argv)
         text_widget.open_sesame(argv[1]);
 
     window->show();
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/TextEditor16.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-text-editor.png"));
 
     return app->exec();
 }

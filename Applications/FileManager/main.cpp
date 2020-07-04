@@ -719,7 +719,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         copy_action->set_enabled(!selection.is_empty());
     };
 
-    auto open_in_text_editor_action = GUI::Action::create("Open in TextEditor...", Gfx::Bitmap::load_from_file("/res/icons/TextEditor16.png"), [&](auto&) {
+    auto open_in_text_editor_action = GUI::Action::create("Open in TextEditor...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-text-editor.png"), [&](auto&) {
         pid_t child;
         for (auto& path : selected_file_paths()) {
             const char* argv[] = { "TextEditor", path.characters(), nullptr };
