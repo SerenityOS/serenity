@@ -1,26 +1,22 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.lastIndexOf).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.lastIndexOf.length === 1);
-
+test("basic functionality", () => {
     var array = [1, 2, 3, 1, "hello"];
 
-    assert(array.lastIndexOf("hello") === 4);
-    assert(array.lastIndexOf("hello", 1000) === 4);
-    assert(array.lastIndexOf(1) === 3);
-    assert(array.lastIndexOf(1, -1) === 3);
-    assert(array.lastIndexOf(1, -2) === 3);
-    assert(array.lastIndexOf(2) === 1);
-    assert(array.lastIndexOf(2, -3) === 1);
-    assert(array.lastIndexOf(2, -4) === 1);
-    assert([].lastIndexOf("hello") === -1);
-    assert([].lastIndexOf("hello", 10) === -1);
-    assert([].lastIndexOf("hello", -10) === -1);
-    assert([].lastIndexOf() === -1);
-    assert([undefined].lastIndexOf() === 0);
-    assert([undefined, undefined, undefined].lastIndexOf() === 2);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(array.lastIndexOf("hello")).toBe(4);
+    expect(array.lastIndexOf("hello", 1000)).toBe(4);
+    expect(array.lastIndexOf(1)).toBe(3);
+    expect(array.lastIndexOf(1, -1)).toBe(3);
+    expect(array.lastIndexOf(1, -2)).toBe(3);
+    expect(array.lastIndexOf(2)).toBe(1);
+    expect(array.lastIndexOf(2, -3)).toBe(1);
+    expect(array.lastIndexOf(2, -4)).toBe(1);
+    expect([].lastIndexOf("hello")).toBe(-1);
+    expect([].lastIndexOf("hello", 10)).toBe(-1);
+    expect([].lastIndexOf("hello", -10)).toBe(-1);
+    expect([].lastIndexOf()).toBe(-1);
+    expect([undefined].lastIndexOf()).toBe(0);
+    expect([undefined, undefined, undefined].lastIndexOf()).toBe(2);
+});

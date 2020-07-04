@@ -1,53 +1,39 @@
-load("test-common.js");
+test("length is 0", () => {
+    expect(Array.prototype.slice).toHaveLength(2);
+});
 
-try {
-    assert(Array.prototype.slice.length === 2);
-
+test("basic functionality", () => {
     var array = ["hello", "friends", "serenity", 1];
 
-    var array_slice = array.slice();
-    assert(array_slice.length === array.length);
-    assert(array_slice.length === 4);
-    assert(array_slice[0] === "hello");
-    assert(array_slice[1] === "friends");
-    assert(array_slice[2] === "serenity");
-    assert(array_slice[3] === 1);
+    var slice = array.slice();
+    expect(array).toEqual(["hello", "friends", "serenity", 1]);
+    expect(slice).toEqual(["hello", "friends", "serenity", 1]);
 
-    array_slice = array.slice(1);
-    assert(array_slice.length === 3);
-    assert(array_slice[0] === "friends");
-    assert(array_slice[1] === "serenity");
-    assert(array_slice[2] === 1);
+    slice = array.slice(1);
+    expect(array).toEqual(["hello", "friends", "serenity", 1]);
+    expect(slice).toEqual(["friends", "serenity", 1]);
 
-    array_slice = array.slice(0, 2);
-    assert(array_slice.length === 2);
-    assert(array_slice[0] === "hello");
-    assert(array_slice[1] === "friends");
+    slice = array.slice(0, 2);
+    expect(array).toEqual(["hello", "friends", "serenity", 1]);
+    expect(slice).toEqual(["hello", "friends"]);
 
-    array_slice = array.slice(-1);
-    assert(array_slice.length === 1);
-    assert(array_slice[0] === 1);
+    slice = array.slice(-1);
+    expect(array).toEqual(["hello", "friends", "serenity", 1]);
+    expect(slice).toEqual([1]);
 
-    array_slice = array.slice(1, 1);
-    assert(array_slice.length === 0);
+    slice = array.slice(1, 1);
+    expect(array).toEqual(["hello", "friends", "serenity", 1]);
+    expect(slice).toEqual([]);
 
-    array_slice = array.slice(1, -1);
-    assert(array_slice.length === 2);
-    assert(array_slice[0] === "friends");
-    assert(array_slice[1] === "serenity");
+    slice = array.slice(1, -1);
+    expect(array).toEqual(["hello", "friends", "serenity", 1]);
+    expect(slice).toEqual(["friends", "serenity"]);
 
-    array_slice = array.slice(2, -1);
-    assert(array_slice.length === 1);
-    assert(array_slice[0] === "serenity");
+    slice = array.slice(2, -1);
+    expect(array).toEqual(["hello", "friends", "serenity", 1]);
+    expect(slice).toEqual(["serenity"]);
 
-    array_slice = array.slice(0, 100);
-    assert(array_slice.length === 4);
-    assert(array_slice[0] === "hello");
-    assert(array_slice[1] === "friends");
-    assert(array_slice[2] === "serenity");
-    assert(array_slice[3] === 1);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    slice = array.slice(0, 100);
+    expect(array).toEqual(["hello", "friends", "serenity", 1]);
+    expect(slice).toEqual(["hello", "friends", "serenity", 1]);
+});

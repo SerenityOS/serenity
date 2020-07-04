@@ -1,49 +1,55 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.every).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.every.length === 1);
+describe("errors", () => {
+    test("requires at least one argument", () => {
+        expect(() => {
+            [].every();
+        }).toThrowWithMessage(TypeError, "Array.prototype.every() requires at least one argument");
+    });
 
-    assertThrowsError(
-        () => {
+    test("callback must be a function", () => {
+        expect(() => {
             [].every(undefined);
-        },
-        {
-            error: TypeError,
-            message: "undefined is not a function",
-        }
-    );
+        }).toThrowWithMessage(TypeError, "undefined is not a function");
+    });
+});
 
-    var arrayOne = ["serenity", { test: "serenity" }];
-    var arrayTwo = [true, false, 1, 2, 3, "3"];
+describe("normal behavior", () => {
+    test("basic functionality", () => {
+        var arrayOne = ["serenity", { test: "serenity" }];
+        var arrayTwo = [true, false, 1, 2, 3, "3"];
 
-    assert(arrayOne.every(value => value === "hello") === false);
-    assert(arrayOne.every(value => value === "serenity") === false);
-    assert(arrayOne.every((value, index, arr) => index < 2) === true);
-    assert(arrayOne.every(value => typeof value === "string") === false);
-    assert(arrayOne.every(value => arrayOne.pop()) === true);
+        expect(arrayOne.every(value => value === "hello")).toBeFalse();
+        expect(arrayOne.every(value => value === "serenity")).toBeFalse();
+        expect(arrayOne.every((value, index, arr) => index < 2)).toBeTrue();
+        expect(arrayOne.every(value => typeof value === "string")).toBeFalse();
+        expect(arrayOne.every(value => arrayOne.pop())).toBeTrue();
 
-    assert(arrayTwo.every((value, index, arr) => index > 0) === false);
-    assert(arrayTwo.every((value, index, arr) => index >= 0) === true);
-    assert(arrayTwo.every(value => typeof value !== "string") === false);
-    assert(arrayTwo.every(value => typeof value === "number") === false);
-    assert(arrayTwo.every(value => value > 0) === false);
-    assert(arrayTwo.every(value => value >= 0 && value < 4) === true);
-    assert(arrayTwo.every(value => arrayTwo.pop()) === true);
+        expect(arrayTwo.every((value, index, arr) => index > 0)).toBeFalse();
+        expect(arrayTwo.every((value, index, arr) => index >= 0)).toBeTrue();
+        expect(arrayTwo.every(value => typeof value !== "string")).toBeFalse();
+        expect(arrayTwo.every(value => typeof value === "number")).toBeFalse();
+        expect(arrayTwo.every(value => value > 0)).toBeFalse();
+        expect(arrayTwo.every(value => value >= 0 && value < 4)).toBeTrue();
+        expect(arrayTwo.every(value => arrayTwo.pop())).toBeTrue();
 
-    assert(["", "hello", "friends", "serenity"].every(value => value.length >= 0) === true);
-    assert([].every(value => value === 1) === true);
+        expect(["", "hello", "friends", "serenity"].every(value => value.length >= 0)).toBeTrue();
+    });
 
-    arrayTwo = [true, false, 1, 2, 3, "3"];
+    test("empty array", () => {
+        expect([].every(value => value === 1)).toBeTrue();
+    });
 
-    // Every only goes up to the original length.
-    assert(
-        arrayTwo.every((value, index, arr) => {
-            arr.push("serenity");
-            return value < 4;
-        }) === true
-    );
+    test("elements past the initial array size are ignored", () => {
+        var array = [1, 2, 3, 4, 5];
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        expect(
+            arrayTwo.every((value, index, arr) => {
+                arr.push(6);
+                return value <= 5;
+            })
+        ).toBeTrue();
+    });
+});

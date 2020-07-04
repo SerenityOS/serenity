@@ -1,36 +1,43 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.concat).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.concat.length === 1);
+describe("normal behavior", () => {
+    var array = ["hello"];
 
-    var array = ["hello", "friends"];
+    test("no arguments", () => {
+        var concatenated = array.concat();
+        expect(array).toHaveLength(1);
+        expect(concatenated).toHaveLength(1);
+    });
 
-    var array_concat = array.concat();
-    assert(array_concat.length === array.length);
+    test("single argument", () => {
+        var concatenated = array.concat("friends");
+        expect(array).toHaveLength(1);
+        expect(concatenated).toHaveLength(2);
+        expect(concatenated[0]).toBe("hello");
+        expect(concatenated[1]).toBe("friends");
+    });
 
-    array_concat = array.concat(1);
-    assert(array_concat.length === 3);
-    assert(array_concat[2] === 1);
+    test("single array argument", () => {
+        var concatenated = array.concat([1, 2, 3]);
+        expect(array).toHaveLength(1);
+        expect(concatenated).toHaveLength(4);
+        expect(concatenated[0]).toBe("hello");
+        expect(concatenated[1]).toBe(1);
+        expect(concatenated[2]).toBe(2);
+        expect(concatenated[3]).toBe(3);
+    });
 
-    array_concat = array.concat([1, 2, 3]);
-    assert(array_concat.length === 5);
-    assert(array_concat[2] === 1);
-    assert(array_concat[3] === 2);
-    assert(array_concat[4] === 3);
-
-    array_concat = array.concat(false, "serenity");
-    assert(array_concat.length === 4);
-    assert(array_concat[2] === false);
-    assert(array_concat[3] === "serenity");
-
-    array_concat = array.concat({ name: "libjs" }, [1, [2, 3]]);
-    assert(array_concat.length === 5);
-    assert(array_concat[2].name === "libjs");
-    assert(array_concat[3] === 1);
-    assert(array_concat[4][0] === 2);
-    assert(array_concat[4][1] === 3);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("multiple arguments", () => {
+        var concatenated = array.concat(false, "serenity", { name: "libjs" }, [1, [2, 3]]);
+        expect(array).toHaveLength(1);
+        expect(concatenated).toHaveLength(6);
+        expect(concatenated[0]).toBe("hello");
+        expect(concatenated[1]).toBeFalse();
+        expect(concatenated[2]).toBe("serenity");
+        expect(concatenated[3]).toEqual({ name: "libjs" });
+        expect(concatenated[4]).toBe(1);
+        expect(concatenated[5]).toEqual([2, 3]);
+    });
+});

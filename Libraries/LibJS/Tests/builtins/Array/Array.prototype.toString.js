@@ -1,22 +1,58 @@
-load("test-common.js");
+test("length is 0", () => {
+    expect(Array.prototype.toString).toHaveLength(0);
+});
 
-try {
-    var a = [1, 2, 3];
-    assert(a.toString() === "1,2,3");
-    assert([].toString() === "");
-    assert([5].toString() === "5");
+describe("normal behavior", () => {
+    test("array with no elements", () => {
+        expect([].toString()).toBe("");
+    });
 
-    assert("rgb(" + [10, 11, 12] + ")" === "rgb(10,11,12)");
+    test("array with one element", () => {
+        expect([1].toString()).toBe("1");
+    });
 
-    assert([undefined, null].toString() === ",");
+    test("array with multiple elements", () => {
+        expect([1, 2, 3].toString()).toBe("1,2,3");
+    });
 
-    a = new Array(5);
-    assert(a.toString() === ",,,,");
-    a[2] = "foo";
-    a[4] = "bar";
-    assert(a.toString() === ",,foo,,bar");
+    test("string and array concatenation", () => {
+        expect("rgb(" + [10, 11, 12] + ")").toBe("rgb(10,11,12)");
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("null and undefined result in empty strings", () => {
+        expect([null].toString()).toBe("");
+        expect([undefined].toString()).toBe("");
+        expect([undefined, null].toString()).toBe(",");
+    });
+
+    test("empty values result in empty strings", () => {
+        expect(new Array(1).toString()).toBe("");
+        expect(new Array(3).toString()).toBe(",,");
+        var a = new Array(5);
+        a[2] = "foo";
+        a[4] = "bar";
+        expect(a.toString()).toBe(",,foo,,bar");
+    });
+
+    test("getter property is included in returned string", () => {
+        var a = [1, 2, 3];
+        Object.defineProperty(a, 3, {
+            get() {
+                return 10;
+            },
+        });
+        expect(a.toString()).toBe("1,2,3,10");
+    });
+
+    test("array with elements that have a custom toString() function", () => {
+        var toStringCalled = 0;
+        var o = {
+            toString() {
+                toStringCalled++;
+                return "o";
+            },
+        };
+        expect([o, undefined, o, null, o].toString()).toBe("o,,o,,o");
+        expect(toStringCalled).toBe(3);
+    });
+});

@@ -1,132 +1,113 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.reduce).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.reduce.length === 1);
+describe("errors", () => {
+    test("requires at least one argument", () => {
+        expect(() => {
+            [].reduce();
+        }).toThrowWithMessage(TypeError, "Array.prototype.reduce() requires at least one argument");
+    });
 
-    assertThrowsError(
-        () => {
-            [1].reduce();
-        },
-        {
-            error: TypeError,
-            message: "Array.prototype.reduce() requires at least one argument",
-        }
-    );
+    test("callback must be a function", () => {
+        expect(() => {
+            [].reduce(undefined);
+        }).toThrowWithMessage(TypeError, "undefined is not a function");
+    });
 
-    assertThrowsError(
-        () => {
-            [1].reduce(undefined);
-        },
-        {
-            error: TypeError,
-            message: "undefined is not a function",
-        }
-    );
-
-    assertThrowsError(
-        () => {
+    test("reduce of empty array with no initial value", () => {
+        expect(() => {
             [].reduce((a, x) => x);
-        },
-        {
-            error: TypeError,
-            message: "Reduce of empty array with no initial value",
-        }
-    );
+        }).toThrowWithMessage(TypeError, "Reduce of empty array with no initial value");
+    });
 
-    assertThrowsError(
-        () => {
+    test("reduce of array with only empty slots and no initial value", () => {
+        expect(() => {
             [, ,].reduce((a, x) => x);
-        },
-        {
-            error: TypeError,
-            message: "Reduce of empty array with no initial value",
-        }
-    );
-
-    [1, 2].reduce(function () {
-        assert(this === undefined);
+        }).toThrowWithMessage(TypeError, "Reduce of empty array with no initial value");
     });
+});
 
-    var callbackCalled = 0;
-    var callback = () => {
-        callbackCalled++;
-        return true;
-    };
+describe("normal behavior", () => {
+    test("basic functionality", () => {
+        [1, 2].reduce(function () {
+            expect(this).toBeUndefined();
+        });
 
-    assert([1].reduce(callback) === 1);
-    assert(callbackCalled === 0);
+        var callbackCalled = 0;
+        var callback = () => {
+            callbackCalled++;
+            return true;
+        };
 
-    assert([, 1].reduce(callback) === 1);
-    assert(callbackCalled === 0);
+        expect([1].reduce(callback)).toBe(1);
+        expect(callbackCalled).toBe(0);
 
-    callbackCalled = 0;
-    assert([1, 2, 3].reduce(callback) === true);
-    assert(callbackCalled === 2);
+        expect([, 1].reduce(callback)).toBe(1);
+        expect(callbackCalled).toBe(0);
 
-    callbackCalled = 0;
-    assert([, , 1, 2, 3].reduce(callback) === true);
-    assert(callbackCalled === 2);
+        callbackCalled = 0;
+        expect([1, 2, 3].reduce(callback)).toBeTrue();
+        expect(callbackCalled).toBe(2);
 
-    callbackCalled = 0;
-    assert([1, , , 10, , 100, , ,].reduce(callback) === true);
-    assert(callbackCalled === 2);
+        callbackCalled = 0;
+        expect([, , 1, 2, 3].reduce(callback)).toBeTrue();
+        expect(callbackCalled).toBe(2);
 
-    var constantlySad = () => ":^(";
-    var result = [].reduce(constantlySad, ":^)");
-    assert(result === ":^)");
+        callbackCalled = 0;
+        expect([1, , , 10, , 100, , ,].reduce(callback)).toBeTrue();
+        expect(callbackCalled).toBe(2);
 
-    result = [":^0"].reduce(constantlySad, ":^)");
-    assert(result === ":^(");
+        var constantlySad = () => ":^(";
+        var result = [].reduce(constantlySad, ":^)");
+        expect(result).toBe(":^)");
 
-    result = [":^0"].reduce(constantlySad);
-    assert(result === ":^0");
+        result = [":^0"].reduce(constantlySad, ":^)");
+        expect(result).toBe(":^(");
 
-    result = [5, 4, 3, 2, 1].reduce((accum, elem) => accum + elem);
-    assert(result === 15);
+        result = [":^0"].reduce(constantlySad);
+        expect(result).toBe(":^0");
 
-    result = [1, 2, 3, 4, 5, 6].reduce((accum, elem) => accum + elem, 100);
-    assert(result === 121);
+        result = [5, 4, 3, 2, 1].reduce((accum, elem) => accum + elem);
+        expect(result).toBe(15);
 
-    result = [6, 5, 4, 3, 2, 1].reduce((accum, elem) => {
-        return accum + elem;
-    }, 100);
-    assert(result === 121);
+        result = [1, 2, 3, 4, 5, 6].reduce((accum, elem) => accum + elem, 100);
+        expect(result).toBe(121);
 
-    var indexes = [];
-    result = ["foo", 1, true].reduce((a, v, i) => {
-        indexes.push(i);
+        result = [6, 5, 4, 3, 2, 1].reduce((accum, elem) => {
+            return accum + elem;
+        }, 100);
+        expect(result).toBe(121);
+
+        var indexes = [];
+        result = ["foo", 1, true].reduce((a, v, i) => {
+            indexes.push(i);
+        });
+        expect(result).toBeUndefined();
+        expect(indexes.length).toBe(2);
+        expect(indexes[0]).toBe(1);
+        expect(indexes[1]).toBe(2);
+
+        indexes = [];
+        result = ["foo", 1, true].reduce((a, v, i) => {
+            indexes.push(i);
+        }, "foo");
+        expect(result).toBeUndefined();
+        expect(indexes).toEqual([0, 1, 2]);
+
+        var mutable = { prop: 0 };
+        result = ["foo", 1, true].reduce((a, v) => {
+            a.prop = v;
+            return a;
+        }, mutable);
+        expect(result).toBe(mutable);
+        expect(result.prop).toBeTrue();
+
+        var a1 = [1, 2];
+        var a2 = null;
+        a1.reduce((a, v, i, t) => {
+            a2 = t;
+        });
+        expect(a1).toBe(a2);
     });
-    assert(result === undefined);
-    assert(indexes.length === 2);
-    assert(indexes[0] === 1);
-    assert(indexes[1] === 2);
-
-    indexes = [];
-    result = ["foo", 1, true].reduce((a, v, i) => {
-        indexes.push(i);
-    }, "foo");
-    assert(result === undefined);
-    assert(indexes.length === 3);
-    assert(indexes[0] === 0);
-    assert(indexes[1] === 1);
-    assert(indexes[2] === 2);
-
-    var mutable = { prop: 0 };
-    result = ["foo", 1, true].reduce((a, v) => {
-        a.prop = v;
-        return a;
-    }, mutable);
-    assert(result === mutable);
-    assert(result.prop === true);
-
-    var a1 = [1, 2];
-    var a2 = null;
-    a1.reduce((a, v, i, t) => {
-        a2 = t;
-    });
-    assert(a1 === a2);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+});

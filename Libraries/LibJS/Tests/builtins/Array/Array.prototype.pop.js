@@ -1,21 +1,23 @@
-load("test-common.js");
+test("length is 0", () => {
+    expect(Array.prototype.pop).toHaveLength(0);
+});
 
-try {
-    var a = [1, 2, 3];
-    var value = a.pop();
-    assert(value === 3);
-    assert(a.length === 2);
-    assert(a[0] === 1);
-    assert(a[1] === 2);
+describe("normal behavior", () => {
+    test("array with elements", () => {
+        var a = [1, 2, 3];
+        expect(a.pop()).toBe(3);
+        expect(a).toEqual([1, 2]);
+    });
 
-    var a = [];
-    var value = a.pop();
-    assert(value === undefined);
-    assert(a.length === 0);
+    test("empty array", () => {
+        var a = [];
+        expect(a.pop()).toBeUndefined();
+        expect(a).toEqual([]);
+    });
 
-    assert([,].pop() === undefined);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("array with empty slot", () => {
+        var a = [,];
+        expect(a.pop()).toBeUndefined();
+        expect(a).toEqual([]);
+    });
+});

@@ -1,29 +1,25 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.indexOf).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.indexOf.length === 1);
-
+test("basic functionality", () => {
     var array = ["hello", "friends", 1, 2, false];
 
-    assert(array.indexOf("hello") === 0);
-    assert(array.indexOf("friends") === 1);
-    assert(array.indexOf(false) === 4);
-    assert(array.indexOf(false, 2) === 4);
-    assert(array.indexOf(false, -2) === 4);
-    assert(array.indexOf(1) === 2);
-    assert(array.indexOf(1, 1000) === -1);
-    assert(array.indexOf(1, -1000) === 2);
-    assert(array.indexOf("serenity") === -1);
-    assert(array.indexOf(false, -1) === 4);
-    assert(array.indexOf(2, -1) === -1);
-    assert(array.indexOf(2, -2) === 3);
-    assert([].indexOf("serenity") === -1);
-    assert([].indexOf("serenity", 10) === -1);
-    assert([].indexOf("serenity", -10) === -1);
-    assert([].indexOf() === -1);
-    assert([undefined].indexOf() === 0);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(array.indexOf("hello")).toBe(0);
+    expect(array.indexOf("friends")).toBe(1);
+    expect(array.indexOf(false)).toBe(4);
+    expect(array.indexOf(false, 2)).toBe(4);
+    expect(array.indexOf(false, -2)).toBe(4);
+    expect(array.indexOf(1)).toBe(2);
+    expect(array.indexOf(1, 1000)).toBe(-1);
+    expect(array.indexOf(1, -1000)).toBe(2);
+    expect(array.indexOf("serenity")).toBe(-1);
+    expect(array.indexOf(false, -1)).toBe(4);
+    expect(array.indexOf(2, -1)).toBe(-1);
+    expect(array.indexOf(2, -2)).toBe(3);
+    expect([].indexOf("serenity")).toBe(-1);
+    expect([].indexOf("serenity", 10)).toBe(-1);
+    expect([].indexOf("serenity", -10)).toBe(-1);
+    expect([].indexOf()).toBe(-1);
+    expect([undefined].indexOf()).toBe(0);
+});

@@ -1,63 +1,57 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var a = [1, 2, 3];
 
-    assert(typeof a === "object");
-    assert(a.length === 3);
-    assert(a[0] === 1);
-    assert(a[1] === 2);
-    assert(a[2] === 3);
+    expect(typeof a).toBe("object");
+    expect(a).toHaveLength(3);
+    expect(a[0]).toBe(1);
+    expect(a[1]).toBe(2);
+    expect(a[2]).toBe(3);
 
     a[1] = 5;
-    assert(a[1] === 5);
-    assert(a.length === 3);
+    expect(a[1]).toBe(5);
+    expect(a).toHaveLength(3);
 
     a.push(7);
-    assert(a[3] === 7);
-    assert(a.length === 4);
+    expect(a[3]).toBe(7);
+    expect(a).toHaveLength(4);
 
     a = [,];
-    assert(a.length === 1);
-    assert(a.toString() === "");
-    assert(a[0] === undefined);
+    expect(a).toHaveLength(1);
+    expect(a.toString()).toBe("");
+    expect(a[0]).toBeUndefined();
 
     a = [, , , ,];
-    assert(a.length === 4);
-    assert(a.toString() === ",,,");
-    assert(a[0] === undefined);
-    assert(a[1] === undefined);
-    assert(a[2] === undefined);
-    assert(a[3] === undefined);
+    expect(a).toHaveLength(4);
+    expect(a.toString()).toBe(",,,");
+    expect(a[0]).toBeUndefined();
+    expect(a[1]).toBeUndefined();
+    expect(a[2]).toBeUndefined();
+    expect(a[3]).toBeUndefined();
 
     a = [1, , 2, , , 3];
-    assert(a.length === 6);
-    assert(a.toString() === "1,,2,,,3");
-    assert(a[0] === 1);
-    assert(a[1] === undefined);
-    assert(a[2] === 2);
-    assert(a[3] === undefined);
-    assert(a[4] === undefined);
-    assert(a[5] === 3);
+    expect(a).toHaveLength(6);
+    expect(a.toString()).toBe("1,,2,,,3");
+    expect(a[0]).toBe(1);
+    expect(a[1]).toBeUndefined();
+    expect(a[2]).toBe(2);
+    expect(a[3]).toBeUndefined();
+    expect(a[4]).toBeUndefined();
+    expect(a[5]).toBe(3);
 
     a = [1, , 2, , , 3];
     Object.defineProperty(a, 1, {
         get() {
-            return this.secret_prop;
+            return this.getterSetterValue;
         },
         set(value) {
-            this.secret_prop = value;
+            this.getterSetterValue = value;
         },
     });
-    assert(a.length === 6);
-    assert(a.toString() === "1,,2,,,3");
-    assert(a.secret_prop === undefined);
+    expect(a).toHaveLength(6);
+    expect(a.toString()).toBe("1,,2,,,3");
+    expect(a.getterSetterValue).toBeUndefined();
     a[1] = 20;
-    assert(a.length === 6);
-    assert(a.toString() === "1,20,2,,,3");
-    assert(a.secret_prop === 20);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(a).toHaveLength(6);
+    expect(a.toString()).toBe("1,20,2,,,3");
+    expect(a.getterSetterValue).toBe(20);
+});
