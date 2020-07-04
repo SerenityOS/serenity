@@ -402,7 +402,7 @@ bool Scheduler::pick_next()
 #ifdef SCHEDULER_RUNNABLE_DEBUG
     dbg() << "Non-runnables:";
     Scheduler::for_each_nonrunnable([](Thread& thread) -> IterationDecision {
-        dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
+        dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Reason: " << (thread.wait_reason() ? thread.wait_reason() : "none");
         return IterationDecision::Continue;
     });
 

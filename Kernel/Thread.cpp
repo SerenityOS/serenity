@@ -852,7 +852,7 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
     return stream << value.process().name() << "(" << value.pid() << ":" << value.tid() << ")";
 }
 
-Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary, const char* reason)
+Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary)
 {
     TimerId timer_id {};
     u32 prev_crit;
@@ -864,6 +864,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<b
         if (lock)
             *lock = false;
         set_state(State::Queued);
+        m_wait_reason = reason;
         queue.enqueue(*Thread::current());
 
     
@@ -899,6 +900,7 @@ void Thread::wake_from_queue()
 {
     ScopedSpinLock lock(g_scheduler_lock);
     ASSERT(state() == State::Queued);
+    m_wait_reason = nullptr;
     if (this != Thread::current())
         set_state(State::Runnable);
     else

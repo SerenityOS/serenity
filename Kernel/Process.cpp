@@ -4846,7 +4846,7 @@ int Process::sys$futex(const Syscall::SC_futex_params* user_params)
         }
 
         // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
-        Thread::BlockResult result = Thread::current()->wait_on(wait_queue, optional_timeout);
+        Thread::BlockResult result = Thread::current()->wait_on(wait_queue, "Futex", optional_timeout);
         if (result == Thread::BlockResult::InterruptedByTimeout) {
             return -ETIMEDOUT;
         }
