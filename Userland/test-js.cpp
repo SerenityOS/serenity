@@ -264,6 +264,8 @@ private:
 
     double m_total_elapsed_time_in_ms { 0 };
     JSTestRunnerCounts m_counts;
+
+    RefPtr<JS::Program> m_test_program;
 };
 
 void TestRunner::run()
@@ -274,12 +276,12 @@ void TestRunner::run()
     print_test_results();
 }
 
-Optional<ParserError> parse_and_run_file(JS::Interpreter& interpreter, const String& path)
+Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
 {
-    auto file = Core::File::construct(path);
+    auto file = Core::File::construct(file_path);
     auto result = file->open(Core::IODevice::ReadOnly);
     if (!result) {
-        printf("Failed to open the following file: \"%s\"\n", path.characters());
+        printf("Failed to open the following file: \"%s\"\n", file_path.characters());
         exit(1);
     }
 
@@ -292,12 +294,10 @@ Optional<ParserError> parse_and_run_file(JS::Interpreter& interpreter, const Str
 
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
-        return ParserError { error, error.source_location_hint(test_file_string) };
-    } else {
-        interpreter.run(interpreter.global_object(), *program);
+        return Result<NonnullRefPtr<JS::Program>, ParserError>(ParserError { error, error.source_location_hint(test_file_string) });
     }
 
-    return {};
+    return Result<NonnullRefPtr<JS::Program>, ParserError>(program);
 }
 
 Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
@@ -317,14 +317,21 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     double start_time = get_time();
     auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
 
-    if (parse_and_run_file(*interpreter, String::format("%s/test-common.js", m_test_root.characters())).has_value()) {
-        dbg() << "test-common.js failed to parse";
-        exit(1);
+    if (!m_test_program) {
+        auto result = parse_file(String::format("%s/test-common.js", m_test_root.characters()));
+        if (result.is_error()) {
+            printf("Unable to parse test-common.js");
+            exit(1);
+        }
+        m_test_program = result.value();
     }
 
-    auto source_file_result = parse_and_run_file(*interpreter, String::format("%s/%s", m_test_root.characters(), test_path.characters()));
-    if (source_file_result.has_value())
-        return { test_path, source_file_result };
+    interpreter->run(interpreter->global_object(), *m_test_program);
+
+    auto file_program = parse_file(String::format("%s/%s", m_test_root.characters(), test_path.characters()));
+    if (file_program.is_error())
+        return { test_path, file_program.error() };
+    interpreter->run(interpreter->global_object(), *file_program.value());
 
     // Print any output
     // FIXME: Should be printed to stdout in a nice format
