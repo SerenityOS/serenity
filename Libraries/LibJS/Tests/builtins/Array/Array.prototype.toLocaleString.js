@@ -1,24 +1,60 @@
-load("test-common.js");
+test("length is 0", () => {
+    expect(Array.prototype.toLocaleString).toHaveLength(0);
+});
 
-try {
-    assert(Array.prototype.toLocaleString.length === 0);
+describe("normal behavior", () => {
+    test("array with no elements", () => {
+        expect([].toLocaleString()).toBe("");
+    });
 
-    assert([].toLocaleString() === "");
-    assert(["foo"].toLocaleString() === "foo");
-    assert(["foo", "bar"].toLocaleString() === "foo,bar");
-    assert(["foo", undefined, "bar", null, "baz"].toLocaleString() === "foo,,bar,,baz");
+    test("array with one element", () => {
+        expect(["foo"].toLocaleString()).toBe("foo");
+    });
 
-    var toStringCalled = 0;
-    var o = {
-        toString: () => {
-            toStringCalled++;
-            return "o";
-        },
-    };
-    assert([o, undefined, o, null, o].toLocaleString() === "o,,o,,o");
-    assert(toStringCalled === 3);
+    test("array with multiple elements", () => {
+        expect(["foo", "bar", "baz"].toLocaleString()).toBe("foo,bar,baz");
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("number stringification differs from regular toString, for now", () => {
+        expect([1, 2, 3].toLocaleString()).toBe(
+            "[object NumberObject],[object NumberObject],[object NumberObject]"
+        );
+    });
+
+    test("null and undefined result in empty strings", () => {
+        expect([null].toLocaleString()).toBe("");
+        expect([undefined].toLocaleString()).toBe("");
+        expect([undefined, null].toLocaleString()).toBe(",");
+    });
+
+    test("empty values result in empty strings", () => {
+        expect(new Array(1).toLocaleString()).toBe("");
+        expect(new Array(3).toLocaleString()).toBe(",,");
+        var a = new Array(5);
+        a[2] = "foo";
+        a[4] = "bar";
+        expect(a.toLocaleString()).toBe(",,foo,,bar");
+    });
+
+    test("getter property is included in returned string", () => {
+        var a = ["foo"];
+        Object.defineProperty(a, 1, {
+            get() {
+                return "bar";
+            },
+        });
+        expect(a.toLocaleString()).toBe("foo,bar");
+    });
+
+    test("array with elements that have a custom toString() function", () => {
+        var toStringCalled = 0;
+        var o = {
+            toString() {
+                toStringCalled++;
+                return "o";
+            },
+        };
+        expect([o, undefined, o, null, o].toLocaleString()).toBe("o,,o,,o");
+        expect(toStringCalled).toBe(3);
+    });
+});

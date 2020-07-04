@@ -1,6 +1,4 @@
-load("test-common.js");
-
-try {
+test("Issue #1992, shrinking array during find() iteration", () => {
     var a, callbackCalled;
 
     callbackCalled = 0;
@@ -9,7 +7,7 @@ try {
         callbackCalled++;
         a.pop();
     });
-    assert(callbackCalled === 5);
+    expect(callbackCalled).toBe(5);
 
     callbackCalled = 0;
     a = [1, 2, 3, 4, 5];
@@ -17,9 +15,5 @@ try {
         callbackCalled++;
         a.pop();
     });
-    assert(callbackCalled === 5);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(callbackCalled).toBe(5);
+});

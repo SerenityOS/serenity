@@ -1,164 +1,150 @@
-load("test-common.js");
+describe("ability to work with generic non-array objects", () => {
+    test("push, pop", () => {
+        [undefined, "foo", -42, 0].forEach(length => {
+            const o = { length };
 
-try {
-    [undefined, "foo", -42, 0].forEach(length => {
-        const o = { length };
+            expect(Array.prototype.push.call(o, "foo")).toBe(1);
+            expect(o).toHaveLength(1);
+            expect(o[0]).toBe("foo");
+            expect(Array.prototype.push.call(o, "bar", "baz")).toBe(3);
+            expect(o).toHaveLength(3);
+            expect(o[0]).toBe("foo");
+            expect(o[1]).toBe("bar");
+            expect(o[2]).toBe("baz");
 
-        assert(Array.prototype.push.call(o, "foo") === 1);
-        assert(o.length === 1);
-        assert(o[0] === "foo");
-        assert(Array.prototype.push.call(o, "bar", "baz") === 3);
-        assert(o.length === 3);
-        assert(o[0] === "foo");
-        assert(o[1] === "bar");
-        assert(o[2] === "baz");
+            expect(Array.prototype.pop.call(o)).toBe("baz");
+            expect(o).toHaveLength(2);
+            expect(Array.prototype.pop.call(o)).toBe("bar");
+            expect(o).toHaveLength(1);
+            expect(Array.prototype.pop.call(o)).toBe("foo");
+            expect(o).toHaveLength(0);
+            expect(Array.prototype.pop.call(o)).toBeUndefined();
+            expect(o).toHaveLength(0);
 
-        assert(Array.prototype.pop.call(o) === "baz");
-        assert(o.length === 2);
-        assert(Array.prototype.pop.call(o) === "bar");
-        assert(o.length === 1);
-        assert(Array.prototype.pop.call(o) === "foo");
-        assert(o.length === 0);
-        assert(Array.prototype.pop.call(o) === undefined);
-        assert(o.length === 0);
-
-        o.length = length;
-        assert(Array.prototype.pop.call(o) === undefined);
-        assert(o.length === 0);
+            o.length = length;
+            expect(Array.prototype.pop.call(o)).toBeUndefined();
+            expect(o).toHaveLength(0);
+        });
     });
 
-    {
+    test("splice", () => {
         const o = { length: 3, 0: "hello", 2: "serenity" };
         const removed = Array.prototype.splice.call(o, 0, 2, "hello", "friends");
-        assert(o.length === 3);
-        assert(o[0] === "hello");
-        assert(o[1] === "friends");
-        assert(o[2] === "serenity");
-        assert(removed.length === 2);
-        assert(removed[0] === "hello");
-        assert(removed[1] === undefined);
-    }
+        expect(o).toHaveLength(3);
+        expect(o[0]).toBe("hello");
+        expect(o[1]).toBe("friends");
+        expect(o[2]).toBe("serenity");
+        expect(removed).toHaveLength(2);
+        expect(removed[0]).toBe("hello");
+        expect(removed[1]).toBeUndefined();
+    });
 
-    {
-        assert(Array.prototype.join.call({}) === "");
-        assert(Array.prototype.join.call({ length: "foo" }) === "");
-        assert(Array.prototype.join.call({ length: 3 }) === ",,");
-        assert(Array.prototype.join.call({ length: 2, 0: "foo", 1: "bar" }) === "foo,bar");
-        assert(
-            Array.prototype.join.call({ length: 2, 0: "foo", 1: "bar", 2: "baz" }) === "foo,bar"
+    test("join", () => {
+        expect(Array.prototype.join.call({})).toBe("");
+        expect(Array.prototype.join.call({ length: "foo" })).toBe("");
+        expect(Array.prototype.join.call({ length: 3 })).toBe(",,");
+        expect(Array.prototype.join.call({ length: 2, 0: "foo", 1: "bar" })).toBe("foo,bar");
+        expect(Array.prototype.join.call({ length: 2, 0: "foo", 1: "bar", 2: "baz" })).toBe(
+            "foo,bar"
         );
-        assert(Array.prototype.join.call({ length: 3, 1: "bar" }, "~") === "~bar~");
-        assert(
-            Array.prototype.join.call({ length: 3, 0: "foo", 1: "bar", 2: "baz" }, "~") ===
-                "foo~bar~baz"
+        expect(Array.prototype.join.call({ length: 3, 1: "bar" }, "~")).toBe("~bar~");
+        expect(Array.prototype.join.call({ length: 3, 0: "foo", 1: "bar", 2: "baz" }, "~")).toBe(
+            "foo~bar~baz"
         );
-    }
+    });
 
-    {
-        assert(Array.prototype.toString.call({}) === "[object Object]");
-        assert(Array.prototype.toString.call({ join: "foo" }) === "[object Object]");
-        assert(Array.prototype.toString.call({ join: () => "foo" }) === "foo");
-    }
+    // FIXME: test-js asserts when this is just called "toString" ಠ_ಠ
+    test("toString (FIXME)", () => {
+        expect(Array.prototype.toString.call({})).toBe("[object Object]");
+        expect(Array.prototype.toString.call({ join: "foo" })).toBe("[object Object]");
+        expect(Array.prototype.toString.call({ join: () => "foo" })).toBe("foo");
+    });
 
-    {
-        assert(Array.prototype.indexOf.call({}) === -1);
-        assert(Array.prototype.indexOf.call({ 0: undefined }) === -1);
-        assert(Array.prototype.indexOf.call({ length: 1, 0: undefined }) === 0);
-        assert(Array.prototype.indexOf.call({ length: 1, 2: "foo" }, "foo") === -1);
-        assert(Array.prototype.indexOf.call({ length: 5, 2: "foo" }, "foo") === 2);
-        assert(Array.prototype.indexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo", 3) === 4);
-    }
+    test("indexOf", () => {
+        expect(Array.prototype.indexOf.call({})).toBe(-1);
+        expect(Array.prototype.indexOf.call({ 0: undefined })).toBe(-1);
+        expect(Array.prototype.indexOf.call({ length: 1, 0: undefined })).toBe(0);
+        expect(Array.prototype.indexOf.call({ length: 1, 2: "foo" }, "foo")).toBe(-1);
+        expect(Array.prototype.indexOf.call({ length: 5, 2: "foo" }, "foo")).toBe(2);
+        expect(Array.prototype.indexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo", 3)).toBe(4);
+    });
 
-    {
-        assert(Array.prototype.lastIndexOf.call({}) === -1);
-        assert(Array.prototype.lastIndexOf.call({ 0: undefined }) === -1);
-        assert(Array.prototype.lastIndexOf.call({ length: 1, 0: undefined }) === 0);
-        assert(Array.prototype.lastIndexOf.call({ length: 1, 2: "foo" }, "foo") === -1);
-        assert(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo" }, "foo") === 2);
-        assert(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo") === 4);
-        assert(
-            Array.prototype.lastIndexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo", -2) === 2
+    test("lastIndexOf", () => {
+        expect(Array.prototype.lastIndexOf.call({})).toBe(-1);
+        expect(Array.prototype.lastIndexOf.call({ 0: undefined })).toBe(-1);
+        expect(Array.prototype.lastIndexOf.call({ length: 1, 0: undefined })).toBe(0);
+        expect(Array.prototype.lastIndexOf.call({ length: 1, 2: "foo" }, "foo")).toBe(-1);
+        expect(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo" }, "foo")).toBe(2);
+        expect(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo")).toBe(4);
+        expect(Array.prototype.lastIndexOf.call({ length: 5, 2: "foo", 4: "foo" }, "foo", -2)).toBe(
+            2
         );
-    }
+    });
 
-    {
-        assert(Array.prototype.includes.call({}) === false);
-        assert(Array.prototype.includes.call({ 0: undefined }) === false);
-        assert(Array.prototype.includes.call({ length: 1, 0: undefined }) === true);
-        assert(Array.prototype.includes.call({ length: 1, 2: "foo" }, "foo") === false);
-        assert(Array.prototype.includes.call({ length: 5, 2: "foo" }, "foo") === true);
-    }
+    test("includes", () => {
+        expect(Array.prototype.includes.call({})).toBeFalse();
+        expect(Array.prototype.includes.call({ 0: undefined })).toBeFalse();
+        expect(Array.prototype.includes.call({ length: 1, 0: undefined })).toBeTrue();
+        expect(Array.prototype.includes.call({ length: 1, 2: "foo" }, "foo")).toBeFalse();
+        expect(Array.prototype.includes.call({ length: 5, 2: "foo" }, "foo")).toBeTrue();
+    });
 
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
-    {
-        assertVisitsAll(
-            visit => {
-                Array.prototype.every.call(o, function (value) {
-                    visit(value);
-                    return true;
-                });
-            },
-            ["foo", "bar", "baz"]
-        );
-    }
-
-    ["find", "findIndex"].forEach(name => {
-        assertVisitsAll(
-            visit => {
-                Array.prototype[name].call(o, function (value) {
-                    visit(value);
-                    return false;
-                });
-            },
-            ["foo", "bar", undefined, "baz", undefined]
-        );
+    test("every", () => {
+        const visited = [];
+        Array.prototype.every.call(o, value => {
+            visited.push(value);
+            return true;
+        });
+        expect(visited).toEqual(["foo", "bar", "baz"]);
     });
 
-    ["filter", "forEach", "map", "some"].forEach(name => {
-        assertVisitsAll(
-            visit => {
-                Array.prototype[name].call(o, function (value) {
-                    visit(value);
-                    return false;
-                });
-            },
-            ["foo", "bar", "baz"]
-        );
+    test("find, findIndex", () => {
+        ["find", "findIndex"].forEach(name => {
+            const visited = [];
+            Array.prototype[name].call(o, value => {
+                visited.push(value);
+                return false;
+            });
+            expect(visited).toEqual(["foo", "bar", undefined, "baz", undefined]);
+        });
     });
-    {
-        assertVisitsAll(
-            visit => {
-                Array.prototype.reduce.call(
-                    o,
-                    function (_, value) {
-                        visit(value);
-                        return false;
-                    },
-                    "initial"
-                );
-            },
-            ["foo", "bar", "baz"]
-        );
-    }
 
-    {
-        assertVisitsAll(
-            visit => {
-                Array.prototype.reduceRight.call(
-                    o,
-                    function (_, value) {
-                        visit(value);
-                        return false;
-                    },
-                    "initial"
-                );
-            },
-            ["baz", "bar", "foo"]
-        );
-    }
+    test("filter, forEach, map, some", () => {
+        ["filter", "forEach", "map", "some"].forEach(name => {
+            const visited = [];
+            Array.prototype[name].call(o, value => {
+                visited.push(value);
+                return false;
+            });
+            expect(visited).toEqual(["foo", "bar", "baz"]);
+        });
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("reduce", () => {
+        const visited = [];
+        Array.prototype.reduce.call(
+            o,
+            (_, value) => {
+                visited.push(value);
+                return false;
+            },
+            "initial"
+        );
+        expect(visited).toEqual(["foo", "bar", "baz"]);
+    });
+
+    test("reduceRight", () => {
+        const visited = [];
+        Array.prototype.reduceRight.call(
+            o,
+            (_, value) => {
+                visited.push(value);
+                return false;
+            },
+            "initial"
+        );
+        expect(visited).toEqual(["baz", "bar", "foo"]);
+    });
+});

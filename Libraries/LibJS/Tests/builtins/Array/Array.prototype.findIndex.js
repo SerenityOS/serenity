@@ -1,54 +1,68 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.findIndex).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.findIndex.length === 1);
-
-    assertThrowsError(
-        () => {
-            [].findIndex(undefined);
-        },
-        {
-            error: TypeError,
-            message: "undefined is not a function",
-        }
-    );
-
-    var array = ["hello", "friends", 1, 2, false];
-
-    assert(array.findIndex(value => value === "hello") === 0);
-    assert(array.findIndex((value, index, arr) => index === 1) === 1);
-    assert(array.findIndex(value => value == "1") === 2);
-    assert(array.findIndex(value => value === 1) === 2);
-    assert(array.findIndex(value => typeof value !== "string") === 2);
-    assert(array.findIndex(value => typeof value === "boolean") === 4);
-    assert(array.findIndex(value => value > 1) === 3);
-    assert(array.findIndex(value => value > 1 && value < 3) === 3);
-    assert(array.findIndex(value => value > 100) === -1);
-    assert([].findIndex(value => value === 1) === -1);
-
-    var callbackCalled = 0;
-    var callback = () => {
-        callbackCalled++;
-    };
-
-    [].findIndex(callback);
-    assert(callbackCalled === 0);
-
-    [1, 2, 3].findIndex(callback);
-    assert(callbackCalled === 3);
-
-    callbackCalled = 0;
-    [1, , , "foo", , undefined, , ,].findIndex(callback);
-    assert(callbackCalled === 8);
-
-    callbackCalled = 0;
-    [1, , , "foo", , undefined, , ,].findIndex(value => {
-        callbackCalled++;
-        return value === undefined;
+describe("errors", () => {
+    test("requires at least one argument", () => {
+        expect(() => {
+            [].findIndex();
+        }).toThrowWithMessage(
+            TypeError,
+            "Array.prototype.findIndex() requires at least one argument"
+        );
     });
-    assert(callbackCalled === 2);
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("callback must be a function", () => {
+        expect(() => {
+            [].findIndex(undefined);
+        }).toThrowWithMessage(TypeError, "undefined is not a function");
+    });
+});
+
+describe("normal behavior", () => {
+    test("basic functionality", () => {
+        var array = ["hello", "friends", 1, 2, false];
+
+        expect(array.findIndex(value => value === "hello")).toBe(0);
+        expect(array.findIndex((value, index, arr) => index === 1)).toBe(1);
+        expect(array.findIndex(value => value == "1")).toBe(2);
+        expect(array.findIndex(value => value === 1)).toBe(2);
+        expect(array.findIndex(value => typeof value !== "string")).toBe(2);
+        expect(array.findIndex(value => typeof value === "boolean")).toBe(4);
+        expect(array.findIndex(value => value > 1)).toBe(3);
+        expect(array.findIndex(value => value > 1 && value < 3)).toBe(3);
+        expect(array.findIndex(value => value > 100)).toBe(-1);
+        expect([].findIndex(value => value === 1)).toBe(-1);
+    });
+
+    test("never calls callback with empty array", () => {
+        var callbackCalled = 0;
+        expect(
+            [].findIndex(() => {
+                callbackCalled++;
+            })
+        ).toBe(-1);
+        expect(callbackCalled).toBe(0);
+    });
+
+    test("calls callback once for every item", () => {
+        var callbackCalled = 0;
+        expect(
+            [1, 2, 3].findIndex(() => {
+                callbackCalled++;
+            })
+        ).toBe(-1);
+        expect(callbackCalled).toBe(3);
+    });
+
+    test("empty slots are treated as undefined", () => {
+        var callbackCalled = 0;
+        expect(
+            [1, , , "foo", , undefined, , ,].findIndex(value => {
+                callbackCalled++;
+                return value === undefined;
+            })
+        ).toBe(1);
+        expect(callbackCalled).toBe(2);
+    });
+});

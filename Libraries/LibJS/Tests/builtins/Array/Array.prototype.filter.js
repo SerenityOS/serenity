@@ -1,78 +1,68 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.filter).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.filter.length === 1);
-
-    assertThrowsError(
-        () => {
+describe("errors", () => {
+    test("requires at least one argument", () => {
+        expect(() => {
             [].filter();
-        },
-        {
-            error: TypeError,
-            message: "Array.prototype.filter() requires at least one argument",
-        }
-    );
+        }).toThrowWithMessage(TypeError, "Array.prototype.filter() requires at least one argument");
+    });
 
-    assertThrowsError(
-        () => {
+    test("callback must be a function", () => {
+        expect(() => {
             [].filter(undefined);
-        },
-        {
-            error: TypeError,
-            message: "undefined is not a function",
-        }
-    );
+        }).toThrowWithMessage(TypeError, "undefined is not a function");
+    });
+});
 
-    var callbackCalled = 0;
-    var callback = () => {
-        callbackCalled++;
-    };
+describe("normal behavior", () => {
+    test("never calls callback with empty array", () => {
+        var callbackCalled = 0;
+        expect(
+            [].filter(() => {
+                callbackCalled++;
+            })
+        ).toEqual([]);
+        expect(callbackCalled).toBe(0);
+    });
 
-    assert([].filter(callback).length === 0);
-    assert(callbackCalled === 0);
+    test("calls callback once for every item", () => {
+        var callbackCalled = 0;
+        expect(
+            [1, 2, 3].filter(() => {
+                callbackCalled++;
+            })
+        ).toEqual([]);
+        expect(callbackCalled).toBe(3);
+    });
 
-    assert([1, 2, 3].filter(callback).length === 0);
-    assert(callbackCalled === 3);
+    test("can filter based on callback return value", () => {
+        var evenNumbers = [0, 1, 2, 3, 4, 5, 6, 7].filter(x => x % 2 === 0);
+        expect(evenNumbers).toEqual([0, 2, 4, 6]);
 
-    var evenNumbers = [0, 1, 2, 3, 4, 5, 6, 7].filter(x => x % 2 === 0);
-    assert(evenNumbers.length === 4);
-    assert(evenNumbers[0] === 0);
-    assert(evenNumbers[1] === 2);
-    assert(evenNumbers[2] === 4);
-    assert(evenNumbers[3] === 6);
-
-    var fruits = [
-        "Apple",
-        "Banana",
-        "Blueberry",
-        "Grape",
-        "Mango",
-        "Orange",
-        "Peach",
-        "Pineapple",
-        "Raspberry",
-        "Watermelon",
-    ];
-    const filterItems = (arr, query) => {
-        return arr.filter(el => el.toLowerCase().indexOf(query.toLowerCase()) !== -1);
-    };
-
-    var results;
-
-    results = filterItems(fruits, "Berry");
-    assert(results.length === 2);
-    assert(results[0] === "Blueberry");
-    assert(results[1] === "Raspberry");
-
-    results = filterItems(fruits, "P");
-    assert(results.length === 5);
-    assert(results[0] === "Apple");
-    assert(results[1] === "Grape");
-    assert(results[2] === "Peach");
-    assert(results[3] === "Pineapple");
-    assert(results[4] === "Raspberry");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        var fruits = [
+            "Apple",
+            "Banana",
+            "Blueberry",
+            "Grape",
+            "Mango",
+            "Orange",
+            "Peach",
+            "Pineapple",
+            "Raspberry",
+            "Watermelon",
+        ];
+        const filterItems = (arr, query) => {
+            return arr.filter(el => el.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+        };
+        expect(filterItems(fruits, "Berry")).toEqual(["Blueberry", "Raspberry"]);
+        expect(filterItems(fruits, "P")).toEqual([
+            "Apple",
+            "Grape",
+            "Peach",
+            "Pineapple",
+            "Raspberry",
+        ]);
+    });
+});

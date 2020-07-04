@@ -1,19 +1,15 @@
-load("test-common.js");
+test("length is 1", () => {
+    expect(Array.prototype.join).toHaveLength(1);
+});
 
-try {
-    assert(Array.prototype.join.length === 1);
-
-    assert(["hello", "friends"].join() === "hello,friends");
-    assert(["hello", "friends"].join(" ") === "hello friends");
-    assert(["hello", "friends", "foo"].join("~", "#") === "hello~friends~foo");
-    assert([].join() === "");
-    assert([null].join() === "");
-    assert([undefined].join() === "");
-    assert([undefined, null, ""].join() === ",,");
-    assert([1, null, 2, undefined, 3].join() === "1,,2,,3");
-    assert(Array(3).join() === ",,");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+test("basic functionality", () => {
+    expect(["hello", "friends"].join()).toBe("hello,friends");
+    expect(["hello", "friends"].join(" ")).toBe("hello friends");
+    expect(["hello", "friends", "foo"].join("~", "#")).toBe("hello~friends~foo");
+    expect([].join()).toBe("");
+    expect([null].join()).toBe("");
+    expect([undefined].join()).toBe("");
+    expect([undefined, null, ""].join()).toBe(",,");
+    expect([1, null, 2, undefined, 3].join()).toBe("1,,2,,3");
+    expect(Array(3).join()).toBe(",,");
+});
