@@ -54,13 +54,13 @@ public:
     enum class Role {
         Display,
         Sort,
-        Custom,
         ForegroundColor,
         BackgroundColor,
         Icon,
         Font,
         DragData,
         TextAlignment,
+        Custom = 0x100, // Applications are free to use roles above this number as they please
     };
 
     virtual ~Model();
