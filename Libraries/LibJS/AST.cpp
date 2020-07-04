@@ -1969,7 +1969,7 @@ Value SequenceExpression::execute(Interpreter& interpreter, GlobalObject& global
 
 Value DebuggerStatement::execute(Interpreter&, GlobalObject&) const
 {
-    dbg() << "Sorry, no JavaScript debugger available (yet)!";
+    // Sorry, no JavaScript debugger available (yet)!
     return js_undefined();
 }
 
