@@ -58,6 +58,7 @@ Vector<String> tests_to_run = {
     "object-method-shorthand.js",
     "object-spread.js",
     "tagged-template-literals.js",
+    "test-common-tests.js",
     "switch-basic.js",
     "update-expression-on-member-expression.js",
 };
@@ -131,7 +132,7 @@ FileResults run_test(const String& path, const String& test_root)
     // FIXME: Should be printed to stdout in a nice format
     auto& arr = interpreter->get_variable("__UserOutput__", interpreter->global_object()).as_array();
     for (auto& entry : arr.indexed_properties()) {
-        dbg() << "OUTPUT: " << entry.value_and_attributes(&interpreter->global_object()).value.to_string(*interpreter);
+        dbg() << "OUTPUT: " << entry.value_and_attributes(&interpreter->global_object()).value.to_string_without_side_effects();
     }
 
     // FIXME: This is _so_ scuffed
