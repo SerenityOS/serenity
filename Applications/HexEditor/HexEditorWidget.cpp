@@ -142,7 +142,7 @@ HexEditorWidget::HexEditorWidget()
     app_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
     }));
 
     m_goto_decimal_offset_action = GUI::Action::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
@@ -199,7 +199,7 @@ HexEditorWidget::HexEditorWidget()
         GUI::AboutDialog::show("Hex Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hexeditor.png"), window());
     }));
 
-    GUI::Application::the().set_menubar(move(menubar));
+    GUI::Application::the()->set_menubar(move(menubar));
 
     m_editor->set_focus(true);
 }

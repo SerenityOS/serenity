@@ -144,11 +144,11 @@ bool prompt_to_stop_profiling()
 
     auto& stop_button = widget.add<GUI::Button>("Stop");
     stop_button.on_click = [&](auto) {
-        GUI::Application::the().quit();
+        GUI::Application::the()->quit();
     };
 
     window->show();
-    return GUI::Application::the().exec() == 0;
+    return GUI::Application::the()->exec() == 0;
 }
 
 bool generate_profile(pid_t pid)

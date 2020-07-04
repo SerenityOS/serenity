@@ -61,7 +61,7 @@ static void set_system_theme_from_shbuf_id(int id)
     auto system_theme = SharedBuffer::create_from_shbuf_id(id);
     ASSERT(system_theme);
     Gfx::set_system_theme(*system_theme);
-    Application::the().set_system_palette(*system_theme);
+    Application::the()->set_system_palette(*system_theme);
 }
 
 void WindowServerConnection::handshake()
@@ -154,7 +154,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
     }
 
     if (!action) {
-        action = Application::the().action_for_key_event(*key_event);
+        action = Application::the()->action_for_key_event(*key_event);
 #ifdef KEYBOARD_SHORTCUTS_DEBUG
         dbg() << "  > Asked application, got action: " << action;
 #endif

@@ -40,7 +40,7 @@ class Application : public Core::Object {
     C_OBJECT(Application);
 
 public:
-    static Application& the();
+    static Application* the();
 
     ~Application();
 

@@ -368,7 +368,7 @@ TextEditorWidget::TextEditorWidget()
     app_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
     }));
 
     auto& edit_menu = menubar->add_menu("Edit");
@@ -455,7 +455,7 @@ TextEditorWidget::TextEditorWidget()
         GUI::AboutDialog::show("Text Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-texteditor.png"), window());
     }));
 
-    GUI::Application::the().set_menubar(move(menubar));
+    GUI::Application::the()->set_menubar(move(menubar));
 
     toolbar.add_action(*m_new_action);
     toolbar.add_action(*m_open_action);

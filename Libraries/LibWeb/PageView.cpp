@@ -221,12 +221,12 @@ void PageView::page_did_middle_click_link(const String& href, [[maybe_unused]] c
 
 void PageView::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
 {
-    GUI::Application::the().show_tooltip(title, screen_relative_rect().location().translated(to_widget_position(content_position)));
+    GUI::Application::the()->show_tooltip(title, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
 void PageView::page_did_leave_tooltip_area()
 {
-    GUI::Application::the().hide_tooltip();
+    GUI::Application::the()->hide_tooltip();
 }
 
 void PageView::page_did_hover_link(const URL& url)

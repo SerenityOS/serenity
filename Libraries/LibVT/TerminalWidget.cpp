@@ -70,7 +70,7 @@ void TerminalWidget::set_pty_master_fd(int fd)
         if (nread < 0) {
             dbgprintf("Terminal read error: %s\n", strerror(errno));
             perror("read(ptm)");
-            GUI::Application::the().quit(1);
+            GUI::Application::the()->quit(1);
             return;
         }
         if (nread == 0) {
