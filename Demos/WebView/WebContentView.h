@@ -26,11 +26,12 @@
 
 #pragma once
 
+#include <LibGUI/ScrollableWidget.h>
 #include <LibGUI/Widget.h>
 
 class WebContentClient;
 
-class WebContentView final : public GUI::Widget {
+class WebContentView final : public GUI::ScrollableWidget {
     C_OBJECT(WebContentView);
 
 public:
@@ -38,6 +39,7 @@ public:
 
     void load(const URL&);
 
+    void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id);
     void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, const Gfx::IntRect&);
     void notify_server_did_change_selection(Badge<WebContentClient>);
@@ -45,11 +47,15 @@ public:
 private:
     WebContentView();
 
+    // ^Widget
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
+
+    // ^ScrollableWidget
+    virtual void did_scroll() override;
 
     void request_repaint();
 
