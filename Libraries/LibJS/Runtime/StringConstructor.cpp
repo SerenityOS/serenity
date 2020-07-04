@@ -47,7 +47,7 @@ void StringConstructor::initialize(Interpreter& interpreter, GlobalObject& globa
     define_property("length", Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("raw", raw, 0, attr);
+    define_native_function("raw", raw, 1, attr);
     define_native_function("fromCharCode", from_char_code, 1, attr);
 }
 
