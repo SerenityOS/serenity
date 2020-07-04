@@ -43,7 +43,7 @@ script:
 - cmake .. -DBUILD_LAGOM=1
 - make
 - CTEST_OUTPUT_ON_FAILURE=1 make test
-- cd "$SERENITY_ROOT"/Libraries/LibJS/Tests
-- ./run-tests.sh
+- cd Meta/Lagom
+- ./test-js
 - cd "$SERENITY_ROOT"/Toolchain/Cache
 - du -ch * || true
