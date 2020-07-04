@@ -33,6 +33,7 @@
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/ACPI/Parser.h>
+#include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Console.h>
 #include <Kernel/Devices/BlockDevice.h>
@@ -67,7 +68,6 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/SharedBuffer.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/API/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
@@ -888,7 +888,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     //      It also happens to be the static Virtual Addresss offset every static exectuable gets :)
     //      Without this, some assumptions by the ELF loading hooks below are severely broken.
     //      0x08000000 is a verified random number chosen by random dice roll https://xkcd.com/221/
-    u32 totally_random_offset = interpreter_description ? 0x08000000 : 0;
+    m_load_offset = interpreter_description ? 0x08000000 : 0;
 
     // FIXME: We should be able to load both the PT_INTERP interpreter and the main program... once the RTLD is smart enough
     if (interpreter_description) {
@@ -906,7 +906,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
-    u32 entry_eip = 0;
+    m_entry_eip = 0;
 
     MM.enter_process_paging_scope(*this);
     RefPtr<ELF::Loader> loader;
@@ -935,7 +935,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            if (auto* region = allocate_region_with_vmobject(vaddr.offset(totally_random_offset), size, *vmobject, offset_in_image, String(name), prot)) {
+            if (auto* region = allocate_region_with_vmobject(vaddr.offset(m_load_offset), size, *vmobject, offset_in_image, String(name), prot)) {
                 region->set_shared(true);
                 return region->vaddr().as_ptr();
             }
@@ -949,7 +949,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
                 prot |= PROT_READ;
             if (is_writable)
                 prot |= PROT_WRITE;
-            if (auto* region = allocate_region(vaddr.offset(totally_random_offset), size, String(name), prot))
+            if (auto* region = allocate_region(vaddr.offset(m_load_offset), size, String(name), prot))
                 return region->vaddr().as_ptr();
             return nullptr;
         };
@@ -976,15 +976,15 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         // FIXME: Validate that this virtual address is within executable region,
         //     instead of just non-null. You could totally have a DSO with entry point of
         //     the beginning of the text segement.
-        if (!loader->entry().offset(totally_random_offset).get()) {
-            klog() << "do_exec: Failure loading " << path.characters() << ", entry pointer is invalid! (" << loader->entry().offset(totally_random_offset) << ")";
+        if (!loader->entry().offset(m_load_offset).get()) {
+            klog() << "do_exec: Failure loading " << path.characters() << ", entry pointer is invalid! (" << loader->entry().offset(m_load_offset) << ")";
             return -ENOEXEC;
         }
 
         rollback_regions_guard.disarm();
 
         // NOTE: At this point, we've committed to the new executable.
-        entry_eip = loader->entry().offset(totally_random_offset).get();
+        m_entry_eip = loader->entry().offset(m_load_offset).get();
 
         kill_threads_except_self();
 
@@ -1002,6 +1002,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_unveiled_paths.clear();
 
     // Copy of the master TLS region that we will clone for new threads
+    // FIXME: Handle this in userspace
     m_master_tls_region = master_tls_region->make_weak_ptr();
 
     auto main_program_metadata = main_program_description->metadata();
@@ -1042,9 +1043,11 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     }
     ASSERT(new_main_thread);
 
+    auto auxv = generate_auxiliary_vector();
+
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
-    u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment));
+    u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment), move(auxv));
 
     // We enter a critical section here because we don't want to get interrupted between do_exec()
     // and Processor::assume_context() or the next context switch.
@@ -1070,13 +1073,13 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     tss.ss = GDT_SELECTOR_DATA3 | 3;
     tss.fs = GDT_SELECTOR_DATA3 | 3;
     tss.gs = GDT_SELECTOR_TLS | 3;
-    tss.eip = entry_eip;
+    tss.eip = m_entry_eip;
     tss.esp = new_userspace_esp;
     tss.cr3 = m_page_directory->cr3();
     tss.ss2 = m_pid;
 
 #ifdef TASK_DEBUG
-    klog() << "Process " << VirtualAddress(this) << " thread " << VirtualAddress(new_main_thread) << " exec'd " << path.characters() << " @ " << String::format("%p", entry_eip);
+    klog() << "Process " << VirtualAddress(this) << " thread " << VirtualAddress(new_main_thread) << " exec'd " << path.characters() << " @ " << String::format("%p", m_entry_eip);
 #endif
 
     if (was_profiling)
@@ -1087,6 +1090,42 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_critical());
     return 0;
+}
+
+Vector<AuxiliaryValue> Process::generate_auxiliary_vector() const
+{
+    Vector<AuxiliaryValue> auxv;
+    // PHDR/EXECFD
+    // PH*
+    auxv.append({ AuxiliaryValue::PageSize, PAGE_SIZE });
+    auxv.append({ AuxiliaryValue::BaseAddress, (void*)m_load_offset });
+    // FLAGS
+    auxv.append({ AuxiliaryValue::Entry, (void*)m_entry_eip });
+    // NOTELF
+    auxv.append({ AuxiliaryValue::Uid, (long)m_uid });
+    auxv.append({ AuxiliaryValue::EUid, (long)m_euid });
+    auxv.append({ AuxiliaryValue::Gid, (long)m_gid });
+    auxv.append({ AuxiliaryValue::EGid, (long)m_egid });
+
+    // FIXME: Don't hard code this? We might support other platforms later.. (e.g. x86_64)
+    auxv.append({ AuxiliaryValue::Platform, "i386" });
+    // FIXME: This is platform specific
+    auxv.append({ AuxiliaryValue::HwCap, (long)CPUID(1).edx() });
+
+    auxv.append({ AuxiliaryValue::ClockTick, (long)TimeManagement::the().ticks_per_second() });
+
+    // FIXME: Also take into account things like extended filesystem permissions? That's what linux does...
+    auxv.append({ AuxiliaryValue::Secure, ((m_uid != m_euid) || (m_gid != m_egid)) ? 1 : 0 });
+
+    char random_bytes[16] {};
+    get_good_random_bytes((u8*)random_bytes, sizeof(random_bytes));
+
+    auxv.append({ AuxiliaryValue::Random, String(random_bytes, sizeof(random_bytes)) });
+
+    auxv.append({ AuxiliaryValue::ExecFilename, m_executable->absolute_path() });
+
+    auxv.append({ AuxiliaryValue::Null, 0L });
+    return auxv;
 }
 
 static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const char first_page[], int nread)
@@ -5269,5 +5308,4 @@ int Process::sys$recvfd(int sockfd)
     m_fds[new_fd].set(*received_descriptor_or_error.value(), 0);
     return new_fd;
 }
-
 }
