@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/API/KeyCode.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/CharacterBitmap.h>

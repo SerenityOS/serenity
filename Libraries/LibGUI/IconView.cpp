@@ -25,7 +25,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <Kernel/API/KeyCode.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/Model.h>
