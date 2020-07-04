@@ -515,9 +515,18 @@ void TestRunner::print_test_results() const
     printf("Time:        %-.3fs\n\n", m_end_time - m_start_time);
 }
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
-    ASSERT(argc == 2);
-    TestRunner(argv[1]).run();
+#ifdef __serenity__
+    TestRunner("/home/anon/js-tests").run();
+#else
+    char* serenity_root = getenv("SERENITY_ROOT");
+    if (!serenity_root) {
+        printf("test-js requires the SERENITY_ROOT environment variable to be set");
+        return 1;
+    }
+    TestRunner(String::format("%s/Libraries/LibJS/Tests", serenity_root)).run();
+#endif
+
     return 0;
 }
