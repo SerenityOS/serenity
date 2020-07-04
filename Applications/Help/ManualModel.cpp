@@ -28,6 +28,9 @@
 #include "ManualNode.h"
 #include "ManualPageNode.h"
 #include "ManualSectionNode.h"
+#include <AK/ByteBuffer.h>
+#include <LibCore/File.h>
+#include <LibGUI/FilteringProxyModel.h>
 
 static ManualSectionNode s_sections[] = {
     { "1", "Command-line programs" },
@@ -74,6 +77,25 @@ String ManualModel::page_path(const GUI::ModelIndex& index) const
         return {};
     auto* page = static_cast<const ManualPageNode*>(node);
     return page->path();
+}
+
+Result<StringView, int> ManualModel::page_view(const String& path) const
+{
+    if (path.is_empty())
+        return StringView {};
+
+    auto mapped_file = m_mapped_files.get(path);
+    if (mapped_file.has_value())
+        return StringView { (const char*)mapped_file.value()->data(), mapped_file.value()->size() };
+
+    auto map = make<MappedFile>(path);
+    if (!map->is_valid())
+        return map->errno_if_invalid();
+
+    StringView view { (const char*)map->data(), map->size() };
+    m_mapped_files.set(path, move(map));
+
+    return view;
 }
 
 String ManualModel::page_and_section(const GUI::ModelIndex& index) const
@@ -137,6 +159,10 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto* node = static_cast<const ManualNode*>(index.internal_data());
     switch (role) {
+    case Role::Search:
+        if (!node->is_page())
+            return {};
+        return String(page_view(page_path(index)).value());
     case Role::Display:
         return node->name();
     case Role::Icon:
@@ -154,6 +180,15 @@ void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, co
 {
     auto* node = static_cast<ManualSectionNode*>(index.internal_data());
     node->set_open(open);
+}
+
+TriState ManualModel::data_matches(const GUI::ModelIndex& index, GUI::Variant term) const
+{
+    auto view_result = page_view(page_path(index));
+    if (view_result.is_error() || view_result.value().is_empty())
+        return TriState::False;
+
+    return view_result.value().contains(term.as_string()) ? TriState::True : TriState::False;
 }
 
 void ManualModel::update()
