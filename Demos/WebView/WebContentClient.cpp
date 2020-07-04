@@ -44,18 +44,24 @@ void WebContentClient::handshake()
 
 void WebContentClient::handle(const Messages::WebContentClient::DidPaint& message)
 {
+#ifdef DEBUG_SPAM
     dbg() << "handle: WebContentClient::DidPaint! content_rect=" << message.content_rect() << ", shbuf_id=" << message.shbuf_id();
+#endif
     m_view.notify_server_did_paint({}, message.shbuf_id());
 }
 
-void WebContentClient::handle(const Messages::WebContentClient::DidFinishLoad& message)
+void WebContentClient::handle([[maybe_unused]] const Messages::WebContentClient::DidFinishLoad& message)
 {
+#ifdef DEBUG_SPAM
     dbg() << "handle: WebContentClient::DidFinishLoad! url=" << message.url();
+#endif
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidInvalidateContentRect& message)
 {
+#ifdef DEBUG_SPAM
     dbg() << "handle: WebContentClient::DidInvalidateContentRect! content_rect=" << message.content_rect();
+#endif
 
     // FIXME: Figure out a way to coalesce these messages to reduce unnecessary painting
     m_view.notify_server_did_invalidate_content_rect({}, message.content_rect());
@@ -63,6 +69,8 @@ void WebContentClient::handle(const Messages::WebContentClient::DidInvalidateCon
 
 void WebContentClient::handle(const Messages::WebContentClient::DidChangeSelection&)
 {
+#ifdef DEBUG_SPAM
     dbg() << "handle: WebContentClient::DidChangeSelection!";
+#endif
     m_view.notify_server_did_change_selection({});
 }

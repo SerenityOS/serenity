@@ -84,9 +84,11 @@ void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_
         update();
 }
 
-void WebContentView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, const Gfx::IntRect& content_rect)
+void WebContentView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] const Gfx::IntRect& content_rect)
 {
+#ifdef DEBUG_SPAM
     dbg() << "server did invalidate content_rect: " << content_rect << ", current shbuf_id=" << m_bitmap->shbuf_id();
+#endif
     request_repaint();
 }
 
