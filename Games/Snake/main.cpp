@@ -65,7 +65,7 @@ int main(int argc, char** argv)
         game.reset();
     }));
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
     }));
 
     auto& help_menu = menubar->add_menu("Help");

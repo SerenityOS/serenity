@@ -113,7 +113,7 @@ void Window::show()
     apply_icon();
 
     reified_windows->set(m_window_id, this);
-    Application::the().did_create_window({});
+    Application::the()->did_create_window({});
     update();
 }
 
@@ -158,7 +158,7 @@ void Window::hide()
         }
     }
     if (!app_has_visible_windows)
-        Application::the().did_delete_last_window({});
+        Application::the()->did_delete_last_window({});
 }
 
 void Window::set_title(const StringView& title)

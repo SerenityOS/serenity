@@ -225,7 +225,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     };
 
     window->show();
-    return GUI::Application::the().exec();
+    return GUI::Application::the()->exec();
 }
 
 int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_location)
@@ -627,7 +627,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     app_menu.add_action(properties_action);
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
     }));
 
     auto& view_menu = menubar->add_menu("View");
@@ -646,7 +646,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         GUI::AboutDialog::show("File Manager", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-folder.png"), window);
     }));
 
-    GUI::Application::the().set_menubar(move(menubar));
+    GUI::Application::the()->set_menubar(move(menubar));
 
     main_toolbar.add_action(go_back_action);
     main_toolbar.add_action(go_forward_action);
@@ -856,5 +856,5 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         return GUI::Window::CloseRequestDecision::Close;
     };
 
-    return GUI::Application::the().exec();
+    return GUI::Application::the()->exec();
 }

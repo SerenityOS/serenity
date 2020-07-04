@@ -254,7 +254,7 @@ Tab::Tab()
     app_menu.add_action(*m_reload_action);
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the().quit();
+        GUI::Application::the()->quit();
     }));
 
     auto& view_menu = m_menubar->add_menu("View");
@@ -429,7 +429,7 @@ void Tab::did_become_active()
     m_toolbar_container->set_visible(!is_fullscreen);
     m_statusbar->set_visible(!is_fullscreen);
 
-    GUI::Application::the().set_menubar(m_menubar);
+    GUI::Application::the()->set_menubar(m_menubar);
 }
 
 void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)

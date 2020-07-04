@@ -247,7 +247,7 @@ void DisplaySettingsWidget::create_frame()
     ok_button.set_preferred_size(60, 22);
     ok_button.on_click = [this](auto) {
         send_settings_to_window_server();
-        GUI::Application::the().quit();
+        GUI::Application::the()->quit();
     };
 
     auto& cancel_button = bottom_widget.add<GUI::Button>();
@@ -255,7 +255,7 @@ void DisplaySettingsWidget::create_frame()
     cancel_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     cancel_button.set_preferred_size(60, 22);
     cancel_button.on_click = [](auto) {
-        GUI::Application::the().quit();
+        GUI::Application::the()->quit();
     };
 
     auto& apply_button = bottom_widget.add<GUI::Button>();

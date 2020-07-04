@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
     auto& app_menu = menubar->add_menu("Piano");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
         return;
     }));
     app_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {

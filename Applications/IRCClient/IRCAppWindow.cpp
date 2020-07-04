@@ -263,7 +263,7 @@ void IRCAppWindow::setup_menus()
     auto& app_menu = menubar->add_menu("IRC Client");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgprintf("Terminal: Quit menu activated!\n");
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
         return;
     }));
 
@@ -301,7 +301,7 @@ void IRCAppWindow::setup_menus()
         GUI::AboutDialog::show("IRC Client", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-irc-client.png"), this);
     }));
 
-    GUI::Application::the().set_menubar(move(menubar));
+    GUI::Application::the()->set_menubar(move(menubar));
 }
 
 void IRCAppWindow::setup_widgets()

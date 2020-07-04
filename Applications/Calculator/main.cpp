@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
     auto& app_menu = menubar->add_menu("Calculator");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
         return;
     }));
 

@@ -74,7 +74,7 @@ int main(int argc, char** argv)
         }));
 
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
         return;
     }));
 

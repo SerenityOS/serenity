@@ -291,7 +291,7 @@ int main(int argc, char** argv)
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgprintf("Terminal: Quit menu activated!\n");
-        GUI::Application::the().quit(0);
+        GUI::Application::the()->quit();
     }));
 
     auto& edit_menu = menubar->add_menu("Edit");

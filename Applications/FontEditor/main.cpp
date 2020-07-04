@@ -86,8 +86,8 @@ int main(int argc, char** argv)
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Font Editor");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the().quit(0);
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        app->quit();
         return;
     }));
 

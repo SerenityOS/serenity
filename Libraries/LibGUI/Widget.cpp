@@ -98,7 +98,7 @@ Widget::Widget()
     , m_background_role(Gfx::ColorRole::Window)
     , m_foreground_role(Gfx::ColorRole::WindowText)
     , m_font(Gfx::Font::default_font())
-    , m_palette(Application::the().palette().impl())
+    , m_palette(Application::the()->palette().impl())
 {
 }
 
@@ -245,7 +245,7 @@ void Widget::handle_paint_event(PaintEvent& event)
         painter.draw_rect(rect(), Color::Magenta);
     }
 
-    if (Application::the().focus_debugging_enabled()) {
+    if (Application::the()->focus_debugging_enabled()) {
         if (is_focused()) {
             Painter painter(*this);
             painter.draw_rect(rect(), Color::Cyan);
@@ -318,13 +318,13 @@ void Widget::handle_mousedoubleclick_event(MouseEvent& event)
 void Widget::handle_enter_event(Core::Event& event)
 {
     if (has_tooltip())
-        Application::the().show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2));
+        Application::the()->show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2));
     enter_event(event);
 }
 
 void Widget::handle_leave_event(Core::Event& event)
 {
-    Application::the().hide_tooltip();
+    Application::the()->hide_tooltip();
     leave_event(event);
 }
 

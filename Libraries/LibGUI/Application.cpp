@@ -39,18 +39,17 @@
 
 namespace GUI {
 
-static Application* s_the;
+static WeakPtr<Application> s_the;
 
-Application& Application::the()
+Application* Application::the()
 {
-    ASSERT(s_the);
-    return *s_the;
+    return s_the;
 }
 
 Application::Application(int argc, char** argv)
 {
     ASSERT(!s_the);
-    s_the = this;
+    s_the = make_weak_ptr();
     m_event_loop = make<Core::EventLoop>();
     WindowServerConnection::the();
     Clipboard::initialize({});
@@ -68,7 +67,7 @@ Application::Application(int argc, char** argv)
 
 Application::~Application()
 {
-    s_the = nullptr;
+    revoke_weak_ptrs();
 }
 
 int Application::exec()
