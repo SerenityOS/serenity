@@ -37,7 +37,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
@@ -52,5 +52,5 @@ int main(int argc, char** argv)
     unveil(nullptr, nullptr);
 
     GUI::AboutDialog::show("SerenityOS", nullptr, nullptr, Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"));
-    return app.exec();
+    return app->exec();
 }

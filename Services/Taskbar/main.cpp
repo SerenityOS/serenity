@@ -37,7 +37,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     signal(SIGCHLD, [](int signo) {
         (void)signo;
@@ -52,5 +52,5 @@ int main(int argc, char** argv)
     TaskbarWindow window;
     window.show();
 
-    return app.exec();
+    return app->exec();
 }

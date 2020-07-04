@@ -35,7 +35,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio thread rpath accept cpath wpath shared_buffer unix", nullptr) < 0) {
         perror("pledge");
@@ -62,5 +62,5 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/TextEditor16.png"));
 
-    return app.exec();
+    return app->exec();
 }

@@ -43,7 +43,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio thread shared_buffer rpath accept cpath wpath", nullptr) < 0) {
         perror("pledge");
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 
     auto& app_menu = menubar->add_menu("Display settings");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](const GUI::Action&) {
-        app.quit();
+        app->quit();
     }));
 
     auto& help_menu = menubar->add_menu("Help");
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("Display settings", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-display-settings.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
     window->show();
-    return app.exec();
+    return app->exec();
 }

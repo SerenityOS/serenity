@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
@@ -85,5 +85,5 @@ int main(int argc, char* argv[])
     applet_window->resize(16, 16);
     applet_window->show();
 
-    return app.exec();
+    return app->exec();
 }

@@ -68,7 +68,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
     Web::ResourceLoader::the();
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
                 tab_widget.remove_tab(tab);
                 tab_widget.set_bar_visible(!window->is_fullscreen() && tab_widget.children().size() > 1);
                 if (tab_widget.children().is_empty())
-                    app.quit();
+                    app->quit();
             });
         };
 
@@ -220,5 +220,5 @@ int main(int argc, char** argv)
     create_new_tab(first_url, true);
     window->show();
 
-    return app.exec();
+    return app->exec();
 }

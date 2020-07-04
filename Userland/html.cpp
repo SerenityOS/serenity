@@ -37,7 +37,7 @@
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto f = Core::File::construct();
     bool success;
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
     auto& app_menu = menubar->add_menu("HTML");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        app.quit();
+        app->quit();
     }));
 
     auto& help_menu = menubar->add_menu("Help");
@@ -75,9 +75,9 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("HTML", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
 
-    return app.exec();
+    return app->exec();
 }

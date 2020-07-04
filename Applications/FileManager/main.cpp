@@ -85,14 +85,14 @@ int main(int argc, char** argv)
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("FileManager");
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio thread shared_buffer accept cpath rpath wpath fattr proc exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    if (app.args().contains_slow("--desktop") || app.args().contains_slow("-d"))
+    if (app->args().contains_slow("--desktop") || app->args().contains_slow("-d"))
         return run_in_desktop_mode(move(config), Core::StandardPaths::desktop_directory());
 
     // our initial location is defined as, in order of precedence:

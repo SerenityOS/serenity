@@ -46,7 +46,7 @@
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 433, 487);
@@ -245,5 +245,5 @@ int main(int argc, char** argv)
 
     window->show();
 
-    return app.exec();
+    return app->exec();
 }

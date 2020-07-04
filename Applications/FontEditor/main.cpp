@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer rpath accept cpath wpath", nullptr) < 0) {
         perror("pledge");
@@ -96,9 +96,9 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("Font Editor", app_icon.bitmap_for_size(32), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     window->show();
 
-    return app.exec();
+    return app->exec();
 }

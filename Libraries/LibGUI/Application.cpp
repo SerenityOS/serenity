@@ -49,8 +49,6 @@ Application& Application::the()
 
 Application::Application(int argc, char** argv)
 {
-    (void)argc;
-    (void)argv;
     ASSERT(!s_the);
     s_the = this;
     m_event_loop = make<Core::EventLoop>();

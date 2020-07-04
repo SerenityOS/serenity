@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
@@ -201,12 +201,12 @@ int main(int argc, char* argv[])
     go_menu.add_action(*go_back_action);
     go_menu.add_action(*go_forward_action);
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     window->set_focused_widget(&tree_view);
     window->show();
 
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"));
 
-    return app.exec();
+    return app->exec();
 }

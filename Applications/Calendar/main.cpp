@@ -42,7 +42,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer rpath accept", nullptr) < 0) {
         perror("pledge");
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
         return;
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
-    app.exec();
+    app->exec();
 }

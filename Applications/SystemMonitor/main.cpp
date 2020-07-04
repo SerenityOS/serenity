@@ -117,7 +117,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio proc shared_buffer accept rpath exec", nullptr) < 0) {
         perror("pledge");
@@ -269,7 +269,7 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("System Monitor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-system-monitor.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     auto& process_tab_unused_widget = process_container_splitter.add<UnavailableProcessWidget>("No process selected");
     process_tab_unused_widget.set_visible(true);
@@ -302,7 +302,7 @@ int main(int argc, char** argv)
 
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"));
 
-    return app.exec();
+    return app->exec();
 }
 
 class ProgressBarPaintingDelegate final : public GUI::TableCellPaintingDelegate {

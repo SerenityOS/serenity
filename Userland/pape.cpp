@@ -85,7 +85,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(name, "Wallpaper to set", "name", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (show_all)
         return handle_show_all();

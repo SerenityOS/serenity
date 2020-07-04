@@ -42,7 +42,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio inet dns unix shared_buffer rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
@@ -50,8 +50,8 @@ int main(int argc, char** argv)
     }
 
     URL url = "";
-    if (app.args().size() >= 1) {
-        url = URL::create_with_url_or_path(app.args()[0]);
+    if (app->args().size() >= 1) {
+        url = URL::create_with_url_or_path(app->args()[0]);
 
         if (url.protocol().to_lowercase() == "ircs") {
             fprintf(stderr, "Secure IRC over SSL/TLS (ircs) is not supported\n");
@@ -74,5 +74,5 @@ int main(int argc, char** argv)
 
     auto app_window = IRCAppWindow::construct(url.host(), url.port());
     app_window->show();
-    return app.exec();
+    return app->exec();
 }

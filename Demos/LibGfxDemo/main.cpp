@@ -196,7 +196,7 @@ void Canvas::draw()
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
@@ -206,5 +206,5 @@ int main(int argc, char** argv)
     window->set_main_widget<Canvas>();
     window->show();
 
-    return app.exec();
+    return app->exec();
 }

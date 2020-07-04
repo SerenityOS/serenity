@@ -32,7 +32,7 @@
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
     auto window = GUI::Window::construct();
     auto& view = window->set_main_widget<WebContentView>();
     window->set_title("WebContentView");
@@ -41,5 +41,5 @@ int main(int argc, char** argv)
 
     view.load("file:///res/html/misc/welcome.html");
 
-    return app.exec();
+    return app->exec();
 }

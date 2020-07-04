@@ -42,7 +42,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio rpath wpath cpath shared_buffer accept", nullptr) < 0) {
         perror("pledge");
@@ -73,11 +73,11 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("Snake", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-snake.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     window->show();
 
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-snake.png"));
 
-    return app.exec();
+    return app->exec();
 }

@@ -160,7 +160,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec fattr thread", nullptr) < 0) {
         perror("pledge");
@@ -525,7 +525,7 @@ int main(int argc, char** argv)
     app_menu.add_action(save_action);
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        app.quit();
+        app->quit();
     }));
 
     auto& project_menu = menubar->add_menu("Project");
@@ -664,7 +664,7 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("HackStudio", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hack-studio.png"), g_window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     g_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
 
@@ -691,7 +691,7 @@ int main(int argc, char** argv)
     open_file(g_project->default_file());
 
     update_actions();
-    return app.exec();
+    return app->exec();
 }
 
 void build(TerminalWrapper& wrapper)
