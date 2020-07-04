@@ -60,3 +60,9 @@ void WebContentClient::handle(const Messages::WebContentClient::DidInvalidateCon
     // FIXME: Figure out a way to coalesce these messages to reduce unnecessary painting
     m_view.notify_server_did_invalidate_content_rect({}, message.content_rect());
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidChangeSelection&)
+{
+    dbg() << "handle: WebContentClient::DidChangeSelection!";
+    m_view.notify_server_did_change_selection({});
+}
