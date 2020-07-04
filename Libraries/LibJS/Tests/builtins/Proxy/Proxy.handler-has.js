@@ -1,62 +1,70 @@
-load("test-common.js");
-
-try {
-    assert("foo" in new Proxy({}, { has: null }) === false);
-    assert("foo" in new Proxy({}, { has: undefined}) === false);
-    assert("foo" in new Proxy({}, {}) === false);
-
-    let o = {};
-    let p = new Proxy(o, {
-        has(target, prop) {
-            assert(target === o);
-            assert(prop === "foo");
-            return true;
-        }
+describe("[[Has]] trap normal behavior", () => {
+    test("forwarding when not defined in handler", () => {
+        expect("foo" in new Proxy({}, { has: null })).toBe(false);
+        expect("foo" in new Proxy({}, { has: undefined})).toBe(false);
+        expect("foo" in new Proxy({}, {})).toBe(false);
     });
 
-    "foo" in p;
-
-    p = new Proxy(o, {
-        has(target, prop) {
-            if (target.checkedFoo)
+    test("correct arguments supplied to trap", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            has(target, prop) {
+                expect(target).toBe(o);
+                expect(prop).toBe("foo");
                 return true;
-            if (prop === "foo")
-                target.checkedFoo = true;
-            return false;
-        }
-    });
+            }
+        });
 
-    assert("foo" in p === false);
-    assert("foo" in p === true);
-
-    // Invariants
-
-    o = {};
-    Object.defineProperty(o, "foo", { configurable: false });
-    Object.defineProperty(o, "bar", { value: 10, configurable: true });
-    p = new Proxy(o, {
-        has() {
-            return false;
-        }
-    });
-
-    assertThrowsError(() => {
         "foo" in p;
-    }, {
-        error: TypeError,
-        message: "Proxy handler's has trap violates invariant: a property cannot be reported as non-existent if it exists on the target as a non-configurable property",
     });
 
-    Object.preventExtensions(o);
+    test("conditional return", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            has(target, prop) {
+                if (target.checkedFoo)
+                    return true;
+                if (prop === "foo")
+                    target.checkedFoo = true;
+                return false;
+            }
+        });
 
-    assertThrowsError(() => {
-        "bar" in p;
-    }, {
-        error: TypeError,
-        message: "Proxy handler's has trap violates invariant: a property cannot be reported as non-existent if it exists on the target and the target is non-extensible",
+        expect("foo" in p).toBe(false);
+        expect("foo" in p).toBe(true);
+    });
+});
+
+describe("[[Has]] invariants", () => {
+    test("cannot return false if the property exists and is non-configurable", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { configurable: false });
+
+        p = new Proxy(o, {
+            has() {
+                return false;
+            }
+        });
+
+        expect(() => {
+            "foo" in p;
+        }).toThrowWithMessage(TypeError, "Proxy handler's has trap violates invariant: a property cannot be reported as non-existent if it exists on the target as a non-configurable property");
     });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("cannot return false if the property exists and the target is non-extensible", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: 10, configurable: true });
+
+        let p = new Proxy(o, {
+            has() {
+                return false;
+            }
+        });
+
+        Object.preventExtensions(o);
+
+        expect(() => {
+            "foo" in p;
+        }).toThrowWithMessage(TypeError, "Proxy handler's has trap violates invariant: a property cannot be reported as non-existent if it exists on the target and the target is non-extensible");
+    });
+});

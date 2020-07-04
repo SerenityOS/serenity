@@ -42,6 +42,19 @@
 
 // FIXME: Will eventually not be necessary when all tests are converted
 Vector<String> tests_to_run = {
+    "builtins/Proxy/Proxy.js",
+    "builtins/Proxy/Proxy.handler-apply.js",
+    "builtins/Proxy/Proxy.handler-construct.js",
+    "builtins/Proxy/Proxy.handler-defineProperty.js",
+    "builtins/Proxy/Proxy.handler-deleteProperty.js",
+    "builtins/Proxy/Proxy.handler-get.js",
+    "builtins/Proxy/Proxy.handler-getOwnPropertyDescriptor.js",
+    "builtins/Proxy/Proxy.handler-getPrototypeOf.js",
+    "builtins/Proxy/Proxy.handler-has.js",
+    "builtins/Proxy/Proxy.handler-isExtensible.js",
+    "builtins/Proxy/Proxy.handler-preventExtensions.js",
+    "builtins/Proxy/Proxy.handler-set.js",
+    "builtins/Proxy/Proxy.handler-setPrototypeOf.js",
     "add-values-to-primitive.js",
     "automatic-semicolon-insertion.js",
     "comments-basic.js",
