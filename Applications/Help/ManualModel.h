@@ -28,6 +28,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <LibGUI/Model.h>
 
@@ -44,11 +45,13 @@ public:
 
     String page_path(const GUI::ModelIndex&) const;
     String page_and_section(const GUI::ModelIndex&) const;
+    Result<StringView, int> page_view(const String& path) const;
 
     void update_section_node_on_toggle(const GUI::ModelIndex&, const bool);
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
+    virtual TriState data_matches(const GUI::ModelIndex&, GUI::Variant) const override;
     virtual void update() override;
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
@@ -59,4 +62,5 @@ private:
     GUI::Icon m_section_open_icon;
     GUI::Icon m_section_icon;
     GUI::Icon m_page_icon;
+    mutable HashMap<String, OwnPtr<MappedFile>> m_mapped_files;
 };

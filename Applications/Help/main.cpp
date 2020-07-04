@@ -26,7 +26,6 @@
 
 #include "History.h"
 #include "ManualModel.h"
-#include <AK/ByteBuffer.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
@@ -34,11 +33,14 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/FilteringProxyModel.h>
+#include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
-#include <LibGUI/TextEditor.h>
+#include <LibGUI/TabWidget.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/TreeView.h>
@@ -100,10 +102,41 @@ int main(int argc, char* argv[])
 
     auto model = ManualModel::create();
 
-    auto& tree_view = splitter.add<GUI::TreeView>();
+    auto& left_tab_bar = splitter.add<GUI::TabWidget>();
+    auto& tree_view = left_tab_bar.add_tab<GUI::TreeView>("Tree");
+    auto& search_view = left_tab_bar.add_tab<GUI::Widget>("Search");
+    search_view.set_layout<GUI::VerticalBoxLayout>();
+    auto& search_box = search_view.add<GUI::TextBox>();
+    auto& search_list_view = search_view.add<GUI::ListView>();
+    search_box.set_preferred_size(0, 20);
+    search_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    search_box.set_text("Search...");
+    search_box.on_focusin = [&] {
+        if (search_box.text() == "Search...")
+            search_box.set_text("");
+    };
+    search_box.on_change = [&] {
+        if (auto model = search_list_view.model()) {
+            auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
+            search_model.set_filter_term(search_box.text());
+            search_model.update();
+        }
+    };
+    search_box.on_focusout = [&] {
+        if (search_box.text().is_empty()) {
+            if (auto model = search_list_view.model()) {
+                auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
+                search_model.set_filter_term("");
+            }
+            search_box.set_text("Search...");
+        }
+    };
+    search_list_view.set_model(GUI::FilteringProxyModel::construct(model));
+    search_list_view.model()->update();
+
     tree_view.set_model(model);
-    tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    tree_view.set_preferred_size(200, 500);
+    left_tab_bar.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    left_tab_bar.set_preferred_size(200, 500);
 
     auto& page_view = splitter.add<Web::PageView>();
 
@@ -123,19 +156,13 @@ int main(int argc, char* argv[])
             return;
         }
 
-        dbg() << "Opening page at " << path;
-
-        auto file = Core::File::construct();
-        file->set_filename(path);
-
-        if (!file->open(Core::IODevice::OpenMode::ReadOnly)) {
-            int saved_errno = errno;
-            GUI::MessageBox::show(window, strerror(saved_errno), "Failed to open man page", GUI::MessageBox::Type::Error);
+        auto source_result = model->page_view(path);
+        if (source_result.is_error()) {
+            GUI::MessageBox::show(window, strerror(source_result.error()), "Failed to open man page", GUI::MessageBox::Type::Error);
             return;
         }
-        auto buffer = file->read_all();
-        StringView source { (const char*)buffer.data(), buffer.size() };
 
+        auto source = source_result.value();
         String html;
         {
             auto md_document = Markdown::Document::parse(source);
@@ -172,6 +199,28 @@ int main(int argc, char* argv[])
                 "Failed to open link",
                 GUI::MessageBox::Type::Error);
         }
+    };
+    search_list_view.on_selection = [&](auto index) {
+        if (!index.is_valid())
+            return;
+
+        if (auto model = search_list_view.model()) {
+            auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
+            index = search_model.map(index);
+        } else {
+            page_view.set_document(nullptr);
+            return;
+        }
+        String path = model->page_path(index);
+        if (path.is_null()) {
+            page_view.set_document(nullptr);
+            return;
+        }
+        tree_view.selection().clear();
+        tree_view.selection().add(index);
+        history.push(path);
+        update_actions();
+        open_page(path);
     };
 
     page_view.on_link_click = [&](auto& url, auto&, unsigned) {
@@ -230,7 +279,7 @@ int main(int argc, char* argv[])
 
     app->set_menubar(move(menubar));
 
-    window->set_focused_widget(&tree_view);
+    window->set_focused_widget(&left_tab_bar);
     window->show();
 
     return app->exec();
