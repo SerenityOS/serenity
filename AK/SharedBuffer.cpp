@@ -28,7 +28,7 @@
 
 #include <AK/SharedBuffer.h>
 #include <AK/kmalloc.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <stdio.h>
 #include <serenity.h>
 

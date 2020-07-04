@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>

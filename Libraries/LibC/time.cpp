@@ -26,7 +26,7 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>

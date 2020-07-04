@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>

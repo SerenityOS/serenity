@@ -26,7 +26,7 @@
 
 #include "CharacterMap.h"
 #include <AK/StringBuilder.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #ifndef KERNEL
 #    include <LibKeyboard/CharacterMapFile.h>
 #endif

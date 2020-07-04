@@ -25,7 +25,7 @@
  */
 
 #include <AK/LogStream.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <errno.h>
 #include <sys/ptrace.h>
 

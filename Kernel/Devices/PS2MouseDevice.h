@@ -29,7 +29,7 @@
 #include <AK/CircularQueue.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/MousePacket.h>
+#include <Kernel/API/MousePacket.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {

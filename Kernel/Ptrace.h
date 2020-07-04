@@ -28,7 +28,7 @@
 
 #include <Kernel/KResult.h>
 #include <Kernel/Process.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <LibC/sys/arch/i386/regs.h>
 
 namespace Ptrace {

@@ -29,8 +29,8 @@
 #include "Event.h"
 #include "EventLoop.h"
 #include "WindowManager.h"
-#include <Kernel/FB.h>
-#include <Kernel/MousePacket.h>
+#include <Kernel/API/FB.h>
+#include <Kernel/API/MousePacket.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>

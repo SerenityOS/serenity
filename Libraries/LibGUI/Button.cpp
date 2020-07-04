@@ -25,7 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Button.h>

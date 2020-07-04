@@ -29,7 +29,7 @@
 #include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
-#include <Kernel/MousePacket.h>
+#include <Kernel/API/MousePacket.h>
 
 namespace Kernel {
 

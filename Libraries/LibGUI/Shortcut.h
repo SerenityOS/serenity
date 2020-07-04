@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Traits.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 
 namespace GUI {
 

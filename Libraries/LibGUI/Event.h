@@ -28,7 +28,7 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibCore/Event.h>
 #include <LibGUI/WindowType.h>
 #include <LibGfx/Point.h>

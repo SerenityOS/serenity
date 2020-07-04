@@ -25,7 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Event.h>
 

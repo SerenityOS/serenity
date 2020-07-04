@@ -26,7 +26,7 @@
 
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>

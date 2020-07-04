@@ -36,7 +36,7 @@
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 

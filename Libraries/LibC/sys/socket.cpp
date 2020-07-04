@@ -25,7 +25,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/socket.h>

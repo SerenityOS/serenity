@@ -30,7 +30,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibVT/Line.h>
 #include <LibVT/Position.h>
 

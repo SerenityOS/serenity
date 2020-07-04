@@ -27,7 +27,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <Kernel/Syscall.h>
+#include <Kernel/API/Syscall.h>
 #include <alloca.h>
 #include <assert.h>
 #include <errno.h>

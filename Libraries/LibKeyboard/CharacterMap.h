@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibKeyboard/CharacterMapData.h>
 
 namespace Keyboard {

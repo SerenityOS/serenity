@@ -32,7 +32,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
-#include <Kernel/KeyCode.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
 #include <LibDesktop/Launcher.h>
