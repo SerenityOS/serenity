@@ -38,6 +38,8 @@
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Value.h>
 
+//#define OBJECT_DEBUG
+
 namespace JS {
 
 PropertyDescriptor PropertyDescriptor::from_dictionary(Interpreter& interpreter, const Object& object)
@@ -391,9 +393,11 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
             return false;
         }
 
+#ifdef OBJECT_DEBUG
         dbg() << "Defining new property " << property_name << " with accessor descriptor { attributes=" << attributes << ", "
               << "getter=" << getter.to_string_without_side_effects() << ", "
               << "setter=" << setter.to_string_without_side_effects() << "}";
+#endif
 
         return define_property(property_name, Accessor::create(interpreter(), global_object(), getter_function, setter_function), attributes, throw_exceptions);
     }
@@ -411,8 +415,10 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
     if (interpreter().exception())
         return {};
 
+#ifdef OBJECT_DEBUG
     dbg() << "Defining new property " << property_name << " with data descriptor { attributes=" << attributes
           << ", value=" << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects()) << " }";
+#endif
 
     return define_property(property_name, value, attributes, throw_exceptions);
 }
@@ -457,7 +463,9 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
     if (!is_extensible()) {
+#ifdef OBJECT_DEBUG
         dbg() << "Disallow define_property of non-extensible object";
+#endif
         if (throw_exceptions && interpreter().in_strict_mode())
             interpreter().throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_name.characters());
         return false;
@@ -492,7 +500,9 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     }
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable() && attributes != metadata.value().attributes) {
+#ifdef OBJECT_DEBUG
         dbg() << "Disallow reconfig of non-configurable property";
+#endif
         if (throw_exceptions)
             interpreter().throw_exception<TypeError>(ErrorType::DescChangeNonConfigurable, property_name.characters());
         return false;
@@ -506,12 +516,16 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
         }
         metadata = shape().lookup(property_name);
 
+#ifdef OBJECT_DEBUG
         dbg() << "Reconfigured property " << property_name << ", new shape says offset is " << metadata.value().offset << " and my storage capacity is " << m_storage.size();
+#endif
     }
 
     auto value_here = m_storage[metadata.value().offset];
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !metadata.value().attributes.is_writable()) {
+#ifdef OBJECT_DEBUG
         dbg() << "Disallow write to non-writable property";
+#endif
         return false;
     }
 
@@ -531,7 +545,9 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
     if (!is_extensible()) {
+#ifdef OBJECT_DEBUG
         dbg() << "Disallow define_property of non-extensible object";
+#endif
         if (throw_exceptions && interpreter().in_strict_mode())
             interpreter().throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_index);
         return false;
@@ -550,7 +566,9 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     PropertyAttributes existing_attributes = new_property ? 0 : existing_property.value().attributes;
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable() && attributes != existing_attributes) {
+#ifdef OBJECT_DEBUG
         dbg() << "Disallow reconfig of non-configurable property";
+#endif
         if (throw_exceptions)
             interpreter().throw_exception<TypeError>(ErrorType::DescChangeNonConfigurable, property_index);
         return false;
@@ -558,7 +576,9 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 
     auto value_here = new_property ? Value() : existing_property.value().value;
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !existing_attributes.is_writable()) {
+#ifdef OBJECT_DEBUG
         dbg() << "Disallow write to non-writable property";
+#endif
         return false;
     }
 
