@@ -340,7 +340,7 @@ public:
         return block<ConditionBlocker>(state_string, move(condition));
     }
 
-    BlockResult wait_on(WaitQueue& queue, timeval* timeout = nullptr, Atomic<bool>* lock = nullptr, Thread* beneficiary = nullptr, const char* reason = nullptr);
+    BlockResult wait_on(WaitQueue& queue, const char* reason, timeval* timeout = nullptr, Atomic<bool>* lock = nullptr, Thread* beneficiary = nullptr);
     void wake_from_queue();
 
     void unblock();
@@ -433,6 +433,11 @@ public:
         m_ipv4_socket_write_bytes += bytes;
     }
 
+    const char* wait_reason() const
+    {
+        return m_wait_reason;
+    }
+
     Thread* clone(Process&);
 
     template<typename Callback>
@@ -484,6 +489,7 @@ private:
     size_t m_thread_specific_region_size { 0 };
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
+    const char* m_wait_reason { nullptr };
 
     bool m_is_joinable { true };
     Thread* m_joiner { nullptr };
