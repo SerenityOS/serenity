@@ -49,6 +49,7 @@ private:
     virtual void handle(const Messages::WebContentClient::DidInvalidateContentRect&) override;
     virtual void handle(const Messages::WebContentClient::DidChangeSelection&) override;
     virtual void handle(const Messages::WebContentClient::DidLayout&) override;
+    virtual void handle(const Messages::WebContentClient::DidChangeTitle&) override;
 
     WebContentView& m_view;
 };

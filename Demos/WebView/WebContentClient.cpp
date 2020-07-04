@@ -82,3 +82,11 @@ void WebContentClient::handle(const Messages::WebContentClient::DidLayout& messa
 #endif
     m_view.notify_server_did_layout({}, message.content_size());
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidChangeTitle& message)
+{
+#ifdef DEBUG_SPAM
+    dbg() << "handle: WebContentClient::DidChangeTitle! title=" << message.title();
+#endif
+    m_view.notify_server_did_change_title({}, message.title());
+}

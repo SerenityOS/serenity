@@ -124,4 +124,9 @@ void PageHost::page_did_layout()
     m_client.post_message(Messages::WebContentClient::DidLayout(content_size));
 }
 
+void PageHost::page_did_change_title(const String& title)
+{
+    m_client.post_message(Messages::WebContentClient::DidChangeTitle(title));
+}
+
 }

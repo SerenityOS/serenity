@@ -35,9 +35,13 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
     auto window = GUI::Window::construct();
     auto& view = window->set_main_widget<WebContentView>();
-    window->set_title("WebContentView");
+    window->set_title("WebView");
     window->set_rect(100, 100, 640, 480);
     window->show();
+
+    view.on_title_change = [&](auto& title) {
+        window->set_title(String::format("%s - WebView", title.characters()));
+    };
 
     view.load("file:///res/html/misc/welcome.html");
 

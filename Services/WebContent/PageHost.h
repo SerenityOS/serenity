@@ -54,6 +54,7 @@ private:
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_layout() override;
+    virtual void page_did_change_title(const String&) override;
 
     explicit PageHost(ClientConnection&);
 
