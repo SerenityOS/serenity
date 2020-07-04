@@ -25,6 +25,7 @@
  */
 
 #include <LibCore/Timer.h>
+#include <LibCore/SystemTime.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
@@ -43,7 +44,7 @@ public:
 
         m_timer = add<Core::Timer>(1000, [this] {
             static time_t last_update_time;
-            time_t now = time(nullptr);
+            time_t now = Core::SystemTime::realtime().tv_sec;
             if (now != last_update_time) {
                 tick_clock();
                 last_update_time = now;
@@ -63,7 +64,7 @@ private:
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
-        time_t now = time(nullptr);
+        time_t now = Core::SystemTime::realtime().tv_sec;
         auto* tm = localtime(&now);
 
         auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u",
