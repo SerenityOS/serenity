@@ -115,21 +115,6 @@ GUI::Variant RunningProcessesModel::data(const GUI::ModelIndex& index, Role role
         }
         ASSERT_NOT_REACHED();
     }
-
-    if (role == Role::Sort) {
-        switch (index.column()) {
-        case Column::Icon:
-            return {};
-        case Column::PID:
-            return process.pid;
-        case Column::UID:
-            return process.uid;
-        case Column::Name:
-            return process.name;
-        }
-        ASSERT_NOT_REACHED();
-    }
-
     return {};
 }
 
