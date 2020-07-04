@@ -1,8 +1,8 @@
 describe("[[IsExtensible]] trap normal behavior", () => {
     test("forwarding when not defined in handler", () => {
-        expect(Object.isExtensible(new Proxy({}, { isExtensible: null }))).toBe(true);
-        expect(Object.isExtensible(new Proxy({}, { isExtensible: undefined }))).toBe(true);
-        expect(Object.isExtensible(new Proxy({}, {}))).toBe(true);
+        expect(Object.isExtensible(new Proxy({}, { isExtensible: null }))).toBeTrue();
+        expect(Object.isExtensible(new Proxy({}, { isExtensible: undefined }))).toBeTrue();
+        expect(Object.isExtensible(new Proxy({}, {}))).toBeTrue();
     });
 
     test("correct arguments supplied to trap", () => {
@@ -14,7 +14,7 @@ describe("[[IsExtensible]] trap normal behavior", () => {
             }
         });
 
-        expect(Object.isExtensible(p)).toBe(true);
+        expect(Object.isExtensible(p)).toBeTrue();
     });
 });
 

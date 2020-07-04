@@ -9,8 +9,8 @@ test("toBe", () => {
     expect("1").toBe("1");
     expect("1").not.toBe("2");
 
-    expect(true).toBe(true);
-    expect(true).not.toBe(false);
+    expect(true).toBeTrue();
+    expect(true).not.toBeFalse();
 
     expect({}).not.toBe({});
     expect([]).not.toBe([]);
@@ -98,6 +98,22 @@ test("toBeUndefined", () => {
 test("toBeNaN", () => {
     expect(NaN).toBeNaN();
     expect(5).not.toBeNaN();
+});
+
+test("toBeTrue", () => {
+    expect(true).toBeTrue();
+    expect(false).not.toBeTrue();
+    expect(null).not.toBeTrue();
+    expect(undefined).not.toBeTrue();
+    expect(0).not.toBeTrue();
+});
+
+test("toBeFalse", () => {
+    expect(true).not.toBeFalse();
+    expect(false).toBeFalse();
+    expect(null).not.toBeFalse();
+    expect(undefined).not.toBeFalse();
+    expect(0).not.toBeFalse();
 });
 
 test("toContain", () => {
@@ -221,4 +237,70 @@ test("toEvalTo", () => {
     expect(() => {
         expect("*^&%%").not.toEvalTo();
     }).toThrow();
+});
+
+test("toHaveConfigurableProperty", () => {
+    expect({ foo: 1 }).toHaveConfigurableProperty("foo");
+
+    expect(() => {
+        expect({ foo: 1 }).not.toHaveConfigurableProperty("bar");
+    }).toThrow();
+
+    let o = {};
+    Object.defineProperty(o, "foo", { configurable: true, value: 1 });
+    Object.defineProperty(o, "bar", { configurable: false, value: 1 });
+    expect(o).toHaveConfigurableProperty("foo");
+    expect(o).not.toHaveConfigurableProperty("bar");
+});
+
+test("toHaveEnumerableProperty", () => {
+    expect({ foo: 1 }).toHaveEnumerableProperty("foo");
+
+    expect(() => {
+        expect({ foo: 1 }).not.toHaveEnumerableProperty("bar");
+    }).toThrow();
+
+    let o = {};
+    Object.defineProperty(o, "foo", { enumerable: true, value: 1 });
+    Object.defineProperty(o, "bar", { enumerable: false, value: 1 });
+    expect(o).toHaveEnumerableProperty("foo");
+    expect(o).not.toHaveEnumerableProperty("bar");
+});
+
+test("toHaveWritableProperty", () => {
+    expect({ foo: 1 }).toHaveWritableProperty("foo");
+
+    expect(() => {
+        expect({ foo: 1 }).not.toHaveWritableProperty("bar");
+    }).toThrow();
+
+    let o = {};
+    Object.defineProperty(o, "foo", { writable: true, value: 1 });
+    Object.defineProperty(o, "bar", { writable: false, value: 1 });
+    expect(o).toHaveWritableProperty("foo");
+    expect(o).not.toHaveWritableProperty("bar");
+});
+
+test("toHaveGetterProperty", () => {
+    expect(() => {
+        expect({ foo: 1 }).not.toHaveGetterProperty("bar");
+    }).toThrow();
+
+    let o = {};
+    Object.defineProperty(o, "foo", { get() { return 1; }});
+    Object.defineProperty(o, "bar", { value: 1 });
+    expect(o).toHaveGetterProperty("foo");
+    expect(o).not.toHaveGetterProperty("bar");
+});
+
+test("toHaveSetterProperty", () => {
+    expect(() => {
+        expect({ foo: 1 }).not.toHaveSetterProperty("bar");
+    }).toThrow();
+
+    let o = {};
+    Object.defineProperty(o, "foo", { set(_) { }});
+    Object.defineProperty(o, "bar", { value: 1 });
+    expect(o).toHaveSetterProperty("foo");
+    expect(o).not.toHaveSetterProperty("bar");
 });
