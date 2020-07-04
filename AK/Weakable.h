@@ -71,6 +71,11 @@ protected:
 #ifdef WEAKABLE_DEBUG
         m_being_destroyed = true;
 #endif
+        revoke_weak_ptrs();
+    }
+
+    void revoke_weak_ptrs()
+    {
         if (m_link)
             m_link->m_ptr = nullptr;
     }
