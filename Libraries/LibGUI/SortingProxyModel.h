@@ -49,6 +49,9 @@ public:
 
     ModelIndex map_to_target(const ModelIndex&) const;
 
+    Role sort_role() const { return m_sort_role; }
+    void set_sort_role(Role role) { m_sort_role = role; }
+
 private:
     explicit SortingProxyModel(NonnullRefPtr<Model>&&);
 
@@ -64,6 +67,7 @@ private:
     Vector<int> m_row_mappings;
     int m_key_column { -1 };
     SortOrder m_sort_order { SortOrder::Ascending };
+    Role m_sort_role { Role::Sort };
     bool m_sorting_case_sensitive { false };
 };
 
