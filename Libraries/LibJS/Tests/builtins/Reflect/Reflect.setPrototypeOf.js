@@ -1,43 +1,54 @@
-load("test-common.js");
+test("length is 2", () => {
+    expect(Reflect.setPrototypeOf).toHaveLength(2);
+});
 
-try {
-    assert(Reflect.setPrototypeOf.length === 2);
-
-    [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
-        assertThrowsError(() => {
-            Reflect.setPrototypeOf(value);
-        }, {
-            error: TypeError,
-            message: "First argument of Reflect.setPrototypeOf() must be an object"
-        });
-        if (value === null)
-            return;
-        assertThrowsError(() => {
-            Reflect.setPrototypeOf({}, value);
-        }, {
-            error: TypeError,
-            message: "Prototype must be an object or null"
+describe("errors", () => {
+    test("target must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.setPrototypeOf(value);
+            }).toThrowWithMessage(TypeError, "First argument of Reflect.setPrototypeOf() must be an object");
         });
     });
 
-    assert(Reflect.setPrototypeOf({}, null) === true);
-    assert(Reflect.setPrototypeOf({}, {}) === true);
-    assert(Reflect.setPrototypeOf({}, Object.prototype) === true);
-    assert(Reflect.setPrototypeOf({}, Array.prototype) === true);
-    assert(Reflect.setPrototypeOf({}, String.prototype) === true);
-    assert(Reflect.setPrototypeOf({}, Reflect.getPrototypeOf({})) === true);
+    test("prototype must be an object or null", () => {
+        [undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.setPrototypeOf({}, value);
+            }).toThrowWithMessage(TypeError, "Prototype must be an object or null");
+        });
+    });
+});
 
-    var o = {};
-    var p = { foo: "bar" };
-    assert(o.foo === undefined);
-    assert(Reflect.setPrototypeOf(o, p) === true);
-    assert(o.foo === "bar");
+describe("normal behavior", () => {
+    test("setting prototype of regular object", () => {
+        expect(Reflect.setPrototypeOf({}, null)).toBeTrue();
+        expect(Reflect.setPrototypeOf({}, {})).toBeTrue();
+        expect(Reflect.setPrototypeOf({}, Object.prototype)).toBeTrue();
+        expect(Reflect.setPrototypeOf({}, Array.prototype)).toBeTrue();
+        expect(Reflect.setPrototypeOf({}, String.prototype)).toBeTrue();
+        expect(Reflect.setPrototypeOf({}, Reflect.getPrototypeOf({}))).toBeTrue();
+    });
 
-    Reflect.preventExtensions(o);
-    assert(Reflect.setPrototypeOf(o, {}) === false);
-    assert(Reflect.setPrototypeOf(o, p) === true);
+    test("setting user-defined prototype of regular object", () => {
+        var o = {};
+        var p = { foo: "bar" };
+        expect(o.foo).toBeUndefined();
+        expect(Reflect.setPrototypeOf(o, p)).toBeTrue();
+        expect(o.foo).toBe("bar");
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("setting prototype of non-extensible object", () => {
+        var o = {};
+        Reflect.preventExtensions(o);
+        expect(Reflect.setPrototypeOf(o, {})).toBeFalse();
+    });
+
+    test("setting same prototype of non-extensible object", () => {
+        var o = {};
+        var p = { foo: "bar" };
+        expect(Reflect.setPrototypeOf(o, p)).toBeTrue();
+        Reflect.preventExtensions(o);
+        expect(Reflect.setPrototypeOf(o, p)).toBeTrue();
+    });
+});

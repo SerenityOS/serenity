@@ -1,56 +1,63 @@
-load("test-common.js");
+test("length is 2", () => {
+    expect(Reflect.get).toHaveLength(2);
+});
 
-try {
-    assert(Reflect.get.length === 2);
-
-    [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
-        assertThrowsError(() => {
-            Reflect.get(value);
-        }, {
-            error: TypeError,
-            message: "First argument of Reflect.get() must be an object"
+describe("errors", () => {
+    test("target must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.get(value);
+            }).toThrowWithMessage(TypeError, "First argument of Reflect.get() must be an object");
         });
     });
+});
 
-    assert(Reflect.get({}) === undefined);
-    assert(Reflect.get({ undefined: 1 }) === 1);
-    assert(Reflect.get({ foo: 1 }) === undefined);
-    assert(Reflect.get({ foo: 1 }, "foo") === 1);
+describe("normal behavior", () => {
+    test("regular object", () => {
+        expect(Reflect.get({})).toBeUndefined();
+        expect(Reflect.get({ undefined: 1 })).toBe(1);
+        expect(Reflect.get({ foo: 1 })).toBeUndefined();
+        expect(Reflect.get({ foo: 1 }, "foo")).toBe(1);
+    });
 
-    assert(Reflect.get([]) === undefined);
-    assert(Reflect.get([1, 2, 3]) === undefined);
-    assert(Reflect.get([1, 2, 3], "0") === 1);
-    assert(Reflect.get([1, 2, 3], 0) === 1);
-    assert(Reflect.get([1, 2, 3], 1) === 2);
-    assert(Reflect.get([1, 2, 3], 2) === 3);
-    assert(Reflect.get([1, 2, 3], 4) === undefined);
+    test("array", () => {
+        expect(Reflect.get([])).toBeUndefined();
+        expect(Reflect.get([1, 2, 3])).toBeUndefined();
+        expect(Reflect.get([1, 2, 3], "0")).toBe(1);
+        expect(Reflect.get([1, 2, 3], 0)).toBe(1);
+        expect(Reflect.get([1, 2, 3], 1)).toBe(2);
+        expect(Reflect.get([1, 2, 3], 2)).toBe(3);
+        expect(Reflect.get([1, 2, 3], 4)).toBeUndefined();
+    });
 
-    assert(Reflect.get(new String()) === undefined);
-    assert(Reflect.get(new String(), 0) === undefined);
-    assert(Reflect.get(new String("foo"), "0") === "f");
-    assert(Reflect.get(new String("foo"), 0) === "f");
-    assert(Reflect.get(new String("foo"), 1) === "o");
-    assert(Reflect.get(new String("foo"), 2) === "o");
-    assert(Reflect.get(new String("foo"), 3) === undefined);
+    test("string object", () => {
+        expect(Reflect.get(new String())).toBeUndefined();
+        expect(Reflect.get(new String(), 0)).toBeUndefined();
+        expect(Reflect.get(new String("foo"), "0")).toBe("f");
+        expect(Reflect.get(new String("foo"), 0)).toBe("f");
+        expect(Reflect.get(new String("foo"), 1)).toBe("o");
+        expect(Reflect.get(new String("foo"), 2)).toBe("o");
+        expect(Reflect.get(new String("foo"), 3)).toBeUndefined();
+    });
 
-    const foo = {
-        get prop() {
-            this.getPropCalled = true;
-        }
-    };
-    const bar = {};
-    Object.setPrototypeOf(bar, foo);
+    test("getter function", () => {
+        const foo = {
+            get prop() {
+                this.getPropCalled = true;
+            }
+        };
+        const bar = {};
+        Object.setPrototypeOf(bar, foo);
 
-    assert(foo.getPropCalled === undefined);
-    assert(bar.getPropCalled === undefined);
-    Reflect.get(bar, "prop");
-    assert(foo.getPropCalled === undefined);
-    assert(bar.getPropCalled === true);
-    Reflect.get(bar, "prop", foo);
-    assert(foo.getPropCalled === true);
-    assert(bar.getPropCalled === true);
+        expect(foo.getPropCalled).toBeUndefined();
+        expect(bar.getPropCalled).toBeUndefined();
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        Reflect.get(bar, "prop");
+        expect(foo.getPropCalled).toBeUndefined();
+        expect(bar.getPropCalled).toBeTrue();
+
+        Reflect.get(bar, "prop", foo);
+        expect(foo.getPropCalled).toBeTrue();
+        expect(bar.getPropCalled).toBeTrue();
+    });
+});

@@ -1,59 +1,74 @@
-load("test-common.js");
+test("length is 3", () => {
+    expect(Reflect.defineProperty).toHaveLength(3);
+});
 
-try {
-    assert(Reflect.defineProperty.length === 3);
-
-    [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
-        assertThrowsError(() => {
-            Reflect.defineProperty(value);
-        }, {
-            error: TypeError,
-            message: "First argument of Reflect.defineProperty() must be an object"
-        });
-
-        assertThrowsError(() => {
-            Reflect.defineProperty({}, "foo", value);
-        }, {
-            error: TypeError,
-            message: "Descriptor argument is not an object"
+describe("errors", () => {
+    test("target must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.defineProperty(value);
+            }).toThrowWithMessage(TypeError, "First argument of Reflect.defineProperty() must be an object");
         });
     });
 
-    var o = {};
+    test("descriptor must be an object", () => {
+        [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
+            expect(() => {
+                Reflect.defineProperty({}, "foo", value);
+            }).toThrowWithMessage(TypeError, "Descriptor argument is not an object");
+        });
+    });
+});
 
-    assert(Reflect.defineProperty(o, "foo", { value: 1, writable: false, enumerable: false }) === true);
-    assert(o.foo === 1);
-    o.foo = 2;
-    assert(o.foo === 1);
 
-    assert(Reflect.defineProperty(o, "bar", { value: "hi", writable: true, enumerable: true }) === true);
-    assert(o.bar === "hi");
-    o.bar = "ho";
-    assert(o.bar === "ho");
+describe("normal behavior", () => {
+    test("initial value and non-writable", () => {
+        var o = {};
 
-    assert(Reflect.defineProperty(o, "bar", { value: "xx", enumerable: false }) === false);
+        expect(o.foo).toBeUndefined();
+        expect(Reflect.defineProperty(o, "foo", { value: 1, writable: false })).toBeTrue();
+        expect(o.foo).toBe(1);
+        o.foo = 2;
+        expect(o.foo).toBe(1);
+    });
 
-    var d = Reflect.getOwnPropertyDescriptor(o, "foo");
-    assert(d.configurable === false);
-    assert(d.enumerable === false);
-    assert(d.writable === false);
-    assert(d.value === 1);
+    test("initial value and writable", () => {
+        var o = {};
 
-    d = Reflect.getOwnPropertyDescriptor(o, "bar");
-    assert(d.configurable === false);
-    assert(d.enumerable === true);
-    assert(d.writable === true);
-    assert(d.value === "ho");
+        expect(o.foo).toBeUndefined();
+        expect(Reflect.defineProperty(o, "foo", { value: 1, writable: true })).toBeTrue();
+        expect(o.foo).toBe(1);
+        o.foo = 2;
+        expect(o.foo).toBe(2);
+    });
 
-    assert(Reflect.defineProperty(o, "baz", { value: 9, configurable: true, writable: false }) === true);
-    assert(Reflect.defineProperty(o, "baz", { configurable: true, writable: true }) === true);
+    test("can redefine value of configurable, writable property", () => {
+        var o = {};
 
-    d = Reflect.getOwnPropertyDescriptor(o, "baz");
-    assert(d.configurable === true);
-    assert(d.writable === true);
-    assert(d.value === 9);
+        expect(o.foo).toBeUndefined();
+        expect(Reflect.defineProperty(o, "foo", { value: 1, configurable: true, writable: true })).toBeTrue();
+        expect(o.foo).toBe(1);
+        expect(Reflect.defineProperty(o, "foo", { value: 2 })).toBeTrue();
+        expect(o.foo).toBe(2);
+    });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    test("can redefine value of configurable, non-writable property", () => {
+        var o = {};
+
+        expect(o.foo).toBeUndefined();
+        expect(Reflect.defineProperty(o, "foo", { value: 1, configurable: true, writable: false })).toBeTrue();
+        expect(o.foo).toBe(1);
+        expect(Reflect.defineProperty(o, "foo", { value: 2 })).toBeTrue();
+        expect(o.foo).toBe(2);
+    });
+
+    test("cannot redefine value of non-configurable, non-writable property", () => {
+        var o = {};
+
+        expect(o.foo).toBeUndefined();
+        expect(Reflect.defineProperty(o, "foo", { value: 1, configurable: false, writable: false })).toBeTrue();
+        expect(o.foo).toBe(1);
+        expect(Reflect.defineProperty(o, "foo", { value: 2 })).toBeFalse();
+        expect(o.foo).toBe(1);
+    });
+});
