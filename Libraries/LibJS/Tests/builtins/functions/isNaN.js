@@ -1,6 +1,8 @@
-test("basic functionality", () => {
+test("length is 1", () => {
     expect(isNaN).toHaveLength(1);
+});
 
+test("arguments that evaluate to false", () => {
     expect(isNaN(0)).toBeFalse();
     expect(isNaN(42)).toBeFalse();
     expect(isNaN("")).toBeFalse();
@@ -12,7 +14,9 @@ test("basic functionality", () => {
     expect(isNaN([])).toBeFalse();
     expect(isNaN(Infinity)).toBeFalse();
     expect(isNaN(-Infinity)).toBeFalse();
+});
 
+test("arguments that evaluate to true", () => {
     expect(isNaN()).toBeTrue();
     expect(isNaN(NaN)).toBeTrue();
     expect(isNaN(undefined)).toBeTrue();
