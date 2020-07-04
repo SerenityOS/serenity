@@ -71,11 +71,7 @@ TextEditorWidget::TextEditorWidget()
     m_editor->set_line_wrapping_enabled(true);
 
     m_editor->on_change = [this] {
-        if (m_markdown_preview_enabled)
-            update_markdown_preview();
-
-        if (m_html_preview_enabled)
-            update_html_preview();
+        update_preview();
 
         // Do not mark as dirty on the first change (When document is first opened.)
         if (m_document_opening) {
@@ -387,18 +383,24 @@ TextEditorWidget::TextEditorWidget()
     edit_menu.add_action(*m_replace_previous_action);
     edit_menu.add_action(*m_replace_all_action);
 
+    m_no_preview_action = GUI::Action::create_checkable(
+        "No preview", [this](auto&) {
+            set_preview_mode(PreviewMode::None);
+        });
+
     m_markdown_preview_action = GUI::Action::create_checkable(
-        "Markdown preview", [this](auto& action) {
-            set_markdown_preview_enabled(action.is_checked());
+        "Markdown preview", [this](auto&) {
+            set_preview_mode(PreviewMode::Markdown);
         },
         this);
 
     m_html_preview_action = GUI::Action::create_checkable(
-        "HTML preview", [this](auto& action) {
-            set_html_preview_enabled(action.is_checked());
+        "HTML preview", [this](auto&) {
+            set_preview_mode(PreviewMode::HTML);
         },
         this);
 
+    m_preview_actions.add_action(*m_no_preview_action);
     m_preview_actions.add_action(*m_markdown_preview_action);
     m_preview_actions.add_action(*m_html_preview_action);
     m_preview_actions.set_exclusive(true);
@@ -406,6 +408,7 @@ TextEditorWidget::TextEditorWidget()
     auto& view_menu = menubar->add_menu("View");
     view_menu.add_action(*m_line_wrapping_setting_action);
     view_menu.add_separator();
+    view_menu.add_action(*m_no_preview_action);
     view_menu.add_action(*m_markdown_preview_action);
     view_menu.add_action(*m_html_preview_action);
     view_menu.add_separator();
@@ -494,8 +497,12 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
         m_plain_text_highlight->activate();
     }
 
-    set_markdown_preview_enabled(m_extension == "md");
-    set_html_preview_enabled(m_extension == "html");
+    if (m_extension == "md")
+        set_preview_mode(PreviewMode::Markdown);
+    else if (m_extension == "html")
+        set_preview_mode(PreviewMode::HTML);
+    else
+        set_preview_mode(PreviewMode::None);
 
     update_title();
 }
@@ -561,26 +568,38 @@ void TextEditorWidget::drop_event(GUI::DropEvent& event)
     }
 }
 
-void TextEditorWidget::set_html_preview_enabled(bool enabled)
+void TextEditorWidget::set_preview_mode(PreviewMode mode)
 {
-    if (m_html_preview_enabled == enabled)
+    if (m_preview_mode == mode)
         return;
-    m_html_preview_enabled = enabled;
-    m_html_preview_action->set_checked(enabled);
-    m_page_view->set_visible(enabled);
-    if (enabled)
+    m_preview_mode = mode;
+
+    if (m_preview_mode == PreviewMode::HTML) {
+        m_html_preview_action->set_checked(true);
+        m_page_view->set_visible(true);
         update_html_preview();
+    } else if (m_preview_mode == PreviewMode::Markdown) {
+        m_markdown_preview_action->set_checked(true);
+        m_page_view->set_visible(true);
+        update_markdown_preview();
+    } else {
+        m_no_preview_action->set_checked(true);
+        m_page_view->set_visible(false);
+    }
 }
 
-void TextEditorWidget::set_markdown_preview_enabled(bool enabled)
+void TextEditorWidget::update_preview()
 {
-    if (m_markdown_preview_enabled == enabled)
-        return;
-    m_markdown_preview_enabled = enabled;
-    m_markdown_preview_action->set_checked(enabled);
-    m_page_view->set_visible(enabled);
-    if (enabled)
+    switch (m_preview_mode) {
+    case PreviewMode::Markdown:
         update_markdown_preview();
+        break;
+    case PreviewMode::HTML:
+        update_html_preview();
+        break;
+    default:
+        break;
+    }
 }
 
 void TextEditorWidget::update_markdown_preview()

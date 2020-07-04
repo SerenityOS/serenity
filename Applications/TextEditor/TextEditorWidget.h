@@ -44,13 +44,19 @@ public:
 
     GUI::TextEditor& editor() { return *m_editor; }
 
-    void set_markdown_preview_enabled(bool);
-    void set_html_preview_enabled(bool);
+    enum class PreviewMode {
+        None,
+        Markdown,
+        HTML,
+    };
+
+    void set_preview_mode(PreviewMode);
 
 private:
     TextEditorWidget();
     void set_path(const LexicalPath& file);
     void update_title();
+    void update_preview();
     void update_markdown_preview();
     void update_html_preview();
 
@@ -74,6 +80,7 @@ private:
     RefPtr<GUI::Action> m_replace_all_action;
 
     GUI::ActionGroup m_preview_actions;
+    RefPtr<GUI::Action> m_no_preview_action;
     RefPtr<GUI::Action> m_markdown_preview_action;
     RefPtr<GUI::Action> m_html_preview_action;
 
@@ -100,6 +107,6 @@ private:
 
     bool m_document_dirty { false };
     bool m_document_opening { false };
-    bool m_markdown_preview_enabled { false };
-    bool m_html_preview_enabled { false };
+
+    PreviewMode m_preview_mode { PreviewMode::None };
 };
