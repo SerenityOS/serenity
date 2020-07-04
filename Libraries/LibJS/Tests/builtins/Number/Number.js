@@ -1,39 +1,33 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Number).toHaveLength(1);
+    expect(Number.name).toBe("Number");
+    expect(Number.prototype).not.toHaveProperty("length");
 
-try {
-    assert(Number.length === 1);
-    assert(Number.name === "Number");
-    assert(Number.prototype.length === undefined);
+    expect(typeof Number()).toBe("number");
+    expect(typeof new Number()).toBe("object");
 
-    assert(typeof Number() === "number");
-    assert(typeof new Number() === "object");
-
-    assert(Number() === 0);
-    assert(new Number().valueOf() === 0);
-    assert(Number("42") === 42);
-    assert(new Number("42").valueOf() === 42);
-    assert(Number(null) === 0);
-    assert(new Number(null).valueOf() === 0);
-    assert(Number(true) === 1);
-    assert(new Number(true).valueOf() === 1);
-    assert(Number("Infinity") === Infinity);
-    assert(new Number("Infinity").valueOf() === Infinity);
-    assert(Number("+Infinity") === Infinity);
-    assert(new Number("+Infinity").valueOf() === Infinity);
-    assert(Number("-Infinity") === -Infinity);
-    assert(new Number("-Infinity").valueOf() === -Infinity);
-    assert(isNaN(Number(undefined)));
-    assert(isNaN(new Number(undefined).valueOf()));
-    assert(isNaN(Number({})));
-    assert(isNaN(new Number({}).valueOf()));
-    assert(isNaN(Number({a: 1})));
-    assert(isNaN(new Number({a: 1}).valueOf()));
-    assert(isNaN(Number([1, 2, 3])));
-    assert(isNaN(new Number([1, 2, 3]).valueOf()));
-    assert(isNaN(Number("foo")));
-    assert(isNaN(new Number("foo").valueOf()));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e.message);
-}
+    expect(Number()).toBe(0);
+    expect(new Number().valueOf()).toBe(0);
+    expect(Number("42")).toBe(42);
+    expect(new Number("42").valueOf()).toBe(42);
+    expect(Number(null)).toBe(0);
+    expect(new Number(null).valueOf()).toBe(0);
+    expect(Number(true)).toBe(1);
+    expect(new Number(true).valueOf()).toBe(1);
+    expect(Number("Infinity")).toBe(Infinity);
+    expect(new Number("Infinity").valueOf()).toBe(Infinity);
+    expect(Number("+Infinity")).toBe(Infinity);
+    expect(new Number("+Infinity").valueOf()).toBe(Infinity);
+    expect(Number("-Infinity")).toBe(-Infinity);
+    expect(new Number("-Infinity").valueOf()).toBe(-Infinity);
+    expect(Number(undefined)).toBeNaN();
+    expect(new Number(undefined).valueOf()).toBeNaN();
+    expect(Number({})).toBeNaN();
+    expect(new Number({}).valueOf()).toBeNaN();
+    expect(Number({a: 1})).toBeNaN();
+    expect(new Number({a: 1}).valueOf()).toBeNaN();
+    expect(Number([1, 2, 3])).toBeNaN();
+    expect(new Number([1, 2, 3]).valueOf()).toBeNaN();
+    expect(Number("foo")).toBeNaN();
+    expect(new Number("foo").valueOf()).toBeNaN();
+});

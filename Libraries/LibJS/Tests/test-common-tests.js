@@ -27,6 +27,26 @@ test("toBe", () => {
     expect(1n).not.toBe(1);
 });
 
+test("toBeCloseTo", () => {
+    expect(1).toBeCloseTo(1);
+    expect(1).not.toBeCloseTo(1.1);
+    expect(1).not.toBeCloseTo(1.01);
+    expect(1).not.toBeCloseTo(1.001);
+    expect(1).not.toBeCloseTo(1.0001);
+    expect(1).not.toBeCloseTo(1.00001);
+    expect(1).toBeCloseTo(1.000001);
+
+    [
+        ["foo", 1],
+        [1, "foo"],
+        [1n, 1],
+    ].forEach(arr => {
+        expect(() => {
+            expect(arr[0]).toBeCloseTo(arr[1]);
+        }).toThrow(ExpectationError);
+    });
+});
+
 test("toHaveLength", () => {
     expect([]).toHaveLength(0);
     expect([]).not.toHaveLength(1);
@@ -114,6 +134,94 @@ test("toBeFalse", () => {
     expect(null).not.toBeFalse();
     expect(undefined).not.toBeFalse();
     expect(0).not.toBeFalse();
+});
+
+test("toBeLessThan", () => {
+    expect(0).toBeLessThan(1);
+    expect(0).toBeLessThan(0.1);
+    expect(1).not.toBeLessThan(1);
+    expect(1).not.toBeLessThan(0);
+
+    expect(0n).toBeLessThan(1n);
+    expect(1n).not.toBeLessThan(1n);
+    expect(1n).not.toBeLessThan(0n);
+
+    [
+        ["foo", 0],
+        [0, "foo"],
+        [0, 0n],
+        [0n, 0],
+    ].forEach(arr => {
+        expect(() => {
+            expect(arr[0]).toBeLessThan(arr[1]);
+        }).toThrow(ExpectationError);
+    });
+});
+
+test("toBeLessThanOrEqual", () => {
+    expect(0).toBeLessThanOrEqual(1);
+    expect(0).toBeLessThanOrEqual(0.1);
+    expect(1).toBeLessThanOrEqual(1);
+    expect(1).not.toBeLessThanOrEqual(0);
+
+    expect(0n).toBeLessThanOrEqual(1n);
+    expect(1n).toBeLessThanOrEqual(1n);
+    expect(1n).not.toBeLessThanOrEqual(0n);
+
+    [
+        ["foo", 0],
+        [0, "foo"],
+        [0, 0n],
+        [0n, 0],
+    ].forEach(arr => {
+        expect(() => {
+            expect(arr[0]).toBeLessThanOrEqual(arr[1]);
+        }).toThrow(ExpectationError);
+    });
+});
+
+test("toBeGreaterThan", () => {
+    expect(1).toBeGreaterThan(0);
+    expect(0.1).toBeGreaterThan(0);
+    expect(1).not.toBeGreaterThan(1);
+    expect(0).not.toBeGreaterThan(1);
+
+    expect(1n).toBeGreaterThan(0n);
+    expect(1n).not.toBeGreaterThan(1n);
+    expect(0n).not.toBeGreaterThan(1n);
+
+    [
+        ["foo", 0],
+        [0, "foo"],
+        [0, 0n],
+        [0n, 0],
+    ].forEach(arr => {
+        expect(() => {
+            expect(arr[0]).toBeGreaterThan(arr[1]);
+        }).toThrow(ExpectationError);
+    });
+});
+
+test("toBeGreaterThanOrEqual", () => {
+    expect(1).toBeGreaterThanOrEqual(0);
+    expect(0.1).toBeGreaterThanOrEqual(0);
+    expect(1).toBeGreaterThanOrEqual(1);
+    expect(0).not.toBeGreaterThanOrEqual(1);
+
+    expect(1n).toBeGreaterThanOrEqual(0n);
+    expect(1n).toBeGreaterThanOrEqual(1n);
+    expect(0n).not.toBeGreaterThanOrEqual(1n);
+
+    [
+        ["foo", 0],
+        [0, "foo"],
+        [0, 0n],
+        [0n, 0],
+    ].forEach(arr => {
+        expect(() => {
+            expect(arr[0]).toBeGreaterThanOrEqual(arr[1]);
+        }).toThrow(ExpectationError);
+    });
 });
 
 test("toContain", () => {

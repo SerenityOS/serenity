@@ -1,7 +1,5 @@
-load("test-common.js");
-
-try {
-    const NUMBER_TEST_CASES = [
+test("parsing numbers", () => {
+    [
         [0, 0],
         [1, 1],
         [.23, 0.23],
@@ -9,17 +7,15 @@ try {
         [0.0123E+2, 1.23],
         [1.23e4, 12300],
         [Infinity, Infinity]
-    ];
-
-    NUMBER_TEST_CASES.forEach(test => {
-        const value = test[0];
-        const result = test[1];
-        assert(parseFloat(value) === result);
-        assert(parseFloat(+value) === result);
-        assert(parseFloat(-value) === -result);
+    ].forEach(test => {
+        expect(parseFloat(test[0])).toBe(test[1]);
+        expect(parseFloat(+test[0])).toBe(test[1]);
+        expect(parseFloat(-test[0])).toBe(-test[1]);
     });
+});
 
-    const STRING_TEST_CASES = [
+test("parsing strings", () => {
+    [
         ["0", 0],
         ["1", 1],
         [".23", 0.23],
@@ -27,23 +23,21 @@ try {
         ["0.0123E+2", 1.23],
         ["1.23e4", 12300],
         ["Infinity", Infinity]
-    ];
-
-    STRING_TEST_CASES.forEach(test => {
-        const value = test[0];
-        const result = test[1];
-        assert(parseFloat(value) === result);
-        assert(parseFloat(`+${value}`) === result);
-        assert(parseFloat(`-${value}`) === -result);
-        assert(parseFloat(`${value}foo`) === result);
-        assert(parseFloat(`+${value}foo`) === result);
-        assert(parseFloat(`-${value}foo`) === -result);
-        assert(parseFloat(`   \n  \t ${value} \v  foo   `) === result);
-        assert(parseFloat(`   \r -${value} \f \n\n  foo   `) === -result);
-        assert(parseFloat({ toString: () => value }) === result);
+    ].forEach(test => {
+        expect(parseFloat(test[0])).toBe(test[1]);
+        expect(parseFloat(`+${test[0]}`)).toBe(test[1]);
+        expect(parseFloat(`-${test[0]}`)).toBe(-test[1]);
+        expect(parseFloat(`${test[0]}foo`)).toBe(test[1]);
+        expect(parseFloat(`+${test[0]}foo`)).toBe(test[1]);
+        expect(parseFloat(`-${test[0]}foo`)).toBe(-test[1]);
+        expect(parseFloat(`   \n  \t ${test[0]} \v  foo   `)).toBe(test[1]);
+        expect(parseFloat(`   \r -${test[0]} \f \n\n  foo   `)).toBe(-test[1]);
+        expect(parseFloat({ toString: () => test[0] })).toBe(test[1]);
     });
+});
 
-    const NAN_TEST_CASES = [
+test("parsing NaN", () => {
+    [
         "",
         [],
         [],
@@ -56,16 +50,10 @@ try {
         "foo+123",
         "fooInfinity",
         "foo+Infinity"
-    ];
-
-    assert(isNaN(parseFloat()));
-    assert(isNaN(parseFloat("", 123, Infinity)));
-
-    NAN_TEST_CASES.forEach(value => {
-        assert(isNaN(parseFloat(value)));
+    ].forEach(value => {
+        expect(parseFloat(value)).toBeNaN();
     });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e)
-}
+    expect(parseFloat()).toBeNaN();
+    expect(parseFloat("", 123, Infinity)).toBeNaN();
+});

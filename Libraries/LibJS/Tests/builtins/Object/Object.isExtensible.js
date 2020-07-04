@@ -1,22 +1,18 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Object.isExtensible).toHaveLength(1);
 
-try {
-    assert(Object.isExtensible() === false);
-    assert(Object.isExtensible(undefined) === false);
-    assert(Object.isExtensible(null) === false);
-    assert(Object.isExtensible(true) === false);
-    assert(Object.isExtensible(6) === false);
-    assert(Object.isExtensible("test") === false);
+    expect(Object.isExtensible()).toBeFalse();
+    expect(Object.isExtensible(undefined)).toBeFalse();
+    expect(Object.isExtensible(null)).toBeFalse();
+    expect(Object.isExtensible(true)).toBeFalse();
+    expect(Object.isExtensible(6)).toBeFalse();
+    expect(Object.isExtensible("test")).toBeFalse();
 
     let s = Symbol();
-    assert(Object.isExtensible(s) === false);
+    expect(Object.isExtensible(s)).toBeFalse();
 
     let o = { foo: "foo" };
-    assert(Object.isExtensible(o) === true);
+    expect(Object.isExtensible(o)).toBeTrue();
     Object.preventExtensions(o);
-    assert(Object.isExtensible(o) === false);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Object.isExtensible(o)).toBeFalse();
+});

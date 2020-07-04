@@ -1,18 +1,14 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Math.tan).toHaveLength(1);
 
-try {
-    assert(Math.tan(0) === 0);
-    assert(Math.tan(null) === 0);
-    assert(Math.tan('') === 0);
-    assert(Math.tan([]) === 0);
-    assert(Math.ceil(Math.tan(Math.PI / 4)) === 1);
-    assert(isNaN(Math.tan()));
-    assert(isNaN(Math.tan(undefined)));
-    assert(isNaN(Math.tan([1, 2, 3])));
-    assert(isNaN(Math.tan({})));
-    assert(isNaN(Math.tan("foo")));
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(Math.tan(0)).toBe(0);
+    expect(Math.tan(null)).toBe(0);
+    expect(Math.tan('')).toBe(0);
+    expect(Math.tan([])).toBe(0);
+    expect(Math.ceil(Math.tan(Math.PI / 4))).toBe(1);
+    expect(Math.tan()).toBeNaN();
+    expect(Math.tan(undefined)).toBeNaN();
+    expect(Math.tan([1, 2, 3])).toBeNaN();
+    expect(Math.tan({})).toBeNaN();
+    expect(Math.tan("foo")).toBeNaN();
+});

@@ -1,11 +1,7 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var d = new Date();
-    assert(!isNaN(d.getDay()));
-    assert(0 <= d.getDay() <= 6);
-    assert(d.getDay() === d.getDay());
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(d.getDay()).toBe(d.getDay());
+    expect(d.getDay()).not.toBeNaN();
+    expect(d.getDay()).toBeGreaterThanOrEqual(0);
+    expect(d.getDay()).toBeLessThanOrEqual(6);
+});

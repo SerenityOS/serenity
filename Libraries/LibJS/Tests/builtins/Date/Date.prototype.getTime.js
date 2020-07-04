@@ -1,11 +1,6 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     var d = new Date();
-    assert(!isNaN(d.getTime()));
-    assert(d.getTime() > 1580000000000);
-    assert(d.getTime() === d.getTime());
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(d.getTime()).toBe(d.getTime());
+    expect(d.getTime()).not.toBeNaN();
+    expect(d.getTime()).toBeGreaterThanOrEqual(1580000000000);
+});

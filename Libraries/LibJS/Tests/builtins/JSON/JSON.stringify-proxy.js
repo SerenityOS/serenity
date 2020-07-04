@@ -1,6 +1,4 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
     let p = new Proxy([], {
         get(_, key) {
             if (key === "length")
@@ -9,10 +7,6 @@ try {
         },
     });
 
-    assert(JSON.stringify(p) === "[0,1,2]");
-    assert(JSON.stringify([[new Proxy(p, {})]]) === "[[[0,1,2]]]");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(JSON.stringify(p)).toBe("[0,1,2]");
+    expect(JSON.stringify([[new Proxy(p, {})]])).toBe("[[[0,1,2]]]");
+});

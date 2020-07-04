@@ -1,56 +1,58 @@
-load("test-common.js");
+test("trim", () => {
+    expect(String.prototype.trim).toHaveLength(0);
 
-try {
-    assert(String.prototype.trim.length === 0);
-    assert(String.prototype.trimStart.length === 0);
-    assert(String.prototype.trimEnd.length === 0);
-    assert("   hello friends  ".trim() === "hello friends");
-    assert("hello friends   ".trim() === "hello friends");
-    assert("   hello friends".trim() === "hello friends");
-    assert("   hello friends".trimStart() === "hello friends");
-    assert("hello friends   ".trimEnd() === "hello friends");
-    assert("   hello friends".trimEnd() === "   hello friends");
-    assert("hello friends   ".trimStart() === "hello friends   ");
-    assert("   hello friends   ".trimEnd() === "   hello friends");
-    assert("    hello friends   ".trimStart() === "hello friends   ");
+    expect("   hello friends  ".trim()).toBe("hello friends");
+    expect("hello friends   ".trim()).toBe("hello friends");
+    expect("   hello friends".trim()).toBe("hello friends");
 
-    assert("\thello friends".trimStart() === "hello friends");
-    assert("hello friends\t".trimStart() === "hello friends\t");
-    assert("\thello friends\t".trimStart() === "hello friends\t");
-    
-    assert("\rhello friends".trimStart() === "hello friends");
-    assert("hello friends\r".trimStart() === "hello friends\r");
-    assert("\rhello friends\r".trimStart() === "hello friends\r");
+    expect("\thello friends\t".trim()).toBe("hello friends");
+    expect("\thello friends".trim()).toBe("hello friends");
+    expect("hello friends\t".trim()).toBe("hello friends");
 
-    assert("hello friends\t".trimEnd() === "hello friends");
-    assert("\thello friends".trimEnd() === "\thello friends");
-    assert("\thello friends\t".trimEnd() === "\thello friends");
-    
-    assert("hello friends\r".trimEnd() === "hello friends");
-    assert("\rhello friends".trimEnd() === "\rhello friends");
-    assert("\rhello friends\r".trimEnd() === "\rhello friends");
-    
-    assert("hello friends\n".trimEnd() === "hello friends");
-    assert("\r\nhello friends".trimEnd() === "\r\nhello friends");
-    assert("\rhello friends\r\n".trimEnd() === "\rhello friends");
+    expect("\rhello friends\r".trim()).toBe("hello friends");
+    expect("\rhello friends".trim()).toBe("hello friends");
+    expect("hello friends\r".trim()).toBe("hello friends");
 
-    assert("\thello friends\t".trim() === "hello friends");
-    assert("\thello friends".trim() === "hello friends");
-    assert("hello friends\t".trim() === "hello friends");
-    
-    assert("\rhello friends\r".trim() === "hello friends");
-    assert("\rhello friends".trim() === "hello friends");
-    assert("hello friends\r".trim() === "hello friends");
-    
-    assert("\rhello friends\n".trim() === "hello friends");
-    assert("\r\thello friends".trim() === "hello friends");
-    assert("hello friends\r\n".trim() === "hello friends");
-    assert("  \thello friends\r\n".trim() === "hello friends");
-    assert("\n\t\thello friends\r\n".trim() === "hello friends");
-    assert("\n\t\thello friends\t\t".trim() === "hello friends");
+    expect("\rhello friends\n".trim()).toBe("hello friends");
+    expect("\r\thello friends".trim()).toBe("hello friends");
+    expect("hello friends\r\n".trim()).toBe("hello friends");
+    expect("  \thello friends\r\n".trim()).toBe("hello friends");
+    expect("\n\t\thello friends\r\n".trim()).toBe("hello friends");
+    expect("\n\t\thello friends\t\t".trim()).toBe("hello friends");
+});
 
+test("trimStart", () => {
+    expect(String.prototype.trimStart).toHaveLength(0);
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect("   hello friends".trimStart()).toBe("hello friends");
+    expect("hello friends   ".trimStart()).toBe("hello friends   ");
+    expect("    hello friends   ".trimStart()).toBe("hello friends   ");
+
+    expect("\thello friends".trimStart()).toBe("hello friends");
+    expect("hello friends\t".trimStart()).toBe("hello friends\t");
+    expect("\thello friends\t".trimStart()).toBe("hello friends\t");
+
+    expect("\rhello friends".trimStart()).toBe("hello friends");
+    expect("hello friends\r".trimStart()).toBe("hello friends\r");
+    expect("\rhello friends\r".trimStart()).toBe("hello friends\r");
+});
+
+test("trimEnd", () => {
+    expect(String.prototype.trimEnd).toHaveLength(0);
+
+    expect("hello friends   ".trimEnd()).toBe("hello friends");
+    expect("   hello friends".trimEnd()).toBe("   hello friends");
+    expect("   hello friends   ".trimEnd()).toBe("   hello friends");
+
+    expect("hello friends\t".trimEnd()).toBe("hello friends");
+    expect("\thello friends".trimEnd()).toBe("\thello friends");
+    expect("\thello friends\t".trimEnd()).toBe("\thello friends");
+
+    expect("hello friends\r".trimEnd()).toBe("hello friends");
+    expect("\rhello friends".trimEnd()).toBe("\rhello friends");
+    expect("\rhello friends\r".trimEnd()).toBe("\rhello friends");
+
+    expect("hello friends\n".trimEnd()).toBe("hello friends");
+    expect("\r\nhello friends".trimEnd()).toBe("\r\nhello friends");
+    expect("\rhello friends\r\n".trimEnd()).toBe("\rhello friends");
+});

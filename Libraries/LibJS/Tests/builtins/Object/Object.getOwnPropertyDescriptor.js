@@ -1,51 +1,49 @@
-load("test-common.js");
+test("plain property", () => {
+    let o = { foo: "bar" };
 
-try {
-    let o = {
-        foo: "bar",
-        get x() { },
-        set ["hi" + 1](_) { },
-    };
+    expect(o).toHaveConfigurableProperty("foo");
+    expect(o).toHaveEnumerableProperty("foo");
+    expect(o).toHaveWritableProperty("foo");
+    expect(o).toHaveValueProperty("foo", "bar");
+    expect(o).not.toHaveGetterProperty("foo");
+    expect(o).not.toHaveSetterProperty("foo");
+});
 
-    Object.defineProperty(o, "baz", {
+test("getter property", () => {
+    let o = { get foo() {} };
+
+    expect(o).toHaveConfigurableProperty("foo");
+    expect(o).toHaveEnumerableProperty("foo");
+    expect(o).not.toHaveWritableProperty("foo");
+    expect(o).not.toHaveValueProperty("foo");
+    expect(o).toHaveGetterProperty("foo");
+    expect(o).not.toHaveSetterProperty("foo");
+});
+
+test("setter property", () => {
+    let o = { set foo(_) {} };
+
+    expect(o).toHaveConfigurableProperty("foo");
+    expect(o).toHaveEnumerableProperty("foo");
+    expect(o).not.toHaveWritableProperty("foo");
+    expect(o).not.toHaveValueProperty("foo");
+    expect(o).not.toHaveGetterProperty("foo");
+    expect(o).toHaveSetterProperty("foo");
+});
+
+test("defined property", () => {
+    let o = {};
+
+    Object.defineProperty(o, "foo", {
         enumerable: false,
         writable: true,
         value: 10,
     });
 
-    let d = Object.getOwnPropertyDescriptor(o, "foo");
-    assert(d.enumerable === true);
-    assert(d.configurable === true);
-    assert(d.writable === true);
-    assert(d.value === "bar");
-    assert(d.get === undefined);
-    assert(d.set === undefined);
-
-    let d = Object.getOwnPropertyDescriptor(o, "x");
-    assert(d.enumerable === true);
-    assert(d.configurable === true);
-    assert(d.writable === undefined);
-    assert(d.value === undefined);
-    assert(typeof d.get === "function");
-    assert(d.set === undefined);
-
-    let d = Object.getOwnPropertyDescriptor(o, "hi1");
-    assert(d.enumerable === true);
-    assert(d.configurable === true);
-    assert(d.writable === undefined);
-    assert(d.value === undefined);
-    assert(d.get === undefined);
-    assert(typeof d.set === "function");
-
-    let d = Object.getOwnPropertyDescriptor(o, "baz");
-    assert(d.enumerable === false);
-    assert(d.configurable === false);
-    assert(d.writable === true);
-    assert(d.value === 10);
-    assert(d.get === undefined);
-    assert(d.set === undefined);
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(o).not.toHaveConfigurableProperty("foo");
+    expect(o).not.toHaveEnumerableProperty("foo");
+    expect(o).toHaveWritableProperty("foo");
+    expect(o).toHaveValueProperty("foo", 10);
+    expect(o).not.toHaveGetterProperty("foo");
+    expect(o).not.toHaveSetterProperty("foo");
+});

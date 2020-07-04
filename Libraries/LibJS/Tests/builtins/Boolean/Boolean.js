@@ -1,40 +1,32 @@
-load("test-common.js");
+test("constructor properties", () => {
+    expect(Boolean).toHaveLength(1);
+    expect(Boolean.name).toBe("Boolean");
+});
 
-try {
-    assert(Boolean.length === 1);
-    assert(Boolean.name === "Boolean");
-    assert(Boolean.prototype.length === undefined);
+test("typeof", () => {
+    expect(typeof new Boolean()).toBe("object");
+    expect(typeof Boolean()).toBe("boolean");
+    expect(typeof Boolean(true)).toBe("boolean");
+})
 
-    assert(typeof new Boolean() === "object");
-    assert(new Boolean().valueOf() === false);
-
+test("basic functionality", () => {
     var foo = new Boolean(true);
     var bar = new Boolean(true);
 
-    assert(foo !== bar);
-    assert(foo.valueOf() === bar.valueOf());
+    expect(foo).not.toBe(bar);
+    expect(foo.valueOf()).toBe(bar.valueOf());
 
-    assert(new Boolean(true).toString() === "true");
-    assert(new Boolean(false).toString() === "false");
-
-    assert(typeof Boolean() === "boolean");
-    assert(typeof Boolean(true) === "boolean");
-
-    assert(Boolean() === false);
-    assert(Boolean(false) === false);
-    assert(Boolean(null) === false);
-    assert(Boolean(undefined) === false);
-    assert(Boolean(NaN) === false);
-    assert(Boolean("") === false);
-    assert(Boolean(0.0) === false);
-    assert(Boolean(-0.0) === false);
-    assert(Boolean(true) === true);
-    assert(Boolean("0") === true);
-    assert(Boolean({}) === true);
-    assert(Boolean([]) === true);
-    assert(Boolean(1)) === true;
-
-    console.log("PASS");
-} catch (err) {
-    console.log("FAIL: " + err);
-}
+    expect(Boolean()).toBeFalse();
+    expect(Boolean(false)).toBeFalse();
+    expect(Boolean(null)).toBeFalse();
+    expect(Boolean(undefined)).toBeFalse();
+    expect(Boolean(NaN)).toBeFalse();
+    expect(Boolean("")).toBeFalse();
+    expect(Boolean(0.0)).toBeFalse();
+    expect(Boolean(-0.0)).toBeFalse();
+    expect(Boolean(true)).toBeTrue();
+    expect(Boolean("0")).toBeTrue();
+    expect(Boolean({})).toBeTrue();
+    expect(Boolean([])).toBeTrue();
+    expect(Boolean(1)).toBeTrue();
+});

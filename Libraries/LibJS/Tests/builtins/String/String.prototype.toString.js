@@ -1,11 +1,6 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype.toString).toHaveLength(0)
 
-try {
-    assert(String.prototype.toString.length === 0)
-    assert("".toString() === "");
-    assert("hello friends".toString() === "hello friends");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect("".toString()).toBe("");
+    expect("hello friends".toString()).toBe("hello friends");
+});

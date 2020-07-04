@@ -1,14 +1,8 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(Object).toHaveLength(1);
+    expect(Object.name).toBe("Object");
+    expect(Object.prototype.length).toBe(undefined);
 
-try {
-    assert(Object.length === 1);
-    assert(Object.name === "Object");
-    assert(Object.prototype.length === undefined);
-
-    assert(typeof Object() === "object");
-    assert(typeof new Object() === "object");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(typeof Object()).toBe("object");
+    expect(typeof new Object()).toBe("object");
+});

@@ -1,15 +1,9 @@
-load("test-common.js");
+test("basic functionality", () => {
+    expect(String.prototype.toLowerCase).toHaveLength(0);
 
-try {
-    assert(String.prototype.toLowerCase.length === 0);
+    expect("foo".toLowerCase()).toBe("foo");
+    expect("Foo".toLowerCase()).toBe("foo");
+    expect("FOO".toLowerCase()).toBe("foo");
 
-    assert("foo".toLowerCase() === "foo");
-    assert("Foo".toLowerCase() === "foo");
-    assert("FOO".toLowerCase() === "foo");
-
-    assert(('b' + 'a' + + 'a' + 'a').toLowerCase() === "banana");
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(('b' + 'a' + + 'a' + 'a').toLowerCase()).toBe("banana");
+});
