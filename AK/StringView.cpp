@@ -178,6 +178,11 @@ bool StringView::contains(char needle) const
     return false;
 }
 
+bool StringView::contains(const StringView& needle) const
+{
+    return memmem(m_characters, m_length, needle.m_characters, needle.m_length) != nullptr;
+}
+
 bool StringView::equals_ignoring_case(const StringView& other) const
 {
     return StringUtils::equals_ignoring_case(*this, other);
