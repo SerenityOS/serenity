@@ -25,6 +25,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -97,8 +98,13 @@ void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
         return;
     }
 
+    Vector<String> child_names;
     while (di.has_next()) {
-        String name = di.next_path();
+        child_names.append(di.next_path());
+    }
+    quick_sort(child_names);
+
+    for (auto& name : child_names) {
         String child_path = String::format("%s/%s", full_path.characters(), name.characters());
         NonnullOwnPtr<Node> child = make<Node>();
         bool ok = child->fetch_data(child_path, false);
