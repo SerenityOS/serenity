@@ -39,6 +39,7 @@
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
+#include <LibELF/AuxiliaryVector.h>
 
 namespace Kernel {
 
@@ -127,7 +128,7 @@ public:
 
     class Blocker {
     public:
-        virtual ~Blocker() {}
+        virtual ~Blocker() { }
         virtual bool should_unblock(Thread&, time_t now_s, long us) = 0;
         virtual const char* state_string() const = 0;
         virtual bool is_reason_signal() const { return false; }
@@ -371,7 +372,7 @@ public:
 
     ShouldUnblockThread dispatch_one_pending_signal();
     ShouldUnblockThread dispatch_signal(u8 signal);
-    bool has_unmasked_pending_signals() const {  return m_pending_signals & ~m_signal_mask; }
+    bool has_unmasked_pending_signals() const { return m_pending_signals & ~m_signal_mask; }
     void terminate_due_to_signal(u8 signal);
     bool should_ignore_signal(u8 signal) const;
     bool has_signal_handler(u8 signal) const;
@@ -382,7 +383,7 @@ public:
     void set_default_signal_dispositions();
     void push_value_on_stack(FlatPtr);
 
-    u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
+    u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue>);
 
     void make_thread_specific_region(Badge<Process>);
 
@@ -536,7 +537,7 @@ private:
 
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
-    bool m_initialized {false};
+    bool m_initialized { false };
 
     OwnPtr<ThreadTracer> m_tracer;
 

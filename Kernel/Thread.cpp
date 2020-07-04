@@ -185,18 +185,18 @@ void Thread::die_if_needed()
 
     ScopedCritical critical;
     set_state(Thread::State::Dying);
-    
+
     // Flag a context switch. Because we're in a critical section,
     // Scheduler::yield will actually only mark a pending scontext switch
     // Simply leaving the critical section would not necessarily trigger
     // a switch.
     Scheduler::yield();
-    
+
     // Now leave the critical section so that we can also trigger the
     // actual context switch
     u32 prev_flags;
     Processor::current().clear_critical(prev_flags, false);
-dbg() << "die_if_needed returned form clear_critical!!! in irq: " << Processor::current().in_irq();
+    dbg() << "die_if_needed returned form clear_critical!!! in irq: " << Processor::current().in_irq();
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
     ASSERT_NOT_REACHED();
@@ -640,7 +640,7 @@ RegisterState& Thread::get_register_dump_from_stack()
     return *(RegisterState*)(kernel_stack_top() - sizeof(RegisterState));
 }
 
-u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
+u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue> auxv)
 {
     auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
     ASSERT(region);
@@ -654,7 +654,8 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     int argc = arguments.size();
     char** argv = (char**)stack_base;
     char** env = argv + arguments.size() + 1;
-    char* bufptr = stack_base + (sizeof(char*) * (arguments.size() + 1)) + (sizeof(char*) * (environment.size() + 1));
+    auxv_t* auxvp = (auxv_t*)((char*)(env + environment.size() + 1));
+    char* bufptr = stack_base + (sizeof(char*) * (arguments.size() + 1)) + (sizeof(char*) * (environment.size() + 1) + (sizeof(auxv_t) * auxv.size()));
 
     SmapDisabler disabler;
 
@@ -674,6 +675,17 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     }
     env[environment.size()] = nullptr;
 
+    for (size_t i = 0; i < auxv.size(); ++i) {
+        *auxvp = auxv[i].auxv;
+        if (!auxv[i].optional_string.is_empty()) {
+            auxvp->a_un.a_ptr = bufptr;
+            memcpy(bufptr, auxv[i].optional_string.characters(), auxv[i].optional_string.length());
+            bufptr += auxv[i].optional_string.length();
+            *(bufptr++) = '\0';
+        }
+        ++auxvp;
+    }
+
     auto push_on_new_stack = [&new_esp](u32 value) {
         new_esp -= 4;
         u32* stack_ptr = (u32*)new_esp;
@@ -685,6 +697,9 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     push_on_new_stack((FlatPtr)argv);
     push_on_new_stack((FlatPtr)argc);
     push_on_new_stack(0);
+
+    ASSERT((FlatPtr)new_esp % 16 == 0);
+
     return new_esp;
 }
 
@@ -802,7 +817,7 @@ String Thread::backtrace_impl()
                 if (!process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2))
                     break;
                 FlatPtr retaddr;
- 
+
                 if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
                     copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]);
                     recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
@@ -890,7 +905,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
             set_state(State::Queued);
             m_wait_reason = reason;
 
-    
             if (timeout) {
                 timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
                     ScopedSpinLock sched_lock(g_scheduler_lock);
@@ -928,9 +942,9 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // To be able to look at m_wait_queue_node we once again need the
         // scheduler lock, which is held when we insert into the queue
         ScopedSpinLock sched_lock(g_scheduler_lock);
-    
+
         result = m_wait_queue_node.is_in_list() ? BlockResult::InterruptedByTimeout : BlockResult::WokeNormally;
-    
+
         // Make sure we cancel the timer if woke normally.
         if (timeout && result == BlockResult::WokeNormally)
             TimerQueue::the().cancel_timer(timer_id);
