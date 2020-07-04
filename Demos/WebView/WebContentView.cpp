@@ -48,8 +48,13 @@ void WebContentView::load(const URL& url)
 
 void WebContentView::paint_event(GUI::PaintEvent& event)
 {
+    GUI::Frame::paint_event(event);
+
     GUI::Painter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
+    painter.translate(frame_thickness(), frame_thickness());
+
     ASSERT(m_bitmap);
     painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
 }
