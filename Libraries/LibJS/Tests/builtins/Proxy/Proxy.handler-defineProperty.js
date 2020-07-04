@@ -1,107 +1,112 @@
-load("test-common.js");
-
-try {
-    let p = new Proxy({}, { defineProperty: null });
-    assert(Object.defineProperty(p, "foo", {}) === p);
-    p = new Proxy({}, { defineProperty: undefined });
-    assert(Object.defineProperty(p, "foo", {}) === p);
-    p = new Proxy({}, {});
-    assert(Object.defineProperty(p, "foo", {}) == p);
-
-    let o = {};
-    p = new Proxy(o, {
-        defineProperty(target, name, descriptor) {
-            assert(target === o);
-            assert(name === "foo");
-            assert(descriptor.configurable === true);
-            assert(descriptor.enumerable === undefined);
-            assert(descriptor.writable === true);
-            assert(descriptor.value === 10);
-            assert(descriptor.get === undefined);
-            assert(descriptor.set === undefined);
-            return true;
-        },
+describe("[[DefineProperty]] trap normal behavior", () => {
+    test("forwarding when not defined in handler", () => {
+        let p = new Proxy({}, { defineProperty: null });
+        expect(Object.defineProperty(p, "foo", {})).toBe(p);
+        p = new Proxy({}, { defineProperty: undefined });
+        expect(Object.defineProperty(p, "foo", {})).toBe(p);
+        p = new Proxy({}, {});
+        expect(Object.defineProperty(p, "foo", {})).toBe(p);
     });
 
-    Object.defineProperty(p, "foo", { configurable: true, writable: true, value: 10 });
+    test("correct arguments passed to trap", () => {
+        let o = {};
+        p = new Proxy(o, {
+            defineProperty(target, name, descriptor) {
+                expect(target).toBe(o);
+                expect(name).toBe("foo");
+                expect(descriptor.configurable).toBe(true);
+                expect(descriptor.enumerable).toBeUndefined();
+                expect(descriptor.writable).toBe(true);
+                expect(descriptor.value).toBe(10);
+                expect(descriptor.get).toBeUndefined();
+                expect(descriptor.set).toBeUndefined();
+                return true;
+            },
+        });
 
-    p = new Proxy(o, {
-        defineProperty(target, name, descriptor) {
-            if (target[name] === undefined)
-                Object.defineProperty(target, name, descriptor);
-            return true;
-        },
+        Object.defineProperty(p, "foo", { configurable: true, writable: true, value: 10 });
     });
 
-    Object.defineProperty(p, "foo", { value: 10, enumerable: true, configurable: false, writable: true });
-    let d = Object.getOwnPropertyDescriptor(p, "foo");
-    assert(d.enumerable === true);
-    assert(d.configurable === false);
-    assert(d.writable === true);
-    assert(d.value === 10);
-    assert(d.get === undefined);
-    assert(d.set === undefined);
+    test("optionally ignoring the define call", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            defineProperty(target, name, descriptor) {
+                if (target[name] === undefined)
+                    Object.defineProperty(target, name, descriptor);
+                return true;
+            },
+        });
 
-    Object.defineProperty(p, "foo", { value: 20, enumerable: true, configurable: false, writable: true });
-    d = Object.getOwnPropertyDescriptor(p, "foo");
-    assert(d.enumerable === true);
-    assert(d.configurable === false);
-    assert(d.writable === true);
-    assert(d.value === 10);
-    assert(d.get === undefined);
-    assert(d.set === undefined);
+        Object.defineProperty(p, "foo", { value: 10, enumerable: true, configurable: false, writable: true });
+        let d = Object.getOwnPropertyDescriptor(p, "foo");
+        expect(d.enumerable).toBe(true);
+        expect(d.configurable).toBe(false);
+        expect(d.writable).toBe(true);
+        expect(d.value).toBe(10);
+        expect(d.get).toBeUndefined();
+        expect(d.set).toBeUndefined();
 
+        Object.defineProperty(p, "foo", { value: 20, enumerable: true, configurable: false, writable: true });
+        d = Object.getOwnPropertyDescriptor(p, "foo");
+        expect(d.enumerable).toBe(true);
+        expect(d.configurable).toBe(false);
+        expect(d.writable).toBe(true);
+        expect(d.value).toBe(10);
+        expect(d.get).toBeUndefined();
+        expect(d.set).toBeUndefined();
+    });
+});
 
-    // Invariants
+describe("[[DefineProperty]] invariants", () => {
+    test("trap can't return false", () => {
+        let p = new Proxy({}, {
+            defineProperty() { return false; }
+        });
 
-    p = new Proxy({}, {
-        defineProperty() { return false; }
+        expect(() => {
+            Object.defineProperty(p, "foo", {});
+        }).toThrowWithMessage(TypeError, "Object's [[DefineProperty]] method returned false");
     });
 
-    assertThrowsError(() => {
-        Object.defineProperty(p, "foo", {});
-    }, {
-        error: TypeError,
-        message: "Object's [[DefineProperty]] method returned false",
+    test("trap cannot return true for a non-extensible target if the property does not exist", () => {
+        let o = {};
+        Object.preventExtensions(o);
+        let p = new Proxy(o, {
+            defineProperty() {
+                return true;
+            }
+        });
+
+        expect(() => {
+            Object.defineProperty(p, "foo", {});
+        }).toThrowWithMessage(TypeError, "Proxy handler's defineProperty trap violates invariant: a property cannot be reported as being defined if the property does not exist on the target and the target is non-extensible");
     });
 
-    o = {};
-    Object.preventExtensions(o);
-    p = new Proxy(o, {
-        defineProperty() {
-            return true;
-        }
-    });
-    assertThrowsError(() => {
-        Object.defineProperty(p, "foo", {});
-    }, {
-        error: TypeError,
-        message: "Proxy handler's defineProperty trap violates invariant: a property cannot be reported as being defined if the property does not exist on the target and the target is non-extensible",
+    test("trap cannot return true for a non-configurable property if it doesn't already exist on the target", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: 10, configurable: true });
+        let p = new Proxy(o, {
+            defineProperty() {
+                return true;
+            },
+        });
+
+        expect(() => {
+            Object.defineProperty(p, "bar", { value: 6, configurable: false });
+        }).toThrowWithMessage(TypeError, "Proxy handler's defineProperty trap violates invariant: a property cannot be defined as non-configurable if it does not already exist on the target object");
     });
 
-    o = {};
-    Object.defineProperty(o, "foo", { value: 10, configurable: true });
-    p = new Proxy(o, {
-        defineProperty() {
-            return true;
-        },
-    });
+    test("trap cannot return true for a non-configurable property if it already exists as a configurable property", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: 10, configurable: true });
+        let p = new Proxy(o, {
+            defineProperty() {
+                return true;
+            },
+        });
 
-    assertThrowsError(() => {
-        Object.defineProperty(p, "bar", { value: 6, configurable: false });
-    }, {
-        error: TypeError,
-        message: "Proxy handler's defineProperty trap violates invariant: a property cannot be defined as non-configurable if it does not already exist on the target object",
-    });
-
-    assertThrowsError(() => {
-        Object.defineProperty(p, "foo", { value: 6, configurable: false });
-    }, {
-        error: TypeError,
-        message: "Proxy handler's defineProperty trap violates invariant: a property cannot be defined as non-configurable if it already exists on the target object as a configurable property",
-    });
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        expect(() => {
+            Object.defineProperty(p, "foo", { value: 6, configurable: false });
+        }).toThrowWithMessage(TypeError, "Proxy handler's defineProperty trap violates invariant: a property cannot be defined as non-configurable if it already exists on the target object as a configurable property");
+    })
+});

@@ -1,30 +1,31 @@
-load("test-common.js");
+test("constructs properly", () => {
+    expect(() => {
+        new Proxy({}, {});
+    }).not.toThrow();
+});
 
-try {
-    new Proxy({}, {});
-
-    assertThrowsError(() => {
+test("constructor argument count", () => {
+    expect(() => {
         new Proxy();
-    }, {
-        error: TypeError,
-        message: "Proxy constructor requires at least two arguments",
-    });
+    }).toThrowWithMessage(TypeError, "Proxy constructor requires at least two arguments");
 
-    assertThrowsError(() => {
-        Proxy();
-    }, {
-        error: TypeError,
-        message: "Proxy must be called with the 'new' operator",
-    });
+    expect(() => {
+        new Proxy({});
+    }).toThrowWithMessage(TypeError, "Proxy constructor requires at least two arguments");
+});
 
-    assertThrowsError(() => {
+test("constructor requires objects", () => {
+    expect(() => {
         new Proxy(1, {});
-    }, {
-        error: TypeError,
-        message: "Expected target argument of Proxy constructor to be object, got 1",
-    });
+    }).toThrowWithMessage(TypeError, "Expected target argument of Proxy constructor to be object, got 1");
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+    expect(() => {
+        new Proxy({}, 1);
+    }).toThrowWithMessage(TypeError, "Expected handler argument of Proxy constructor to be object, got 1");
+});
+
+test("constructor must be invoked with 'new'", () => {
+    expect(() => {
+        Proxy({}, {});
+    }).toThrowWithMessage(TypeError, "Proxy must be called with the 'new' operator");
+});

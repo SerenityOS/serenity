@@ -1,95 +1,94 @@
-load("test-common.js");
+describe("[[SetPrototypeOf]] trap normal behavior", () => {
+    test("forwarding when not defined in handler", () => {
+        const o = {};
+        const proto = { foo: "bar" };
+        Object.setPrototypeOf(o, proto);
 
-try {
-    const child = {};
-    const childProto = { foo: "bar" };
-
-    Object.setPrototypeOf(child, childProto);
-    assert(child.foo === "bar");
-
-    Object.setPrototypeOf(new Proxy(child, { setPrototypeOf: null }), childProto);
-    Object.setPrototypeOf(new Proxy(child, { setPrototypeOf: undefined }), childProto);
-
-    let o = {};
-    let theNewProto = { foo: "bar" };
-    let p = new Proxy(o, {
-        setPrototypeOf(target, newProto) {
-            assert(target === o);
-            assert(newProto === theNewProto);
-            return true;
-        }
+        let p = new Proxy(o, { setPrototypeOf: null });
+        expect(Object.setPrototypeOf(p, proto)).toBe(p);
+        let p = new Proxy(o, { setPrototypeOf: undefined });
+        expect(Object.setPrototypeOf(p, proto)).toBe(p);
+        let p = new Proxy(o, {});
+        expect(Object.setPrototypeOf(p, proto)).toBe(p);
     });
 
-    Object.setPrototypeOf(p, theNewProto);
+    test("correct arguments supplied to trap", () => {
+        let o = {};
+        let theNewProto = { foo: "bar" };
 
-    p = new Proxy(o, {
-        setPrototypeOf(target, newProto) {
-            if (target.shouldSet)
-                Object.setPrototypeOf(target, newProto);
-            return true;
-        },
+        let p = new Proxy(o, {
+            setPrototypeOf(target, newProto) {
+                expect(target).toBe(o);
+                expect(newProto).toBe(theNewProto);
+                return true;
+            }
+        });
+
+        Object.setPrototypeOf(p, theNewProto);
     });
 
-    Object.setPrototypeOf(p, { foo: 1 });
-    assert(Object.getPrototypeOf(p).foo === undefined);
-    p.shouldSet = true;
-    assert(o.shouldSet === true);
-    Object.setPrototypeOf(p, { foo: 1 });
-    assert(Object.getPrototypeOf(p).foo === 1);
+    test("conditional setting", () => {
+        let o = {};
 
-    // Invariants
+        let p = new Proxy(o, {
+            setPrototypeOf(target, newProto) {
+                if (target.shouldSet)
+                    Object.setPrototypeOf(target, newProto);
+                return true;
+            },
+        });
 
-    assertThrowsError(() => {
-        Object.setPrototypeOf(new Proxy(child, { setPrototypeOf: 1 }), {});
-    }, {
-        error: TypeError,
-        message: "Proxy handler's setPrototypeOf trap wasn't undefined, null, or callable",
+        Object.setPrototypeOf(p, { foo: 1 });
+        expect(Object.getPrototypeOf(p).foo).toBeUndefined();
+        p.shouldSet = true;
+        expect(o.shouldSet).toBe(true);
+        Object.setPrototypeOf(p, { foo: 1 });
+        expect(Object.getPrototypeOf(p).foo).toBe(1);
     });
 
-    p = new Proxy(child, {
-        setPrototypeOf(target, newProto) {
-            assert(target === child);
-            return false;
-        },
+    test("non-extensible targets", () => {
+        let o = {};
+        let proto = {};
+        Object.setPrototypeOf(o, proto);
+        Object.preventExtensions(o);
+
+        p = new Proxy(o, {
+            setPrototypeOf() {
+                return true;
+            },
+        });
+
+        expect(Object.setPrototypeOf(p, proto)).toBe(p);
+        expect(Object.getPrototypeOf(p)).toBe(proto);
+    });
+});
+
+describe("[[SetPrototypeOf]] invariants", () => {
+    test("cannot return false", () => {
+        let o = {};
+        p = new Proxy(o, {
+            setPrototypeOf() {
+                return false;
+            },
+        });
+
+        expect(() => {
+            Object.setPrototypeOf(p, {});
+        }).toThrowWithMessage(TypeError, "Object's [[SetPrototypeOf]] method returned false");
     });
 
-    assertThrowsError(() => {
-        Object.setPrototypeOf(p, {});
-    }, {
-        error: TypeError,
-        message: "Object's [[SetPrototypeOf]] method returned false",
+    test("the argument must match the target's prototype if the target is non-extensible", () => {
+        let o = {};
+        Object.preventExtensions(o);
+
+        let p = new Proxy(o, {
+            setPrototypeOf() {
+                return true;
+            }
+        });
+
+        expect(() => {
+            Object.setPrototypeOf(p, {});
+        }).toThrowWithMessage(TypeError, "Proxy handler's setPrototypeOf trap violates invariant: the argument must match the prototype of the target if the target is non-extensible");
     });
-    assert(Object.getPrototypeOf(p) === childProto);
-
-    p = new Proxy(child, {
-        setPrototypeOf(target, newProto) {
-            assert(target === child);
-            return true;
-        },
-    });
-
-    assert(Object.setPrototypeOf(p, {}) === p);
-    assert(Object.getPrototypeOf(p) === childProto);
-
-    Object.preventExtensions(child);
-    p = new Proxy(child, {
-        setPrototypeOf(target, newProto) {
-            assert(target === child);
-            return true;
-        },
-    });
-
-    assert(Object.setPrototypeOf(p, childProto) === p);
-    assert(Object.getPrototypeOf(p) === childProto);
-
-    assertThrowsError(() => {
-        Object.setPrototypeOf(p, {});
-    }, {
-        error: TypeError,
-        message: "Proxy handler's setPrototypeOf trap violates invariant: the argument must match the prototype of the target if the target is non-extensible",
-    });
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+});

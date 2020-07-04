@@ -1,71 +1,76 @@
-load("test-common.js");
-
-try {
-    assert((new Proxy({}, { get: undefined })).foo === undefined);
-    assert((new Proxy({}, { get: null })).foo === undefined);
-    assert((new Proxy({}, {})).foo === undefined);
-
-    let o = {};
-    let p = new Proxy(o, {
-        get(target, property, receiver) {
-            assert(target === o);
-            assert(property === "foo");
-            assert(receiver === p);
-        },
+describe("[[Get]] trap normal behavior", () => {
+    test("forwarding when not defined in handler", () => {
+        expect((new Proxy({}, { get: undefined })).foo).toBeUndefined();
+        expect((new Proxy({}, { get: null })).foo).toBeUndefined();
+        expect((new Proxy({}, {})).foo).toBeUndefined();
     });
 
-    p.foo;
+    test("correct arguments supplied to trap", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            get(target, property, receiver) {
+                expect(target).toBe(o);
+                expect(property).toBe("foo");
+                expect(receiver).toBe(p);
+            },
+        });
 
-    o = { foo: 1 };
-    p = new Proxy(o, {
-        get(target, property, receiver) {
-            if (property === "bar") {
-                return 2;
-            } else if (property === "baz") {
-                return receiver.qux;
-            } else if (property === "qux") {
-                return 3;
+        p.foo;
+    });
+
+    test("conditional return", () => {
+        let o = { foo: 1 };
+        let p = new Proxy(o, {
+            get(target, property, receiver) {
+                if (property === "bar") {
+                    return 2;
+                } else if (property === "baz") {
+                    return receiver.qux;
+                } else if (property === "qux") {
+                    return 3;
+                }
+                return target[property];
             }
-            return target[property];
-        }
+        });
+
+        expect(p.foo).toBe(1);
+        expect(p.bar).toBe(2);
+        expect(p.baz).toBe(3);
+        expect(p.qux).toBe(3);
+        expect(p.test).toBeUndefined();
+    });
+});
+
+describe("[[Get]] invariants", () => {
+    test("returned value must match the target property value if the property is non-configurable and non-writable", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: 5, configurable: false, writable: true });
+        Object.defineProperty(o, "bar", { value: 10, configurable: false, writable: false });
+
+        let p = new Proxy(o, {
+            get() {
+                return 8;
+            },
+        });
+
+        expect(p.foo).toBe(8);
+        expect(() => {
+            p.bar;
+        }).toThrowWithMessage(TypeError, "Proxy handler's get trap violates invariant: the returned value must match the value on the target if the property exists on the target as a non-writable, non-configurable own data property");
     });
 
-    assert(p.foo === 1);
-    assert(p.bar === 2);
-    assert(p.baz === 3);
-    assert(p.qux === 3);
-    assert(p.test === undefined);
+    test("returned value must be undefined if the property is a non-configurable accessor with no getter", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { configurable: false, set(_) {} });
 
-    // Invariants
+        let p = new Proxy(o, {
+            get() {
+                return 8;
+            },
+        });
 
-    o = {};
-    Object.defineProperty(o, "foo", { value: 5, configurable: false, writable: true });
-    Object.defineProperty(o, "bar", { value: 10, configurable: false, writable: false });
-
-    p = new Proxy(o, {
-        get() {
-            return 8;
-        },
-    });
-
-    assert(p.foo === 8);
-
-    assertThrowsError(() => {
-        p.bar;
-    }, {
-        error: TypeError,
-        message: "Proxy handler's get trap violates invariant: the returned value must match the value on the target if the property exists on the target as a non-writable, non-configurable own data property",
-    });
-
-    Object.defineProperty(o, "baz", { configurable: false, set(_) {} });
-    assertThrowsError(() => {
-        p.baz;
-    }, {
-        error: TypeError,
-        message: "Proxy handler's get trap violates invariant: the returned value must be undefined if the property exists on the target as a non-configurable accessor property with an undefined get attribute",
-    });
-
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        expect(() => {
+            p.foo;
+        }).toThrowWithMessage(TypeError, "Proxy handler's get trap violates invariant: the returned value must be undefined if the property exists on the target as a non-configurable accessor property with an undefined get attribute");
+    })
+});

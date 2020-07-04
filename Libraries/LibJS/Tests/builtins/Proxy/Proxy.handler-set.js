@@ -1,66 +1,73 @@
-load("test-common.js");
-
-try {
-    assert((new Proxy({}, { set: undefined }).foo = 1) === 1);
-    assert((new Proxy({}, { set: null }).foo = 1) === 1);
-    assert((new Proxy({}, {}).foo = 1) === 1);
-
-    let o = {};
-    let p = new Proxy(o, {
-        set(target, prop, value, receiver) {
-            assert(target === o);
-            assert(prop === "foo");
-            assert(value === 10);
-            assert(receiver === p);
-            return true;
-        },
+describe("[[Set]] trap normal behavior", () => {
+    test("forwarding when not defined in handler", () => {
+        expect((new Proxy({}, { set: undefined }).foo = 1)).toBe(1);
+        expect((new Proxy({}, { set: null }).foo = 1)).toBe(1);
+        expect((new Proxy({}, {}).foo = 1)).toBe(1);
     });
 
-    p.foo = 10;
+    test("correct arguments supplied to trap", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            set(target, prop, value, receiver) {
+                expect(target).toBe(o);
+                expect(prop).toBe("foo");
+                expect(value).toBe(10);
+                expect(receiver).toBe(p);
+                return true;
+            },
+        });
 
-    p = new Proxy(o, {
-        set(target, prop, value, receiver) {
-            if (target[prop] === value) {
-                target[prop] *= 2;
-            } else {
-                target[prop] = value;
-            }
-        },
+        p.foo = 10;
     });
 
-    p.foo = 10;
-    assert(p.foo === 10);
-    p.foo = 10;
-    assert(p.foo === 20);
-    p.foo = 10;
-    assert(p.foo === 10);
+    test("conditional return value", () => {
+        let p = new Proxy({}, {
+            set(target, prop, value) {
+                if (target[prop] === value) {
+                    target[prop] *= 2;
+                } else {
+                    target[prop] = value;
+                }
+            },
+        });
 
-    // Invariants
+        p.foo = 10;
+        expect(p.foo).toBe(10);
+        p.foo = 10;
+        expect(p.foo).toBe(20);
+        p.foo = 10;
+        expect(p.foo).toBe(10);
+    });
+});
 
-    o = {};
-    Object.defineProperty(o, "foo", { value: 10 });
-    p = new Proxy(o, {
-        set() {
-            return true;
-        },
+describe("[[Set]] invariants", () => {
+    test("cannot return true for a non-configurable, non-writable property", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { value: 10 });
+
+        let p = new Proxy(o, {
+            set() {
+                return true;
+            },
+        });
+
+        expect(() => {
+            p.foo = 12;
+        }).toThrowWithMessage(TypeError, "Proxy handler's set trap violates invariant: cannot return true for a property on the target which is a non-configurable, non-writable own data property");
     });
 
-    assertThrowsError(() => {
-        p.foo = 12;
-    }, {
-        error: TypeError,
-        message: "Proxy handler's set trap violates invariant: cannot return true for a property on the target which is a non-configurable, non-writable own data property",
-    });
+    test("cannot return true for a non-configurable accessor property with no setter", () => {
+        let o = {};
+        Object.defineProperty(o, "foo", { get() {} });
 
-    Object.defineProperty(o, "bar", { get() {} });
-    assertThrowsError(() => {
-        p.bar = 12;
-    }, {
-        error: TypeError,
-        message: "Proxy handler's set trap violates invariant: cannot return true for a property on the target which is a non-configurable own accessor property with an undefined set attribute",
-    });
+        let p = new Proxy(o, {
+            set() {
+                return true;
+            },
+        });
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        expect(() => {
+            p.foo = 12;
+        }).toThrowWithMessage(TypeError, "Proxy handler's set trap violates invariant: cannot return true for a property on the target which is a non-configurable own accessor property with an undefined set attribute");
+    });
+});

@@ -1,55 +1,53 @@
-load("test-common.js");
-
-try {
-    let p = new Proxy({}, { preventExtensions: null });
-    assert(Object.preventExtensions(p) === p);
-    p = new Proxy({}, { preventExtensions: undefined });
-    assert(Object.preventExtensions(p) === p);
-    p = new Proxy({}, {});
-    assert(Object.preventExtensions(p) == p);
-
-    let o = {};
-    p = new Proxy(o, {
-        preventExtensions(target) {
-            assert(target === o);
-            return true;
-        }
+describe("[[PreventExtension]] trap normal behavior", () => {
+    test("forwarding when not defined in handler", () => {
+        let p = new Proxy({}, { preventExtensions: null });
+        expect(Object.preventExtensions(p)).toBe(p);
+        p = new Proxy({}, { preventExtensions: undefined });
+        expect(Object.preventExtensions(p)).toBe(p);
+        p = new Proxy({}, {});
+        expect(Object.preventExtensions(p)).toBe(p);
     });
 
-    Object.preventExtensions(o);
-    Object.preventExtensions(p);
+    test("correct arguments supplied to trap", () => {
+        let o = {};
+        p = new Proxy(o, {
+            preventExtensions(target) {
+                expect(target).toBe(o);
+                return true;
+            }
+        });
 
-    // Invariants
-
-    p = new Proxy({}, {
-        preventExtensions() {
-            return false;
-        },
-    });
-    assertThrowsError(() => {
+        Object.preventExtensions(o);
         Object.preventExtensions(p);
-    }, {
-        error: TypeError,
-        message: "Object's [[PreventExtensions]] method returned false",
+    });
+});
+
+describe("[[PreventExtensions]] invariants", () => {
+    test("cannot return false", () => {
+        let p = new Proxy({}, {
+            preventExtensions() {
+                return false;
+            },
+        });
+
+        expect(() => {
+            Object.preventExtensions(p);
+        }).toThrowWithMessage(TypeError, "Object's [[PreventExtensions]] method returned false");
     });
 
-    o = {};
-    p = new Proxy(o, {
-        preventExtensions() {
-            return true;
-        },
-    });
-    assertThrowsError(() => {
-        Object.preventExtensions(p);
-    }, {
-        error: TypeError,
-        message: "Proxy handler's preventExtensions trap violates invariant: cannot return true if the target object is extensible"
-    });
+    test("cannot return true if the target is extensible", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            preventExtensions() {
+                return true;
+            },
+        });
 
-    Object.preventExtensions(o);
-    assert(Object.preventExtensions(p) === p);
+        expect(() => {
+            Object.preventExtensions(p);
+        }).toThrowWithMessage(TypeError, "Proxy handler's preventExtensions trap violates invariant: cannot return true if the target object is extensible");
 
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
+        Object.preventExtensions(o);
+        expect(Object.preventExtensions(p)).toBe(p);
+    });
+});
