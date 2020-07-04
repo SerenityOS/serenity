@@ -14,9 +14,9 @@ describe("[[DefineProperty]] trap normal behavior", () => {
             defineProperty(target, name, descriptor) {
                 expect(target).toBe(o);
                 expect(name).toBe("foo");
-                expect(descriptor.configurable).toBe(true);
+                expect(descriptor.configurable).toBeTrue();
                 expect(descriptor.enumerable).toBeUndefined();
-                expect(descriptor.writable).toBe(true);
+                expect(descriptor.writable).toBeTrue();
                 expect(descriptor.value).toBe(10);
                 expect(descriptor.get).toBeUndefined();
                 expect(descriptor.set).toBeUndefined();
@@ -38,22 +38,20 @@ describe("[[DefineProperty]] trap normal behavior", () => {
         });
 
         Object.defineProperty(p, "foo", { value: 10, enumerable: true, configurable: false, writable: true });
-        let d = Object.getOwnPropertyDescriptor(p, "foo");
-        expect(d.enumerable).toBe(true);
-        expect(d.configurable).toBe(false);
-        expect(d.writable).toBe(true);
-        expect(d.value).toBe(10);
-        expect(d.get).toBeUndefined();
-        expect(d.set).toBeUndefined();
+        expect(p).toHaveEnumerableProperty("foo");
+        expect(p).not.toHaveConfigurableProperty("foo");
+        expect(p).toHaveWritableProperty("foo");
+        expect(p).toHaveValueProperty("foo", 10);
+        expect(p).not.toHaveGetterProperty("foo");
+        expect(p).not.toHaveSetterProperty("foo");
 
         Object.defineProperty(p, "foo", { value: 20, enumerable: true, configurable: false, writable: true });
-        d = Object.getOwnPropertyDescriptor(p, "foo");
-        expect(d.enumerable).toBe(true);
-        expect(d.configurable).toBe(false);
-        expect(d.writable).toBe(true);
-        expect(d.value).toBe(10);
-        expect(d.get).toBeUndefined();
-        expect(d.set).toBeUndefined();
+        expect(p).toHaveEnumerableProperty("foo");
+        expect(p).not.toHaveConfigurableProperty("foo");
+        expect(p).toHaveWritableProperty("foo");
+        expect(p).toHaveValueProperty("foo", 10);
+        expect(p).not.toHaveGetterProperty("foo");
+        expect(p).not.toHaveSetterProperty("foo");
     });
 });
 

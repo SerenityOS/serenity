@@ -1,8 +1,8 @@
 describe("[[Delete]] trap normal behavior", () => {
     test("forwarding when not defined in handler", () => {
-        expect(delete (new Proxy({}, { deleteProperty: undefined })).foo).toBe(true);
-        expect(delete (new Proxy({}, { deleteProperty: null })).foo).toBe(true);
-        expect(delete (new Proxy({}, {})).foo).toBe(true);
+        expect(delete (new Proxy({}, { deleteProperty: undefined })).foo).toBeTrue();
+        expect(delete (new Proxy({}, { deleteProperty: null })).foo).toBeTrue();
+        expect(delete (new Proxy({}, {})).foo).toBeTrue();
     });
 
     test("correct arguments supplied to trap", () => {
@@ -30,8 +30,8 @@ describe("[[Delete]] trap normal behavior", () => {
             }
         });
 
-        expect(delete p.foo).toBe(true);
-        expect(delete p.bar).toBe(false);
+        expect(delete p.foo).toBeTrue();
+        expect(delete p.bar).toBeFalse();
 
         expect(o.foo).toBe(undefined);
         expect(o.bar).toBe(2);
