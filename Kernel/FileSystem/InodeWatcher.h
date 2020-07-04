@@ -30,6 +30,7 @@
 #include <AK/CircularQueue.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/Lock.h>
 
 namespace Kernel {
 
@@ -44,9 +45,12 @@ public:
         enum class Type {
             Invalid = 0,
             Modified,
+            ChildAdded,
+            ChildRemoved,
         };
 
         Type type { Type::Invalid };
+        String string;
     };
 
     virtual bool can_read(const FileDescription&, size_t) const override;
@@ -57,10 +61,13 @@ public:
     virtual const char* class_name() const override { return "InodeWatcher"; };
 
     void notify_inode_event(Badge<Inode>, Event::Type);
+    void notify_child_added(Badge<Inode>, const String& child_name);
+    void notify_child_removed(Badge<Inode>, const String& child_name);
 
 private:
     explicit InodeWatcher(Inode&);
 
+    Lock m_lock;
     WeakPtr<Inode> m_inode;
     CircularQueue<Event, 32> m_queue;
 };

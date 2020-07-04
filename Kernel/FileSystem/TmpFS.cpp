@@ -297,7 +297,7 @@ KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
     FS::DirectoryEntry entry = { owned_name.characters(), owned_name.length(), child.identifier(), 0 };
 
     m_children.set(owned_name, { entry, static_cast<TmpFSInode&>(child) });
-    notify_watchers();
+    did_add_child(name);
     return KSuccess;
 }
 
@@ -313,7 +313,7 @@ KResult TmpFSInode::remove_child(const StringView& name)
     if (it == m_children.end())
         return KResult(-ENOENT);
     m_children.remove(it);
-    notify_watchers();
+    did_remove_child(name);
     return KSuccess;
 }
 
