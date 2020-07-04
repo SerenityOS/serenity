@@ -25,12 +25,37 @@
  */
 
 #include <AK/String.h>
+#include <LibELF/AuxiliaryVector.h>
 
 #include <dlfcn.h>
 #include <stdio.h>
 
-int main()
+int main(int argc, char** argv, char** envp)
 {
+    for (int i = 0; i < argc; ++i) {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    char** env;
+    for (env = envp; *env; ++env) {
+        printf("env: %s\n", *env);
+    }
+    for (auxv_t* auxvp = (auxv_t*)++env; auxvp->a_type != AT_NULL; ++auxvp) {
+        printf("AuxVal: Type=%ld, Val/Ptr=%p\n", auxvp->a_type, auxvp->a_un.a_ptr);
+        if (auxvp->a_type == AT_PLATFORM) {
+            printf("    Platform: %s\n", (char*)auxvp->a_un.a_ptr);
+        } else if (auxvp->a_type == AT_EXECFN) {
+            printf("    Filename: %s\n", (char*)auxvp->a_un.a_ptr);
+        } else if (auxvp->a_type == AT_RANDOM) {
+            auto byte_ptr = (uint8_t*)auxvp->a_un.a_ptr;
+            printf("    My Random bytes are: ");
+            for (size_t i = 0; i < 16; ++i) {
+                printf("0x%2x ", byte_ptr[i]);
+            }
+            printf("\n");
+        }
+    }
+
     void* handle = dlopen("/usr/lib/libDynamicLib.so", RTLD_LAZY | RTLD_GLOBAL);
 
     if (!handle) {
