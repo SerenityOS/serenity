@@ -31,6 +31,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/ProcessorInfo.h>
 #include <Kernel/Arch/i386/ISRStubs.h>
+#include <Kernel/GlobalPage.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -923,7 +924,7 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
     if (i > m_gdt_length) {
         m_gdt_length = i + 1;
         ASSERT(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
-        m_gdtr.limit = (m_gdt_length + 1) * 8 - 1;
+        m_gdtr.limit = m_gdt_length * 8 - 1;
     }
     m_gdt[i].low = low;
     m_gdt[i].high = high;
