@@ -215,6 +215,22 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
     }
 }
 
+void Inode::did_add_child(const String& name)
+{
+    LOCKER(m_lock);
+    for (auto& watcher : m_watchers) {
+        watcher->notify_child_added({}, name);
+    }
+}
+
+void Inode::did_remove_child(const String& name)
+{
+    LOCKER(m_lock);
+    for (auto& watcher : m_watchers) {
+        watcher->notify_child_removed({}, name);
+    }
+}
+
 KResult Inode::prepare_to_write_data()
 {
     // FIXME: It's a poor design that filesystems are expected to call this before writing out data.

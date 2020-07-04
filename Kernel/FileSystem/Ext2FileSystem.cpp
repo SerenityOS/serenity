@@ -981,6 +981,8 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
     bool success = write_directory(entries);
     if (success)
         m_lookup_cache.set(name, child.index());
+
+    did_add_child(name);
     return KSuccess;
 }
 
@@ -1022,6 +1024,8 @@ KResult Ext2FSInode::remove_child(const StringView& name)
 
     auto child_inode = fs().get_inode(child_id);
     child_inode->decrement_link_count();
+
+    did_remove_child(name);
     return KSuccess;
 }
 
