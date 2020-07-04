@@ -114,6 +114,7 @@ private:
 static SlabAllocator<16> s_slab_allocator_16;
 static SlabAllocator<32> s_slab_allocator_32;
 static SlabAllocator<64> s_slab_allocator_64;
+static SlabAllocator<128> s_slab_allocator_128;
 
 static_assert(sizeof(Region) <= s_slab_allocator_64.slab_size());
 
@@ -130,6 +131,7 @@ void slab_alloc_init()
     s_slab_allocator_16.init(128 * KB);
     s_slab_allocator_32.init(128 * KB);
     s_slab_allocator_64.init(512 * KB);
+    s_slab_allocator_128.init(512 * KB);
 }
 
 void* slab_alloc(size_t slab_size)
@@ -140,6 +142,8 @@ void* slab_alloc(size_t slab_size)
         return s_slab_allocator_32.alloc();
     if (slab_size <= 64)
         return s_slab_allocator_64.alloc();
+    if (slab_size <= 128)
+        return s_slab_allocator_128.alloc();
     ASSERT_NOT_REACHED();
 }
 
@@ -151,6 +155,8 @@ void slab_dealloc(void* ptr, size_t slab_size)
         return s_slab_allocator_32.dealloc(ptr);
     if (slab_size <= 64)
         return s_slab_allocator_64.dealloc(ptr);
+    if (slab_size <= 128)
+        return s_slab_allocator_128.dealloc(ptr);
     ASSERT_NOT_REACHED();
 }
 
