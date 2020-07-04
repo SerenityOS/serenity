@@ -20,6 +20,11 @@ sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Deve
 sudo pacman -S base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
 ```
 
+**ALT Linux**
+```bash
+apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel patch gcc
+```
+
 Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
 ```bash
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
