@@ -21,6 +21,7 @@ set(SOURCES
     SocketAddress.cpp
     Socket.cpp
     StandardPaths.cpp
+    SystemTime.cpp
     TCPServer.cpp
     TCPSocket.cpp
     Timer.cpp

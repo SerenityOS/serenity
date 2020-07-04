@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,37 +26,15 @@
 
 #pragma once
 
+#include <sys/time.h>
+
 namespace Core {
 
-class ArgsParser;
-class ChildEvent;
-class ConfigFile;
-class CustomEvent;
-class DateTime;
-class DirIterator;
-class ElapsedTimer;
-class Event;
-class EventLoop;
-class File;
-class IODevice;
-class LocalServer;
-class LocalSocket;
-class MimeData;
-class NetworkJob;
-class NetworkResponse;
-class Notifier;
-class Object;
-class ProcessStatisticsReader;
-class Socket;
-class SocketAddress;
-class SystemTime;
-class TCPServer;
-class TCPSocket;
-class Timer;
-class TimerEvent;
-class UDPServer;
-class UDPSocket;
-
-enum class TimerShouldFireWhenNotVisible;
+class SystemTime {
+public:
+    static timeval timeofday();
+    static timespec monotonic();
+    static timespec realtime();
+};
 
 }
