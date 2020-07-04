@@ -149,12 +149,15 @@ int ScrollableWidget::width_occupied_by_vertical_scrollbar() const
 
 Gfx::IntRect ScrollableWidget::visible_content_rect() const
 {
-    return {
+    Gfx::IntRect rect {
         m_horizontal_scrollbar->value(),
         m_vertical_scrollbar->value(),
         min(m_content_size.width(), frame_inner_rect().width() - width_occupied_by_vertical_scrollbar() - m_size_occupied_by_fixed_elements.width()),
         min(m_content_size.height(), frame_inner_rect().height() - height_occupied_by_horizontal_scrollbar() - m_size_occupied_by_fixed_elements.height())
     };
+    if (rect.is_empty())
+        return {};
+    return rect;
 }
 
 void ScrollableWidget::scroll_into_view(const Gfx::IntRect& rect, Orientation orientation)
@@ -198,12 +201,12 @@ void ScrollableWidget::set_scrollbars_enabled(bool scrollbars_enabled)
 
 void ScrollableWidget::scroll_to_top()
 {
-    scroll_into_view({ 0, 0, 1, 1 }, Orientation::Vertical);
+    scroll_into_view({}, Orientation::Vertical);
 }
 
 void ScrollableWidget::scroll_to_bottom()
 {
-    scroll_into_view({ 0, content_height(), 1, 1 }, Orientation::Vertical);
+    scroll_into_view({ 0, content_height(), 0, 0 }, Orientation::Vertical);
 }
 
 Gfx::IntRect ScrollableWidget::widget_inner_rect() const
