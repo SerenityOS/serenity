@@ -39,13 +39,13 @@ WaitQueue::~WaitQueue()
 
 void WaitQueue::enqueue(Thread& thread)
 {
-    ScopedCritical critical;
+    ScopedSpinLock queue_lock(m_lock);
     m_threads.append(thread);
 }
 
 void WaitQueue::wake_one(Atomic<bool>* lock)
 {
-    ScopedCritical critical;
+    ScopedSpinLock queue_lock(m_lock);
     if (lock)
         *lock = false;
     if (m_threads.is_empty())
@@ -57,7 +57,7 @@ void WaitQueue::wake_one(Atomic<bool>* lock)
 
 void WaitQueue::wake_n(i32 wake_count)
 {
-    ScopedCritical critical;
+    ScopedSpinLock queue_lock(m_lock);
     if (m_threads.is_empty())
         return;
 
@@ -72,7 +72,7 @@ void WaitQueue::wake_n(i32 wake_count)
 
 void WaitQueue::wake_all()
 {
-    ScopedCritical critical;
+    ScopedSpinLock queue_lock(m_lock);
     if (m_threads.is_empty())
         return;
     while (!m_threads.is_empty())
@@ -82,7 +82,7 @@ void WaitQueue::wake_all()
 
 void WaitQueue::clear()
 {
-    ScopedCritical critical;
+    ScopedSpinLock queue_lock(m_lock);
     m_threads.clear();
 }
 

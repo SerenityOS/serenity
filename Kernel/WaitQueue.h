@@ -28,6 +28,7 @@
 
 #include <AK/Atomic.h>
 #include <AK/SinglyLinkedList.h>
+#include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
@@ -46,6 +47,7 @@ public:
 private:
     typedef IntrusiveList<Thread, &Thread::m_wait_queue_node> ThreadList;
     ThreadList m_threads;
+    SpinLock<u32> m_lock;
 };
 
 }
