@@ -33,10 +33,10 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <sys/time.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
 
@@ -147,7 +147,7 @@ Vector<String> tests_to_run = {
     "builtins/Reflect/Reflect.ownKeys.js",
     "builtins/Reflect/Reflect.preventExtensions.js",
     "builtins/Reflect/Reflect.set.js",
-    "builtins/Reflect/Reflect.setPrototypeOf.js",\
+    "builtins/Reflect/Reflect.setPrototypeOf.js",
     "builtins/String/String.js",
     "builtins/String/String.fromCharCode.js",
     "builtins/String/String.prototype.js",
@@ -167,7 +167,7 @@ Vector<String> tests_to_run = {
     "builtins/String/String.prototype.toUpperCase.js",
     "builtins/String/String.prototype.trim.js",
     "builtins/String/String.prototype.valueOf.js",
-    "builtins/String/String.raw.js",\
+    "builtins/String/String.raw.js",
     "add-values-to-primitive.js",
     "automatic-semicolon-insertion.js",
     "comments-basic.js",
@@ -189,41 +189,98 @@ Vector<String> tests_to_run = {
     "update-expression-on-member-expression.js",
 };
 
-struct FileTest {
-    String name;
-    bool passed;
+enum class TestResult {
+    Pass,
+    Fail,
 };
 
-struct FileSuite {
+struct JSTest {
     String name;
-    int passed { 0 };
-    int failed { 0 };
-    Vector<FileTest> tests {};
+    TestResult result;
 };
 
-struct TestError {
+struct JSSuite {
+    String name;
+    bool has_failed_tests { false };
+    Vector<JSTest> tests {};
+};
+
+struct ParserError {
     JS::Parser::Error error;
     String hint;
 };
 
-struct FileResults {
-    String file;
-    Optional<TestError> error {};
-    int passed { 0 };
-    int failed { 0 };
-    Vector<FileSuite> suites {};
+struct JSFileResult {
+    String name;
+    Optional<ParserError> error {};
+    bool has_failed_tests { false };
+    Vector<JSSuite> suites {};
 };
 
-struct Results {
-    Vector<FileResults> file_results {};
+struct JSTestRunnerCounts {
+    int tests_failed { 0 };
+    int tests_passed { 0 };
+    int suites_failed { 0 };
+    int suites_passed { 0 };
+    int files_total { 0 };
 };
 
-Optional<TestError> parse_and_run_file(JS::Interpreter& interpreter, const String& path)
+using JSTestRunnerResult = Vector<JSFileResult>;
+
+double get_time()
+{
+    struct timeval tv1;
+    struct timezone tz1;
+    auto return_code = gettimeofday(&tv1, &tz1);
+    ASSERT(return_code >= 0);
+    return static_cast<double>(tv1.tv_sec) + static_cast<double>(tv1.tv_usec) / 1'000'000;
+}
+
+class TestRunner {
+public:
+    TestRunner(String test_root)
+        : m_test_root(move(test_root))
+    {
+    }
+
+    void run();
+
+private:
+    JSFileResult run_file_test(const String& test_path);
+    static void print_file_result(const JSFileResult& file_result);
+    void print_test_results() const;
+
+    String m_test_root;
+
+    double m_start_time;
+    double m_end_time;
+    JSTestRunnerCounts m_counts;
+};
+
+void TestRunner::run()
+{
+    m_start_time = get_time();
+
+    // FIXME: The way this currently works, the time it takes to print is
+    // counted in the total test duration. In order to change this, we'd have to
+    // loop over the paths and collect the results, record then time, and then
+    // print. However, doing it this way provides no feedback to the user at
+    // first, and then all the feedback at once. Both ways have their pros and
+    // cons, but which one we prefer still needs to be decided.
+    for (auto& test_path : tests_to_run)
+        print_file_result(run_file_test(test_path));
+
+    m_end_time = get_time();
+
+    print_test_results();
+}
+
+Optional<ParserError> parse_and_run_file(JS::Interpreter& interpreter, const String& path)
 {
     auto file = Core::File::construct(path);
     auto result = file->open(Core::IODevice::ReadOnly);
     if (!result) {
-        dbg() << "Failed to open file " << path;
+        printf("Failed to open the following file: \"%s\"\n", path.characters());
         exit(1);
     }
 
@@ -236,7 +293,7 @@ Optional<TestError> parse_and_run_file(JS::Interpreter& interpreter, const Strin
 
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
-        return TestError { error, error.source_location_hint(test_file_string) };
+        return ParserError { error, error.source_location_hint(test_file_string) };
     } else {
         interpreter.run(interpreter.global_object(), *program);
     }
@@ -244,84 +301,88 @@ Optional<TestError> parse_and_run_file(JS::Interpreter& interpreter, const Strin
     return {};
 }
 
-FileResults run_test(const String& path, const String& test_root)
+Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
+{
+    auto result = interpreter.get_variable("__TestResults__", interpreter.global_object());
+    auto json_string = JS::JSONObject::stringify_impl(interpreter, interpreter.global_object(), result, JS::js_undefined(), JS::js_undefined());
+
+    auto json = JsonValue::from_string(json_string);
+    if (!json.has_value())
+        return {};
+
+    return json.value();
+}
+
+JSFileResult TestRunner::run_file_test(const String& test_path)
 {
     auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
 
-    if (parse_and_run_file(*interpreter, String::format("%s/test-common.js", test_root.characters())).has_value()) {
+    if (parse_and_run_file(*interpreter, String::format("%s/test-common.js", m_test_root.characters())).has_value()) {
         dbg() << "test-common.js failed to parse";
         exit(1);
     }
 
-    auto source_file_result = parse_and_run_file(*interpreter, String::format("%s/%s", test_root.characters(), path.characters()));
+    auto source_file_result = parse_and_run_file(*interpreter, String::format("%s/%s", m_test_root.characters(), test_path.characters()));
     if (source_file_result.has_value())
-        return { path, source_file_result };
+        return { test_path, source_file_result };
 
     // Print any output
     // FIXME: Should be printed to stdout in a nice format
     auto& arr = interpreter->get_variable("__UserOutput__", interpreter->global_object()).as_array();
     for (auto& entry : arr.indexed_properties()) {
-        dbg() << path << ": " << entry.value_and_attributes(&interpreter->global_object()).value.to_string_without_side_effects();
+        dbg() << test_path << ": " << entry.value_and_attributes(&interpreter->global_object()).value.to_string_without_side_effects();
     }
 
-    // FIXME: This is _so_ scuffed
-    auto result = interpreter->get_variable("__TestResults__", interpreter->global_object());
-    auto json_object = interpreter->get_variable("JSON", interpreter->global_object());
-    auto stringify = json_object.as_object().get("stringify");
-    JS::MarkedValueList arguments(interpreter->heap());
-    arguments.append(result);
-    auto json_string = interpreter->call(stringify.as_function(), interpreter->this_value(interpreter->global_object()), move(arguments)).to_string(*interpreter);
-
-    auto json_result = JsonValue::from_string(json_string);
-
-    if (!json_result.has_value()) {
-        dbg() << "BAD JSON:";
-        dbg() << json_string;
-        return {};
+    auto test_json = get_test_results(*interpreter);
+    if (!test_json.has_value()) {
+        printf("Received malformed JSON from test \"%s\"\n", test_path.characters());
+        exit(1);
     }
 
-    auto json = json_result.value();
+    JSFileResult file_result { test_path };
 
-    FileResults results { path };
+    test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
+        JSSuite suite { suite_name };
 
-    json.as_object().for_each_member([&](const String& property, const JsonValue& value) {
-        FileSuite suite { property };
+        if (!suite_value.is_object()) {
+            printf("Test JSON has a suite which is not an object (\"%s\")\n", test_path.characters());
+            exit(1);
+        }
 
-        value.as_object().for_each_member([&](const String& property1, const JsonValue& value1) {
-            FileTest test { property1, false };
+        suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
+            JSTest test { test_name, TestResult::Fail };
 
-            if (value1.is_object()) {
-                auto obj = value1.as_object();
-                if (obj.has("passed")) {
-                    auto passed = obj.get("passed");
-                    test.passed = passed.is_bool() && passed.as_bool();
-                }
-            }
+            ASSERT(test_value.is_object());
+            ASSERT(test_value.as_object().has("result"));
 
-            if (test.passed) {
-                suite.passed++;
+            auto result = test_value.as_object().get("result");
+            ASSERT(result.is_string());
+            auto result_string = result.as_string();
+            if (result_string == "pass") {
+                test.result = TestResult::Pass;
+                m_counts.tests_passed++;
             } else {
-                suite.failed++;
+                test.result = TestResult::Fail;
+                m_counts.tests_failed++;
+                suite.has_failed_tests = true;
             }
 
             suite.tests.append(test);
         });
 
-        if (suite.failed) {
-            results.failed++;
+        if (suite.has_failed_tests) {
+            m_counts.suites_failed++;
+            file_result.has_failed_tests = true;
         } else {
-            results.passed++;
+            m_counts.suites_passed++;
         }
 
-        results.suites.append(suite);
+        file_result.suites.append(suite);
     });
 
-    return results;
-}
+    m_counts.files_total++;
 
-bool skip_test(char* test_name)
-{
-    return !strcmp(test_name, "test-common.js") || !strcmp(test_name, "run_tests.sh");
+    return file_result;
 }
 
 enum Modifier {
@@ -363,9 +424,9 @@ void print_modifiers(Vector<Modifier> modifiers)
     }
 }
 
-void print_file_results(const FileResults& results)
+void TestRunner::print_file_result(const JSFileResult& file_result)
 {
-    if (results.failed || results.error.has_value()) {
+    if (file_result.has_failed_tests || file_result.error.has_value()) {
         print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
         printf(" FAIL ");
         print_modifiers({ CLEAR });
@@ -375,10 +436,10 @@ void print_file_results(const FileResults& results)
         print_modifiers({ CLEAR });
     }
 
-    printf(" %s\n", results.file.characters());
+    printf(" %s\n", file_result.name.characters());
 
-    if (results.error.has_value()) {
-        auto test_error = results.error.value();
+    if (file_result.error.has_value()) {
+        auto test_error = file_result.error.value();
 
         print_modifiers({ FG_RED });
         printf("       ❌ The file failed to parse\n\n");
@@ -392,117 +453,71 @@ void print_file_results(const FileResults& results)
         return;
     }
 
-    if (results.failed) {
-        for (auto& suite : results.suites) {
-            if (!suite.failed)
+    if (file_result.has_failed_tests) {
+        for (auto& suite : file_result.suites) {
+            if (!suite.has_failed_tests)
                 continue;
 
-            bool top_level = suite.name == TOP_LEVEL_TEST_NAME;
-
-            if (!top_level) {
-                print_modifiers({ FG_GRAY, FG_BOLD });
-                printf("       ❌ Suite:  ");
+            print_modifiers({ FG_GRAY, FG_BOLD });
+            printf("       ❌ Suite:  ");
+            if (suite.name == TOP_LEVEL_TEST_NAME) {
+                print_modifiers({ CLEAR, FG_GRAY });
+                printf("<top-level>\n");
+            } else {
                 print_modifiers({ CLEAR, FG_RED });
                 printf("%s\n", suite.name.characters());
-                print_modifiers({ CLEAR });
             }
+            print_modifiers({ CLEAR });
 
             for (auto& test : suite.tests) {
-                if (test.passed)
+                if (test.result == TestResult::Pass)
                     continue;
 
-                if (!top_level) {
-                    print_modifiers({ FG_GRAY, FG_BOLD });
-                    printf("            Test: ");
-                    print_modifiers({ CLEAR, FG_RED });
-                    printf("%s\n", test.name.characters());
-                    print_modifiers({ CLEAR });
-                } else {
-                    print_modifiers({ FG_GRAY, FG_BOLD });
-                    printf("       ❌ Test:   ");
-                    print_modifiers({ CLEAR, FG_RED });
-                    printf("%s\n", test.name.characters());
-                    print_modifiers({ CLEAR });
-                }
+                print_modifiers({ FG_GRAY, FG_BOLD });
+                printf("            Test:   ");
+                print_modifiers({ CLEAR, FG_RED });
+                printf("%s\n", test.name.characters());
+                print_modifiers({ CLEAR });
             }
         }
     }
 }
 
-void print_results(const Results& results, double time_elapsed)
+void TestRunner::print_test_results() const
 {
-    for (auto& result : results.file_results)
-        print_file_results(result);
-
-    int suites_passed = 0;
-    int suites_failed = 0;
-    int tests_passed = 0;
-    int tests_failed = 0;
-
-    for (auto& file_result : results.file_results) {
-        for (auto& suite : file_result.suites) {
-            tests_passed += suite.passed;
-            tests_failed += suite.failed;
-
-            if (suite.failed) {
-                suites_failed++;
-            } else {
-                suites_passed++;
-            }
-        }
-    }
-
-
     printf("\nTest Suites: ");
-    if (suites_failed) {
+    if (m_counts.suites_failed) {
         print_modifiers({ FG_RED });
-        printf("%d failed, ", suites_failed);
+        printf("%d failed, ", m_counts.suites_failed);
         print_modifiers({ CLEAR });
     }
-    if (suites_passed) {
+    if (m_counts.suites_passed) {
         print_modifiers({ FG_GREEN });
-        printf("%d passed, ", suites_passed);
+        printf("%d passed, ", m_counts.suites_passed);
         print_modifiers({ CLEAR });
     }
-    printf("%d total\n", suites_failed + suites_passed);
+    printf("%d total\n", m_counts.suites_failed + m_counts.suites_passed);
 
     printf("Tests:       ");
-    if (tests_failed) {
+    if (m_counts.tests_failed) {
         print_modifiers({ FG_RED });
-        printf("%d failed, ", tests_failed);
+        printf("%d failed, ", m_counts.tests_failed);
         print_modifiers({ CLEAR });
     }
-    if (tests_passed) {
+    if (m_counts.tests_passed) {
         print_modifiers({ FG_GREEN });
-        printf("%d passed, ", tests_passed);
+        printf("%d passed, ", m_counts.tests_passed);
         print_modifiers({ CLEAR });
     }
-    printf("%d total\n", tests_failed + tests_passed);
+    printf("%d total\n", m_counts.tests_failed + m_counts.tests_passed);
 
-    printf("Time:        %-.3fs\n\n", time_elapsed);
+    printf("Files:       %d total\n", m_counts.files_total);
+    printf("Time:        %-.3fs\n\n", m_end_time - m_start_time);
 }
 
-double get_time()
+int main(int argc, char** argv)
 {
-    struct timeval tv1;
-    struct timezone tz1;
-    auto return_code = gettimeofday(&tv1, &tz1);
-    ASSERT(return_code >= 0);
-    return static_cast<double>(tv1.tv_sec) + static_cast<double>(tv1.tv_usec) / 1'000'000;
-}
-
-int main(int, char** argv)
-{
-    String test_root = argv[1];
-    Results results;
-
-    double start_time = get_time();
-
-    for (auto& test : tests_to_run)
-        results.file_results.append(run_test(test, test_root));
-
-    print_results(results, get_time() - start_time);
-
+    ASSERT(argc == 2);
+    TestRunner(argv[1]).run();
     return 0;
 }
-

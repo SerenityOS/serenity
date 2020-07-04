@@ -54,13 +54,7 @@ JSONObject::~JSONObject()
 {
 }
 
-JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
-{
-    if (!interpreter.argument_count())
-        return js_undefined();
-    auto value = interpreter.argument(0);
-    auto replacer = interpreter.argument(1);
-    auto space = interpreter.argument(2);
+String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global_object, Value value, Value replacer, Value space) {
 
     StringifyState state;
 
@@ -129,8 +123,25 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
     if (interpreter.exception())
         return {};
     if (result.is_null())
+        return {};
+
+    return result;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
+{
+    if (!interpreter.argument_count())
         return js_undefined();
-    return js_string(interpreter, result);
+
+    auto value = interpreter.argument(0);
+    auto replacer = interpreter.argument(1);
+    auto space = interpreter.argument(2);
+
+    auto string = stringify_impl(interpreter, global_object, value, replacer, space);
+    if (string.is_null())
+        return js_undefined();
+
+    return js_string(interpreter, string);
 }
 
 String JSONObject::serialize_json_property(Interpreter& interpreter, StringifyState& state, const PropertyName& key, Object* holder)
