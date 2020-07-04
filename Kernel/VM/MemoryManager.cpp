@@ -30,6 +30,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/GlobalPage.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
@@ -47,6 +48,8 @@
 extern FlatPtr start_of_kernel_text;
 extern FlatPtr start_of_kernel_data;
 extern FlatPtr end_of_kernel_bss;
+
+static_assert(sizeof(::GlobalPage) <= PAGE_SIZE);
 
 namespace Kernel {
 
@@ -66,6 +69,10 @@ MemoryManager::MemoryManager()
     protect_kernel_image();
 
     m_shared_zero_page = allocate_user_physical_page();
+    m_shared_global_page = allocate_user_physical_page();
+
+    map_global_page_for_kernel(*m_shared_global_page);
+    new (&global_page()) ::GlobalPage();
 }
 
 MemoryManager::~MemoryManager()
@@ -552,6 +559,22 @@ void MemoryManager::flush_tlb(VirtualAddress vaddr)
 
 extern "C" PageTableEntry boot_pd3_pt1023[1024];
 
+void MemoryManager::map_global_page_for_kernel(PhysicalPage& physical_page)
+{
+    ScopedSpinLock lock(s_lock);
+
+    VirtualAddress vaddr(&global_page());
+    auto& pte = boot_pd3_pt1023[0];
+    if (pte.physical_page_base() != physical_page.paddr().as_ptr()) {
+        pte.set_physical_page_base(physical_page.paddr().get());
+        pte.set_writable(true);
+        pte.set_present(true);
+        pte.set_global(true);
+        pte.set_user_allowed(false);
+        flush_tlb(vaddr);
+    }
+}
+
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
     ScopedSpinLock lock(s_lock);
@@ -573,7 +596,7 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
     ScopedSpinLock lock(s_lock);
-    auto& pte = boot_pd3_pt1023[0];
+    auto& pte = boot_pd3_pt1023[8];
     if (pte.physical_page_base() != pt_paddr.as_ptr()) {
 #ifdef MM_DEBUG
         dbg() << "quickmap_pt: Mapping P" << (void*)pt_paddr.as_ptr() << " at 0xffe00000 in pte @ " << &pte;
@@ -582,9 +605,9 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
-        flush_tlb(VirtualAddress(0xffe00000));
+        flush_tlb(VirtualAddress(0xffe08000));
     }
-    return (PageTableEntry*)0xffe00000;
+    return (PageTableEntry*)0xffe08000;
 }
 
 u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
@@ -594,7 +617,7 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
     ScopedSpinLock lock(s_lock);
 
-    u32 pte_idx = 8 + Processor::current().id();
+    u32 pte_idx = 12 + Processor::current().id();
     VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
 
     auto& pte = boot_pd3_pt1023[pte_idx];
@@ -617,7 +640,7 @@ void MemoryManager::unquickmap_page()
     ScopedSpinLock lock(s_lock);
     auto& mm_data = get_data();
     ASSERT(mm_data.m_quickmap_in_use.is_locked());
-    u32 pte_idx = 8 + Processor::current().id();
+    u32 pte_idx = 12 + Processor::current().id();
     VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
     auto& pte = boot_pd3_pt1023[pte_idx];
     pte.clear();
@@ -646,8 +669,14 @@ bool MemoryManager::validate_range(const Process& process, VirtualAddress base_v
         if (!region || !region->contains(vaddr)) {
             if (space == AccessSpace::Kernel)
                 region = kernel_region_from_vaddr(vaddr);
-            if (!region || !region->contains(vaddr))
+            if (!region || !region->contains(vaddr)) {
                 region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
+                if (!region && vaddr == VirtualAddress(global_page_user())
+                    && space == AccessSpace::User && access_type == AccessType::Read) {
+                    // Special exception for the read-only global page
+                    break;
+                }
+            }
             if (!region
                 || (space == AccessSpace::User && !region->is_user_accessible())
                 || (access_type == AccessType::Read && !region->is_readable())

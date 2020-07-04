@@ -63,7 +63,9 @@ public:
 
     u32 ref_count() const { return m_ref_count; }
 
+    bool is_shared_page() const;
     bool is_shared_zero_page() const;
+    bool is_shared_global_page() const;
 
 private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);

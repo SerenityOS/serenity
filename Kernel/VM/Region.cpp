@@ -133,7 +133,7 @@ bool Region::commit(size_t page_index)
     ASSERT(vmobject().is_anonymous() || vmobject().is_purgeable());
     InterruptDisabler disabler;
     auto& vmobject_physical_page_entry = physical_page_slot(page_index);
-    if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
+    if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_page())
         return true;
     auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
     if (!physical_page) {
@@ -168,7 +168,7 @@ size_t Region::amount_resident() const
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
         auto* page = physical_page(i);
-        if (page && !page->is_shared_zero_page())
+        if (page && !page->is_shared_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -179,7 +179,7 @@ size_t Region::amount_shared() const
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
         auto* page = physical_page(i);
-        if (page && page->ref_count() > 1 && !page->is_shared_zero_page())
+        if (page && page->ref_count() > 1 && !page->is_shared_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -202,7 +202,7 @@ NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefP
 bool Region::should_cow(size_t page_index) const
 {
     auto* page = physical_page(page_index);
-    if (page && page->is_shared_zero_page())
+    if (page && page->is_shared_page())
         return true;
     if (m_shared)
         return false;

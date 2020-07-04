@@ -49,6 +49,7 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/GlobalPage.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/IO.h>
 #include <Kernel/KBufferBuilder.h>
@@ -2409,7 +2410,7 @@ int Process::sys$sleep(unsigned seconds)
 
 timeval kgettimeofday()
 {
-    return g_timeofday;
+    return global_page().read_timeofday();
 }
 
 void compute_relative_timeout_from_absolute(const timeval& absolute_time, timeval& relative_time)
@@ -2986,7 +2987,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     bool select_has_timeout = false;
     if (timeout && (timeout->tv_sec || timeout->tv_nsec)) {
         timespec ts_since_boot;
-        timeval_to_timespec(Scheduler::time_since_boot(), ts_since_boot);
+        timeval_to_timespec(TimeManagement::the().time_since_boot(), ts_since_boot);
         timespec_add(ts_since_boot, *timeout, computed_timeout);
         select_has_timeout = true;
     }
@@ -3098,7 +3099,7 @@ int Process::sys$poll(const Syscall::SC_poll_params* params)
     bool has_timeout = false;
     if (timeout && (timeout->tv_sec || timeout->tv_nsec)) {
         timespec ts_since_boot;
-        timeval_to_timespec(Scheduler::time_since_boot(), ts_since_boot);
+        timeval_to_timespec(TimeManagement::the().time_since_boot(), ts_since_boot);
         timespec_add(ts_since_boot, *timeout, actual_timeout);
         has_timeout = true;
     }
@@ -4495,12 +4496,10 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* user_ts)
 
     switch (clock_id) {
     case CLOCK_MONOTONIC:
-        ts.tv_sec = TimeManagement::the().seconds_since_boot();
-        ts.tv_nsec = TimeManagement::the().ticks_this_second() * 1000000;
+        ts = TimeManagement::the().monotonic_time();
         break;
     case CLOCK_REALTIME:
-        ts.tv_sec = TimeManagement::the().epoch_time();
-        ts.tv_nsec = TimeManagement::the().ticks_this_second() * 1000000;
+        ts = TimeManagement::the().real_time();
         break;
     default:
         return -EINVAL;

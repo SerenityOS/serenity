@@ -25,6 +25,7 @@
  */
 
 #include <AK/Memory.h>
+#include <Kernel/GlobalPage.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Thread.h>
@@ -48,7 +49,7 @@ static HashMap<u32, PageDirectory*>& cr3_map()
 
 RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
 {
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     return cr3_map().get(cr3).value_or({});
 }
 
@@ -93,13 +94,23 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
 
     {
-        InterruptDisabler disabler;
+        ScopedCritical critical;
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_directory_table);
         table.raw[0] = (u64)m_directory_pages[0]->paddr().as_ptr() | 1;
         table.raw[1] = (u64)m_directory_pages[1]->paddr().as_ptr() | 1;
         table.raw[2] = (u64)m_directory_pages[2]->paddr().as_ptr() | 1;
         table.raw[3] = (u64)m_directory_pages[3]->paddr().as_ptr() | 1;
         MM.unquickmap_page();
+
+        // Map the shared global page
+        auto& pte = MM.ensure_pte(*this, VirtualAddress(global_page_user()));
+        pte.clear();
+        pte.set_physical_page_base(MM.shared_global_page().paddr().get());
+        pte.set_present(true);
+        pte.set_writable(false);
+        if (Processor::current().has_feature(CPUFeature::NX))
+            pte.set_execute_disabled(true);
+        pte.set_user_allowed(true);
     }
 
     // Clone bottom 2 MB of mappings from kernel_page_directory
@@ -109,7 +120,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     auto* new_pd = MM.quickmap_pd(*this, 0);
     memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
 
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     cr3_map().set(cr3(), this);
 }
 
@@ -118,7 +129,7 @@ PageDirectory::~PageDirectory()
 #ifdef MM_DEBUG
     dbg() << "MM: ~PageDirectory K" << this;
 #endif
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     cr3_map().remove(cr3());
 }
 

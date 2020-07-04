@@ -46,12 +46,13 @@ public:
     static void initialize();
     static TimeManagement& the();
 
-    time_t epoch_time() const;
     void set_epoch_time(time_t);
     time_t seconds_since_boot() const;
     time_t ticks_per_second() const;
-    time_t ticks_this_second() const;
+    timeval time_since_boot() const;
     time_t boot_time() const;
+    timespec monotonic_time() const;
+    timespec real_time() const;
 
     bool is_system_timer(const HardwareTimer&) const;
 
@@ -59,8 +60,6 @@ public:
     void increment_time_since_boot(const RegisterState&);
 
     static bool is_hpet_periodic_mode_allowed();
-
-    static timeval now_as_timeval();
 
 private:
     explicit TimeManagement(bool probe_non_legacy_hardware_timers);

@@ -26,6 +26,7 @@
 
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/GlobalPage.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Time/HPET.h>
 #include <Kernel/Time/HPETComparator.h>
@@ -58,11 +59,6 @@ void TimeManagement::set_epoch_time(time_t value)
     m_epoch_time = value;
 }
 
-time_t TimeManagement::epoch_time() const
-{
-    return m_epoch_time;
-}
-
 void TimeManagement::initialize()
 {
     ASSERT(!s_time_management);
@@ -71,18 +67,15 @@ void TimeManagement::initialize()
     else
         s_time_management = new TimeManagement(true);
 }
-time_t TimeManagement::seconds_since_boot() const
-{
-    return m_seconds_since_boot;
-}
+
 time_t TimeManagement::ticks_per_second() const
 {
     return m_system_timer->ticks_per_second();
 }
 
-time_t TimeManagement::ticks_this_second() const
+timeval TimeManagement::time_since_boot() const
 {
-    return m_ticks_this_second;
+    return { m_seconds_since_boot, (suseconds_t)m_ticks_this_second * 1000 };
 }
 
 time_t TimeManagement::boot_time() const
@@ -113,11 +106,6 @@ TimeManagement::TimeManagement(bool probe_non_legacy_hardware_timers)
     if (probe_and_set_legacy_hardware_timers())
         return;
     ASSERT_NOT_REACHED();
-}
-
-timeval TimeManagement::now_as_timeval()
-{
-    return { s_time_management->epoch_time(), (suseconds_t)s_time_management->ticks_this_second() * (suseconds_t)1000 };
 }
 
 Vector<HardwareTimer*> TimeManagement::scan_and_initialize_periodic_timers()
@@ -219,6 +207,24 @@ bool TimeManagement::probe_and_set_legacy_hardware_timers()
     return true;
 }
 
+timespec TimeManagement::monotonic_time() const
+{
+    timespec ts;
+    InterruptDisabler disable;
+    ts.tv_sec = m_seconds_since_boot;
+    ts.tv_nsec = m_ticks_this_second * 1000000;
+    return ts;
+}
+
+timespec TimeManagement::real_time() const
+{
+    timespec ts;
+    InterruptDisabler disable;
+    ts.tv_sec = m_epoch_time;
+    ts.tv_nsec = m_ticks_this_second * 1000000;
+    return ts;
+}
+
 void TimeManagement::update_time(const RegisterState& regs)
 {
     TimeManagement::the().increment_time_since_boot(regs);
@@ -233,6 +239,7 @@ void TimeManagement::increment_time_since_boot(const RegisterState&)
         ++m_epoch_time;
         m_ticks_this_second = 0;
     }
+    global_page().write_time(m_epoch_time, m_seconds_since_boot, (suseconds_t)m_ticks_this_second * (suseconds_t)1000);
 }
 
 }

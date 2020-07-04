@@ -32,6 +32,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Forward.h>
 #include <Kernel/SpinLock.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
@@ -154,6 +155,7 @@ public:
     void dump_kernel_regions();
 
     PhysicalPage& shared_zero_page() { return *m_shared_zero_page; }
+    PhysicalPage& shared_global_page() { return *m_shared_global_page; }
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
@@ -191,6 +193,8 @@ private:
     PageDirectoryEntry* quickmap_pd(PageDirectory&, size_t pdpt_index);
     PageTableEntry* quickmap_pt(PhysicalAddress);
 
+    void map_global_page_for_kernel(PhysicalPage& physical_page);
+
     const PageTableEntry* pte(const PageDirectory&, VirtualAddress);
     PageTableEntry& ensure_pte(PageDirectory&, VirtualAddress);
 
@@ -198,6 +202,7 @@ private:
     RefPtr<PhysicalPage> m_low_page_table;
 
     RefPtr<PhysicalPage> m_shared_zero_page;
+    RefPtr<PhysicalPage> m_shared_global_page;
 
     unsigned m_user_physical_pages { 0 };
     unsigned m_user_physical_pages_used { 0 };
@@ -213,8 +218,6 @@ private:
     InlineLinkedList<VMObject> m_vmobjects;
 
     static RecursiveSpinLock s_lock;
-
-    RefPtr<PhysicalPage> m_low_pseudo_identity_mapping_pages[4];
 };
 
 template<typename Callback>
@@ -244,9 +247,19 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
     return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
 }
 
+inline bool PhysicalPage::is_shared_page() const
+{
+    return this == &MM.shared_global_page() || this == &MM.shared_zero_page();
+}
+
 inline bool PhysicalPage::is_shared_zero_page() const
 {
     return this == &MM.shared_zero_page();
+}
+
+inline bool PhysicalPage::is_shared_global_page() const
+{
+    return this == &MM.shared_global_page();
 }
 
 }

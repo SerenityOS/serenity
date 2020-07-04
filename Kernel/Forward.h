@@ -36,6 +36,7 @@ class DiskCache;
 class DoubleBuffer;
 class File;
 class FileDescription;
+struct GlobalPage;
 class IPv4Socket;
 class Inode;
 class InodeIdentifier;

@@ -46,7 +46,6 @@ extern WaitQueue* g_finalizer_wait_queue;
 extern Atomic<bool> g_finalizer_has_work;
 extern u64 g_uptime;
 extern SchedulerData* g_scheduler_data;
-extern timeval g_timeofday;
 extern RecursiveSpinLock g_scheduler_lock;
 
 class Scheduler {
@@ -55,7 +54,6 @@ public:
     static void timer_tick(const RegisterState&);
     [[noreturn]] static void start();
     static bool pick_next();
-    static timeval time_since_boot();
     static bool yield();
     static bool donate_to(Thread*, const char* reason);
     static bool context_switch(Thread&);
