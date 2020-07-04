@@ -29,21 +29,21 @@ describe("[Call][GetOwnProperty]] trap normal behavior", () => {
             }
         });
 
-        let d = Object.getOwnPropertyDescriptor(p, "baz");
-        expect(d.configurable).toBe(true);
-        expect(d.enumerable).toBe(false);
-        expect(d.writable).toBe(false);
-        expect(d.value).toBe("qux");
-        expect(d.get).toBeUndefined();
-        expect(d.set).toBeUndefined();
+        expect(p).toHaveConfigurableProperty("baz");
+        expect(p).not.toHaveEnumerableProperty("baz");
+        expect(p).not.toHaveWritableProperty("baz");
+        expect(p).toHaveValueProperty("baz", "qux");
+        expect(p).not.toHaveGetterProperty("baz");
+        expect(p).not.toHaveSetterProperty("baz");
 
         d = Object.getOwnPropertyDescriptor(p, "foo");
-        expect(d.configurable).toBe(true);
-        expect(d.enumerable).toBe(false);
-        expect(d.writable).toBe(true);
-        expect(d.value).toBe("bar");
-        expect(d.get).toBeUndefined();
-        expect(d.set).toBeUndefined();
+
+        expect(p).toHaveConfigurableProperty("foo");
+        expect(p).not.toHaveEnumerableProperty("foo");
+        expect(p).toHaveWritableProperty("foo");
+        expect(p).toHaveValueProperty("foo", "bar");
+        expect(p).not.toHaveGetterProperty("foo");
+        expect(p).not.toHaveSetterProperty("foo");
     });
 });
 

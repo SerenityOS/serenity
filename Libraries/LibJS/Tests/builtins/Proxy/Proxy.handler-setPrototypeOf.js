@@ -41,7 +41,7 @@ describe("[[SetPrototypeOf]] trap normal behavior", () => {
         Object.setPrototypeOf(p, { foo: 1 });
         expect(Object.getPrototypeOf(p).foo).toBeUndefined();
         p.shouldSet = true;
-        expect(o.shouldSet).toBe(true);
+        expect(o.shouldSet).toBeTrue();
         Object.setPrototypeOf(p, { foo: 1 });
         expect(Object.getPrototypeOf(p).foo).toBe(1);
     });

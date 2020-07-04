@@ -144,6 +144,18 @@ class Expector {
         });
     }
 
+    toBeTrue() {
+        this.__doMatcher(() => {
+            this.__expect(this.target === true);
+        });
+    }
+
+    toBeFalse() {
+        this.__doMatcher(() => {
+            this.__expect(this.target === false);
+        })
+    }
+
     toContain(item) {
         this.__doMatcher(() => {
             // FIXME: Iterator check
@@ -265,6 +277,68 @@ class Expector {
 
         this.__doMatcher(() => {
             this.__expect(deepEquals(value, result));
+        });
+    }
+
+    toHaveConfigurableProperty(property) {
+        this.__expect(this.target !== undefined && this.target !== null);
+        let d = Object.getOwnPropertyDescriptor(this.target, property);
+        this.__expect(d !== undefined);
+
+        this.__doMatcher(() => {
+            this.__expect(d.configurable);
+        });
+    }
+
+    toHaveEnumerableProperty(property) {
+        this.__expect(this.target !== undefined && this.target !== null);
+        let d = Object.getOwnPropertyDescriptor(this.target, property);
+        this.__expect(d !== undefined);
+
+        this.__doMatcher(() => {
+            this.__expect(d.enumerable);
+        });
+    }
+
+    toHaveWritableProperty(property) {
+        this.__expect(this.target !== undefined && this.target !== null);
+        let d = Object.getOwnPropertyDescriptor(this.target, property);
+        this.__expect(d !== undefined);
+
+        this.__doMatcher(() => {
+            this.__expect(d.writable);
+        });
+    }
+
+    toHaveValueProperty(property, value) {
+        this.__expect(this.target !== undefined && this.target !== null);
+        let d = Object.getOwnPropertyDescriptor(this.target, property);
+        this.__expect(d !== undefined);
+
+        this.__doMatcher(() => {
+            this.__expect(d.value !== undefined);
+            if (value !== undefined)
+                this.__expect(deepEquals(value, d.value));
+        });
+    }
+
+    toHaveGetterProperty(property) {
+        this.__expect(this.target !== undefined && this.target !== null);
+        let d = Object.getOwnPropertyDescriptor(this.target, property);
+        this.__expect(d !== undefined);
+
+        this.__doMatcher(() => {
+            this.__expect(d.get !== undefined);
+        });
+    }
+
+    toHaveSetterProperty(property) {
+        this.__expect(this.target !== undefined && this.target !== null);
+        let d = Object.getOwnPropertyDescriptor(this.target, property);
+        this.__expect(d !== undefined);
+
+        this.__doMatcher(() => {
+            this.__expect(d.set !== undefined);
         });
     }
 

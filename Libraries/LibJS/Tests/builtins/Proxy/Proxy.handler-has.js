@@ -1,8 +1,8 @@
 describe("[[Has]] trap normal behavior", () => {
     test("forwarding when not defined in handler", () => {
-        expect("foo" in new Proxy({}, { has: null })).toBe(false);
-        expect("foo" in new Proxy({}, { has: undefined})).toBe(false);
-        expect("foo" in new Proxy({}, {})).toBe(false);
+        expect("foo" in new Proxy({}, { has: null })).toBeFalse();
+        expect("foo" in new Proxy({}, { has: undefined})).toBeFalse();
+        expect("foo" in new Proxy({}, {})).toBeFalse();
     });
 
     test("correct arguments supplied to trap", () => {
@@ -30,8 +30,8 @@ describe("[[Has]] trap normal behavior", () => {
             }
         });
 
-        expect("foo" in p).toBe(false);
-        expect("foo" in p).toBe(true);
+        expect("foo" in p).toBeFalse();
+        expect("foo" in p).toBeTrue();
     });
 });
 
