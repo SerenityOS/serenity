@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
     pid_t pid = pid_opt.value();
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto window = GUI::Window::construct();
     window->set_title("Inspector");
@@ -114,5 +114,5 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    return app.exec();
+    return app->exec();
 }

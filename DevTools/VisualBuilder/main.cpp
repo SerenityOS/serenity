@@ -47,7 +47,7 @@ static RefPtr<GUI::Window> make_toolbox_window();
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto propbox = VBPropertiesWindow::construct();
 
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("Visual Builder", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-visual-builder.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     auto toolbox = make_toolbox_window();
     toolbox->show();
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
         form1->load_from_file(argv[1]);
     }
 
-    return app.exec();
+    return app->exec();
 }
 
 RefPtr<GUI::Window> make_toolbox_window()

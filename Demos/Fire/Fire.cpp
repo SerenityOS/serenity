@@ -222,7 +222,7 @@ void Fire::mouseup_event(GUI::MouseEvent& event)
 */
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(false);
@@ -241,5 +241,5 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-fire.png"));
 
-    return app.exec();
+    return app->exec();
 }

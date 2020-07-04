@@ -29,17 +29,19 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
-#include <LibCore/Forward.h>
+#include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {
 
-class Application {
+class Application : public Core::Object {
+    C_OBJECT(Application);
+
 public:
     static Application& the();
-    Application(int argc, char** argv);
+
     ~Application();
 
     int exec();
@@ -71,6 +73,8 @@ public:
     bool focus_debugging_enabled() const { return m_focus_debugging_enabled; }
 
 private:
+    Application(int argc, char** argv);
+
     OwnPtr<Core::EventLoop> m_event_loop;
     RefPtr<MenuBar> m_menubar;
     RefPtr<Gfx::PaletteImpl> m_palette;

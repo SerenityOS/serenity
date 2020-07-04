@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
     args_parser.parse(argc, argv);
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto& clipboard = GUI::Clipboard::the();
     auto data_and_type = clipboard.data_and_type();

@@ -53,7 +53,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio thread shared_buffer accept rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
@@ -196,7 +196,7 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("PixelPaint", app_icon.bitmap_for_size(32), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     image_editor.on_active_layer_change = [&](auto* layer) {
         layer_list_widget.set_selected_layer(layer);
@@ -227,5 +227,5 @@ int main(int argc, char** argv)
     image_editor.set_image(image);
     image_editor.set_active_layer(bg_layer);
 
-    return app.exec();
+    return app->exec();
 }

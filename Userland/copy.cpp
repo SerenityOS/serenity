@@ -75,7 +75,7 @@ Options parse_options(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     Options options = parse_options(argc, argv);
 

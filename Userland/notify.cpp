@@ -32,7 +32,7 @@
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     Core::ArgsParser args_parser;
     const char* title = nullptr;

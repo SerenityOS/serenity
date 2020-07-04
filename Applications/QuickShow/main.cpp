@@ -55,7 +55,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer accept cpath rpath wpath proc exec thread", nullptr) < 0) {
         perror("pledge");
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
 
     auto quit_action = GUI::CommonActions::make_quit_action(
         [&](auto&) {
-            app.quit();
+            app->quit();
         });
 
     auto rotate_left_action = GUI::Action::create("Rotate Left", { Mod_None, Key_L },
@@ -290,7 +290,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(about_action);
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     if (path != nullptr) {
         widget.load_from_file(path);
@@ -298,5 +298,5 @@ int main(int argc, char** argv)
 
     window->show();
 
-    return app.exec();
+    return app->exec();
 }

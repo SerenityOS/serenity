@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto window = GUI::Window::construct();
     window->set_title("UserName");
@@ -101,5 +101,5 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    return app.exec();
+    return app->exec();
 }

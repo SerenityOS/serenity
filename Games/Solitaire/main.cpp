@@ -35,7 +35,7 @@
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio rpath shared_buffer", nullptr) < 0) {
         perror("pledge");
@@ -56,18 +56,18 @@ int main(int argc, char** argv)
 
     app_menu.add_action(GUI::Action::create("Restart game", [&](auto&) { widget->setup(); }));
     app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Solitaire", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-solitaire.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
     window->set_main_widget(widget);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-solitaire.png"));
     window->show();
     widget->setup();
 
-    return app.exec();
+    return app->exec();
 }

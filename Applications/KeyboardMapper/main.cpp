@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "Keyboard character mapping file.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper");
 
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 
     auto quit_action = GUI::CommonActions::make_quit_action(
         [&](auto&) {
-            app.quit();
+            app->quit();
         });
 
     auto about_action = GUI::Action::create("About",
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(about_action);
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
-    return app.exec();
+    return app->exec();
 }

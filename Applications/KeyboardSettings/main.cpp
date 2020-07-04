@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     }
 
     // If there is no command line parameter go for GUI.
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio rpath accept shared_buffer proc exec", nullptr) < 0) {
         perror("pledge");
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
             exit(1);
         }
         if (quit)
-            app.quit();
+            app->quit();
     };
 
     auto& bottom_widget = root_widget.add<GUI::Widget>();
@@ -161,12 +161,12 @@ int main(int argc, char** argv)
     cancel_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     cancel_button.set_preferred_size(60, 22);
     cancel_button.on_click = [&](auto) {
-        app.quit();
+        app->quit();
     };
 
     auto quit_action = GUI::CommonActions::make_quit_action(
         [&](auto&) {
-            app.quit();
+            app->quit();
         });
 
     auto about_action = GUI::Action::create("About",
@@ -182,9 +182,9 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(about_action);
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     window->show();
 
-    return app.exec();
+    return app->exec();
 }

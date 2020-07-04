@@ -35,7 +35,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath cpath wpath thread", nullptr) < 0) {
         perror("pledge");
@@ -60,5 +60,5 @@ int main(int argc, char** argv)
     if (argc >= 2)
         hex_editor_widget.open_file(argv[1]);
 
-    return app.exec();
+    return app->exec();
 }

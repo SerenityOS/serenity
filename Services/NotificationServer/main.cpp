@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
     auto server = Core::LocalServer::construct();
 
     bool ok = server->take_over_from_system_server();
@@ -67,5 +67,5 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    return app.exec();
+    return app->exec();
 }

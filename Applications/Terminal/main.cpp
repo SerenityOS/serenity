@@ -209,7 +209,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec unix", nullptr) < 0) {
         perror("pledge");
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
 
     auto& terminal = window->set_main_widget<TerminalWidget>(ptm_fd, true, config);
     terminal.on_command_exit = [&] {
-        app.quit(0);
+        app->quit(0);
     };
     terminal.on_title_change = [&](auto& title) {
         window->set_title(title);
@@ -321,7 +321,7 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("Terminal", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-terminal.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");
@@ -346,5 +346,5 @@ int main(int argc, char** argv)
     unveil(nullptr, nullptr);
 
     config->sync();
-    return app.exec();
+    return app->exec();
 }

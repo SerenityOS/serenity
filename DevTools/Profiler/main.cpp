@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
     args_parser.parse(argc, argv, false);
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     const char* path = nullptr;
     if (argc != 2) {
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Profiler");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& view_menu = menubar->add_menu("View");
     auto invert_action = GUI::Action::create_checkable("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
@@ -118,10 +118,10 @@ int main(int argc, char** argv)
     percent_action->set_checked(false);
     view_menu.add_action(percent_action);
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     window->show();
-    return app.exec();
+    return app->exec();
 }
 
 bool prompt_to_stop_profiling()

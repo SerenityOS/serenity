@@ -44,7 +44,7 @@
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     auto& edit_menu = menubar->add_menu("Edit");
     main_widget.add_actions(edit_menu);
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
-    return app.exec();
+    return app->exec();
 }

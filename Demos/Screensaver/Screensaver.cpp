@@ -134,7 +134,7 @@ void Screensaver::draw()
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
@@ -148,5 +148,5 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-screensaver.png"));
 
-    return app.exec();
+    return app->exec();
 }

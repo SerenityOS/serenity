@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio rpath accept wpath cpath shared_buffer", nullptr) < 0) {
         perror("pledge");
@@ -127,11 +127,11 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("Minesweeper", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-minesweeper.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    app->set_menubar(move(menubar));
 
     window->show();
 
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/mine.png"));
 
-    return app.exec();
+    return app->exec();
 }

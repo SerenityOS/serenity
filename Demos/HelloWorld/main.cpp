@@ -33,7 +33,7 @@
 
 int main(int argc, char** argv)
 {
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 240, 160);
@@ -53,10 +53,10 @@ int main(int argc, char** argv)
     button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button.set_preferred_size(0, 20);
     button.on_click = [&](auto) {
-        app.quit();
+        app->quit();
     };
 
     window->show();
 
-    return app.exec();
+    return app->exec();
 }

@@ -133,7 +133,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Application app(argc, argv);
+    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
         perror("pledge");
@@ -257,5 +257,5 @@ int main(int argc, char** argv)
     }
 
     window->show();
-    return app.exec();
+    return app->exec();
 }
