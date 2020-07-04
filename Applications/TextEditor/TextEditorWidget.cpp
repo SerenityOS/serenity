@@ -452,7 +452,7 @@ TextEditorWidget::TextEditorWidget()
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Text Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-texteditor.png"), window());
+        GUI::AboutDialog::show("Text Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-text-editor.png"), window());
     }));
 
     GUI::Application::the()->set_menubar(move(menubar));

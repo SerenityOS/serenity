@@ -480,7 +480,7 @@ int main(int argc, char** argv)
     });
 
     auto add_editor_action = GUI::Action::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E },
-        Gfx::Bitmap::load_from_file("/res/icons/TextEditor16.png"),
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-text-editor.png"),
         [&](auto&) {
             add_new_editor(*g_text_inner_splitter);
             update_actions();
