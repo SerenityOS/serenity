@@ -52,8 +52,10 @@ void ProcessChooser::build()
     widget.set_fill_with_background_color(true);
     widget.set_layout<GUI::VerticalBoxLayout>();
     auto& table_view = widget.add<GUI::TableView>();
-    table_view.set_model(GUI::SortingProxyModel::create(Profiler::RunningProcessesModel::create()));
-    table_view.model()->set_key_column_and_sort_order(Profiler::RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
+    auto sorting_model = GUI::SortingProxyModel::create(Profiler::RunningProcessesModel::create());
+    sorting_model->set_sort_role(GUI::Model::Role::Display);
+    sorting_model->set_key_column_and_sort_order(Profiler::RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
+    table_view.set_model(sorting_model);
     auto& button_container = widget.add<GUI::Widget>();
     button_container.set_preferred_size(0, 30);
     button_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
