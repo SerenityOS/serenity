@@ -66,17 +66,17 @@ void WebContentView::resize_event(GUI::ResizeEvent& event)
 
 void WebContentView::mousedown_event(GUI::MouseEvent& event)
 {
-    client().post_message(Messages::WebContentServer::MouseDown(event.position(), event.button(), event.buttons(), event.modifiers()));
+    client().post_message(Messages::WebContentServer::MouseDown(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
 }
 
 void WebContentView::mouseup_event(GUI::MouseEvent& event)
 {
-    client().post_message(Messages::WebContentServer::MouseUp(event.position(), event.button(), event.buttons(), event.modifiers()));
+    client().post_message(Messages::WebContentServer::MouseUp(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
 }
 
 void WebContentView::mousemove_event(GUI::MouseEvent& event)
 {
-    client().post_message(Messages::WebContentServer::MouseMove(event.position(), event.button(), event.buttons(), event.modifiers()));
+    client().post_message(Messages::WebContentServer::MouseMove(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
 }
 
 void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id)
