@@ -29,6 +29,7 @@
 #include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <sys/wait.h>
@@ -85,37 +86,29 @@ void handle_signal(int signal)
 
 int run_command(const Vector<const char*>& command)
 {
-    child_pid = fork();
-    if (child_pid < 0) {
-        // We failed to fork, so we shall print an error message and update the exit code.
+    if ((errno = posix_spawnp(const_cast<pid_t*>(&child_pid), command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
         exit_code = 1;
-        perror("fork");
+        perror("posix_spawn");
         return errno;
-    } else if (child_pid == 0) {
-        // We are in the child process, so we should run the command.
-        execvp(command[0], const_cast<char* const*>(command.data()));
-        perror("exec");
-        exit(1);
-    } else {
-        // We are still in the parent process, so we shall wait for the child to terminate,
-        // then return its exit code.
-        int status;
-        pid_t exited_pid;
-        do {
-            exited_pid = waitpid(child_pid, &status, 0);
-        } while (exited_pid < 0 && errno == EINTR);
-        ASSERT(exited_pid == child_pid);
-        child_pid = -1;
-        if (exited_pid < 0) {
-            perror("waitpid");
-            return 1;
-        }
-        if (WIFEXITED(status)) {
-            return WEXITSTATUS(status);
-        } else {
-            return 1;
-        }
     }
+
+   // Wait for the child to terminate, then return its exit code.
+   int status;
+   pid_t exited_pid;
+   do {
+       exited_pid = waitpid(child_pid, &status, 0);
+   } while (exited_pid < 0 && errno == EINTR);
+   ASSERT(exited_pid == child_pid);
+   child_pid = -1;
+   if (exited_pid < 0) {
+       perror("waitpid");
+       return 1;
+   }
+   if (WIFEXITED(status)) {
+       return WEXITSTATUS(status);
+   } else {
+       return 1;
+   }
 }
 
 int main(int argc, char** argv)
