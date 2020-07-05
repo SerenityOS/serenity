@@ -48,7 +48,7 @@ void WebContentView::load(const URL& url)
 
 void WebContentView::paint_event(GUI::PaintEvent& event)
 {
-    GUI::Frame::paint_event(event);
+    GUI::ScrollableWidget::paint_event(event);
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
@@ -61,11 +61,12 @@ void WebContentView::paint_event(GUI::PaintEvent& event)
 
 void WebContentView::resize_event(GUI::ResizeEvent& event)
 {
-    GUI::Widget::resize_event(event);
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, event.size());
+    GUI::ScrollableWidget::resize_event(event);
+
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size());
     m_bitmap = bitmap->to_bitmap_backed_by_shared_buffer();
     m_bitmap->shared_buffer()->share_with(client().server_pid());
-    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, event.size())));
+    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, m_bitmap->size())));
     request_repaint();
 }
 
@@ -116,7 +117,7 @@ void WebContentView::notify_server_did_change_title(Badge<WebContentClient>, con
 
 void WebContentView::did_scroll()
 {
-    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, size())));
+    client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));
     request_repaint();
 }
 
