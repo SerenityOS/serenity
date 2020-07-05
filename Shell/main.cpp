@@ -146,8 +146,8 @@ int main(int argc, char** argv)
         String file_path = Shell::init_file_path;
         if (file_path.starts_with('~'))
             file_path = shell->expand_tilde(file_path);
-        if (!shell->run_file(file_path)) {
-            fprintf(stderr, "Shell: Failed to execute init file '%s'\n", Shell::init_file_path);
+        if (Core::File::exists(file_path)) {
+            shell->run_file(file_path, false);
         }
     }
 
