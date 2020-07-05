@@ -27,6 +27,8 @@
 #include "WebContentView.h"
 #include <AK/URL.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/StatusBar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 
@@ -34,13 +36,24 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
     auto window = GUI::Window::construct();
-    auto& view = window->set_main_widget<WebContentView>();
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    auto& view = main_widget.add<WebContentView>();
+    auto& statusbar = main_widget.add<GUI::StatusBar>();
     window->set_title("WebView");
     window->set_rect(100, 100, 640, 480);
     window->show();
 
     view.on_title_change = [&](auto& title) {
         window->set_title(String::format("%s - WebView", title.characters()));
+    };
+
+    view.on_link_hover = [&](auto& url) {
+        if (url.is_valid())
+            statusbar.set_text(url.to_string());
+        else
+            statusbar.set_text("");
     };
 
     view.load("file:///res/html/misc/welcome.html");
