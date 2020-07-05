@@ -6,6 +6,9 @@ let expect;
 // name to avoid name collision.
 let __TestResults__ = {};
 
+// So test names like "toString" don't automatically produce an error
+Object.setPrototypeOf(__TestResults__, null);
+
 // This array is used to communicate with the C++ program. It treats
 // each message in this array as a separate message. Has a terrible
 // name to avoid name collision.
@@ -430,8 +433,12 @@ test = (message, callback) => {
         __TestResults__[suiteMessage] = {};
 
     const suite = __TestResults__[suiteMessage];
-    if (suite[message])
-        throw new Error("Duplicate test name: " + message);
+    if (suite[message]) {
+        suite[message] = {
+            result: "fail"
+        };
+        return;
+    }
 
     try {
         callback();
