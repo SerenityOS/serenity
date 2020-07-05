@@ -58,7 +58,16 @@ private:
     virtual void handle(const Messages::WebContentServer::MouseMove&) override;
     virtual void handle(const Messages::WebContentServer::MouseUp&) override;
 
+    void flush_pending_paint_requests();
+
     NonnullOwnPtr<PageHost> m_page_host;
+
+    struct PaintRequest {
+        Gfx::IntRect content_rect;
+        NonnullRefPtr<Gfx::Bitmap> bitmap;
+    };
+    Vector<PaintRequest> m_pending_paint_requests;
+    RefPtr<Core::Timer> m_paint_flush_timer;
 };
 
 }

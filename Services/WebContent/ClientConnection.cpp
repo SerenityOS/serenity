@@ -41,6 +41,7 @@ ClientConnection::ClientConnection(Core::LocalSocket& socket, int client_id)
     , m_page_host(PageHost::create(*this))
 {
     s_connections.set(client_id, *this);
+    m_paint_flush_timer = Core::Timer::create_single_shot(0, [this] { flush_pending_paint_requests(); });
 }
 
 ClientConnection::~ClientConnection()
@@ -102,6 +103,13 @@ void ClientConnection::handle(const Messages::WebContentServer::Paint& message)
     dbg() << "handle: WebContentServer::Paint: content_rect=" << message.content_rect() << ", shbuf_id=" << message.shbuf_id();
 #endif
 
+    for (auto& pending_paint : m_pending_paint_requests) {
+        if (pending_paint.bitmap->shbuf_id() == message.shbuf_id()) {
+            pending_paint.content_rect = message.content_rect();
+            return;
+        }
+    }
+
     auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
     if (!shared_buffer) {
         dbg() << "WebContentServer::Paint: SharedBuffer already gone! Ignoring :^)";
@@ -112,8 +120,18 @@ void ClientConnection::handle(const Messages::WebContentServer::Paint& message)
         did_misbehave("WebContentServer::Paint: Cannot create Gfx::Bitmap wrapper around SharedBuffer");
         return;
     }
-    m_page_host->paint(message.content_rect(), *shared_bitmap);
-    post_message(Messages::WebContentClient::DidPaint(message.content_rect(), message.shbuf_id()));
+
+    m_pending_paint_requests.append({ message.content_rect(), shared_bitmap.release_nonnull() });
+    m_paint_flush_timer->start();
+}
+
+void ClientConnection::flush_pending_paint_requests()
+{
+    for (auto& pending_paint : m_pending_paint_requests) {
+        m_page_host->paint(pending_paint.content_rect, *pending_paint.bitmap);
+        post_message(Messages::WebContentClient::DidPaint(pending_paint.content_rect, pending_paint.bitmap->shbuf_id()));
+    }
+    m_pending_paint_requests.clear();
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::MouseDown& message)
