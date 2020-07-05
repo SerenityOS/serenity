@@ -131,7 +131,7 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
         return adopt(*new LayoutTableRow(document(), *this, move(style)));
     if (display == CSS::Display::TableCell)
         return adopt(*new LayoutTableCell(document(), *this, move(style)));
-    if (display == CSS::Display::TableRowGroup)
+    if (display == CSS::Display::TableRowGroup || display == CSS::Display::TableHeaderGroup || display == CSS::Display::TableFooterGroup)
         return adopt(*new LayoutTableRowGroup(document(), *this, move(style)));
     if (display == CSS::Display::InlineBlock) {
         auto inline_block = adopt(*new LayoutBlock(document(), this, move(style)));
