@@ -112,7 +112,9 @@ void ClientConnection::handle(const Messages::WebContentServer::Paint& message)
 
     auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
     if (!shared_buffer) {
+#ifdef DEBUG_SPAM
         dbg() << "WebContentServer::Paint: SharedBuffer already gone! Ignoring :^)";
+#endif
         return;
     }
     auto shared_bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGB32, shared_buffer.release_nonnull(), message.content_rect().size());
