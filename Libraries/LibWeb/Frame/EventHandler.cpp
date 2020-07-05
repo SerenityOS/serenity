@@ -131,6 +131,9 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             auto href = link->href();
             if (href.starts_with("javascript:")) {
                 document.run_javascript(href.substring_view(11, href.length() - 11));
+            } else if (href.starts_with('#')) {
+                auto anchor = href.substring_view(1, href.length() - 1);
+                m_frame.scroll_to_anchor(anchor);
             } else {
                 if (m_frame.is_main_frame()) {
                     page_client.page_did_click_link(link->href(), link->target(), modifiers);

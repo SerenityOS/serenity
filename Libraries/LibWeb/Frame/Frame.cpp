@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/HTMLAnchorElement.h>
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutWidget.h>
@@ -116,9 +117,33 @@ void Frame::did_scroll(Badge<PageView>)
 
 void Frame::scroll_to_anchor(const String& fragment)
 {
-    // FIXME: This logic is backwards, the work should be done in here,
-    //        and then we just request that the "view" scrolls to a certain content offset.
-    page().client().page_did_request_scroll_to_anchor(fragment);
+    if (!document())
+        return;
+
+    const auto* element = document()->get_element_by_id(fragment);
+    if (!element) {
+        auto candidates = document()->get_elements_by_name(fragment);
+        for (auto* candidate : candidates) {
+            if (is<HTMLAnchorElement>(*candidate)) {
+                element = to<HTMLAnchorElement>(candidate);
+                break;
+            }
+        }
+    }
+
+    if (!element || !element->layout_node())
+        return;
+
+    auto& layout_node = *element->layout_node();
+
+    Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)viewport_rect().width(), (float)viewport_rect().height() } };
+    if (is<LayoutBox>(layout_node)) {
+        auto& layout_box = to<LayoutBox>(layout_node);
+        auto padding_box = layout_box.box_model().padding_box(layout_box);
+        float_rect.move_by(-padding_box.left, -padding_box.top);
+    }
+
+    page().client().page_did_request_scroll_into_view(enclosing_int_rect(float_rect));
 }
 
 Gfx::IntRect Frame::to_main_frame_rect(const Gfx::IntRect& a_rect)

@@ -54,7 +54,6 @@ public:
 
     void reload();
     bool load(const URL&);
-    void scroll_to_anchor(const StringView&);
 
     URL url() const;
 
@@ -110,10 +109,10 @@ private:
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(const URL&) override;
     virtual void page_did_unhover_link() override;
-    virtual void page_did_request_scroll_to_anchor(const String& fragment) override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_favicon(const Gfx::Bitmap&) override;
     virtual void page_did_layout() override;
+    virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) override;
 
     void layout_and_sync_size();
 

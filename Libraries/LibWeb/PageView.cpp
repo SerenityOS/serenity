@@ -239,11 +239,6 @@ void PageView::page_did_unhover_link()
 {
 }
 
-void PageView::page_did_request_scroll_to_anchor(const String& fragment)
-{
-    scroll_to_anchor(fragment);
-}
-
 void PageView::page_did_invalidate(const Gfx::IntRect&)
 {
     update();
@@ -403,38 +398,9 @@ LayoutDocument* PageView::layout_root()
     return const_cast<LayoutDocument*>(document()->layout_node());
 }
 
-void PageView::scroll_to_anchor(const StringView& name)
+void PageView::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
 {
-    if (!document())
-        return;
-
-    const auto* element = document()->get_element_by_id(name);
-    if (!element) {
-        auto candidates = document()->get_elements_by_name(name);
-        for (auto* candidate : candidates) {
-            if (is<HTMLAnchorElement>(*candidate)) {
-                element = to<HTMLAnchorElement>(candidate);
-                break;
-            }
-        }
-    }
-
-    if (!element) {
-        dbg() << "PageView::scroll_to_anchor(): Anchor not found: '" << name << "'";
-        return;
-    }
-    if (!element->layout_node()) {
-        dbg() << "PageView::scroll_to_anchor(): Anchor found but without layout node: '" << name << "'";
-        return;
-    }
-    auto& layout_node = *element->layout_node();
-    Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)visible_content_rect().width(), (float)visible_content_rect().height() } };
-    if (is<LayoutBox>(layout_node)) {
-        auto& layout_box = to<LayoutBox>(layout_node);
-        auto padding_box = layout_box.box_model().padding_box(layout_box);
-        float_rect.move_by(-padding_box.left, -padding_box.top);
-    }
-    scroll_into_view(enclosing_int_rect(float_rect), true, true);
+    scroll_into_view(rect, true, true);
     window()->set_override_cursor(GUI::StandardCursor::None);
 }
 
