@@ -499,11 +499,12 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
     return *job;
 }
 
-bool Shell::run_file(const String& filename)
+bool Shell::run_file(const String& filename, bool explicitly_invoked)
 {
     auto file_result = Core::File::open(filename, Core::File::ReadOnly);
     if (file_result.is_error()) {
-        fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file_result.error().characters());
+        if (explicitly_invoked)
+            fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file_result.error().characters());
         return false;
     }
     auto file = file_result.value();
