@@ -831,7 +831,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size
 Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_name, const String& option, size_t offset)
 {
     size_t start = 0;
-    while (start < option.length() && option[start] == '-')
+    while (start < option.length() && option[start] == '-' && start < 2)
         ++start;
     auto option_pattern = offset > start ? option.substring_view(start, offset - start) : "";
     editor->suggest(offset);
