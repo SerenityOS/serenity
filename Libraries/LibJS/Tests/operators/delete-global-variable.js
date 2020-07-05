@@ -1,16 +1,19 @@
 load("test-common.js");
 
 try {
-    a = 1;
-    assert(delete a === true);
+  a = 1;
+  assert(delete a === true);
 
-    assertThrowsError(() => {
-        a;
-    }, {
-        error: ReferenceError
-    });
+  assertThrowsError(
+    () => {
+      a;
+    },
+    {
+      error: ReferenceError,
+    }
+  );
 
-    console.log("PASS");
+  console.log("PASS");
 } catch (e) {
-    console.log("FAIL: " + e);
+  console.log("FAIL: " + e);
 }

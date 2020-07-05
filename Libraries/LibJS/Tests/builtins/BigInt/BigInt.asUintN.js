@@ -1,9 +1,9 @@
 load("test-common.js");
 
 try {
-    assert(BigInt.asUintN.length === 2);
+  assert(BigInt.asUintN.length === 2);
 
-    console.log("PASS");
+  console.log("PASS");
 } catch (e) {
-    console.log("FAIL: " + e);
+  console.log("FAIL: " + e);
 }

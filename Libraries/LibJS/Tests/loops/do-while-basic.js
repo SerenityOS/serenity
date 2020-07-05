@@ -1,17 +1,18 @@
 load("test-common.js");
 
 try {
-    var number = 0;
-    do {
-        number++;
-    } while (number < 9);
-    assert(number === 9);
+  var number = 0;
+  do {
+    number++;
+  } while (number < 9);
+  assert(number === 9);
 
-    number = 0;
-    do number++; while(number < 3);
-    assert(number === 3);
+  number = 0;
+  do number++;
+  while (number < 3);
+  assert(number === 3);
 
-    console.log("PASS");
+  console.log("PASS");
 } catch (e) {
-    console.log("FAIL: " + e);
+  console.log("FAIL: " + e);
 }
