@@ -31,6 +31,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -84,14 +85,10 @@ private:
         if (event.button() != GUI::MouseButton::Left)
             return;
 
-        pid_t pid = fork();
-        if (pid < 0) {
-            perror("fork");
-        } else if (pid == 0) {
-            execl("/bin/Calendar", "Calendar", nullptr);
-            perror("execl");
-            ASSERT_NOT_REACHED();
-        }
+        pid_t pid;
+        const char* argv[] = { "Calendar", nullptr };
+        if ((errno = posix_spawn(&pid, "/bin/Calendar", nullptr, nullptr, const_cast<char**>(argv), environ)))
+            perror("posix_spawn");
     }
 
     void tick_clock()
