@@ -1035,10 +1035,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
 #define ENTER_THREAD_CONTEXT_ARGS_SIZE (2 * 4) //  to_thread, from_thread
 
-void Processor::switch_context(Thread* from_thread, Thread* to_thread)
+void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     ASSERT(!in_irq());
-    ASSERT(!m_in_critical);
+    ASSERT(m_in_critical == 1);
     ASSERT(is_kernel_mode());
 #ifdef CONTEXT_SWITCH_DEBUG
     dbg() << "switch_context --> switching out of: " << VirtualAddress(from_thread) << " " << *from_thread;
@@ -1096,13 +1096,23 @@ extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapF
     (void)to_thread;
     (void)trap;
     
-    ASSERT(to_thread == Thread::current());
 #ifdef CONTEXT_SWITCH_DEBUG
         dbg() << "switch_context <-- from " << VirtualAddress(from_thread) << " " << *from_thread << " to " << VirtualAddress(to_thread) << " " << *to_thread << " (context_first_init)";
 #endif
+    
+    ASSERT(to_thread == Thread::current());
+
+    Scheduler::enter_current(*from_thread);
+
     if (to_thread->process().wait_for_tracer_at_next_execve()) {
         to_thread->send_urgent_signal_to_self(SIGSTOP);
     }
+
+    // Since we got here and don't have Scheduler::context_switch in the
+    // call stack (because this is the first time we switched into this
+    // context), we need to unlock the scheduler lock manually. We're
+    // using the flags initially set up by init_context
+    g_scheduler_lock.unlock(trap->regs->eflags);
 }
 
 extern "C" void thread_context_first_enter(void);
@@ -1124,10 +1134,12 @@ asm(
 u32 Processor::init_context(Thread& thread, bool leave_crit)
 {
     ASSERT(is_kernel_mode());
+    ASSERT(g_scheduler_lock.is_locked());
     if (leave_crit) {
-        ASSERT(in_critical());
-        m_in_critical--; // leave it without triggering anything
-        ASSERT(!in_critical());
+        // Leave the critical section we set up in in Process::exec,
+        // but because we still have the scheduler lock we should end up with 1
+        m_in_critical--; // leave it without triggering anything or restoring flags
+        ASSERT(in_critical() == 1);
     }
 
     const u32 kernel_stack_top = thread.kernel_stack_top();
@@ -1213,7 +1225,6 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
 extern "C" u32 do_init_context(Thread* thread, u32 flags)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(Processor::current().in_critical());
     thread->tss().eflags = flags;
     return Processor::current().init_context(*thread, true);
 }
@@ -1246,6 +1257,9 @@ void Processor::assume_context(Thread& thread, u32 flags)
     dbg() << "Assume context for thread " << VirtualAddress(&thread) << " " << thread;
 #endif
     ASSERT_INTERRUPTS_DISABLED();
+    // in_critical() should be 2 here. The critical section in Process::exec
+    // and then the scheduler lock
+    ASSERT(Processor::current().in_critical() == 2);
     do_assume_context(&thread, flags);
     ASSERT_NOT_REACHED();
 }

@@ -319,6 +319,11 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
 void Scheduler::start()
 {
     ASSERT_INTERRUPTS_DISABLED();
+    
+    // We need to acquire our scheduler lock, which will be released
+    // by the idle thread once control transferred there
+    g_scheduler_lock.lock();
+
     auto& processor = Processor::current();
     ASSERT(processor.is_initialized());
     auto& idle_thread = *processor.idle_thread();
@@ -402,7 +407,10 @@ bool Scheduler::pick_next()
 #ifdef SCHEDULER_RUNNABLE_DEBUG
     dbg() << "Non-runnables:";
     Scheduler::for_each_nonrunnable([](Thread& thread) -> IterationDecision {
-        dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Reason: " << (thread.wait_reason() ? thread.wait_reason() : "none");
+        if (thread.state() == Thread::Queued)
+            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Reason: " << (thread.wait_reason() ? thread.wait_reason() : "none");
+        else if (thread.state() == Thread::Dying)
+            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Finalizable: " << thread.is_finalizable();
         return IterationDecision::Continue;
     });
 
@@ -447,8 +455,7 @@ bool Scheduler::pick_next()
     dbg() << "Scheduler[" << Processor::current().id() << "]: Switch to " << *thread_to_schedule << " @ " << String::format("%04x:%08x", thread_to_schedule->tss().cs, thread_to_schedule->tss().eip);
 #endif
 
-    lock.unlock();
-    return context_switch(*thread_to_schedule);
+    return context_switch(thread_to_schedule);
 }
 
 bool Scheduler::yield()
@@ -476,7 +483,7 @@ bool Scheduler::yield()
 
 bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(g_scheduler_lock);
     auto& proc = Processor::current();
     ASSERT(!proc.in_irq());
     if (!Thread::is_thread(beneficiary))
@@ -497,39 +504,64 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     dbg() << "Scheduler[" << proc.id() << "]: Donating " << ticks_to_donate << " ticks to " << *beneficiary << ", reason=" << reason;
 #endif
     beneficiary->set_ticks_left(ticks_to_donate);
-    Scheduler::context_switch(*beneficiary);
+    Scheduler::context_switch(beneficiary);
     return false;
 }
 
-bool Scheduler::context_switch(Thread& thread)
+bool Scheduler::context_switch(Thread* thread)
 {
-    thread.set_ticks_left(time_slice_for(thread));
-    thread.did_schedule();
+    thread->set_ticks_left(time_slice_for(*thread));
+    thread->did_schedule();
 
-    auto current_thread = Thread::current();
-    if (current_thread == &thread)
+    auto from_thread = Thread::current();
+    if (from_thread == thread)
         return false;
 
-    if (current_thread) {
+    if (from_thread) {
         // If the last process hasn't blocked (still marked as running),
         // mark it as runnable for the next round.
-        if (current_thread->state() == Thread::Running)
-            current_thread->set_state(Thread::Runnable);
+        if (from_thread->state() == Thread::Running)
+            from_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbg() << "Scheduler[" << Processor::current().id() << "]: " << *current_thread << " -> " << thread << " [" << thread.priority() << "] " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
+        dbg() << "Scheduler[" << Processor::current().id() << "]: " << *from_thread << " -> " << *thread << " [" << thread->priority() << "] " << String::format("%w", thread->tss().cs) << ":" << String::format("%x", thread->tss().eip);
 #endif
     }
 
     auto& proc = Processor::current();
-    if (!thread.is_initialized()) {
-        proc.init_context(thread, false);
-        thread.set_initialized(true);
+    if (!thread->is_initialized()) {
+        proc.init_context(*thread, false);
+        thread->set_initialized(true);
     }
-    thread.set_state(Thread::Running);
+    thread->set_state(Thread::Running);
 
-    proc.switch_context(current_thread, &thread);
+    // Mark it as active because we are using this thread. This is similar
+    // to comparing it with Processor::current_thread, but when there are
+    // multiple processors there's no easy way to check whether the thread
+    // is actually still needed. This prevents accidental finalization when
+    // a thread is no longer in Running state, but running on another core.
+    thread->set_active(true);
+
+    proc.switch_context(from_thread, thread);
+
+    // NOTE: from_thread at this point reflects the thread we were
+    // switched from, and thread reflects Thread::current()
+    enter_current(*from_thread);
+    ASSERT(thread == Thread::current());
+
     return true;
+}
+
+void Scheduler::enter_current(Thread& prev_thread)
+{
+    ASSERT(g_scheduler_lock.is_locked());
+    prev_thread.set_active(false);
+    if (prev_thread.state() == Thread::Dying) {
+        // If the thread we switched from is marked as dying, then notify
+        // the finalizer. Note that as soon as we leave the scheduler lock
+        // the finalizer may free from_thread!
+        notify_finalizer();
+    }
 }
 
 Process* Scheduler::colonel()
@@ -620,6 +652,12 @@ void Scheduler::invoke_async()
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!Processor::current().in_irq());
     pick_next();
+}
+
+void Scheduler::notify_finalizer()
+{
+    if (g_finalizer_has_work.exchange(true, AK::MemoryOrder::memory_order_acq_rel) == false)
+        g_finalizer_wait_queue->wake_all();
 }
 
 void Scheduler::idle_loop()

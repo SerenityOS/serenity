@@ -751,6 +751,30 @@ public:
         }
         if (prev_flags & 0x200)
             sti();
+        else
+            cli();
+    }
+    
+    ALWAYS_INLINE u32 clear_critical(u32& prev_flags, bool enable_interrupts)
+    {
+        u32 prev_crit = m_in_critical;
+        m_in_critical = 0;
+        prev_flags = cpu_flags();
+        if (!m_in_irq)
+            check_invoke_scheduler();
+        if (enable_interrupts)
+            sti();
+        return prev_crit;
+    }
+    
+    ALWAYS_INLINE void restore_critical(u32 prev_crit, u32 prev_flags)
+    {
+        ASSERT(m_in_critical == 0);
+        m_in_critical = prev_crit;
+        if (prev_flags & 0x200)
+            sti();
+        else
+            cli();
     }
     
     ALWAYS_INLINE u32& in_critical() { return m_in_critical; }
@@ -772,7 +796,7 @@ public:
     void exit_trap(TrapFrame& trap);
     
     [[noreturn]] void initialize_context_switching(Thread& initial_thread);
-    void switch_context(Thread* from_thread, Thread* to_thread);
+    void switch_context(Thread*& from_thread, Thread*& to_thread);
     [[noreturn]] static void assume_context(Thread& thread, u32 flags);
     u32 init_context(Thread& thread, bool leave_crit);
     static bool get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip);

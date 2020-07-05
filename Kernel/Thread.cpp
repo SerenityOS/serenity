@@ -153,7 +153,7 @@ void Thread::set_should_die()
 #endif
         return;
     }
-    InterruptDisabler disabler;
+    ScopedCritical critical;
 
     // Remember that we should die instead of returning to
     // the userspace.
@@ -181,36 +181,43 @@ void Thread::die_if_needed()
     if (!m_should_die)
         return;
 
-    u32 prev_crit;
-    unlock_process_if_locked(prev_crit);
+    unlock_process_if_locked();
 
-    InterruptDisabler disabler;
+    ScopedCritical critical;
     set_state(Thread::State::Dying);
+    
+    // Flag a context switch. Because we're in a critical section,
+    // Scheduler::yield will actually only mark a pending scontext switch
+    // Simply leaving the critical section would not necessarily trigger
+    // a switch.
     Scheduler::yield();
+    
+    // Now leave the critical section so that we can also trigger the
+    // actual context switch
+    u32 prev_flags;
+    Processor::current().clear_critical(prev_flags, false);
+
+    // We should never get here, but the scoped scheduler lock
+    // will be released by Scheduler::context_switch again
+    ASSERT_NOT_REACHED();
 }
 
 void Thread::yield_without_holding_big_lock()
 {
-    u32 prev_crit;
-    bool did_unlock = unlock_process_if_locked(prev_crit);
+    bool did_unlock = unlock_process_if_locked();
     Scheduler::yield();
-    relock_process(did_unlock, prev_crit);
+    relock_process(did_unlock);
 }
 
-bool Thread::unlock_process_if_locked(u32& prev_crit)
+bool Thread::unlock_process_if_locked()
 {
-    auto& in_critical = Processor::current().in_critical();
-    prev_crit = in_critical;
-    in_critical = 0;
     return process().big_lock().force_unlock_if_locked();
 }
 
-void Thread::relock_process(bool did_unlock, u32 prev_crit)
+void Thread::relock_process(bool did_unlock)
 {
     if (did_unlock)
         process().big_lock().lock();
-    ASSERT(!Processor::current().in_critical());
-    Processor::current().in_critical() = prev_crit;
 }
 
 u64 Thread::sleep(u32 ticks)
@@ -266,6 +273,7 @@ const char* Thread::state_string() const
 void Thread::finalize()
 {
     ASSERT(Thread::current() == g_finalizer);
+    ASSERT(Thread::current() != this);
 
 #ifdef THREAD_DEBUG
     dbg() << "Finalizing thread " << *this;
@@ -290,9 +298,10 @@ void Thread::finalize_dying_threads()
     ASSERT(Thread::current() == g_finalizer);
     Vector<Thread*, 32> dying_threads;
     {
-        InterruptDisabler disabler;
+        ScopedSpinLock lock(g_scheduler_lock);
         for_each_in_state(Thread::State::Dying, [&](Thread& thread) {
-            dying_threads.append(&thread);
+            if (thread.is_finalizable())
+                dying_threads.append(&thread);
             return IterationDecision::Continue;
         });
     }
@@ -723,20 +732,18 @@ void Thread::set_state(State new_state)
 
     m_state = new_state;
 #ifdef THREAD_DEBUG
-    dbg() << "Set Thread " << VirtualAddress(this) << " " << *this << " state to " << state_string();
+    dbg() << "Set Thread " << *this << " state to " << state_string();
 #endif
+
     if (m_process.pid() != 0) {
         Scheduler::update_state_for_thread(*this);
     }
 
-    if (new_state == Dying)
-        notify_finalizer();
-}
-
-void Thread::notify_finalizer()
-{
-    g_finalizer_has_work.store(true, AK::MemoryOrder::memory_order_release);
-    g_finalizer_wait_queue->wake_all();
+    if (m_state == Dying && this != Thread::current() && is_finalizable()) {
+        // Some other thread set this thread to Dying, notify the
+        // finalizer right away as it can be cleaned up now
+        Scheduler::notify_finalizer();
+    }
 }
 
 String Thread::backtrace(ProcessInspectionHandle&)
@@ -855,44 +862,72 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
 Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary)
 {
     TimerId timer_id {};
-    u32 prev_crit;
     bool did_unlock;
 
     {
-        InterruptDisabler disable;
-        did_unlock = unlock_process_if_locked(prev_crit);
-        if (lock)
-            *lock = false;
-        set_state(State::Queued);
-        m_wait_reason = reason;
-        queue.enqueue(*Thread::current());
+        ScopedCritical critical;
+        // We need to be in a critical section *and* then also acquire the
+        // scheduler lock. The only way acquiring the scheduler lock could
+        // block us is if another core were to be holding it, in which case
+        // we need to wait until the scheduler lock is released again
+        {
+            ScopedSpinLock sched_lock(g_scheduler_lock);
+            did_unlock = unlock_process_if_locked();
+            if (lock)
+                *lock = false;
+            set_state(State::Queued);
+            m_wait_reason = reason;
+            queue.enqueue(*Thread::current());
 
     
-        if (timeout) {
-            timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
-                wake_from_queue();
-            });
+            if (timeout) {
+                timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
+                    ScopedSpinLock sched_lock(g_scheduler_lock);
+                    wake_from_queue();
+                });
+            }
+
+            // Yield and wait for the queue to wake us up again.
+            if (beneficiary)
+                Scheduler::donate_to(beneficiary, reason);
+            else
+                Scheduler::yield();
         }
 
-        // Yield and wait for the queue to wake us up again.
-        if (beneficiary)
-            Scheduler::donate_to(beneficiary, reason);
-        else
-            Scheduler::yield();
+        // Clearing the critical section may trigger the context switch
+        // flagged by calling Scheduler::donate_to or Scheduler::yield
+        // above. We have to do it this way because we intentionally
+        // leave the critical section here to be able to switch contexts.
+        u32 prev_flags;
+        u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
+
+        // We've unblocked, relock the process if needed and carry on.
+        relock_process(did_unlock);
+
+        // NOTE: We may be on a differenct CPU now!
+        Processor::current().restore_critical(prev_crit, prev_flags);
+
+        // This looks counter productive, but we may not actually leave
+        // the critical section we just restored. It depends on whether
+        // we were in one while being called.
     }
 
-    if (!are_interrupts_enabled())
-        sti();
+    BlockResult result;
+    {
+        // To be able to look at m_wait_queue_node we once again need the
+        // scheduler lock, which is held when we insert into the queue
+        ScopedSpinLock sched_lock(g_scheduler_lock);
+    
+        result = m_wait_queue_node.is_in_list() ? BlockResult::InterruptedByTimeout : BlockResult::WokeNormally;
+    
+        // Make sure we cancel the timer if woke normally.
+        if (timeout && result == BlockResult::WokeNormally)
+            TimerQueue::the().cancel_timer(timer_id);
+    }
 
-    // We've unblocked, relock the process if needed and carry on.
-    relock_process(did_unlock, prev_crit);
-
-    BlockResult result = m_wait_queue_node.is_in_list() ? BlockResult::InterruptedByTimeout : BlockResult::WokeNormally;
-
-    // Make sure we cancel the timer if woke normally.
-    if (timeout && result == BlockResult::WokeNormally)
-        TimerQueue::the().cancel_timer(timer_id);
-
+    // The API contract guarantees we return with interrupts enabled,
+    // regardless of how we got called
+    sti();
     return result;
 }
 

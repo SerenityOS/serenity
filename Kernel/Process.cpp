@@ -1046,7 +1046,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     //       and we don't want to deal with faults after this point.
     u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment));
 
-    // We cli() manually here because we don't want to get interrupted between do_exec()
+    // We enter a critical section here because we don't want to get interrupted between do_exec()
     // and Processor::assume_context() or the next context switch.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
     Processor::current().enter_critical(prev_flags);
@@ -1268,6 +1268,12 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
 
     auto current_thread = Thread::current();
     if (current_thread == new_main_thread) {
+        // We need to enter the scheduler lock before changing the state
+        // and it will be released after the context switch into that
+        // thread. We should also still be in our critical section
+        ASSERT(!g_scheduler_lock.is_locked());
+        ASSERT(Processor::current().in_critical() == 1);
+        g_scheduler_lock.lock();
         current_thread->set_state(Thread::State::Running);
         Processor::assume_context(*current_thread, prev_flags);
         ASSERT_NOT_REACHED();

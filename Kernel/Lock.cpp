@@ -73,8 +73,13 @@ void Lock::lock(Mode mode)
             // switch will happen, so yield.
             // The assumption is that if we call this from a critical section
             // that we DO want to temporarily leave it
-            TemporaryChange change(Processor::current().in_critical(), 0u);
+            u32 prev_flags;
+            u32 prev_crit = Processor::current().clear_critical(prev_flags, !Processor::current().in_irq());
+
             Scheduler::yield();
+
+            // Note, we may now be on a different CPU!
+            Processor::current().restore_critical(prev_crit, prev_flags);
         }
     }
 }
@@ -105,8 +110,13 @@ void Lock::unlock()
         // I don't know *who* is using "m_lock", so just yield.
         // The assumption is that if we call this from a critical section
         // that we DO want to temporarily leave it
-        TemporaryChange change(Processor::current().in_critical(), 0u);
+        u32 prev_flags;
+        u32 prev_crit = Processor::current().clear_critical(prev_flags, false);
+
         Scheduler::yield();
+
+        // Note, we may now be on a different CPU!
+        Processor::current().restore_critical(prev_crit, prev_flags);
     }
 }
 

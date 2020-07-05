@@ -42,6 +42,8 @@ public:
     SpinLock() = default;
     SpinLock(const SpinLock&) = delete;
     SpinLock(SpinLock&&) = delete;
+    SpinLock& operator=(const SpinLock&) = delete;
+    SpinLock& operator=(SpinLock&&) = delete;
 
     ALWAYS_INLINE u32 lock()
     {
@@ -82,6 +84,8 @@ public:
     RecursiveSpinLock() = default;
     RecursiveSpinLock(const RecursiveSpinLock&) = delete;
     RecursiveSpinLock(RecursiveSpinLock&&) = delete;
+    RecursiveSpinLock& operator=(const RecursiveSpinLock&) = delete;
+    RecursiveSpinLock& operator=(RecursiveSpinLock&&) = delete;
 
     ALWAYS_INLINE u32 lock()
     {
@@ -128,6 +132,9 @@ class ScopedSpinLock
 
 public:
     ScopedSpinLock() = delete;
+    ScopedSpinLock(const ScopedSpinLock&) = delete;
+    ScopedSpinLock& operator=(const ScopedSpinLock&) = delete;
+    ScopedSpinLock& operator=(ScopedSpinLock&&) = delete;
 
     ScopedSpinLock(LockType& lock):
         m_lock(&lock)
@@ -146,8 +153,6 @@ public:
         from.m_prev_flags = 0;
         from.m_have_lock = false;
     }
-
-    ScopedSpinLock(const ScopedSpinLock&) = delete;
 
     ~ScopedSpinLock()
     {
