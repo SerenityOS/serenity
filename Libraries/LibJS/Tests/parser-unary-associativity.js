@@ -1,20 +1,14 @@
-load("test-common.js");
-
-try {
-  var o = {};
+test("basic functionality", () => {
+  const o = {};
   o.a = 1;
 
-  assert(o.a === 1);
-  assert(!o.a === false);
-  assert(!o.a === !o.a);
-  assert(~o.a === ~o.a);
-  assert(+o.a === +o.a);
-  assert(-o.a === -o.a);
+  expect(o.a === 1).toBeTrue();
+  expect(!o.a === false).toBeTrue();
+  expect(!o.a === !o.a).toBeTrue();
+  expect(~o.a === ~o.a).toBeTrue();
+  expect(+o.a === +o.a).toBeTrue();
+  expect(-o.a === -o.a).toBeTrue();
 
-  assert((typeof "x" === "string") === true);
-  assert(!(typeof "x" === "string") === false);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect((typeof "x" === "string") === true).toBeTrue();
+  expect(!(typeof "x" === "string") === false).toBeTrue();
+});

@@ -1,17 +1,13 @@
-load("test-common.js");
+test("hex escapes", () => {
+  expect("\x55").toBe("U");
+  expect("X55").toBe("X55");
+  expect(`\x55`).toBe("U");
+  expect(`\X55`).toBe("X55");
+});
 
-try {
-  assert("\x55" === "U");
-  assert("X55" === "X55");
-  assert(`\x55` === "U");
-  assert(`\X55` === "X55");
-
-  assert("\u26a0" === "⚠");
-  assert(`\u26a0` === "⚠");
-  assert("\u{1f41e}" === "🐞");
-  assert(`\u{1f41e}` === "🐞");
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("unicode escapes", () => {
+  expect("\u26a0").toBe("⚠");
+  expect(`\u26a0`).toBe("⚠");
+  expect("\u{1f41e}").toBe("🐞");
+  expect(`\u{1f41e}`).toBe("🐞");
+});

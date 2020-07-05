@@ -1,62 +1,75 @@
-load("test-common.js");
+test("non-numeric primitives", () => {
+  expect(+false).toBe(0);
+  expect(-false).toBe(-0);
+  expect(+true).toBe(1);
+  expect(-true).toBe(-1);
+  expect(+null).toBe(0);
+  expect(-null).toBe(-0);
+  expect(+undefined).toBeNaN();
+  expect(-undefined).toBeNaN();
+});
 
-try {
-  assert(+false === 0);
-  assert(-false === 0);
-  assert(+true === 1);
-  assert(-true === -1);
-  assert(+null === 0);
-  assert(-null === 0);
-  assert(+[] === 0);
-  assert(-[] === 0);
-  assert(+[,] === 0);
-  assert(-[,] === 0);
-  assert(+[null] === 0);
-  assert(-[null] === 0);
-  assert(+[undefined] === 0);
-  assert(-[undefined] === 0);
-  assert(+[[[[[]]]]] === 0);
-  assert(-[[[[[]]]]] === 0);
-  assert(+[[[[[42]]]]] === 42);
-  assert(-[[[[[42]]]]] === -42);
-  assert(+"" === 0);
-  assert(-"" === 0);
-  assert(+"42" === 42);
-  assert(-"42" === -42);
-  assert(+42 === 42);
-  assert(-42 === -42);
-  assert(+1.23 === 1.23);
-  assert(-1.23 === -1.23);
-  assert(+"1.23" === 1.23);
-  assert(-"1.23" === -1.23);
-  assert(+"Infinity" === Infinity);
-  assert(+"+Infinity" === Infinity);
-  assert(+"-Infinity" === -Infinity);
-  assert(-"Infinity" === -Infinity);
-  assert(-"+Infinity" === -Infinity);
-  assert(-"-Infinity" === Infinity);
-  assert(+"  \r  \t \n " === 0);
-  assert(+"  \n  \t    Infinity   \r   " === Infinity);
-  assert(+"\r     \n1.23   \t\t\t  \n" === 1.23);
+test("arrays", () => {
+  expect(+[]).toBe(0);
+  expect(-[]).toBe(-0);
+  expect(+[,]).toBe(0);
+  expect(-[,]).toBe(-0);
+  expect(+[null]).toBe(0);
+  expect(-[null]).toBe(-0);
+  expect(+[undefined]).toBe(0);
+  expect(-[undefined]).toBe(-0);
+  expect(+[[[[[]]]]]).toBe(0);
+  expect(-[[[[[]]]]]).toBe(-0);
+  expect(+[[[[[42]]]]]).toBe(42);
+  expect(-[[[[[42]]]]]).toBe(-42);
 
-  assert(isNaN(+undefined));
-  assert(isNaN(-undefined));
-  assert(isNaN(+{}));
-  assert(isNaN(-{}));
-  assert(isNaN(+{ a: 1 }));
-  assert(isNaN(-{ a: 1 }));
-  assert(isNaN(+[, , ,]));
-  assert(isNaN(-[, , ,]));
-  assert(isNaN(+[undefined, undefined]));
-  assert(isNaN(-[undefined, undefined]));
-  assert(isNaN(+[1, 2, 3]));
-  assert(isNaN(-[1, 2, 3]));
-  assert(isNaN(+[[[["foo"]]]]));
-  assert(isNaN(-[[[["foo"]]]]));
-  assert(isNaN(+"foo"));
-  assert(isNaN(-"foo"));
+  expect(+[, , ,]).toBeNaN();
+  expect(-[, , ,]).toBeNaN();
+  expect(+[undefined, undefined]).toBeNaN();
+  expect(-[undefined, undefined]).toBeNaN();
+  expect(+[1, 2, 3]).toBeNaN();
+  expect(-[1, 2, 3]).toBeNaN();
+  expect(+[[[["foo"]]]]).toBeNaN();
+  expect(-[[[["foo"]]]]).toBeNaN();
+});
 
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("strings", () => {
+  expect(+"").toBe(0);
+  expect(-"").toBe(-0);
+  expect(+"42").toBe(42);
+  expect(-"42").toBe(-42);
+  expect(+"1.23").toBe(1.23);
+  expect(-"1.23").toBe(-1.23);
+
+  expect(+"foo").toBeNaN();
+  expect(-"foo").toBeNaN();
+});
+
+test("numbers", () => {
+  expect(+42).toBe(42);
+  expect(-42).toBe(-42);
+  expect(+1.23).toBe(1.23);
+  expect(-1.23).toBe(-1.23);
+});
+
+test("infinity", () => {
+  expect(+"Infinity").toBe(Infinity);
+  expect(+"+Infinity").toBe(Infinity);
+  expect(+"-Infinity").toBe(-Infinity);
+  expect(-"Infinity").toBe(-Infinity);
+  expect(-"+Infinity").toBe(-Infinity);
+  expect(-"-Infinity").toBe(Infinity);
+});
+
+test("space and space-like escapes", () => {
+  expect(+"  \r  \t \n ").toBe(0);
+  expect(+"  \n  \t    Infinity   \r   ").toBe(Infinity);
+  expect(+"\r     \n1.23   \t\t\t  \n").toBe(1.23);
+});
+
+test("object literals", () => {
+  expect(+{}).toBeNaN();
+  expect(-{}).toBeNaN();
+  expect(+{ a: 1 }).toBeNaN();
+  expect(-{ a: 1 }).toBeNaN();
+});

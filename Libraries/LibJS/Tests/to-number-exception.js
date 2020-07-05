@@ -1,54 +1,25 @@
-load("test-common.js");
+const message = "oops, Value::to_number() failed";
 
-try {
-  const message = "oops, Value::to_number() failed";
-  const o = {
-    toString() {
-      throw new Error(message);
-    },
-  };
+const o = {
+  toString() {
+    throw new Error(message);
+  },
+};
 
-  assertThrowsError(
-    () => {
-      +o;
-    },
-    {
-      error: Error,
-      message,
-    }
-  );
+test("basic functionality", () => {
+  expect(() => {
+    +o;
+  }).toThrowWithMessage(Error, message);
 
-  assertThrowsError(
-    () => {
-      o - 1;
-    },
-    {
-      error: Error,
-      message,
-    }
-  );
+  expect(() => {
+    o - 1;
+  }).toThrowWithMessage(Error, message);
 
-  assertThrowsError(
-    () => {
-      "foo".charAt(o);
-    },
-    {
-      error: Error,
-      message,
-    }
-  );
+  expect(() => {
+    "foo".charAt(o);
+  }).toThrowWithMessage(Error, message);
 
-  assertThrowsError(
-    () => {
-      "bar".repeat(o);
-    },
-    {
-      error: Error,
-      message,
-    }
-  );
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(() => {
+    "bar".repeat(o);
+  }).toThrowWithMessage(Error, message);
+});

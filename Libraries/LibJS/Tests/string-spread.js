@@ -1,27 +1,25 @@
-load("test-common.js");
-
 function testArray(arr) {
   return arr.length === 4 && arr[0] === "a" && arr[1] === "b" && arr[2] === "c" && arr[3] === "d";
 }
 
-try {
-  var arr;
+test("spreading string literal", () => {
+  expect(["a", ..."bc", "d"]).toEqual(["a", "b", "c", "d"]);
+});
 
-  arr = ["a", ..."bc", "d"];
-  assert(testArray(arr));
+test("spreading string variable", () => {
+  const s = "bc";
+  expect(["a", ...s, "d"]).toEqual(["a", "b", "c", "d"]);
+});
 
-  let s = "bc";
-  arr = ["a", ...s, "d"];
-  assert(testArray(arr));
+test("spreading string in object", () => {
+  const obj = { a: "bc" };
+  expect(["a", ...obj.a, "d"]).toEqual(["a", "b", "c", "d"]);
+});
 
-  let obj = { a: "bc" };
-  arr = ["a", ...obj.a, "d"];
-  assert(testArray(arr));
+test("spreading empty string", () => {
+  expect([..."", "a", ..."bc", ..."", "d", ...""]).toEqual(["a", "b", "c", "d"]);
+});
 
-  arr = [..."", ...[...new String("abc")], "d"];
-  assert(testArray(arr));
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("spreading string objects", () => {
+  expect([..."", ...[...new String("abc")], "d"]).toEqual(["a", "b", "c", "d"]);
+});

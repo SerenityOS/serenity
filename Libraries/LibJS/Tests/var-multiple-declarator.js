@@ -1,13 +1,8 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
   var a = 1,
     b = 2,
     c = a + b;
-  assert(a === 1);
-  assert(b === 2);
-  assert(c === 3);
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(a).toBe(1);
+  expect(b).toBe(2);
+  expect(c).toBe(3);
+});
