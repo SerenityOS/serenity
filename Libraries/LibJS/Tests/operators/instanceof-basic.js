@@ -1,28 +1,28 @@
 load("test-common.js");
 
 try {
-    function Foo() {
-        this.x = 123;
-    }
+  function Foo() {
+    this.x = 123;
+  }
 
-    var foo = new Foo();
-    assert(foo instanceof Foo);
+  var foo = new Foo();
+  assert(foo instanceof Foo);
 
-    function Base() {
-        this.is_base = true;
-    }
+  function Base() {
+    this.is_base = true;
+  }
 
-    function Derived() {
-        this.is_derived = true;
-    }
+  function Derived() {
+    this.is_derived = true;
+  }
 
-    Object.setPrototypeOf(Derived.prototype, Base.prototype);
+  Object.setPrototypeOf(Derived.prototype, Base.prototype);
 
-    var d = new Derived();
-    assert(d instanceof Derived);
-    assert(d instanceof Base);
+  var d = new Derived();
+  assert(d instanceof Derived);
+  assert(d instanceof Base);
 
-    console.log("PASS");
-} catch(e) {
-    console.log("FAIL: " + e);
+  console.log("PASS");
+} catch (e) {
+  console.log("FAIL: " + e);
 }

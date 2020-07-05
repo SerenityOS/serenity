@@ -1,22 +1,22 @@
 load("test-common.js");
 
 try {
-    for (var v = 5; false; );
-    assert(v == 5);
+  for (var v = 5; false; );
+  assert(v == 5);
 
-    const options = {error: ReferenceError};
+  const options = { error: ReferenceError };
 
-    assertThrowsError(() => {
-        for (let l = 5; false; );
-        l;
-    }, options);
+  assertThrowsError(() => {
+    for (let l = 5; false; );
+    l;
+  }, options);
 
-    assertThrowsError(() => {
-        for (const c = 5; false; );
-        c;
-    }, options)
+  assertThrowsError(() => {
+    for (const c = 5; false; );
+    c;
+  }, options);
 
-    console.log("PASS");
+  console.log("PASS");
 } catch (e) {
-    console.log("FAIL: " + e);
+  console.log("FAIL: " + e);
 }
