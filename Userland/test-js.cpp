@@ -172,6 +172,7 @@ Vector<String> tests_to_run = {
     "add-values-to-primitive.js",
     "automatic-semicolon-insertion.js",
     "comments-basic.js",
+    "const-reassignment.js",
     "debugger-statement.js",
     "empty-statements.js",
     "exception-ReferenceError.js",
@@ -181,13 +182,28 @@ Vector<String> tests_to_run = {
     "let-scoping.js",
     "new-expression.js",
     "numeric-literals-basic.js",
+    "object-basic.js",
     "object-getter-setter-shorthand.js",
     "object-method-shorthand.js",
     "object-spread.js",
-    "tagged-template-literals.js",
-    "test-common-tests.js",
+    "parser-unary-associativity.js",
+    "program-strict-mode.js",
+    "strict-mode-errors.js",
+    "string-escapes.js",
+    "string-spread.js",
     "switch-basic.js",
+    "switch-break.js",
+    "tagged-template-literals.js",
+    "template-literals.js",
+    "test-common-tests.js",
+    "throw-basic.js",
+    "to-number-basic.js",
+    "to-number-exception.js",
     "update-expression-on-member-expression.js",
+    "update-expressions-basic.js",
+    "var-multiple-declarator.js",
+    "var-scoping.js",
+    "variable-undefined.js",
 };
 
 enum class TestResult {
@@ -236,15 +252,6 @@ struct JSTestRunnerCounts {
 
 using JSTestRunnerResult = Vector<JSFileResult>;
 
-double get_time()
-{
-    struct timeval tv1;
-    struct timezone tz1;
-    auto return_code = gettimeofday(&tv1, &tz1);
-    ASSERT(return_code >= 0);
-    return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
-}
-
 class TestRunner {
 public:
     TestRunner(String test_root, bool print_times)
@@ -268,6 +275,48 @@ private:
 
     RefPtr<JS::Program> m_test_program;
 };
+
+class TestRunnerGlobalObject : public JS::GlobalObject {
+public:
+    TestRunnerGlobalObject();
+    virtual ~TestRunnerGlobalObject() override;
+
+    virtual void initialize() override;
+
+private:
+    virtual const char* class_name() const override { return "TestRunnerGlobalObject"; }
+
+    JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
+};
+
+TestRunnerGlobalObject::TestRunnerGlobalObject()
+{
+}
+
+TestRunnerGlobalObject::~TestRunnerGlobalObject()
+{
+}
+
+void TestRunnerGlobalObject::initialize()
+{
+    JS::GlobalObject::initialize();
+    define_property("global", this, JS::Attribute::Enumerable);
+    define_native_function("isStrictMode", is_strict_mode);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)
+{
+    return JS::Value(interpreter.in_strict_mode());
+}
+
+double get_time()
+{
+    struct timeval tv1;
+    struct timezone tz1;
+    auto return_code = gettimeofday(&tv1, &tz1);
+        ASSERT(return_code >= 0);
+    return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
+}
 
 void TestRunner::run()
 {
@@ -316,7 +365,7 @@ Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 JSFileResult TestRunner::run_file_test(const String& test_path)
 {
     double start_time = get_time();
-    auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
+    auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>();
 
     if (!m_test_program) {
         auto result = parse_file(String::format("%s/test-common.js", m_test_root.characters()));

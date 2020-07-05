@@ -1,9 +1,7 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
   function foo() {
     i = 3;
-    assert(i === 3);
+    expect(i).toBe(3);
     var i;
   }
 
@@ -15,9 +13,5 @@ try {
   } catch (e) {
     caught_exception = e;
   }
-  assert(caught_exception !== undefined);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(caught_exception).not.toBeUndefined();
+});
