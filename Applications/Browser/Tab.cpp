@@ -228,8 +228,11 @@ Tab::Tab()
 
     m_statusbar = widget.add<GUI::StatusBar>();
 
-    m_page_view->on_link_hover = [this](auto& href) {
-        m_statusbar->set_text(href);
+    m_page_view->on_link_hover = [this](auto& url) {
+        if (url.is_valid())
+            m_statusbar->set_text(url.to_string());
+        else
+            m_statusbar->set_text("");
     };
 
     m_page_view->on_url_drop = [this](auto& url) {
