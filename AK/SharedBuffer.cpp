@@ -69,10 +69,8 @@ RefPtr<SharedBuffer> SharedBuffer::create_from_shbuf_id(int shbuf_id)
 {
     size_t size = 0;
     void* data = shbuf_get(shbuf_id, &size);
-    if (data == (void*)-1) {
-        perror("shbuf_get");
+    if (data == (void*)-1)
         return nullptr;
-    }
     return adopt(*new SharedBuffer(shbuf_id, size, data));
 }
 
