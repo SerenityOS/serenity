@@ -71,6 +71,7 @@ public:
     EventHandler& event_handler() { return m_event_handler; }
     const EventHandler& event_handler() const { return m_event_handler; }
 
+    void scroll_to(const Gfx::IntPoint&);
     void scroll_to_anchor(const String&);
 
     Frame& main_frame() { return m_main_frame; }
@@ -81,6 +82,7 @@ public:
 
     Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
     Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
+
 
 private:
     explicit Frame(Element& host_element, Frame& main_frame);

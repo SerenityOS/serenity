@@ -159,13 +159,8 @@ Tab::Tab()
             auto url = m_page_view->document()->complete_url(href);
             on_tab_open_request(url);
         } else {
-            if (href.starts_with("#")) {
-                auto anchor = href.substring_view(1, href.length() - 1);
-                m_page_view->scroll_to_anchor(anchor);
-            } else {
-                auto url = m_page_view->document()->complete_url(href);
-                m_page_view->load(url);
-            }
+            auto url = m_page_view->document()->complete_url(href);
+            m_page_view->load(url);
         }
     };
 
