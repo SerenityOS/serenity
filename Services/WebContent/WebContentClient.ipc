@@ -6,4 +6,5 @@ endpoint WebContentClient = 90
     DidChangeSelection() =|
     DidLayout(Gfx::IntSize content_size) =|
     DidChangeTitle(String title) =|
+    DidRequestScrollIntoView(Gfx::IntRect rect) =|
 }

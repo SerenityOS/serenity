@@ -115,6 +115,11 @@ void WebContentView::notify_server_did_change_title(Badge<WebContentClient>, con
         on_title_change(title);
 }
 
+void WebContentView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect& rect)
+{
+    scroll_into_view(rect, true, true);
+}
+
 void WebContentView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));

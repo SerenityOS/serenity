@@ -46,6 +46,7 @@ public:
     void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, const Gfx::IntRect&);
     void notify_server_did_change_selection(Badge<WebContentClient>);
     void notify_server_did_change_title(Badge<WebContentClient>, const String&);
+    void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect&);
 
 private:
     WebContentView();
