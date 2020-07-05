@@ -232,11 +232,13 @@ void PageView::page_did_leave_tooltip_area()
 void PageView::page_did_hover_link(const URL& url)
 {
     if (on_link_hover)
-        on_link_hover(url.to_string());
+        on_link_hover(url);
 }
 
 void PageView::page_did_unhover_link()
 {
+    if (on_link_hover)
+        on_link_hover({});
 }
 
 void PageView::page_did_invalidate(const Gfx::IntRect&)
