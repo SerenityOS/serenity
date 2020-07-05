@@ -27,7 +27,10 @@
 #include <Kernel/Thread.h>
 #include <Kernel/WaitQueue.h>
 
+//#define WAITQUEUE_DEBUG
+
 namespace Kernel {
+
 
 WaitQueue::WaitQueue()
 {
@@ -37,10 +40,20 @@ WaitQueue::~WaitQueue()
 {
 }
 
-void WaitQueue::enqueue(Thread& thread)
+bool WaitQueue::enqueue(Thread& thread)
 {
     ScopedSpinLock queue_lock(m_lock);
+    if (m_wake_requested) {
+        // wake_* was called when no threads were in the queue
+        // we shouldn't wait at all
+        m_wake_requested = false;
+#ifdef WAITQUEUE_DEBUG
+        dbg() << "WaitQueue " << VirtualAddress(this) << ": enqueue: wake_all pending";
+#endif
+        return false;
+    }
     m_threads.append(thread);
+    return true;
 }
 
 void WaitQueue::wake_one(Atomic<bool>* lock)
@@ -48,42 +61,87 @@ void WaitQueue::wake_one(Atomic<bool>* lock)
     ScopedSpinLock queue_lock(m_lock);
     if (lock)
         *lock = false;
-    if (m_threads.is_empty())
+    if (m_threads.is_empty()) {
+        // Save the fact that a wake was requested
+        m_wake_requested = true;
+#ifdef WAITQUEUE_DEBUG
+        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one: nobody to wake, mark as pending";
+#endif
         return;
-    if (auto* thread = m_threads.take_first())
-        thread->wake_from_queue();
+    }
+#ifdef WAITQUEUE_DEBUG
+    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one:";
+#endif
+    auto* thread = m_threads.take_first();
+#ifdef WAITQUEUE_DEBUG
+    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one: wake thread " << *thread;
+#endif
+    thread->wake_from_queue();
+    m_wake_requested = false;
     Scheduler::yield();
 }
 
-void WaitQueue::wake_n(i32 wake_count)
+void WaitQueue::wake_n(u32 wake_count)
 {
     ScopedSpinLock queue_lock(m_lock);
-    if (m_threads.is_empty())
+    if (m_threads.is_empty()) {
+        // Save the fact that a wake was requested
+        m_wake_requested = true;
+#ifdef WAITQUEUE_DEBUG
+        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: nobody to wake, mark as pending";
+#endif
         return;
+    }
 
-    for (i32 i = 0; i < wake_count; ++i) {
+#ifdef WAITQUEUE_DEBUG
+    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: " << wake_count;
+#endif
+    for (u32 i = 0; i < wake_count; ++i) {
         Thread* thread = m_threads.take_first();
         if (!thread)
             break;
+#ifdef WAITQUEUE_DEBUG
+        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: wake thread " << *thread;
+#endif
         thread->wake_from_queue();
     }
+    m_wake_requested = false;
     Scheduler::yield();
 }
 
 void WaitQueue::wake_all()
 {
     ScopedSpinLock queue_lock(m_lock);
-    if (m_threads.is_empty())
+    if (m_threads.is_empty()) {
+        // Save the fact that a wake was requested
+        m_wake_requested = true;
+#ifdef WAITQUEUE_DEBUG
+        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: nobody to wake, mark as pending";
+#endif
         return;
-    while (!m_threads.is_empty())
-        m_threads.take_first()->wake_from_queue();
+    }
+#ifdef WAITQUEUE_DEBUG
+    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: ";
+#endif
+    while (!m_threads.is_empty()) {
+        Thread* thread = m_threads.take_first();
+#ifdef WAITQUEUE_DEBUG
+        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: wake thread " << *thread;
+#endif
+        thread->wake_from_queue();
+    }
+    m_wake_requested = false;
     Scheduler::yield();
 }
 
 void WaitQueue::clear()
 {
     ScopedSpinLock queue_lock(m_lock);
+#ifdef WAITQUEUE_DEBUG
+    dbg() << "WaitQueue " << VirtualAddress(this) << ": clear";
+#endif
     m_threads.clear();
+    m_wake_requested = false;
 }
 
 }

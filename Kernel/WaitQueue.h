@@ -38,9 +38,9 @@ public:
     WaitQueue();
     ~WaitQueue();
 
-    void enqueue(Thread&);
+    bool enqueue(Thread&);
     void wake_one(Atomic<bool>* lock = nullptr);
-    void wake_n(i32 wake_count);
+    void wake_n(u32 wake_count);
     void wake_all();
     void clear();
 
@@ -48,6 +48,7 @@ private:
     typedef IntrusiveList<Thread, &Thread::m_wait_queue_node> ThreadList;
     ThreadList m_threads;
     SpinLock<u32> m_lock;
+    bool m_wake_requested { false };
 };
 
 }

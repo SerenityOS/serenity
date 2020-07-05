@@ -872,12 +872,18 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // we need to wait until the scheduler lock is released again
         {
             ScopedSpinLock sched_lock(g_scheduler_lock);
+            if (!queue.enqueue(*Thread::current())) {
+                // The WaitQueue was already requested to wake someone when
+                // nobody was waiting. So return right away as we shouldn't
+                // be waiting
+                return BlockResult::NotBlocked;
+            }
+
             did_unlock = unlock_process_if_locked();
             if (lock)
                 *lock = false;
             set_state(State::Queued);
             m_wait_reason = reason;
-            queue.enqueue(*Thread::current());
 
     
             if (timeout) {

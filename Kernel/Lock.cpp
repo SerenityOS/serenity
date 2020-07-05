@@ -54,20 +54,20 @@ void Lock::lock(Mode mode)
     for (;;) {
         bool expected = false;
         if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            // FIXME: Do not add new readers if writers are queued.
-            bool modes_dont_conflict = !modes_conflict(m_mode, mode);
-            bool already_hold_exclusive_lock = m_mode == Mode::Exclusive && m_holder == current_thread;
-            if (modes_dont_conflict || already_hold_exclusive_lock) {
-                // We got the lock!
-                if (!already_hold_exclusive_lock)
-                    m_mode = mode;
-                m_holder = current_thread;
-                m_times_locked++;
-                m_lock.store(false, AK::memory_order_release);
-                return;
-            }
-            timeval* timeout = nullptr;
-            current_thread->wait_on(m_queue, m_name, timeout, &m_lock, m_holder);
+            do {
+                // FIXME: Do not add new readers if writers are queued.
+                bool modes_dont_conflict = !modes_conflict(m_mode, mode);
+                bool already_hold_exclusive_lock = m_mode == Mode::Exclusive && m_holder == current_thread;
+                if (modes_dont_conflict || already_hold_exclusive_lock) {
+                    // We got the lock!
+                    if (!already_hold_exclusive_lock)
+                        m_mode = mode;
+                    m_holder = current_thread;
+                    m_times_locked++;
+                    m_lock.store(false, AK::memory_order_release);
+                    return;
+                }
+             } while (current_thread->wait_on(m_queue, m_name, nullptr, &m_lock, m_holder) == Thread::BlockResult::NotBlocked);
         } else if (Processor::current().in_critical()) {
             // If we're in a critical section and trying to lock, no context
             // switch will happen, so yield.
