@@ -222,6 +222,7 @@ struct JSFileResult {
     // precedence over a passed test
     TestResult most_severe_test_result { TestResult::Pass };
     Vector<JSSuite> suites {};
+    Vector<String> logged_messages {};
 };
 
 struct JSTestRunnerCounts {
@@ -333,12 +334,6 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         return { test_path, file_program.error() };
     interpreter->run(interpreter->global_object(), *file_program.value());
 
-    // Print any output
-    // FIXME: Should be printed to stdout in a nice format
-    auto& arr = interpreter->get_variable("__UserOutput__", interpreter->global_object()).as_array();
-    for (auto& entry : arr.indexed_properties()) {
-        dbg() << test_path << ": " << entry.value_and_attributes(&interpreter->global_object()).value.to_string_without_side_effects();
-    }
 
     auto test_json = get_test_results(*interpreter);
     if (!test_json.has_value()) {
@@ -347,6 +342,13 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     }
 
     JSFileResult file_result { test_path };
+
+    // Collect logged messages
+    auto& arr = interpreter->get_variable("__UserOutput__", interpreter->global_object()).as_array();
+    for (auto& entry : arr.indexed_properties()) {
+        auto message = entry.value_and_attributes(&interpreter->global_object()).value;
+        file_result.logged_messages.append(message.to_string_without_side_effects());
+    }
 
     test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
         JSSuite suite { suite_name };
@@ -474,17 +476,35 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
         printf("\n");
     }
 
+    if (!file_result.logged_messages.is_empty()) {
+        print_modifiers({ FG_GRAY, FG_BOLD });
+#ifdef __serenity__
+        printf("     ℹ Console output:\n");
+#else
+        // This emoji has a second invisible byte after it. The one above does not
+        printf("    ℹ️  Console output:\n");
+#endif
+        print_modifiers({ CLEAR, FG_GRAY });
+        for (auto& message : file_result.logged_messages)
+            printf("         %s\n", message.characters());
+    }
+
     if (file_result.error.has_value()) {
         auto test_error = file_result.error.value();
 
         print_modifiers({ FG_RED });
-        printf("       ❌ The file failed to parse\n\n");
+#ifdef __serenity__
+        printf("     ❌ The file failed to parse\n\n");
+#else
+        // No invisible byte here, but the spacing still needs to be altered on the host
+        printf("    ❌ The file failed to parse\n\n");
+#endif
         print_modifiers({ FG_GRAY });
         for (auto& message : test_error.hint.split('\n', true)) {
-            printf("            %s\n", message.characters());
+            printf("         %s\n", message.characters());
         }
         print_modifiers({ FG_RED });
-        printf("            %s\n\n", test_error.error.to_string().characters());
+        printf("         %s\n\n", test_error.error.to_string().characters());
 
         return;
     }
@@ -499,9 +519,19 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
             print_modifiers({ FG_GRAY, FG_BOLD });
 
             if (failed) {
-                printf("       ❌  Suite:  ");
+#ifdef __serenity__
+                printf("     ❌ Suite:  ");
+#else
+                // No invisible byte here, but the spacing still needs to be altered on the host
+                printf("    ❌ Suite:  ");
+#endif
             } else {
-                printf("       ⚠️️  Suite:  ");
+#ifdef __serenity__
+                printf("     ⚠ Suite:  ");
+#else
+                // This emoji has a second invisible byte after it. The one above does not
+                printf("    ⚠️  Suite:  ");
+#endif
             }
 
             print_modifiers({ CLEAR, FG_GRAY });
@@ -518,7 +548,7 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
                     continue;
 
                 print_modifiers({ FG_GRAY, FG_BOLD });
-                printf("             Test:   ");
+                printf("         Test:   ");
                 if (test.result == TestResult::Fail) {
                     print_modifiers({ CLEAR, FG_RED });
                     printf("%s (failed)\n", test.name.characters());
