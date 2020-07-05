@@ -316,9 +316,6 @@ int Shell::run_command(const StringView& cmd)
     if (cmd.is_empty())
         return 0;
 
-    if (cmd.starts_with("#"))
-        return 0;
-
     auto command = Parser(cmd).parse();
 
     if (!command)
@@ -505,6 +502,8 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
     if (file_result.is_error()) {
         if (explicitly_invoked)
             fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file_result.error().characters());
+        else
+            dbg() << "open() failed for '" << filename << "' with " << file_result.error();
         return false;
     }
     auto file = file_result.value();

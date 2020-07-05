@@ -556,7 +556,7 @@ void Comment::dump(int level) const
 
 RefPtr<Value> Comment::run(RefPtr<Shell>)
 {
-    return create<StringValue>("");
+    return create<ListValue>({});
 }
 
 void Comment::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -1229,7 +1229,27 @@ void Sequence::dump(int level) const
 
 RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
 {
+    // If we are to return a job, block on the left one then return the right one.
+    if (would_execute()) {
+        RefPtr<AST::Node> execute_node = create<AST::Execute>(m_left->position(), m_left);
+        auto left_job = execute_node->run(shell);
+        ASSERT(left_job->is_job());
+        shell->block_on_job(static_cast<JobValue*>(left_job.ptr())->job());
+
+        if (m_right->would_execute())
+            return m_right->run(shell);
+
+        execute_node = create<AST::Execute>(m_right->position(), m_right);
+        return execute_node->run(shell);
+    }
     auto left = m_left->run(shell)->resolve_as_commands(shell);
+    // This could happen if a comment is next to a command.
+    if (left.size() == 1) {
+        auto& command = left.first();
+        if (command.argv.is_empty() && command.redirections.is_empty())
+            return m_right->run(shell);
+    }
+
     auto right = m_right->run(shell)->resolve_as_commands(shell);
 
     Vector<Command> commands;

@@ -717,9 +717,6 @@ RefPtr<AST::Node> Parser::parse_comment()
 
     consume();
     auto text = consume_while(is_not('\n'));
-    if (peek() == '\n')
-        consume();
-
     return create<AST::Comment>(move(text)); // Comment
 }
 
