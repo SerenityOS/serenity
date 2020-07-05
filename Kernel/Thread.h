@@ -301,6 +301,7 @@ public:
 
     enum class BlockResult {
         WokeNormally,
+        NotBlocked,
         InterruptedBySignal,
         InterruptedByDeath,
         InterruptedByTimeout,
