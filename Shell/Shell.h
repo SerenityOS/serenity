@@ -73,7 +73,7 @@ public:
 
     int run_command(const StringView&);
     RefPtr<Job> run_command(AST::Command&);
-    bool run_file(const String&);
+    bool run_file(const String&, bool explicitly_invoked = true);
     bool run_builtin(int argc, const char** argv, int& retval);
     bool has_builtin(const StringView&) const;
     void block_on_job(RefPtr<Job>);
