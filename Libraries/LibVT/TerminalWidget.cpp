@@ -133,9 +133,15 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
         paste();
     });
 
+    m_clear_including_history_action = GUI::Action::create("Clear including history", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
+        clear_including_history();
+    });
+
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(copy_action());
     m_context_menu->add_action(paste_action());
+    m_context_menu->add_separator();
+    m_context_menu->add_action(clear_including_history_action());
 }
 
 TerminalWidget::~TerminalWidget()
@@ -864,4 +870,9 @@ void TerminalWidget::did_change_font()
 
     if (!size().is_empty())
         relayout(size());
+}
+
+void TerminalWidget::clear_including_history()
+{
+    m_terminal.clear_including_history();
 }

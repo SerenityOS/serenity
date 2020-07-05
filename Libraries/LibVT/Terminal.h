@@ -59,6 +59,8 @@ public:
     void on_input(u8);
 
     void clear();
+    void clear_including_history();
+
     void set_size(u16 columns, u16 rows);
     u16 columns() const { return m_columns; }
     u16 rows() const { return m_rows; }

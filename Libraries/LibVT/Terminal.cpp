@@ -49,6 +49,14 @@ void Terminal::clear()
     set_cursor(0, 0);
 }
 
+void Terminal::clear_including_history()
+{
+    m_history.clear();
+    clear();
+
+    m_client.terminal_history_changed();
+}
+
 inline bool is_valid_parameter_character(u8 ch)
 {
     return ch >= 0x30 && ch <= 0x3f;
