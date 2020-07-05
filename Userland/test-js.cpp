@@ -24,11 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/JsonValue.h>
 #include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/LogStream.h>
-#include <LibCore/File.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
@@ -36,8 +36,8 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
-#include <sys/time.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
 
@@ -135,7 +135,7 @@ Vector<String> tests_to_run = {
     "builtins/Proxy/Proxy.handler-isExtensible.js",
     "builtins/Proxy/Proxy.handler-preventExtensions.js",
     "builtins/Proxy/Proxy.handler-set.js",
-    "builtins/Proxy/Proxy.handler-setPrototypeOf.js",\
+    "builtins/Proxy/Proxy.handler-setPrototypeOf.js",
     "builtins/Reflect/Reflect.apply.js",
     "builtins/Reflect/Reflect.construct.js",
     "builtins/Reflect/Reflect.defineProperty.js",
@@ -334,7 +334,6 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         return { test_path, file_program.error() };
     interpreter->run(interpreter->global_object(), *file_program.value());
 
-
     auto test_json = get_test_results(*interpreter);
     if (!test_json.has_value()) {
         printf("Received malformed JSON from test \"%s\"\n", test_path.characters());
@@ -457,9 +456,13 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
         printf(" FAIL ");
         print_modifiers({ CLEAR });
     } else {
-        print_modifiers({ BG_GREEN, FG_BLACK, FG_BOLD });
-        printf(" PASS ");
-        print_modifiers({ CLEAR });
+        if (m_print_times || file_result.most_severe_test_result != TestResult::Pass) {
+            print_modifiers({ BG_GREEN, FG_BLACK, FG_BOLD });
+            printf(" PASS ");
+            print_modifiers({ CLEAR });
+        } else {
+            return;
+        }
     }
 
     printf(" %s", file_result.name.characters());
