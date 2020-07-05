@@ -1,63 +1,63 @@
 load("test-common.js");
 
 try {
-    var a = [1, 2, 3];
+  var a = [1, 2, 3];
 
-    assert(typeof a === "object");
-    assert(a.length === 3);
-    assert(a[0] === 1);
-    assert(a[1] === 2);
-    assert(a[2] === 3);
+  assert(typeof a === "object");
+  assert(a.length === 3);
+  assert(a[0] === 1);
+  assert(a[1] === 2);
+  assert(a[2] === 3);
 
-    a[1] = 5;
-    assert(a[1] === 5);
-    assert(a.length === 3);
+  a[1] = 5;
+  assert(a[1] === 5);
+  assert(a.length === 3);
 
-    a.push(7);
-    assert(a[3] === 7);
-    assert(a.length === 4);
+  a.push(7);
+  assert(a[3] === 7);
+  assert(a.length === 4);
 
-    a = [,];
-    assert(a.length === 1);
-    assert(a.toString() === "");
-    assert(a[0] === undefined);
+  a = [,];
+  assert(a.length === 1);
+  assert(a.toString() === "");
+  assert(a[0] === undefined);
 
-    a = [,,,,];
-    assert(a.length === 4);
-    assert(a.toString() === ",,,");
-    assert(a[0] === undefined);
-    assert(a[1] === undefined);
-    assert(a[2] === undefined);
-    assert(a[3] === undefined);
+  a = [, , , ,];
+  assert(a.length === 4);
+  assert(a.toString() === ",,,");
+  assert(a[0] === undefined);
+  assert(a[1] === undefined);
+  assert(a[2] === undefined);
+  assert(a[3] === undefined);
 
-    a = [1,,2,,,3,];
-    assert(a.length === 6);
-    assert(a.toString() === "1,,2,,,3");
-    assert(a[0] === 1);
-    assert(a[1] === undefined);
-    assert(a[2] === 2);
-    assert(a[3] === undefined);
-    assert(a[4] === undefined);
-    assert(a[5] === 3);
+  a = [1, , 2, , , 3];
+  assert(a.length === 6);
+  assert(a.toString() === "1,,2,,,3");
+  assert(a[0] === 1);
+  assert(a[1] === undefined);
+  assert(a[2] === 2);
+  assert(a[3] === undefined);
+  assert(a[4] === undefined);
+  assert(a[5] === 3);
 
-    a = [1,,2,,,3,];
-    Object.defineProperty(a, 1, {
-        get() {
-            return this.secret_prop;
-        },
-        set(value) {
-            this.secret_prop = value;
-        },
-    });
-    assert(a.length === 6);
-    assert(a.toString() === "1,,2,,,3");
-    assert(a.secret_prop === undefined);
-    a[1] = 20;
-    assert(a.length === 6);
-    assert(a.toString() === "1,20,2,,,3");
-    assert(a.secret_prop === 20);
+  a = [1, , 2, , , 3];
+  Object.defineProperty(a, 1, {
+    get() {
+      return this.secret_prop;
+    },
+    set(value) {
+      this.secret_prop = value;
+    },
+  });
+  assert(a.length === 6);
+  assert(a.toString() === "1,,2,,,3");
+  assert(a.secret_prop === undefined);
+  a[1] = 20;
+  assert(a.length === 6);
+  assert(a.toString() === "1,20,2,,,3");
+  assert(a.secret_prop === 20);
 
-    console.log("PASS");
+  console.log("PASS");
 } catch (e) {
-    console.log("FAIL: " + e);
+  console.log("FAIL: " + e);
 }

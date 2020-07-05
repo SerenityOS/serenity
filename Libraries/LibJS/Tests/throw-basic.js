@@ -1,30 +1,30 @@
 load("test-common.js");
 
 try {
-    throw 1;
-    assertNotReached();
+  throw 1;
+  assertNotReached();
 } catch (e) {
-    assert(e === 1);
+  assert(e === 1);
 }
 
 try {
-    throw [99];
-    assertNotReached();
+  throw [99];
+  assertNotReached();
 } catch (e) {
-    assert(typeof e === "object");
-    assert(e.length === 1);
+  assert(typeof e === "object");
+  assert(e.length === 1);
 }
 
 function foo() {
-    throw "hello";
-    assertNotReached();
+  throw "hello";
+  assertNotReached();
 }
 
 try {
-    foo();
-    assertNotReached();
+  foo();
+  assertNotReached();
 } catch (e) {
-    assert(e === "hello");
+  assert(e === "hello");
 }
 
 console.log("PASS");

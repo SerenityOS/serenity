@@ -1,103 +1,104 @@
 load("test-common.js");
 
 try {
-    var foo = "bar";
-    var computed = "computed"
-    var o = {
-        1: 23,
-        foo,
-        bar: "baz",
-        qux: true ? 10 : 20,
-        "hello": "friends",
-        [1 + 2]: 42,
-        ["I am a " + computed + " key"]: foo,
-        duplicate: "hello",
-        duplicate: "world"
-    };
-    assert(o[1] === 23);
-    assert(o[1n] === 23);
-    assert(o["1"] === 23);
-    assert(o.foo === "bar");
-    assert(o["foo"] === "bar");
-    assert(o.qux === 10),
-    assert(o.hello === "friends");
-    assert(o["hello"] === "friends");
-    assert(o[3] === 42);
-    assert(o["I am a computed key"] === "bar");
-    assert(o.duplicate === "world");
-    o.baz = "test";
-    assert(o.baz === "test");
-    assert(o["baz"] === "test");
-    o[10] = "123";
-    assert(o[10] === "123");
-    assert(o["10"] === "123");
-    o[10n] = "123";
-    assert(o[10] === "123");
-    assert(o["10"] === "123");
-    o[-1] = "hello friends";
-    assert(o[-1] === "hello friends");
-    assert(o["-1"] === "hello friends");
+  var foo = "bar";
+  var computed = "computed";
+  var o = {
+    1: 23,
+    foo,
+    bar: "baz",
+    qux: true ? 10 : 20,
+    hello: "friends",
+    [1 + 2]: 42,
+    ["I am a " + computed + " key"]: foo,
+    duplicate: "hello",
+    duplicate: "world",
+  };
+  assert(o[1] === 23);
+  assert(o[1n] === 23);
+  assert(o["1"] === 23);
+  assert(o.foo === "bar");
+  assert(o["foo"] === "bar");
+  assert(o.qux === 10), assert(o.hello === "friends");
+  assert(o["hello"] === "friends");
+  assert(o[3] === 42);
+  assert(o["I am a computed key"] === "bar");
+  assert(o.duplicate === "world");
+  o.baz = "test";
+  assert(o.baz === "test");
+  assert(o["baz"] === "test");
+  o[10] = "123";
+  assert(o[10] === "123");
+  assert(o["10"] === "123");
+  o[10n] = "123";
+  assert(o[10] === "123");
+  assert(o["10"] === "123");
+  o[-1] = "hello friends";
+  assert(o[-1] === "hello friends");
+  assert(o["-1"] === "hello friends");
 
-    var math = { 3.14: "pi" };
-    assert(math["3.14"] === "pi");
-    // Note : this test doesn't pass yet due to floating-point literals being coerced to i32 on access
-    // assert(math[3.14] === "pi");
+  var math = { 3.14: "pi" };
+  assert(math["3.14"] === "pi");
+  // Note : this test doesn't pass yet due to floating-point literals being coerced to i32 on access
+  // assert(math[3.14] === "pi");
 
-    // This is also allowed! Watch out for syntax errors.
-    var o2 = { return: 1, yield: 1, for: 1, catch: 1, break: 1 };
-    assert(o2.return === 1);
-    assert(o2.yield === 1);
-    assert(o2.for === 1);
-    assert(o2.catch === 1);
-    assert(o2.break === 1);
+  // This is also allowed! Watch out for syntax errors.
+  var o2 = { return: 1, yield: 1, for: 1, catch: 1, break: 1 };
+  assert(o2.return === 1);
+  assert(o2.yield === 1);
+  assert(o2.for === 1);
+  assert(o2.catch === 1);
+  assert(o2.break === 1);
 
-    var a;
-    var append = x => { a.push(x); };
+  var a;
+  var append = x => {
+    a.push(x);
+  };
 
-    a = [];
-    var o3 = {[append(1)]: 1, [append(2)]: 2, [append(3)]: 3}
-    assert(a.length === 3);
-    assert(a[0] === 1);
-    assert(a[1] === 2);
-    assert(a[2] === 3);
-    assert(o3.undefined === 3);
+  a = [];
+  var o3 = { [append(1)]: 1, [append(2)]: 2, [append(3)]: 3 };
+  assert(a.length === 3);
+  assert(a[0] === 1);
+  assert(a[1] === 2);
+  assert(a[2] === 3);
+  assert(o3.undefined === 3);
 
-    a = [];
-    var o4 = {"test": append(1), "test": append(2), "test": append(3)}
-    assert(a.length === 3);
-    assert(a[0] === 1);
-    assert(a[1] === 2);
-    assert(a[2] === 3);
-    assert(o4.test === undefined);
+  a = [];
+  var o4 = { test: append(1), test: append(2), test: append(3) };
+  assert(a.length === 3);
+  assert(a[0] === 1);
+  assert(a[1] === 2);
+  assert(a[2] === 3);
+  assert(o4.test === undefined);
 
-    var base = {
-        getNumber() {
-            return 10;
-        }
-    };
+  var base = {
+    getNumber() {
+      return 10;
+    },
+  };
 
-    var derived = {
-        getNumber() {
-            return 20 + super.getNumber();
-        }
-    };
+  var derived = {
+    getNumber() {
+      return 20 + super.getNumber();
+    },
+  };
 
-    Object.setPrototypeOf(derived, base)
-    assert(derived.getNumber() === 30);
+  Object.setPrototypeOf(derived, base);
+  assert(derived.getNumber() === 30);
 
-    assertIsSyntaxError("({ foo: function() { super.bar; } })")
-    assertIsSyntaxError("({ get ...foo })");
-    assertIsSyntaxError("({ get... foo })");
-    assertIsSyntaxError("({ get foo })");
-    assertIsSyntaxError("({ get foo: bar })");
-    assertIsSyntaxError("({ get [foo]: bar })");
-    assertIsSyntaxError("({ get ...[foo] })");
-    assertIsSyntaxError("({ get foo(bar) {} })");
-    assertIsSyntaxError("({ set foo() {} })");
-    assertIsSyntaxError("({ set foo(bar, baz) {} })");
-    assertIsSyntaxError("({ ...foo: bar })");
+  assertIsSyntaxError("({ foo: function() { super.bar; } })");
+  assertIsSyntaxError("({ get ...foo })");
+  assertIsSyntaxError("({ get... foo })");
+  assertIsSyntaxError("({ get foo })");
+  assertIsSyntaxError("({ get foo: bar })");
+  assertIsSyntaxError("({ get [foo]: bar })");
+  assertIsSyntaxError("({ get ...[foo] })");
+  assertIsSyntaxError("({ get foo(bar) {} })");
+  assertIsSyntaxError("({ set foo() {} })");
+  assertIsSyntaxError("({ set foo(bar, baz) {} })");
+  assertIsSyntaxError("({ ...foo: bar })");
 
-    console.log("PASS");
+  console.log("PASS");
 } catch (e) {
-    console.log("FAIL: " + e);
+  console.log("FAIL: " + e);
 }

@@ -2,7 +2,7 @@ load("test-common.js");
 
 try {
   function Foo() {
-      this.x = 123;
+    this.x = 123;
   }
 
   assert(Foo.prototype.constructor === Foo);
