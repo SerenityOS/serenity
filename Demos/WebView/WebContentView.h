@@ -66,5 +66,6 @@ private:
     WebContentClient& client();
 
     RefPtr<WebContentClient> m_client;
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap> m_front_bitmap;
+    RefPtr<Gfx::Bitmap> m_back_bitmap;
 };
