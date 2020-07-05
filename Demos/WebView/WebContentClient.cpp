@@ -98,3 +98,19 @@ void WebContentClient::handle(const Messages::WebContentClient::DidRequestScroll
 #endif
     m_view.notify_server_did_request_scroll_into_view({}, message.rect());
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidHoverLink& message)
+{
+#ifdef DEBUG_SPAM
+    dbg() << "handle: WebContentClient::DidHoverLink! url=" << message.url();
+#endif
+    m_view.notify_server_did_hover_link({}, message.url());
+}
+
+void WebContentClient::handle(const Messages::WebContentClient::DidUnhoverLink&)
+{
+#ifdef DEBUG_SPAM
+    dbg() << "handle: WebContentClient::DidUnhoverLink!";
+#endif
+    m_view.notify_server_did_unhover_link({});
+}

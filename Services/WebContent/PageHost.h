@@ -56,6 +56,8 @@ private:
     virtual void page_did_layout() override;
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) override;
+    virtual void page_did_hover_link(const URL&) override;
+    virtual void page_did_unhover_link() override;
 
     explicit PageHost(ClientConnection&);
 

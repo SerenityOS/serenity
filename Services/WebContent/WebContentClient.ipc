@@ -7,4 +7,6 @@ endpoint WebContentClient = 90
     DidLayout(Gfx::IntSize content_size) =|
     DidChangeTitle(String title) =|
     DidRequestScrollIntoView(Gfx::IntRect rect) =|
+    DidHoverLink(URL url) =|
+    DidUnhoverLink() =|
 }

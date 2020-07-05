@@ -40,6 +40,7 @@ public:
     void load(const URL&);
 
     Function<void(const String&)> on_title_change;
+    Function<void(const URL&)> on_link_hover;
 
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id);
@@ -47,6 +48,8 @@ public:
     void notify_server_did_change_selection(Badge<WebContentClient>);
     void notify_server_did_change_title(Badge<WebContentClient>, const String&);
     void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect&);
+    void notify_server_did_hover_link(Badge<WebContentClient>, const URL&);
+    void notify_server_did_unhover_link(Badge<WebContentClient>);
 
 private:
     WebContentView();
