@@ -79,9 +79,11 @@ public:
 
     GUI::Action& copy_action() { return *m_copy_action; }
     GUI::Action& paste_action() { return *m_paste_action; }
+    GUI::Action& clear_including_history_action() { return *m_clear_including_history_action; }
 
     void copy();
     void paste();
+    void clear_including_history();
 
     virtual bool accepts_focus() const override { return true; }
 
@@ -178,6 +180,7 @@ private:
 
     RefPtr<GUI::Action> m_copy_action;
     RefPtr<GUI::Action> m_paste_action;
+    RefPtr<GUI::Action> m_clear_including_history_action;
 
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Menu> m_context_menu_for_hyperlink;

@@ -297,6 +297,9 @@ int main(int argc, char** argv)
     edit_menu.add_action(terminal.copy_action());
     edit_menu.add_action(terminal.paste_action());
 
+    auto& view_menu = menubar->add_menu("View");
+    view_menu.add_action(terminal.clear_including_history_action());
+
     GUI::ActionGroup font_action_group;
     font_action_group.set_exclusive(true);
     auto& font_menu = menubar->add_menu("Font");
