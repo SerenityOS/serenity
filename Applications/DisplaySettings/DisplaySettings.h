@@ -31,7 +31,7 @@
 #include <LibGUI/ComboBox.h>
 
 class DisplaySettingsWidget : public GUI::Widget {
-    C_OBJECT(MonitorWidget);
+    C_OBJECT(DisplaySettingsWidget);
 
 public:
     DisplaySettingsWidget();

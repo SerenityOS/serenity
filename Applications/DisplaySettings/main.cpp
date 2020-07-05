@@ -50,14 +50,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    DisplaySettingsWidget instance;
+    // FIXME: Clean up this bizarre object graph
+    auto instance = DisplaySettingsWidget::construct();
 
     auto window = GUI::Window::construct();
     window->set_title("Display settings");
     window->move_to(100, 100);
     window->resize(360, 390);
     window->set_resizable(false);
-    window->set_main_widget(instance.root_widget());
+    window->set_main_widget(instance->root_widget());
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"));
 
     auto menubar = GUI::MenuBar::construct();
