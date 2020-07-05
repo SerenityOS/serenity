@@ -171,7 +171,6 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
-    bool was_hovering_link = document.hovered_node() && document.hovered_node()->is_link();
     auto result = layout_root.hit_test(position);
     const HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
@@ -210,8 +209,6 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         } else {
             page_client.page_did_leave_tooltip_area();
         }
-    }
-    if (is_hovering_link != was_hovering_link) {
         if (is_hovering_link)
             page_client.page_did_hover_link(document.complete_url(hovered_link_element->href()));
         else
