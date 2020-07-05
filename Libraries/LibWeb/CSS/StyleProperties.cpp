@@ -299,6 +299,10 @@ CSS::Display StyleProperties::display() const
         return CSS::Display::TableCell;
     if (display == "table-row-group")
         return CSS::Display::TableRowGroup;
+    if (display == "table-header-group")
+        return CSS::Display::TableHeaderGroup;
+    if (display == "table-footer-group")
+        return CSS::Display::TableFooterGroup;
     dbg() << "Unknown display type: _" << display << "_";
     return CSS::Display::Block;
 }

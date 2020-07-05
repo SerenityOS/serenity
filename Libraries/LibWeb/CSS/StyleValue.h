@@ -132,7 +132,9 @@ enum class Display {
     Table,
     TableRow,
     TableCell,
+    TableHeaderGroup,
     TableRowGroup,
+    TableFooterGroup,
 };
 
 enum class WhiteSpace {
