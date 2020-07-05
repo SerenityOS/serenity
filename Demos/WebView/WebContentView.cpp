@@ -55,18 +55,21 @@ void WebContentView::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.translate(frame_thickness(), frame_thickness());
 
-    ASSERT(m_bitmap);
-    painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
+    ASSERT(m_front_bitmap);
+    painter.blit({ 0, 0 }, *m_front_bitmap, m_front_bitmap->rect());
 }
 
 void WebContentView::resize_event(GUI::ResizeEvent& event)
 {
     GUI::ScrollableWidget::resize_event(event);
 
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size());
-    m_bitmap = bitmap->to_bitmap_backed_by_shared_buffer();
-    m_bitmap->shared_buffer()->share_with(client().server_pid());
-    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, m_bitmap->size())));
+    m_front_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())->to_bitmap_backed_by_shared_buffer();
+    m_front_bitmap->shared_buffer()->share_with(client().server_pid());
+
+    m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())->to_bitmap_backed_by_shared_buffer();
+    m_back_bitmap->shared_buffer()->share_with(client().server_pid());
+
+    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
     request_repaint();
 }
 
@@ -87,8 +90,10 @@ void WebContentView::mousemove_event(GUI::MouseEvent& event)
 
 void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id)
 {
-    if (m_bitmap->shbuf_id() == shbuf_id)
+    if (m_back_bitmap->shbuf_id() == shbuf_id) {
+        swap(m_back_bitmap, m_front_bitmap);
         update();
+    }
 }
 
 void WebContentView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] const Gfx::IntRect& content_rect)
@@ -128,7 +133,7 @@ void WebContentView::did_scroll()
 
 void WebContentView::request_repaint()
 {
-    client().post_message(Messages::WebContentServer::Paint(m_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_bitmap->shbuf_id()));
+    client().post_message(Messages::WebContentServer::Paint(m_back_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_back_bitmap->shbuf_id()));
 }
 
 WebContentClient& WebContentView::client()
