@@ -58,11 +58,13 @@ public:
     static timeval time_since_boot();
     static bool yield();
     static bool donate_to(Thread*, const char* reason);
-    static bool context_switch(Thread&);
+    static bool context_switch(Thread*);
+    static void enter_current(Thread& prev_thread);
     static Process* colonel();
     static void beep();
     static void idle_loop();
     static void invoke_async();
+    static void notify_finalizer();
 
     template<typename Callback>
     static inline IterationDecision for_each_runnable(Callback);

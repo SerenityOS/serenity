@@ -438,6 +438,18 @@ public:
         return m_wait_reason;
     }
 
+    void set_active(bool active)
+    {
+        ASSERT(g_scheduler_lock.is_locked());
+        m_is_active = active;
+    }
+
+    bool is_finalizable() const
+    {
+        ASSERT(g_scheduler_lock.is_locked());
+        return !m_is_active;
+    }
+
     Thread* clone(Process&);
 
     template<typename Callback>
@@ -467,8 +479,8 @@ private:
 private:
     friend class SchedulerData;
     friend class WaitQueue;
-    bool unlock_process_if_locked(u32& prev_crit);
-    void relock_process(bool did_unlock, u32 prev_crit);
+    bool unlock_process_if_locked();
+    void relock_process(bool did_unlock);
     String backtrace_impl();
     void reset_fpu_state();
 
@@ -491,6 +503,7 @@ private:
     Blocker* m_blocker { nullptr };
     const char* m_wait_reason { nullptr };
 
+    bool m_is_active { false };
     bool m_is_joinable { true };
     Thread* m_joiner { nullptr };
     Thread* m_joinee { nullptr };
@@ -526,7 +539,6 @@ private:
 
     OwnPtr<ThreadTracer> m_tracer;
 
-    void notify_finalizer();
     void yield_without_holding_big_lock();
 };
 
