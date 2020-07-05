@@ -1,5 +1,5 @@
 test("basic update expression", () => {
-  var o = {};
+  const o = {};
   o.f = 1;
 
   expect(o.f++).toBe(1);

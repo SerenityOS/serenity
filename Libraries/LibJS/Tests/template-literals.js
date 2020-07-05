@@ -1,50 +1,58 @@
-load("test-common.js");
+test("plain literals with expression-like characters", () => {
+  expect(`foo`).toBe("foo");
+  expect(`foo{`).toBe("foo{");
+  expect(`foo}`).toBe("foo}");
+  expect(`foo$`).toBe("foo$");
+});
 
-try {
-  assert(`foo` === "foo");
-  assert(`foo{` === "foo{");
-  assert(`foo}` === "foo}");
-  assert(`foo$` === "foo$");
-  assert(`foo\`` === "foo`");
-  assert(`foo\$` === "foo$");
+test("plain literals with escaped special characters", () => {
+  expect(`foo\``).toBe("foo`");
+  expect(`foo\$`).toBe("foo$");
+  expect(`foo \${"bar"}`).toBe('foo ${"bar"}');
+});
 
-  assert(`foo ${undefined}` === "foo undefined");
-  assert(`foo ${null}` === "foo null");
-  assert(`foo ${5}` === "foo 5");
-  assert(`foo ${true}` === "foo true");
-  assert(`foo ${"bar"}` === "foo bar");
-  assert(`foo \${"bar"}` === 'foo ${"bar"}');
+test("literals in expressions", () => {
+  expect(`foo ${undefined}`).toBe("foo undefined");
+  expect(`foo ${null}`).toBe("foo null");
+  expect(`foo ${5}`).toBe("foo 5");
+  expect(`foo ${true}`).toBe("foo true");
+  expect(`foo ${"bar"}`).toBe("foo bar");
+});
 
-  assert(`foo ${{}}` === "foo [object Object]");
-  assert(`foo ${{ bar: { baz: "qux" } }}` === "foo [object Object]");
-  assert(`foo ${"bar"} ${"baz"}` === "foo bar baz");
-  assert(`${"foo"} bar baz` === "foo bar baz");
-  assert(`${"foo bar baz"}` === "foo bar baz");
+test("objects in expressions", () => {
+  expect(`foo ${{}}`).toBe("foo [object Object]");
+  expect(`foo ${{ bar: { baz: "qux" } }}`).toBe("foo [object Object]");
+});
 
+test("expressions at beginning of template literal", () => {
+  expect(`${"foo"} bar baz`).toBe("foo bar baz");
+  expect(`${"foo bar baz"}`).toBe("foo bar baz");
+});
+
+test("multiple template literals", () => {
+  expect(`foo ${"bar"} ${"baz"}`).toBe("foo bar baz");
+});
+
+test("variables in expressions", () => {
   let a = 27;
-  assert(`${a}` === "27");
-  assert(`foo ${a}` === "foo 27");
-  assert(`foo ${a ? "bar" : "baz"}` === "foo bar");
-  assert(`foo ${(() => a)()}` === "foo 27");
+  expect(`${a}`).toBe("27");
+  expect(`foo ${a}`).toBe("foo 27");
+  expect(`foo ${a ? "bar" : "baz"}`).toBe("foo bar");
+  expect(`foo ${(() => a)()}`).toBe("foo 27");
+});
 
-  assert(`foo ${`bar`}` === "foo bar");
-  assert(`${`${`${`${"foo"}`} bar`}`}` === "foo bar");
-  assert(
+test("template literals in expressions", () => {
+  expect(`foo ${`bar`}`).toBe("foo bar");
+  expect(`${`${`${`${"foo"}`} bar`}`}`).toBe("foo bar");
+});
+
+test("newline literals (not characters)", () => {
+  expect(
     `foo
-    bar` === "foo\n    bar"
-  );
+    bar`
+  ).toBe("foo\n    bar");
+});
 
-  assertThrowsError(
-    () => {
-      `${b}`;
-    },
-    {
-      error: ReferenceError,
-      message: "'b' is not defined",
-    }
-  );
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("reference error from expressions", () => {
+  expect(() => `${b}`).toThrowWithMessage(ReferenceError, "'b' is not defined");
+});

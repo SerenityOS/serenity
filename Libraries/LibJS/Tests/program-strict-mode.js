@@ -1,29 +1,18 @@
 "use strict";
 
-load("test-common.js");
-
-try {
-  assert(isStrictMode());
+test("basic functionality", () => {
+  expect(isStrictMode()).toBeTrue();
 
   (function () {
-    assert(isStrictMode());
-  })();
-
-  (function () {
-    "use strict";
-    assert(isStrictMode());
+    expect(isStrictMode()).toBeTrue();
   })();
 
   (() => {
-    assert(isStrictMode());
+    expect(isStrictMode()).toBeTrue();
   })();
 
   (() => {
     "use strict";
-    assert(isStrictMode());
+    expect(isStrictMode()).toBeTrue();
   })();
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+});

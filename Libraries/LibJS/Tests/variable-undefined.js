@@ -1,19 +1,14 @@
-load("test-common.js");
+test("basic functionality", () => {
+  function foo(a) {
+    return a;
+  }
 
-function foo(a) {
-  return a;
-}
-
-try {
   var x = undefined;
-  assert(x === undefined);
-  assert(foo(x) === undefined);
+  expect(x).toBeUndefined();
+  expect(foo(x)).toBeUndefined();
 
   var o = {};
   o.x = x;
-  assert(o.x === undefined);
-  assert(o.x === x);
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(o.x).toBeUndefined();
+  expect(o.x).toBe(x);
+});

@@ -1,30 +1,34 @@
-load("test-common.js");
+test("throw literal", () => {
+  try {
+    throw 1;
+    expect().fail();
+  } catch (e) {
+    if (e.name === "ExpectationError") throw e;
+    expect(e).toBe(1);
+  }
+});
 
-try {
-  throw 1;
-  assertNotReached();
-} catch (e) {
-  assert(e === 1);
-}
+test("throw array", () => {
+  try {
+    throw [99];
+    expect().fail();
+  } catch (e) {
+    if (e.name === "ExpectationError") throw e;
+    expect(e).toEqual([99]);
+  }
+});
 
-try {
-  throw [99];
-  assertNotReached();
-} catch (e) {
-  assert(typeof e === "object");
-  assert(e.length === 1);
-}
+test("call function that throws", () => {
+  function foo() {
+    throw "hello";
+    expect().fail();
+  }
 
-function foo() {
-  throw "hello";
-  assertNotReached();
-}
-
-try {
-  foo();
-  assertNotReached();
-} catch (e) {
-  assert(e === "hello");
-}
-
-console.log("PASS");
+  try {
+    foo();
+    expect().fail();
+  } catch (e) {
+    if (e.name === "ExpectationError") throw e;
+    expect(e).toBe("hello");
+  }
+});
