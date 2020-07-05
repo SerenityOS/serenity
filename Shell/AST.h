@@ -699,6 +699,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Sequence"; }
     virtual bool is_list() const override { return true; }
+    virtual bool would_execute() const override { return m_left->would_execute() || m_right->would_execute(); }
 
     RefPtr<Node> m_left;
     RefPtr<Node> m_right;
