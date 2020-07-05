@@ -50,6 +50,7 @@ private:
     virtual void handle(const Messages::WebContentClient::DidChangeSelection&) override;
     virtual void handle(const Messages::WebContentClient::DidLayout&) override;
     virtual void handle(const Messages::WebContentClient::DidChangeTitle&) override;
+    virtual void handle(const Messages::WebContentClient::DidRequestScrollIntoView&) override;
 
     WebContentView& m_view;
 };

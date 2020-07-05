@@ -90,3 +90,11 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeTitle& 
 #endif
     m_view.notify_server_did_change_title({}, message.title());
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidRequestScrollIntoView& message)
+{
+#ifdef DEBUG_SPAM
+    dbg() << "handle: WebContentClient::DidRequestScrollIntoView! rect=" << message.rect();
+#endif
+    m_view.notify_server_did_request_scroll_into_view({}, message.rect());
+}

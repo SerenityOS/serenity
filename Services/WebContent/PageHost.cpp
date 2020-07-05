@@ -129,4 +129,9 @@ void PageHost::page_did_change_title(const String& title)
     m_client.post_message(Messages::WebContentClient::DidChangeTitle(title));
 }
 
+void PageHost::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
+{
+    m_client.post_message(Messages::WebContentClient::DidRequestScrollIntoView(rect));
+}
+
 }
