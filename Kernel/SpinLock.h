@@ -26,24 +26,20 @@
 
 #pragma once
 
-#include <AK/Types.h>
 #include <AK/Atomic.h>
-#include <Kernel/Forward.h>
+#include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Forward.h>
 
 namespace Kernel {
 
-template <typename BaseType = u32>
-class SpinLock
-{
-    AK::Atomic<BaseType> m_lock{0};
+template<typename BaseType = u32>
+class SpinLock {
+    AK_MAKE_NONCOPYABLE(SpinLock);
+    AK_MAKE_NONMOVABLE(SpinLock);
 
 public:
     SpinLock() = default;
-    SpinLock(const SpinLock&) = delete;
-    SpinLock(SpinLock&&) = delete;
-    SpinLock& operator=(const SpinLock&) = delete;
-    SpinLock& operator=(SpinLock&&) = delete;
 
     ALWAYS_INLINE u32 lock()
     {
@@ -54,7 +50,6 @@ public:
             expected = 0;
         } while (!m_lock.compare_exchange_strong(expected, 1, AK::memory_order_acq_rel));
         return prev_flags;
-        
     }
 
     ALWAYS_INLINE void unlock(u32 prev_flags)
@@ -73,19 +68,17 @@ public:
     {
         m_lock.store(0, AK::memory_order_release);
     }
+
+private:
+    AK::Atomic<BaseType> m_lock { 0 };
 };
 
-class RecursiveSpinLock
-{
-    AK::Atomic<FlatPtr> m_lock{0};
-    u32 m_recursions{0};
+class RecursiveSpinLock {
+    AK_MAKE_NONCOPYABLE(RecursiveSpinLock);
+    AK_MAKE_NONMOVABLE(RecursiveSpinLock);
 
 public:
     RecursiveSpinLock() = default;
-    RecursiveSpinLock(const RecursiveSpinLock&) = delete;
-    RecursiveSpinLock(RecursiveSpinLock&&) = delete;
-    RecursiveSpinLock& operator=(const RecursiveSpinLock&) = delete;
-    RecursiveSpinLock& operator=(RecursiveSpinLock&&) = delete;
 
     ALWAYS_INLINE u32 lock()
     {
@@ -98,7 +91,7 @@ public:
             if (expected == cpu)
                 break;
             expected = 0;
-        } 
+        }
         m_recursions++;
         return prev_flags;
     }
@@ -121,33 +114,32 @@ public:
     {
         m_lock.store(0, AK::memory_order_release);
     }
+
+private:
+    AK::Atomic<FlatPtr> m_lock { 0 };
+    u32 m_recursions { 0 };
 };
 
-template <typename BaseType = u32, typename LockType = SpinLock<BaseType>>
-class ScopedSpinLock
-{
-    LockType* m_lock;
-    u32 m_prev_flags{0};
-    bool m_have_lock{false};
+template<typename BaseType = u32, typename LockType = SpinLock<BaseType>>
+class ScopedSpinLock {
+    AK_MAKE_NONCOPYABLE(ScopedSpinLock);
 
 public:
     ScopedSpinLock() = delete;
-    ScopedSpinLock(const ScopedSpinLock&) = delete;
-    ScopedSpinLock& operator=(const ScopedSpinLock&) = delete;
     ScopedSpinLock& operator=(ScopedSpinLock&&) = delete;
 
-    ScopedSpinLock(LockType& lock):
-        m_lock(&lock)
+    ScopedSpinLock(LockType& lock)
+        : m_lock(&lock)
     {
         ASSERT(m_lock);
         m_prev_flags = m_lock->lock();
         m_have_lock = true;
     }
 
-    ScopedSpinLock(ScopedSpinLock&& from):
-        m_lock(from.m_lock),
-        m_prev_flags(from.m_prev_flags),
-        m_have_lock(from.m_have_lock)
+    ScopedSpinLock(ScopedSpinLock&& from)
+        : m_lock(from.m_lock)
+        , m_prev_flags(from.m_prev_flags)
+        , m_have_lock(from.m_have_lock)
     {
         from.m_lock = nullptr;
         from.m_prev_flags = 0;
@@ -182,6 +174,11 @@ public:
     {
         return m_have_lock;
     }
+
+private:
+    LockType* m_lock { nullptr };
+    u32 m_prev_flags { 0 };
+    bool m_have_lock { false };
 };
 
 }
