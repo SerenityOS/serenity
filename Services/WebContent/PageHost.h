@@ -49,7 +49,7 @@ public:
     void set_viewport_rect(const Gfx::IntRect&);
 
 private:
-    // ^PageHost
+    // ^PageClient
     virtual Gfx::Palette palette() const override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_selection() override;
@@ -58,6 +58,8 @@ private:
     virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) override;
     virtual void page_did_hover_link(const URL&) override;
     virtual void page_did_unhover_link() override;
+    virtual void page_did_click_link(const URL&, const String& target, unsigned modifiers) override;
+    virtual void page_did_middle_click_link(const URL&, const String& target, unsigned modifiers) override;
 
     explicit PageHost(ClientConnection&);
 

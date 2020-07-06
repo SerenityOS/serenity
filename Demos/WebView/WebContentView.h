@@ -41,6 +41,8 @@ public:
 
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_link_hover;
+    Function<void(const URL&, const String& target, unsigned modifiers)> on_link_click;
+    Function<void(const URL&, const String& target, unsigned modifiers)> on_link_middle_click;
 
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id);
@@ -50,6 +52,8 @@ public:
     void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect&);
     void notify_server_did_hover_link(Badge<WebContentClient>, const URL&);
     void notify_server_did_unhover_link(Badge<WebContentClient>);
+    void notify_server_did_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
+    void notify_server_did_middle_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
 
 private:
     WebContentView();

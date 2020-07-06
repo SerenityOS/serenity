@@ -56,6 +56,11 @@ int main(int argc, char** argv)
             statusbar.set_text("");
     };
 
+    view.on_link_click = [&](auto& url, auto&, auto) {
+        if (url.is_valid())
+            view.load(url);
+    };
+
     view.load("file:///res/html/misc/welcome.html");
 
     return app->exec();

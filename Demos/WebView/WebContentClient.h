@@ -53,6 +53,8 @@ private:
     virtual void handle(const Messages::WebContentClient::DidRequestScrollIntoView&) override;
     virtual void handle(const Messages::WebContentClient::DidHoverLink&) override;
     virtual void handle(const Messages::WebContentClient::DidUnhoverLink&) override;
+    virtual void handle(const Messages::WebContentClient::DidClickLink&) override;
+    virtual void handle(const Messages::WebContentClient::DidMiddleClickLink&) override;
 
     WebContentView& m_view;
 };
