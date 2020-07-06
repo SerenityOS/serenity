@@ -435,8 +435,6 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
         return nullptr;
     }
     if (child == 0) {
-        setpgid(0, 0);
-        tcsetpgrp(0, getpid());
         tcsetattr(0, TCSANOW, &default_termios);
         for (auto& rewiring : rewirings) {
 #ifdef SH_DEBUG
@@ -511,14 +509,16 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
     run_command(data);
     return true;
 }
-void Shell::take_back_stdin()
+void Shell::restore_stdin()
 {
-    tcsetpgrp(0, m_pid);
     tcsetattr(0, TCSANOW, &termios);
 }
 
 void Shell::block_on_job(RefPtr<Job> job)
 {
+    ScopedValueRollback accepting_signal_rollback(m_is_accepting_signals);
+    m_is_accepting_signals = false;
+
     if (!job)
         return;
 
@@ -529,13 +529,13 @@ void Shell::block_on_job(RefPtr<Job> job)
         loop.quit(0);
     };
     if (job->exited()) {
-        take_back_stdin();
+        restore_stdin();
         return;
     }
 
     loop.exec();
 
-    take_back_stdin();
+    restore_stdin();
 }
 
 String Shell::get_history_path()
@@ -872,7 +872,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
 
 bool Shell::read_single_line()
 {
-    take_back_stdin();
+    restore_stdin();
     auto line_result = editor->get_line(prompt());
 
     if (line_result.is_error()) {

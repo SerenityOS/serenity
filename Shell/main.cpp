@@ -61,6 +61,8 @@ int main(int argc, char** argv)
     Core::EventLoop loop;
 
     signal(SIGINT, [](int) {
+        if (!s_shell->is_accepting_signals())
+            return;
         editor->interrupted();
     });
 
@@ -68,7 +70,12 @@ int main(int argc, char** argv)
         editor->resized();
     });
 
+    signal(SIGTTIN, [](int) {});
+    signal(SIGTTOU, [](int) {});
+
     signal(SIGHUP, [](int) {
+        if (!s_shell->is_accepting_signals())
+            return;
         s_shell->save_history();
     });
 

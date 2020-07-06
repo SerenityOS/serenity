@@ -799,7 +799,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
                 } else if (command.should_notify_if_in_background) {
                     if (job)
                         job->set_running_in_background(true);
-                    shell->take_back_stdin();
+                    shell->restore_stdin();
                 }
             }
         }
