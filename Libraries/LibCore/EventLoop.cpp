@@ -29,6 +29,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/NeverDestroyed.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -40,6 +41,7 @@
 #include <LibThread/Lock.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,6 +81,10 @@ static NeverDestroyed<IDAllocator> s_id_allocator;
 static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static HashTable<Notifier*>* s_notifiers;
 int EventLoop::s_wake_pipe_fds[2];
+HashMap<int, EventLoop::SignalHandlers> EventLoop::s_signal_handlers;
+int EventLoop::s_handling_signal = 0;
+int EventLoop::s_next_signal_id = 0;
+pid_t EventLoop::s_pid;
 static RefPtr<LocalServer> s_rpc_server;
 HashMap<int, RefPtr<RPCClient>> s_rpc_clients;
 
@@ -225,6 +231,7 @@ EventLoop::EventLoop()
 
     if (!s_main_event_loop) {
         s_main_event_loop = this;
+        s_pid = getpid();
 #if defined(SOCK_NONBLOCK)
         int rc = pipe2(s_wake_pipe_fds, O_CLOEXEC);
 #else
@@ -409,10 +416,114 @@ void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
     m_queued_events.empend(receiver, move(event));
 }
 
+EventLoop::SignalHandlers::SignalHandlers(int signo)
+    : m_signo(signo)
+    , m_original_handler(signal(signo, EventLoop::handle_signal))
+{
+#ifdef EVENTLOOP_DEBUG
+    dbg() << "Core::EventLoop: Registered handler for signal " << m_signo;
+#endif
+}
+
+EventLoop::SignalHandlers::~SignalHandlers()
+{
+    if (m_valid) {
+#ifdef EVENTLOOP_DEBUG
+        dbg() << "Core::EventLoop: Unregistering handler for signal " << m_signo;
+#endif
+        signal(m_signo, m_original_handler);
+    }
+}
+
+void EventLoop::SignalHandlers::dispatch()
+{
+    for (auto& handler : m_handlers)
+        handler.value(m_signo);
+}
+
+int EventLoop::SignalHandlers::add(Function<void(int)>&& handler)
+{
+    int id = ++EventLoop::s_next_signal_id; // TODO: worry about wrapping and duplicates?
+    m_handlers.set(id, move(handler));
+    return id;
+}
+
+bool EventLoop::SignalHandlers::remove(int handler_id)
+{
+    ASSERT(handler_id != 0);
+    return m_handlers.remove(handler_id);
+}
+
+void EventLoop::dispatch_signal(int signo)
+{
+    // We need to protect the handler from being removed while handling it
+    TemporaryChange change(s_handling_signal, signo);
+    auto handlers = s_signal_handlers.find(signo);
+    if (handlers != s_signal_handlers.end()) {
+#ifdef EVENTLOOP_DEBUG
+        dbg() << "Core::EventLoop: dispatching signal " << signo;
+#endif
+        handlers->value.dispatch();
+    }
+}
+
+void EventLoop::handle_signal(int signo)
+{
+    ASSERT(signo != 0);
+    // We MUST check if the current pid still matches, because there
+    // is a window between fork() and exec() where a signal delivered
+    // to our fork could be inadvertedly routed to the parent process!
+    if (getpid() == s_pid) {
+        int nwritten = write(s_wake_pipe_fds[1], &signo, sizeof(signo));
+        if (nwritten < 0) {
+            perror("EventLoop::register_signal: write");
+            ASSERT_NOT_REACHED();
+        }
+    } else {
+        // We're a fork who received a signal, reset s_pid
+        s_pid = 0;
+    }
+}
+
+int EventLoop::register_signal(int signo, Function<void(int)> handler)
+{
+    ASSERT(signo != 0);
+    ASSERT(s_handling_signal != signo); // can't register the same signal while handling it
+    auto handlers = s_signal_handlers.find(signo);
+    if (handlers == s_signal_handlers.end()) {
+        SignalHandlers signal_handlers(signo);
+        auto handler_id = signal_handlers.add(move(handler));
+        s_signal_handlers.set(signo, move(signal_handlers));
+        return handler_id;
+    } else {
+        return handlers->value.add(move(handler));
+    }
+}
+
+void EventLoop::unregister_signal(int handler_id)
+{
+    ASSERT(handler_id != 0);
+    int remove_signo = 0;
+    for (auto& h : s_signal_handlers) {
+        auto& handlers = h.value;
+        if (handlers.m_signo == s_handling_signal) {
+            // can't remove the same signal while handling it
+            ASSERT(!handlers.have(handler_id));
+        } else if (handlers.remove(handler_id)) {
+            if (handlers.is_empty())
+                remove_signo = handlers.m_signo;
+            break;
+        }
+    }
+    if (remove_signo != 0)
+        s_signal_handlers.remove(remove_signo);
+}
+
 void EventLoop::wait_for_event(WaitMode mode)
 {
     fd_set rfds;
     fd_set wfds;
+retry:
     FD_ZERO(&rfds);
     FD_ZERO(&wfds);
 
@@ -461,7 +572,7 @@ void EventLoop::wait_for_event(WaitMode mode)
         }
     }
 
-try_select_again:;
+try_select_again:
     int marked_fd_count = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
     if (marked_fd_count < 0) {
         int saved_errno = errno;
@@ -477,13 +588,24 @@ try_select_again:;
         ASSERT_NOT_REACHED();
     }
     if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
-        char buffer[32];
-        auto nread = read(s_wake_pipe_fds[0], buffer, sizeof(buffer));
+        int wake_events[8];
+        auto nread = read(s_wake_pipe_fds[0], wake_events, sizeof(wake_events));
         if (nread < 0) {
             perror("read from wake pipe");
             ASSERT_NOT_REACHED();
         }
         ASSERT(nread > 0);
+        bool wake_requested = false;
+        int event_count = nread / sizeof(wake_events[0]);
+        for (int i = 0; i < event_count; i++) {
+            if (wake_events[i] != 0)
+                dispatch_signal(wake_events[i]);
+            else
+                wake_requested = true;
+        }
+
+        if (!wake_requested && nread == sizeof(wake_events))
+            goto retry;
     }
 
     if (!s_timers->is_empty()) {
@@ -599,8 +721,8 @@ void EventLoop::unregister_notifier(Badge<Notifier>, Notifier& notifier)
 
 void EventLoop::wake()
 {
-    char ch = '!';
-    int nwritten = write(s_wake_pipe_fds[1], &ch, 1);
+    int wake_event = 0;
+    int nwritten = write(s_wake_pipe_fds[1], &wake_event, sizeof(wake_event));
     if (nwritten < 0) {
         perror("EventLoop::wake: write");
         ASSERT_NOT_REACHED();

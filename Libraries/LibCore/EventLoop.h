@@ -27,12 +27,15 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Function.h>
+#include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
 #include <sys/time.h>
+#include <sys/types.h>
 
 namespace Core {
 
@@ -75,10 +78,15 @@ public:
 
     static void wake();
 
+    static int register_signal(int signo, Function<void(int)> handler);
+    static void unregister_signal(int handler_id);
+
 private:
     bool start_rpc_server();
     void wait_for_event(WaitMode);
     Optional<struct timeval> get_next_timer_expiration();
+    static void dispatch_signal(int);
+    static void handle_signal(int);
 
     struct QueuedEvent {
         AK_MAKE_NONCOPYABLE(QueuedEvent);
@@ -92,7 +100,56 @@ private:
         NonnullOwnPtr<Event> event;
     };
 
+    class SignalHandlers {
+        AK_MAKE_NONCOPYABLE(SignalHandlers);
+    public:
+
+        SignalHandlers(SignalHandlers&& from)
+            : m_signo(from.m_signo)
+            , m_original_handler(from.m_original_handler)
+            , m_handlers(move(from.m_handlers))
+        {
+            from.m_valid = false;
+        }
+        SignalHandlers& operator=(SignalHandlers&& from)
+        {
+            if (this != &from) {
+                m_signo = from.m_signo;
+                m_original_handler = from.m_original_handler;
+                m_handlers = move(from.m_handlers);
+                from.m_valid = false;
+            }
+            return *this;
+        }
+        SignalHandlers(int signo);
+        ~SignalHandlers();
+
+        void dispatch();
+        int add(Function<void(int)>&& handler);
+        bool remove(int handler_id);
+
+        bool is_empty() const
+        {
+            return m_handlers.is_empty();
+        }
+
+        bool have(int handler_id) const
+        {
+            return m_handlers.contains(handler_id);
+        }
+
+        int m_signo;
+        void (*m_original_handler)(int); // TODO: can't use sighandler_t?
+        HashMap<int, Function<void(int)>> m_handlers;
+        bool m_valid { true };
+    };
+    friend class SignalHandlers;
+
     Vector<QueuedEvent, 64> m_queued_events;
+    static HashMap<int, SignalHandlers> s_signal_handlers;
+    static int s_handling_signal;
+    static int s_next_signal_id;
+    static pid_t s_pid;
 
     bool m_exit_requested { false };
     int m_exit_code { 0 };
