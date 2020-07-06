@@ -109,11 +109,15 @@ set(SOURCES
     CSS/PropertyID.h
     CSS/PropertyID.cpp
     CSS/DefaultStyleSheetSource.cpp
+    WebContentView.cpp
+    WebContentClient.cpp
 )
 
 set(GENERATED_SOURCES
     ../../Services/ProtocolServer/ProtocolClientEndpoint.h
     ../../Services/ProtocolServer/ProtocolServerEndpoint.h
+    ../../Services/WebContent/WebContentClientEndpoint.h
+    ../../Services/WebContent/WebContentServerEndpoint.h
 )
 
 set_property(GLOBAL PROPERTY wrapper_sources)
