@@ -196,7 +196,7 @@ void Thread::die_if_needed()
     // actual context switch
     u32 prev_flags;
     Processor::current().clear_critical(prev_flags, false);
-
+dbg() << "die_if_needed returned form clear_critical!!! in irq: " << Processor::current().in_irq();
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
     ASSERT_NOT_REACHED();

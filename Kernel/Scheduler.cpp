@@ -566,57 +566,51 @@ void Scheduler::enter_current(Thread& prev_thread)
 
 Process* Scheduler::colonel()
 {
+    ASSERT(s_colonel_process);
     return s_colonel_process;
 }
 
-void Scheduler::initialize(u32 cpu)
+void Scheduler::initialize()
 {
-    static Atomic<u32> s_bsp_is_initialized;
-
     ASSERT(&Processor::current() != nullptr); // sanity check
 
     Thread* idle_thread = nullptr;
-    if (cpu == 0) {
-        ASSERT(s_bsp_is_initialized.load(AK::MemoryOrder::memory_order_consume) == 0);
-        g_scheduler_data = new SchedulerData;
-        g_finalizer_wait_queue = new WaitQueue;
+    g_scheduler_data = new SchedulerData;
+    g_finalizer_wait_queue = new WaitQueue;
 
-        g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-        s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, 1 << cpu);
-        ASSERT(s_colonel_process);
-        ASSERT(idle_thread);
-        idle_thread->set_priority(THREAD_PRIORITY_MIN);
-        idle_thread->set_name(String::format("idle thread #%u", cpu));
-    } else {
-        // We need to make sure the BSP initialized the global data first
-        if (s_bsp_is_initialized.load(AK::MemoryOrder::memory_order_consume) == 0) {
-#ifdef SCHEDULER_DEBUG
-            dbg() << "Scheduler[" << cpu << "]: waiting for BSP to initialize...";
-#endif
-            while (s_bsp_is_initialized.load(AK::MemoryOrder::memory_order_consume) == 0) {
-            }
-#ifdef SCHEDULER_DEBUG
-            dbg() << "Scheduler[" << cpu << "]: initializing now";
-#endif
-        }
+    g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
+    s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, 1);
+    ASSERT(s_colonel_process);
+    ASSERT(idle_thread);
+    idle_thread->set_priority(THREAD_PRIORITY_MIN);
+    idle_thread->set_name("idle thread #0");
 
-        ASSERT(s_colonel_process);
-        idle_thread = s_colonel_process->create_kernel_thread(idle_loop, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), 1 << cpu, false);
-        ASSERT(idle_thread);
-    }
+    set_idle_thread(idle_thread);
+}
 
+void Scheduler::set_idle_thread(Thread* idle_thread)
+{
     Processor::current().set_idle_thread(*idle_thread);
     Processor::current().set_current_thread(*idle_thread);
+}
 
-    if (cpu == 0)
-        s_bsp_is_initialized.store(1, AK::MemoryOrder::memory_order_release);
+Thread* Scheduler::create_ap_idle_thread(u32 cpu)
+{
+    ASSERT(cpu != 0);
+    // This function is called on the bsp, but creates an idle thread for another AP
+    ASSERT(Processor::current().id() == 0);
+
+    ASSERT(s_colonel_process);
+    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), 1 << cpu, false);
+    ASSERT(idle_thread);
+    return idle_thread;
 }
 
 void Scheduler::timer_tick(const RegisterState& regs)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_irq());
-
+if (Processor::current().id() > 0) return;
     auto current_thread = Processor::current().current_thread();
     if (!current_thread)
         return;
@@ -664,9 +658,11 @@ void Scheduler::idle_loop()
 {
     dbg() << "Scheduler[" << Processor::current().id() << "]: idle loop running";
     ASSERT(are_interrupts_enabled());
+
     for (;;) {
         asm("hlt");
-        yield();
+        
+if (Processor::current().id() == 0)        yield();
     }
 }
 

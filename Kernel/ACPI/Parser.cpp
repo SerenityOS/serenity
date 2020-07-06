@@ -228,7 +228,7 @@ void Parser::try_acpi_reboot()
     auto fadt = map_typed<Structures::FADT>(m_fadt);
     ASSERT(validate_reset_register());
     access_generic_address(fadt->reset_reg, fadt->reset_value);
-    hang();
+    Processor::halt();
 }
 
 void Parser::try_acpi_shutdown()

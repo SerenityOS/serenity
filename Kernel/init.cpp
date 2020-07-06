@@ -148,7 +148,7 @@ extern "C" [[noreturn]] void init()
     VirtualConsole::switch_to(0);
 
     Process::initialize();
-    Scheduler::initialize(0);
+    Scheduler::initialize();
 
     Thread* init_stage2_thread = nullptr;
     Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
@@ -169,17 +169,39 @@ extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
     klog() << "CPU #" << cpu << " processor_info at " << VirtualAddress(FlatPtr(processor_info));
 
     processor_info->initialize(cpu);
+    APIC::the().enable(cpu);
     MemoryManager::initialize(cpu);
 
-    APIC::the().enable(cpu);
+    Scheduler::set_idle_thread(APIC::the().get_idle_thread(cpu));
 
-    Scheduler::initialize(cpu);
     Scheduler::start();
     ASSERT_NOT_REACHED();
 }
 
+//
+// This method is called once a CPU enters the scheduler and its idle thread
+// At this point the initial boot stack can be freed
+//
+extern "C" void init_finished(u32 cpu)
+{
+    klog() << "CPU #" << cpu << " finished initialization";
+    if (cpu == 0) {
+        // TODO: we can reuse the boot stack, maybe for kmalloc()?
+    } else {
+        APIC::the().init_finished(cpu);
+    }
+}
+
 void init_stage2()
 {
+    if (APIC::initialized() && APIC::the().enabled_processor_count() > 1) {
+        // We can't start the APs until we have a scheduler up and running.
+        // We need to be able to process ICI messages, otherwise another
+        // core may send too many and end up deadlocking once the pool is
+        // exhausted
+        APIC::the().boot_aps();
+    }
+
     SyncTask::spawn();
     FinalizerTask::spawn();
 
@@ -231,7 +253,7 @@ void init_stage2()
 
     if (!root.starts_with("/dev/hda")) {
         klog() << "init_stage2: root filesystem must be on the first IDE hard drive (/dev/hda)";
-        hang();
+        Processor::halt();
     }
 
     auto pata0 = PATAChannel::create(PATAChannel::ChannelType::Primary, force_pio);
@@ -244,14 +266,14 @@ void init_stage2()
 
         if (!partition_number.has_value()) {
             klog() << "init_stage2: couldn't parse partition number from root kernel parameter";
-            hang();
+            Processor::halt();
         }
 
         MBRPartitionTable mbr(root_dev);
 
         if (!mbr.initialize()) {
             klog() << "init_stage2: couldn't read MBR from disk";
-            hang();
+            Processor::halt();
         }
 
         if (mbr.is_protective_mbr()) {
@@ -259,12 +281,12 @@ void init_stage2()
             GPTPartitionTable gpt(root_dev);
             if (!gpt.initialize()) {
                 klog() << "init_stage2: couldn't read GPT from disk";
-                hang();
+                Processor::halt();
             }
             auto partition = gpt.partition(partition_number.value());
             if (!partition) {
                 klog() << "init_stage2: couldn't get partition " << partition_number.value();
-                hang();
+                Processor::halt();
             }
             root_dev = *partition;
         } else {
@@ -273,23 +295,23 @@ void init_stage2()
                 EBRPartitionTable ebr(root_dev);
                 if (!ebr.initialize()) {
                     klog() << "init_stage2: couldn't read EBR from disk";
-                    hang();
+                    Processor::halt();
                 }
                 auto partition = ebr.partition(partition_number.value());
                 if (!partition) {
                     klog() << "init_stage2: couldn't get partition " << partition_number.value();
-                    hang();
+                    Processor::halt();
                 }
                 root_dev = *partition;
             } else {
                 if (partition_number.value() < 1 || partition_number.value() > 4) {
                     klog() << "init_stage2: invalid partition number " << partition_number.value() << "; expected 1 to 4";
-                    hang();
+                    Processor::halt();
                 }
                 auto partition = mbr.partition(partition_number.value());
                 if (!partition) {
                     klog() << "init_stage2: couldn't get partition " << partition_number.value();
-                    hang();
+                    Processor::halt();
                 }
                 root_dev = *partition;
             }
@@ -298,12 +320,12 @@ void init_stage2()
     auto e2fs = Ext2FS::create(*FileDescription::create(root_dev));
     if (!e2fs->initialize()) {
         klog() << "init_stage2: couldn't open root filesystem";
-        hang();
+        Processor::halt();
     }
 
     if (!VFS::the().mount_root(e2fs)) {
         klog() << "VFS::mount_root failed";
-        hang();
+        Processor::halt();
     }
 
     Process::current()->set_root_directory(VFS::the().root_custody());
@@ -319,7 +341,7 @@ void init_stage2()
     Process::create_user_process(thread, userspace_init, (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
     if (error != 0) {
         klog() << "init_stage2: error spawning SystemServer: " << error;
-        hang();
+        Processor::halt();
     }
     thread->set_priority(THREAD_PRIORITY_HIGH);
 

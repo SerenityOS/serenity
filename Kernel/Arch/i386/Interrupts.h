@@ -32,12 +32,12 @@
 
 extern "C" void interrupt_common_asm_entry();
 
-#define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(interrupt_vector, isr_number) \
-    extern "C" void interrupt_##interrupt_vector##_asm_entry();                    \
-    asm(".globl interrupt_" #interrupt_vector "_asm_entry\n"                       \
-        "interrupt_" #interrupt_vector "_asm_entry:\n"                             \
-        "    pushw $" #isr_number "\n"                                             \
-        "    pushw $0\n"                                                           \
+#define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number) \
+    extern "C" void interrupt_##isr_number##_asm_entry();        \
+    asm(".globl interrupt_" #isr_number "_asm_entry\n"           \
+        "interrupt_" #isr_number "_asm_entry:\n"                 \
+        "    pushw $" #isr_number "\n"                           \
+        "    pushw $0\n"                                         \
         "    jmp interrupt_common_asm_entry\n");
 
 asm(

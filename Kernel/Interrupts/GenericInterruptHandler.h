@@ -65,11 +65,12 @@ public:
 
 protected:
     void change_interrupt_number(u8 number);
-    explicit GenericInterruptHandler(u8 interrupt_number);
+    explicit GenericInterruptHandler(u8 interrupt_number, bool disable_remap = false);
 
 private:
     size_t m_invoking_count { 0 };
     bool m_enabled { false };
     u8 m_interrupt_number { 0 };
+    bool m_disable_remap { false };
 };
 }

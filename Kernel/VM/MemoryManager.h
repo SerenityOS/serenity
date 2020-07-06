@@ -72,6 +72,8 @@ struct MemoryManagerData {
     u32 m_quickmap_prev_flags;
 };
 
+extern RecursiveSpinLock s_mm_lock;
+
 class MemoryManager {
     AK_MAKE_ETERNAL
     friend class PageDirectory;
@@ -176,8 +178,8 @@ private:
     void detect_cpu_features();
     void protect_kernel_image();
     void parse_memory_map();
-    void flush_entire_tlb();
-    void flush_tlb(VirtualAddress);
+    static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
+    static void flush_tlb(VirtualAddress, size_t page_count = 1);
 
     static Region* user_region_from_vaddr(Process&, VirtualAddress);
     static Region* kernel_region_from_vaddr(VirtualAddress);
@@ -211,8 +213,6 @@ private:
     InlineLinkedList<Region> m_kernel_regions;
 
     InlineLinkedList<VMObject> m_vmobjects;
-
-    static RecursiveSpinLock s_lock;
 
     RefPtr<PhysicalPage> m_low_pseudo_identity_mapping_pages[4];
 };

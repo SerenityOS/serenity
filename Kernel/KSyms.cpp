@@ -125,7 +125,7 @@ NEVER_INLINE void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksyms)
     }
 #endif
     if (use_ksyms && !g_kernel_symbols_available) {
-        hang();
+        Processor::halt();
         return;
     }
 
