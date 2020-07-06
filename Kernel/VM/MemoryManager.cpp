@@ -60,6 +60,7 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager()
 {
+    ScopedSpinLock lock(s_mm_lock);
     m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
     parse_memory_map();
     write_cr3(kernel_page_directory().cr3());
@@ -165,7 +166,7 @@ void MemoryManager::parse_memory_map()
 const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ScopedSpinLock lock(s_mm_lock);
+    ASSERT(s_mm_lock.own_lock());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -181,7 +182,7 @@ const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, Vi
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ScopedSpinLock lock(s_mm_lock);
+    ASSERT(s_mm_lock.own_lock());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -554,7 +555,7 @@ extern "C" PageTableEntry boot_pd3_pt1023[1024];
 
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
-    ScopedSpinLock lock(s_mm_lock);
+    ASSERT(s_mm_lock.own_lock());
     auto& pte = boot_pd3_pt1023[4];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.as_ptr()) {
@@ -565,14 +566,17 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
-        flush_tlb(VirtualAddress(0xffe04000));
+        // Because we must continue to hold the MM lock while we use this
+        // mapping, it is sufficient to only flush on the current CPU. Other
+        // CPUs trying to use this API must wait on the MM lock anyway
+        flush_tlb_local(VirtualAddress(0xffe04000));
     }
     return (PageDirectoryEntry*)0xffe04000;
 }
 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
-    ScopedSpinLock lock(s_mm_lock);
+    ASSERT(s_mm_lock.own_lock());
     auto& pte = boot_pd3_pt1023[0];
     if (pte.physical_page_base() != pt_paddr.as_ptr()) {
 #ifdef MM_DEBUG
@@ -582,7 +586,10 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
-        flush_tlb(VirtualAddress(0xffe00000));
+        // Because we must continue to hold the MM lock while we use this
+        // mapping, it is sufficient to only flush on the current CPU. Other
+        // CPUs trying to use this API must wait on the MM lock anyway
+        flush_tlb_local(VirtualAddress(0xffe00000));
     }
     return (PageTableEntry*)0xffe00000;
 }
@@ -606,7 +613,7 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
-        flush_tlb_local(vaddr, 1);
+        flush_tlb_local(vaddr);
     }
     return vaddr.as_ptr();
 }
@@ -621,7 +628,7 @@ void MemoryManager::unquickmap_page()
     VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
     auto& pte = boot_pd3_pt1023[pte_idx];
     pte.clear();
-    flush_tlb_local(vaddr, 1);
+    flush_tlb_local(vaddr);
     mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_prev_flags);
 }
 
