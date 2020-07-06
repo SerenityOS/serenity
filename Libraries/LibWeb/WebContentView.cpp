@@ -33,6 +33,7 @@
 
 WebContentView::WebContentView()
 {
+    set_should_hide_unnecessary_scrollbars(true);
     m_client = WebContentClient::construct(*this);
     client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
 }
