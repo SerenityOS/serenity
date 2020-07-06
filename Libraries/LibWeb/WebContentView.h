@@ -54,6 +54,7 @@ public:
     void notify_server_did_unhover_link(Badge<WebContentClient>);
     void notify_server_did_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
     void notify_server_did_middle_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
+    void notify_server_did_start_loading(Badge<WebContentClient>, const URL&);
 
 private:
     WebContentView();

@@ -154,4 +154,9 @@ void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] const
     m_client.post_message(Messages::WebContentClient::DidMiddleClickLink(url, target, modifiers));
 }
 
+void PageHost::page_did_start_loading(const URL& url)
+{
+    m_client.post_message(Messages::WebContentClient::DidStartLoading(url));
+}
+
 }
