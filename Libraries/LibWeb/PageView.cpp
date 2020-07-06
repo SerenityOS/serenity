@@ -207,16 +207,16 @@ void PageView::page_did_request_link_context_menu(const Gfx::IntPoint& content_p
         on_link_context_menu_request(href, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void PageView::page_did_click_link(const String& href, const String& target, unsigned modifiers)
+void PageView::page_did_click_link(const URL& url, const String& target, unsigned modifiers)
 {
     if (on_link_click)
-        on_link_click(href, target, modifiers);
+        on_link_click(url, target, modifiers);
 }
 
-void PageView::page_did_middle_click_link(const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+void PageView::page_did_middle_click_link(const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
 {
     if (on_link_middle_click)
-        on_link_middle_click(href);
+        on_link_middle_click(url);
 }
 
 void PageView::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
