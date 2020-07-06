@@ -1774,7 +1774,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 #ifdef IO_DEBUG
             dbg() << "block write on " << description.absolute_path();
 #endif
-            if (Thread::current()->block<Thread::WriteBlocker>(description) != Thread::BlockResult::WokeNormally) {
+            if (Thread::current()->block<Thread::WriteBlocker>(description).was_interrupted()) {
                 if (nwritten == 0)
                     return -EINTR;
             }
@@ -1837,7 +1837,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
         return -EISDIR;
     if (description->is_blocking()) {
         if (!description->can_read()) {
-            if (Thread::current()->block<Thread::ReadBlocker>(*description) != Thread::BlockResult::WokeNormally)
+            if (Thread::current()->block<Thread::ReadBlocker>(*description).was_interrupted())
                 return -EINTR;
             if (!description->can_read())
                 return -EAGAIN;
@@ -2610,7 +2610,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         return KResult(-EINVAL);
     }
 
-    if (Thread::current()->block<Thread::WaitBlocker>(options, waitee_pid) != Thread::BlockResult::WokeNormally)
+    if (Thread::current()->block<Thread::WaitBlocker>(options, waitee_pid).was_interrupted())
         return KResult(-EINTR);
 
     ScopedSpinLock lock(g_processes_lock);
@@ -3075,7 +3075,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
 #endif
 
     if (!timeout || select_has_timeout) {
-        if (current_thread->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds) != Thread::BlockResult::WokeNormally)
+        if (current_thread->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds).was_interrupted())
             return -EINTR;
         // While we blocked, the process lock was dropped. This gave other threads
         // the opportunity to mess with the memory. For example, it could free the
@@ -3161,7 +3161,7 @@ int Process::sys$poll(const Syscall::SC_poll_params* params)
 #endif
 
     if (!timeout || has_timeout) {
-        if (current_thread->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()) != Thread::BlockResult::WokeNormally)
+        if (current_thread->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()).was_interrupted())
             return -EINTR;
     }
 
@@ -3513,7 +3513,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen
 
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
-            if (Thread::current()->block<Thread::AcceptBlocker>(*accepting_socket_description) != Thread::BlockResult::WokeNormally)
+            if (Thread::current()->block<Thread::AcceptBlocker>(*accepting_socket_description).was_interrupted())
                 return -EINTR;
         } else {
             return -EAGAIN;
