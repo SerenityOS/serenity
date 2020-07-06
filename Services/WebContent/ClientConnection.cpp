@@ -36,8 +36,8 @@ namespace WebContent {
 
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
-ClientConnection::ClientConnection(Core::LocalSocket& socket, int client_id)
-    : IPC::ClientConnection<WebContentServerEndpoint>(*this, socket, client_id)
+ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+    : IPC::ClientConnection<WebContentServerEndpoint>(*this, move(socket), client_id)
     , m_page_host(PageHost::create(*this))
 {
     s_connections.set(client_id, *this);

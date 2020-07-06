@@ -37,7 +37,7 @@ class ClientConnection final : public IPC::ClientConnection<ClipboardServerEndpo
     C_OBJECT(ClientConnection);
 
 public:
-    explicit ClientConnection(Core::LocalSocket&, int client_id);
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
     virtual ~ClientConnection() override;
 
     virtual void die() override;

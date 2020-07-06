@@ -50,8 +50,8 @@ void ClientConnection::for_each(Function<void(ClientConnection&)> callback)
         callback(connection);
 }
 
-ClientConnection::ClientConnection(Core::LocalSocket& client_socket, int client_id, Mixer& mixer)
-    : IPC::ClientConnection<AudioServerEndpoint>(*this, client_socket, client_id)
+ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socket, int client_id, Mixer& mixer)
+    : IPC::ClientConnection<AudioServerEndpoint>(*this, move(client_socket), client_id)
     , m_mixer(mixer)
 {
     s_connections.set(client_id, *this);
