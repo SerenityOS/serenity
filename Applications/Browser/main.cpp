@@ -105,6 +105,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
     auto m_config = Core::ConfigFile::get_for_app("Browser");
@@ -151,7 +156,8 @@ int main(int argc, char** argv)
 
     Function<void(URL url, bool activate)> create_new_tab;
     create_new_tab = [&](auto url, auto activate) {
-        auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab");
+        auto type = Browser::Tab::Type::InProcessWebView;
+        auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab", type);
 
         tab_widget.set_bar_visible(!window->is_fullscreen() && tab_widget.children().size() > 1);
         tab_widget.set_tab_icon(new_tab, default_favicon);

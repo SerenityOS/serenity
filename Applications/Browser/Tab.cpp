@@ -56,6 +56,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/Parser/CSSParser.h>
+#include <LibWeb/WebContentView.h>
 
 namespace Browser {
 
@@ -73,20 +74,25 @@ URL url_from_user_input(const String& input)
     return URL(builder.build());
 }
 
-Tab::Tab()
+Tab::Tab(Type type)
+    : m_type(type)
 {
     auto& widget = *this;
     set_layout<GUI::VerticalBoxLayout>();
 
     m_toolbar_container = widget.add<GUI::ToolBarContainer>();
     auto& toolbar = m_toolbar_container->add<GUI::ToolBar>();
-    m_page_view = widget.add<Web::PageView>();
+
+    if (m_type == Type::InProcessWebView)
+        m_page_view = widget.add<Web::PageView>();
+    else
+        m_web_content_view = widget.add<WebContentView>();
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) {
         m_history.go_back();
         update_actions();
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
-        m_page_view->load(m_history.current());
+        load(m_history.current());
     },
         this);
 
@@ -94,7 +100,7 @@ Tab::Tab()
         m_history.go_forward();
         update_actions();
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
-        m_page_view->load(m_history.current());
+        load(m_history.current());
     },
         this);
 
@@ -102,14 +108,15 @@ Tab::Tab()
     toolbar.add_action(*m_go_forward_action);
 
     toolbar.add_action(GUI::CommonActions::make_go_home_action([this](auto&) {
-        m_page_view->load(g_home_url);
+        load(g_home_url);
     },
         this));
 
-    m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) {
-        TemporaryChange<bool> change(m_should_push_loads_to_history, false);
-        m_page_view->reload();
-    },
+    m_reload_action = GUI::CommonActions::make_reload_action(
+        [this](auto&) {
+            TemporaryChange<bool> change(m_should_push_loads_to_history, false);
+            reload();
+        },
         this);
 
     toolbar.add_action(*m_reload_action);
@@ -120,8 +127,8 @@ Tab::Tab()
 
     m_location_box->on_return_pressed = [this] {
         auto url = url_from_user_input(m_location_box->text());
-        m_page_view->load(url);
-        m_page_view->set_focus(true);
+        load(url);
+        view().set_focus(true);
     };
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste & Go", [this](auto&) {
@@ -136,7 +143,7 @@ Tab::Tab()
     m_bookmark_button->set_preferred_size(22, 22);
 
     m_bookmark_button->on_click = [this](auto) {
-        auto url = m_page_view->document()->url().to_string();
+        auto url = this->url().to_string();
         if (BookmarksBarWidget::the().contains_bookmark(url)) {
             BookmarksBarWidget::the().remove_bookmark(url);
         } else {
@@ -145,7 +152,7 @@ Tab::Tab()
         update_bookmark_button(url);
     };
 
-    m_page_view->on_load_start = [this](auto& url) {
+    hooks().on_load_start = [this](auto& url) {
         m_location_box->set_icon(nullptr);
         m_location_box->set_text(url.to_string());
         if (m_should_push_loads_to_history)
@@ -154,20 +161,20 @@ Tab::Tab()
         update_bookmark_button(url.to_string());
     };
 
-    m_page_view->on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
+    hooks().on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
         if (target == "_blank" || modifiers == Mod_Ctrl) {
             on_tab_open_request(url);
         } else {
-            m_page_view->load(url);
+            load(url);
         }
     };
 
     m_link_context_menu = GUI::Menu::construct();
     m_link_context_menu->add_action(GUI::Action::create("Open", [this](auto&) {
-        m_page_view->on_link_click(m_link_context_menu_url, "", 0);
+        hooks().on_link_click(m_link_context_menu_url, "", 0);
     }));
     m_link_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
-        m_page_view->on_link_click(m_link_context_menu_url, "_blank", 0);
+        hooks().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
     m_link_context_menu->add_action(GUI::Action::create("Copy link", [this](auto&) {
         GUI::Clipboard::the().set_data(m_link_context_menu_url.to_string());
@@ -184,7 +191,7 @@ Tab::Tab()
         (void)window.leak_ref();
     }));
 
-    m_page_view->on_link_context_menu_request = [this](auto& url, auto& screen_position) {
+    hooks().on_link_context_menu_request = [this](auto& url, auto& screen_position) {
         m_link_context_menu_url = url;
         m_link_context_menu->popup(screen_position);
     };
@@ -193,9 +200,9 @@ Tab::Tab()
         hooks().on_link_click(href, "_blank", 0);
     };
 
-    m_page_view->on_title_change = [this](auto& title) {
+    hooks().on_title_change = [this](auto& title) {
         if (title.is_null()) {
-            m_title = m_page_view->document()->url().to_string();
+            m_title = url().to_string();
         } else {
             m_title = title;
         }
@@ -203,19 +210,22 @@ Tab::Tab()
             on_title_change(m_title);
     };
 
-    m_page_view->on_favicon_change = [this](auto& icon) {
+    hooks().on_favicon_change = [this](auto& icon) {
         m_icon = icon;
         m_location_box->set_icon(&icon);
         if (on_favicon_change)
             on_favicon_change(icon);
     };
 
-    m_page_view->on_set_document = [this](auto* document) {
-        if (document && m_console_window) {
-            auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
-            console_widget->set_interpreter(document->interpreter().make_weak_ptr());
-        }
-    };
+    // FIXME: Support JS console in multi-process mode.
+    if (m_type == Type::InProcessWebView) {
+        hooks().on_set_document = [this](auto* document) {
+            if (document && m_console_window) {
+                auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
+                console_widget->set_interpreter(document->interpreter().make_weak_ptr());
+            }
+        };
+    }
 
     auto focus_location_box_action = GUI::Action::create(
         "Focus location box", { Mod_Ctrl, Key_L }, [this](auto&) {
@@ -226,15 +236,15 @@ Tab::Tab()
 
     m_statusbar = widget.add<GUI::StatusBar>();
 
-    m_page_view->on_link_hover = [this](auto& url) {
+    hooks().on_link_hover = [this](auto& url) {
         if (url.is_valid())
             m_statusbar->set_text(url.to_string());
         else
             m_statusbar->set_text("");
     };
 
-    m_page_view->on_url_drop = [this](auto& url) {
-        m_page_view->load(url);
+    hooks().on_url_drop = [this](auto& url) {
+        load(url);
     };
 
     m_menubar = GUI::MenuBar::construct();
@@ -268,33 +278,41 @@ Tab::Tab()
 
     auto view_source_action = GUI::Action::create(
         "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
-            ASSERT(m_page_view->document());
-            auto url = m_page_view->document()->url().to_string();
-            auto source = m_page_view->document()->source();
-            auto window = GUI::Window::construct();
-            auto& editor = window->set_main_widget<GUI::TextEditor>();
-            editor.set_text(source);
-            editor.set_readonly(true);
-            editor.set_ruler_visible(true);
-            window->set_rect(150, 150, 640, 480);
-            window->set_title(url);
-            window->show();
-            (void)window.leak_ref();
+            if (m_type == Type::InProcessWebView) {
+                ASSERT(m_page_view->document());
+                auto url = m_page_view->document()->url().to_string();
+                auto source = m_page_view->document()->source();
+                auto window = GUI::Window::construct();
+                auto& editor = window->set_main_widget<GUI::TextEditor>();
+                editor.set_text(source);
+                editor.set_readonly(true);
+                editor.set_ruler_visible(true);
+                window->set_rect(150, 150, 640, 480);
+                window->set_title(url);
+                window->show();
+                (void)window.leak_ref();
+            } else {
+                TODO();
+            }
         },
         this);
 
     auto inspect_dom_tree_action = GUI::Action::create(
         "Inspect DOM tree", { Mod_None, Key_F12 }, [this](auto&) {
-            if (!m_dom_inspector_window) {
-                m_dom_inspector_window = GUI::Window::construct();
-                m_dom_inspector_window->set_rect(100, 100, 300, 500);
-                m_dom_inspector_window->set_title("DOM inspector");
-                m_dom_inspector_window->set_main_widget<InspectorWidget>();
+            if (m_type == Type::InProcessWebView) {
+                if (!m_dom_inspector_window) {
+                    m_dom_inspector_window = GUI::Window::construct();
+                    m_dom_inspector_window->set_rect(100, 100, 300, 500);
+                    m_dom_inspector_window->set_title("DOM inspector");
+                    m_dom_inspector_window->set_main_widget<InspectorWidget>();
+                }
+                auto* inspector_widget = static_cast<InspectorWidget*>(m_dom_inspector_window->main_widget());
+                inspector_widget->set_document(m_page_view->document());
+                m_dom_inspector_window->show();
+                m_dom_inspector_window->move_to_front();
+            } else {
+                TODO();
             }
-            auto* inspector_widget = static_cast<InspectorWidget*>(m_dom_inspector_window->main_widget());
-            inspector_widget->set_document(m_page_view->document());
-            m_dom_inspector_window->show();
-            m_dom_inspector_window->move_to_front();
         },
         this);
 
@@ -304,42 +322,62 @@ Tab::Tab()
 
     inspect_menu.add_action(GUI::Action::create(
         "Open JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
-            if (!m_console_window) {
-                m_console_window = GUI::Window::construct();
-                m_console_window->set_rect(100, 100, 500, 300);
-                m_console_window->set_title("JS Console");
-                m_console_window->set_main_widget<ConsoleWidget>();
+            if (m_type == Type::InProcessWebView) {
+                if (!m_console_window) {
+                    m_console_window = GUI::Window::construct();
+                    m_console_window->set_rect(100, 100, 500, 300);
+                    m_console_window->set_title("JS Console");
+                    m_console_window->set_main_widget<ConsoleWidget>();
+                }
+                auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
+                console_widget->set_interpreter(m_page_view->document()->interpreter().make_weak_ptr());
+                m_console_window->show();
+                m_console_window->move_to_front();
+            } else {
+                TODO();
             }
-            auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
-            console_widget->set_interpreter(m_page_view->document()->interpreter().make_weak_ptr());
-            m_console_window->show();
-            m_console_window->move_to_front();
         },
         this));
 
     auto& debug_menu = m_menubar->add_menu("Debug");
     debug_menu.add_action(GUI::Action::create(
         "Dump DOM tree", [this](auto&) {
-            Web::dump_tree(*m_page_view->document());
+            if (m_type == Type::InProcessWebView) {
+                Web::dump_tree(*m_page_view->document());
+            } else {
+                TODO();
+            }
         },
         this));
     debug_menu.add_action(GUI::Action::create(
         "Dump Layout tree", [this](auto&) {
-            Web::dump_tree(*m_page_view->document()->layout_node());
+            if (m_type == Type::InProcessWebView) {
+                Web::dump_tree(*m_page_view->document()->layout_node());
+            } else {
+                TODO();
+            }
         },
         this));
     debug_menu.add_action(GUI::Action::create(
         "Dump Style sheets", [this](auto&) {
-            for (auto& sheet : m_page_view->document()->style_sheets().sheets()) {
-                dump_sheet(sheet);
+            if (m_type == Type::InProcessWebView) {
+                for (auto& sheet : m_page_view->document()->style_sheets().sheets()) {
+                    dump_sheet(sheet);
+                }
+            } else {
+                TODO();
             }
         },
         this));
     debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable(
         "Line box borders", [this](auto& action) {
-            m_page_view->set_should_show_line_box_borders(action.is_checked());
-            m_page_view->update();
+            if (m_type == Type::InProcessWebView) {
+                m_page_view->set_should_show_line_box_borders(action.is_checked());
+                m_page_view->update();
+            } else {
+                TODO();
+            }
         },
         this);
     line_box_borders_action->set_checked(false);
@@ -366,7 +404,7 @@ Tab::Tab()
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(*view_source_action);
     m_page_context_menu->add_action(*inspect_dom_tree_action);
-    m_page_view->on_context_menu_request = [&](auto& screen_position) {
+    hooks().on_context_menu_request = [&](auto& screen_position) {
         m_page_context_menu->popup(screen_position);
     };
 }
@@ -377,7 +415,22 @@ Tab::~Tab()
 
 void Tab::load(const URL& url)
 {
-    m_page_view->load(url);
+    if (m_type == Type::InProcessWebView)
+        m_page_view->load(url);
+    else
+        m_web_content_view->load(url);
+}
+
+URL Tab::url() const
+{
+    if (m_type == Type::InProcessWebView)
+        return m_page_view->url();
+    return m_web_content_view->url();
+}
+
+void Tab::reload()
+{
+    load(url());
 }
 
 void Tab::update_actions()
@@ -411,7 +464,7 @@ void Tab::did_become_active()
         if (modifiers & Mod_Ctrl)
             on_tab_open_request(url);
         else
-            m_page_view->load(url);
+            load(url);
     };
 
     BookmarksBarWidget::the().on_bookmark_hover = [this](auto&, auto& url) {
@@ -433,4 +486,16 @@ void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
     m_tab_context_menu->popup(screen_position);
 }
 
+GUI::Widget& Tab::view()
+{
+    if (m_type == Type::InProcessWebView)
+        return *m_page_view;
+    return *m_web_content_view;
+}
+
+Web::WebViewHooks& Tab::hooks()
+{
+    if (m_type == Type::InProcessWebView)
+        return *m_page_view;
+    return *m_web_content_view;}
 }

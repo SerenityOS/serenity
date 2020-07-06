@@ -41,6 +41,7 @@ class WebContentView final
 public:
     virtual ~WebContentView() override;
 
+    URL url() const { return m_url; }
     void load(const URL&);
 
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
@@ -70,6 +71,8 @@ private:
     void request_repaint();
 
     WebContentClient& client();
+
+    URL m_url;
 
     RefPtr<WebContentClient> m_client;
     RefPtr<Gfx::Bitmap> m_front_bitmap;

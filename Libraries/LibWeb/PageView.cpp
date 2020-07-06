@@ -368,9 +368,16 @@ void PageView::keydown_event(GUI::KeyEvent& event)
     event.accept();
 }
 
+URL PageView::url() const
+{
+    if (page().main_frame().document())
+        return {};
+    return page().main_frame().document()->url();
+}
+
 void PageView::reload()
 {
-    load(page().main_frame().document()->url());
+    load(url());
 }
 
 void PageView::load_html(const StringView& html, const URL& url)
