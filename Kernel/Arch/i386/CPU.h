@@ -837,6 +837,14 @@ public:
         return *this;
     }
 
+    void set_interrupt_flag_on_destruction(bool flag)
+    {
+        if (flag)
+            m_prev_flags |= 0x200;
+        else
+            m_prev_flags &= ~0x200;
+    }
+
 private:
     u32 m_prev_flags { 0 };
     bool m_valid { false };

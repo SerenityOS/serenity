@@ -876,6 +876,11 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
                 // The WaitQueue was already requested to wake someone when
                 // nobody was waiting. So return right away as we shouldn't
                 // be waiting
+
+                // The API contract guarantees we return with interrupts enabled,
+                // regardless of how we got called
+                critical.set_interrupt_flag_on_destruction(true);
+
                 return BlockResult::NotBlocked;
             }
 
