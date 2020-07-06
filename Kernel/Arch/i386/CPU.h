@@ -776,49 +776,44 @@ public:
         else
             cli();
     }
-    
+
     ALWAYS_INLINE u32& in_critical() { return m_in_critical; }
-    
+
     ALWAYS_INLINE const FPUState& clean_fpu_state() const
     {
         return s_clean_fpu_state;
     }
-    
+
     ALWAYS_INLINE bool has_feature(CPUFeature f) const
     {
         return (static_cast<u32>(m_features) & static_cast<u32>(f)) != 0;
     }
-    
+
     void check_invoke_scheduler();
     void invoke_scheduler_async() { m_invoke_scheduler_async = true; }
-    
+
     void enter_trap(TrapFrame& trap, bool raise_irq);
     void exit_trap(TrapFrame& trap);
-    
+
     [[noreturn]] void initialize_context_switching(Thread& initial_thread);
     void switch_context(Thread*& from_thread, Thread*& to_thread);
     [[noreturn]] static void assume_context(Thread& thread, u32 flags);
     u32 init_context(Thread& thread, bool leave_crit);
     static bool get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip);
-    
+
     void set_thread_specific(u8* data, size_t len);
 };
 
-class ScopedCritical
-{
-    u32 m_prev_flags;
-    bool m_valid;
+class ScopedCritical {
+    AK_MAKE_NONCOPYABLE(ScopedCritical);
 
 public:
-    ScopedCritical(const ScopedCritical&) = delete;
-    ScopedCritical& operator=(const ScopedCritical&) = delete;
-
     ScopedCritical()
     {
         m_valid = true;
         Processor::current().enter_critical(m_prev_flags);
     }
-    
+
     ~ScopedCritical()
     {
         if (m_valid) {
@@ -827,30 +822,30 @@ public:
         }
     }
 
-    ScopedCritical(ScopedCritical&& from):
-        m_prev_flags(from.m_prev_flags),
-        m_valid(from.m_valid)
+    ScopedCritical(ScopedCritical&& from)
+        : m_prev_flags(exchange(from.m_prev_flags, 0))
+        , m_valid(exchange(from.m_valid, false))
     {
-        from.m_prev_flags = 0;
-        from.m_valid = false;
     }
 
     ScopedCritical& operator=(ScopedCritical&& from)
     {
         if (&from != this) {
-            m_prev_flags = from.m_prev_flags;
-            m_valid = from.m_valid;
-            from.m_prev_flags = 0;
-            from.m_valid = false;
+            m_prev_flags = exchange(from.m_prev_flags, 0);
+            m_valid = exchange(from.m_valid, false);
         }
         return *this;
     }
+
+private:
+    u32 m_prev_flags { 0 };
+    bool m_valid { false };
 };
 
 struct TrapFrame {
     u32 prev_irq_level;
     RegisterState* regs; // must be last
-    
+
     TrapFrame() = delete;
     TrapFrame(const TrapFrame&) = delete;
     TrapFrame(TrapFrame&&) = delete;
