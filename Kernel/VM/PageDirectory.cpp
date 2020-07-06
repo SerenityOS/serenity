@@ -48,7 +48,7 @@ static HashMap<u32, PageDirectory*>& cr3_map()
 
 RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
     return cr3_map().get(cr3).value_or({});
 }
 
@@ -76,6 +76,7 @@ PageDirectory::PageDirectory()
 PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_range_allocator)
     : m_process(&process)
 {
+    ScopedSpinLock lock(s_mm_lock);
     if (parent_range_allocator) {
         m_range_allocator.initialize_from_parent(*parent_range_allocator);
     } else {
@@ -93,7 +94,6 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
 
     {
-        InterruptDisabler disabler;
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_directory_table);
         table.raw[0] = (u64)m_directory_pages[0]->paddr().as_ptr() | 1;
         table.raw[1] = (u64)m_directory_pages[1]->paddr().as_ptr() | 1;
@@ -109,7 +109,6 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     auto* new_pd = MM.quickmap_pd(*this, 0);
     memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
 
-    InterruptDisabler disabler;
     cr3_map().set(cr3(), this);
 }
 
@@ -118,7 +117,7 @@ PageDirectory::~PageDirectory()
 #ifdef MM_DEBUG
     dbg() << "MM: ~PageDirectory K" << this;
 #endif
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
     cr3_map().remove(cr3());
 }
 
