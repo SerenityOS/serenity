@@ -78,6 +78,16 @@ int main(int argc, char** argv)
         for (auto& job : jobs) {
             int wstatus = 0;
             auto child_pid = waitpid(job.value->pid(), &wstatus, WNOHANG);
+            if (child_pid < 0) {
+                if (errno == ECHILD) {
+                    // The child process went away before we could process its death, just assume it exited all ok.
+                    // FIXME: This should never happen, the child should stay around until we do the waitpid above.
+                    dbg() << "Child process gone, cannot get exit code for " << job.key;
+                    child_pid = job.value->pid();
+                } else {
+                    ASSERT_NOT_REACHED();
+                }
+            }
 #ifndef __serenity__
             if (child_pid == 0) {
                 // Linux: if child didn't "change state", but existed.
