@@ -47,6 +47,7 @@ namespace Browser {
 static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 String g_home_url;
 URL url_from_user_input(const String& input);
+bool g_multi_process = false;
 
 }
 
@@ -65,6 +66,7 @@ int main(int argc, char** argv)
     const char* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(Browser::g_multi_process, "Multi-process mode", "multi-process", 'm');
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -156,7 +158,7 @@ int main(int argc, char** argv)
 
     Function<void(URL url, bool activate)> create_new_tab;
     create_new_tab = [&](auto url, auto activate) {
-        auto type = Browser::Tab::Type::InProcessWebView;
+        auto type = Browser::g_multi_process ? Browser::Tab::Type::OutOfProcessWebView : Browser::Tab::Type::InProcessWebView;
         auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab", type);
 
         tab_widget.set_bar_visible(!window->is_fullscreen() && tab_widget.children().size() > 1);
