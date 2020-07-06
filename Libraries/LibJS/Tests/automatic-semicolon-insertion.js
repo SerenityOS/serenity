@@ -1,5 +1,5 @@
 test("Issue #1829, if-else without braces or semicolons", () => {
-  const source = `if (1)
+    const source = `if (1)
     return 1;
 else
     return 0;
@@ -14,11 +14,11 @@ if (1)
 else
     return 0;`;
 
-  expect(source).toEval();
+    expect(source).toEval();
 });
 
 test("break/continue, variable declaration, do-while, and return asi", () => {
-  const source = `function foo() {
+    const source = `function foo() {
     label:
     for (var i = 0; i < 4; i++) {
         break // semicolon inserted here
@@ -39,11 +39,11 @@ var curly/* semicolon inserted here */}
 
 return foo();`;
 
-  expect(source).toEvalTo(undefined);
+    expect(source).toEvalTo(undefined);
 });
 
 test("more break and continue asi", () => {
-  const source = `let counter = 0;
+    const source = `let counter = 0;
 let outer;
 
 outer:
@@ -57,9 +57,9 @@ for (let i = 0; i < 5; ++i) {
 
 return counter;`;
 
-  expect(source).toEvalTo(5);
+    expect(source).toEvalTo(5);
 });
 
 test("eof with no semicolon", () => {
-  expect("var eof").toEval();
+    expect("var eof").toEval();
 });
