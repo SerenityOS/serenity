@@ -71,6 +71,8 @@ class Shell : public Core::Object {
 public:
     constexpr static auto init_file_path = "~/shell-init.sh";
 
+    bool is_accepting_signals() const { return m_is_accepting_signals; }
+
     int run_command(const StringView&);
     RefPtr<Job> run_command(AST::Command&);
     bool run_file(const String&, bool explicitly_invoked = true);
@@ -104,7 +106,7 @@ public:
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);
 
-    void take_back_stdin();
+    void restore_stdin();
 
     u64 find_last_job_id() const;
     const Job* find_job(u64 id);
@@ -180,6 +182,7 @@ private:
 
     StringBuilder m_complete_line_builder;
     bool m_should_ignore_jobs_on_next_exit { false };
+    bool m_is_accepting_signals { true };
     pid_t m_pid { 0 };
 
     HashMap<String, RefPtr<AST::Value>> m_local_variables;
