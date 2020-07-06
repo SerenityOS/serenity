@@ -48,6 +48,18 @@ Editor::Editor(Configuration configuration)
 {
     m_always_refresh = configuration.refresh_behaviour == Configuration::RefreshBehaviour::Eager;
     m_pending_chars = ByteBuffer::create_uninitialized(0);
+    get_terminal_size();
+    m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns, m_cached_prompt_metrics);
+}
+
+Editor::~Editor()
+{
+    if (m_initialized)
+        restore();
+}
+
+void Editor::get_terminal_size()
+{
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
         m_num_columns = 80;
@@ -56,13 +68,6 @@ Editor::Editor(Configuration configuration)
         m_num_columns = ws.ws_col;
         m_num_lines = ws.ws_row;
     }
-    m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns, m_cached_prompt_metrics);
-}
-
-Editor::~Editor()
-{
-    if (m_initialized)
-        restore();
 }
 
 void Editor::add_to_history(const String& line)
@@ -238,6 +243,8 @@ void Editor::initialize()
     struct termios termios;
     tcgetattr(0, &termios);
     m_default_termios = termios; // grab a copy to restore
+    if (m_was_resized)
+        get_terminal_size();
 
     auto* term = getenv("TERM");
     if (StringView { term }.starts_with("xterm"))
@@ -974,26 +981,14 @@ void Editor::refresh_display()
     // Someone changed the window size, figure it out
     // and react to it, we might need to redraw.
     if (m_was_resized) {
-        auto previous_num_columns = m_num_columns;
-
-        struct winsize ws;
-        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
-            m_num_columns = 80;
-            m_num_lines = 25;
-        } else {
-            m_num_columns = ws.ws_col;
-            m_num_lines = ws.ws_row;
-        }
-        m_suggestion_display->set_vt_size(m_num_lines, m_num_columns);
-
-        if (previous_num_columns != m_num_columns) {
+        if (m_previous_num_columns != m_num_columns) {
             // We need to cleanup and redo everything.
             m_cached_prompt_valid = false;
             m_refresh_needed = true;
-            swap(previous_num_columns, m_num_columns);
+            swap(m_previous_num_columns, m_num_columns);
             recalculate_origin();
             cleanup();
-            swap(previous_num_columns, m_num_columns);
+            swap(m_previous_num_columns, m_num_columns);
             has_cleaned_up = true;
         }
         m_was_resized = false;

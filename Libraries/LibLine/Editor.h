@@ -124,7 +124,9 @@ public:
     void resized()
     {
         m_was_resized = true;
-        refresh_display();
+        m_previous_num_columns = m_num_columns;
+        get_terminal_size();
+        m_suggestion_display->set_vt_size(m_num_lines, m_num_columns);
     }
 
     size_t cursor() const { return m_cursor; }
@@ -308,6 +310,8 @@ private:
     };
     CodepointRange byte_offset_range_to_codepoint_offset_range(size_t byte_start, size_t byte_end, size_t codepoint_scan_offset, bool reverse = false) const;
 
+    void get_terminal_size();
+
     bool m_finish { false };
 
     RefPtr<Editor> m_search_editor;
@@ -331,6 +335,7 @@ private:
     size_t m_times_tab_pressed { 0 };
     size_t m_num_columns { 0 };
     size_t m_num_lines { 1 };
+    size_t m_previous_num_columns { 0 };
     size_t m_extra_forward_lines { 0 };
     StringMetrics m_cached_prompt_metrics;
     StringMetrics m_old_prompt_metrics;
