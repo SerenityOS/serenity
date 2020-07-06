@@ -184,8 +184,19 @@ Vector<String> get_test_paths(const String& test_root)
 
 void TestRunner::run()
 {
-    for (auto& path : get_test_paths(m_test_root))
+    size_t progress_counter = 0;
+    auto test_paths = get_test_paths(m_test_root);
+    for (auto& path : test_paths) {
+        ++progress_counter;
         print_file_result(run_file_test(path));
+#ifdef __serenity__
+        fprintf(stderr, "\033]9;%zu;%zu;\033\\", progress_counter, test_paths.size());
+#endif
+    }
+
+#ifdef __serenity__
+    fprintf(stderr, "\033]9;-1;\033\\");
+#endif
 
     print_test_results();
 }
