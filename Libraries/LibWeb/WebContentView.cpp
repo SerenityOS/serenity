@@ -150,6 +150,12 @@ void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>
         on_link_middle_click(url, target, modifiers);
 }
 
+void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, const URL& url)
+{
+    if (on_load_start)
+        on_load_start(url);
+}
+
 void WebContentView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));

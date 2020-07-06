@@ -124,3 +124,8 @@ void WebContentClient::handle(const Messages::WebContentClient::DidMiddleClickLi
 {
     m_view.notify_server_did_middle_click_link({}, message.url(), message.target(), message.modifiers());
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidStartLoading& message)
+{
+    m_view.notify_server_did_start_loading({}, message.url());
+}

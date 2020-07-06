@@ -60,6 +60,7 @@ private:
     virtual void page_did_unhover_link() override;
     virtual void page_did_click_link(const URL&, const String& target, unsigned modifiers) override;
     virtual void page_did_middle_click_link(const URL&, const String& target, unsigned modifiers) override;
+    virtual void page_did_start_loading(const URL&) override;
 
     explicit PageHost(ClientConnection&);
 

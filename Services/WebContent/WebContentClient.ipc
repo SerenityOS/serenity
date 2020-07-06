@@ -11,4 +11,5 @@ endpoint WebContentClient = 90
     DidUnhoverLink() =|
     DidClickLink(URL url, String target, unsigned modifiers) =|
     DidMiddleClickLink(URL url, String target, unsigned modifiers) =|
+    DidStartLoading(URL url) =|
 }
