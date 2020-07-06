@@ -60,26 +60,22 @@ int main(int argc, char** argv)
 {
     Core::EventLoop loop;
 
-    signal(SIGINT, [](int) {
-        if (!s_shell->is_accepting_signals())
-            return;
+    Core::EventLoop::register_signal(SIGINT, [](int) {
         editor->interrupted();
     });
 
-    signal(SIGWINCH, [](int) {
+    Core::EventLoop::register_signal(SIGWINCH, [](int) {
         editor->resized();
     });
 
-    signal(SIGTTIN, [](int) {});
-    signal(SIGTTOU, [](int) {});
+    Core::EventLoop::register_signal(SIGTTIN, [](int) {});
+    Core::EventLoop::register_signal(SIGTTOU, [](int) {});
 
-    signal(SIGHUP, [](int) {
-        if (!s_shell->is_accepting_signals())
-            return;
+    Core::EventLoop::register_signal(SIGHUP, [](int) {
         s_shell->save_history();
     });
 
-    signal(SIGCHLD, [](int) {
+    Core::EventLoop::register_signal(SIGCHLD, [](int) {
         auto& jobs = s_shell->jobs;
         Vector<u64> disowned_jobs;
         for (auto& job : jobs) {
@@ -116,7 +112,7 @@ int main(int argc, char** argv)
     });
 
     // Ignore SIGTSTP as the shell should not be suspended with ^Z.
-    signal(SIGTSTP, [](auto) {});
+    Core::EventLoop::register_signal(SIGTSTP, [](auto) {});
 
 #ifndef __serenity__
     sigset_t blocked;
