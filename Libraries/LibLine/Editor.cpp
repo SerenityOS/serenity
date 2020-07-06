@@ -41,6 +41,10 @@
 
 // #define SUGGESTIONS_DEBUG
 
+namespace {
+u32 ctrl(char c) { return c & 0x3f; }
+}
+
 namespace Line {
 
 Editor::Editor(Configuration configuration)
@@ -721,7 +725,7 @@ void Editor::handle_read_event()
             m_refresh_needed = true;
         };
 
-        if (codepoint == 8 || codepoint == m_termios.c_cc[VERASE]) {
+        if (codepoint == '\b' || codepoint == m_termios.c_cc[VERASE]) {
             do_backspace();
             continue;
         }
@@ -746,7 +750,7 @@ void Editor::handle_read_event()
             continue;
         }
         // ^L
-        if (codepoint == 0xc) {
+        if (codepoint == ctrl('L')) {
             printf("\033[3J\033[H\033[2J"); // Clear screen.
             VT::move_absolute(1, 1);
             set_origin(1, 1);
@@ -754,12 +758,12 @@ void Editor::handle_read_event()
             continue;
         }
         // ^A
-        if (codepoint == 0x01) {
+        if (codepoint == ctrl('A')) {
             m_cursor = 0;
             continue;
         }
         // ^R
-        if (codepoint == 0x12) {
+        if (codepoint == ctrl('R')) {
             if (m_is_searching) {
                 // how did we get here?
                 ASSERT_NOT_REACHED();
@@ -786,7 +790,7 @@ void Editor::handle_read_event()
                 };
 
                 // Whenever the search editor gets a ^R, cycle between history entries.
-                m_search_editor->register_character_input_callback(0x12, [this](Editor& search_editor) {
+                m_search_editor->register_character_input_callback(ctrl('R'), [this](Editor& search_editor) {
                     ++m_search_offset;
                     search_editor.m_refresh_needed = true;
                     return false; // Do not process this key event
@@ -807,7 +811,7 @@ void Editor::handle_read_event()
                 // and we end up with the wrong order of prompts, so we will first refresh
                 // ourselves, then refresh the search editor, and then tell him not to process
                 // this event.
-                m_search_editor->register_character_input_callback(0x0c, [this](auto& search_editor) {
+                m_search_editor->register_character_input_callback(ctrl('L'), [this](auto& search_editor) {
                     printf("\033[3J\033[H\033[2J"); // Clear screen.
 
                     // refresh our own prompt
@@ -887,7 +891,7 @@ void Editor::handle_read_event()
             continue;
         }
         // ^E
-        if (codepoint == 0x05) {
+        if (codepoint == ctrl('E')) {
             m_cursor = m_buffer.size();
             continue;
         }
