@@ -72,8 +72,6 @@ public:
     constexpr static auto local_init_file_path = "~/.shellrc";
     constexpr static auto global_init_file_path = "/etc/shellrc";
 
-    bool is_accepting_signals() const { return m_is_accepting_signals; }
-
     int run_command(const StringView&);
     RefPtr<Job> run_command(AST::Command&);
     bool run_file(const String&, bool explicitly_invoked = true);
@@ -183,7 +181,6 @@ private:
 
     StringBuilder m_complete_line_builder;
     bool m_should_ignore_jobs_on_next_exit { false };
-    bool m_is_accepting_signals { true };
     pid_t m_pid { 0 };
 
     HashMap<String, RefPtr<AST::Value>> m_local_variables;

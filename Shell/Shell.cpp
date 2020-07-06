@@ -516,9 +516,6 @@ void Shell::restore_stdin()
 
 void Shell::block_on_job(RefPtr<Job> job)
 {
-    ScopedValueRollback accepting_signal_rollback(m_is_accepting_signals);
-    m_is_accepting_signals = false;
-
     if (!job)
         return;
 
