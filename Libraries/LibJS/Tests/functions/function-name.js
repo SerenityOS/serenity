@@ -1,45 +1,50 @@
-load("test-common.js");
-
-try {
-  assert(function () {}.name === "");
-
-  var foo = function () {};
-  assert(foo.name === "foo");
-  assert((foo.name = "bar") === "bar");
-  assert(foo.name === "foo");
-
-  var a, b;
-  a = b = function () {};
-  assert(a.name === "b");
-  assert(b.name === "b");
-
-  var arr = [function () {}, function () {}, function () {}];
-  assert(arr[0].name === "arr");
-  assert(arr[1].name === "arr");
-  assert(arr[2].name === "arr");
-
-  var f;
-  var o = { a: function () {} };
-  assert(o.a.name === "a");
-  f = o.a;
-  assert(f.name === "a");
-  assert(o.a.name === "a");
-  o = { ...o, b: f };
-  assert(o.a.name === "a");
-  assert(o.b.name === "a");
-  o.c = function () {};
-  assert(o.c.name === "c");
+test("basic functionality", () => {
+  expect(function () {}.name).toBe("");
 
   function bar() {}
-  assert(bar.name === "bar");
-  assert((bar.name = "baz") === "baz");
-  assert(bar.name === "bar");
+  expect(bar.name).toBe("bar");
+  expect((bar.name = "baz")).toBe("baz");
+  expect(bar.name).toBe("bar");
+});
 
-  assert(console.log.name === "log");
-  assert((console.log.name = "warn") === "warn");
-  assert(console.log.name === "log");
+test("function assigned to variable", () => {
+  let foo = function () {};
+  expect(foo.name).toBe("foo");
+  expect((foo.name = "bar")).toBe("bar");
+  expect(foo.name).toBe("foo");
 
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  let a, b;
+  a = b = function () {};
+  expect(a.name).toBe("b");
+  expect(b.name).toBe("b");
+});
+
+test("functions in array assigned to variable", () => {
+  const arr = [function () {}, function () {}, function () {}];
+  expect(arr[0].name).toBe("arr");
+  expect(arr[1].name).toBe("arr");
+  expect(arr[2].name).toBe("arr");
+});
+
+test("functions in objects", () => {
+  let f;
+  let o = { a: function () {} };
+
+  expect(o.a.name).toBe("a");
+  f = o.a;
+  expect(f.name).toBe("a");
+  expect(o.a.name).toBe("a");
+
+  o = { ...o, b: f };
+  expect(o.a.name).toBe("a");
+  expect(o.b.name).toBe("a");
+
+  o.c = function () {};
+  expect(o.c.name).toBe("c");
+});
+
+test("names of native functions", () => {
+  expect(console.debug.name).toBe("debug");
+  expect((console.debug.name = "warn")).toBe("warn");
+  expect(console.debug.name).toBe("debug");
+});

@@ -1,33 +1,23 @@
-load("test-common.js");
+// test("basic functionality", () => {
+//   const localSym = Symbol("foo");
+//   const globalSym = Symbol.for("foo");
 
-try {
-  const localSym = Symbol("foo");
-  const globalSym = Symbol.for("foo");
+//   expect(localSym).not.toBe(globalSym);
+//   expect(localSym).not.toBe(Symbol("foo"));
+//   expect(globalSym).not.toBe(Symbol("foo"));
+//   expect(globalSym).toBe(Symbol.for("foo"));
+//   expect(localSym.toString()).toBe("Symbol(foo)");
+//   expect(globalSym.toString()).toBe("Symbol(foo)");
 
-  assert(localSym !== globalSym);
-  assert(localSym !== Symbol("foo"));
-  assert(globalSym !== Symbol("foo"));
-  assert(globalSym === Symbol.for("foo"));
-  assert(localSym.toString() === "Symbol(foo)");
-  assert(globalSym.toString() === "Symbol(foo)");
+//   expect(Symbol.for(1).description).toBe("1");
+//   expect(Symbol.for(true).description).toBe("true");
+//   expect(Symbol.for({}).description).toBe("[object Object]");
+//   expect(Symbol.for().description).toBe("undefined");
+//   expect(Symbol.for(null).description).toBe("null");
+// });
 
-  assert(Symbol.for(1).description === "1");
-  assert(Symbol.for(true).description === "true");
-  assert(Symbol.for({}).description === "[object Object]");
-  assert(Symbol.for().description === "undefined");
-  assert(Symbol.for(null).description === "null");
-
-  assertThrowsError(
-    () => {
-      Symbol.for(Symbol());
-    },
-    {
-      error: TypeError,
-      message: "Cannot convert symbol to string",
-    }
-  );
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+// test("symbol argument throws an error", () => {
+//   expect(() => {
+//     Symbol.for(Symbol());
+//   }).toThrowWithMessage(TypeError, "Cannot convert symbol to string");
+// });

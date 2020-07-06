@@ -1,15 +1,10 @@
-load("test-common.js");
+test("basic functionality", () => {
+  function foo(a, b) {
+    return a + b;
+  }
 
-function foo(a, b) {
-  return a + b;
-}
-
-try {
-  assert(isNaN(foo()) === true);
-  assert(isNaN(foo(1)) === true);
-  assert(foo(2, 3) === 5);
-  assert(foo(2, 3, 4) === 5);
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(foo()).toBeNaN();
+  expect(foo(1)).toBeNaN();
+  expect(foo(2, 3)).toBe(5);
+  expect(foo(2, 3, 4)).toBe(5);
+});

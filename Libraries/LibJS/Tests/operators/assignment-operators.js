@@ -1,61 +1,55 @@
-load("test-common.js");
+let x;
 
-try {
-  var x;
+test("basic functionality", () => {
+  x = 1;
+  expect((x = 2)).toBe(2);
+  expect(x).toBe(2);
 
   x = 1;
-  assert((x = 2) === 2);
-  assert(x === 2);
-
-  x = 1;
-  assert((x += 2) === 3);
-  assert(x === 3);
+  expect((x += 2)).toBe(3);
+  expect(x).toBe(3);
 
   x = 3;
-  assert((x -= 2) === 1);
-  assert(x === 1);
+  expect((x -= 2)).toBe(1);
+  expect(x).toBe(1);
 
   x = 3;
-  assert((x *= 2) === 6);
-  assert(x === 6);
+  expect((x *= 2)).toBe(6);
+  expect(x).toBe(6);
 
   x = 6;
-  assert((x /= 2) === 3);
-  assert(x === 3);
+  expect((x /= 2)).toBe(3);
+  expect(x).toBe(3);
 
   x = 6;
-  assert((x %= 4) === 2);
-  assert(x === 2);
+  expect((x %= 4)).toBe(2);
+  expect(x).toBe(2);
 
   x = 2;
-  assert((x **= 3) === 8);
-  assert(x === 8);
+  expect((x **= 3)).toBe(8);
+  expect(x).toBe(8);
 
   x = 3;
-  assert((x &= 2) === 2);
-  assert(x === 2);
+  expect((x &= 2)).toBe(2);
+  expect(x).toBe(2);
 
   x = 3;
-  assert((x |= 4) === 7);
-  assert(x === 7);
+  expect((x |= 4)).toBe(7);
+  expect(x).toBe(7);
 
   x = 6;
-  assert((x ^= 2) === 4);
-  assert(x === 4);
+  expect((x ^= 2)).toBe(4);
+  expect(x).toBe(4);
 
   x = 2;
-  assert((x <<= 2) === 8);
-  assert(x === 8);
+  expect((x <<= 2)).toBe(8);
+  expect(x).toBe(8);
 
   x = 8;
-  assert((x >>= 2) === 2);
-  assert(x === 2);
+  expect((x >>= 2)).toBe(2);
+  expect(x).toBe(2);
 
   x = -(2 ** 32 - 10);
-  assert((x >>>= 2) === 2);
-  assert(x === 2);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect((x >>>= 2)).toBe(2);
+  expect(x).toBe(2);
+});

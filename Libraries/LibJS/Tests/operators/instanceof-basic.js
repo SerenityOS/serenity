@@ -1,13 +1,13 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
   function Foo() {
     this.x = 123;
   }
 
-  var foo = new Foo();
-  assert(foo instanceof Foo);
+  const foo = new Foo();
+  expect(foo instanceof Foo).toBeTrue();
+});
 
+test("derived ES5 classes", () => {
   function Base() {
     this.is_base = true;
   }
@@ -18,11 +18,7 @@ try {
 
   Object.setPrototypeOf(Derived.prototype, Base.prototype);
 
-  var d = new Derived();
-  assert(d instanceof Derived);
-  assert(d instanceof Base);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  const d = new Derived();
+  expect(d instanceof Derived).toBeTrue();
+  expect(d instanceof Base).toBeTrue();
+});

@@ -1,12 +1,5 @@
-load("test-common.js");
-
-try {
-  var number = 0;
-
-  for (var i = 0; i < 3; ++i) for (var j = 0; j < 3; ++j) number++;
-
-  assert(number === 9);
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("basic functionality", () => {
+  let number = 0;
+  for (let i = 0; i < 3; ++i) for (let j = 0; j < 3; ++j) number++;
+  expect(number).toBe(9);
+});

@@ -1,21 +1,19 @@
-load("test-common.js");
-
-try {
-  var number = 0;
+test("basic functionality", () => {
+  let number = 0;
   while (number < 9) {
     number++;
   }
-  assert(number === 9);
+  expect(number).toBe(9);
+});
 
-  number = 0;
+test("no braces", () => {
+  let number = 0;
   while (number < 3) number++;
-  assert(number === 3);
+  expect(number).toBe(3);
+});
 
+test("does not loop when initially false", () => {
   while (false) {
-    assertNotReached();
+    expect().fail();
   }
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+});

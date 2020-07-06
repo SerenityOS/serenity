@@ -1,63 +1,60 @@
-load("test-common.js");
+test("basic numeric shifting", () => {
+  expect(0 << 0).toBe(0);
+  expect(0 << 1).toBe(0);
+  expect(0 << 2).toBe(0);
+  expect(0 << 3).toBe(0);
+  expect(0 << 4).toBe(0);
+  expect(0 << 5).toBe(0);
 
-try {
-  assert(0 << 0 === 0);
-  assert(0 << 1 === 0);
-  assert(0 << 2 === 0);
-  assert(0 << 3 === 0);
-  assert(0 << 4 === 0);
-  assert(0 << 5 === 0);
+  expect(1 << 0).toBe(1);
+  expect(1 << 1).toBe(2);
+  expect(1 << 2).toBe(4);
+  expect(1 << 3).toBe(8);
+  expect(1 << 4).toBe(16);
+  expect(1 << 5).toBe(32);
 
-  assert(1 << 0 === 1);
-  assert(1 << 1 === 2);
-  assert(1 << 2 === 4);
-  assert(1 << 3 === 8);
-  assert(1 << 4 === 16);
-  assert(1 << 5 === 32);
+  expect(2 << 0).toBe(2);
+  expect(2 << 1).toBe(4);
+  expect(2 << 2).toBe(8);
+  expect(2 << 3).toBe(16);
+  expect(2 << 4).toBe(32);
+  expect(2 << 5).toBe(64);
 
-  assert(2 << 0 === 2);
-  assert(2 << 1 === 4);
-  assert(2 << 2 === 8);
-  assert(2 << 3 === 16);
-  assert(2 << 4 === 32);
-  assert(2 << 5 === 64);
+  expect(3 << 0).toBe(3);
+  expect(3 << 1).toBe(6);
+  expect(3 << 2).toBe(12);
+  expect(3 << 3).toBe(24);
+  expect(3 << 4).toBe(48);
+  expect(3 << 5).toBe(96);
 
-  assert(3 << 0 === 3);
-  assert(3 << 1 === 6);
-  assert(3 << 2 === 12);
-  assert(3 << 3 === 24);
-  assert(3 << 4 === 48);
-  assert(3 << 5 === 96);
+  expect(4 << 0).toBe(4);
+  expect(4 << 1).toBe(8);
+  expect(4 << 2).toBe(16);
+  expect(4 << 3).toBe(32);
+  expect(4 << 4).toBe(64);
+  expect(4 << 5).toBe(128);
 
-  assert(4 << 0 === 4);
-  assert(4 << 1 === 8);
-  assert(4 << 2 === 16);
-  assert(4 << 3 === 32);
-  assert(4 << 4 === 64);
-  assert(4 << 5 === 128);
+  expect(5 << 0).toBe(5);
+  expect(5 << 1).toBe(10);
+  expect(5 << 2).toBe(20);
+  expect(5 << 3).toBe(40);
+  expect(5 << 4).toBe(80);
+  expect(5 << 5).toBe(160);
+});
 
-  assert(5 << 0 === 5);
-  assert(5 << 1 === 10);
-  assert(5 << 2 === 20);
-  assert(5 << 3 === 40);
-  assert(5 << 4 === 80);
-  assert(5 << 5 === 160);
+test("shifting with non-numeric values", () => {
+  let x = 3;
+  let y = 7;
 
-  var x = 3;
-  var y = 7;
-  assert("42" << 6 === 2688);
-  assert(x << y === 384);
-  assert(x << [[[[12]]]] === 12288);
-  assert(undefined << y === 0);
-  assert("a" << "b" === 0);
-  assert(null << null === 0);
-  assert(undefined << undefined === 0);
-  assert(NaN << NaN === 0);
-  assert(NaN << 6 === 0);
-  assert(Infinity << Infinity === 0);
-  assert(-Infinity << Infinity === 0);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect("42" << 6).toBe(2688);
+  expect(x << y).toBe(384);
+  expect(x << [[[[12]]]]).toBe(12288);
+  expect(undefined << y).toBe(0);
+  expect("a" << "b").toBe(0);
+  expect(null << null).toBe(0);
+  expect(undefined << undefined).toBe(0);
+  expect(NaN << NaN).toBe(0);
+  expect(NaN << 6).toBe(0);
+  expect(Infinity << Infinity).toBe(0);
+  expect(-Infinity << Infinity).toBe(0);
+});

@@ -1,45 +1,23 @@
-load("test-common.js");
+test("using undefined variable in initializer", () => {
+  expect(() => {
+    for (let i = foo; i < 100; ++i) {}
+  }).toThrowWithMessage(ReferenceError, "'foo' is not defined");
+});
 
-try {
-  assertThrowsError(
-    () => {
-      for (var i = foo; i < 100; ++i) {
-        assertNotReached();
-      }
-    },
-    {
-      error: ReferenceError,
-      message: "'foo' is not defined",
+test("using undefined variable in condition", () => {
+  expect(() => {
+    for (let i = 0; i < foo; ++i) {}
+  }).toThrowWithMessage(ReferenceError, "'foo' is not defined");
+});
+
+test("using undefined variable in updater", () => {
+  let loopCount = 0;
+
+  expect(() => {
+    for (let i = 0; i < 100; ++foo) {
+      loopCount++;
     }
-  );
+  }).toThrowWithMessage(ReferenceError, "'foo' is not defined");
 
-  assertThrowsError(
-    () => {
-      for (var i = 0; i < foo; ++i) {
-        assertNotReached();
-      }
-    },
-    {
-      error: ReferenceError,
-      message: "'foo' is not defined",
-    }
-  );
-
-  var loopCount = 0;
-  assertThrowsError(
-    () => {
-      for (var i = 0; i < 100; ++foo) {
-        loopCount++;
-      }
-    },
-    {
-      error: ReferenceError,
-      message: "'foo' is not defined",
-    }
-  );
-  assert(loopCount === 1);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(loopCount).toBe(1);
+});

@@ -1,70 +1,44 @@
-load("test-common.js");
+test("calling non-function", () => {
+  expect(() => {
+    const a = true;
+    a();
+  }).toThrowWithMessage(TypeError, "true is not a function (evaluated from 'a')");
+});
 
-try {
-  assertThrowsError(
-    () => {
-      var b = true;
-      b();
-    },
-    {
-      error: TypeError,
-      message: "true is not a function (evaluated from 'b')",
-    }
+test("calling number", () => {
+  expect(() => {
+    const a = 100 + 20 + 3;
+    a();
+  }).toThrowWithMessage(TypeError, "123 is not a function (evaluated from 'a')");
+});
+
+test("calling undefined object key", () => {
+  expect(() => {
+    const o = {};
+    o.a();
+  }).toThrowWithMessage(TypeError, "undefined is not a function (evaluated from 'o.a')");
+});
+
+test("calling object", () => {
+  expect(() => {
+    Math();
+  }).toThrowWithMessage(TypeError, "[object MathObject] is not a function (evaluated from 'Math')");
+});
+
+test("constructing object", () => {
+  expect(() => {
+    new Math();
+  }).toThrowWithMessage(
+    TypeError,
+    "[object MathObject] is not a constructor (evaluated from 'Math')"
   );
+});
 
-  assertThrowsError(
-    () => {
-      var n = 100 + 20 + 3;
-      n();
-    },
-    {
-      error: TypeError,
-      message: "123 is not a function (evaluated from 'n')",
-    }
+test("constructing native function", () => {
+  expect(() => {
+    new isNaN();
+  }).toThrowWithMessage(
+    TypeError,
+    "[object NativeFunction] is not a constructor (evaluated from 'isNaN')"
   );
-
-  assertThrowsError(
-    () => {
-      var o = {};
-      o.a();
-    },
-    {
-      error: TypeError,
-      message: "undefined is not a function (evaluated from 'o.a')",
-    }
-  );
-
-  assertThrowsError(
-    () => {
-      Math();
-    },
-    {
-      error: TypeError,
-      message: "[object MathObject] is not a function (evaluated from 'Math')",
-    }
-  );
-
-  assertThrowsError(
-    () => {
-      new Math();
-    },
-    {
-      error: TypeError,
-      message: "[object MathObject] is not a constructor (evaluated from 'Math')",
-    }
-  );
-
-  assertThrowsError(
-    () => {
-      new isNaN();
-    },
-    {
-      error: TypeError,
-      message: "[object NativeFunction] is not a constructor (evaluated from 'isNaN')",
-    }
-  );
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+});

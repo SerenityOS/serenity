@@ -1,17 +1,16 @@
-load("test-common.js");
+test("basic functionality", () => {
+  expect(typeof this).toBe("object");
+  expect(this).toBe(globalThis);
+});
 
-try {
-  assert(typeof this === "object");
-  assert(this === globalThis);
-
+test("this inside instantiated functions is not globalThis", () => {
+  let functionThis;
   function Foo() {
     this.x = 5;
-    assert(typeof this === "object");
-    assert(this.x === 5);
+    functionThis = this;
   }
 
   new Foo();
-  console.log("PASS");
-} catch (err) {
-  console.log("FAIL: " + err);
-}
+  expect(typeof functionThis).toBe("object");
+  expect(functionThis.x).toBe(5);
+});
