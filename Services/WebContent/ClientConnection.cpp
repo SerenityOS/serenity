@@ -51,6 +51,8 @@ ClientConnection::~ClientConnection()
 void ClientConnection::die()
 {
     s_connections.remove(client_id());
+    if (s_connections.is_empty())
+        Core::EventLoop::current().quit(0);
 }
 
 Web::Page& ClientConnection::page()
