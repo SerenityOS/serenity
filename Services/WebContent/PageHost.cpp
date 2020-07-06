@@ -144,4 +144,14 @@ void PageHost::page_did_unhover_link()
     m_client.post_message(Messages::WebContentClient::DidUnhoverLink());
 }
 
+void PageHost::page_did_click_link(const URL& url, const String& target, unsigned modifiers)
+{
+    m_client.post_message(Messages::WebContentClient::DidClickLink(url, target, modifiers));
+}
+
+void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+{
+    m_client.post_message(Messages::WebContentClient::DidMiddleClickLink(url, target, modifiers));
+}
+
 }

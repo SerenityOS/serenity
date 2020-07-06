@@ -137,6 +137,18 @@ void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
         on_link_hover({});
 }
 
+void WebContentView::notify_server_did_click_link(Badge<WebContentClient>, const URL& url, const String& target, unsigned int modifiers)
+{
+    if (on_link_click)
+        on_link_click(url, target, modifiers);
+}
+
+void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>, const URL& url, const String& target, unsigned int modifiers)
+{
+    if (on_link_middle_click)
+        on_link_middle_click(url, target, modifiers);
+}
+
 void WebContentView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));

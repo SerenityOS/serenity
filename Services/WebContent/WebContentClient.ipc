@@ -9,4 +9,6 @@ endpoint WebContentClient = 90
     DidRequestScrollIntoView(Gfx::IntRect rect) =|
     DidHoverLink(URL url) =|
     DidUnhoverLink() =|
+    DidClickLink(URL url, String target, unsigned modifiers) =|
+    DidMiddleClickLink(URL url, String target, unsigned modifiers) =|
 }

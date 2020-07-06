@@ -114,3 +114,13 @@ void WebContentClient::handle(const Messages::WebContentClient::DidUnhoverLink&)
 #endif
     m_view.notify_server_did_unhover_link({});
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidClickLink& message)
+{
+    m_view.notify_server_did_click_link({}, message.url(), message.target(), message.modifiers());
+}
+
+void WebContentClient::handle(const Messages::WebContentClient::DidMiddleClickLink& message)
+{
+    m_view.notify_server_did_middle_click_link({}, message.url(), message.target(), message.modifiers());
+}
