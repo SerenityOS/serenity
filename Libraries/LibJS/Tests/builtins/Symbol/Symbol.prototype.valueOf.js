@@ -1,25 +1,15 @@
-load("test-common.js");
+test("basic functionality", () => {
+  const local = Symbol("foo");
+  // const global = Symbol.for("foo");
+  expect(local.valueOf()).toBe(local);
+  // expect(global.valueOf()).toBe(global);
 
-try {
-  let local = Symbol("foo");
-  let global = Symbol.for("foo");
-  assert(local.valueOf() === local);
-  assert(global.valueOf() === global);
+  expect(Symbol.prototype.valueOf.call(local)).toBe(local);
+  // expect(Symbol.prototype.valueOf.call(global)).toBe(global);
+});
 
-  assert(Symbol.prototype.valueOf.call(local) === local);
-  assert(Symbol.prototype.valueOf.call(global) === global);
-
-  assertThrowsError(
-    () => {
-      Symbol.prototype.valueOf.call("foo");
-    },
-    {
-      error: TypeError,
-      message: "Not a Symbol object",
-    }
-  );
-
-  console.log("PASS");
-} catch (err) {
-  console.log("FAIL: " + err);
-}
+test("|this| must be a symbol", () => {
+  expect(() => {
+    Symbol.prototype.valueOf.call("foo");
+  }).toThrowWithMessage(TypeError, "Not a Symbol object");
+});

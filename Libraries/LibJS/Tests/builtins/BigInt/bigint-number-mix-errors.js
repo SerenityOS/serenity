@@ -1,118 +1,31 @@
-load("test-common.js");
-
-try {
+const doTest = (operatorName, executeOperation) => {
   [1, null, undefined].forEach(value => {
-    assertThrowsError(
-      () => {
-        1n + value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use addition operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n - value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use subtraction operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n * value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use multiplication operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n / value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use division operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n % value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use modulo operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n ** value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use exponentiation operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n | value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use bitwise OR operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n & value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use bitwise AND operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n ^ value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use bitwise XOR operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n << value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use left-shift operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n >> value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use right-shift operator with BigInt and other type",
-      }
-    );
-    assertThrowsError(
-      () => {
-        1n >>> value;
-      },
-      {
-        error: TypeError,
-        message: "Cannot use unsigned right-shift operator with BigInt",
-      }
+    const messageSuffix = operatorName === "unsigned right-shift" ? "" : " and other type";
+
+    expect(() => {
+      executeOperation(1n, value);
+    }).toThrowWithMessage(
+      TypeError,
+      `Cannot use ${operatorName} operator with BigInt${messageSuffix}`
     );
   });
+};
 
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+[
+  ["addition", (a, b) => a + b],
+  ["subtraction", (a, b) => a - b],
+  ["multiplication", (a, b) => a * b],
+  ["division", (a, b) => a / b],
+  ["modulo", (a, b) => a % b],
+  ["exponentiation", (a, b) => a ** b],
+  ["bitwise OR", (a, b) => a | b],
+  ["bitwise AND", (a, b) => a & b],
+  ["bitwise XOR", (a, b) => a ^ b],
+  ["left-shift", (a, b) => a << b],
+  ["right-shift", (a, b) => a >> b],
+  ["unsigned right-shift", (a, b) => a >>> b],
+].forEach(testCase => {
+  test(`using ${testCase[0]} operator with BigInt and other type`, () => {
+    doTest(testCase[0], testCase[1]);
+  });
+});

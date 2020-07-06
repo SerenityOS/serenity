@@ -1,6 +1,4 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
   const vals = [
     1,
     2,
@@ -723,13 +721,9 @@ try {
     let x = vals[test[0]];
     let y = vals[test[1]];
 
-    assert(x < y === test[2]);
-    assert(x > y === test[3]);
-    assert(x <= y === test[4]);
-    assert(x >= y === test[5]);
+    expect(x < y).toBe(test[2]);
+    expect(x > y).toBe(test[3]);
+    expect(x <= y).toBe(test[4]);
+    expect(x >= y).toBe(test[5]);
   }
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+});

@@ -1,47 +1,45 @@
-load("test-common.js");
+test("iterate through empty string", () => {
+  const a = [];
+  for (const property in "") {
+    a.push(property);
+  }
+  expect(a).toEqual([]);
+});
 
-try {
-  assertVisitsAll(visit => {
-    for (const property in "") {
-      visit(property);
-    }
-  }, []);
+test("iterate through number", () => {
+  const a = [];
+  for (const property in 123) {
+    a.push(property);
+  }
+  expect(a).toEqual([]);
+});
 
-  assertVisitsAll(visit => {
-    for (const property in 123) {
-      visit(property);
-    }
-  }, []);
+test("iterate through empty object", () => {
+  const a = [];
+  for (const property in {}) {
+    a.push(property);
+  }
+  expect(a).toEqual([]);
+});
 
-  assertVisitsAll(visit => {
-    for (const property in {}) {
-      visit(property);
-    }
-  }, []);
+test("iterate through string", () => {
+  const a = [];
+  for (const property in "hello") {
+    a.push(property);
+  }
+  expect(a).toEqual(["0", "1", "2", "3", "4"]);
+});
 
-  assertVisitsAll(
-    visit => {
-      for (const property in "hello") {
-        visit(property);
-      }
-    },
-    ["0", "1", "2", "3", "4"]
-  );
+test("iterate through object", () => {
+  const a = [];
+  for (const property in { a: 1, b: 2, c: 2 }) {
+    a.push(property);
+  }
+  expect(a).toEqual(["a", "b", "c"]);
+});
 
-  assertVisitsAll(
-    visit => {
-      for (const property in { a: 1, b: 2, c: 2 }) {
-        visit(property);
-      }
-    },
-    ["a", "b", "c"]
-  );
-
+test("use already-declared variable", () => {
   var property;
   for (property in "abc");
-  assert(property === "2");
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(property).toBe("2");
+});

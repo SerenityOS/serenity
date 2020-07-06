@@ -1,17 +1,11 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
   function Foo() {
     this.x = 123;
   }
 
-  assert(Foo.prototype.constructor === Foo);
+  expect(Foo.prototype.constructor).toBe(Foo);
 
-  var foo = new Foo();
-  assert(foo.constructor === Foo);
-  assert(foo.x === 123);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  const foo = new Foo();
+  expect(foo.constructor).toBe(Foo);
+  expect(foo.x).toBe(123);
+});

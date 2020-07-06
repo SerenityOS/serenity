@@ -1,21 +1,16 @@
-load("test-common.js");
+test("basic functionality", () => {
+  const x = 1;
 
-try {
-  var x = 1;
+  expect(x === 1 ? true : false).toBeTrue();
+  expect(x ? x : 0).toBe(x);
+  expect(1 < 2 ? true : false).toBeTrue();
+  expect(0 ? 1 : 1 ? 10 : 20).toBe(10);
+  expect(0 ? (1 ? 1 : 10) : 20).toBe(20);
+});
 
-  assert(x === 1 ? true : false);
-  assert((x ? x : 0) === x);
-  assert(1 < 2 ? true : false);
-  assert((0 ? 1 : 1 ? 10 : 20) === 10);
-  assert((0 ? (1 ? 1 : 10) : 20) === 20);
-
-  var o = {};
+test("object values", () => {
+  const o = {};
   o.f = true;
-  assert(o.f ? true : false);
-
-  assert(1 ? o.f : null);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(o.f ? true : false).toBeTrue();
+  expect(1 ? o.f : null).toBeTrue();
+});

@@ -1,26 +1,24 @@
-load("test-common.js");
+test("inside parenthesis", () => {
+  expect((1, 2, 3)).toBe(3);
+  expect((1, 2 + 3, 4)).toBe(4);
+});
 
-try {
-  assert((1, 2, 3) === 3);
-  assert((1, 2 + 3, 4) === 4);
-
-  var foo = 0;
+test("with post-increment operator", () => {
+  let foo = 0;
   foo = (foo++, foo);
-  assert(foo === 1);
+  expect(foo).toBe(1);
+});
 
+test("with assignment operator", () => {
   var a, b, c;
-  assert(((a = b = 3), (c = 4)) === 4);
-  assert(a === 3);
-  assert(b === 3);
-  assert(c === 4);
+  expect(((a = b = 3), (c = 4))).toBe(4);
+  expect(a).toBe(3);
+  expect(b).toBe(3);
+  expect(c).toBe(4);
 
   var x, y, z;
-  assert((x = ((y = 5), (z = 6))) === 6);
-  assert(x === 6);
-  assert(y === 5);
-  assert(z === 6);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect((x = ((y = 5), (z = 6)))).toBe(6);
+  expect(x).toBe(6);
+  expect(y).toBe(5);
+  expect(z).toBe(6);
+});

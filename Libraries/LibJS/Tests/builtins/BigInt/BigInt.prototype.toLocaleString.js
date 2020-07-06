@@ -1,21 +1,10 @@
-load("test-common.js");
+test("basic functionality", () => {
+  expect(BigInt.prototype.toLocaleString).toHaveLength(0);
+  expect(BigInt(123).toLocaleString()).toBe("123");
+});
 
-try {
-  assert(BigInt.prototype.toLocaleString.length === 0);
-
-  assertThrowsError(
-    () => {
-      BigInt.prototype.toLocaleString.call("foo");
-    },
-    {
-      error: TypeError,
-      message: "Not a BigInt object",
-    }
-  );
-
-  assert(BigInt(123).toLocaleString() === "123");
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("calling with non-BigInt |this|", () => {
+  expect(() => {
+    BigInt.prototype.toLocaleString.call("foo");
+  }).toThrowWithMessage(TypeError, "Not a BigInt object");
+});

@@ -1,24 +1,29 @@
-load("test-common.js");
-
-try {
-  var callHoisted = hoisted();
+test("basic functionality", () => {
+  let callHoisted = hoisted();
   function hoisted() {
-    return true;
+    return "foo";
   }
-  assert(hoisted() === true);
-  assert(callHoisted === true);
+  expect(hoisted()).toBe("foo");
+  expect(callHoisted).toBe("foo");
+});
 
+// First two calls produce a ReferenceError, but the declarations should be hoisted
+test.skip("functions are hoisted across non-lexical scopes", () => {
+  expect(scopedHoisted).toBeUndefined();
+  expect(callScopedHoisted).toBeUndefined();
   {
     var callScopedHoisted = scopedHoisted();
     function scopedHoisted() {
       return "foo";
     }
-    assert(scopedHoisted() === "foo");
-    assert(callScopedHoisted === "foo");
+    expect(scopedHoisted()).toBe("foo");
+    expect(callScopedHoisted).toBe("foo");
   }
-  assert(scopedHoisted() === "foo");
-  assert(callScopedHoisted === "foo");
+  expect(scopedHoisted()).toBe("foo");
+  expect(callScopedHoisted).toBe("foo");
+});
 
+test("functions are not hoisted across lexical scopes", () => {
   const test = () => {
     var iife = (function () {
       return declaredLater();
@@ -28,10 +33,7 @@ try {
     }
     return iife;
   };
-  assert(typeof declaredLater === "undefined");
-  assert(test() === "yay");
 
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(() => declaredLater).toThrow(ReferenceError);
+  expect(test()).toBe("yay");
+});

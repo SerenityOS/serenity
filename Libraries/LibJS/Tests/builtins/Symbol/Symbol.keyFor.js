@@ -1,34 +1,24 @@
-load("test-common.js");
+// test("basic functionality", () => {
+//   const localSym = Symbol("bar");
+//   const globalSym = Symbol.for("bar");
 
-try {
-  const localSym = Symbol("foo");
-  const globalSym = Symbol.for("foo");
+//   expect(Symbol.keyFor(localSym)).toBeUndefined();
+//   expect(Symbol.keyFor(globalSym)).toBe("bar");
+// });
 
-  assert(Symbol.keyFor(localSym) === undefined);
-  assert(Symbol.keyFor(globalSym) === "foo");
-
-  const testThrows = (value, str) => {
-    assertThrowsError(
-      () => {
-        Symbol.keyFor(value);
-      },
-      {
-        error: TypeError,
-        message: str + " is not a symbol",
-      }
-    );
-  };
-
-  testThrows(1, "1");
-  testThrows(null, "null");
-  testThrows(undefined, "undefined");
-  testThrows([], "[object Array]");
-  testThrows({}, "[object Object]");
-  testThrows(true, "true");
-  testThrows("foobar", "foobar");
-  testThrows(function () {}, "[object ScriptFunction]"); // FIXME: Better function stringification
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+// test("bad argument values", () => {
+//   [
+//     [1, "1"],
+//     [null, "null"],
+//     [undefined, "undefined"],
+//     [[], "[object Array]"],
+//     [{}, "[object Object]"],
+//     [true, "true"],
+//     ["foobar", "foobar"],
+//     [function () {}, "[object ScriptFunction]"], // FIXME: Better function stringification
+//   ].forEach(testCase => {
+//     expect(() => {
+//       Symbol.keyFor(testCase[0]);
+//     }).toThrowWithMessage(TypeError, `${testCase[1]} is not a symbol`);
+//   });
+// });

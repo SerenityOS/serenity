@@ -1,60 +1,58 @@
-load("test-common.js");
-
-try {
-  o = {};
+test("deleting object properties", () => {
+  const o = {};
   o.x = 1;
   o.y = 2;
   o.z = 3;
-  assert(Object.getOwnPropertyNames(o).length === 3);
+  expect(Object.getOwnPropertyNames(o)).toHaveLength(3);
 
-  assert(delete o.x === true);
-  assert(o.hasOwnProperty("x") === false);
-  assert(o.hasOwnProperty("y") === true);
-  assert(o.hasOwnProperty("z") === true);
-  assert(Object.getOwnPropertyNames(o).length === 2);
+  expect(delete o.x).toBeTrue();
+  expect(o.hasOwnProperty("x")).toBeFalse();
+  expect(o.hasOwnProperty("y")).toBeTrue();
+  expect(o.hasOwnProperty("z")).toBeTrue();
+  expect(Object.getOwnPropertyNames(o)).toHaveLength(2);
 
-  assert(delete o.y === true);
-  assert(o.hasOwnProperty("x") === false);
-  assert(o.hasOwnProperty("y") === false);
-  assert(o.hasOwnProperty("z") === true);
-  assert(Object.getOwnPropertyNames(o).length === 1);
+  expect(delete o.y).toBeTrue();
+  expect(o.hasOwnProperty("x")).toBeFalse();
+  expect(o.hasOwnProperty("y")).toBeFalse();
+  expect(o.hasOwnProperty("z")).toBeTrue();
+  expect(Object.getOwnPropertyNames(o)).toHaveLength(1);
 
-  assert(delete o.z === true);
-  assert(o.hasOwnProperty("x") === false);
-  assert(o.hasOwnProperty("y") === false);
-  assert(o.hasOwnProperty("z") === false);
-  assert(Object.getOwnPropertyNames(o).length === 0);
+  expect(delete o.z).toBeTrue();
+  expect(o.hasOwnProperty("x")).toBeFalse();
+  expect(o.hasOwnProperty("y")).toBeFalse();
+  expect(o.hasOwnProperty("z")).toBeFalse();
+  expect(Object.getOwnPropertyNames(o)).toHaveLength(0);
+});
 
-  a = [3, 5, 7];
+test("deleting array indices", () => {
+  const a = [3, 5, 7];
 
-  assert(Object.getOwnPropertyNames(a).length === 4);
+  expect(Object.getOwnPropertyNames(a)).toHaveLength(4);
 
-  assert(delete a[0] === true);
-  assert(a.hasOwnProperty(0) === false);
-  assert(a.hasOwnProperty(1) === true);
-  assert(a.hasOwnProperty(2) === true);
-  assert(Object.getOwnPropertyNames(a).length === 3);
+  expect(delete a[0]).toBeTrue();
+  expect(a.hasOwnProperty(0)).toBeFalse();
+  expect(a.hasOwnProperty(1)).toBeTrue();
+  expect(a.hasOwnProperty(2)).toBeTrue();
+  expect(Object.getOwnPropertyNames(a)).toHaveLength(3);
 
-  assert(delete a[1] === true);
-  assert(a.hasOwnProperty(0) === false);
-  assert(a.hasOwnProperty(1) === false);
-  assert(a.hasOwnProperty(2) === true);
-  assert(Object.getOwnPropertyNames(a).length === 2);
+  expect(delete a[1]).toBeTrue();
+  expect(a.hasOwnProperty(0)).toBeFalse();
+  expect(a.hasOwnProperty(1)).toBeFalse();
+  expect(a.hasOwnProperty(2)).toBeTrue();
+  expect(Object.getOwnPropertyNames(a)).toHaveLength(2);
 
-  assert(delete a[2] === true);
-  assert(a.hasOwnProperty(0) === false);
-  assert(a.hasOwnProperty(1) === false);
-  assert(a.hasOwnProperty(2) === false);
-  assert(Object.getOwnPropertyNames(a).length === 1);
+  expect(delete a[2]).toBeTrue();
+  expect(a.hasOwnProperty(0)).toBeFalse();
+  expect(a.hasOwnProperty(1)).toBeFalse();
+  expect(a.hasOwnProperty(2)).toBeFalse();
+  expect(Object.getOwnPropertyNames(a)).toHaveLength(1);
+});
 
-  q = {};
+test("deleting non-configurable property", () => {
+  const q = {};
   Object.defineProperty(q, "foo", { value: 1, writable: false, enumerable: false });
-  assert(q.foo === 1);
+  expect(q.foo).toBe(1);
 
-  assert(delete q.foo === false);
-  assert(q.hasOwnProperty("foo") === true);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(delete q.foo).toBeFalse();
+  expect(q.hasOwnProperty("foo")).toBeTrue();
+});
