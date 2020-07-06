@@ -85,6 +85,13 @@ void TrackManager::set_octave(Direction direction)
     }
 }
 
+void TrackManager::set_octave(int octave)
+{
+    if (octave <= octave_max && octave >= octave_min) {
+        m_octave = octave;
+    }
+}
+
 void TrackManager::add_track()
 {
     m_tracks.append(make<Track>(m_time));

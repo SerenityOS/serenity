@@ -45,6 +45,7 @@ public:
     void add_actions(GUI::Menu&);
 
     void set_octave_and_ensure_note_change(Direction);
+    void set_octave_and_ensure_note_change(int);
 
 private:
     explicit MainWidget(TrackManager&);
