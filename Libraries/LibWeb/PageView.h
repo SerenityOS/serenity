@@ -30,11 +30,13 @@
 #include <LibGUI/ScrollableWidget.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Page.h>
+#include <LibWeb/WebViewHooks.h>
 
 namespace Web {
 
 class PageView final
     : public GUI::ScrollableWidget
+    , public WebViewHooks
     , public PageClient {
     C_OBJECT(PageView);
 
@@ -58,17 +60,6 @@ public:
     URL url() const;
 
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
-
-    Function<void(const Gfx::IntPoint& screen_position)> on_context_menu_request;
-    Function<void(const URL&, const String& target, unsigned modifiers)> on_link_click;
-    Function<void(const URL&, const Gfx::IntPoint& screen_position)> on_link_context_menu_request;
-    Function<void(const URL&)> on_link_middle_click;
-    Function<void(const URL&)> on_link_hover;
-    Function<void(const String&)> on_title_change;
-    Function<void(const URL&)> on_load_start;
-    Function<void(const Gfx::Bitmap&)> on_favicon_change;
-    Function<void(const URL&)> on_url_drop;
-    Function<void(Document*)> on_set_document;
 
     virtual bool accepts_focus() const override { return true; }
 
