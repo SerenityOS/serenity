@@ -51,6 +51,7 @@ public:
     };
 
     void set_preview_mode(PreviewMode);
+    void set_auto_detect_preview_mode(bool value) { m_auto_detect_preview_mode = value; }
 
 private:
     TextEditorWidget();
@@ -107,6 +108,7 @@ private:
 
     bool m_document_dirty { false };
     bool m_document_opening { false };
+    bool m_auto_detect_preview_mode { false };
 
     PreviewMode m_preview_mode { PreviewMode::None };
 };

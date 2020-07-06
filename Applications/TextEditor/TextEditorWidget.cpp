@@ -497,12 +497,14 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
         m_plain_text_highlight->activate();
     }
 
-    if (m_extension == "md")
-        set_preview_mode(PreviewMode::Markdown);
-    else if (m_extension == "html")
-        set_preview_mode(PreviewMode::HTML);
-    else
-        set_preview_mode(PreviewMode::None);
+    if (m_auto_detect_preview_mode) {
+        if (m_extension == "md")
+            set_preview_mode(PreviewMode::Markdown);
+        else if (m_extension == "html")
+            set_preview_mode(PreviewMode::HTML);
+        else
+            set_preview_mode(PreviewMode::None);
+    }
 
     update_title();
 }
