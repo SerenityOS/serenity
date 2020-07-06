@@ -87,8 +87,8 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
 
     GUI::Painter painter(*this);
     painter.translate(frame_thickness(), frame_thickness());
-    painter.translate(-horizontal_note_offset_remainder, -note_offset_remainder);
     painter.add_clip_rect(event.rect());
+    painter.translate(-horizontal_note_offset_remainder, -note_offset_remainder);
 
     for (int y = 0; y < notes_to_paint; ++y) {
         int y_pos = y * note_height;
