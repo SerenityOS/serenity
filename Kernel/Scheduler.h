@@ -51,7 +51,9 @@ extern RecursiveSpinLock g_scheduler_lock;
 
 class Scheduler {
 public:
-    static void initialize(u32 cpu);
+    static void initialize();
+    static Thread* create_ap_idle_thread(u32 cpu);
+    static void set_idle_thread(Thread* idle_thread);
     static void timer_tick(const RegisterState&);
     [[noreturn]] static void start();
     static bool pick_next();

@@ -1129,7 +1129,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_si
 
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbg() << "Ext2FS: find_a_free_inode(preferred_group: " << preferred_group << ", expected_size: " << expected_size) << ")";
+    dbg() << "Ext2FS: find_a_free_inode(preferred_group: " << preferred_group << ", expected_size: " << expected_size << ")";
 #endif
 
     unsigned needed_blocks = ceil_div(static_cast<size_t>(expected_size), block_size());

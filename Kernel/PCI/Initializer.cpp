@@ -47,7 +47,7 @@ static Access::Type detect_optimal_access_type(bool mmio_allowed)
         return Access::Type::IO;
 
     klog() << "No PCI bus access method detected!";
-    hang();
+    Processor::halt();
 }
 
 void initialize()

@@ -1271,7 +1271,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
         // We need to enter the scheduler lock before changing the state
         // and it will be released after the context switch into that
         // thread. We should also still be in our critical section
-        ASSERT(!g_scheduler_lock.is_locked());
+        ASSERT(!g_scheduler_lock.own_lock());
         ASSERT(Processor::current().in_critical() == 1);
         g_scheduler_lock.lock();
         current_thread->set_state(Thread::State::Running);

@@ -57,7 +57,7 @@ Region::~Region()
     // Make sure we disable interrupts so we don't get interrupted between unmapping and unregistering.
     // Unmapping the region will give the VM back to the RangeAllocator, so an interrupt handler would
     // find the address<->region mappings in an invalid state there.
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
     if (m_page_directory) {
         unmap(ShouldDeallocateVirtualMemoryRange::Yes);
         ASSERT(!m_page_directory);
@@ -117,7 +117,7 @@ NonnullOwnPtr<Region> Region::clone()
 
 bool Region::commit()
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
 #ifdef MM_DEBUG
     dbg() << "MM: Commit " << page_count() << " pages in Region " << this << " (VMO=" << &vmobject() << ") at " << vaddr();
 #endif
@@ -131,7 +131,7 @@ bool Region::commit()
 bool Region::commit(size_t page_index)
 {
     ASSERT(vmobject().is_anonymous() || vmobject().is_purgeable());
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
     auto& vmobject_physical_page_entry = physical_page_slot(page_index);
     if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
         return true;
@@ -250,14 +250,14 @@ void Region::map_individual_page_impl(size_t page_index)
 void Region::remap_page(size_t page_index)
 {
     ASSERT(m_page_directory);
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
     ASSERT(physical_page(page_index));
     map_individual_page_impl(page_index);
 }
 
 void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
     ASSERT(m_page_directory);
     for (size_t i = 0; i < page_count(); ++i) {
         auto vaddr = this->vaddr().offset(i * PAGE_SIZE);
@@ -281,13 +281,13 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 void Region::set_page_directory(PageDirectory& page_directory)
 {
     ASSERT(!m_page_directory || m_page_directory == &page_directory);
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
     m_page_directory = page_directory;
 }
 void Region::map(PageDirectory& page_directory)
 {
     set_page_directory(page_directory);
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_mm_lock);
 #ifdef MM_DEBUG
     dbg() << "MM: Region::map() will map VMO pages " << first_page_index() << " - " << last_page_index() << " (VMO page count: " << vmobject().page_count() << ")";
 #endif

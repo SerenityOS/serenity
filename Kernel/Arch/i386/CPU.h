@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
@@ -33,7 +34,7 @@
 #include <Kernel/VirtualAddress.h>
 
 #define PAGE_SIZE 4096
-#define GENERIC_INTERRUPT_HANDLERS_COUNT 128
+#define GENERIC_INTERRUPT_HANDLERS_COUNT (256 - IRQ_VECTOR_BASE)
 #define PAGE_MASK ((FlatPtr)0xfffff000u)
 
 namespace Kernel {
@@ -276,13 +277,6 @@ void flush_idt();
 void load_task_register(u16 selector);
 void handle_crash(RegisterState&, const char* description, int signal, bool out_of_memory = false);
 
-[[noreturn]] static inline void hang()
-{
-    asm volatile("cli; hlt");
-    for (;;) {
-    }
-}
-
 #define LSW(x) ((u32)(x)&0xFFFF)
 #define MSW(x) (((u32)(x) >> 16) & 0xFFFF)
 #define LSB(x) ((x)&0xFF)
@@ -307,19 +301,16 @@ inline u32 cpu_flags()
 inline void set_fs(u32 segment)
 {
     asm volatile(
-        "movl %%eax, %%fs" :: "a"(segment)
-        : "memory"
-    );
+        "movl %%eax, %%fs" ::"a"(segment)
+        : "memory");
 }
 
 inline void set_gs(u32 segment)
 {
     asm volatile(
-        "movl %%eax, %%gs" :: "a"(segment)
-        : "memory"
-    );
+        "movl %%eax, %%gs" ::"a"(segment)
+        : "memory");
 }
-
 
 inline u32 get_fs()
 {
@@ -532,9 +523,9 @@ u32 read_dr6();
 static inline bool is_kernel_mode()
 {
     u32 cs;
-    asm volatile (
+    asm volatile(
         "movl %%cs, %[cs] \n"
-        : [cs] "=g" (cs));
+        : [ cs ] "=g"(cs));
     return (cs & 3) == 0;
 }
 
@@ -624,9 +615,47 @@ struct TrapFrame;
 
 class ProcessorInfo;
 struct MemoryManagerData;
+struct ProcessorMessageEntry;
+
+struct ProcessorMessage {
+    enum Type {
+        FlushTlb,
+        Callback,
+        CallbackWithData
+    };
+    Type type;
+    volatile u32 refs; // atomic
+    union {
+        ProcessorMessage* next; // only valid while in the pool
+        struct {
+            void (*handler)();
+        } callback;
+        struct {
+            void* data;
+            void (*handler)(void*);
+            void (*free)(void*);
+        } callback_with_data;
+        struct {
+            u8* ptr;
+            size_t page_count;
+        } flush_tlb;
+    };
+
+    volatile bool async;
+
+    ProcessorMessageEntry* per_proc_entries;
+};
+
+struct ProcessorMessageEntry {
+    ProcessorMessageEntry* next;
+    ProcessorMessage* msg;
+};
 
 class Processor {
     friend class ProcessorInfo;
+
+    AK_MAKE_NONCOPYABLE(Processor);
+    AK_MAKE_NONMOVABLE(Processor);
 
     Processor* m_self; // must be first field (%fs offset 0x0)
 
@@ -641,19 +670,30 @@ class Processor {
     TSS32 m_tss;
     static FPUState s_clean_fpu_state;
     CPUFeature m_features;
+    static volatile u32 g_total_processors; // atomic
 
     ProcessorInfo* m_info;
     MemoryManagerData* m_mm_data;
     Thread* m_current_thread;
     Thread* m_idle_thread;
 
+    volatile ProcessorMessageEntry* m_message_queue; // atomic, LIFO
+
     bool m_invoke_scheduler_async;
     bool m_scheduler_initialized;
+    bool m_halt_requested;
 
     void gdt_init();
     void write_raw_gdt_entry(u16 selector, u32 low, u32 high);
     void write_gdt_entry(u16 selector, Descriptor& descriptor);
     static Vector<Processor*>& processors();
+
+    static void smp_return_to_pool(ProcessorMessage& msg);
+    static ProcessorMessage& smp_get_from_pool();
+    static void smp_cleanup_message(ProcessorMessage& msg);
+    bool smp_queue_message(ProcessorMessage& msg);
+    static void smp_broadcast_message(ProcessorMessage& msg, bool async);
+    static void smp_broadcast_halt();
 
     void cpu_detect();
     void cpu_setup();
@@ -661,8 +701,33 @@ class Processor {
     String features_string() const;
 
 public:
+    Processor() = default;
+
     void early_initialize(u32 cpu);
     void initialize(u32 cpu);
+
+    static u32 count()
+    {
+        // NOTE: because this value never changes once all APs are booted,
+        // we don't really need to do an atomic_load() on this variable
+        return g_total_processors;
+    }
+
+    ALWAYS_INLINE static void wait_check()
+    {
+        Processor::current().smp_process_pending_messages();
+        // TODO: pause
+    }
+
+    [[noreturn]] static void halt();
+
+    static void flush_entire_tlb_local()
+    {
+        write_cr3(read_cr3());
+    }
+
+    static void flush_tlb_local(VirtualAddress vaddr, size_t page_count);
+    static void flush_tlb(VirtualAddress vaddr, size_t page_count);
 
     Descriptor& get_gdt_entry(u16 selector);
     void flush_gdt();
@@ -670,19 +735,20 @@ public:
 
     static Processor& by_id(u32 cpu);
 
-    template <typename Callback>
+    template<typename Callback>
     static inline IterationDecision for_each(Callback callback)
     {
         auto& procs = processors();
-        for (auto it = procs.begin(); it != procs.end(); ++it) {
-            if (callback(**it) == IterationDecision::Break)
+        size_t count = procs.size();
+        for (size_t i = 0; i < count; i++) {
+            if (callback(*procs[i]) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         return IterationDecision::Continue;
     }
-    
+
     ALWAYS_INLINE ProcessorInfo& info() { return *m_info; }
-    
+
     ALWAYS_INLINE static Processor& current()
     {
         return *(Processor*)read_fs_u32(0);
@@ -729,19 +795,30 @@ public:
     {
         return m_cpu;
     }
-    
+
+    ALWAYS_INLINE u32 raise_irq()
+    {
+        return m_in_irq++;
+    }
+
+    ALWAYS_INLINE void restore_irq(u32 prev_irq)
+    {
+        ASSERT(prev_irq <= m_in_irq);
+        m_in_irq = prev_irq;
+    }
+
     ALWAYS_INLINE u32& in_irq()
     {
         return m_in_irq;
     }
-    
+
     ALWAYS_INLINE void enter_critical(u32& prev_flags)
     {
         m_in_critical++;
         prev_flags = cpu_flags();
         cli();
     }
-    
+
     ALWAYS_INLINE void leave_critical(u32 prev_flags)
     {
         ASSERT(m_in_critical > 0);
@@ -754,7 +831,7 @@ public:
         else
             cli();
     }
-    
+
     ALWAYS_INLINE u32 clear_critical(u32& prev_flags, bool enable_interrupts)
     {
         u32 prev_crit = m_in_critical;
@@ -766,7 +843,7 @@ public:
             sti();
         return prev_crit;
     }
-    
+
     ALWAYS_INLINE void restore_critical(u32 prev_crit, u32 prev_flags)
     {
         ASSERT(m_in_critical == 0);
@@ -784,6 +861,27 @@ public:
         return s_clean_fpu_state;
     }
 
+    static void smp_enable();
+    bool smp_process_pending_messages();
+
+    template<typename Callback>
+    static void smp_broadcast(Callback callback, bool async)
+    {
+        auto* data = new Callback(move(callback));
+        smp_broadcast(
+            [](void* data) {
+                (*reinterpret_cast<Callback*>(data))();
+            },
+            data,
+            [](void* data) {
+                delete reinterpret_cast<Callback*>(data);
+            },
+            async);
+    }
+    static void smp_broadcast(void (*callback)(), bool async);
+    static void smp_broadcast(void (*callback)(void*), void* data, void (*free_data)(void*), bool async);
+    static void smp_broadcast_flush_tlb(VirtualAddress vaddr, size_t page_count);
+
     ALWAYS_INLINE bool has_feature(CPUFeature f) const
     {
         return (static_cast<u32>(m_features) & static_cast<u32>(f)) != 0;
@@ -793,6 +891,7 @@ public:
     void invoke_scheduler_async() { m_invoke_scheduler_async = true; }
 
     void enter_trap(TrapFrame& trap, bool raise_irq);
+
     void exit_trap(TrapFrame& trap);
 
     [[noreturn]] void initialize_context_switching(Thread& initial_thread);

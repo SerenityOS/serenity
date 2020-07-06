@@ -38,6 +38,7 @@ namespace Kernel {
 static u8* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
 static int s_active_console;
+static RecursiveSpinLock s_lock;
 
 void VirtualConsole::flush_vga_cursor()
 {
@@ -85,7 +86,7 @@ void VirtualConsole::switch_to(unsigned index)
     ASSERT(index < 6);
     ASSERT(s_consoles[index]);
 
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     if (s_active_console != -1) {
         auto* active_console = s_consoles[s_active_console];
         // We won't know how to switch away from a graphical console until we
@@ -107,7 +108,7 @@ void VirtualConsole::set_active(bool active)
     if (active == m_active)
         return;
 
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
 
     m_active = active;
 
@@ -240,7 +241,7 @@ void VirtualConsole::on_key_pressed(KeyboardDevice::Event event)
 
 ssize_t VirtualConsole::on_tty_write(const u8* data, ssize_t size)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(s_lock);
     for (ssize_t i = 0; i < size; ++i)
         m_terminal.on_input(data[i]);
     if (m_active)

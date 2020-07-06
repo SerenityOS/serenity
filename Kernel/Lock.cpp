@@ -48,7 +48,7 @@ void Lock::lock(Mode mode)
     if (!are_interrupts_enabled()) {
         klog() << "Interrupts disabled when trying to take Lock{" << m_name << "}";
         dump_backtrace();
-        hang();
+        Processor::halt();
     }
     auto current_thread = Thread::current();
     for (;;) {

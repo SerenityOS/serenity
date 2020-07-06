@@ -47,6 +47,7 @@ public:
         Processor::current().enter_critical(prev_flags);
         BaseType expected;
         do {
+            Processor::wait_check();
             expected = 0;
         } while (!m_lock.compare_exchange_strong(expected, 1, AK::memory_order_acq_rel));
         return prev_flags;
@@ -90,6 +91,7 @@ public:
         while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
             if (expected == cpu)
                 break;
+            Processor::wait_check();
             expected = 0;
         }
         m_recursions++;
@@ -108,6 +110,11 @@ public:
     ALWAYS_INLINE bool is_locked() const
     {
         return m_lock.load(AK::memory_order_consume) != 0;
+    }
+
+    ALWAYS_INLINE bool own_lock() const
+    {
+        return m_lock.load(AK::memory_order_consume) == FlatPtr(&Processor::current());
     }
 
     ALWAYS_INLINE void initialize()
