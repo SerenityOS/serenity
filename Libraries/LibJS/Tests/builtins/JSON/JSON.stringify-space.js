@@ -1,20 +1,20 @@
 test("basic functionality", () => {
-  let o = {
-    foo: 1,
-    bar: "baz",
-    qux: {
-      get x() {
-        return 10;
-      },
-      y() {
-        return 20;
-      },
-      arr: [1, 2, 3],
-    },
-  };
+    let o = {
+        foo: 1,
+        bar: "baz",
+        qux: {
+            get x() {
+                return 10;
+            },
+            y() {
+                return 20;
+            },
+            arr: [1, 2, 3],
+        },
+    };
 
-  let string = JSON.stringify(o, null, 4);
-  let expected = `{
+    let string = JSON.stringify(o, null, 4);
+    let expected = `{
     "foo": 1,
     "bar": "baz",
     "qux": {
@@ -27,10 +27,10 @@ test("basic functionality", () => {
     }
 }`;
 
-  expect(string).toBe(expected);
+    expect(string).toBe(expected);
 
-  string = JSON.stringify(o, null, "abcd");
-  expected = `{
+    string = JSON.stringify(o, null, "abcd");
+    expected = `{
 abcd"foo": 1,
 abcd"bar": "baz",
 abcd"qux": {
@@ -43,5 +43,5 @@ abcdabcd]
 abcd}
 }`;
 
-  expect(string).toBe(expected);
+    expect(string).toBe(expected);
 });

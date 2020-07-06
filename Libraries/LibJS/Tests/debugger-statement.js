@@ -1,3 +1,3 @@
 test("debugger keyword", () => {
-  expect("debugger").toEval();
+    expect("debugger").toEval();
 });
