@@ -164,19 +164,19 @@ Tab::Tab()
 
     m_link_context_menu = GUI::Menu::construct();
     m_link_context_menu->add_action(GUI::Action::create("Open", [this](auto&) {
-        m_page_view->on_link_click(m_link_context_menu_href, "", 0);
+        m_page_view->on_link_click(m_link_context_menu_url, "", 0);
     }));
     m_link_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
-        m_page_view->on_link_click(m_link_context_menu_href, "_blank", 0);
+        m_page_view->on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
     m_link_context_menu->add_action(GUI::Action::create("Copy link", [this](auto&) {
-        GUI::Clipboard::the().set_data(m_page_view->document()->complete_url(m_link_context_menu_href).to_string());
+        GUI::Clipboard::the().set_data(m_link_context_menu_url.to_string());
     }));
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("Download", [this](auto&) {
         auto window = GUI::Window::construct();
         window->set_rect(300, 300, 300, 150);
-        auto url = m_page_view->document()->complete_url(m_link_context_menu_href);
+        auto url = m_link_context_menu_url;
         window->set_title(String::format("0%% of %s", url.basename().characters()));
         window->set_resizable(false);
         window->set_main_widget<DownloadWidget>(url);
@@ -184,8 +184,8 @@ Tab::Tab()
         (void)window.leak_ref();
     }));
 
-    m_page_view->on_link_context_menu_request = [this](auto& href, auto& screen_position) {
-        m_link_context_menu_href = href;
+    m_page_view->on_link_context_menu_request = [this](auto& url, auto& screen_position) {
+        m_link_context_menu_url = url;
         m_link_context_menu->popup(screen_position);
     };
 

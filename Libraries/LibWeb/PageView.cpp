@@ -201,10 +201,10 @@ void PageView::page_did_request_context_menu(const Gfx::IntPoint& content_positi
         on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void PageView::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const String& href, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+void PageView::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
 {
     if (on_link_context_menu_request)
-        on_link_context_menu_request(href, screen_relative_rect().location().translated(to_widget_position(content_position)));
+        on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
 void PageView::page_did_click_link(const URL& url, const String& target, unsigned modifiers)

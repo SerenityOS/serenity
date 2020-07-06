@@ -73,7 +73,7 @@ private:
     RefPtr<GUI::ToolBarContainer> m_toolbar_container;
 
     RefPtr<GUI::Menu> m_link_context_menu;
-    String m_link_context_menu_href;
+    URL m_link_context_menu_url;
 
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<GUI::Menu> m_page_context_menu;
