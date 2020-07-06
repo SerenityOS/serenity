@@ -46,3 +46,7 @@ undefined
 77
 undefined
 ```
+
+## See also
+
+* [`test-js`(1)](test-js.md)
