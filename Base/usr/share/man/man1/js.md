@@ -25,7 +25,6 @@ Run `help()` in REPL mode to see its available built-in functions.
 * `-l`, `--print-last-result`: Print the result of the last statement executed.
 * `-g`, `--gc-on-every-allocation`: Run garbage collection on every allocation.
 * `-s`, `--no-syntax-highlight`: Disable live syntax highlighting in the REPL
-* `-t`, `--test-mode`: Run the interpreter with added functionality for the test harness
 
 ## Examples
 
@@ -47,26 +46,3 @@ undefined
 77
 undefined
 ```
-
-## Test mode
-
-In test mode, the `load()` function is added to the global object and can be used
-to load further test utility functions defined in `LibJS/Tests/test-common.js`.
-
-Typically a test will look like this:
-
-```js
-load("test-common.js");
-
-try {
-    // test feature
-    console.log("PASS");
-} catch (e) {
-    console.log("FAIL: " + e);
-}
-```
-
-Available functions in `test-common.js`:
-
-* `assert(expression)`: Throws an `AssertionError` if condition does not evaluate to a truthy value
-* `assertNotReached()`: Throws an `AssertionError`, use to ensure certain code paths are never reached
