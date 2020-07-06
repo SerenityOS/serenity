@@ -56,18 +56,9 @@ int main(int, char**)
     (void)*new ProtocolServer::GeminiProtocol;
     (void)*new ProtocolServer::HttpProtocol;
     (void)*new ProtocolServer::HttpsProtocol;
-    auto server = Core::LocalServer::construct();
-    bool ok = server->take_over_from_system_server();
-    ASSERT(ok);
-    server->on_ready_to_accept = [&] {
-        auto client_socket = server->accept();
-        if (!client_socket) {
-            dbg() << "ProtocolServer: accept failed.";
-            return;
-        }
-        static int s_next_client_id = 0;
-        int client_id = ++s_next_client_id;
-        IPC::new_client_connection<ProtocolServer::ClientConnection>(*client_socket, client_id);
-    };
+
+    auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
+    ASSERT(socket);
+    IPC::new_client_connection<ProtocolServer::ClientConnection>(socket.release_nonnull(), 1);
     return event_loop.exec();
 }

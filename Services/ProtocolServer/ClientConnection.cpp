@@ -48,6 +48,8 @@ ClientConnection::~ClientConnection()
 void ClientConnection::die()
 {
     s_connections.remove(client_id());
+    if (s_connections.is_empty())
+        Core::EventLoop::current().quit(0);
 }
 
 OwnPtr<Messages::ProtocolServer::IsSupportedProtocolResponse> ClientConnection::handle(const Messages::ProtocolServer::IsSupportedProtocol& message)
