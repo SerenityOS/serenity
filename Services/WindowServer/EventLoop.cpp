@@ -63,7 +63,7 @@ EventLoop::EventLoop()
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<ClientConnection>(*client_socket, client_id);
+        IPC::new_client_connection<ClientConnection>(client_socket.release_nonnull(), client_id);
     };
 
     ASSERT(m_keyboard_fd >= 0);

@@ -84,7 +84,7 @@ public:
     void notify_display_link(Badge<Compositor>);
 
 private:
-    explicit ClientConnection(Core::LocalSocket&, int client_id);
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
     // ^ClientConnection
     virtual void die() override;

@@ -41,8 +41,8 @@ void ClientConnection::for_each_client(Function<void(ClientConnection&)> callbac
     }
 }
 
-ClientConnection::ClientConnection(Core::LocalSocket& socket, int client_id)
-    : IPC::ClientConnection<ClipboardServerEndpoint>(*this, socket, client_id)
+ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+    : IPC::ClientConnection<ClipboardServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);
 }

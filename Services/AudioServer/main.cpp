@@ -49,7 +49,7 @@ int main(int, char**)
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<AudioServer::ClientConnection>(*client_socket, client_id, mixer);
+        IPC::new_client_connection<AudioServer::ClientConnection>(client_socket.release_nonnull(), client_id, mixer);
     };
 
     if (pledge("stdio thread shared_buffer accept", nullptr) < 0) {

@@ -43,7 +43,7 @@ class ClientConnection final : public IPC::ClientConnection<AudioServerEndpoint>
     , public AudioServerEndpoint {
     C_OBJECT(ClientConnection)
 public:
-    explicit ClientConnection(Core::LocalSocket&, int client_id, Mixer& mixer);
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id, Mixer& mixer);
     ~ClientConnection() override;
 
     void did_finish_playing_buffer(Badge<BufferQueue>, int buffer_id);

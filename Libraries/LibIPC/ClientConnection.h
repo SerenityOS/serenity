@@ -48,7 +48,7 @@ public:
         Invalid = 2000,
         Disconnected,
     };
-    Event() {}
+    Event() { }
     explicit Event(Type type)
         : Core::Event(type)
     {
@@ -78,19 +78,18 @@ NonnullRefPtr<T> new_client_connection(Args&&... args)
 template<typename Endpoint>
 class ClientConnection : public Core::Object {
 public:
-    ClientConnection(Endpoint& endpoint, Core::LocalSocket& socket, int client_id)
+    ClientConnection(Endpoint& endpoint, NonnullRefPtr<Core::LocalSocket> socket, int client_id)
         : m_endpoint(endpoint)
-        , m_socket(socket)
+        , m_socket(move(socket))
         , m_client_id(client_id)
     {
-        ASSERT(socket.is_connected());
+        ASSERT(m_socket->is_connected());
         ucred creds;
         socklen_t creds_size = sizeof(creds);
         if (getsockopt(m_socket->fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
             ASSERT_NOT_REACHED();
         }
         m_client_pid = creds.pid;
-        add_child(socket);
         m_socket->on_ready_to_read = [this] { drain_messages_from_client(); };
 
         m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
@@ -100,8 +99,8 @@ public:
     {
     }
 
-    virtual void may_have_become_unresponsive() {}
-    virtual void did_become_responsive() {}
+    virtual void may_have_become_unresponsive() { }
+    virtual void did_become_responsive() { }
 
     void post_message(const Message& message)
     {
@@ -223,7 +222,7 @@ protected:
 
 private:
     Endpoint& m_endpoint;
-    RefPtr<Core::LocalSocket> m_socket;
+    NonnullRefPtr<Core::LocalSocket> m_socket;
     RefPtr<Core::Timer> m_responsiveness_timer;
     int m_client_id { -1 };
     int m_client_pid { -1 };
