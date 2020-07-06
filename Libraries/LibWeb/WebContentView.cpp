@@ -29,6 +29,7 @@
 #include <AK/SharedBuffer.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/SystemTheme.h>
 
 WebContentView::WebContentView()
@@ -129,12 +130,16 @@ void WebContentView::notify_server_did_request_scroll_into_view(Badge<WebContent
 
 void WebContentView::notify_server_did_hover_link(Badge<WebContentClient>, const URL& url)
 {
+    if (window())
+        window()->set_override_cursor(GUI::StandardCursor::Hand);
     if (on_link_hover)
         on_link_hover(url);
 }
 
 void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
 {
+    if (window())
+        window()->set_override_cursor(GUI::StandardCursor::None);
     if (on_link_hover)
         on_link_hover({});
 }
