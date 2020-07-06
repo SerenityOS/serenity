@@ -69,6 +69,7 @@ NonnullOwnPtr<Region> Region::clone()
 {
     ASSERT(Process::current());
 
+    ScopedSpinLock lock(s_mm_lock);
     if (m_inherit_mode == InheritMode::ZeroedOnFork) {
         ASSERT(m_mmap);
         ASSERT(!m_shared);
@@ -122,16 +123,21 @@ bool Region::commit()
     dbg() << "MM: Commit " << page_count() << " pages in Region " << this << " (VMO=" << &vmobject() << ") at " << vaddr();
 #endif
     for (size_t i = 0; i < page_count(); ++i) {
-        if (!commit(i))
+        if (!commit(i)) {
+            // Flush what we did commit
+            if (i > 0)
+                MM.flush_tlb(vaddr(), i + 1);
             return false;
+        }
     }
+    MM.flush_tlb(vaddr(), page_count());
     return true;
 }
 
 bool Region::commit(size_t page_index)
 {
     ASSERT(vmobject().is_anonymous() || vmobject().is_purgeable());
-    ScopedSpinLock lock(s_mm_lock);
+    ASSERT(s_mm_lock.own_lock());
     auto& vmobject_physical_page_entry = physical_page_slot(page_index);
     if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
         return true;
@@ -142,7 +148,7 @@ bool Region::commit(size_t page_index)
         return false;
     }
     vmobject_physical_page_entry = move(physical_page);
-    remap_page(page_index);
+    remap_page(page_index, false); // caller is in charge of flushing tlb
     return true;
 }
 
@@ -224,7 +230,7 @@ Bitmap& Region::ensure_cow_map() const
 
 void Region::map_individual_page_impl(size_t page_index)
 {
-    auto page_vaddr = vaddr().offset(page_index * PAGE_SIZE);
+    auto page_vaddr = vaddr_from_page_index(page_index);
     auto& pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     auto* page = physical_page(page_index);
     if (!page || (!is_readable() && !is_writable())) {
@@ -244,15 +250,16 @@ void Region::map_individual_page_impl(size_t page_index)
         dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << page->paddr() << " (@" << page << ")";
 #endif
     }
-    MM.flush_tlb(page_vaddr);
 }
 
-void Region::remap_page(size_t page_index)
+void Region::remap_page(size_t page_index, bool with_flush)
 {
     ASSERT(m_page_directory);
     ScopedSpinLock lock(s_mm_lock);
     ASSERT(physical_page(page_index));
     map_individual_page_impl(page_index);
+    if (with_flush)
+        MM.flush_tlb(vaddr_from_page_index(page_index));
 }
 
 void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
@@ -260,15 +267,15 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
     ScopedSpinLock lock(s_mm_lock);
     ASSERT(m_page_directory);
     for (size_t i = 0; i < page_count(); ++i) {
-        auto vaddr = this->vaddr().offset(i * PAGE_SIZE);
+        auto vaddr = vaddr_from_page_index(i);
         auto& pte = MM.ensure_pte(*m_page_directory, vaddr);
         pte.clear();
-        MM.flush_tlb(vaddr);
 #ifdef MM_DEBUG
         auto* page = physical_page(i);
         dbg() << "MM: >> Unmapped " << vaddr << " => P" << String::format("%p", page ? page->paddr().get() : 0) << " <<";
 #endif
     }
+    MM.flush_tlb(vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes) {
         if (m_page_directory->range_allocator().contains(range()))
             m_page_directory->range_allocator().deallocate(range());
@@ -281,18 +288,20 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 void Region::set_page_directory(PageDirectory& page_directory)
 {
     ASSERT(!m_page_directory || m_page_directory == &page_directory);
-    ScopedSpinLock lock(s_mm_lock);
+    ASSERT(s_mm_lock.own_lock());
     m_page_directory = page_directory;
 }
+
 void Region::map(PageDirectory& page_directory)
 {
-    set_page_directory(page_directory);
     ScopedSpinLock lock(s_mm_lock);
+    set_page_directory(page_directory);
 #ifdef MM_DEBUG
     dbg() << "MM: Region::map() will map VMO pages " << first_page_index() << " - " << last_page_index() << " (VMO page count: " << vmobject().page_count() << ")";
 #endif
     for (size_t page_index = 0; page_index < page_count(); ++page_index)
         map_individual_page_impl(page_index);
+    MM.flush_tlb(vaddr(), page_count());
 }
 
 void Region::remap()

@@ -117,6 +117,11 @@ public:
     {
         return (vaddr - m_range.base()).get() / PAGE_SIZE;
     }
+    
+    VirtualAddress vaddr_from_page_index(size_t page_index) const
+    {
+        return vaddr().offset(page_index * PAGE_SIZE);
+    }
 
     size_t first_page_index() const
     {
@@ -151,7 +156,6 @@ public:
     }
 
     bool commit();
-    bool commit(size_t page_index);
 
     size_t amount_resident() const;
     size_t amount_shared() const;
@@ -175,7 +179,6 @@ public:
     void unmap(ShouldDeallocateVirtualMemoryRange = ShouldDeallocateVirtualMemoryRange::Yes);
 
     void remap();
-    void remap_page(size_t index);
 
     // For InlineLinkedListNode
     Region* m_next { nullptr };
@@ -196,6 +199,9 @@ private:
         else
             m_access &= ~access;
     }
+
+    bool commit(size_t page_index);
+    void remap_page(size_t index, bool with_flush = true);
 
     PageFaultResponse handle_cow_fault(size_t page_index);
     PageFaultResponse handle_inode_fault(size_t page_index);
