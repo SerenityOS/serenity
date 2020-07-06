@@ -43,6 +43,7 @@ WebContentView::~WebContentView()
 
 void WebContentView::load(const URL& url)
 {
+    m_url = url;
     client().post_message(Messages::WebContentServer::LoadURL(url));
 }
 
