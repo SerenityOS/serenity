@@ -111,6 +111,10 @@ public:
 
     Reference get_reference(const FlyString& name);
 
+    Symbol* get_global_symbol(const String& description);
+    Symbol* get_well_known_symbol(const String& description) const;
+    const HashMap<String, Symbol*>& get_well_known_symbol_map(Badge<SymbolConstructor>) const { return m_well_known_symbol_map; };
+
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);
 
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
@@ -216,6 +220,9 @@ private:
     Vector<CallFrame> m_call_stack;
 
     Object* m_global_object { nullptr };
+
+    HashMap<String, Symbol*> m_well_known_symbol_map;
+    HashMap<String, Symbol*> m_global_symbol_map;
 
     Exception* m_exception { nullptr };
 

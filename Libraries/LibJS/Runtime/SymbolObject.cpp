@@ -34,21 +34,6 @@
 
 namespace JS {
 
-HashMap<String, Value> SymbolObject::s_global_symbol_map;
-
-Value SymbolObject::s_well_known_iterator;
-Value SymbolObject::s_well_known_async_terator;
-Value SymbolObject::s_well_known_match;
-Value SymbolObject::s_well_known_match_all;
-Value SymbolObject::s_well_known_replace;
-Value SymbolObject::s_well_known_search;
-Value SymbolObject::s_well_known_split;
-Value SymbolObject::s_well_known_has_instance;
-Value SymbolObject::s_well_known_is_concat_spreadable;
-Value SymbolObject::s_well_known_unscopables;
-Value SymbolObject::s_well_known_species;
-Value SymbolObject::s_well_known_to_primtive;
-Value SymbolObject::s_well_known_to_string_tag;
 
 SymbolObject* SymbolObject::create(GlobalObject& global_object, Symbol& primitive_symbol)
 {
@@ -63,54 +48,6 @@ SymbolObject::SymbolObject(Symbol& symbol, Object& prototype)
 
 SymbolObject::~SymbolObject()
 {
-}
-
-Value SymbolObject::get_global(Interpreter& interpreter, String description)
-{
-    auto global_symbol = s_global_symbol_map.get(description);
-    if (global_symbol.has_value())
-        return global_symbol.value();
-
-    auto symbol = js_symbol(interpreter, description, true);
-    s_global_symbol_map.set(description, symbol);
-    return Value(symbol);
-}
-
-void SymbolObject::initialize_well_known_symbols(Interpreter& interpreter)
-{
-    SymbolObject::s_well_known_iterator = Value(js_symbol(interpreter, "Symbol.iterator", false));
-    SymbolObject::s_well_known_async_terator = Value(js_symbol(interpreter, "Symbol.asyncIterator", false));
-    SymbolObject::s_well_known_match = Value(js_symbol(interpreter, "Symbol.match", false));
-    SymbolObject::s_well_known_match_all = Value(js_symbol(interpreter, "Symbol.matchAll", false));
-    SymbolObject::s_well_known_replace = Value(js_symbol(interpreter, "Symbol.replace", false));
-    SymbolObject::s_well_known_search = Value(js_symbol(interpreter, "Symbol.search", false));
-    SymbolObject::s_well_known_split = Value(js_symbol(interpreter, "Symbol.split", false));
-    SymbolObject::s_well_known_has_instance = Value(js_symbol(interpreter, "Symbol.hasInstance", false));
-    SymbolObject::s_well_known_is_concat_spreadable = Value(js_symbol(interpreter, "Symbol.isConcatSpreadable", false));
-    SymbolObject::s_well_known_unscopables = Value(js_symbol(interpreter, "Symbol.unscopables", false));
-    SymbolObject::s_well_known_species = Value(js_symbol(interpreter, "Symbol.species", false));
-    SymbolObject::s_well_known_to_primtive = Value(js_symbol(interpreter, "Symbol.toPrimitive", false));
-    SymbolObject::s_well_known_to_string_tag = Value(js_symbol(interpreter, "Symbol.toStringTag", false));
-}
-
-void SymbolObject::gather_symbol_roots(HashTable<Cell*>& roots)
-{
-    for (auto& global_symbol : s_global_symbol_map) 
-        roots.set(&global_symbol.value.as_symbol());
-
-    roots.set(&s_well_known_iterator.as_symbol());
-    roots.set(&s_well_known_async_terator.as_symbol());
-    roots.set(&s_well_known_match.as_symbol());
-    roots.set(&s_well_known_match_all.as_symbol());
-    roots.set(&s_well_known_replace.as_symbol());
-    roots.set(&s_well_known_search.as_symbol());
-    roots.set(&s_well_known_split.as_symbol());
-    roots.set(&s_well_known_has_instance.as_symbol());
-    roots.set(&s_well_known_is_concat_spreadable.as_symbol());
-    roots.set(&s_well_known_unscopables.as_symbol());
-    roots.set(&s_well_known_species.as_symbol());
-    roots.set(&s_well_known_to_primtive.as_symbol());
-    roots.set(&s_well_known_to_string_tag.as_symbol());
 }
 
 void SymbolObject::visit_children(Cell::Visitor& visitor)
