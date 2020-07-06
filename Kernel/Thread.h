@@ -300,12 +300,42 @@ public:
     u64 sleep(u32 ticks);
     u64 sleep_until(u64 wakeup_time);
 
-    enum class BlockResult {
-        WokeNormally,
-        NotBlocked,
-        InterruptedBySignal,
-        InterruptedByDeath,
-        InterruptedByTimeout,
+    class BlockResult {
+    public:
+        enum Type {
+            WokeNormally,
+            NotBlocked,
+            InterruptedBySignal,
+            InterruptedByDeath,
+            InterruptedByTimeout,
+        };
+
+        BlockResult() = delete;
+
+        BlockResult(Type type)
+            : m_type(type)
+        {
+        }
+
+        bool operator==(Type type) const
+        {
+            return m_type == type;
+        }
+
+        bool was_interrupted() const
+        {
+            switch (m_type) {
+            case InterruptedBySignal:
+            case InterruptedByDeath:
+            case InterruptedByTimeout:
+                return true;
+            default:
+                return false;
+            }
+        }
+
+    private:
+        Type m_type;
     };
 
     template<typename T, class... Args>

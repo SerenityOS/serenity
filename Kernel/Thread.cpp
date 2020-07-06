@@ -226,7 +226,7 @@ u64 Thread::sleep(u32 ticks)
     u64 wakeup_time = g_uptime + ticks;
     auto ret = Thread::current()->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime) {
-        ASSERT(ret != Thread::BlockResult::WokeNormally);
+        ASSERT(ret.was_interrupted());
     }
     return wakeup_time;
 }
@@ -236,7 +236,7 @@ u64 Thread::sleep_until(u64 wakeup_time)
     ASSERT(state() == Thread::Running);
     auto ret = Thread::current()->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime)
-        ASSERT(ret != Thread::BlockResult::WokeNormally);
+        ASSERT(ret.was_interrupted());
     return wakeup_time;
 }
 
@@ -937,16 +937,17 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // we were in one while being called.
     }
 
-    BlockResult result;
+    BlockResult result(BlockResult::WokeNormally);
     {
         // To be able to look at m_wait_queue_node we once again need the
         // scheduler lock, which is held when we insert into the queue
         ScopedSpinLock sched_lock(g_scheduler_lock);
 
-        result = m_wait_queue_node.is_in_list() ? BlockResult::InterruptedByTimeout : BlockResult::WokeNormally;
+        if (m_wait_queue_node.is_in_list())
+            result = BlockResult::InterruptedByTimeout;
 
         // Make sure we cancel the timer if woke normally.
-        if (timeout && result == BlockResult::WokeNormally)
+        if (timeout && !result.was_interrupted())
             TimerQueue::the().cancel_timer(timer_id);
     }
 

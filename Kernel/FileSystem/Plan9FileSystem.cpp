@@ -423,7 +423,7 @@ KResult Plan9FS::post_message(Message& message)
 
     while (size > 0) {
         if (!description.can_write()) {
-            if (Thread::current()->block<Thread::WriteBlocker>(description) != Thread::BlockResult::WokeNormally)
+            if (Thread::current()->block<Thread::WriteBlocker>(description).was_interrupted())
                 return KResult(-EINTR);
         }
         ssize_t nwritten = description.write(data, size);
@@ -441,7 +441,7 @@ KResult Plan9FS::do_read(u8* data, size_t size)
     auto& description = file_description();
     while (size > 0) {
         if (!description.can_read()) {
-            if (Thread::current()->block<Thread::ReadBlocker>(description) != Thread::BlockResult::WokeNormally)
+            if (Thread::current()->block<Thread::ReadBlocker>(description).was_interrupted())
                 return KResult(-EINTR);
         }
         ssize_t nread = description.read(data, size);
@@ -524,8 +524,7 @@ KResult Plan9FS::wait_for_specific_message(u16 tag, Message& out_message)
     // Block until either:
     // * Someone else reads the message we're waiting for, and hands it to us;
     // * Or we become the one to read and dispatch messages.
-    auto block_result = Thread::current()->block<Plan9FS::Blocker>(completion);
-    if (block_result != Thread::BlockResult::WokeNormally) {
+    if (Thread::current()->block<Plan9FS::Blocker>(completion).was_interrupted()) {
         LOCKER(m_lock);
         m_completions.remove(tag);
         return KResult(-EINTR);

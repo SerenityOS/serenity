@@ -250,7 +250,7 @@ ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* bu
         locker.lock();
 
         if (!m_can_read) {
-            if (res != Thread::BlockResult::WokeNormally)
+            if (res.was_interrupted())
                 return -EINTR;
 
             // Unblocked due to timeout.
@@ -300,7 +300,7 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
         locker.lock();
 
         if (!m_can_read) {
-            if (res != Thread::BlockResult::WokeNormally)
+            if (res.was_interrupted())
                 return -EINTR;
 
             // Unblocked due to timeout.
