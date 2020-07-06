@@ -22,6 +22,8 @@ This process hosts the main HTML/CSS engine (**LibWeb**.) It also runs JavaScrip
 
 This process can speak networking protocols (like HTTP, HTTPS, and Gemini) to the outside world. Each **WebContent** process gets its own **ProtocolServer** to do networking on its behalf.
 
+For DNS lookups, **ProtocolServer** asks for help from the system's global **LookupServer** service, which handles all outgoing DNS requests.
+
 ### Process: ImageDecoder
 
 This process can decode images (PNG, JPEG, BMP, ICO, PBM, etc.) into bitmaps. Each image is decoded in a fresh **ImageDecoder** process. These are strongly sandboxed and can't do much except receive encoded bitmap data and return a bitmap to **WebContent** if decoding successful.
