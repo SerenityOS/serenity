@@ -55,14 +55,12 @@ public:
     virtual void initialize() override;
     virtual ~ReplObject() override;
 
-    JS_DECLARE_NATIVE_FUNCTION(load_file);
-    JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
-
 private:
     virtual const char* class_name() const override { return "ReplObject"; }
 
     JS_DECLARE_NATIVE_FUNCTION(exit_interpreter);
     JS_DECLARE_NATIVE_FUNCTION(repl_help);
+    JS_DECLARE_NATIVE_FUNCTION(load_file);
     JS_DECLARE_NATIVE_FUNCTION(save_to_file);
 };
 
@@ -441,11 +439,6 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
     return JS::Value(true);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ReplObject::is_strict_mode)
-{
-    return JS::Value(interpreter.in_strict_mode());
-}
-
 void repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
@@ -455,12 +448,6 @@ void repl(JS::Interpreter& interpreter)
         repl_statements.append(piece);
         parse_and_run(interpreter, piece);
     }
-}
-
-void enable_test_mode(JS::Interpreter& interpreter)
-{
-    interpreter.global_object().define_native_function("load", ReplObject::load_file);
-    interpreter.global_object().define_native_function("isStrictMode", ReplObject::is_strict_mode);
 }
 
 static Function<void()> interrupt_interpreter;
@@ -549,7 +536,6 @@ int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
-    bool test_mode = false;
     const char* script_path = nullptr;
 
     Core::ArgsParser args_parser;
@@ -557,7 +543,6 @@ int main(int argc, char** argv)
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
-    args_parser.add_option(test_mode, "Run the interpreter with added functionality for the test harness", "test-mode", 't');
     args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -577,8 +562,6 @@ int main(int argc, char** argv)
         interpreter->console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         interpreter->set_underscore_is_last_value(true);
-        if (test_mode)
-            enable_test_mode(*interpreter);
 
         s_editor = Line::Editor::construct();
 
@@ -861,8 +844,6 @@ int main(int argc, char** argv)
         ReplConsoleClient console_client(interpreter->console());
         interpreter->console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-        if (test_mode)
-            enable_test_mode(*interpreter);
 
         signal(SIGINT, [](int) {
             sigint_handler();
