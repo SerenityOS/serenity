@@ -27,7 +27,9 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LogStream.h>
+#include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
@@ -40,268 +42,6 @@
 #include <sys/time.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
-
-// FIXME: Will eventually not be necessary when all tests are converted
-Vector<String> tests_to_run = {
-    "builtins/Array/Array.js",
-    "builtins/Array/array-basic.js",
-    "builtins/Array/array-length-setter.js",
-    "builtins/Array/array-shrink-during-find-crash.js",
-    "builtins/Array/array-spread.js",
-    "builtins/Array/Array.isArray.js",
-    "builtins/Array/Array.of.js",
-    "builtins/Array/Array.prototype-generic-functions.js",
-    "builtins/Array/Array.prototype.concat.js",
-    "builtins/Array/Array.prototype.every.js",
-    "builtins/Array/Array.prototype.fill.js",
-    "builtins/Array/Array.prototype.filter.js",
-    "builtins/Array/Array.prototype.find.js",
-    "builtins/Array/Array.prototype.findIndex.js",
-    "builtins/Array/Array.prototype.forEach.js",
-    "builtins/Array/Array.prototype.includes.js",
-    "builtins/Array/Array.prototype.indexOf.js",
-    "builtins/Array/Array.prototype.join.js",
-    "builtins/Array/Array.prototype.lastIndexOf.js",
-    "builtins/Array/Array.prototype.map.js",
-    "builtins/Array/Array.prototype.pop.js",
-    "builtins/Array/Array.prototype.push.js",
-    "builtins/Array/Array.prototype.reduce.js",
-    "builtins/Array/Array.prototype.reduceRight.js",
-    "builtins/Array/Array.prototype.reverse.js",
-    "builtins/Array/Array.prototype.shift.js",
-    "builtins/Array/Array.prototype.slice.js",
-    "builtins/Array/Array.prototype.some.js",
-    "builtins/Array/Array.prototype.splice.js",
-    "builtins/Array/Array.prototype.toLocaleString.js",
-    "builtins/Array/Array.prototype.toString.js",
-    "builtins/Array/Array.prototype.unshift.js",
-    "builtins/BigInt/BigInt.js",
-    "builtins/BigInt/bigint-basic.js",
-    "builtins/BigInt/bigint-number-mix-errors.js",
-    "builtins/BigInt/BigInt.prototype.toLocaleString.js",
-    "builtins/BigInt/BigInt.prototype.toString.js",
-    "builtins/BigInt/BigInt.prototype.valueOf.js",
-    "builtins/Boolean/Boolean.js",
-    "builtins/Boolean/Boolean.prototype.js",
-    "builtins/Boolean/Boolean.prototype.toString.js",
-    "builtins/Boolean/Boolean.prototype.valueOf.js",
-    "builtins/Date/Date.js",
-    "builtins/Date/Date.now.js",
-    "builtins/Date/Date.prototype.getDate.js",
-    "builtins/Date/Date.prototype.getDay.js",
-    "builtins/Date/Date.prototype.getFullYear.js",
-    "builtins/Date/Date.prototype.getHours.js",
-    "builtins/Date/Date.prototype.getMilliseconds.js",
-    "builtins/Date/Date.prototype.getMinutes.js",
-    "builtins/Date/Date.prototype.getMonth.js",
-    "builtins/Date/Date.prototype.getSeconds.js",
-    "builtins/Date/Date.prototype.getTime.js",
-    "builtins/Error/Error.js",
-    "builtins/Error/Error.prototype.name.js",
-    "builtins/Error/Error.prototype.toString.js",
-    "builtins/Function/Function.js",
-    "builtins/Function/Function.prototype.apply.js",
-    "builtins/Function/Function.prototype.bind.js",
-    "builtins/Function/Function.prototype.call.js",
-    "builtins/Function/Function.prototype.toString.js",
-    "builtins/functions/isFinite.js",
-    "builtins/functions/isNaN.js",
-    "builtins/functions/parseFloat.js",
-    "builtins/Infinity/Infinity.js",
-    "builtins/JSON/JSON.parse.js",
-    "builtins/JSON/JSON.parse-reviver.js",
-    "builtins/JSON/JSON.stringify.js",
-    "builtins/JSON/JSON.stringify-order.js",
-    "builtins/JSON/JSON.stringify-proxy.js",
-    "builtins/JSON/JSON.stringify-replacer.js",
-    "builtins/JSON/JSON.stringify-space.js",
-    "builtins/Math/Math-constants.js",
-    "builtins/Math/Math.abs.js",
-    "builtins/Math/Math.acosh.js",
-    "builtins/Math/Math.asinh.js",
-    "builtins/Math/Math.atanh.js",
-    "builtins/Math/Math.cbrt.js",
-    "builtins/Math/Math.ceil.js",
-    "builtins/Math/Math.clz32.js",
-    "builtins/Math/Math.cos.js",
-    "builtins/Math/Math.exp.js",
-    "builtins/Math/Math.expm1.js",
-    "builtins/Math/Math.floor.js",
-    "builtins/Math/Math.log1p.js",
-    "builtins/Math/Math.max.js",
-    "builtins/Math/Math.min.js",
-    "builtins/Math/Math.pow.js",
-    "builtins/Math/Math.sign.js",
-    "builtins/Math/Math.sqrt.js",
-    "builtins/Math/Math.tan.js",
-    "builtins/Math/Math.trunc.js",
-    "builtins/NaN/NaN.js",
-    "builtins/Number/Number.js",
-    "builtins/Number/Number-constants.js",
-    "builtins/Number/Number.isFinite.js",
-    "builtins/Number/Number.isInteger.js",
-    "builtins/Number/Number.isNaN.js",
-    "builtins/Number/Number.isSafeInteger.js",
-    "builtins/Number/Number.parseFloat.js",
-    "builtins/Number/Number.prototype.js",
-    "builtins/Object/Object.js",
-    "builtins/Object/Object.defineProperty.js",
-    "builtins/Object/Object.entries.js",
-    "builtins/Object/Object.getOwnPropertyDescriptor.js",
-    "builtins/Object/Object.getOwnPropertyNames.js",
-    "builtins/Object/Object.getPrototypeOf.js",
-    "builtins/Object/Object.is.js",
-    "builtins/Object/Object.isExtensible.js",
-    "builtins/Object/Object.keys.js",
-    "builtins/Object/Object.preventExtensions.js",
-    "builtins/Object/Object.prototype.js",
-    "builtins/Object/Object.prototype.constructor.js",
-    "builtins/Object/Object.prototype.hasOwnProperty.js",
-    "builtins/Object/Object.prototype.toLocaleString.js",
-    "builtins/Object/Object.prototype.toString.js",
-    "builtins/Object/Object.setPrototypeOf.js",
-    "builtins/Object/Object.values.js",
-    "builtins/Proxy/Proxy.js",
-    "builtins/Proxy/Proxy.handler-apply.js",
-    "builtins/Proxy/Proxy.handler-construct.js",
-    "builtins/Proxy/Proxy.handler-defineProperty.js",
-    "builtins/Proxy/Proxy.handler-deleteProperty.js",
-    "builtins/Proxy/Proxy.handler-get.js",
-    "builtins/Proxy/Proxy.handler-getOwnPropertyDescriptor.js",
-    "builtins/Proxy/Proxy.handler-getPrototypeOf.js",
-    "builtins/Proxy/Proxy.handler-has.js",
-    "builtins/Proxy/Proxy.handler-isExtensible.js",
-    "builtins/Proxy/Proxy.handler-preventExtensions.js",
-    "builtins/Proxy/Proxy.handler-set.js",
-    "builtins/Proxy/Proxy.handler-setPrototypeOf.js",
-    "builtins/Reflect/Reflect.apply.js",
-    "builtins/Reflect/Reflect.construct.js",
-    "builtins/Reflect/Reflect.defineProperty.js",
-    "builtins/Reflect/Reflect.deleteProperty.js",
-    "builtins/Reflect/Reflect.get.js",
-    "builtins/Reflect/Reflect.getOwnPropertyDescriptor.js",
-    "builtins/Reflect/Reflect.getPrototypeOf.js",
-    "builtins/Reflect/Reflect.has.js",
-    "builtins/Reflect/Reflect.isExtensible.js",
-    "builtins/Reflect/Reflect.ownKeys.js",
-    "builtins/Reflect/Reflect.preventExtensions.js",
-    "builtins/Reflect/Reflect.set.js",
-    "builtins/Reflect/Reflect.setPrototypeOf.js",
-    "builtins/String/String.js",
-    "builtins/String/String.fromCharCode.js",
-    "builtins/String/String.prototype.js",
-    "builtins/String/String.prototype-generic-functions.js",
-    "builtins/String/String.prototype.charAt.js",
-    "builtins/String/String.prototype.includes.js",
-    "builtins/String/String.prototype.indexOf.js",
-    "builtins/String/String.prototype.lastIndexOf.js",
-    "builtins/String/String.prototype.padEnd.js",
-    "builtins/String/String.prototype.padStart.js",
-    "builtins/String/String.prototype.repeat.js",
-    "builtins/String/String.prototype.slice.js",
-    "builtins/String/String.prototype.startsWith.js",
-    "builtins/String/String.prototype.substring.js",
-    "builtins/String/String.prototype.toLowerCase.js",
-    "builtins/String/String.prototype.toString.js",
-    "builtins/String/String.prototype.toUpperCase.js",
-    "builtins/String/String.prototype.trim.js",
-    "builtins/String/String.prototype.valueOf.js",
-    "builtins/String/String.raw.js",
-    "builtins/Symbol/Symbol.js",
-    "builtins/Symbol/Symbol.for.js",
-    "builtins/Symbol/Symbol.keyFor.js",
-    "builtins/Symbol/Symbol.prototype.toString.js",
-    "builtins/Symbol/Symbol.prototype.valueOf.js",
-    "classes/class-advanced-extends.js",
-    "classes/class-basic.js",
-    "classes/class-constructor.js",
-    "classes/class-errors.js",
-    "classes/class-expressions.js",
-    "classes/class-getters.js",
-    "classes/class-inheritance.js",
-    "classes/class-methods.js",
-    "classes/class-setters.js",
-    "classes/class-static.js",
-    "classes/class-static-getters.js",
-    "classes/class-static-setters.js",
-    "classes/class-strict-mode.js",
-    "functions/arrow-functions.js",
-    "functions/constructor-basic.js",
-    "functions/function-default-parameters.js",
-    "functions/function-hoisting.js",
-    "functions/function-length.js",
-    "functions/function-missing-arg.js",
-    "functions/function-name.js",
-    "functions/function-rest-params.js",
-    "functions/function-spread.js",
-    "functions/function-strict-mode.js",
-    "functions/function-this-in-arguments.js",
-    "functions/function-TypeError.js",
-    "loops/continue-basic.js",
-    "loops/do-while-basic.js",
-    "loops/for-basic.js",
-    "loops/for-head-errors.js",
-    "loops/for-in-basic.js",
-    "loops/for-no-curlies.js",
-    "loops/for-of-basic.js",
-    "loops/for-scopes.js",
-    "loops/while-basic.js",
-    "operators/assignment-operators.js",
-    "operators/binary-bitwise-left-shift.js",
-    "operators/binary-bitwise-or.js",
-    "operators/binary-bitwise-right-shift.js",
-    "operators/binary-bitwise-unsigned-right-shift.js",
-    "operators/binary-relational.js",
-    "operators/comma-operator.js",
-    "operators/delete-basic.js",
-    "operators/delete-global-variable.js",
-    "operators/delete-globalThis-property-crash.js",
-    "operators/in-operator-basic.js",
-    "operators/instanceof-basic.js",
-    "operators/logical-and.js",
-    "operators/logical-expressions-short-circuit.js",
-    "operators/logical-nullish-coalescing.js",
-    "operators/logical-or.js",
-    "operators/modulo-basic.js",
-    "operators/ternary-basic.js",
-    "operators/typeof-basic.js",
-    "operators/void-basic.js",
-    "add-values-to-primitive.js",
-    "automatic-semicolon-insertion.js",
-    "comments-basic.js",
-    "const-reassignment.js",
-    "debugger-statement.js",
-    "empty-statements.js",
-    "exception-ReferenceError.js",
-    "exponentiation-basic.js",
-    "indexed-access-string-object.js",
-    "invalid-lhs-in-assignment.js",
-    "let-scoping.js",
-    "new-expression.js",
-    "numeric-literals-basic.js",
-    "object-basic.js",
-    "object-getter-setter-shorthand.js",
-    "object-method-shorthand.js",
-    "object-spread.js",
-    "parser-unary-associativity.js",
-    "program-strict-mode.js",
-    "strict-mode-errors.js",
-    "string-escapes.js",
-    "string-spread.js",
-    "switch-basic.js",
-    "switch-break.js",
-    "tagged-template-literals.js",
-    "template-literals.js",
-    "test-common-tests.js",
-    "throw-basic.js",
-    "to-number-basic.js",
-    "to-number-exception.js",
-    "update-expression-on-member-expression.js",
-    "update-expressions-basic.js",
-    "var-multiple-declarator.js",
-    "var-scoping.js",
-    "variable-undefined.js",
-};
 
 enum class TestResult {
     Pass,
@@ -347,7 +87,18 @@ struct JSTestRunnerCounts {
     int files_total { 0 };
 };
 
-using JSTestRunnerResult = Vector<JSFileResult>;
+class TestRunnerGlobalObject : public JS::GlobalObject {
+public:
+    TestRunnerGlobalObject();
+    virtual ~TestRunnerGlobalObject() override;
+
+    virtual void initialize() override;
+
+private:
+    virtual const char* class_name() const override { return "TestRunnerGlobalObject"; }
+
+    JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
+};
 
 class TestRunner {
 public:
@@ -373,19 +124,6 @@ private:
     RefPtr<JS::Program> m_test_program;
 };
 
-class TestRunnerGlobalObject : public JS::GlobalObject {
-public:
-    TestRunnerGlobalObject();
-    virtual ~TestRunnerGlobalObject() override;
-
-    virtual void initialize() override;
-
-private:
-    virtual const char* class_name() const override { return "TestRunnerGlobalObject"; }
-
-    JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
-};
-
 TestRunnerGlobalObject::TestRunnerGlobalObject()
 {
 }
@@ -406,19 +144,51 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)
     return JS::Value(interpreter.in_strict_mode());
 }
 
-double get_time()
+double get_time_in_ms()
 {
     struct timeval tv1;
     struct timezone tz1;
     auto return_code = gettimeofday(&tv1, &tz1);
-        ASSERT(return_code >= 0);
+    ASSERT(return_code >= 0);
     return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
+}
+
+template<typename Callback>
+void iterate_directory_recursively(const String& directory_path, Callback callback)
+{
+    Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
+
+    while (directory_iterator.has_next()) {
+        auto file_path = String::format("%s/%s", directory_path.characters(), directory_iterator.next_path().characters());
+        auto file = Core::File::open(file_path, Core::IODevice::OpenMode::NotOpen);
+        ASSERT(!file.is_error());
+
+        if (file.value()->is_directory()) {
+            iterate_directory_recursively(file_path, callback);
+        } else {
+            callback(move(file_path));
+        }
+    }
+}
+
+Vector<String> get_test_paths(const String& test_root)
+{
+    Vector<String> paths;
+
+    iterate_directory_recursively(test_root, [&](const String& file_path) {
+        if (!file_path.ends_with("test-common.js"))
+            paths.append(file_path);
+    });
+
+    quick_sort(paths);
+
+    return paths;
 }
 
 void TestRunner::run()
 {
-    for (auto& test_path : tests_to_run)
-        print_file_result(run_file_test(test_path));
+    for (auto& path : get_test_paths(m_test_root))
+        print_file_result(run_file_test(path));
 
     print_test_results();
 }
@@ -461,7 +231,7 @@ Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 
 JSFileResult TestRunner::run_file_test(const String& test_path)
 {
-    double start_time = get_time();
+    double start_time = get_time_in_ms();
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>();
 
     if (!m_test_program) {
@@ -475,7 +245,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
 
     interpreter->run(interpreter->global_object(), *m_test_program);
 
-    auto file_program = parse_file(String::format("%s/%s", m_test_root.characters(), test_path.characters()));
+    auto file_program = parse_file(test_path);
     if (file_program.is_error())
         return { test_path, file_program.error() };
     interpreter->run(interpreter->global_object(), *file_program.value());
@@ -486,7 +256,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         exit(1);
     }
 
-    JSFileResult file_result { test_path };
+    JSFileResult file_result { test_path.substring(m_test_root.length() + 1, test_path.length() - m_test_root.length() - 1) };
 
     // Collect logged messages
     auto& arr = interpreter->get_variable("__UserOutput__", interpreter->global_object()).as_array();
@@ -498,10 +268,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
         JSSuite suite { suite_name };
 
-        if (!suite_value.is_object()) {
-            printf("Test JSON has a suite which is not an object (\"%s\")\n", test_path.characters());
-            exit(1);
-        }
+        ASSERT(suite_value.is_object());
 
         suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
             JSTest test { test_name, TestResult::Fail };
@@ -543,7 +310,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
 
     m_counts.files_total++;
 
-    file_result.time_taken = get_time() - start_time;
+    file_result.time_taken = get_time_in_ms() - start_time;
     m_total_elapsed_time_in_ms += file_result.time_taken;
 
     return file_result;
@@ -596,7 +363,6 @@ void print_modifiers(Vector<Modifier> modifiers)
 
 void TestRunner::print_file_result(const JSFileResult& file_result) const
 {
-
     if (file_result.most_severe_test_result == TestResult::Fail || file_result.error.has_value()) {
         print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
         printf(" FAIL ");
