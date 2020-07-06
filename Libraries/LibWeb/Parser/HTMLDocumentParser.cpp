@@ -80,7 +80,9 @@ void HTMLDocumentParser::run(const URL& url)
         process_using_the_rules_for(m_insertion_mode, token);
 
         if (m_stop_parsing) {
+#ifdef PARSER_DEBUG
             dbg() << "Stop parsing! :^)";
+#endif
             break;
         }
     }
