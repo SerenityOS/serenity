@@ -151,10 +151,9 @@ int main(int argc, char* argv[])
         open_page(path);
     };
 
-    page_view.on_link_click = [&](const String& href, auto&, unsigned) {
+    page_view.on_link_click = [&](auto& url, auto&, unsigned) {
         char* current_path = strdup(history.current().characters());
-        char* dir_path = dirname(current_path);
-        char* path = realpath(String::format("%s/%s", dir_path, href.characters()).characters(), nullptr);
+        char* path = realpath(url.path().characters(), nullptr);
         free(current_path);
         auto tree_view_index = model->index_from_path(path);
         if (tree_view_index.has_value()) {

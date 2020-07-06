@@ -60,9 +60,9 @@ public:
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
     Function<void(const Gfx::IntPoint& screen_position)> on_context_menu_request;
-    Function<void(const String& href, const String& target, unsigned modifiers)> on_link_click;
+    Function<void(const URL&, const String& target, unsigned modifiers)> on_link_click;
     Function<void(const String& href, const Gfx::IntPoint& screen_position)> on_link_context_menu_request;
-    Function<void(const String& href)> on_link_middle_click;
+    Function<void(const URL&)> on_link_middle_click;
     Function<void(const URL&)> on_link_hover;
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_load_start;
@@ -103,8 +103,8 @@ private:
     virtual void page_did_request_cursor_change(GUI::StandardCursor) override;
     virtual void page_did_request_context_menu(const Gfx::IntPoint&) override;
     virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const String& href, const String& target, unsigned modifiers) override;
-    virtual void page_did_click_link(const String& href, const String& target, unsigned modifiers) override;
-    virtual void page_did_middle_click_link(const String& href, const String& target, unsigned modifiers) override;
+    virtual void page_did_click_link(const URL&, const String& target, unsigned modifiers) override;
+    virtual void page_did_middle_click_link(const URL&, const String& target, unsigned modifiers) override;
     virtual void page_did_enter_tooltip_area(const Gfx::IntPoint&, const String&) override;
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(const URL&) override;

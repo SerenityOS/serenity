@@ -104,7 +104,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (!layout_root_ptr)
         return false;
     auto& layout_root = *layout_root_ptr;
-    auto& document = *m_frame.document();
+    NonnullRefPtr document = *m_frame.document();
     auto& page_client = m_frame.page().client();
 
     auto result = layout_root.hit_test(position);
@@ -112,7 +112,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return false;
 
     RefPtr<Node> node = result.layout_node->node();
-    document.set_hovered_node(node);
+    document->set_hovered_node(node);
     if (!node)
         return false;
 
@@ -125,27 +125,29 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     auto offset = compute_mouse_event_offset(position, *result.layout_node);
     node->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
     if (RefPtr<HTMLAnchorElement> link = node->enclosing_link_element()) {
-        dbg() << "Web::EventHandler: Clicking on a link to " << link->href();
-
+        auto href = link->href();
+        auto url = document->complete_url(href);
+        dbg() << "Web::EventHandler: Clicking on a link to " << url;
         if (button == GUI::MouseButton::Left) {
             auto href = link->href();
+            auto url = document->complete_url(href);
             if (href.starts_with("javascript:")) {
-                document.run_javascript(href.substring_view(11, href.length() - 11));
+                document->run_javascript(href.substring_view(11, href.length() - 11));
             } else if (href.starts_with('#')) {
                 auto anchor = href.substring_view(1, href.length() - 1);
                 m_frame.scroll_to_anchor(anchor);
             } else {
                 if (m_frame.is_main_frame()) {
-                    page_client.page_did_click_link(link->href(), link->target(), modifiers);
+                    page_client.page_did_click_link(url, link->target(), modifiers);
                 } else {
                     // FIXME: Handle different targets!
-                    m_frame.loader().load(document.complete_url(link->href()));
+                    m_frame.loader().load(url);
                 }
             }
         } else if (button == GUI::MouseButton::Right) {
             page_client.page_did_request_link_context_menu(m_frame.to_main_frame_position(position), link->href(), link->target(), modifiers);
         } else if (button == GUI::MouseButton::Middle) {
-            page_client.page_did_middle_click_link(link->href(), link->target(), modifiers);
+            page_client.page_did_middle_click_link(url, link->target(), modifiers);
         }
     } else {
         if (button == GUI::MouseButton::Left) {

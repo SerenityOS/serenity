@@ -154,12 +154,10 @@ Tab::Tab()
         update_bookmark_button(url.to_string());
     };
 
-    m_page_view->on_link_click = [this](auto& href, auto& target, unsigned modifiers) {
+    m_page_view->on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
         if (target == "_blank" || modifiers == Mod_Ctrl) {
-            auto url = m_page_view->document()->complete_url(href);
             on_tab_open_request(url);
         } else {
-            auto url = m_page_view->document()->complete_url(href);
             m_page_view->load(url);
         }
     };
