@@ -48,6 +48,19 @@ Interpreter::Interpreter()
     : m_heap(*this)
     , m_console(*this)
 {
+    m_well_known_symbol_map.set("iterator", js_symbol(*this, "Symbol.iterator", false));
+    m_well_known_symbol_map.set("asyncIterator", js_symbol(*this, "Symbol.asyncIterator", false));
+    m_well_known_symbol_map.set("match", js_symbol(*this, "Symbol.match", false));
+    m_well_known_symbol_map.set("matchAll", js_symbol(*this, "Symbol.matchAll", false));
+    m_well_known_symbol_map.set("replace", js_symbol(*this, "Symbol.replace", false));
+    m_well_known_symbol_map.set("search", js_symbol(*this, "Symbol.search", false));
+    m_well_known_symbol_map.set("split", js_symbol(*this, "Symbol.split", false));
+    m_well_known_symbol_map.set("hasInstance", js_symbol(*this, "Symbol.hasInstance", false));
+    m_well_known_symbol_map.set("isConcatSpreadable", js_symbol(*this, "Symbol.isConcatSpreadable", false));
+    m_well_known_symbol_map.set("unscopables", js_symbol(*this, "Symbol.unscopables", false));
+    m_well_known_symbol_map.set("species", js_symbol(*this, "Symbol.species", false));
+    m_well_known_symbol_map.set("toPrimitive", js_symbol(*this, "Symbol.toPrimitive", false));
+    m_well_known_symbol_map.set("toStringTag", js_symbol(*this, "Symbol.toStringTag", false));
 }
 
 Interpreter::~Interpreter()
@@ -201,6 +214,23 @@ Reference Interpreter::get_reference(const FlyString& name)
     return { Reference::GlobalVariable, name };
 }
 
+Symbol* Interpreter::get_global_symbol(const String& description)
+{
+    auto result = m_global_symbol_map.get(description);
+    if (result.has_value())
+        return result.value();
+
+    auto new_global_symbol = js_symbol(*this, description, true);
+    m_global_symbol_map.set(description, new_global_symbol);
+    return new_global_symbol;
+}
+
+Symbol* Interpreter::get_well_known_symbol(const String& description) const
+{
+    ASSERT(m_well_known_symbol_map.contains(description));
+    return m_well_known_symbol_map.get(description).value();
+}
+
 void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 {
     roots.set(m_global_object);
@@ -219,7 +249,11 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
         roots.set(call_frame.environment);
     }
 
-    SymbolObject::gather_symbol_roots(roots);
+    for (auto& symbol : m_well_known_symbol_map)
+        roots.set(symbol.value);
+
+    for (auto& symbol : m_global_symbol_map)
+        roots.set(symbol.value);
 }
 
 Value Interpreter::call(Function& function, Value this_value, Optional<MarkedValueList> arguments)

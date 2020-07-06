@@ -46,21 +46,8 @@ void SymbolConstructor::initialize(Interpreter& interpreter, GlobalObject& globa
     define_native_function("for", for_, 1, Attribute::Writable | Attribute::Configurable);
     define_native_function("keyFor", key_for, 1, Attribute::Writable | Attribute::Configurable);
 
-    SymbolObject::initialize_well_known_symbols(interpreter);
-
-    define_property("iterator", SymbolObject::well_known_iterator(), 0);
-    define_property("asyncIterator", SymbolObject::well_known_async_terator(), 0);
-    define_property("match", SymbolObject::well_known_match(), 0);
-    define_property("matchAll", SymbolObject::well_known_match_all(), 0);
-    define_property("replace", SymbolObject::well_known_replace(), 0);
-    define_property("search", SymbolObject::well_known_search(), 0);
-    define_property("split", SymbolObject::well_known_split(), 0);
-    define_property("hasInstance", SymbolObject::well_known_has_instance(), 0);
-    define_property("isConcatSpreadable", SymbolObject::well_known_is_concat_spreadable(), 0);
-    define_property("unscopables", SymbolObject::well_known_unscopables(), 0);
-    define_property("species", SymbolObject::well_known_species(), 0);
-    define_property("toPrimitive", SymbolObject::well_known_to_primtive(), 0);
-    define_property("toStringTag", SymbolObject::well_known_to_string_tag(), 0);
+    for (auto& entry : interpreter.get_well_known_symbol_map({}))
+        define_property(entry.key, entry.value, 0);
 }
 
 SymbolConstructor::~SymbolConstructor()
@@ -89,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
         description = interpreter.argument(0).to_string(interpreter);
     }
 
-    return SymbolObject::get_global(interpreter, description);
+    return interpreter.get_global_symbol(description);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)

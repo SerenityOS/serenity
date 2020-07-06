@@ -32,6 +32,9 @@
 namespace JS {
 
 class Symbol final : public Cell {
+    AK_MAKE_NONCOPYABLE(Symbol)
+    AK_MAKE_NONMOVABLE(Symbol)
+
 public:
     Symbol(String, bool);
     virtual ~Symbol();

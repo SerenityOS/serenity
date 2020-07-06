@@ -46,51 +46,16 @@ public:
     const String& description() const { return m_symbol.description(); }
     bool is_global() const { return m_symbol.is_global(); }
 
-    static Value get_global(Interpreter&, String description);
-
     virtual Value value_of() const override
     {
         return Value(&m_symbol);
     }
-
-    static void initialize_well_known_symbols(Interpreter&);
-    static void gather_symbol_roots(HashTable<Cell*>& roots);
-
-    static Value well_known_iterator() { return s_well_known_iterator; };
-    static Value well_known_async_terator() { return s_well_known_async_terator; };
-    static Value well_known_match() { return s_well_known_match; };
-    static Value well_known_match_all() { return s_well_known_match_all; };
-    static Value well_known_replace() { return s_well_known_replace; };
-    static Value well_known_search() { return s_well_known_search; };
-    static Value well_known_split() { return s_well_known_split; };
-    static Value well_known_has_instance() { return s_well_known_has_instance; };
-    static Value well_known_is_concat_spreadable() { return s_well_known_is_concat_spreadable; };
-    static Value well_known_unscopables() { return s_well_known_unscopables; };
-    static Value well_known_species() { return s_well_known_species; };
-    static Value well_known_to_primtive() { return s_well_known_to_primtive; };
-    static Value well_known_to_string_tag() { return s_well_known_to_string_tag; };
 
 private:
     virtual void visit_children(Visitor&) override;
     virtual bool is_symbol_object() const override { return true; }
 
     Symbol& m_symbol;
-
-    static HashMap<String, Value> s_global_symbol_map;
-
-    static Value s_well_known_iterator;
-    static Value s_well_known_async_terator;
-    static Value s_well_known_match;
-    static Value s_well_known_match_all;
-    static Value s_well_known_replace;
-    static Value s_well_known_search;
-    static Value s_well_known_split;
-    static Value s_well_known_has_instance;
-    static Value s_well_known_is_concat_spreadable;
-    static Value s_well_known_unscopables;
-    static Value s_well_known_species;
-    static Value s_well_known_to_primtive;
-    static Value s_well_known_to_string_tag;
 };
 
 }
