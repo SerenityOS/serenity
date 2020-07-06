@@ -160,10 +160,7 @@ void iterate_directory_recursively(const String& directory_path, Callback callba
 
     while (directory_iterator.has_next()) {
         auto file_path = String::format("%s/%s", directory_path.characters(), directory_iterator.next_path().characters());
-        auto file = Core::File::open(file_path, Core::IODevice::OpenMode::NotOpen);
-        ASSERT(!file.is_error());
-
-        if (file.value()->is_directory()) {
+        if (Core::File::is_directory(file_path)) {
             iterate_directory_recursively(file_path, callback);
         } else {
             callback(move(file_path));
