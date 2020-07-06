@@ -83,7 +83,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     m_octave_knob->on_value_changed = [this](int value) {
         int new_octave = octave_max - value;
         if (m_change_underlying)
-            m_main_widget.set_octave_and_ensure_note_change(new_octave == m_track_manager.octave() + 1 ? Up : Down);
+            m_main_widget.set_octave_and_ensure_note_change(new_octave);
         ASSERT(new_octave == m_track_manager.octave());
         m_octave_value->set_text(String::number(new_octave));
     };

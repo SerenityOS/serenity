@@ -160,6 +160,16 @@ void MainWidget::turn_on_pressed_keys()
     }
 }
 
+void MainWidget::set_octave_and_ensure_note_change(int octave)
+{
+    turn_off_pressed_keys();
+    m_track_manager.set_octave(octave);
+    turn_on_pressed_keys();
+
+    m_knobs_widget->update_knobs();
+    m_keys_widget->update();
+}
+
 void MainWidget::set_octave_and_ensure_note_change(Direction direction)
 {
     turn_off_pressed_keys();
