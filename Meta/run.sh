@@ -32,7 +32,7 @@ die() {
 $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
 -cpu max
--d cpu_reset,guest_errors
+-d guest_errors
 -smp 2
 -device VGA,vgamem_mb=64
 -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
@@ -47,7 +47,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
 -cpu max
 -machine q35
--d cpu_reset,guest_errors
+-d guest_errors
 -smp 2
 -device VGA,vgamem_mb=64
 -device piix3-ide
