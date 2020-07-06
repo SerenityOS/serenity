@@ -148,7 +148,7 @@ void* kmalloc_impl(size_t size)
     if (g_kmalloc_bytes_free < real_size) {
         Kernel::dump_backtrace();
         klog() << "kmalloc(): PANIC! Out of memory\nsum_free=" << g_kmalloc_bytes_free << ", real_size=" << real_size;
-        Kernel::hang();
+        Processor::halt();
     }
 
     size_t chunks_needed = (real_size + CHUNK_SIZE - 1) / CHUNK_SIZE;
@@ -167,7 +167,7 @@ void* kmalloc_impl(size_t size)
     if (!first_chunk.has_value()) {
         klog() << "kmalloc(): PANIC! Out of memory (no suitable block for size " << size << ")";
         Kernel::dump_backtrace();
-        Kernel::hang();
+        Processor::halt();
     }
 
     return kmalloc_allocate(first_chunk.value(), chunks_needed);

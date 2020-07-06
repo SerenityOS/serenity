@@ -42,6 +42,7 @@ class ProcessorInfo
     u32 m_display_family;
     u32 m_stepping;
     u32 m_type;
+    u32 m_apic_id;
 
 public:
     ProcessorInfo(Processor& processor);
@@ -53,6 +54,9 @@ public:
     u32 display_family() const { return m_display_family; }
     u32 stepping() const { return m_stepping; }
     u32 type() const { return m_type; }
+    u32 apic_id() const { return m_apic_id; }
+
+    void set_apic_id(u32 apic_id) { m_apic_id = apic_id; }
 };
 
 }
