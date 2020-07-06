@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "WebContentView.h"
 #include <AK/URL.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/StatusBar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibWeb/WebContentView.h>
 
 int main(int argc, char** argv)
 {
