@@ -429,6 +429,69 @@ void Editor::handle_read_event()
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
     size_t consumed_codepoints = 0;
 
+    enum Amount { Character, Word };
+    auto do_cursor_left = [&](Amount amount) {
+	if (m_cursor == 0)
+            return;
+	if (amount == Word) {
+	    auto skipped_at_least_one_character = false;
+	    for (;;) {
+		if (m_cursor == 0)
+		    break;
+		if (skipped_at_least_one_character && isspace(m_buffer[m_cursor - 1])) // stop *after* a space, but only if it changes the position
+		    break;
+		skipped_at_least_one_character = true;
+		--m_cursor;
+	    }
+	} else {
+	    --m_cursor;
+	}
+    };
+    auto do_cursor_right = [&](Amount amount) {
+	if (m_cursor >= m_buffer.size())
+            return;
+	if (amount == Word) {
+	    // Temporarily put a space at the end of our buffer,
+	    // doing this greatly simplifies the logic below.
+	    m_buffer.append(' ');
+	    for (;;) {
+		if (m_cursor >= m_buffer.size())
+		    break;
+		if (isspace(m_buffer[++m_cursor]))
+		    break;
+	    }
+	    m_buffer.take_last();
+	} else {
+	    ++m_cursor;
+	}
+    };
+
+    auto do_backspace = [&] {
+        if (m_is_searching) {
+            return;
+        }
+        if (m_cursor == 0) {
+            fputc('\a', stdout);
+            fflush(stdout);
+            return;
+        }
+        remove_at_index(m_cursor - 1);
+        --m_cursor;
+        m_inline_search_cursor = m_cursor;
+        // We will have to redraw :(
+        m_refresh_needed = true;
+    };
+
+    auto do_delete = [&] {
+        if (m_cursor == m_buffer.size()) {
+            fputc('\a', stdout);
+            fflush(stdout);
+            return;
+        }
+        remove_at_index(m_cursor);
+        m_refresh_needed = true;
+    };
+
     for (auto codepoint : input_view) {
         if (m_finish)
             break;
@@ -495,42 +558,13 @@ void Editor::handle_read_event()
                 continue;
             }
             case 'D': // left
-                if (m_cursor > 0) {
-                    if (ctrl_held) {
-                        auto skipped_at_least_one_character = false;
-                        for (;;) {
-                            if (m_cursor == 0)
-                                break;
-                            if (skipped_at_least_one_character && isspace(m_buffer[m_cursor - 1])) // stop *after* a space, but only if it changes the position
-                                break;
-                            skipped_at_least_one_character = true;
-                            --m_cursor;
-                        }
-                    } else {
-                        --m_cursor;
-                    }
-                }
+		do_cursor_left(ctrl_held ? Word : Character);
                 m_inline_search_cursor = m_cursor;
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'C': // right
-                if (m_cursor < m_buffer.size()) {
-                    if (ctrl_held) {
-                        // Temporarily put a space at the end of our buffer,
-                        // doing this greatly simplifies the logic below.
-                        m_buffer.append(' ');
-                        for (;;) {
-                            if (m_cursor >= m_buffer.size())
-                                break;
-                            if (isspace(m_buffer[++m_cursor]))
-                                break;
-                        }
-                        m_buffer.take_last();
-                    } else {
-                        ++m_cursor;
-                    }
-                }
+		do_cursor_right(ctrl_held ? Word : Character);
                 m_inline_search_cursor = m_cursor;
                 m_search_offset = 0;
                 m_state = InputState::Free;
@@ -556,13 +590,7 @@ void Editor::handle_read_event()
                 ctrl_held = false;
                 break;
             case '3':
-                if (m_cursor == m_buffer.size()) {
-                    fputc('\a', stdout);
-                    fflush(stdout);
-                    continue;
-                }
-                remove_at_index(m_cursor);
-                m_refresh_needed = true;
+                do_delete();
                 m_search_offset = 0;
                 m_state = InputState::ExpectTerminator;
                 ctrl_held = false;
@@ -708,22 +736,6 @@ void Editor::handle_read_event()
             m_suggestion_display->finish();
         }
         m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
-
-        auto do_backspace = [&] {
-            if (m_is_searching) {
-                return;
-            }
-            if (m_cursor == 0) {
-                fputc('\a', stdout);
-                fflush(stdout);
-                return;
-            }
-            remove_at_index(m_cursor - 1);
-            --m_cursor;
-            m_inline_search_cursor = m_cursor;
-            // We will have to redraw :(
-            m_refresh_needed = true;
-        };
 
         if (codepoint == '\b' || codepoint == m_termios.c_cc[VERASE]) {
             do_backspace();
