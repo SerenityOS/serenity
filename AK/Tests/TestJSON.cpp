@@ -128,4 +128,12 @@ TEST_CASE(json_utf8_multibyte)
     EXPECT_EQ(json.as_string() ==  "\xc5\xa1", true);
 }
 
+TEST_CASE(json_64_bit_value)
+{
+    auto big_value = 0x12345678aabbccddull;
+    JsonValue big_json_value(big_value);
+    JsonValue big_json_value_copy = big_json_value;
+    EXPECT_EQ(big_json_value.as_u64(), big_json_value_copy.as_u64());
+}
+
 TEST_MAIN(JSON)

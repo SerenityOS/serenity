@@ -68,7 +68,7 @@ void JsonValue::copy_from(const JsonValue& other)
         m_value.as_array = new JsonArray(*other.m_value.as_array);
         break;
     default:
-        m_value.as_string = other.m_value.as_string;
+        m_value.as_u64 = other.m_value.as_u64;
         break;
     }
 }
@@ -76,7 +76,7 @@ void JsonValue::copy_from(const JsonValue& other)
 JsonValue::JsonValue(JsonValue&& other)
 {
     m_type = exchange(other.m_type, Type::Null);
-    m_value.as_string = exchange(other.m_value.as_string, nullptr);
+    m_value.as_u64 = exchange(other.m_value.as_u64, 0);
 }
 
 JsonValue& JsonValue::operator=(JsonValue&& other)
@@ -84,7 +84,7 @@ JsonValue& JsonValue::operator=(JsonValue&& other)
     if (this != &other) {
         clear();
         m_type = exchange(other.m_type, Type::Null);
-        m_value.as_string = exchange(other.m_value.as_string, nullptr);
+        m_value.as_u64 = exchange(other.m_value.as_u64, 0);
     }
     return *this;
 }
