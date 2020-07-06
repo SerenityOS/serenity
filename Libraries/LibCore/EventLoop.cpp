@@ -519,11 +519,11 @@ try_select_again:;
 
     for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {
-            if (notifier->on_ready_to_read)
+            if (notifier->event_mask() & Notifier::Event::Read)
                 post_event(*notifier, make<NotifierReadEvent>(notifier->fd()));
         }
         if (FD_ISSET(notifier->fd(), &wfds)) {
-            if (notifier->on_ready_to_write)
+            if (notifier->event_mask() & Notifier::Event::Write)
                 post_event(*notifier, make<NotifierWriteEvent>(notifier->fd()));
         }
     }
