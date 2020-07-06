@@ -365,8 +365,9 @@ void Widget::keydown_event(KeyEvent& event)
     event.ignore();
 }
 
-void Widget::keyup_event(KeyEvent&)
+void Widget::keyup_event(KeyEvent& event)
 {
+    event.ignore();
 }
 
 void Widget::mousedown_event(MouseEvent&)
