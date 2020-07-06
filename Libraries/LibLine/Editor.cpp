@@ -737,10 +737,6 @@ void Editor::handle_read_event()
         }
         m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
-        if (codepoint == '\b' || codepoint == m_termios.c_cc[VERASE]) {
-            do_backspace();
-            continue;
-        }
         if (codepoint == m_termios.c_cc[VWERASE]) {
             bool has_seen_nonspace = false;
             while (m_cursor > 0) {
@@ -766,9 +762,28 @@ void Editor::handle_read_event()
             m_cursor = 0;
             continue;
         }
+        if (codepoint == ctrl('B')) {
+            do_cursor_left(Character);
+            continue;
+        }
+        // ^D
+        if (codepoint == ctrl('D')) {
+            do_delete();
+            continue;
+        }
         // ^E
         if (codepoint == ctrl('E')) {
             m_cursor = m_buffer.size();
+            continue;
+        }
+        // ^F
+        if (codepoint == ctrl('F')) {
+            do_cursor_right(Character);
+            continue;
+        }
+        // ^H: ctrl('H') == '\b'
+        if (codepoint == '\b' || codepoint == m_termios.c_cc[VERASE]) {
+            do_backspace();
             continue;
         }
         // ^L
