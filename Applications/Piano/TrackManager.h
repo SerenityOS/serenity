@@ -51,6 +51,7 @@ public:
     void set_should_loop(bool b) { m_should_loop = b; }
     void set_note_current_octave(int note, Switch);
     void set_octave(Direction);
+    void set_octave(int octave);
     void add_track();
     void next_track();
 
