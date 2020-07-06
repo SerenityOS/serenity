@@ -213,10 +213,10 @@ void PageView::page_did_click_link(const URL& url, const String& target, unsigne
         on_link_click(url, target, modifiers);
 }
 
-void PageView::page_did_middle_click_link(const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+void PageView::page_did_middle_click_link(const URL& url, const String& target, unsigned modifiers)
 {
     if (on_link_middle_click)
-        on_link_middle_click(url);
+        on_link_middle_click(url, target, modifiers);
 }
 
 void PageView::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)

@@ -26,23 +26,22 @@
 
 #pragma once
 
+#include <AK/URL.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibGUI/Widget.h>
+#include <LibWeb/WebViewHooks.h>
 
 class WebContentClient;
 
-class WebContentView final : public GUI::ScrollableWidget {
+class WebContentView final
+    : public GUI::ScrollableWidget
+    , public Web::WebViewHooks {
     C_OBJECT(WebContentView);
 
 public:
     virtual ~WebContentView() override;
 
     void load(const URL&);
-
-    Function<void(const String&)> on_title_change;
-    Function<void(const URL&)> on_link_hover;
-    Function<void(const URL&, const String& target, unsigned modifiers)> on_link_click;
-    Function<void(const URL&, const String& target, unsigned modifiers)> on_link_middle_click;
 
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id);

@@ -189,8 +189,8 @@ Tab::Tab()
         m_link_context_menu->popup(screen_position);
     };
 
-    m_page_view->on_link_middle_click = [this](auto& href) {
-        m_page_view->on_link_click(href, "_blank", 0);
+    hooks().on_link_middle_click = [this](auto& href, auto&, auto) {
+        hooks().on_link_click(href, "_blank", 0);
     };
 
     m_page_view->on_title_change = [this](auto& title) {
