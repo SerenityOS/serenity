@@ -145,7 +145,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 }
             }
         } else if (button == GUI::MouseButton::Right) {
-            page_client.page_did_request_link_context_menu(m_frame.to_main_frame_position(position), link->href(), link->target(), modifiers);
+            page_client.page_did_request_link_context_menu(m_frame.to_main_frame_position(position), url, link->target(), modifiers);
         } else if (button == GUI::MouseButton::Middle) {
             page_client.page_did_middle_click_link(url, link->target(), modifiers);
         }
