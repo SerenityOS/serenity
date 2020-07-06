@@ -742,17 +742,22 @@ void Editor::handle_read_event()
             m_refresh_needed = true;
             continue;
         }
+        // ^A
+        if (codepoint == ctrl('A')) {
+            m_cursor = 0;
+            continue;
+        }
+        // ^E
+        if (codepoint == ctrl('E')) {
+            m_cursor = m_buffer.size();
+            continue;
+        }
         // ^L
         if (codepoint == ctrl('L')) {
             printf("\033[3J\033[H\033[2J"); // Clear screen.
             VT::move_absolute(1, 1);
             set_origin(1, 1);
             m_refresh_needed = true;
-            continue;
-        }
-        // ^A
-        if (codepoint == ctrl('A')) {
-            m_cursor = 0;
             continue;
         }
         // ^R
@@ -881,11 +886,6 @@ void Editor::handle_read_event()
                     continue;
                 }
             }
-            continue;
-        }
-        // ^E
-        if (codepoint == ctrl('E')) {
-            m_cursor = m_buffer.size();
             continue;
         }
         if (codepoint == '\n') {
