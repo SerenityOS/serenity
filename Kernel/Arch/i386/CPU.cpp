@@ -1405,7 +1405,7 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     while (page_count > 0) {
         asm volatile("invlpg %0"
              :
-             : "m"(*(char*)vaddr.get())
+             : "m"(*ptr)
              : "memory");
         ptr += PAGE_SIZE;
         page_count--;
