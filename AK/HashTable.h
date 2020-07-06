@@ -34,6 +34,11 @@
 
 namespace AK {
 
+enum class HashSetResult {
+    InsertedNewEntry,
+    ReplacedExistingEntry
+};
+
 template<typename T, typename>
 class HashTable;
 
@@ -157,8 +162,8 @@ public:
         rehash(capacity);
     }
 
-    void set(const T&);
-    void set(T&&);
+    HashSetResult set(const T&);
+    HashSetResult set(T&&);
     bool contains(const T&) const;
     void clear();
 
@@ -208,11 +213,14 @@ public:
         return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
     }
 
-    void remove(const T& value)
+    bool remove(const T& value)
     {
         auto it = find(value);
-        if (it != end())
+        if (it != end()) {
             remove(it);
+            return true;
+        }
+        return false;
     }
 
     void remove(Iterator);
@@ -251,7 +259,7 @@ private:
 };
 
 template<typename T, typename TraitsForT>
-void HashTable<T, TraitsForT>::set(T&& value)
+HashSetResult HashTable<T, TraitsForT>::set(T&& value)
 {
     if (!m_capacity)
         rehash(1);
@@ -259,7 +267,7 @@ void HashTable<T, TraitsForT>::set(T&& value)
     for (auto& e : bucket) {
         if (TraitsForT::equals(e, value)) {
             e = move(value);
-            return;
+            return HashSetResult::ReplacedExistingEntry;
         }
     }
     if (size() >= capacity()) {
@@ -269,10 +277,11 @@ void HashTable<T, TraitsForT>::set(T&& value)
         bucket.append(move(value));
     }
     m_size++;
+    return HashSetResult::InsertedNewEntry;
 }
 
 template<typename T, typename TraitsForT>
-void HashTable<T, TraitsForT>::set(const T& value)
+HashSetResult HashTable<T, TraitsForT>::set(const T& value)
 {
     if (!m_capacity)
         rehash(1);
@@ -280,7 +289,7 @@ void HashTable<T, TraitsForT>::set(const T& value)
     for (auto& e : bucket) {
         if (TraitsForT::equals(e, value)) {
             e = value;
-            return;
+            return HashSetResult::ReplacedExistingEntry;
         }
     }
     if (size() >= capacity()) {
@@ -290,6 +299,7 @@ void HashTable<T, TraitsForT>::set(const T& value)
         bucket.append(value);
     }
     m_size++;
+    return HashSetResult::InsertedNewEntry;
 }
 
 template<typename T, typename TraitsForT>

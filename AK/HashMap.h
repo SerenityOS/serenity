@@ -54,13 +54,16 @@ public:
     size_t capacity() const { return m_table.capacity(); }
     void clear() { m_table.clear(); }
 
-    void set(const K& key, const V& value) { m_table.set({ key, value }); }
-    void set(const K& key, V&& value) { m_table.set({ key, move(value) }); }
-    void remove(const K& key)
+    HashSetResult set(const K& key, const V& value) { return m_table.set({ key, value }); }
+    HashSetResult set(const K& key, V&& value) { return m_table.set({ key, move(value) }); }
+    bool remove(const K& key)
     {
         auto it = find(key);
-        if (it != end())
+        if (it != end()) {
             m_table.remove(it);
+            return true;
+        }
+        return false;
     }
     void remove_one_randomly() { m_table.remove(m_table.begin()); }
 
