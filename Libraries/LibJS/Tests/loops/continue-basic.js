@@ -1,10 +1,10 @@
 test("basic functionality", () => {
-  var j = 0;
-  for (var i = 0; i < 9; ++i) {
-    if (i == 3) {
-      continue;
+    var j = 0;
+    for (var i = 0; i < 9; ++i) {
+        if (i == 3) {
+            continue;
+        }
+        ++j;
     }
-    ++j;
-  }
-  expect(j).toBe(8);
+    expect(j).toBe(8);
 });

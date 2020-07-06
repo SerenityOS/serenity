@@ -1,19 +1,19 @@
 test("constructors are always strict mode", () => {
-  class A {
-    constructor() {
-      expect(isStrictMode()).toBeTrue();
+    class A {
+        constructor() {
+            expect(isStrictMode()).toBeTrue();
+        }
     }
-  }
 
-  new A();
+    new A();
 });
 
 test("methods are always strict mode", () => {
-  class A {
-    method() {
-      expect(isStrictMode()).toBeTrue();
+    class A {
+        method() {
+            expect(isStrictMode()).toBeTrue();
+        }
     }
-  }
 
-  new A().method();
+    new A().method();
 });
