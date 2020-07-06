@@ -1,38 +1,32 @@
-load("test-common.js");
+test("in operator with objects", () => {
+  const o = { foo: "bar", bar: undefined };
+  expect("" in o).toBeFalse();
+  expect("foo" in o).toBeTrue();
+  expect("bar" in o).toBeTrue();
+  expect("baz" in o).toBeFalse();
+  expect("toString" in o).toBeTrue();
+});
 
-try {
+test("in operator with arrays", () => {
+  const a = ["hello", "friends"];
+  expect(0 in a).toBeTrue();
+  expect(1 in a).toBeTrue();
+  expect(2 in a).toBeFalse();
+  expect("0" in a).toBeTrue();
+  expect("hello" in a).toBeFalse();
+  expect("friends" in a).toBeFalse();
+  expect("length" in a).toBeTrue();
+});
+
+test("in operator with string object", () => {
+  const s = new String("foo");
+  expect("length" in s).toBeTrue();
+});
+
+test("error when used with primitives", () => {
   ["foo", 123, null, undefined].forEach(value => {
-    assertThrowsError(
-      () => {
-        "prop" in value;
-      },
-      {
-        error: TypeError,
-        message: "'in' operator must be used on an object",
-      }
-    );
+    expect(() => {
+      "prop" in value;
+    }).toThrowWithMessage(TypeError, "'in' operator must be used on an object");
   });
-
-  var o = { foo: "bar", bar: undefined };
-  assert("" in o === false);
-  assert("foo" in o === true);
-  assert("bar" in o === true);
-  assert("baz" in o === false);
-  assert("toString" in o === true);
-
-  var a = ["hello", "friends"];
-  assert(0 in a === true);
-  assert(1 in a === true);
-  assert(2 in a === false);
-  assert("0" in a === true);
-  assert("hello" in a === false);
-  assert("friends" in a === false);
-  assert("length" in a === true);
-
-  var s = new String("foo");
-  assert("length" in s);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+});

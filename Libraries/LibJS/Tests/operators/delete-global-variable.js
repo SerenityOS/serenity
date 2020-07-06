@@ -1,19 +1,9 @@
-load("test-common.js");
+a = 1;
 
-try {
-  a = 1;
-  assert(delete a === true);
+test("basic functionality", () => {
+  expect(delete a).toBeTrue();
 
-  assertThrowsError(
-    () => {
-      a;
-    },
-    {
-      error: ReferenceError,
-    }
-  );
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(() => {
+    a;
+  }).toThrowWithMessage(ReferenceError, "'a' is not defined");
+});

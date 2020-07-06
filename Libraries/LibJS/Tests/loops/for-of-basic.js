@@ -1,60 +1,47 @@
-load("test-common.js");
+describe("correct behavior", () => {
+  test("iterate through array", () => {
+    const a = [];
+    for (const num of [1, 2, 3]) {
+      a.push(num);
+    }
+    expect(a).toEqual([1, 2, 3]);
+  });
 
-try {
-  assertThrowsError(
-    () => {
+  test("iterate through string", () => {
+    const a = [];
+    for (const char of "hello") {
+      a.push(char);
+    }
+    expect(a).toEqual(["h", "e", "l", "l", "o"]);
+  });
+
+  test("iterate through string object", () => {
+    const a = [];
+    for (const char of new String("hello")) {
+      a.push(char);
+    }
+    expect(a).toEqual(["h", "e", "l", "l", "o"]);
+  });
+
+  test("use already-declared variable", () => {
+    var char;
+    for (char of "abc");
+    expect(char).toBe("c");
+  });
+});
+
+describe("errors", () => {
+  test("right hand side is a primitive", () => {
+    expect(() => {
       for (const _ of 123) {
       }
-    },
-    {
-      error: TypeError,
-      message: "for..of right-hand side must be iterable",
-    }
-  );
+    }).toThrowWithMessage(TypeError, "for..of right-hand side must be iterable");
+  });
 
-  assertThrowsError(
-    () => {
+  test("right hand side is an object", () => {
+    expect(() => {
       for (const _ of { foo: 1, bar: 2 }) {
       }
-    },
-    {
-      error: TypeError,
-      message: "for..of right-hand side must be iterable",
-    }
-  );
-
-  assertVisitsAll(
-    visit => {
-      for (const num of [1, 2, 3]) {
-        visit(num);
-      }
-    },
-    [1, 2, 3]
-  );
-
-  assertVisitsAll(
-    visit => {
-      for (const char of "hello") {
-        visit(char);
-      }
-    },
-    ["h", "e", "l", "l", "o"]
-  );
-
-  assertVisitsAll(
-    visit => {
-      for (const char of new String("hello")) {
-        visit(char);
-      }
-    },
-    ["h", "e", "l", "l", "o"]
-  );
-
-  var char;
-  for (char of "abc");
-  assert(char === "c");
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+    }).toThrowWithMessage(TypeError, "for..of right-hand side must be iterable");
+  });
+});

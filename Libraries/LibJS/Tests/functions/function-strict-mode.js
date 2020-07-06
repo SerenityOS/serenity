@@ -1,52 +1,53 @@
-load("test-common.js");
+// This file must not be formatted by prettier. Make sure your IDE
+// respects the .prettierignore file!
 
-try {
-  (function () {
-    assert(!isStrictMode());
+test("non strict-mode by default", () => {
+  expect(isStrictMode()).toBeFalse();
+});
+
+test("use strict with double quotes", () => {
+  "use strict";
+  expect(isStrictMode()).toBeTrue();
+});
+
+test("use strict with single quotes", () => {
+  'use strict';
+  expect(isStrictMode()).toBeTrue();
+});
+
+test("use strict with backticks does not yield strict mode", () => {
+  `use strict`;
+  expect(isStrictMode()).toBeFalse();
+});
+
+test("use strict with single quotes after statement does not yield strict mode code", () => {
+  ;'use strict';
+  expect(isStrictMode()).toBeFalse();
+});
+
+test("use strict with double quotes after statement does not yield strict mode code", () => {
+  ;"use strict";
+  expect(isStrictMode()).toBeFalse();
+});
+
+test("strict mode propogates down the scope chain", () => {
+  "use strict";
+  expect(isStrictMode()).toBeTrue();
+  (function() {
+    expect(isStrictMode()).toBeTrue();
   })();
+});
 
-  (function () {
+test("strict mode does not propogate up the scope chain", () => {
+  expect(isStrictMode()).toBeFalse();
+  (function() {
     "use strict";
-    assert(isStrictMode());
+    expect(isStrictMode()).toBeTrue();
   })();
+  expect(isStrictMode()).toBeFalse();
+});
 
-  (function () {
-    "use strict";
-    assert(isStrictMode());
-  })();
-
-  (function () {
-    `use strict`;
-    assert(!isStrictMode());
-  })();
-
-  (function () {
-    ("use strict");
-    assert(!isStrictMode());
-  })();
-
-  (function () {
-    ("use strict");
-    assert(!isStrictMode());
-  })();
-
-  (function () {
-    "use strict";
-    (function () {
-      assert(isStrictMode());
-    })();
-  })();
-
-  (function () {
-    assert(!isStrictMode());
-    (function () {
-      "use strict";
-      assert(isStrictMode());
-    })();
-    assert(!isStrictMode());
-  })();
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test('only the string "use strict" yields strict mode code', () => {
+  "use stric";
+  expect(isStrictMode()).toBeFalse();
+});

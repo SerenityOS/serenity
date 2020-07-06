@@ -1,21 +1,10 @@
-load("test-common.js");
+test("basic functionality", () => {
+  expect(BigInt.prototype.toString).toHaveLength(0);
+  expect(BigInt(123).toString()).toBe("123");
+});
 
-try {
-  assert(BigInt.prototype.toString.length === 0);
-
-  assertThrowsError(
-    () => {
-      BigInt.prototype.toString.call("foo");
-    },
-    {
-      error: TypeError,
-      message: "Not a BigInt object",
-    }
-  );
-
-  assert(BigInt(123).toString() === "123");
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("calling with non-BigInt |this|", () => {
+  expect(() => {
+    BigInt.prototype.toString.call("foo");
+  }).toThrowWithMessage(TypeError, "Not a BigInt object");
+});

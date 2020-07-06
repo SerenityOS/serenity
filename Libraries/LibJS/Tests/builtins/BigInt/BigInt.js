@@ -1,78 +1,68 @@
-load("test-common.js");
+describe("correct behavior", () => {
+  test("basic functionality", () => {
+    expect(BigInt).toHaveLength(1);
+    expect(BigInt.name).toBe("BigInt");
+  });
 
-try {
-  assert(BigInt.length === 1);
-  assert(BigInt.name === "BigInt");
+  test("constructor with numbers", () => {
+    expect(BigInt(0)).toBe(0n);
+    expect(BigInt(1)).toBe(1n);
+    expect(BigInt(+1)).toBe(1n);
+    expect(BigInt(-1)).toBe(-1n);
+    expect(BigInt(123n)).toBe(123n);
+  });
 
-  assert(BigInt(0) === 0n);
-  assert(BigInt(1) === 1n);
-  assert(BigInt(+1) === 1n);
-  assert(BigInt(-1) === -1n);
-  assert(BigInt("") === 0n);
-  assert(BigInt("0") === 0n);
-  assert(BigInt("1") === 1n);
-  assert(BigInt("+1") === 1n);
-  assert(BigInt("-1") === -1n);
-  assert(BigInt("-1") === -1n);
-  assert(BigInt([]) === 0n);
-  assert(BigInt("42") === 42n);
-  assert(BigInt("  \n  00100  \n  ") === 100n);
-  assert(BigInt(123n) === 123n);
-  assert(
-    BigInt("3323214327642987348732109829832143298746432437532197321") ===
+  test("constructor with strings", () => {
+    expect(BigInt("")).toBe(0n);
+    expect(BigInt("0")).toBe(0n);
+    expect(BigInt("1")).toBe(1n);
+    expect(BigInt("+1")).toBe(1n);
+    expect(BigInt("-1")).toBe(-1n);
+    expect(BigInt("-1")).toBe(-1n);
+    expect(BigInt("42")).toBe(42n);
+    expect(BigInt("  \n  00100  \n  ")).toBe(100n);
+    expect(BigInt("3323214327642987348732109829832143298746432437532197321")).toBe(
       3323214327642987348732109829832143298746432437532197321n
-  );
+    );
+  });
 
-  assertThrowsError(
-    () => {
+  test("constructor with objects", () => {
+    expect(BigInt([])).toBe(0n);
+  });
+});
+
+describe("errors", () => {
+  test('cannot be constructed with "new"', () => {
+    expect(() => {
       new BigInt();
-    },
-    {
-      error: TypeError,
-      message: "BigInt is not a constructor",
-    }
-  );
-
-  [null, undefined, Symbol()].forEach(value => {
-    assertThrowsError(
-      () => {
-        BigInt(value);
-      },
-      {
-        error: TypeError,
-        message:
-          typeof value === "symbol"
-            ? "Cannot convert symbol to BigInt"
-            : `Cannot convert ${value} to BigInt`,
-      }
-    );
+    }).toThrowWithMessage(TypeError, "BigInt is not a constructor");
   });
 
-  ["foo", "123n", "1+1", {}, function () {}].forEach(value => {
-    assertThrowsError(
-      () => {
+  test("invalid arguments", () => {
+    expect(() => {
+      BigInt(null);
+    }).toThrowWithMessage(TypeError, "Cannot convert null to BigInt");
+
+    expect(() => {
+      BigInt(undefined);
+    }).toThrowWithMessage(TypeError, "Cannot convert undefined to BigInt");
+
+    expect(() => {
+      BigInt(Symbol());
+    }).toThrowWithMessage(TypeError, "Cannot convert symbol to BigInt");
+
+    ["foo", "123n", "1+1", {}, function () {}].forEach(value => {
+      expect(() => {
         BigInt(value);
-      },
-      {
-        error: SyntaxError,
-        message: `Invalid value for BigInt: ${value}`,
-      }
-    );
+      }).toThrowWithMessage(SyntaxError, `Invalid value for BigInt: ${value}`);
+    });
   });
 
-  [1.23, Infinity, -Infinity, NaN].forEach(value => {
-    assertThrowsError(
-      () => {
+  test("invalid numeric arguments", () => {
+    [1.23, Infinity, -Infinity, NaN].forEach(value => {
+      expect(() => {
         BigInt(value);
-      },
-      {
-        error: RangeError,
-        message: "BigInt argument must be an integer",
-      }
-    );
+      }).toThrowWithMessage(RangeError, "BigInt argument must be an integer");
+    });
   });
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+});

@@ -1,30 +1,20 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
   const sum = (a, b, c) => a + b + c;
   const a = [1, 2, 3];
 
-  assert(sum(...a) === 6);
-  assert(sum(1, ...a) === 4);
-  assert(sum(...a, 10) === 6);
+  expect(sum(...a)).toBe(6);
+  expect(sum(1, ...a)).toBe(4);
+  expect(sum(...a, 10)).toBe(6);
 
   const foo = (a, b, c) => c;
 
   const o = { bar: [1, 2, 3] };
-  assert(foo(...o.bar) === 3);
-  assert(foo(..."abc") === "c");
+  expect(foo(...o.bar)).toBe(3);
+  expect(foo(..."abc")).toBe("c");
+});
 
-  assertThrowsError(
-    () => {
-      [...1];
-    },
-    {
-      error: TypeError,
-      message: "1 is not iterable",
-    }
-  );
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("spreading non iterable", () => {
+  expect(() => {
+    [...1];
+  }).toThrowWithMessage(TypeError, "1 is not iterable");
+});

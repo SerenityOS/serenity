@@ -1,23 +1,12 @@
-load("test-common.js");
-
-try {
-  assert(BigInt.prototype.valueOf.length === 0);
-
-  assertThrowsError(
-    () => {
-      BigInt.prototype.valueOf.call("foo");
-    },
-    {
-      error: TypeError,
-      message: "Not a BigInt object",
-    }
-  );
-
-  assert(typeof BigInt(123).valueOf() === "bigint");
+test("basic functionality", () => {
+  expect(BigInt.prototype.valueOf).toHaveLength(0);
+  expect(typeof BigInt(123).valueOf()).toBe("bigint");
   // FIXME: Uncomment once we support Object() with argument
-  // assert(typeof Object(123n).valueOf() === "bigint");
+  // expect(typeof Object(123n).valueOf()).toBe("bigint");
+});
 
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("calling with non-BigInt |this|", () => {
+  expect(() => {
+    BigInt.prototype.valueOf.call("foo");
+  }).toThrowWithMessage(TypeError, "Not a BigInt object");
+});

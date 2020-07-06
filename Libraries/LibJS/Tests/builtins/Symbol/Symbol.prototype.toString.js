@@ -1,33 +1,23 @@
-load("test-common.js");
+describe("correct behavior", () => {
+  test("basic functionality", () => {
+    const s1 = Symbol("baz");
+    // const s2 = Symbol.for("qux");
 
-try {
-  const s1 = Symbol("foo");
-  const s2 = Symbol.for("bar");
+    expect(s1.toString()).toBe("Symbol(baz)");
+    // expect(s2.toString()).toBe("Symbol(qux)");
+  });
+});
 
-  assert(s1.toString() === "Symbol(foo)");
-  assert(s2.toString() === "Symbol(bar)");
+describe("errors", () => {
+  test("convert to string", () => {
+    expect(() => {
+      Symbol() + "";
+    }).toThrowWithMessage(TypeError, "Cannot convert symbol to string");
+  });
 
-  assertThrowsError(
-    () => {
-      s1 + "";
-    },
-    {
-      error: TypeError,
-      message: "Cannot convert symbol to string",
-    }
-  );
-
-  assertThrowsError(
-    () => {
-      s1 + 1;
-    },
-    {
-      error: TypeError,
-      message: "Cannot convert symbol to number",
-    }
-  );
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  test("convert to number", () => {
+    expect(() => {
+      Symbol() + 1;
+    }).toThrowWithMessage(TypeError, "Cannot convert symbol to number");
+  });
+});

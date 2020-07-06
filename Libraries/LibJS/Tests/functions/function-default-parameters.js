@@ -1,75 +1,81 @@
-load("test-common.js");
-
-try {
-  function func1(a, b = 1) {
-    return a + b;
-  }
-
-  const arrowFunc1 = (a, b = 1) => a + b;
-
-  assert(func1(4, 5) === 9);
-  assert(func1(4) === 5);
-  assert(func1(4, undefined) === 5);
-  assert(Number.isNaN(func1()));
-
-  assert(arrowFunc1(4, 5) === 9);
-  assert(arrowFunc1(4) === 5);
-  assert(arrowFunc1(4, undefined) === 5);
-  assert(Number.isNaN(arrowFunc1()));
-
-  function func2(a = 6) {
+test("single default parameter", () => {
+  function func(a = 6) {
     return typeof a;
   }
 
-  const arrowFunc2 = (a = 6) => typeof a;
+  const arrowFunc = (a = 6) => typeof a;
 
-  assert(func2() === "number");
-  assert(func2(5) === "number");
-  assert(func2(undefined) === "number");
-  assert(func2(false) === "boolean");
-  assert(func2(null) === "object");
-  assert(func2({}) === "object");
+  expect(func()).toBe("number");
+  expect(func(5)).toBe("number");
+  expect(func(undefined)).toBe("number");
+  expect(func(false)).toBe("boolean");
+  expect(func(null)).toBe("object");
+  expect(func({})).toBe("object");
 
-  assert(arrowFunc2() === "number");
-  assert(arrowFunc2(5) === "number");
-  assert(arrowFunc2(undefined) === "number");
-  assert(arrowFunc2(false) === "boolean");
-  assert(arrowFunc2(null) === "object");
-  assert(arrowFunc2({}) === "object");
+  expect(arrowFunc()).toBe("number");
+  expect(arrowFunc(5)).toBe("number");
+  expect(arrowFunc(undefined)).toBe("number");
+  expect(arrowFunc(false)).toBe("boolean");
+  expect(arrowFunc(null)).toBe("object");
+  expect(arrowFunc({})).toBe("object");
+});
 
-  function func3(a = 5, b) {
+test("two parameters, second one is default", () => {
+  function func(a, b = 1) {
     return a + b;
   }
 
-  const arrowFunc3 = (a = 5, b) => a + b;
+  const arrowFunc = (a, b = 1) => a + b;
 
-  assert(func3(4, 5) === 9);
-  assert(func3(undefined, 4) === 9);
-  assert(Number.isNaN(func3()));
+  expect(func(4, 5)).toBe(9);
+  expect(func(4)).toBe(5);
+  expect(func(4, undefined)).toBe(5);
+  expect(func()).toBeNaN();
 
-  assert(arrowFunc3(4, 5) === 9);
-  assert(arrowFunc3(undefined, 4) === 9);
-  assert(Number.isNaN(arrowFunc3()));
+  expect(arrowFunc(4, 5)).toBe(9);
+  expect(arrowFunc(4)).toBe(5);
+  expect(arrowFunc(4, undefined)).toBe(5);
+  expect(arrowFunc()).toBeNaN();
+});
 
-  function func4(a, b = a) {
+test("two parameters, first one is default", () => {
+  function func(a = 5, b) {
     return a + b;
   }
 
-  const arrowFunc4 = (a, b = a) => a + b;
+  const arrowFunc = (a = 5, b) => a + b;
 
-  assert(func4(4, 5) === 9);
-  assert(func4(4) === 8);
-  assert(func4("hf") === "hfhf");
-  assert(func4(true) === 2);
-  assert(Number.isNaN(func4()));
+  expect(func(4, 5)).toBe(9);
+  expect(func(undefined, 4)).toBe(9);
+  expect(func()).toBeNaN();
 
-  assert(arrowFunc4(4, 5) === 9);
-  assert(arrowFunc4(4) === 8);
-  assert(arrowFunc4("hf") === "hfhf");
-  assert(arrowFunc4(true) === 2);
-  assert(Number.isNaN(arrowFunc4()));
+  expect(arrowFunc(4, 5)).toBe(9);
+  expect(arrowFunc(undefined, 4)).toBe(9);
+  expect(arrowFunc()).toBeNaN();
+});
 
-  function func5(
+test("default parameter references a previous parameter", () => {
+  function func(a, b = a) {
+    return a + b;
+  }
+
+  const arrowFunc = (a, b = a) => a + b;
+
+  expect(func(4, 5)).toBe(9);
+  expect(func(4)).toBe(8);
+  expect(func("hf")).toBe("hfhf");
+  expect(func(true)).toBe(2);
+  expect(func()).toBeNaN();
+
+  expect(arrowFunc(4, 5)).toBe(9);
+  expect(arrowFunc(4)).toBe(8);
+  expect(arrowFunc("hf")).toBe("hfhf");
+  expect(arrowFunc(true)).toBe(2);
+  expect(arrowFunc()).toBeNaN();
+});
+
+test("parameter with a function default value", () => {
+  function func(
     a = function () {
       return 5;
     }
@@ -77,60 +83,61 @@ try {
     return a();
   }
 
-  const arrowFunc5 = (
+  const arrowFunc = (
     a = function () {
       return 5;
     }
   ) => a();
 
-  assert(func5() === 5);
-  assert(
-    func5(function () {
+  expect(func()).toBe(5);
+  expect(
+    func(function () {
       return 10;
-    }) === 10
-  );
-  assert(func5(() => 10) === 10);
-  assert(arrowFunc5() === 5);
-  assert(
-    arrowFunc5(function () {
-      return 10;
-    }) === 10
-  );
-  assert(arrowFunc5(() => 10) === 10);
+    })
+  ).toBe(10);
+  expect(func(() => 10)).toBe(10);
 
-  function func6(a = () => 5) {
+  expect(arrowFunc()).toBe(5);
+  expect(
+    arrowFunc(function () {
+      return 10;
+    })
+  ).toBe(10);
+  expect(arrowFunc(() => 10)).toBe(10);
+});
+
+test("parameter with an arrow function default vlaue", () => {
+  function func(a = () => 5) {
     return a();
   }
 
-  const arrowFunc6 = (a = () => 5) => a();
+  const arrowFunc = (a = () => 5) => a();
 
-  assert(func6() === 5);
-  assert(
-    func6(function () {
+  expect(func()).toBe(5);
+  expect(
+    func(function () {
       return 10;
-    }) === 10
-  );
-  assert(func6(() => 10) === 10);
-  assert(arrowFunc6() === 5);
-  assert(
-    arrowFunc6(function () {
+    })
+  ).toBe(10);
+  expect(func(() => 10)).toBe(10);
+  expect(arrowFunc()).toBe(5);
+  expect(
+    arrowFunc(function () {
       return 10;
-    }) === 10
-  );
-  assert(arrowFunc6(() => 10) === 10);
+    })
+  ).toBe(10);
+  expect(arrowFunc(() => 10)).toBe(10);
+});
 
-  function func7(a = { foo: "bar" }) {
+test("parameter with an object default value", () => {
+  function func(a = { foo: "bar" }) {
     return a.foo;
   }
 
-  const arrowFunc7 = (a = { foo: "bar" }) => a.foo;
+  const arrowFunc = (a = { foo: "bar" }) => a.foo;
 
-  assert(func7() === "bar");
-  assert(func7({ foo: "baz" }) === "baz");
-  assert(arrowFunc7() === "bar");
-  assert(arrowFunc7({ foo: "baz" }) === "baz");
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(func()).toBe("bar");
+  expect(func({ foo: "baz" })).toBe("baz");
+  expect(arrowFunc()).toBe("bar");
+  expect(arrowFunc({ foo: "baz" })).toBe("baz");
+});

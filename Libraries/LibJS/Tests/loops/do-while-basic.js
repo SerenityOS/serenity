@@ -1,18 +1,14 @@
-load("test-common.js");
-
-try {
-  var number = 0;
+test("basic functionality", () => {
+  let number = 0;
   do {
     number++;
   } while (number < 9);
-  assert(number === 9);
+  expect(number).toBe(9);
+});
 
-  number = 0;
+test("no braces", () => {
+  let number = 0;
   do number++;
   while (number < 3);
-  assert(number === 3);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  expect(number).toBe(3);
+});

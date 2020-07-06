@@ -1,22 +1,18 @@
-load("test-common.js");
-
-try {
+test("var in for head", () => {
   for (var v = 5; false; );
-  assert(v == 5);
+  expect(v).toBe(5);
+});
 
-  const options = { error: ReferenceError };
-
-  assertThrowsError(() => {
-    for (let l = 5; false; );
+test("let in for head", () => {
+  for (let l = 5; false; );
+  expect(() => {
     l;
-  }, options);
+  }).toThrowWithMessage(ReferenceError, "'l' is not defined");
+});
 
-  assertThrowsError(() => {
-    for (const c = 5; false; );
+test("const in for head", () => {
+  for (const c = 5; false; );
+  expect(() => {
     c;
-  }, options);
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+  }).toThrowWithMessage(ReferenceError, "'c' is not defined");
+});

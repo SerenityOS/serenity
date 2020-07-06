@@ -1,29 +1,19 @@
-load("test-common.js");
-
-try {
+test("basic functionality", () => {
   const s1 = Symbol("foo");
   const s2 = Symbol("foo");
 
-  assert(s1 !== s2);
-  assert(s1.description === "foo");
-  assert(s2.description === "foo");
+  expect(s1).not.toBe(s2);
+  expect(s1.description).toBe("foo");
+  expect(s2.description).toBe("foo");
 
   s1.description = "bar";
-  assert(s1.description === "foo");
+  expect(s1.description).toBe("foo");
 
-  assert(typeof s1 === "symbol");
+  expect(typeof s1).toBe("symbol");
+});
 
-  assertThrowsError(
-    () => {
-      Symbol(Symbol("foo"));
-    },
-    {
-      error: TypeError,
-      message: "Cannot convert symbol to string",
-    }
-  );
-
-  console.log("PASS");
-} catch (e) {
-  console.log("FAIL: " + e);
-}
+test("constructing symbol from symbol is an error", () => {
+  expect(() => {
+    Symbol(Symbol("foo"));
+  }).toThrowWithMessage(TypeError, "Cannot convert symbol to string");
+});
