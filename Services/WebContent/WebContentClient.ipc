@@ -12,4 +12,6 @@ endpoint WebContentClient = 90
     DidClickLink(URL url, String target, unsigned modifiers) =|
     DidMiddleClickLink(URL url, String target, unsigned modifiers) =|
     DidStartLoading(URL url) =|
+    DidRequestContextMenu(Gfx::IntPoint content_position) =|
+    DidRequestLinkContextMenu(Gfx::IntPoint content_position, URL url, String target, unsigned modifiers) =|
 }
