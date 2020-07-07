@@ -121,8 +121,13 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
 
     if (display == CSS::Display::Block)
         return adopt(*new LayoutBlock(document(), this, move(style)));
-    if (display == CSS::Display::Inline)
+
+    if (display == CSS::Display::Inline) {
+        if (style->float_().value_or(CSS::Float::None) != CSS::Float::None)
+            return adopt(*new LayoutBlock(document(), this, move(style)));
         return adopt(*new LayoutInline(document(), *this, move(style)));
+    }
+
     if (display == CSS::Display::ListItem)
         return adopt(*new LayoutListItem(document(), *this, move(style)));
     if (display == CSS::Display::Table)
