@@ -66,6 +66,10 @@ RefPtr<Cursor> Cursor::create(StandardCursor standard_cursor)
         return WindowManager::the().resize_diagonally_tlbr_cursor();
     case StandardCursor::ResizeDiagonalBLTR:
         return WindowManager::the().resize_diagonally_bltr_cursor();
+    case StandardCursor::ResizeColumn:
+        return WindowManager::the().resize_column_cursor();
+    case StandardCursor::ResizeRow:
+        return WindowManager::the().resize_row_cursor();
     case StandardCursor::Hand:
         return WindowManager::the().hand_cursor();
     case StandardCursor::Drag:
