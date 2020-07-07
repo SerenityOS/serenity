@@ -35,10 +35,16 @@ namespace Web {
 class FrameLoader final
     : public ResourceClient {
 public:
+    enum class Type {
+        Navigation,
+        Reload,
+        IFrame,
+    };
+
     explicit FrameLoader(Frame&);
     ~FrameLoader();
 
-    bool load(const URL&);
+    bool load(const URL&, Type);
 
     Frame& frame() { return m_frame; }
     const Frame& frame() const { return m_frame; }

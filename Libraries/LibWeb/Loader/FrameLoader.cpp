@@ -137,7 +137,7 @@ RefPtr<Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& d
     return nullptr;
 }
 
-bool FrameLoader::load(const URL& url)
+bool FrameLoader::load(const URL& url, Type type)
 {
     dbg() << "FrameLoader::load: " << url;
 
@@ -150,9 +150,10 @@ bool FrameLoader::load(const URL& url)
     request.set_url(url);
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
-    frame().page().client().page_did_start_loading(url);
+    if (type == Type::Navigation)
+        frame().page().client().page_did_start_loading(url);
 
-    if (url.protocol() != "file" && url.protocol() != "about") {
+    if (type != Type::IFrame && url.protocol() != "file" && url.protocol() != "about") {
         URL favicon_url;
         favicon_url.set_protocol(url.protocol());
         favicon_url.set_host(url.host());
@@ -211,7 +212,7 @@ void FrameLoader::resource_did_load()
     // FIXME: Also check HTTP status code before redirecting
     auto location = resource()->response_headers().get("Location");
     if (location.has_value()) {
-        load(location.value());
+        load(location.value(), FrameLoader::Type::Navigation);
         return;
     }
 

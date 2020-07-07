@@ -42,7 +42,7 @@ Page::~Page()
 
 void Page::load(const URL& url)
 {
-    main_frame().loader().load(url);
+    main_frame().loader().load(url, FrameLoader::Type::Navigation);
 }
 
 Gfx::Palette Page::palette() const
