@@ -41,6 +41,7 @@ enum class StandardCursor {
     ResizeColumn,
     ResizeRow,
     Hand,
+    Help,
     Drag,
     Move,
 };

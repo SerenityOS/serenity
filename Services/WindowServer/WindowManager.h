@@ -122,6 +122,7 @@ public:
     const Cursor& active_cursor() const;
     const Cursor& arrow_cursor() const { return *m_arrow_cursor; }
     const Cursor& hand_cursor() const { return *m_hand_cursor; }
+    const Cursor& help_cursor() const { return *m_help_cursor; }
     const Cursor& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
     const Cursor& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
     const Cursor& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
@@ -204,6 +205,7 @@ private:
 
     RefPtr<Cursor> m_arrow_cursor;
     RefPtr<Cursor> m_hand_cursor;
+    RefPtr<Cursor> m_help_cursor;
     RefPtr<Cursor> m_resize_horizontally_cursor;
     RefPtr<Cursor> m_resize_vertically_cursor;
     RefPtr<Cursor> m_resize_diagonally_tlbr_cursor;
