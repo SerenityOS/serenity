@@ -62,6 +62,16 @@ enum class PopupMenuItem {
     Maximize,
 };
 
+enum class WindowMenuDefaultAction {
+    None = 0,
+    BasedOnWindowState,
+    Close,
+    Minimize,
+    Unminimize,
+    Maximize,
+    Restore
+};
+
 class Window final : public Core::Object
     , public InlineLinkedListNode<Window> {
     C_OBJECT(Window)
@@ -70,7 +80,8 @@ public:
     Window(Core::Object&, WindowType);
     virtual ~Window() override;
 
-    void popup_window_menu(const Gfx::IntPoint&);
+    void popup_window_menu(const Gfx::IntPoint&, WindowMenuDefaultAction);
+    void window_menu_activate_default();
     void request_close();
 
     unsigned wm_event_mask() const { return m_wm_event_mask; }
@@ -240,6 +251,7 @@ private:
     void update_menu_item_text(PopupMenuItem item);
     void update_menu_item_enabled(PopupMenuItem item);
     void add_child_window(Window&);
+    void ensure_window_menu();
 
     ClientConnection* m_client { nullptr };
 
@@ -283,6 +295,7 @@ private:
     RefPtr<Menu> m_window_menu;
     MenuItem* m_window_menu_minimize_item { nullptr };
     MenuItem* m_window_menu_maximize_item { nullptr };
+    MenuItem* m_window_menu_close_item { nullptr };
     int m_minimize_animation_step { -1 };
     int m_progress { -1 };
 };

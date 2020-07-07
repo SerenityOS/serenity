@@ -405,7 +405,7 @@ void Window::request_update(const Gfx::IntRect& rect, bool ignore_occlusion)
     m_pending_paint_rects.add(rect);
 }
 
-void Window::popup_window_menu(const Gfx::IntPoint& position)
+void Window::ensure_window_menu()
 {
     if (!m_window_menu) {
         m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)");
@@ -422,7 +422,9 @@ void Window::popup_window_menu(const Gfx::IntPoint& position)
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
         auto close_item = make<MenuItem>(*m_window_menu, 3, "Close");
-        close_item->set_icon(&close_icon());
+        m_window_menu_close_item = close_item.ptr();
+        m_window_menu_close_item->set_icon(&close_icon());
+        m_window_menu_close_item->set_default(true);
         m_window_menu->add_item(move(close_item));
 
         m_window_menu->item((int)PopupMenuItem::Minimize).set_enabled(m_minimizable);
@@ -447,10 +449,33 @@ void Window::popup_window_menu(const Gfx::IntPoint& position)
             }
         };
     }
+}
+
+void Window::popup_window_menu(const Gfx::IntPoint& position, WindowMenuDefaultAction default_action)
+{
+    ensure_window_menu();
+    if (default_action == WindowMenuDefaultAction::BasedOnWindowState) {
+        // When clicked on the task bar, determine the default action
+        if (!is_active() && !is_minimized())
+            default_action = WindowMenuDefaultAction::None;
+        else if (is_minimized())
+            default_action = WindowMenuDefaultAction::Unminimize;
+        else
+            default_action = WindowMenuDefaultAction::Minimize;
+    }
+    m_window_menu_minimize_item->set_default(default_action == WindowMenuDefaultAction::Minimize || default_action == WindowMenuDefaultAction::Unminimize);
     m_window_menu_minimize_item->set_icon(m_minimized ? nullptr : &minimize_icon());
+    m_window_menu_maximize_item->set_default(default_action == WindowMenuDefaultAction::Maximize || default_action == WindowMenuDefaultAction::Restore);
     m_window_menu_maximize_item->set_icon(m_maximized ? &restore_icon() : &maximize_icon());
+    m_window_menu_close_item->set_default(default_action == WindowMenuDefaultAction::Close);
 
     m_window_menu->popup(position);
+}
+
+void Window::window_menu_activate_default()
+{
+    ensure_window_menu();
+    m_window_menu->activate_default();
 }
 
 void Window::request_close()

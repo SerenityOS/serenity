@@ -670,6 +670,24 @@ void WindowManager::set_cursor_tracking_button(Button* button)
     m_cursor_tracking_button = button ? button->make_weak_ptr() : nullptr;
 }
 
+auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) const -> const ClickMetadata&
+{
+    switch (button) {
+    case MouseButton::Left:
+        return m_left;
+    case MouseButton::Right:
+        return m_right;
+    case MouseButton::Middle:
+        return m_middle;
+    case MouseButton::Back:
+        return m_back;
+    case MouseButton::Forward:
+        return m_forward;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> ClickMetadata&
 {
     switch (button) {
@@ -690,6 +708,59 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> 
 
 // #define DOUBLECLICK_DEBUG
 
+bool WindowManager::is_considered_doubleclick(const MouseEvent& event, const DoubleClickInfo::ClickMetadata& metadata) const
+{
+    int elapsed_since_last_click = metadata.clock.elapsed();
+    if (elapsed_since_last_click < m_double_click_speed) {
+        auto diff = event.position() - metadata.last_position;
+        auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
+        if (distance_travelled_squared <= (m_max_distance_for_double_click * m_max_distance_for_double_click))
+            return true;
+    }
+    return false;
+}
+
+void WindowManager::start_menu_doubleclick(Window& window, const MouseEvent& event)
+{
+    // This is a special case. Basically, we're trying to determine whether
+    // double clicking on the window menu icon happened. In this case, the
+    // WindowFrame only receives a MouseDown event, and since the window
+    // menu popus up, it does not see the MouseUp event. But, if they subsequently
+    // click there again, the menu is closed and we receive a MouseUp event.
+    // So, in order to be able to detect a double click when a menu is being
+    // opened by the MouseDown event, we need to consider the MouseDown event
+    // as a potential double-click trigger
+    ASSERT(event.type() == Event::MouseDown);
+
+    auto& metadata = m_double_click_info.metadata_for_button(event.button());
+    if (&window != m_double_click_info.m_clicked_window) {
+        // we either haven't clicked anywhere, or we haven't clicked on this
+        // window. set the current click window, and reset the timers.
+#if defined(DOUBLECLICK_DEBUG)
+        dbg() << "Initial mousedown on window " << &window << " for menu (previous was " << m_double_click_info.m_clicked_window << ')';
+#endif
+        m_double_click_info.m_clicked_window = window.make_weak_ptr();
+        m_double_click_info.reset();
+    }
+
+    metadata.last_position = event.position();
+    metadata.clock.start();
+}
+
+bool WindowManager::is_menu_doubleclick(Window& window, const MouseEvent& event) const
+{
+    ASSERT(event.type() == Event::MouseUp);
+
+    if (&window != m_double_click_info.m_clicked_window)
+        return false;
+
+    auto& metadata = m_double_click_info.metadata_for_button(event.button());
+    if (!metadata.clock.is_valid())
+        return false;
+    
+    return is_considered_doubleclick(event, metadata);
+}
+
 void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& event)
 {
     // We only care about button presses (because otherwise it's not a doubleclick, duh!)
@@ -707,32 +778,20 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
 
     auto& metadata = m_double_click_info.metadata_for_button(event.button());
 
-    // if the clock is invalid, we haven't clicked with this button on this
-    // window yet, so there's nothing to do.
-    if (!metadata.clock.is_valid()) {
+    if (!metadata.clock.is_valid() || !is_considered_doubleclick(event, metadata)) {
+        // either the clock is invalid because we haven't clicked on this
+        // button on this window yet, so there's nothing to do, or this
+        // isn't considered to be a double click. either way, restart the
+        // clock
         metadata.clock.start();
     } else {
-        int elapsed_since_last_click = metadata.clock.elapsed();
-        metadata.clock.start();
-        if (elapsed_since_last_click < m_double_click_speed) {
-            auto diff = event.position() - metadata.last_position;
-            auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
-            if (distance_travelled_squared > (m_max_distance_for_double_click * m_max_distance_for_double_click)) {
-                // too far; try again
-                metadata.clock.start();
-            } else {
 #if defined(DOUBLECLICK_DEBUG)
-                dbg() << "Transforming MouseUp to MouseDoubleClick (" << elapsed_since_last_click << " < " << m_double_click_speed << ")!";
+        dbg() << "Transforming MouseUp to MouseDoubleClick (" << elapsed_since_last_click << " < " << m_double_click_speed << ")!";
 #endif
-                event = MouseEvent(Event::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
-                // invalidate this now we've delivered a doubleclick, otherwise
-                // tripleclick will deliver two doubleclick events (incorrectly).
-                metadata.clock = {};
-            }
-        } else {
-            // too slow; try again
-            metadata.clock.start();
-        }
+        event = MouseEvent(Event::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
+        // invalidate this now we've delivered a doubleclick, otherwise
+        // tripleclick will deliver two doubleclick events (incorrectly).
+        metadata.clock = {};
     }
 
     metadata.last_position = event.position();

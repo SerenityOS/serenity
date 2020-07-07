@@ -58,6 +58,9 @@ public:
     bool is_checked() const { return m_checked; }
     void set_checked(bool);
 
+    bool is_default() const { return m_default; }
+    void set_default(bool);
+
     String text() const { return m_text; }
     void set_text(const String& text) { m_text = text; }
 
@@ -88,6 +91,7 @@ private:
     bool m_enabled { true };
     bool m_checkable { false };
     bool m_checked { false };
+    bool m_default { false };
     unsigned m_identifier { 0 };
     String m_text;
     String m_shortcut_text;

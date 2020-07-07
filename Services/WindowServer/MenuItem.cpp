@@ -71,6 +71,14 @@ void MenuItem::set_checked(bool checked)
     m_menu.redraw();
 }
 
+void MenuItem::set_default(bool is_default)
+{
+    if (m_default == is_default)
+        return;
+    m_default = is_default;
+    m_menu.redraw();
+}
+
 Menu* MenuItem::submenu()
 {
     ASSERT(is_submenu());
