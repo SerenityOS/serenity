@@ -1,7 +1,3 @@
-test("length is 1", () => {
-    expect(Reflect.preventExtensions).toHaveLength(1);
-});
-
 describe("errors", () => {
     test("target must be an object", () => {
         [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
@@ -16,6 +12,10 @@ describe("errors", () => {
 });
 
 describe("normal behavior", () => {
+    test("length is 1", () => {
+        expect(Reflect.preventExtensions).toHaveLength(1);
+    });
+
     test("properties cannot be added", () => {
         var o = {};
         o.foo = "foo";
@@ -25,12 +25,18 @@ describe("normal behavior", () => {
         expect(o.bar).toBeUndefined();
     });
 
-    test("property values can still be changed", () => {
-        // FIXME: This doesn't work even though it should (the value remains unchanged)
-        // var o = {};
-        // o.foo = "foo";
-        // expect(Reflect.preventExtensions(o)).toBeTrue();
-        // o.foo = "bar";
-        // expect(o.foo).toBe("bar");
+    test("modifying existing properties", () => {
+        const o = {};
+        o.foo = "foo";
+        expect(Reflect.preventExtensions(o)).toBeTrue();
+        o.foo = "bar";
+        expect(o.foo).toBe("bar");
+    });
+
+    test("deleting existing properties", () => {
+        const o = { foo: "bar" };
+        Reflect.preventExtensions(o);
+        delete o.foo;
+        expect(o).not.toHaveProperty("foo");
     });
 });
