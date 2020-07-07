@@ -4,5 +4,5 @@ Executable=/bin/Help
 Category=Utilities
 
 [Icons]
-16x16=/res/icons/16x16/book.png
-32x32=
+16x16=/res/icons/16x16/app-help.png
+32x32=/res/icons/32x32/app-help.png
