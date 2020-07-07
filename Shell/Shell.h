@@ -69,7 +69,8 @@ class Shell : public Core::Object {
     C_OBJECT(Shell);
 
 public:
-    constexpr static auto init_file_path = "~/shell-init.sh";
+    constexpr static auto local_init_file_path = "~/.shellrc";
+    constexpr static auto global_init_file_path = "/etc/shellrc";
 
     bool is_accepting_signals() const { return m_is_accepting_signals; }
 

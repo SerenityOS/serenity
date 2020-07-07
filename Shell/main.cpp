@@ -150,22 +150,26 @@ int main(int argc, char** argv)
 
     const char* command_to_run = nullptr;
     const char* file_to_read_from = nullptr;
-    bool skip_init_file = false;
+    bool skip_rc_files = false;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
-    parser.add_option(skip_init_file, "Skip running ~/shell-init.sh", "skip-init", 0);
+    parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc", 0);
 
     parser.parse(argc, argv);
 
-    if (!skip_init_file) {
-        String file_path = Shell::init_file_path;
-        if (file_path.starts_with('~'))
-            file_path = shell->expand_tilde(file_path);
-        if (Core::File::exists(file_path)) {
-            shell->run_file(file_path, false);
-        }
+    if (!skip_rc_files) {
+        auto run_rc_file = [&](auto& name) {
+            String file_path = name;
+            if (file_path.starts_with('~'))
+                file_path = shell->expand_tilde(file_path);
+            if (Core::File::exists(file_path)) {
+                shell->run_file(file_path, false);
+            }
+        };
+        run_rc_file(Shell::global_init_file_path);
+        run_rc_file(Shell::local_init_file_path);
     }
 
     if (command_to_run) {
