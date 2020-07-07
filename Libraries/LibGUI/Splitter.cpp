@@ -60,7 +60,7 @@ void Splitter::resize_event(ResizeEvent& event)
 
 void Splitter::enter_event(Core::Event&)
 {
-    window()->set_override_cursor(m_orientation == Orientation::Horizontal ? StandardCursor::ResizeHorizontal : StandardCursor::ResizeVertical);
+    window()->set_override_cursor(m_orientation == Orientation::Horizontal ? StandardCursor::ResizeColumn : StandardCursor::ResizeRow);
 }
 
 void Splitter::leave_event(Core::Event&)
