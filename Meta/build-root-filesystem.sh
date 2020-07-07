@@ -135,34 +135,7 @@ chown -R 200:200 mnt/home/nona
 echo "done"
 
 printf "installing shortcuts... "
-ln -s FileManager mnt/bin/fm
-ln -s HelloWorld mnt/bin/hw
-ln -s IRCClient mnt/bin/irc
-ln -s Minesweeper mnt/bin/ms
 ln -s Shell mnt/bin/sh
-ln -s Snake mnt/bin/sn
-ln -s Taskbar mnt/bin/tb
-ln -s VisualBuilder mnt/bin/vb
-ln -s WidgetGallery mnt/bin/wg
-ln -s TextEditor mnt/bin/te
-ln -s HexEditor mnt/bin/he
-ln -s PixelPaint mnt/bin/pp
-ln -s QuickShow mnt/bin/qs
-ln -s Piano mnt/bin/pi
-ln -s SystemDialog mnt/bin/sd
-ln -s Calculator mnt/bin/calc
-ln -s Calendar mnt/bin/calendar
-ln -s Inspector mnt/bin/ins
-ln -s SoundPlayer mnt/bin/sp
-ln -s Help mnt/bin/help
-ln -s Browser mnt/bin/br
-ln -s HackStudio mnt/bin/hs
-ln -s Debugger mnt/bin/sdb
-ln -s SystemMonitor mnt/bin/sm
-ln -s Profiler mnt/bin/pv
-ln -s WebServer mnt/bin/ws
-ln -s Solitaire mnt/bin/sl
-ln -s WebView mnt/bin/wv
 ln -s test mnt/bin/[
 echo "done"
 
