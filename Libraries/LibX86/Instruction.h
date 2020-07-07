@@ -198,6 +198,8 @@ public:
     String to_string_mm() const;
 
     bool is_register() const { return m_register_index != 0xffffffff; }
+
+    unsigned register_index() const { return m_register_index; }
     SegmentRegister segment() const
     {
         ASSERT(!is_register());
@@ -237,16 +239,21 @@ private:
     bool m_has_sib { false };
 };
 
+class Interpreter;
+typedef void (Interpreter::*InstructionHandler)(const Instruction&);
+
 class Instruction {
 public:
     static Instruction from_stream(InstructionStream&, bool o32, bool a32);
     ~Instruction() {}
 
-    MemoryOrRegisterReference& modrm()
+    MemoryOrRegisterReference& modrm() const
     {
         ASSERT(has_rm());
         return m_modrm;
     }
+
+    InstructionHandler handler() const;
 
     bool has_segment_prefix() const { return m_segment_prefix != SegmentRegister::None; }
     bool has_address_size_override_prefix() const { return m_has_address_size_override_prefix; }
@@ -350,7 +357,7 @@ private:
     bool m_has_address_size_override_prefix { false };
     u8 m_rep_prefix { 0 };
 
-    MemoryOrRegisterReference m_modrm;
+    mutable MemoryOrRegisterReference m_modrm;
 
     InstructionDescriptor* m_descriptor { nullptr };
 };

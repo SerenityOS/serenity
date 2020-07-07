@@ -1906,4 +1906,10 @@ void MemoryOrRegisterReference::decode32(InstructionStream& stream)
     }
 }
 
+InstructionHandler Instruction::handler() const
+{
+    ASSERT(m_descriptor->handler);
+    return m_descriptor->handler;
+}
+
 }
