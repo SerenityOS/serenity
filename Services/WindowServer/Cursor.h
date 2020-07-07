@@ -44,6 +44,7 @@ enum class StandardCursor {
     Help,
     Drag,
     Move,
+    Wait,
 };
 
 class Cursor : public RefCounted<Cursor> {
