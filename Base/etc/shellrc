@@ -14,7 +14,6 @@ alias he=HexEditor
 alias pp=PixelPaint
 alias qs=QuickShow
 alias pi=Piano
-alias sd=SystemDialog
 alias calc=Calculator
 alias calendar=Calendar
 alias ins=Inspector
