@@ -246,7 +246,8 @@ void Document::layout()
     m_layout_root->layout();
     m_layout_root->set_needs_display();
 
-    frame()->page().client().page_did_layout();
+    if (frame()->is_main_frame())
+        frame()->page().client().page_did_layout();
 }
 
 void Document::update_style()
