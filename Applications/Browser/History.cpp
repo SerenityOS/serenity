@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,31 +24,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/URL.h>
-#include <AK/Vector.h>
+#include "History.h"
 
 namespace Browser {
 
-class History {
-public:
-    void dump() const;
+void History::dump() const
+{
+    dbg() << "Dump " << m_items.size() << " item(s)";
+    int i = 0;
+    for (auto& item : m_items) {
+        dbg() << "[" << i << "] " << item << " " << (m_current == i ? '*' : ' ');
+        ++i;
+    }
+}
 
-    void push(const URL&);
-    URL current() const;
+void History::push(const URL& url)
+{
+    m_items.shrink(m_current + 1);
+    m_items.append(url);
+    m_current++;
+}
 
-    void go_back();
-    void go_forward();
+URL History::current() const
+{
+    if (m_current == -1)
+        return {};
+    return m_items[m_current];
+}
 
-    bool can_go_back() { return m_current > 0; }
-    bool can_go_forward() { return m_current + 1 < static_cast<int>(m_items.size()); }
+void History::go_back()
+{
+    ASSERT(can_go_back());
+    m_current--;
+}
 
-    void clear();
+void History::go_forward()
+{
+    ASSERT(can_go_forward());
+    m_current++;
+}
 
-private:
-    Vector<URL> m_items;
-    int m_current { -1 };
-};
+void History::clear()
+{
+    m_items = {};
+    m_current = -1;
+}
 
 }
