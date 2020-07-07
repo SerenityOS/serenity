@@ -757,11 +757,22 @@ void Editor::handle_read_event()
             m_refresh_needed = true;
             continue;
         }
+        // Normally ^D. `stty eof \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
+        // Handle it before ctrl shortcuts below and only continue if the buffer is empty, so that the editing shortcuts can take effect else.
+        if (codepoint == m_termios.c_cc[VEOF] && m_buffer.is_empty()) {
+            printf("<EOF>\n");
+            if (!m_always_refresh) {
+                m_input_error = Error::Eof;
+                finish();
+            }
+            continue;
+        }
         // ^A
         if (codepoint == ctrl('A')) {
             m_cursor = 0;
             continue;
         }
+        // ^B
         if (codepoint == ctrl('B')) {
             do_cursor_left(Character);
             continue;
@@ -907,18 +918,6 @@ void Editor::handle_read_event()
                 // Return the string,
                 finish();
                 continue;
-            }
-            continue;
-        }
-        // Normally ^D
-        if (codepoint == m_termios.c_cc[VEOF]) {
-            if (m_buffer.is_empty()) {
-                printf("<EOF>\n");
-                if (!m_always_refresh) {
-                    m_input_error = Error::Eof;
-                    finish();
-                    continue;
-                }
             }
             continue;
         }
