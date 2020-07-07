@@ -129,3 +129,13 @@ void WebContentClient::handle(const Messages::WebContentClient::DidStartLoading&
 {
     m_view.notify_server_did_start_loading({}, message.url());
 }
+
+void WebContentClient::handle(const Messages::WebContentClient::DidRequestContextMenu& message)
+{
+    m_view.notify_server_did_request_context_menu({}, message.content_position());
+}
+
+void WebContentClient::handle(const Messages::WebContentClient::DidRequestLinkContextMenu& message)
+{
+    m_view.notify_server_did_request_link_context_menu({}, message.content_position(), message.url(), message.target(), message.modifiers());
+}

@@ -162,6 +162,18 @@ void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, co
         on_load_start(url);
 }
 
+void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position)
+{
+    if (on_context_menu_request)
+        on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
+}
+
+void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position, const URL& url, const String&, unsigned)
+{
+    if (on_link_context_menu_request)
+        on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
+}
+
 void WebContentView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));
