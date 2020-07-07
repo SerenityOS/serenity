@@ -43,15 +43,16 @@ int Emulator::exec(X86::SimpleInstructionStream& stream, u32 base)
     size_t offset = 0;
     while (!m_shutdown) {
         auto insn = X86::Instruction::from_stream(stream, true, true);
-        out() << "instruction: " << insn.to_string(base + offset);
+        out() << "\033[33;1m" << insn.to_string(base + offset) << "\033[0m";
+
+        // FIXME: Remove this hack once it's no longer needed :^)
+        if (insn.mnemonic() == "RET")
+            break;
 
         (m_cpu.*insn.handler())(insn);
         m_cpu.dump();
 
         offset += insn.length();
-
-        if (insn.mnemonic() == "RET")
-            break;
     }
     return m_exit_status;
 }
