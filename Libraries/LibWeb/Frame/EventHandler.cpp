@@ -141,7 +141,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                     page_client.page_did_click_link(url, link->target(), modifiers);
                 } else {
                     // FIXME: Handle different targets!
-                    m_frame.loader().load(url);
+                    m_frame.loader().load(url, FrameLoader::Type::Navigation);
                 }
             }
         } else if (button == GUI::MouseButton::Right) {
