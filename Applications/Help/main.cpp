@@ -75,7 +75,10 @@ int main(int argc, char* argv[])
 
     unveil(nullptr, nullptr);
 
+    auto app_icon = GUI::Icon::default_icon("app-help");
+
     auto window = GUI::Window::construct();
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Help");
     window->set_rect(300, 200, 570, 500);
 
@@ -189,7 +192,7 @@ int main(int argc, char* argv[])
 
     auto& app_menu = menubar->add_menu("Help");
     app_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Help", Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"), window);
+        GUI::AboutDialog::show("Help", app_icon.bitmap_for_size(32), window);
     }));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -204,8 +207,6 @@ int main(int argc, char* argv[])
 
     window->set_focused_widget(&tree_view);
     window->show();
-
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"));
 
     return app->exec();
 }
