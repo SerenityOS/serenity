@@ -921,6 +921,17 @@ void Editor::handle_read_event()
             }
             continue;
         }
+        // ^T
+        if (codepoint == ctrl('T')) {
+            if (m_cursor > 0 && m_buffer.size() >= 2) {
+                if (m_cursor < m_buffer.size())
+                    ++m_cursor;
+                swap(m_buffer[m_cursor - 1], m_buffer[m_cursor - 2]);
+                // FIXME: Update anchored styles too.
+                m_refresh_needed = true;
+            }
+            continue;
+        }
         if (codepoint == '\n') {
             finish();
             continue;
