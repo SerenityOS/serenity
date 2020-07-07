@@ -631,27 +631,34 @@ void Shell::cache_path()
     if (!cached_path.is_empty())
         cached_path.clear_with_capacity();
 
-    String path = getenv("PATH");
-    if (path.is_empty())
-        return;
-
-    auto directories = path.split(':');
-    for (const auto& directory : directories) {
-        Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
-        while (programs.has_next()) {
-            auto program = programs.next_path();
-            String program_path = String::format("%s/%s", directory.characters(), program.characters());
-            auto escaped_name = escape_token(program);
-            if (cached_path.contains_slow(escaped_name))
-                continue;
-            if (access(program_path.characters(), X_OK) == 0)
-                cached_path.append(escaped_name);
-        }
-    }
-
-    // add shell builtins to the cache
+    // Add shell builtins to the cache.
     for (const auto& builtin_name : builtin_names)
         cached_path.append(escape_token(builtin_name));
+
+    // Add aliases to the cache.
+    for (const auto& alias : m_aliases) {
+        auto name = escape_token(alias.key);
+        if (cached_path.contains_slow(name))
+            continue;
+        cached_path.append(name);
+    }
+
+    String path = getenv("PATH");
+    if (!path.is_empty()) {
+        auto directories = path.split(':');
+        for (const auto& directory : directories) {
+            Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
+            while (programs.has_next()) {
+                auto program = programs.next_path();
+                String program_path = String::format("%s/%s", directory.characters(), program.characters());
+                auto escaped_name = escape_token(program);
+                if (cached_path.contains_slow(escaped_name))
+                    continue;
+                if (access(program_path.characters(), X_OK) == 0)
+                    cached_path.append(escaped_name);
+            }
+        }
+    }
 
     quick_sort(cached_path);
 }
