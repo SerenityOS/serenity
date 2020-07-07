@@ -29,6 +29,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -58,7 +59,7 @@ int main(int argc, char* argv[])
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -69,6 +70,11 @@ int main(int argc, char* argv[])
     }
 
     if (unveil("/usr/share/man", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/launch", "rw") < 0) {
         perror("unveil");
         return 1;
     }
@@ -159,10 +165,27 @@ int main(int argc, char* argv[])
         model->update_section_node_on_toggle(index, open);
     };
 
+    auto open_external = [&](auto& url) {
+        if (!Desktop::Launcher::open(url)) {
+            GUI::MessageBox::show(
+                String::format("The link to '%s' could not be opened.", url.to_string().characters()),
+                "Failed to open link",
+                GUI::MessageBox::Type::Error,
+                GUI::MessageBox::InputType::OK,
+                window);
+        }
+    };
+
     page_view.on_link_click = [&](auto& url, auto&, unsigned) {
-        char* current_path = strdup(history.current().characters());
-        char* path = realpath(url.path().characters(), nullptr);
-        free(current_path);
+        if (url.protocol() != "file") {
+            open_external(url);
+            return;
+        }
+        auto path = Core::File::real_path_for(url.path());
+        if (!path.starts_with("/usr/share/man/")) {
+            open_external(url);
+            return;
+        }
         auto tree_view_index = model->index_from_path(path);
         if (tree_view_index.has_value()) {
             dbg() << "Found path _" << path << "_ in model at index " << tree_view_index.value();
@@ -172,7 +195,6 @@ int main(int argc, char* argv[])
         history.push(path);
         update_actions();
         open_page(path);
-        free(path);
     };
 
     go_back_action = GUI::CommonActions::make_go_back_action([&](auto&) {
