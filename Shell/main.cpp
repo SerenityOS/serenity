@@ -121,7 +121,7 @@ int main(int argc, char** argv)
     pthread_sigmask(SIG_BLOCK, &blocked, NULL);
 #endif
 #ifdef __serenity__
-    if (pledge("stdio rpath wpath cpath proc exec tty accept", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath proc exec tty accept sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
