@@ -519,7 +519,21 @@ void SoftCPU::XOR_RM16_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_RM16_reg16(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_RM32_imm32(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::XOR_RM32_reg32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::XOR_RM32_reg32(const X86::Instruction& insn)
+{
+    ASSERT(insn.modrm().is_register());
+    auto& dest = *m_reg32_table[insn.modrm().register_index()];
+    auto src = *m_reg32_table[insn.register_index()];
+    dest ^= src;
+
+    set_cf(false);
+    set_of(false);
+    set_zf(dest == 0);
+    set_sf(dest & 0x80000000);
+    // FIXME: set_pf
+}
+
 void SoftCPU::XOR_RM8_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_RM8_reg8(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_reg16_RM16(const X86::Instruction&) { TODO(); }
