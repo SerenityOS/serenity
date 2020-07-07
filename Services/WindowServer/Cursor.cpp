@@ -72,6 +72,8 @@ RefPtr<Cursor> Cursor::create(StandardCursor standard_cursor)
         return WindowManager::the().resize_row_cursor();
     case StandardCursor::Hand:
         return WindowManager::the().hand_cursor();
+    case StandardCursor::Help:
+        return WindowManager::the().help_cursor();
     case StandardCursor::Drag:
         return WindowManager::the().drag_cursor();
     case StandardCursor::Move:
