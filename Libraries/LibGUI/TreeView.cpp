@@ -145,6 +145,8 @@ void TreeView::toggle_index(const ModelIndex& index)
     ASSERT(model()->row_count(index));
     auto& metadata = ensure_metadata_for_index(index);
     metadata.open = !metadata.open;
+    if (on_toggle)
+        on_toggle(index, metadata.open);
     update_column_sizes();
     update_content_size();
     update();
@@ -452,6 +454,8 @@ void TreeView::keydown_event(KeyEvent& event)
     }
 
     auto open_tree_node = [&](bool open, MetadataForIndex& metadata) {
+        if (on_toggle)
+            on_toggle(cursor_index, open);
         metadata.open = open;
         update_column_sizes();
         update_content_size();
@@ -499,8 +503,7 @@ void TreeView::keydown_event(KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Return) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
-            auto& metadata = ensure_metadata_for_index(cursor_index);
-            open_tree_node(!metadata.open, metadata);
+            toggle_index(cursor_index);
             return;
         }
     }

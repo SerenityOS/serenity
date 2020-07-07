@@ -44,6 +44,8 @@ public:
     void expand_tree(const ModelIndex& root = {});
     void collapse_tree(const ModelIndex& root = {});
 
+    Function<void(const ModelIndex&, const bool)> on_toggle;
+
 protected:
     TreeView();
 
