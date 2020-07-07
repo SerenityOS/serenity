@@ -117,6 +117,8 @@ void WindowManager::reload_config(bool set_screen)
     m_resize_vertically_cursor = get_cursor("ResizeV");
     m_resize_diagonally_tlbr_cursor = get_cursor("ResizeDTLBR");
     m_resize_diagonally_bltr_cursor = get_cursor("ResizeDBLTR");
+    m_resize_column_cursor = get_cursor("ResizeColumn");
+    m_resize_row_cursor = get_cursor("ResizeRow");
     m_i_beam_cursor = get_cursor("IBeam");
     m_disallowed_cursor = get_cursor("Disallowed");
     m_move_cursor = get_cursor("Move");

@@ -38,6 +38,8 @@ enum class StandardCursor {
     ResizeVertical,
     ResizeDiagonalTLBR,
     ResizeDiagonalBLTR,
+    ResizeColumn,
+    ResizeRow,
     Hand,
     Drag,
     Move,

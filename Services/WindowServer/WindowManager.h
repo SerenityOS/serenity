@@ -126,6 +126,8 @@ public:
     const Cursor& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
     const Cursor& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
     const Cursor& resize_diagonally_bltr_cursor() const { return *m_resize_diagonally_bltr_cursor; }
+    const Cursor& resize_column_cursor() const { return *m_resize_column_cursor; }
+    const Cursor& resize_row_cursor() const { return *m_resize_row_cursor; }
     const Cursor& i_beam_cursor() const { return *m_i_beam_cursor; }
     const Cursor& disallowed_cursor() const { return *m_disallowed_cursor; }
     const Cursor& move_cursor() const { return *m_move_cursor; }
@@ -206,6 +208,8 @@ private:
     RefPtr<Cursor> m_resize_vertically_cursor;
     RefPtr<Cursor> m_resize_diagonally_tlbr_cursor;
     RefPtr<Cursor> m_resize_diagonally_bltr_cursor;
+    RefPtr<Cursor> m_resize_column_cursor;
+    RefPtr<Cursor> m_resize_row_cursor;
     RefPtr<Cursor> m_i_beam_cursor;
     RefPtr<Cursor> m_disallowed_cursor;
     RefPtr<Cursor> m_move_cursor;
