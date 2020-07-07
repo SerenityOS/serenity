@@ -123,7 +123,10 @@ RefPtr<AST::Node> Parser::parse()
         // Parsing stopped midway, this is a syntax error.
         auto error_start = push_start();
         m_offset = m_input.length();
-        return create<AST::Join>(move(toplevel), create<AST::SyntaxError>("Unexpected tokens past the end"));
+        auto syntax_error_node = create<AST::SyntaxError>("Unexpected tokens past the end");
+        if (toplevel)
+            return create<AST::Join>(move(toplevel), move(syntax_error_node));
+        return syntax_error_node;
     }
 
     return toplevel;
