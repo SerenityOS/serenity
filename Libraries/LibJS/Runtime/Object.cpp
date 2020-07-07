@@ -462,7 +462,10 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
-    if (!is_extensible()) {
+    auto metadata = shape().lookup(property_name);
+    bool new_property = !metadata.has_value();
+
+    if (!is_extensible() && new_property) {
 #ifdef OBJECT_DEBUG
         dbg() << "Disallow define_property of non-extensible object";
 #endif
@@ -479,8 +482,6 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
             attributes.set_has_setter();
     }
 
-    auto metadata = shape().lookup(property_name);
-    bool new_property = !metadata.has_value();
 
     if (new_property) {
         if (!m_shape->is_unique() && shape().property_count() > 100) {
@@ -544,7 +545,10 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
-    if (!is_extensible()) {
+    auto existing_property = m_indexed_properties.get(nullptr, property_index, false);
+    auto new_property = !existing_property.has_value();
+
+    if (!is_extensible() && new_property) {
 #ifdef OBJECT_DEBUG
         dbg() << "Disallow define_property of non-extensible object";
 #endif
@@ -561,8 +565,6 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
             attributes.set_has_setter();
     }
 
-    auto existing_property = m_indexed_properties.get(nullptr, property_index, false);
-    auto new_property = !existing_property.has_value();
     PropertyAttributes existing_attributes = new_property ? 0 : existing_property.value().attributes;
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable() && attributes != existing_attributes) {
