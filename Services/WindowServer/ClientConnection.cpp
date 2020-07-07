@@ -648,7 +648,7 @@ void ClientConnection::handle(const Messages::WindowServer::WM_PopupWindowMenu& 
         return;
     }
     auto& window = *(*it).value;
-    window.popup_window_menu(message.screen_position());
+    window.popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
 }
 
 void ClientConnection::handle(const Messages::WindowServer::WM_StartWindowResize& request)

@@ -172,6 +172,9 @@ public:
 
     void did_popup_a_menu(Badge<Menu>);
 
+    void start_menu_doubleclick(Window& window, const MouseEvent& event);
+    bool is_menu_doubleclick(Window& window, const MouseEvent& event) const;
+
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
     NonnullRefPtr<Cursor> get_cursor(const String& name, const Gfx::IntPoint& hotspot);
@@ -227,6 +230,7 @@ private:
             Gfx::IntPoint last_position;
         };
 
+        const ClickMetadata& metadata_for_button(MouseButton) const;
         ClickMetadata& metadata_for_button(MouseButton);
 
         void reset()
@@ -247,6 +251,9 @@ private:
         ClickMetadata m_back;
         ClickMetadata m_forward;
     };
+
+    bool is_considered_doubleclick(const MouseEvent& event, const DoubleClickInfo::ClickMetadata& metadata) const;
+
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
     int m_max_distance_for_double_click { 4 };

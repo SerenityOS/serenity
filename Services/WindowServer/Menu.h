@@ -87,6 +87,8 @@ public:
     bool is_window_menu_open() { return m_is_window_menu_open; }
     void set_window_menu_open(bool is_open) { m_is_window_menu_open = is_open; }
 
+    bool activate_default();
+
     int content_width() const;
 
     int item_height() const { return 20; }
