@@ -57,3 +57,10 @@ void ManualSectionNode::reify_if_needed() const
     for (auto& page_name : page_names)
         m_children.append(make<ManualPageNode>(*this, move(page_name)));
 }
+
+void ManualSectionNode::set_open(bool open)
+{
+    if (m_open == open)
+        return;
+    m_open = open;
+}

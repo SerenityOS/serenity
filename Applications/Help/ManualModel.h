@@ -45,6 +45,7 @@ public:
     String page_path(const GUI::ModelIndex&) const;
     String page_and_section(const GUI::ModelIndex&) const;
 
+    void update_section_node_on_toggle(const GUI::ModelIndex&, const bool);
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
@@ -55,6 +56,7 @@ public:
 private:
     ManualModel();
 
+    GUI::Icon m_section_open_icon;
     GUI::Icon m_section_icon;
     GUI::Icon m_page_icon;
 };
