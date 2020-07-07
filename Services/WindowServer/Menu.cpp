@@ -110,9 +110,10 @@ int Menu::content_width() const
     for (auto& item : m_items) {
         if (item.type() != MenuItem::Text)
             continue;
-        int text_width = font().width(item.text());
+        auto& use_font = item.is_default() ? Gfx::Font::default_bold_font() : font();
+        int text_width = use_font.width(item.text());
         if (!item.shortcut_text().is_empty()) {
-            int shortcut_width = font().width(item.shortcut_text());
+            int shortcut_width = use_font.width(item.shortcut_text());
             widest_shortcut = max(shortcut_width, widest_shortcut);
         }
         widest_text = max(widest_text, text_width);
@@ -248,10 +249,14 @@ void Menu::draw()
                 icon_rect.center_vertically_within(text_rect);
                 painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());
             }
+            auto& previous_font = painter.font();
+            if (item.is_default())
+                painter.set_font(Gfx::Font::default_bold_font());
             painter.draw_text(text_rect, item.text(), Gfx::TextAlignment::CenterLeft, text_color);
             if (!item.shortcut_text().is_empty()) {
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), Gfx::TextAlignment::CenterRight, text_color);
             }
+            painter.set_font(previous_font);
             if (item.is_submenu()) {
                 static auto& submenu_arrow_bitmap = Gfx::CharacterBitmap::create_from_ascii(s_submenu_arrow_bitmap_data, s_submenu_arrow_bitmap_width, s_submenu_arrow_bitmap_height).leak_ref();
                 Gfx::IntRect submenu_arrow_rect {
@@ -456,6 +461,19 @@ void Menu::did_activate(MenuItem& item)
 
     if (m_client)
         m_client->post_message(Messages::WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
+}
+
+bool Menu::activate_default()
+{
+    for (auto& item : m_items) {
+        if (item.type() == MenuItem::Type::Separator)
+            continue;
+        if (item.is_enabled() && item.is_default()) {
+            did_activate(item);
+            return true;
+        }
+    }
+    return false;
 }
 
 MenuItem* Menu::item_with_identifier(unsigned identifer)
