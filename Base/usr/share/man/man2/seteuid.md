@@ -22,7 +22,7 @@ In particular, `seteuid(geteuid())` will fail if the current effective user ID i
 ## Return value
 
 If the call was set successful, returns 0.
-Else, returns -1 and sets `errno` to describe the error.
+Otherwise, returns -1 and sets `errno` to describe the error.
 
 ## Errors
 
