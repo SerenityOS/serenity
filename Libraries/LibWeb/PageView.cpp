@@ -160,6 +160,7 @@ String PageView::selected_text() const
 
 void PageView::page_did_layout()
 {
+    ASSERT(layout_root());
     set_content_size(layout_root()->size().to_int_size());
 }
 
@@ -392,7 +393,7 @@ bool PageView::load(const URL& url)
     if (window())
         window()->set_override_cursor(GUI::StandardCursor::None);
 
-    return page().main_frame().loader().load(url);
+    return page().main_frame().loader().load(url, FrameLoader::Type::Navigation);
 }
 
 const LayoutDocument* PageView::layout_root() const

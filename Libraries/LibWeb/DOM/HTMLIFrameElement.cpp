@@ -79,7 +79,7 @@ void HTMLIFrameElement::load_src(const String& value)
         return;
     }
 
-    m_hosted_frame->loader().load(url);
+    m_hosted_frame->loader().load(url, FrameLoader::Type::IFrame);
 }
 
 const Document* HTMLIFrameElement::hosted_document() const
