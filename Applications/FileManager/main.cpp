@@ -764,7 +764,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position());
             } else {
-                file_context_menu->popup(event.screen_position());
+                file_context_menu->popup(event.screen_position(), open_in_text_editor_action);
             }
         } else {
             directory_view_context_menu->popup(event.screen_position());
