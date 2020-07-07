@@ -46,8 +46,9 @@ SoftCPU::SoftCPU(Emulator& emulator)
 
 void SoftCPU::dump() const
 {
-    printf("eax: %08x  ebx: %08x  ecx: %08x  edx: %08x\n", m_eax, m_ebx, m_ecx, m_edx);
-    printf("ebp: %08x  esp: %08x  esi: %08x  edi: %08x\n", m_ebp, m_esp, m_esi, m_edi);
+    printf("eax=%08x ebx=%08x ecx=%08x edx=%08x ", m_eax, m_ebx, m_ecx, m_edx);
+    printf("ebp=%08x esp=%08x esi=%08x edi=%08x ", m_ebp, m_esp, m_esi, m_edi);
+    printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", m_of, m_sf, m_zf, m_af, m_pf, m_cf);
 }
 
 void SoftCPU::AAA(const X86::Instruction&) { TODO(); }
