@@ -53,8 +53,15 @@ public:
 
     URL url() const;
 
-    void load(const URL&);
+    enum class LoadType {
+        Normal,
+        HistoryNavigation,
+    };
+
+    void load(const URL&, LoadType = LoadType::Normal);
     void reload();
+    void go_back();
+    void go_forward();
 
     void did_become_active();
     void context_menu_requested(const Gfx::IntPoint& screen_position);
@@ -78,7 +85,7 @@ private:
 
     Type m_type;
 
-    History<URL> m_history;
+    History m_history;
 
     RefPtr<Web::PageView> m_page_view;
     RefPtr<WebContentView> m_web_content_view;
@@ -102,8 +109,6 @@ private:
 
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;
-
-    bool m_should_push_loads_to_history { true };
 };
 
 }

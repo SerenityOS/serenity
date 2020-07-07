@@ -88,36 +88,14 @@ Tab::Tab(Type type)
     else
         m_web_content_view = widget.add<WebContentView>();
 
-    m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) {
-        m_history.go_back();
-        update_actions();
-        TemporaryChange<bool> change(m_should_push_loads_to_history, false);
-        load(m_history.current());
-    },
-        this);
-
-    m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) {
-        m_history.go_forward();
-        update_actions();
-        TemporaryChange<bool> change(m_should_push_loads_to_history, false);
-        load(m_history.current());
-    },
-        this);
+    m_go_back_action = GUI::CommonActions::make_go_back_action( [this](auto&) { go_back(); }, this);
+    m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { go_forward(); }, this);
 
     toolbar.add_action(*m_go_back_action);
     toolbar.add_action(*m_go_forward_action);
 
-    toolbar.add_action(GUI::CommonActions::make_go_home_action([this](auto&) {
-        load(g_home_url);
-    },
-        this));
-
-    m_reload_action = GUI::CommonActions::make_reload_action(
-        [this](auto&) {
-            TemporaryChange<bool> change(m_should_push_loads_to_history, false);
-            reload();
-        },
-        this);
+    toolbar.add_action(GUI::CommonActions::make_go_home_action([this](auto&) { load(g_home_url); }, this));
+    m_reload_action = GUI::CommonActions::make_reload_action( [this](auto&) { reload(); }, this);
 
     toolbar.add_action(*m_reload_action);
 
@@ -155,8 +133,6 @@ Tab::Tab(Type type)
     hooks().on_load_start = [this](auto& url) {
         m_location_box->set_icon(nullptr);
         m_location_box->set_text(url.to_string());
-        if (m_should_push_loads_to_history)
-            m_history.push(url);
         update_actions();
         update_bookmark_button(url.to_string());
     };
@@ -369,6 +345,9 @@ Tab::Tab(Type type)
             }
         },
         this));
+    debug_menu.add_action(GUI::Action::create("Dump history", { Mod_Ctrl, Key_H }, [&](auto&) {
+        m_history.dump();
+    }));
     debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable(
         "Line box borders", [this](auto& action) {
@@ -413,8 +392,11 @@ Tab::~Tab()
 {
 }
 
-void Tab::load(const URL& url)
+void Tab::load(const URL& url, LoadType load_type)
 {
+    if (load_type == LoadType::Normal)
+        m_history.push(url);
+
     if (m_type == Type::InProcessWebView)
         m_page_view->load(url);
     else
@@ -431,6 +413,20 @@ URL Tab::url() const
 void Tab::reload()
 {
     load(url());
+}
+
+void Tab::go_back()
+{
+    m_history.go_back();
+    update_actions();
+    load(m_history.current(), LoadType::HistoryNavigation);
+}
+
+void Tab::go_forward()
+{
+    m_history.go_forward();
+    update_actions();
+    load(m_history.current(), LoadType::HistoryNavigation);
 }
 
 void Tab::update_actions()
@@ -497,5 +493,6 @@ Web::WebViewHooks& Tab::hooks()
 {
     if (m_type == Type::InProcessWebView)
         return *m_page_view;
-    return *m_web_content_view;}
+    return *m_web_content_view;
+}
 }

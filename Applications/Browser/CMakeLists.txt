@@ -3,6 +3,7 @@ set(SOURCES
     BrowserConsoleClient.cpp
     ConsoleWidget.cpp
     DownloadWidget.cpp
+    History.cpp
     InspectorWidget.cpp
     main.cpp
     Tab.cpp
