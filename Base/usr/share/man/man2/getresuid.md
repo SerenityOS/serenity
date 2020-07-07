@@ -18,7 +18,7 @@ Returns the real, effective, and saved user or group ID.
 ## Return value
 
 If the call was set successful, returns 0.
-Else, returns -1 and sets `errno` to describe the error.
+Otherwise, returns -1 and sets `errno` to describe the error.
 
 ## Errors
 

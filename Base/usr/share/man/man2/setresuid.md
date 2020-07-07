@@ -22,7 +22,7 @@ For non-superusers, each of the given values has to be equal to any of the curre
 ## Return value
 
 If the call was set successful, returns 0.
-Else, returns -1 and sets `errno` to describe the error.
+Otherwise, returns -1 and sets `errno` to describe the error.
 
 ## Errors
 
