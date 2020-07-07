@@ -295,7 +295,7 @@ void AbstractTableView::mousemove_event(MouseEvent& event)
         bool found_hovered_header = false;
         for (int i = 0; i < column_count; ++i) {
             if (column_resize_grabbable_rect(i).contains(horizontally_adjusted_position)) {
-                window()->set_override_cursor(StandardCursor::ResizeHorizontal);
+                window()->set_override_cursor(StandardCursor::ResizeColumn);
                 set_hovered_header_index(-1);
                 return;
             }
