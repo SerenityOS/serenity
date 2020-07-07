@@ -42,7 +42,7 @@ static ManualSectionNode s_sections[] = {
 
 ManualModel::ManualModel()
 {
-    // FIXME: need some help from the icon fairy ^)
+    m_section_open_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/book-open.png"));
     m_section_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"));
     m_page_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
 }
@@ -142,10 +142,18 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, Role role) const
     case Role::Icon:
         if (node->is_page())
             return m_page_icon;
+        if (node->is_open())
+            return m_section_open_icon;
         return m_section_icon;
     default:
         return {};
     }
+}
+
+void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, const bool open)
+{
+    auto* node = static_cast<ManualSectionNode*>(index.internal_data());
+    node->set_open(open);
 }
 
 void ManualModel::update()
