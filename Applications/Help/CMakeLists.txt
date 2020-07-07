@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_bin(Help)
-target_link_libraries(Help LibWeb LibMarkdown LibGUI)
+target_link_libraries(Help LibWeb LibMarkdown LibGUI LibDesktop)
