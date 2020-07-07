@@ -28,3 +28,4 @@ alias ws=WebServer
 alias sl=Solitaire
 alias wv=WebView
 
+alias ll='ls -l'
