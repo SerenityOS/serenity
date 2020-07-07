@@ -46,6 +46,8 @@ public:
 
     virtual const ManualNode* parent() const override { return nullptr; }
     virtual String name() const override { return m_full_name; }
+    virtual bool is_open() const override { return m_open; }
+    void set_open(bool open);
 
     const String& section_name() const { return m_section; }
     String path() const;
@@ -57,4 +59,5 @@ private:
     String m_full_name;
     mutable NonnullOwnPtrVector<ManualNode> m_children;
     mutable bool m_reified { false };
+    bool m_open { false };
 };

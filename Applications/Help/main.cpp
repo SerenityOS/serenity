@@ -147,11 +147,16 @@ int main(int argc, char* argv[])
         String path = model->page_path(tree_view.selection().first());
         if (path.is_null()) {
             page_view.set_document(nullptr);
+            window->set_title("Help");
             return;
         }
         history.push(path);
         update_actions();
         open_page(path);
+    };
+
+    tree_view.on_toggle = [&](const GUI::ModelIndex& index, const bool open) {
+        model->update_section_node_on_toggle(index, open);
     };
 
     page_view.on_link_click = [&](auto& url, auto&, unsigned) {
