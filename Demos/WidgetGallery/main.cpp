@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -242,6 +243,76 @@ int main(int argc, char** argv)
 
     auto& gif_animation_image = tab_image.add<GUI::Image>();
     gif_animation_image.load_from_file("/res/download-animation.gif");
+
+    auto& tab_cursors = tab_widget.add_tab<GUI::Widget>("Cursors");
+    tab_cursors.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    tab_cursors.set_layout<GUI::VerticalBoxLayout>();
+    tab_cursors.layout()->set_margins({ 4, 4, 4, 4 });
+    tab_cursors.layout()->set_spacing(4);
+
+    auto& cursor_group_box = tab_cursors.add<GUI::GroupBox>("Cursor");
+    cursor_group_box.set_layout<GUI::VerticalBoxLayout>();
+    cursor_group_box.layout()->set_margins({ 5, 15, 5, 5 });
+    cursor_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    cursor_group_box.set_preferred_size(0, 390);
+
+    auto& radio_cursor_none = cursor_group_box.add<GUI::RadioButton>("None");
+    radio_cursor_none.set_checked(true);
+    radio_cursor_none.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::None);
+    };
+    auto& radio_cursor_arrow = cursor_group_box.add<GUI::RadioButton>("Arrow");
+    radio_cursor_arrow.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::Arrow);
+    };
+    auto& radio_cursor_i_beam = cursor_group_box.add<GUI::RadioButton>("IBeam");
+    radio_cursor_i_beam.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::IBeam);
+    };
+    auto& radio_cursor_resize_horizontal = cursor_group_box.add<GUI::RadioButton>("ResizeHorizontal");
+    radio_cursor_resize_horizontal.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::ResizeHorizontal);
+    };
+    auto& radio_cursor_resize_vertical = cursor_group_box.add<GUI::RadioButton>("ResizeVertical");
+    radio_cursor_resize_vertical.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::ResizeVertical);
+    };
+    auto& radio_cursor_resize_diagonal_tlbr = cursor_group_box.add<GUI::RadioButton>("ResizeDiagonalTLBR");
+    radio_cursor_resize_diagonal_tlbr.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::ResizeDiagonalTLBR);
+    };
+    auto& radio_cursor_resize_diagonal_bltr = cursor_group_box.add<GUI::RadioButton>("ResizeDiagonalBLTR");
+    radio_cursor_resize_diagonal_bltr.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::ResizeDiagonalBLTR);
+    };
+    auto& radio_cursor_resize_column = cursor_group_box.add<GUI::RadioButton>("ResizeColumn");
+    radio_cursor_resize_column.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::ResizeColumn);
+    };
+    auto& radio_cursor_resize_row = cursor_group_box.add<GUI::RadioButton>("ResizeRow");
+    radio_cursor_resize_row.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::ResizeRow);
+    };
+    auto& radio_cursor_hand = cursor_group_box.add<GUI::RadioButton>("Hand");
+    radio_cursor_hand.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::Hand);
+    };
+    auto& radio_cursor_help = cursor_group_box.add<GUI::RadioButton>("Help");
+    radio_cursor_help.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::Help);
+    };
+    auto& radio_cursor_drag = cursor_group_box.add<GUI::RadioButton>("Drag");
+    radio_cursor_drag.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::Drag);
+    };
+    auto& radio_cursor_move = cursor_group_box.add<GUI::RadioButton>("Move");
+    radio_cursor_move.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::Move);
+    };
+    auto& radio_cursor_wait = cursor_group_box.add<GUI::RadioButton>("Wait");
+    radio_cursor_wait.on_checked = [&](bool) {
+        window->set_override_cursor(GUI::StandardCursor::Wait);
+    };
 
     window->show();
 
