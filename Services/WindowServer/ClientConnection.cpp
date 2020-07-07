@@ -842,8 +842,12 @@ void ClientConnection::set_unresponsive(bool unresponsive)
         return;
     m_unresponsive = unresponsive;
     for (auto& it : m_windows) {
-        it.value->invalidate();
+        auto& window = *it.value;
+        window.invalidate();
+        if (unresponsive)
+            window.set_override_cursor(WindowManager::the().wait_cursor());
     }
+    Compositor::the().invalidate_cursor();
 }
 
 void ClientConnection::may_have_become_unresponsive()
