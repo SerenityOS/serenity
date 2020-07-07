@@ -1030,10 +1030,11 @@ void WindowManager::set_active_window(Window* window)
         active_client = m_active_window->client();
         Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
         m_active_window->invalidate();
-
-        auto* client = window->client();
-        ASSERT(client);
-        MenuManager::the().set_current_menubar(client->app_menubar());
+        if (auto* client = window->client()) {
+            MenuManager::the().set_current_menubar(client->app_menubar());
+        } else {
+            MenuManager::the().set_current_menubar(nullptr);
+        }
         tell_wm_listeners_window_state_changed(*m_active_window);
     } else {
         MenuManager::the().set_current_menubar(nullptr);
