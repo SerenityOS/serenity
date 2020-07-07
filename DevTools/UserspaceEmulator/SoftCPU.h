@@ -510,6 +510,20 @@ public:
 private:
     Emulator& m_emulator;
 
+    bool get_of() const { return m_of; }
+    bool get_sf() const { return m_sf; }
+    bool get_zf() const { return m_zf; }
+    bool get_af() const { return m_af; }
+    bool get_pf() const { return m_pf; }
+    bool get_cf() const { return m_cf; }
+
+    void set_of(bool value) { m_of = value; }
+    void set_sf(bool value) { m_sf = value; }
+    void set_zf(bool value) { m_zf = value; }
+    void set_af(bool value) { m_af = value; }
+    void set_pf(bool value) { m_pf = value; }
+    void set_cf(bool value) { m_cf = value; }
+
     u32* m_reg32_table[8];
 
     u32 m_eax { 0 };
@@ -520,6 +534,13 @@ private:
     u32 m_ebp { 0 };
     u32 m_esi { 0 };
     u32 m_edi { 0 };
+
+    bool m_of { false };
+    bool m_sf { false };
+    bool m_zf { false };
+    bool m_af { false };
+    bool m_pf { false };
+    bool m_cf { false };
 };
 
 }
