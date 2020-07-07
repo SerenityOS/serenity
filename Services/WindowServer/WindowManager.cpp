@@ -395,7 +395,10 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
         { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
     };
     Gfx::IntRect outer_rect = window.frame().rect();
-    ASSERT(outer_rect.contains(position));
+    if (!outer_rect.contains(position)) {
+        // FIXME: This used to be an ASSERT but crashing WindowServer over this seems silly.
+        dbg() << "FIXME: !outer_rect.contains(position): outer_rect=" << outer_rect << ", position=" << position;
+    }
     int window_relative_x = position.x() - outer_rect.x();
     int window_relative_y = position.y() - outer_rect.y();
     int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
