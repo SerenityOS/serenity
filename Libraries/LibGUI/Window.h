@@ -52,6 +52,7 @@ enum class StandardCursor {
     Help,
     Drag,
     Move,
+    Wait,
 };
 
 class Window : public Core::Object {

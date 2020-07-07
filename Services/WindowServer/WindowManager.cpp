@@ -124,6 +124,7 @@ void WindowManager::reload_config(bool set_screen)
     m_disallowed_cursor = get_cursor("Disallowed");
     m_move_cursor = get_cursor("Move");
     m_drag_cursor = get_cursor("Drag");
+    m_wait_cursor = get_cursor("Wait");
 }
 
 const Gfx::Font& WindowManager::font() const

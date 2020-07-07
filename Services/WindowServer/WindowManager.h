@@ -133,6 +133,7 @@ public:
     const Cursor& disallowed_cursor() const { return *m_disallowed_cursor; }
     const Cursor& move_cursor() const { return *m_move_cursor; }
     const Cursor& drag_cursor() const { return *m_drag_cursor; }
+    const Cursor& wait_cursor() const { return *m_wait_cursor; }
 
     void invalidate(const Gfx::IntRect&);
     void invalidate();
@@ -216,6 +217,7 @@ private:
     RefPtr<Cursor> m_disallowed_cursor;
     RefPtr<Cursor> m_move_cursor;
     RefPtr<Cursor> m_drag_cursor;
+    RefPtr<Cursor> m_wait_cursor;
 
     InlineLinkedList<Window> m_windows_in_order;
 
