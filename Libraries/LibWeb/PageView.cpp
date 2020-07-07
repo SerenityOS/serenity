@@ -45,8 +45,8 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame/EventHandler.h>
 #include <LibWeb/Frame/Frame.h>
-#include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutBreak.h>
+#include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -370,7 +370,7 @@ void PageView::keydown_event(GUI::KeyEvent& event)
 
 URL PageView::url() const
 {
-    if (page().main_frame().document())
+    if (!page().main_frame().document())
         return {};
     return page().main_frame().document()->url();
 }
