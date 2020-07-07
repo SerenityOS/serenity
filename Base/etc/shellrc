@@ -27,5 +27,6 @@ alias pv=Profiler
 alias ws=WebServer
 alias sl=Solitaire
 alias wv=WebView
+alias ue=UserspaceEmulator
 
 alias ll='ls -l'
