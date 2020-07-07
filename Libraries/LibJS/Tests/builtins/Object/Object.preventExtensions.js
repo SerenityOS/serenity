@@ -24,6 +24,20 @@ describe("correct behavior", () => {
         o.baz = "baz";
         expect(o.baz).toBeUndefined();
     });
+
+    test("modifying existing properties", () => {
+        const o = { foo: "bar" };
+        Object.preventExtensions(o);
+        o.foo = "baz";
+        expect(o.foo).toBe("baz");
+    });
+
+    test("deleting existing properties", () => {
+        const o = { foo: "bar" };
+        Object.preventExtensions(o);
+        delete o.foo;
+        expect(o).not.toHaveProperty("foo");
+    });
 });
 
 describe("errors", () => {
