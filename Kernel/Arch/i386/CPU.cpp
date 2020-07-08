@@ -990,8 +990,6 @@ void Processor::initialize(u32 cpu)
         if (cpu >= s_processors->size())
             s_processors->resize(cpu + 1);
         (*s_processors)[cpu] = this;
-
-        klog() << "CPU[" << cpu << "]: initialized Processor at " << VirtualAddress(FlatPtr(this));
     }
 }
 
@@ -1344,6 +1342,27 @@ void Processor::assume_context(Thread& thread, u32 flags)
     ASSERT_NOT_REACHED();
 }
 
+extern "C" void pre_init_finished(void)
+{
+    ASSERT(g_scheduler_lock.own_lock());
+
+    // The target flags will get restored upon leaving the trap
+    u32 prev_flags = cpu_flags();
+    g_scheduler_lock.unlock(prev_flags);
+
+    // We because init_finished() will wait on the other APs, we need
+    // to release the scheduler lock so that the other APs can also get
+    // to this point
+}
+
+extern "C" void post_init_finished(void)
+{
+    // We need to re-acquire the scheduler lock before a context switch
+    // transfers control into the idle loop, which needs the lock held
+    ASSERT(!g_scheduler_lock.own_lock());
+    g_scheduler_lock.lock();
+}
+
 void Processor::initialize_context_switching(Thread& initial_thread)
 {
     ASSERT(initial_thread.process().is_ring0());
@@ -1368,9 +1387,11 @@ void Processor::initialize_context_switching(Thread& initial_thread)
         "addl $20, %%ebx \n" // calculate pointer to TrapFrame
         "pushl %%ebx \n"
         "cld \n"
-        "pushl %[cpu] \n"
+        "pushl %[cpu] \n" // push argument for init_finished before register is clobbered
+        "call pre_init_finished \n"
         "call init_finished \n"
         "addl $4, %%esp \n"
+        "call post_init_finished \n"
         "call enter_trap_no_irq \n"
         "addl $4, %%esp \n"
         "lret \n"

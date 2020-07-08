@@ -166,10 +166,7 @@ extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
 {
     processor_info->early_initialize(cpu);
 
-    klog() << "CPU #" << cpu << " processor_info at " << VirtualAddress(FlatPtr(processor_info));
-
     processor_info->initialize(cpu);
-    APIC::the().enable(cpu);
     MemoryManager::initialize(cpu);
 
     Scheduler::set_idle_thread(APIC::the().get_idle_thread(cpu));
@@ -184,7 +181,6 @@ extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
 //
 extern "C" void init_finished(u32 cpu)
 {
-    klog() << "CPU #" << cpu << " finished initialization";
     if (cpu == 0) {
         // TODO: we can reuse the boot stack, maybe for kmalloc()?
     } else {

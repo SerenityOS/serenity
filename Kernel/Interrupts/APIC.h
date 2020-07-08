@@ -96,7 +96,6 @@ private:
     };
 
     OwnPtr<Region> m_apic_base;
-    Vector<OwnPtr<Region>> m_apic_ap_stacks;
     Vector<OwnPtr<Processor>> m_ap_processor_info;
     Vector<Thread*> m_ap_idle_threads;
     AK::Atomic<u8> m_apic_ap_count{0};
