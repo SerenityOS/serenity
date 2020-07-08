@@ -289,106 +289,109 @@ bool APIC::init_bsp()
 
 void APIC::do_boot_aps()
 {
-    if (m_processor_enabled_cnt > 1) {
-        u32 aps_to_enable = m_processor_enabled_cnt - 1;
+    ASSERT(m_processor_enabled_cnt > 1);
+    u32 aps_to_enable = m_processor_enabled_cnt - 1;
 
-        // Copy the APIC startup code and variables to P0x00008000
-        // Also account for the data appended to:
-        // * aps_to_enable u32 values for ap_cpu_init_stacks
-        // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
-        auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), PAGE_ROUND_UP(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))), {}, Region::Access::Read | Region::Access::Write | Region::Access::Execute);
-        memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
+    // Copy the APIC startup code and variables to P0x00008000
+    // Also account for the data appended to:
+    // * aps_to_enable u32 values for ap_cpu_init_stacks
+    // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
+    auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), PAGE_ROUND_UP(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))), {}, Region::Access::Read | Region::Access::Write | Region::Access::Execute);
+    memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
 
-        // Allocate enough stacks for all APs
-        for (u32 i = 0; i < aps_to_enable; i++) {
-            auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, false, true, true);
-            if (!stack_region) {
-                klog() << "APIC: Failed to allocate stack for AP #" << i;
-                return;
-            }
-            stack_region->set_stack(true);
-            m_apic_ap_stacks.append(move(stack_region));
+    // Allocate enough stacks for all APs
+    Vector<OwnPtr<Region>> apic_ap_stacks;
+    for (u32 i = 0; i < aps_to_enable; i++) {
+        auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, false, true, true);
+        if (!stack_region) {
+            klog() << "APIC: Failed to allocate stack for AP #" << i;
+            return;
         }
+        stack_region->set_stack(true);
+        apic_ap_stacks.append(move(stack_region));
+    }
 
-        // Store pointers to all stacks for the APs to use
-        auto ap_stack_array = APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_stacks);
-        ASSERT(aps_to_enable == m_apic_ap_stacks.size());
-        for (size_t i = 0; i < aps_to_enable; i++) {
-            ap_stack_array[i] = m_apic_ap_stacks[i]->vaddr().get() + Thread::default_kernel_stack_size;
+    // Store pointers to all stacks for the APs to use
+    auto ap_stack_array = APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_stacks);
+    ASSERT(aps_to_enable == apic_ap_stacks.size());
+    for (size_t i = 0; i < aps_to_enable; i++) {
+        ap_stack_array[i] = apic_ap_stacks[i]->vaddr().get() + Thread::default_kernel_stack_size;
 #ifdef APIC_DEBUG
-            klog() << "APIC: CPU[" << (i + 1) << "] stack at " << VirtualAddress(ap_stack_array[i]);
-#endif
-        }
-
-        // Allocate Processor structures for all APs and store the pointer to the data
-        m_ap_processor_info.resize(aps_to_enable);
-        for (size_t i = 0; i < aps_to_enable; i++)
-            m_ap_processor_info[i] = make<Processor>();
-        auto ap_processor_info_array = &ap_stack_array[aps_to_enable];
-        for (size_t i = 0; i < aps_to_enable; i++) {
-            ap_processor_info_array[i] = FlatPtr(m_ap_processor_info[i].ptr());
-#ifdef APIC_DEBUG
-            klog() << "APIC: CPU[" << (i + 1) << "] Processor at " << VirtualAddress(ap_processor_info_array[i]);
-#endif
-        }
-        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_processor_info_array) = FlatPtr(&ap_processor_info_array[0]);
-
-        // Store the BSP's CR3 value for the APs to use
-        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
-
-        // Store the BSP's GDT and IDT for the APs to use
-        const auto& gdtr = Processor::current().get_gdtr();
-        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_gdtr) = FlatPtr(&gdtr);
-        const auto& idtr = get_idtr();
-        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_idtr) = FlatPtr(&idtr);
-
-        // Store the BSP's CR0 and CR4 values for the APs to use
-        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr0) = read_cr0();
-        *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr4) = read_cr4();
-
-        // Create an idle thread for each processor. We have to do this here
-        // because we won't be able to send FlushTLB messages, so we have to
-        // have all memory set up for the threads so that when the APs are
-        // starting up, they can access all the memory properly
-        m_ap_idle_threads.resize(aps_to_enable);
-        for (u32 i = 0; i < aps_to_enable; i++)
-            m_ap_idle_threads[i] = Scheduler::create_ap_idle_thread(i + 1);
-
-#ifdef APIC_DEBUG
-        klog() << "APIC: Starting " << aps_to_enable << " AP(s)";
-#endif
-
-        // INIT
-        write_icr(ICRReg(0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
-
-        IO::delay(10 * 1000);
-
-        for (int i = 0; i < 2; i++) {
-            // SIPI
-            write_icr(ICRReg(0x08, ICRReg::StartUp, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf)); // start execution at P8000
-
-            IO::delay(200);
-        }
-
-        // Now wait until the ap_cpu_init_pending variable dropped to 0, which means all APs are initialized and no longer need these special mappings
-        if (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable) {
-#ifdef APIC_DEBUG
-            klog() << "APIC: Waiting for " << aps_to_enable << " AP(s) to finish initialization...";
-#endif
-            do {
-                // Wait a little bit
-                IO::delay(200);
-            } while (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable);
-        }
-
-#ifdef APIC_DEBUG
-        klog() << "APIC: " << m_processor_enabled_cnt << " processors are initialized and running";
+        klog() << "APIC: CPU[" << (i + 1) << "] stack at " << VirtualAddress(ap_stack_array[i]);
 #endif
     }
+
+    // Allocate Processor structures for all APs and store the pointer to the data
+    m_ap_processor_info.resize(aps_to_enable);
+    for (size_t i = 0; i < aps_to_enable; i++)
+        m_ap_processor_info[i] = make<Processor>();
+    auto ap_processor_info_array = &ap_stack_array[aps_to_enable];
+    for (size_t i = 0; i < aps_to_enable; i++) {
+        ap_processor_info_array[i] = FlatPtr(m_ap_processor_info[i].ptr());
+#ifdef APIC_DEBUG
+        klog() << "APIC: CPU[" << (i + 1) << "] Processor at " << VirtualAddress(ap_processor_info_array[i]);
+#endif
+    }
+    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_processor_info_array) = FlatPtr(&ap_processor_info_array[0]);
+
+    // Store the BSP's CR3 value for the APs to use
+    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
+
+    // Store the BSP's GDT and IDT for the APs to use
+    const auto& gdtr = Processor::current().get_gdtr();
+    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_gdtr) = FlatPtr(&gdtr);
+    const auto& idtr = get_idtr();
+    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_idtr) = FlatPtr(&idtr);
+
+    // Store the BSP's CR0 and CR4 values for the APs to use
+    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr0) = read_cr0();
+    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr4) = read_cr4();
+
+    // Create an idle thread for each processor. We have to do this here
+    // because we won't be able to send FlushTLB messages, so we have to
+    // have all memory set up for the threads so that when the APs are
+    // starting up, they can access all the memory properly
+    m_ap_idle_threads.resize(aps_to_enable);
+    for (u32 i = 0; i < aps_to_enable; i++)
+        m_ap_idle_threads[i] = Scheduler::create_ap_idle_thread(i + 1);
+
+#ifdef APIC_DEBUG
+    klog() << "APIC: Starting " << aps_to_enable << " AP(s)";
+#endif
+
+    // INIT
+    write_icr(ICRReg(0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
+
+    IO::delay(10 * 1000);
+
+    for (int i = 0; i < 2; i++) {
+        // SIPI
+        write_icr(ICRReg(0x08, ICRReg::StartUp, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf)); // start execution at P8000
+
+        IO::delay(200);
+    }
+
+    // Now wait until the ap_cpu_init_pending variable dropped to 0, which means all APs are initialized and no longer need these special mappings
+    if (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable) {
+#ifdef APIC_DEBUG
+        klog() << "APIC: Waiting for " << aps_to_enable << " AP(s) to finish initialization...";
+#endif
+        do {
+            // Wait a little bit
+            IO::delay(200);
+        } while (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable);
+    }
+
+#ifdef APIC_DEBUG
+    klog() << "APIC: " << m_processor_enabled_cnt << " processors are initialized and running";
+#endif
 }
 
 void APIC::boot_aps()
 {
+    if (m_processor_enabled_cnt <= 1)
+        return;
+
     // We split this into another call because do_boot_aps() will cause
     // MM calls upon exit, and we don't want to call smp_enable before that
     do_boot_aps();
@@ -396,10 +399,13 @@ void APIC::boot_aps()
     // Enable SMP, which means IPIs may now be sent
     Processor::smp_enable();
 
+#ifdef APIC_DEBUG
+    dbg() << "All processors initialized and waiting, trigger all to continue";
+#endif
+
     // Now trigger all APs to continue execution (need to do this after
     // the regions have been freed so that we don't trigger IPIs
-    if (m_processor_enabled_cnt > 1)
-        m_apic_ap_continue.store(1, AK::MemoryOrder::memory_order_release);
+    m_apic_ap_continue.store(1, AK::MemoryOrder::memory_order_release);
 }
 
 void APIC::enable(u32 cpu)
@@ -446,23 +452,6 @@ void APIC::enable(u32 cpu)
     write_register(APIC_REG_LVT_LINT1, APIC_LVT(0, 0) | APIC_LVT_TRIGGER_LEVEL);
 
     write_register(APIC_REG_TPR, 0);
-
-    if (cpu > 0) {
-        // Notify the BSP that we are done initializing. It will unmap the startup data at P8000
-        m_apic_ap_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
-#ifdef APIC_DEBUG
-        klog() << "APIC: cpu #" << cpu << " initialized, waiting for all others";
-#endif
-        // The reason we're making all APs wait until the BSP signals them is that
-        // we don't want APs to trigger IPIs (e.g. through MM) while the BSP
-        // is unable to process them
-        while (!m_apic_ap_continue.load(AK::MemoryOrder::memory_order_consume)) {
-            IO::delay(200);
-        }
-
-        // boot_aps() freed memory, so we need to update our tlb
-        Processor::flush_entire_tlb_local();
-    }
 }
 
 Thread* APIC::get_idle_thread(u32 cpu) const
@@ -475,12 +464,33 @@ void APIC::init_finished(u32 cpu)
 {
     // This method is called once the boot stack is no longer needed
     ASSERT(cpu > 0);
-    ASSERT(cpu <= m_apic_ap_count);
-    ASSERT(m_apic_ap_stacks[cpu - 1]);
+    ASSERT(cpu < m_processor_enabled_cnt);
+    // Since we're waiting on other APs here, we shouldn't have the
+    // scheduler lock
+    ASSERT(!g_scheduler_lock.own_lock());
+
+    // Notify the BSP that we are done initializing. It will unmap the startup data at P8000
+    m_apic_ap_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
 #ifdef APIC_DEBUG
-    klog() << "APIC: boot stack for for cpu #" << cpu << " no longer needed";
+    klog() << "APIC: cpu #" << cpu << " initialized, waiting for all others";
 #endif
-    m_apic_ap_stacks[cpu - 1].clear();
+
+    // The reason we're making all APs wait until the BSP signals them is that
+    // we don't want APs to trigger IPIs (e.g. through MM) while the BSP
+    // is unable to process them
+    while (!m_apic_ap_continue.load(AK::MemoryOrder::memory_order_consume)) {
+        IO::delay(200);
+    }
+
+#ifdef APIC_DEBUG
+    klog() << "APIC: cpu #" << cpu << " continues, all others are initialized";
+#endif
+
+    // do_boot_aps() freed memory, so we need to update our tlb
+    Processor::flush_entire_tlb_local();
+
+    // Now enable all the interrupts
+    APIC::the().enable(cpu);
 }
 
 void APIC::broadcast_ipi()
