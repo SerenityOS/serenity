@@ -126,6 +126,22 @@ set(CMAKE_RANLIB ${TOOLCHAIN_PREFIX}ranlib)
 set(CMAKE_STRIP ${TOOLCHAIN_PREFIX}strip)
 set(CMAKE_AR ${TOOLCHAIN_PREFIX}ar)
 
+foreach(lang ASM C CXX OBJC OBJCXX)
+    unset(CMAKE_${lang}_OSX_COMPATIBILITY_VERSION_FLAG)
+    unset(CMAKE_${lang}_OSX_CURRENT_VERSION_FLAG)
+    unset(CMAKE_${lang}_LINK_FLAGS)
+    unset(CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS)
+    unset(CMAKE_SHARED_MODULE_CREATE_${lang}_FLAGS)
+    unset(CMAKE_SHARED_MODULE_LOADER_${lang}_FLAG )
+    unset(CMAKE_${lang}_OSX_DEPLOYMENT_TARGET_FLAG)
+    unset(CMAKE_${lang}_SYSROOT_FLAG)
+    unset(CMAKE_SHARED_LIBRARY_SONAME_${lang}_FLAG)
+endforeach()
+
+set(CMAKE_INSTALL_NAME_TOOL "true")
+set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared")
+
 #FIXME: -fstack-protector
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -Wno-sized-deallocation -fno-sized-deallocation -fno-exceptions -fno-rtti -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-nonnull-compare -Wno-deprecated-copy -Wno-expansion-to-defined")
