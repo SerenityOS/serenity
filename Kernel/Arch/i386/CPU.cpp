@@ -788,10 +788,20 @@ void Processor::cpu_detect()
         set_feature(CPUFeature::TSC);
     if (processor_info.ecx() & (1 << 30))
         set_feature(CPUFeature::RDRAND);
-
+    if (processor_info.edx() & (1 << 11)) {
+        u32 stepping = processor_info.eax() & 0xf;
+        u32 model = (processor_info.eax() >> 4) & 0xf;
+        u32 family = (processor_info.eax() >> 8) & 0xf;
+        if (!(family == 6 && model < 3 && stepping < 3))
+            set_feature(CPUFeature::SEP);
+    }
     CPUID extended_processor_info(0x80000001);
     if (extended_processor_info.edx() & (1 << 20))
         set_feature(CPUFeature::NX);
+    if (extended_processor_info.edx() & (1 << 11)) {
+        // Only available in 64 bit mode
+        set_feature(CPUFeature::SYSCALL);
+    }
 
     CPUID extended_features(0x7);
     if (extended_features.ebx() & (1 << 20))
@@ -895,6 +905,10 @@ String Processor::features_string() const
                     return "tsc";
                 case CPUFeature::UMIP:
                     return "umip";
+                case CPUFeature::SEP:
+                    return "sep";
+                case CPUFeature::SYSCALL:
+                    return "syscall";
                 // no default statement here intentionally so that we get
                 // a warning if a new feature is forgotten to be added here
             }
