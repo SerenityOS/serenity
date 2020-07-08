@@ -9,6 +9,18 @@ test("plain property", () => {
     expect(o).not.toHaveSetterProperty("foo");
 });
 
+test("symbol property", () => {
+    let s = Symbol("foo");
+    let o = { [s]: "bar" };
+
+    expect(o).toHaveConfigurableProperty(s);
+    expect(o).toHaveEnumerableProperty(s);
+    expect(o).toHaveWritableProperty(s);
+    expect(o).toHaveValueProperty(s, "bar");
+    expect(o).not.toHaveGetterProperty(s);
+    expect(o).not.toHaveSetterProperty(s);
+});
+
 test("getter property", () => {
     let o = { get foo() {} };
 

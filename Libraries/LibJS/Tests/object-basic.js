@@ -31,6 +31,14 @@ describe("correct behavior", () => {
         expect(o["hello"]).toBe("friends");
     });
 
+    test("symbol keys", () => {
+        let object = {};
+        let symbol = Symbol("foo");
+
+        object[symbol] = 2;
+        expect(object[symbol]).toBe(2);
+    });
+
     test("computed properties", () => {
         const foo = "bar";
         const computed = "computed";
