@@ -46,7 +46,6 @@ public:
     void set_model_column(int column) { m_model_column = column; }
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
-    Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
     virtual void select_all() override;
 private:
@@ -67,6 +66,8 @@ private:
     Vector<int> items_intersecting_rect(const Gfx::IntRect&) const;
     void update_content_size();
     void get_item_rects(int item_index, const Gfx::Font&, const Variant& item_text, Gfx::IntRect& item_rect, Gfx::IntRect& icon_rect, Gfx::IntRect& text_rect) const;
+    bool update_rubber_banding(const Gfx::IntPoint&);
+    void scroll_out_of_view_timer_fired();
 
     int m_horizontal_padding { 5 };
     int m_model_column { 0 };
@@ -76,6 +77,9 @@ private:
     Gfx::IntSize m_effective_item_size { 80, 80 };
 
     bool m_rubber_banding { false };
+    bool m_rubber_banding_store_selection { false };
+    RefPtr<Core::Timer> m_out_of_view_timer;
+    Gfx::IntPoint m_out_of_view_position;
     Gfx::IntPoint m_rubber_band_origin;
     Gfx::IntPoint m_rubber_band_current;
     Vector<ModelIndex> m_rubber_band_remembered_selection;
