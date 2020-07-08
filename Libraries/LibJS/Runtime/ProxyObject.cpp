@@ -213,7 +213,7 @@ bool ProxyObject::prevent_extensions()
     return trap_result;
 }
 
-Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(PropertyName name) const
+Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(const PropertyName& name) const
 {
     if (m_is_revoked) {
         interpreter().throw_exception<TypeError>(ErrorType::ProxyRevoked);
@@ -270,7 +270,7 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(PropertyNa
     return result_desc;
 }
 
-bool ProxyObject::define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions)
+bool ProxyObject::define_property(const StringOrSymbol& property_name, const Object& descriptor, bool throw_exceptions)
 {
     if (m_is_revoked) {
         interpreter().throw_exception<TypeError>(ErrorType::ProxyRevoked);
@@ -287,7 +287,7 @@ bool ProxyObject::define_property(const FlyString& property_name, const Object& 
     }
     MarkedValueList arguments(interpreter().heap());
     arguments.append(Value(&m_target));
-    arguments.append(js_string(interpreter(), property_name));
+    arguments.append(property_name.to_value(interpreter()));
     arguments.append(Value(const_cast<Object*>(&descriptor)));
     auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
     if (interpreter().exception() || !trap_result)
@@ -324,7 +324,7 @@ bool ProxyObject::define_property(const FlyString& property_name, const Object& 
     return true;
 }
 
-bool ProxyObject::has_property(PropertyName name) const
+bool ProxyObject::has_property(const PropertyName& name) const
 {
     if (m_is_revoked) {
         interpreter().throw_exception<TypeError>(ErrorType::ProxyRevoked);
@@ -364,7 +364,7 @@ bool ProxyObject::has_property(PropertyName name) const
     return trap_result;
 }
 
-Value ProxyObject::get(PropertyName name, Value) const
+Value ProxyObject::get(const PropertyName& name, Value) const
 {
     if (m_is_revoked) {
         interpreter().throw_exception<TypeError>(ErrorType::ProxyRevoked);
@@ -396,7 +396,7 @@ Value ProxyObject::get(PropertyName name, Value) const
     return trap_result;
 }
 
-bool ProxyObject::put(PropertyName name, Value value, Value)
+bool ProxyObject::put(const PropertyName& name, Value value, Value)
 {
     if (m_is_revoked) {
         interpreter().throw_exception<TypeError>(ErrorType::ProxyRevoked);
@@ -434,7 +434,7 @@ bool ProxyObject::put(PropertyName name, Value value, Value)
     return true;
 }
 
-Value ProxyObject::delete_property(PropertyName name)
+Value ProxyObject::delete_property(const PropertyName& name)
 {
     if (m_is_revoked) {
         interpreter().throw_exception<TypeError>(ErrorType::ProxyRevoked);

@@ -41,13 +41,13 @@ public:
 
     const String& description() const { return m_description; }
     bool is_global() const { return m_is_global; }
-    const String to_string() const { return String::format("Symbol(%s)", description().characters()); }
+    String to_string() const { return String::format("Symbol(%s)", description().characters()); }
 
 private:
     virtual const char* class_name() const override { return "Symbol"; }
 
-    const String m_description;
-    const bool m_is_global;
+    String m_description;
+    bool m_is_global;
 };
 
 Symbol* js_symbol(Heap&, String description, bool is_global);

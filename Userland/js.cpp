@@ -197,7 +197,11 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
 
     size_t index = 0;
     for (auto& it : object.shape().property_table_ordered()) {
-        printf("\"\033[33;1m%s\033[0m\": ", it.key.characters());
+        if (it.key.is_string()) {
+            printf("\"\033[33;1m%s\033[0m\": ", it.key.to_display_string().characters());
+        } else {
+            printf("\033[33;1m%s\033[0m: ", it.key.to_display_string().characters());
+        }
         print_value(object.get_direct(it.value.offset), seen_objects);
         if (index != object.shape().property_count() - 1)
             fputs(", ", stdout);
@@ -792,10 +796,13 @@ int main(int argc, char** argv)
 
             Function<void(const JS::Shape&, const StringView&)> list_all_properties = [&results, &list_all_properties](const JS::Shape& shape, auto& property_pattern) {
                 for (const auto& descriptor : shape.property_table()) {
-                    if (descriptor.key.view().starts_with(property_pattern)) {
-                        Line::CompletionSuggestion completion { descriptor.key, Line::CompletionSuggestion::ForSearch };
+                    if (!descriptor.key.is_string())
+                        continue;
+                    auto key = descriptor.key.as_string();
+                    if (key.view().starts_with(property_pattern)) {
+                        Line::CompletionSuggestion completion { key, Line::CompletionSuggestion::ForSearch };
                         if (!results.contains_slow(completion)) { // hide duplicates
-                            results.append({ descriptor.key });
+                            results.append(key);
                         }
                     }
                 }
