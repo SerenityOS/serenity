@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/Model.h>
@@ -128,7 +129,7 @@ ModelIndex IconView::index_at_event_position(const Gfx::IntPoint& position) cons
     ASSERT(model());
     // FIXME: Since all items are the same size, just compute the clicked item index
     //        instead of iterating over everything.
-    auto adjusted_position = this->adjusted_position(position);
+    auto adjusted_position = to_content_position(position);
     for (int item_index = 0; item_index < item_count(); ++item_index) {
         Gfx::IntRect item_rect;
         Gfx::IntRect icon_rect;
@@ -140,11 +141,6 @@ ModelIndex IconView::index_at_event_position(const Gfx::IntPoint& position) cons
             return index;
     }
     return {};
-}
-
-Gfx::IntPoint IconView::adjusted_position(const Gfx::IntPoint& position) const
-{
-    return position.translated(0, vertical_scrollbar().value());
 }
 
 void IconView::mousedown_event(MouseEvent& event)
@@ -171,7 +167,7 @@ void IconView::mousedown_event(MouseEvent& event)
         selection().clear();
     }
 
-    auto adjusted_position = this->adjusted_position(event.position());
+    auto adjusted_position = to_content_position(event.position());
 
     m_might_drag = false;
     m_rubber_banding = true;
@@ -184,6 +180,8 @@ void IconView::mouseup_event(MouseEvent& event)
     if (m_rubber_banding && event.button() == MouseButton::Left) {
         m_rubber_banding = false;
         m_rubber_band_remembered_selection.clear();
+        if (m_out_of_view_timer)
+            m_out_of_view_timer->stop();
         update();
     }
     AbstractView::mouseup_event(event);
@@ -208,31 +206,84 @@ void IconView::drag_move_event(DragEvent& event)
     event.accept();
 }
 
+bool IconView::update_rubber_banding(const Gfx::IntPoint& position)
+{
+    auto adjusted_position = to_content_position(position);
+    if (m_rubber_band_current != adjusted_position) {
+        m_rubber_band_current = adjusted_position;
+        auto rubber_band_rect = Gfx::IntRect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
+        selection().clear();
+        for (auto item_index : items_intersecting_rect(rubber_band_rect)) {
+            selection().add(model()->index(item_index, model_column()));
+        }
+        if (m_rubber_banding_store_selection) {
+            for (auto stored_item : m_rubber_band_remembered_selection) {
+                selection().add(stored_item);
+            }
+        }
+        update();
+        return true;
+    }
+    return false;
+}
+
+#define SCROLL_OUT_OF_VIEW_HOT_MARGIN 20
+
 void IconView::mousemove_event(MouseEvent& event)
 {
     if (!model())
         return AbstractView::mousemove_event(event);
 
     if (m_rubber_banding) {
-        auto adjusted_position = this->adjusted_position(event.position());
-        if (m_rubber_band_current != adjusted_position) {
-            m_rubber_band_current = adjusted_position;
-            auto rubber_band_rect = Gfx::IntRect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
-            selection().clear();
-            for (auto item_index : items_intersecting_rect(rubber_band_rect)) {
-                selection().add(model()->index(item_index, model_column()));
+        m_rubber_banding_store_selection = (event.modifiers() & Mod_Ctrl);
+
+        auto in_view_rect = widget_inner_rect();
+        in_view_rect.shrink(SCROLL_OUT_OF_VIEW_HOT_MARGIN, SCROLL_OUT_OF_VIEW_HOT_MARGIN);
+        if (!in_view_rect.contains(event.position())) {
+            if (!m_out_of_view_timer) {
+                m_out_of_view_timer = add<Core::Timer>();
+                m_out_of_view_timer->set_interval(100);
+                m_out_of_view_timer->on_timeout = [this] {
+                    scroll_out_of_view_timer_fired();
+                };
             }
-            if (event.modifiers() & Mod_Ctrl) {
-                for (auto stored_item : m_rubber_band_remembered_selection) {
-                    selection().add(stored_item);
-                }
-            }
-            update();
-            return;
+            
+            m_out_of_view_position = event.position();
+            if (!m_out_of_view_timer->is_active())
+                m_out_of_view_timer->start();
+        } else {
+            if (m_out_of_view_timer)
+                m_out_of_view_timer->stop();
         }
+        if (update_rubber_banding(event.position()))
+            return;
     }
 
     AbstractView::mousemove_event(event);
+}
+
+void IconView::scroll_out_of_view_timer_fired()
+{
+    auto scroll_to = to_content_position(m_out_of_view_position);
+    // Adjust the scroll-to position by SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2
+    // depending on which direction we're scrolling. This allows us to
+    // start scrolling before we actually leave the visible area, which
+    // is important when there is no space to further move the mouse. The
+    // speed of scrolling is determined by the distance between the mouse
+    // pointer and the widget's inner rect shrunken by the hot margin
+    auto in_view_rect = widget_inner_rect().shrunken(SCROLL_OUT_OF_VIEW_HOT_MARGIN, SCROLL_OUT_OF_VIEW_HOT_MARGIN);
+    int adjust_x = 0, adjust_y = 0;
+    if (m_out_of_view_position.y() > in_view_rect.bottom())
+        adjust_y = (SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + min(SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.y() - in_view_rect.bottom());
+    else if (m_out_of_view_position.y() < in_view_rect.top())
+        adjust_y = -(SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + max(-SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.y() - in_view_rect.top());
+    if (m_out_of_view_position.x() > in_view_rect.right())
+        adjust_x = (SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + min(SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.x() - in_view_rect.right());
+    else if (m_out_of_view_position.x() < in_view_rect.left())
+        adjust_x = -(SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + max(-SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.x() - in_view_rect.left());
+    
+    ScrollableWidget::scroll_into_view({scroll_to.translated(adjust_x, adjust_y), {1, 1}}, true, true);
+    update_rubber_banding(m_out_of_view_position);
 }
 
 void IconView::get_item_rects(int item_index, const Gfx::Font& font, const Variant& item_text, Gfx::IntRect& item_rect, Gfx::IntRect& icon_rect, Gfx::IntRect& text_rect) const
