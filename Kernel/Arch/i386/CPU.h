@@ -599,7 +599,9 @@ enum class CPUFeature : u32 {
     SMEP = (1 << 6),
     SSE = (1 << 7),
     TSC = (1 << 8),
-    UMIP = (1 << 9)
+    UMIP = (1 << 9),
+    SEP = (1 << 10),
+    SYSCALL = (1 << 11)
 };
 
 class Thread;
@@ -612,6 +614,13 @@ struct TrapFrame;
 #define GDT_SELECTOR_TLS 0x28
 #define GDT_SELECTOR_PROC 0x30
 #define GDT_SELECTOR_TSS 0x38
+
+// SYSENTER makes certain assumptions on how the GDT is structured:
+static_assert(GDT_SELECTOR_CODE0 + 8 == GDT_SELECTOR_DATA0); // SS0 = CS0 + 8
+
+// SYSEXIT makes certain assumptions on how the GDT is structured:
+static_assert(GDT_SELECTOR_CODE0 + 16 == GDT_SELECTOR_CODE3); // CS3 = CS0 + 16
+static_assert(GDT_SELECTOR_CODE0 + 24 == GDT_SELECTOR_DATA3); // SS3 = CS0 + 32
 
 class ProcessorInfo;
 struct MemoryManagerData;
