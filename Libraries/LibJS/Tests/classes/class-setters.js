@@ -29,6 +29,8 @@ test("name", () => {
 });
 
 test("extended name syntax", () => {
+    const s = Symbol("foo");
+
     class A {
         set "method with space"(value) {
             this.a = value;
@@ -41,15 +43,21 @@ test("extended name syntax", () => {
         set [`he${"llo"}`](value) {
             this.c = value;
         }
+
+        set [s](value) {
+            this.d = value;
+        }
     }
 
     const a = new A();
     a["method with space"] = 1;
     a[12] = 2;
     a.hello = 3;
+    a[s] = 4;
     expect(a.a).toBe(1);
     expect(a.b).toBe(2);
     expect(a.c).toBe(3);
+    expect(a.d).toBe(4);
 });
 
 test("inherited setter", () => {

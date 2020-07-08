@@ -27,6 +27,8 @@ describe("correct behavior", () => {
     });
 
     test("extended name syntax", () => {
+        const s = Symbol("foo");
+
         class A {
             static set "method with space"(value) {
                 this.a = value;
@@ -39,14 +41,20 @@ describe("correct behavior", () => {
             static set [`he${"llo"}`](value) {
                 this.c = value;
             }
+
+            static set [s](value) {
+                this.d = value;
+            }
         }
 
         A["method with space"] = 1;
         A[12] = 2;
         A.hello = 3;
+        A[s] = 4;
         expect(A.a).toBe(1);
         expect(A.b).toBe(2);
         expect(A.c).toBe(3);
+        expect(A.d).toBe(4);
     });
 
     test("inherited static setter", () => {

@@ -12,7 +12,7 @@ const testObjStrSpread = obj => {
 };
 
 test("spread object literal inside object literal", () => {
-    let obj = {
+    const obj = {
         foo: 0,
         ...{ bar: 1, baz: 2 },
         qux: 3,
@@ -21,19 +21,19 @@ test("spread object literal inside object literal", () => {
 });
 
 test("spread object with assigned property inside object literal", () => {
-    obj = { foo: 0, bar: 1, baz: 2 };
+    const obj = { foo: 0, bar: 1, baz: 2 };
     obj.qux = 3;
     testObjSpread({ ...obj });
 });
 
 test("spread object inside object literal", () => {
     let a = { bar: 1, baz: 2 };
-    obj = { foo: 0, ...a, qux: 3 };
+    const obj = { foo: 0, ...a, qux: 3 };
     testObjSpread(obj);
 });
 
 test("complex nested object spreading", () => {
-    obj = {
+    const obj = {
         ...{},
         ...{
             ...{ foo: 0, bar: 1, baz: 2 },
@@ -44,29 +44,40 @@ test("complex nested object spreading", () => {
 });
 
 test("spread string in object literal", () => {
-    obj = { ..."abcd" };
+    const obj = { ..."abcd" };
     testObjStrSpread(obj);
 });
 
 test("spread array in object literal", () => {
-    obj = { ...["a", "b", "c", "d"] };
+    const obj = { ...["a", "b", "c", "d"] };
     testObjStrSpread(obj);
 });
 
 test("spread string object in object literal", () => {
-    obj = { ...String("abcd") };
+    const obj = { ...String("abcd") };
     testObjStrSpread(obj);
 });
 
 test("spread object with non-enumerable property", () => {
-    a = { foo: 0 };
+    const a = { foo: 0 };
     Object.defineProperty(a, "bar", {
         value: 1,
         enumerable: false,
     });
-    obj = { ...a };
+    const obj = { ...a };
     expect(obj.foo).toBe(0);
     expect(obj).not.toHaveProperty("bar");
+});
+
+test("spread object with symbol keys", () => {
+    const s = Symbol("baz");
+    const a = {
+        foo: "bar",
+        [s]: "qux",
+    };
+    const obj = { ...a };
+    expect(obj.foo).toBe("bar");
+    expect(obj[s]).toBe("qux");
 });
 
 test("spreading non-spreadable values", () => {

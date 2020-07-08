@@ -20,6 +20,8 @@ describe("correct behavior", () => {
     });
 
     test("extended name syntax", () => {
+        const s = Symbol("foo");
+
         class A {
             static get "method with space"() {
                 return 1;
@@ -32,11 +34,16 @@ describe("correct behavior", () => {
             static get [`he${"llo"}`]() {
                 return 3;
             }
+
+            static get [s]() {
+                return 4;
+            }
         }
 
         expect(A["method with space"]).toBe(1);
         expect(A[12]).toBe(2);
         expect(A.hello).toBe(3);
+        expect(A[s]).toBe(4);
     });
 
     test("inherited static getter", () => {

@@ -37,3 +37,14 @@ test("computed property method shorthand", () => {
     };
     expect(o[14]()).toBe("bar");
 });
+
+test("symbol computed property shorthand", () => {
+    const s = Symbol("foo");
+    const o = {
+        foo: "bar",
+        [s]() {
+            return this.foo;
+        },
+    };
+    expect(o[s]()).toBe("bar");
+});

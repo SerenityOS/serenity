@@ -14,6 +14,11 @@ describe("correct behavior", () => {
         expect(keys).toEqual(["foo", "bar", "baz"]);
     });
 
+    test("object argument with symbol keys", () => {
+        let keys = Object.keys({ foo: 1, [Symbol("bar")]: 2, baz: 3 });
+        expect(keys).toEqual(["foo", "baz"]);
+    });
+
     test("array argument", () => {
         let keys = Object.keys(["a", "b", "c"]);
         expect(keys).toEqual(["0", "1", "2"]);

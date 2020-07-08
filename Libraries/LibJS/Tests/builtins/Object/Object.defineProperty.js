@@ -1,5 +1,7 @@
 describe("normal functionality", () => {
-    test("non-configurable property", () => {
+    let s = Symbol("foo");
+
+    test("non-configurable string property", () => {
         let o = {};
         Object.defineProperty(o, "foo", { value: 1, writable: false, enumerable: false });
 
@@ -13,6 +15,20 @@ describe("normal functionality", () => {
         expect(o).toHaveValueProperty("foo", 1);
     });
 
+    test("non-configurable symbol property", () => {
+        let o = {};
+        Object.defineProperty(o, s, { value: 1, writable: false, enumerable: false });
+
+        expect(o[s]).toBe(1);
+        o[s] = 2;
+        expect(o[s]).toBe(1);
+
+        expect(o).not.toHaveConfigurableProperty(s);
+        expect(o).not.toHaveEnumerableProperty(s);
+        expect(o).not.toHaveWritableProperty(s);
+        expect(o).toHaveValueProperty(s, 1);
+    });
+
     test("array index getter", () => {
         let o = {};
         Object.defineProperty(o, 2, {
@@ -23,7 +39,17 @@ describe("normal functionality", () => {
         expect(o[2]).toBe(10);
     });
 
-    test("configurable property", () => {
+    test("symbol property getter", () => {
+        let o = {};
+        Object.defineProperty(o, s, {
+            get() {
+                return 10;
+            },
+        });
+        expect(o[s]).toBe(10);
+    });
+
+    test("configurable string property", () => {
         let o = {};
         Object.defineProperty(o, "foo", { value: "hi", writable: true, enumerable: true });
 
@@ -37,7 +63,21 @@ describe("normal functionality", () => {
         expect(o).toHaveValueProperty("foo", "ho");
     });
 
-    test("reconfigure configurable property", () => {
+    test("configurable symbol property", () => {
+        let o = {};
+        Object.defineProperty(o, s, { value: "hi", writable: true, enumerable: true });
+
+        expect(o[s]).toBe("hi");
+        o[s] = "ho";
+        expect(o[s]).toBe("ho");
+
+        expect(o).not.toHaveConfigurableProperty(s);
+        expect(o).toHaveEnumerableProperty(s);
+        expect(o).toHaveWritableProperty(s);
+        expect(o).toHaveValueProperty(s, "ho");
+    });
+
+    test("reconfigure configurable string property", () => {
         let o = {};
         Object.defineProperty(o, "foo", { value: 9, configurable: true, writable: false });
         Object.defineProperty(o, "foo", { configurable: true, writable: true });
@@ -48,7 +88,18 @@ describe("normal functionality", () => {
         expect(o).toHaveValueProperty("foo", 9);
     });
 
-    test("define accessor", () => {
+    test("reconfigure configurable symbol property", () => {
+        let o = {};
+        Object.defineProperty(o, s, { value: 9, configurable: true, writable: false });
+        Object.defineProperty(o, s, { configurable: true, writable: true });
+
+        expect(o).toHaveConfigurableProperty(s);
+        expect(o).toHaveWritableProperty(s);
+        expect(o).not.toHaveEnumerableProperty(s);
+        expect(o).toHaveValueProperty(s, 9);
+    });
+
+    test("define string accessor", () => {
         let o = {};
 
         Object.defineProperty(o, "foo", {
@@ -72,6 +123,31 @@ describe("normal functionality", () => {
         expect((o.foo = 5)).toBe(5);
         expect((o.foo = 4)).toBe(4);
     });
+
+    test("define symbol accessor", () => {
+        let o = {};
+
+        Object.defineProperty(o, s, {
+            configurable: true,
+            get() {
+                return o.secret_foo + 1;
+            },
+            set(value) {
+                this.secret_foo = value + 1;
+            },
+        });
+
+        o[s] = 10;
+        expect(o[s]).toBe(12);
+        o[s] = 20;
+        expect(o[s]).toBe(22);
+
+        Object.defineProperty(o, s, { configurable: true, value: 4 });
+
+        expect(o[s]).toBe(4);
+        expect((o[s] = 5)).toBe(5);
+        expect((o[s] = 4)).toBe(4);
+    });
 });
 
 describe("errors", () => {
@@ -84,6 +160,19 @@ describe("errors", () => {
         }).toThrowWithMessage(
             TypeError,
             "Cannot change attributes of non-configurable property 'foo'"
+        );
+    });
+
+    test("redefine non-configurable symbol property", () => {
+        let o = {};
+        let s = Symbol("foo");
+        Object.defineProperty(o, s, { value: 1, writable: true, enumerable: true });
+
+        expect(() => {
+            Object.defineProperty(o, s, { value: 2, writable: false, enumerable: true });
+        }).toThrowWithMessage(
+            TypeError,
+            "Cannot change attributes of non-configurable property 'Symbol(foo)'"
         );
     });
 
