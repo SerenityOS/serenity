@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Cell.h>
 #include <LibJS/Runtime/PropertyAttributes.h>
+#include <LibJS/Runtime/StringOrSymbol.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -42,7 +42,7 @@ struct PropertyMetadata {
 };
 
 struct TransitionKey {
-    FlyString property_name;
+    StringOrSymbol property_name;
     PropertyAttributes attributes { 0 };
 
     bool operator==(const TransitionKey& other) const
@@ -63,11 +63,11 @@ public:
     };
 
     explicit Shape(GlobalObject&);
-    Shape(Shape& previous_shape, const FlyString& property_name, PropertyAttributes attributes, TransitionType);
+    Shape(Shape& previous_shape, const StringOrSymbol& property_name, PropertyAttributes attributes, TransitionType);
     Shape(Shape& previous_shape, Object* new_prototype);
 
-    Shape* create_put_transition(const FlyString& name, PropertyAttributes attributes);
-    Shape* create_configure_transition(const FlyString& name, PropertyAttributes attributes);
+    Shape* create_put_transition(const StringOrSymbol&, PropertyAttributes attributes);
+    Shape* create_configure_transition(const StringOrSymbol&, PropertyAttributes attributes);
     Shape* create_prototype_transition(Object* new_prototype);
 
     bool is_unique() const { return m_unique; }
@@ -78,12 +78,12 @@ public:
     Object* prototype() { return m_prototype; }
     const Object* prototype() const { return m_prototype; }
 
-    Optional<PropertyMetadata> lookup(const FlyString&) const;
-    const HashMap<FlyString, PropertyMetadata>& property_table() const;
+    Optional<PropertyMetadata> lookup(const StringOrSymbol&) const;
+    const HashMap<StringOrSymbol, PropertyMetadata>& property_table() const;
     size_t property_count() const;
 
     struct Property {
-        FlyString key;
+        StringOrSymbol key;
         PropertyMetadata value;
     };
 
@@ -91,9 +91,9 @@ public:
 
     void set_prototype_without_transition(Object* new_prototype) { m_prototype = new_prototype; }
 
-    void remove_property_from_unique_shape(const FlyString&, size_t offset);
-    void add_property_to_unique_shape(const FlyString&, PropertyAttributes attributes);
-    void reconfigure_property_in_unique_shape(const FlyString& property_name, PropertyAttributes attributes);
+    void remove_property_from_unique_shape(const StringOrSymbol&, size_t offset);
+    void add_property_to_unique_shape(const StringOrSymbol&, PropertyAttributes attributes);
+    void reconfigure_property_in_unique_shape(const StringOrSymbol& property_name, PropertyAttributes attributes);
 
 private:
     virtual const char* class_name() const override { return "Shape"; }
@@ -103,11 +103,11 @@ private:
 
     GlobalObject& m_global_object;
 
-    mutable OwnPtr<HashMap<FlyString, PropertyMetadata>> m_property_table;
+    mutable OwnPtr<HashMap<StringOrSymbol, PropertyMetadata>> m_property_table;
 
     HashMap<TransitionKey, Shape*> m_forward_transitions;
     Shape* m_previous { nullptr };
-    FlyString m_property_name;
+    StringOrSymbol m_property_name;
     PropertyAttributes m_attributes { 0 };
     bool m_unique { false };
     Object* m_prototype { nullptr };
@@ -120,6 +120,6 @@ template<>
 struct AK::Traits<JS::TransitionKey> : public GenericTraits<JS::TransitionKey> {
     static unsigned hash(const JS::TransitionKey& key)
     {
-        return pair_int_hash(key.attributes.bits(), key.property_name.hash());
+        return pair_int_hash(key.attributes.bits(), Traits<JS::StringOrSymbol>::hash(key.property_name));
     }
 };

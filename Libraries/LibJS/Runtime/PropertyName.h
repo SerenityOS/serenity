@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibJS/Runtime/StringOrSymbol.h>
 
 namespace JS {
 
@@ -36,9 +37,21 @@ public:
         Invalid,
         Number,
         String,
+        Symbol,
     };
 
-    PropertyName() {}
+    static PropertyName from_value(Interpreter& interpreter, Value value)
+    {
+        if (value.is_symbol())
+            return &value.as_symbol();
+        if (value.is_number())
+            return value.as_i32();
+        if (!value.is_empty())
+            return value.to_string(interpreter);
+        return {};
+    }
+
+    PropertyName() { }
 
     PropertyName(i32 index)
         : m_type(Type::Number)
@@ -65,23 +78,79 @@ public:
     {
     }
 
+    PropertyName(Symbol* symbol)
+        : m_type(Type::Symbol)
+        , m_symbol(symbol)
+    {
+    }
+
+    PropertyName(const StringOrSymbol& string_or_symbol)
+    {
+        if (string_or_symbol.is_string()) {
+            m_string = string_or_symbol.as_string();
+            m_type = Type::String;
+        } else if (string_or_symbol.is_symbol()) {
+            m_symbol = const_cast<Symbol*>(string_or_symbol.as_symbol());
+            m_type = Type::Symbol;
+        }
+    }
+
     bool is_valid() const { return m_type != Type::Invalid; }
     bool is_number() const { return m_type == Type::Number; }
     bool is_string() const { return m_type == Type::String; }
+    bool is_symbol() const { return m_type == Type::Symbol; }
 
-    i32 as_number() const { return m_number; }
-    const FlyString& as_string() const { return m_string; }
+    i32 as_number() const
+    {
+        ASSERT(is_number());
+        return m_number;
+    }
+
+    const FlyString& as_string() const
+    {
+        ASSERT(is_string());
+        return m_string;
+    }
+
+    const Symbol* as_symbol() const
+    {
+        ASSERT(is_symbol());
+        return m_symbol;
+    }
 
     String to_string() const
     {
+        ASSERT(is_valid());
+        ASSERT(!is_symbol());
         if (is_string())
             return as_string();
         return String::number(as_number());
     }
 
+    StringOrSymbol to_string_or_symbol() const
+    {
+        ASSERT(is_valid());
+        ASSERT(!is_number());
+        if (is_string())
+            return StringOrSymbol(as_string());
+        return StringOrSymbol(as_symbol());
+    }
+
+    Value to_value(Interpreter& interpreter) const
+    {
+        if (is_string())
+            return js_string(interpreter, m_string);
+        if (is_number())
+            return Value(m_number);
+        if (is_symbol())
+            return m_symbol;
+        return js_undefined();
+    }
+
 private:
     Type m_type { Type::Invalid };
     FlyString m_string;
+    Symbol* m_symbol { nullptr };
     u32 m_number { 0 };
 };
 

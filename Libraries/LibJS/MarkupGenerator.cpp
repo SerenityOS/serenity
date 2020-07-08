@@ -146,7 +146,7 @@ void MarkupGenerator::object_to_html(const Object& object, StringBuilder& html_o
 
     size_t index = 0;
     for (auto& it : object.shape().property_table_ordered()) {
-        html_output.append(wrap_string_in_style(String::format("\"%s\"", it.key.characters()), StyleType::String));
+        html_output.append(wrap_string_in_style(String::format("\"%s\"", it.key.to_display_string().characters()), StyleType::String));
         html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
         value_to_html(object.get_direct(it.value.offset), html_output, seen_objects);
         if (index != object.shape().property_count() - 1)
