@@ -19,6 +19,15 @@ describe("basic functionality", () => {
         ]);
     });
 
+    test("entries with objects with symbol keys", () => {
+        let entries = Object.entries({ foo: 1, [Symbol("bar")]: 2, baz: 3 });
+
+        expect(entries).toEqual([
+            ["foo", 1],
+            ["baz", 3],
+        ]);
+    });
+
     test("entries with array", () => {
         entries = Object.entries(["a", "b", "c"]);
         expect(entries).toEqual([

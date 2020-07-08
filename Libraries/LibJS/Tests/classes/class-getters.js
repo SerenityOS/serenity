@@ -18,6 +18,8 @@ test("name", () => {
 });
 
 test("extended name syntax", () => {
+    const s = Symbol("foo");
+
     class A {
         get "method with space"() {
             return 1;
@@ -30,12 +32,17 @@ test("extended name syntax", () => {
         get [`he${"llo"}`]() {
             return 3;
         }
+
+        get [s]() {
+            return 4;
+        }
     }
 
     const a = new A();
     expect(a["method with space"]).toBe(1);
     expect(a[12]).toBe(2);
     expect(a.hello).toBe(3);
+    expect(a[s]).toBe(4);
 });
 
 test("inherited getter", () => {
