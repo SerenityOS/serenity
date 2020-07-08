@@ -26,14 +26,19 @@
  */
 
 #include <LibCore/Timer.h>
+#include <LibGUI/AboutDialog.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Image.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ProgressBar.h>
 #include <LibGUI/RadioButton.h>
@@ -49,9 +54,22 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
 
+    auto app_icon = GUI::Icon::default_icon("app-widget-gallery");
+
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 433, 487);
     window->set_title("Widget Gallery");
+    window->set_icon(app_icon.bitmap_for_size(16));
+
+    auto menubar = GUI::MenuBar::construct();
+
+    auto& app_menu = menubar->add_menu("Widget Gallery");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("Widget Gallery", app_icon.bitmap_for_size(32), window);
+    }));
 
     auto& root_widget = window->set_main_widget<GUI::Widget>();
     root_widget.set_fill_with_background_color(true);
@@ -313,6 +331,8 @@ int main(int argc, char** argv)
     radio_cursor_wait.on_checked = [&](bool) {
         window->set_override_cursor(GUI::StandardCursor::Wait);
     };
+
+    app->set_menubar(move(menubar));
 
     window->show();
 
