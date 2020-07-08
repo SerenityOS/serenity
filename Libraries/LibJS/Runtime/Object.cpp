@@ -164,7 +164,7 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
             return {};
         value_here = existing_property.value().value.value_or(js_undefined());
     } else {
-        auto metadata = shape().lookup(property_name.as_string());
+        auto metadata = shape().lookup(property_name.to_string_or_symbol());
         if (!metadata.has_value())
             return {};
         value_here = m_storage[metadata.value().offset].value_or(js_undefined());
@@ -179,7 +179,7 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
     return value_here;
 }
 
-Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode kind, bool only_enumerable_properties) const
+Value Object::get_own_properties(const Object& this_object, GetOwnPropertyReturnMode kind, bool only_enumerable_properties, GetOwnPropertyReturnType return_type) const
 {
     auto* properties_array = Array::create(global_object());
 
@@ -188,9 +188,9 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
         auto str = static_cast<const StringObject&>(this_object).primitive_string().string();
 
         for (size_t i = 0; i < str.length(); ++i) {
-            if (kind == GetOwnPropertyMode::Key) {
+            if (kind == GetOwnPropertyReturnMode::Key) {
                 properties_array->define_property(i, js_string(interpreter(), String::number(i)));
-            } else if (kind == GetOwnPropertyMode::Value) {
+            } else if (kind == GetOwnPropertyReturnMode::Value) {
                 properties_array->define_property(i, js_string(interpreter(), String::format("%c", str[i])));
             } else {
                 auto* entry_array = Array::create(global_object());
@@ -215,9 +215,9 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
         if (only_enumerable_properties && !value_and_attributes.attributes.is_enumerable())
             continue;
 
-        if (kind == GetOwnPropertyMode::Key) {
+        if (kind == GetOwnPropertyReturnMode::Key) {
             properties_array->define_property(property_index, js_string(interpreter(), String::number(entry.index())));
-        } else if (kind == GetOwnPropertyMode::Value) {
+        } else if (kind == GetOwnPropertyReturnMode::Value) {
             properties_array->define_property(property_index, value_and_attributes.value);
         } else {
             auto* entry_array = Array::create(global_object());
@@ -239,30 +239,35 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode k
         if (only_enumerable_properties && !it.value.attributes.is_enumerable())
             continue;
 
-        size_t offset = it.value.offset + property_index;
+        if (return_type == GetOwnPropertyReturnType::StringOnly && it.key.is_symbol())
+            continue;
+        if (return_type == GetOwnPropertyReturnType::SymbolOnly && it.key.is_string())
+            continue;
 
-        if (kind == GetOwnPropertyMode::Key) {
-            properties_array->define_property(offset, js_string(interpreter(), it.key));
-        } else if (kind == GetOwnPropertyMode::Value) {
-            properties_array->define_property(offset, this_object.get(it.key));
+        if (kind == GetOwnPropertyReturnMode::Key) {
+            properties_array->define_property(property_index, it.key.to_value(interpreter()));
+        } else if (kind == GetOwnPropertyReturnMode::Value) {
+            properties_array->define_property(property_index, this_object.get(it.key));
         } else {
             auto* entry_array = Array::create(global_object());
-            entry_array->define_property(0, js_string(interpreter(), it.key));
+            entry_array->define_property(0, it.key.to_value(interpreter()));
             if (interpreter().exception())
                 return {};
             entry_array->define_property(1, this_object.get(it.key));
             if (interpreter().exception())
                 return {};
-            properties_array->define_property(offset, entry_array);
+            properties_array->define_property(property_index, entry_array);
         }
         if (interpreter().exception())
             return {};
+
+        ++property_index;
     }
 
     return properties_array;
 }
 
-Optional<PropertyDescriptor> Object::get_own_property_descriptor(PropertyName property_name) const
+Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyName& property_name) const
 {
     Value value;
     PropertyAttributes attributes;
@@ -275,7 +280,7 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(PropertyName pr
         attributes = existing_value.value().attributes;
         attributes = default_attributes;
     } else {
-        auto metadata = shape().lookup(property_name.as_string());
+        auto metadata = shape().lookup(property_name.to_string_or_symbol());
         if (!metadata.has_value())
             return {};
         value = m_storage[metadata.value().offset];
@@ -301,7 +306,7 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(PropertyName pr
     return descriptor;
 }
 
-Value Object::get_own_property_descriptor_object(PropertyName property_name) const
+Value Object::get_own_property_descriptor_object(const PropertyName& property_name) const
 {
     auto descriptor_opt = get_own_property_descriptor(property_name);
     if (!descriptor_opt.has_value())
@@ -343,7 +348,7 @@ void Object::set_shape(Shape& new_shape)
     m_shape = &new_shape;
 }
 
-bool Object::define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions)
+bool Object::define_property(const StringOrSymbol& property_name, const Object& descriptor, bool throw_exceptions)
 {
     bool is_accessor_property = descriptor.has_property("get") || descriptor.has_property("set");
     PropertyAttributes attributes;
@@ -423,20 +428,22 @@ bool Object::define_property(const FlyString& property_name, const Object& descr
     return define_property(property_name, value, attributes, throw_exceptions);
 }
 
-bool Object::define_property(PropertyName property_name, Value value, PropertyAttributes attributes, bool throw_exceptions)
+bool Object::define_property(const PropertyName& property_name, Value value, PropertyAttributes attributes, bool throw_exceptions)
 {
     if (property_name.is_number())
         return put_own_property_by_index(*this, property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
-    i32 property_index = property_name.as_string().to_int().value_or(-1);
-    if (property_index >= 0)
-        return put_own_property_by_index(*this, property_index, value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
-    return put_own_property(*this, property_name.as_string(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+    if (property_name.is_string()) {
+        i32 property_index = property_name.as_string().to_int().value_or(-1);
+        if (property_index >= 0)
+            return put_own_property_by_index(*this, property_index, value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+    }
+    return put_own_property(*this, property_name.to_string_or_symbol(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
-bool Object::define_accessor(PropertyName property_name, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes, bool throw_exceptions)
+bool Object::define_accessor(const PropertyName& property_name, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes, bool throw_exceptions)
 {
     Accessor* accessor { nullptr };
-    auto property_metadata = shape().lookup(property_name.as_string());
+    auto property_metadata = shape().lookup(property_name.to_string_or_symbol());
     if (property_metadata.has_value()) {
         auto existing_property = get_direct(property_metadata.value().offset);
         if (existing_property.is_accessor())
@@ -458,7 +465,7 @@ bool Object::define_accessor(PropertyName property_name, Function& getter_or_set
     return true;
 }
 
-bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
+bool Object::put_own_property(Object& this_object, const StringOrSymbol& property_name, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
@@ -470,7 +477,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
         dbg() << "Disallow define_property of non-extensible object";
 #endif
         if (throw_exceptions && interpreter().in_strict_mode())
-            interpreter().throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_name.characters());
+            interpreter().throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_name.to_display_string().characters());
         return false;
     }
 
@@ -481,7 +488,6 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
         if (accessor.setter())
             attributes.set_has_setter();
     }
-
 
     if (new_property) {
         if (!m_shape->is_unique() && shape().property_count() > 100) {
@@ -505,7 +511,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
         dbg() << "Disallow reconfig of non-configurable property";
 #endif
         if (throw_exceptions)
-            interpreter().throw_exception<TypeError>(ErrorType::DescChangeNonConfigurable, property_name.characters());
+            interpreter().throw_exception<TypeError>(ErrorType::DescChangeNonConfigurable, property_name.to_display_string().characters());
         return false;
     }
 
@@ -595,7 +601,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     return true;
 }
 
-Value Object::delete_property(PropertyName property_name)
+Value Object::delete_property(const PropertyName& property_name)
 {
     ASSERT(property_name.is_valid());
     if (property_name.is_number())
@@ -604,7 +610,7 @@ Value Object::delete_property(PropertyName property_name)
     if (property_index >= 0)
         return Value(m_indexed_properties.remove(property_name.as_number()));
 
-    auto metadata = shape().lookup(property_name.as_string());
+    auto metadata = shape().lookup(property_name.to_string_or_symbol());
     if (!metadata.has_value())
         return Value(true);
     if (!metadata.value().attributes.is_configurable())
@@ -614,7 +620,7 @@ Value Object::delete_property(PropertyName property_name)
 
     ensure_shape_is_unique();
 
-    shape().remove_property_from_unique_shape(property_name.as_string(), deleted_offset);
+    shape().remove_property_from_unique_shape(property_name.to_string_or_symbol(), deleted_offset);
     m_storage.remove(deleted_offset);
     return Value(true);
 }
@@ -652,15 +658,17 @@ Value Object::get_by_index(u32 property_index) const
     return {};
 }
 
-Value Object::get(PropertyName property_name, Value receiver) const
+Value Object::get(const PropertyName& property_name, Value receiver) const
 {
     if (property_name.is_number())
         return get_by_index(property_name.as_number());
 
-    auto property_string = property_name.to_string();
-    i32 property_index = property_string.to_int().value_or(-1);
-    if (property_index >= 0)
-        return get_by_index(property_index);
+    if (property_name.is_string()) {
+        auto property_string = property_name.to_string();
+        i32 property_index = property_string.to_int().value_or(-1);
+        if (property_index >= 0)
+            return get_by_index(property_index);
+    }
 
     const Object* object = this;
     while (object) {
@@ -705,23 +713,27 @@ bool Object::put_by_index(u32 property_index, Value value)
     return put_own_property_by_index(*this, property_index, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
-bool Object::put(PropertyName property_name, Value value, Value receiver)
+bool Object::put(const PropertyName& property_name, Value value, Value receiver)
 {
     if (property_name.is_number())
         return put_by_index(property_name.as_number(), value);
 
     ASSERT(!value.is_empty());
 
-    auto property_string = property_name.to_string();
-    i32 property_index = property_string.to_int().value_or(-1);
-    if (property_index >= 0)
-        return put_by_index(property_index, value);
+    if (property_name.is_string()) {
+        auto& property_string = property_name.as_string();
+        i32 property_index = property_string.to_int().value_or(-1);
+        if (property_index >= 0)
+            return put_by_index(property_index, value);
+    }
+
+    auto string_or_symbol = property_name.to_string_or_symbol();
 
     // If there's a setter in the prototype chain, we go to the setter.
     // Otherwise, it goes in the own property storage.
     Object* object = this;
     while (object) {
-        auto metadata = object->shape().lookup(property_string);
+        auto metadata = object->shape().lookup(string_or_symbol);
         if (metadata.has_value()) {
             auto value_here = object->m_storage[metadata.value().offset];
             if (value_here.is_accessor()) {
@@ -739,22 +751,28 @@ bool Object::put(PropertyName property_name, Value value, Value receiver)
         if (interpreter().exception())
             return {};
     }
-    return put_own_property(*this, property_string, value, default_attributes, PutOwnPropertyMode::Put);
+    return put_own_property(*this, string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
-bool Object::define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+bool Object::define_native_function(const StringOrSymbol& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
-    auto* function = NativeFunction::create(interpreter(), global_object(), property_name, move(native_function));
+    String function_name;
+    if (property_name.is_string()) {
+        function_name = property_name.as_string();
+    } else {
+        function_name = String::format("[%s]", property_name.as_symbol()->description().characters());
+    }
+    auto* function = NativeFunction::create(interpreter(), global_object(), function_name, move(native_function));
     function->define_property("length", Value(length), Attribute::Configurable);
     if (interpreter().exception())
         return {};
-    function->define_property("name", js_string(heap(), property_name), Attribute::Configurable);
+    function->define_property("name", js_string(heap(), function_name), Attribute::Configurable);
     if (interpreter().exception())
         return {};
     return define_property(property_name, function, attribute);
 }
 
-bool Object::define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
+bool Object::define_native_property(const StringOrSymbol& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
     return define_property(property_name, heap().allocate<NativeProperty>(global_object(), move(getter), move(setter)), attribute);
 }
@@ -771,7 +789,7 @@ void Object::visit_children(Cell::Visitor& visitor)
         visitor.visit(value.value);
 }
 
-bool Object::has_property(PropertyName property_name) const
+bool Object::has_property(const PropertyName& property_name) const
 {
     const Object* object = this;
     while (object) {
@@ -784,7 +802,7 @@ bool Object::has_property(PropertyName property_name) const
     return false;
 }
 
-bool Object::has_own_property(PropertyName property_name) const
+bool Object::has_own_property(const PropertyName& property_name) const
 {
     auto has_indexed_property = [&](u32 index) -> bool {
         if (is_string_object())
@@ -795,11 +813,13 @@ bool Object::has_own_property(PropertyName property_name) const
     if (property_name.is_number())
         return has_indexed_property(property_name.as_number());
 
-    i32 property_index = property_name.as_string().to_int().value_or(-1);
-    if (property_index >= 0)
-        return has_indexed_property(property_index);
+    if (property_name.is_string()) {
+        i32 property_index = property_name.as_string().to_int().value_or(-1);
+        if (property_index >= 0)
+            return has_indexed_property(property_index);
+    }
 
-    return shape().lookup(property_name.as_string()).has_value();
+    return shape().lookup(property_name.to_string_or_symbol()).has_value();
 }
 
 Value Object::to_primitive(Value::PreferredType preferred_type) const
@@ -846,7 +866,7 @@ Value Object::to_string() const
     return js_string(heap(), String::format("[object %s]", class_name()));
 }
 
-Value Object::invoke(const FlyString& property_name, Optional<MarkedValueList> arguments)
+Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments)
 {
     auto& interpreter = this->interpreter();
     auto property = get(property_name).value_or(js_undefined());

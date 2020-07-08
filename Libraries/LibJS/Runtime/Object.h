@@ -68,10 +68,15 @@ public:
 
     virtual bool inherits(const StringView& class_name) const { return class_name == this->class_name(); }
 
-    enum class GetOwnPropertyMode {
+    enum class GetOwnPropertyReturnMode {
         Key,
         Value,
         KeyAndValue,
+    };
+
+    enum class GetOwnPropertyReturnType {
+        StringOnly,
+        SymbolOnly,
     };
 
     enum class PutOwnPropertyMode {
@@ -84,26 +89,26 @@ public:
 
     GlobalObject& global_object() const { return shape().global_object(); }
 
-    virtual Value get(PropertyName, Value receiver = {}) const;
+    virtual Value get(const PropertyName&, Value receiver = {}) const;
 
-    virtual bool has_property(PropertyName) const;
-    bool has_own_property(PropertyName) const;
+    virtual bool has_property(const PropertyName&) const;
+    bool has_own_property(const PropertyName&) const;
 
-    virtual bool put(PropertyName, Value, Value receiver = {});
+    virtual bool put(const PropertyName&, Value, Value receiver = {});
 
     Value get_own_property(const Object& this_object, PropertyName, Value receiver) const;
-    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, bool only_enumerable_properties = false) const;
-    virtual Optional<PropertyDescriptor> get_own_property_descriptor(PropertyName) const;
-    Value get_own_property_descriptor_object(PropertyName) const;
+    Value get_own_properties(const Object& this_object, GetOwnPropertyReturnMode, bool only_enumerable_properties = false, GetOwnPropertyReturnType = GetOwnPropertyReturnType::StringOnly) const;
+    virtual Optional<PropertyDescriptor> get_own_property_descriptor(const PropertyName&) const;
+    Value get_own_property_descriptor_object(const PropertyName&) const;
 
-    virtual bool define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions = true);
-    bool define_property(PropertyName, Value value, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
-    bool define_accessor(PropertyName, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
+    virtual bool define_property(const StringOrSymbol& property_name, const Object& descriptor, bool throw_exceptions = true);
+    bool define_property(const PropertyName&, Value value, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
+    bool define_accessor(const PropertyName&, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
 
-    bool define_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&, GlobalObject&)>, i32 length = 0, PropertyAttributes attributes = default_attributes);
-    bool define_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attributes = default_attributes);
+    bool define_native_function(const StringOrSymbol& property_name, AK::Function<Value(Interpreter&, GlobalObject&)>, i32 length = 0, PropertyAttributes attributes = default_attributes);
+    bool define_native_property(const StringOrSymbol& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attributes = default_attributes);
 
-    virtual Value delete_property(PropertyName);
+    virtual Value delete_property(const PropertyName&);
 
     virtual bool is_array() const { return false; }
     virtual bool is_date() const { return false; }
@@ -140,7 +145,7 @@ public:
     IndexedProperties& indexed_properties() { return m_indexed_properties; }
     void set_indexed_property_elements(Vector<Value>&& values) { m_indexed_properties = IndexedProperties(move(values)); }
 
-    Value invoke(const FlyString& property_name, Optional<MarkedValueList> arguments = {});
+    Value invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments = {});
 
 protected:
     enum class GlobalObjectTag { Tag };
@@ -151,7 +156,7 @@ protected:
 private:
     virtual Value get_by_index(u32 property_index) const;
     virtual bool put_by_index(u32 property_index, Value);
-    bool put_own_property(Object& this_object, const FlyString& property_name, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
+    bool put_own_property(Object& this_object, const StringOrSymbol& property_name, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
     bool put_own_property_by_index(Object& this_object, u32 property_index, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
 
     Value call_native_property_getter(Object* this_object, Value property) const;

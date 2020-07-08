@@ -145,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
         return {};
     if (!interpreter.argument(2).is_object())
         return interpreter.throw_exception<TypeError>(ErrorType::ReflectBadDescriptorArgument);
-    auto property_key = interpreter.argument(1).to_string(interpreter);
+    auto property_key = StringOrSymbol::from_value(interpreter, interpreter.argument(1));
     if (interpreter.exception())
         return {};
     auto& descriptor = interpreter.argument(2).as_object();
@@ -162,7 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
         return {};
 
     auto property_key = interpreter.argument(1);
-    auto property_name = PropertyName(property_key.to_string(interpreter));
+    auto property_name = PropertyName::from_value(interpreter, property_key);
     if (interpreter.exception())
         return {};
     auto property_key_number = property_key.to_number(interpreter);
@@ -181,7 +181,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
     auto* target = get_target_object_from(interpreter, "get");
     if (!target)
         return {};
-    auto property_key = interpreter.argument(1).to_string(interpreter);
+    auto property_key = PropertyName::from_value(interpreter, interpreter.argument(1));
     if (interpreter.exception())
         return {};
     Value receiver = {};
@@ -195,7 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
     auto* target = get_target_object_from(interpreter, "getOwnPropertyDescriptor");
     if (!target)
         return {};
-    auto property_key = interpreter.argument(1).to_string(interpreter);
+    auto property_key = PropertyName::from_value(interpreter, interpreter.argument(1));
     if (interpreter.exception())
         return {};
     return target->get_own_property_descriptor_object(property_key);
@@ -214,7 +214,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::has)
     auto* target = get_target_object_from(interpreter, "has");
     if (!target)
         return {};
-    auto property_key = interpreter.argument(1).to_string(interpreter);
+    auto property_key = PropertyName::from_value(interpreter, interpreter.argument(1));
     if (interpreter.exception())
         return {};
     return Value(target->has_property(property_key));
@@ -233,7 +233,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
     auto* target = get_target_object_from(interpreter, "ownKeys");
     if (!target)
         return {};
-    return target->get_own_properties(*target, GetOwnPropertyMode::Key);
+    return target->get_own_properties(*target, GetOwnPropertyReturnMode::Key);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)

@@ -84,8 +84,11 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
     auto* result = Array::create(global_object);
     for (auto& entry : object->indexed_properties())
         result->indexed_properties().append(js_string(interpreter, String::number(entry.index())));
-    for (auto& it : object->shape().property_table_ordered())
-        result->indexed_properties().append(js_string(interpreter, it.key));
+    for (auto& it : object->shape().property_table_ordered()) {
+        if (!it.key.is_string())
+            continue;
+        result->indexed_properties().append(js_string(interpreter, it.key.as_string()));
+    }
 
     return result;
 }
@@ -151,7 +154,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
     auto* object = interpreter.argument(0).to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    auto property_key = interpreter.argument(1).to_string(interpreter);
+    auto property_key = PropertyName::from_value(interpreter, interpreter.argument(1));
     if (interpreter.exception())
         return {};
     return object->get_own_property_descriptor_object(property_key);
@@ -164,7 +167,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property_)
     if (!interpreter.argument(2).is_object())
         return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Descriptor argument");
     auto& object = interpreter.argument(0).as_object();
-    auto property_key = interpreter.argument(1).to_string(interpreter);
+    auto property_key = StringOrSymbol::from_value(interpreter, interpreter.argument(1));
     if (interpreter.exception())
         return {};
     auto& descriptor = interpreter.argument(2).as_object();
@@ -173,7 +176,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property_)
             if (object.is_proxy_object()) {
                 interpreter.throw_exception<TypeError>(ErrorType::ObjectDefinePropertyReturnedFalse);
             } else {
-                interpreter.throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_key.characters());
+                interpreter.throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_key.to_display_string().characters());
             }
         }
         return {};
@@ -195,7 +198,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::Key, true);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyReturnMode::Key, true);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
@@ -207,7 +210,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::Value, true);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyReturnMode::Value, true);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
@@ -219,7 +222,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::KeyAndValue, true);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyReturnMode::KeyAndValue, true);
 }
 
 }

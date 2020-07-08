@@ -65,6 +65,15 @@ static void update_function_name(Value& value, const FlyString& name)
     }
 }
 
+static String get_function_name(Interpreter& interpreter, Value value)
+{
+    if (value.is_symbol())
+        return String::format("[%s]", value.as_symbol().description().characters());
+    if (value.is_string())
+        return value.as_string().string();
+    return value.to_string(interpreter);
+}
+
 Value ScopeNode::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     return interpreter.run(global_object, *this);
@@ -106,7 +115,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         if (interpreter.exception())
             return {};
         if (is_super_property_lookup && (lookup_target.is_null() || lookup_target.is_undefined())) {
-            interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects());
+            interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects().characters());
             return {};
         }
 
@@ -374,7 +383,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         return {};
     auto* object = rhs_result.to_object(interpreter, global_object);
     while (object) {
-        auto property_names = object->get_own_properties(*object, Object::GetOwnPropertyMode::Key, true);
+        auto property_names = object->get_own_properties(*object, Object::GetOwnPropertyReturnMode::Key, true);
         for (auto& property_name : property_names.as_object().indexed_properties()) {
             interpreter.set_variable(variable_name, property_name.value_and_attributes(object).value, global_object);
             if (interpreter.exception())
@@ -735,23 +744,21 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         auto& target = method.is_static() ? *class_constructor : class_prototype.as_object();
         method_function.set_home_object(&target);
 
-        auto property_name = key.to_string(interpreter);
-
         if (method.kind() == ClassMethod::Kind::Method) {
-            target.define_property(property_name, method_value);
+            target.define_property(StringOrSymbol::from_value(interpreter, key), method_value);
         } else {
             String accessor_name = [&] {
                 switch (method.kind()) {
                 case ClassMethod::Kind::Getter:
-                    return String::format("get %s", property_name.characters());
+                    return String::format("get %s", get_function_name(interpreter, key).characters());
                 case ClassMethod::Kind::Setter:
-                    return String::format("set %s", property_name.characters());
+                    return String::format("set %s", get_function_name(interpreter, key).characters());
                 default:
                     ASSERT_NOT_REACHED();
                 }
             }();
             update_function_name(method_value, accessor_name);
-            target.define_accessor(property_name, method_function, method.kind() == ClassMethod::Kind::Getter, Attribute::Configurable | Attribute::Enumerable);
+            target.define_accessor(StringOrSymbol::from_value(interpreter, key), method_function, method.kind() == ClassMethod::Kind::Getter, Attribute::Configurable | Attribute::Enumerable);
         }
         if (interpreter.exception())
             return {};
@@ -1286,7 +1293,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
     if (reference.is_unresolvable())
         return interpreter.throw_exception<ReferenceError>(ErrorType::InvalidLeftHandAssignment);
 
-    update_function_name(rhs_result, reference.name().as_string());
+    update_function_name(rhs_result, get_function_name(interpreter, reference.name().to_value(interpreter)));
     reference.put(interpreter, global_object, rhs_result);
 
     if (interpreter.exception())
@@ -1488,20 +1495,20 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 {
     auto* object = Object::create_empty(interpreter, global_object);
     for (auto& property : m_properties) {
-        auto key_result = property.key().execute(interpreter, global_object);
+        auto key = property.key().execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
 
         if (property.type() == ObjectProperty::Type::Spread) {
-            if (key_result.is_array()) {
-                auto& array_to_spread = static_cast<Array&>(key_result.as_object());
+            if (key.is_array()) {
+                auto& array_to_spread = static_cast<Array&>(key.as_object());
                 for (auto& entry : array_to_spread.indexed_properties()) {
                     object->indexed_properties().append(entry.value_and_attributes(&array_to_spread).value);
                     if (interpreter.exception())
                         return {};
                 }
-            } else if (key_result.is_object()) {
-                auto& obj_to_spread = key_result.as_object();
+            } else if (key.is_object()) {
+                auto& obj_to_spread = key.as_object();
 
                 for (auto& it : obj_to_spread.shape().property_table_ordered()) {
                     if (it.value.attributes.is_enumerable()) {
@@ -1510,8 +1517,8 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
                             return {};
                     }
                 }
-            } else if (key_result.is_string()) {
-                auto& str_to_spread = key_result.as_string().string();
+            } else if (key.is_string()) {
+                auto& str_to_spread = key.as_string().string();
 
                 for (size_t i = 0; i < str_to_spread.length(); i++) {
                     object->define_property(i, js_string(interpreter, str_to_spread.substring(i, 1)));
@@ -1523,7 +1530,6 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
             continue;
         }
 
-        auto key = key_result.to_string(interpreter);
         if (interpreter.exception())
             return {};
         auto value = property.value().execute(interpreter, global_object);
@@ -1533,22 +1539,22 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         if (value.is_function() && property.is_method())
             value.as_function().set_home_object(object);
 
-        String name = key;
+        String name = get_function_name(interpreter, key);
         if (property.type() == ObjectProperty::Type::Getter) {
-            name = String::format("get %s", key.characters());
+            name = String::format("get %s", name.characters());
         } else if (property.type() == ObjectProperty::Type::Setter) {
-            name = String::format("set %s", key.characters());
+            name = String::format("set %s", name.characters());
         }
 
         update_function_name(value, name);
 
         if (property.type() == ObjectProperty::Type::Getter || property.type() == ObjectProperty::Type::Setter) {
             ASSERT(value.is_function());
-            object->define_accessor(key, value.as_function(), property.type() == ObjectProperty::Type::Getter, Attribute::Configurable | Attribute::Enumerable);
+            object->define_accessor(PropertyName::from_value(interpreter, key), value.as_function(), property.type() == ObjectProperty::Type::Getter, Attribute::Configurable | Attribute::Enumerable);
             if (interpreter.exception())
                 return {};
         } else {
-            object->define_property(key, value);
+            object->define_property(PropertyName::from_value(interpreter, key), value);
             if (interpreter.exception())
                 return {};
         }
@@ -1578,6 +1584,9 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, 
 
     if (index.is_integer() && index.as_i32() >= 0)
         return index.as_i32();
+
+    if (index.is_symbol())
+        return &index.as_symbol();
 
     auto index_string = index.to_string(interpreter);
     if (interpreter.exception())
