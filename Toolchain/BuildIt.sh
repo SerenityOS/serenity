@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -e
-shopt -s globstar
 # This file will need to be run in bash, for now.
 
 
@@ -23,6 +22,12 @@ NPROC="nproc"
 # Each cache entry is 260 MB. 8 entries are 4 GiB.
 # It seems that Travis starts having trouble at 35 entries, so I think this is a good amount.
 KEEP_CACHE_COUNT=8
+
+if command -v ginstall &>/dev/null; then
+    INSTALL=ginstall
+else
+    INSTALL=install
+fi
 
 if [ "$(uname -s)" = "OpenBSD" ]; then
     MAKE=gmake
@@ -230,11 +235,12 @@ pushd "$DIR/Build/"
         pushd "$BUILD"
             CXXFLAGS="-DBUILDING_SERENITY_TOOLCHAIN" cmake ..
             cmake --build . --target LibC
-            install -D Libraries/LibC/libc.a Libraries/LibM/libm.a Root/usr/lib/
+            "$INSTALL" -D Libraries/LibC/libc.a Libraries/LibM/libm.a Root/usr/lib/
             SRC_ROOT=$(realpath "$DIR"/..)
-            for header in "$SRC_ROOT"/Libraries/Lib{C,M}/**/*.h; do
+            FILES=$(find "$SRC_ROOT"/Libraries/LibC "$SRC_ROOT"/Libraries/LibM -name '*.h' -print)
+            for header in $FILES; do
                 target=$(echo "$header" | sed -e "s@$SRC_ROOT/Libraries/LibC@@" -e "s@$SRC_ROOT/Libraries/LibM@@")
-                install -D "$header" "Root/usr/include/$target"
+                $INSTALL -D "$header" "Root/usr/include/$target"
             done
             unset SRC_ROOT
         popd
