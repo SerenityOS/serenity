@@ -68,7 +68,7 @@ public:
 
     virtual bool inherits(const StringView& class_name) const { return class_name == this->class_name(); }
 
-    enum class GetOwnPropertyReturnMode {
+    enum class PropertyKind {
         Key,
         Value,
         KeyAndValue,
@@ -97,7 +97,7 @@ public:
     virtual bool put(const PropertyName&, Value, Value receiver = {});
 
     Value get_own_property(const Object& this_object, PropertyName, Value receiver) const;
-    Value get_own_properties(const Object& this_object, GetOwnPropertyReturnMode, bool only_enumerable_properties = false, GetOwnPropertyReturnType = GetOwnPropertyReturnType::StringOnly) const;
+    Value get_own_properties(const Object& this_object, PropertyKind, bool only_enumerable_properties = false, GetOwnPropertyReturnType = GetOwnPropertyReturnType::StringOnly) const;
     virtual Optional<PropertyDescriptor> get_own_property_descriptor(const PropertyName&) const;
     Value get_own_property_descriptor_object(const PropertyName&) const;
 

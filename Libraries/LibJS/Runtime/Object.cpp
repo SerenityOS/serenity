@@ -179,7 +179,7 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
     return value_here;
 }
 
-Value Object::get_own_properties(const Object& this_object, GetOwnPropertyReturnMode kind, bool only_enumerable_properties, GetOwnPropertyReturnType return_type) const
+Value Object::get_own_properties(const Object& this_object, PropertyKind kind, bool only_enumerable_properties, GetOwnPropertyReturnType return_type) const
 {
     auto* properties_array = Array::create(global_object());
 
@@ -188,9 +188,9 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyReturn
         auto str = static_cast<const StringObject&>(this_object).primitive_string().string();
 
         for (size_t i = 0; i < str.length(); ++i) {
-            if (kind == GetOwnPropertyReturnMode::Key) {
+            if (kind == PropertyKind::Key) {
                 properties_array->define_property(i, js_string(interpreter(), String::number(i)));
-            } else if (kind == GetOwnPropertyReturnMode::Value) {
+            } else if (kind == PropertyKind::Value) {
                 properties_array->define_property(i, js_string(interpreter(), String::format("%c", str[i])));
             } else {
                 auto* entry_array = Array::create(global_object());
@@ -211,9 +211,9 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyReturn
         if (only_enumerable_properties && !value_and_attributes.attributes.is_enumerable())
             continue;
 
-        if (kind == GetOwnPropertyReturnMode::Key) {
+        if (kind == PropertyKind::Key) {
             properties_array->define_property(property_index, js_string(interpreter(), String::number(entry.index())));
-        } else if (kind == GetOwnPropertyReturnMode::Value) {
+        } else if (kind == PropertyKind::Value) {
             properties_array->define_property(property_index, value_and_attributes.value);
         } else {
             auto* entry_array = Array::create(global_object());
@@ -236,9 +236,9 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyReturn
         if (return_type == GetOwnPropertyReturnType::SymbolOnly && it.key.is_string())
             continue;
 
-        if (kind == GetOwnPropertyReturnMode::Key) {
+        if (kind == PropertyKind::Key) {
             properties_array->define_property(property_index, it.key.to_value(interpreter()));
-        } else if (kind == GetOwnPropertyReturnMode::Value) {
+        } else if (kind == PropertyKind::Value) {
             properties_array->define_property(property_index, this_object.get(it.key));
         } else {
             auto* entry_array = Array::create(global_object());
