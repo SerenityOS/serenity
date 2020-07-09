@@ -28,14 +28,54 @@
 #include "SoftCPU.h"
 #include <AK/LogStream.h>
 #include <Kernel/API/Syscall.h>
-#include <unistd.h>
 #include <stdio.h>
+#include <unistd.h>
 
 namespace UserspaceEmulator {
+
+static constexpr u32 stack_location = 0x10000000;
+static constexpr size_t stack_size = 64 * KB;
+
+class SimpleRegion final : public SoftMMU::Region {
+public:
+    SimpleRegion(u32 base, u32 size)
+        : Region(base, size)
+    {
+        m_data = (u8*)malloc(size);
+    }
+
+    ~SimpleRegion()
+    {
+        free(m_data);
+    }
+
+    virtual u32 read32(u32 offset) override
+    {
+        ASSERT(offset + 3 < size());
+        return *reinterpret_cast<const u32*>(m_data + offset);
+    }
+
+    virtual void write32(u32 offset, u32 value) override
+    {
+        ASSERT(offset + 3 < size());
+        *reinterpret_cast<u32*>(m_data + offset) = value;
+    }
+
+private:
+    u8* m_data { nullptr };
+};
 
 Emulator::Emulator()
     : m_cpu(*this)
 {
+    setup_stack();
+}
+
+void Emulator::setup_stack()
+{
+    auto stack_region = make<SimpleRegion>(stack_location, stack_size);
+    m_mmu.add_region(move(stack_region));
+    m_cpu.set_esp(stack_location + stack_size);
 }
 
 int Emulator::exec(X86::SimpleInstructionStream& stream, u32 base)
@@ -59,8 +99,8 @@ int Emulator::exec(X86::SimpleInstructionStream& stream, u32 base)
 
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
-    (void) arg2;
-    (void) arg3;
+    (void)arg2;
+    (void)arg3;
 
     printf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
     switch (function) {

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
 
 namespace UserspaceEmulator {
@@ -37,6 +38,21 @@ public:
     explicit SoftCPU(Emulator&);
     void dump() const;
 
+    void push32(u32);
+    u32 pop32();
+
+    u32 get_esp() const { return m_esp; }
+    void set_esp(u32 value) { m_esp = value; }
+
+    u16 get_cs() const { return 0x18; }
+    u16 get_ds() const { return 0x20; }
+    u16 get_es() const { return 0x20; }
+    u16 get_ss() const { return 0x20; }
+
+    u32 read_memory32(X86::LogicalAddress);
+    void write_memory32(X86::LogicalAddress, u32);
+
+private:
     virtual void AAA(const X86::Instruction&) override;
     virtual void AAD(const X86::Instruction&) override;
     virtual void AAM(const X86::Instruction&) override;
