@@ -40,9 +40,8 @@ CppLexer::CppLexer(const StringView& input)
 char CppLexer::peek(size_t offset) const
 {
     while ((m_index + offset) < m_input.length() && m_input[m_index + offset] == '\\'
-        && (m_index + offset + 1) < m_input.length() && m_input[m_index + offset + 1] == '\n') {
+           && (m_index + offset + 1) < m_input.length() && m_input[m_index + offset + 1] == '\n')
         offset += 2;
-    }
     if ((m_index + offset) >= m_input.length())
         return 0;
     return m_input[m_index + offset];
@@ -67,9 +66,8 @@ char CppLexer::consume()
     if (ch == '\n') {
         m_position.line++;
         m_position.column = 0;
-    } else {
+    } else
         m_position.column++;
-    }
     return ch;
 }
 
@@ -358,6 +356,17 @@ Vector<CppToken> CppLexer::lex()
         }
         if (ch == ';') {
             emit_token(CppToken::Type::Semicolon);
+            continue;
+        }
+        if (ch == '?') {
+            emit_token(CppToken::Type::QuestionMark);
+            continue;
+        }
+        if (ch == ':') {
+            if (peek(1) == ':')
+                commit_n_chars_token(2, CppToken::Type::ColonColon);
+            else
+                emit_token(CppToken::Type::Colon);
             continue;
         }
         if (ch == '?') {
