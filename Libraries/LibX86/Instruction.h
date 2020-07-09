@@ -124,7 +124,7 @@ enum MMXRegisterIndex {
 
 class LogicalAddress {
 public:
-    LogicalAddress() {}
+    LogicalAddress() { }
     LogicalAddress(u16 selector, u32 offset)
         : m_selector(selector)
         , m_offset(offset)
@@ -200,6 +200,10 @@ public:
     bool is_register() const { return m_register_index != 0xffffffff; }
 
     unsigned register_index() const { return m_register_index; }
+    RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
+    RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
+    RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
+
     SegmentRegister segment() const
     {
         ASSERT(!is_register());
@@ -208,7 +212,7 @@ public:
     u32 offset();
 
 private:
-    MemoryOrRegisterReference() {}
+    MemoryOrRegisterReference() { }
 
     String to_string() const;
     String to_string_a16() const;
@@ -245,7 +249,7 @@ typedef void (Interpreter::*InstructionHandler)(const Instruction&);
 class Instruction {
 public:
     static Instruction from_stream(InstructionStream&, bool o32, bool a32);
-    ~Instruction() {}
+    ~Instruction() { }
 
     MemoryOrRegisterReference& modrm() const
     {
@@ -321,6 +325,10 @@ public:
     bool has_sub_op() const { return m_has_sub_op; }
 
     unsigned register_index() const { return m_register_index; }
+    RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
+    RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
+    RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
+
     SegmentRegister segment_register() const { return static_cast<SegmentRegister>(register_index()); }
 
     u8 cc() const { return m_has_sub_op ? m_sub_op & 0xf : m_op & 0xf; }

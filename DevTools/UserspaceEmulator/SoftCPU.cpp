@@ -34,21 +34,13 @@ namespace UserspaceEmulator {
 SoftCPU::SoftCPU(Emulator& emulator)
     : m_emulator(emulator)
 {
-    m_reg32_table[X86::RegisterEAX] = &m_eax;
-    m_reg32_table[X86::RegisterEBX] = &m_ebx;
-    m_reg32_table[X86::RegisterECX] = &m_ecx;
-    m_reg32_table[X86::RegisterEDX] = &m_edx;
-    m_reg32_table[X86::RegisterEBP] = &m_ebp;
-    m_reg32_table[X86::RegisterESP] = &m_esp;
-    m_reg32_table[X86::RegisterESI] = &m_esi;
-    m_reg32_table[X86::RegisterEDI] = &m_edi;
 }
 
 void SoftCPU::dump() const
 {
-    printf("eax=%08x ebx=%08x ecx=%08x edx=%08x ", m_eax, m_ebx, m_ecx, m_edx);
-    printf("ebp=%08x esp=%08x esi=%08x edi=%08x ", m_ebp, m_esp, m_esi, m_edi);
-    printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", m_of, m_sf, m_zf, m_af, m_pf, m_cf);
+    printf("eax=%08x ebx=%08x ecx=%08x edx=%08x ", eax(), ebx(), ecx(), edx());
+    printf("ebp=%08x esp=%08x esi=%08x edi=%08x ", ebp(), esp(), esi(), edi());
+    printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", of(), sf(), zf(), af(), pf(), cf());
 }
 
 u32 SoftCPU::read_memory32(X86::LogicalAddress address)
@@ -68,14 +60,14 @@ void SoftCPU::write_memory32(X86::LogicalAddress address, u32 value)
 
 void SoftCPU::push32(u32 value)
 {
-    m_esp -= sizeof(value);
-    write_memory32({ get_ss(), get_esp() }, value);
+    set_esp(esp() - sizeof(value));
+    write_memory32({ ss(), esp() }, value);
 }
 
 u32 SoftCPU::pop32()
 {
-    auto value = read_memory32({ get_ss(), get_esp() });
-    m_esp += sizeof(value);
+    auto value = read_memory32({ ss(), esp() });
+    set_esp(esp() + sizeof(value));
     return value;
 }
 
@@ -228,7 +220,7 @@ void SoftCPU::INTO(const X86::Instruction&) { TODO(); }
 void SoftCPU::INT_imm8(const X86::Instruction& insn)
 {
     ASSERT(insn.imm8() == 0x82);
-    m_eax = m_emulator.virt_syscall(m_eax, m_edx, m_ecx, m_ebx);
+    set_eax(m_emulator.virt_syscall(eax(), edx(), ecx(), ebx()));
 }
 
 void SoftCPU::INVLPG(const X86::Instruction&) { TODO(); }
@@ -303,7 +295,7 @@ void SoftCPU::MOV_RM32_imm32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_RM32_reg32(const X86::Instruction& insn)
 {
     ASSERT(insn.modrm().is_register());
-    *m_reg32_table[insn.modrm().register_index()] = *m_reg32_table[insn.register_index()];
+    gpr32(insn.modrm().reg32()) = gpr32(insn.reg32());
 }
 
 void SoftCPU::MOV_RM8_imm8(const X86::Instruction&) { TODO(); }
@@ -319,7 +311,7 @@ void SoftCPU::MOV_reg32_RM32(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::MOV_reg32_imm32(const X86::Instruction& insn)
 {
-    *m_reg32_table[insn.register_index()] = insn.imm32();
+    gpr32(insn.reg32()) = insn.imm32();
 }
 
 void SoftCPU::MOV_reg8_RM8(const X86::Instruction&) { TODO(); }
@@ -377,7 +369,7 @@ void SoftCPU::POP_reg16(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::POP_reg32(const X86::Instruction& insn)
 {
-    *m_reg32_table[insn.register_index()] = pop32();
+    gpr32(insn.reg32()) = pop32();
 }
 
 void SoftCPU::PUSHA(const X86::Instruction&) { TODO(); }
@@ -400,7 +392,7 @@ void SoftCPU::PUSH_reg16(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
 {
-    push32(*m_reg32_table[insn.register_index()]);
+    push32(gpr32(insn.reg32()));
 }
 
 void SoftCPU::RCL_RM16_1(const X86::Instruction&) { TODO(); }
@@ -561,8 +553,8 @@ void SoftCPU::XOR_RM32_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_RM32_reg32(const X86::Instruction& insn)
 {
     ASSERT(insn.modrm().is_register());
-    auto& dest = *m_reg32_table[insn.modrm().register_index()];
-    auto src = *m_reg32_table[insn.register_index()];
+    auto& dest = gpr32(insn.modrm().reg32());
+    auto src = gpr32(insn.reg32());
     dest ^= src;
 
     set_cf(false);

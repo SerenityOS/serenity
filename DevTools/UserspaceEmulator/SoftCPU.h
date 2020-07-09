@@ -33,6 +33,21 @@ namespace UserspaceEmulator {
 
 class Emulator;
 
+union PartAddressableRegister {
+    struct {
+        u32 full_u32 { 0 };
+    };
+    struct {
+        u16 low_u16;
+        u16 high_u16;
+    };
+    struct {
+        u8 low_u8;
+        u8 high_u8;
+        u16 also_high_u16;
+    };
+};
+
 class SoftCPU final : public X86::Interpreter {
 public:
     explicit SoftCPU(Emulator&);
@@ -41,13 +56,45 @@ public:
     void push32(u32);
     u32 pop32();
 
-    u32 get_esp() const { return m_esp; }
-    void set_esp(u32 value) { m_esp = value; }
+    u32 gpr32(X86::RegisterIndex32 reg) const { return m_gpr[reg].full_u32; }
+    u32& gpr32(X86::RegisterIndex32 reg) { return m_gpr[reg].full_u32; }
 
-    u16 get_cs() const { return 0x18; }
-    u16 get_ds() const { return 0x20; }
-    u16 get_es() const { return 0x20; }
-    u16 get_ss() const { return 0x20; }
+    u32 eax() const { return gpr32(X86::RegisterEAX); }
+    u32 ebx() const { return gpr32(X86::RegisterEBX); }
+    u32 ecx() const { return gpr32(X86::RegisterECX); }
+    u32 edx() const { return gpr32(X86::RegisterEDX); }
+    u32 esp() const { return gpr32(X86::RegisterESP); }
+    u32 ebp() const { return gpr32(X86::RegisterEBP); }
+    u32 esi() const { return gpr32(X86::RegisterESI); }
+    u32 edi() const { return gpr32(X86::RegisterEDI); }
+
+    void set_eax(u32 value) { gpr32(X86::RegisterEAX) = value; }
+    void set_ebx(u32 value) { gpr32(X86::RegisterEBX) = value; }
+    void set_ecx(u32 value) { gpr32(X86::RegisterECX) = value; }
+    void set_edx(u32 value) { gpr32(X86::RegisterEDX) = value; }
+    void set_ebp(u32 value) { gpr32(X86::RegisterEBP) = value; }
+    void set_esp(u32 value) { gpr32(X86::RegisterESP) = value; }
+    void set_esi(u32 value) { gpr32(X86::RegisterESI) = value; }
+    void set_edi(u32 value) { gpr32(X86::RegisterEDI) = value; }
+
+    bool of() const { return m_of; }
+    bool sf() const { return m_sf; }
+    bool zf() const { return m_zf; }
+    bool af() const { return m_af; }
+    bool pf() const { return m_pf; }
+    bool cf() const { return m_cf; }
+
+    void set_of(bool value) { m_of = value; }
+    void set_sf(bool value) { m_sf = value; }
+    void set_zf(bool value) { m_zf = value; }
+    void set_af(bool value) { m_af = value; }
+    void set_pf(bool value) { m_pf = value; }
+    void set_cf(bool value) { m_cf = value; }
+
+    u16 cs() const { return 0x18; }
+    u16 ds() const { return 0x20; }
+    u16 es() const { return 0x20; }
+    u16 ss() const { return 0x20; }
 
     u32 read_memory32(X86::LogicalAddress);
     void write_memory32(X86::LogicalAddress, u32);
@@ -526,30 +573,7 @@ private:
 private:
     Emulator& m_emulator;
 
-    bool get_of() const { return m_of; }
-    bool get_sf() const { return m_sf; }
-    bool get_zf() const { return m_zf; }
-    bool get_af() const { return m_af; }
-    bool get_pf() const { return m_pf; }
-    bool get_cf() const { return m_cf; }
-
-    void set_of(bool value) { m_of = value; }
-    void set_sf(bool value) { m_sf = value; }
-    void set_zf(bool value) { m_zf = value; }
-    void set_af(bool value) { m_af = value; }
-    void set_pf(bool value) { m_pf = value; }
-    void set_cf(bool value) { m_cf = value; }
-
-    u32* m_reg32_table[8];
-
-    u32 m_eax { 0 };
-    u32 m_ebx { 0 };
-    u32 m_ecx { 0 };
-    u32 m_edx { 0 };
-    u32 m_esp { 0 };
-    u32 m_ebp { 0 };
-    u32 m_esi { 0 };
-    u32 m_edi { 0 };
+    PartAddressableRegister m_gpr[8];
 
     bool m_of { false };
     bool m_sf { false };
