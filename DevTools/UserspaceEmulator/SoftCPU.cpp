@@ -51,6 +51,34 @@ void SoftCPU::dump() const
     printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", m_of, m_sf, m_zf, m_af, m_pf, m_cf);
 }
 
+u32 SoftCPU::read_memory32(X86::LogicalAddress address)
+{
+    ASSERT(address.selector() == 0x20);
+    auto value = m_emulator.mmu().read32(address.offset());
+    printf("\033[36;1mread_memory32: @%08x -> %08x\033[0m\n", address.offset(), value);
+    return value;
+}
+
+void SoftCPU::write_memory32(X86::LogicalAddress address, u32 value)
+{
+    ASSERT(address.selector() == 0x20);
+    printf("\033[35;1mwrite_memory32: @%08x <- %08x\033[0m\n", address.offset(), value);
+    m_emulator.mmu().write32(address.offset(), value);
+}
+
+void SoftCPU::push32(u32 value)
+{
+    m_esp -= sizeof(value);
+    write_memory32({ get_ss(), get_esp() }, value);
+}
+
+u32 SoftCPU::pop32()
+{
+    auto value = read_memory32({ get_ss(), get_esp() });
+    m_esp += sizeof(value);
+    return value;
+}
+
 void SoftCPU::AAA(const X86::Instruction&) { TODO(); }
 void SoftCPU::AAD(const X86::Instruction&) { TODO(); }
 void SoftCPU::AAM(const X86::Instruction&) { TODO(); }
@@ -346,7 +374,12 @@ void SoftCPU::POP_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::POP_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::POP_SS(const X86::Instruction&) { TODO(); }
 void SoftCPU::POP_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::POP_reg32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::POP_reg32(const X86::Instruction& insn)
+{
+    *m_reg32_table[insn.register_index()] = pop32();
+}
+
 void SoftCPU::PUSHA(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSHAD(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSHF(const X86::Instruction&) { TODO(); }
@@ -364,7 +397,12 @@ void SoftCPU::PUSH_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_imm32(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_reg32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
+{
+    push32(*m_reg32_table[insn.register_index()]);
+}
+
 void SoftCPU::RCL_RM16_1(const X86::Instruction&) { TODO(); }
 void SoftCPU::RCL_RM16_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::RCL_RM16_imm8(const X86::Instruction&) { TODO(); }
