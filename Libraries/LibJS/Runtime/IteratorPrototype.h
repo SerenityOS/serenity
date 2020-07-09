@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,40 +30,16 @@
 
 namespace JS {
 
-class ArrayPrototype final : public Object {
-    JS_OBJECT(ArrayPrototype, Object);
+class IteratorPrototype : public Object {
+    JS_OBJECT(IteratorPrototype, Object)
 
 public:
-    ArrayPrototype(GlobalObject&);
+    IteratorPrototype(GlobalObject&);
     virtual void initialize(Interpreter&, GlobalObject&) override;
-    virtual ~ArrayPrototype() override;
+    virtual ~IteratorPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(filter);
-    JS_DECLARE_NATIVE_FUNCTION(for_each);
-    JS_DECLARE_NATIVE_FUNCTION(map);
-    JS_DECLARE_NATIVE_FUNCTION(pop);
-    JS_DECLARE_NATIVE_FUNCTION(push);
-    JS_DECLARE_NATIVE_FUNCTION(shift);
-    JS_DECLARE_NATIVE_FUNCTION(to_string);
-    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
-    JS_DECLARE_NATIVE_FUNCTION(unshift);
-    JS_DECLARE_NATIVE_FUNCTION(join);
-    JS_DECLARE_NATIVE_FUNCTION(concat);
-    JS_DECLARE_NATIVE_FUNCTION(slice);
-    JS_DECLARE_NATIVE_FUNCTION(index_of);
-    JS_DECLARE_NATIVE_FUNCTION(reduce);
-    JS_DECLARE_NATIVE_FUNCTION(reduce_right);
-    JS_DECLARE_NATIVE_FUNCTION(reverse);
-    JS_DECLARE_NATIVE_FUNCTION(last_index_of);
-    JS_DECLARE_NATIVE_FUNCTION(includes);
-    JS_DECLARE_NATIVE_FUNCTION(find);
-    JS_DECLARE_NATIVE_FUNCTION(find_index);
-    JS_DECLARE_NATIVE_FUNCTION(some);
-    JS_DECLARE_NATIVE_FUNCTION(every);
-    JS_DECLARE_NATIVE_FUNCTION(splice);
-    JS_DECLARE_NATIVE_FUNCTION(fill);
-    JS_DECLARE_NATIVE_FUNCTION(values);
+    JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
 };
 
 }
