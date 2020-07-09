@@ -1,5 +1,6 @@
 set(SOURCES
     SoftCPU.cpp
+    SoftMMU.cpp
     Emulator.cpp
     main.cpp
 )

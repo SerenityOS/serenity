@@ -24,36 +24,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "SoftCPU.h"
 #include "SoftMMU.h"
-#include <AK/Types.h>
-#include <LibX86/Instruction.h>
-#include <sys/types.h>
 
 namespace UserspaceEmulator {
 
-class Emulator {
-public:
-    Emulator();
+SoftMMU::Region* SoftMMU::find_region(u32 address)
+{
+    for (auto& region : m_regions) {
+        if (region.contains(address))
+            return &region;
+    }
+    return nullptr;
+}
 
-    int exec(X86::SimpleInstructionStream&, u32 base);
-    u32 virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3);
+void SoftMMU::add_region(NonnullOwnPtr<Region> region)
+{
+    ASSERT(!find_region(region->base()));
+    // FIXME: More sanity checks pls
+    m_regions.append(move(region));
+}
 
-    SoftMMU& mmu() { return m_mmu; }
+u32 SoftMMU::read32(u32 address)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        TODO();
+    }
 
-private:
-    SoftMMU m_mmu;
-    SoftCPU m_cpu;
+    return region->read32(address - region->base());
+}
 
-    void setup_stack();
+void SoftMMU::write32(u32 address, u32 value)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        TODO();
+    }
 
-    uid_t virt$getuid();
-    void virt$exit(int);
-
-    bool m_shutdown { false };
-    int m_exit_status { 0 };
-};
+    region->write32(address - region->base(), value);
+}
 
 }

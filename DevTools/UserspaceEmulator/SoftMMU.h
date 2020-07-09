@@ -26,34 +26,46 @@
 
 #pragma once
 
-#include "SoftCPU.h"
-#include "SoftMMU.h"
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
-#include <LibX86/Instruction.h>
-#include <sys/types.h>
 
 namespace UserspaceEmulator {
 
-class Emulator {
+class SoftMMU {
 public:
-    Emulator();
+    class Region {
+    public:
+        virtual ~Region() { }
 
-    int exec(X86::SimpleInstructionStream&, u32 base);
-    u32 virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3);
+        u32 base() const { return m_base; }
+        u32 size() const { return m_size; }
+        u32 end() const { return m_base + m_size; }
 
-    SoftMMU& mmu() { return m_mmu; }
+        bool contains(u32 address) const { return address >= base() && address < end(); }
+
+        virtual void write32(u32 offset, u32 value) = 0;
+        virtual u32 read32(u32 offset) = 0;
+
+    protected:
+        Region(u32 base, u32 size)
+            : m_base(base)
+            , m_size(size)
+        {
+        }
+
+    private:
+        u32 m_base { 0 };
+        u32 m_size { 0 };
+    };
+
+    u32 read32(u32 address);
+    void write32(u32 address, u32 value);
+
+    Region* find_region(u32 address);
+    void add_region(NonnullOwnPtr<Region>);
 
 private:
-    SoftMMU m_mmu;
-    SoftCPU m_cpu;
-
-    void setup_stack();
-
-    uid_t virt$getuid();
-    void virt$exit(int);
-
-    bool m_shutdown { false };
-    int m_exit_status { 0 };
+    NonnullOwnPtrVector<Region> m_regions;
 };
 
 }
