@@ -46,8 +46,10 @@ void SymbolConstructor::initialize(Interpreter& interpreter, GlobalObject& globa
     define_native_function("for", for_, 1, Attribute::Writable | Attribute::Configurable);
     define_native_function("keyFor", key_for, 1, Attribute::Writable | Attribute::Configurable);
 
-    for (auto& entry : interpreter.get_well_known_symbol_map({}))
-        define_property(entry.key, entry.value, 0);
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    define_property(#SymbolName, interpreter.well_known_symbol_##snake_name(), 0);
+    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
 }
 
 SymbolConstructor::~SymbolConstructor()

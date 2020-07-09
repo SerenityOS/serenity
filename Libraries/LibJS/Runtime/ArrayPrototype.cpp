@@ -81,7 +81,7 @@ void ArrayPrototype::initialize(Interpreter& interpreter, GlobalObject& global_o
     // Use define_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
-    define_property(interpreter.get_well_known_symbol("iterator"), get("values"), attr);
+    define_property(interpreter.well_known_symbol_iterator(), get("values"), attr);
 }
 
 ArrayPrototype::~ArrayPrototype()
