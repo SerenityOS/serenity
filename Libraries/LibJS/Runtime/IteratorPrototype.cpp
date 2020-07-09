@@ -37,7 +37,7 @@ IteratorPrototype::IteratorPrototype(GlobalObject& global_object)
 void IteratorPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
     Object::initialize(interpreter, global_object);
-    define_native_function(interpreter.get_well_known_symbol("iterator"), symbol_iterator, 0, Attribute::Writable | Attribute::Enumerable);
+    define_native_function(interpreter.well_known_symbol_iterator(), symbol_iterator, 0, Attribute::Writable | Attribute::Enumerable);
 }
 
 IteratorPrototype::~IteratorPrototype()

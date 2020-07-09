@@ -112,8 +112,6 @@ public:
     Reference get_reference(const FlyString& name);
 
     Symbol* get_global_symbol(const String& description);
-    Symbol* get_well_known_symbol(const String& description) const;
-    const HashMap<String, Symbol*>& get_well_known_symbol_map(Badge<SymbolConstructor>) const { return m_well_known_symbol_map; };
 
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);
 
@@ -209,6 +207,11 @@ public:
     const LexicalEnvironment* get_this_environment() const;
     Value get_new_target() const;
 
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    Symbol* well_known_symbol_##snake_name() const { return m_well_known_symbol_##snake_name; }
+    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
+
 private:
     Interpreter();
 
@@ -221,9 +224,6 @@ private:
 
     Object* m_global_object { nullptr };
 
-    HashMap<String, Symbol*> m_well_known_symbol_map;
-    HashMap<String, Symbol*> m_global_symbol_map;
-
     Exception* m_exception { nullptr };
 
     ScopeType m_unwind_until { ScopeType::None };
@@ -232,6 +232,13 @@ private:
     bool m_underscore_is_last_value { false };
 
     Console m_console;
+
+    HashMap<String, Symbol*> m_global_symbol_map;
+
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    Symbol* m_well_known_symbol_##snake_name { nullptr };
+    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
 };
 
 }
