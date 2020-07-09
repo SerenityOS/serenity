@@ -36,7 +36,7 @@ Object* get_iterator(Object& obj, String hint, Value method)
     if (method.is_empty()) {
         if (hint == "async")
             TODO();
-        method = obj.get(obj.interpreter().get_well_known_symbol("iterator"));
+        method = obj.get(obj.interpreter().well_known_symbol_iterator());
         if (interpreter.exception())
             return {};
     }
