@@ -10,6 +10,8 @@ set(SOURCES
     Parser.cpp
     Runtime/Array.cpp
     Runtime/ArrayConstructor.cpp
+    Runtime/ArrayIterator.cpp
+    Runtime/ArrayIteratorPrototype.cpp
     Runtime/ArrayPrototype.cpp
     Runtime/BigInt.cpp
     Runtime/BigIntConstructor.cpp
@@ -34,6 +36,8 @@ set(SOURCES
     Runtime/FunctionPrototype.cpp
     Runtime/GlobalObject.cpp
     Runtime/IndexedProperties.cpp
+    Runtime/IteratorOperations.cpp
+    Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp
     Runtime/LexicalEnvironment.cpp
     Runtime/MarkedValueList.cpp

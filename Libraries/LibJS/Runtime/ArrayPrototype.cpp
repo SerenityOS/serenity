@@ -28,9 +28,9 @@
 
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
@@ -75,7 +75,13 @@ void ArrayPrototype::initialize(Interpreter& interpreter, GlobalObject& global_o
     define_native_function("every", every, 1, attr);
     define_native_function("splice", splice, 2, attr);
     define_native_function("fill", fill, 1, attr);
+    define_native_function("values", values, 0, attr);
     define_property("length", Value(0), Attribute::Configurable);
+
+    // Use define_property here instead of define_native_function so that
+    // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
+    // evaluates to true
+    define_property(interpreter.get_well_known_symbol("iterator"), get("values"), attr);
 }
 
 ArrayPrototype::~ArrayPrototype()
@@ -848,6 +854,15 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
     }
 
     return this_object;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
+{
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    if (!this_object)
+        return {};
+
+    return ArrayIterator::create(global_object, this_object, Object::PropertyKind::Value);
 }
 
 }
