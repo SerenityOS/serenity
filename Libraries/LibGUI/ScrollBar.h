@@ -43,12 +43,15 @@ public:
     int value() const { return m_value; }
     int min() const { return m_min; }
     int max() const { return m_max; }
+    int page() const { return m_page; }
     int step() const { return m_step; }
     int big_step() const { return m_big_step; }
 
-    void set_min(int min) { set_range(min, max()); }
-    void set_max(int max) { set_range(min(), max); }
-    void set_range(int min, int max);
+    void set_min(int min) { set_range(min, max(), page()); }
+    void set_max(int max) { set_range(min(), max, page()); }
+    void set_page(int page) { set_range(min(), max(), page); }
+    void set_range(int min, int max) { set_range(min, max, page()); }
+    void set_range(int min, int max, int page);
     void set_value(int value);
     void set_step(int step) { m_step = step; }
     void set_big_step(int big_step) { m_big_step = big_step; }
@@ -91,6 +94,7 @@ private:
 
     int m_min { 0 };
     int m_max { 0 };
+    int m_page { 0 };
     int m_value { 0 };
     int m_step { 1 };
     int m_big_step { 5 };

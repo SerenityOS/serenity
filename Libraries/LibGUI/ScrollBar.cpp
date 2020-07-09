@@ -115,14 +115,17 @@ ScrollBar::~ScrollBar()
 {
 }
 
-void ScrollBar::set_range(int min, int max)
+void ScrollBar::set_range(int min, int max, int page)
 {
     ASSERT(min <= max);
-    if (m_min == min && m_max == max)
+    if (page < 0)
+        page = 0;
+    if (m_min == min && m_max == max && m_page == page)
         return;
 
     m_min = min;
     m_max = max;
+    m_page = page;
 
     int old_value = m_value;
     m_value = clamp(m_value, m_min, m_max);
@@ -190,7 +193,14 @@ int ScrollBar::scrubber_size() const
 {
     int pixel_range = length(orientation()) - button_size() * 2;
     int value_range = m_max - m_min;
-    return ::max(pixel_range - value_range, button_size());
+    
+    int scrubber_size = 0;
+    if (value_range > 0) {
+        // Scrubber size should be proportional to the visible portion
+        // (page) in relation to the content (value range + page)
+        scrubber_size = (m_page * pixel_range) / (value_range + m_page);
+    }
+    return ::max(scrubber_size, button_size());
 }
 
 Gfx::IntRect ScrollBar::scrubber_rect() const

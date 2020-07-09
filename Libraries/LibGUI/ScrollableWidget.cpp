@@ -107,13 +107,13 @@ void ScrollableWidget::update_scrollbar_ranges()
     auto available_size = this->available_size();
 
     int excess_height = max(0, m_content_size.height() - available_size.height());
-    m_vertical_scrollbar->set_range(0, excess_height);
+    m_vertical_scrollbar->set_range(0, excess_height, available_size.height());
 
     if (should_hide_unnecessary_scrollbars())
         m_vertical_scrollbar->set_visible(excess_height > 0);
 
     int excess_width = max(0, m_content_size.width() - available_size.width());
-    m_horizontal_scrollbar->set_range(0, excess_width);
+    m_horizontal_scrollbar->set_range(0, excess_width, available_size.width());
 
     if (should_hide_unnecessary_scrollbars())
         m_horizontal_scrollbar->set_visible(excess_width > 0);
