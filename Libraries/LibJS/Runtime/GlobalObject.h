@@ -49,6 +49,11 @@ public:
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
+#define __JS_ENUMERATE(ClassName, snake_name) \
+    Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
+    JS_ENUMERATE_ITERATOR_PROTOTYPES
+#undef __JS_ENUMERATE
+
 protected:
     virtual void visit_children(Visitor&) override;
 
@@ -68,6 +73,12 @@ private:
     Object* m_##snake_name##_prototype { nullptr };
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name) \
+    Object* m_##snake_name##_prototype { nullptr };
+    JS_ENUMERATE_ITERATOR_PROTOTYPES
+#undef __JS_ENUMERATE
+
 };
 
 template<typename ConstructorType>

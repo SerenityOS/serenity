@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,40 +30,27 @@
 
 namespace JS {
 
-class ArrayPrototype final : public Object {
-    JS_OBJECT(ArrayPrototype, Object);
+class ArrayIterator final : public Object {
+    JS_OBJECT(ArrayIterator, Object);
 
 public:
-    ArrayPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
-    virtual ~ArrayPrototype() override;
+    static ArrayIterator* create(GlobalObject&, Value array, Object::PropertyKind iteration_kind);
+
+    explicit ArrayIterator(Object& prototype, Value array, Object::PropertyKind iteration_kind);
+    virtual ~ArrayIterator() override;
+
+    Value array() const { return m_array; }
+    Object::PropertyKind iteration_kind() const { return m_iteration_kind; }
+    size_t index() const { return m_index; }
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(filter);
-    JS_DECLARE_NATIVE_FUNCTION(for_each);
-    JS_DECLARE_NATIVE_FUNCTION(map);
-    JS_DECLARE_NATIVE_FUNCTION(pop);
-    JS_DECLARE_NATIVE_FUNCTION(push);
-    JS_DECLARE_NATIVE_FUNCTION(shift);
-    JS_DECLARE_NATIVE_FUNCTION(to_string);
-    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
-    JS_DECLARE_NATIVE_FUNCTION(unshift);
-    JS_DECLARE_NATIVE_FUNCTION(join);
-    JS_DECLARE_NATIVE_FUNCTION(concat);
-    JS_DECLARE_NATIVE_FUNCTION(slice);
-    JS_DECLARE_NATIVE_FUNCTION(index_of);
-    JS_DECLARE_NATIVE_FUNCTION(reduce);
-    JS_DECLARE_NATIVE_FUNCTION(reduce_right);
-    JS_DECLARE_NATIVE_FUNCTION(reverse);
-    JS_DECLARE_NATIVE_FUNCTION(last_index_of);
-    JS_DECLARE_NATIVE_FUNCTION(includes);
-    JS_DECLARE_NATIVE_FUNCTION(find);
-    JS_DECLARE_NATIVE_FUNCTION(find_index);
-    JS_DECLARE_NATIVE_FUNCTION(some);
-    JS_DECLARE_NATIVE_FUNCTION(every);
-    JS_DECLARE_NATIVE_FUNCTION(splice);
-    JS_DECLARE_NATIVE_FUNCTION(fill);
-    JS_DECLARE_NATIVE_FUNCTION(values);
+    friend class ArrayIteratorPrototype;
+
+    virtual bool is_array_iterator_object() const override { return true; }
+
+    Value m_array;
+    Object::PropertyKind m_iteration_kind;
+    size_t m_index { 0 };
 };
 
 }

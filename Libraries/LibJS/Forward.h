@@ -67,6 +67,10 @@
     __JS_ENUMERATE(TypeError, type_error, TypeErrorPrototype, TypeErrorConstructor)                     \
     __JS_ENUMERATE(URIError, uri_error, URIErrorPrototype, URIErrorConstructor)
 
+#define JS_ENUMERATE_ITERATOR_PROTOTYPES            \
+    __JS_ENUMERATE(Iterator, iterator)              \
+    __JS_ENUMERATE(ArrayIterator, array_iterator)
+
 #define JS_ENUMERATE_BUILTIN_TYPES \
     JS_ENUMERATE_NATIVE_OBJECTS    \
     JS_ENUMERATE_ERROR_SUBCLASSES

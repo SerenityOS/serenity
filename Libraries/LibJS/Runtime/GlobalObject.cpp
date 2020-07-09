@@ -28,6 +28,7 @@
 #include <AK/LogStream.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
+#include <LibJS/Runtime/ArrayIteratorPrototype.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
 #include <LibJS/Runtime/BigIntPrototype.h>
@@ -41,6 +42,7 @@
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -83,6 +85,13 @@ void GlobalObject::initialize()
         m_##snake_name##_prototype = heap().allocate<PrototypeName>(*this, *this);
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name)                                    \
+    if (!m_##snake_name##_prototype)                                             \
+        m_##snake_name##_prototype = heap().allocate<ClassName##Prototype>(*this, *this);
+    JS_ENUMERATE_ITERATOR_PROTOTYPES
+#undef __JS_ENUMERATE
+
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("gc", gc, 0, attr);
