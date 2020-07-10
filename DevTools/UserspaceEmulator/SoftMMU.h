@@ -43,7 +43,12 @@ public:
 
         bool contains(u32 address) const { return address >= base() && address < end(); }
 
+        virtual void write8(u32 offset, u8 value) = 0;
+        virtual void write16(u32 offset, u16 value) = 0;
         virtual void write32(u32 offset, u32 value) = 0;
+
+        virtual u8 read8(u32 offset) = 0;
+        virtual u16 read16(u32 offset) = 0;
         virtual u32 read32(u32 offset) = 0;
 
     protected:
@@ -58,7 +63,12 @@ public:
         u32 m_size { 0 };
     };
 
+    u8 read8(u32 address);
+    u16 read16(u32 address);
     u32 read32(u32 address);
+
+    void write8(u32 address, u8 value);
+    void write16(u32 address, u16 value);
     void write32(u32 address, u32 value);
 
     Region* find_region(u32 address);

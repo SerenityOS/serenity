@@ -117,7 +117,12 @@ public:
     u16 es() const { return m_segment[(int)X86::SegmentRegister::ES]; }
     u16 ss() const { return m_segment[(int)X86::SegmentRegister::SS]; }
 
+    u8 read_memory8(X86::LogicalAddress);
+    u16 read_memory16(X86::LogicalAddress);
     u32 read_memory32(X86::LogicalAddress);
+
+    void write_memory8(X86::LogicalAddress, u8);
+    void write_memory16(X86::LogicalAddress, u16);
     void write_memory32(X86::LogicalAddress, u32);
 
 private:

@@ -78,12 +78,42 @@ void SoftCPU::dump() const
     printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", of(), sf(), zf(), af(), pf(), cf());
 }
 
+u8 SoftCPU::read_memory8(X86::LogicalAddress address)
+{
+    ASSERT(address.selector() == 0x20);
+    auto value = m_emulator.mmu().read8(address.offset());
+    printf("\033[36;1mread_memory8: @%08x -> %02x\033[0m\n", address.offset(), value);
+    return value;
+}
+
+u16 SoftCPU::read_memory16(X86::LogicalAddress address)
+{
+    ASSERT(address.selector() == 0x20);
+    auto value = m_emulator.mmu().read16(address.offset());
+    printf("\033[36;1mread_memory16: @%08x -> %04x\033[0m\n", address.offset(), value);
+    return value;
+}
+
 u32 SoftCPU::read_memory32(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x20);
     auto value = m_emulator.mmu().read32(address.offset());
     printf("\033[36;1mread_memory32: @%08x -> %08x\033[0m\n", address.offset(), value);
     return value;
+}
+
+void SoftCPU::write_memory8(X86::LogicalAddress address, u8 value)
+{
+    ASSERT(address.selector() == 0x20);
+    printf("\033[35;1mwrite_memory8: @%08x <- %02x\033[0m\n", address.offset(), value);
+    m_emulator.mmu().write8(address.offset(), value);
+}
+
+void SoftCPU::write_memory16(X86::LogicalAddress address, u16 value)
+{
+    ASSERT(address.selector() == 0x20);
+    printf("\033[35;1mwrite_memory16: @%08x <- %04x\033[0m\n", address.offset(), value);
+    m_emulator.mmu().write16(address.offset(), value);
 }
 
 void SoftCPU::write_memory32(X86::LogicalAddress address, u32 value)

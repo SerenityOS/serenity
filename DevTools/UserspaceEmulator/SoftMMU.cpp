@@ -44,6 +44,26 @@ void SoftMMU::add_region(NonnullOwnPtr<Region> region)
     m_regions.append(move(region));
 }
 
+u8 SoftMMU::read8(u32 address)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        TODO();
+    }
+
+    return region->read8(address - region->base());
+}
+
+u16 SoftMMU::read16(u32 address)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        TODO();
+    }
+
+    return region->read16(address - region->base());
+}
+
 u32 SoftMMU::read32(u32 address)
 {
     auto* region = find_region(address);
@@ -52,6 +72,26 @@ u32 SoftMMU::read32(u32 address)
     }
 
     return region->read32(address - region->base());
+}
+
+void SoftMMU::write8(u32 address, u8 value)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        TODO();
+    }
+
+    region->write8(address - region->base(), value);
+}
+
+void SoftMMU::write16(u32 address, u16 value)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        TODO();
+    }
+
+    region->write16(address - region->base(), value);
 }
 
 void SoftMMU::write32(u32 address, u32 value)
