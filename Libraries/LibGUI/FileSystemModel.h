@@ -95,6 +95,9 @@ public:
         bool is_directory() const { return S_ISDIR(mode); }
         bool is_executable() const { return mode & (S_IXUSR | S_IXGRP | S_IXOTH); }
 
+        bool is_selected() const { return m_selected; }
+        void set_selected(bool selected);
+
         bool has_error() const { return m_error != 0; }
         int error() const { return m_error; }
         const char* error_string() const { return strerror(m_error); }
@@ -107,6 +110,8 @@ public:
         Node* parent { nullptr };
         NonnullOwnPtrVector<Node> children;
         bool has_traversed { false };
+
+        bool m_selected { false };
 
         int m_watch_fd { -1 };
         RefPtr<Core::Notifier> m_notifier;
@@ -129,6 +134,9 @@ public:
     void set_root_path(const StringView&);
     String full_path(const ModelIndex&) const;
     ModelIndex index(const StringView& path, int column) const;
+
+    void update_node_on_selection(const ModelIndex&, const bool);
+    ModelIndex m_previously_selected_index {};
 
     const Node& node(const ModelIndex& index) const;
     GUI::Icon icon_for_file(const mode_t mode, const String& name) const;
@@ -171,6 +179,7 @@ private:
     OwnPtr<Node> m_root { nullptr };
 
     GUI::Icon m_directory_icon;
+    GUI::Icon m_directory_open_icon;
     GUI::Icon m_file_icon;
     GUI::Icon m_symlink_icon;
     GUI::Icon m_socket_icon;

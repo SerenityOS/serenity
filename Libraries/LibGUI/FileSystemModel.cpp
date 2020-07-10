@@ -204,6 +204,7 @@ FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
     , m_mode(mode)
 {
     m_directory_icon = Icon::default_icon("filetype-folder");
+    m_directory_open_icon = Icon::default_icon("filetype-folder-open");
     m_file_icon = Icon::default_icon("filetype-unknown");
     m_symlink_icon = Icon::default_icon("filetype-symlink");
     m_socket_icon = Icon::default_icon("filetype-socket");
@@ -282,6 +283,19 @@ static String permission_string(mode_t mode)
     else
         builder.appendf("%c", mode & S_IXOTH ? 'x' : '-');
     return builder.to_string();
+}
+
+void FileSystemModel::Node::set_selected(bool selected)
+{
+    if (m_selected == selected)
+        return;
+    m_selected = selected;
+}
+
+void FileSystemModel::update_node_on_selection(const ModelIndex& index, const bool selected)
+{
+    Node& node = const_cast<Node&>(this->node(index));
+    node.set_selected(selected);
 }
 
 void FileSystemModel::set_root_path(const StringView& root_path)
@@ -468,6 +482,11 @@ Icon FileSystemModel::icon_for(const Node& node) const
                 return m_filetype_image_icon;
         }
         return GUI::Icon(m_filetype_image_icon.bitmap_for_size(16), *node.thumbnail);
+    }
+
+    if (node.is_directory()) {
+        if (node.is_selected())
+            return m_directory_open_icon;
     }
 
     return icon_for_file(node.mode, node.name);
