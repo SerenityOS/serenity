@@ -56,6 +56,9 @@ public:
     void push32(u32);
     u32 pop32();
 
+    u16 segment(X86::SegmentRegister seg) const { return m_segment[(int)seg]; }
+    u16& segment(X86::SegmentRegister seg) { return m_segment[(int)seg]; }
+
     u32 gpr32(X86::RegisterIndex32 reg) const { return m_gpr[reg].full_u32; }
     u32& gpr32(X86::RegisterIndex32 reg) { return m_gpr[reg].full_u32; }
 
@@ -109,10 +112,10 @@ public:
     void set_pf(bool value) { m_pf = value; }
     void set_cf(bool value) { m_cf = value; }
 
-    u16 cs() const { return 0x18; }
-    u16 ds() const { return 0x20; }
-    u16 es() const { return 0x20; }
-    u16 ss() const { return 0x20; }
+    u16 cs() const { return m_segment[(int)X86::SegmentRegister::CS]; }
+    u16 ds() const { return m_segment[(int)X86::SegmentRegister::DS]; }
+    u16 es() const { return m_segment[(int)X86::SegmentRegister::ES]; }
+    u16 ss() const { return m_segment[(int)X86::SegmentRegister::SS]; }
 
     u32 read_memory32(X86::LogicalAddress);
     void write_memory32(X86::LogicalAddress, u32);
@@ -592,6 +595,7 @@ private:
     Emulator& m_emulator;
 
     PartAddressableRegister m_gpr[8];
+    u16 m_segment[8] { 0 };
 
     bool m_of { false };
     bool m_sf { false };
