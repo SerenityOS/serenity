@@ -38,8 +38,11 @@ void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
         if (filter(index))
             to_remove.append(index);
     }
-    for (auto& index : to_remove)
-        m_indexes.remove(index);
+    if (!to_remove.is_empty()) {
+        for (auto& index : to_remove)
+            m_indexes.remove(index);
+        m_view.notify_selection_changed({});
+    }
 }
 
 void ModelSelection::set(const ModelIndex& index)

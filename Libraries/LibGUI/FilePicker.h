@@ -71,6 +71,7 @@ private:
 
     RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
+    int m_model_update_id { 0 };
     LexicalPath m_selected_file;
 
     RefPtr<TextBox> m_filename_textbox;

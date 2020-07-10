@@ -58,17 +58,21 @@ private:
     Model& target() { return *m_target; }
     const Model& target() const { return *m_target; }
 
+    void check_if_cache_needs_update() const;
     void resort();
 
     void set_sorting_case_sensitive(bool b) { m_sorting_case_sensitive = b; }
     bool is_sorting_case_sensitive() { return m_sorting_case_sensitive; }
 
     NonnullRefPtr<Model> m_target;
+    int m_target_update_id { 0 };
     Vector<int> m_row_mappings;
     int m_key_column { -1 };
     SortOrder m_sort_order { SortOrder::Ascending };
     Role m_sort_role { Role::Sort };
     bool m_sorting_case_sensitive { false };
+    bool m_need_to_update_cache { true };
+    bool m_sorting { false };
 };
 
 }

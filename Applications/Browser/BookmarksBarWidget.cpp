@@ -88,16 +88,20 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
 
 BookmarksBarWidget::~BookmarksBarWidget()
 {
+    if (m_model)
+        m_model->unregister_update(m_model_update_id);
 }
 
 void BookmarksBarWidget::set_model(RefPtr<GUI::Model> model)
 {
     if (model == m_model)
         return;
+    if (m_model)
+        m_model->unregister_update(m_model_update_id);
     m_model = move(model);
-    m_model->on_update = [&]() {
+    m_model_update_id = m_model->register_update([&](unsigned) {
         did_update_model();
-    };
+    });
 }
 
 void BookmarksBarWidget::resize_event(GUI::ResizeEvent& event)

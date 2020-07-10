@@ -95,7 +95,8 @@ public:
     void register_view(Badge<AbstractView>, AbstractView&);
     void unregister_view(Badge<AbstractView>, AbstractView&);
 
-    Function<void()> on_update;
+    int register_update(Function<void(unsigned)>);
+    void unregister_update(int);
 
 protected:
     Model();
@@ -107,6 +108,7 @@ protected:
 
 private:
     HashTable<AbstractView*> m_views;
+    Vector<Function<void(unsigned)>> m_on_update;
 };
 
 inline ModelIndex ModelIndex::parent() const

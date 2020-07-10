@@ -123,10 +123,10 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     m_view->set_column_hidden(FileSystemModel::Column::SymlinkTarget, true);
     m_model->set_root_path(path);
 
-    m_model->on_update = [&] {
+    m_model_update_id = m_model->register_update([&](unsigned) {
         location_textbox.set_text(m_model->root_path());
         clear_preview();
-    };
+    });
 
     location_textbox.on_return_pressed = [&] {
         m_model->set_root_path(location_textbox.text());
@@ -270,6 +270,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
 
 FilePicker::~FilePicker()
 {
+    m_model->unregister_update(m_model_update_id);
 }
 
 void FilePicker::set_preview(const LexicalPath& path)

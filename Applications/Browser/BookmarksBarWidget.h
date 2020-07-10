@@ -58,6 +58,7 @@ private:
     void update_content_size();
 
     RefPtr<GUI::Model> m_model;
+    int m_model_update_id { 0 };
     RefPtr<GUI::Button> m_additional;
     RefPtr<GUI::Widget> m_separator;
     RefPtr<GUI::Menu> m_additional_menu;

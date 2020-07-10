@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/TemporaryChange.h>
 #include <AK/QuickSort.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/SortingProxyModel.h>
@@ -36,22 +37,28 @@ SortingProxyModel::SortingProxyModel(NonnullRefPtr<Model>&& target)
     : m_target(move(target))
     , m_key_column(-1)
 {
-    m_target->on_update = [this] {
-        resort();
-    };
+    m_target_update_id = m_target->register_update([this](unsigned flags) {
+        if (!m_sorting)
+            m_need_to_update_cache = true;
+        // We need to notify anyone watching this whenever the target updated
+        did_update(flags);
+    });
 }
 
 SortingProxyModel::~SortingProxyModel()
 {
+    m_target->unregister_update(m_target_update_id);
 }
 
 int SortingProxyModel::row_count(const ModelIndex& index) const
 {
+    check_if_cache_needs_update();
     return target().row_count(index);
 }
 
 int SortingProxyModel::column_count(const ModelIndex& index) const
 {
+    check_if_cache_needs_update();
     return target().column_count(index);
 }
 
@@ -59,6 +66,7 @@ ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
+    check_if_cache_needs_update();
     if (static_cast<size_t>(index.row()) >= m_row_mappings.size() || index.column() >= column_count())
         return {};
     return target().index(m_row_mappings[index.row()], index.column());
@@ -66,7 +74,14 @@ ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
 
 String SortingProxyModel::column_name(int index) const
 {
+    check_if_cache_needs_update();
     return target().column_name(index);
+}
+
+void SortingProxyModel::check_if_cache_needs_update() const
+{
+    if (m_need_to_update_cache && !m_sorting)
+        const_cast<SortingProxyModel*>(this)->resort();
 }
 
 Variant SortingProxyModel::data(const ModelIndex& index, Role role) const
@@ -102,13 +117,15 @@ void SortingProxyModel::set_key_column_and_sort_order(int column, SortOrder sort
 
 void SortingProxyModel::resort()
 {
+    TemporaryChange change(m_sorting, true);
     auto old_row_mappings = m_row_mappings;
     int row_count = target().row_count();
     m_row_mappings.resize(row_count);
     for (int i = 0; i < row_count; ++i)
         m_row_mappings[i] = i;
     if (m_key_column == -1) {
-        did_update(Model::UpdateFlag::DontInvalidateIndexes);
+        if (!m_need_to_update_cache)
+            did_update(Model::UpdateFlag::DontInvalidateIndexes);
         return;
     }
     quick_sort(m_row_mappings, [&](auto row1, auto row2) -> bool {
@@ -123,7 +140,10 @@ void SortingProxyModel::resort()
             is_less_than = data1 < data2;
         return m_sort_order == SortOrder::Ascending ? is_less_than : !is_less_than;
     });
-    did_update(Model::UpdateFlag::DontInvalidateIndexes);
+    if (!m_need_to_update_cache)
+        did_update(Model::UpdateFlag::DontInvalidateIndexes);
+    else
+        m_need_to_update_cache = false;
     for_each_view([&](AbstractView& view) {
         auto& selection = view.selection();
         Vector<ModelIndex> selected_indexes_in_target;

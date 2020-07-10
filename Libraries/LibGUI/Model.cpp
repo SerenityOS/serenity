@@ -55,8 +55,10 @@ void Model::for_each_view(Function<void(AbstractView&)> callback)
 
 void Model::did_update(unsigned flags)
 {
-    if (on_update)
-        on_update();
+    for (auto& on_update : m_on_update) {
+        if (on_update)
+            on_update(flags);
+    }
     for_each_view([&](auto& view) {
         view.did_update_model(flags);
     });
@@ -80,6 +82,26 @@ ModelIndex Model::sibling(int row, int column, const ModelIndex& parent) const
 bool Model::accepts_drag(const ModelIndex&, const StringView&)
 {
     return false;
+}
+
+int Model::register_update(Function<void(unsigned)> on_update)
+{
+    for (size_t i = 0; i < m_on_update.size(); i++) {
+        if (!m_on_update[i]) {
+            m_on_update[i] = move(on_update);
+            return (int)i + 1;
+        }
+    }
+    m_on_update.append(move(on_update));
+    return (int)m_on_update.size();
+}
+
+void Model::unregister_update(int id)
+{
+    if (id == 0)
+        return;
+    ASSERT(m_on_update[id - 1]);
+    m_on_update[id - 1] = nullptr;
 }
 
 }

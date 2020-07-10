@@ -95,16 +95,14 @@ DirectoryView::DirectoryView()
             on_path_change(model().root_path());
     };
 
-    //  NOTE: We're using the on_update hook on the GUI::SortingProxyModel here instead of
-    //        the GUI::FileSystemModel's hook. This is because GUI::SortingProxyModel has already
-    //        installed an on_update hook on the GUI::FileSystemModel internally.
-    // FIXME: This is an unfortunate design. We should come up with something better.
-    m_table_view->model()->on_update = [this] {
-        for_each_view_implementation([](auto& view) {
-            view.selection().clear();
-        });
+    m_model_update_id = m_model->register_update([this](unsigned flags) {
+        if (flags & GUI::Model::UpdateFlag::InvalidateAllIndexes) {
+            for_each_view_implementation([](auto& view) {
+                view.selection().clear();
+            });
+        }
         update_statusbar();
-    };
+    });
 
     m_model->on_thumbnail_progress = [this](int done, int total) {
         if (on_thumbnail_progress)
@@ -169,6 +167,7 @@ DirectoryView::DirectoryView()
 
 DirectoryView::~DirectoryView()
 {
+    m_model->unregister_update(m_model_update_id);
 }
 
 void DirectoryView::set_view_mode(ViewMode mode)
