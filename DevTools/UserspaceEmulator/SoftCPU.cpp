@@ -36,6 +36,11 @@ SoftCPU::SoftCPU(Emulator& emulator)
     : m_emulator(emulator)
 {
     memset(m_gpr, 0, sizeof(m_gpr));
+
+    m_segment[(int)X86::SegmentRegister::CS] = 0x18;
+    m_segment[(int)X86::SegmentRegister::DS] = 0x20;
+    m_segment[(int)X86::SegmentRegister::ES] = 0x20;
+    m_segment[(int)X86::SegmentRegister::SS] = 0x20;
 }
 
 void SoftCPU::dump() const
