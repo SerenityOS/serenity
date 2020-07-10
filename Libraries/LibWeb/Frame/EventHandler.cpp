@@ -72,13 +72,11 @@ LayoutDocument* EventHandler::layout_root()
 
 bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
-    auto* layout_root_ptr = this->layout_root();
-    if (!layout_root_ptr)
+    if (!layout_root())
         return false;
-    auto& layout_root = *layout_root_ptr;
     bool handled_event = false;
 
-    auto result = layout_root.hit_test(position);
+    auto result = layout_root()->hit_test(position);
     if (result.layout_node && result.layout_node->node()) {
         RefPtr<Node> node = result.layout_node->node();
         if (is<HTMLIFrameElement>(*node)) {
@@ -100,14 +98,12 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 
 bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
-    auto* layout_root_ptr = this->layout_root();
-    if (!layout_root_ptr)
+    if (!layout_root())
         return false;
-    auto& layout_root = *layout_root_ptr;
     NonnullRefPtr document = *m_frame.document();
     auto& page_client = m_frame.page().client();
 
-    auto result = layout_root.hit_test(position);
+    auto result = layout_root()->hit_test(position);
     if (!result.layout_node)
         return false;
 
@@ -124,6 +120,9 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
     auto offset = compute_mouse_event_offset(position, *result.layout_node);
     node->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
+    if (!layout_root())
+        return true;
+
     if (RefPtr<HTMLAnchorElement> link = node->enclosing_link_element()) {
         auto href = link->href();
         auto url = document->complete_url(href);
@@ -151,7 +150,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         }
     } else {
         if (button == GUI::MouseButton::Left) {
-            layout_root.selection().set({ result.layout_node, result.index_in_node }, {});
+            layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
             dump_selection("MouseDown");
             m_in_mouse_selection = true;
         }
@@ -164,16 +163,14 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
 bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned buttons, unsigned modifiers)
 {
-    auto* layout_root_ptr = this->layout_root();
-    if (!layout_root_ptr)
+    if (!layout_root())
         return false;
-    auto& layout_root = *layout_root_ptr;
     auto& document = *m_frame.document();
     auto& page_client = m_frame.page().client();
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
-    auto result = layout_root.hit_test(position);
+    auto result = layout_root()->hit_test(position);
     const HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
         RefPtr<Node> node = result.layout_node->node();
@@ -196,9 +193,11 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             }
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
             node->dispatch_event(MouseEvent::create("mousemove", offset.x(), offset.y()));
+            if (!layout_root())
+                return true;
         }
         if (m_in_mouse_selection) {
-            layout_root.selection().set_end({ result.layout_node, result.index_in_node });
+            layout_root()->selection().set_end({ result.layout_node, result.index_in_node });
             dump_selection("MouseMove");
             page_client.page_did_change_selection();
         }
