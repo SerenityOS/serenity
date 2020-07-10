@@ -204,12 +204,11 @@ public:
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
     RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
 
-    SegmentRegister segment() const
-    {
-        ASSERT(!is_register());
-        return m_segment;
-    }
-    u32 offset();
+    template<typename CPU>
+    void write32(CPU&, const Instruction&, u32);
+
+    template<typename CPU>
+    u32 read32(CPU&, const Instruction&);
 
 private:
     MemoryOrRegisterReference() { }
@@ -221,6 +220,14 @@ private:
     void decode(InstructionStream&, bool a32);
     void decode16(InstructionStream&);
     void decode32(InstructionStream&);
+
+    template<typename CPU>
+    LogicalAddress resolve16(const CPU&, Optional<SegmentRegister>);
+    template<typename CPU>
+    LogicalAddress resolve32(const CPU&, Optional<SegmentRegister>);
+
+    template<typename CPU>
+    u32 evaluate_sib(const CPU&, SegmentRegister& default_segment) const;
 
     unsigned m_register_index { 0xffffffff };
     SegmentRegister m_segment;
@@ -371,5 +378,207 @@ private:
 
     InstructionDescriptor* m_descriptor { nullptr };
 };
+
+template<typename CPU>
+LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+{
+    ASSERT(!m_a32);
+
+    auto default_segment = SegmentRegister::DS;
+    u16 offset = 0;
+
+    switch (m_rm & 7) {
+    case 0:
+        offset = cpu.bx() + cpu.si() + m_displacement16;
+        break;
+    case 1:
+        offset = cpu.bx() + cpu.di() + m_displacement16;
+        break;
+    case 2:
+        default_segment = SegmentRegister::SS;
+        offset = cpu.bp() + cpu.si() + m_displacement16;
+        break;
+    case 3:
+        default_segment = SegmentRegister::SS;
+        offset = cpu.bp() + cpu.di() + m_displacement16;
+        break;
+    case 4:
+        offset = cpu.si() + m_displacement16;
+        break;
+    case 5:
+        offset = cpu.di() + m_displacement16;
+        break;
+    case 6:
+        if ((m_rm & 0xc0) == 0)
+            offset = m_displacement16;
+        else {
+            default_segment = SegmentRegister::SS;
+            offset = cpu.bp() + m_displacement16;
+        }
+        break;
+    default:
+        offset = cpu.bx() + m_displacement16;
+        break;
+    }
+
+    u16 segment = cpu.segment(segment_prefix.value_or(default_segment));
+    return { segment, offset };
+}
+
+template<typename CPU>
+inline LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+{
+    ASSERT(m_a32);
+
+    auto default_segment = SegmentRegister::DS;
+    u32 offset = 0;
+
+    switch (m_rm & 0x07) {
+    case 0:
+        offset = cpu.eax() + m_displacement32;
+        break;
+    case 1:
+        offset = cpu.ecx() + m_displacement32;
+        break;
+    case 2:
+        offset = cpu.edx() + m_displacement32;
+        break;
+    case 3:
+        offset = cpu.ebx() + m_displacement32;
+        break;
+    case 4:
+        offset = evaluate_sib(cpu, default_segment);
+        break;
+    case 6:
+        offset = cpu.esi() + m_displacement32;
+        break;
+    case 7:
+        offset = cpu.edi() + m_displacement32;
+        break;
+    default: // 5
+        if ((m_rm & 0xc0) == 0x00) {
+            offset = m_displacement32;
+            break;
+        } else {
+            default_segment = SegmentRegister::SS;
+            offset = cpu.ebp() + m_displacement32;
+            break;
+        }
+        break;
+    }
+    u16 segment = cpu.segment(segment_prefix.value_or(default_segment));
+    return { segment, offset };
+}
+
+template<typename CPU>
+inline u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegister& default_segment) const
+{
+    u32 scale = 0;
+    switch (m_sib & 0xc0) {
+    case 0x00:
+        scale = 1;
+        break;
+    case 0x40:
+        scale = 2;
+        break;
+    case 0x80:
+        scale = 4;
+        break;
+    case 0xc0:
+        scale = 8;
+        break;
+    }
+    u32 index = 0;
+    switch ((m_sib >> 3) & 0x07) {
+    case 0:
+        index = cpu.eax();
+        break;
+    case 1:
+        index = cpu.ecx();
+        break;
+    case 2:
+        index = cpu.edx();
+        break;
+    case 3:
+        index = cpu.ebx();
+        break;
+    case 4:
+        index = 0;
+        break;
+    case 5:
+        index = cpu.ebp();
+        break;
+    case 6:
+        index = cpu.esi();
+        break;
+    case 7:
+        index = cpu.edi();
+        break;
+    }
+
+    u32 base = m_displacement32;
+    switch (m_sib & 0x07) {
+    case 0:
+        base += cpu.eax();
+        break;
+    case 1:
+        base += cpu.ecx();
+        break;
+    case 2:
+        base += cpu.edx();
+        break;
+    case 3:
+        base += cpu.ebx();
+        break;
+    case 4:
+        default_segment = SegmentRegister::SS;
+        base += cpu.esp();
+        break;
+    case 6:
+        base += cpu.esi();
+        break;
+    case 7:
+        base += cpu.edi();
+        break;
+    default: // 5
+        switch ((m_rm >> 6) & 3) {
+        case 0:
+            break;
+        case 1:
+        case 2:
+            default_segment = SegmentRegister::SS;
+            base += cpu.ebp();
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+            break;
+        }
+        break;
+    }
+
+    return (scale * index) + base;
+}
+
+template<typename CPU>
+inline void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn, u32 value)
+{
+    if (is_register()) {
+        cpu.gpr32(reg32()) = value;
+        return;
+    }
+
+    auto address = resolve32(cpu, insn.segment_prefix());
+    cpu.write_memory32(address, value);
+}
+
+template<typename CPU>
+inline u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
+{
+    if (is_register())
+        return cpu.gpr32(reg32());
+
+    auto address = resolve32(cpu, insn.segment_prefix());
+    return cpu.read_memory32(address);
+}
 
 }
