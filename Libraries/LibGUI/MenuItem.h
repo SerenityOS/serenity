@@ -47,7 +47,7 @@ public:
     ~MenuItem();
 
     Type type() const { return m_type; }
-    String text() const;
+
     const Action* action() const { return m_action.ptr(); }
     Action* action() { return m_action.ptr(); }
     unsigned identifier() const { return m_identifier; }
@@ -64,6 +64,9 @@ public:
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
+    bool is_default() const { return m_default; }
+    void set_default(bool);
+
     void set_menu_id(Badge<Menu>, unsigned menu_id);
     void set_identifier(Badge<Menu>, unsigned identifier);
 
@@ -76,6 +79,7 @@ private:
     bool m_enabled { true };
     bool m_checkable { false };
     bool m_checked { false };
+    bool m_default { false };
     RefPtr<Action> m_action;
     RefPtr<Menu> m_submenu;
 };
