@@ -130,13 +130,13 @@ public:
     JsonArraySerializer<Builder> add_array(const StringView& key)
     {
         begin_item(key);
-        return JsonArraySerializer(m_builder);
+        return JsonArraySerializer<Builder>(m_builder);
     }
 
     JsonObjectSerializer<Builder> add_object(const StringView& key)
     {
         begin_item(key);
-        return JsonObjectSerializer(m_builder);
+        return JsonObjectSerializer<Builder>(m_builder);
     }
 
     void finish()
@@ -167,7 +167,7 @@ template<typename Builder>
 JsonObjectSerializer<Builder> JsonArraySerializer<Builder>::add_object()
 {
     begin_item();
-    return JsonObjectSerializer(m_builder);
+    return JsonObjectSerializer<Builder>(m_builder);
 }
 
 }

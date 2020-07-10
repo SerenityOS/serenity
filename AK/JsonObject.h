@@ -129,7 +129,7 @@ private:
 template<typename Builder>
 inline void JsonObject::serialize(Builder& builder) const
 {
-    JsonObjectSerializer serializer { builder };
+    JsonObjectSerializer<Builder> serializer { builder };
     for_each_member([&](auto& key, auto& value) {
         serializer.add(key, value);
     });
