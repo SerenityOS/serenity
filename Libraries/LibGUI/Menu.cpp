@@ -83,15 +83,15 @@ void Menu::add_separator()
     m_items.append(make<MenuItem>(m_menu_id, MenuItem::Type::Separator));
 }
 
-void Menu::realize_if_needed()
+void Menu::realize_if_needed(const RefPtr<Action>& default_action)
 {
-    if (m_menu_id == -1)
-        realize_menu();
+    if (m_menu_id == -1 || m_last_default_action.ptr() != default_action)
+        realize_menu(default_action);
 }
 
-void Menu::popup(const Gfx::IntPoint& screen_position)
+void Menu::popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action)
 {
-    realize_if_needed();
+    realize_if_needed(default_action);
     WindowServerConnection::the().post_message(Messages::WindowServer::PopupMenu(m_menu_id, screen_position));
 }
 
@@ -102,7 +102,7 @@ void Menu::dismiss()
     WindowServerConnection::the().post_message(Messages::WindowServer::DismissMenu(m_menu_id));
 }
 
-int Menu::realize_menu()
+int Menu::realize_menu(RefPtr<Action> default_action)
 {
     m_menu_id = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateMenu>(m_name)->menu_id();
 
@@ -120,8 +120,8 @@ int Menu::realize_menu()
         }
         if (item.type() == MenuItem::Type::Submenu) {
             auto& submenu = *item.submenu();
-            submenu.realize_if_needed();
-            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, "", -1, false);
+            submenu.realize_if_needed(default_action);
+            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", -1, false);
             continue;
         }
         if (item.type() == MenuItem::Type::Action) {
@@ -143,10 +143,12 @@ int Menu::realize_menu()
             }
             auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
             bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
-            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, shortcut_text, icon_buffer_id, exclusive);
+            bool is_default = (default_action.ptr() == &action);
+            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon_buffer_id, exclusive);
         }
     }
     all_menus().set(m_menu_id, this);
+    m_last_default_action = default_action ? default_action->make_weak_ptr() : nullptr;
     return m_menu_id;
 }
 
@@ -157,6 +159,12 @@ void Menu::unrealize_menu()
     all_menus().remove(m_menu_id);
     WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyMenu>(m_menu_id);
     m_menu_id = 0;
+}
+
+void Menu::realize_menu_if_needed()
+{
+    if (menu_id() == -1)
+        realize_menu();
 }
 
 Action* Menu::action_at(size_t index)
