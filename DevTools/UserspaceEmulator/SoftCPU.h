@@ -68,14 +68,32 @@ public:
     u32 esi() const { return gpr32(X86::RegisterESI); }
     u32 edi() const { return gpr32(X86::RegisterEDI); }
 
+    u16 ax() const { return m_gpr[X86::RegisterEAX].low_u16; }
+    u16 bx() const { return m_gpr[X86::RegisterEBX].low_u16; }
+    u16 cx() const { return m_gpr[X86::RegisterECX].low_u16; }
+    u16 dx() const { return m_gpr[X86::RegisterEDX].low_u16; }
+    u16 sp() const { return m_gpr[X86::RegisterESP].low_u16; }
+    u16 bp() const { return m_gpr[X86::RegisterEBP].low_u16; }
+    u16 si() const { return m_gpr[X86::RegisterESI].low_u16; }
+    u16 di() const { return m_gpr[X86::RegisterEDI].low_u16; }
+
     void set_eax(u32 value) { gpr32(X86::RegisterEAX) = value; }
     void set_ebx(u32 value) { gpr32(X86::RegisterEBX) = value; }
     void set_ecx(u32 value) { gpr32(X86::RegisterECX) = value; }
     void set_edx(u32 value) { gpr32(X86::RegisterEDX) = value; }
-    void set_ebp(u32 value) { gpr32(X86::RegisterEBP) = value; }
     void set_esp(u32 value) { gpr32(X86::RegisterESP) = value; }
+    void set_ebp(u32 value) { gpr32(X86::RegisterEBP) = value; }
     void set_esi(u32 value) { gpr32(X86::RegisterESI) = value; }
     void set_edi(u32 value) { gpr32(X86::RegisterEDI) = value; }
+
+    void set_ax(u16 value) { m_gpr[X86::RegisterEAX].low_u16 = value; }
+    void set_bx(u16 value) { m_gpr[X86::RegisterEBX].low_u16 = value; }
+    void set_cx(u16 value) { m_gpr[X86::RegisterECX].low_u16 = value; }
+    void set_dx(u16 value) { m_gpr[X86::RegisterEDX].low_u16 = value; }
+    void set_sp(u16 value) { m_gpr[X86::RegisterESP].low_u16 = value; }
+    void set_bp(u16 value) { m_gpr[X86::RegisterEBP].low_u16 = value; }
+    void set_si(u16 value) { m_gpr[X86::RegisterESI].low_u16 = value; }
+    void set_di(u16 value) { m_gpr[X86::RegisterEDI].low_u16 = value; }
 
     bool of() const { return m_of; }
     bool sf() const { return m_sf; }
