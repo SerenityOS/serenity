@@ -21,13 +21,14 @@ endpoint WindowServer = 2
         bool enabled,
         bool checkable,
         bool checked,
+        bool is_default,
         [UTF8] String shortcut,
         i32 icon_buffer_id,
         bool exclusive) => ()
 
     AddMenuSeparator(i32 menu_id) => ()
 
-    UpdateMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, [UTF8] String text, bool enabled, bool checkable, bool checked, [UTF8] String shortcut) => ()
+    UpdateMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, [UTF8] String text, bool enabled, bool checkable, bool checked, bool is_default, [UTF8] String shortcut) => ()
 
     CreateWindow(
         Gfx::IntRect rect,

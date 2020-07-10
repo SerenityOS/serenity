@@ -201,6 +201,8 @@ OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(con
     }
     auto& menu = *(*it).value;
     auto menu_item = make<MenuItem>(menu, identifier, message.text(), message.shortcut(), message.enabled(), message.checkable(), message.checked());
+    if (message.is_default())
+        menu_item->set_default(true);
     if (message.icon_buffer_id() != -1) {
         auto icon_buffer = SharedBuffer::create_from_shbuf_id(message.icon_buffer_id());
         if (!icon_buffer)
@@ -260,6 +262,7 @@ OwnPtr<Messages::WindowServer::UpdateMenuItemResponse> ClientConnection::handle(
     menu_item->set_shortcut_text(message.shortcut());
     menu_item->set_enabled(message.enabled());
     menu_item->set_checkable(message.checkable());
+    menu_item->set_default(message.is_default());
     if (message.checkable())
         menu_item->set_checked(message.checked());
     return make<Messages::WindowServer::UpdateMenuItemResponse>();
