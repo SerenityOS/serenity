@@ -115,6 +115,8 @@ void TreeView::set_open_state_of_all_in_subtree(const ModelIndex& root, bool ope
     int row_count = model()->row_count(root);
     int column = model()->tree_column();
     for (int row = 0; row < row_count; ++row) {
+        if (on_toggle)
+            on_toggle(root, open);
         auto index = model()->index(row, column, root);
         set_open_state_of_all_in_subtree(index, open);
     }
