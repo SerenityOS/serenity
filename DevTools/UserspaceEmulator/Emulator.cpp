@@ -49,10 +49,34 @@ public:
         free(m_data);
     }
 
+    virtual u8 read8(u32 offset) override
+    {
+        ASSERT(offset < size());
+        return *reinterpret_cast<const u8*>(m_data + offset);
+    }
+
+    virtual u16 read16(u32 offset) override
+    {
+        ASSERT(offset + 1 < size());
+        return *reinterpret_cast<const u16*>(m_data + offset);
+    }
+
     virtual u32 read32(u32 offset) override
     {
         ASSERT(offset + 3 < size());
         return *reinterpret_cast<const u32*>(m_data + offset);
+    }
+
+    virtual void write8(u32 offset, u8 value) override
+    {
+        ASSERT(offset < size());
+        *reinterpret_cast<u8*>(m_data + offset) = value;
+    }
+
+    virtual void write16(u32 offset, u16 value) override
+    {
+        ASSERT(offset + 1 < size());
+        *reinterpret_cast<u16*>(m_data + offset) = value;
     }
 
     virtual void write32(u32 offset, u32 value) override
