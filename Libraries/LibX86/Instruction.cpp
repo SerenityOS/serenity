@@ -867,7 +867,7 @@ unsigned Instruction::length() const
     return len;
 }
 
-static SegmentRegister to_segment_prefix(u8 op)
+static Optional<SegmentRegister> to_segment_prefix(u8 op)
 {
     switch (op) {
     case 0x26:
@@ -883,7 +883,7 @@ static SegmentRegister to_segment_prefix(u8 op)
     case 0x65:
         return SegmentRegister::GS;
     default:
-        return SegmentRegister::None;
+        return {};
     }
 }
 
@@ -912,7 +912,7 @@ Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
             continue;
         }
         auto segment_prefix = to_segment_prefix(opbyte);
-        if (segment_prefix != SegmentRegister::None) {
+        if (segment_prefix.has_value()) {
             m_segment_prefix = segment_prefix;
             continue;
         }
@@ -1269,8 +1269,8 @@ String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider,
     String osize_prefix;
     String rep_prefix;
     String lock_prefix;
-    if (has_segment_prefix()) {
-        segment_prefix = String::format("%s: ", register_name(m_segment_prefix));
+    if (m_segment_prefix.has_value()) {
+        segment_prefix = String::format("%s: ", register_name(m_segment_prefix.value()));
     }
     if (has_address_size_override_prefix()) {
         asize_prefix = m_a32 ? "a32 " : "a16 ";

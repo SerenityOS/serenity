@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Types.h>
@@ -75,7 +76,6 @@ enum class SegmentRegister {
     GS,
     SegR6,
     SegR7,
-    None = 0xFF,
 };
 
 enum RegisterIndex8 {
@@ -223,7 +223,7 @@ private:
     void decode32(InstructionStream&);
 
     unsigned m_register_index { 0xffffffff };
-    SegmentRegister m_segment { SegmentRegister::None };
+    SegmentRegister m_segment;
     union {
         u32 m_offset32 { 0 };
         u16 m_offset16;
@@ -259,7 +259,9 @@ public:
 
     InstructionHandler handler() const;
 
-    bool has_segment_prefix() const { return m_segment_prefix != SegmentRegister::None; }
+    bool has_segment_prefix() const { return m_segment_prefix.has_value(); }
+    Optional<SegmentRegister> segment_prefix() const { return m_segment_prefix; }
+
     bool has_address_size_override_prefix() const { return m_has_address_size_override_prefix; }
     bool has_operand_size_override_prefix() const { return m_has_operand_size_override_prefix; }
     bool has_lock_prefix() const { return m_has_lock_prefix; }
@@ -360,7 +362,7 @@ private:
     unsigned m_imm2_bytes { 0 };
     unsigned m_prefix_bytes { 0 };
 
-    SegmentRegister m_segment_prefix { SegmentRegister::None };
+    Optional<SegmentRegister> m_segment_prefix;
     bool m_has_operand_size_override_prefix { false };
     bool m_has_address_size_override_prefix { false };
     u8 m_rep_prefix { 0 };
