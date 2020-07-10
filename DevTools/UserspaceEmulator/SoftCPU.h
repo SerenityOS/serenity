@@ -59,6 +59,55 @@ public:
     u16 segment(X86::SegmentRegister seg) const { return m_segment[(int)seg]; }
     u16& segment(X86::SegmentRegister seg) { return m_segment[(int)seg]; }
 
+    u8& gpr8(X86::RegisterIndex8 reg)
+    {
+        switch (reg) {
+        case X86::RegisterAL:
+            return m_gpr[X86::RegisterEAX].low_u8;
+        case X86::RegisterAH:
+            return m_gpr[X86::RegisterEAX].high_u8;
+        case X86::RegisterBL:
+            return m_gpr[X86::RegisterEBX].low_u8;
+        case X86::RegisterBH:
+            return m_gpr[X86::RegisterEBX].high_u8;
+        case X86::RegisterCL:
+            return m_gpr[X86::RegisterECX].low_u8;
+        case X86::RegisterCH:
+            return m_gpr[X86::RegisterECX].high_u8;
+        case X86::RegisterDL:
+            return m_gpr[X86::RegisterEDX].low_u8;
+        case X86::RegisterDH:
+            return m_gpr[X86::RegisterEDX].high_u8;
+        }
+        ASSERT_NOT_REACHED();
+    }
+
+    u8 gpr8(X86::RegisterIndex8 reg) const
+    {
+        switch (reg) {
+        case X86::RegisterAL:
+            return m_gpr[X86::RegisterEAX].low_u8;
+        case X86::RegisterAH:
+            return m_gpr[X86::RegisterEAX].high_u8;
+        case X86::RegisterBL:
+            return m_gpr[X86::RegisterEBX].low_u8;
+        case X86::RegisterBH:
+            return m_gpr[X86::RegisterEBX].high_u8;
+        case X86::RegisterCL:
+            return m_gpr[X86::RegisterECX].low_u8;
+        case X86::RegisterCH:
+            return m_gpr[X86::RegisterECX].high_u8;
+        case X86::RegisterDL:
+            return m_gpr[X86::RegisterEDX].low_u8;
+        case X86::RegisterDH:
+            return m_gpr[X86::RegisterEDX].high_u8;
+        }
+        ASSERT_NOT_REACHED();
+    }
+
+    u16 gpr16(X86::RegisterIndex16 reg) const { return m_gpr[reg].low_u16; }
+    u16& gpr16(X86::RegisterIndex16 reg) { return m_gpr[reg].low_u16; }
+
     u32 gpr32(X86::RegisterIndex32 reg) const { return m_gpr[reg].full_u32; }
     u32& gpr32(X86::RegisterIndex32 reg) { return m_gpr[reg].full_u32; }
 
@@ -71,14 +120,23 @@ public:
     u32 esi() const { return gpr32(X86::RegisterESI); }
     u32 edi() const { return gpr32(X86::RegisterEDI); }
 
-    u16 ax() const { return m_gpr[X86::RegisterEAX].low_u16; }
-    u16 bx() const { return m_gpr[X86::RegisterEBX].low_u16; }
-    u16 cx() const { return m_gpr[X86::RegisterECX].low_u16; }
-    u16 dx() const { return m_gpr[X86::RegisterEDX].low_u16; }
-    u16 sp() const { return m_gpr[X86::RegisterESP].low_u16; }
-    u16 bp() const { return m_gpr[X86::RegisterEBP].low_u16; }
-    u16 si() const { return m_gpr[X86::RegisterESI].low_u16; }
-    u16 di() const { return m_gpr[X86::RegisterEDI].low_u16; }
+    u16 ax() const { return gpr16(X86::RegisterAX); }
+    u16 bx() const { return gpr16(X86::RegisterBX); }
+    u16 cx() const { return gpr16(X86::RegisterCX); }
+    u16 dx() const { return gpr16(X86::RegisterDX); }
+    u16 sp() const { return gpr16(X86::RegisterSP); }
+    u16 bp() const { return gpr16(X86::RegisterBP); }
+    u16 si() const { return gpr16(X86::RegisterSI); }
+    u16 di() const { return gpr16(X86::RegisterDI); }
+
+    u8 al() const { return gpr8(X86::RegisterAL); }
+    u8 ah() const { return gpr8(X86::RegisterAH); }
+    u8 bl() const { return gpr8(X86::RegisterBL); }
+    u8 bh() const { return gpr8(X86::RegisterBH); }
+    u8 cl() const { return gpr8(X86::RegisterCL); }
+    u8 ch() const { return gpr8(X86::RegisterCH); }
+    u8 dl() const { return gpr8(X86::RegisterDL); }
+    u8 dh() const { return gpr8(X86::RegisterDH); }
 
     void set_eax(u32 value) { gpr32(X86::RegisterEAX) = value; }
     void set_ebx(u32 value) { gpr32(X86::RegisterEBX) = value; }
@@ -89,14 +147,23 @@ public:
     void set_esi(u32 value) { gpr32(X86::RegisterESI) = value; }
     void set_edi(u32 value) { gpr32(X86::RegisterEDI) = value; }
 
-    void set_ax(u16 value) { m_gpr[X86::RegisterEAX].low_u16 = value; }
-    void set_bx(u16 value) { m_gpr[X86::RegisterEBX].low_u16 = value; }
-    void set_cx(u16 value) { m_gpr[X86::RegisterECX].low_u16 = value; }
-    void set_dx(u16 value) { m_gpr[X86::RegisterEDX].low_u16 = value; }
-    void set_sp(u16 value) { m_gpr[X86::RegisterESP].low_u16 = value; }
-    void set_bp(u16 value) { m_gpr[X86::RegisterEBP].low_u16 = value; }
-    void set_si(u16 value) { m_gpr[X86::RegisterESI].low_u16 = value; }
-    void set_di(u16 value) { m_gpr[X86::RegisterEDI].low_u16 = value; }
+    void set_ax(u16 value) { gpr16(X86::RegisterAX) = value; }
+    void set_bx(u16 value) { gpr16(X86::RegisterBX) = value; }
+    void set_cx(u16 value) { gpr16(X86::RegisterCX) = value; }
+    void set_dx(u16 value) { gpr16(X86::RegisterDX) = value; }
+    void set_sp(u16 value) { gpr16(X86::RegisterSP) = value; }
+    void set_bp(u16 value) { gpr16(X86::RegisterBP) = value; }
+    void set_si(u16 value) { gpr16(X86::RegisterSI) = value; }
+    void set_di(u16 value) { gpr16(X86::RegisterDI) = value; }
+
+    void set_al(u8 value) { gpr8(X86::RegisterAL) = value; }
+    void set_ah(u8 value) { gpr8(X86::RegisterAH) = value; }
+    void set_bl(u8 value) { gpr8(X86::RegisterBL) = value; }
+    void set_bh(u8 value) { gpr8(X86::RegisterBH) = value; }
+    void set_cl(u8 value) { gpr8(X86::RegisterCL) = value; }
+    void set_ch(u8 value) { gpr8(X86::RegisterCH) = value; }
+    void set_dl(u8 value) { gpr8(X86::RegisterDL) = value; }
+    void set_dh(u8 value) { gpr8(X86::RegisterDH) = value; }
 
     bool of() const { return m_of; }
     bool sf() const { return m_sf; }
