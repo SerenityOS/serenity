@@ -805,6 +805,14 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }
     };
 
+    tree_view.on_selection = [&](const GUI::ModelIndex& index) {
+        if (directories_model->m_previously_selected_index.is_valid())
+            directories_model->update_node_on_selection(directories_model->m_previously_selected_index, false);
+
+        directories_model->update_node_on_selection(index, true);
+        directories_model->m_previously_selected_index = index;
+    };
+
     tree_view.on_selection_change = [&] {
         if (tree_view.selection().is_empty())
             return;
