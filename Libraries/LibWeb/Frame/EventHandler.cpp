@@ -60,14 +60,14 @@ const LayoutDocument* EventHandler::layout_root() const
 {
     if (!m_frame.document())
         return nullptr;
-    return static_cast<LayoutDocument*>(m_frame.document()->layout_node());
+    return m_frame.document()->layout_node();
 }
 
 LayoutDocument* EventHandler::layout_root()
 {
     if (!m_frame.document())
         return nullptr;
-    return const_cast<LayoutDocument*>(m_frame.document()->layout_node());
+    return m_frame.document()->layout_node();
 }
 
 bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
