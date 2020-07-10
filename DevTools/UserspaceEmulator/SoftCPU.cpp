@@ -28,12 +28,14 @@
 #include "Emulator.h"
 #include <AK/Assertions.h>
 #include <stdio.h>
+#include <string.h>
 
 namespace UserspaceEmulator {
 
 SoftCPU::SoftCPU(Emulator& emulator)
     : m_emulator(emulator)
 {
+    memset(m_gpr, 0, sizeof(m_gpr));
 }
 
 void SoftCPU::dump() const

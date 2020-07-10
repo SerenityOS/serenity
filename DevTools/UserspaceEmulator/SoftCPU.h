@@ -35,7 +35,7 @@ class Emulator;
 
 union PartAddressableRegister {
     struct {
-        u32 full_u32 { 0 };
+        u32 full_u32;
     };
     struct {
         u16 low_u16;
