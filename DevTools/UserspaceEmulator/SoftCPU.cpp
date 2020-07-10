@@ -148,6 +148,17 @@ static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, Destination&
     return result;
 }
 
+template<typename Destination, typename Source>
+static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, Destination& dest, const Source& src)
+{
+    u64 result = (u64)dest - (u64)src;
+    cpu.set_zf(result == 0);
+    cpu.set_sf((result >> (X86::TypeTrivia<Destination>::bits - 1) & 1));
+    cpu.set_af((((result ^ (src ^ dest)) & 0x10) >> 4) & 1);
+    cpu.set_of((((result ^ dest) & (src ^ dest)) >> (X86::TypeTrivia<Destination>::bits - 1)) & 1);
+    return result;
+}
+
 template<typename Op>
 void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
 {
@@ -705,20 +716,6 @@ void SoftCPU::STOSB(const X86::Instruction&) { TODO(); }
 void SoftCPU::STOSD(const X86::Instruction&) { TODO(); }
 void SoftCPU::STOSW(const X86::Instruction&) { TODO(); }
 void SoftCPU::STR_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_AL_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_AX_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_EAX_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_RM16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_RM32_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_RM8_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_RM8_reg8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::SUB_reg8_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::TEST_AL_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::TEST_AX_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::TEST_EAX_imm32(const X86::Instruction&) { TODO(); }
@@ -762,6 +759,7 @@ void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
     void SoftCPU::mnemonic##_reg8_RM8(const X86::Instruction& insn) { generic_reg8_RM8(op<u8, u8>, insn); }
 
 DEFINE_GENERIC_INSN_HANDLERS(XOR, op_xor)
+DEFINE_GENERIC_INSN_HANDLERS(SUB, op_sub)
 
 void SoftCPU::MOVQ_mm1_mm2m64(const X86::Instruction&) { TODO(); }
 void SoftCPU::EMMS(const X86::Instruction&) { TODO(); }
