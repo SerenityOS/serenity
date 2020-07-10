@@ -501,10 +501,23 @@ void SoftCPU::MOV_AX_moff16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_CR_reg32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_DR_reg32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_EAX_moff32(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_RM16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_RM16_reg16(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MOV_RM16_imm16(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, insn.imm16());
+}
+
+void SoftCPU::MOV_RM16_reg16(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, gpr16(insn.reg16()));
+}
+
 void SoftCPU::MOV_RM16_seg(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_RM32_imm32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MOV_RM32_imm32(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = insn.imm32();
+}
 
 void SoftCPU::MOV_RM32_reg32(const X86::Instruction& insn)
 {
@@ -512,24 +525,53 @@ void SoftCPU::MOV_RM32_reg32(const X86::Instruction& insn)
     gpr32(insn.modrm().reg32()) = gpr32(insn.reg32());
 }
 
-void SoftCPU::MOV_RM8_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_RM8_reg8(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOV_RM8_imm8(const X86::Instruction& insn)
+{
+    insn.modrm().write8(*this, insn, insn.imm8());
+}
+
+void SoftCPU::MOV_RM8_reg8(const X86::Instruction& insn)
+{
+    insn.modrm().write8(*this, insn, insn.modrm().read8(*this, insn));
+}
+
 void SoftCPU::MOV_moff16_AX(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_moff32_EAX(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_moff8_AL(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_reg16_imm16(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MOV_reg16_RM16(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = insn.modrm().read16(*this, insn);
+}
+
+void SoftCPU::MOV_reg16_imm16(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = insn.imm16();
+}
+
 void SoftCPU::MOV_reg32_CR(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_reg32_DR(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_reg32_RM32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MOV_reg32_RM32(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = insn.modrm().read32(*this, insn);
+}
 
 void SoftCPU::MOV_reg32_imm32(const X86::Instruction& insn)
 {
     gpr32(insn.reg32()) = insn.imm32();
 }
 
-void SoftCPU::MOV_reg8_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_reg8_imm8(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOV_reg8_RM8(const X86::Instruction& insn)
+{
+    gpr8(insn.reg8()) = insn.modrm().read8(*this, insn);
+}
+
+void SoftCPU::MOV_reg8_imm8(const X86::Instruction& insn)
+{
+    gpr8(insn.reg8()) = insn.imm8();
+}
+
 void SoftCPU::MOV_seg_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_seg_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MUL_RM16(const X86::Instruction&) { TODO(); }
