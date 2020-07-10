@@ -32,6 +32,34 @@
 
 namespace UserspaceEmulator {
 
+template<typename T>
+struct TypeDoubler {
+};
+template<>
+struct TypeDoubler<u8> {
+    typedef u16 type;
+};
+template<>
+struct TypeDoubler<u16> {
+    typedef u32 type;
+};
+template<>
+struct TypeDoubler<u32> {
+    typedef u64 type;
+};
+template<>
+struct TypeDoubler<i8> {
+    typedef i16 type;
+};
+template<>
+struct TypeDoubler<i16> {
+    typedef i32 type;
+};
+template<>
+struct TypeDoubler<i32> {
+    typedef i64 type;
+};
+
 SoftCPU::SoftCPU(Emulator& emulator)
     : m_emulator(emulator)
 {
@@ -76,6 +104,45 @@ u32 SoftCPU::pop32()
     auto value = read_memory32({ ss(), esp() });
     set_esp(esp() + sizeof(value));
     return value;
+}
+
+template<typename Destination, typename Source>
+static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, Destination& dest, const Source& src)
+{
+    auto result = dest ^ src;
+    cpu.set_zf(dest == 0);
+    cpu.set_sf(dest & 0x80000000);
+    // FIXME: set_pf
+    cpu.set_of(false);
+    cpu.set_cf(false);
+    return result;
+}
+
+template<typename Op>
+void SoftCPU::generic_RM32_reg32(Op op, const X86::Instruction& insn)
+{
+    auto dest = insn.modrm().read32(*this, insn);
+    auto src = gpr32(insn.reg32());
+    auto result = op(*this, dest, src);
+    insn.modrm().write32(*this, insn, result);
+}
+
+template<typename Op>
+void SoftCPU::generic_RM32_imm32(Op op, const X86::Instruction& insn)
+{
+    auto dest = insn.modrm().read32(*this, insn);
+    auto src = insn.imm32();
+    auto result = op(*this, dest, src);
+    insn.modrm().write32(*this, insn, result);
+}
+
+template<typename Op>
+void SoftCPU::generic_RM32_imm8(Op op, const X86::Instruction& insn)
+{
+    auto dest = insn.modrm().read32(*this, insn);
+    auto src = insn.imm8();
+    auto result = op(*this, dest, src);
+    insn.modrm().write32(*this, insn, result);
 }
 
 void SoftCPU::AAA(const X86::Instruction&) { TODO(); }
@@ -548,27 +615,32 @@ void SoftCPU::XCHG_reg16_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::XCHG_reg32_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::XCHG_reg8_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
-void SoftCPU::XOR_AL_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::XOR_AL_imm8(const X86::Instruction&)
+{
+
+    TODO();
+}
+
 void SoftCPU::XOR_AX_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_EAX_imm32(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_RM16_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_RM16_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::XOR_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::XOR_RM32_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::XOR_RM32_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::XOR_RM32_imm32(const X86::Instruction& insn)
+{
+    generic_RM32_imm32(op_xor<u32, u32>, insn);
+}
+
+void SoftCPU::XOR_RM32_imm8(const X86::Instruction& insn)
+{
+    generic_RM32_imm8(op_xor<u32, u8>, insn);
+}
 
 void SoftCPU::XOR_RM32_reg32(const X86::Instruction& insn)
 {
-    ASSERT(insn.modrm().is_register());
-    auto& dest = gpr32(insn.modrm().reg32());
-    auto src = gpr32(insn.reg32());
-    dest ^= src;
-
-    set_cf(false);
-    set_of(false);
-    set_zf(dest == 0);
-    set_sf(dest & 0x80000000);
-    // FIXME: set_pf
+    generic_RM32_reg32(op_xor<u32, u32>, insn);
 }
 
 void SoftCPU::XOR_RM8_imm8(const X86::Instruction&) { TODO(); }

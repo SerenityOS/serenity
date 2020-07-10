@@ -591,6 +591,13 @@ private:
     virtual void wrap_0xD3_16(const X86::Instruction&) override;
     virtual void wrap_0xD3_32(const X86::Instruction&) override;
 
+    template<typename Op>
+    void generic_RM32_reg32(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM32_imm32(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM32_imm8(Op, const X86::Instruction&);
+
 private:
     Emulator& m_emulator;
 
