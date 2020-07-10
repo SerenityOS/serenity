@@ -652,15 +652,80 @@ void SoftCPU::ROR_RM8_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::ROR_RM8_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SAHF(const X86::Instruction&) { TODO(); }
 void SoftCPU::SALC(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM16_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM16_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM32_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM32_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM8_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM8_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SAR_RM8_imm8(const X86::Instruction&) { TODO(); }
+
+template<typename T>
+T SoftCPU::sar_impl(T data, u8 steps)
+{
+    if (steps == 0)
+        return data;
+
+    u32 result = 0;
+    u32 new_flags = 0;
+    asm("sarl %%cl, %%eax\n"
+        "mov %%eax, %%ebx\n"
+        "pushf\n"
+        "pop %%eax\n"
+        : "=a"(new_flags), "=b"(result)
+        : "a"(data), "c"(steps));
+
+    set_flags_oszapc(new_flags);
+    return result;
+}
+
+void SoftCPU::SAR_RM16_1(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, sar_impl(data, 1));
+}
+
+void SoftCPU::SAR_RM16_CL(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, sar_impl(data, cl()));
+}
+
+void SoftCPU::SAR_RM16_imm8(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, sar_impl(data, insn.imm8()));
+}
+
+void SoftCPU::SAR_RM32_1(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, sar_impl(data, 1));
+}
+
+void SoftCPU::SAR_RM32_CL(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, sar_impl(data, cl()));
+}
+
+void SoftCPU::SAR_RM32_imm8(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, sar_impl(data, insn.imm8()));
+}
+
+void SoftCPU::SAR_RM8_1(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, sar_impl(data, 1));
+}
+
+void SoftCPU::SAR_RM8_CL(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, sar_impl(data, cl()));
+}
+
+void SoftCPU::SAR_RM8_imm8(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, sar_impl(data, insn.imm8()));
+}
+
 void SoftCPU::SBB_AL_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SBB_AX_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::SBB_EAX_imm32(const X86::Instruction&) { TODO(); }

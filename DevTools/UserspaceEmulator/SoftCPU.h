@@ -53,6 +53,20 @@ public:
     explicit SoftCPU(Emulator&);
     void dump() const;
 
+    struct Flags {
+        enum Flag {
+            CF = 0x0001,
+            PF = 0x0004,
+            AF = 0x0010,
+            ZF = 0x0040,
+            SF = 0x0080,
+            TF = 0x0100,
+            IF = 0x0200,
+            DF = 0x0400,
+            OF = 0x0800,
+        };
+    };
+
     void push32(u32);
     u32 pop32();
 
@@ -165,19 +179,27 @@ public:
     void set_dl(u8 value) { gpr8(X86::RegisterDL) = value; }
     void set_dh(u8 value) { gpr8(X86::RegisterDH) = value; }
 
-    bool of() const { return m_of; }
-    bool sf() const { return m_sf; }
-    bool zf() const { return m_zf; }
-    bool af() const { return m_af; }
-    bool pf() const { return m_pf; }
-    bool cf() const { return m_cf; }
+    bool of() const { return m_eflags & Flags::OF; }
+    bool sf() const { return m_eflags & Flags::SF; }
+    bool zf() const { return m_eflags & Flags::ZF; }
+    bool af() const { return m_eflags & Flags::AF; }
+    bool pf() const { return m_eflags & Flags::PF; }
+    bool cf() const { return m_eflags & Flags::CF; }
 
-    void set_of(bool value) { m_of = value; }
-    void set_sf(bool value) { m_sf = value; }
-    void set_zf(bool value) { m_zf = value; }
-    void set_af(bool value) { m_af = value; }
-    void set_pf(bool value) { m_pf = value; }
-    void set_cf(bool value) { m_cf = value; }
+    void set_flag(Flags::Flag flag, bool value)
+    {
+        if (value)
+            m_eflags |= flag;
+        else
+            m_eflags &= ~flag;
+    }
+
+    void set_of(bool value) { set_flag(Flags::OF, value); }
+    void set_sf(bool value) { set_flag(Flags::SF, value); }
+    void set_zf(bool value) { set_flag(Flags::ZF, value); }
+    void set_af(bool value) { set_flag(Flags::AF, value); }
+    void set_pf(bool value) { set_flag(Flags::PF, value); }
+    void set_cf(bool value) { set_flag(Flags::CF, value); }
 
     u16 cs() const { return m_segment[(int)X86::SegmentRegister::CS]; }
     u16 ds() const { return m_segment[(int)X86::SegmentRegister::DS]; }
@@ -692,18 +714,21 @@ private:
     template<typename Op>
     void generic_reg8_RM8(Op, const X86::Instruction&);
 
+    template<typename T>
+    T sar_impl(T data, u8 steps);
+
+    void set_flags_oszapc(u32 new_flags)
+    {
+        m_eflags &= ~(Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
+        m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
+    }
+
 private:
     Emulator& m_emulator;
 
     PartAddressableRegister m_gpr[8];
     u16 m_segment[8] { 0 };
-
-    bool m_of { false };
-    bool m_sf { false };
-    bool m_zf { false };
-    bool m_af { false };
-    bool m_pf { false };
-    bool m_cf { false };
+    u32 m_eflags { 0 };
 };
 
 }
