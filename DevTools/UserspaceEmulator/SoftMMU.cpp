@@ -48,6 +48,7 @@ u8 SoftMMU::read8(u32 address)
 {
     auto* region = find_region(address);
     if (!region) {
+        warn() << "SoftMMU::read8: No region for @" << (const void*)address;
         TODO();
     }
 
@@ -58,6 +59,7 @@ u16 SoftMMU::read16(u32 address)
 {
     auto* region = find_region(address);
     if (!region) {
+        warn() << "SoftMMU::read16: No region for @" << (const void*)address;
         TODO();
     }
 
@@ -68,6 +70,7 @@ u32 SoftMMU::read32(u32 address)
 {
     auto* region = find_region(address);
     if (!region) {
+        warn() << "SoftMMU::read32: No region for @" << (const void*)address;
         TODO();
     }
 
@@ -78,6 +81,7 @@ void SoftMMU::write8(u32 address, u8 value)
 {
     auto* region = find_region(address);
     if (!region) {
+        warn() << "SoftMMU::write8: No region for @" << (const void*)address;
         TODO();
     }
 
@@ -88,6 +92,7 @@ void SoftMMU::write16(u32 address, u16 value)
 {
     auto* region = find_region(address);
     if (!region) {
+        warn() << "SoftMMU::write16: No region for @" << (const void*)address;
         TODO();
     }
 
@@ -98,6 +103,7 @@ void SoftMMU::write32(u32 address, u32 value)
 {
     auto* region = find_region(address);
     if (!region) {
+        warn() << "SoftMMU::write32: No region for @" << (const void*)address;
         TODO();
     }
 
