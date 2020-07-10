@@ -205,8 +205,16 @@ public:
     RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
 
     template<typename CPU>
+    void write8(CPU&, const Instruction&, u8);
+    template<typename CPU>
+    void write16(CPU&, const Instruction&, u16);
+    template<typename CPU>
     void write32(CPU&, const Instruction&, u32);
 
+    template<typename CPU>
+    u8 read8(CPU&, const Instruction&);
+    template<typename CPU>
+    u16 read16(CPU&, const Instruction&);
     template<typename CPU>
     u32 read32(CPU&, const Instruction&);
 
@@ -225,6 +233,14 @@ private:
     LogicalAddress resolve16(const CPU&, Optional<SegmentRegister>);
     template<typename CPU>
     LogicalAddress resolve32(const CPU&, Optional<SegmentRegister>);
+
+    template<typename CPU>
+    LogicalAddress resolve(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+    {
+        if (m_a32)
+            return resolve32(cpu, segment_prefix);
+        return resolve16(cpu, segment_prefix);
+    }
 
     template<typename CPU>
     u32 evaluate_sib(const CPU&, SegmentRegister& default_segment) const;
@@ -560,6 +576,30 @@ inline u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegist
 }
 
 template<typename CPU>
+inline void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction& insn, u8 value)
+{
+    if (is_register()) {
+        cpu.gpr8(reg8()) = value;
+        return;
+    }
+
+    auto address = resolve(cpu, insn.segment_prefix());
+    cpu.write_memory8(address, value);
+}
+
+template<typename CPU>
+inline void MemoryOrRegisterReference::write16(CPU& cpu, const Instruction& insn, u16 value)
+{
+    if (is_register()) {
+        cpu.gpr16(reg16()) = value;
+        return;
+    }
+
+    auto address = resolve(cpu, insn.segment_prefix());
+    cpu.write_memory16(address, value);
+}
+
+template<typename CPU>
 inline void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn, u32 value)
 {
     if (is_register()) {
@@ -567,8 +607,28 @@ inline void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn
         return;
     }
 
-    auto address = resolve32(cpu, insn.segment_prefix());
+    auto address = resolve(cpu, insn.segment_prefix());
     cpu.write_memory32(address, value);
+}
+
+template<typename CPU>
+inline u8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
+{
+    if (is_register())
+        return cpu.gpr8(reg8());
+
+    auto address = resolve(cpu, insn.segment_prefix());
+    return cpu.read_memory8(address);
+}
+
+template<typename CPU>
+inline u16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
+{
+    if (is_register())
+        return cpu.gpr16(reg16());
+
+    auto address = resolve(cpu, insn.segment_prefix());
+    return cpu.read_memory16(address);
 }
 
 template<typename CPU>
@@ -577,7 +637,7 @@ inline u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
     if (is_register())
         return cpu.gpr32(reg32());
 
-    auto address = resolve32(cpu, insn.segment_prefix());
+    auto address = resolve(cpu, insn.segment_prefix());
     return cpu.read_memory32(address);
 }
 
