@@ -664,11 +664,33 @@ private:
     virtual void wrap_0xD3_32(const X86::Instruction&) override;
 
     template<typename Op>
-    void generic_RM32_reg32(Op, const X86::Instruction&);
+    void generic_AL_imm8(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_AX_imm16(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_EAX_imm32(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM16_imm16(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM16_imm8(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM16_reg16(Op, const X86::Instruction&);
     template<typename Op>
     void generic_RM32_imm32(Op, const X86::Instruction&);
     template<typename Op>
     void generic_RM32_imm8(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM32_reg32(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM8_imm8(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM8_reg8(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_reg16_RM16(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_reg32_RM32(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_reg8_RM8(Op, const X86::Instruction&);
 
 private:
     Emulator& m_emulator;
