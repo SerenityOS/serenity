@@ -336,6 +336,37 @@ static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
+static T op_sbb(SoftCPU& cpu, const T& dest, const T& src)
+{
+    T result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("sbbl %%ecx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u32)src));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("sbbw %%cx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u16)src));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("sbbb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u8)src));
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszapc(new_flags);
+    return result;
+}
+
+template<typename T>
 static T op_add(SoftCPU& cpu, T& dest, const T& src)
 {
     T result = 0;
@@ -1226,20 +1257,6 @@ void SoftCPU::SAR_RM8_imm8(const X86::Instruction& insn)
     insn.modrm().write8(*this, insn, op_sar(*this, data, insn.imm8()));
 }
 
-void SoftCPU::SBB_AL_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_AX_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_EAX_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_RM16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_RM32_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_RM8_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_RM8_reg8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::SBB_reg8_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SCASB(const X86::Instruction&) { TODO(); }
 void SoftCPU::SCASD(const X86::Instruction&) { TODO(); }
 void SoftCPU::SCASW(const X86::Instruction&) { TODO(); }
@@ -1461,6 +1478,7 @@ DEFINE_GENERIC_INSN_HANDLERS(XOR, op_xor, true)
 DEFINE_GENERIC_INSN_HANDLERS(OR, op_or, true)
 DEFINE_GENERIC_INSN_HANDLERS(ADD, op_add, true)
 DEFINE_GENERIC_INSN_HANDLERS(SUB, op_sub, true)
+DEFINE_GENERIC_INSN_HANDLERS(SBB, op_sbb, true)
 DEFINE_GENERIC_INSN_HANDLERS(AND, op_and, true)
 DEFINE_GENERIC_INSN_HANDLERS(CMP, op_sub, false)
 DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(TEST, op_and, false)
