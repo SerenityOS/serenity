@@ -767,11 +767,6 @@ private:
     template<bool update_dest, typename Op>
     void generic_reg8_RM8(Op, const X86::Instruction&);
 
-    template<typename T>
-    T sar_impl(T data, u8 steps);
-    template<typename T>
-    T inc_impl(T);
-
 private:
     Emulator& m_emulator;
 
