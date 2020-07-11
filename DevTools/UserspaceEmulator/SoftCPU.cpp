@@ -882,7 +882,11 @@ void SoftCPU::JMP_short_imm8(const X86::Instruction& insn)
     set_eip(eip() + (i8)insn.imm8());
 }
 
-void SoftCPU::Jcc_NEAR_imm(const X86::Instruction&) { TODO(); }
+void SoftCPU::Jcc_NEAR_imm(const X86::Instruction& insn)
+{
+    if (evaluate_condition(insn.cc()))
+        set_eip(eip() + (i32)insn.imm32());
+}
 
 void SoftCPU::Jcc_imm8(const X86::Instruction& insn)
 {
