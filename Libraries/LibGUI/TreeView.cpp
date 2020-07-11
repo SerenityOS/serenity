@@ -469,7 +469,7 @@ void TreeView::keydown_event(KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Left) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
-            if (event.alt()) {
+            if (event.ctrl()) {
                 collapse_tree(cursor_index);
                 return;
             }
@@ -489,7 +489,7 @@ void TreeView::keydown_event(KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Right) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
-            if (event.alt()) {
+            if (event.ctrl()) {
                 expand_tree(cursor_index);
                 return;
             }
