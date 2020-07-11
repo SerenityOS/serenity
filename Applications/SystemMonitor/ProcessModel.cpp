@@ -54,38 +54,13 @@ ProcessModel::ProcessModel()
 
     auto file = Core::File::construct("/proc/cpuinfo");
     if (file->open(Core::IODevice::ReadOnly)) {
-        OwnPtr<CpuInfo> cpu;
-        u32 cpu_id = 0;
-        while (file->can_read_line()) {
-            auto line = file->read_line(1024);
-            if (line.is_null())
-                continue;
-
-            auto str = String::copy(line, Chomp);
-            if (str.is_empty() && cpu)
-                m_cpus.append(cpu.release_nonnull());
-
-            size_t i;
-            bool have_val = false;
-            for (i = 0; i < str.length(); i++) {
-                if (str[i] == ':') {
-                    have_val = true;
-                    break;
-                }
-            }
-            if (!have_val)
-                continue;
-            auto key = str.substring(0, i);
-            auto val = str.substring(i + 1, str.length() - i - 1).trim_whitespace();
-            
-            if (!cpu)
-                cpu = make<CpuInfo>(cpu_id++);
-                
-            cpu->values.set(key, val);
-        }
-
-        if (cpu)
-            m_cpus.append(cpu.release_nonnull());
+        auto json = JsonValue::from_string({ file->read_all() });
+        auto cpuinfo_array = json.value().as_array();
+        cpuinfo_array.for_each([&](auto& value) {
+            auto& cpu_object = value.as_object();
+            auto cpu_id = cpu_object.get("processor").as_u32();
+            m_cpus.append(make<CpuInfo>(cpu_id));
+        });
     }
 
     if (m_cpus.is_empty())

@@ -89,14 +89,12 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
-    struct CpuInfo
-    {
+    struct CpuInfo {
         u32 id;
-        float total_cpu_percent{0.0};
-        HashMap<String, String> values;
-        
-        CpuInfo(u32 id):
-            id(id)
+        float total_cpu_percent { 0.0 };
+
+        CpuInfo(u32 id)
+            : id(id)
         {
         }
     };
