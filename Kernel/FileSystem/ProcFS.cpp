@@ -732,27 +732,26 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
 Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
 {
     KBufferBuilder builder;
-    bool first = true;
-
+    JsonArraySerializer array { builder };
     Processor::for_each(
         [&](Processor& proc) -> IterationDecision
         {
-            if (first)
-                first = false;
-            else
-                builder.append('\n');
-            
             auto& info = proc.info();
-            builder.appendf("processor: %u\n", proc.id());
-            builder.appendf("cpuid:     %s\n", info.cpuid().characters());
-            builder.appendf("family:    %u\n", info.display_family());
-            builder.appendf("features:  %s\n", info.features().characters());
-            builder.appendf("model:     %u\n", info.display_model());
-            builder.appendf("stepping:  %u\n", info.stepping());
-            builder.appendf("type:      %u\n", info.type());
-            builder.appendf("brandstr:  \"%s\"\n", info.brandstr().characters());
+            auto obj = array.add_object();
+            JsonArray features;
+            for (auto& feature : info.features().split(' '))
+                features.append(feature);
+            obj.add("processor", proc.id());
+            obj.add("cpuid", info.cpuid());
+            obj.add("family", info.display_family());
+            obj.add("features", features);
+            obj.add("model", info.display_model());
+            obj.add("stepping", info.stepping());
+            obj.add("type", info.type());
+            obj.add("brandstr", info.brandstr());
             return IterationDecision::Continue;
         });
+    array.finish();
     return builder.build();
 }
 
