@@ -48,6 +48,8 @@ void JSONObject::initialize(Interpreter& interpreter, GlobalObject& global_objec
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("stringify", stringify, 3, attr);
     define_native_function("parse", parse, 2, attr);
+
+    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "JSON"), Attribute::Configurable);
 }
 
 JSONObject::~JSONObject()
