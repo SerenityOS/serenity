@@ -55,8 +55,9 @@ void Model::for_each_view(Function<void(AbstractView&)> callback)
 
 void Model::did_update(unsigned flags)
 {
-    if (on_update)
-        on_update();
+    for (auto* client : m_clients)
+        client->on_model_update(flags);
+
     for_each_view([&](auto& view) {
         view.did_update_model(flags);
     });
@@ -80,6 +81,16 @@ ModelIndex Model::sibling(int row, int column, const ModelIndex& parent) const
 bool Model::accepts_drag(const ModelIndex&, const StringView&)
 {
     return false;
+}
+
+void Model::register_client(ModelClient& client)
+{
+    m_clients.set(&client);
+}
+
+void Model::unregister_client(ModelClient& client)
+{
+    m_clients.remove(&client);
 }
 
 }

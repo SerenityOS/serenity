@@ -61,6 +61,7 @@ class Painter;
 class ResizeCorner;
 class ScrollBar;
 class Slider;
+class SortingProxyModel;
 class SpinBox;
 class Splitter;
 class StackWidget;
