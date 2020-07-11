@@ -129,7 +129,7 @@ int Emulator::exec()
     while (!m_shutdown) {
         auto base_eip = m_cpu.eip();
         auto insn = X86::Instruction::from_stream(m_cpu, true, true);
-        out() << "\033[33;1m" << insn.to_string(base_eip) << "\033[0m";
+        out() << (const void*)base_eip << "  \033[33;1m" << insn.to_string(base_eip) << "\033[0m";
 
         // FIXME: Remove this hack once it's no longer needed :^)
         if (insn.mnemonic() == "RET")
