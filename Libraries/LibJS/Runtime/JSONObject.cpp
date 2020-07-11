@@ -433,7 +433,7 @@ Object* JSONObject::parse_json_object(Interpreter& interpreter, GlobalObject& gl
 {
     auto* object = Object::create_empty(interpreter, global_object);
     json_object.for_each_member([&](auto& key, auto& value) {
-        object->put(key, parse_json_value(interpreter, global_object, value));
+        object->define_property(key, parse_json_value(interpreter, global_object, value));
     });
     return object;
 }
@@ -443,7 +443,7 @@ Array* JSONObject::parse_json_array(Interpreter& interpreter, GlobalObject& glob
     auto* array = Array::create(global_object);
     size_t index = 0;
     json_array.for_each([&](auto& value) {
-        array->put(index++, parse_json_value(interpreter, global_object, value));
+        array->define_property(index++, parse_json_value(interpreter, global_object, value));
     });
     return array;
 }
