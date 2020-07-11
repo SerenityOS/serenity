@@ -40,34 +40,6 @@ inline constexpr T sign_extended_to(U value)
     return (X86::TypeTrivia<T>::mask & ~X86::TypeTrivia<U>::mask) | value;
 }
 
-template<typename T>
-struct TypeDoubler {
-};
-template<>
-struct TypeDoubler<u8> {
-    typedef u16 type;
-};
-template<>
-struct TypeDoubler<u16> {
-    typedef u32 type;
-};
-template<>
-struct TypeDoubler<u32> {
-    typedef u64 type;
-};
-template<>
-struct TypeDoubler<i8> {
-    typedef i16 type;
-};
-template<>
-struct TypeDoubler<i16> {
-    typedef i32 type;
-};
-template<>
-struct TypeDoubler<i32> {
-    typedef i64 type;
-};
-
 SoftCPU::SoftCPU(Emulator& emulator)
     : m_emulator(emulator)
 {
@@ -197,21 +169,21 @@ void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
     }
 }
 
-template<typename Destination, typename Source>
-static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, const Destination& dest, const Source& src)
+template<typename T>
+static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
 {
-    Destination result = 0;
+    T result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(Destination) == 4) {
+    if constexpr (sizeof(T) == 4) {
         asm volatile("xorl %%ecx, %%eax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u32)src));
-    } else if constexpr (sizeof(Destination) == 2) {
+    } else if constexpr (sizeof(T) == 2) {
         asm volatile("xor %%cx, %%ax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u16)src));
-    } else if constexpr (sizeof(Destination) == 1) {
+    } else if constexpr (sizeof(T) == 1) {
         asm volatile("xorb %%cl, %%al\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u8)src));
@@ -228,21 +200,21 @@ static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, const Destin
     return result;
 }
 
-template<typename Destination, typename Source>
-static typename TypeDoubler<Destination>::type op_or(SoftCPU& cpu, const Destination& dest, const Source& src)
+template<typename T>
+static T op_or(SoftCPU& cpu, const T& dest, const T& src)
 {
-    Destination result = 0;
+    T result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(Destination) == 4) {
+    if constexpr (sizeof(T) == 4) {
         asm volatile("orl %%ecx, %%eax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u32)src));
-    } else if constexpr (sizeof(Destination) == 2) {
+    } else if constexpr (sizeof(T) == 2) {
         asm volatile("or %%cx, %%ax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u16)src));
-    } else if constexpr (sizeof(Destination) == 1) {
+    } else if constexpr (sizeof(T) == 1) {
         asm volatile("orb %%cl, %%al\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u8)src));
@@ -259,21 +231,21 @@ static typename TypeDoubler<Destination>::type op_or(SoftCPU& cpu, const Destina
     return result;
 }
 
-template<typename Destination, typename Source>
-static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, const Destination& dest, const Source& src)
+template<typename T>
+static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
 {
-    Destination result = 0;
+    T result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(Destination) == 4) {
+    if constexpr (sizeof(T) == 4) {
         asm volatile("subl %%ecx, %%eax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u32)src));
-    } else if constexpr (sizeof(Destination) == 2) {
+    } else if constexpr (sizeof(T) == 2) {
         asm volatile("subw %%cx, %%ax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u16)src));
-    } else if constexpr (sizeof(Destination) == 1) {
+    } else if constexpr (sizeof(T) == 1) {
         asm volatile("subb %%cl, %%al\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u8)src));
@@ -290,21 +262,21 @@ static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, const Destin
     return result;
 }
 
-template<typename Destination, typename Source>
-static Destination op_add(SoftCPU& cpu, Destination& dest, const Source& src)
+template<typename T>
+static T op_add(SoftCPU& cpu, T& dest, const T& src)
 {
-    Destination result = 0;
+    T result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(Destination) == 4) {
+    if constexpr (sizeof(T) == 4) {
         asm volatile("addl %%ecx, %%eax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u32)src));
-    } else if constexpr (sizeof(Destination) == 2) {
+    } else if constexpr (sizeof(T) == 2) {
         asm volatile("addw %%cx, %%ax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u16)src));
-    } else if constexpr (sizeof(Destination) == 1) {
+    } else if constexpr (sizeof(T) == 1) {
         asm volatile("addb %%cl, %%al\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u8)src));
@@ -321,21 +293,21 @@ static Destination op_add(SoftCPU& cpu, Destination& dest, const Source& src)
     return result;
 }
 
-template<typename Destination, typename Source>
-static Destination op_and(SoftCPU& cpu, Destination& dest, const Source& src)
+template<typename T>
+static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 {
-    Destination result = 0;
+    T result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(Destination) == 4) {
+    if constexpr (sizeof(T) == 4) {
         asm volatile("andl %%ecx, %%eax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u32)src));
-    } else if constexpr (sizeof(Destination) == 2) {
+    } else if constexpr (sizeof(T) == 2) {
         asm volatile("andw %%cx, %%ax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u16)src));
-    } else if constexpr (sizeof(Destination) == 1) {
+    } else if constexpr (sizeof(T) == 1) {
         asm volatile("andb %%cl, %%al\n"
                      : "=a"(result)
                      : "a"(dest), "c"((u8)src));
@@ -352,17 +324,17 @@ static Destination op_and(SoftCPU& cpu, Destination& dest, const Source& src)
     return result;
 }
 
-template<typename Destination, typename Source>
-static typename TypeDoubler<Destination>::type op_imul(SoftCPU& cpu, const Destination& dest, const Source& src)
+template<typename T>
+static T op_imul(SoftCPU& cpu, const T& dest, const T& src)
 {
-    Destination result = 0;
+    T result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(Destination) == 4) {
+    if constexpr (sizeof(T) == 4) {
         asm volatile("imull %%ecx, %%eax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((i32)src));
-    } else if constexpr (sizeof(Destination) == 2) {
+    } else if constexpr (sizeof(T) == 2) {
         asm volatile("imulw %%cx, %%ax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((i16)src));
@@ -649,32 +621,32 @@ void SoftCPU::IMUL_RM8(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::IMUL_reg16_RM16(const X86::Instruction& insn)
 {
-    gpr16(insn.reg16()) = op_imul<i16, i16>(*this, gpr16(insn.reg16()), insn.modrm().read16(*this, insn));
+    gpr16(insn.reg16()) = op_imul<i16>(*this, gpr16(insn.reg16()), insn.modrm().read16(*this, insn));
 }
 
 void SoftCPU::IMUL_reg16_RM16_imm16(const X86::Instruction& insn)
 {
-    gpr16(insn.reg16()) = op_imul<i16, i16>(*this, insn.modrm().read16(*this, insn), insn.imm16());
+    gpr16(insn.reg16()) = op_imul<i16>(*this, insn.modrm().read16(*this, insn), insn.imm16());
 }
 
 void SoftCPU::IMUL_reg16_RM16_imm8(const X86::Instruction& insn)
 {
-    gpr16(insn.reg16()) = op_imul<i16, i8>(*this, insn.modrm().read16(*this, insn), insn.imm8());
+    gpr16(insn.reg16()) = op_imul<i16>(*this, insn.modrm().read16(*this, insn), sign_extended_to<i16>(insn.imm8()));
 }
 
 void SoftCPU::IMUL_reg32_RM32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = op_imul<i32, i32>(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn));
+    gpr32(insn.reg32()) = op_imul<i32>(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn));
 }
 
 void SoftCPU::IMUL_reg32_RM32_imm32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = op_imul<i32, i32>(*this, insn.modrm().read32(*this, insn), insn.imm32());
+    gpr32(insn.reg32()) = op_imul<i32>(*this, insn.modrm().read32(*this, insn), insn.imm32());
 }
 
 void SoftCPU::IMUL_reg32_RM32_imm8(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = op_imul<i32, i8>(*this, insn.modrm().read32(*this, insn), insn.imm8());
+    gpr32(insn.reg32()) = op_imul<i32>(*this, insn.modrm().read32(*this, insn), sign_extended_to<i32>(insn.imm8()));
 }
 
 template<typename T>
@@ -1302,24 +1274,24 @@ void SoftCPU::XCHG_reg32_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::XCHG_reg8_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
 
-#define DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest)                                                        \
-    void SoftCPU::mnemonic##_AL_imm8(const X86::Instruction& insn) { generic_AL_imm8<update_dest>(op<u8, u8>, insn); }         \
-    void SoftCPU::mnemonic##_AX_imm16(const X86::Instruction& insn) { generic_AX_imm16<update_dest>(op<u16, u16>, insn); }     \
-    void SoftCPU::mnemonic##_EAX_imm32(const X86::Instruction& insn) { generic_EAX_imm32<update_dest>(op<u32, u32>, insn); }   \
-    void SoftCPU::mnemonic##_RM16_imm16(const X86::Instruction& insn) { generic_RM16_imm16<update_dest>(op<u16, u16>, insn); } \
-    void SoftCPU::mnemonic##_RM16_reg16(const X86::Instruction& insn) { generic_RM16_reg16<update_dest>(op<u16, u16>, insn); } \
-    void SoftCPU::mnemonic##_RM32_imm32(const X86::Instruction& insn) { generic_RM32_imm32<update_dest>(op<u32, u32>, insn); } \
-    void SoftCPU::mnemonic##_RM32_reg32(const X86::Instruction& insn) { generic_RM32_reg32<update_dest>(op<u32, u32>, insn); } \
-    void SoftCPU::mnemonic##_RM8_imm8(const X86::Instruction& insn) { generic_RM8_imm8<update_dest>(op<u8, u8>, insn); }       \
-    void SoftCPU::mnemonic##_RM8_reg8(const X86::Instruction& insn) { generic_RM8_reg8<update_dest>(op<u8, u8>, insn); }
+#define DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest)                                                   \
+    void SoftCPU::mnemonic##_AL_imm8(const X86::Instruction& insn) { generic_AL_imm8<update_dest>(op<u8>, insn); }        \
+    void SoftCPU::mnemonic##_AX_imm16(const X86::Instruction& insn) { generic_AX_imm16<update_dest>(op<u16>, insn); }     \
+    void SoftCPU::mnemonic##_EAX_imm32(const X86::Instruction& insn) { generic_EAX_imm32<update_dest>(op<u32>, insn); }   \
+    void SoftCPU::mnemonic##_RM16_imm16(const X86::Instruction& insn) { generic_RM16_imm16<update_dest>(op<u16>, insn); } \
+    void SoftCPU::mnemonic##_RM16_reg16(const X86::Instruction& insn) { generic_RM16_reg16<update_dest>(op<u16>, insn); } \
+    void SoftCPU::mnemonic##_RM32_imm32(const X86::Instruction& insn) { generic_RM32_imm32<update_dest>(op<u32>, insn); } \
+    void SoftCPU::mnemonic##_RM32_reg32(const X86::Instruction& insn) { generic_RM32_reg32<update_dest>(op<u32>, insn); } \
+    void SoftCPU::mnemonic##_RM8_imm8(const X86::Instruction& insn) { generic_RM8_imm8<update_dest>(op<u8>, insn); }      \
+    void SoftCPU::mnemonic##_RM8_reg8(const X86::Instruction& insn) { generic_RM8_reg8<update_dest>(op<u8>, insn); }
 
-#define DEFINE_GENERIC_INSN_HANDLERS(mnemonic, op, update_dest)                                                                \
-    DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest)                                                            \
-    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { generic_RM16_imm8<update_dest>(op<u16, u16>, insn); }    \
-    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { generic_RM32_imm8<update_dest>(op<u32, u32>, insn); }    \
-    void SoftCPU::mnemonic##_reg16_RM16(const X86::Instruction& insn) { generic_reg16_RM16<update_dest>(op<u16, u16>, insn); } \
-    void SoftCPU::mnemonic##_reg32_RM32(const X86::Instruction& insn) { generic_reg32_RM32<update_dest>(op<u32, u32>, insn); } \
-    void SoftCPU::mnemonic##_reg8_RM8(const X86::Instruction& insn) { generic_reg8_RM8<update_dest>(op<u8, u8>, insn); }
+#define DEFINE_GENERIC_INSN_HANDLERS(mnemonic, op, update_dest)                                                           \
+    DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest)                                                       \
+    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { generic_RM16_imm8<update_dest>(op<u16>, insn); }   \
+    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { generic_RM32_imm8<update_dest>(op<u32>, insn); }   \
+    void SoftCPU::mnemonic##_reg16_RM16(const X86::Instruction& insn) { generic_reg16_RM16<update_dest>(op<u16>, insn); } \
+    void SoftCPU::mnemonic##_reg32_RM32(const X86::Instruction& insn) { generic_reg32_RM32<update_dest>(op<u32>, insn); } \
+    void SoftCPU::mnemonic##_reg8_RM8(const X86::Instruction& insn) { generic_reg8_RM8<update_dest>(op<u8>, insn); }
 
 DEFINE_GENERIC_INSN_HANDLERS(XOR, op_xor, true)
 DEFINE_GENERIC_INSN_HANDLERS(OR, op_or, true)
