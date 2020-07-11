@@ -221,6 +221,37 @@ static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, const Destin
 }
 
 template<typename Destination, typename Source>
+static typename TypeDoubler<Destination>::type op_or(SoftCPU& cpu, const Destination& dest, const Source& src)
+{
+    Destination result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(Destination) == 4) {
+        asm volatile("orl %%ecx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u32)src));
+    } else if constexpr (sizeof(Destination) == 2) {
+        asm volatile("or %%cx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u16)src));
+    } else if constexpr (sizeof(Destination) == 1) {
+        asm volatile("orb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u8)src));
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszpc(new_flags);
+    return result;
+}
+
+template<typename Destination, typename Source>
 static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, const Destination& dest, const Source& src)
 {
     Destination result = 0;
@@ -864,20 +895,6 @@ void SoftCPU::NOP(const X86::Instruction&) { TODO(); }
 void SoftCPU::NOT_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::NOT_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::NOT_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_AL_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_AX_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_EAX_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_RM16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_RM32_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_RM8_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_RM8_reg8(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::OR_reg8_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::OUTSB(const X86::Instruction&) { TODO(); }
 void SoftCPU::OUTSD(const X86::Instruction&) { TODO(); }
 void SoftCPU::OUTSW(const X86::Instruction&) { TODO(); }
@@ -1213,6 +1230,7 @@ void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
     void SoftCPU::mnemonic##_reg8_RM8(const X86::Instruction& insn) { generic_reg8_RM8<update_dest>(op<u8, u8>, insn); }
 
 DEFINE_GENERIC_INSN_HANDLERS(XOR, op_xor, true)
+DEFINE_GENERIC_INSN_HANDLERS(OR, op_or, true)
 DEFINE_GENERIC_INSN_HANDLERS(ADD, op_add, true)
 DEFINE_GENERIC_INSN_HANDLERS(SUB, op_sub, true)
 DEFINE_GENERIC_INSN_HANDLERS(AND, op_and, true)
