@@ -213,6 +213,12 @@ public:
         m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF);
     }
 
+    void set_flags_oszpc(u32 new_flags)
+    {
+        m_eflags &= ~(Flags::OF | Flags::SF | Flags::ZF | Flags::PF | Flags::CF);
+        m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::PF | Flags::CF);
+    }
+
     u16 cs() const { return m_segment[(int)X86::SegmentRegister::CS]; }
     u16 ds() const { return m_segment[(int)X86::SegmentRegister::DS]; }
     u16 es() const { return m_segment[(int)X86::SegmentRegister::ES]; }
