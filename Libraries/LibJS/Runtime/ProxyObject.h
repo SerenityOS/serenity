@@ -64,8 +64,8 @@ public:
 private:
     virtual void visit_children(Visitor&) override;
     virtual bool is_proxy_object() const override { return true; }
-    virtual bool is_function() const override { return m_target.is_function(); }
 
+    virtual bool is_function() const override { return m_target.is_function(); }
     virtual bool is_array() const override { return m_target.is_array(); };
 
     Object& m_target;

@@ -16,9 +16,7 @@ describe("normal behavior", () => {
     });
 
     test("number stringification differs from regular toString, for now", () => {
-        expect([1, 2, 3].toLocaleString()).toBe(
-            "[object NumberObject],[object NumberObject],[object NumberObject]"
-        );
+        expect([1, 2, 3].toLocaleString()).toBe("[object Number],[object Number],[object Number]");
     });
 
     test("null and undefined result in empty strings", () => {

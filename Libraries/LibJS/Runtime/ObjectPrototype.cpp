@@ -68,10 +68,43 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto this_value = interpreter.this_value(global_object);
+
+    if (this_value.is_undefined())
+        return js_string(interpreter, "[object Undefined]");
+    if (this_value.is_null())
+        return js_string(interpreter, "[object Null]");
+
+    auto* this_object = this_value.to_object(interpreter, global_object);
     if (!this_object)
         return {};
-    return js_string(interpreter, String::format("[object %s]", this_object->class_name()));
+
+    String tag;
+    auto to_string_tag = this_object->get(interpreter.well_known_symbol_to_string_tag());
+    
+    if (to_string_tag.is_string()) {
+        tag = to_string_tag.as_string().string();
+    } else if (this_object->is_array()) {
+        tag = "Array";
+    } else if (this_object->is_function()) {
+        tag = "Function";
+    } else if (this_object->is_error()) {
+        tag = "Error";
+    } else if (this_object->is_boolean_object()) {
+        tag = "Boolean";
+    } else if (this_object->is_number_object()) {
+        tag = "Number";
+    } else if (this_object->is_string_object()) {
+        tag = "String";
+    } else if (this_object->is_date()) {
+        tag = "Date";
+    } else if (this_object->is_regexp_object()) {
+        tag = "RegExp";
+    } else {
+        tag = "Object";
+    }
+
+    return js_string(interpreter, String::format("[object %s]", tag.characters()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
