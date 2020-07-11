@@ -40,6 +40,10 @@ public:
     int preferred_width() { return m_preferred_width; }
     int preferred_height() { return m_preferred_height; }
 
+    bool save_as(const String&);
+
+    const String& path() { return m_path; }
+
 private:
     FontEditorWidget(const String& path, RefPtr<Gfx::Font>&&);
     RefPtr<Gfx::Font> m_edited_font;
