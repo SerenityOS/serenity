@@ -51,6 +51,7 @@ void FunctionPrototype::initialize(Interpreter& interpreter, GlobalObject& globa
     define_native_function("bind", bind, 1, attr);
     define_native_function("call", call, 1, attr);
     define_native_function("toString", to_string, 0, attr);
+    define_native_function(interpreter.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
     define_property("length", Value(0), Attribute::Configurable);
     define_property("name", js_string(heap(), ""), Attribute::Configurable);
 }
@@ -165,6 +166,17 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
         function_parameters.characters(),
         function_body.characters());
     return js_string(interpreter, function_source);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
+{
+    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    if (!this_object)
+        return {};
+    if (!this_object->is_function())
+        return interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
+
+    return ordinary_has_instance(interpreter, interpreter.argument(0), this_object);
 }
 
 }
