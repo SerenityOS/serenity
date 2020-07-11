@@ -719,8 +719,19 @@ void SoftCPU::CLD(const X86::Instruction&) { TODO(); }
 void SoftCPU::CLI(const X86::Instruction&) { TODO(); }
 void SoftCPU::CLTS(const X86::Instruction&) { TODO(); }
 void SoftCPU::CMC(const X86::Instruction&) { TODO(); }
-void SoftCPU::CMOVcc_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::CMOVcc_reg32_RM32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::CMOVcc_reg16_RM16(const X86::Instruction& insn)
+{
+    if (evaluate_condition(insn.cc()))
+        gpr16(insn.reg16()) = insn.modrm().read16(*this, insn);
+}
+
+void SoftCPU::CMOVcc_reg32_RM32(const X86::Instruction& insn)
+{
+    if (evaluate_condition(insn.cc()))
+        gpr32(insn.reg32()) = insn.modrm().read32(*this, insn);
+}
+
 void SoftCPU::CMPSB(const X86::Instruction&) { TODO(); }
 void SoftCPU::CMPSD(const X86::Instruction&) { TODO(); }
 void SoftCPU::CMPSW(const X86::Instruction&) { TODO(); }
