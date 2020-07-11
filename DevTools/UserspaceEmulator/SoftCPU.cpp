@@ -702,12 +702,21 @@ T SoftCPU::sar_impl(T data, u8 steps)
 
     u32 result = 0;
     u32 new_flags = 0;
-    asm("sarl %%cl, %%eax\n"
+
+    if constexpr (sizeof(T) == 4)
+        asm volatile("sarl %%cl, %%eax\n" ::"a"(data), "c"(steps));
+    else if constexpr (sizeof(T) == 2)
+        asm volatile("sarw %%cl, %%ax\n" ::"a"(data), "c"(steps));
+    else if constexpr (sizeof(T) == 1)
+        asm volatile("sarb %%cl, %%al\n" ::"a"(data), "c"(steps));
+
+    asm volatile(
         "mov %%eax, %%ebx\n"
+        : "=b"(result));
+    asm volatile(
         "pushf\n"
-        "pop %%eax\n"
-        : "=a"(new_flags), "=b"(result)
-        : "a"(data), "c"(steps));
+        "pop %%eax"
+        : "=a"(new_flags));
 
     set_flags_oszapc(new_flags);
     return result;
