@@ -329,6 +329,14 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         if (request == TCSETSF)
             flush_input();
         return 0;
+    case TCFLSH:
+        // Serenity's TTY implementation does not use an output buffer, so ignore TCOFLUSH.
+        if (arg == TCIFLUSH || arg == TCIOFLUSH) {
+            flush_input();
+        } else if (arg != TCOFLUSH) {
+            return -EINVAL;
+        }
+        return 0;
     case TIOCGWINSZ:
         ws = reinterpret_cast<winsize*>(arg);
         if (!current_process.validate_write(ws, sizeof(winsize)))
