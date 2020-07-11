@@ -139,12 +139,31 @@ u32 SoftCPU::pop32()
 template<typename Destination, typename Source>
 static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, const Destination& dest, const Source& src)
 {
-    auto result = dest ^ src;
-    cpu.set_zf(dest == 0);
-    cpu.set_sf(dest & 0x80000000);
-    // FIXME: set_pf
-    cpu.set_of(false);
-    cpu.set_cf(false);
+    Destination result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(Destination) == 4) {
+        asm volatile("xorl %%ecx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else if constexpr (sizeof(Destination) == 2) {
+        asm volatile("xor %%cx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else if constexpr (sizeof(Destination) == 1) {
+        asm volatile("xorb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszpc(new_flags);
     return result;
 }
 
