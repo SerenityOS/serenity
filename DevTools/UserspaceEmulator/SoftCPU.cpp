@@ -151,11 +151,31 @@ static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, const Destin
 template<typename Destination, typename Source>
 static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, const Destination& dest, const Source& src)
 {
-    u64 result = (u64)dest - (u64)src;
-    cpu.set_zf(result == 0);
-    cpu.set_sf((result >> (X86::TypeTrivia<Destination>::bits - 1) & 1));
-    cpu.set_af((((result ^ (src ^ dest)) & 0x10) >> 4) & 1);
-    cpu.set_of((((result ^ dest) & (src ^ dest)) >> (X86::TypeTrivia<Destination>::bits - 1)) & 1);
+    Destination result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(Destination) == 4) {
+        asm volatile("subl %%ecx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else if constexpr (sizeof(Destination) == 2) {
+        asm volatile("subw %%cx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else if constexpr (sizeof(Destination) == 1) {
+        asm volatile("subb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszap(new_flags);
     return result;
 }
 
