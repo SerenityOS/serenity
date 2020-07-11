@@ -38,9 +38,10 @@
 
 namespace WebServer {
 
-Client::Client(NonnullRefPtr<Core::TCPSocket> socket, Core::Object* parent)
+Client::Client(NonnullRefPtr<Core::TCPSocket> socket, const String& root, Core::Object* parent)
     : Core::Object(parent)
     , m_socket(socket)
+    , m_root_path(root)
 {
 }
 
@@ -86,7 +87,8 @@ void Client::handle_request(ByteBuffer raw_request)
     dbg() << "Canonical requested path: '" << requested_path << "'";
 
     StringBuilder path_builder;
-    path_builder.append("/www/");
+    path_builder.append(m_root_path);
+    path_builder.append('/');
     path_builder.append(requested_path);
     auto real_path = path_builder.to_string();
 
