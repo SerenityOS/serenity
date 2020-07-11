@@ -112,8 +112,8 @@ void iterator_close(Object& iterator)
 Value create_iterator_result_object(Interpreter& interpreter, GlobalObject& global_object, Value value, bool done)
 {
     auto* object = Object::create_empty(interpreter, global_object);
-    object->put("value", value);
-    object->put("done", Value(done));
+    object->define_property("value", value);
+    object->define_property("done", Value(done));
     return object;
 }
 
