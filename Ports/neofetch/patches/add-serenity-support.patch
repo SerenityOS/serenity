@@ -110,11 +110,11 @@
          ;;
 +
 +        "SerenityOS")
-+            while IFS=":" read -r a b; do
-+                case $a in
-+                    "brandstr") cpu="${b//\"}" ;;
-+                esac
-+            done < /proc/cpuinfo
++            # while IFS=":" read -r a b; do
++            #     case $a in
++            #         "brandstr") cpu="${b//\"}" ;;
++            #     esac
++            # done < /proc/cpuinfo
 +            # `cpu` will contain "@ [speed]GHz" and to be super correct we
 +            # have to cut that off and store it in `speed` only for neofetch
 +            # to append it again later - but that's fine for now this way.
