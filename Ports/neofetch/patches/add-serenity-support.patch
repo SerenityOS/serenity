@@ -1,5 +1,5 @@
---- neofetch-7.0.0/neofetch	2020-04-27 15:12:00.884771680 +0100
-+++ neofetch-7.0.0/neofetch	2020-04-27 20:10:22.265079042 +0100
+--- neofetch-7.0.0/neofetch	2020-03-08 10:23:36.000000000 +0000
++++ neofetch-7.0.0/neofetch	2020-07-11 22:28:44.926009278 +0100
 @@ -775,7 +775,7 @@
  #       PostMarketOS, Proxmox, Puppy, PureOS, Qubes, Radix, Raspbian,
  #       Reborn_OS, Redstar, Redcore, Redhat, Refracted_Devuan, Regata,
@@ -139,25 +139,21 @@
      esac
  
      [[ "$memory_percent" == "on" ]] && ((mem_perc=mem_used * 100 / mem_total))
-@@ -3027,6 +3059,17 @@
+@@ -3027,6 +3059,13 @@
              theme="${theme/ '[Plasma]'}"
          fi
      fi
 +
 +    if [[ "$os" == "SerenityOS" ]]; then
-+        theme="Default"
-+        # This will stop working if there's another "Name" key!
-+        # We somehow need to check if the current section is "[Theme]".
-+        while IFS="=" read -r a b; do
-+            case $a in
-+                $serenity) theme="${b}" ;;
-+            esac
-+        done < /etc/WindowServer/WindowServer.ini
++        theme=$(ini /etc/WindowServer/WindowServer.ini Theme Name)
++        if [ -z "$theme" ]; then
++            theme="Default"
++        fi
 +    fi
  }
  
  get_theme() {
-@@ -3035,6 +3078,7 @@
+@@ -3035,6 +3074,7 @@
      gconf="gtk_theme"
      xfconf="/Net/ThemeName"
      kde="Name"
@@ -165,7 +161,7 @@
  
      get_style
  }
-@@ -3045,6 +3089,7 @@
+@@ -3045,6 +3085,7 @@
      gconf="icon_theme"
      xfconf="/Net/IconThemeName"
      kde="Theme"
@@ -173,7 +169,7 @@
  
      get_style
      icons="$theme"
-@@ -3074,6 +3119,8 @@
+@@ -3074,6 +3115,8 @@
          *)              term="${TERM_PROGRAM/\.app}" ;;
      esac
  
@@ -182,7 +178,7 @@
      # Most likely TosWin2 on FreeMiNT - quick check
      [[ "$TERM" == "tw52" || "$TERM" == "tw100" ]] && term="TosWin2"
      [[ "$SSH_CONNECTION" ]] && term="$SSH_TTY"
-@@ -3637,10 +3684,10 @@
+@@ -3637,10 +3680,10 @@
  }
  
  get_public_ip() {
@@ -197,7 +193,7 @@
  
      if [[ -z "$public_ip" ]] && type -p drill >/dev/null; then
          public_ip="$(drill myip.opendns.com @resolver1.opendns.com | \
-@@ -3785,13 +3832,13 @@
+@@ -3785,13 +3828,13 @@
  }
  
  print_ascii() {
@@ -218,7 +214,7 @@
  
      # Set locale to get correct padding.
      LC_ALL="$sys_locale"
-@@ -4549,8 +4596,8 @@
+@@ -4549,8 +4592,8 @@
              padding=${xrdb/*internalBorder:}
              padding=${padding/$'\n'*}
  
@@ -229,7 +225,7 @@
          ;;
      esac
  }
-@@ -4834,7 +4881,7 @@
+@@ -4834,7 +4877,7 @@
                                  PostMarketOS, Proxmox, Puppy, PureOS, Qubes, Radix, Raspbian,
                                  Reborn_OS, Redstar, Redcore, Redhat, Refracted_Devuan, Regata,
                                  Rosa, sabotage, Sabayon, Sailfish, SalentOS, Scientific, Septor,
@@ -238,7 +234,7 @@
                                  Source_Mage, Sparky, Star, SteamOS, SunOS, openSUSE_Leap,
                                  openSUSE_Tumbleweed, openSUSE, SwagArch, Tails, Trisquel,
                                  Ubuntu-Budgie, Ubuntu-GNOME, Ubuntu-MATE, Ubuntu-Studio, Ubuntu,
-@@ -9097,6 +9144,34 @@
+@@ -9097,6 +9140,34 @@
  EOF
          ;;
  
