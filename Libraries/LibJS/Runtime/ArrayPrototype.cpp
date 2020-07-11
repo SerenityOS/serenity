@@ -182,7 +182,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
     for_each_item(interpreter, global_object, "map", [&](auto index, auto, auto callback_result) {
         if (interpreter.exception())
             return IterationDecision::Break;
-        new_array->put(index, callback_result);
+        new_array->define_property(index, callback_result);
         return IterationDecision::Continue;
     });
     return Value(new_array);
