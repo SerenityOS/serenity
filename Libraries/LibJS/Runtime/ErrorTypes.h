@@ -42,7 +42,7 @@
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '%s'")         \
     M(FunctionArgsNotObject, "Argument array must be an object")                                       \
     M(InOperatorWithObject, "'in' operator must be used on an object")                                 \
-    M(InstanceOfOperatorBadPrototype, "Prototype property of %s is not an object")                     \
+    M(InstanceOfOperatorBadPrototype, "'prototype' property of %s is not an object")                   \
     M(InvalidAssignToConst, "Invalid assignment to const variable")                                    \
     M(InvalidLeftHandAssignment, "Invalid left-hand side in assignment")                               \
     M(IsNotA, "%s is not a %s")                                                                        \
