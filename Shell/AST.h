@@ -578,6 +578,24 @@ private:
     int dest_fd { -1 };
 };
 
+class ForLoop final : public Node {
+public:
+    ForLoop(Position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position = {});
+    virtual ~ForLoop();
+
+private:
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) override;
+    virtual String class_name() const override { return "ForLoop"; }
+
+    String m_variable_name;
+    RefPtr<AST::Node> m_iterated_expression;
+    RefPtr<AST::Node> m_block;
+    Optional<size_t> m_in_kw_position;
+};
+
 class Glob final : public Node {
 public:
     Glob(Position, String);
