@@ -166,15 +166,15 @@ static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, const Destin
     if constexpr (sizeof(Destination) == 4) {
         asm volatile("xorl %%ecx, %%eax\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u32)src));
     } else if constexpr (sizeof(Destination) == 2) {
         asm volatile("xor %%cx, %%ax\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u16)src));
     } else if constexpr (sizeof(Destination) == 1) {
         asm volatile("xorb %%cl, %%al\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u8)src));
     } else {
         ASSERT_NOT_REACHED();
     }
@@ -197,15 +197,15 @@ static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, const Destin
     if constexpr (sizeof(Destination) == 4) {
         asm volatile("subl %%ecx, %%eax\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u32)src));
     } else if constexpr (sizeof(Destination) == 2) {
         asm volatile("subw %%cx, %%ax\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u16)src));
     } else if constexpr (sizeof(Destination) == 1) {
         asm volatile("subb %%cl, %%al\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u8)src));
     } else {
         ASSERT_NOT_REACHED();
     }
@@ -228,15 +228,15 @@ static Destination op_add(SoftCPU& cpu, Destination& dest, const Source& src)
     if constexpr (sizeof(Destination) == 4) {
         asm volatile("addl %%ecx, %%eax\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u32)src));
     } else if constexpr (sizeof(Destination) == 2) {
         asm volatile("addw %%cx, %%ax\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u16)src));
     } else if constexpr (sizeof(Destination) == 1) {
         asm volatile("addb %%cl, %%al\n"
                      : "=a"(result)
-                     : "a"(dest), "c"(src));
+                     : "a"(dest), "c"((u8)src));
     } else {
         ASSERT_NOT_REACHED();
     }
