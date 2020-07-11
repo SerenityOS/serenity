@@ -131,10 +131,6 @@ int Emulator::exec()
         auto insn = X86::Instruction::from_stream(m_cpu, true, true);
         out() << (const void*)base_eip << "  \033[33;1m" << insn.to_string(base_eip) << "\033[0m";
 
-        // FIXME: Remove this hack once it's no longer needed :^)
-        if (insn.mnemonic() == "RET")
-            break;
-
         (m_cpu.*insn.handler())(insn);
         m_cpu.dump();
     }
