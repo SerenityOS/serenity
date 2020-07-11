@@ -1777,9 +1777,6 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
         raw_strings->indexed_properties().append(value);
     }
     strings->define_property("raw", raw_strings, 0);
-    if (interpreter.exception())
-        return {};
-
     return interpreter.call(tag_function, js_undefined(), move(arguments));
 }
 

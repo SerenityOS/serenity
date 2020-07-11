@@ -195,11 +195,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyReturn
             } else {
                 auto* entry_array = Array::create(global_object());
                 entry_array->define_property(0, js_string(interpreter(), String::number(i)));
-                if (interpreter().exception())
-                    return {};
                 entry_array->define_property(1, js_string(interpreter(), String::format("%c", str[i])));
-                if (interpreter().exception())
-                    return {};
                 properties_array->define_property(i, entry_array);
             }
             if (interpreter().exception())
@@ -222,11 +218,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyReturn
         } else {
             auto* entry_array = Array::create(global_object());
             entry_array->define_property(0, js_string(interpreter(), String::number(entry.index())));
-            if (interpreter().exception())
-                return {};
             entry_array->define_property(1, value_and_attributes.value);
-            if (interpreter().exception())
-                return {};
             properties_array->define_property(property_index, entry_array);
         }
         if (interpreter().exception())
@@ -251,11 +243,7 @@ Value Object::get_own_properties(const Object& this_object, GetOwnPropertyReturn
         } else {
             auto* entry_array = Array::create(global_object());
             entry_array->define_property(0, it.key.to_value(interpreter()));
-            if (interpreter().exception())
-                return {};
             entry_array->define_property(1, this_object.get(it.key));
-            if (interpreter().exception())
-                return {};
             properties_array->define_property(property_index, entry_array);
         }
         if (interpreter().exception())
