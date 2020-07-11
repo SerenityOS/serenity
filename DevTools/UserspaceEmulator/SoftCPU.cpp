@@ -281,6 +281,33 @@ static Destination op_and(SoftCPU& cpu, Destination& dest, const Source& src)
     return result;
 }
 
+template<typename Destination, typename Source>
+static typename TypeDoubler<Destination>::type op_imul(SoftCPU& cpu, const Destination& dest, const Source& src)
+{
+    Destination result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(Destination) == 4) {
+        asm volatile("imull %%ecx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((i32)src));
+    } else if constexpr (sizeof(Destination) == 2) {
+        asm volatile("imulw %%cx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((i16)src));
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszapc(new_flags);
+    return result;
+}
+
 template<bool update_dest, typename Op>
 void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
 {
@@ -514,12 +541,36 @@ void SoftCPU::IDIV_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::IMUL_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::IMUL_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::IMUL_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_reg16_RM16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_reg16_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_reg32_RM32_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_reg32_RM32_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::IMUL_reg16_RM16(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = op_imul<i16, i16>(*this, gpr16(insn.reg16()), insn.modrm().read16(*this, insn));
+}
+
+void SoftCPU::IMUL_reg16_RM16_imm16(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = op_imul<i16, i16>(*this, insn.modrm().read16(*this, insn), insn.imm16());
+}
+
+void SoftCPU::IMUL_reg16_RM16_imm8(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = op_imul<i16, i8>(*this, insn.modrm().read16(*this, insn), insn.imm8());
+}
+
+void SoftCPU::IMUL_reg32_RM32(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = op_imul<i32, i32>(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn));
+}
+
+void SoftCPU::IMUL_reg32_RM32_imm32(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = op_imul<i32, i32>(*this, insn.modrm().read32(*this, insn), insn.imm32());
+}
+
+void SoftCPU::IMUL_reg32_RM32_imm8(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = op_imul<i32, i8>(*this, insn.modrm().read32(*this, insn), insn.imm8());
+}
 
 template<typename T>
 static T op_inc(SoftCPU& cpu, T data)
