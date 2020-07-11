@@ -781,11 +781,21 @@ void SoftCPU::PUSH_ES(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_FS(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_GS(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_RM32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::PUSH_RM32(const X86::Instruction& insn)
+{
+    push32(insn.modrm().read32(*this, insn));
+}
+
 void SoftCPU::PUSH_SP_8086_80186(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_SS(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_imm32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::PUSH_imm32(const X86::Instruction& insn)
+{
+    push32(insn.imm32());
+}
+
 void SoftCPU::PUSH_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_reg16(const X86::Instruction&) { TODO(); }
 
