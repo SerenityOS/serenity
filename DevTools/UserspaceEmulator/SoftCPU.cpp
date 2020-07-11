@@ -716,7 +716,13 @@ void SoftCPU::LAR_reg32_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LDS_reg16_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LDS_reg32_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LEAVE16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LEAVE32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::LEAVE32(const X86::Instruction&)
+{
+    u32 new_ebp = read_memory32({ ss(), ebp() });
+    set_esp(ebp() + 4);
+    set_ebp(new_ebp);
+}
 
 void SoftCPU::LEA_reg16_mem16(const X86::Instruction& insn)
 {
