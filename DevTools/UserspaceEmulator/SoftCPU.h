@@ -214,6 +214,47 @@ public:
     void write_memory16(X86::LogicalAddress, u16);
     void write_memory32(X86::LogicalAddress, u32);
 
+    bool evaluate_condition(u8 condition) const
+    {
+        switch (condition) {
+        case 0:
+            return of(); // O
+        case 1:
+            return !of(); // NO
+        case 2:
+            return cf(); // B, C, NAE
+        case 3:
+            return !cf(); // NB, NC, AE
+        case 4:
+            return zf(); // E, Z
+        case 5:
+            return !zf(); // NE, NZ
+        case 6:
+            return (cf() | zf()); // BE, NA
+        case 7:
+            return !(cf() | zf()); // NBE, A
+        case 8:
+            return sf(); // S
+        case 9:
+            return !sf(); // NS
+        case 10:
+            return pf(); // P, PE
+        case 11:
+            return !pf(); // NP, PO
+        case 12:
+            return sf() ^ of(); // L, NGE
+        case 13:
+            return !(sf() ^ of()); // NL, GE
+        case 14:
+            return (sf() ^ of()) | zf(); // LE, NG
+        case 15:
+            return !((sf() ^ of()) | zf()); // NLE, G
+        default:
+            ASSERT_NOT_REACHED();
+        }
+        return 0;
+    }
+
 private:
     virtual void AAA(const X86::Instruction&) override;
     virtual void AAD(const X86::Instruction&) override;
