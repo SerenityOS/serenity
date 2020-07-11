@@ -683,10 +683,19 @@ void SoftCPU::JMP_FAR_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_FAR_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::JMP_imm16(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::JMP_imm16(const X86::Instruction& insn)
+{
+    set_eip(eip() + (i16)insn.imm16());
+}
+
 void SoftCPU::JMP_imm16_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_imm16_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::JMP_imm32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::JMP_imm32(const X86::Instruction& insn)
+{
+    set_eip(eip() + (i32)insn.imm32());
+}
 
 void SoftCPU::JMP_short_imm8(const X86::Instruction& insn)
 {
