@@ -184,6 +184,64 @@ void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
 }
 
 template<typename T>
+static T op_inc(SoftCPU& cpu, T data)
+{
+    T result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("incl %%eax\n"
+                     : "=a"(result)
+                     : "a"(data));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("incw %%ax\n"
+                     : "=a"(result)
+                     : "a"(data));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("incb %%al\n"
+                     : "=a"(result)
+                     : "a"(data));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszap(new_flags);
+    return result;
+}
+
+template<typename T>
+static T op_dec(SoftCPU& cpu, T data)
+{
+    T result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("decl %%eax\n"
+                     : "=a"(result)
+                     : "a"(data));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("decw %%ax\n"
+                     : "=a"(result)
+                     : "a"(data));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("decb %%al\n"
+                     : "=a"(result)
+                     : "a"(data));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszap(new_flags);
+    return result;
+}
+
+template<typename T>
 static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
 {
     T result = 0;
@@ -642,11 +700,32 @@ void SoftCPU::CWD(const X86::Instruction&) { TODO(); }
 void SoftCPU::CWDE(const X86::Instruction&) { TODO(); }
 void SoftCPU::DAA(const X86::Instruction&) { TODO(); }
 void SoftCPU::DAS(const X86::Instruction&) { TODO(); }
-void SoftCPU::DEC_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::DEC_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::DEC_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::DEC_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::DEC_reg32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::DEC_RM16(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, op_dec(*this, insn.modrm().read16(*this, insn)));
+}
+
+void SoftCPU::DEC_RM32(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, op_dec(*this, insn.modrm().read32(*this, insn)));
+}
+
+void SoftCPU::DEC_RM8(const X86::Instruction& insn)
+{
+    insn.modrm().write8(*this, insn, op_dec(*this, insn.modrm().read8(*this, insn)));
+}
+
+void SoftCPU::DEC_reg16(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = op_dec(*this, gpr16(insn.reg16()));
+}
+
+void SoftCPU::DEC_reg32(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = op_dec(*this, gpr32(insn.reg32()));
+}
+
 void SoftCPU::DIV_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::DIV_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::DIV_RM8(const X86::Instruction&) { TODO(); }
@@ -689,35 +768,6 @@ void SoftCPU::IMUL_reg32_RM32_imm32(const X86::Instruction& insn)
 void SoftCPU::IMUL_reg32_RM32_imm8(const X86::Instruction& insn)
 {
     gpr32(insn.reg32()) = op_imul<i32>(*this, insn.modrm().read32(*this, insn), sign_extended_to<i32>(insn.imm8()));
-}
-
-template<typename T>
-static T op_inc(SoftCPU& cpu, T data)
-{
-    T result = 0;
-    u32 new_flags = 0;
-
-    if constexpr (sizeof(T) == 4) {
-        asm volatile("incl %%eax\n"
-                     : "=a"(result)
-                     : "a"(data));
-    } else if constexpr (sizeof(T) == 2) {
-        asm volatile("incw %%ax\n"
-                     : "=a"(result)
-                     : "a"(data));
-    } else if constexpr (sizeof(T) == 1) {
-        asm volatile("incb %%al\n"
-                     : "=a"(result)
-                     : "a"(data));
-    }
-
-    asm volatile(
-        "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
-
-    cpu.set_flags_oszap(new_flags);
-    return result;
 }
 
 void SoftCPU::INC_RM16(const X86::Instruction& insn)
