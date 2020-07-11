@@ -625,8 +625,17 @@ void SoftCPU::LDS_reg16_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LDS_reg32_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LEAVE16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LEAVE32(const X86::Instruction&) { TODO(); }
-void SoftCPU::LEA_reg16_mem16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LEA_reg32_mem32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::LEA_reg16_mem16(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = insn.modrm().resolve(*this, insn.segment_prefix()).offset();
+}
+
+void SoftCPU::LEA_reg32_mem32(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = insn.modrm().resolve(*this, insn.segment_prefix()).offset();
+}
+
 void SoftCPU::LES_reg16_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LES_reg32_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LFS_reg16_mem16(const X86::Instruction&) { TODO(); }
