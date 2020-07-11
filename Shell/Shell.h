@@ -93,6 +93,29 @@ public:
     void set_local_variable(const String&, RefPtr<AST::Value>);
     void unset_local_variable(const String&);
 
+    struct LocalFrame {
+        HashMap<String, RefPtr<AST::Value>> local_variables;
+    };
+
+    struct Frame {
+        Frame(Vector<LocalFrame>& frames, const LocalFrame& frame)
+            : frames(frames)
+            , frame(frame)
+        {
+        }
+        ~Frame();
+
+        void leak_frame() { should_destroy_frame = false; }
+
+    private:
+        Vector<LocalFrame>& frames;
+        const LocalFrame& frame;
+        bool should_destroy_frame { true };
+    };
+
+    [[nodiscard]] Frame push_frame();
+    void pop_frame();
+
     static String escape_token(const String& token);
     static String unescape_token(const String& token);
 
@@ -166,6 +189,7 @@ private:
     void cache_path();
     void stop_all_jobs();
     const Job* m_current_job { nullptr };
+    LocalFrame* find_frame_containing_local_variable(const String& name);
 
     virtual void custom_event(Core::CustomEvent&) override;
 
@@ -188,7 +212,8 @@ private:
     bool m_should_ignore_jobs_on_next_exit { false };
     pid_t m_pid { 0 };
 
-    HashMap<String, RefPtr<AST::Value>> m_local_variables;
+    Vector<LocalFrame> m_local_frames;
+
     HashMap<String, String> m_aliases;
 };
 
