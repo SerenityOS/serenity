@@ -60,9 +60,7 @@ int tcflow(int fd, int action)
 
 int tcflush(int fd, int queue_selector)
 {
-    (void)fd;
-    (void)queue_selector;
-    ASSERT_NOT_REACHED();
+    return ioctl(fd, TCFLSH, queue_selector);
 }
 
 speed_t cfgetispeed(const struct termios* tp)
