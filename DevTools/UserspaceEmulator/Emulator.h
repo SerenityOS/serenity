@@ -37,9 +37,9 @@ namespace UserspaceEmulator {
 
 class Emulator {
 public:
-    Emulator();
+    explicit Emulator(NonnullRefPtr<ELF::Loader>);
 
-    bool load_elf(const ELF::Loader&);
+    bool load_elf();
 
     int exec();
     u32 virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3);
@@ -47,6 +47,8 @@ public:
     SoftMMU& mmu() { return m_mmu; }
 
 private:
+    NonnullRefPtr<ELF::Loader> m_elf;
+
     SoftMMU m_mmu;
     SoftCPU m_cpu;
 

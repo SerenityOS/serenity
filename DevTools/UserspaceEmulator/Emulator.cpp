@@ -92,8 +92,9 @@ private:
     u8* m_data { nullptr };
 };
 
-Emulator::Emulator()
-    : m_cpu(*this)
+Emulator::Emulator(NonnullRefPtr<ELF::Loader> elf)
+    : m_elf(move(elf))
+    , m_cpu(*this)
 {
     setup_stack();
 }
@@ -110,9 +111,9 @@ void Emulator::setup_stack()
     m_cpu.push32(0);
 }
 
-bool Emulator::load_elf(const ELF::Loader& elf)
+bool Emulator::load_elf()
 {
-    elf.image().for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
+    m_elf->image().for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
         if (program_header.type() != PT_LOAD)
             return;
         auto region = make<SimpleRegion>(program_header.vaddr().get(), program_header.size_in_memory());
@@ -120,16 +121,34 @@ bool Emulator::load_elf(const ELF::Loader& elf)
         mmu().add_region(move(region));
     });
 
-    m_cpu.set_eip(elf.image().entry().get());
+    m_cpu.set_eip(m_elf->image().entry().get());
     return true;
 }
 
+class ELFSymbolProvider final : public X86::SymbolProvider {
+public:
+    ELFSymbolProvider(ELF::Loader& loader)
+        : m_loader(loader)
+    {
+    }
+
+    virtual String symbolicate(FlatPtr address, u32* offset = nullptr) const
+    {
+        return m_loader.symbolicate(address, offset);
+    }
+
+private:
+    ELF::Loader& m_loader;
+};
+
 int Emulator::exec()
 {
+    ELFSymbolProvider symbol_provider(*m_elf);
+
     while (!m_shutdown) {
         auto base_eip = m_cpu.eip();
         auto insn = X86::Instruction::from_stream(m_cpu, true, true);
-        out() << (const void*)base_eip << "  \033[33;1m" << insn.to_string(base_eip) << "\033[0m";
+        out() << (const void*)base_eip << "  \033[33;1m" << insn.to_string(base_eip, &symbol_provider) << "\033[0m";
 
         (m_cpu.*insn.handler())(insn);
         m_cpu.dump();
