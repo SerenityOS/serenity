@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <string.h>
 
+//#define MEMORY_DEBUG
+
 namespace UserspaceEmulator {
 
 template<typename T, typename U>
@@ -83,7 +85,9 @@ u8 SoftCPU::read_memory8(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x18 || address.selector() == 0x20);
     auto value = m_emulator.mmu().read8(address.offset());
+#ifdef MEMORY_DEBUG
     printf("\033[36;1mread_memory8: @%08x -> %02x\033[0m\n", address.offset(), value);
+#endif
     return value;
 }
 
@@ -91,7 +95,9 @@ u16 SoftCPU::read_memory16(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x18 || address.selector() == 0x20);
     auto value = m_emulator.mmu().read16(address.offset());
+#ifdef MEMORY_DEBUG
     printf("\033[36;1mread_memory16: @%08x -> %04x\033[0m\n", address.offset(), value);
+#endif
     return value;
 }
 
@@ -99,28 +105,36 @@ u32 SoftCPU::read_memory32(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x18 || address.selector() == 0x20);
     auto value = m_emulator.mmu().read32(address.offset());
+#ifdef MEMORY_DEBUG
     printf("\033[36;1mread_memory32: @%08x -> %08x\033[0m\n", address.offset(), value);
+#endif
     return value;
 }
 
 void SoftCPU::write_memory8(X86::LogicalAddress address, u8 value)
 {
     ASSERT(address.selector() == 0x20);
+#ifdef MEMORY_DEBUG
     printf("\033[35;1mwrite_memory8: @%08x <- %02x\033[0m\n", address.offset(), value);
+#endif
     m_emulator.mmu().write8(address.offset(), value);
 }
 
 void SoftCPU::write_memory16(X86::LogicalAddress address, u16 value)
 {
     ASSERT(address.selector() == 0x20);
+#ifdef MEMORY_DEBUG
     printf("\033[35;1mwrite_memory16: @%08x <- %04x\033[0m\n", address.offset(), value);
+#endif
     m_emulator.mmu().write16(address.offset(), value);
 }
 
 void SoftCPU::write_memory32(X86::LogicalAddress address, u32 value)
 {
     ASSERT(address.selector() == 0x20);
+#ifdef MEMORY_DEBUG
     printf("\033[35;1mwrite_memory32: @%08x <- %08x\033[0m\n", address.offset(), value);
+#endif
     m_emulator.mmu().write32(address.offset(), value);
 }
 
