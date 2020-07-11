@@ -371,6 +371,34 @@ static typename TypeDoubler<Destination>::type op_imul(SoftCPU& cpu, const Desti
     return result;
 }
 
+template<typename T>
+static T op_shr(SoftCPU& cpu, T data, u8 steps)
+{
+    if (steps == 0)
+        return data;
+
+    u32 result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4)
+        asm volatile("shrl %%cl, %%eax\n" ::"a"(data), "c"(steps));
+    else if constexpr (sizeof(T) == 2)
+        asm volatile("shrw %%cl, %%ax\n" ::"a"(data), "c"(steps));
+    else if constexpr (sizeof(T) == 1)
+        asm volatile("shrb %%cl, %%al\n" ::"a"(data), "c"(steps));
+
+    asm volatile(
+        "mov %%eax, %%ebx\n"
+        : "=b"(result));
+    asm volatile(
+        "pushf\n"
+        "pop %%eax"
+        : "=a"(new_flags));
+
+    cpu.set_flags_oszapc(new_flags);
+    return result;
+}
+
 template<bool update_dest, typename Op>
 void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
 {
@@ -1136,7 +1164,12 @@ void SoftCPU::SHR_RM16_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHR_RM16_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHR_RM32_1(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHR_RM32_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHR_RM32_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::SHR_RM32_imm8(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, op_shr<u32>(*this, insn.modrm().read32(*this, insn), insn.imm8()));
+}
+
 void SoftCPU::SHR_RM8_1(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHR_RM8_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHR_RM8_imm8(const X86::Instruction&) { TODO(); }
