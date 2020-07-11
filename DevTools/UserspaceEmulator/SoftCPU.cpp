@@ -846,7 +846,11 @@ void SoftCPU::MOV_AL_moff8(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_AX_moff16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_CR_reg32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_DR_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_EAX_moff32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MOV_EAX_moff32(const X86::Instruction& insn)
+{
+    set_eax(read_memory32({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }));
+}
 
 void SoftCPU::MOV_RM16_imm16(const X86::Instruction& insn)
 {
