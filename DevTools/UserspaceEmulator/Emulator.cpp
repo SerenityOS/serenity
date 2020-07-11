@@ -42,7 +42,7 @@ public:
     SimpleRegion(u32 base, u32 size)
         : Region(base, size)
     {
-        m_data = (u8*)malloc(size);
+        m_data = (u8*)calloc(1, size);
     }
 
     ~SimpleRegion()
