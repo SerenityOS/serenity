@@ -50,6 +50,8 @@ void SymbolPrototype::initialize(Interpreter& interpreter, GlobalObject& global_
     define_native_property("description", description_getter, nullptr, Attribute::Configurable);
     define_native_function("toString", to_string, 0, Attribute::Writable | Attribute::Configurable);
     define_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
+
+    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "Symbol"), Attribute::Configurable);
 }
 
 SymbolPrototype::~SymbolPrototype()

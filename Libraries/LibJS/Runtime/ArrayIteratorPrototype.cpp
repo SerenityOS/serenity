@@ -42,6 +42,8 @@ void ArrayIteratorPrototype::initialize(Interpreter& interpreter, GlobalObject& 
 {
     Object::initialize(interpreter, global_object);
     define_native_function("next", next, 0, Attribute::Writable | Attribute::Configurable);
+
+    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "Array Iterator"), Attribute::Configurable);
 }
 
 ArrayIteratorPrototype::~ArrayIteratorPrototype()
