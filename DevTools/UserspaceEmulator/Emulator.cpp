@@ -105,10 +105,20 @@ void Emulator::setup_stack()
     m_mmu.add_region(move(stack_region));
     m_cpu.set_esp(stack_location + stack_size);
 
-    m_cpu.push32(0);
-    m_cpu.push32(0);
-    m_cpu.push32(0);
-    m_cpu.push32(0);
+    m_cpu.push32(0); // char** envp = { nullptr }
+    u32 envp = m_cpu.esp();
+
+    m_cpu.push32(0); // char** argv = { nullptr }
+    u32 argv = m_cpu.esp();
+
+    m_cpu.push32(0); // (alignment)
+    m_cpu.push32(0); // (alignment)
+
+    u32 argc = 0;
+    m_cpu.push32(envp);
+    m_cpu.push32(argv);
+    m_cpu.push32(argc);
+    m_cpu.push32(0); // (alignment)
 }
 
 bool Emulator::load_elf()
