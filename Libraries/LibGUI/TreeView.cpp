@@ -110,13 +110,16 @@ void TreeView::doubleclick_event(MouseEvent& event)
 
 void TreeView::set_open_state_of_all_in_subtree(const ModelIndex& root, bool open)
 {
-    if (root.is_valid())
+    if (root.is_valid()) {
         ensure_metadata_for_index(root).open = open;
+        if (model()->row_count(root)) {
+            if (on_toggle)
+                on_toggle(root, open);
+        }
+    }
     int row_count = model()->row_count(root);
     int column = model()->tree_column();
     for (int row = 0; row < row_count; ++row) {
-        if (on_toggle)
-            on_toggle(root, open);
         auto index = model()->index(row, column, root);
         set_open_state_of_all_in_subtree(index, open);
     }
