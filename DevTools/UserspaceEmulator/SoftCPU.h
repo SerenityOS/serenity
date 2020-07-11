@@ -201,6 +201,18 @@ public:
     void set_pf(bool value) { set_flag(Flags::PF, value); }
     void set_cf(bool value) { set_flag(Flags::CF, value); }
 
+    void set_flags_oszapc(u32 new_flags)
+    {
+        m_eflags &= ~(Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
+        m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
+    }
+
+    void set_flags_oszap(u32 new_flags)
+    {
+        m_eflags &= ~(Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF);
+        m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF);
+    }
+
     u16 cs() const { return m_segment[(int)X86::SegmentRegister::CS]; }
     u16 ds() const { return m_segment[(int)X86::SegmentRegister::DS]; }
     u16 es() const { return m_segment[(int)X86::SegmentRegister::ES]; }
@@ -757,12 +769,8 @@ private:
 
     template<typename T>
     T sar_impl(T data, u8 steps);
-
-    void set_flags_oszapc(u32 new_flags)
-    {
-        m_eflags &= ~(Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
-        m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
-    }
+    template<typename T>
+    T inc_impl(T);
 
 private:
     Emulator& m_emulator;
