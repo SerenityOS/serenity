@@ -44,6 +44,8 @@ void BigIntPrototype::initialize(Interpreter& interpreter, GlobalObject& global_
     define_native_function("toString", to_string, 0, attr);
     define_native_function("toLocaleString", to_locale_string, 0, attr);
     define_native_function("valueOf", value_of, 0, attr);
+
+    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "BigInt"), Attribute::Configurable);
 }
 
 BigIntPrototype::~BigIntPrototype()

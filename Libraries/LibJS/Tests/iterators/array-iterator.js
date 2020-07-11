@@ -2,6 +2,11 @@ test("length", () => {
     expect(Array.prototype[Symbol.iterator].length).toBe(0);
 });
 
+test("@@toStringTag", () => {
+    expect([].values()[Symbol.toStringTag]).toBe("Array Iterator");
+    expect([].values().toString()).toBe("[object Array Iterator]");
+});
+
 test("same function as Array.prototype.values", () => {
     expect(Array.prototype[Symbol.iterator]).toBe(Array.prototype.values);
 });

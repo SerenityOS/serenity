@@ -74,6 +74,8 @@ void MathObject::initialize(Interpreter& interpreter, GlobalObject& global_objec
     define_property("PI", Value(M_PI), 0);
     define_property("SQRT1_2", Value(M_SQRT1_2), 0);
     define_property("SQRT2", Value(M_SQRT2), 0);
+
+    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "Math"), Attribute::Configurable);
 }
 
 MathObject::~MathObject()
