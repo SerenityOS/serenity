@@ -100,6 +100,11 @@ void Emulator::setup_stack()
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     m_mmu.add_region(move(stack_region));
     m_cpu.set_esp(stack_location + stack_size);
+
+    m_cpu.push32(0);
+    m_cpu.push32(0);
+    m_cpu.push32(0);
+    m_cpu.push32(0);
 }
 
 int Emulator::exec(X86::SimpleInstructionStream& stream, u32 base)
