@@ -186,7 +186,7 @@ void DisplaySettingsWidget::create_frame()
         this->m_monitor_widget->update();
     };
 
-    /// Resulation Row ////////////////////////////////////////////////////////////////////////////
+    /// Resolution Row ////////////////////////////////////////////////////////////////////////////
 
     auto& resolution_selection_container = settings_content.add<GUI::Widget>();
     resolution_selection_container.set_layout<GUI::HorizontalBoxLayout>();
