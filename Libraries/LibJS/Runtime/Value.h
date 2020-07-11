@@ -323,6 +323,7 @@ Value mod(Interpreter&, Value lhs, Value rhs);
 Value exp(Interpreter&, Value lhs, Value rhs);
 Value in(Interpreter&, Value lhs, Value rhs);
 Value instance_of(Interpreter&, Value lhs, Value rhs);
+Value ordinary_has_instance(Interpreter& interpreter, Value lhs, Value rhs);
 
 bool abstract_eq(Interpreter&, Value lhs, Value rhs);
 bool strict_eq(Interpreter&, Value lhs, Value rhs);

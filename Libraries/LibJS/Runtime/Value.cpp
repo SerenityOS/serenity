@@ -38,6 +38,7 @@
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -685,14 +686,56 @@ Value in(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value instance_of(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    if (!lhs.is_object() || !rhs.is_object())
+    if (!rhs.is_object())
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
+
+    auto has_instance_method = rhs.as_object().get(interpreter.well_known_symbol_has_instance());
+    if (!has_instance_method.is_empty()) {
+        if (!has_instance_method.is_function())
+            return interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
+
+        MarkedValueList arguments(interpreter.heap());
+        arguments.append(lhs);
+        return Value(interpreter.call(has_instance_method.as_function(), rhs, move(arguments)).to_boolean());
+    }
+
+    if (!rhs.is_function())
+        return interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, rhs.to_string_without_side_effects().characters());
+
+    return ordinary_has_instance(interpreter, lhs, rhs);
+}
+
+Value ordinary_has_instance(Interpreter& interpreter, Value lhs, Value rhs)
+{
+    if (!rhs.is_function())
         return Value(false);
-    auto constructor_prototype_property = rhs.as_object().get("prototype");
+    auto& rhs_function = rhs.as_function();
+
+    if (rhs_function.is_bound_function()) {
+        auto& bound_target = static_cast<BoundFunction&>(rhs_function);
+        return instance_of(interpreter, lhs, Value(&bound_target.target_function()));
+    }
+
+    if (!lhs.is_object())
+        return Value(false);
+
+    Object* lhs_object = &lhs.as_object();
+    auto rhs_prototype = rhs_function.get("prototype");
     if (interpreter.exception())
         return {};
-    if (!constructor_prototype_property.is_object())
-        return Value(false);
-    return Value(lhs.as_object().has_prototype(&constructor_prototype_property.as_object()));
+
+    if (!rhs_prototype.is_object())
+        return interpreter.throw_exception<TypeError>(ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects().characters());
+
+    while (true) {
+        lhs_object = lhs_object->prototype();
+        if (interpreter.exception())
+            return {};
+        if (!lhs_object)
+            return Value(false);
+        if (same_value(interpreter, rhs_prototype, lhs_object))
+            return Value(true);
+    }
 }
 
 const LogStream& operator<<(const LogStream& stream, const Value& value)
