@@ -361,18 +361,18 @@ int Shell::run_command(const StringView& cmd)
     if (!command)
         return 0;
 
-    if (command->is_syntax_error()) {
-        auto& error_node = command->syntax_error_node();
-        auto& position = error_node.position();
-        fprintf(stderr, "Shell: Syntax error in command: %s\n", error_node.error_text().characters());
-        fprintf(stderr, "Around '%.*s'\n", (int)min(position.end_offset - position.start_offset, (size_t)10), cmd.characters_without_null_termination() + position.start_offset);
-        return 1;
-    }
-
 #ifdef SH_DEBUG
     dbg() << "Command follows";
     command->dump(0);
 #endif
+
+    if (command->is_syntax_error()) {
+        auto& error_node = command->syntax_error_node();
+        auto& position = error_node.position();
+        fprintf(stderr, "Shell: Syntax error in command: %s\n", error_node.error_text().characters());
+        fprintf(stderr, "Around '%.*s' at %zu:%zu\n", (int)min(position.end_offset - position.start_offset, (size_t)10), cmd.characters_without_null_termination() + position.start_offset, position.start_offset, position.end_offset);
+        return 1;
+    }
 
     tcgetattr(0, &termios);
 

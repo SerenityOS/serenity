@@ -164,6 +164,7 @@ public:
     virtual bool is_job() const { return false; }
     virtual bool is_list() const { return false; }
     virtual bool is_string() const { return false; }
+    virtual bool is_list_without_resolution() const { return false; }
 };
 
 class CommandValue final : public Value {
@@ -221,13 +222,17 @@ private:
 class ListValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual RefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual ~ListValue();
     virtual bool is_list() const override { return true; }
+    virtual bool is_list_without_resolution() const override { return true; }
     ListValue(Vector<String> values);
     ListValue(Vector<RefPtr<Value>> values)
         : m_contained_values(move(values))
     {
     }
+
+    const Vector<RefPtr<Value>>& values() const { return m_contained_values; }
 
 private:
     Vector<RefPtr<Value>> m_contained_values;
@@ -389,7 +394,7 @@ private:
 
 class ListConcatenate final : public Node {
 public:
-    ListConcatenate(Position, RefPtr<Node>, RefPtr<Node>);
+    ListConcatenate(Position, Vector<RefPtr<Node>>);
     virtual ~ListConcatenate();
 
 private:
@@ -401,8 +406,7 @@ private:
     virtual bool is_list() const override { return true; }
     virtual RefPtr<Node> leftmost_trivial_literal() const override;
 
-    RefPtr<Node> m_element;
-    RefPtr<Node> m_list;
+    Vector<RefPtr<Node>> m_list;
 };
 
 class Background final : public Node {

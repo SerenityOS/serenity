@@ -420,19 +420,19 @@ RefPtr<AST::Node> Parser::parse_list_expression()
     consume_while(is_whitespace);
 
     auto rule_start = push_start();
+    Vector<RefPtr<AST::Node>> nodes;
 
-    auto expr = parse_expression();
-    if (!expr)
+    do {
+        auto expr = parse_expression();
+        if (!expr)
+            break;
+        nodes.append(move(expr));
+    } while (!consume_while(is_whitespace).is_empty());
+
+    if (nodes.is_empty())
         return nullptr;
 
-    if (consume_while(is_whitespace).is_empty())
-        return expr;
-
-    auto list = parse_list_expression();
-    if (!list)
-        return create<AST::CastToList>(move(expr));
-
-    return create<AST::ListConcatenate>(move(expr), move(list)); // Join Element List
+    return create<AST::ListConcatenate>(move(nodes)); // Concatenate List
 }
 
 RefPtr<AST::Node> Parser::parse_expression()

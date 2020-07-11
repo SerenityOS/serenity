@@ -216,33 +216,59 @@ And::~And()
 void ListConcatenate::dump(int level) const
 {
     Node::dump(level);
-    m_element->dump(level + 1);
-    m_list->dump(level + 1);
+    for (auto& element : m_list)
+        element->dump(level + 1);
 }
 
 RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
 {
-    auto list = m_list->run(shell)->resolve_without_cast(shell);
-    auto element = m_element->run(shell)->resolve_without_cast(shell);
+    RefPtr<Value> result = nullptr;
 
-    if (list->is_command() || element->is_command()) {
-        auto joined_commands = join_commands(element->resolve_as_commands(shell), list->resolve_as_commands(shell));
+    for (auto& element : m_list) {
+        if (!result) {
+            result = create<ListValue>({ element->run(shell)->resolve_without_cast(shell) });
+            continue;
+        }
+        auto element_value = element->run(shell)->resolve_without_cast(shell);
 
-        if (joined_commands.size() == 1)
-            return create<CommandValue>(joined_commands[0]);
-        return create<CommandSequenceValue>(move(joined_commands));
+        if (result->is_command() || element_value->is_command()) {
+            auto joined_commands = join_commands(result->resolve_as_commands(shell), element_value->resolve_as_commands(shell));
+
+            if (joined_commands.size() == 1)
+                result = create<CommandValue>(joined_commands[0]);
+            else
+                result = create<CommandSequenceValue>(move(joined_commands));
+        } else {
+            Vector<RefPtr<Value>> values;
+
+            if (result->is_list_without_resolution()) {
+                values.append(static_cast<ListValue*>(result.ptr())->values());
+            } else {
+                for (auto& result : result->resolve_as_list(shell))
+                    values.append(create<StringValue>(result));
+            }
+
+            values.append(move(element_value));
+
+            result = create<ListValue>(move(values));
+        }
     }
+    if (!result)
+        return create<ListValue>({});
 
-    return create<ListValue>({ move(element), move(list) });
+    return result;
 }
 
 void ListConcatenate::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
     auto first = metadata.is_first_in_list;
     metadata.is_first_in_list = false;
-    m_list->highlight_in_editor(editor, shell, metadata);
+
     metadata.is_first_in_list = first;
-    m_element->highlight_in_editor(editor, shell, metadata);
+    for (auto& element : m_list) {
+        element->highlight_in_editor(editor, shell, metadata);
+        metadata.is_first_in_list = false;
+    }
 }
 
 HitTestResult ListConcatenate::hit_test_position(size_t offset)
@@ -250,29 +276,37 @@ HitTestResult ListConcatenate::hit_test_position(size_t offset)
     if (!position().contains(offset))
         return {};
 
-    auto result = m_element->hit_test_position(offset);
-    if (result.matching_node)
-        return result;
-    result = m_list->hit_test_position(offset);
-    if (!result.closest_node_with_semantic_meaning)
-        result.closest_node_with_semantic_meaning = this;
-    return result;
+    bool first = true;
+    for (auto& element : m_list) {
+        auto result = element->hit_test_position(offset);
+        if (!result.closest_node_with_semantic_meaning && !first)
+            result.closest_node_with_semantic_meaning = this;
+        if (result.matching_node)
+            return result;
+        first = false;
+    }
+
+    return {};
 }
 
 RefPtr<Node> ListConcatenate::leftmost_trivial_literal() const
 {
-    return m_element->leftmost_trivial_literal();
+    if (m_list.is_empty())
+        return nullptr;
+
+    return m_list.first()->leftmost_trivial_literal();
 }
 
-ListConcatenate::ListConcatenate(Position position, RefPtr<Node> element, RefPtr<Node> list)
+ListConcatenate::ListConcatenate(Position position, Vector<RefPtr<Node>> list)
     : Node(move(position))
-    , m_element(move(element))
     , m_list(move(list))
 {
-    if (m_element->is_syntax_error())
-        set_is_syntax_error(m_element->syntax_error_node());
-    else if (m_list->is_syntax_error())
-        set_is_syntax_error(m_list->syntax_error_node());
+    for (auto& element : m_list) {
+        if (element->is_syntax_error()) {
+            set_is_syntax_error(element->syntax_error_node());
+            break;
+        }
+    }
 }
 
 ListConcatenate::~ListConcatenate()
@@ -451,9 +485,9 @@ RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
     if (!m_inner)
         return create<ListValue>({});
 
-    auto inner_value = m_inner->run(shell);
+    auto inner_value = m_inner->run(shell)->resolve_without_cast(shell);
 
-    if (inner_value->is_command())
+    if (inner_value->is_command() || inner_value->is_list())
         return inner_value;
 
     auto values = inner_value->resolve_as_list(shell);
@@ -1781,6 +1815,15 @@ Vector<String> ListValue::resolve_as_list(RefPtr<Shell> shell)
         values.append(value->resolve_as_list(shell));
 
     return values;
+}
+
+RefPtr<Value> ListValue::resolve_without_cast(RefPtr<Shell> shell)
+{
+    Vector<RefPtr<Value>> values;
+    for (auto& value : m_contained_values)
+        values.append(value->resolve_without_cast(shell));
+
+    return create<ListValue>(move(values));
 }
 
 CommandValue::~CommandValue()
