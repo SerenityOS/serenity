@@ -137,7 +137,7 @@ u32 SoftCPU::pop32()
 }
 
 template<typename Destination, typename Source>
-static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, Destination& dest, const Source& src)
+static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, const Destination& dest, const Source& src)
 {
     auto result = dest ^ src;
     cpu.set_zf(dest == 0);
@@ -149,13 +149,44 @@ static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, Destination&
 }
 
 template<typename Destination, typename Source>
-static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, Destination& dest, const Source& src)
+static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, const Destination& dest, const Source& src)
 {
     u64 result = (u64)dest - (u64)src;
     cpu.set_zf(result == 0);
     cpu.set_sf((result >> (X86::TypeTrivia<Destination>::bits - 1) & 1));
     cpu.set_af((((result ^ (src ^ dest)) & 0x10) >> 4) & 1);
     cpu.set_of((((result ^ dest) & (src ^ dest)) >> (X86::TypeTrivia<Destination>::bits - 1)) & 1);
+    return result;
+}
+
+template<typename Destination, typename Source>
+static Destination op_add(SoftCPU& cpu, Destination& dest, const Source& src)
+{
+    Destination result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(Destination) == 4) {
+        asm volatile("addl %%ecx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else if constexpr (sizeof(Destination) == 2) {
+        asm volatile("addw %%cx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else if constexpr (sizeof(Destination) == 1) {
+        asm volatile("addb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"(src));
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszap(new_flags);
     return result;
 }
 
@@ -317,20 +348,6 @@ void SoftCPU::ADC_RM8_reg8(const X86::Instruction&) { TODO(); }
 void SoftCPU::ADC_reg16_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::ADC_reg32_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::ADC_reg8_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_AL_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_AX_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_EAX_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_RM16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_RM32_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_RM8_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_RM8_reg8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADD_reg8_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::AND_AL_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::AND_AX_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::AND_EAX_imm32(const X86::Instruction&) { TODO(); }
@@ -420,11 +437,61 @@ void SoftCPU::IMUL_reg16_RM16_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::IMUL_reg32_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::IMUL_reg32_RM32_imm32(const X86::Instruction&) { TODO(); }
 void SoftCPU::IMUL_reg32_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::INC_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::INC_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::INC_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::INC_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::INC_reg32(const X86::Instruction&) { TODO(); }
+
+template<typename T>
+T SoftCPU::inc_impl(T data)
+{
+    T result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("incl %%eax\n"
+                     : "=a"(result)
+                     : "a"(data));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("incw %%ax\n"
+                     : "=a"(result)
+                     : "a"(data));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("incb %%al\n"
+                     : "=a"(result)
+                     : "a"(data));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    set_flags_oszap(new_flags);
+    return result;
+}
+
+void SoftCPU::INC_RM16(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, inc_impl(insn.modrm().read16(*this, insn)));
+}
+
+void SoftCPU::INC_RM32(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, inc_impl(insn.modrm().read32(*this, insn)));
+}
+
+void SoftCPU::INC_RM8(const X86::Instruction& insn)
+{
+    insn.modrm().write8(*this, insn, inc_impl(insn.modrm().read8(*this, insn)));
+}
+
+void SoftCPU::INC_reg16(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = inc_impl(gpr16(insn.reg16()));
+}
+
+void SoftCPU::INC_reg32(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = inc_impl(gpr32(insn.reg32()));
+}
+
 void SoftCPU::INSB(const X86::Instruction&) { TODO(); }
 void SoftCPU::INSD(const X86::Instruction&) { TODO(); }
 void SoftCPU::INSW(const X86::Instruction&) { TODO(); }
@@ -874,6 +941,7 @@ void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
     void SoftCPU::mnemonic##_reg8_RM8(const X86::Instruction& insn) { generic_reg8_RM8<update_dest>(op<u8, u8>, insn); }
 
 DEFINE_GENERIC_INSN_HANDLERS(XOR, op_xor, true)
+DEFINE_GENERIC_INSN_HANDLERS(ADD, op_add, true)
 DEFINE_GENERIC_INSN_HANDLERS(SUB, op_sub, true)
 DEFINE_GENERIC_INSN_HANDLERS(CMP, op_sub, false)
 
