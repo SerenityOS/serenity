@@ -1229,7 +1229,12 @@ void SoftCPU::SBB_reg8_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SCASB(const X86::Instruction&) { TODO(); }
 void SoftCPU::SCASD(const X86::Instruction&) { TODO(); }
 void SoftCPU::SCASW(const X86::Instruction&) { TODO(); }
-void SoftCPU::SETcc_RM8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::SETcc_RM8(const X86::Instruction& insn)
+{
+    insn.modrm().write8(*this, insn, evaluate_condition(insn.cc()));
+}
+
 void SoftCPU::SGDT(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHLD_RM16_reg16_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHLD_RM16_reg16_imm8(const X86::Instruction&) { TODO(); }
