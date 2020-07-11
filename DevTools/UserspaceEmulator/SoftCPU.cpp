@@ -583,7 +583,13 @@ void SoftCPU::BT_RM32_reg32(const X86::Instruction&) { TODO(); }
 void SoftCPU::CALL_FAR_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::CALL_FAR_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::CALL_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::CALL_RM32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::CALL_RM32(const X86::Instruction& insn)
+{
+    push32(eip());
+    set_eip(insn.modrm().read32(*this, insn));
+}
+
 void SoftCPU::CALL_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::CALL_imm16_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::CALL_imm16_imm32(const X86::Instruction&) { TODO(); }
