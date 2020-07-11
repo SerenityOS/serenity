@@ -42,6 +42,9 @@ __BEGIN_DECLS
 #define M_SQRT2 1.4142135623730951
 #define M_SQRT1_2 0.7071067811865475
 
+#define DOUBLE_MAX ((double)0b0111111111101111111111111111111111111111111111111111111111111111)
+#define DOUBLE_MIN ((double)0b0000000000010000000000000000000000000000000000000000000000000000)
+
 double acos(double);
 float acosf(float);
 double asin(double);
@@ -109,5 +112,7 @@ double atanh(double);
 double hypot(double, double);
 double erf(double);
 double erfc(double);
+
+int isnormal(double);
 
 __END_DECLS

@@ -536,4 +536,11 @@ double erfc(double x)
 {
     return 1 - erf(x);
 }
+
+int isnormal(double x)
+{
+    if (x < 0)
+        x = -x;
+    return x >= DOUBLE_MIN && x <= DOUBLE_MAX;
+}
 }
