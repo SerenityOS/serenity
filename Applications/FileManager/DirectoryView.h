@@ -34,7 +34,8 @@
 #include <LibGUI/TableView.h>
 #include <sys/stat.h>
 
-class DirectoryView final : public GUI::StackWidget {
+class DirectoryView final : public GUI::StackWidget
+    , private GUI::ModelClient {
     C_OBJECT(DirectoryView)
 public:
     virtual ~DirectoryView() override;
@@ -93,6 +94,8 @@ public:
 private:
     DirectoryView();
     const GUI::FileSystemModel& model() const { return *m_model; }
+
+    virtual void on_model_update(unsigned) override;
 
     void handle_activation(const GUI::ModelIndex&);
 

@@ -106,11 +106,11 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
 #endif
     toolbar.set_has_frame(false);
 
-    auto& location_textbox = upper_container.add<TextBox>();
-    location_textbox.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    location_textbox.set_preferred_size(0, 22);
-    location_textbox.set_text(path);
-    location_textbox.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
+    m_location_textbox = upper_container.add<TextBox>();
+    m_location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_location_textbox->set_preferred_size(0, 22);
+    m_location_textbox->set_text(path);
+    m_location_textbox->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
 
     m_view = vertical_container.add<MultiView>();
     m_view->set_model(SortingProxyModel::create(*m_model));
@@ -122,14 +122,10 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     m_view->set_column_hidden(FileSystemModel::Column::Inode, true);
     m_view->set_column_hidden(FileSystemModel::Column::SymlinkTarget, true);
     m_model->set_root_path(path);
+    m_model->register_client(*this);
 
-    m_model->on_update = [&] {
-        location_textbox.set_text(m_model->root_path());
-        clear_preview();
-    };
-
-    location_textbox.on_return_pressed = [&] {
-        m_model->set_root_path(location_textbox.text());
+    m_location_textbox->on_return_pressed = [this] {
+        m_model->set_root_path(m_location_textbox->text());
     };
 
     auto open_parent_directory_action = Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
@@ -270,6 +266,13 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
 
 FilePicker::~FilePicker()
 {
+    m_model->unregister_client(*this);
+}
+
+void FilePicker::on_model_update(unsigned)
+{
+    m_location_textbox->set_text(m_model->root_path());
+    clear_preview();
 }
 
 void FilePicker::set_preview(const LexicalPath& path)

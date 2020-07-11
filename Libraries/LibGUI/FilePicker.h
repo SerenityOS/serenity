@@ -31,10 +31,11 @@
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Image.h>
+#include <LibGUI/Model.h>
 
 namespace GUI {
 
-class FilePicker final : public Dialog {
+class FilePicker final : public Dialog, private ModelClient {
     C_OBJECT(FilePicker)
 public:
     enum class Mode {
@@ -55,6 +56,8 @@ private:
     void clear_preview();
     void on_file_return();
 
+    virtual void on_model_update(unsigned) override;
+
     FilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory(), Window* parent_window = nullptr);
 
     static String ok_button_name(Mode mode)
@@ -74,6 +77,7 @@ private:
     LexicalPath m_selected_file;
 
     RefPtr<TextBox> m_filename_textbox;
+    RefPtr<TextBox> m_location_textbox;
     RefPtr<Frame> m_preview_container;
     RefPtr<Image> m_preview_image;
     RefPtr<Label> m_preview_name_label;

@@ -44,6 +44,13 @@ enum class SortOrder {
     Descending
 };
 
+class ModelClient {
+public:
+    virtual ~ModelClient() { }
+
+    virtual void on_model_update(unsigned flags) = 0;
+};
+
 class Model : public RefCounted<Model> {
 public:
     enum UpdateFlag {
@@ -95,7 +102,8 @@ public:
     void register_view(Badge<AbstractView>, AbstractView&);
     void unregister_view(Badge<AbstractView>, AbstractView&);
 
-    Function<void()> on_update;
+    void register_client(ModelClient&);
+    void unregister_client(ModelClient&);
 
 protected:
     Model();
@@ -107,6 +115,7 @@ protected:
 
 private:
     HashTable<AbstractView*> m_views;
+    HashTable<ModelClient*> m_clients;
 };
 
 inline ModelIndex ModelIndex::parent() const

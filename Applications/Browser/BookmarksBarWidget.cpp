@@ -88,16 +88,18 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
 
 BookmarksBarWidget::~BookmarksBarWidget()
 {
+    if (m_model)
+        m_model->unregister_client(*this);
 }
 
 void BookmarksBarWidget::set_model(RefPtr<GUI::Model> model)
 {
     if (model == m_model)
         return;
+    if (m_model)
+        m_model->unregister_client(*this);
     m_model = move(model);
-    m_model->on_update = [&]() {
-        did_update_model();
-    };
+    m_model->register_client(*this);
 }
 
 void BookmarksBarWidget::resize_event(GUI::ResizeEvent& event)
@@ -106,7 +108,7 @@ void BookmarksBarWidget::resize_event(GUI::ResizeEvent& event)
     update_content_size();
 }
 
-void BookmarksBarWidget::did_update_model()
+void BookmarksBarWidget::on_model_update(unsigned)
 {
     for (auto* child : child_widgets()) {
         child->remove_from_parent();

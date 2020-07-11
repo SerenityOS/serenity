@@ -30,7 +30,8 @@
 
 namespace GUI {
 
-class SortingProxyModel final : public Model {
+class SortingProxyModel final : public Model
+    , private ModelClient {
 public:
     static NonnullRefPtr<SortingProxyModel> create(NonnullRefPtr<Model>&& model) { return adopt(*new SortingProxyModel(move(model))); }
     virtual ~SortingProxyModel() override;
@@ -55,10 +56,12 @@ public:
 private:
     explicit SortingProxyModel(NonnullRefPtr<Model>&&);
 
+    virtual void on_model_update(unsigned) override;
+
     Model& target() { return *m_target; }
     const Model& target() const { return *m_target; }
 
-    void resort();
+    void resort(unsigned flags = Model::UpdateFlag::DontInvalidateIndexes);
 
     void set_sorting_case_sensitive(bool b) { m_sorting_case_sensitive = b; }
     bool is_sorting_case_sensitive() { return m_sorting_case_sensitive; }
@@ -69,6 +72,7 @@ private:
     SortOrder m_sort_order { SortOrder::Ascending };
     Role m_sort_role { Role::Sort };
     bool m_sorting_case_sensitive { false };
+    bool m_sorting { false };
 };
 
 }
