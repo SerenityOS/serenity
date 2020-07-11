@@ -521,8 +521,7 @@ void SoftCPU::MOV_RM32_imm32(const X86::Instruction& insn)
 
 void SoftCPU::MOV_RM32_reg32(const X86::Instruction& insn)
 {
-    ASSERT(insn.modrm().is_register());
-    gpr32(insn.modrm().reg32()) = gpr32(insn.reg32());
+    insn.modrm().write32(*this, insn, gpr32(insn.reg32()));
 }
 
 void SoftCPU::MOV_RM8_imm8(const X86::Instruction& insn)
