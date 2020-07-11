@@ -587,9 +587,20 @@ void SoftCPU::JMP_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_imm16_imm16(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_imm16_imm32(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::JMP_short_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::JMP_short_imm8(const X86::Instruction& insn)
+{
+    set_eip(eip() + (i8)insn.imm8());
+}
+
 void SoftCPU::Jcc_NEAR_imm(const X86::Instruction&) { TODO(); }
-void SoftCPU::Jcc_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::Jcc_imm8(const X86::Instruction& insn)
+{
+    if (evaluate_condition(insn.cc()))
+        set_eip(eip() + (i8)insn.imm8());
+}
+
 void SoftCPU::LAHF(const X86::Instruction&) { TODO(); }
 void SoftCPU::LAR_reg16_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LAR_reg32_RM32(const X86::Instruction&) { TODO(); }
