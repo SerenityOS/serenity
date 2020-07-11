@@ -51,10 +51,14 @@ IconView::~IconView()
 
 void IconView::select_all()
 {
-    selection().clear();
     for (int item_index = 0; item_index < item_count(); ++item_index) {
-        auto index = model()->index(item_index, model_column());
-        selection().add(index);
+        auto& item_data = m_item_data_cache[item_index];
+        if (!item_data.selected) {
+            if (item_data.is_valid())
+                add_selection(item_data);
+            else
+                add_selection(model()->index(item_index, model_column()));
+        }
     }
 }
 
@@ -69,9 +73,75 @@ void IconView::resize_event(ResizeEvent& event)
     update_content_size();
 }
 
+void IconView::reinit_item_cache() const
+{
+    auto prev_item_count = m_item_data_cache.size();
+    size_t new_item_count = item_count();
+    auto items_to_invalidate = min(prev_item_count, new_item_count);
+
+    // if the new number of items is less, check if any of the
+    // ones not in the list anymore was selected
+    for (size_t i = new_item_count; i < m_item_data_cache.size(); i++) {
+        auto& item_data = m_item_data_cache[i];
+        if (item_data.selected) {
+            ASSERT(m_selected_count_cache > 0);
+            m_selected_count_cache--;
+        }
+    }
+    if ((size_t)m_first_selected_hint >= new_item_count)
+        m_first_selected_hint = 0;
+    m_item_data_cache.resize(new_item_count);
+    for (size_t i = 0; i < items_to_invalidate; i++) {
+        auto& item_data = m_item_data_cache[i];
+        // TODO: It's unfortunate that we have no way to know whether any
+        // data actually changed, so we have to invalidate *everyone*
+        if (item_data.is_valid()/* && !model()->is_valid(item_data.index)*/)
+            item_data.invalidate();
+        if (item_data.selected && i < (size_t)m_first_selected_hint)
+            m_first_selected_hint = (int)i;
+    }
+
+    m_item_data_cache_valid = true;
+}
+
+auto IconView::get_item_data(int item_index) const -> ItemData&
+{
+    if (!m_item_data_cache_valid)
+        reinit_item_cache();
+
+    auto& item_data = m_item_data_cache[item_index];
+    if (item_data.is_valid())
+        return item_data;
+
+    item_data.index = model()->index(item_index, model_column());
+    item_data.data = model()->data(item_data.index);
+    get_item_rects(item_index, item_data, font_for_index(item_data.index));
+    item_data.valid = true;
+    return item_data;
+}
+
+auto IconView::item_data_from_content_position(const Gfx::IntPoint& content_position) const -> ItemData*
+{
+    if (!m_visual_row_count || !m_visual_column_count)
+        return nullptr;
+    int row, column;
+    column_row_from_content_position(content_position, row, column);
+    int item_index = row * m_visual_column_count + column;
+    if (item_index < 0 || item_index >= item_count())
+        return nullptr;
+    return &get_item_data(item_index);
+}
+
 void IconView::did_update_model(unsigned flags)
 {
     AbstractView::did_update_model(flags);
+    if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
+        m_item_data_cache.clear();
+        AbstractView::clear_selection();
+        m_selected_count_cache = 0;
+        m_first_selected_hint = 0;
+    }
+    m_item_data_cache_valid = false;
     update_content_size();
     update();
 }
@@ -81,7 +151,7 @@ void IconView::update_content_size()
     if (!model())
         return set_content_size({});
 
-    m_visual_column_count = available_size().width() / effective_item_size().width();
+    m_visual_column_count = max(1, available_size().width() / effective_item_size().width());
     if (m_visual_column_count)
         m_visual_row_count = ceil_div(model()->row_count(), m_visual_column_count);
     else
@@ -91,6 +161,15 @@ void IconView::update_content_size()
     int content_height = m_visual_row_count * effective_item_size().height();
 
     set_content_size({ content_width, content_height });
+
+    if (!m_item_data_cache_valid)
+        reinit_item_cache();
+
+    for (int item_index = 0; item_index < item_count(); item_index++) {
+        auto& item_data = m_item_data_cache[item_index];
+        if (item_data.is_valid())
+            update_item_rects(item_index, item_data);
+    }
 }
 
 Gfx::IntRect IconView::item_rect(int item_index) const
@@ -107,38 +186,13 @@ Gfx::IntRect IconView::item_rect(int item_index) const
     };
 }
 
-Vector<int> IconView::items_intersecting_rect(const Gfx::IntRect& rect) const
-{
-    ASSERT(model());
-    Vector<int> item_indexes;
-    for (int item_index = 0; item_index < item_count(); ++item_index) {
-        Gfx::IntRect item_rect;
-        Gfx::IntRect icon_rect;
-        Gfx::IntRect text_rect;
-        auto index = model()->index(item_index, model_column());
-        auto item_text = model()->data(index);
-        get_item_rects(item_index, font_for_index(index), item_text, item_rect, icon_rect, text_rect);
-        if (icon_rect.intersects(rect) || text_rect.intersects(rect))
-            item_indexes.append(item_index);
-    }
-    return item_indexes;
-}
-
 ModelIndex IconView::index_at_event_position(const Gfx::IntPoint& position) const
 {
     ASSERT(model());
-    // FIXME: Since all items are the same size, just compute the clicked item index
-    //        instead of iterating over everything.
     auto adjusted_position = to_content_position(position);
-    for (int item_index = 0; item_index < item_count(); ++item_index) {
-        Gfx::IntRect item_rect;
-        Gfx::IntRect icon_rect;
-        Gfx::IntRect text_rect;
-        auto index = model()->index(item_index, model_column());
-        auto item_text = model()->data(index);
-        get_item_rects(item_index, font_for_index(index), item_text, item_rect, icon_rect, text_rect);
-        if (icon_rect.contains(adjusted_position) || text_rect.contains(adjusted_position))
-            return index;
+    if (auto item_data = item_data_from_content_position(adjusted_position)) {
+        if (item_data->is_containing(adjusted_position))
+            return item_data->index;
     }
     return {};
 }
@@ -157,14 +211,11 @@ void IconView::mousedown_event(MouseEvent& event)
         return AbstractView::mousedown_event(event);
     }
 
-    ASSERT(m_rubber_band_remembered_selection.is_empty());
-
     if (event.modifiers() & Mod_Ctrl) {
-        selection().for_each_index([&](auto& index) {
-            m_rubber_band_remembered_selection.append(index);
-        });
+        m_rubber_banding_store_selection = true;
     } else {
-        selection().clear();
+        clear_selection();
+        m_rubber_banding_store_selection = false;
     }
 
     auto adjusted_position = to_content_position(event.position());
@@ -179,7 +230,6 @@ void IconView::mouseup_event(MouseEvent& event)
 {
     if (m_rubber_banding && event.button() == MouseButton::Left) {
         m_rubber_banding = false;
-        m_rubber_band_remembered_selection.clear();
         if (m_out_of_view_timer)
             m_out_of_view_timer->stop();
         update();
@@ -210,17 +260,58 @@ bool IconView::update_rubber_banding(const Gfx::IntPoint& position)
 {
     auto adjusted_position = to_content_position(position);
     if (m_rubber_band_current != adjusted_position) {
+        auto prev_rect = Gfx::IntRect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
         m_rubber_band_current = adjusted_position;
         auto rubber_band_rect = Gfx::IntRect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
-        selection().clear();
-        for (auto item_index : items_intersecting_rect(rubber_band_rect)) {
-            selection().add(model()->index(item_index, model_column()));
-        }
-        if (m_rubber_banding_store_selection) {
-            for (auto stored_item : m_rubber_band_remembered_selection) {
-                selection().add(stored_item);
+
+        // If the rectangle width or height is 0, we still want to be able
+        // to match the items in the path. An easy work-around for this
+        // is to simply set the width or height to 1
+        auto ensure_rect = [](Gfx::IntRect& rect) {
+            if (rect.width() <= 0)
+                rect.set_width(1);
+            if (rect.height() <= 0)
+                rect.set_height(1);
+        };
+        ensure_rect(prev_rect);
+        ensure_rect(rubber_band_rect);
+
+        // Clearing the entire selection every time is very expensive,
+        // determine what items may need to be deselected and what new
+        // items may need to be selected. Avoid a ton of allocations.
+
+        auto deselect_area = prev_rect.shatter(rubber_band_rect);
+        auto select_area = rubber_band_rect.shatter(prev_rect);
+
+        // Initialize all candidate's toggle flag. We need to know which
+        // items we touched because the various rectangles likely will
+        // contain the same item more than once
+        for_each_item_intersecting_rects(deselect_area, [](ItemData& item_data) -> IterationDecision {
+            item_data.selection_toggled = false;
+            return IterationDecision::Continue;
+        });
+        for_each_item_intersecting_rects(select_area, [](ItemData& item_data) -> IterationDecision {
+            item_data.selection_toggled = false;
+            return IterationDecision::Continue;
+        });
+
+        // Now toggle all items that are no longer in the selected area, once only
+        for_each_item_intersecting_rects(deselect_area, [&](ItemData& item_data) -> IterationDecision {
+            if (!item_data.selection_toggled && item_data.is_intersecting(prev_rect) && !item_data.is_intersecting(rubber_band_rect)) {
+                item_data.selection_toggled = true;
+                toggle_selection(item_data);
             }
-        }
+            return IterationDecision::Continue;
+        });
+        // Now toggle all items that are in the new selected area, once only
+        for_each_item_intersecting_rects(select_area, [&](ItemData& item_data) -> IterationDecision {
+            if (!item_data.selection_toggled && !item_data.is_intersecting(prev_rect) && item_data.is_intersecting(rubber_band_rect)) {
+                item_data.selection_toggled = true;
+                toggle_selection(item_data);
+            }
+            return IterationDecision::Continue;
+        });
+
         update();
         return true;
     }
@@ -235,8 +326,6 @@ void IconView::mousemove_event(MouseEvent& event)
         return AbstractView::mousemove_event(event);
 
     if (m_rubber_banding) {
-        m_rubber_banding_store_selection = (event.modifiers() & Mod_Ctrl);
-
         auto in_view_rect = widget_inner_rect();
         in_view_rect.shrink(SCROLL_OUT_OF_VIEW_HOT_MARGIN, SCROLL_OUT_OF_VIEW_HOT_MARGIN);
         if (!in_view_rect.contains(event.position())) {
@@ -281,21 +370,32 @@ void IconView::scroll_out_of_view_timer_fired()
         adjust_x = (SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + min(SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.x() - in_view_rect.right());
     else if (m_out_of_view_position.x() < in_view_rect.left())
         adjust_x = -(SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + max(-SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.x() - in_view_rect.left());
-    
+
     ScrollableWidget::scroll_into_view({scroll_to.translated(adjust_x, adjust_y), {1, 1}}, true, true);
     update_rubber_banding(m_out_of_view_position);
 }
 
-void IconView::get_item_rects(int item_index, const Gfx::Font& font, const Variant& item_text, Gfx::IntRect& item_rect, Gfx::IntRect& icon_rect, Gfx::IntRect& text_rect) const
+void IconView::update_item_rects(int item_index, ItemData& item_data) const
 {
-    item_rect = this->item_rect(item_index);
-    icon_rect = { 0, 0, 32, 32 };
-    icon_rect.center_within(item_rect);
-    icon_rect.move_by(0, -font.glyph_height() - 6);
-    text_rect = { 0, icon_rect.bottom() + 6 + 1, font.width(item_text.to_string()), font.glyph_height() };
-    text_rect.center_horizontally_within(item_rect);
-    text_rect.inflate(6, 4);
-    text_rect.intersect(item_rect);
+    auto item_rect = this->item_rect(item_index);
+    item_data.icon_rect.center_within(item_rect);
+    item_data.icon_rect.move_by(0, item_data.icon_offset_y);
+    item_data.text_rect.center_horizontally_within(item_rect);
+    item_data.text_rect.set_top(item_rect.y() + item_data.text_offset_y);
+}
+
+void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Font& font) const
+{
+    auto item_rect = this->item_rect(item_index);
+    item_data.icon_rect = { 0, 0, 32, 32 };
+    item_data.icon_rect.center_within(item_rect);
+    item_data.icon_offset_y = -font.glyph_height() - 6;
+    item_data.icon_rect.move_by(0, item_data.icon_offset_y);
+    item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6 + 1, font.width(item_data.data.to_string()), font.glyph_height() };
+    item_data.text_rect.center_horizontally_within(item_rect);
+    item_data.text_rect.inflate(6, 4);
+    item_data.text_rect.intersect(item_rect);
+    item_data.text_offset_y = item_data.text_rect.y() - item_rect.y();
 }
 
 void IconView::second_paint_event(PaintEvent& event)
@@ -321,35 +421,30 @@ void IconView::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
+    
     if (fill_with_background_color())
         painter.fill_rect(event.rect(), widget_background_color);
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
-        auto model_index = model()->index(item_index, m_model_column);
-        bool is_selected_item = selection().contains(model_index);
+    auto translation = painter.translation().translated(-relative_position().x(), -relative_position().y());
+    for_each_item_intersecting_rect(painter.clip_rect().translated(-translation.x(), -translation.y()), [&](auto& item_data) -> IterationDecision {
         Color background_color;
-        if (is_selected_item) {
+        if (item_data.selected) {
             background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {
             background_color = widget_background_color;
         }
 
-        auto icon = model()->data(model_index, Model::Role::Icon);
-        auto item_text = model()->data(model_index, Model::Role::Display);
-
-        Gfx::IntRect item_rect;
-        Gfx::IntRect icon_rect;
-        Gfx::IntRect text_rect;
-        get_item_rects(item_index, font_for_index(model_index), item_text, item_rect, icon_rect, text_rect);
+        auto icon = model()->data(item_data.index, Model::Role::Icon);
+        auto item_text = model()->data(item_data.index, Model::Role::Display);
 
         if (icon.is_icon()) {
-            if (auto bitmap = icon.as_icon().bitmap_for_size(icon_rect.width())) {
+            if (auto bitmap = icon.as_icon().bitmap_for_size(item_data.icon_rect.width())) {
                 Gfx::IntRect destination = bitmap->rect();
-                destination.center_within(icon_rect);
+                destination.center_within(item_data.icon_rect);
 
-                if (m_hovered_index.is_valid() && m_hovered_index == model_index) {
+                if (m_hovered_index.is_valid() && m_hovered_index == item_data.index) {
                     painter.blit_brightened(destination.location(), *bitmap, bitmap->rect());
                 } else {
                     painter.blit(destination.location(), *bitmap, bitmap->rect());
@@ -358,18 +453,19 @@ void IconView::paint_event(PaintEvent& event)
         }
 
         Color text_color;
-        if (is_selected_item)
+        if (item_data.selected)
             text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
         else
-            text_color = model()->data(model_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-        painter.fill_rect(text_rect, background_color);
-        painter.draw_text(text_rect, item_text.to_string(), font_for_index(model_index), Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
+            text_color = model()->data(item_data.index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
+        painter.fill_rect(item_data.text_rect, background_color);
+        painter.draw_text(item_data.text_rect, item_text.to_string(), font_for_index(item_data.index), Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
 
-        if (model_index == m_drop_candidate_index) {
+        if (item_data.index == m_drop_candidate_index) {
             // FIXME: This visualization is not great, as it's also possible to drop things on the text label..
-            painter.draw_rect(icon_rect.inflated(8, 8), palette().selection(), true);
+            painter.draw_rect(item_data.icon_rect.inflated(8, 8), palette().selection(), true);
         }
-    };
+        return IterationDecision::Continue;
+    });
 }
 
 int IconView::item_count() const
@@ -377,6 +473,122 @@ int IconView::item_count() const
     if (!model())
         return 0;
     return model()->row_count();
+}
+
+void IconView::did_update_selection()
+{
+    AbstractView::did_update_selection();
+    if (m_changing_selection)
+        return;
+    
+    // Selection was modified externally, we need to synchronize our cache
+    do_clear_selection();
+    selection().for_each_index([&](const ModelIndex& index) {
+        if (index.is_valid()) {
+            auto item_index = model_index_to_item_index(index);
+            if ((size_t)item_index < m_item_data_cache.size())
+                do_add_selection(get_item_data(item_index));
+        }
+    });
+}
+
+void IconView::do_clear_selection()
+{
+    for (size_t item_index = m_first_selected_hint; item_index < m_item_data_cache.size(); item_index++) {
+        if (m_selected_count_cache == 0)
+            break;
+        auto& item_data = m_item_data_cache[item_index];
+        if (!item_data.selected)
+            continue;
+        item_data.selected = false;
+        m_selected_count_cache--;
+    }
+    m_first_selected_hint = 0;
+    ASSERT(m_selected_count_cache == 0);
+}
+
+void IconView::clear_selection()
+{
+    TemporaryChange change(m_changing_selection, true);
+    AbstractView::clear_selection();
+    do_clear_selection();
+}
+
+bool IconView::do_add_selection(ItemData& item_data)
+{
+    if (!item_data.selected) {
+        item_data.selected = true;
+        m_selected_count_cache++;
+        int item_index = &item_data - &m_item_data_cache[0];
+        if (m_first_selected_hint > item_index)
+            m_first_selected_hint = item_index;
+        return true;
+    }
+    return false;
+}
+
+void IconView::add_selection(ItemData& item_data)
+{
+    if (do_add_selection(item_data))
+        AbstractView::add_selection(item_data.index);
+}
+
+void IconView::add_selection(const ModelIndex& new_index)
+{
+    TemporaryChange change(m_changing_selection, true);
+    auto item_index = model_index_to_item_index(new_index);
+    add_selection(get_item_data(item_index));
+}
+
+void IconView::toggle_selection(ItemData& item_data)
+{
+    if (!item_data.selected)
+        add_selection(item_data);
+    else
+        remove_selection(item_data);
+}
+
+void IconView::toggle_selection(const ModelIndex& new_index)
+{
+    TemporaryChange change(m_changing_selection, true);
+    auto item_index = model_index_to_item_index(new_index);
+    toggle_selection(get_item_data(item_index));
+}
+
+void IconView::remove_selection(ItemData& item_data)
+{
+    if (!item_data.selected)
+        return;
+
+    TemporaryChange change(m_changing_selection, true);
+    item_data.selected = false;
+    ASSERT(m_selected_count_cache > 0);
+    m_selected_count_cache--;
+    int item_index = &item_data - &m_item_data_cache[0];
+    if (m_first_selected_hint == item_index) {
+        m_first_selected_hint = 0;
+        while ((size_t)item_index < m_item_data_cache.size()) {
+            if (m_item_data_cache[item_index].selected) {
+                m_first_selected_hint = item_index;
+                break;
+            }
+            item_index++;
+        }
+    }
+    AbstractView::remove_selection(item_data.index);
+}
+
+void IconView::set_selection(const ModelIndex& new_index)
+{
+    TemporaryChange change(m_changing_selection, true);
+    do_clear_selection();
+    auto item_index = model_index_to_item_index(new_index);
+    auto& item_data = get_item_data(item_index);
+    item_data.selected = true;
+    m_selected_count_cache = 1;
+    if (item_index < m_first_selected_hint)
+        m_first_selected_hint = item_index;
+    AbstractView::set_selection(new_index);
 }
 
 void IconView::keydown_event(KeyEvent& event)
@@ -394,7 +606,7 @@ void IconView::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Home) {
         auto new_index = model.index(0, 0);
         if (model.is_valid(new_index)) {
-            selection().set(new_index);
+            set_selection(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -403,7 +615,7 @@ void IconView::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_End) {
         auto new_index = model.index(model.row_count() - 1, 0);
         if (model.is_valid(new_index)) {
-            selection().set(new_index);
+            set_selection(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -418,7 +630,7 @@ void IconView::keydown_event(KeyEvent& event)
             new_index = model.index(0, 0);
         }
         if (model.is_valid(new_index)) {
-            selection().set(new_index);
+            set_selection(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -433,7 +645,7 @@ void IconView::keydown_event(KeyEvent& event)
             new_index = model.index(0, 0);
         }
         if (model.is_valid(new_index)) {
-            selection().set(new_index);
+            set_selection(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -448,7 +660,7 @@ void IconView::keydown_event(KeyEvent& event)
             new_index = model.index(0, 0);
         }
         if (model.is_valid(new_index)) {
-            selection().set(new_index);
+            set_selection(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -463,7 +675,7 @@ void IconView::keydown_event(KeyEvent& event)
             new_index = model.index(0, 0);
         }
         if (model.is_valid(new_index)) {
-            selection().set(new_index);
+            set_selection(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -474,7 +686,7 @@ void IconView::keydown_event(KeyEvent& event)
         auto old_index = selection().first();
         auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
         if (model.is_valid(new_index)) {
-            selection().set(new_index);
+            set_selection(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -485,7 +697,7 @@ void IconView::keydown_event(KeyEvent& event)
         auto old_index = selection().first();
         auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
         if (model.is_valid(new_index)) {
-            selection().set(new_index);
+            set_selection(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }

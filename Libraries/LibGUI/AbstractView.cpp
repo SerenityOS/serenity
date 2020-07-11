@@ -65,10 +65,35 @@ void AbstractView::did_update_model(unsigned flags)
     m_edit_index = {};
     m_hovered_index = {};
     if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
-        selection().clear();
+        clear_selection();
     } else {
         selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
     }
+}
+
+void AbstractView::clear_selection()
+{
+    m_selection.clear();
+}
+
+void AbstractView::set_selection(const ModelIndex& new_index)
+{
+    m_selection.set(new_index);
+}
+
+void AbstractView::add_selection(const ModelIndex& new_index)
+{
+    m_selection.add(new_index);
+}
+
+void AbstractView::remove_selection(const ModelIndex& new_index)
+{
+    m_selection.remove(new_index);
+}
+
+void AbstractView::toggle_selection(const ModelIndex& new_index)
+{
+    m_selection.toggle(new_index);
 }
 
 void AbstractView::did_update_selection()
@@ -182,14 +207,14 @@ void AbstractView::mousedown_event(MouseEvent& event)
     m_might_drag = false;
 
     if (!index.is_valid()) {
-        m_selection.clear();
+        clear_selection();
     } else if (event.modifiers() & Mod_Ctrl) {
-        m_selection.toggle(index);
+        toggle_selection(index);
     } else if (event.button() == MouseButton::Left && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
     } else {
-        m_selection.set(index);
+        set_selection(index);
     }
 
     update();
@@ -294,9 +319,9 @@ void AbstractView::mouseup_event(MouseEvent& event)
         // Since we're here, it was not that; so fix up the selection now.
         auto index = index_at_event_position(event.position());
         if (index.is_valid())
-            m_selection.set(index);
+            set_selection(index);
         else
-            m_selection.clear();
+            clear_selection();
         m_might_drag = false;
         update();
     }
@@ -315,9 +340,9 @@ void AbstractView::doubleclick_event(MouseEvent& event)
     auto index = index_at_event_position(event.position());
 
     if (!index.is_valid())
-        m_selection.clear();
+        clear_selection();
     else if (!m_selection.contains(index))
-        m_selection.set(index);
+        set_selection(index);
 
     activate_selected();
 }
@@ -330,9 +355,9 @@ void AbstractView::context_menu_event(ContextMenuEvent& event)
     auto index = index_at_event_position(event.position());
 
     if (index.is_valid())
-        m_selection.add(index);
+        add_selection(index);
     else
-        selection().clear();
+        clear_selection();
 
     if (on_context_menu_request)
         on_context_menu_request(index, event);

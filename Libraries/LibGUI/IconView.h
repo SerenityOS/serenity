@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <AK/IterationDecision.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/Variant.h>
 
 namespace GUI {
 
@@ -48,6 +50,7 @@ public:
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
 
     virtual void select_all() override;
+
 private:
     IconView();
 
@@ -61,13 +64,109 @@ private:
     virtual void keydown_event(KeyEvent&) override;
     virtual void drag_move_event(DragEvent&) override;
 
+    struct ItemData {
+        Gfx::IntRect text_rect;
+        Gfx::IntRect icon_rect;
+        int icon_offset_y;
+        int text_offset_y;
+        Variant data;
+        ModelIndex index;
+        bool valid { false };
+        bool selected { false }; // always valid
+        bool selection_toggled;  // only used as a temporary marker
+
+        bool is_valid() const { return valid; }
+        void invalidate()
+        {
+            valid = false;
+            data.clear();
+        }
+
+        bool is_intersecting(const Gfx::IntRect& rect) const
+        {
+            ASSERT(valid);
+            return icon_rect.intersects(rect) || text_rect.intersects(rect);
+        }
+
+        bool is_containing(const Gfx::IntPoint& point) const
+        {
+            ASSERT(valid);
+            return icon_rect.contains(point) || text_rect.contains(point);
+        }
+    };
+
+    template<typename Function>
+    IterationDecision for_each_item_intersecting_rect(const Gfx::IntRect& rect, Function f) const
+    {
+        ASSERT(model());
+        if (rect.is_empty())
+            return IterationDecision::Continue;
+        int begin_row, begin_column;
+        column_row_from_content_position(rect.top_left(), begin_row, begin_column);
+        int end_row, end_column;
+        column_row_from_content_position(rect.bottom_right(), end_row, end_column);
+        int items_per_column = end_column - begin_column + 1;
+        int item_index = max(0, begin_row * m_visual_column_count + begin_column);
+        int last_index = min(item_count(), end_row * m_visual_column_count + end_column + 1);
+        while (item_index < last_index) {
+            for (int i = item_index; i < min(item_index + items_per_column, last_index); i++) {
+                auto& item_data = get_item_data(i);
+                if (item_data.is_intersecting(rect)) {
+                    auto decision = f(item_data);
+                    if (decision != IterationDecision::Continue)
+                        return decision;
+                }
+            }
+            item_index += m_visual_column_count;
+        };
+        return IterationDecision::Continue;
+    }
+
+    template<typename Function>
+    IterationDecision for_each_item_intersecting_rects(const Vector<Gfx::IntRect>& rects, Function f) const
+    {
+        for (auto& rect : rects) {
+            auto decision = for_each_item_intersecting_rect(rect, f);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
+    }
+
+    void column_row_from_content_position(const Gfx::IntPoint& content_position, int& row, int& column) const
+    {
+        row = max(0, min(m_visual_row_count - 1, content_position.y() / effective_item_size().height()));
+        column = max(0, min(m_visual_column_count - 1, content_position.x() / effective_item_size().width()));
+    }
+
     int item_count() const;
     Gfx::IntRect item_rect(int item_index) const;
-    Vector<int> items_intersecting_rect(const Gfx::IntRect&) const;
     void update_content_size();
-    void get_item_rects(int item_index, const Gfx::Font&, const Variant& item_text, Gfx::IntRect& item_rect, Gfx::IntRect& icon_rect, Gfx::IntRect& text_rect) const;
+    void update_item_rects(int item_index, ItemData& item_data) const;
+    void get_item_rects(int item_index, ItemData& item_data, const Gfx::Font&) const;
     bool update_rubber_banding(const Gfx::IntPoint&);
     void scroll_out_of_view_timer_fired();
+
+    void reinit_item_cache() const;
+    int model_index_to_item_index(const ModelIndex& model_index) const
+    {
+        ASSERT(model_index.row() < item_count());
+        return model_index.row();
+    }
+
+    virtual void did_update_selection() override;
+    virtual void clear_selection() override;
+    virtual void add_selection(const ModelIndex& new_index) override;
+    virtual void set_selection(const ModelIndex& new_index) override;
+    virtual void toggle_selection(const ModelIndex& new_index) override;
+
+    ItemData& get_item_data(int) const;
+    ItemData* item_data_from_content_position(const Gfx::IntPoint&) const;
+    void do_clear_selection();
+    bool do_add_selection(ItemData&);
+    void add_selection(ItemData&);
+    void remove_selection(ItemData&);
+    void toggle_selection(ItemData&);
 
     int m_horizontal_padding { 5 };
     int m_model_column { 0 };
@@ -82,9 +181,15 @@ private:
     Gfx::IntPoint m_out_of_view_position;
     Gfx::IntPoint m_rubber_band_origin;
     Gfx::IntPoint m_rubber_band_current;
-    Vector<ModelIndex> m_rubber_band_remembered_selection;
 
     ModelIndex m_drop_candidate_index;
+
+    mutable Vector<ItemData> m_item_data_cache;
+    mutable int m_selected_count_cache { 0 };
+    mutable int m_first_selected_hint { 0 };
+    mutable bool m_item_data_cache_valid { false };
+
+    bool m_changing_selection { false };
 };
 
 }
