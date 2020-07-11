@@ -124,11 +124,23 @@ void Emulator::setup_stack()
 bool Emulator::load_elf()
 {
     m_elf->image().for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
-        if (program_header.type() != PT_LOAD)
+        if (program_header.type() == PT_LOAD) {
+            auto region = make<SimpleRegion>(program_header.vaddr().get(), program_header.size_in_memory());
+            memcpy(region->data(), program_header.raw_data(), program_header.size_in_image());
+            mmu().add_region(move(region));
             return;
-        auto region = make<SimpleRegion>(program_header.vaddr().get(), program_header.size_in_memory());
-        memcpy(region->data(), program_header.raw_data(), program_header.size_in_image());
-        mmu().add_region(move(region));
+        }
+        if (program_header.type() == PT_TLS) {
+            auto tcb_region = make<SimpleRegion>(0x20000000, program_header.size_in_memory());
+            memcpy(tcb_region->data(), program_header.raw_data(), program_header.size_in_image());
+
+            auto tls_region = make<SimpleRegion>(0, 4);
+            tls_region->write32(0, tcb_region->base() + 8);
+
+            mmu().add_region(move(tcb_region));
+            mmu().set_tls_region(move(tls_region));
+            return;
+        }
     });
 
     m_cpu.set_eip(m_elf->image().entry().get());
