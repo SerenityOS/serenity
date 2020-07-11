@@ -52,8 +52,8 @@ static LibThread::Lock& malloc_lock()
     return *reinterpret_cast<LibThread::Lock*>(&lock_storage);
 }
 
-constexpr int number_of_chunked_blocks_to_keep_around_per_size_class = 4;
-constexpr int number_of_big_blocks_to_keep_around_per_size_class = 8;
+constexpr size_t number_of_chunked_blocks_to_keep_around_per_size_class = 4;
+constexpr size_t number_of_big_blocks_to_keep_around_per_size_class = 8;
 
 static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
@@ -108,7 +108,7 @@ struct ChunkedBlock
     unsigned short m_free_chunks { 0 };
     unsigned char m_slot[0];
 
-    void* chunk(int index)
+    void* chunk(size_t index)
     {
         return &m_slot[index * m_size];
     }
@@ -153,7 +153,7 @@ static inline BigAllocator (&big_allocators())[1]
 
 static Allocator* allocator_for_size(size_t size, size_t& good_size)
 {
-    for (int i = 0; size_classes[i]; ++i) {
+    for (size_t i = 0; size_classes[i]; ++i) {
         if (size <= size_classes[i]) {
             good_size = size_classes[i];
             return &allocators()[i];
@@ -174,7 +174,7 @@ extern "C" {
 
 size_t malloc_good_size(size_t size)
 {
-    for (int i = 0; size_classes[i]; ++i) {
+    for (size_t i = 0; size_classes[i]; ++i) {
         if (size < size_classes[i])
             return size_classes[i];
     }
