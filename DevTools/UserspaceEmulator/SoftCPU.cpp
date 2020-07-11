@@ -1009,7 +1009,14 @@ void SoftCPU::RET(const X86::Instruction& insn)
 
 void SoftCPU::RETF(const X86::Instruction&) { TODO(); }
 void SoftCPU::RETF_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::RET_imm16(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::RET_imm16(const X86::Instruction& insn)
+{
+    ASSERT(!insn.has_operand_size_override_prefix());
+    set_eip(pop32());
+    set_esp(esp() + insn.imm16());
+}
+
 void SoftCPU::ROL_RM16_1(const X86::Instruction&) { TODO(); }
 void SoftCPU::ROL_RM16_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::ROL_RM16_imm8(const X86::Instruction&) { TODO(); }
