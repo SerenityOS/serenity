@@ -1,0 +1,103 @@
+diff --git a/config/config.sub b/config/config.sub
+index 7ffe373..3c8aae4 100755
+--- a/config/config.sub
++++ b/config/config.sub
+@@ -117,7 +117,7 @@ maybe_os=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\2/'`
+ case $maybe_os in
+   nto-qnx* | linux-gnu* | linux-android* | linux-dietlibc | linux-newlib* | \
+   linux-musl* | linux-uclibc* | uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | \
+-  knetbsd*-gnu* | netbsd*-gnu* | \
++  knetbsd*-gnu* | netbsd*-gnu* | *serenity* | \
+   kopensolaris*-gnu* | \
+   storm-chaos* | os2-emx* | rtmk-nova*)
+     os=-$maybe_os
+@@ -1296,6 +1296,10 @@ case $basic_machine in
+ 	we32k)
+ 		basic_machine=we32k-att
+ 		;;
++    *serenity*)
++		basic_machine=i686-pc
++        ;;
++
+ 	sh[1234] | sh[24]a | sh[24]aeb | sh[34]eb | sh[1234]le | sh[23]ele)
+ 		basic_machine=sh-unknown
+ 		;;
+@@ -1423,6 +1427,9 @@ case $os in
+ 	-linux*)
+ 		os=`echo $os | sed -e 's|linux|linux-gnu|'`
+ 		;;
++    *-serenity*)
++        os=-serenity
++        ;;
+ 	-sunos5*)
+ 		os=`echo $os | sed -e 's|sunos5|solaris2|'`
+ 		;;
+diff --git a/configure b/configure
+index de9c48a..1ace244 100755
+--- a/configure
++++ b/configure
+@@ -6828,6 +6828,10 @@ bsdi[45]*)
+   lt_cv_file_magic_test_file=/shlib/libc.so
+   ;;
+ 
++*serenity*)
++  lt_cv_deplibs_check_method=pass_all
++  ;;
++
+ cygwin*)
+   # func_win32_libid is a shell function defined in ltmain.sh
+   lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
+diff --git a/modules/oniguruma/config.sub b/modules/oniguruma/config.sub
+index cc69b06..a916f15 100755
+--- a/modules/oniguruma/config.sub
++++ b/modules/oniguruma/config.sub
+@@ -117,7 +117,7 @@ case $maybe_os in
+   nto-qnx* | linux-gnu* | linux-android* | linux-dietlibc | linux-newlib* | \
+   linux-musl* | linux-uclibc* | uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | \
+   knetbsd*-gnu* | netbsd*-gnu* | netbsd*-eabi* | \
+-  kopensolaris*-gnu* | cloudabi*-eabi* | \
++  kopensolaris*-gnu* | cloudabi*-eabi* | *serenity* \
+   storm-chaos* | os2-emx* | rtmk-nova*)
+     os=-$maybe_os
+     basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`
+diff --git a/src/jv_alloc.c b/src/jv_alloc.c
+index fd7b257..9f5ced8 100644
+--- a/src/jv_alloc.c
++++ b/src/jv_alloc.c
+@@ -130,7 +130,14 @@ void* jv_mem_alloc_unguarded(size_t sz) {
+   return malloc(sz);
+ }
+ 
++static void* jv_mem_calloc_unique_allocd = 0;
+ void* jv_mem_calloc(size_t nemb, size_t sz) {
++  if (!sz || !nemb) {
++      if (jv_mem_calloc_unique_allocd)
++          return jv_mem_calloc_unique_allocd;
++      else
++          return jv_mem_calloc_unique_allocd = calloc(1,1);
++  }
+   void* p = calloc(nemb, sz);
+   if (!p) {
+     memory_exhausted();
+@@ -155,6 +162,8 @@ char* jv_mem_strdup_unguarded(const char *s) {
+ }
+ 
+ void jv_mem_free(void* p) {
++  if (p == jv_mem_calloc_unique_allocd)
++    return;
+   free(p);
+ }
+ 
+diff --git a/src/util.c b/src/util.c
+index df83952..58c95c8 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -136,7 +136,7 @@ jv jq_realpath(jv path) {
+ #ifdef _PC_PATH_MAX
+   path_max = pathconf(jv_string_value(path),_PC_PATH_MAX);
+ #else
+-  path_max = PATH_MAX;
++  path_max = 4096;
+ #endif
+   if (path_max > 0) {
+      buf = jv_mem_alloc(path_max);
