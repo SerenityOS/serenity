@@ -439,7 +439,7 @@ void SoftCPU::IMUL_reg32_RM32_imm32(const X86::Instruction&) { TODO(); }
 void SoftCPU::IMUL_reg32_RM32_imm8(const X86::Instruction&) { TODO(); }
 
 template<typename T>
-T SoftCPU::inc_impl(T data)
+static T op_inc(SoftCPU& cpu, T data)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -463,33 +463,33 @@ T SoftCPU::inc_impl(T data)
         "pop %%ebx"
         : "=b"(new_flags));
 
-    set_flags_oszap(new_flags);
+    cpu.set_flags_oszap(new_flags);
     return result;
 }
 
 void SoftCPU::INC_RM16(const X86::Instruction& insn)
 {
-    insn.modrm().write16(*this, insn, inc_impl(insn.modrm().read16(*this, insn)));
+    insn.modrm().write16(*this, insn, op_inc(*this, insn.modrm().read16(*this, insn)));
 }
 
 void SoftCPU::INC_RM32(const X86::Instruction& insn)
 {
-    insn.modrm().write32(*this, insn, inc_impl(insn.modrm().read32(*this, insn)));
+    insn.modrm().write32(*this, insn, op_inc(*this, insn.modrm().read32(*this, insn)));
 }
 
 void SoftCPU::INC_RM8(const X86::Instruction& insn)
 {
-    insn.modrm().write8(*this, insn, inc_impl(insn.modrm().read8(*this, insn)));
+    insn.modrm().write8(*this, insn, op_inc(*this, insn.modrm().read8(*this, insn)));
 }
 
 void SoftCPU::INC_reg16(const X86::Instruction& insn)
 {
-    gpr16(insn.reg16()) = inc_impl(gpr16(insn.reg16()));
+    gpr16(insn.reg16()) = op_inc(*this, gpr16(insn.reg16()));
 }
 
 void SoftCPU::INC_reg32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = inc_impl(gpr32(insn.reg32()));
+    gpr32(insn.reg32()) = op_inc(*this, gpr32(insn.reg32()));
 }
 
 void SoftCPU::INSB(const X86::Instruction&) { TODO(); }
@@ -762,7 +762,7 @@ void SoftCPU::SAHF(const X86::Instruction&) { TODO(); }
 void SoftCPU::SALC(const X86::Instruction&) { TODO(); }
 
 template<typename T>
-T SoftCPU::sar_impl(T data, u8 steps)
+static T op_sar(SoftCPU& cpu, T data, u8 steps)
 {
     if (steps == 0)
         return data;
@@ -785,62 +785,62 @@ T SoftCPU::sar_impl(T data, u8 steps)
         "pop %%eax"
         : "=a"(new_flags));
 
-    set_flags_oszapc(new_flags);
+    cpu.set_flags_oszapc(new_flags);
     return result;
 }
 
 void SoftCPU::SAR_RM16_1(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, sar_impl(data, 1));
+    insn.modrm().write16(*this, insn, op_sar(*this, data, 1));
 }
 
 void SoftCPU::SAR_RM16_CL(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, sar_impl(data, cl()));
+    insn.modrm().write16(*this, insn, op_sar(*this, data, cl()));
 }
 
 void SoftCPU::SAR_RM16_imm8(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, sar_impl(data, insn.imm8()));
+    insn.modrm().write16(*this, insn, op_sar(*this, data, insn.imm8()));
 }
 
 void SoftCPU::SAR_RM32_1(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, sar_impl(data, 1));
+    insn.modrm().write32(*this, insn, op_sar(*this, data, 1));
 }
 
 void SoftCPU::SAR_RM32_CL(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, sar_impl(data, cl()));
+    insn.modrm().write32(*this, insn, op_sar(*this, data, cl()));
 }
 
 void SoftCPU::SAR_RM32_imm8(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, sar_impl(data, insn.imm8()));
+    insn.modrm().write32(*this, insn, op_sar(*this, data, insn.imm8()));
 }
 
 void SoftCPU::SAR_RM8_1(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, sar_impl(data, 1));
+    insn.modrm().write8(*this, insn, op_sar(*this, data, 1));
 }
 
 void SoftCPU::SAR_RM8_CL(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, sar_impl(data, cl()));
+    insn.modrm().write8(*this, insn, op_sar(*this, data, cl()));
 }
 
 void SoftCPU::SAR_RM8_imm8(const X86::Instruction& insn)
 {
     auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, sar_impl(data, insn.imm8()));
+    insn.modrm().write8(*this, insn, op_sar(*this, data, insn.imm8()));
 }
 
 void SoftCPU::SBB_AL_imm8(const X86::Instruction&) { TODO(); }
