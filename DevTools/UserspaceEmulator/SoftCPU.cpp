@@ -998,9 +998,22 @@ void SoftCPU::MOV_seg_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MUL_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MUL_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MUL_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::NEG_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::NEG_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::NEG_RM8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::NEG_RM16(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, op_sub<u16>(*this, 0, insn.modrm().read16(*this, insn)));
+}
+
+void SoftCPU::NEG_RM32(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, op_sub<u32>(*this, 0, insn.modrm().read32(*this, insn)));
+}
+
+void SoftCPU::NEG_RM8(const X86::Instruction& insn)
+{
+    insn.modrm().write8(*this, insn, op_sub<u8>(*this, 0, insn.modrm().read8(*this, insn)));
+}
+
 void SoftCPU::NOP(const X86::Instruction&) { TODO(); }
 void SoftCPU::NOT_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::NOT_RM32(const X86::Instruction&) { TODO(); }
