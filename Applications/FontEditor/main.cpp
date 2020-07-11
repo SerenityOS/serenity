@@ -29,6 +29,7 @@
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -36,18 +37,19 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Point.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer rpath accept unix cpath wpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer thread rpath accept unix cpath wpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio shared_buffer rpath accept cpath wpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer thread rpath accept cpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -70,22 +72,40 @@ int main(int argc, char** argv)
         }
     }
 
-    // Convert 256 char font to 384 char font.
-    if (edited_font->type() == Gfx::FontTypes::Default)
-        edited_font->set_type(Gfx::FontTypes::LatinExtendedA);
-
     auto app_icon = GUI::Icon::default_icon("app-font-editor");
 
     auto window = GUI::Window::construct();
-    window->set_title(String::format("%s - Font Editor", path));
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& font_editor_widget = window->set_main_widget<FontEditorWidget>(path, move(edited_font));
-    window->set_rect({ 50, 50, font_editor_widget.preferred_width(), font_editor_widget.preferred_height() });
+    auto set_edited_font = [&](const String& path, RefPtr<Gfx::Font>&& font, Gfx::IntPoint point) {
+        // Convert 256 char font to 384 char font.
+        if (font->type() == Gfx::FontTypes::Default)
+            font->set_type(Gfx::FontTypes::LatinExtendedA);
+
+        window->set_title(String::format("%s - Font Editor", path.characters()));
+        auto& font_editor_widget = window->set_main_widget<FontEditorWidget>(path, move(font));
+        window->set_rect({ point, { font_editor_widget.preferred_width(), font_editor_widget.preferred_height() } });
+    };
+    set_edited_font(path, move(edited_font), { 50, 50 });
 
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Font Editor");
+    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath();
+        if (!open_path.has_value())
+            return;
+
+        RefPtr<Gfx::Font> new_font = Gfx::Font::load_from_file(open_path.value())->clone();
+        if (!new_font) {
+            String message = String::format("Couldn't load font: %s\n", open_path.value().characters());
+            GUI::MessageBox::show(message, "Font Editor", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+            return;
+        }
+
+        set_edited_font(open_path.value(), move(new_font), window->position());
+    }));
+    app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
         return;
