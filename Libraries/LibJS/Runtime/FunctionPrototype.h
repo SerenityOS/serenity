@@ -43,6 +43,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(bind);
     JS_DECLARE_NATIVE_FUNCTION(call);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(symbol_has_instance);
 };
 
 }
