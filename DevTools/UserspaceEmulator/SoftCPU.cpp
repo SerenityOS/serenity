@@ -746,9 +746,22 @@ void SoftCPU::MOVSW(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOVSX_reg16_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOVSX_reg32_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOVSX_reg32_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOVZX_reg16_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOVZX_reg32_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOVZX_reg32_RM8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MOVZX_reg16_RM8(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = insn.modrm().read8(*this, insn);
+}
+
+void SoftCPU::MOVZX_reg32_RM16(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = insn.modrm().read16(*this, insn);
+}
+
+void SoftCPU::MOVZX_reg32_RM8(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = insn.modrm().read8(*this, insn);
+}
+
 void SoftCPU::MOV_AL_moff8(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_AX_moff16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_CR_reg32(const X86::Instruction&) { TODO(); }
