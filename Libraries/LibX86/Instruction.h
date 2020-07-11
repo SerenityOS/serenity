@@ -218,6 +218,14 @@ public:
     template<typename CPU>
     u32 read32(CPU&, const Instruction&);
 
+    template<typename CPU>
+    LogicalAddress resolve(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+    {
+        if (m_a32)
+            return resolve32(cpu, segment_prefix);
+        return resolve16(cpu, segment_prefix);
+    }
+
 private:
     MemoryOrRegisterReference() { }
 
@@ -233,14 +241,6 @@ private:
     LogicalAddress resolve16(const CPU&, Optional<SegmentRegister>);
     template<typename CPU>
     LogicalAddress resolve32(const CPU&, Optional<SegmentRegister>);
-
-    template<typename CPU>
-    LogicalAddress resolve(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
-    {
-        if (m_a32)
-            return resolve32(cpu, segment_prefix);
-        return resolve16(cpu, segment_prefix);
-    }
 
     template<typename CPU>
     u32 evaluate_sib(const CPU&, SegmentRegister& default_segment) const;
