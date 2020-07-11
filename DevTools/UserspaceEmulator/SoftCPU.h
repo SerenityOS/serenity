@@ -48,10 +48,15 @@ union PartAddressableRegister {
     };
 };
 
-class SoftCPU final : public X86::Interpreter {
+class SoftCPU final
+    : public X86::Interpreter
+    , public X86::InstructionStream {
 public:
     explicit SoftCPU(Emulator&);
     void dump() const;
+
+    u32 eip() const { return m_eip; }
+    void set_eip(u32 eip) { m_eip = eip; }
 
     struct Flags {
         enum Flag {
@@ -274,6 +279,13 @@ public:
     }
 
 private:
+    // ^X86::InstructionStream
+    virtual bool can_read() override { return false; }
+    virtual u8 read8() override;
+    virtual u16 read16() override;
+    virtual u32 read32() override;
+
+    // ^X86::Interpreter
     virtual void AAA(const X86::Instruction&) override;
     virtual void AAD(const X86::Instruction&) override;
     virtual void AAM(const X86::Instruction&) override;
@@ -779,6 +791,8 @@ private:
     PartAddressableRegister m_gpr[8];
     u16 m_segment[8] { 0 };
     u32 m_eflags { 0 };
+
+    u32 m_eip { 0 };
 };
 
 }

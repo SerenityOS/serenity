@@ -29,6 +29,7 @@
 #include <AK/LogStream.h>
 #include <Kernel/API/Syscall.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 namespace UserspaceEmulator {
@@ -85,6 +86,8 @@ public:
         *reinterpret_cast<u32*>(m_data + offset) = value;
     }
 
+    u8* data() { return m_data; }
+
 private:
     u8* m_data { nullptr };
 };
@@ -107,12 +110,26 @@ void Emulator::setup_stack()
     m_cpu.push32(0);
 }
 
-int Emulator::exec(X86::SimpleInstructionStream& stream, u32 base)
+bool Emulator::load_elf(const ELF::Loader& elf)
 {
-    size_t offset = 0;
+    elf.image().for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
+        if (program_header.type() != PT_LOAD)
+            return;
+        auto region = make<SimpleRegion>(program_header.vaddr().get(), program_header.size_in_memory());
+        memcpy(region->data(), program_header.raw_data(), program_header.size_in_image());
+        mmu().add_region(move(region));
+    });
+
+    m_cpu.set_eip(elf.image().entry().get());
+    return true;
+}
+
+int Emulator::exec()
+{
     while (!m_shutdown) {
-        auto insn = X86::Instruction::from_stream(stream, true, true);
-        out() << "\033[33;1m" << insn.to_string(base + offset) << "\033[0m";
+        auto base_eip = m_cpu.eip();
+        auto insn = X86::Instruction::from_stream(m_cpu, true, true);
+        out() << "\033[33;1m" << insn.to_string(base_eip) << "\033[0m";
 
         // FIXME: Remove this hack once it's no longer needed :^)
         if (insn.mnemonic() == "RET")
@@ -120,8 +137,6 @@ int Emulator::exec(X86::SimpleInstructionStream& stream, u32 base)
 
         (m_cpu.*insn.handler())(insn);
         m_cpu.dump();
-
-        offset += insn.length();
     }
     return m_exit_status;
 }

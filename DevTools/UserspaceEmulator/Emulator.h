@@ -29,6 +29,7 @@
 #include "SoftCPU.h"
 #include "SoftMMU.h"
 #include <AK/Types.h>
+#include <LibELF/Loader.h>
 #include <LibX86/Instruction.h>
 #include <sys/types.h>
 
@@ -38,7 +39,9 @@ class Emulator {
 public:
     Emulator();
 
-    int exec(X86::SimpleInstructionStream&, u32 base);
+    bool load_elf(const ELF::Loader&);
+
+    int exec();
     u32 virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3);
 
     SoftMMU& mmu() { return m_mmu; }

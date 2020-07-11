@@ -30,7 +30,6 @@
 #include <AK/MappedFile.h>
 #include <LibCore/ArgsParser.h>
 #include <LibELF/Loader.h>
-#include <LibX86/Instruction.h>
 
 int main(int argc, char** argv)
 {
@@ -48,15 +47,9 @@ int main(int argc, char** argv)
 
     auto elf = ELF::Loader::create((const u8*)mapped_file.data(), mapped_file.size());
 
-    auto _start_symbol = elf->find_demangled_function("_start");
-    if (!_start_symbol.has_value()) {
-        warn() << "Could not find '_start' symbol in executable";
-        return 1;
-    }
-
-    auto main_code = _start_symbol.value().raw_data();
-    X86::SimpleInstructionStream stream((const u8*)main_code.characters_without_null_termination(), main_code.length());
-
     UserspaceEmulator::Emulator emulator;
-    return emulator.exec(stream, _start_symbol.value().value());
+    if (!emulator.load_elf(*elf))
+        return 1;
+
+    return emulator.exec();
 }
