@@ -1159,20 +1159,61 @@ void SoftCPU::SHRD_RM16_reg16_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHRD_RM16_reg16_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHRD_RM32_reg32_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHRD_RM32_reg32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHR_RM16_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHR_RM16_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHR_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHR_RM32_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHR_RM32_CL(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::SHR_RM16_1(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, op_shr(*this, data, 1));
+}
+
+void SoftCPU::SHR_RM16_CL(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, op_shr(*this, data, cl()));
+}
+
+void SoftCPU::SHR_RM16_imm8(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, op_shr(*this, data, insn.imm8()));
+}
+
+void SoftCPU::SHR_RM32_1(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, op_shr(*this, data, 1));
+}
+
+void SoftCPU::SHR_RM32_CL(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, op_shr(*this, data, cl()));
+}
 
 void SoftCPU::SHR_RM32_imm8(const X86::Instruction& insn)
 {
-    insn.modrm().write32(*this, insn, op_shr<u32>(*this, insn.modrm().read32(*this, insn), insn.imm8()));
+    auto data = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, op_shr(*this, data, insn.imm8()));
 }
 
-void SoftCPU::SHR_RM8_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHR_RM8_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHR_RM8_imm8(const X86::Instruction&) { TODO(); }
+void SoftCPU::SHR_RM8_1(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, op_shr(*this, data, 1));
+}
+
+void SoftCPU::SHR_RM8_CL(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, op_shr(*this, data, cl()));
+}
+
+void SoftCPU::SHR_RM8_imm8(const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, op_shr(*this, data, insn.imm8()));
+}
+
 void SoftCPU::SIDT(const X86::Instruction&) { TODO(); }
 void SoftCPU::SLDT_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::SMSW_RM16(const X86::Instruction&) { TODO(); }
