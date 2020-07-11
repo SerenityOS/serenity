@@ -83,6 +83,12 @@ protected:
     virtual void drop_event(DropEvent&) override;
     virtual void leave_event(Core::Event&) override;
 
+    virtual void clear_selection();
+    virtual void set_selection(const ModelIndex&);
+    virtual void add_selection(const ModelIndex&);
+    virtual void remove_selection(const ModelIndex&);
+    virtual void toggle_selection(const ModelIndex&);
+
     virtual void did_scroll() override;
     void set_hovered_index(const ModelIndex&);
     void activate(const ModelIndex&);
