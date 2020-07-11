@@ -105,6 +105,15 @@ int main(int argc, char** argv)
 
         set_edited_font(open_path.value(), move(new_font), window->position());
     }));
+    app_menu.add_action(GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
+        FontEditorWidget* editor = static_cast<FontEditorWidget*>(window->main_widget());
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(editor->path(), ".font");
+        if (!save_path.has_value())
+            return;
+
+        if (editor->save_as(save_path.value()))
+            window->set_title(String::format("%s - Font Editor", save_path.value().characters()));
+    }));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
