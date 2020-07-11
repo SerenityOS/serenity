@@ -797,7 +797,7 @@ void SoftCPU::MOV_RM16_seg(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::MOV_RM32_imm32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = insn.imm32();
+    insn.modrm().write32(*this, insn, insn.imm32());
 }
 
 void SoftCPU::MOV_RM32_reg32(const X86::Instruction& insn)
