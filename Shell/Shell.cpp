@@ -319,10 +319,21 @@ String Shell::resolve_path(String path) const
     return Core::File::real_path_for(path);
 }
 
+Shell::LocalFrame* Shell::find_frame_containing_local_variable(const String& name)
+{
+    for (auto& frame : m_local_frames) {
+        if (frame.local_variables.contains(name))
+            return &frame;
+    }
+    return nullptr;
+}
+
 RefPtr<AST::Value> Shell::lookup_local_variable(const String& name)
 {
-    auto value = m_local_variables.get(name).value_or(nullptr);
-    return value;
+    if (auto* frame = find_frame_containing_local_variable(name))
+        return frame->local_variables.get(name).value();
+
+    return nullptr;
 }
 
 String Shell::local_variable_or(const String& name, const String& replacement)
@@ -338,12 +349,36 @@ String Shell::local_variable_or(const String& name, const String& replacement)
 
 void Shell::set_local_variable(const String& name, RefPtr<AST::Value> value)
 {
-    m_local_variables.set(name, move(value));
+    if (auto* frame = find_frame_containing_local_variable(name))
+        frame->local_variables.set(name, move(value));
+    else
+        m_local_frames.last().local_variables.set(name, move(value));
 }
 
 void Shell::unset_local_variable(const String& name)
 {
-    m_local_variables.remove(name);
+    if (auto* frame = find_frame_containing_local_variable(name))
+        frame->local_variables.remove(name);
+}
+
+Shell::Frame Shell::push_frame()
+{
+    m_local_frames.empend();
+    return { m_local_frames, m_local_frames.last() };
+}
+
+void Shell::pop_frame()
+{
+    ASSERT(m_local_frames.size() > 1);
+    m_local_frames.take_last();
+}
+
+Shell::Frame::~Frame()
+{
+    if (!should_destroy_frame)
+        return;
+    ASSERT(&frames.last() == &frame);
+    frames.take_last();
 }
 
 String Shell::resolve_alias(const String& name) const
@@ -879,9 +914,11 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, 
     editor->suggest(offset);
 
     // Look at local variables.
-    for (auto& variable : m_local_variables) {
-        if (variable.key.starts_with(pattern))
-            suggestions.append(variable.key);
+    for (auto& frame : m_local_frames) {
+        for (auto& variable : frame.local_variables) {
+            if (variable.key.starts_with(pattern) && !suggestions.contains_slow(variable.key))
+                suggestions.append(variable.key);
+        }
     }
 
     // Look at the environment.
@@ -1014,6 +1051,8 @@ Shell::Shell()
     uid = getuid();
     tcsetpgrp(0, getpgrp());
     m_pid = getpid();
+
+    push_frame().leak_frame();
 
     int rc = gethostname(hostname, Shell::HostNameSize);
     if (rc < 0)

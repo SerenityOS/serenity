@@ -144,24 +144,41 @@ RefPtr<AST::Node> Parser::parse_toplevel()
 
 RefPtr<AST::Node> Parser::parse_sequence()
 {
+    consume_while(is_any_of(" \t\n"));
+
     auto rule_start = push_start();
     auto var_decls = parse_variable_decls();
 
     switch (peek()) {
+    case '}':
+        return var_decls;
     case ';':
-    case '\n':
+    case '\n': {
+        if (!var_decls)
+            break;
+
         consume_while(is_any_of("\n;"));
-        break;
+        auto rest = parse_sequence();
+        if (rest)
+            return create<AST::Sequence>(move(var_decls), move(rest));
+        return var_decls;
+    }
     default:
         break;
     }
 
-    auto pipe_seq = parse_pipe_sequence();
-    if (!pipe_seq)
+    RefPtr<AST::Node> first = nullptr;
+    if (auto control_structure = parse_control_structure())
+        first = control_structure;
+
+    if (!first)
+        first = parse_or_logical_sequence();
+
+    if (!first)
         return var_decls;
 
     if (var_decls)
-        pipe_seq = create<AST::Sequence>(move(var_decls), move(pipe_seq));
+        first = create<AST::Sequence>(move(var_decls), move(first));
 
     consume_while(is_whitespace);
 
@@ -170,42 +187,20 @@ RefPtr<AST::Node> Parser::parse_sequence()
     case '\n':
         consume_while(is_any_of("\n;"));
         if (auto expr = parse_sequence()) {
-            return create<AST::Sequence>(move(pipe_seq), move(expr)); // Sequence
+            return create<AST::Sequence>(move(first), move(expr)); // Sequence
         }
-        return pipe_seq;
+        return first;
     case '&': {
-        auto execute_pipe_seq = create<AST::Execute>(pipe_seq);
+        auto execute_pipe_seq = first->would_execute() ? first : static_cast<RefPtr<AST::Node>>(create<AST::Execute>(first));
         consume();
-        if (peek() == '&') {
-            consume();
-            if (auto expr = parse_sequence()) {
-                return create<AST::And>(move(execute_pipe_seq), create<AST::Execute>(move(expr))); // And
-            }
-            return execute_pipe_seq;
-        }
-
-        auto bg = create<AST::Background>(move(pipe_seq)); // Execute Background
+        auto bg = create<AST::Background>(move(first)); // Execute Background
         if (auto rest = parse_sequence())
             return create<AST::Sequence>(move(bg), move(rest)); // Sequence Background Sequence
 
         return bg;
     }
-    case '|': {
-        auto execute_pipe_seq = create<AST::Execute>(pipe_seq);
-        consume();
-        if (peek() != '|') {
-            putback();
-            return execute_pipe_seq;
-        }
-        consume();
-        if (auto expr = parse_sequence()) {
-            return create<AST::Or>(move(execute_pipe_seq), create<AST::Execute>(move(expr))); // Or
-        }
-        putback();
-        return execute_pipe_seq;
-    }
     default:
-        return pipe_seq;
+        return first;
     }
 }
 
@@ -269,6 +264,50 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
     return create<AST::VariableDeclarations>(move(variables));
 }
 
+RefPtr<AST::Node> Parser::parse_or_logical_sequence()
+{
+    consume_while(is_whitespace);
+    auto rule_start = push_start();
+    auto and_sequence = parse_and_logical_sequence();
+    if (!and_sequence)
+        return nullptr;
+
+    consume_while(is_whitespace);
+    auto saved_offset = m_offset;
+    if (!expect("||")) {
+        m_offset = saved_offset;
+        return and_sequence;
+    }
+
+    auto right_and_sequence = parse_and_logical_sequence();
+    if (!right_and_sequence)
+        right_and_sequence = create<AST::SyntaxError>("Expected an expression after '||'");
+
+    return create<AST::Or>(create<AST::Execute>(move(and_sequence)), create<AST::Execute>(move(right_and_sequence)));
+}
+
+RefPtr<AST::Node> Parser::parse_and_logical_sequence()
+{
+    consume_while(is_whitespace);
+    auto rule_start = push_start();
+    auto pipe_sequence = parse_pipe_sequence();
+    if (!pipe_sequence)
+        return nullptr;
+
+    consume_while(is_whitespace);
+    auto saved_offset = m_offset;
+    if (!expect("&&")) {
+        m_offset = saved_offset;
+        return pipe_sequence;
+    }
+
+    auto right_pipe_sequence = parse_pipe_sequence();
+    if (!right_pipe_sequence)
+        right_pipe_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
+
+    return create<AST::And>(create<AST::Execute>(move(pipe_sequence)), create<AST::Execute>(move(right_pipe_sequence)));
+}
+
 RefPtr<AST::Node> Parser::parse_pipe_sequence()
 {
     auto rule_start = push_start();
@@ -316,6 +355,80 @@ RefPtr<AST::Node> Parser::parse_command()
         return redir;
 
     return create<AST::Join>(move(redir), command); // Join Command Command
+}
+
+RefPtr<AST::Node> Parser::parse_control_structure()
+{
+    auto rule_start = push_start();
+    consume_while(is_whitespace);
+    if (auto for_loop = parse_for_loop())
+        return for_loop;
+
+    return nullptr;
+}
+
+RefPtr<AST::Node> Parser::parse_for_loop()
+{
+    auto rule_start = push_start();
+    if (!expect("for")) {
+        m_offset = rule_start->offset;
+        return nullptr;
+    }
+
+    if (consume_while(is_any_of(" \t\n")).is_empty()) {
+        m_offset = rule_start->offset;
+        return nullptr;
+    }
+
+    auto variable_name = consume_while(is_word_character);
+    Optional<size_t> in_start_position;
+    if (variable_name.is_empty()) {
+        variable_name = "it";
+    } else {
+        consume_while(is_whitespace);
+        auto in_error_start = push_start();
+        in_start_position = in_error_start->offset;
+        if (!expect("in")) {
+            auto syntax_error = create<AST::SyntaxError>("Expected 'in' after a variable name in a 'for' loop");
+            return create<AST::ForLoop>(move(variable_name), move(syntax_error), nullptr); // ForLoop Var Iterated Block
+        }
+    }
+
+    consume_while(is_whitespace);
+    RefPtr<AST::Node> iterated_expression;
+    {
+        auto iter_error_start = push_start();
+        iterated_expression = parse_expression();
+        if (!iterated_expression) {
+            auto syntax_error = create<AST::SyntaxError>("Expected an expression in 'for' loop");
+            return create<AST::ForLoop>(move(variable_name), move(syntax_error), nullptr, move(in_start_position)); // ForLoop Var Iterated Block
+        }
+    }
+
+    consume_while(is_any_of(" \t\n"));
+    {
+        auto obrace_error_start = push_start();
+        if (!expect('{')) {
+            auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a 'for' loop body");
+            return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(syntax_error), move(in_start_position)); // ForLoop Var Iterated Block
+        }
+    }
+
+    auto body = parse_toplevel();
+
+    {
+        auto cbrace_error_start = push_start();
+        if (!expect('}')) {
+            auto error_start = push_start();
+            RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a 'for' loop body");
+            if (body)
+                body->set_is_syntax_error(*syntax_error);
+            else
+                body = syntax_error;
+        }
+    }
+
+    return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(body), move(in_start_position)); // ForLoop Var Iterated Block
 }
 
 RefPtr<AST::Node> Parser::parse_redirection()

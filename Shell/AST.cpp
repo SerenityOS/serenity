@@ -732,6 +732,88 @@ Fd2FdRedirection::~Fd2FdRedirection()
 {
 }
 
+void ForLoop::dump(int level) const
+{
+    Node::dump(level);
+    print_indented(String::format("%s in\n", m_variable_name.characters()), level + 1);
+    m_iterated_expression->dump(level + 2);
+    print_indented("Running", level + 1);
+    if (m_block)
+        m_block->dump(level + 2);
+    else
+        print_indented("(null)", level + 2);
+}
+
+RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
+{
+    if (!m_block)
+        return create<ListValue>({});
+
+    Vector<RefPtr<Value>> values;
+    auto resolved = m_iterated_expression->run(shell)->resolve_without_cast(shell);
+    if (resolved->is_list_without_resolution())
+        values = static_cast<ListValue*>(resolved.ptr())->values();
+    else
+        values = create<ListValue>(resolved->resolve_as_list(shell))->values();
+
+    for (auto& value : values) {
+        auto frame = shell->push_frame();
+        shell->set_local_variable(m_variable_name, value);
+
+        auto block_value = m_block->run(shell)->resolve_without_cast(shell);
+        if (block_value->is_job()) {
+            auto job = static_cast<JobValue*>(block_value.ptr())->job();
+            if (!job || job->is_running_in_background())
+                continue;
+            shell->block_on_job(job);
+        }
+    }
+
+    return create<ListValue>({});
+}
+
+void ForLoop::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    editor.stylize({ m_position.start_offset, m_position.start_offset + 3 }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+    if (m_in_kw_position.has_value())
+        editor.stylize({ m_in_kw_position.value(), m_in_kw_position.value() + 2 }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+
+    metadata.is_first_in_list = false;
+    m_iterated_expression->highlight_in_editor(editor, shell, metadata);
+
+    metadata.is_first_in_list = true;
+    if (m_block)
+        m_block->highlight_in_editor(editor, shell, metadata);
+}
+
+HitTestResult ForLoop::hit_test_position(size_t offset)
+{
+    if (!position().contains(offset))
+        return {};
+
+    if (auto result = m_iterated_expression->hit_test_position(offset); result.matching_node)
+        return result;
+
+    return m_block->hit_test_position(offset);
+}
+
+ForLoop::ForLoop(Position position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position)
+    : Node(move(position))
+    , m_variable_name(move(variable_name))
+    , m_iterated_expression(move(iterated_expr))
+    , m_block(move(block))
+    , m_in_kw_position(move(in_kw_position))
+{
+    if (m_iterated_expression->is_syntax_error())
+        set_is_syntax_error(m_iterated_expression->syntax_error_node());
+    else if (m_block && m_block->is_syntax_error())
+        set_is_syntax_error(m_block->syntax_error_node());
+}
+
+ForLoop::~ForLoop()
+{
+}
+
 void Glob::dump(int level) const
 {
     Node::dump(level);

@@ -45,9 +45,13 @@ public:
 private:
     RefPtr<AST::Node> parse_toplevel();
     RefPtr<AST::Node> parse_sequence();
+    RefPtr<AST::Node> parse_and_logical_sequence();
+    RefPtr<AST::Node> parse_or_logical_sequence();
     RefPtr<AST::Node> parse_variable_decls();
     RefPtr<AST::Node> parse_pipe_sequence();
     RefPtr<AST::Node> parse_command();
+    RefPtr<AST::Node> parse_control_structure();
+    RefPtr<AST::Node> parse_for_loop();
     RefPtr<AST::Node> parse_redirection();
     RefPtr<AST::Node> parse_list_expression();
     RefPtr<AST::Node> parse_expression();
@@ -100,12 +104,17 @@ private:
 constexpr auto the_grammar = R"(
 toplevel :: sequence?
 
-sequence :: variable_decls? pipe_sequence terminator sequence
-          | variable_decls? pipe_sequence '&'
-          | variable_decls? pipe_sequence '&' '&' sequence
-          | variable_decls? pipe_sequence '|' '|' sequence
-          | variable_decls? pipe_sequence
-          | variable_decls? terminator pipe_sequence
+sequence :: variable_decls? or_logical_sequence terminator sequence
+          | variable_decls? or_logical_sequence '&' sequence
+          | variable_decls? control_structure terminator sequence
+          | variable_decls? or_logical_sequence
+          | variable_decls? terminator sequence
+
+or_logical_sequence :: and_logical_sequence '|' '|' and_logical_sequence
+                     | and_logical_sequence
+
+and_logical_sequence :: pipe_sequence '&' '&' and_logical_sequence
+                      | pipe_sequence
 
 terminator :: ';'
             | '\n'
@@ -115,6 +124,8 @@ variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
 
 pipe_sequence :: command '|' pipe_sequence
                | command
+
+control_structure :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
 
 command :: redirection command
          | list_expression command?
