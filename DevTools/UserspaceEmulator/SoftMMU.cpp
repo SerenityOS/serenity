@@ -28,10 +28,13 @@
 
 namespace UserspaceEmulator {
 
-SoftMMU::Region* SoftMMU::find_region(u32 address)
+SoftMMU::Region* SoftMMU::find_region(X86::LogicalAddress address)
 {
+    if (address.selector() == 0x28)
+        return m_tls_region.ptr();
+
     for (auto& region : m_regions) {
-        if (region.contains(address))
+        if (region.contains(address.offset()))
             return &region;
     }
     return nullptr;
@@ -39,75 +42,81 @@ SoftMMU::Region* SoftMMU::find_region(u32 address)
 
 void SoftMMU::add_region(NonnullOwnPtr<Region> region)
 {
-    ASSERT(!find_region(region->base()));
+    ASSERT(!find_region({ 0x20, region->base() }));
     // FIXME: More sanity checks pls
     m_regions.append(move(region));
 }
 
-u8 SoftMMU::read8(u32 address)
+void SoftMMU::set_tls_region(NonnullOwnPtr<Region> region)
 {
-    auto* region = find_region(address);
-    if (!region) {
-        warn() << "SoftMMU::read8: No region for @" << (const void*)address;
-        TODO();
-    }
-
-    return region->read8(address - region->base());
+    ASSERT(!m_tls_region);
+    m_tls_region = move(region);
 }
 
-u16 SoftMMU::read16(u32 address)
+u8 SoftMMU::read8(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
-        warn() << "SoftMMU::read16: No region for @" << (const void*)address;
+        warn() << "SoftMMU::read8: No region for @" << (const void*)address.offset();
         TODO();
     }
 
-    return region->read16(address - region->base());
+    return region->read8(address.offset() - region->base());
 }
 
-u32 SoftMMU::read32(u32 address)
+u16 SoftMMU::read16(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
-        warn() << "SoftMMU::read32: No region for @" << (const void*)address;
+        warn() << "SoftMMU::read16: No region for @" << (const void*)address.offset();
         TODO();
     }
 
-    return region->read32(address - region->base());
+    return region->read16(address.offset() - region->base());
 }
 
-void SoftMMU::write8(u32 address, u8 value)
+u32 SoftMMU::read32(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
-        warn() << "SoftMMU::write8: No region for @" << (const void*)address;
+        warn() << "SoftMMU::read32: No region for @" << (const void*)address.offset();
         TODO();
     }
 
-    region->write8(address - region->base(), value);
+    return region->read32(address.offset() - region->base());
 }
 
-void SoftMMU::write16(u32 address, u16 value)
+void SoftMMU::write8(X86::LogicalAddress address, u8 value)
 {
     auto* region = find_region(address);
     if (!region) {
-        warn() << "SoftMMU::write16: No region for @" << (const void*)address;
+        warn() << "SoftMMU::write8: No region for @" << (const void*)address.offset();
         TODO();
     }
 
-    region->write16(address - region->base(), value);
+    region->write8(address.offset() - region->base(), value);
 }
 
-void SoftMMU::write32(u32 address, u32 value)
+void SoftMMU::write16(X86::LogicalAddress address, u16 value)
 {
     auto* region = find_region(address);
     if (!region) {
-        warn() << "SoftMMU::write32: No region for @" << (const void*)address;
+        warn() << "SoftMMU::write16: No region for @" << (const void*)address.offset();
         TODO();
     }
 
-    region->write32(address - region->base(), value);
+    region->write16(address.offset() - region->base(), value);
+}
+
+void SoftMMU::write32(X86::LogicalAddress address, u32 value)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        warn() << "SoftMMU::write32: No region for @" << (const void*)address.offset();
+        TODO();
+    }
+
+    region->write32(address.offset() - region->base(), value);
 }
 
 }

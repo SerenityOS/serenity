@@ -27,7 +27,9 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <AK/Types.h>
+#include <LibX86/Instruction.h>
 
 namespace UserspaceEmulator {
 
@@ -63,18 +65,21 @@ public:
         u32 m_size { 0 };
     };
 
-    u8 read8(u32 address);
-    u16 read16(u32 address);
-    u32 read32(u32 address);
+    u8 read8(X86::LogicalAddress);
+    u16 read16(X86::LogicalAddress);
+    u32 read32(X86::LogicalAddress);
 
-    void write8(u32 address, u8 value);
-    void write16(u32 address, u16 value);
-    void write32(u32 address, u32 value);
+    void write8(X86::LogicalAddress, u8);
+    void write16(X86::LogicalAddress, u16);
+    void write32(X86::LogicalAddress, u32);
 
-    Region* find_region(u32 address);
+    Region* find_region(X86::LogicalAddress);
+
     void add_region(NonnullOwnPtr<Region>);
+    void set_tls_region(NonnullOwnPtr<Region>);
 
 private:
+    OwnPtr<Region> m_tls_region;
     NonnullOwnPtrVector<Region> m_regions;
 };
 
