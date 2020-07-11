@@ -215,7 +215,7 @@ static typename TypeDoubler<Destination>::type op_sub(SoftCPU& cpu, const Destin
         "pop %%ebx"
         : "=b"(new_flags));
 
-    cpu.set_flags_oszap(new_flags);
+    cpu.set_flags_oszapc(new_flags);
     return result;
 }
 
@@ -246,7 +246,7 @@ static Destination op_add(SoftCPU& cpu, Destination& dest, const Source& src)
         "pop %%ebx"
         : "=b"(new_flags));
 
-    cpu.set_flags_oszap(new_flags);
+    cpu.set_flags_oszapc(new_flags);
     return result;
 }
 
