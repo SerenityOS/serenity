@@ -27,11 +27,13 @@
 #pragma once
 
 #include <LibGUI/Forward.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>
 
 namespace Browser {
 
-class BookmarksBarWidget final : public GUI::Widget {
+class BookmarksBarWidget final : public GUI::Widget
+    , private GUI::ModelClient {
     C_OBJECT(BookmarksBarWidget)
 public:
     static BookmarksBarWidget& the();
@@ -52,7 +54,7 @@ public:
 private:
     BookmarksBarWidget(const String&, bool enabled);
 
-    virtual void did_update_model();
+    virtual void on_model_update(unsigned) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
 
     void update_content_size();

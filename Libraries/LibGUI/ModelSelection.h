@@ -26,7 +26,9 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/HashTable.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <LibGUI/ModelIndex.h>
 
@@ -91,9 +93,25 @@ public:
 
     void remove_matching(Function<bool(const ModelIndex&)>);
 
+    template<typename Function>
+    void change_from_model(Badge<SortingProxyModel>, Function f)
+    {
+        {
+            TemporaryChange change(m_disable_notify, true);
+            m_notify_pending = false;
+            f(*this);
+        }
+        if (m_notify_pending)
+            notify_selection_changed();
+    }
+
 private:
+    void notify_selection_changed();
+
     AbstractView& m_view;
     HashTable<ModelIndex> m_indexes;
+    bool m_disable_notify { false };
+    bool m_notify_pending { false };
 };
 
 }

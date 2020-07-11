@@ -38,8 +38,11 @@ void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
         if (filter(index))
             to_remove.append(index);
     }
-    for (auto& index : to_remove)
-        m_indexes.remove(index);
+    if (!to_remove.is_empty()) {
+        for (auto& index : to_remove)
+            m_indexes.remove(index);
+        notify_selection_changed();
+    }
 }
 
 void ModelSelection::set(const ModelIndex& index)
@@ -49,7 +52,7 @@ void ModelSelection::set(const ModelIndex& index)
         return;
     m_indexes.clear();
     m_indexes.set(index);
-    m_view.notify_selection_changed({});
+    notify_selection_changed();
 }
 
 void ModelSelection::add(const ModelIndex& index)
@@ -58,7 +61,7 @@ void ModelSelection::add(const ModelIndex& index)
     if (m_indexes.contains(index))
         return;
     m_indexes.set(index);
-    m_view.notify_selection_changed({});
+    notify_selection_changed();
 }
 
 void ModelSelection::toggle(const ModelIndex& index)
@@ -68,7 +71,7 @@ void ModelSelection::toggle(const ModelIndex& index)
         m_indexes.remove(index);
     else
         m_indexes.set(index);
-    m_view.notify_selection_changed({});
+    notify_selection_changed();
 }
 
 bool ModelSelection::remove(const ModelIndex& index)
@@ -77,7 +80,7 @@ bool ModelSelection::remove(const ModelIndex& index)
     if (!m_indexes.contains(index))
         return false;
     m_indexes.remove(index);
-    m_view.notify_selection_changed({});
+    notify_selection_changed();
     return true;
 }
 
@@ -86,7 +89,17 @@ void ModelSelection::clear()
     if (m_indexes.is_empty())
         return;
     m_indexes.clear();
-    m_view.notify_selection_changed({});
+    notify_selection_changed();
+}
+
+void ModelSelection::notify_selection_changed()
+{
+    if (!m_disable_notify) {
+        m_view.notify_selection_changed({});
+        m_notify_pending = false;
+    } else {
+        m_notify_pending = true;
+    }
 }
 
 }
