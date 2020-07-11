@@ -32,6 +32,14 @@
 
 namespace UserspaceEmulator {
 
+template<typename T, typename U>
+inline constexpr T sign_extended_to(U value)
+{
+    if (!(value & X86::TypeTrivia<U>::sign_bit))
+        return value;
+    return (X86::TypeTrivia<T>::mask & ~X86::TypeTrivia<U>::mask) | value;
+}
+
 template<typename T>
 struct TypeDoubler {
 };
@@ -443,7 +451,7 @@ template<bool update_dest, typename Op>
 void SoftCPU::generic_RM16_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read16(*this, insn);
-    auto src = insn.imm8();
+    auto src = sign_extended_to<u16>(insn.imm8());
     auto result = op(*this, dest, src);
     if (update_dest)
         insn.modrm().write16(*this, insn, result);
@@ -473,7 +481,7 @@ template<bool update_dest, typename Op>
 void SoftCPU::generic_RM32_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read32(*this, insn);
-    auto src = insn.imm8();
+    auto src = sign_extended_to<u32>(insn.imm8());
     auto result = op(*this, dest, src);
     if (update_dest)
         insn.modrm().write32(*this, insn, result);
@@ -1307,8 +1315,8 @@ void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
 
 #define DEFINE_GENERIC_INSN_HANDLERS(mnemonic, op, update_dest)                                                                \
     DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest)                                                            \
-    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { generic_RM16_imm8<update_dest>(op<u16, u8>, insn); }    \
-    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { generic_RM32_imm8<update_dest>(op<u32, u8>, insn); }    \
+    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { generic_RM16_imm8<update_dest>(op<u16, u16>, insn); }    \
+    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { generic_RM32_imm8<update_dest>(op<u32, u32>, insn); }    \
     void SoftCPU::mnemonic##_reg16_RM16(const X86::Instruction& insn) { generic_reg16_RM16<update_dest>(op<u16, u16>, insn); } \
     void SoftCPU::mnemonic##_reg32_RM32(const X86::Instruction& insn) { generic_reg32_RM32<update_dest>(op<u32, u32>, insn); } \
     void SoftCPU::mnemonic##_reg8_RM8(const X86::Instruction& insn) { generic_reg8_RM8<update_dest>(op<u8, u8>, insn); }
