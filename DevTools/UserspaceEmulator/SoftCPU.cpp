@@ -157,6 +157,38 @@ u32 SoftCPU::pop32()
     return value;
 }
 
+template<bool check_zf, typename Callback>
+void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
+{
+    if (!insn.has_rep_prefix())
+        return callback();
+
+    if (insn.has_address_size_override_prefix()) {
+        while (cx()) {
+            callback();
+            set_cx(cx() - 1);
+            if constexpr (check_zf) {
+                if (insn.rep_prefix() == X86::Prefix::REPZ && !zf())
+                    break;
+                if (insn.rep_prefix() == X86::Prefix::REPNZ && zf())
+                    break;
+            }
+        }
+        return;
+    }
+
+    while (ecx()) {
+        callback();
+        set_ecx(ecx() - 1);
+        if constexpr (check_zf) {
+            if (insn.rep_prefix() == X86::Prefix::REPZ && !zf())
+                break;
+            if (insn.rep_prefix() == X86::Prefix::REPNZ && zf())
+                break;
+        }
+    }
+}
+
 template<typename Destination, typename Source>
 static typename TypeDoubler<Destination>::type op_xor(SoftCPU& cpu, const Destination& dest, const Source& src)
 {
@@ -1064,9 +1096,52 @@ void SoftCPU::SMSW_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::STC(const X86::Instruction&) { TODO(); }
 void SoftCPU::STD(const X86::Instruction&) { TODO(); }
 void SoftCPU::STI(const X86::Instruction&) { TODO(); }
-void SoftCPU::STOSB(const X86::Instruction&) { TODO(); }
-void SoftCPU::STOSD(const X86::Instruction&) { TODO(); }
-void SoftCPU::STOSW(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::STOSB(const X86::Instruction& insn)
+{
+    if (insn.has_address_size_override_prefix()) {
+        do_once_or_repeat<false>(insn, [&] {
+            write_memory8({ es(), di() }, al());
+            set_di(di() + (df() ? -1 : 1));
+        });
+    } else {
+        do_once_or_repeat<false>(insn, [&] {
+            write_memory8({ es(), edi() }, al());
+            set_edi(edi() + (df() ? -1 : 1));
+        });
+    }
+}
+
+void SoftCPU::STOSD(const X86::Instruction& insn)
+{
+    if (insn.has_address_size_override_prefix()) {
+        do_once_or_repeat<false>(insn, [&] {
+            write_memory32({ es(), di() }, eax());
+            set_di(di() + (df() ? -4 : 4));
+        });
+    } else {
+        do_once_or_repeat<false>(insn, [&] {
+            write_memory32({ es(), edi() }, eax());
+            set_edi(edi() + (df() ? -4 : 4));
+        });
+    }
+}
+
+void SoftCPU::STOSW(const X86::Instruction& insn)
+{
+    if (insn.has_address_size_override_prefix()) {
+        do_once_or_repeat<false>(insn, [&] {
+            write_memory16({ es(), di() }, ax());
+            set_di(di() + (df() ? -2 : 2));
+        });
+    } else {
+        do_once_or_repeat<false>(insn, [&] {
+            write_memory16({ es(), edi() }, ax());
+            set_edi(edi() + (df() ? -2 : 2));
+        });
+    }
+}
+
 void SoftCPU::STR_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::UD0(const X86::Instruction&) { TODO(); }
 void SoftCPU::UD1(const X86::Instruction&) { TODO(); }

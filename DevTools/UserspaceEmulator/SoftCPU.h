@@ -190,6 +190,7 @@ public:
     bool af() const { return m_eflags & Flags::AF; }
     bool pf() const { return m_eflags & Flags::PF; }
     bool cf() const { return m_eflags & Flags::CF; }
+    bool df() const { return m_eflags & Flags::DF; }
 
     void set_flag(Flags::Flag flag, bool value)
     {
@@ -205,6 +206,7 @@ public:
     void set_af(bool value) { set_flag(Flags::AF, value); }
     void set_pf(bool value) { set_flag(Flags::PF, value); }
     void set_cf(bool value) { set_flag(Flags::CF, value); }
+    void set_df(bool value) { set_flag(Flags::DF, value); }
 
     void set_flags_oszapc(u32 new_flags)
     {
@@ -784,6 +786,9 @@ private:
     void generic_reg32_RM32(Op, const X86::Instruction&);
     template<bool update_dest, typename Op>
     void generic_reg8_RM8(Op, const X86::Instruction&);
+
+    template<bool check_zf, typename Callback>
+    void do_once_or_repeat(const X86::Instruction& insn, Callback);
 
 private:
     Emulator& m_emulator;
