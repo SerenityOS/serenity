@@ -46,6 +46,7 @@ public:
     u32 operator*() const;
 
     int codepoint_length_in_bytes() const;
+    bool done() const { return !m_length; }
 
 private:
     Utf8CodepointIterator(const unsigned char*, int);

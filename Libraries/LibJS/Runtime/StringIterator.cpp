@@ -24,24 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Runtime/ArrayIterator.h>
+#include <AK/Utf8View.h>
+#include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
-ArrayIterator* ArrayIterator::create(GlobalObject& global_object, Value array, Object::PropertyKind iteration_kind)
+StringIterator* StringIterator::create(GlobalObject& global_object, String string)
 {
-    return global_object.heap().allocate<ArrayIterator>(global_object, *global_object.array_iterator_prototype(), array, iteration_kind);
+    return global_object.heap().allocate<StringIterator>(global_object, *global_object.string_iterator_prototype(), move(string));
 }
 
-ArrayIterator::ArrayIterator(Object& prototype, Value array, Object::PropertyKind iteration_kind)
+StringIterator::StringIterator(Object& prototype, String string)
     : Object(prototype)
-    , m_array(array)
-    , m_iteration_kind(iteration_kind)
+    , m_string(move(string))
+    , m_iterator(Utf8View(m_string).begin())
 {
 }
 
-ArrayIterator::~ArrayIterator()
+StringIterator::~StringIterator()
 {
 }
 

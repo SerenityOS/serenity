@@ -24,25 +24,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Runtime/ArrayIterator.h>
-#include <LibJS/Runtime/GlobalObject.h>
+#pragma once
+
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-ArrayIterator* ArrayIterator::create(GlobalObject& global_object, Value array, Object::PropertyKind iteration_kind)
-{
-    return global_object.heap().allocate<ArrayIterator>(global_object, *global_object.array_iterator_prototype(), array, iteration_kind);
-}
+class StringIteratorPrototype final : public Object {
+    JS_OBJECT(StringIteratorPrototype, Object)
 
-ArrayIterator::ArrayIterator(Object& prototype, Value array, Object::PropertyKind iteration_kind)
-    : Object(prototype)
-    , m_array(array)
-    , m_iteration_kind(iteration_kind)
-{
-}
+public:
+    StringIteratorPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual ~StringIteratorPrototype() override;
 
-ArrayIterator::~ArrayIterator()
-{
-}
+private:
+    JS_DECLARE_NATIVE_FUNCTION(next);
+};
 
 }

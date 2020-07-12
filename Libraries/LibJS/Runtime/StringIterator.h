@@ -24,25 +24,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Runtime/ArrayIterator.h>
-#include <LibJS/Runtime/GlobalObject.h>
+#pragma once
+
+#include <AK/Utf8View.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-ArrayIterator* ArrayIterator::create(GlobalObject& global_object, Value array, Object::PropertyKind iteration_kind)
-{
-    return global_object.heap().allocate<ArrayIterator>(global_object, *global_object.array_iterator_prototype(), array, iteration_kind);
-}
+class StringIterator final : public Object {
+    JS_OBJECT(StringIterator, Object);
 
-ArrayIterator::ArrayIterator(Object& prototype, Value array, Object::PropertyKind iteration_kind)
-    : Object(prototype)
-    , m_array(array)
-    , m_iteration_kind(iteration_kind)
-{
-}
+public:
+    static StringIterator* create(GlobalObject&, String string);
 
-ArrayIterator::~ArrayIterator()
-{
-}
+    explicit StringIterator(Object& prototype, String string);
+    virtual ~StringIterator() override;
+
+    Utf8CodepointIterator& iterator() { return m_iterator; }
+    bool done() const { return m_done; }
+
+private:
+    friend class StringIteratorPrototype;
+
+    virtual bool is_string_iterator_object() const override { return true; }
+
+    String m_string;
+    Utf8CodepointIterator m_iterator;
+    bool m_done { false };
+};
 
 }
