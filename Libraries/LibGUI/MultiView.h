@@ -103,10 +103,14 @@ public:
     Action& view_as_columns_action() { return *m_view_as_columns_action; }
 #endif
 
+    bool is_multi_select() const { return m_multi_select; }
+    void set_multi_select(bool);
+
 private:
     MultiView();
 
     void build_actions();
+    void apply_multi_select();
 
     ViewMode m_view_mode { Invalid };
     int m_model_column { 0 };
@@ -126,6 +130,8 @@ private:
 #endif
 
     OwnPtr<ActionGroup> m_view_type_action_group;
+
+    bool m_multi_select { true };
 };
 
 }
