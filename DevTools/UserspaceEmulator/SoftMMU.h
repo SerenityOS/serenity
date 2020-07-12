@@ -78,6 +78,10 @@ public:
     void add_region(NonnullOwnPtr<Region>);
     void set_tls_region(NonnullOwnPtr<Region>);
 
+    void copy_to_vm(FlatPtr destination, const void* source, size_t);
+    void copy_from_vm(void* destination, const FlatPtr source, size_t);
+    ByteBuffer copy_buffer_from_vm(const FlatPtr source, size_t);
+
 private:
     OwnPtr<Region> m_tls_region;
     NonnullOwnPtrVector<Region> m_regions;
