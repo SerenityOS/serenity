@@ -221,9 +221,11 @@ void IconView::mousedown_event(MouseEvent& event)
     auto adjusted_position = to_content_position(event.position());
 
     m_might_drag = false;
-    m_rubber_banding = true;
-    m_rubber_band_origin = adjusted_position;
-    m_rubber_band_current = adjusted_position;
+    if (is_multi_select()) {
+        m_rubber_banding = true;
+        m_rubber_band_origin = adjusted_position;
+        m_rubber_band_current = adjusted_position;
+    }
 }
 
 void IconView::mouseup_event(MouseEvent& event)

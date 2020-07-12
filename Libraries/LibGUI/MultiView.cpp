@@ -108,6 +108,7 @@ MultiView::MultiView()
 
     build_actions();
     set_view_mode(ViewMode::Icon);
+    apply_multi_select();
 }
 
 MultiView::~MultiView()
@@ -192,6 +193,23 @@ void MultiView::build_actions()
 #ifdef MULTIVIEW_WITH_COLUMNSVIEW
     m_view_type_action_group->add_action(*m_view_as_columns_action);
 #endif
+}
+
+void MultiView::apply_multi_select()
+{
+    m_table_view->set_multi_select(m_multi_select);
+    m_icon_view->set_multi_select(m_multi_select);
+#ifdef MULTIVIEW_WITH_COLUMNSVIEW
+    //m_columns_view->set_multi_select(m_multi_select);
+#endif
+}
+
+void MultiView::set_multi_select(bool multi_select)
+{
+    if (m_multi_select == multi_select)
+        return;
+    m_multi_select = multi_select;
+    apply_multi_select();
 }
 
 }
