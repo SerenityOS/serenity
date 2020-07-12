@@ -409,7 +409,7 @@ u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
 
 void Emulator::virt$exit(int status)
 {
-    out() << "exit(" << status << "), shutting down!";
+    dbg() << "exit(" << status << "), shutting down!";
     m_exit_status = status;
     m_shutdown = true;
 }
