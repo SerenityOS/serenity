@@ -40,6 +40,7 @@ public:
     explicit Emulator(NonnullRefPtr<ELF::Loader>);
 
     bool load_elf();
+    void dump_backtrace();
 
     int exec();
     u32 virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3);

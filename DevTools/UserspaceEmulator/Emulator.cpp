@@ -178,6 +178,25 @@ int Emulator::exec()
     return m_exit_status;
 }
 
+void Emulator::dump_backtrace()
+{
+    u32 offset = 0;
+    String symbol = m_elf->symbolicate(m_cpu.eip(), &offset);
+
+    printf("> %#08x  %s +%#x\n", m_cpu.eip(), symbol.characters(), offset);
+
+    u32 frame_ptr = m_cpu.ebp();
+    while (frame_ptr) {
+        u32 ret_ptr = m_mmu.read32({ 0x20, frame_ptr + 4 });
+        if (!ret_ptr)
+            return;
+        symbol = m_elf->symbolicate(ret_ptr, &offset);
+        printf("> %#08x  %s +%#x\n", ret_ptr, symbol.characters(), offset);
+
+        frame_ptr = m_mmu.read32({ 0x20, frame_ptr });
+    }
+}
+
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
     (void)arg2;
@@ -198,6 +217,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return 0;
     default:
         warn() << "Unimplemented syscall!";
+        dump_backtrace();
         TODO();
     }
 }
