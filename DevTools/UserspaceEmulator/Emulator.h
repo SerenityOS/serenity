@@ -54,6 +54,9 @@ private:
 
     void setup_stack();
 
+    u32 virt$gettid();
+    u32 virt$unveil(u32);
+    u32 virt$pledge(u32);
     uid_t virt$getuid();
     void virt$exit(int);
 

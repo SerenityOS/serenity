@@ -185,6 +185,12 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 
     printf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
     switch (function) {
+    case SC_gettid:
+        return virt$gettid();
+    case SC_pledge:
+        return virt$pledge(arg1);
+    case SC_unveil:
+        return virt$unveil(arg1);
     case SC_getuid:
         return virt$getuid();
     case SC_exit:
@@ -194,6 +200,21 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         warn() << "Unimplemented syscall!";
         TODO();
     }
+}
+
+u32 Emulator::virt$gettid()
+{
+    return gettid();
+}
+
+u32 Emulator::virt$pledge(u32)
+{
+    return 0;
+}
+
+u32 Emulator::virt$unveil(u32)
+{
+    return 0;
 }
 
 uid_t Emulator::virt$getuid()
