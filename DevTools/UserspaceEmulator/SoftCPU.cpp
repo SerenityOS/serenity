@@ -735,9 +735,43 @@ void SoftCPU::CMOVcc_reg32_RM32(const X86::Instruction& insn)
 void SoftCPU::CMPSB(const X86::Instruction&) { TODO(); }
 void SoftCPU::CMPSD(const X86::Instruction&) { TODO(); }
 void SoftCPU::CMPSW(const X86::Instruction&) { TODO(); }
-void SoftCPU::CMPXCHG_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::CMPXCHG_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::CMPXCHG_RM8_reg8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::CMPXCHG_RM16_reg16(const X86::Instruction& insn)
+{
+    auto current = insn.modrm().read16(*this, insn);
+    if (current == eax()) {
+        set_zf(true);
+        insn.modrm().write16(*this, insn, gpr16(insn.reg16()));
+    } else {
+        set_zf(false);
+        set_eax(current);
+    }
+}
+
+void SoftCPU::CMPXCHG_RM32_reg32(const X86::Instruction& insn)
+{
+    auto current = insn.modrm().read32(*this, insn);
+    if (current == eax()) {
+        set_zf(true);
+        insn.modrm().write32(*this, insn, gpr32(insn.reg32()));
+    } else {
+        set_zf(false);
+        set_eax(current);
+    }
+}
+
+void SoftCPU::CMPXCHG_RM8_reg8(const X86::Instruction& insn)
+{
+    auto current = insn.modrm().read8(*this, insn);
+    if (current == eax()) {
+        set_zf(true);
+        insn.modrm().write8(*this, insn, gpr8(insn.reg8()));
+    } else {
+        set_zf(false);
+        set_eax(current);
+    }
+}
+
 void SoftCPU::CPUID(const X86::Instruction&) { TODO(); }
 void SoftCPU::CWD(const X86::Instruction&) { TODO(); }
 void SoftCPU::CWDE(const X86::Instruction&) { TODO(); }
