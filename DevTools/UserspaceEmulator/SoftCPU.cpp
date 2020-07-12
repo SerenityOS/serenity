@@ -139,6 +139,14 @@ void SoftCPU::write_memory32(X86::LogicalAddress address, u32 value)
     m_emulator.mmu().write32(address, value);
 }
 
+void SoftCPU::push_string(const StringView& string)
+{
+    size_t space_to_allocate = round_up_to_power_of_two(string.length() + 1, 16);
+    set_esp(esp() - space_to_allocate);
+    m_emulator.mmu().copy_to_vm(esp(), string.characters_without_null_termination(), string.length());
+    m_emulator.mmu().write8({ 0x20, esp() + string.length() }, '\0');
+}
+
 void SoftCPU::push32(u32 value)
 {
     set_esp(esp() - sizeof(value));
