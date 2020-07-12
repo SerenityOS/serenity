@@ -39,6 +39,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Point.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char** argv)
 {
@@ -111,7 +112,10 @@ int main(int argc, char** argv)
     }));
     app_menu.add_action(GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
         FontEditorWidget* editor = static_cast<FontEditorWidget*>(window->main_widget());
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(editor->path(), ".font");
+        String title = editor->path();
+        if (title.ends_with(".font"))
+            title = title.substring(0, title.length() - strlen(".font"));
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(title, "font");
         if (!save_path.has_value())
             return;
 
