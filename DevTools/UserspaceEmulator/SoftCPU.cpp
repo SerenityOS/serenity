@@ -914,7 +914,11 @@ void SoftCPU::JCXZ_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_FAR_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_FAR_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::JMP_RM32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::JMP_RM32(const X86::Instruction& insn)
+{
+    set_eip(insn.modrm().read32(*this, insn));
+}
 
 void SoftCPU::JMP_imm16(const X86::Instruction& insn)
 {
