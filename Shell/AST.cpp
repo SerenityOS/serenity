@@ -745,7 +745,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
     auto initial_commands = m_command->run(shell)->resolve_as_commands(shell);
     decltype(initial_commands) commands;
 
-    for (auto& command : initial_commands) {
+    Function<void(Command&)> resolve_aliases_and_append = [&](auto& command) {
         if (!command.argv.is_empty()) {
             auto alias = shell->resolve_alias(command.argv[0]);
             if (!alias.is_null()) {
@@ -757,15 +757,26 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
                         subcommand_ast = ast->command();
                     }
                     RefPtr<Node> substitute = create<Join>(position(), move(subcommand_ast), create<CommandLiteral>(position(), command));
-                    commands.append(substitute->run(shell)->resolve_as_commands(shell));
+                    for (auto& subst_command : substitute->run(shell)->resolve_as_commands(shell)) {
+                        if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
+                            commands.append(subst_command);
+                        else
+                            resolve_aliases_and_append(subst_command);
+                    }
                 } else {
                     commands.append(command);
                 }
             } else {
                 commands.append(command);
             }
+        } else {
+            commands.append(command);
         }
-    }
+    };
+
+    for (auto& command : initial_commands)
+        resolve_aliases_and_append(command);
+
     Vector<RefPtr<Job>> jobs_to_wait_for;
 
     auto run_commands = [&](auto& commands) {
