@@ -25,6 +25,7 @@
  */
 
 #include "SoftMMU.h"
+#include <AK/ByteBuffer.h>
 
 namespace UserspaceEmulator {
 
@@ -117,6 +118,25 @@ void SoftMMU::write32(X86::LogicalAddress address, u32 value)
     }
 
     region->write32(address.offset() - region->base(), value);
+}
+
+void SoftMMU::copy_to_vm(FlatPtr destination, const void* source, size_t size)
+{
+    for (size_t i = 0; i < size; ++i)
+        write8({ 0x20, destination + i }, ((const u8*)source)[i]);
+}
+
+void SoftMMU::copy_from_vm(void* destination, const FlatPtr source, size_t size)
+{
+    for (size_t i = 0; i < size; ++i)
+        ((u8*)destination)[i] = read8({ 0x20, source + i });
+}
+
+ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)
+{
+    auto buffer = ByteBuffer::create_uninitialized(size);
+    copy_from_vm(buffer.data(), source, size);
+    return buffer;
 }
 
 }
