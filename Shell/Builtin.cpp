@@ -372,44 +372,33 @@ int Shell::builtin_disown(int argc, const char** argv)
             fprintf(stderr, "disown: Invalid job id %s\n", job_id);
     }
 
-    if (job_ids.is_empty()) {
-        u64 id = 0;
-        for (auto& job : jobs)
-            id = max(id, job.value->job_id());
-        job_ids.append(id);
-    }
+    if (job_ids.is_empty())
+        job_ids.append(find_last_job_id());
 
-    Vector<size_t> keys_of_jobs_to_disown;
+    Vector<const Job*> jobs_to_disown;
 
     for (auto id : job_ids) {
-        bool found = false;
-        for (auto& entry : jobs) {
-            if (entry.value->job_id() == id) {
-                keys_of_jobs_to_disown.append(entry.key);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
+        auto job = find_job(id);
+        if (!job)
             fprintf(stderr, "disown: job with id %zu not found\n", id);
-        }
+        else
+            jobs_to_disown.append(job);
     }
-    if (keys_of_jobs_to_disown.is_empty()) {
-        if (str_job_ids.is_empty()) {
+
+    if (jobs_to_disown.is_empty()) {
+        if (str_job_ids.is_empty())
             fprintf(stderr, "disown: no current job\n");
-        }
         // An error message has already been printed about the nonexistence of each listed job.
         return 1;
     }
-    for (auto job_index : keys_of_jobs_to_disown) {
-        auto job = jobs.get(job_index).value();
 
+    for (auto job : jobs_to_disown) {
         job->deactivate();
 
         if (!job->is_running_in_background())
             fprintf(stderr, "disown warning: job %" PRIu64 " is currently not running, 'kill -%d %d' to make it continue\n", job->job_id(), SIGCONT, job->pid());
 
-        jobs.remove(job_index);
+        jobs.remove(job->pid());
     }
 
     return 0;

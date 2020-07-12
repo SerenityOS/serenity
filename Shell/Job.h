@@ -75,6 +75,11 @@ public:
     bool should_be_disowned() const { return m_should_be_disowned; }
     void disown() { m_should_be_disowned = true; }
     bool is_running_in_background() const { return m_running_in_background; }
+    void unblock() const
+    {
+        if (!m_exited && on_exit)
+            on_exit(*this);
+    }
     Function<void(RefPtr<Job>)> on_exit;
 
     Core::ElapsedTimer& timer() { return m_command_timer; }

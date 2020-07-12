@@ -474,6 +474,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         return nullptr;
     }
     if (child == 0) {
+        setpgid(0, 0);
         tcsetattr(0, TCSANOW, &default_termios);
         for (auto& rewiring : rewirings) {
 #ifdef SH_DEBUG
@@ -523,6 +524,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     jobs.set((u64)child, job);
 
     job->on_exit = [](auto job) {
+        if (!job->exited())
+            return;
         if (job->is_running_in_background())
             fprintf(stderr, "Shell: Job %d(%s) exited\n", job->pid(), job->cmd().characters());
         job->disown();
@@ -598,6 +601,8 @@ void Shell::restore_stdin()
 
 void Shell::block_on_job(RefPtr<Job> job)
 {
+    TemporaryChange<const Job*> current_job { m_current_job, job.ptr() };
+
     if (!job)
         return;
 
@@ -1051,18 +1056,10 @@ void Shell::stop_all_jobs()
 #ifdef SH_DEBUG
                 dbg() << "Job " << entry.value->pid() << " is not running in background";
 #endif
-                if (killpg(entry.value->pgid(), SIGCONT) < 0) {
-                    perror("killpg(CONT)");
-                }
+                kill_job(entry.value, SIGCONT);
             }
 
-            if (killpg(entry.value->pgid(), SIGHUP) < 0) {
-                perror("killpg(HUP)");
-            }
-
-            if (killpg(entry.value->pgid(), SIGTERM) < 0) {
-                perror("killpg(TERM)");
-            }
+            kill_job(entry.value, SIGHUP);
         }
 
         usleep(10000); // Wait for a bit before killing the job
@@ -1097,6 +1094,15 @@ const Job* Shell::find_job(u64 id)
             return entry.value;
     }
     return nullptr;
+}
+
+void Shell::kill_job(const Job* job, int sig)
+{
+    if (!job)
+        return;
+
+    if (killpg(job->pgid(), sig) < 0)
+        perror("killpg(job)");
 }
 
 void Shell::save_to(JsonObject& object)

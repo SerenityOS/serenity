@@ -111,6 +111,8 @@ public:
 
     u64 find_last_job_id() const;
     const Job* find_job(u64 id);
+    const Job* current_job() const { return m_current_job; }
+    void kill_job(const Job*, int sig);
 
     String get_history_path();
     void load_history();
@@ -163,6 +165,7 @@ private:
 
     void cache_path();
     void stop_all_jobs();
+    const Job* m_current_job { nullptr };
 
     virtual void custom_event(Core::CustomEvent&) override;
 
