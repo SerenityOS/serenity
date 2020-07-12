@@ -1266,7 +1266,7 @@ void SoftCPU::PUSH_imm32(const X86::Instruction& insn)
 void SoftCPU::PUSH_imm8(const X86::Instruction& insn)
 {
     ASSERT(!insn.has_operand_size_override_prefix());
-    push32((i32)insn.imm8());
+    push32(sign_extended_to<i32>(insn.imm8()));
 }
 
 void SoftCPU::PUSH_reg16(const X86::Instruction&) { TODO(); }
