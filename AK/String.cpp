@@ -311,13 +311,13 @@ bool String::contains(const String& needle) const
     return strstr(characters(), needle.characters());
 }
 
-Optional<size_t> String::index_of(const String& needle) const
+Optional<size_t> String::index_of(const String& needle, size_t start) const
 {
     if (is_null() || needle.is_null())
         return {};
 
     const char* self_characters = characters();
-    const char* result = strstr(self_characters, needle.characters());
+    const char* result = strstr(self_characters + start, needle.characters());
     if (!result)
         return {};
     return Optional<size_t> { result - self_characters };
