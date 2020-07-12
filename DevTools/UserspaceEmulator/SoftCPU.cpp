@@ -1603,9 +1603,33 @@ void SoftCPU::VERR_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::VERW_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::WAIT(const X86::Instruction&) { TODO(); }
 void SoftCPU::WBINVD(const X86::Instruction&) { TODO(); }
-void SoftCPU::XADD_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::XADD_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::XADD_RM8_reg8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::XADD_RM16_reg16(const X86::Instruction& insn)
+{
+    auto dest = insn.modrm().read16(*this, insn);
+    auto src = gpr16(insn.reg16());
+    auto result = op_add(*this, dest, src);
+    gpr16(insn.reg16()) = dest;
+    insn.modrm().write16(*this, insn, result);
+}
+
+void SoftCPU::XADD_RM32_reg32(const X86::Instruction& insn)
+{
+    auto dest = insn.modrm().read32(*this, insn);
+    auto src = gpr32(insn.reg32());
+    auto result = op_add(*this, dest, src);
+    gpr32(insn.reg32()) = dest;
+    insn.modrm().write32(*this, insn, result);
+}
+
+void SoftCPU::XADD_RM8_reg8(const X86::Instruction& insn)
+{
+    auto dest = insn.modrm().read8(*this, insn);
+    auto src = gpr8(insn.reg8());
+    auto result = op_add(*this, dest, src);
+    gpr8(insn.reg8()) = dest;
+    insn.modrm().write8(*this, insn, result);
+}
 
 void SoftCPU::XCHG_AX_reg16(const X86::Instruction& insn)
 {
