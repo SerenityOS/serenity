@@ -62,16 +62,21 @@ int main(int argc, char** argv)
 
     Core::EventLoop::register_signal(SIGINT, [](int) {
         editor->interrupted();
+        s_shell->kill_job(s_shell->current_job(), SIGINT);
     });
 
     Core::EventLoop::register_signal(SIGWINCH, [](int) {
         editor->resized();
+        s_shell->kill_job(s_shell->current_job(), SIGWINCH);
     });
 
     Core::EventLoop::register_signal(SIGTTIN, [](int) {});
     Core::EventLoop::register_signal(SIGTTOU, [](int) {});
 
     Core::EventLoop::register_signal(SIGHUP, [](int) {
+        for (auto& it : s_shell->jobs)
+            s_shell->kill_job(it.value.ptr(), SIGHUP);
+
         s_shell->save_history();
     });
 
@@ -102,6 +107,8 @@ int main(int argc, char** argv)
                     job.value->set_has_exit(WEXITSTATUS(wstatus));
                 } else if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
                     job.value->set_has_exit(126);
+                } else if (WIFSTOPPED(wstatus)) {
+                    job.value->unblock();
                 }
             }
             if (job.value->should_be_disowned())
@@ -111,8 +118,12 @@ int main(int argc, char** argv)
             jobs.remove(key);
     });
 
-    // Ignore SIGTSTP as the shell should not be suspended with ^Z.
-    Core::EventLoop::register_signal(SIGTSTP, [](auto) {});
+    Core::EventLoop::register_signal(SIGTSTP, [](auto) {
+        auto job = s_shell->current_job();
+        s_shell->kill_job(job, SIGTSTP);
+        if (job)
+            job->unblock();
+    });
 
 #ifndef __serenity__
     sigset_t blocked;
