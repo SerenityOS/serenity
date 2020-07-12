@@ -31,6 +31,7 @@
 #include <Kernel/API/Syscall.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 namespace UserspaceEmulator {
@@ -216,8 +217,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     (void)arg2;
     (void)arg3;
 
-    printf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
+    dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
     switch (function) {
+    case SC_mmap:
+        return virt$mmap(arg1);
     case SC_gettid:
         return virt$gettid();
     case SC_pledge:
@@ -226,6 +229,16 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$unveil(arg1);
     case SC_getuid:
         return virt$getuid();
+    case SC_getgid:
+        return virt$getgid();
+    case SC_write:
+        return virt$write(arg1, arg2, arg3);
+    case SC_read:
+        return virt$read(arg1, arg2, arg3);
+    case SC_mprotect:
+        return virt$mprotect(arg1, arg2, arg3);
+    case SC_madvise:
+        return virt$madvise(arg1, arg2, arg3);
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
@@ -234,6 +247,34 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         dump_backtrace();
         TODO();
     }
+}
+
+u32 Emulator::virt$mmap(u32 params_addr)
+{
+    Syscall::SC_mmap_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    ASSERT(params.addr == 0);
+    ASSERT(params.flags & MAP_ANONYMOUS);
+
+    // FIXME: Write a proper VM allocator
+    static u32 next_address = 0x30000000;
+
+    u32 final_address = 0;
+    u32 final_size = round_up_to_power_of_two(params.size, PAGE_SIZE);
+
+    if (params.alignment) {
+        // FIXME: What if alignment is not a power of 2?
+        final_address = round_up_to_power_of_two(next_address, params.alignment);
+    } else {
+        final_address = next_address;
+    }
+
+    next_address = final_address + final_size;
+
+    mmu().add_region(make<SimpleRegion>(final_address, final_size));
+
+    return final_address;
 }
 
 u32 Emulator::virt$gettid()
@@ -251,9 +292,44 @@ u32 Emulator::virt$unveil(u32)
     return 0;
 }
 
+u32 Emulator::virt$mprotect(FlatPtr, size_t, int)
+{
+    return 0;
+}
+
+u32 Emulator::virt$madvise(FlatPtr, size_t, int)
+{
+    return 0;
+}
+
 uid_t Emulator::virt$getuid()
 {
     return getuid();
+}
+
+uid_t Emulator::virt$getgid()
+{
+    return getgid();
+}
+
+u32 Emulator::virt$write(int fd, FlatPtr data, ssize_t size)
+{
+    if (size < 0)
+        return -EINVAL;
+    auto buffer = mmu().copy_buffer_from_vm(data, size);
+    return syscall(SC_write, fd, buffer.data(), buffer.size());
+}
+
+u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
+{
+    if (size < 0)
+        return -EINVAL;
+    auto local_buffer = ByteBuffer::create_uninitialized(size);
+    int nread = syscall(SC_read, fd, local_buffer.data(), local_buffer.size());
+    if (nread < 0)
+        return nread;
+    mmu().copy_to_vm(buffer, local_buffer.data(), local_buffer.size());
+    return nread;
 }
 
 void Emulator::virt$exit(int status)

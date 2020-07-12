@@ -55,10 +55,16 @@ private:
 
     void setup_stack();
 
+    u32 virt$mmap(u32);
     u32 virt$gettid();
     u32 virt$unveil(u32);
     u32 virt$pledge(u32);
     uid_t virt$getuid();
+    gid_t virt$getgid();
+    u32 virt$read(int, FlatPtr, ssize_t);
+    u32 virt$write(int, FlatPtr, ssize_t);
+    u32 virt$mprotect(FlatPtr, size_t, int);
+    u32 virt$madvise(FlatPtr, size_t, int);
     void virt$exit(int);
 
     bool m_shutdown { false };
