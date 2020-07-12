@@ -804,7 +804,25 @@ void SoftCPU::DEC_reg32(const X86::Instruction& insn)
 }
 
 void SoftCPU::DIV_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::DIV_RM32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::DIV_RM32(const X86::Instruction& insn)
+{
+    auto divisor = insn.modrm().read32(*this, insn);
+    if (divisor == 0) {
+        warn() << "Divide by zero";
+        TODO();
+    }
+    u64 dividend = ((u64)edx() << 32) | eax();
+    auto result = dividend / divisor;
+    if (result > NumericLimits<u32>::max()) {
+        warn() << "Divide overflow";
+        TODO();
+    }
+
+    set_eax(result);
+    set_edx(dividend % divisor);
+}
+
 void SoftCPU::DIV_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::ENTER16(const X86::Instruction&) { TODO(); }
 void SoftCPU::ENTER32(const X86::Instruction&) { TODO(); }
