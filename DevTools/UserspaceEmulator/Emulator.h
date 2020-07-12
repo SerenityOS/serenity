@@ -57,6 +57,7 @@ private:
 
     u32 virt$mmap(u32);
     u32 virt$gettid();
+    u32 virt$getpid();
     u32 virt$unveil(u32);
     u32 virt$pledge(u32);
     uid_t virt$getuid();
@@ -65,6 +66,11 @@ private:
     u32 virt$write(int, FlatPtr, ssize_t);
     u32 virt$mprotect(FlatPtr, size_t, int);
     u32 virt$madvise(FlatPtr, size_t, int);
+    u32 virt$open(u32);
+    int virt$close(int);
+    u32 virt$fcntl(int fd, int, u32);
+    int virt$getgroups(ssize_t count, FlatPtr);
+    int virt$lseek(int fd, off_t offset, int whence);
     void virt$exit(int);
 
     bool m_shutdown { false };

@@ -29,6 +29,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <Kernel/API/Syscall.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -223,6 +224,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$mmap(arg1);
     case SC_gettid:
         return virt$gettid();
+    case SC_getpid:
+        return virt$getpid();
     case SC_pledge:
         return virt$pledge(arg1);
     case SC_unveil:
@@ -231,6 +234,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getuid();
     case SC_getgid:
         return virt$getgid();
+    case SC_close:
+        return virt$close(arg1);
     case SC_write:
         return virt$write(arg1, arg2, arg3);
     case SC_read:
@@ -239,6 +244,14 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$mprotect(arg1, arg2, arg3);
     case SC_madvise:
         return virt$madvise(arg1, arg2, arg3);
+    case SC_open:
+        return virt$open(arg1);
+    case SC_fcntl:
+        return virt$fcntl(arg1, arg2, arg3);
+    case SC_getgroups:
+        return virt$getgroups(arg1, arg2);
+    case SC_lseek:
+        return virt$lseek(arg1, arg2, arg3);
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
@@ -247,6 +260,59 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         dump_backtrace();
         TODO();
     }
+}
+
+int Emulator::virt$close(int fd)
+{
+    return syscall(SC_close, fd);
+}
+
+int Emulator::virt$lseek(int fd, off_t offset, int whence)
+{
+    return syscall(SC_lseek, fd, offset, whence);
+}
+
+int Emulator::virt$getgroups(ssize_t count, FlatPtr groups)
+{
+    if (!count)
+        return syscall(SC_getgroups, 0, nullptr);
+
+    auto buffer = ByteBuffer::create_uninitialized(count * sizeof(gid_t));
+    int rc = syscall(SC_getgroups, count, buffer.data());
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(groups, buffer.data(), buffer.size());
+    return 0;
+}
+
+u32 Emulator::virt$fcntl(int fd, int cmd, u32 arg)
+{
+    switch (cmd) {
+    case F_DUPFD:
+    case F_GETFD:
+    case F_SETFD:
+    case F_GETFL:
+    case F_SETFL:
+    case F_ISTTY:
+        break;
+    default:
+        TODO();
+    }
+
+    return syscall(SC_fcntl, fd, cmd, arg);
+}
+
+u32 Emulator::virt$open(u32 params_addr)
+{
+    Syscall::SC_open_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
+
+    int fd = openat_with_path_length(params.dirfd, (const char*)path.data(), path.size(), params.options, params.mode);
+    if (fd < 0)
+        return -errno;
+    return fd;
 }
 
 u32 Emulator::virt$mmap(u32 params_addr)
@@ -282,6 +348,11 @@ u32 Emulator::virt$gettid()
     return gettid();
 }
 
+u32 Emulator::virt$getpid()
+{
+    return getpid();
+}
+
 u32 Emulator::virt$pledge(u32)
 {
     return 0;
@@ -307,7 +378,7 @@ uid_t Emulator::virt$getuid()
     return getuid();
 }
 
-uid_t Emulator::virt$getgid()
+gid_t Emulator::virt$getgid()
 {
     return getgid();
 }
