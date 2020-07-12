@@ -1052,8 +1052,16 @@ void SoftCPU::MOVZX_reg32_RM8(const X86::Instruction& insn)
     gpr32(insn.reg32()) = insn.modrm().read8(*this, insn);
 }
 
-void SoftCPU::MOV_AL_moff8(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_AX_moff16(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOV_AL_moff8(const X86::Instruction& insn)
+{
+    set_al(read_memory8({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }));
+}
+
+void SoftCPU::MOV_AX_moff16(const X86::Instruction& insn)
+{
+    set_ax(read_memory16({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }));
+}
+
 void SoftCPU::MOV_CR_reg32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_DR_reg32(const X86::Instruction&) { TODO(); }
 
@@ -1094,9 +1102,20 @@ void SoftCPU::MOV_RM8_reg8(const X86::Instruction& insn)
     insn.modrm().write8(*this, insn, gpr8(insn.reg8()));
 }
 
-void SoftCPU::MOV_moff16_AX(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_moff32_EAX(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_moff8_AL(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOV_moff16_AX(const X86::Instruction& insn)
+{
+    write_memory16({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }, ax());
+}
+
+void SoftCPU::MOV_moff32_EAX(const X86::Instruction& insn)
+{
+    write_memory32({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }, eax());
+}
+
+void SoftCPU::MOV_moff8_AL(const X86::Instruction& insn)
+{
+    write_memory8({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }, al());
+}
 
 void SoftCPU::MOV_reg16_RM16(const X86::Instruction& insn)
 {
