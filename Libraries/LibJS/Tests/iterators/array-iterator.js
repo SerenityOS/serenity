@@ -1,5 +1,5 @@
 test("length", () => {
-    expect(Array.prototype[Symbol.iterator].length).toBe(0);
+    expect(Array.prototype[Symbol.iterator]).toHaveLength(0);
 });
 
 test("@@toStringTag", () => {
