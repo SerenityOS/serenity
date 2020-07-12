@@ -75,6 +75,8 @@ public:
     void push32(u32);
     u32 pop32();
 
+    void push_string(const StringView&);
+
     u16 segment(X86::SegmentRegister seg) const { return m_segment[(int)seg]; }
     u16& segment(X86::SegmentRegister seg) { return m_segment[(int)seg]; }
 

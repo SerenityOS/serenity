@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 
     auto elf = ELF::Loader::create((const u8*)mapped_file.data(), mapped_file.size());
 
-    UserspaceEmulator::Emulator emulator(move(elf));
+    UserspaceEmulator::Emulator emulator(executable_path, move(elf));
     if (!emulator.load_elf())
         return 1;
 

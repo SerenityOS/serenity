@@ -26,6 +26,7 @@
 
 #include "Emulator.h"
 #include "SoftCPU.h"
+#include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <Kernel/API/Syscall.h>
 #include <stdio.h>
@@ -92,9 +93,10 @@ private:
     u8* m_data { nullptr };
 };
 
-Emulator::Emulator(NonnullRefPtr<ELF::Loader> elf)
+Emulator::Emulator(const String& executable_path, NonnullRefPtr<ELF::Loader> elf)
     : m_elf(move(elf))
     , m_cpu(*this)
+    , m_executable_path(executable_path)
 {
     setup_stack();
 }
@@ -105,16 +107,19 @@ void Emulator::setup_stack()
     m_mmu.add_region(move(stack_region));
     m_cpu.set_esp(stack_location + stack_size);
 
+    m_cpu.push_string(LexicalPath(m_executable_path).basename());
+    u32 argv0 = m_cpu.esp();
+
     m_cpu.push32(0); // char** envp = { nullptr }
     u32 envp = m_cpu.esp();
 
-    m_cpu.push32(0); // char** argv = { nullptr }
+    m_cpu.push32(0); // char** argv = { argv0, nullptr }
+    m_cpu.push32(argv0);
     u32 argv = m_cpu.esp();
 
     m_cpu.push32(0); // (alignment)
-    m_cpu.push32(0); // (alignment)
 
-    u32 argc = 0;
+    u32 argc = 1;
     m_cpu.push32(envp);
     m_cpu.push32(argv);
     m_cpu.push32(argc);

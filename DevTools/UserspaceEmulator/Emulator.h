@@ -37,7 +37,7 @@ namespace UserspaceEmulator {
 
 class Emulator {
 public:
-    explicit Emulator(NonnullRefPtr<ELF::Loader>);
+    Emulator(const String& executable_path, NonnullRefPtr<ELF::Loader>);
 
     bool load_elf();
     void dump_backtrace();
@@ -63,6 +63,8 @@ private:
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
+
+    String m_executable_path;
 };
 
 }
