@@ -172,13 +172,22 @@ int Emulator::exec()
 {
     ELFSymbolProvider symbol_provider(*m_elf);
 
+    bool trace = false;
+
     while (!m_shutdown) {
-        auto base_eip = m_cpu.eip();
+        u32 base_eip = 0;
+        if (trace)
+            base_eip = m_cpu.eip();
+
         auto insn = X86::Instruction::from_stream(m_cpu, true, true);
-        out() << (const void*)base_eip << "  \033[33;1m" << insn.to_string(base_eip, &symbol_provider) << "\033[0m";
+
+        if (trace)
+            out() << (const void*)base_eip << "  \033[33;1m" << insn.to_string(base_eip, &symbol_provider) << "\033[0m";
 
         (m_cpu.*insn.handler())(insn);
-        m_cpu.dump();
+
+        if (trace)
+            m_cpu.dump();
     }
     return m_exit_status;
 }
