@@ -24,71 +24,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayIterator.h>
-#include <LibJS/Runtime/ArrayIteratorPrototype.h>
+#include <AK/StringBuilder.h>
+#include <LibJS/Runtime/StringIterator.h>
+#include <LibJS/Runtime/StringIteratorPrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 
 namespace JS {
 
-ArrayIteratorPrototype::ArrayIteratorPrototype(GlobalObject& global_object)
+StringIteratorPrototype::StringIteratorPrototype(GlobalObject& global_object)
     : Object(*global_object.iterator_prototype())
 {
 }
 
-void ArrayIteratorPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void StringIteratorPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
 {
     Object::initialize(interpreter, global_object);
 
     define_native_function("next", next, 0, Attribute::Configurable | Attribute::Writable);
-    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "Array Iterator"), Attribute::Configurable);
+    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "String Iterator"), Attribute::Configurable);
 }
 
-ArrayIteratorPrototype::~ArrayIteratorPrototype()
+StringIteratorPrototype::~StringIteratorPrototype()
 {
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
+JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
 {
     auto this_value = interpreter.this_value(global_object);
-    if (!this_value.is_object() || !this_value.as_object().is_array_iterator_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Array Iterator");
+    if (!this_value.is_object() || !this_value.as_object().is_string_iterator_object())
+        return interpreter.throw_exception<TypeError>(ErrorType::NotA, "String Iterator");
 
     auto& this_object = this_value.as_object();
-
-    auto& iterator = static_cast<ArrayIterator&>(this_object);
-    auto target_array = iterator.array();
-    if (target_array.is_undefined())
+    auto& iterator = static_cast<StringIterator&>(this_object);
+    if (iterator.done())
         return create_iterator_result_object(interpreter, global_object, js_undefined(), true);
-    ASSERT(target_array.is_object());
-    auto& array = target_array.as_object();
 
-    auto index = iterator.index();
-    auto iteration_kind = iterator.iteration_kind();
-    // FIXME: Typed array check
-    auto length = array.indexed_properties().array_like_size();
+    auto& utf8_iterator = iterator.iterator();
 
-    if (index >= length) {
-        iterator.m_array = js_undefined();
+    if (utf8_iterator.done()) {
+        iterator.m_done = true;
         return create_iterator_result_object(interpreter, global_object, js_undefined(), true);
     }
 
-    iterator.m_index++;
-    if (iteration_kind == Object::PropertyKind::Key)
-        return create_iterator_result_object(interpreter, global_object, Value(static_cast<i32>(index)), false);
+    StringBuilder builder;
+    builder.append_codepoint(*utf8_iterator);
+    ++utf8_iterator;
 
-    auto value = array.get(index);
-    if (interpreter.exception())
-        return {};
-    if (iteration_kind == Object::PropertyKind::Value)
-        return create_iterator_result_object(interpreter, global_object, value, false);
-
-    auto* entry_array = Array::create(global_object);
-    entry_array->define_property(0, Value(static_cast<i32>(index)));
-    entry_array->define_property(1, value);
-    return create_iterator_result_object(interpreter, global_object, entry_array, false);
+    return create_iterator_result_object(interpreter, global_object, js_string(interpreter, builder.to_string()), false);
 }
 
 }

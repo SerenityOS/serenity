@@ -33,6 +33,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>
 #include <string.h>
@@ -87,6 +88,7 @@ void StringPrototype::initialize(Interpreter& interpreter, GlobalObject& global_
     define_native_function("includes", includes, 1, attr);
     define_native_function("slice", slice, 2, attr);
     define_native_function("lastIndexOf", last_index_of, 1, attr);
+    define_native_function(interpreter.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
 StringPrototype::~StringPrototype()
@@ -426,6 +428,18 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     }
 
     return Value(-1);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
+{
+    auto this_object = interpreter.this_value(global_object);
+    if (this_object.is_undefined() || this_object.is_null())
+        return interpreter.throw_exception<TypeError>(ErrorType::ToObjectNullOrUndef);
+
+    auto string = this_object.to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+    return StringIterator::create(global_object, string);
 }
 
 }
