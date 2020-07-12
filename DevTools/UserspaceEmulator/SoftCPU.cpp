@@ -1573,11 +1573,42 @@ void SoftCPU::WBINVD(const X86::Instruction&) { TODO(); }
 void SoftCPU::XADD_RM16_reg16(const X86::Instruction&) { TODO(); }
 void SoftCPU::XADD_RM32_reg32(const X86::Instruction&) { TODO(); }
 void SoftCPU::XADD_RM8_reg8(const X86::Instruction&) { TODO(); }
-void SoftCPU::XCHG_AX_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::XCHG_EAX_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::XCHG_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::XCHG_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::XCHG_reg8_RM8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::XCHG_AX_reg16(const X86::Instruction& insn)
+{
+    auto temp = gpr16(insn.reg16());
+    gpr16(insn.reg16()) = eax();
+    set_eax(temp);
+}
+
+void SoftCPU::XCHG_EAX_reg32(const X86::Instruction& insn)
+{
+    auto temp = gpr32(insn.reg32());
+    gpr32(insn.reg32()) = eax();
+    set_eax(temp);
+}
+
+void SoftCPU::XCHG_reg16_RM16(const X86::Instruction& insn)
+{
+    auto temp = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, gpr16(insn.reg16()));
+    gpr16(insn.reg16()) = temp;
+}
+
+void SoftCPU::XCHG_reg32_RM32(const X86::Instruction& insn)
+{
+    auto temp = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, gpr32(insn.reg32()));
+    gpr32(insn.reg32()) = temp;
+}
+
+void SoftCPU::XCHG_reg8_RM8(const X86::Instruction& insn)
+{
+    auto temp = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, gpr8(insn.reg8()));
+    gpr8(insn.reg8()) = temp;
+}
+
 void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
 
 #define DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest)                                                   \
