@@ -1000,7 +1000,7 @@ void SoftCPU::MOV_RM8_imm8(const X86::Instruction& insn)
 
 void SoftCPU::MOV_RM8_reg8(const X86::Instruction& insn)
 {
-    insn.modrm().write8(*this, insn, insn.modrm().read8(*this, insn));
+    insn.modrm().write8(*this, insn, gpr8(insn.reg8()));
 }
 
 void SoftCPU::MOV_moff16_AX(const X86::Instruction&) { TODO(); }
