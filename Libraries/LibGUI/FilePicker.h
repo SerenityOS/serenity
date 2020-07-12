@@ -40,11 +40,21 @@ class FilePicker final : public Dialog, private ModelClient {
 public:
     enum class Mode {
         Open,
+        OpenMultiple,
         Save
     };
 
-    static Optional<String> get_open_filepath(const String& window_title = {});
-    static Optional<String> get_save_filepath(const String& title, const String& extension);
+    enum class Options : unsigned {
+        None = 0,
+        DisablePreview = (1 << 0)
+    };
+
+    static Optional<String> get_open_filepath(Options options)
+    {
+        return get_open_filepath({}, options);
+    }
+    static Optional<String> get_open_filepath(const String& window_title = {}, Options options = Options::None);
+    static Optional<String> get_save_filepath(const String& title, const String& extension, Options options = Options::None);
     static bool file_exists(const StringView& path);
 
     virtual ~FilePicker() override;
@@ -52,18 +62,20 @@ public:
     LexicalPath selected_file() const { return m_selected_file; }
 
 private:
+    bool have_preview() const { return m_preview_container; }
     void set_preview(const LexicalPath&);
     void clear_preview();
     void on_file_return();
 
     virtual void on_model_update(unsigned) override;
 
-    FilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory(), Window* parent_window = nullptr);
+    FilePicker(Mode type = Mode::Open, Options = Options::None, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory(), Window* parent_window = nullptr);
 
     static String ok_button_name(Mode mode)
     {
         switch (mode) {
         case Mode::Open:
+        case Mode::OpenMultiple:
             return "Open";
         case Mode::Save:
             return "Save";
