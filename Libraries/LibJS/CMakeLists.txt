@@ -63,6 +63,8 @@ set(SOURCES
     Runtime/ScriptFunction.cpp
     Runtime/Shape.cpp
     Runtime/StringConstructor.cpp
+    Runtime/StringIterator.cpp
+    Runtime/StringIteratorPrototype.cpp
     Runtime/StringObject.cpp
     Runtime/StringPrototype.cpp
     Runtime/Symbol.cpp

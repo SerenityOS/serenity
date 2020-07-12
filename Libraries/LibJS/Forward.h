@@ -69,7 +69,8 @@
 
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES            \
     __JS_ENUMERATE(Iterator, iterator)              \
-    __JS_ENUMERATE(ArrayIterator, array_iterator)
+    __JS_ENUMERATE(ArrayIterator, array_iterator)   \
+    __JS_ENUMERATE(StringIterator, string_iterator)
 
 #define JS_ENUMERATE_BUILTIN_TYPES \
     JS_ENUMERATE_NATIVE_OBJECTS    \
