@@ -973,9 +973,66 @@ void SoftCPU::LSL_reg32_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LSS_reg16_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LSS_reg32_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LTR_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOVSB(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOVSD(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOVSW(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MOVSB(const X86::Instruction& insn)
+{
+    auto src_segment = segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
+    if (insn.has_address_size_override_prefix()) {
+        do_once_or_repeat<false>(insn, [&] {
+            auto src = read_memory8({ src_segment, si() });
+            write_memory8({ es(), di() }, src);
+            set_di(di() + (df() ? -1 : 1));
+            set_si(si() + (df() ? -1 : 1));
+        });
+    } else {
+        do_once_or_repeat<false>(insn, [&] {
+            auto src = read_memory8({ src_segment, esi() });
+            write_memory8({ es(), edi() }, src);
+            set_edi(edi() + (df() ? -1 : 1));
+            set_esi(esi() + (df() ? -1 : 1));
+        });
+    }
+}
+
+void SoftCPU::MOVSD(const X86::Instruction& insn)
+{
+    auto src_segment = segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
+    if (insn.has_address_size_override_prefix()) {
+        do_once_or_repeat<false>(insn, [&] {
+            auto src = read_memory32({ src_segment, si() });
+            write_memory32({ es(), di() }, src);
+            set_di(di() + (df() ? -1 : 1));
+            set_si(si() + (df() ? -1 : 1));
+        });
+    } else {
+        do_once_or_repeat<false>(insn, [&] {
+            auto src = read_memory32({ src_segment, esi() });
+            write_memory32({ es(), edi() }, src);
+            set_edi(edi() + (df() ? -1 : 1));
+            set_esi(esi() + (df() ? -1 : 1));
+        });
+    }
+}
+
+void SoftCPU::MOVSW(const X86::Instruction& insn)
+{
+    auto src_segment = segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
+    if (insn.has_address_size_override_prefix()) {
+        do_once_or_repeat<false>(insn, [&] {
+            auto src = read_memory16({ src_segment, si() });
+            write_memory16({ es(), di() }, src);
+            set_di(di() + (df() ? -1 : 1));
+            set_si(si() + (df() ? -1 : 1));
+        });
+    } else {
+        do_once_or_repeat<false>(insn, [&] {
+            auto src = read_memory16({ src_segment, esi() });
+            write_memory16({ es(), edi() }, src);
+            set_edi(edi() + (df() ? -1 : 1));
+            set_esi(esi() + (df() ? -1 : 1));
+        });
+    }
+}
 void SoftCPU::MOVSX_reg16_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOVSX_reg32_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOVSX_reg32_RM8(const X86::Instruction&) { TODO(); }
