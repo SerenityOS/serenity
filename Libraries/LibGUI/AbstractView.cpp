@@ -375,4 +375,16 @@ void AbstractView::drop_event(DropEvent& event)
         on_drop(index, event);
 }
 
+void AbstractView::set_multi_select(bool multi_select)
+{
+    if (m_multi_select == multi_select)
+        return;
+    m_multi_select = multi_select;
+    if (!multi_select && m_selection.size() > 1) {
+        auto first_selected = m_selection.first();
+        m_selection.clear();
+        m_selection.set(first_selected);
+    }
+}
+
 }

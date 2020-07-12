@@ -47,6 +47,9 @@ public:
     bool is_editable() const { return m_editable; }
     void set_editable(bool editable) { m_editable = editable; }
 
+    bool is_multi_select() const { return m_multi_select; }
+    void set_multi_select(bool);
+
     virtual bool accepts_focus() const override { return true; }
     virtual void did_update_model(unsigned flags);
     virtual void did_update_selection();
@@ -110,6 +113,7 @@ private:
     OwnPtr<ModelEditingDelegate> m_editing_delegate;
     ModelSelection m_selection;
     bool m_activates_on_selection { false };
+    bool m_multi_select { true };
 };
 
 }
