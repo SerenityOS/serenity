@@ -35,6 +35,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+//#define DEBUG_SPAM
+
 namespace UserspaceEmulator {
 
 static constexpr u32 stack_location = 0x10000000;
@@ -218,7 +220,9 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     (void)arg2;
     (void)arg3;
 
+#ifdef DEBUG_SPAM
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
+#endif
     switch (function) {
     case SC_mmap:
         return virt$mmap(arg1);
