@@ -42,9 +42,9 @@
 
 namespace GUI {
 
-Optional<String> FilePicker::get_open_filepath(const String& window_title)
+Optional<String> FilePicker::get_open_filepath(const String& window_title, Options options)
 {
-    auto picker = FilePicker::construct(Mode::Open);
+    auto picker = FilePicker::construct(Mode::Open, options);
 
     if (!window_title.is_null())
         picker->set_title(window_title);
@@ -60,9 +60,9 @@ Optional<String> FilePicker::get_open_filepath(const String& window_title)
     return {};
 }
 
-Optional<String> FilePicker::get_save_filepath(const String& title, const String& extension)
+Optional<String> FilePicker::get_save_filepath(const String& title, const String& extension, Options options)
 {
-    auto picker = FilePicker::construct(Mode::Save, String::format("%s.%s", title.characters(), extension.characters()));
+    auto picker = FilePicker::construct(Mode::Save, options, String::format("%s.%s", title.characters(), extension.characters()));
 
     if (picker->exec() == Dialog::ExecOK) {
         String file_path = picker->selected_file().string();
@@ -75,11 +75,22 @@ Optional<String> FilePicker::get_save_filepath(const String& title, const String
     return {};
 }
 
-FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView& path, Window* parent_window)
+FilePicker::FilePicker(Mode mode, Options options, const StringView& file_name, const StringView& path, Window* parent_window)
     : Dialog(parent_window)
     , m_model(FileSystemModel::create())
     , m_mode(mode)
 {
+    switch (m_mode) {
+        case Mode::Open:
+            set_title("Open File");
+            break;
+        case Mode::OpenMultiple:
+            set_title("Open Files");
+            break;
+        case Mode::Save:
+            set_title("Save File");
+            break;
+    }
     set_title(m_mode == Mode::Open ? "Open File" : "Save File");
     set_rect(200, 200, 700, 400);
     auto& horizontal_container = set_main_widget<Widget>();
@@ -113,6 +124,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     m_location_textbox->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
 
     m_view = vertical_container.add<MultiView>();
+    m_view->set_multi_select(m_mode == Mode::OpenMultiple);
     m_view->set_model(SortingProxyModel::create(*m_model));
     m_view->set_model_column(FileSystemModel::Column::Name);
     m_view->model()->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
@@ -198,11 +210,13 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         const FileSystemModel::Node& node = m_model->node(local_index);
         LexicalPath path { node.full_path(m_model) };
 
-        clear_preview();
+        if (have_preview())
+            clear_preview();
 
         if (!node.is_directory())
             m_filename_textbox->set_text(node.name);
-        set_preview(path);
+        if (have_preview())
+            set_preview(path);
     };
 
     auto& button_container = lower_container.add<Widget>();
@@ -242,26 +256,28 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         }
     };
 
-    m_preview_container = horizontal_container.add<Frame>();
-    m_preview_container->set_visible(false);
-    m_preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_preview_container->set_preferred_size(180, 0);
-    m_preview_container->set_layout<VerticalBoxLayout>();
-    m_preview_container->layout()->set_margins({ 8, 8, 8, 8 });
+    if (!((unsigned)options & (unsigned)Options::DisablePreview)) {
+        m_preview_container = horizontal_container.add<Frame>();
+        m_preview_container->set_visible(false);
+        m_preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+        m_preview_container->set_preferred_size(180, 0);
+        m_preview_container->set_layout<VerticalBoxLayout>();
+        m_preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 
-    m_preview_image = m_preview_container->add<Image>();
-    m_preview_image->set_should_stretch(true);
-    m_preview_image->set_auto_resize(false);
-    m_preview_image->set_preferred_size(160, 160);
+        m_preview_image = m_preview_container->add<Image>();
+        m_preview_image->set_should_stretch(true);
+        m_preview_image->set_auto_resize(false);
+        m_preview_image->set_preferred_size(160, 160);
 
-    m_preview_name_label = m_preview_container->add<Label>();
-    m_preview_name_label->set_font(Gfx::Font::default_bold_font());
-    m_preview_name_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_preview_name_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
+        m_preview_name_label = m_preview_container->add<Label>();
+        m_preview_name_label->set_font(Gfx::Font::default_bold_font());
+        m_preview_name_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        m_preview_name_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
 
-    m_preview_geometry_label = m_preview_container->add<Label>();
-    m_preview_geometry_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_preview_geometry_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
+        m_preview_geometry_label = m_preview_container->add<Label>();
+        m_preview_geometry_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        m_preview_geometry_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
+    }
 }
 
 FilePicker::~FilePicker()
@@ -272,7 +288,8 @@ FilePicker::~FilePicker()
 void FilePicker::on_model_update(unsigned)
 {
     m_location_textbox->set_text(m_model->root_path());
-    clear_preview();
+    if (have_preview())
+        clear_preview();
 }
 
 void FilePicker::set_preview(const LexicalPath& path)
