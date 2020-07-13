@@ -93,6 +93,7 @@ int Shell::builtin_bg(int argc, const char** argv)
     }
 
     job->set_running_in_background(true);
+    job->set_is_suspended(false);
 
     dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
     fprintf(stderr, "Resuming job %" PRIu64 " - %s\n", job->job_id(), job->cmd().characters());
@@ -339,6 +340,7 @@ int Shell::builtin_fg(int argc, const char** argv)
     }
 
     job->set_running_in_background(false);
+    job->set_is_suspended(false);
 
     dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
     fprintf(stderr, "Resuming job %" PRIu64 " - %s\n", job->job_id(), job->cmd().characters());

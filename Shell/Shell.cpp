@@ -561,16 +561,18 @@ Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
         }
 #endif
         auto job = run_command(command);
+        if (!job)
+            continue;
 
         if (command.should_wait) {
             block_on_job(job);
-            jobs_to_wait_for.append(job);
+            if (!job->is_suspended())
+                jobs_to_wait_for.append(job);
         } else {
             if (command.is_pipe_source) {
                 jobs_to_wait_for.append(job);
             } else if (command.should_notify_if_in_background) {
-                if (job)
-                    job->set_running_in_background(true);
+                job->set_running_in_background(true);
                 restore_stdin();
             }
         }
