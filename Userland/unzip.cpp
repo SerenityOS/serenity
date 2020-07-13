@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/MappedFile.h>
+#include <AK/NumberFormat.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <string.h>
@@ -31,26 +33,20 @@
 
 static const u8 central_directory_file_header_sig[] = "\x50\x4b\x01\x02";
 
-bool seek_and_read(u8* buffer, Core::File& file, off_t seek_to, size_t bytes_to_read)
+bool seek_and_read(u8* buffer, const MappedFile& file, off_t seek_to, size_t bytes_to_read)
 {
     if (!buffer)
         return false;
 
-    if (!file.seek(seek_to))
+    if ((size_t)seek_to >= file.size())
         return false;
 
-    size_t read_bytes = 0;
-    while (read_bytes < bytes_to_read) {
-        auto nread = file.read(buffer + read_bytes, bytes_to_read - read_bytes);
-        if (nread <= 0)
-            return false;
-        read_bytes += nread;
-    }
-    
+    memcpy(buffer, (const char*)file.data() + seek_to, bytes_to_read);
+
     return true;
 }
 
-bool find_next_central_directory(off_t file_size, Core::File& file, off_t current_index, off_t& return_index)
+bool find_next_central_directory(off_t file_size, const MappedFile& file, off_t current_index, off_t& return_index)
 {
     off_t start_index = current_index == 0 ? current_index : current_index + 1;
     for (off_t index = start_index; index < file_size - 4; index++) {
@@ -66,7 +62,7 @@ bool find_next_central_directory(off_t file_size, Core::File& file, off_t curren
     return false;
 }
 
-bool unpack_file_for_central_directory_index(off_t central_directory_index, Core::File& file)
+bool unpack_file_for_central_directory_index(off_t central_directory_index, const MappedFile& file)
 {
     u8 buffer[4];
     if (!seek_and_read(buffer, file, central_directory_index + 42, 4))
@@ -93,7 +89,7 @@ bool unpack_file_for_central_directory_index(off_t central_directory_index, Core
 
     auto new_file = Core::File::construct(String { file_name });
     if (!new_file->open(Core::IODevice::WriteOnly)) {
-        fprintf(stderr, "Can't write file %s: %s\n", file_name, file.error_string());
+        fprintf(stderr, "Can't write file %s: %s\n", file_name, new_file->error_string());
         return false;
     }
 
@@ -119,31 +115,39 @@ bool unpack_file_for_central_directory_index(off_t central_directory_index, Core
 int main(int argc, char** argv)
 {
     const char* path;
+    int map_size_limit = 32 * MB;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(map_size_limit, "Maximum chunk size to map", "map-size-limit", 0, "size");
     args_parser.add_positional_argument(path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
-    String zip_file_path = { path };
-
-    auto file = Core::File::construct(zip_file_path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Can't read file %s: %s\n", zip_file_path.characters(), file->error_string());
-        return 2;
-    }
+    String zip_file_path { path };
 
     struct stat st;
-    int rc = fstat(file->fd(), &st);
+    int rc = stat(zip_file_path.characters(), &st);
     if (rc < 0) {
-        memset(&st, 0, sizeof(st));
-        return 3;
+        perror("stat");
+        return 1;
     }
+
+    // FIXME: Map file chunk-by-chunk once we have mmap() with offset.
+    //        This will require mapping some parts then unmapping them repeatedly,
+    //        but it would be significantly faster and less syscall heavy than seek()/read() at every read.
+    if (st.st_size >= map_size_limit) {
+        fprintf(stderr, "unzip warning: Refusing to map file since it is larger than %s, pass '--map-size-limit %d' to get around this\n",
+            human_readable_size(map_size_limit).characters(),
+            round_up_to_power_of_two(st.st_size, 16));
+        return 1;
+    }
+
+    MappedFile mapped_file { zip_file_path };
 
     printf("Archive: %s\n", zip_file_path.characters());
 
     off_t index = 0;
-    while (find_next_central_directory(st.st_size, file, index, index)) {
-        bool success = unpack_file_for_central_directory_index(index, file);
+    while (find_next_central_directory(st.st_size, mapped_file, index, index)) {
+        bool success = unpack_file_for_central_directory_index(index, mapped_file);
         if (!success) {
             printf("Could not find local file header for a file.\n");
             return 4;
