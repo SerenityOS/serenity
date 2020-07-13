@@ -773,8 +773,17 @@ void SoftCPU::CALL_imm32(const X86::Instruction& insn)
 
 void SoftCPU::CBW(const X86::Instruction&) { TODO(); }
 void SoftCPU::CDQ(const X86::Instruction&) { TODO(); }
-void SoftCPU::CLC(const X86::Instruction&) { TODO(); }
-void SoftCPU::CLD(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::CLC(const X86::Instruction&)
+{
+    set_cf(false);
+}
+
+void SoftCPU::CLD(const X86::Instruction&)
+{
+    set_df(false);
+}
+
 void SoftCPU::CLI(const X86::Instruction&) { TODO(); }
 void SoftCPU::CLTS(const X86::Instruction&) { TODO(); }
 void SoftCPU::CMC(const X86::Instruction&) { TODO(); }
@@ -1614,8 +1623,17 @@ void SoftCPU::SHR_RM8_imm8(const X86::Instruction& insn)
 void SoftCPU::SIDT(const X86::Instruction&) { TODO(); }
 void SoftCPU::SLDT_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::SMSW_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::STC(const X86::Instruction&) { TODO(); }
-void SoftCPU::STD(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::STC(const X86::Instruction&)
+{
+    set_cf(true);
+}
+
+void SoftCPU::STD(const X86::Instruction&)
+{
+    set_df(true);
+}
+
 void SoftCPU::STI(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::STOSB(const X86::Instruction& insn)
