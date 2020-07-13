@@ -98,6 +98,7 @@ public:
     };
 
     Function<CloseRequestDecision()> on_close_request;
+    Function<void(const bool is_active)> on_activity_change;
 
     int x() const { return rect().x(); }
     int y() const { return rect().y(); }
