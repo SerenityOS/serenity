@@ -971,6 +971,8 @@ Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
     if (m_imm1_bytes)
         m_imm1 = stream.read(m_imm1_bytes);
 
+    m_handler = m_descriptor->handler;
+
 #ifdef DISALLOW_INVALID_LOCK_PREFIX
     if (m_has_lock_prefix && !m_descriptor->lock_prefix_allowed) {
         fprintf(stderr, "Instruction not allowed with LOCK prefix, this will raise #UD\n");
@@ -1904,12 +1906,6 @@ void MemoryOrRegisterReference::decode32(InstructionStream& stream)
             }
         }
     }
-}
-
-InstructionHandler Instruction::handler() const
-{
-    ASSERT(m_descriptor->handler);
-    return m_descriptor->handler;
 }
 
 }
