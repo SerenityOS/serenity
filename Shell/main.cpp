@@ -121,8 +121,10 @@ int main(int argc, char** argv)
     Core::EventLoop::register_signal(SIGTSTP, [](auto) {
         auto job = s_shell->current_job();
         s_shell->kill_job(job, SIGTSTP);
-        if (job)
+        if (job) {
+            job->set_is_suspended(true);
             job->unblock();
+        }
     });
 
 #ifndef __serenity__
