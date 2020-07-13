@@ -219,7 +219,7 @@ public:
     u32 read32(CPU&, const Instruction&);
 
     template<typename CPU>
-    LogicalAddress resolve(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+    ALWAYS_INLINE LogicalAddress resolve(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
     {
         if (m_a32)
             return resolve32(cpu, segment_prefix);
@@ -274,13 +274,13 @@ public:
     static Instruction from_stream(InstructionStream&, bool o32, bool a32);
     ~Instruction() { }
 
-    MemoryOrRegisterReference& modrm() const
+    ALWAYS_INLINE MemoryOrRegisterReference& modrm() const
     {
         ASSERT(has_rm());
         return m_modrm;
     }
 
-    InstructionHandler handler() const;
+    ALWAYS_INLINE InstructionHandler handler() const { return m_handler; }
 
     bool has_segment_prefix() const { return m_segment_prefix.has_value(); }
     Optional<SegmentRegister> segment_prefix() const { return m_segment_prefix; }
@@ -393,10 +393,11 @@ private:
     mutable MemoryOrRegisterReference m_modrm;
 
     InstructionDescriptor* m_descriptor { nullptr };
+    InstructionHandler m_handler { nullptr };
 };
 
 template<typename CPU>
-LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
 {
     ASSERT(!m_a32);
 
@@ -442,7 +443,7 @@ LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu, Optional<Seg
 }
 
 template<typename CPU>
-inline LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
 {
     ASSERT(m_a32);
 
@@ -487,7 +488,7 @@ inline LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optio
 }
 
 template<typename CPU>
-inline u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegister& default_segment) const
+ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegister& default_segment) const
 {
     u32 scale = 0;
     switch (m_sib & 0xc0) {
@@ -576,7 +577,7 @@ inline u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegist
 }
 
 template<typename CPU>
-inline void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction& insn, u8 value)
+ALWAYS_INLINE void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction& insn, u8 value)
 {
     if (is_register()) {
         cpu.gpr8(reg8()) = value;
@@ -588,7 +589,7 @@ inline void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction& insn,
 }
 
 template<typename CPU>
-inline void MemoryOrRegisterReference::write16(CPU& cpu, const Instruction& insn, u16 value)
+ALWAYS_INLINE void MemoryOrRegisterReference::write16(CPU& cpu, const Instruction& insn, u16 value)
 {
     if (is_register()) {
         cpu.gpr16(reg16()) = value;
@@ -600,7 +601,7 @@ inline void MemoryOrRegisterReference::write16(CPU& cpu, const Instruction& insn
 }
 
 template<typename CPU>
-inline void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn, u32 value)
+ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn, u32 value)
 {
     if (is_register()) {
         cpu.gpr32(reg32()) = value;
@@ -612,7 +613,7 @@ inline void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn
 }
 
 template<typename CPU>
-inline u8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
+ALWAYS_INLINE u8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.gpr8(reg8());
@@ -622,7 +623,7 @@ inline u8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
 }
 
 template<typename CPU>
-inline u16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
+ALWAYS_INLINE u16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.gpr16(reg16());
@@ -632,7 +633,7 @@ inline u16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
 }
 
 template<typename CPU>
-inline u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
+ALWAYS_INLINE u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.gpr32(reg32());
