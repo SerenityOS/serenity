@@ -75,6 +75,7 @@ public:
     bool should_be_disowned() const { return m_should_be_disowned; }
     void disown() { m_should_be_disowned = true; }
     bool is_running_in_background() const { return m_running_in_background; }
+    bool is_suspended() const { return m_is_suspended; }
     void unblock() const
     {
         if (!m_exited && on_exit)
@@ -94,6 +95,8 @@ public:
             on_exit(*this);
     }
 
+    void set_is_suspended(bool value) const { m_is_suspended = value; }
+
     void set_running_in_background(bool running_in_background)
     {
         m_running_in_background = running_in_background;
@@ -111,5 +114,6 @@ private:
     int m_exit_code { -1 };
     Core::ElapsedTimer m_command_timer;
     mutable bool m_active { true };
+    mutable bool m_is_suspended { false };
     bool m_should_be_disowned { false };
 };
