@@ -431,39 +431,42 @@ void Editor::handle_read_event()
 
     enum Amount { Character, Word };
     auto do_cursor_left = [&](Amount amount) {
-	if (m_cursor == 0)
-            return;
-	if (amount == Word) {
-	    auto skipped_at_least_one_character = false;
-	    for (;;) {
-		if (m_cursor == 0)
-		    break;
-		if (skipped_at_least_one_character && isspace(m_buffer[m_cursor - 1])) // stop *after* a space, but only if it changes the position
-		    break;
-		skipped_at_least_one_character = true;
-		--m_cursor;
-	    }
-	} else {
-	    --m_cursor;
-	}
+        if (m_cursor > 0) {
+            if (amount == Word) {
+                auto skipped_at_least_one_character = false;
+                for (;;) {
+                    if (m_cursor == 0)
+                        break;
+                    if (skipped_at_least_one_character && isspace(m_buffer[m_cursor - 1])) // stop *after* a space, but only if it changes the position
+                        break;
+                    skipped_at_least_one_character = true;
+                    --m_cursor;
+                }
+            } else {
+                --m_cursor;
+            }
+        }
+        m_inline_search_cursor = m_cursor;
     };
     auto do_cursor_right = [&](Amount amount) {
-	if (m_cursor >= m_buffer.size())
-            return;
-	if (amount == Word) {
-	    // Temporarily put a space at the end of our buffer,
-	    // doing this greatly simplifies the logic below.
-	    m_buffer.append(' ');
-	    for (;;) {
-		if (m_cursor >= m_buffer.size())
-		    break;
-		if (isspace(m_buffer[++m_cursor]))
-		    break;
-	    }
-	    m_buffer.take_last();
-	} else {
-	    ++m_cursor;
-	}
+        if (m_cursor < m_buffer.size()) {
+            if (amount == Word) {
+                // Temporarily put a space at the end of our buffer,
+                // doing this greatly simplifies the logic below.
+                m_buffer.append(' ');
+                for (;;) {
+                    if (m_cursor >= m_buffer.size())
+                        break;
+                    if (isspace(m_buffer[++m_cursor]))
+                        break;
+                }
+                m_buffer.take_last();
+            } else {
+                ++m_cursor;
+            }
+        }
+        m_inline_search_cursor = m_cursor;
+        m_search_offset = 0;
     };
 
     auto do_backspace = [&] {
@@ -559,14 +562,11 @@ void Editor::handle_read_event()
             }
             case 'D': // left
 		do_cursor_left(ctrl_held ? Word : Character);
-                m_inline_search_cursor = m_cursor;
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'C': // right
 		do_cursor_right(ctrl_held ? Word : Character);
-                m_inline_search_cursor = m_cursor;
-                m_search_offset = 0;
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
