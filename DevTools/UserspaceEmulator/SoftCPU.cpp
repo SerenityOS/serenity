@@ -74,39 +74,6 @@ void SoftCPU::update_code_cache()
     m_cached_code_end = region->cacheable_ptr(region->size());
 }
 
-u8 SoftCPU::read8()
-{
-    if (!m_cached_code_ptr || m_cached_code_ptr >= m_cached_code_end)
-        update_code_cache();
-
-    u8 value = *m_cached_code_ptr;
-    m_cached_code_ptr += 1;
-    m_eip += 1;
-    return value;
-}
-
-u16 SoftCPU::read16()
-{
-    if (!m_cached_code_ptr || (m_cached_code_ptr + 2) >= m_cached_code_end)
-        update_code_cache();
-
-    u16 value = *reinterpret_cast<const u16*>(m_cached_code_ptr);
-    m_cached_code_ptr += 2;
-    m_eip += 2;
-    return value;
-}
-
-u32 SoftCPU::read32()
-{
-    if (!m_cached_code_ptr || (m_cached_code_ptr + 4) >= m_cached_code_end)
-        update_code_cache();
-
-    u32 value = *reinterpret_cast<const u32*>(m_cached_code_ptr);
-    m_cached_code_ptr += 4;
-    m_eip += 4;
-    return value;
-}
-
 u8 SoftCPU::read_memory8(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x18 || address.selector() == 0x20 || address.selector() == 0x28);
