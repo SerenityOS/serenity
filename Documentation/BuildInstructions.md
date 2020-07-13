@@ -22,7 +22,7 @@ sudo zypper install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs patch
 
 **Arch Linux / Manjaro**
 ```bash
-sudo pacman -S base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
+sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
 ```
 
 **ALT Linux**
