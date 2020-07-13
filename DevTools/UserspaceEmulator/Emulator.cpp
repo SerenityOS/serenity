@@ -44,33 +44,37 @@ namespace UserspaceEmulator {
 static constexpr u32 stack_location = 0x10000000;
 static constexpr size_t stack_size = 64 * KB;
 
-Emulator::Emulator(const String& executable_path, NonnullRefPtr<ELF::Loader> elf)
+Emulator::Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader> elf)
     : m_elf(move(elf))
     , m_cpu(*this)
-    , m_executable_path(executable_path)
 {
-    setup_stack();
+    setup_stack(arguments);
 }
 
-void Emulator::setup_stack()
+void Emulator::setup_stack(const Vector<String>& arguments)
 {
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     m_mmu.add_region(move(stack_region));
     m_cpu.set_esp(stack_location + stack_size);
 
-    m_cpu.push_string(LexicalPath(m_executable_path).basename());
-    u32 argv0 = m_cpu.esp();
+    Vector<u32> argv_entries;
+
+    for (auto& argument : arguments) {
+        m_cpu.push_string(argument.characters());
+        argv_entries.append(m_cpu.esp());
+    }
 
     m_cpu.push32(0); // char** envp = { nullptr }
     u32 envp = m_cpu.esp();
 
-    m_cpu.push32(0); // char** argv = { argv0, nullptr }
-    m_cpu.push32(argv0);
+    m_cpu.push32(0); // char** argv = { argv_entries..., nullptr }
+    for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
+        m_cpu.push32(argv_entries[i]);
     u32 argv = m_cpu.esp();
 
     m_cpu.push32(0); // (alignment)
 
-    u32 argc = 1;
+    u32 argc = argv_entries.size();
     m_cpu.push32(envp);
     m_cpu.push32(argv);
     m_cpu.push32(argc);
