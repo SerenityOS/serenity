@@ -292,7 +292,6 @@ public:
     virtual u8 read8() = 0;
     virtual u16 read16() = 0;
     virtual u32 read32() = 0;
-    u32 read(unsigned count);
 };
 
 class SimpleInstructionStream final : public InstructionStream {
@@ -378,9 +377,12 @@ private:
     String to_string_a16() const;
     String to_string_a32() const;
 
-    void decode(InstructionStream&, bool a32);
-    void decode16(InstructionStream&);
-    void decode32(InstructionStream&);
+    template<typename InstructionStreamType>
+    void decode(InstructionStreamType&, bool a32);
+    template<typename InstructionStreamType>
+    void decode16(InstructionStreamType&);
+    template<typename InstructionStreamType>
+    void decode32(InstructionStreamType&);
 
     template<typename CPU>
     LogicalAddress resolve16(const CPU&, Optional<SegmentRegister>);
@@ -413,7 +415,8 @@ private:
 
 class Instruction {
 public:
-    static Instruction from_stream(InstructionStream&, bool o32, bool a32);
+    template<typename InstructionStreamType>
+    static Instruction from_stream(InstructionStreamType&, bool o32, bool a32);
     ~Instruction() { }
 
     ALWAYS_INLINE MemoryOrRegisterReference& modrm() const
@@ -503,7 +506,8 @@ public:
     String to_string(u32 origin, const SymbolProvider* = nullptr, bool x32 = true) const;
 
 private:
-    Instruction(InstructionStream&, bool o32, bool a32);
+    template<typename InstructionStreamType>
+    Instruction(InstructionStreamType&, bool o32, bool a32);
 
     String to_string_internal(u32 origin, const SymbolProvider*, bool x32) const;
 
@@ -784,7 +788,8 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction&
     return cpu.read_memory32(address);
 }
 
-ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStream& stream, bool o32, bool a32)
+template<typename InstructionStreamType>
+ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream, bool o32, bool a32)
 {
     return Instruction(stream, o32, a32);
 }
@@ -826,7 +831,8 @@ ALWAYS_INLINE static Optional<SegmentRegister> to_segment_prefix(u8 op)
     }
 }
 
-ALWAYS_INLINE Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
+template<typename InstructionStreamType>
+ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, bool a32)
     : m_a32(a32)
     , m_o32(o32)
 {
@@ -905,10 +911,29 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStream& stream, bool o32, bool
     m_imm2_bytes = m_descriptor->imm2_bytes_for_address_size(m_a32);
 
     // Consume immediates if present.
-    if (m_imm2_bytes)
-        m_imm2 = stream.read(m_imm2_bytes);
-    if (m_imm1_bytes)
-        m_imm1 = stream.read(m_imm1_bytes);
+    switch (m_imm2_bytes) {
+    case 1:
+        m_imm2 = stream.read8();
+        break;
+    case 2:
+        m_imm2 = stream.read16();
+        break;
+    case 4:
+        m_imm2 = stream.read32();
+        break;
+    }
+
+    switch (m_imm1_bytes) {
+    case 1:
+        m_imm1 = stream.read8();
+        break;
+    case 2:
+        m_imm1 = stream.read16();
+        break;
+    case 4:
+        m_imm1 = stream.read32();
+        break;
+    }
 
     m_handler = m_descriptor->handler;
 
@@ -920,21 +945,8 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStream& stream, bool o32, bool
 #endif
 }
 
-ALWAYS_INLINE u32 InstructionStream::read(unsigned count)
-{
-    switch (count) {
-    case 1:
-        return read8();
-    case 2:
-        return read16();
-    case 4:
-        return read32();
-    }
-    ASSERT_NOT_REACHED();
-    return 0;
-}
-
-ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStream& stream, bool a32)
+template<typename InstructionStreamType>
+ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, bool a32)
 {
     m_a32 = a32;
     m_rm = stream.read8();
@@ -972,7 +984,8 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStream& stream, 
     }
 }
 
-ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStream&)
+template<typename InstructionStreamType>
+ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
 {
     ASSERT(!m_a32);
 
@@ -995,7 +1008,8 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStream&)
     }
 }
 
-ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStream& stream)
+template<typename InstructionStreamType>
+ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& stream)
 {
     ASSERT(m_a32);
 

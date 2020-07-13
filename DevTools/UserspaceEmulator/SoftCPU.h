@@ -287,13 +287,13 @@ public:
         return 0;
     }
 
-private:
     // ^X86::InstructionStream
     virtual bool can_read() override { return false; }
     virtual u8 read8() override;
     virtual u16 read16() override;
     virtual u32 read32() override;
 
+private:
     // ^X86::Interpreter
     virtual void AAA(const X86::Instruction&) override;
     virtual void AAD(const X86::Instruction&) override;
