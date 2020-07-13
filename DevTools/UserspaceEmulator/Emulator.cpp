@@ -188,6 +188,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     switch (function) {
     case SC_mmap:
         return virt$mmap(arg1);
+    case SC_munmap:
+        return virt$munmap(arg1, arg2);
     case SC_gettid:
         return virt$gettid();
     case SC_getpid:
@@ -222,11 +224,17 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$lseek(arg1, arg2, arg3);
     case SC_get_process_name:
         return virt$get_process_name(arg1, arg2);
+    case SC_dbgputstr:
+        return virt$dbgputstr(arg1, arg2);
+    case SC_dbgputch:
+        return virt$dbgputch(arg1);
+    case SC_kill:
+        return virt$kill(arg1, arg2);
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
     default:
-        warn() << "Unimplemented syscall!";
+        warn() << "Unimplemented syscall: " << Syscall::to_string((Syscall::Function)function);
         dump_backtrace();
         TODO();
     }
@@ -245,6 +253,24 @@ int Emulator::virt$fstat(int fd, FlatPtr statbuf)
 int Emulator::virt$close(int fd)
 {
     return syscall(SC_close, fd);
+}
+
+int Emulator::virt$dbgputstr(FlatPtr characters, int length)
+{
+    auto buffer = mmu().copy_buffer_from_vm(characters, length);
+    dbgputstr((const char*)buffer.data(), buffer.size());
+    return 0;
+}
+
+int Emulator::virt$dbgputch(char ch)
+{
+    dbgputch(ch);
+    return 0;
+}
+
+int Emulator::virt$kill(pid_t pid, int signal)
+{
+    return syscall(SC_kill, pid, signal);
 }
 
 int Emulator::virt$get_process_name(FlatPtr buffer, int size)
@@ -301,6 +327,16 @@ u32 Emulator::virt$open(u32 params_addr)
     if (fd < 0)
         return -errno;
     return fd;
+}
+
+u32 Emulator::virt$munmap(FlatPtr address, u32 size)
+{
+    auto* region = mmu().find_region({ 0x20, address });
+    ASSERT(region);
+    if (region->size() != round_up_to_power_of_two(size, PAGE_SIZE))
+        TODO();
+    mmu().remove_region(*region);
+    return 0;
 }
 
 u32 Emulator::virt$mmap(u32 params_addr)
