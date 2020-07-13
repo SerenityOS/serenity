@@ -812,4 +812,37 @@ private:
     const u8* m_cached_code_end { nullptr };
 };
 
+ALWAYS_INLINE u8 SoftCPU::read8()
+{
+    if (!m_cached_code_ptr || m_cached_code_ptr >= m_cached_code_end)
+        update_code_cache();
+
+    u8 value = *m_cached_code_ptr;
+    m_cached_code_ptr += 1;
+    m_eip += 1;
+    return value;
+}
+
+ALWAYS_INLINE u16 SoftCPU::read16()
+{
+    if (!m_cached_code_ptr || (m_cached_code_ptr + 2) >= m_cached_code_end)
+        update_code_cache();
+
+    u16 value = *reinterpret_cast<const u16*>(m_cached_code_ptr);
+    m_cached_code_ptr += 2;
+    m_eip += 2;
+    return value;
+}
+
+ALWAYS_INLINE u32 SoftCPU::read32()
+{
+    if (!m_cached_code_ptr || (m_cached_code_ptr + 4) >= m_cached_code_end)
+        update_code_cache();
+
+    u32 value = *reinterpret_cast<const u32*>(m_cached_code_ptr);
+    m_cached_code_ptr += 4;
+    m_eip += 4;
+    return value;
+}
+
 }
