@@ -79,6 +79,16 @@ String SortingProxyModel::column_name(int index) const
     return target().column_name(index);
 }
 
+ModelIndex SortingProxyModel::index(int row, int column, const ModelIndex& parent) const
+{
+    if (static_cast<size_t>(row) >= m_row_mappings.size() || column >= column_count())
+        return {};
+    auto mapped_index = target().index(m_row_mappings[row], column, parent);
+    if (!mapped_index.is_valid())
+        return {};
+    return create_index(row, column, mapped_index.internal_data());
+}
+
 Variant SortingProxyModel::data(const ModelIndex& index, Role role) const
 {
     auto target_index = map_to_target(index);
