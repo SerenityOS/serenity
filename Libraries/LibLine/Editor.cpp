@@ -469,6 +469,42 @@ void Editor::handle_read_event()
         m_search_offset = 0;
     };
 
+    auto do_search_backwards = [&] {
+        m_searching_backwards = true;
+        auto inline_search_cursor = m_inline_search_cursor;
+        StringBuilder builder;
+        builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
+        String search_phrase = builder.to_string();
+        if (search(search_phrase, true, true)) {
+            ++m_search_offset;
+        } else {
+            insert(search_phrase);
+        }
+        m_inline_search_cursor = inline_search_cursor;
+    };
+
+    auto do_search_forwards = [&] {
+        auto inline_search_cursor = m_inline_search_cursor;
+        StringBuilder builder;
+        builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
+        String search_phrase = builder.to_string();
+        auto search_changed_directions = m_searching_backwards;
+        m_searching_backwards = false;
+        if (m_search_offset > 0) {
+            m_search_offset -= 1 + search_changed_directions;
+            if (!search(search_phrase, true, true)) {
+                insert(search_phrase);
+            }
+        } else {
+            m_search_offset = 0;
+            m_cursor = 0;
+            m_buffer.clear();
+            insert(search_phrase);
+            m_refresh_needed = true;
+        }
+        m_inline_search_cursor = inline_search_cursor;
+    };
+
     auto do_backspace = [&] {
         if (m_is_searching) {
             return;
@@ -519,47 +555,15 @@ void Editor::handle_read_event()
                 ctrl_held = true;
                 continue;
             case 'A': // up
-            {
-                m_searching_backwards = true;
-                auto inline_search_cursor = m_inline_search_cursor;
-                StringBuilder builder;
-                builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
-                String search_phrase = builder.to_string();
-                if (search(search_phrase, true, true)) {
-                    ++m_search_offset;
-                } else {
-                    insert(search_phrase);
-                }
-                m_inline_search_cursor = inline_search_cursor;
+                do_search_backwards();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            }
             case 'B': // down
-            {
-                auto inline_search_cursor = m_inline_search_cursor;
-                StringBuilder builder;
-                builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
-                String search_phrase = builder.to_string();
-                auto search_changed_directions = m_searching_backwards;
-                m_searching_backwards = false;
-                if (m_search_offset > 0) {
-                    m_search_offset -= 1 + search_changed_directions;
-                    if (!search(search_phrase, true, true)) {
-                        insert(search_phrase);
-                    }
-                } else {
-                    m_search_offset = 0;
-                    m_cursor = 0;
-                    m_buffer.clear();
-                    insert(search_phrase);
-                    m_refresh_needed = true;
-                }
-                m_inline_search_cursor = inline_search_cursor;
+                do_search_forwards();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            }
             case 'D': // left
 		do_cursor_left(ctrl_held ? Word : Character);
                 m_state = InputState::Free;
@@ -618,6 +622,17 @@ void Editor::handle_read_event()
             if (!cb.value()->callback(*this)) {
                 continue;
             }
+        }
+
+        // ^N
+        if (codepoint == ctrl('N')) {
+            do_search_forwards();
+            continue;
+        }
+        // ^P
+        if (codepoint == ctrl('P')) {
+            do_search_backwards();
+            continue;
         }
 
         m_search_offset = 0; // reset search offset on any key
