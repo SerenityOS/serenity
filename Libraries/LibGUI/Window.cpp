@@ -329,6 +329,8 @@ void Window::event(Core::Event& event)
 
     if (event.type() == Event::WindowBecameActive || event.type() == Event::WindowBecameInactive) {
         m_is_active = event.type() == Event::WindowBecameActive;
+        if (on_activity_change)
+            on_activity_change(m_is_active);
         if (m_main_widget)
             m_main_widget->dispatch_event(event, this);
         if (m_focused_widget)
