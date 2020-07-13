@@ -30,6 +30,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC optimize("O3")
+#endif
+
 //#define MEMORY_DEBUG
 
 namespace UserspaceEmulator {
