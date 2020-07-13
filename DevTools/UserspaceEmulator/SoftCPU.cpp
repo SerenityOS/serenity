@@ -343,11 +343,16 @@ static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
     return result;
 }
 
-template<typename T>
-static T op_sbb(SoftCPU& cpu, const T& dest, const T& src)
+template<typename T, bool cf>
+static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
+
+    if constexpr (cf)
+        asm volatile("stc");
+    else
+        asm volatile("clc");
 
     if constexpr (sizeof(T) == 4) {
         asm volatile("sbbl %%ecx, %%eax\n"
@@ -372,6 +377,14 @@ static T op_sbb(SoftCPU& cpu, const T& dest, const T& src)
 
     cpu.set_flags_oszapc(new_flags);
     return result;
+}
+
+template<typename T>
+static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
+{
+    if (cpu.cf())
+        return op_sbb_impl<T, true>(cpu, dest, src);
+    return op_sbb_impl<T, false>(cpu, dest, src);
 }
 
 template<typename T>
