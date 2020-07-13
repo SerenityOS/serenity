@@ -25,6 +25,7 @@
  */
 
 #include "Emulator.h"
+#include "MmapRegion.h"
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
 #include <AK/LexicalPath.h>
@@ -44,10 +45,20 @@ namespace UserspaceEmulator {
 static constexpr u32 stack_location = 0x10000000;
 static constexpr size_t stack_size = 64 * KB;
 
+static Emulator* s_the;
+
+Emulator& Emulator::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
+
 Emulator::Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader> elf)
     : m_elf(move(elf))
     , m_cpu(*this)
 {
+    ASSERT(!s_the);
+    s_the = this;
     setup_stack(arguments);
 }
 
@@ -315,7 +326,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
 
     next_address = final_address + final_size;
 
-    mmu().add_region(make<SimpleRegion>(final_address, final_size));
+    mmu().add_region(make<MmapRegion>(final_address, final_size, params.prot));
 
     return final_address;
 }

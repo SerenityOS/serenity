@@ -1,5 +1,6 @@
 set(SOURCES
     Emulator.cpp
+    MmapRegion.cpp
     SimpleRegion.cpp
     SoftCPU.cpp
     SoftMMU.cpp
