@@ -1031,15 +1031,15 @@ void SoftCPU::MOVSD(const X86::Instruction& insn)
         do_once_or_repeat<false>(insn, [&] {
             auto src = read_memory32({ src_segment, si() });
             write_memory32({ es(), di() }, src);
-            set_di(di() + (df() ? -1 : 1));
-            set_si(si() + (df() ? -1 : 1));
+            set_di(di() + (df() ? -4 : 4));
+            set_si(si() + (df() ? -4 : 4));
         });
     } else {
         do_once_or_repeat<false>(insn, [&] {
             auto src = read_memory32({ src_segment, esi() });
             write_memory32({ es(), edi() }, src);
-            set_edi(edi() + (df() ? -1 : 1));
-            set_esi(esi() + (df() ? -1 : 1));
+            set_edi(edi() + (df() ? -4 : 4));
+            set_esi(esi() + (df() ? -4 : 4));
         });
     }
 }
@@ -1051,15 +1051,15 @@ void SoftCPU::MOVSW(const X86::Instruction& insn)
         do_once_or_repeat<false>(insn, [&] {
             auto src = read_memory16({ src_segment, si() });
             write_memory16({ es(), di() }, src);
-            set_di(di() + (df() ? -1 : 1));
-            set_si(si() + (df() ? -1 : 1));
+            set_di(di() + (df() ? -2 : 2));
+            set_si(si() + (df() ? -2 : 2));
         });
     } else {
         do_once_or_repeat<false>(insn, [&] {
             auto src = read_memory16({ src_segment, esi() });
             write_memory16({ es(), edi() }, src);
-            set_edi(edi() + (df() ? -1 : 1));
-            set_esi(esi() + (df() ? -1 : 1));
+            set_edi(edi() + (df() ? -2 : 2));
+            set_esi(esi() + (df() ? -2 : 2));
         });
     }
 }
