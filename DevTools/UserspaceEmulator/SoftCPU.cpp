@@ -1249,7 +1249,12 @@ void SoftCPU::POP_reg32(const X86::Instruction& insn)
 void SoftCPU::PUSHA(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSHAD(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSHF(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSHFD(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::PUSHFD(const X86::Instruction&)
+{
+    push32(m_eflags & 0x00fcffff);
+}
+
 void SoftCPU::PUSH_CS(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_DS(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_ES(const X86::Instruction&) { TODO(); }
