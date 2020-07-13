@@ -271,6 +271,45 @@ Vector<String> Shell::expand_globs(Vector<StringView> path_segments, const Strin
     }
 }
 
+Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands)
+{
+    Vector<AST::Command> commands;
+
+    Function<void(AST::Command&)> resolve_aliases_and_append = [&](auto& command) {
+        if (!command.argv.is_empty()) {
+            auto alias = resolve_alias(command.argv[0]);
+            if (!alias.is_null()) {
+                auto argv0 = command.argv.take_first();
+                auto subcommand_ast = Parser { alias }.parse();
+                if (subcommand_ast) {
+                    while (subcommand_ast->is_execute()) {
+                        auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
+                        subcommand_ast = ast->command();
+                    }
+                    AST::Node& substitute = *new AST::Join(subcommand_ast->position(), subcommand_ast, *new AST::CommandLiteral(subcommand_ast->position(), command));
+                    for (auto& subst_command : substitute.run(*this)->resolve_as_commands(*this)) {
+                        if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
+                            commands.append(subst_command);
+                        else
+                            resolve_aliases_and_append(subst_command);
+                    }
+                } else {
+                    commands.append(command);
+                }
+            } else {
+                commands.append(command);
+            }
+        } else {
+            commands.append(command);
+        }
+    };
+
+    for (auto& command : initial_commands)
+        resolve_aliases_and_append(command);
+
+    return commands;
+}
+
 String Shell::resolve_path(String path) const
 {
     if (!path.starts_with('/'))
@@ -349,7 +388,7 @@ int Shell::run_command(const StringView& cmd)
     return last_return_code;
 }
 
-RefPtr<Job> Shell::run_command(AST::Command& command)
+RefPtr<Job> Shell::run_command(const AST::Command& command)
 {
     FileDescriptionCollector fds;
 
@@ -492,6 +531,49 @@ RefPtr<Job> Shell::run_command(AST::Command& command)
     fds.collect();
 
     return *job;
+}
+
+Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
+{
+    Vector<RefPtr<Job>> jobs_to_wait_for;
+
+    for (auto& command : commands) {
+#ifdef SH_DEBUG
+        dbg() << "Command";
+        for (auto& arg : command.argv)
+            dbg() << "argv: " << arg;
+        for (auto& redir : command.redirections) {
+            if (redir->is_path_redirection()) {
+                auto path_redir = (const AST::PathRedirection*)redir.ptr();
+                dbg() << "redir path " << (int)path_redir->direction << " " << path_redir->path << " <-> " << path_redir->fd;
+            } else if (redir->is_fd_redirection()) {
+                auto fd_redir = (const AST::FdRedirection*)redir.ptr();
+                dbg() << "redir fd " << fd_redir->source_fd << " -> " << fd_redir->dest_fd;
+            } else if (redir->is_close_redirection()) {
+                auto close_redir = (const AST::CloseRedirection*)redir.ptr();
+                dbg() << "close fd " << close_redir->fd;
+            } else {
+                ASSERT_NOT_REACHED();
+            }
+        }
+#endif
+        auto job = run_command(command);
+
+        if (command.should_wait) {
+            block_on_job(job);
+            jobs_to_wait_for.append(job);
+        } else {
+            if (command.is_pipe_source) {
+                jobs_to_wait_for.append(job);
+            } else if (command.should_notify_if_in_background) {
+                if (job)
+                    job->set_running_in_background(true);
+                restore_stdin();
+            }
+        }
+    }
+
+    return jobs_to_wait_for;
 }
 
 bool Shell::run_file(const String& filename, bool explicitly_invoked)

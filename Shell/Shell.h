@@ -73,7 +73,8 @@ public:
     constexpr static auto global_init_file_path = "/etc/shellrc";
 
     int run_command(const StringView&);
-    RefPtr<Job> run_command(AST::Command&);
+    RefPtr<Job> run_command(const AST::Command&);
+    Vector<RefPtr<Job>> run_commands(Vector<AST::Command>&);
     bool run_file(const String&, bool explicitly_invoked = true);
     bool run_builtin(int argc, const char** argv, int& retval);
     bool has_builtin(const StringView&) const;
@@ -83,6 +84,7 @@ public:
     static String expand_tilde(const String&);
     static Vector<String> expand_globs(const StringView& path, StringView base);
     static Vector<String> expand_globs(Vector<StringView> path_segments, const StringView& base);
+    Vector<AST::Command> expand_aliases(Vector<AST::Command>);
     String resolve_path(String) const;
     String resolve_alias(const String&) const;
 
