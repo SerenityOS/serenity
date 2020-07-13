@@ -58,6 +58,7 @@ private:
     void setup_stack(const Vector<String>& arguments);
 
     u32 virt$mmap(u32);
+    u32 virt$munmap(FlatPtr address, u32 size);
     u32 virt$gettid();
     u32 virt$getpid();
     u32 virt$unveil(u32);
@@ -71,6 +72,9 @@ private:
     u32 virt$open(u32);
     int virt$close(int);
     int virt$get_process_name(FlatPtr buffer, int size);
+    int virt$dbgputstr(FlatPtr characters, int length);
+    int virt$dbgputch(char);
+    int virt$kill(pid_t, int);
     int virt$fstat(int, FlatPtr);
     u32 virt$fcntl(int fd, int, u32);
     int virt$getgroups(ssize_t count, FlatPtr);

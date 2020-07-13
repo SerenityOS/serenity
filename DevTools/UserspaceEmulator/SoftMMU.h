@@ -76,6 +76,8 @@ public:
     Region* find_region(X86::LogicalAddress);
 
     void add_region(NonnullOwnPtr<Region>);
+    void remove_region(Region&);
+
     void set_tls_region(NonnullOwnPtr<Region>);
 
     void copy_to_vm(FlatPtr destination, const void* source, size_t);

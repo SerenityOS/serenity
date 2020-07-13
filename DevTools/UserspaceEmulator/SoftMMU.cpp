@@ -48,6 +48,11 @@ void SoftMMU::add_region(NonnullOwnPtr<Region> region)
     m_regions.append(move(region));
 }
 
+void SoftMMU::remove_region(Region& region)
+{
+    m_regions.remove_first_matching([&](auto& entry) { return entry.ptr() == &region; });
+}
+
 void SoftMMU::set_tls_region(NonnullOwnPtr<Region> region)
 {
     ASSERT(!m_tls_region);
