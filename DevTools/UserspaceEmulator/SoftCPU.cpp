@@ -472,20 +472,24 @@ static T op_shr(SoftCPU& cpu, T data, u8 steps)
     u32 result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(T) == 4)
-        asm volatile("shrl %%cl, %%eax\n" ::"a"(data), "c"(steps));
-    else if constexpr (sizeof(T) == 2)
-        asm volatile("shrw %%cl, %%ax\n" ::"a"(data), "c"(steps));
-    else if constexpr (sizeof(T) == 1)
-        asm volatile("shrb %%cl, %%al\n" ::"a"(data), "c"(steps));
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("shrl %%cl, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("shrw %%cl, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("shrb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    }
 
     asm volatile(
-        "mov %%eax, %%ebx\n"
-        : "=b"(result));
-    asm volatile(
         "pushf\n"
-        "pop %%eax"
-        : "=a"(new_flags));
+        "pop %%ebx"
+        : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     return result;
@@ -500,20 +504,24 @@ static T op_shl(SoftCPU& cpu, T data, u8 steps)
     u32 result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(T) == 4)
-        asm volatile("shll %%cl, %%eax\n" ::"a"(data), "c"(steps));
-    else if constexpr (sizeof(T) == 2)
-        asm volatile("shlw %%cl, %%ax\n" ::"a"(data), "c"(steps));
-    else if constexpr (sizeof(T) == 1)
-        asm volatile("shlb %%cl, %%al\n" ::"a"(data), "c"(steps));
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("shll %%cl, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("shlw %%cl, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("shlb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    }
 
     asm volatile(
-        "mov %%eax, %%ebx\n"
-        : "=b"(result));
-    asm volatile(
         "pushf\n"
-        "pop %%eax"
-        : "=a"(new_flags));
+        "pop %%ebx"
+        : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     return result;
@@ -1355,20 +1363,24 @@ static T op_sar(SoftCPU& cpu, T data, u8 steps)
     u32 result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(T) == 4)
-        asm volatile("sarl %%cl, %%eax\n" ::"a"(data), "c"(steps));
-    else if constexpr (sizeof(T) == 2)
-        asm volatile("sarw %%cl, %%ax\n" ::"a"(data), "c"(steps));
-    else if constexpr (sizeof(T) == 1)
-        asm volatile("sarb %%cl, %%al\n" ::"a"(data), "c"(steps));
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("sarl %%cl, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("sarw %%cl, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("sarb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    }
 
     asm volatile(
-        "mov %%eax, %%ebx\n"
-        : "=b"(result));
-    asm volatile(
         "pushf\n"
-        "pop %%eax"
-        : "=a"(new_flags));
+        "pop %%ebx"
+        : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     return result;
