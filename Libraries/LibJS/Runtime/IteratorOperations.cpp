@@ -25,39 +25,51 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 
 namespace JS {
 
-Object* get_iterator(Object& obj, String hint, Value method)
+Object* get_iterator(GlobalObject& global_object, Value value, String hint, Value method)
 {
-    auto& interpreter = obj.interpreter();
+    auto& interpreter = global_object.interpreter();
     ASSERT(hint == "sync" || hint == "async");
     if (method.is_empty()) {
         if (hint == "async")
             TODO();
-        method = obj.get(obj.interpreter().well_known_symbol_iterator());
+        auto object = value.to_object(interpreter, global_object);
+        if (!object)
+            return {};
+        method = object->get(interpreter.well_known_symbol_iterator());
         if (interpreter.exception())
             return {};
     }
-    if (!method.is_function())
-        TODO();
-    auto iterator = interpreter.call(method.as_function(), &obj);
+    if (!method.is_function()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects().characters());
+        return nullptr;
+    }
+    auto iterator = interpreter.call(method.as_function(), value);
     if (interpreter.exception())
         return {};
-    if (!iterator.is_object())
-        TODO();
+    if (!iterator.is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects().characters());
+        return nullptr;
+    }
     return &iterator.as_object();
 }
 
-Value iterator_next(Object& iterator, Value value)
+Object* iterator_next(Object& iterator, Value value)
 {
     auto& interpreter = iterator.interpreter();
     auto next_method = iterator.get("next");
     if (interpreter.exception())
         return {};
 
-    ASSERT(next_method.is_function());
+    if (!next_method.is_function()) {
+        interpreter.throw_exception<TypeError>(ErrorType::IterableNextNotAFunction);
+        return nullptr;
+    }
 
     Value result;
     if (value.is_empty()) {
@@ -70,37 +82,12 @@ Value iterator_next(Object& iterator, Value value)
 
     if (interpreter.exception())
         return {};
-    if (!result.is_object())
-        TODO();
+    if (!result.is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::IterableNextBadReturn);
+        return nullptr;
+    }
 
-    return result;
-}
-
-bool is_iterator_complete(Object& iterator_result)
-{
-    auto done = iterator_result.get("done");
-    if (iterator_result.interpreter().exception())
-        return false;
-    return done.to_boolean();
-}
-
-Value iterator_value(Object& iterator_result)
-{
-    return iterator_result.get("value");
-}
-
-Value iterator_step(Object& iterator)
-{
-    auto& interpreter = iterator.interpreter();
-    auto result = iterator_next(iterator);
-    if (interpreter.exception())
-        return {};
-    auto done = is_iterator_complete(result.as_object());
-    if (interpreter.exception())
-        return {};
-    if (done)
-        return Value(false);
-    return result;
+    return &result.as_object();
 }
 
 void iterator_close(Object& iterator)
@@ -115,6 +102,37 @@ Value create_iterator_result_object(Interpreter& interpreter, GlobalObject& glob
     object->define_property("value", value);
     object->define_property("done", Value(done));
     return object;
+}
+
+void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value&)> callback)
+{
+    auto& interpreter = global_object.interpreter();
+
+    auto iterator = get_iterator(global_object, value);
+    if (!iterator)
+        return;
+
+    while (true) {
+        auto next_object = iterator_next(*iterator);
+        if (!next_object)
+            return;
+
+        auto done_property = next_object->get("done");
+        if (interpreter.exception())
+            return;
+
+        if (!done_property.is_empty() && done_property.to_boolean())
+            return;
+
+        auto next_value = next_object->get("value");
+        if (interpreter.exception())
+            return;
+
+        auto result = callback(next_value);
+        if (result == IterationDecision::Break)
+            return;
+        ASSERT(result == IterationDecision::Continue);
+    }
 }
 
 }

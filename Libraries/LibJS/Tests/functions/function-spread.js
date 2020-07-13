@@ -13,6 +13,24 @@ test("basic functionality", () => {
     expect(foo(..."abc")).toBe("c");
 });
 
+test("spreading custom iterable", () => {
+    let o = {
+        [Symbol.iterator]() {
+            return {
+                i: 0,
+                next() {
+                    if (this.i++ === 3) {
+                        return { done: true };
+                    }
+                    return { value: this.i };
+                },
+            };
+        },
+    };
+
+    expect(Math.max(...o)).toBe(3);
+});
+
 test("spreading non iterable", () => {
     expect(() => {
         [...1];

@@ -200,7 +200,6 @@ class ExpectationError extends Error {
 
         toContain(item) {
             this.__doMatcher(() => {
-                // FIXME: Iterator check
                 for (let element of this.target) {
                     if (item === element) return;
                 }
@@ -211,7 +210,6 @@ class ExpectationError extends Error {
 
         toContainEqual(item) {
             this.__doMatcher(() => {
-                // FIXME: Iterator check
                 for (let element of this.target) {
                     if (deepEquals(item, element)) return;
                 }
