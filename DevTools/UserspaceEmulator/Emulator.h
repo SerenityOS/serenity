@@ -68,6 +68,8 @@ private:
     u32 virt$madvise(FlatPtr, size_t, int);
     u32 virt$open(u32);
     int virt$close(int);
+    int virt$get_process_name(FlatPtr buffer, int size);
+    int virt$fstat(int, FlatPtr);
     u32 virt$fcntl(int fd, int, u32);
     int virt$getgroups(ssize_t count, FlatPtr);
     int virt$lseek(int fd, off_t offset, int whence);

@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 //#define DEBUG_SPAM
@@ -240,6 +241,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getgid();
     case SC_close:
         return virt$close(arg1);
+    case SC_fstat:
+        return virt$fstat(arg1, arg2);
     case SC_write:
         return virt$write(arg1, arg2, arg3);
     case SC_read:
@@ -256,6 +259,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getgroups(arg1, arg2);
     case SC_lseek:
         return virt$lseek(arg1, arg2, arg3);
+    case SC_get_process_name:
+        return virt$get_process_name(arg1, arg2);
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
@@ -266,9 +271,27 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     }
 }
 
+int Emulator::virt$fstat(int fd, FlatPtr statbuf)
+{
+    struct stat local_statbuf;
+    int rc = syscall(SC_fstat, fd, &local_statbuf);
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(statbuf, &local_statbuf, sizeof(local_statbuf));
+    return rc;
+}
+
 int Emulator::virt$close(int fd)
 {
     return syscall(SC_close, fd);
+}
+
+int Emulator::virt$get_process_name(FlatPtr buffer, int size)
+{
+    if (size < 9)
+        return -ENAMETOOLONG;
+    mmu().copy_to_vm(buffer, "EMULATED", 9);
+    return 0;
 }
 
 int Emulator::virt$lseek(int fd, off_t offset, int whence)
