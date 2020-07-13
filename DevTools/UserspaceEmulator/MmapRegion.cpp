@@ -30,16 +30,35 @@
 
 namespace UserspaceEmulator {
 
+NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 prot)
+{
+    auto region = adopt_own(*new MmapRegion(base, size, prot));
+    region->m_file_backed = false;
+    region->m_data = (u8*)calloc(1, size);
+    return region;
+}
+
+NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset)
+{
+    auto region = adopt_own(*new MmapRegion(base, size, prot));
+    region->m_file_backed = true;
+    region->m_data = (u8*)mmap(nullptr, size, prot, flags, fd, offset);
+    ASSERT(region->m_data != MAP_FAILED);
+    return region;
+}
+
 MmapRegion::MmapRegion(u32 base, u32 size, int prot)
     : Region(base, size)
     , m_prot(prot)
 {
-    m_data = (u8*)calloc(1, size);
 }
 
 MmapRegion::~MmapRegion()
 {
-    free(m_data);
+    if (m_file_backed)
+        munmap(m_data, size());
+    else
+        free(m_data);
 }
 
 u8 MmapRegion::read8(FlatPtr offset)

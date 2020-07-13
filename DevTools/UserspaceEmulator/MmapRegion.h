@@ -33,7 +33,8 @@ namespace UserspaceEmulator {
 
 class MmapRegion final : public SoftMMU::Region {
 public:
-    MmapRegion(u32 base, u32 size, int prot);
+    static NonnullOwnPtr<MmapRegion> create_anonymous(u32 base, u32 size, u32 prot);
+    static NonnullOwnPtr<MmapRegion> create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset);
     virtual ~MmapRegion() override;
 
     virtual u8 read8(u32 offset) override;
@@ -51,8 +52,11 @@ public:
     bool is_executable() const { return m_prot & PROT_EXEC; }
 
 private:
+    MmapRegion(u32 base, u32 size, int prot);
+
     u8* m_data { nullptr };
     int m_prot { 0 };
+    bool m_file_backed { false };
 };
 
 }
