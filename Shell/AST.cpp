@@ -742,79 +742,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
     if (m_command->would_execute())
         return m_command->run(shell);
 
-    auto initial_commands = m_command->run(shell)->resolve_as_commands(shell);
-    decltype(initial_commands) commands;
-
-    Function<void(Command&)> resolve_aliases_and_append = [&](auto& command) {
-        if (!command.argv.is_empty()) {
-            auto alias = shell->resolve_alias(command.argv[0]);
-            if (!alias.is_null()) {
-                auto argv0 = command.argv.take_first();
-                auto subcommand_ast = Parser { alias }.parse();
-                if (subcommand_ast) {
-                    while (subcommand_ast->is_execute()) {
-                        auto* ast = static_cast<Execute*>(subcommand_ast.ptr());
-                        subcommand_ast = ast->command();
-                    }
-                    RefPtr<Node> substitute = create<Join>(position(), move(subcommand_ast), create<CommandLiteral>(position(), command));
-                    for (auto& subst_command : substitute->run(shell)->resolve_as_commands(shell)) {
-                        if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
-                            commands.append(subst_command);
-                        else
-                            resolve_aliases_and_append(subst_command);
-                    }
-                } else {
-                    commands.append(command);
-                }
-            } else {
-                commands.append(command);
-            }
-        } else {
-            commands.append(command);
-        }
-    };
-
-    for (auto& command : initial_commands)
-        resolve_aliases_and_append(command);
-
-    Vector<RefPtr<Job>> jobs_to_wait_for;
-
-    auto run_commands = [&](auto& commands) {
-        for (auto& command : commands) {
-#ifdef EXECUTE_DEBUG
-            dbg() << "Command";
-            for (auto& arg : command.argv)
-                dbg() << "argv: " << arg;
-            for (auto& redir : command.redirections) {
-                if (redir->is_path_redirection()) {
-                    auto path_redir = (const PathRedirection*)redir.ptr();
-                    dbg() << "redir path " << (int)path_redir->direction << " " << path_redir->path << " <-> " << path_redir->fd;
-                } else if (redir->is_fd_redirection()) {
-                    auto fd_redir = (const FdRedirection*)redir.ptr();
-                    dbg() << "redir fd " << fd_redir->source_fd << " -> " << fd_redir->dest_fd;
-                } else if (redir->is_close_redirection()) {
-                    auto close_redir = (const CloseRedirection*)redir.ptr();
-                    dbg() << "close fd " << close_redir->fd;
-                } else {
-                    ASSERT_NOT_REACHED();
-                }
-            }
-#endif
-            job = shell->run_command(command);
-
-            if (command.should_wait) {
-                shell->block_on_job(job);
-            } else {
-                if (command.is_pipe_source) {
-                    jobs_to_wait_for.append(job);
-                } else if (command.should_notify_if_in_background) {
-                    if (job)
-                        job->set_running_in_background(true);
-                    shell->restore_stdin();
-                }
-            }
-        }
-    };
+    auto commands = shell->expand_aliases(m_command->run(shell)->resolve_as_commands(shell));
 
     if (m_capture_stdout) {
         int pipefd[2];
@@ -860,9 +788,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
             try_read();
         };
 
-        run_commands(commands);
-
-        for (auto job : jobs_to_wait_for) {
+        for (auto job : shell->run_commands(commands)) {
             shell->block_on_job(job);
         }
 
@@ -877,12 +803,14 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
         return create<StringValue>(builder.build(), shell->local_variable_or("IFS", "\n"), shell->options.inline_exec_keep_empty_segments);
     }
 
-    run_commands(commands);
-    for (auto job : jobs_to_wait_for) {
+    RefPtr<Job> last_job;
+
+    for (auto& job : shell->run_commands(commands)) {
         shell->block_on_job(job);
+        last_job = move(job);
     }
 
-    return create<JobValue>(move(job));
+    return create<JobValue>(move(last_job));
 }
 
 void Execute::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1969,7 +1897,7 @@ Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
     return { shell->expand_tilde(builder.to_string()) };
 }
 
-Result<RefPtr<Rewiring>, String> CloseRedirection::apply()
+Result<RefPtr<Rewiring>, String> CloseRedirection::apply() const
 {
     return static_cast<RefPtr<Rewiring>>((adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseDestination))));
 }
@@ -1978,7 +1906,7 @@ CloseRedirection::~CloseRedirection()
 {
 }
 
-Result<RefPtr<Rewiring>, String> PathRedirection::apply()
+Result<RefPtr<Rewiring>, String> PathRedirection::apply() const
 {
     auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<RefPtr<Rewiring>, String> {
         if (fd < 0) {
