@@ -142,8 +142,10 @@ OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
         first = false;
         if (!item_builder.is_empty())
             item_builder.append(' ');
+        ASSERT(offset <= line.length());
         item_builder.append(line.substring_view(offset, line.length() - offset));
         ++lines;
+        offset = 0;
     }
 
     if (!flush_item_if_needed() || first)
