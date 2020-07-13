@@ -257,12 +257,8 @@ static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFor
     build_slash(s_0f_table32, op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
-void Instruction::build_opcode_tables_if_needed()
+[[gnu::constructor]] static void build_opcode_tables()
 {
-    static bool has_built_tables = false;
-    if (has_built_tables)
-        return;
-
     build(0x00, "ADD", OP_RM8_reg8, &Interpreter::ADD_RM8_reg8, LockPrefixAllowed);
     build(0x01, "ADD", OP_RM16_reg16, &Interpreter::ADD_RM16_reg16, OP_RM32_reg32, &Interpreter::ADD_RM32_reg32, LockPrefixAllowed);
     build(0x02, "ADD", OP_reg8_RM8, &Interpreter::ADD_reg8_RM8, LockPrefixAllowed);
@@ -706,8 +702,6 @@ void Instruction::build_opcode_tables_if_needed()
     build_0f(0xFD, "PADDW", OP_mm1_mm2m64, &Interpreter::PADDW_mm1_mm2m64);
     build_0f(0xFE, "PADDD", OP_mm1_mm2m64, &Interpreter::PADDD_mm1_mm2m64);
     build_0f(0xFF, "UD0", OP, &Interpreter::UD0);
-
-    has_built_tables = true;
 }
 
 static const char* register_name(RegisterIndex8);
