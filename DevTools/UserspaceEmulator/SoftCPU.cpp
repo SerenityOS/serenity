@@ -185,7 +185,7 @@ void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
 }
 
 template<typename T>
-static T op_inc(SoftCPU& cpu, T data)
+ALWAYS_INLINE static T op_inc(SoftCPU& cpu, T data)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -214,7 +214,7 @@ static T op_inc(SoftCPU& cpu, T data)
 }
 
 template<typename T>
-static T op_dec(SoftCPU& cpu, T data)
+ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -243,7 +243,7 @@ static T op_dec(SoftCPU& cpu, T data)
 }
 
 template<typename T>
-static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -274,7 +274,7 @@ static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-static T op_or(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -305,7 +305,7 @@ static T op_or(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -336,7 +336,7 @@ static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T, bool cf>
-static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -372,7 +372,7 @@ static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
 {
     if (cpu.cf())
         return op_sbb_impl<T, true>(cpu, dest, src);
@@ -380,7 +380,7 @@ static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-static T op_add(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -411,7 +411,7 @@ static T op_add(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T, bool cf>
-static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -447,7 +447,7 @@ static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-static T op_adc(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
 {
     if (cpu.cf())
         return op_adc_impl<T, true>(cpu, dest, src);
@@ -455,7 +455,7 @@ static T op_adc(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-static T op_and(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -486,7 +486,7 @@ static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-static T op_imul(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_imul(SoftCPU& cpu, const T& dest, const T& src)
 {
     T result = 0;
     u32 new_flags = 0;
@@ -513,7 +513,7 @@ static T op_imul(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-static T op_shr(SoftCPU& cpu, T data, u8 steps)
+ALWAYS_INLINE static T op_shr(SoftCPU& cpu, T data, u8 steps)
 {
     if (steps == 0)
         return data;
@@ -545,7 +545,7 @@ static T op_shr(SoftCPU& cpu, T data, u8 steps)
 }
 
 template<typename T>
-static T op_shl(SoftCPU& cpu, T data, u8 steps)
+ALWAYS_INLINE static T op_shl(SoftCPU& cpu, T data, u8 steps)
 {
     if (steps == 0)
         return data;
@@ -577,7 +577,7 @@ static T op_shl(SoftCPU& cpu, T data, u8 steps)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = al();
     auto src = insn.imm8();
@@ -587,7 +587,7 @@ void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_AX_imm16(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_AX_imm16(Op op, const X86::Instruction& insn)
 {
     auto dest = ax();
     auto src = insn.imm16();
@@ -597,7 +597,7 @@ void SoftCPU::generic_AX_imm16(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_EAX_imm32(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_EAX_imm32(Op op, const X86::Instruction& insn)
 {
     auto dest = eax();
     auto src = insn.imm32();
@@ -607,7 +607,7 @@ void SoftCPU::generic_EAX_imm32(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_RM16_imm16(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_RM16_imm16(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read16(*this, insn);
     auto src = insn.imm16();
@@ -617,7 +617,7 @@ void SoftCPU::generic_RM16_imm16(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_RM16_imm8(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_RM16_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read16(*this, insn);
     auto src = sign_extended_to<u16>(insn.imm8());
@@ -627,7 +627,7 @@ void SoftCPU::generic_RM16_imm8(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_RM16_reg16(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_RM16_reg16(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read16(*this, insn);
     auto src = gpr16(insn.reg16());
@@ -637,7 +637,7 @@ void SoftCPU::generic_RM16_reg16(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_RM32_imm32(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_RM32_imm32(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read32(*this, insn);
     auto src = insn.imm32();
@@ -647,7 +647,7 @@ void SoftCPU::generic_RM32_imm32(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_RM32_imm8(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_RM32_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read32(*this, insn);
     auto src = sign_extended_to<u32>(insn.imm8());
@@ -657,7 +657,7 @@ void SoftCPU::generic_RM32_imm8(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_RM32_reg32(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_RM32_reg32(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read32(*this, insn);
     auto src = gpr32(insn.reg32());
@@ -667,7 +667,7 @@ void SoftCPU::generic_RM32_reg32(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_RM8_imm8(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_RM8_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read8(*this, insn);
     auto src = insn.imm8();
@@ -677,7 +677,7 @@ void SoftCPU::generic_RM8_imm8(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_RM8_reg8(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_RM8_reg8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read8(*this, insn);
     auto src = gpr8(insn.reg8());
@@ -687,7 +687,7 @@ void SoftCPU::generic_RM8_reg8(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_reg16_RM16(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_reg16_RM16(Op op, const X86::Instruction& insn)
 {
     auto dest = gpr16(insn.reg16());
     auto src = insn.modrm().read16(*this, insn);
@@ -697,7 +697,7 @@ void SoftCPU::generic_reg16_RM16(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_reg32_RM32(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_reg32_RM32(Op op, const X86::Instruction& insn)
 {
     auto dest = gpr32(insn.reg32());
     auto src = insn.modrm().read32(*this, insn);
@@ -707,7 +707,7 @@ void SoftCPU::generic_reg32_RM32(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, typename Op>
-void SoftCPU::generic_reg8_RM8(Op op, const X86::Instruction& insn)
+ALWAYS_INLINE void SoftCPU::generic_reg8_RM8(Op op, const X86::Instruction& insn)
 {
     auto dest = gpr8(insn.reg8());
     auto src = insn.modrm().read8(*this, insn);
