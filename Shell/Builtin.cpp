@@ -698,14 +698,17 @@ int Shell::builtin_time(int argc, const char** argv)
     for (auto& arg : args)
         command.argv.append(arg);
 
+    auto commands = expand_aliases({ move(command) });
+
     Core::ElapsedTimer timer;
+    int exit_code = 1;
     timer.start();
-    auto job = run_command(command);
-    if (!job)
-        return 1;
-    block_on_job(job);
+    for (auto& job : run_commands(commands)) {
+        block_on_job(job);
+        exit_code = job->exit_code();
+    }
     fprintf(stderr, "Time: %d ms\n", timer.elapsed());
-    return job->exit_code();
+    return exit_code;
 }
 
 int Shell::builtin_umask(int argc, const char** argv)
