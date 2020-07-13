@@ -37,7 +37,7 @@ namespace UserspaceEmulator {
 
 class Emulator {
 public:
-    Emulator(const String& executable_path, NonnullRefPtr<ELF::Loader>);
+    Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader>);
 
     bool load_elf();
     void dump_backtrace();
@@ -53,7 +53,7 @@ private:
     SoftMMU m_mmu;
     SoftCPU m_cpu;
 
-    void setup_stack();
+    void setup_stack(const Vector<String>& arguments);
 
     u32 virt$mmap(u32);
     u32 virt$gettid();
@@ -77,8 +77,6 @@ private:
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
-
-    String m_executable_path;
 };
 
 }

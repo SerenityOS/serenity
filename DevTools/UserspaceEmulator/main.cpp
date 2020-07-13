@@ -30,14 +30,17 @@
 #include <AK/MappedFile.h>
 #include <LibCore/ArgsParser.h>
 #include <LibELF/Loader.h>
+#include <getopt.h>
 
 int main(int argc, char** argv)
 {
-    const char* executable_path = nullptr;
+    if (argc == 1) {
+        out() << "usage: UserspaceEmulator <command>";
+        return 0;
+    }
 
-    Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(executable_path, "Executable path", "executable");
-    args_parser.parse(argc, argv);
+    // FIXME: Allow specifying any command in $PATH instead of requiring a full executable path.
+    const char* executable_path = argv[1];
 
     MappedFile mapped_file(executable_path);
     if (!mapped_file.is_valid()) {
@@ -47,7 +50,12 @@ int main(int argc, char** argv)
 
     auto elf = ELF::Loader::create((const u8*)mapped_file.data(), mapped_file.size());
 
-    UserspaceEmulator::Emulator emulator(executable_path, move(elf));
+    Vector<String> arguments;
+    for (int i = 1; i < argc; ++i) {
+        arguments.append(argv[i]);
+    }
+
+    UserspaceEmulator::Emulator emulator(arguments, move(elf));
     if (!emulator.load_elf())
         return 1;
 
