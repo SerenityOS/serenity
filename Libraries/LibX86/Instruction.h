@@ -505,8 +505,6 @@ public:
 private:
     Instruction(InstructionStream&, bool o32, bool a32);
 
-    static void build_opcode_tables_if_needed();
-
     String to_string_internal(u32 origin, const SymbolProvider*, bool x32) const;
 
     const char* reg8_name() const;
@@ -788,7 +786,6 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction&
 
 ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStream& stream, bool o32, bool a32)
 {
-    build_opcode_tables_if_needed();
     return Instruction(stream, o32, a32);
 }
 
