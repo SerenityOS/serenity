@@ -26,59 +26,33 @@
 
 #pragma once
 
-#include "SoftCPU.h"
 #include "SoftMMU.h"
-#include <AK/Types.h>
-#include <LibELF/Loader.h>
-#include <LibX86/Instruction.h>
-#include <sys/types.h>
+#include <sys/mman.h>
 
 namespace UserspaceEmulator {
 
-class Emulator {
+class MmapRegion final : public SoftMMU::Region {
 public:
-    static Emulator& the();
+    MmapRegion(u32 base, u32 size, int prot);
+    virtual ~MmapRegion() override;
 
-    Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader>);
+    virtual u8 read8(u32 offset) override;
+    virtual u16 read16(u32 offset) override;
+    virtual u32 read32(u32 offset) override;
 
-    bool load_elf();
-    void dump_backtrace();
+    virtual void write8(u32 offset, u8 value) override;
+    virtual void write16(u32 offset, u16 value) override;
+    virtual void write32(u32 offset, u32 value) override;
 
-    int exec();
-    u32 virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3);
+    u8* data() { return m_data; }
 
-    SoftMMU& mmu() { return m_mmu; }
+    bool is_readable() const { return m_prot & PROT_READ; }
+    bool is_writable() const { return m_prot & PROT_WRITE; }
+    bool is_executable() const { return m_prot & PROT_EXEC; }
 
 private:
-    NonnullRefPtr<ELF::Loader> m_elf;
-
-    SoftMMU m_mmu;
-    SoftCPU m_cpu;
-
-    void setup_stack(const Vector<String>& arguments);
-
-    u32 virt$mmap(u32);
-    u32 virt$gettid();
-    u32 virt$getpid();
-    u32 virt$unveil(u32);
-    u32 virt$pledge(u32);
-    uid_t virt$getuid();
-    gid_t virt$getgid();
-    u32 virt$read(int, FlatPtr, ssize_t);
-    u32 virt$write(int, FlatPtr, ssize_t);
-    u32 virt$mprotect(FlatPtr, size_t, int);
-    u32 virt$madvise(FlatPtr, size_t, int);
-    u32 virt$open(u32);
-    int virt$close(int);
-    int virt$get_process_name(FlatPtr buffer, int size);
-    int virt$fstat(int, FlatPtr);
-    u32 virt$fcntl(int fd, int, u32);
-    int virt$getgroups(ssize_t count, FlatPtr);
-    int virt$lseek(int fd, off_t offset, int whence);
-    void virt$exit(int);
-
-    bool m_shutdown { false };
-    int m_exit_status { 0 };
+    u8* m_data { nullptr };
+    int m_prot { 0 };
 };
 
 }
