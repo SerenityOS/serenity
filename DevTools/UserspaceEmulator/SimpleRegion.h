@@ -45,6 +45,8 @@ public:
 
     u8* data() { return m_data; }
 
+    virtual u8* cacheable_ptr(u32 offset) override;
+
 private:
     u8* m_data { nullptr };
 };

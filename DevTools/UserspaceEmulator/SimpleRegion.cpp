@@ -75,4 +75,9 @@ void SimpleRegion::write32(u32 offset, u32 value)
     *reinterpret_cast<u32*>(m_data + offset) = value;
 }
 
+u8* SimpleRegion::cacheable_ptr(u32 offset)
+{
+    return m_data + offset;
+}
+
 }
