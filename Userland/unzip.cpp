@@ -64,49 +64,90 @@ bool find_next_central_directory(off_t file_size, const MappedFile& file, off_t 
 
 bool unpack_file_for_central_directory_index(off_t central_directory_index, const MappedFile& file)
 {
+    enum CentralFileDirectoryHeaderOffsets {
+        CFDHCompressionMethodOffset = 10,
+        CFDHLocalFileHeaderIndexOffset = 42,
+    };
+    enum LocalFileHeaderOffsets {
+        LFHCompressionMethodOffset = 10,
+        LFHCompressedSizeOffset = 18,
+        LFHFileNameLengthOffset = 26,
+        LFHExtraFieldLengthOffset = 28,
+        LFHFileNameBaseOffset = 30,
+    };
+    enum CompressionMethod {
+        None = 0,
+        Shrunk = 1,
+        Factor1 = 2,
+        Factor2 = 3,
+        Factor3 = 4,
+        Factor4 = 5,
+        Implode = 6,
+        Deflate = 8,
+        EnhancedDeflate = 9,
+        PKWareDCLImplode = 10,
+        BZIP2 = 12,
+        LZMA = 14,
+        TERSE = 18,
+        LZ77 = 19,
+    };
+
     u8 buffer[4];
-    if (!seek_and_read(buffer, file, central_directory_index + 42, 4))
+    if (!seek_and_read(buffer, file, central_directory_index + CFDHLocalFileHeaderIndexOffset, 4))
         return false;
     off_t local_file_header_index = buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
 
-    if (!seek_and_read(buffer, file, local_file_header_index + 18, 4))
+    if (!seek_and_read(buffer, file, local_file_header_index + LFHCompressionMethodOffset, 2))
+        return false;
+    auto compression_method = buffer[1] << 8 | buffer[0];
+    // FIXME: Remove once any decompression is supported.
+    ASSERT(compression_method == None);
+
+    if (!seek_and_read(buffer, file, local_file_header_index + LFHCompressedSizeOffset, 4))
         return false;
     off_t compressed_file_size = buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
 
-    if (!seek_and_read(buffer, file, local_file_header_index + 26, 2))
+    if (!seek_and_read(buffer, file, local_file_header_index + LFHFileNameLengthOffset, 2))
         return false;
     off_t file_name_length = buffer[1] << 8 | buffer[0];
 
-    if (!seek_and_read(buffer, file, local_file_header_index + 28, 2))
+    if (!seek_and_read(buffer, file, local_file_header_index + LFHExtraFieldLengthOffset, 2))
         return false;
     off_t extra_field_length = buffer[1] << 8 | buffer[0];
 
-    if (!seek_and_read(buffer, file, local_file_header_index + 30, file_name_length))
+    if (!seek_and_read(buffer, file, local_file_header_index + LFHFileNameBaseOffset, file_name_length))
         return false;
     char file_name[file_name_length + 1];
     memcpy(file_name, buffer, file_name_length);
     file_name[file_name_length] = '\0';
 
-    auto new_file = Core::File::construct(String { file_name });
-    if (!new_file->open(Core::IODevice::WriteOnly)) {
-        fprintf(stderr, "Can't write file %s: %s\n", file_name, new_file->error_string());
-        return false;
-    }
+    if (file_name[file_name_length - 1] == '/') {
+        if (mkdir(file_name, 0755) < 0) {
+            perror("mkdir");
+            return false;
+        }
+    } else {
+        auto new_file = Core::File::construct(String { file_name });
+        if (!new_file->open(Core::IODevice::WriteOnly)) {
+            fprintf(stderr, "Can't write file %s: %s\n", file_name, new_file->error_string());
+            return false;
+        }
 
-    printf(" extracting: %s\n", file_name);
-    u8 raw_file_contents[compressed_file_size];
-    if (!seek_and_read(raw_file_contents, file, local_file_header_index + 30 + file_name_length + extra_field_length, compressed_file_size))
-        return false;
+        printf(" extracting: %s\n", file_name);
+        u8 raw_file_contents[compressed_file_size];
+        if (!seek_and_read(raw_file_contents, file, local_file_header_index + LFHFileNameBaseOffset + file_name_length + extra_field_length, compressed_file_size))
+            return false;
 
-    // FIXME: Try to uncompress data here. We're just ignoring it as no decompression methods are implemented yet.
-    if (!new_file->write(raw_file_contents, compressed_file_size)) {
-        fprintf(stderr, "Can't write file contents in %s: %s\n", file_name, new_file->error_string());
-        return false;
-    }
+        // FIXME: Try to uncompress data here. We're just ignoring it as no decompression methods are implemented yet.
+        if (!new_file->write(raw_file_contents, compressed_file_size)) {
+            fprintf(stderr, "Can't write file contents in %s: %s\n", file_name, new_file->error_string());
+            return false;
+        }
 
-    if (!new_file->close()) {
-        fprintf(stderr, "Can't close file %s: %s\n", file_name, new_file->error_string());
-        return false;
+        if (!new_file->close()) {
+            fprintf(stderr, "Can't close file %s: %s\n", file_name, new_file->error_string());
+            return false;
+        }
     }
 
     return true;
