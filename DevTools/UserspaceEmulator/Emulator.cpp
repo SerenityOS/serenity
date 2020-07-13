@@ -309,7 +309,6 @@ u32 Emulator::virt$mmap(u32 params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     ASSERT(params.addr == 0);
-    ASSERT(params.flags & MAP_ANONYMOUS);
 
     // FIXME: Write a proper VM allocator
     static u32 next_address = 0x30000000;
@@ -326,7 +325,10 @@ u32 Emulator::virt$mmap(u32 params_addr)
 
     next_address = final_address + final_size;
 
-    mmu().add_region(make<MmapRegion>(final_address, final_size, params.prot));
+    if (params.flags & MAP_ANONYMOUS)
+        mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot));
+    else
+        mmu().add_region(MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset));
 
     return final_address;
 }
