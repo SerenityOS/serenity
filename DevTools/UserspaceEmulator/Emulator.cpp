@@ -38,6 +38,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC optimize("O3")
+#endif
+
 //#define DEBUG_SPAM
 
 namespace UserspaceEmulator {
@@ -171,7 +175,8 @@ void Emulator::dump_backtrace()
         if (!ret_ptr)
             return;
         symbol = m_elf->symbolicate(ret_ptr, &offset);
-        printf("> %#08x  %s +%#x\n", ret_ptr, symbol.characters(), offset);
+        if (!symbol.is_null())
+            printf("> %#08x  %s +%#x\n", ret_ptr, symbol.characters(), offset);
 
         frame_ptr = m_mmu.read32({ 0x20, frame_ptr });
     }

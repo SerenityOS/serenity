@@ -29,6 +29,10 @@
 #include <LibX86/Interpreter.h>
 #include <stdio.h>
 
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC optimize("O3")
+#endif
+
 namespace X86 {
 
 enum IsLockPrefixAllowed {
