@@ -418,6 +418,50 @@ static T op_add(SoftCPU& cpu, T& dest, const T& src)
     return result;
 }
 
+template<typename T, bool cf>
+static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
+{
+    T result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (cf)
+        asm volatile("stc");
+    else
+        asm volatile("clc");
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("adcl %%ecx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u32)src));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("adcw %%cx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u16)src));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("adcb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(dest), "c"((u8)src));
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszapc(new_flags);
+    return result;
+}
+
+template<typename T>
+static T op_adc(SoftCPU& cpu, T& dest, const T& src)
+{
+    if (cpu.cf())
+        return op_adc_impl<T, true>(cpu, dest, src);
+    return op_adc_impl<T, false>(cpu, dest, src);
+}
+
 template<typename T>
 static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 {
@@ -684,20 +728,6 @@ void SoftCPU::AAA(const X86::Instruction&) { TODO(); }
 void SoftCPU::AAD(const X86::Instruction&) { TODO(); }
 void SoftCPU::AAM(const X86::Instruction&) { TODO(); }
 void SoftCPU::AAS(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_AL_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_AX_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_EAX_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_RM16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_RM32_imm32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_RM8_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_RM8_reg8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ADC_reg8_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::ARPL(const X86::Instruction&) { TODO(); }
 void SoftCPU::BOUND(const X86::Instruction&) { TODO(); }
 void SoftCPU::BSF_reg16_RM16(const X86::Instruction&) { TODO(); }
@@ -1728,6 +1758,7 @@ void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
 DEFINE_GENERIC_INSN_HANDLERS(XOR, op_xor, true)
 DEFINE_GENERIC_INSN_HANDLERS(OR, op_or, true)
 DEFINE_GENERIC_INSN_HANDLERS(ADD, op_add, true)
+DEFINE_GENERIC_INSN_HANDLERS(ADC, op_adc, true)
 DEFINE_GENERIC_INSN_HANDLERS(SUB, op_sub, true)
 DEFINE_GENERIC_INSN_HANDLERS(SBB, op_sbb, true)
 DEFINE_GENERIC_INSN_HANDLERS(AND, op_and, true)
