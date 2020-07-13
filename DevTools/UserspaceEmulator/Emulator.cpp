@@ -25,6 +25,7 @@
  */
 
 #include "Emulator.h"
+#include "SimpleRegion.h"
 #include "SoftCPU.h"
 #include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
@@ -42,61 +43,6 @@ namespace UserspaceEmulator {
 
 static constexpr u32 stack_location = 0x10000000;
 static constexpr size_t stack_size = 64 * KB;
-
-class SimpleRegion final : public SoftMMU::Region {
-public:
-    SimpleRegion(u32 base, u32 size)
-        : Region(base, size)
-    {
-        m_data = (u8*)calloc(1, size);
-    }
-
-    ~SimpleRegion()
-    {
-        free(m_data);
-    }
-
-    virtual u8 read8(u32 offset) override
-    {
-        ASSERT(offset < size());
-        return *reinterpret_cast<const u8*>(m_data + offset);
-    }
-
-    virtual u16 read16(u32 offset) override
-    {
-        ASSERT(offset + 1 < size());
-        return *reinterpret_cast<const u16*>(m_data + offset);
-    }
-
-    virtual u32 read32(u32 offset) override
-    {
-        ASSERT(offset + 3 < size());
-        return *reinterpret_cast<const u32*>(m_data + offset);
-    }
-
-    virtual void write8(u32 offset, u8 value) override
-    {
-        ASSERT(offset < size());
-        *reinterpret_cast<u8*>(m_data + offset) = value;
-    }
-
-    virtual void write16(u32 offset, u16 value) override
-    {
-        ASSERT(offset + 1 < size());
-        *reinterpret_cast<u16*>(m_data + offset) = value;
-    }
-
-    virtual void write32(u32 offset, u32 value) override
-    {
-        ASSERT(offset + 3 < size());
-        *reinterpret_cast<u32*>(m_data + offset) = value;
-    }
-
-    u8* data() { return m_data; }
-
-private:
-    u8* m_data { nullptr };
-};
 
 Emulator::Emulator(const String& executable_path, NonnullRefPtr<ELF::Loader> elf)
     : m_elf(move(elf))

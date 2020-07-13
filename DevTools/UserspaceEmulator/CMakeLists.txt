@@ -1,7 +1,8 @@
 set(SOURCES
+    Emulator.cpp
+    SimpleRegion.cpp
     SoftCPU.cpp
     SoftMMU.cpp
-    Emulator.cpp
     main.cpp
 )
 
