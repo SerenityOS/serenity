@@ -53,6 +53,8 @@ public:
         virtual u16 read16(u32 offset) = 0;
         virtual u32 read32(u32 offset) = 0;
 
+        virtual u8* cacheable_ptr([[maybe_unused]] u32 offset) { return nullptr; }
+
     protected:
         Region(u32 base, u32 size)
             : m_base(base)

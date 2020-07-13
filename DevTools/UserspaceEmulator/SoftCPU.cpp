@@ -61,23 +61,44 @@ void SoftCPU::dump() const
     printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", of(), sf(), zf(), af(), pf(), cf());
 }
 
+void SoftCPU::update_code_cache()
+{
+    auto* region = m_emulator.mmu().find_region({ cs(), eip() });
+    ASSERT(region);
+
+    m_cached_code_ptr = region->cacheable_ptr(eip() - region->base());
+    m_cached_code_end = region->cacheable_ptr(region->size());
+}
+
 u8 SoftCPU::read8()
 {
-    auto value = read_memory8({ cs(), eip() });
+    if (!m_cached_code_ptr || m_cached_code_ptr >= m_cached_code_end)
+        update_code_cache();
+
+    u8 value = *m_cached_code_ptr;
+    m_cached_code_ptr += 1;
     m_eip += 1;
     return value;
 }
 
 u16 SoftCPU::read16()
 {
-    auto value = read_memory16({ cs(), eip() });
+    if (!m_cached_code_ptr || (m_cached_code_ptr + 2) >= m_cached_code_end)
+        update_code_cache();
+
+    u16 value = *reinterpret_cast<const u16*>(m_cached_code_ptr);
+    m_cached_code_ptr += 2;
     m_eip += 2;
     return value;
 }
 
 u32 SoftCPU::read32()
 {
-    auto value = read_memory32({ cs(), eip() });
+    if (!m_cached_code_ptr || (m_cached_code_ptr + 4) >= m_cached_code_end)
+        update_code_cache();
+
+    u32 value = *reinterpret_cast<const u32*>(m_cached_code_ptr);
+    m_cached_code_ptr += 4;
     m_eip += 4;
     return value;
 }

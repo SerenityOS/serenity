@@ -56,7 +56,12 @@ public:
     void dump() const;
 
     u32 eip() const { return m_eip; }
-    void set_eip(u32 eip) { m_eip = eip; }
+    void set_eip(u32 eip)
+    {
+        m_eip = eip;
+        m_cached_code_ptr = nullptr;
+        m_cached_code_end = nullptr;
+    }
 
     struct Flags {
         enum Flag {
@@ -792,6 +797,8 @@ private:
     template<bool check_zf, typename Callback>
     void do_once_or_repeat(const X86::Instruction& insn, Callback);
 
+    void update_code_cache();
+
 private:
     Emulator& m_emulator;
 
@@ -800,6 +807,9 @@ private:
     u32 m_eflags { 0 };
 
     u32 m_eip { 0 };
+
+    const u8* m_cached_code_ptr { nullptr };
+    const u8* m_cached_code_end { nullptr };
 };
 
 }
