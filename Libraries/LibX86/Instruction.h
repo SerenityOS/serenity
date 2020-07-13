@@ -30,11 +30,13 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <stdio.h>
 
 namespace X86 {
 
 class Instruction;
-struct InstructionDescriptor;
+class Interpreter;
+typedef void (Interpreter::*InstructionHandler)(const Instruction&);
 
 class SymbolProvider {
 public:
@@ -55,6 +57,149 @@ inline constexpr T sign_extended_to(U value)
         return value;
     return (TypeTrivia<T>::mask & ~TypeTrivia<U>::mask) | value;
 }
+
+enum IsLockPrefixAllowed {
+    LockPrefixNotAllowed = 0,
+    LockPrefixAllowed
+};
+
+enum InstructionFormat {
+    InvalidFormat,
+    MultibyteWithSlash,
+    MultibyteWithSubopcode,
+    InstructionPrefix,
+
+    __BeginFormatsWithRMByte,
+    OP_RM16_reg16,
+    OP_reg8_RM8,
+    OP_reg16_RM16,
+    OP_RM16_seg,
+    OP_RM32_seg,
+    OP_RM8_imm8,
+    OP_RM16_imm16,
+    OP_RM16_imm8,
+    OP_RM32_imm8,
+    OP_RM8,
+    OP_RM16,
+    OP_RM32,
+    OP_RM8_reg8,
+    OP_RM32_reg32,
+    OP_reg32_RM32,
+    OP_RM32_imm32,
+    OP_reg16_RM16_imm8,
+    OP_reg32_RM32_imm8,
+    OP_reg16_RM16_imm16,
+    OP_reg32_RM32_imm32,
+    OP_reg16_mem16,
+    OP_reg32_mem32,
+    OP_seg_RM16,
+    OP_seg_RM32,
+    OP_RM8_1,
+    OP_RM16_1,
+    OP_RM32_1,
+    OP_FAR_mem16,
+    OP_FAR_mem32,
+    OP_RM8_CL,
+    OP_RM16_CL,
+    OP_RM32_CL,
+    OP_reg32_CR,
+    OP_CR_reg32,
+    OP_reg32_DR,
+    OP_DR_reg32,
+    OP_reg16_RM8,
+    OP_reg32_RM8,
+    OP_reg32_RM16,
+    OP_RM16_reg16_imm8,
+    OP_RM32_reg32_imm8,
+    OP_RM16_reg16_CL,
+    OP_RM32_reg32_CL,
+    OP_mm1_mm2m64,
+    OP_mm1m64_mm2,
+    __EndFormatsWithRMByte,
+
+    OP_reg32_imm32,
+    OP_AL_imm8,
+    OP_AX_imm16,
+    OP_EAX_imm32,
+    OP_CS,
+    OP_DS,
+    OP_ES,
+    OP_SS,
+    OP_FS,
+    OP_GS,
+    OP,
+    OP_reg16,
+    OP_imm16,
+    OP_relimm16,
+    OP_relimm32,
+    OP_imm8,
+    OP_imm16_imm16,
+    OP_imm16_imm32,
+    OP_AX_reg16,
+    OP_EAX_reg32,
+    OP_AL_moff8,
+    OP_AX_moff16,
+    OP_EAX_moff32,
+    OP_moff8_AL,
+    OP_moff16_AX,
+    OP_moff32_EAX,
+    OP_reg8_imm8,
+    OP_reg16_imm16,
+    OP_3,
+    OP_AX_imm8,
+    OP_EAX_imm8,
+    OP_short_imm8,
+    OP_AL_DX,
+    OP_AX_DX,
+    OP_EAX_DX,
+    OP_DX_AL,
+    OP_DX_AX,
+    OP_DX_EAX,
+    OP_imm8_AL,
+    OP_imm8_AX,
+    OP_imm8_EAX,
+    OP_reg8_CL,
+
+    OP_reg32,
+    OP_imm32,
+    OP_imm16_imm8,
+
+    OP_NEAR_imm,
+};
+
+static const unsigned CurrentAddressSize = 0xB33FBABE;
+
+struct InstructionDescriptor {
+    InstructionHandler handler { nullptr };
+    bool opcode_has_register_index { false };
+    const char* mnemonic { nullptr };
+    InstructionFormat format { InvalidFormat };
+    bool has_rm { false };
+    unsigned imm1_bytes { 0 };
+    unsigned imm2_bytes { 0 };
+    InstructionDescriptor* slashes { nullptr };
+
+    unsigned imm1_bytes_for_address_size(bool a32)
+    {
+        if (imm1_bytes == CurrentAddressSize)
+            return a32 ? 4 : 2;
+        return imm1_bytes;
+    }
+
+    unsigned imm2_bytes_for_address_size(bool a32)
+    {
+        if (imm2_bytes == CurrentAddressSize)
+            return a32 ? 4 : 2;
+        return imm2_bytes;
+    }
+
+    IsLockPrefixAllowed lock_prefix_allowed { LockPrefixNotAllowed };
+};
+
+extern InstructionDescriptor s_table16[256];
+extern InstructionDescriptor s_table32[256];
+extern InstructionDescriptor s_0f_table16[256];
+extern InstructionDescriptor s_0f_table32[256];
 
 struct Prefix {
     enum Op {
@@ -266,9 +411,6 @@ private:
     bool m_has_sib { false };
 };
 
-class Interpreter;
-typedef void (Interpreter::*InstructionHandler)(const Instruction&);
-
 class Instruction {
 public:
     static Instruction from_stream(InstructionStream&, bool o32, bool a32);
@@ -362,6 +504,8 @@ public:
 
 private:
     Instruction(InstructionStream&, bool o32, bool a32);
+
+    static void build_opcode_tables_if_needed();
 
     String to_string_internal(u32 origin, const SymbolProvider*, bool x32) const;
 
@@ -641,5 +785,263 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction&
     auto address = resolve(cpu, insn.segment_prefix());
     return cpu.read_memory32(address);
 }
+
+ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStream& stream, bool o32, bool a32)
+{
+    build_opcode_tables_if_needed();
+    return Instruction(stream, o32, a32);
+}
+
+ALWAYS_INLINE unsigned Instruction::length() const
+{
+    unsigned len = 1;
+    if (m_has_sub_op)
+        ++len;
+    if (m_has_rm) {
+        ++len;
+        if (m_modrm.m_has_sib)
+            ++len;
+        len += m_modrm.m_displacement_bytes;
+    }
+    len += m_imm1_bytes;
+    len += m_imm2_bytes;
+    len += m_prefix_bytes;
+    return len;
+}
+
+ALWAYS_INLINE static Optional<SegmentRegister> to_segment_prefix(u8 op)
+{
+    switch (op) {
+    case 0x26:
+        return SegmentRegister::ES;
+    case 0x2e:
+        return SegmentRegister::CS;
+    case 0x36:
+        return SegmentRegister::SS;
+    case 0x3e:
+        return SegmentRegister::DS;
+    case 0x64:
+        return SegmentRegister::FS;
+    case 0x65:
+        return SegmentRegister::GS;
+    default:
+        return {};
+    }
+}
+
+ALWAYS_INLINE Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
+    : m_a32(a32)
+    , m_o32(o32)
+{
+    for (;; ++m_prefix_bytes) {
+        u8 opbyte = stream.read8();
+        if (opbyte == Prefix::OperandSizeOverride) {
+            m_o32 = !o32;
+            m_has_operand_size_override_prefix = true;
+            continue;
+        }
+        if (opbyte == Prefix::AddressSizeOverride) {
+            m_a32 = !a32;
+            m_has_address_size_override_prefix = true;
+            continue;
+        }
+        if (opbyte == Prefix::REPZ || opbyte == Prefix::REPNZ) {
+            m_rep_prefix = opbyte;
+            continue;
+        }
+        if (opbyte == Prefix::LOCK) {
+            m_has_lock_prefix = true;
+            continue;
+        }
+        auto segment_prefix = to_segment_prefix(opbyte);
+        if (segment_prefix.has_value()) {
+            m_segment_prefix = segment_prefix;
+            continue;
+        }
+        m_op = opbyte;
+        break;
+    }
+
+    if (m_op == 0x0F) {
+        m_has_sub_op = true;
+        m_sub_op = stream.read8();
+        m_descriptor = m_o32 ? &s_0f_table32[m_sub_op] : &s_0f_table16[m_sub_op];
+    } else {
+        m_descriptor = m_o32 ? &s_table32[m_op] : &s_table16[m_op];
+    }
+
+    m_has_rm = m_descriptor->has_rm;
+    if (m_has_rm) {
+        // Consume ModR/M (may include SIB and displacement.)
+        m_modrm.decode(stream, m_a32);
+        m_register_index = (m_modrm.m_rm >> 3) & 7;
+    } else {
+        if (m_has_sub_op)
+            m_register_index = m_sub_op & 7;
+        else
+            m_register_index = m_op & 7;
+    }
+
+    bool hasSlash = m_descriptor->format == MultibyteWithSlash;
+
+    if (hasSlash) {
+        m_descriptor = &m_descriptor->slashes[slash()];
+    }
+
+    if (!m_descriptor->mnemonic) {
+        if (m_has_sub_op) {
+            if (hasSlash)
+                fprintf(stderr, "Instruction %02X %02X /%u not understood\n", m_op, m_sub_op, slash());
+            else
+                fprintf(stderr, "Instruction %02X %02X not understood\n", m_op, m_sub_op);
+        } else {
+            if (hasSlash)
+                fprintf(stderr, "Instruction %02X /%u not understood\n", m_op, slash());
+            else
+                fprintf(stderr, "Instruction %02X not understood\n", m_op);
+        }
+        m_descriptor = nullptr;
+        return;
+    }
+
+    m_imm1_bytes = m_descriptor->imm1_bytes_for_address_size(m_a32);
+    m_imm2_bytes = m_descriptor->imm2_bytes_for_address_size(m_a32);
+
+    // Consume immediates if present.
+    if (m_imm2_bytes)
+        m_imm2 = stream.read(m_imm2_bytes);
+    if (m_imm1_bytes)
+        m_imm1 = stream.read(m_imm1_bytes);
+
+    m_handler = m_descriptor->handler;
+
+#ifdef DISALLOW_INVALID_LOCK_PREFIX
+    if (m_has_lock_prefix && !m_descriptor->lock_prefix_allowed) {
+        fprintf(stderr, "Instruction not allowed with LOCK prefix, this will raise #UD\n");
+        m_descriptor = nullptr;
+    }
+#endif
+}
+
+ALWAYS_INLINE u32 InstructionStream::read(unsigned count)
+{
+    switch (count) {
+    case 1:
+        return read8();
+    case 2:
+        return read16();
+    case 4:
+        return read32();
+    }
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
+ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStream& stream, bool a32)
+{
+    m_a32 = a32;
+    m_rm = stream.read8();
+
+    if (m_a32) {
+        decode32(stream);
+        switch (m_displacement_bytes) {
+        case 0:
+            break;
+        case 1:
+            m_displacement32 = sign_extended_to<u32>(stream.read8());
+            break;
+        case 4:
+            m_displacement32 = stream.read32();
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+            break;
+        }
+    } else {
+        decode16(stream);
+        switch (m_displacement_bytes) {
+        case 0:
+            break;
+        case 1:
+            m_displacement16 = sign_extended_to<u16>(stream.read8());
+            break;
+        case 2:
+            m_displacement16 = stream.read16();
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+            break;
+        }
+    }
+}
+
+ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStream&)
+{
+    ASSERT(!m_a32);
+
+    switch (m_rm & 0xc0) {
+    case 0:
+        if ((m_rm & 0x07) == 6)
+            m_displacement_bytes = 2;
+        else
+            ASSERT(m_displacement_bytes == 0);
+        break;
+    case 0x40:
+        m_displacement_bytes = 1;
+        break;
+    case 0x80:
+        m_displacement_bytes = 2;
+        break;
+    case 0xc0:
+        m_register_index = m_rm & 7;
+        break;
+    }
+}
+
+ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStream& stream)
+{
+    ASSERT(m_a32);
+
+    switch (m_rm & 0xc0) {
+    case 0:
+        if ((m_rm & 0x07) == 5)
+            m_displacement_bytes = 4;
+        break;
+    case 0x40:
+        m_displacement_bytes = 1;
+        break;
+    case 0x80:
+        m_displacement_bytes = 4;
+        break;
+    case 0xc0:
+        m_register_index = m_rm & 7;
+        return;
+    }
+
+    m_has_sib = (m_rm & 0x07) == 4;
+    if (m_has_sib) {
+        m_sib = stream.read8();
+        if ((m_sib & 0x07) == 5) {
+            switch ((m_rm >> 6) & 0x03) {
+            case 0:
+                ASSERT(!m_displacement_bytes || m_displacement_bytes == 4);
+                m_displacement_bytes = 4;
+                break;
+            case 1:
+                ASSERT(!m_displacement_bytes || m_displacement_bytes == 1);
+                m_displacement_bytes = 1;
+                break;
+            case 2:
+                ASSERT(!m_displacement_bytes || m_displacement_bytes == 4);
+                m_displacement_bytes = 4;
+                break;
+            default:
+                ASSERT_NOT_REACHED();
+                break;
+            }
+        }
+    }
+}
+
 
 }
