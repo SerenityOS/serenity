@@ -91,3 +91,22 @@ test("spreading non-spreadable values", () => {
     };
     expect(Object.getOwnPropertyNames(empty)).toHaveLength(0);
 });
+
+test("respects custom Symbol.iterator method", () => {
+    let o = {
+        [Symbol.iterator]() {
+            return {
+                i: 0,
+                next() {
+                    if (this.i++ == 3) {
+                        return { done: true };
+                    }
+                    return { value: this.i, done: false };
+                },
+            };
+        },
+    };
+
+    let a = [...o];
+    expect(a).toEqual([1, 2, 3]);
+});

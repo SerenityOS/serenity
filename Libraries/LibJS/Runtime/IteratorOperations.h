@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
@@ -33,13 +34,13 @@ namespace JS {
 // Common iterator operations defined in ECMA262 7.4
 // https://tc39.es/ecma262/#sec-operations-on-iterator-objects
 
-Object* get_iterator(Object& obj, String hint = "sync", Value method = {});
+Object* get_iterator(GlobalObject&, Value value, String hint = "sync", Value method = {});
 bool is_iterator_complete(Object& iterator_result);
 Value create_iterator_result_object(Interpreter&, GlobalObject&, Value value, bool done);
 
-Value iterator_next(Object& iterator, Value value = {});
-Value iterator_value(Object& iterator_result);
-Value iterator_step(Object& iterator);
+Object* iterator_next(Object& iterator, Value value = {});
 void iterator_close(Object& iterator);
+
+void get_iterator_values(GlobalObject&, Value value, AK::Function<IterationDecision(Value&)> callback);
 
 }

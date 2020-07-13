@@ -40,7 +40,6 @@
     M(Convert, "Cannot convert %s to %s")                                                              \
     M(ConvertUndefinedToObject, "Cannot convert undefined to object")                                  \
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '%s'")         \
-    M(ForOfNotIterable, "for..of right-hand side must be iterable")                                    \
     M(FunctionArgsNotObject, "Argument array must be an object")                                       \
     M(InOperatorWithObject, "'in' operator must be used on an object")                                 \
     M(InstanceOfOperatorBadPrototype, "Prototype property of %s is not an object")                     \
@@ -48,6 +47,9 @@
     M(InvalidLeftHandAssignment, "Invalid left-hand side in assignment")                               \
     M(IsNotA, "%s is not a %s")                                                                        \
     M(IsNotAEvaluatedFrom, "%s is not a %s (evaluated from '%s')")                                     \
+    M(IterableNextBadReturn, "iterator.next() returned a non-object value")                            \
+    M(IterableNextNotAFunction, "'next' property on returned object from Symbol.iterator method is "   \
+        "not a function")                                                                              \
     M(JsonBigInt, "Cannot serialize BigInt value to JSON")                                             \
     M(JsonCircular, "Cannot stringify circular object")                                                \
     M(JsonMalformed, "Malformed JSON string")                                                          \
