@@ -1306,7 +1306,13 @@ void SoftCPU::PADDD_mm1_mm2m64(const X86::Instruction&) { TODO(); }
 void SoftCPU::POPA(const X86::Instruction&) { TODO(); }
 void SoftCPU::POPAD(const X86::Instruction&) { TODO(); }
 void SoftCPU::POPF(const X86::Instruction&) { TODO(); }
-void SoftCPU::POPFD(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::POPFD(const X86::Instruction&)
+{
+    m_eflags &= ~0x00fcffff;
+    m_eflags |= pop32() & 0x00fcffff;
+}
+
 void SoftCPU::POP_DS(const X86::Instruction&) { TODO(); }
 void SoftCPU::POP_ES(const X86::Instruction&) { TODO(); }
 void SoftCPU::POP_FS(const X86::Instruction&) { TODO(); }
