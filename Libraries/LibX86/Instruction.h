@@ -425,7 +425,7 @@ public:
         return m_modrm;
     }
 
-    ALWAYS_INLINE InstructionHandler handler() const { return m_handler; }
+    ALWAYS_INLINE InstructionHandler handler() const { return m_descriptor->handler; }
 
     bool has_segment_prefix() const { return m_segment_prefix.has_value(); }
     Optional<SegmentRegister> segment_prefix() const { return m_segment_prefix; }
@@ -811,7 +811,7 @@ ALWAYS_INLINE unsigned Instruction::length() const
     return len;
 }
 
-ALWAYS_INLINE static Optional<SegmentRegister> to_segment_prefix(u8 op)
+ALWAYS_INLINE Optional<SegmentRegister> to_segment_prefix(u8 op)
 {
     switch (op) {
     case 0x26:
@@ -934,8 +934,6 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_imm1 = stream.read32();
         break;
     }
-
-    m_handler = m_descriptor->handler;
 
 #ifdef DISALLOW_INVALID_LOCK_PREFIX
     if (m_has_lock_prefix && !m_descriptor->lock_prefix_allowed) {
