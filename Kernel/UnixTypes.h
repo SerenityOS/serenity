@@ -55,6 +55,11 @@
 #define MS_RDONLY (1 << 4)
 #define MS_REMOUNT (1 << 5)
 
+enum {
+    _SC_NPROCESSORS_CONF,
+    _SC_NPROCESSORS_ONLN,
+};
+
 #define PERF_EVENT_MALLOC 1
 #define PERF_EVENT_FREE 2
 
