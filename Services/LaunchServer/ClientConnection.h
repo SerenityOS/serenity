@@ -45,5 +45,6 @@ private:
     virtual OwnPtr<Messages::LaunchServer::GreetResponse> handle(const Messages::LaunchServer::Greet&) override;
     virtual OwnPtr<Messages::LaunchServer::OpenURLResponse> handle(const Messages::LaunchServer::OpenURL&) override;
     virtual OwnPtr<Messages::LaunchServer::GetHandlersForURLResponse> handle(const Messages::LaunchServer::GetHandlersForURL&) override;
+    virtual OwnPtr<Messages::LaunchServer::GetHandlersWithDetailsForURLResponse> handle(const Messages::LaunchServer::GetHandlersWithDetailsForURL&) override;
 };
 }
