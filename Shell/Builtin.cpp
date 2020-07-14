@@ -31,7 +31,9 @@
 #include <inttypes.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
+extern char** environ;
 extern RefPtr<Line::Editor> editor;
 
 int Shell::builtin_alias(int argc, const char** argv)

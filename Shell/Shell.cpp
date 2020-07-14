@@ -52,6 +52,7 @@
 
 static bool s_disable_hyperlinks = false;
 extern RefPtr<Line::Editor> editor;
+extern char** environ;
 
 //#define SH_DEBUG
 
