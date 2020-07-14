@@ -106,6 +106,7 @@ public:
     virtual ~Action() override;
 
     String text() const { return m_text; }
+    void set_text(String text) { m_text = move(text); }
     Shortcut shortcut() const { return m_shortcut; }
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
     void set_icon(const Gfx::Bitmap*);

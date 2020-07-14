@@ -27,11 +27,55 @@
 #include "DirectoryView.h"
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
-#include <LibDesktop/Launcher.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 #include <unistd.h>
+
+NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(const LauncherHandler&)> launch_handler)
+{
+    RefPtr<Gfx::Bitmap> icon;
+    auto icon_file = details().icons.get("16x16");
+    if (icon_file.has_value())
+        icon = Gfx::Bitmap::load_from_file(icon_file.value());
+    return GUI::Action::create(details().name, move(icon), [this, launch_handler = move(launch_handler)](auto&) {
+        launch_handler(*this);
+    });
+}
+
+RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(const NonnullRefPtrVector<LauncherHandler>& handlers)
+{
+    // If there's a handler preferred by the user, pick this first
+    for (size_t i = 0; i < handlers.size(); i++) {
+        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::UserPreferred)
+            return handlers[i];
+    }
+    // Otherwise, use the user's default, if available
+    for (size_t i = 0; i < handlers.size(); i++) {
+        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::UserDefault)
+            return handlers[i];
+    }
+    // If still no match, use the first one we find
+    if (!handlers.is_empty()) {
+        return handlers[0];
+    }
+
+    return {};
+}
+
+NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(const URL& url)
+{
+    NonnullRefPtrVector<LauncherHandler> handlers;
+    for (auto& h : Desktop::Launcher::get_handlers_with_details_for_url(url)) {
+        handlers.append(adopt(*new LauncherHandler(h)));
+    }
+    return handlers;
+}
+
+NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(const String& path)
+{
+    return get_launch_handlers(URL::create_with_file_protocol(path));
+}
 
 void DirectoryView::handle_activation(const GUI::ModelIndex& index)
 {
@@ -52,7 +96,15 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
         return;
     }
 
-    Desktop::Launcher::open(URL::create_with_file_protocol(path));
+    auto url = URL::create_with_file_protocol(path);
+    auto launcher_handlers = get_launch_handlers(url);
+    auto default_launcher = get_default_launch_handler(launcher_handlers);
+    if (default_launcher) {
+        Desktop::Launcher::open(url, default_launcher->details());
+    } else {
+        auto error_message = String::format("Could not open %s", path.characters());
+        GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
+    }
 }
 
 DirectoryView::DirectoryView()
