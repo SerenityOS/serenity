@@ -45,6 +45,11 @@ NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(c
 
 RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(const NonnullRefPtrVector<LauncherHandler>& handlers)
 {
+    // If this is an application, pick it first
+    for (size_t i = 0; i < handlers.size(); i++) {
+        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::Application)
+            return handlers[i];
+    }
     // If there's a handler preferred by the user, pick this first
     for (size_t i = 0; i < handlers.size(); i++) {
         if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::UserPreferred)
@@ -99,8 +104,8 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
     auto url = URL::create_with_file_protocol(path);
     auto launcher_handlers = get_launch_handlers(url);
     auto default_launcher = get_default_launch_handler(launcher_handlers);
-    if (default_launcher) {
-        Desktop::Launcher::open(url, default_launcher->details());
+    if (default_launcher && on_launch) {
+        on_launch(url, *default_launcher);
     } else {
         auto error_message = String::format("Could not open %s", path.characters());
         GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);

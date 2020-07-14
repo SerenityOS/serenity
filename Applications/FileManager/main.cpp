@@ -742,11 +742,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     NonnullRefPtrVector<LauncherHandler> current_file_handlers;
     RefPtr<GUI::Action> file_context_menu_action_default_action;
 
-    auto file_open_action_handler = [&](const LauncherHandler& launcher_handler) {
+    directory_view.on_launch = [&](const AK::URL&, const LauncherHandler& launcher_handler) {
         pid_t child;
-        for (auto& path : selected_file_paths()) {
-            const char* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
+        if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
+            const char* argv[] = { launcher_handler.details().name.characters(), nullptr };
             posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+        } else {
+            for (auto& path : selected_file_paths()) {
+                const char* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
+                posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+            }
         }
     };
 
@@ -759,7 +764,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position());
             } else {
-                current_file_handlers = directory_view.get_launch_handlers(node.full_path(directory_view.model()));
+                auto full_path = node.full_path(directory_view.model());
+                current_file_handlers = directory_view.get_launch_handlers(full_path);
 
                 file_context_menu = GUI::Menu::construct("Directory View File");
                 file_context_menu->add_action(copy_action);
@@ -770,10 +776,13 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 bool added_open_menu_items = false;
                 auto default_file_handler = directory_view.get_default_launch_handler(current_file_handlers);
                 if (default_file_handler) {
-                    auto file_open_action = default_file_handler->create_launch_action([&](auto& launcher_handler) {
-                        file_open_action_handler(launcher_handler);
+                    auto file_open_action = default_file_handler->create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
+                        directory_view.on_launch(URL::create_with_file_protocol(full_path), launcher_handler);
                     });
-                    file_open_action->set_text(String::format("Open in %s", file_open_action->text().characters()));
+                    if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
+                        file_open_action->set_text(String::format("Run %s", file_open_action->text().characters()));
+                    else
+                        file_open_action->set_text(String::format("Open in %s", file_open_action->text().characters()));
 
                     file_context_menu_action_default_action = file_open_action;
 
@@ -789,8 +798,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                     for (auto& handler : current_file_handlers) {
                         if (&handler == default_file_handler.ptr())
                             continue;
-                        file_open_with_menu.add_action(handler.create_launch_action([&](auto& launcher_handler) {
-                            file_open_action_handler(launcher_handler);
+                        file_open_with_menu.add_action(handler.create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
+                            directory_view.on_launch(URL::create_with_file_protocol(full_path), launcher_handler);
                         }));
                     }
                 }

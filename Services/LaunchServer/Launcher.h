@@ -36,6 +36,7 @@ namespace LaunchServer {
 struct Handler {
     enum class Type {
         Default = 0,
+        Application,
         UserPreferred,
         UserDefault
     };
