@@ -763,8 +763,18 @@ void SoftCPU::CALL_imm32(const X86::Instruction& insn)
     set_eip(eip() + (i32)insn.imm32());
 }
 
-void SoftCPU::CBW(const X86::Instruction&) { TODO(); }
-void SoftCPU::CDQ(const X86::Instruction&) { TODO(); }
+void SoftCPU::CBW(const X86::Instruction&)
+{
+    set_ah((al() & 0x80) ? 0xff : 0x00);
+}
+
+void SoftCPU::CDQ(const X86::Instruction&)
+{
+    if (eax() & 0x80000000)
+        set_edx(0xffffffff);
+    else
+        set_edx(0x00000000);
+}
 
 void SoftCPU::CLC(const X86::Instruction&)
 {
@@ -833,8 +843,17 @@ void SoftCPU::CMPXCHG_RM8_reg8(const X86::Instruction& insn)
 }
 
 void SoftCPU::CPUID(const X86::Instruction&) { TODO(); }
-void SoftCPU::CWD(const X86::Instruction&) { TODO(); }
-void SoftCPU::CWDE(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::CWD(const X86::Instruction&)
+{
+    set_dx((ax() & 0x8000) ? 0xffff : 0x0000);
+}
+
+void SoftCPU::CWDE(const X86::Instruction&)
+{
+    set_eax(sign_extended_to<u32>(ax()));
+}
+
 void SoftCPU::DAA(const X86::Instruction&) { TODO(); }
 void SoftCPU::DAS(const X86::Instruction&) { TODO(); }
 
