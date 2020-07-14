@@ -201,6 +201,9 @@ void TextEditor::doubleclick_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return;
 
+    if (is_displayonly())
+        return;
+
     // NOTE: This ensures that spans are updated before we look at them.
     flush_pending_change_notification_if_needed();
 
@@ -235,6 +238,12 @@ void TextEditor::mousedown_event(MouseEvent& event)
     if (event.button() != MouseButton::Left) {
         return;
     }
+
+    if (on_mousedown)
+        on_mousedown();
+
+    if (is_displayonly())
+        return;
 
     if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
         m_triple_click_timer = Core::ElapsedTimer();
@@ -364,6 +373,19 @@ void TextEditor::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), widget_background_color);
 
+    if (is_displayonly() && (is_focused() || has_visible_list())) {
+        widget_background_color = palette().selection();
+        Gfx::IntRect display_rect {
+            widget_inner_rect().x() + 1,
+            widget_inner_rect().y() + 1,
+            widget_inner_rect().width() - button_padding(),
+            widget_inner_rect().height() - 2
+        };
+        painter.add_clip_rect(display_rect);
+        painter.add_clip_rect(event.rect());
+        painter.fill_rect(event.rect(), widget_background_color);
+    }
+
     painter.translate(frame_thickness(), frame_thickness());
 
     auto ruler_rect = ruler_rect_in_inner_coordinates();
@@ -438,6 +460,8 @@ void TextEditor::paint_event(PaintEvent& event)
             if (!document().has_spans()) {
                 // Fast-path for plain text
                 auto color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
+                if (is_displayonly() && (is_focused() || has_visible_list()))
+                    color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
                 painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, color);
             } else {
                 Gfx::IntRect character_rect = { visual_line_rect.location(), { 0, line_height() } };
@@ -521,7 +545,7 @@ void TextEditor::paint_event(PaintEvent& event)
         painter.draw_scaled_bitmap(icon_rect, *m_icon, m_icon->rect());
     }
 
-    if (is_focused() && m_cursor_state)
+    if (is_focused() && m_cursor_state && !is_displayonly())
         painter.fill_rect(cursor_content_rect(), palette().text_cursor());
 }
 
@@ -1269,7 +1293,8 @@ void TextEditor::undefer_reflow()
 void TextEditor::enter_event(Core::Event&)
 {
     ASSERT(window());
-    window()->set_override_cursor(StandardCursor::IBeam);
+    if (!is_displayonly())
+        window()->set_override_cursor(StandardCursor::IBeam);
 
     m_automatic_selection_scroll_timer->stop();
 }
@@ -1302,15 +1327,42 @@ void TextEditor::did_change()
         });
     }
 }
-
-void TextEditor::set_readonly(bool readonly)
+void TextEditor::set_mode(const Mode mode)
 {
-    if (m_readonly == readonly)
+    if (m_mode == mode)
         return;
-    m_readonly = readonly;
-    m_cut_action->set_enabled(!is_readonly() && has_selection());
-    m_delete_action->set_enabled(!is_readonly());
-    m_paste_action->set_enabled(!is_readonly());
+    m_mode = mode;
+    switch (mode) {
+    case Editable:
+        m_cut_action->set_enabled(true && has_selection());
+        m_delete_action->set_enabled(true);
+        m_paste_action->set_enabled(true);
+        set_accepts_emoji_input(true);
+        break;
+    case ReadOnly:
+    case DisplayOnly:
+        m_cut_action->set_enabled(false && has_selection());
+        m_delete_action->set_enabled(false);
+        m_paste_action->set_enabled(false);
+        set_accepts_emoji_input(false);
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+void TextEditor::set_has_open_button(bool has_button)
+{
+    if (m_has_open_button == has_button)
+        return;
+    m_has_open_button = has_button;
+}
+
+void TextEditor::set_has_visible_list(bool visible)
+{
+    if (m_has_visible_list == visible)
+        return;
+    m_has_visible_list = visible;
 }
 
 void TextEditor::did_update_selection()
@@ -1327,6 +1379,9 @@ void TextEditor::did_update_selection()
 
 void TextEditor::context_menu_event(ContextMenuEvent& event)
 {
+    if (is_displayonly())
+        return;
+
     if (!m_context_menu) {
         m_context_menu = Menu::construct();
         m_context_menu->add_action(undo_action());

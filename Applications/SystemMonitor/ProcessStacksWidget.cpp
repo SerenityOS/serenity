@@ -35,7 +35,7 @@ ProcessStacksWidget::ProcessStacksWidget()
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 4, 4, 4, 4 });
     m_stacks_editor = add<GUI::TextEditor>();
-    m_stacks_editor->set_readonly(true);
+    m_stacks_editor->set_mode(GUI::TextEditor::ReadOnly);
 
     m_timer = add<Core::Timer>(1000, [this] { refresh(); });
 }
