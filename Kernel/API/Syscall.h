@@ -191,7 +191,8 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(ptrace)             \
     __ENUMERATE_SYSCALL(minherit)           \
     __ENUMERATE_SYSCALL(sendfd)             \
-    __ENUMERATE_SYSCALL(recvfd)
+    __ENUMERATE_SYSCALL(recvfd)             \
+    __ENUMERATE_SYSCALL(sysconf)
 
 namespace Syscall {
 

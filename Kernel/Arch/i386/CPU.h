@@ -744,6 +744,8 @@ public:
 
     static Processor& by_id(u32 cpu);
 
+    static size_t processor_count() { return processors().size(); }
+
     template<typename Callback>
     static inline IterationDecision for_each(Callback callback)
     {

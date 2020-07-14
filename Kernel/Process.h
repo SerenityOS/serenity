@@ -327,6 +327,7 @@ public:
     int sys$ptrace(const Syscall::SC_ptrace_params*);
     int sys$sendfd(int sockfd, int fd);
     int sys$recvfd(int sockfd);
+    long sys$sysconf(int name);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);

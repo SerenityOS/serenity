@@ -172,4 +172,10 @@ enum {
 #define _POSIX_PRIORITY_SCHEDULING
 #define _POSIX_VDISABLE '\0'
 
+enum {
+    _SC_NPROCESSORS_CONF,
+    _SC_NPROCESSORS_ONLN,
+};
+long sysconf(int name);
+
 __END_DECLS
