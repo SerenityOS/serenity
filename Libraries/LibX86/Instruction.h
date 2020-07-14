@@ -336,10 +336,10 @@ class MemoryOrRegisterReference {
     friend class Instruction;
 
 public:
-    String to_string_o8() const;
-    String to_string_o16() const;
-    String to_string_o32() const;
-    String to_string_mm() const;
+    String to_string_o8(const Instruction&) const;
+    String to_string_o16(const Instruction&) const;
+    String to_string_o32(const Instruction&) const;
+    String to_string_mm(const Instruction&) const;
 
     bool is_register() const { return m_register_index != 0xffffffff; }
 
@@ -363,17 +363,12 @@ public:
     u32 read32(CPU&, const Instruction&);
 
     template<typename CPU>
-    ALWAYS_INLINE LogicalAddress resolve(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
-    {
-        if (m_a32)
-            return resolve32(cpu, segment_prefix);
-        return resolve16(cpu, segment_prefix);
-    }
+    LogicalAddress resolve(const CPU&, const Instruction&);
 
 private:
     MemoryOrRegisterReference() { }
 
-    String to_string() const;
+    String to_string(const Instruction&) const;
     String to_string_a16() const;
     String to_string_a32() const;
 
@@ -398,8 +393,6 @@ private:
         u32 m_offset32 { 0 };
         u16 m_offset16;
     };
-
-    u8 m_a32 { false };
 
     u8 m_rm { 0 };
     u8 m_sib { 0 };
@@ -477,6 +470,8 @@ public:
 
     u8 cc() const { return m_has_sub_op ? m_sub_op & 0xf : m_op & 0xf; }
 
+    bool a32() const { return m_a32; }
+
     String to_string(u32 origin, const SymbolProvider* = nullptr, bool x32 = true) const;
 
 private:
@@ -517,8 +512,6 @@ private:
 template<typename CPU>
 ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
 {
-    ASSERT(!m_a32);
-
     auto default_segment = SegmentRegister::DS;
     u16 offset = 0;
 
@@ -563,8 +556,6 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu
 template<typename CPU>
 ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
 {
-    ASSERT(m_a32);
-
     auto default_segment = SegmentRegister::DS;
     u32 offset = 0;
 
@@ -702,7 +693,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction
         return;
     }
 
-    auto address = resolve(cpu, insn.segment_prefix());
+    auto address = resolve(cpu, insn);
     cpu.write_memory8(address, value);
 }
 
@@ -714,7 +705,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write16(CPU& cpu, const Instructio
         return;
     }
 
-    auto address = resolve(cpu, insn.segment_prefix());
+    auto address = resolve(cpu, insn);
     cpu.write_memory16(address, value);
 }
 
@@ -726,7 +717,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instructio
         return;
     }
 
-    auto address = resolve(cpu, insn.segment_prefix());
+    auto address = resolve(cpu, insn);
     cpu.write_memory32(address, value);
 }
 
@@ -736,7 +727,7 @@ ALWAYS_INLINE u8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& i
     if (is_register())
         return cpu.gpr8(reg8());
 
-    auto address = resolve(cpu, insn.segment_prefix());
+    auto address = resolve(cpu, insn);
     return cpu.read_memory8(address);
 }
 
@@ -746,7 +737,7 @@ ALWAYS_INLINE u16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction&
     if (is_register())
         return cpu.gpr16(reg16());
 
-    auto address = resolve(cpu, insn.segment_prefix());
+    auto address = resolve(cpu, insn);
     return cpu.read_memory16(address);
 }
 
@@ -756,7 +747,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction&
     if (is_register())
         return cpu.gpr32(reg32());
 
-    auto address = resolve(cpu, insn.segment_prefix());
+    auto address = resolve(cpu, insn);
     return cpu.read_memory32(address);
 }
 
@@ -919,10 +910,9 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
 template<typename InstructionStreamType>
 ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, bool a32)
 {
-    m_a32 = a32;
     m_rm = stream.read8();
 
-    if (m_a32) {
+    if (a32) {
         decode32(stream);
         switch (m_displacement_bytes) {
         case 0:
@@ -958,8 +948,6 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
 template<typename InstructionStreamType>
 ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
 {
-    ASSERT(!m_a32);
-
     switch (m_rm & 0xc0) {
     case 0:
         if ((m_rm & 0x07) == 6)
@@ -982,8 +970,6 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
 template<typename InstructionStreamType>
 ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& stream)
 {
-    ASSERT(m_a32);
-
     switch (m_rm & 0xc0) {
     case 0:
         if ((m_rm & 0x07) == 5)
@@ -1025,5 +1011,12 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& st
     }
 }
 
+template<typename CPU>
+ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve(const CPU& cpu, const Instruction& insn)
+{
+    if (insn.a32())
+        return resolve32(cpu, insn.segment_prefix());
+    return resolve16(cpu, insn.segment_prefix());
+}
 
 }

@@ -725,37 +725,37 @@ const char* Instruction::reg32_name() const
     return register_name(static_cast<RegisterIndex32>(register_index()));
 }
 
-String MemoryOrRegisterReference::to_string_o8() const
+String MemoryOrRegisterReference::to_string_o8(const Instruction& insn) const
 {
     if (is_register())
         return register_name(static_cast<RegisterIndex8>(m_register_index));
-    return String::format("[%s]", to_string().characters());
+    return String::format("[%s]", to_string(insn).characters());
 }
 
-String MemoryOrRegisterReference::to_string_o16() const
+String MemoryOrRegisterReference::to_string_o16(const Instruction& insn) const
 {
     if (is_register())
         return register_name(static_cast<RegisterIndex16>(m_register_index));
-    return String::format("[%s]", to_string().characters());
+    return String::format("[%s]", to_string(insn).characters());
 }
 
-String MemoryOrRegisterReference::to_string_o32() const
+String MemoryOrRegisterReference::to_string_o32(const Instruction& insn) const
 {
     if (is_register())
         return register_name(static_cast<RegisterIndex32>(m_register_index));
-    return String::format("[%s]", to_string().characters());
+    return String::format("[%s]", to_string(insn).characters());
 }
 
-String MemoryOrRegisterReference::to_string_mm() const
+String MemoryOrRegisterReference::to_string_mm(const Instruction& insn) const
 {
     if (is_register())
         return register_name(static_cast<MMXRegisterIndex>(m_register_index));
-    return String::format("[%s]", to_string().characters());
+    return String::format("[%s]", to_string(insn).characters());
 }
 
-String MemoryOrRegisterReference::to_string() const
+String MemoryOrRegisterReference::to_string(const Instruction& insn) const
 {
-    if (m_a32)
+    if (insn.a32())
         return to_string_a32();
     return to_string_a16();
 }
@@ -1032,9 +1032,9 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
         return builder.to_string();
     };
 
-    auto append_rm8 = [&] { builder.append(m_modrm.to_string_o8()); };
-    auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16()); };
-    auto append_rm32 = [&] { builder.append(m_modrm.to_string_o32()); };
+    auto append_rm8 = [&] { builder.append(m_modrm.to_string_o8(*this)); };
+    auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16(*this)); };
+    auto append_rm32 = [&] { builder.append(m_modrm.to_string_o32(*this)); };
     auto append_imm8 = [&] { builder.appendf("%#02x", imm8()); };
     auto append_imm8_2 = [&] { builder.appendf("%#02x", imm8_2()); };
     auto append_imm16 = [&] { builder.appendf("%#04x", imm16()); };
@@ -1054,7 +1054,7 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
     auto append_relative_imm32 = [&] { builder.append(formatted_address(origin + 5, x32, i32(imm32()))); };
 
     auto append_mm = [&] { builder.appendf("mm%u", register_index()); };
-    auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm()); };
+    auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
 
     auto append = [&](auto& content) { builder.append(content); };
     auto append_moff = [&] {

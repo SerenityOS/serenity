@@ -1026,12 +1026,12 @@ void SoftCPU::LEAVE32(const X86::Instruction&)
 
 void SoftCPU::LEA_reg16_mem16(const X86::Instruction& insn)
 {
-    gpr16(insn.reg16()) = insn.modrm().resolve(*this, insn.segment_prefix()).offset();
+    gpr16(insn.reg16()) = insn.modrm().resolve(*this, insn).offset();
 }
 
 void SoftCPU::LEA_reg32_mem32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = insn.modrm().resolve(*this, insn.segment_prefix()).offset();
+    gpr32(insn.reg32()) = insn.modrm().resolve(*this, insn).offset();
 }
 
 void SoftCPU::LES_reg16_mem16(const X86::Instruction&) { TODO(); }
