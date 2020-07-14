@@ -104,6 +104,7 @@ void Menu::dismiss()
 
 int Menu::realize_menu(RefPtr<Action> default_action)
 {
+    unrealize_menu();
     m_menu_id = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateMenu>(m_name)->menu_id();
 
 #ifdef MENU_DEBUG
