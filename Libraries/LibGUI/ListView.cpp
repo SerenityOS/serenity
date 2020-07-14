@@ -127,7 +127,12 @@ void ListView::paint_event(PaintEvent& event)
     int painted_item_index = 0;
 
     for (int row_index = 0; row_index < model()->row_count(); ++row_index) {
-        bool is_selected_row = selection().contains_row(row_index);
+        bool is_selected_row;
+        if (hover_highlighting() && m_last_valid_hovered_index.is_valid())
+            is_selected_row = row_index == m_last_valid_hovered_index.row();
+        else
+            is_selected_row = selection().contains_row(row_index);
+
         int y = painted_item_index * item_height();
 
         Color background_color;
@@ -187,15 +192,29 @@ void ListView::move_selection(int steps)
     auto& model = *this->model();
     ModelIndex new_index;
     if (!selection().is_empty()) {
-        auto old_index = selection().first();
-        new_index = model.index(old_index.row() + steps, old_index.column());
+        if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
+            new_index = model.index(m_last_valid_hovered_index.row() + steps, m_last_valid_hovered_index.column());
+        } else {
+            auto old_index = selection().first();
+            new_index = model.index(old_index.row() + steps, old_index.column());
+        }
     } else {
-        new_index = model.index(0, 0);
+        if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
+            new_index = model.index(m_last_valid_hovered_index.row() + steps, m_last_valid_hovered_index.column());
+        } else {
+            new_index = model.index(0, 0);
+        }
     }
     if (model.is_valid(new_index)) {
+        set_last_valid_hovered_index({});
         selection().set(new_index);
         scroll_into_view(new_index, Orientation::Vertical);
         update();
+    } else {
+        if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
+            new_index = model.index(m_last_valid_hovered_index.row(), m_last_valid_hovered_index.column());
+            selection().set(new_index);
+        }
     }
 }
 
@@ -204,7 +223,12 @@ void ListView::keydown_event(KeyEvent& event)
     if (!model())
         return;
     auto& model = *this->model();
+    ModelIndex new_index;
     if (event.key() == KeyCode::Key_Return) {
+        if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
+            auto new_index = model.index(m_last_valid_hovered_index.row(), m_last_valid_hovered_index.column());
+            selection().set(new_index);
+        }
         activate_selected();
         return;
     }
@@ -217,9 +241,15 @@ void ListView::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_PageUp) {
-        int items_per_page = visible_content_rect().height() / item_height();
-        auto old_index = selection().first();
-        auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
+        if (hover_highlighting())
+            set_last_valid_hovered_index({});
+        if (!selection().is_empty()) {
+            int items_per_page = visible_content_rect().height() / item_height();
+            auto old_index = selection().first();
+            new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
+        } else {
+            new_index = model.index(0, 0);
+        }
         if (model.is_valid(new_index)) {
             selection().set(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -228,14 +258,25 @@ void ListView::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_PageDown) {
-        int items_per_page = visible_content_rect().height() / item_height();
-        auto old_index = selection().first();
-        auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
+        if (hover_highlighting())
+            set_last_valid_hovered_index({});
+        if (!selection().is_empty()) {
+            int items_per_page = visible_content_rect().height() / item_height();
+            auto old_index = selection().first();
+            new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
+        } else {
+            new_index = model.index(0, 0);
+        }
         if (model.is_valid(new_index)) {
             selection().set(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
+        return;
+    }
+    if (event.key() == KeyCode::Key_Escape) {
+        if (on_escape_pressed)
+            on_escape_pressed();
         return;
     }
     return Widget::keydown_event(event);

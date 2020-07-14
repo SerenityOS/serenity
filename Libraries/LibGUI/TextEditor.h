@@ -127,8 +127,13 @@ public:
     void redo() { document().redo(); }
 
     Function<void()> on_change;
+    Function<void()> on_mousedown;
     Function<void()> on_return_pressed;
     Function<void()> on_escape_pressed;
+    Function<void()> on_up_pressed;
+    Function<void()> on_down_pressed;
+    Function<void()> on_pageup_pressed;
+    Function<void()> on_pagedown_pressed;
 
     Action& undo_action() { return *m_undo_action; }
     Action& redo_action() { return *m_redo_action; }

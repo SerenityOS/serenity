@@ -225,6 +225,16 @@ void AbstractView::set_hovered_index(const ModelIndex& index)
     if (m_hovered_index == index)
         return;
     m_hovered_index = index;
+    if (m_hovered_index.is_valid())
+        m_last_valid_hovered_index = m_hovered_index;
+    update();
+}
+
+void AbstractView::set_last_valid_hovered_index(const ModelIndex& index)
+{
+    if (m_last_valid_hovered_index == index)
+        return;
+    m_last_valid_hovered_index = index;
     update();
 }
 
@@ -325,6 +335,9 @@ void AbstractView::mouseup_event(MouseEvent& event)
         m_might_drag = false;
         update();
     }
+
+    if (activates_on_selection())
+        activate_selected();
 }
 
 void AbstractView::doubleclick_event(MouseEvent& event)

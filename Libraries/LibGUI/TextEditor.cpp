@@ -700,6 +700,10 @@ void TextEditor::keydown_event(KeyEvent& event)
             }
         }
         return;
+    } else if (event.key() == KeyCode::Key_Up) {
+        if (on_up_pressed)
+            on_up_pressed();
+        return;
     }
     if (is_multi_line() && event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (line_count() - 1)) {
@@ -717,6 +721,10 @@ void TextEditor::keydown_event(KeyEvent& event)
             }
         }
         return;
+    } else if (event.key() == KeyCode::Key_Down) {
+        if (on_down_pressed)
+            on_down_pressed();
+        return;
     }
     if (is_multi_line() && event.key() == KeyCode::Key_PageUp) {
         if (m_cursor.line() > 0) {
@@ -731,6 +739,10 @@ void TextEditor::keydown_event(KeyEvent& event)
             }
         }
         return;
+    } else if (event.key() == KeyCode::Key_PageUp) {
+        if (on_pageup_pressed)
+            on_pageup_pressed();
+        return;
     }
     if (is_multi_line() && event.key() == KeyCode::Key_PageDown) {
         if (m_cursor.line() < (line_count() - 1)) {
@@ -743,6 +755,10 @@ void TextEditor::keydown_event(KeyEvent& event)
                 did_update_selection();
             }
         }
+        return;
+    } else if (event.key() == KeyCode::Key_PageDown) {
+        if (on_pagedown_pressed)
+            on_pagedown_pressed();
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
