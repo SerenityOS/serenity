@@ -69,7 +69,7 @@ bool unpack_file_for_central_directory_index(off_t central_directory_index, cons
         CFDHLocalFileHeaderIndexOffset = 42,
     };
     enum LocalFileHeaderOffsets {
-        LFHCompressionMethodOffset = 10,
+        LFHCompressionMethodOffset = 8,
         LFHCompressedSizeOffset = 18,
         LFHFileNameLengthOffset = 26,
         LFHExtraFieldLengthOffset = 28,
