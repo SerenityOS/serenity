@@ -13,5 +13,6 @@ build() {
 }
 
 install() {
+    mkdir -p "${SERENITY_ROOT}/Build/Root/usr/local/bin"
     cp "${workdir}/ninja" "${SERENITY_ROOT}/Build/Root/usr/local/bin/ninja"
 }

@@ -5308,4 +5308,15 @@ int Process::sys$recvfd(int sockfd)
     m_fds[new_fd].set(*received_descriptor_or_error.value(), 0);
     return new_fd;
 }
+
+long Process::sys$sysconf(int name)
+{
+    switch (name) {
+    case _SC_NPROCESSORS_CONF:
+    case _SC_NPROCESSORS_ONLN:
+        return Processor::processor_count();
+    default:
+        return -EINVAL;
+    }
+}
 }
