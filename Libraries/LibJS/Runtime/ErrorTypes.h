@@ -46,6 +46,7 @@
     M(InstanceOfOperatorBadPrototype, "Prototype property of %s is not an object")                     \
     M(InvalidAssignToConst, "Invalid assignment to const variable")                                    \
     M(InvalidLeftHandAssignment, "Invalid left-hand side in assignment")                               \
+    M(InvalidRadix, "Radix must be an integer no less than 2, and no greater than 36")                 \
     M(IsNotA, "%s is not a %s")                                                                        \
     M(IsNotAEvaluatedFrom, "%s is not a %s (evaluated from '%s')")                                     \
     M(JsonBigInt, "Cannot serialize BigInt value to JSON")                                             \
@@ -60,6 +61,7 @@
     M(NotASymbol, "%s is not a symbol")                                                                \
     M(NotIterable, "%s is not iterable")                                                               \
     M(NonExtensibleDefine, "Cannot define property %s on non-extensible object")                       \
+    M(NumberIncompatibleThis, "Number.prototype.%s method called with incompatible this target")       \
     M(ObjectDefinePropertyReturnedFalse, "Object's [[DefineProperty]] method returned false")          \
     M(ObjectSetPrototypeOfReturnedFalse, "Object's [[SetPrototypeOf]] method returned false")          \
     M(ObjectSetPrototypeOfTwoArgs, "Object.setPrototypeOf requires at least two arguments")            \

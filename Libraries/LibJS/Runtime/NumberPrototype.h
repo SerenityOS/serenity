@@ -35,7 +35,10 @@ class NumberPrototype final : public NumberObject {
 
 public:
     explicit NumberPrototype(GlobalObject&);
+    virtual void initialize(Interpreter&, GlobalObject&) override;
     virtual ~NumberPrototype() override;
+
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
 };
 
 }
