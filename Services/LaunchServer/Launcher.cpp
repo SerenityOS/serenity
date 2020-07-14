@@ -26,7 +26,11 @@
 
 #include "Launcher.h"
 #include <AK/Function.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonObjectSerializer.h>
+#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <spawn.h>
@@ -37,6 +41,47 @@ namespace LaunchServer {
 
 static Launcher* s_the;
 static bool spawn(String executable, String argument);
+
+String Handler::name_from_executable(const StringView& executable)
+{
+    auto separator = executable.find_last_of('/');
+    if (separator.has_value()) {
+        auto start = separator.value() + 1;
+        return executable.substring_view(start, executable.length() - start);
+    }
+    return executable;
+}
+
+void Handler::from_executable(Type handler_type, const String& executable)
+{
+    this->handler_type = handler_type;
+    this->name = name_from_executable(executable);
+    this->executable = executable;
+}
+
+String Handler::to_details_str() const
+{
+    StringBuilder builder;
+    JsonObjectSerializer obj { builder };
+    obj.add("executable", executable);
+    obj.add("name", name);
+    switch (handler_type) {
+        case Type::UserDefault:
+            obj.add("type", "userdefault");
+            break;
+        case Type::UserPreferred:
+            obj.add("type", "userpreferred");
+            break;
+        default:
+            break;
+    }
+    JsonObject icons_obj;
+    for (auto& icon : icons)
+        icons_obj.set(icon.key, icon.value);
+    obj.add("icons", move(icons_obj));
+    obj.finish();
+    return builder.build();
+}
 
 Launcher::Launcher()
 {
@@ -61,6 +106,14 @@ void Launcher::load_handlers(const String& af_dir)
 
         return table;
     };
+    auto load_hashmap = [](auto& af, auto& group) {
+        HashMap<String, String> map;
+        auto keys = af->keys(group);
+        for (auto& key : keys)
+            map.set(key, af->read_entry(group, key));
+
+        return map;
+    };
 
     Core::DirIterator dt(af_dir, Core::DirIterator::SkipDots);
     while (dt.has_next()) {
@@ -73,7 +126,8 @@ void Launcher::load_handlers(const String& af_dir)
         auto app_executable = af->read_entry("App", "Executable");
         auto file_types = load_hashtable(af, "FileTypes");
         auto protocols = load_hashtable(af, "Protocols");
-        m_handlers.set(app_executable, { app_name, app_executable, file_types, protocols });
+        auto icons = load_hashmap(af, "Icons");
+        m_handlers.set(app_executable, { Handler::Type::Default, move(app_name), app_executable, move(file_types), move(protocols), move(icons) });
     }
 }
 
@@ -90,12 +144,42 @@ void Launcher::load_config(const Core::ConfigFile& cfg)
 
 Vector<String> Launcher::handlers_for_url(const URL& url)
 {
-    if (url.protocol() == "file")
-        return handlers_for_path(url.path());
+    Vector<String> handlers;
+    if (url.protocol() == "file") {
+        for_each_handler_for_path(url.path(), [&](auto& handler) -> bool {
+            handlers.append(handler.executable);
+            return true;
+        });
+    } else {
+        for_each_handler(url.protocol(), m_protocol_handlers, [&](const auto& handler) -> bool {
+            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.protocol())) {
+                handlers.append(handler.executable);
+                return true;
+            }
+            return false;
+        });
+    }
+    return handlers;
+}
 
-    return handlers_for(url.protocol(), m_protocol_handlers, [](auto& handler, auto& key) {
-        return handler.protocols.contains(key);
-    });
+Vector<String> Launcher::handlers_with_details_for_url(const URL& url)
+{
+    Vector<String> handlers;
+    if (url.protocol() == "file") {
+        for_each_handler_for_path(url.path(), [&](auto& handler) -> bool {
+            handlers.append(handler.to_details_str());
+            return true;
+        });
+    } else {
+        for_each_handler(url.protocol(), m_protocol_handlers, [&](const auto& handler) -> bool {
+            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.protocol())) {
+                handlers.append(handler.to_details_str());
+                return true;
+            }
+            return false;
+        });
+    }
+    return handlers;
 }
 
 bool Launcher::open_url(const URL& url, const String& handler_name)
@@ -135,6 +219,19 @@ bool spawn(String executable, String argument)
     return true;
 }
 
+Handler Launcher::get_handler_for_executable(Handler::Type handler_type, const String& executable) const
+{
+    Handler handler;
+    auto existing_handler = m_handlers.get(executable);
+    if (existing_handler.has_value()) {
+        handler = existing_handler.value();
+        handler.handler_type = handler_type;
+    } else {
+        handler.from_executable(handler_type, executable);
+    }
+    return handler;
+}
+
 bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_preferences, const String key, const String argument, const String default_program)
 {
     auto program_path = user_preferences.get(key);
@@ -151,45 +248,46 @@ bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_pr
     return spawn(default_program, argument);
 }
 
-Vector<String> Launcher::handlers_for(const String& key, HashMap<String, String>& user_preference, Function<bool(Handler&, const String&)> handler_matches)
+void Launcher::for_each_handler(const String& key, HashMap<String, String>& user_preference, Function<bool(const Handler&)> f)
 {
-    Vector<String> handlers;
-
     auto user_preferred = user_preference.get(key);
     if (user_preferred.has_value())
-        handlers.append(user_preferred.value());
+        f(get_handler_for_executable(Handler::Type::UserPreferred, user_preferred.value()));
 
+    size_t counted = 0;
     for (auto& handler : m_handlers) {
         // Skip over the existing item in the list
         if (user_preferred.has_value() && user_preferred.value() == handler.value.executable)
             continue;
-        if (handler_matches(handler.value, key))
-            handlers.append(handler.value.executable);
+        if (f(handler.value))
+            counted++;
     }
 
     auto user_default = user_preference.get("*");
-    if (handlers.size() == 0 && user_default.has_value())
-        handlers.append(user_default.value());
-
-    return handlers;
+    if (counted == 0 && user_default.has_value())
+        f(get_handler_for_executable(Handler::Type::UserDefault, user_default.value()));
 }
 
-Vector<String> Launcher::handlers_for_path(const String& path)
+void Launcher::for_each_handler_for_path(const String& path, Function<bool(const Handler&)> f)
 {
     struct stat st;
     if (stat(path.characters(), &st) < 0) {
         perror("stat");
-        return {};
+        return;
     }
 
     // TODO: Make directory opening configurable
-    if (S_ISDIR(st.st_mode))
-        return { "/bin/FileManager" };
+    if (S_ISDIR(st.st_mode)) {
+        f(get_handler_for_executable(Handler::Type::Default, "/bin/FileManager"));
+        return;
+    }
 
     auto extension = LexicalPath(path).extension().to_lowercase();
 
-    return handlers_for(extension, m_file_handlers, [](auto& handler, auto& key) {
-        return handler.file_types.contains(key);
+    for_each_handler(extension, m_file_handlers, [&](const auto& handler) -> bool {
+        if (handler.handler_type != Handler::Type::Default || handler.file_types.contains(extension))
+            return f(handler);
+        return false;
     });
 }
 
