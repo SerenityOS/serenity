@@ -38,6 +38,7 @@ class Launcher {
 public:
     enum class LauncherType {
         Default = 0,
+        Application,
         UserPreferred,
         UserDefault
     };

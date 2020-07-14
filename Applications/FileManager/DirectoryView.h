@@ -70,6 +70,7 @@ public:
 
     void refresh();
 
+    Function<void(const AK::URL&, const LauncherHandler&)> on_launch;
     Function<void(const StringView&)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
     Function<void(const GUI::AbstractView&, const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;

@@ -44,7 +44,9 @@ auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRe
     details->name = obj.get("name").to_string();
     if (auto type_value = obj.get_ptr("type")) {
         auto type_str = type_value->to_string();
-        if (type_str == "userpreferred")
+        if (type_str == "app")
+            details->launcher_type = LauncherType::Application;
+        else if (type_str == "userpreferred")
             details->launcher_type = LauncherType::UserPreferred;
         else if (type_str == "userdefault")
             details->launcher_type = LauncherType::UserDefault;
@@ -83,6 +85,7 @@ bool Launcher::open(const URL& url, const String& handler_name)
 
 bool Launcher::open(const URL& url, const Details& details)
 {
+    ASSERT(details.launcher_type != LauncherType::Application); // Launcher should not be used to execute arbitrary applications
     return open(url, details.executable);
 }
 

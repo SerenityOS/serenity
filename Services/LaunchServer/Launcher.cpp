@@ -66,6 +66,9 @@ String Handler::to_details_str() const
     obj.add("executable", executable);
     obj.add("name", name);
     switch (handler_type) {
+        case Type::Application:
+            obj.add("type", "app");
+            break;
         case Type::UserDefault:
             obj.add("type", "userdefault");
             break;
@@ -75,10 +78,12 @@ String Handler::to_details_str() const
         default:
             break;
     }
-    JsonObject icons_obj;
-    for (auto& icon : icons)
-        icons_obj.set(icon.key, icon.value);
-    obj.add("icons", move(icons_obj));
+    if (!icons.is_empty()) {
+        JsonObject icons_obj;
+        for (auto& icon : icons)
+            icons_obj.set(icon.key, icon.value);
+        obj.add("icons", move(icons_obj));
+    }
     obj.finish();
     return builder.build();
 }
@@ -282,6 +287,9 @@ void Launcher::for_each_handler_for_path(const String& path, Function<bool(const
         return;
     }
 
+    if ((st.st_mode & S_IFMT) == S_IFREG && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
+        f(get_handler_for_executable(Handler::Type::Application, path));
+
     auto extension = LexicalPath(path).extension().to_lowercase();
 
     for_each_handler(extension, m_file_handlers, [&](const auto& handler) -> bool {
@@ -303,7 +311,7 @@ bool Launcher::open_file_url(const URL& url)
     if (S_ISDIR(st.st_mode))
         return spawn("/bin/FileManager", url.path());
 
-    if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+    if ((st.st_mode & S_IFMT) == S_IFREG && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return spawn(url.path(), {});
 
     auto extension_parts = url.path().to_lowercase().split('.');
