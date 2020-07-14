@@ -46,6 +46,13 @@ public:
         MultiLine,
         SingleLine
     };
+
+    enum Mode {
+        Editable,
+        ReadOnly,
+        DisplayOnly
+    };
+
     virtual ~TextEditor() override;
 
     const TextDocument& document() const { return *m_document; }
@@ -53,8 +60,10 @@ public:
 
     void set_document(TextDocument&);
 
-    bool is_readonly() const { return m_readonly; }
-    void set_readonly(bool);
+    bool has_visible_list() const { return m_has_visible_list; }
+    void set_has_visible_list(bool);
+    bool has_open_button() const { return m_has_open_button; }
+    void set_has_open_button(bool);
 
     virtual bool is_automatic_indentation_enabled() const final { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
@@ -70,6 +79,12 @@ public:
     Type type() const { return m_type; }
     bool is_single_line() const { return m_type == SingleLine; }
     bool is_multi_line() const { return m_type == MultiLine; }
+
+    Mode mode() const { return m_mode; }
+    bool is_editable() const { return m_mode == Editable; }
+    bool is_readonly() const { return m_mode == ReadOnly; }
+    bool is_displayonly() const { return m_mode == DisplayOnly; }
+    void set_mode(const Mode);
 
     bool is_ruler_visible() const { return m_ruler_visible; }
     void set_ruler_visible(bool b) { m_ruler_visible = b; }
@@ -153,7 +168,7 @@ protected:
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void theme_change_event(ThemeChangeEvent&) override;
-    virtual void cursor_did_change() {}
+    virtual void cursor_did_change() { }
     Gfx::IntRect ruler_content_rect(size_t line) const;
 
     TextPosition text_position_at(const Gfx::IntPoint&) const;
@@ -182,6 +197,7 @@ private:
 
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }
+    int button_padding() const { return m_has_open_button ? 17 : 2; }
 
     class ReflowDeferrer {
     public:
@@ -194,6 +210,7 @@ private:
         {
             m_editor.undefer_reflow();
         }
+
     private:
         TextEditor& m_editor;
     };
@@ -238,6 +255,7 @@ private:
     }
 
     Type m_type { MultiLine };
+    Mode m_mode { Editable };
 
     TextPosition m_cursor;
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::CenterLeft };
@@ -247,7 +265,8 @@ private:
     bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
     bool m_line_wrapping_enabled { false };
-    bool m_readonly { false };
+    bool m_has_visible_list { false };
+    bool m_has_open_button { false };
     int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
