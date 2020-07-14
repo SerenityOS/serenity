@@ -42,6 +42,8 @@ public:
     virtual bool is_number_object() const override { return true; }
     virtual Value value_of() const override { return Value(m_value); }
 
+    double number() const { return m_value; }
+
 private:
     double m_value { 0 };
 };

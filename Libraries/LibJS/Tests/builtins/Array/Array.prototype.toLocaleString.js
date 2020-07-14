@@ -15,10 +15,6 @@ describe("normal behavior", () => {
         expect(["foo", "bar", "baz"].toLocaleString()).toBe("foo,bar,baz");
     });
 
-    test("number stringification differs from regular toString, for now", () => {
-        expect([1, 2, 3].toLocaleString()).toBe("[object Number],[object Number],[object Number]");
-    });
-
     test("null and undefined result in empty strings", () => {
         expect([null].toLocaleString()).toBe("");
         expect([undefined].toLocaleString()).toBe("");
