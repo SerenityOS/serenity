@@ -451,41 +451,15 @@ public:
         return (rm() >> 3) & 7;
     }
 
-    u8 imm8() const
-    {
-        ASSERT(m_imm1_bytes == 1);
-        return m_imm1;
-    }
-    u16 imm16() const
-    {
-        ASSERT(m_imm1_bytes == 2);
-        return m_imm1;
-    }
-    u32 imm32() const
-    {
-        ASSERT(m_imm1_bytes == 4);
-        return m_imm1;
-    }
-
+    u8 imm8() const { return m_imm1; }
+    u16 imm16() const { return m_imm1; }
+    u32 imm32() const { return m_imm1; }
     u8 imm8_1() const { return imm8(); }
-    u8 imm8_2() const
-    {
-        ASSERT(m_imm2_bytes == 1);
-        return m_imm2;
-    }
+    u8 imm8_2() const { return m_imm2; }
     u16 imm16_1() const { return imm16(); }
-    u16 imm16_2() const
-    {
-        ASSERT(m_imm2_bytes == 2);
-        return m_imm2;
-    }
+    u16 imm16_2() const { return m_imm2; }
     u32 imm32_1() const { return imm32(); }
-    u32 imm32_2() const
-    {
-        ASSERT(m_imm2_bytes == 4);
-        return m_imm2;
-    }
-
+    u32 imm32_2() const { return m_imm2; }
     u32 imm_address() const { return m_a32 ? imm32() : imm16(); }
 
     LogicalAddress imm_address16_16() const { return LogicalAddress(imm16_1(), imm16_2()); }
@@ -527,9 +501,7 @@ private:
     bool m_has_sub_op { false };
     bool m_has_rm { false };
 
-    unsigned m_imm1_bytes { 0 };
-    unsigned m_imm2_bytes { 0 };
-    unsigned m_prefix_bytes { 0 };
+    u8 m_extra_bytes { 0 };
 
     Optional<SegmentRegister> m_segment_prefix;
     bool m_has_operand_size_override_prefix { false };
@@ -805,9 +777,7 @@ ALWAYS_INLINE unsigned Instruction::length() const
             ++len;
         len += m_modrm.m_displacement_bytes;
     }
-    len += m_imm1_bytes;
-    len += m_imm2_bytes;
-    len += m_prefix_bytes;
+    len += m_extra_bytes;
     return len;
 }
 
@@ -836,7 +806,8 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
     : m_a32(a32)
     , m_o32(o32)
 {
-    for (;; ++m_prefix_bytes) {
+    u8 prefix_bytes = 0;
+    for (;; ++prefix_bytes) {
         u8 opbyte = stream.read8();
         if (opbyte == Prefix::OperandSizeOverride) {
             m_o32 = !o32;
@@ -907,11 +878,11 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         return;
     }
 
-    m_imm1_bytes = m_descriptor->imm1_bytes_for_address_size(m_a32);
-    m_imm2_bytes = m_descriptor->imm2_bytes_for_address_size(m_a32);
+    auto imm1_bytes = m_descriptor->imm1_bytes_for_address_size(m_a32);
+    auto imm2_bytes = m_descriptor->imm2_bytes_for_address_size(m_a32);
 
     // Consume immediates if present.
-    switch (m_imm2_bytes) {
+    switch (imm2_bytes) {
     case 1:
         m_imm2 = stream.read8();
         break;
@@ -923,7 +894,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         break;
     }
 
-    switch (m_imm1_bytes) {
+    switch (imm1_bytes) {
     case 1:
         m_imm1 = stream.read8();
         break;
@@ -934,6 +905,8 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_imm1 = stream.read32();
         break;
     }
+
+    m_extra_bytes = prefix_bytes + imm1_bytes + imm2_bytes;
 
 #ifdef DISALLOW_INVALID_LOCK_PREFIX
     if (m_has_lock_prefix && !m_descriptor->lock_prefix_allowed) {
