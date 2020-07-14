@@ -26,13 +26,30 @@
 
 #pragma once
 
+#include <AK/URL.h>
 #include <AK/Vector.h>
+#include <LibDesktop/Launcher.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/ColumnsView.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
 #include <sys/stat.h>
+
+class LauncherHandler: public RefCounted<LauncherHandler> {
+public:
+    LauncherHandler(const NonnullRefPtr<Desktop::Launcher::Details>& details)
+        : m_details(details)
+    {
+    }
+
+    NonnullRefPtr<GUI::Action> create_launch_action(Function<void(const LauncherHandler&)>);
+    const Desktop::Launcher::Details& details() const { return *m_details; }
+
+private:
+    NonnullRefPtr<Desktop::Launcher::Details> m_details;
+};
 
 class DirectoryView final : public GUI::StackWidget
     , private GUI::ModelClient {
@@ -47,6 +64,9 @@ public:
     void open_next_directory();
     int path_history_size() const { return m_path_history.size(); }
     int path_history_position() const { return m_path_history_position; }
+    static RefPtr<LauncherHandler> get_default_launch_handler(const NonnullRefPtrVector<LauncherHandler>& handlers);
+    NonnullRefPtrVector<LauncherHandler> get_launch_handlers(const URL& url);
+    NonnullRefPtrVector<LauncherHandler> get_launch_handlers(const String& path);
 
     void refresh();
 
