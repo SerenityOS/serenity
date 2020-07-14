@@ -459,7 +459,10 @@ public:
     LogicalAddress imm_address16_32() const { return LogicalAddress(imm16_1(), imm32_2()); }
 
     bool has_rm() const { return m_has_rm; }
-    bool has_sub_op() const { return m_has_sub_op; }
+    bool has_sub_op() const
+    {
+        return m_op == 0x0f;
+    }
 
     unsigned register_index() const { return m_register_index; }
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
@@ -468,7 +471,7 @@ public:
 
     SegmentRegister segment_register() const { return static_cast<SegmentRegister>(register_index()); }
 
-    u8 cc() const { return m_has_sub_op ? m_sub_op & 0xf : m_op & 0xf; }
+    u8 cc() const { return has_sub_op() ? m_sub_op & 0xf : m_op & 0xf; }
 
     bool a32() const { return m_a32; }
 
@@ -493,7 +496,6 @@ private:
     bool m_o32 { false };
     bool m_has_lock_prefix { false };
 
-    bool m_has_sub_op { false };
     bool m_has_rm { false };
 
     u8 m_extra_bytes { 0 };
@@ -760,7 +762,7 @@ ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream
 ALWAYS_INLINE unsigned Instruction::length() const
 {
     unsigned len = 1;
-    if (m_has_sub_op)
+    if (has_sub_op())
         ++len;
     if (m_has_rm) {
         ++len;
@@ -827,8 +829,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         break;
     }
 
-    if (m_op == 0x0F) {
-        m_has_sub_op = true;
+    if (m_op == 0x0f) {
         m_sub_op = stream.read8();
         m_descriptor = m_o32 ? &s_0f_table32[m_sub_op] : &s_0f_table16[m_sub_op];
     } else {
@@ -841,7 +842,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_modrm.decode(stream, m_a32);
         m_register_index = (m_modrm.m_rm >> 3) & 7;
     } else {
-        if (m_has_sub_op)
+        if (has_sub_op())
             m_register_index = m_sub_op & 7;
         else
             m_register_index = m_op & 7;
@@ -854,7 +855,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
     }
 
     if (!m_descriptor->mnemonic) {
-        if (m_has_sub_op) {
+        if (has_sub_op()) {
             if (hasSlash)
                 fprintf(stderr, "Instruction %02X %02X /%u not understood\n", m_op, m_sub_op, slash());
             else
