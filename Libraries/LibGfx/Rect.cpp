@@ -97,13 +97,13 @@ Vector<IntRect, 4> IntRect::shatter(const IntRect& hammer) const
         right() - hammer.right(),
         min((hammer.y() + hammer.height()), (y() + height())) - max(hammer.y(), y())
     };
-    if (intersects(top_shard))
+    if (!top_shard.is_empty())
         pieces.unchecked_append(top_shard);
-    if (intersects(bottom_shard))
+    if (!bottom_shard.is_empty())
         pieces.unchecked_append(bottom_shard);
-    if (intersects(left_shard))
+    if (!left_shard.is_empty())
         pieces.unchecked_append(left_shard);
-    if (intersects(right_shard))
+    if (!right_shard.is_empty())
         pieces.unchecked_append(right_shard);
 
     return pieces;
