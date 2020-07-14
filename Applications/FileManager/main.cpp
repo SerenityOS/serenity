@@ -313,7 +313,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     auto directory_context_menu = GUI::Menu::construct("Directory View Directory");
-    auto file_context_menu = GUI::Menu::construct("Directory View File");
     auto directory_view_context_menu = GUI::Menu::construct("Directory View");
     auto tree_view_directory_context_menu = GUI::Menu::construct("Tree View Directory");
     auto tree_view_context_menu = GUI::Menu::construct("Tree View");
@@ -719,27 +718,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         copy_action->set_enabled(!selection.is_empty());
     };
 
-    auto open_in_text_editor_action = GUI::Action::create("Open in TextEditor...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-text-editor.png"), [&](auto&) {
-        pid_t child;
-        for (auto& path : selected_file_paths()) {
-            const char* argv[] = { "TextEditor", path.characters(), nullptr };
-            posix_spawn(&child, "/bin/TextEditor", nullptr, nullptr, const_cast<char**>(argv), environ);
-        }
-    });
-
     directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(folder_specific_paste_action);
     directory_context_menu->add_action(delete_action);
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
-
-    file_context_menu->add_action(copy_action);
-    file_context_menu->add_action(paste_action);
-    file_context_menu->add_action(delete_action);
-    file_context_menu->add_separator();
-    file_context_menu->add_action(open_in_text_editor_action);
-    file_context_menu->add_separator();
-    file_context_menu->add_action(properties_action);
 
     directory_view_context_menu->add_action(mkdir_action);
     directory_view_context_menu->add_action(paste_action);
@@ -755,6 +738,18 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(mkdir_action);
 
+    RefPtr<GUI::Menu> file_context_menu;
+    NonnullRefPtrVector<LauncherHandler> current_file_handlers;
+    RefPtr<GUI::Action> file_context_menu_action_default_action;
+
+    auto file_open_action_handler = [&](const LauncherHandler& launcher_handler) {
+        pid_t child;
+        for (auto& path : selected_file_paths()) {
+            const char* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
+            posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+        }
+    };
+
     directory_view.on_context_menu_request = [&](const GUI::AbstractView&, const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {
             auto& node = directory_view.model().node(index);
@@ -764,7 +759,47 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position());
             } else {
-                file_context_menu->popup(event.screen_position(), open_in_text_editor_action);
+                current_file_handlers = directory_view.get_launch_handlers(node.full_path(directory_view.model()));
+
+                file_context_menu = GUI::Menu::construct("Directory View File");
+                file_context_menu->add_action(copy_action);
+                file_context_menu->add_action(paste_action);
+                file_context_menu->add_action(delete_action);
+
+                file_context_menu->add_separator();
+                bool added_open_menu_items = false;
+                auto default_file_handler = directory_view.get_default_launch_handler(current_file_handlers);
+                if (default_file_handler) {
+                    auto file_open_action = default_file_handler->create_launch_action([&](auto& launcher_handler) {
+                        file_open_action_handler(launcher_handler);
+                    });
+                    file_open_action->set_text(String::format("Open in %s", file_open_action->text().characters()));
+
+                    file_context_menu_action_default_action = file_open_action;
+
+                    file_context_menu->add_action(move(file_open_action));
+                    added_open_menu_items = true;
+                } else {
+                    file_context_menu_action_default_action.clear();
+                }
+                
+                if (current_file_handlers.size() > 1) {
+                    added_open_menu_items = true;
+                    auto& file_open_with_menu = file_context_menu->add_submenu("Open with");
+                    for (auto& handler : current_file_handlers) {
+                        if (&handler == default_file_handler.ptr())
+                            continue;
+                        file_open_with_menu.add_action(handler.create_launch_action([&](auto& launcher_handler) {
+                            file_open_action_handler(launcher_handler);
+                        }));
+                    }
+                }
+
+                if (added_open_menu_items)
+                    file_context_menu->add_separator();
+
+                file_context_menu->add_action(properties_action);
+                file_context_menu->popup(event.screen_position(), file_context_menu_action_default_action);
             }
         } else {
             directory_view_context_menu->popup(event.screen_position());
