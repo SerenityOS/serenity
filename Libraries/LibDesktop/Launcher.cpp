@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonObject.h>
 #include <AK/URL.h>
 #include <LaunchServer/LaunchClientEndpoint.h>
 #include <LaunchServer/LaunchServerEndpoint.h>
@@ -32,6 +33,29 @@
 #include <stdlib.h>
 
 namespace Desktop {
+
+auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRefPtr<Details>
+{
+    auto details = adopt(*new Details);
+    auto json = JsonValue::from_string(details_str);
+    ASSERT(json.has_value());
+    auto obj = json.value().as_object();
+    details->executable = obj.get("executable").to_string();
+    details->name = obj.get("name").to_string();
+    if (auto type_value = obj.get_ptr("type")) {
+        auto type_str = type_value->to_string();
+        if (type_str == "userpreferred")
+            details->launcher_type = LauncherType::UserPreferred;
+        else if (type_str == "userdefault")
+            details->launcher_type = LauncherType::UserDefault;
+    }
+    if (auto icons_value = obj.get_ptr("icons")) {
+        icons_value->as_object().for_each_member([&](auto& name, auto& value) {
+            details->icons.set(name, value.to_string());
+        });
+    }
+    return details;
+}
 
 class LaunchServerConnection : public IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>
     , public LaunchClientEndpoint {
@@ -57,10 +81,26 @@ bool Launcher::open(const URL& url, const String& handler_name)
     return connection->send_sync<Messages::LaunchServer::OpenURL>(url, handler_name)->response();
 }
 
+bool Launcher::open(const URL& url, const Details& details)
+{
+    return open(url, details.executable);
+}
+
 Vector<String> Launcher::get_handlers_for_url(const URL& url)
 {
     auto connection = LaunchServerConnection::construct();
     return connection->send_sync<Messages::LaunchServer::GetHandlersForURL>(url.to_string())->handlers();
+}
+
+auto Launcher::get_handlers_with_details_for_url(const URL& url) -> NonnullRefPtrVector<Details>
+{
+    auto connection = LaunchServerConnection::construct();
+    auto details = connection->send_sync<Messages::LaunchServer::GetHandlersWithDetailsForURL>(url.to_string())->handlers_details();
+    NonnullRefPtrVector<Details> handlers_with_details;
+    for (auto& value : details) {
+        handlers_with_details.append(Details::from_details_str(value));
+    }
+    return handlers_with_details;
 }
 
 }
