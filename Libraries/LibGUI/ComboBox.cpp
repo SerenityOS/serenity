@@ -49,6 +49,8 @@ private:
 
     virtual void mousewheel_event(MouseEvent& event) override
     {
+        if (!is_focused())
+            set_focus(true);
         if (on_mousewheel)
             on_mousewheel(event.wheel_delta());
     }
@@ -57,6 +59,7 @@ private:
 ComboBox::ComboBox()
 {
     m_editor = add<ComboBoxEditor>();
+    m_editor->set_has_open_button(true);
     m_editor->on_change = [this] {
         if (on_change)
             on_change(m_editor->text(), m_list_view->selection().first());
@@ -65,6 +68,27 @@ ComboBox::ComboBox()
         if (on_return_pressed)
             on_return_pressed();
     };
+    m_editor->on_up_pressed = [this] {
+        m_list_view->move_selection(-1);
+    };
+    m_editor->on_down_pressed = [this] {
+        m_list_view->move_selection(1);
+    };
+    m_editor->on_pageup_pressed = [this] {
+        m_list_view->move_selection(-m_list_view->selection().first().row());
+    };
+    m_editor->on_pagedown_pressed = [this] {
+        if (model())
+            m_list_view->move_selection((model()->row_count() - 1) - m_list_view->selection().first().row());
+    };
+    m_editor->on_mousewheel = [this](int delta) {
+        m_list_view->move_selection(delta);
+    };
+    m_editor->on_mousedown = [this] {
+        if (only_allow_values_from_model())
+            m_open_button->click();
+    };
+
     m_open_button = add<Button>();
     m_open_button->set_focusable(false);
     m_open_button->set_text("\xE2\xAC\x87"); // DOWNWARDS BLACK ARROW
@@ -77,25 +101,38 @@ ComboBox::ComboBox()
 
     m_list_window = add<Window>();
     m_list_window->set_frameless(true);
+    m_list_window->on_activity_change = [this](const bool is_active) {
+        if (!is_active) {
+            m_open_button->set_enabled(false);
+            close();
+        }
+        m_open_button->set_enabled(true);
+    };
 
     m_list_view = m_list_window->set_main_widget<ListView>();
     m_list_view->horizontal_scrollbar().set_visible(false);
-
+    m_list_view->set_alternating_row_colors(false);
+    m_list_view->set_hover_highlighting(true);
+    m_list_view->set_frame_thickness(1);
+    m_list_view->set_frame_shadow(Gfx::FrameShadow::Plain);
     m_list_view->on_selection = [this](auto& index) {
         ASSERT(model());
+        m_list_view->set_activates_on_selection(true);
         auto new_value = model()->data(index).to_string();
         m_editor->set_text(new_value);
         if (!m_only_allow_values_from_model)
             m_editor->select_all();
-        close();
         deferred_invoke([this, index](auto&) {
             if (on_change)
                 on_change(m_editor->text(), index);
         });
     };
-
-    m_editor->on_mousewheel = [this](int delta) {
-        m_list_view->move_selection(delta);
+    m_list_view->on_activation = [this](auto&) {
+        m_list_view->set_activates_on_selection(false);
+        close();
+    };
+    m_list_view->on_escape_pressed = [this] {
+        close();
     };
 }
 
@@ -152,6 +189,11 @@ void ComboBox::open()
     Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
     list_window_rect.intersect(Desktop::the().rect().shrunken(0, 128));
 
+    if (m_list_view->hover_highlighting())
+        m_list_view->set_last_valid_hovered_index({});
+
+    m_editor->set_has_visible_list(true);
+    m_editor->set_focus(true);
     m_list_window->set_rect(list_window_rect);
     m_list_window->show();
 }
@@ -159,6 +201,7 @@ void ComboBox::open()
 void ComboBox::close()
 {
     m_list_window->hide();
+    m_editor->set_has_visible_list(false);
     m_editor->set_focus(true);
 }
 

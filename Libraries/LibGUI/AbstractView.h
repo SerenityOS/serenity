@@ -74,6 +74,8 @@ public:
 
     NonnullRefPtr<Gfx::Font> font_for_index(const ModelIndex&) const;
 
+    void set_last_valid_hovered_index(const ModelIndex&);
+
 protected:
     AbstractView();
     virtual ~AbstractView() override;
@@ -107,6 +109,7 @@ protected:
     bool m_might_drag { false };
 
     ModelIndex m_hovered_index;
+    ModelIndex m_last_valid_hovered_index;
 
 private:
     RefPtr<Model> m_model;
