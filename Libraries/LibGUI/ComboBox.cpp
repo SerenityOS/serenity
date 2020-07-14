@@ -177,7 +177,7 @@ void ComboBox::set_only_allow_values_from_model(bool b)
     if (m_only_allow_values_from_model == b)
         return;
     m_only_allow_values_from_model = b;
-    m_editor->set_readonly(m_only_allow_values_from_model);
+    m_editor->set_mode(m_only_allow_values_from_model ? TextEditor::DisplayOnly : TextEditor::Editable);
 }
 
 Model* ComboBox::model()

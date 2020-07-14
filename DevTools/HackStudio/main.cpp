@@ -734,11 +734,11 @@ void open_file(const String& filename)
     auto project_file = g_project->get_file(filename);
     if (project_file) {
         current_editor().set_document(const_cast<GUI::TextDocument&>(project_file->document()));
-        current_editor().set_readonly(false);
+        current_editor().set_mode(GUI::TextEditor::Editable);
     } else {
         auto external_file = ProjectFile::construct_with_name(filename);
         current_editor().set_document(const_cast<GUI::TextDocument&>(external_file->document()));
-        current_editor().set_readonly(true);
+        current_editor().set_mode(GUI::TextEditor::ReadOnly);
     }
 
     if (filename.ends_with(".cpp") || filename.ends_with(".h"))
