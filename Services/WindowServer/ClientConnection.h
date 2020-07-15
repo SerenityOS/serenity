@@ -61,8 +61,6 @@ public:
 
     MenuBar* app_menubar() { return m_app_menubar.ptr(); }
 
-    bool is_showing_modal_window() const;
-
     void notify_about_new_screen_rect(const Gfx::IntRect&);
     void post_paint_message(Window&, bool ignore_occlusion = false);
 

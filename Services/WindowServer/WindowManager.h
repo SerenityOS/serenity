@@ -112,7 +112,6 @@ public:
     Window* active_input_window() { return m_active_input_window.ptr(); }
     const Window* active_input_window() const { return m_active_input_window.ptr(); }
     const ClientConnection* active_client() const;
-    bool active_window_is_modal() const { return m_active_window && m_active_window->is_modal(); }
 
     const Window* highlight_window() const { return m_highlight_window.ptr(); }
     void set_highlight_window(Window*);

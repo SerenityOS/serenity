@@ -116,7 +116,7 @@ public:
     WindowFrame& frame() { return m_frame; }
     const WindowFrame& frame() const { return m_frame; }
 
-    bool is_blocked_by_modal_window() const;
+    Window* is_blocked_by_modal_window();
 
     bool listens_to_wm_events() const { return m_listens_to_wm_events; }
 
@@ -145,7 +145,7 @@ public:
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
 
-    bool is_modal() const { return m_modal; }
+    bool is_modal() const { return m_modal && m_parent_window; }
 
     Gfx::IntRect rect() const { return m_rect; }
     void set_rect(const Gfx::IntRect&);

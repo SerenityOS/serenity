@@ -387,16 +387,20 @@ bool Window::is_active() const
     return WindowManager::the().active_window() == this;
 }
 
-bool Window::is_blocked_by_modal_window() const
+Window* Window::is_blocked_by_modal_window()
 {
-    bool is_any_modal = false;
-    const Window* next = this;
-    while (!is_any_modal && next) {
-        is_any_modal = next->is_modal();
-        next = next->parent_window();
+    // A window is blocked if any immediate child, or any child further
+    // down the chain is modal
+    for (auto& window: m_child_windows) {
+        if (window) {
+            if (window->is_modal())
+                return window;
+            
+            if (auto* blocking_modal_window = window->is_blocked_by_modal_window())
+                return blocking_modal_window;
+        }
     }
-
-    return !is_any_modal && client() && client()->is_showing_modal_window();
+    return nullptr;
 }
 
 void Window::set_default_icon()
