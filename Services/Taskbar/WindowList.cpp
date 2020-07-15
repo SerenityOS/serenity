@@ -25,7 +25,6 @@
  */
 
 #include "WindowList.h"
-#include <LibGUI/WindowServerConnection.h>
 
 WindowList& WindowList::the()
 {
@@ -33,6 +32,19 @@ WindowList& WindowList::the()
     if (!s_the)
         s_the = new WindowList;
     return *s_the;
+}
+
+Window* WindowList::find_parent(const Window& window)
+{
+   if (!window.parent_identifier().is_valid())
+       return nullptr;
+   for (auto& it : m_windows)
+   {
+       auto& w = *it.value;
+       if (w.identifier() == window.parent_identifier())
+           return &w;
+   }
+   return nullptr;
 }
 
 Window* WindowList::window(const WindowIdentifier& identifier)
@@ -49,14 +61,6 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
     if (it != m_windows.end())
         return *it->value;
     auto window = make<Window>(identifier);
-    window->set_button(aid_create_button(identifier));
-    window->button()->on_click = [window = window.ptr(), identifier](auto) {
-        if (window->is_minimized() || !window->is_active()) {
-            GUI::WindowServerConnection::the().post_message(Messages::WindowServer::WM_SetActiveWindow(identifier.client_id(), identifier.window_id()));
-        } else {
-            GUI::WindowServerConnection::the().post_message(Messages::WindowServer::WM_SetWindowMinimized(identifier.client_id(), identifier.window_id(), true));
-        }
-    };
     auto& window_ref = *window;
     m_windows.set(identifier, move(window));
     return window_ref;

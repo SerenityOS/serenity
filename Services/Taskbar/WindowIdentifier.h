@@ -30,6 +30,7 @@
 
 class WindowIdentifier {
 public:
+    WindowIdentifier() = default;
     WindowIdentifier(int client_id, int window_id)
         : m_client_id(client_id)
         , m_window_id(window_id)
@@ -42,6 +43,11 @@ public:
     bool operator==(const WindowIdentifier& other) const
     {
         return m_client_id == other.m_client_id && m_window_id == other.m_window_id;
+    }
+
+    bool is_valid() const
+    {
+        return m_client_id != -1 && m_window_id != -1;
     }
 
 private:
