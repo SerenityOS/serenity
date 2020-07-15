@@ -70,6 +70,7 @@ private:
     u32 virt$mprotect(FlatPtr, size_t, int);
     u32 virt$madvise(FlatPtr, size_t, int);
     u32 virt$open(u32);
+    int virt$pipe(FlatPtr pipefd, int flags);
     int virt$close(int);
     int virt$get_process_name(FlatPtr buffer, int size);
     int virt$dbgputstr(FlatPtr characters, int length);

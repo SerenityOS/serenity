@@ -221,6 +221,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$madvise(arg1, arg2, arg3);
     case SC_open:
         return virt$open(arg1);
+    case SC_pipe:
+        return virt$pipe(arg1, arg2);
     case SC_fcntl:
         return virt$fcntl(arg1, arg2, arg3);
     case SC_getgroups:
@@ -332,6 +334,16 @@ u32 Emulator::virt$open(u32 params_addr)
     if (fd < 0)
         return -errno;
     return fd;
+}
+
+int Emulator::virt$pipe(FlatPtr vm_pipefd, int flags)
+{
+    int pipefd[2];
+    int rc = syscall(SC_pipe, pipefd, flags);
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(vm_pipefd, pipefd, sizeof(pipefd));
+    return rc;
 }
 
 u32 Emulator::virt$munmap(FlatPtr address, u32 size)
