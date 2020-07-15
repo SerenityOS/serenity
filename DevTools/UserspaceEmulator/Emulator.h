@@ -117,6 +117,11 @@ private:
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
+
+    FlatPtr m_malloc_symbol_start { 0 };
+    FlatPtr m_malloc_symbol_end { 0 };
+    FlatPtr m_free_symbol_start { 0 };
+    FlatPtr m_free_symbol_end { 0 };
 };
 
 }
