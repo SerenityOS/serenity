@@ -645,7 +645,7 @@ int strcmp_utf32(const u32* s1, const u32* s2, size_t n)
 
 void TextEditor::sort_selected_lines()
 {
-    if (is_readonly())
+    if (!is_editable())
         return;
 
     if (!has_selection())
@@ -887,7 +887,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Backspace) {
-        if (is_readonly())
+        if (!is_editable())
             return;
         if (has_selection()) {
             delete_selection();
@@ -922,20 +922,20 @@ void TextEditor::keydown_event(KeyEvent& event)
     }
 
     if (event.modifiers() == Mod_Shift && event.key() == KeyCode::Key_Delete) {
-        if (is_readonly())
+        if (!is_editable())
             return;
         delete_current_line();
         return;
     }
 
     if (event.key() == KeyCode::Key_Delete) {
-        if (is_readonly())
+        if (!is_editable())
             return;
         do_delete();
         return;
     }
 
-    if (!is_readonly() && !event.ctrl() && !event.alt() && event.code_point() != 0) {
+    if (is_editable() && !event.ctrl() && !event.alt() && event.code_point() != 0) {
         StringBuilder sb;
         sb.append_codepoint(event.code_point());
 
@@ -970,7 +970,7 @@ void TextEditor::delete_current_line()
 
 void TextEditor::do_delete()
 {
-    if (is_readonly())
+    if (!is_editable())
         return;
 
     if (has_selection())
@@ -1255,7 +1255,7 @@ void TextEditor::delete_selection()
 void TextEditor::insert_at_cursor_or_replace_selection(const StringView& text)
 {
     ReflowDeferrer defer(*this);
-    ASSERT(!is_readonly());
+    ASSERT(is_editable());
     if (has_selection())
         delete_selection();
     execute<InsertTextCommand>(text, m_cursor);
@@ -1263,7 +1263,7 @@ void TextEditor::insert_at_cursor_or_replace_selection(const StringView& text)
 
 void TextEditor::cut()
 {
-    if (is_readonly())
+    if (!is_editable())
         return;
     auto selected_text = this->selected_text();
     printf("Cut: \"%s\"\n", selected_text.characters());
@@ -1280,7 +1280,7 @@ void TextEditor::copy()
 
 void TextEditor::paste()
 {
-    if (is_readonly())
+    if (!is_editable())
         return;
 
     auto paste_text = Clipboard::the().data();
@@ -1355,8 +1355,8 @@ void TextEditor::set_mode(const Mode mode)
         m_paste_action->set_enabled(true);
         set_accepts_emoji_input(true);
         break;
-    case ReadOnly:
     case DisplayOnly:
+    case ReadOnly:
         m_cut_action->set_enabled(false && has_selection());
         m_delete_action->set_enabled(false);
         m_paste_action->set_enabled(false);
@@ -1383,7 +1383,7 @@ void TextEditor::set_has_visible_list(bool visible)
 
 void TextEditor::did_update_selection()
 {
-    m_cut_action->set_enabled(!is_readonly() && has_selection());
+    m_cut_action->set_enabled(is_editable() && has_selection());
     m_copy_action->set_enabled(has_selection());
     if (on_selection_change)
         on_selection_change();
