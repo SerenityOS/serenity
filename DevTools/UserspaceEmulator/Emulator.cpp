@@ -278,9 +278,15 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$kill(arg1, arg2);
     case SC_set_mmap_name:
         return virt$set_mmap_name(arg1);
+    case SC_set_process_icon:
+        return virt$set_process_icon(arg1);
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
+    case SC_gettimeofday:
+        return virt$gettimeofday(arg1);
+    case SC_clock_gettime:
+        return virt$clock_gettime(arg1, arg2);
     default:
         warn() << "Unimplemented syscall: " << Syscall::to_string((Syscall::Function)function);
         dump_backtrace();
@@ -416,6 +422,31 @@ int Emulator::virt$listen(int fd, int backlog)
 int Emulator::virt$kill(pid_t pid, int signal)
 {
     return syscall(SC_kill, pid, signal);
+}
+
+int Emulator::virt$set_process_icon(int shbuf_id)
+{
+    return syscall(SC_set_process_icon, shbuf_id);
+}
+
+int Emulator::virt$gettimeofday(FlatPtr timeval)
+{
+    struct timeval host_timeval;
+    int rc = syscall(SC_gettimeofday, &host_timeval);
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(timeval, &host_timeval, sizeof(host_timeval));
+    return rc;
+}
+
+int Emulator::virt$clock_gettime(int clockid, FlatPtr timespec)
+{
+    struct timespec host_timespec;
+    int rc = syscall(SC_clock_gettime, clockid, &host_timespec);
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(timespec, &host_timespec, sizeof(host_timespec));
+    return rc;
 }
 
 int Emulator::virt$set_mmap_name(FlatPtr)
