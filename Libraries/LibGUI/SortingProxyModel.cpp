@@ -57,12 +57,14 @@ void SortingProxyModel::on_model_update(unsigned flags)
 
 int SortingProxyModel::row_count(const ModelIndex& index) const
 {
-    return target().row_count(index);
+    auto target_index = map_to_target(index);
+    return target().row_count(target_index);
 }
 
 int SortingProxyModel::column_count(const ModelIndex& index) const
 {
-    return target().column_count(index);
+    auto target_index = map_to_target(index);
+    return target().column_count(target_index);
 }
 
 ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
@@ -74,19 +76,16 @@ ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
     return target().index(m_row_mappings[index.row()], index.column());
 }
 
-String SortingProxyModel::column_name(int index) const
+String SortingProxyModel::column_name(int column) const
 {
-    return target().column_name(index);
+    return target().column_name(column);
 }
 
 Variant SortingProxyModel::data(const ModelIndex& index, Role role) const
 {
     auto target_index = map_to_target(index);
-    if (!target_index.is_valid()) {
-        dbg() << "BUG! SortingProxyModel: Unable to convert " << index << " to target";
-        return {};
-    }
-    return target().data(map_to_target(index), role);
+    ASSERT(target_index.is_valid());
+    return target().data(target_index, role);
 }
 
 void SortingProxyModel::update()

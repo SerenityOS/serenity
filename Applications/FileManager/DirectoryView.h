@@ -119,6 +119,7 @@ private:
     virtual void on_model_update(unsigned) override;
 
     void handle_activation(const GUI::ModelIndex&);
+    GUI::ModelIndex map_table_view_index(const GUI::ModelIndex&) const;
 
     void set_status_message(const StringView&);
     void update_statusbar();

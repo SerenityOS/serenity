@@ -166,8 +166,7 @@ DirectoryView::DirectoryView()
         handle_activation(index);
     };
     m_table_view->on_activation = [&](auto& index) {
-        auto& filter_model = (GUI::SortingProxyModel&)*m_table_view->model();
-        handle_activation(filter_model.map_to_target(index));
+        handle_activation(map_table_view_index(index));
     };
 
     m_table_view->on_selection_change = [this] {
@@ -188,7 +187,7 @@ DirectoryView::DirectoryView()
 
     m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(*m_table_view, index, event);
+            on_context_menu_request(*m_table_view, map_table_view_index(index), event);
     };
     m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
@@ -201,7 +200,7 @@ DirectoryView::DirectoryView()
 
     m_table_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(*m_table_view, index, event);
+            on_drop(*m_table_view, map_table_view_index(index), event);
     };
     m_icon_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
@@ -304,6 +303,12 @@ void DirectoryView::open_next_directory()
     }
 }
 
+GUI::ModelIndex DirectoryView::map_table_view_index(const GUI::ModelIndex& index) const
+{
+    auto& filter_model = (const GUI::SortingProxyModel&)*m_table_view->model();
+    return filter_model.map_to_target(index);
+}
+
 void DirectoryView::update_statusbar()
 {
     size_t total_size = model().node({}).total_size;
@@ -338,10 +343,8 @@ void DirectoryView::update_statusbar()
         auto index = current_view().selection().first();
 
         // FIXME: This is disgusting. This code should not even be aware that there is a GUI::SortingProxyModel in the table view.
-        if (m_view_mode == ViewMode::Table) {
-            auto& filter_model = (GUI::SortingProxyModel&)*m_table_view->model();
-            index = filter_model.map_to_target(index);
-        }
+        if (m_view_mode == ViewMode::Table)
+            index = map_table_view_index(index);
 
         auto& node = model().node(index);
         if (!node.symlink_target.is_empty()) {
