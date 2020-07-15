@@ -450,7 +450,7 @@ RefPtr<AST::Node> Parser::parse_expression()
         return expr;
     };
 
-    if (strchr("&|[]){} ;<>\n", starting_char) != nullptr)
+    if (strchr("&|){} ;<>\n", starting_char) != nullptr)
         return nullptr;
 
     if (isdigit(starting_char)) {
@@ -728,7 +728,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
     auto rule_start = push_start();
     StringBuilder builder;
     auto is_acceptable_bareword_character = [](char c) {
-        return strchr("\\\"'*$&#|()[]{} ?;<>\n", c) == nullptr;
+        return strchr("\\\"'*$&#|(){} ?;<>\n", c) == nullptr;
     };
     while (!at_end()) {
         char ch = peek();
