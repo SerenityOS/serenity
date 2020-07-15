@@ -92,7 +92,7 @@ void MallocTracer::audit_read(FlatPtr address, size_t size)
 
     if (mallocation->freed) {
         dbgprintf("\n");
-        dbgprintf("==%d==  \033[31;1mUAF\033[0m, invalid %zu-byte read at address %p\n", s_pid, size, address);
+        dbgprintf("==%d==  \033[31;1mUse-after-free\033[0m, invalid %zu-byte read at address %p\n", s_pid, size, address);
         dbgprintf("==%d==  Address is %zu bytes into freed block of size %zu\n", s_pid, offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace();
         return;
@@ -112,7 +112,7 @@ void MallocTracer::audit_write(FlatPtr address, size_t size)
 
     if (mallocation->freed) {
         dbgprintf("\n");
-        dbgprintf("==%d==   \033[31;1mUAF\033[0m, invalid %zu-byte write at address %p\n", s_pid, size, address);
+        dbgprintf("==%d==   \033[31;1mUse-after-free\033[0m, invalid %zu-byte write at address %p\n", s_pid, size, address);
         dbgprintf("==%d==   Address is %zu bytes into freed block of size %zu\n", s_pid, offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace();
         return;
