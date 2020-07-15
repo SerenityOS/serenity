@@ -51,11 +51,20 @@ void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
 {
     for (auto& mallocation : m_mallocations) {
         if (mallocation.address == address) {
+            if (mallocation.freed) {
+                dbgprintf("\n");
+                dbgprintf("==%d==  \033[31;1mDouble free()\033[0m, %p\n", s_pid, address);
+                dbgprintf("==%d==  Address %p has already been passed to free()\n", s_pid, address);
+                Emulator::the().dump_backtrace();
+            }
             mallocation.freed = true;
             return;
         }
     }
-    ASSERT_NOT_REACHED();
+    dbgprintf("\n");
+    dbgprintf("==%d==  \033[31;1mInvalid free()\033[0m, %p\n", s_pid, address);
+    dbgprintf("==%d==  Address %p has never been returned by malloc()\n", s_pid, address);
+    Emulator::the().dump_backtrace();
 }
 
 MallocTracer::Mallocation* MallocTracer::find_mallocation(FlatPtr address)
