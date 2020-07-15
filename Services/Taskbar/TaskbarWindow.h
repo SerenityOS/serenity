@@ -42,6 +42,10 @@ private:
     void create_quick_launch_bar();
     void on_screen_rect_change(const Gfx::IntRect&);
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
+    void add_window_button(::Window&, const WindowIdentifier&);
+    void remove_window_button(::Window&);
+    void update_window_button(::Window&, bool);
+    ::Window* find_window_owner(::Window&) const;
 
     virtual void wm_event(GUI::WMEvent&) override;
 
