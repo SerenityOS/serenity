@@ -521,6 +521,10 @@ int main(int argc, char* argv[])
         argv[argc] = nullptr;
     }
 
+    // Exit false when no arguments are given.
+    if (argc == 1)
+        return 1;
+
     auto condition = parse_complex_expression(argv);
     if (optind != argc - 1)
         fatal_error("Too many arguments");
