@@ -33,6 +33,8 @@
 
 namespace Kernel {
 
+static constexpr unsigned s_max_virtual_consoles = 6;
+
 class VirtualConsole final : public TTY
     , public KeyboardClient
     , public VT::TerminalClient {

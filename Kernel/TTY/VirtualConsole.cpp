@@ -36,7 +36,7 @@
 namespace Kernel {
 
 static u8* s_vga_buffer;
-static VirtualConsole* s_consoles[6];
+static VirtualConsole* s_consoles[s_max_virtual_consoles];
 static int s_active_console;
 static RecursiveSpinLock s_lock;
 
@@ -68,6 +68,8 @@ VirtualConsole::VirtualConsole(const unsigned index)
     , m_index(index)
     , m_terminal(*this)
 {
+    ASSERT(index < s_max_virtual_consoles);
+
     m_tty_name = String::format("/dev/tty%u", m_index);
     m_terminal.set_size(80, 25);
 
@@ -83,7 +85,7 @@ void VirtualConsole::switch_to(unsigned index)
 {
     if ((int)index == s_active_console)
         return;
-    ASSERT(index < 6);
+    ASSERT(index < s_max_virtual_consoles);
     ASSERT(s_consoles[index]);
 
     ScopedSpinLock lock(s_lock);
