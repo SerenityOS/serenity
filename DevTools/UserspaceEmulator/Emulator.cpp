@@ -35,7 +35,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/select.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -211,6 +214,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$close(arg1);
     case SC_fstat:
         return virt$fstat(arg1, arg2);
+    case SC_mkdir:
+        return virt$mkdir(arg1, arg2, arg3);
+    case SC_unlink:
+        return virt$unlink(arg1, arg2);
     case SC_write:
         return virt$write(arg1, arg2, arg3);
     case SC_read:
@@ -229,12 +236,28 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getgroups(arg1, arg2);
     case SC_lseek:
         return virt$lseek(arg1, arg2, arg3);
+    case SC_socket:
+        return virt$socket(arg1, arg2, arg3);
+    case SC_getsockopt:
+        return virt$getsockopt(arg1);
     case SC_get_process_name:
         return virt$get_process_name(arg1, arg2);
     case SC_dbgputstr:
         return virt$dbgputstr(arg1, arg2);
     case SC_dbgputch:
         return virt$dbgputch(arg1);
+    case SC_fchmod:
+        return virt$fchmod(arg1, arg2);
+    case SC_bind:
+        return virt$bind(arg1, arg2, arg3);
+    case SC_connect:
+        return virt$connect(arg1, arg2, arg3);
+    case SC_listen:
+        return virt$listen(arg1, arg2);
+    case SC_select:
+        return virt$select(arg1);
+    case SC_recvfrom:
+        return virt$recvfrom(arg1);
     case SC_kill:
         return virt$kill(arg1, arg2);
     case SC_exit:
@@ -262,6 +285,18 @@ int Emulator::virt$close(int fd)
     return syscall(SC_close, fd);
 }
 
+int Emulator::virt$mkdir(FlatPtr path, size_t path_length, mode_t mode)
+{
+    auto buffer = mmu().copy_buffer_from_vm(path, path_length);
+    return syscall(SC_mkdir, buffer.data(), buffer.size(), mode);
+}
+
+int Emulator::virt$unlink(FlatPtr path, size_t path_length)
+{
+    auto buffer = mmu().copy_buffer_from_vm(path, path_length);
+    return syscall(SC_unlink, buffer.data(), buffer.size());
+}
+
 int Emulator::virt$dbgputstr(FlatPtr characters, int length)
 {
     auto buffer = mmu().copy_buffer_from_vm(characters, length);
@@ -269,10 +304,32 @@ int Emulator::virt$dbgputstr(FlatPtr characters, int length)
     return 0;
 }
 
+int Emulator::virt$fchmod(int fd, mode_t mode)
+{
+    return syscall(SC_fchmod, fd, mode);
+}
+
+int Emulator::virt$bind(int sockfd, FlatPtr address, socklen_t address_length)
+{
+    auto buffer = mmu().copy_buffer_from_vm(address, address_length);
+    return syscall(SC_bind, sockfd, buffer.data(), buffer.size());
+}
+
+int Emulator::virt$connect(int sockfd, FlatPtr address, socklen_t address_size)
+{
+    auto buffer = mmu().copy_buffer_from_vm(address, address_size);
+    return syscall(SC_connect, sockfd, buffer.data(), buffer.size());
+}
+
 int Emulator::virt$dbgputch(char ch)
 {
     dbgputch(ch);
     return 0;
+}
+
+int Emulator::virt$listen(int fd, int backlog)
+{
+    return syscall(SC_listen, fd, backlog);
 }
 
 int Emulator::virt$kill(pid_t pid, int signal)
@@ -291,6 +348,96 @@ int Emulator::virt$get_process_name(FlatPtr buffer, int size)
 int Emulator::virt$lseek(int fd, off_t offset, int whence)
 {
     return syscall(SC_lseek, fd, offset, whence);
+}
+
+int Emulator::virt$socket(int domain, int type, int protocol)
+{
+    return syscall(SC_socket, domain, type, protocol);
+}
+
+int Emulator::virt$recvfrom(FlatPtr params_addr)
+{
+    Syscall::SC_recvfrom_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    auto buffer = ByteBuffer::create_uninitialized(params.buffer.size);
+
+    sockaddr_un address;
+    if (params.addr)
+        mmu().copy_from_vm(&address, (FlatPtr)params.addr, sizeof(address));
+
+    socklen_t address_length = 0;
+    if (params.addr_length)
+        mmu().copy_from_vm(&address_length, (FlatPtr)address_length, sizeof(address_length));
+
+    int rc = recvfrom(params.sockfd, buffer.data(), buffer.size(), params.flags, params.addr ? (struct sockaddr*)&address : nullptr, params.addr_length ? &address_length : nullptr);
+    if (rc < 0)
+        return -errno;
+
+    mmu().copy_to_vm((FlatPtr)params.buffer.data, buffer.data(), buffer.size());
+
+    if (params.addr)
+        mmu().copy_to_vm((FlatPtr)params.addr, &address, address_length);
+    if (params.addr_length)
+        mmu().copy_to_vm((FlatPtr)params.addr_length, &address_length, sizeof(address_length));
+
+    return rc;
+}
+
+int Emulator::virt$select(FlatPtr params_addr)
+{
+    Syscall::SC_select_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    fd_set readfds;
+    fd_set writefds;
+    fd_set exceptfds;
+    struct timespec timeout;
+    u32 sigmask;
+
+    if (params.readfds)
+        mmu().copy_from_vm(&readfds, (FlatPtr)params.readfds, sizeof(readfds));
+    if (params.writefds)
+        mmu().copy_from_vm(&writefds, (FlatPtr)params.writefds, sizeof(writefds));
+    if (params.exceptfds)
+        mmu().copy_from_vm(&exceptfds, (FlatPtr)params.exceptfds, sizeof(exceptfds));
+    if (params.timeout)
+        mmu().copy_from_vm(&timeout, (FlatPtr)params.timeout, sizeof(timeout));
+    if (params.sigmask)
+        mmu().copy_from_vm(&sigmask, (FlatPtr)params.sigmask, sizeof(sigmask));
+
+    int rc = pselect(params.nfds, &readfds, &writefds, &exceptfds, params.timeout ? &timeout : nullptr, params.sigmask ? &sigmask : nullptr);
+    if (rc < 0)
+        return -errno;
+
+    if (params.readfds)
+        mmu().copy_to_vm((FlatPtr)params.readfds, &readfds, sizeof(readfds));
+    if (params.writefds)
+        mmu().copy_to_vm((FlatPtr)params.writefds, &writefds, sizeof(writefds));
+    if (params.exceptfds)
+        mmu().copy_to_vm((FlatPtr)params.exceptfds, &exceptfds, sizeof(exceptfds));
+    if (params.timeout)
+        mmu().copy_to_vm((FlatPtr)params.timeout, &timeout, sizeof(timeout));
+
+    return rc;
+}
+
+int Emulator::virt$getsockopt(FlatPtr params_addr)
+{
+    Syscall::SC_getsockopt_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    if (params.option == SO_PEERCRED) {
+        struct ucred creds = {};
+        socklen_t creds_size = sizeof(creds);
+        int rc = getsockopt(params.sockfd, params.level, SO_PEERCRED, &creds, &creds_size);
+        if (rc < 0)
+            return -errno;
+        // FIXME: Check params.value_size
+        mmu().copy_to_vm((FlatPtr)params.value, &creds, sizeof(creds));
+        return rc;
+    }
+
+    TODO();
 }
 
 int Emulator::virt$getgroups(ssize_t count, FlatPtr groups)
@@ -440,8 +587,13 @@ u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
         return -EINVAL;
     auto local_buffer = ByteBuffer::create_uninitialized(size);
     int nread = syscall(SC_read, fd, local_buffer.data(), local_buffer.size());
-    if (nread < 0)
+    if (nread < 0) {
+        if (nread == -EPERM) {
+            dump_backtrace();
+            TODO();
+        }
         return nread;
+    }
     mmu().copy_to_vm(buffer, local_buffer.data(), local_buffer.size());
     return nread;
 }

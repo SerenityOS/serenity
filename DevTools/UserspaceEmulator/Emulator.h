@@ -72,14 +72,24 @@ private:
     u32 virt$open(u32);
     int virt$pipe(FlatPtr pipefd, int flags);
     int virt$close(int);
+    int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
+    int virt$unlink(FlatPtr path, size_t path_length);
     int virt$get_process_name(FlatPtr buffer, int size);
     int virt$dbgputstr(FlatPtr characters, int length);
     int virt$dbgputch(char);
+    int virt$fchmod(int, mode_t);
+    int virt$listen(int, int);
     int virt$kill(pid_t, int);
     int virt$fstat(int, FlatPtr);
     u32 virt$fcntl(int fd, int, u32);
     int virt$getgroups(ssize_t count, FlatPtr);
     int virt$lseek(int fd, off_t offset, int whence);
+    int virt$socket(int, int, int);
+    int virt$getsockopt(FlatPtr);
+    int virt$select(FlatPtr);
+    int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
+    int virt$recvfrom(FlatPtr);
+    int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
     void virt$exit(int);
 
     bool m_shutdown { false };
