@@ -1288,7 +1288,17 @@ void SoftCPU::MOV_reg8_imm8(const X86::Instruction& insn)
 void SoftCPU::MOV_seg_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_seg_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::MUL_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::MUL_RM32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MUL_RM32(const X86::Instruction& insn)
+{
+    u64 result = (u64)eax() * (u64)insn.modrm().read32(*this, insn);
+    set_eax(result & 0xffffffff);
+    set_edx(result >> 32);
+
+    set_cf(edx() != 0);
+    set_of(edx() != 0);
+}
+
 void SoftCPU::MUL_RM8(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::NEG_RM16(const X86::Instruction& insn)
