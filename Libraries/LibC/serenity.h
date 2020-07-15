@@ -70,4 +70,21 @@ int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
 
 int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size);
 
+ALWAYS_INLINE void send_secret_data_to_userspace_emulator(uintptr_t data1, uintptr_t data2, uintptr_t data3)
+{
+    asm volatile(
+        ".byte 0xd6\n"
+        ".byte 0xd6\n" ::
+            : "eax");
+    asm volatile(
+        "push %%eax\n"
+        "push %%ecx\n"
+        "push %%edx\n"
+        "pop %%edx\n"
+        "pop %%ecx\n"
+        "pop %%eax\n" ::"a"(data1),
+        "c"(data2), "d"(data3)
+        : "memory");
+}
+
 __END_DECLS

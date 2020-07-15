@@ -281,6 +281,10 @@ static void* malloc_impl(size_t size)
 #ifdef MALLOC_DEBUG
     dbgprintf("LibC: allocated %p (chunk in block %p, size %zu)\n", ptr, block, block->bytes_per_chunk());
 #endif
+
+    // Tell UserspaceEmulator about this malloc()
+    send_secret_data_to_userspace_emulator(1, size, reinterpret_cast<FlatPtr>(ptr));
+
     if (s_scrub_malloc)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
     return ptr;
@@ -382,6 +386,9 @@ void free(void* ptr)
     if (s_profiling)
         perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
     free_impl(ptr);
+
+    // Tell UserspaceEmulator about this free()
+    send_secret_data_to_userspace_emulator(2, reinterpret_cast<FlatPtr>(ptr), 0);
 }
 
 void* calloc(size_t count, size_t size)
