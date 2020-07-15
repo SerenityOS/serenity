@@ -205,22 +205,46 @@ void WindowManager::add_window(Window& window)
 
 void WindowManager::move_to_front_and_make_active(Window& window)
 {
-    if (window.is_blocked_by_modal_window())
-        return;
-
-    bool make_active = true;
-    if (window.is_accessory()) {
-        auto* parent = window.parent_window();
-        do_move_to_front(*parent, true, false);
-        make_active = false;
-            
-        for (auto& accessory_window : parent->accessory_windows()) {
-            if (accessory_window && accessory_window.ptr() != &window)
-                do_move_to_front(*accessory_window, false, false);
+    auto move_window_to_front = [&](Window& wnd, bool make_active, bool make_input) {
+        if (wnd.is_accessory()) {
+            auto* parent = wnd.parent_window();
+            do_move_to_front(*parent, true, false);
+            make_active = false;
+                
+            for (auto& accessory_window : parent->accessory_windows()) {
+                if (accessory_window && accessory_window.ptr() != &wnd)
+                    do_move_to_front(*accessory_window, false, false);
+            }
         }
-    }
 
-    do_move_to_front(window, make_active, true);
+        do_move_to_front(wnd, make_active, make_input);
+    };
+
+    auto* blocking_modal_window = window.is_blocked_by_modal_window();
+    if (blocking_modal_window || window.is_modal()) {
+        // If a window that is currently blocked by a modal child is being
+        // brought to the front, bring the entire stack of modal windows
+        // to the front and activate the modal window. Also set the
+        // active input window to that same window (which would pull
+        // active input from any accessory window)
+        Vector<Window*> modal_stack;
+        auto* modal_stack_top = blocking_modal_window ? blocking_modal_window : &window;
+        for (auto* parent = modal_stack_top->parent_window(); parent; parent = parent->parent_window()) {
+            if (parent->is_blocked_by_modal_window() != blocking_modal_window)
+                break;
+            modal_stack.append(parent);
+            if (!parent->is_modal())
+                break;
+        }
+        if (!modal_stack.is_empty()) {
+            for (size_t i = modal_stack.size(); i > 0; i--) {
+                move_window_to_front(*modal_stack[i - 1], false, false);
+            }
+        }
+        move_window_to_front(*modal_stack_top, true, true);
+    } else {
+        move_window_to_front(window, true, true);
+    }
 }
 
 void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
@@ -858,7 +882,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     HashTable<Window*> windows_who_received_mouse_event_due_to_cursor_tracking;
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized())
+        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->is_blocked_by_modal_window())
             continue;
         windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
         auto translated_event = event.translated(-window->position());
@@ -866,7 +890,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     }
 
     // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
-    if (MenuManager::the().has_open_menu() || (!active_window_is_modal() && menubar_rect().contains(event.position()))) {
+    if (MenuManager::the().has_open_menu() || menubar_rect().contains(event.position())) {
         clear_resize_candidate();
         MenuManager::the().dispatch_event(event);
         return;
@@ -939,7 +963,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 }
 
                 hovered_window = &window;
-                if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window)) {
+                if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window) && !window.is_blocked_by_modal_window()) {
                     auto translated_event = event.translated(-window.position());
                     deliver_mouse_event(window, translated_event);
                     if (event.type() == Event::MouseDown) {
@@ -1139,8 +1163,14 @@ Window* WindowManager::set_active_input_window(Window* window)
 
 void WindowManager::set_active_window(Window* window, bool make_input)
 {
-    if (window && window->is_blocked_by_modal_window())
-        return;
+    if (window) {
+        if (auto* modal_window = window->is_blocked_by_modal_window()) {
+            ASSERT(modal_window->is_modal());
+            ASSERT(modal_window != window);
+            window = modal_window;
+            make_input = true;
+        }
+    }
 
     if (window && !window_type_can_become_active(window->type()))
         return;
