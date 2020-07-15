@@ -107,7 +107,10 @@ public:
     void start_dnd_drag(ClientConnection&, const String& text, Gfx::Bitmap*, const String& data_type, const String& data);
     void end_dnd_drag();
 
+    Window* active_window() { return m_active_window.ptr(); }
     const Window* active_window() const { return m_active_window.ptr(); }
+    Window* active_input_window() { return m_active_input_window.ptr(); }
+    const Window* active_input_window() const { return m_active_input_window.ptr(); }
     const ClientConnection* active_client() const;
     bool active_window_is_modal() const { return m_active_window && m_active_window->is_modal(); }
 
@@ -145,6 +148,8 @@ public:
     bool set_resolution(int width, int height);
     Gfx::IntSize resolution() const;
 
+    Window* set_active_input_window(Window*);
+    void restore_active_input_window(Window*);
     void set_active_window(Window*, bool make_input = true);
     void set_hovered_button(Button*);
 
@@ -207,7 +212,7 @@ private:
     void tell_wm_listener_about_window(Window& listener, Window&);
     void tell_wm_listener_about_window_icon(Window& listener, Window&);
     void tell_wm_listener_about_window_rect(Window& listener, Window&);
-    void pick_new_active_window(Window&);
+    bool pick_new_active_window(Window*);
 
     void do_move_to_front(Window&, bool, bool);
 
