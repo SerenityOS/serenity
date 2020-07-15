@@ -154,12 +154,25 @@ struct ComponentSpec {
 };
 
 struct StartOfFrame {
+
+    // Of these, only the first 3 are in mainstream use, and refers to SOF0-2.
     enum class FrameType {
-        Baseline = 0
-        // Progressive = 1
+        Baseline_DCT = 0,
+        Extended_Sequential_DCT = 1,
+        Progressive_DCT = 2,
+        Sequential_Lossless = 3,
+        Differential_Sequential_DCT = 5,
+        Differential_Progressive_DCT = 6,
+        Differential_Sequential_Lossless = 7,
+        Extended_Sequential_DCT_Arithmetic = 9,
+        Progressive_DCT_Arithmetic = 10,
+        Sequential_Lossless_Arithmetic = 11,
+        Differential_Sequential_DCT_Arithmetic = 13,
+        Differential_Progressive_DCT_Arithmetic = 14,
+        Differential_Sequential_Lossless_Arithmetic = 15,
     };
 
-    FrameType type { FrameType::Baseline };
+    FrameType type { FrameType::Baseline_DCT };
     u8 precision { 0 };
     u16 height { 0 };
     u16 width { 0 };
@@ -439,12 +452,16 @@ static inline bool is_valid_marker(const Marker marker)
     case JPG_SOI:
     case JPG_SOS:
         return true;
-    case JPG_SOF2:
-        dbg() << "Progressive JPEGs are not supported yet. Decoder will fail!";
-        return false;
-    default:
-        return false;
     }
+
+    if (marker >= 0xFFC0 && marker <= 0xFFCF) {
+        if (marker != 0xFFC4 && marker != 0xFFC8 && marker != 0xFFCC) {
+            dbg() << "Decoding this frame-type (SOF" << (marker & 0xf) << ") is not currently supported. Decoder will fail!";
+            return false;
+        }
+    }
+
+    return false;
 }
 
 static inline u16 read_be_word(BufferStream& stream)
@@ -1005,6 +1022,15 @@ static bool parse_header(BufferStream& stream, JPGLoadingContext& context)
     }
     for (;;) {
         marker = read_marker_at_cursor(stream);
+
+        // Set frame type if the marker marks a new frame.
+        if (marker >= 0xFFC0 && marker <= 0xFFCF) {
+            // Ignore interleaved markers.
+            if (marker != 0xFFC4 && marker != 0xFFC8 && marker != 0xFFCC) {
+                context.frame.type = static_cast<StartOfFrame::FrameType>(marker & 0xF);
+            }
+        }
+
         switch (marker) {
         case JPG_INVALID:
         case JPG_RST0:
