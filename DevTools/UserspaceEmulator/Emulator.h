@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "MallocTracer.h"
 #include "SoftCPU.h"
 #include "SoftMMU.h"
 #include <AK/Types.h>
@@ -34,6 +35,8 @@
 #include <sys/types.h>
 
 namespace UserspaceEmulator {
+
+class MallocTracer;
 
 class Emulator {
 public:
@@ -49,11 +52,17 @@ public:
 
     SoftMMU& mmu() { return m_mmu; }
 
+    MallocTracer* malloc_tracer() { return m_malloc_tracer; }
+
+    bool is_in_malloc_or_free() const;
+
 private:
     NonnullRefPtr<ELF::Loader> m_elf;
 
     SoftMMU m_mmu;
     SoftCPU m_cpu;
+
+    OwnPtr<MallocTracer> m_malloc_tracer;
 
     void setup_stack(const Vector<String>& arguments);
 
