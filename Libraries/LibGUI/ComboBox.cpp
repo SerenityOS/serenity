@@ -102,16 +102,8 @@ ComboBox::ComboBox()
     m_list_window = add<Window>(window());
     m_list_window->set_frameless(true);
     m_list_window->set_accessory(true);
-
     m_list_window->on_active_input_change = [this](bool is_active_input) {
         if (!is_active_input) {
-            m_open_button->set_enabled(true);
-            close();
-        }
-    };
-
-    m_list_window->on_activity_change = [this](const bool is_active) {
-        if (!is_active) {
             m_open_button->set_enabled(false);
             close();
         }
