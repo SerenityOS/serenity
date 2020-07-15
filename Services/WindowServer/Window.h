@@ -145,7 +145,8 @@ public:
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
 
-    bool is_modal() const { return m_modal && m_parent_window; }
+    bool is_modal() const;
+    bool is_modal_dont_unparent() const { return m_modal && m_parent_window; }
 
     Gfx::IntRect rect() const { return m_rect; }
     void set_rect(const Gfx::IntRect&);
@@ -260,6 +261,7 @@ private:
     void add_child_window(Window&);
     void add_accessory_window(Window&);
     void ensure_window_menu();
+    void modal_unparented();
 
     ClientConnection* m_client { nullptr };
 

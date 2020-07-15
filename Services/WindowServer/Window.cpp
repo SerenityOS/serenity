@@ -214,11 +214,10 @@ void Window::set_minimized(bool minimized)
         return;
     if (minimized && !m_minimizable)
         return;
-    if (is_blocked_by_modal_window())
-        return;
     m_minimized = minimized;
     update_menu_item_text(PopupMenuItem::Minimize);
-    start_minimize_animation();
+    if (!is_blocked_by_modal_window())
+        start_minimize_animation();
     if (!minimized)
         request_update({ {}, size() });
     invalidate();
@@ -255,8 +254,6 @@ void Window::set_maximized(bool maximized)
     if (m_maximized == maximized)
         return;
     if (maximized && !is_resizable())
-        return;
-    if (is_blocked_by_modal_window())
         return;
     set_tiled(WindowTileType::None);
     m_maximized = maximized;
@@ -446,14 +443,12 @@ void Window::ensure_window_menu()
         m_window_menu->on_item_activation = [&](auto& item) {
             switch (item.identifier()) {
             case 1:
-                set_minimized(!m_minimized);
+                WindowManager::the().minimize_windows(*this, !m_minimized);
                 if (!m_minimized)
                     WindowManager::the().move_to_front_and_make_active(*this);
                 break;
             case 2:
-                set_maximized(!m_maximized);
-                if (m_minimized)
-                    set_minimized(false);
+                WindowManager::the().maximize_windows(*this, !m_maximized);
                 WindowManager::the().move_to_front_and_make_active(*this);
                 break;
             case 3:
@@ -611,6 +606,23 @@ bool Window::is_accessory_of(Window& window) const
     if (!is_accessory())
         return false;
     return parent_window() == &window;
+}
+
+void Window::modal_unparented()
+{
+    m_modal = false;
+    WindowManager::the().notify_modal_unparented(*this);
+}
+
+bool Window::is_modal() const
+{
+    if (!m_modal)
+        return false;
+    if (!m_parent_window) {
+        const_cast<Window*>(this)->modal_unparented();
+        return false;
+    }
+    return true;
 }
 
 void Window::set_progress(int progress)

@@ -88,6 +88,7 @@ public:
     void remove_window(Window&);
 
     void notify_title_changed(Window&);
+    void notify_modal_unparented(Window&);
     void notify_rect_changed(Window&, const Gfx::IntRect& oldRect, const Gfx::IntRect& newRect);
     void notify_minimization_state_changed(Window&);
     void notify_opacity_changed(Window&);
@@ -180,6 +181,35 @@ public:
 
     void start_menu_doubleclick(Window& window, const MouseEvent& event);
     bool is_menu_doubleclick(Window& window, const MouseEvent& event) const;
+
+    void minimize_windows(Window&, bool);
+    void maximize_windows(Window&, bool);
+
+    template<typename Function>
+    void for_each_window_in_modal_stack(Window& window, Function f)
+    {
+        auto* blocking_modal_window = window.is_blocked_by_modal_window();
+        if (blocking_modal_window || window.is_modal()) {
+            Vector<Window*> modal_stack;
+            auto* modal_stack_top = blocking_modal_window ? blocking_modal_window : &window;
+            for (auto* parent = modal_stack_top->parent_window(); parent; parent = parent->parent_window()) {
+                if (parent->is_blocked_by_modal_window() != modal_stack_top)
+                    break;
+                modal_stack.append(parent);
+                if (!parent->is_modal())
+                    break;
+            }
+            if (!modal_stack.is_empty()) {
+                for (size_t i = modal_stack.size(); i > 0; i--) {
+                    f(*modal_stack[i - 1], false);
+                }
+            }
+            f(*modal_stack_top, true);
+        } else {
+            // Not a modal window stack, just "iterate" over this window
+            f(window, true);
+        }
+    }
 
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);

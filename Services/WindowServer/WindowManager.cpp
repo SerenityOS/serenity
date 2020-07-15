@@ -220,31 +220,14 @@ void WindowManager::move_to_front_and_make_active(Window& window)
         do_move_to_front(wnd, make_active, make_input);
     };
 
-    auto* blocking_modal_window = window.is_blocked_by_modal_window();
-    if (blocking_modal_window || window.is_modal()) {
-        // If a window that is currently blocked by a modal child is being
-        // brought to the front, bring the entire stack of modal windows
-        // to the front and activate the modal window. Also set the
-        // active input window to that same window (which would pull
-        // active input from any accessory window)
-        Vector<Window*> modal_stack;
-        auto* modal_stack_top = blocking_modal_window ? blocking_modal_window : &window;
-        for (auto* parent = modal_stack_top->parent_window(); parent; parent = parent->parent_window()) {
-            if (parent->is_blocked_by_modal_window() != blocking_modal_window)
-                break;
-            modal_stack.append(parent);
-            if (!parent->is_modal())
-                break;
-        }
-        if (!modal_stack.is_empty()) {
-            for (size_t i = modal_stack.size(); i > 0; i--) {
-                move_window_to_front(*modal_stack[i - 1], false, false);
-            }
-        }
-        move_window_to_front(*modal_stack_top, true, true);
-    } else {
-        move_window_to_front(window, true, true);
-    }
+    // If a window that is currently blocked by a modal child is being
+    // brought to the front, bring the entire stack of modal windows
+    // to the front and activate the modal window. Also set the
+    // active input window to that same window (which would pull
+    // active input from any accessory window)
+    for_each_window_in_modal_stack(window, [&](auto& w, bool is_stack_top) {
+        move_window_to_front(w, is_stack_top, is_stack_top);
+    });
 }
 
 void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
@@ -287,7 +270,7 @@ void WindowManager::remove_window(Window& window)
     for_each_window_listening_to_wm_events([&window](Window& listener) {
         if (!(listener.wm_event_mask() & WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
-        if (!window.is_internal())
+        if (!window.is_internal() && !window.is_modal())
             listener.client()->post_message(Messages::WindowClient::WM_WindowRemoved(listener.window_id(), window.client_id(), window.window_id()));
         return IterationDecision::Continue;
     });
@@ -299,7 +282,8 @@ void WindowManager::tell_wm_listener_about_window(Window& listener, Window& wind
         return;
     if (window.is_internal())
         return;
-    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), window.is_active(), window.is_minimized(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress()));
+    auto* parent = window.parent_window();
+    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress()));
 }
 
 void WindowManager::tell_wm_listener_about_window_rect(Window& listener, Window& window)
@@ -360,6 +344,19 @@ void WindowManager::notify_title_changed(Window& window)
     dbg() << "[WM] Window{" << &window << "} title set to \"" << window.title() << '"';
 #endif
     invalidate(window.frame().rect());
+    if (m_switcher.is_visible())
+        m_switcher.refresh();
+
+    tell_wm_listeners_window_state_changed(window);
+}
+
+void WindowManager::notify_modal_unparented(Window& window)
+{
+    if (window.type() != WindowType::Normal)
+        return;
+#ifdef WINDOWMANAGER_DEBUG
+    dbg() << "[WM] Modal Window{" << &window << "} was unparented";
+#endif
     if (m_switcher.is_visible())
         m_switcher.refresh();
 
@@ -1403,6 +1400,22 @@ void WindowManager::did_popup_a_menu(Badge<Menu>)
         return;
     m_active_input_tracking_window->set_automatic_cursor_tracking_enabled(false);
     m_active_input_tracking_window = nullptr;
+}
+
+void WindowManager::minimize_windows(Window& window, bool minimized)
+{
+    for_each_window_in_modal_stack(window, [&](auto& w, bool) {
+        w.set_minimized(minimized);
+    });
+}
+
+void WindowManager::maximize_windows(Window& window, bool maximized)
+{
+    for_each_window_in_modal_stack(window, [&](auto& w, bool) {
+        w.set_maximized(maximized);
+        if (w.is_minimized())
+            w.set_minimized(false);
+    });
 }
 
 }
