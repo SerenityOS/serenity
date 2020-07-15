@@ -76,7 +76,7 @@ class Window final : public Core::Object
     , public InlineLinkedListNode<Window> {
     C_OBJECT(Window)
 public:
-    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen);
+    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
     virtual ~Window() override;
 
@@ -240,6 +240,13 @@ public:
     Vector<WeakPtr<Window>>& child_windows() { return m_child_windows; }
     const Vector<WeakPtr<Window>>& child_windows() const { return m_child_windows; }
 
+    Vector<WeakPtr<Window>>& accessory_windows() { return m_accessory_windows; }
+    const Vector<WeakPtr<Window>>& accessory_windows() const { return m_accessory_windows; }
+
+    void set_accessory(bool accessory) { m_accessory = accessory; }
+    bool is_accessory() const { return m_accessory; }
+    bool is_accessory_of(Window&) const;
+
     void set_frameless(bool frameless) { m_frameless = frameless; }
     bool is_frameless() const { return m_frameless; }
 
@@ -251,12 +258,14 @@ private:
     void update_menu_item_text(PopupMenuItem item);
     void update_menu_item_enabled(PopupMenuItem item);
     void add_child_window(Window&);
+    void add_accessory_window(Window&);
     void ensure_window_menu();
 
     ClientConnection* m_client { nullptr };
 
     WeakPtr<Window> m_parent_window;
     Vector<WeakPtr<Window>> m_child_windows;
+    Vector<WeakPtr<Window>> m_accessory_windows;
 
     String m_title;
     Gfx::IntRect m_rect;
@@ -275,6 +284,7 @@ private:
     bool m_minimized { false };
     bool m_maximized { false };
     bool m_fullscreen { false };
+    bool m_accessory { false };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };

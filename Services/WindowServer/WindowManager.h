@@ -145,7 +145,7 @@ public:
     bool set_resolution(int width, int height);
     Gfx::IntSize resolution() const;
 
-    void set_active_window(Window*);
+    void set_active_window(Window*, bool make_input = true);
     void set_hovered_button(Button*);
 
     const Button* cursor_tracking_button() const { return m_cursor_tracking_button.ptr(); }
@@ -158,6 +158,8 @@ public:
     void tell_wm_listeners_window_state_changed(Window&);
     void tell_wm_listeners_window_icon_changed(Window&);
     void tell_wm_listeners_window_rect_changed(Window&);
+
+    bool is_active_window_or_accessory(Window&) const;
 
     void start_window_resize(Window&, const Gfx::IntPoint&, MouseButton);
     void start_window_resize(Window&, const MouseEvent&);
@@ -205,7 +207,9 @@ private:
     void tell_wm_listener_about_window(Window& listener, Window&);
     void tell_wm_listener_about_window_icon(Window& listener, Window&);
     void tell_wm_listener_about_window_rect(Window& listener, Window&);
-    void pick_new_active_window();
+    void pick_new_active_window(Window&);
+
+    void do_move_to_front(Window&, bool, bool);
 
     RefPtr<Cursor> m_arrow_cursor;
     RefPtr<Cursor> m_hand_cursor;
@@ -262,6 +266,7 @@ private:
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_highlight_window;
     WeakPtr<Window> m_active_input_window;
+    WeakPtr<Window> m_active_input_tracking_window;
 
     WeakPtr<Window> m_move_window;
     Gfx::IntPoint m_move_origin;

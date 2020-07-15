@@ -434,21 +434,17 @@ Window* ClientConnection::window_from_id(i32 window_id)
 
 OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(const Messages::WindowServer::CreateWindow& message)
 {
-    int window_id = m_next_window_id++;
-    auto window = Window::construct(*this, (WindowType)message.type(), window_id, message.modal(), message.minimizable(), message.frameless(), message.resizable(), message.fullscreen());
-
+    Window* parent_window = nullptr;
     if (message.parent_window_id()) {
-        auto* parent_window = window_from_id(message.parent_window_id());
+        parent_window = window_from_id(message.parent_window_id());
         if (!parent_window) {
             did_misbehave("CreateWindow with bad parent_window_id");
             return nullptr;
         }
-        if (parent_window->window_id() == window_id) {
-            did_misbehave("CreateWindow trying to make a window with itself as parent");
-            return nullptr;
-        }
-        window->set_parent_window(*parent_window);
     }
+
+    int window_id = m_next_window_id++;
+    auto window = Window::construct(*this, (WindowType)message.type(), window_id, message.modal(), message.minimizable(), message.frameless(), message.resizable(), message.fullscreen(), message.accessory(), parent_window);
 
     window->set_has_alpha_channel(message.has_alpha_channel());
     window->set_title(message.title());

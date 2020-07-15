@@ -57,6 +57,8 @@ public:
         WindowLeft,
         WindowBecameInactive,
         WindowBecameActive,
+        WindowInputEntered,
+        WindowInputLeft,
         FocusIn,
         FocusOut,
         WindowCloseRequest,

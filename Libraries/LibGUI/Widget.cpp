@@ -502,9 +502,12 @@ bool Widget::is_focused() const
     auto* win = window();
     if (!win)
         return false;
-    if (!win->is_active())
-        return false;
-    return win->focused_widget() == this;
+    // Accessory windows are not active despite being the active
+    // input window. So we can have focus if either we're the active
+    // input window or we're the active window
+    if (win->is_active_input() || win->is_active())
+        return win->focused_widget() == this;
+    return false;
 }
 
 void Widget::set_focus(bool focus)

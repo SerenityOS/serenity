@@ -189,7 +189,7 @@ WindowFrame::FrameColors WindowFrame::compute_frame_colors() const
         return { palette.highlight_window_title(), palette.highlight_window_border1(), palette.highlight_window_border2() };
     if (&m_window == wm.m_move_window)
         return { palette.moving_window_title(), palette.moving_window_border1(), palette.moving_window_border2() };
-    if (&m_window == wm.m_active_window)
+    if (wm.is_active_window_or_accessory(m_window))
         return { palette.active_window_title(), palette.active_window_border1(), palette.active_window_border2() };
     return { palette.inactive_window_title(), palette.inactive_window_border1(), palette.inactive_window_border2() };
 }

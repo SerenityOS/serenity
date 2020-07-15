@@ -101,6 +101,7 @@ void Window::show()
         m_resizable,
         m_fullscreen,
         m_frameless,
+        m_accessory,
         m_opacity_when_windowless,
         m_base_size,
         m_size_increment,
@@ -331,6 +332,17 @@ void Window::event(Core::Event& event)
         m_is_active = event.type() == Event::WindowBecameActive;
         if (on_activity_change)
             on_activity_change(m_is_active);
+        if (m_main_widget)
+            m_main_widget->dispatch_event(event, this);
+        if (m_focused_widget)
+            m_focused_widget->update();
+        return;
+    }
+
+    if (event.type() == Event::WindowInputEntered || event.type() == Event::WindowInputLeft) {
+        m_is_active_input = event.type() == Event::WindowInputEntered;
+        if (on_active_input_change)
+            on_active_input_change(m_is_active_input);
         if (m_main_widget)
             m_main_widget->dispatch_event(event, this);
         if (m_focused_widget)
