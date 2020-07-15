@@ -85,12 +85,11 @@ $ cd Toolchain
 $ ./BuildIt.sh
 ```
 
-Building the toolchain will also automatically create a `Build/` directory for the build to live in, and build cmake inside that directory.
+Building the toolchain will also automatically create a `build/` directory for the build to live in, and build cmake inside that directory.
 
-Once the toolchain and cmake have been built, go into the `Build/` directory and run the `make` and `make install` commands:
+Once the toolchain and cmake have been built, go into the `build/` directory and run the `make` and `make install` commands:
 ```bash
-$ cd ..
-$ cd Build
+$ cd ../build
 $ make
 $ make install
 ```
@@ -112,7 +111,7 @@ Bare curious users may even consider sourcing suitable hardware to [install Sere
 
 Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply run `make install`, `make image`, `make run` again. CMake will only rebuild those parts that have been updated.
 
-You may also want to replace `make` with `ninja` in the above commands for some additional build speed benefits. To do this, go to an empty directory at the root and call `cmake .. -G Ninja` inside that directory. You might either create a new directory or reuse the existing `Build` directory after cleaning it.
+You may also want to replace `make` with `ninja` in the above commands for some additional build speed benefits. To do this, go to an empty directory at the root and call `cmake .. -G Ninja` inside that directory. You might either create a new directory or reuse the existing `build` directory after cleaning it.
 
 #### Ports
-To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run **./package.sh**. The sourcecode for the package will be downloaded and the package will be built. After that, run **make image** from the `Build/` directory to update the disk image. The next time you start Serenity with **make run**, `curl` will be available.
+To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run **./package.sh**. The sourcecode for the package will be downloaded and the package will be built. After that, run **make image** from the `build/` directory to update the disk image. The next time you start Serenity with **make run**, `curl` will be available.
