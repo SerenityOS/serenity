@@ -63,7 +63,7 @@ void VirtualConsole::set_graphical(bool graphical)
     m_graphical = graphical;
 }
 
-VirtualConsole::VirtualConsole(unsigned index)
+VirtualConsole::VirtualConsole(const unsigned index)
     : TTY(4, index)
     , m_index(index)
     , m_terminal(*this)
