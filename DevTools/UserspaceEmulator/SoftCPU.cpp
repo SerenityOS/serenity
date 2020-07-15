@@ -576,6 +576,64 @@ ALWAYS_INLINE static T op_shl(SoftCPU& cpu, T data, u8 steps)
     return result;
 }
 
+template<typename T>
+ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, u8 steps)
+{
+    if (steps == 0)
+        return data;
+
+    u32 result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("shrd %%cl, %%edx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "d"(extra_bits), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("shrb %%cl, %%dx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "d"(extra_bits), "c"(steps));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszapc(new_flags);
+    return result;
+}
+
+
+template<typename T>
+ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, u8 steps)
+{
+    if (steps == 0)
+        return data;
+
+    u32 result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("shld %%cl, %%edx, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "d"(extra_bits), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("shlb %%cl, %%dx, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "d"(extra_bits), "c"(steps));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oszapc(new_flags);
+    return result;
+}
+
+
 template<bool update_dest, typename Op>
 ALWAYS_INLINE void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
 {
@@ -1577,7 +1635,11 @@ void SoftCPU::SGDT(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHLD_RM16_reg16_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHLD_RM16_reg16_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHLD_RM32_reg32_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHLD_RM32_reg32_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::SHLD_RM32_reg32_imm8(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, op_shld(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn), insn.imm8()));
+}
 
 void SoftCPU::SHL_RM16_1(const X86::Instruction& insn)
 {
@@ -1636,7 +1698,11 @@ void SoftCPU::SHL_RM8_imm8(const X86::Instruction& insn)
 void SoftCPU::SHRD_RM16_reg16_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHRD_RM16_reg16_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHRD_RM32_reg32_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHRD_RM32_reg32_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::SHRD_RM32_reg32_imm8(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, op_shrd(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn), insn.imm8()));
+}
 
 void SoftCPU::SHR_RM16_1(const X86::Instruction& insn)
 {
