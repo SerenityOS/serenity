@@ -49,6 +49,9 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
 
 void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
 {
+    if (!address)
+        return;
+
     for (auto& mallocation : m_mallocations) {
         if (mallocation.address == address) {
             if (mallocation.freed) {
