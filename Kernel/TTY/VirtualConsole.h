@@ -38,7 +38,7 @@ class VirtualConsole final : public TTY
     , public VT::TerminalClient {
     AK_MAKE_ETERNAL
 public:
-    VirtualConsole(unsigned index);
+    VirtualConsole(const unsigned index);
     virtual ~VirtualConsole() override;
 
     static void switch_to(unsigned);
