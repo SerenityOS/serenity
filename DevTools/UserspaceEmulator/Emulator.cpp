@@ -308,7 +308,7 @@ int Emulator::virt$shbuf_create(int size, FlatPtr buffer)
     u8* host_data = nullptr;
     int shbuf_id = syscall(SC_shbuf_create, size, &host_data);
     if (shbuf_id < 0)
-        return -errno;
+        return shbuf_id;
     FlatPtr address = allocate_vm(size, PAGE_SIZE);
     auto region = SharedBufferRegion::create_with_shbuf_id(address, size, shbuf_id, host_data);
     m_mmu.add_region(move(region));
@@ -321,7 +321,7 @@ FlatPtr Emulator::virt$shbuf_get(int shbuf_id, FlatPtr size_ptr)
     size_t host_size = 0;
     void* host_data = (void*)syscall(SC_shbuf_get, shbuf_id, &host_size);
     if (host_data == (void*)-1)
-        return -errno;
+        return (FlatPtr)host_data;
     FlatPtr address = allocate_vm(host_size, PAGE_SIZE);
     auto region = SharedBufferRegion::create_with_shbuf_id(address, host_size, shbuf_id, (u8*)host_data);
     m_mmu.add_region(move(region));
