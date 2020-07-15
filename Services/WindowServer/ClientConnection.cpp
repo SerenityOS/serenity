@@ -630,7 +630,7 @@ void ClientConnection::handle(const Messages::WindowServer::WM_SetActiveWindow& 
         return;
     }
     auto& window = *(*it).value;
-    window.set_minimized(false);
+    WindowManager::the().minimize_windows(window, false);
     WindowManager::the().move_to_front_and_make_active(window);
 }
 
@@ -647,7 +647,11 @@ void ClientConnection::handle(const Messages::WindowServer::WM_PopupWindowMenu& 
         return;
     }
     auto& window = *(*it).value;
-    window.popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
+    if (auto* blocked_by_modal = window.is_blocked_by_modal_window()) {
+        blocked_by_modal->popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
+    } else {
+        window.popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
+    }
 }
 
 void ClientConnection::handle(const Messages::WindowServer::WM_StartWindowResize& request)
@@ -681,7 +685,7 @@ void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowMinimize
         return;
     }
     auto& window = *(*it).value;
-    window.set_minimized(message.minimized());
+    WindowManager::the().minimize_windows(window, message.minimized());
 }
 
 OwnPtr<Messages::WindowServer::GreetResponse> ClientConnection::handle(const Messages::WindowServer::Greet&)
