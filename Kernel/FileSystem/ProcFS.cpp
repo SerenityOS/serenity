@@ -575,9 +575,12 @@ Optional<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
             region.vmobject().ref_count());
         for (size_t i = 0; i < region.vmobject().page_count(); ++i) {
             auto& physical_page = region.vmobject().physical_pages()[i];
+            bool should_cow = false;
+            if (i >= region.first_page_index() && i <= region.last_page_index())
+                should_cow = region.should_cow(i - region.first_page_index());
             builder.appendf("P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
-                region.should_cow(i) ? "!" : "",
+                should_cow ? "!" : "",
                 physical_page ? physical_page->ref_count() : 0);
         }
         builder.appendf("\n");
