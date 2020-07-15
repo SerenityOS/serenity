@@ -371,7 +371,8 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
         return;
 
     if (m_window.type() == WindowType::Normal && title_bar_icon_rect().contains(event.position())) {
-        wm.move_to_front_and_make_active(m_window);
+        if (event.type() == Event::MouseDown)
+            wm.move_to_front_and_make_active(m_window);
         if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
             // Manually start a potential double click. Since we're opening
             // a menu, we will only receive the MouseDown event, so we
