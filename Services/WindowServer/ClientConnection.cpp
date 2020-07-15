@@ -689,16 +689,6 @@ OwnPtr<Messages::WindowServer::GreetResponse> ClientConnection::handle(const Mes
     return make<Messages::WindowServer::GreetResponse>(client_id(), Screen::the().rect(), Gfx::current_system_theme_buffer_id());
 }
 
-bool ClientConnection::is_showing_modal_window() const
-{
-    for (auto& it : m_windows) {
-        auto& window = *it.value;
-        if (window.is_visible() && window.is_modal())
-            return true;
-    }
-    return false;
-}
-
 void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowTaskbarRect& message)
 {
     auto* client = ClientConnection::from_client_id(message.client_id());
