@@ -57,6 +57,13 @@ private:
 
     void setup_stack(const Vector<String>& arguments);
 
+    int virt$shbuf_create(int size, FlatPtr buffer);
+    int virt$shbuf_allow_pid(int, pid_t peer_pid);
+    int virt$shbuf_allow_all(int);
+    FlatPtr virt$shbuf_get(int shbuf_id, FlatPtr size);
+    int virt$shbuf_release(int shbuf_id);
+    int virt$shbuf_seal(int shbuf_id);
+    int virt$shbuf_set_volatile(int shbuf_id, bool);
     u32 virt$mmap(u32);
     u32 virt$munmap(FlatPtr address, u32 size);
     u32 virt$gettid();
@@ -75,6 +82,7 @@ private:
     int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
     int virt$unlink(FlatPtr path, size_t path_length);
     int virt$get_process_name(FlatPtr buffer, int size);
+    int virt$set_mmap_name(FlatPtr);
     int virt$dbgputstr(FlatPtr characters, int length);
     int virt$dbgputch(char);
     int virt$fchmod(int, mode_t);
@@ -91,6 +99,8 @@ private:
     int virt$recvfrom(FlatPtr);
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
     void virt$exit(int);
+
+    FlatPtr allocate_vm(size_t size, size_t alignment);
 
     bool m_shutdown { false };
     int m_exit_status { 0 };

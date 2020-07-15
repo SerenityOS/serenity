@@ -25,6 +25,7 @@
  */
 
 #include "SoftMMU.h"
+#include "SharedBufferRegion.h"
 #include <AK/ByteBuffer.h>
 
 namespace UserspaceEmulator {
@@ -45,11 +46,15 @@ void SoftMMU::add_region(NonnullOwnPtr<Region> region)
 {
     ASSERT(!find_region({ 0x20, region->base() }));
     // FIXME: More sanity checks pls
+    if (region->is_shared_buffer())
+        m_shbuf_regions.set(static_cast<SharedBufferRegion*>(region.ptr())->shbuf_id(), region.ptr());
     m_regions.append(move(region));
 }
 
 void SoftMMU::remove_region(Region& region)
 {
+    if (region.is_shared_buffer())
+        m_shbuf_regions.remove(static_cast<SharedBufferRegion&>(region).shbuf_id());
     m_regions.remove_first_matching([&](auto& entry) { return entry.ptr() == &region; });
 }
 
@@ -142,6 +147,11 @@ ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)
     auto buffer = ByteBuffer::create_uninitialized(size);
     copy_from_vm(buffer.data(), source, size);
     return buffer;
+}
+
+SharedBufferRegion* SoftMMU::shbuf_region(int shbuf_id)
+{
+    return (SharedBufferRegion*)m_shbuf_regions.get(shbuf_id).value_or(nullptr);
 }
 
 }
