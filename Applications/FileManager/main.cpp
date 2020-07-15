@@ -379,24 +379,24 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     RefPtr<GUI::Action> view_as_icons_action;
     RefPtr<GUI::Action> view_as_columns_action;
 
-    view_as_table_action = GUI::Action::create_checkable(
-        "Table view", { Mod_Ctrl, KeyCode::Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
-            directory_view.set_view_mode(DirectoryView::ViewMode::Table);
-            config->write_entry("DirectoryView", "ViewMode", "Table");
-            config->sync();
-        },
-        window);
-
     view_as_icons_action = GUI::Action::create_checkable(
-        "Icon view", { Mod_Ctrl, KeyCode::Key_I }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
+        "Icon view", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Icon);
             config->write_entry("DirectoryView", "ViewMode", "Icon");
             config->sync();
         },
         window);
 
+    view_as_table_action = GUI::Action::create_checkable(
+        "Table view", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
+            directory_view.set_view_mode(DirectoryView::ViewMode::Table);
+            config->write_entry("DirectoryView", "ViewMode", "Table");
+            config->sync();
+        },
+        window);
+
     view_as_columns_action = GUI::Action::create_checkable(
-        "Columns view", Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
+        "Columns view", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Columns);
             config->write_entry("DirectoryView", "ViewMode", "Columns");
             config->sync();
@@ -405,8 +405,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto view_type_action_group = make<GUI::ActionGroup>();
     view_type_action_group->set_exclusive(true);
-    view_type_action_group->add_action(*view_as_table_action);
     view_type_action_group->add_action(*view_as_icons_action);
+    view_type_action_group->add_action(*view_as_table_action);
     view_type_action_group->add_action(*view_as_columns_action);
 
     auto selected_file_paths = [&] {
@@ -668,6 +668,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     go_menu.add_action(go_forward_action);
     go_menu.add_action(open_parent_directory_action);
     go_menu.add_action(go_home_action);
+    go_menu.add_action(GUI::Action::create(
+        "Go to location...", { Mod_Ctrl, Key_L }, [&](auto&) {
+            location_textbox.select_all();
+            location_textbox.set_focus(true);
+        }));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
