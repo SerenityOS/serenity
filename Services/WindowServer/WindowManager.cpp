@@ -210,17 +210,13 @@ void WindowManager::move_to_front_and_make_active(Window& window)
 
     bool make_active = true;
     if (window.is_accessory()) {
-        if (auto* parent = window.parent_window()) {
-            do_move_to_front(*parent, true, false);
-            make_active = false;
+        auto* parent = window.parent_window();
+        do_move_to_front(*parent, true, false);
+        make_active = false;
             
-            for (auto& accessory_window : parent->accessory_windows()) {
-                if (accessory_window && accessory_window.ptr() != &window)
-                    do_move_to_front(*accessory_window, false, false);
-            }
-        } else {
-            // If accessory window was unparented, convert to a regular window
-            window.set_accessory(false);
+        for (auto& accessory_window : parent->accessory_windows()) {
+            if (accessory_window && accessory_window.ptr() != &window)
+                do_move_to_front(*accessory_window, false, false);
         }
     }
 
@@ -258,7 +254,7 @@ void WindowManager::remove_window(Window& window)
     window.invalidate();
     m_windows_in_order.remove(&window);
     if (window.is_active())
-        pick_new_active_window(window);
+        pick_new_active_window(&window);
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
@@ -376,7 +372,7 @@ void WindowManager::notify_minimization_state_changed(Window& window)
         window.client()->post_message(Messages::WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
 
     if (window.is_active() && window.is_minimized())
-        pick_new_active_window(window);
+        pick_new_active_window(&window);
 }
 
 void WindowManager::notify_occlusion_state_changed(Window& window)
@@ -390,18 +386,24 @@ void WindowManager::notify_progress_changed(Window& window)
     tell_wm_listeners_window_state_changed(window);
 }
 
-void WindowManager::pick_new_active_window(Window& previous_active)
+bool WindowManager::pick_new_active_window(Window* previous_active)
 {
     bool new_window_picked = false;
+    Window* first_candidate = nullptr;
     for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& candidate) {
-        if (!candidate.is_accessory_of(previous_active)) {
+        first_candidate = &candidate;
+        if ((!previous_active && !candidate.is_accessory()) || (previous_active && !candidate.is_accessory_of(*previous_active))) {
             set_active_window(&candidate);
             new_window_picked = true;
+            return IterationDecision::Break;
         }
-        return IterationDecision::Break;
+        return IterationDecision::Continue;
     });
-    if (!new_window_picked)
-        set_active_window(nullptr);
+    if (!new_window_picked) {
+        set_active_window(first_candidate);
+        new_window_picked = first_candidate != nullptr;
+    }
+    return new_window_picked;
 }
 
 void WindowManager::start_window_move(Window& window, const MouseEvent& event)
@@ -1095,19 +1097,44 @@ bool WindowManager::is_active_window_or_accessory(Window& window) const
     if (!window.is_accessory())
         return false;
 
-    auto* parent = window.parent_window();
-    if (!parent) {
-        // If accessory window was unparented, convert to a regular window
-        window.set_accessory(false);
-        return false;
-    }
-
-    return m_active_window == parent;
+    return m_active_window == window.parent_window();
 }
 
 static bool window_type_can_become_active(WindowType type)
 {
     return type == WindowType::Normal || type == WindowType::Desktop;
+}
+
+void WindowManager::restore_active_input_window(Window* window)
+{
+    // If the previous active input window is gone, fall back to the
+    // current active window
+    if (!window)
+        window = active_window();
+    // If the current active window is also gone, pick some other window
+    if (!window && pick_new_active_window(nullptr))
+        return;
+    
+    set_active_input_window(window);
+}
+
+Window* WindowManager::set_active_input_window(Window* window)
+{
+    if (window == m_active_input_window)
+        return window;
+
+    Window* previous_input_window = m_active_input_window;
+    if (previous_input_window)
+        Core::EventLoop::current().post_event(*previous_input_window, make<Event>(Event::WindowInputLeft));
+
+    if (window) {
+        m_active_input_window = window->make_weak_ptr();
+        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowInputEntered));
+    } else {
+        m_active_input_window = nullptr;
+    }
+
+    return previous_input_window;
 }
 
 void WindowManager::set_active_window(Window* window, bool make_input)
@@ -1118,31 +1145,15 @@ void WindowManager::set_active_window(Window* window, bool make_input)
     if (window && !window_type_can_become_active(window->type()))
         return;
 
-    if (make_input) {
-        auto* new_active_input_window = window;
-        if (window && window->is_accessory()) {
-            if (auto* parent = window->parent_window()) {
-                // The parent of an accessory window is always the active
-                // window, but input is routed to the accessory window
-                window = parent;
-            } else {
-                // If accessory window was unparented, convert to a regular window
-                window->set_accessory(false);
-            }
-        }
-
-        if (new_active_input_window != m_active_input_window) {
-            if (m_active_input_window)
-                Core::EventLoop::current().post_event(*m_active_input_window, make<Event>(Event::WindowInputLeft));
-
-            if (new_active_input_window) {
-                m_active_input_window = new_active_input_window->make_weak_ptr();
-                Core::EventLoop::current().post_event(*new_active_input_window, make<Event>(Event::WindowInputEntered));
-            } else {
-                m_active_input_window = nullptr;
-            }
-        }
+    auto* new_active_input_window = window;
+    if (window && window->is_accessory()) {
+        // The parent of an accessory window is always the active
+        // window, but input is routed to the accessory window
+        window = window->parent_window();
     }
+
+    if (make_input)
+        set_active_input_window(new_active_input_window);
 
     if (window == m_active_window)
         return;

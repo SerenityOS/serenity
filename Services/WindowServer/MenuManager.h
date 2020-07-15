@@ -56,6 +56,7 @@ public:
 
     Menu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(Menu*);
+    void clear_current_menu();
     void open_menu(Menu&, bool as_current_menu = true);
     void toggle_menu(Menu&);
 
@@ -104,6 +105,7 @@ private:
     RefPtr<Window> m_window;
 
     WeakPtr<Menu> m_current_menu;
+    WeakPtr<Window> m_previous_input_window;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
 
     RefPtr<Core::Timer> m_search_timer;
