@@ -125,6 +125,14 @@ bool Emulator::load_elf()
     });
 
     m_cpu.set_eip(m_elf->image().entry().get());
+
+    auto malloc_symbol = m_elf->find_demangled_function("malloc");
+    auto free_symbol = m_elf->find_demangled_function("free");
+
+    m_malloc_symbol_start = malloc_symbol.value().value();
+    m_malloc_symbol_end = m_malloc_symbol_start + malloc_symbol.value().size();
+    m_free_symbol_start = free_symbol.value().value();
+    m_free_symbol_end = m_free_symbol_start + free_symbol.value().size();
     return true;
 }
 
@@ -170,8 +178,7 @@ int Emulator::exec()
 
 bool Emulator::is_in_malloc_or_free() const
 {
-    auto symbol = m_elf->symbolicate(m_cpu.eip());
-    return symbol.starts_with("malloc") || symbol.starts_with("free");
+    return (m_cpu.eip() >= m_malloc_symbol_start && m_cpu.eip() < m_malloc_symbol_end) || (m_cpu.eip() >= m_free_symbol_start && m_cpu.eip() < m_free_symbol_end);
 }
 
 static pid_t s_pid = getpid();
