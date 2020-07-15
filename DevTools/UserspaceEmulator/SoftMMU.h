@@ -26,12 +26,15 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <LibX86/Instruction.h>
 
 namespace UserspaceEmulator {
+
+class SharedBufferRegion;
 
 class SoftMMU {
 public:
@@ -54,6 +57,7 @@ public:
         virtual u32 read32(u32 offset) = 0;
 
         virtual u8* cacheable_ptr([[maybe_unused]] u32 offset) { return nullptr; }
+        virtual bool is_shared_buffer() const { return false; }
 
     protected:
         Region(u32 base, u32 size)
@@ -86,9 +90,12 @@ public:
     void copy_from_vm(void* destination, const FlatPtr source, size_t);
     ByteBuffer copy_buffer_from_vm(const FlatPtr source, size_t);
 
+    SharedBufferRegion* shbuf_region(int shbuf_id);
+
 private:
     OwnPtr<Region> m_tls_region;
     NonnullOwnPtrVector<Region> m_regions;
+    HashMap<int, Region*> m_shbuf_regions;
 };
 
 }

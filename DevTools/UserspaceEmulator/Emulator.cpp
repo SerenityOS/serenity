@@ -26,12 +26,14 @@
 
 #include "Emulator.h"
 #include "MmapRegion.h"
+#include "SharedBufferRegion.h"
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
 #include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <Kernel/API/Syscall.h>
 #include <fcntl.h>
+#include <serenity.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -194,6 +196,20 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
+    case SC_shbuf_create:
+        return virt$shbuf_create(arg1, arg2);
+    case SC_shbuf_allow_pid:
+        return virt$shbuf_allow_pid(arg1, arg2);
+    case SC_shbuf_allow_all:
+        return virt$shbuf_allow_all(arg1);
+    case SC_shbuf_get:
+        return virt$shbuf_get(arg1, arg2);
+    case SC_shbuf_release:
+        return virt$shbuf_release(arg1);
+    case SC_shbuf_seal:
+        return virt$shbuf_seal(arg1);
+    case SC_shbuf_set_volatile:
+        return virt$shbuf_set_volatile(arg1, arg2);
     case SC_mmap:
         return virt$mmap(arg1);
     case SC_munmap:
@@ -260,6 +276,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$recvfrom(arg1);
     case SC_kill:
         return virt$kill(arg1, arg2);
+    case SC_set_mmap_name:
+        return virt$set_mmap_name(arg1);
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
@@ -268,6 +286,69 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         dump_backtrace();
         TODO();
     }
+}
+
+int Emulator::virt$shbuf_create(int size, FlatPtr buffer)
+{
+    u8* host_data = nullptr;
+    int shbuf_id = syscall(SC_shbuf_create, size, &host_data);
+    if (shbuf_id < 0)
+        return -errno;
+    FlatPtr address = allocate_vm(size, PAGE_SIZE);
+    auto region = SharedBufferRegion::create_with_shbuf_id(address, size, shbuf_id, host_data);
+    m_mmu.add_region(move(region));
+    m_mmu.copy_to_vm(buffer, &address, sizeof(address));
+    return shbuf_id;
+}
+
+FlatPtr Emulator::virt$shbuf_get(int shbuf_id, FlatPtr size_ptr)
+{
+    size_t host_size = 0;
+    void* host_data = (void*)syscall(SC_shbuf_get, shbuf_id, &host_size);
+    if (host_data == (void*)-1)
+        return -errno;
+    FlatPtr address = allocate_vm(host_size, PAGE_SIZE);
+    auto region = SharedBufferRegion::create_with_shbuf_id(address, host_size, shbuf_id, (u8*)host_data);
+    m_mmu.add_region(move(region));
+    m_mmu.copy_to_vm(size_ptr, &host_size, sizeof(host_size));
+    return address;
+}
+
+int Emulator::virt$shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
+{
+    auto* region = m_mmu.shbuf_region(shbuf_id);
+    ASSERT(region);
+    return region->allow_pid(peer_pid);
+}
+
+int Emulator::virt$shbuf_allow_all(int shbuf_id)
+{
+    auto* region = m_mmu.shbuf_region(shbuf_id);
+    ASSERT(region);
+    return region->allow_all();
+}
+
+int Emulator::virt$shbuf_release(int shbuf_id)
+{
+    auto* region = m_mmu.shbuf_region(shbuf_id);
+    ASSERT(region);
+    auto rc = region->release();
+    m_mmu.remove_region(*region);
+    return rc;
+}
+
+int Emulator::virt$shbuf_seal(int shbuf_id)
+{
+    auto* region = m_mmu.shbuf_region(shbuf_id);
+    ASSERT(region);
+    return region->seal();
+}
+
+int Emulator::virt$shbuf_set_volatile(int shbuf_id, bool is_volatile)
+{
+    auto* region = m_mmu.shbuf_region(shbuf_id);
+    ASSERT(region);
+    return region->set_volatile(is_volatile);
 }
 
 int Emulator::virt$fstat(int fd, FlatPtr statbuf)
@@ -335,6 +416,12 @@ int Emulator::virt$listen(int fd, int backlog)
 int Emulator::virt$kill(pid_t pid, int signal)
 {
     return syscall(SC_kill, pid, signal);
+}
+
+int Emulator::virt$set_mmap_name(FlatPtr)
+{
+    // FIXME: Implement.
+    return 0;
 }
 
 int Emulator::virt$get_process_name(FlatPtr buffer, int size)
@@ -503,6 +590,24 @@ u32 Emulator::virt$munmap(FlatPtr address, u32 size)
     return 0;
 }
 
+FlatPtr Emulator::allocate_vm(size_t size, size_t alignment)
+{
+    // FIXME: Write a proper VM allocator
+    static FlatPtr next_address = 0x30000000;
+
+    FlatPtr final_address;
+
+    if (alignment) {
+        // FIXME: What if alignment is not a power of 2?
+        final_address = round_up_to_power_of_two(next_address, alignment);
+    } else {
+        final_address = next_address;
+    }
+
+    next_address = final_address + size;
+    return final_address;
+}
+
 u32 Emulator::virt$mmap(u32 params_addr)
 {
     Syscall::SC_mmap_params params;
@@ -510,20 +615,8 @@ u32 Emulator::virt$mmap(u32 params_addr)
 
     ASSERT(params.addr == 0);
 
-    // FIXME: Write a proper VM allocator
-    static u32 next_address = 0x30000000;
-
-    u32 final_address = 0;
     u32 final_size = round_up_to_power_of_two(params.size, PAGE_SIZE);
-
-    if (params.alignment) {
-        // FIXME: What if alignment is not a power of 2?
-        final_address = round_up_to_power_of_two(next_address, params.alignment);
-    } else {
-        final_address = next_address;
-    }
-
-    next_address = final_address + final_size;
+    u32 final_address = allocate_vm(final_size, params.alignment);
 
     if (params.flags & MAP_ANONYMOUS)
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot));
