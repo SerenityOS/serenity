@@ -198,9 +198,6 @@ void Emulator::dump_backtrace()
 
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
-    (void)arg2;
-    (void)arg3;
-
 #ifdef DEBUG_SPAM
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
 #endif
@@ -296,6 +293,9 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$gettimeofday(arg1);
     case SC_clock_gettime:
         return virt$clock_gettime(arg1, arg2);
+    case SC_getrandom:
+        return virt$getrandom(arg1, arg2, arg3)       ;
+
     default:
         warn() << "Unimplemented syscall: " << Syscall::to_string((Syscall::Function)function);
         dump_backtrace();
@@ -736,6 +736,16 @@ void Emulator::virt$exit(int status)
     dbg() << "exit(" << status << "), shutting down!";
     m_exit_status = status;
     m_shutdown = true;
+}
+
+ssize_t Emulator::virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags)
+{
+    auto host_buffer = ByteBuffer::create_uninitialized(buffer_size);
+    int rc = syscall(SC_getrandom, host_buffer.data(), host_buffer.size(), flags);
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
+    return rc;
 }
 
 }

@@ -111,6 +111,7 @@ private:
     int virt$recvfrom(FlatPtr);
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
     void virt$exit(int);
+    ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
 
