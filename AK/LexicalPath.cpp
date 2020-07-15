@@ -89,12 +89,8 @@ void LexicalPath::canonicalize()
     m_dirname = dirname_builder.to_string();
 
     m_basename = canonical_parts.last();
-    String dot { "." };
-    Optional<size_t> last_dot, end = m_basename.index_of(dot);
-    while (end.has_value()) {
-      last_dot = end;
-      end = m_basename.index_of(dot, end.value() + 1);
-    }
+
+    Optional<size_t> last_dot = StringView(m_basename).find_last_of('.');
     if (last_dot.has_value()) {
       m_title = m_basename.substring(0, last_dot.value());
       m_extension = m_basename.substring(last_dot.value() + 1, m_basename.length() - last_dot.value() - 1);
