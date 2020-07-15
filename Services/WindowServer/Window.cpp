@@ -590,6 +590,18 @@ void Window::set_parent_window(Window& parent_window)
         parent_window.add_child_window(*this);
 }
 
+bool Window::is_accessory() const
+{
+    if (!m_accessory)
+        return false;
+    if (parent_window() != nullptr)
+        return true;
+    
+    // If accessory window was unparented, convert to a regular window
+    const_cast<Window*>(this)->set_accessory(false);
+    return false;
+}
+
 bool Window::is_accessory_of(Window& window) const
 {
     if (!is_accessory())

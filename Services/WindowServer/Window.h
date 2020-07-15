@@ -244,7 +244,7 @@ public:
     const Vector<WeakPtr<Window>>& accessory_windows() const { return m_accessory_windows; }
 
     void set_accessory(bool accessory) { m_accessory = accessory; }
-    bool is_accessory() const { return m_accessory; }
+    bool is_accessory() const;
     bool is_accessory_of(Window&) const;
 
     void set_frameless(bool frameless) { m_frameless = frameless; }

@@ -284,12 +284,12 @@ MenuItem* Menu::hovered_item() const
     return const_cast<MenuItem*>(&item(m_hovered_item_index));
 }
 
-void Menu::update_for_new_hovered_item()
+void Menu::update_for_new_hovered_item(bool make_input)
 {
     if (hovered_item() && hovered_item()->is_submenu()) {
         ASSERT(menu_window());
         MenuManager::the().close_everyone_not_in_lineage(*hovered_item()->submenu());
-        hovered_item()->submenu()->popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()));
+        hovered_item()->submenu()->do_popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()), make_input);
     } else {
         MenuManager::the().close_everyone_not_in_lineage(*this);
         ensure_menu_window().set_visible(true);
@@ -313,7 +313,7 @@ void Menu::descend_into_submenu_at_hovered_item()
     ASSERT(hovered_item());
     auto submenu = hovered_item()->submenu();
     ASSERT(submenu);
-    MenuManager::the().open_menu(*submenu);
+    MenuManager::the().open_menu(*submenu, false);
     submenu->set_hovered_item(0);
     ASSERT(submenu->hovered_item()->type() != MenuItem::Separator);
 }
@@ -384,7 +384,7 @@ void Menu::event(Core::Event& event)
         // Default to the first item on key press if one has not been selected yet
         if (!hovered_item()) {
             m_hovered_item_index = 0;
-            update_for_new_hovered_item();
+            update_for_new_hovered_item(key == Key_Right);
             return;
         }
 
@@ -509,6 +509,11 @@ void Menu::redraw_if_theme_changed()
 
 void Menu::popup(const Gfx::IntPoint& position)
 {
+    do_popup(position, true);
+}
+
+void Menu::do_popup(const Gfx::IntPoint& position, bool make_input)
+{
     if (is_empty()) {
         dbg() << "Menu: Empty menu popup";
         return;
@@ -532,7 +537,7 @@ void Menu::popup(const Gfx::IntPoint& position)
 
     window.move_to(adjusted_pos);
     window.set_visible(true);
-    MenuManager::the().open_menu(*this, false);
+    MenuManager::the().open_menu(*this, make_input);
     WindowManager::the().did_popup_a_menu({});
 }
 

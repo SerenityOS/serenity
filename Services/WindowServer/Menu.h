@@ -120,6 +120,7 @@ public:
     void close();
 
     void popup(const Gfx::IntPoint&);
+    void do_popup(const Gfx::IntPoint&, bool);
 
     bool is_menu_ancestor_of(const Menu&) const;
 
@@ -142,7 +143,7 @@ private:
     int item_index_at(const Gfx::IntPoint&);
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(MenuItem&);
-    void update_for_new_hovered_item();
+    void update_for_new_hovered_item(bool make_input = false);
 
     ClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
