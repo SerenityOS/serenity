@@ -144,7 +144,9 @@ extern "C" [[noreturn]] void init()
 
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0);
-    new VirtualConsole(1);
+    for (unsigned i = 1; i < s_max_virtual_consoles; i++) {
+        new VirtualConsole(i);
+    }
     VirtualConsole::switch_to(0);
 
     Process::initialize();
