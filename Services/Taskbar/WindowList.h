@@ -45,7 +45,10 @@ public:
             m_button->remove_from_parent();
     }
 
-    WindowIdentifier identifier() const { return m_identifier; }
+    const WindowIdentifier& identifier() const { return m_identifier; }
+
+    void set_parent_identifier(const WindowIdentifier& parent_identifier) { m_parent_identifier = parent_identifier; }
+    const WindowIdentifier& parent_identifier() const { return m_parent_identifier; }
 
     String title() const { return m_title; }
     void set_title(const String& title) { m_title = title; }
@@ -62,12 +65,16 @@ public:
     void set_minimized(bool minimized) { m_minimized = minimized; }
     bool is_minimized() const { return m_minimized; }
 
+    void set_modal(bool modal) { m_modal = modal; }
+    bool is_modal() const { return m_modal; }
+
     void set_progress(int progress)
     {
         if (m_progress == progress)
             return;
         m_progress = progress;
-        m_button->update();
+        if (m_button)
+            m_button->update();
     }
 
     int progress() const { return m_progress; }
@@ -76,12 +83,14 @@ public:
 
 private:
     WindowIdentifier m_identifier;
+    WindowIdentifier m_parent_identifier;
     String m_title;
     Gfx::IntRect m_rect;
     RefPtr<GUI::Button> m_button;
     RefPtr<Gfx::Bitmap> m_icon;
     bool m_active { false };
     bool m_minimized { false };
+    bool m_modal { false };
     int m_progress { -1 };
 };
 
@@ -96,11 +105,10 @@ public:
             callback(*it.value);
     }
 
+    Window* find_parent(const Window&);
     Window* window(const WindowIdentifier&);
     Window& ensure_window(const WindowIdentifier&);
     void remove_window(const WindowIdentifier&);
-
-    Function<NonnullRefPtr<GUI::Button>(const WindowIdentifier&)> aid_create_button;
 
 private:
     HashMap<WindowIdentifier, NonnullOwnPtr<Window>> m_windows;
