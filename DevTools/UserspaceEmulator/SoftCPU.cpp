@@ -726,7 +726,12 @@ void SoftCPU::BSF_reg16_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::BSF_reg32_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::BSR_reg16_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::BSR_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::BSWAP_reg32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::BSWAP_reg32(const X86::Instruction& insn)
+{
+    gpr32(insn.reg32()) = __builtin_bswap32(gpr32(insn.reg32()));
+}
+
 void SoftCPU::BTC_RM16_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::BTC_RM16_reg16(const X86::Instruction&) { TODO(); }
 void SoftCPU::BTC_RM32_imm8(const X86::Instruction&) { TODO(); }
