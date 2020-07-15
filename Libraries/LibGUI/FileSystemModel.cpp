@@ -332,6 +332,7 @@ const FileSystemModel::Node& FileSystemModel::node(const ModelIndex& index) cons
 {
     if (!index.is_valid())
         return *m_root;
+    ASSERT(index.internal_data());
     return *(Node*)index.internal_data();
 }
 
