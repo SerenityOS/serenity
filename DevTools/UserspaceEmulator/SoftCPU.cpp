@@ -1560,7 +1560,7 @@ void SoftCPU::SAHF(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::SALC(const X86::Instruction&)
 {
-    set_al(cf() ? 0x01 : 0x00);
+    set_al(cf() ? 0xff : 0x00);
 
     if (m_secret_handshake_state < 2)
         ++m_secret_handshake_state;
