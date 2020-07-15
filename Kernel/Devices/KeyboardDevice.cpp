@@ -321,10 +321,7 @@ void KeyboardDevice::handle_irq(const RegisterState&)
         default:
             if (m_modifiers & Mod_Alt) {
                 switch (ch) {
-                case 0x02: // 1
-                case 0x03: // 2
-                case 0x04: // 3
-                case 0x05: // 4
+                case 0x02 ... 0x07: // 1 to 6
                     VirtualConsole::switch_to(ch - 0x02);
                     break;
                 default:
