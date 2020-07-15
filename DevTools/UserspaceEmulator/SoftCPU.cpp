@@ -910,7 +910,14 @@ void SoftCPU::DIV_RM32(const X86::Instruction& insn)
 void SoftCPU::DIV_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::ENTER16(const X86::Instruction&) { TODO(); }
 void SoftCPU::ENTER32(const X86::Instruction&) { TODO(); }
-void SoftCPU::ESCAPE(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::ESCAPE(const X86::Instruction&)
+{
+    dbg() << "FIXME: x87 floating-point support";
+    m_emulator.dump_backtrace();
+    TODO();
+}
+
 void SoftCPU::HLT(const X86::Instruction&) { TODO(); }
 void SoftCPU::IDIV_RM16(const X86::Instruction&) { TODO(); }
 
