@@ -38,6 +38,7 @@ endpoint WindowServer = 2
         bool resizable,
         bool fullscreen,
         bool frameless,
+        bool accessory,
         float opacity,
         Gfx::IntSize base_size,
         Gfx::IntSize size_increment,

@@ -106,6 +106,18 @@ void WindowServerConnection::handle(const Messages::WindowClient::WindowDeactiva
         Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowBecameInactive));
 }
 
+void WindowServerConnection::handle(const Messages::WindowClient::WindowInputEntered& message)
+{
+    if (auto* window = Window::from_window_id(message.window_id()))
+        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowInputEntered));
+}
+
+void WindowServerConnection::handle(const Messages::WindowClient::WindowInputLeft& message)
+{
+    if (auto* window = Window::from_window_id(message.window_id()))
+        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowInputLeft));
+}
+
 void WindowServerConnection::handle(const Messages::WindowClient::WindowCloseRequest& message)
 {
     if (auto* window = Window::from_window_id(message.window_id()))

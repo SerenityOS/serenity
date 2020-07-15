@@ -50,6 +50,8 @@ public:
         KeyUp,
         WindowActivated,
         WindowDeactivated,
+        WindowInputEntered,
+        WindowInputLeft,
         WindowCloseRequest,
         WindowResized,
     };

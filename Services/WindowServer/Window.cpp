@@ -91,7 +91,7 @@ Window::Window(Core::Object& parent, WindowType type)
     WindowManager::the().add_window(*this);
 }
 
-Window::Window(ClientConnection& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen)
+Window::Window(ClientConnection& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window)
     : Core::Object(&client)
     , m_client(&client)
     , m_type(window_type)
@@ -100,6 +100,7 @@ Window::Window(ClientConnection& client, WindowType window_type, int window_id, 
     , m_frameless(frameless)
     , m_resizable(resizable)
     , m_fullscreen(fullscreen)
+    , m_accessory(accessory)
     , m_window_id(window_id)
     , m_client_id(client.client_id())
     , m_icon(default_window_icon())
@@ -111,6 +112,8 @@ Window::Window(ClientConnection& client, WindowType window_type, int window_id, 
         m_listens_to_wm_events = true;
     }
 
+    if (parent_window)
+        set_parent_window(*parent_window);
     WindowManager::the().add_window(*this);
 }
 
@@ -320,6 +323,12 @@ void Window::event(Core::Event& event)
         break;
     case Event::WindowDeactivated:
         m_client->post_message(Messages::WindowClient::WindowDeactivated(m_window_id));
+        break;
+    case Event::WindowInputEntered:
+        m_client->post_message(Messages::WindowClient::WindowInputEntered(m_window_id));
+        break;
+    case Event::WindowInputLeft:
+        m_client->post_message(Messages::WindowClient::WindowInputLeft(m_window_id));
         break;
     case Event::WindowCloseRequest:
         m_client->post_message(Messages::WindowClient::WindowCloseRequest(m_window_id));
@@ -566,11 +575,26 @@ void Window::add_child_window(Window& child_window)
     m_child_windows.append(child_window.make_weak_ptr());
 }
 
+void Window::add_accessory_window(Window& accessory_window)
+{
+    m_accessory_windows.append(accessory_window.make_weak_ptr());
+}
+
 void Window::set_parent_window(Window& parent_window)
 {
     ASSERT(!m_parent_window);
     m_parent_window = parent_window.make_weak_ptr();
-    parent_window.add_child_window(*this);
+    if (m_accessory)
+        parent_window.add_accessory_window(*this);
+    else
+        parent_window.add_child_window(*this);
+}
+
+bool Window::is_accessory_of(Window& window) const
+{
+    if (!is_accessory())
+        return false;
+    return parent_window() == &window;
 }
 
 void Window::set_progress(int progress)

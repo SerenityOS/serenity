@@ -98,6 +98,7 @@ public:
     };
 
     Function<CloseRequestDecision()> on_close_request;
+    Function<void(bool is_active_input)> on_active_input_change;
     Function<void(const bool is_active)> on_activity_change;
 
     int x() const { return rect().x(); }
@@ -122,6 +123,10 @@ public:
 
     bool is_visible() const;
     bool is_active() const { return m_is_active; }
+    bool is_active_input() const { return m_is_active_input; }
+
+    bool is_accessory() const { return m_accessory; }
+    void set_accessory(bool accessory) { m_accessory = accessory; }
 
     void show();
     void hide();
@@ -232,6 +237,7 @@ private:
     WindowType m_window_type { WindowType::Normal };
     StandardCursor m_override_cursor { StandardCursor::None };
     bool m_is_active { false };
+    bool m_is_active_input { false };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
     bool m_modal { false };
@@ -242,6 +248,7 @@ private:
     bool m_layout_pending { false };
     bool m_visible_for_timer_purposes { true };
     bool m_visible { false };
+    bool m_accessory { false };
 };
 
 }

@@ -59,6 +59,8 @@ private:
     virtual void handle(const Messages::WindowClient::KeyUp&) override;
     virtual void handle(const Messages::WindowClient::WindowActivated&) override;
     virtual void handle(const Messages::WindowClient::WindowDeactivated&) override;
+    virtual void handle(const Messages::WindowClient::WindowInputEntered&) override;
+    virtual void handle(const Messages::WindowClient::WindowInputLeft&) override;
     virtual void handle(const Messages::WindowClient::WindowCloseRequest&) override;
     virtual void handle(const Messages::WindowClient::WindowResized&) override;
     virtual void handle(const Messages::WindowClient::MenuItemActivated&) override;

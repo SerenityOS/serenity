@@ -208,6 +208,27 @@ void WindowManager::move_to_front_and_make_active(Window& window)
     if (window.is_blocked_by_modal_window())
         return;
 
+    bool make_active = true;
+    if (window.is_accessory()) {
+        if (auto* parent = window.parent_window()) {
+            do_move_to_front(*parent, true, false);
+            make_active = false;
+            
+            for (auto& accessory_window : parent->accessory_windows()) {
+                if (accessory_window && accessory_window.ptr() != &window)
+                    do_move_to_front(*accessory_window, false, false);
+            }
+        } else {
+            // If accessory window was unparented, convert to a regular window
+            window.set_accessory(false);
+        }
+    }
+
+    do_move_to_front(window, make_active, true);
+}
+
+void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
+{
     if (m_windows_in_order.tail() != &window)
         window.invalidate();
     m_windows_in_order.remove(&window);
@@ -215,17 +236,20 @@ void WindowManager::move_to_front_and_make_active(Window& window)
 
     Compositor::the().recompute_occlusions();
 
-    set_active_window(&window);
+    if (make_active)
+        set_active_window(&window, make_input);
 
     if (m_switcher.is_visible()) {
         m_switcher.refresh();
-        m_switcher.select_window(window);
-        set_highlight_window(&window);
+        if (!window.is_accessory()) {
+            m_switcher.select_window(window);
+            set_highlight_window(&window);
+        }
     }
 
     for (auto& child_window : window.child_windows()) {
         if (child_window)
-            move_to_front_and_make_active(*child_window);
+            do_move_to_front(*child_window, make_active, make_input);
     }
 }
 
@@ -234,7 +258,7 @@ void WindowManager::remove_window(Window& window)
     window.invalidate();
     m_windows_in_order.remove(&window);
     if (window.is_active())
-        pick_new_active_window();
+        pick_new_active_window(window);
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
@@ -352,7 +376,7 @@ void WindowManager::notify_minimization_state_changed(Window& window)
         window.client()->post_message(Messages::WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
 
     if (window.is_active() && window.is_minimized())
-        pick_new_active_window();
+        pick_new_active_window(window);
 }
 
 void WindowManager::notify_occlusion_state_changed(Window& window)
@@ -366,12 +390,14 @@ void WindowManager::notify_progress_changed(Window& window)
     tell_wm_listeners_window_state_changed(window);
 }
 
-void WindowManager::pick_new_active_window()
+void WindowManager::pick_new_active_window(Window& previous_active)
 {
     bool new_window_picked = false;
     for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& candidate) {
-        set_active_window(&candidate);
-        new_window_picked = true;
+        if (!candidate.is_accessory_of(previous_active)) {
+            set_active_window(&candidate);
+            new_window_picked = true;
+        }
         return IterationDecision::Break;
     });
     if (!new_window_picked)
@@ -846,20 +872,20 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
 
     Window* event_window_with_frame = nullptr;
 
-    if (m_active_input_window) {
+    if (m_active_input_tracking_window) {
         // At this point, we have delivered the start of an input sequence to a
         // client application. We must keep delivering to that client
         // application until the input sequence is done.
         //
         // This prevents e.g. moving on one window out of the bounds starting
         // a move in that other unrelated window, and other silly shenanigans.
-        if (!windows_who_received_mouse_event_due_to_cursor_tracking.contains(m_active_input_window)) {
-            auto translated_event = event.translated(-m_active_input_window->position());
-            deliver_mouse_event(*m_active_input_window, translated_event);
-            windows_who_received_mouse_event_due_to_cursor_tracking.set(m_active_input_window.ptr());
+        if (!windows_who_received_mouse_event_due_to_cursor_tracking.contains(m_active_input_tracking_window)) {
+            auto translated_event = event.translated(-m_active_input_tracking_window->position());
+            deliver_mouse_event(*m_active_input_tracking_window, translated_event);
+            windows_who_received_mouse_event_due_to_cursor_tracking.set(m_active_input_tracking_window.ptr());
         }
         if (event.type() == Event::MouseUp && event.buttons() == 0) {
-            m_active_input_window = nullptr;
+            m_active_input_tracking_window = nullptr;
         }
 
         for_each_visible_window_from_front_to_back([&](auto& window) {
@@ -915,7 +941,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                     auto translated_event = event.translated(-window.position());
                     deliver_mouse_event(window, translated_event);
                     if (event.type() == Event::MouseDown) {
-                        m_active_input_window = window.make_weak_ptr();
+                        m_active_input_tracking_window = window.make_weak_ptr();
                     }
                 }
                 return;
@@ -1004,45 +1030,45 @@ void WindowManager::event(Core::Event& event)
             return;
         }
 
-        if (m_active_window) {
+        if (m_active_input_window) {
             if (key_event.type() == Event::KeyDown && key_event.modifiers() == Mod_Logo) {
                 if (key_event.key() == Key_Down) {
-                    if (m_active_window->is_resizable() && m_active_window->is_maximized()) {
-                        m_active_window->set_maximized(false);
+                    if (m_active_input_window->is_resizable() && m_active_input_window->is_maximized()) {
+                        m_active_input_window->set_maximized(false);
                         return;
                     }
-                    if (m_active_window->is_minimizable())
-                        m_active_window->set_minimized(true);
+                    if (m_active_input_window->is_minimizable())
+                        m_active_input_window->set_minimized(true);
                     return;
                 }
-                if (m_active_window->is_resizable()) {
+                if (m_active_input_window->is_resizable()) {
                     if (key_event.key() == Key_Up) {
-                        m_active_window->set_maximized(!m_active_window->is_maximized());
+                        m_active_input_window->set_maximized(!m_active_input_window->is_maximized());
                         return;
                     }
                     if (key_event.key() == Key_Left) {
-                        if (m_active_window->tiled() != WindowTileType::None) {
-                            m_active_window->set_tiled(WindowTileType::None);
+                        if (m_active_input_window->tiled() != WindowTileType::None) {
+                            m_active_input_window->set_tiled(WindowTileType::None);
                             return;
                         }
-                        if (m_active_window->is_maximized())
-                            m_active_window->set_maximized(false);
-                        m_active_window->set_tiled(WindowTileType::Left);
+                        if (m_active_input_window->is_maximized())
+                            m_active_input_window->set_maximized(false);
+                        m_active_input_window->set_tiled(WindowTileType::Left);
                         return;
                     }
                     if (key_event.key() == Key_Right) {
-                        if (m_active_window->tiled() != WindowTileType::None) {
-                            m_active_window->set_tiled(WindowTileType::None);
+                        if (m_active_input_window->tiled() != WindowTileType::None) {
+                            m_active_input_window->set_tiled(WindowTileType::None);
                             return;
                         }
-                        if (m_active_window->is_maximized())
-                            m_active_window->set_maximized(false);
-                        m_active_window->set_tiled(WindowTileType::Right);
+                        if (m_active_input_window->is_maximized())
+                            m_active_input_window->set_maximized(false);
+                        m_active_input_window->set_tiled(WindowTileType::Right);
                         return;
                     }
                 }
             }
-            m_active_window->dispatch_event(event);
+            m_active_input_window->dispatch_event(event);
             return;
         }
     }
@@ -1061,18 +1087,62 @@ void WindowManager::set_highlight_window(Window* window)
         m_highlight_window->invalidate();
 }
 
+bool WindowManager::is_active_window_or_accessory(Window& window) const
+{
+    if (m_active_window == &window)
+        return true;
+
+    if (!window.is_accessory())
+        return false;
+
+    auto* parent = window.parent_window();
+    if (!parent) {
+        // If accessory window was unparented, convert to a regular window
+        window.set_accessory(false);
+        return false;
+    }
+
+    return m_active_window == parent;
+}
+
 static bool window_type_can_become_active(WindowType type)
 {
     return type == WindowType::Normal || type == WindowType::Desktop;
 }
 
-void WindowManager::set_active_window(Window* window)
+void WindowManager::set_active_window(Window* window, bool make_input)
 {
     if (window && window->is_blocked_by_modal_window())
         return;
 
     if (window && !window_type_can_become_active(window->type()))
         return;
+
+    if (make_input) {
+        auto* new_active_input_window = window;
+        if (window && window->is_accessory()) {
+            if (auto* parent = window->parent_window()) {
+                // The parent of an accessory window is always the active
+                // window, but input is routed to the accessory window
+                window = parent;
+            } else {
+                // If accessory window was unparented, convert to a regular window
+                window->set_accessory(false);
+            }
+        }
+
+        if (new_active_input_window != m_active_input_window) {
+            if (m_active_input_window)
+                Core::EventLoop::current().post_event(*m_active_input_window, make<Event>(Event::WindowInputLeft));
+
+            if (new_active_input_window) {
+                m_active_input_window = new_active_input_window->make_weak_ptr();
+                Core::EventLoop::current().post_event(*new_active_input_window, make<Event>(Event::WindowInputEntered));
+            } else {
+                m_active_input_window = nullptr;
+            }
+        }
+    }
 
     if (window == m_active_window)
         return;
@@ -1087,7 +1157,7 @@ void WindowManager::set_active_window(Window* window)
         Core::EventLoop::current().post_event(*previously_active_window, make<Event>(Event::WindowDeactivated));
         previously_active_window->invalidate();
         m_active_window = nullptr;
-        m_active_input_window = nullptr;
+        m_active_input_tracking_window = nullptr;
         tell_wm_listeners_window_state_changed(*previously_active_window);
     }
 
@@ -1236,7 +1306,7 @@ void WindowManager::start_dnd_drag(ClientConnection& client, const String& text,
     m_dnd_data_type = data_type;
     m_dnd_data = data;
     Compositor::the().invalidate_cursor();
-    m_active_input_window = nullptr;
+    m_active_input_tracking_window = nullptr;
 }
 
 void WindowManager::end_dnd_drag()
@@ -1288,10 +1358,10 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
 void WindowManager::did_popup_a_menu(Badge<Menu>)
 {
     // Clear any ongoing input gesture
-    if (!m_active_input_window)
+    if (!m_active_input_tracking_window)
         return;
-    m_active_input_window->set_automatic_cursor_tracking_enabled(false);
-    m_active_input_window = nullptr;
+    m_active_input_tracking_window->set_automatic_cursor_tracking_enabled(false);
+    m_active_input_tracking_window = nullptr;
 }
 
 }
