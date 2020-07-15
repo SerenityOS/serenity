@@ -66,6 +66,7 @@ Emulator::Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader> e
     : m_elf(move(elf))
     , m_cpu(*this)
 {
+    m_malloc_tracer = make<MallocTracer>();
     ASSERT(!s_the);
     s_the = this;
     setup_stack(arguments);
@@ -167,12 +168,20 @@ int Emulator::exec()
     return m_exit_status;
 }
 
+bool Emulator::is_in_malloc_or_free() const
+{
+    auto symbol = m_elf->symbolicate(m_cpu.eip());
+    return symbol.starts_with("malloc") || symbol.starts_with("free");
+}
+
+static pid_t s_pid = getpid();
+
 void Emulator::dump_backtrace()
 {
     u32 offset = 0;
     String symbol = m_elf->symbolicate(m_cpu.eip(), &offset);
 
-    printf("> %#08x  %s +%#x\n", m_cpu.eip(), symbol.characters(), offset);
+    dbgprintf("==%d==    %#08x  %s +%#x\n", s_pid, m_cpu.eip(), symbol.characters(), offset);
 
     u32 frame_ptr = m_cpu.ebp();
     while (frame_ptr) {
@@ -181,7 +190,7 @@ void Emulator::dump_backtrace()
             return;
         symbol = m_elf->symbolicate(ret_ptr, &offset);
         if (!symbol.is_null())
-            printf("> %#08x  %s +%#x\n", ret_ptr, symbol.characters(), offset);
+            dbgprintf("==%d==    %#08x  %s +%#x\n", s_pid, ret_ptr, symbol.characters(), offset);
 
         frame_ptr = m_mmu.read32({ 0x20, frame_ptr });
     }

@@ -1,5 +1,6 @@
 set(SOURCES
     Emulator.cpp
+    MallocTracer.cpp
     MmapRegion.cpp
     SharedBufferRegion.cpp
     SimpleRegion.cpp

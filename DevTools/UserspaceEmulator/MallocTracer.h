@@ -26,39 +26,39 @@
 
 #pragma once
 
-#include "SoftMMU.h"
-#include <sys/mman.h>
+#include <AK/Badge.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
 
 namespace UserspaceEmulator {
 
-class MmapRegion final : public SoftMMU::Region {
+class SoftCPU;
+
+class MallocTracer {
 public:
-    static NonnullOwnPtr<MmapRegion> create_anonymous(u32 base, u32 size, u32 prot);
-    static NonnullOwnPtr<MmapRegion> create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset);
-    virtual ~MmapRegion() override;
+    MallocTracer();
 
-    virtual u8 read8(u32 offset) override;
-    virtual u16 read16(u32 offset) override;
-    virtual u32 read32(u32 offset) override;
+    void target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t);
+    void target_did_free(Badge<SoftCPU>, FlatPtr address);
 
-    virtual void write8(u32 offset, u8 value) override;
-    virtual void write16(u32 offset, u16 value) override;
-    virtual void write32(u32 offset, u32 value) override;
-
-    u8* data() { return m_data; }
-
-    bool is_readable() const { return m_prot & PROT_READ; }
-    bool is_writable() const { return m_prot & PROT_WRITE; }
-    bool is_executable() const { return m_prot & PROT_EXEC; }
-
-    bool is_malloc_block() const;
+    void audit_read(FlatPtr address, size_t);
+    void audit_write(FlatPtr address, size_t);
 
 private:
-    MmapRegion(u32 base, u32 size, int prot);
+    struct Mallocation {
+        bool contains(FlatPtr a) const
+        {
+            return a >= address && a < (address + size);
+        }
 
-    u8* m_data { nullptr };
-    int m_prot { 0 };
-    bool m_file_backed { false };
+        FlatPtr address { 0 };
+        size_t size { 0 };
+        bool freed { false };
+    };
+
+    Mallocation* find_mallocation(FlatPtr);
+
+    Vector<Mallocation> m_mallocations;
 };
 
 }

@@ -65,6 +65,19 @@ void SoftCPU::dump() const
     printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", of(), sf(), zf(), af(), pf(), cf());
 }
 
+void SoftCPU::did_receive_secret_data()
+{
+    if (m_secret_data[0] == 1) {
+        if (auto* tracer = m_emulator.malloc_tracer())
+            tracer->target_did_malloc({}, m_secret_data[2], m_secret_data[1]);
+    } else if (m_secret_data[0] == 2) {
+        if (auto* tracer = m_emulator.malloc_tracer())
+            tracer->target_did_free({}, m_secret_data[1]);
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+}
+
 void SoftCPU::update_code_cache()
 {
     auto* region = m_emulator.mmu().find_region({ cs(), eip() });
@@ -604,7 +617,6 @@ ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, u8 steps)
     return result;
 }
 
-
 template<typename T>
 ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, u8 steps)
 {
@@ -632,7 +644,6 @@ ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, u8 steps)
     cpu.set_flags_oszapc(new_flags);
     return result;
 }
-
 
 template<bool update_dest, typename Op>
 ALWAYS_INLINE void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
@@ -1477,6 +1488,18 @@ void SoftCPU::PUSH_reg16(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
 {
     push32(gpr32(insn.reg32()));
+
+    if (m_secret_handshake_state == 2) {
+        m_secret_data[0] = gpr32(insn.reg32());
+        ++m_secret_handshake_state;
+    } else if (m_secret_handshake_state == 3) {
+        m_secret_data[1] = gpr32(insn.reg32());
+        ++m_secret_handshake_state;
+    } else if (m_secret_handshake_state == 4) {
+        m_secret_data[2] = gpr32(insn.reg32());
+        m_secret_handshake_state = 0;
+        did_receive_secret_data();
+    }
 }
 
 void SoftCPU::RCL_RM16_1(const X86::Instruction&) { TODO(); }
@@ -1534,7 +1557,16 @@ void SoftCPU::ROR_RM8_1(const X86::Instruction&) { TODO(); }
 void SoftCPU::ROR_RM8_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::ROR_RM8_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::SAHF(const X86::Instruction&) { TODO(); }
-void SoftCPU::SALC(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::SALC(const X86::Instruction&)
+{
+    set_al(cf() ? 0x01 : 0x00);
+
+    if (m_secret_handshake_state < 2)
+        ++m_secret_handshake_state;
+    else
+        m_secret_handshake_state = 0;
+}
 
 template<typename T>
 static T op_sar(SoftCPU& cpu, T data, u8 steps)
