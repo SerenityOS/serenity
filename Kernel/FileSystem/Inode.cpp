@@ -205,6 +205,18 @@ void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
     m_watchers.remove(&watcher);
 }
 
+FIFO& Inode::fifo()
+{
+    ASSERT(metadata().is_fifo());
+
+    // FIXME: Release m_fifo when it is closed by all readers and writers
+    if (!m_fifo)
+        m_fifo = FIFO::create(metadata().uid);
+
+    ASSERT(m_fifo);
+    return *m_fifo;
+}
+
 void Inode::set_metadata_dirty(bool metadata_dirty)
 {
     if (m_metadata_dirty == metadata_dirty)

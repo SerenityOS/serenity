@@ -28,7 +28,9 @@
 
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/WaitQueue.h>
 
 namespace Kernel {
 
@@ -48,6 +50,7 @@ public:
     uid_t uid() const { return m_uid; }
 
     NonnullRefPtr<FileDescription> open_direction(Direction);
+    NonnullRefPtr<FileDescription> open_direction_blocking(Direction);
 
     void attach(Direction);
     void detach(Direction);
@@ -71,6 +74,10 @@ private:
     uid_t m_uid { 0 };
 
     int m_fifo_id { 0 };
+
+    WaitQueue m_read_open_queue;
+    WaitQueue m_write_open_queue;
+    Lock m_open_lock;
 };
 
 }
