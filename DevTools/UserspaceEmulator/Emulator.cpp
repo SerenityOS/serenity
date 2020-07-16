@@ -75,6 +75,7 @@ Emulator::Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader> e
 void Emulator::setup_stack(const Vector<String>& arguments)
 {
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
+    stack_region->set_stack(true);
     m_mmu.add_region(move(stack_region));
     m_cpu.set_esp(stack_location + stack_size);
 
