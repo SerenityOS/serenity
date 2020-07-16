@@ -98,6 +98,8 @@ public:
 
     SharedBufferRegion* shbuf_region(int shbuf_id);
 
+    NonnullOwnPtrVector<Region>& regions() { return m_regions; }
+
 private:
     OwnPtr<Region> m_tls_region;
     NonnullOwnPtrVector<Region> m_regions;

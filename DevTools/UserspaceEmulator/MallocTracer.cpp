@@ -26,6 +26,7 @@
 
 #include "MallocTracer.h"
 #include "Emulator.h"
+#include "MmapRegion.h"
 #include <AK/LogStream.h>
 
 namespace UserspaceEmulator {
@@ -81,6 +82,9 @@ MallocTracer::Mallocation* MallocTracer::find_mallocation(FlatPtr address)
 
 void MallocTracer::audit_read(FlatPtr address, size_t size)
 {
+    if (!m_auditing_enabled)
+        return;
+
     if (Emulator::the().is_in_malloc_or_free())
         return;
 
@@ -101,6 +105,9 @@ void MallocTracer::audit_read(FlatPtr address, size_t size)
 
 void MallocTracer::audit_write(FlatPtr address, size_t size)
 {
+    if (!m_auditing_enabled)
+        return;
+
     if (Emulator::the().is_in_malloc_or_free())
         return;
 
@@ -112,11 +119,69 @@ void MallocTracer::audit_write(FlatPtr address, size_t size)
 
     if (mallocation->freed) {
         dbgprintf("\n");
-        dbgprintf("==%d==   \033[31;1mUse-after-free\033[0m, invalid %zu-byte write at address %p\n", s_pid, size, address);
-        dbgprintf("==%d==   Address is %zu bytes into freed block of size %zu\n", s_pid, offset_into_mallocation, mallocation->size);
+        dbgprintf("==%d==  \033[31;1mUse-after-free\033[0m, invalid %zu-byte write at address %p\n", s_pid, size, address);
+        dbgprintf("==%d==  Address is %zu bytes into freed block of size %zu\n", s_pid, offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace();
         return;
     }
+}
+
+bool MallocTracer::is_reachable(const Mallocation& mallocation) const
+{
+    ASSERT(!mallocation.freed);
+
+    // 1. Search in active (non-freed) mallocations for pointers to this mallocation
+    for (auto& other_mallocation : m_mallocations) {
+        if (&mallocation == &other_mallocation)
+            continue;
+        size_t pointers_in_mallocation = other_mallocation.size / sizeof(u32);
+        for (size_t i = 0; i < pointers_in_mallocation; ++i) {
+            auto value = Emulator::the().mmu().read32({ 0x20, other_mallocation.address + i * sizeof(u32) });
+            if (value == mallocation.address) {
+                dbgprintf("mallocation %p is reachable from other mallocation %p\n", mallocation.address, other_mallocation.address);
+                return true;
+            }
+        }
+    }
+
+    // 2. Search in other memory regions for pointers to this mallocation
+    for (auto& region : Emulator::the().mmu().regions()) {
+        // Skip the stack
+        if (region.is_stack())
+            continue;
+        // Skip malloc blocks
+        if (region.is_mmap() && static_cast<const MmapRegion&>(region).is_malloc_block())
+            continue;
+
+        size_t pointers_in_region = region.size() / sizeof(u32);
+        for (size_t i = 0; i < pointers_in_region; ++i) {
+            auto value = region.read32(i * sizeof(u32));
+            if (value == mallocation.address) {
+                dbgprintf("mallocation %p is reachable from region %p-%p\n", mallocation.address, region.base(), region.end() - 1);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void MallocTracer::dump_leak_report()
+{
+    TemporaryChange change(m_auditing_enabled, false);
+
+    size_t leaks_found = 0;
+    for (auto& mallocation : m_mallocations) {
+        if (mallocation.freed)
+            continue;
+        if (is_reachable(mallocation))
+            continue;
+        ++leaks_found;
+        dbgprintf("\n");
+        dbgprintf("==%d==  \033[31;1mLeak\033[0m, %zu-byte allocation at address %p\n", s_pid, mallocation.size, mallocation.address);
+    }
+
+    dbgprintf("==%d==  %zu leak(s) found\n", s_pid, leaks_found);
 }
 
 }
