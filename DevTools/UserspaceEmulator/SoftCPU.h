@@ -794,6 +794,19 @@ private:
     template<bool update_dest, typename Op>
     void generic_reg8_RM8(Op, const X86::Instruction&);
 
+    template<typename Op>
+    void generic_RM8_1(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM8_CL(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM16_1(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM16_CL(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM32_1(Op, const X86::Instruction&);
+    template<typename Op>
+    void generic_RM32_CL(Op, const X86::Instruction&);
+
     template<bool check_zf, typename Callback>
     void do_once_or_repeat(const X86::Instruction& insn, Callback);
 
