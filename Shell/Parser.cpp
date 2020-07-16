@@ -301,11 +301,11 @@ RefPtr<AST::Node> Parser::parse_and_logical_sequence()
         return pipe_sequence;
     }
 
-    auto right_pipe_sequence = parse_pipe_sequence();
-    if (!right_pipe_sequence)
-        right_pipe_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
+    auto right_and_sequence = parse_and_logical_sequence();
+    if (!right_and_sequence)
+        right_and_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
 
-    return create<AST::And>(create<AST::Execute>(move(pipe_sequence)), create<AST::Execute>(move(right_pipe_sequence)));
+    return create<AST::And>(create<AST::Execute>(move(pipe_sequence)), create<AST::Execute>(move(right_and_sequence)));
 }
 
 RefPtr<AST::Node> Parser::parse_pipe_sequence()
