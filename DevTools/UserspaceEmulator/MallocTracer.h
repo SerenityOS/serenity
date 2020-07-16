@@ -56,6 +56,9 @@ private:
         FlatPtr address { 0 };
         size_t size { 0 };
         bool freed { false };
+
+        Vector<FlatPtr> malloc_backtrace;
+        Vector<FlatPtr> free_backtrace;
     };
 
     Mallocation* find_mallocation(FlatPtr);

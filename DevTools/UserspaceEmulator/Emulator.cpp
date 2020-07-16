@@ -188,24 +188,34 @@ bool Emulator::is_in_malloc_or_free() const
 
 static pid_t s_pid = getpid();
 
-void Emulator::dump_backtrace()
+Vector<FlatPtr> Emulator::raw_backtrace()
 {
-    u32 offset = 0;
-    String symbol = m_elf->symbolicate(m_cpu.eip(), &offset);
-
-    dbgprintf("==%d==    %#08x  %s +%#x\n", s_pid, m_cpu.eip(), symbol.characters(), offset);
+    Vector<FlatPtr> backtrace;
+    backtrace.append(m_cpu.eip());
 
     u32 frame_ptr = m_cpu.ebp();
     while (frame_ptr) {
         u32 ret_ptr = m_mmu.read32({ 0x20, frame_ptr + 4 });
         if (!ret_ptr)
-            return;
-        symbol = m_elf->symbolicate(ret_ptr, &offset);
-        if (!symbol.is_null())
-            dbgprintf("==%d==    %#08x  %s +%#x\n", s_pid, ret_ptr, symbol.characters(), offset);
-
+            break;
+        backtrace.append(ret_ptr);
         frame_ptr = m_mmu.read32({ 0x20, frame_ptr });
     }
+    return backtrace;
+}
+
+void Emulator::dump_backtrace(const Vector<FlatPtr>& backtrace)
+{
+    for (auto& address : backtrace) {
+        u32 offset = 0;
+        String symbol = m_elf->symbolicate(address, &offset);
+        dbgprintf("==%d==    %#08x  %s +%#x\n", s_pid, m_cpu.eip(), symbol.characters(), offset);
+    }
+}
+
+void Emulator::dump_backtrace()
+{
+    dump_backtrace(raw_backtrace());
 }
 
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
@@ -306,7 +316,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_clock_gettime:
         return virt$clock_gettime(arg1, arg2);
     case SC_getrandom:
-        return virt$getrandom(arg1, arg2, arg3)       ;
+        return virt$getrandom(arg1, arg2, arg3);
 
     default:
         warn() << "Unimplemented syscall: " << Syscall::to_string((Syscall::Function)function);
