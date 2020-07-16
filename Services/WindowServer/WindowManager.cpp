@@ -260,7 +260,9 @@ void WindowManager::remove_window(Window& window)
 {
     window.invalidate();
     m_windows_in_order.remove(&window);
-    if (window.is_active())
+    auto* active = active_window();
+    auto* active_input = active_input_window();
+    if (active == &window || active_input == &window || (active && window.is_descendant_of(*active)) || (active_input && active_input != active && window.is_descendant_of(*active_input)))
         pick_new_active_window(&window);
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
@@ -412,7 +414,10 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
     bool new_window_picked = false;
     Window* first_candidate = nullptr;
     for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& candidate) {
-        first_candidate = &candidate;
+        if (candidate.is_destroyed())
+            return IterationDecision::Continue;
+        if (previous_active != first_candidate)
+            first_candidate = &candidate;
         if ((!previous_active && !candidate.is_accessory()) || (previous_active && !candidate.is_accessory_of(*previous_active))) {
             set_active_window(&candidate);
             new_window_picked = true;
@@ -1167,10 +1172,10 @@ void WindowManager::set_active_window(Window* window, bool make_input)
             window = modal_window;
             make_input = true;
         }
-    }
 
-    if (window && !window_type_can_become_active(window->type()))
-        return;
+        if (!window_type_can_become_active(window->type()))
+            return;
+    }
 
     auto* new_active_input_window = window;
     if (window && window->is_accessory()) {

@@ -256,6 +256,9 @@ public:
     int progress() const { return m_progress; }
     void set_progress(int);
 
+    bool is_destroyed() const { return m_destroyed; }
+    void destroy();
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
@@ -289,6 +292,7 @@ private:
     bool m_maximized { false };
     bool m_fullscreen { false };
     bool m_accessory { false };
+    bool m_destroyed { false };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };
