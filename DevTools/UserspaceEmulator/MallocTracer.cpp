@@ -29,6 +29,8 @@
 #include "MmapRegion.h"
 #include <AK/LogStream.h>
 
+//#define REACHABLE_DEBUG
+
 namespace UserspaceEmulator {
 
 static pid_t s_pid = getpid();
@@ -140,7 +142,9 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         for (size_t i = 0; i < pointers_in_mallocation; ++i) {
             auto value = Emulator::the().mmu().read32({ 0x20, other_mallocation.address + i * sizeof(u32) });
             if (value == mallocation.address) {
+#ifdef REACHABLE_DEBUG
                 dbgprintf("mallocation %p is reachable from other mallocation %p\n", mallocation.address, other_mallocation.address);
+#endif
                 return true;
             }
         }
@@ -159,7 +163,9 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         for (size_t i = 0; i < pointers_in_region; ++i) {
             auto value = region.read32(i * sizeof(u32));
             if (value == mallocation.address) {
+#ifdef REACHABLE_DEBUG
                 dbgprintf("mallocation %p is reachable from region %p-%p\n", mallocation.address, region.base(), region.end() - 1);
+#endif
                 return true;
             }
         }
