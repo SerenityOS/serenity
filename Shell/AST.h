@@ -589,6 +589,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "ForLoop"; }
+    virtual bool would_execute() const override { return true; }
 
     String m_variable_name;
     RefPtr<AST::Node> m_iterated_expression;
