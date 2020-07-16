@@ -68,6 +68,7 @@ private:
 
     void setup_stack(const Vector<String>& arguments);
 
+    int virt$usleep(useconds_t);
     int virt$shbuf_create(int size, FlatPtr buffer);
     int virt$shbuf_allow_pid(int, pid_t peer_pid);
     int virt$shbuf_allow_all(int);
