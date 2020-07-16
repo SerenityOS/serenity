@@ -475,12 +475,19 @@ void ClientConnection::destroy_window(Window& window, Vector<i32>& destroyed_win
         destroy_window(*child_window, destroyed_window_ids);
     }
 
+    for (auto& accessory_window : window.accessory_windows()) {
+        if (!accessory_window)
+            continue;
+        ASSERT(accessory_window->window_id() != window.window_id());
+        destroy_window(*accessory_window, destroyed_window_ids);
+    }
+
     destroyed_window_ids.append(window.window_id());
 
     if (window.type() == WindowType::MenuApplet)
         AppletManager::the().remove_applet(window);
 
-    window.invalidate();
+    window.destroy();
     remove_child(window);
     m_windows.remove(window.window_id());
 }
