@@ -45,6 +45,8 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
         ASSERT(existing_mallocation->freed);
         existing_mallocation->size = size;
         existing_mallocation->freed = false;
+        existing_mallocation->malloc_backtrace = Emulator::the().raw_backtrace();
+        existing_mallocation->free_backtrace.clear();
         return;
     }
     m_mallocations.append({ address, size, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() });
