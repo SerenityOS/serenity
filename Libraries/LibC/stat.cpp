@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -62,5 +63,10 @@ int fchmod(int fd, mode_t mode)
 {
     int rc = syscall(SC_fchmod, fd, mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int mkfifo(const char* pathname, mode_t mode)
+{
+    return mknod(pathname, mode | S_IFIFO, 0);
 }
 }
