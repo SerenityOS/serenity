@@ -215,22 +215,30 @@ public:
     void set_cf(bool value) { set_flag(Flags::CF, value); }
     void set_df(bool value) { set_flag(Flags::DF, value); }
 
+    void set_flags_with_mask(u32 new_flags, u32 mask)
+    {
+        m_eflags &= ~mask;
+        m_eflags |= new_flags & mask;
+    }
+
     void set_flags_oszapc(u32 new_flags)
     {
-        m_eflags &= ~(Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
-        m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
+        set_flags_with_mask(new_flags, Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
     }
 
     void set_flags_oszap(u32 new_flags)
     {
-        m_eflags &= ~(Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF);
-        m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF);
+        set_flags_with_mask(new_flags, Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF);
     }
 
     void set_flags_oszpc(u32 new_flags)
     {
-        m_eflags &= ~(Flags::OF | Flags::SF | Flags::ZF | Flags::PF | Flags::CF);
-        m_eflags |= new_flags & (Flags::OF | Flags::SF | Flags::ZF | Flags::PF | Flags::CF);
+        set_flags_with_mask(new_flags, Flags::OF | Flags::SF | Flags::ZF | Flags::PF | Flags::CF);
+    }
+
+    void set_flags_oc(u32 new_flags)
+    {
+        set_flags_with_mask(new_flags, Flags::OF | Flags::CF);
     }
 
     u16 cs() const { return m_segment[(int)X86::SegmentRegister::CS]; }

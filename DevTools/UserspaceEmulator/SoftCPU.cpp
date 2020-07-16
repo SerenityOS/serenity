@@ -1555,24 +1555,100 @@ void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
     }
 }
 
-void SoftCPU::RCL_RM16_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCL_RM16_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCL_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCL_RM32_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCL_RM32_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCL_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCL_RM8_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCL_RM8_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCL_RM8_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM16_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM16_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM32_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM32_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM8_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM8_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::RCR_RM8_imm8(const X86::Instruction&) { TODO(); }
+template<typename T, bool cf>
+ALWAYS_INLINE static T op_rcl_impl(SoftCPU& cpu, T data, u8 steps)
+{
+    if (steps == 0)
+        return data;
+
+    u32 result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (cf)
+        asm volatile("stc");
+    else
+        asm volatile("clc");
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("rcll %%cl, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("rclw %%cl, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("rclb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oc(new_flags);
+    return result;
+}
+
+template<typename T>
+ALWAYS_INLINE static T op_rcl(SoftCPU& cpu, T data, u8 steps)
+{
+    if (cpu.cf())
+        return op_rcl_impl<T, true>(cpu, data, steps);
+    return op_rcl_impl<T, false>(cpu, data, steps);
+}
+
+DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(RCL, op_rcl)
+
+template<typename T, bool cf>
+ALWAYS_INLINE static T op_rcr_impl(SoftCPU& cpu, T data, u8 steps)
+{
+    if (steps == 0)
+        return data;
+
+    u32 result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (cf)
+        asm volatile("stc");
+    else
+        asm volatile("clc");
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("rcrl %%cl, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("rcrw %%cl, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("rcrb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oc(new_flags);
+    return result;
+}
+
+template<typename T>
+ALWAYS_INLINE static T op_rcr(SoftCPU& cpu, T data, u8 steps)
+{
+    if (cpu.cf())
+        return op_rcr_impl<T, true>(cpu, data, steps);
+    return op_rcr_impl<T, false>(cpu, data, steps);
+}
+
+DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(RCR, op_rcr)
+
 void SoftCPU::RDTSC(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::RET(const X86::Instruction& insn)
@@ -1591,24 +1667,74 @@ void SoftCPU::RET_imm16(const X86::Instruction& insn)
     set_esp(esp() + insn.imm16());
 }
 
-void SoftCPU::ROL_RM16_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROL_RM16_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROL_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROL_RM32_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROL_RM32_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROL_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROL_RM8_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROL_RM8_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROL_RM8_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM16_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM16_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM32_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM32_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM8_1(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM8_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::ROR_RM8_imm8(const X86::Instruction&) { TODO(); }
+template<typename T>
+ALWAYS_INLINE static T op_rol(SoftCPU& cpu, T data, u8 steps)
+{
+    if (steps == 0)
+        return data;
+
+    u32 result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("roll %%cl, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("rolw %%cl, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("rolb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oc(new_flags);
+    return result;
+}
+
+DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(ROL, op_rol)
+
+template<typename T>
+ALWAYS_INLINE static T op_ror(SoftCPU& cpu, T data, u8 steps)
+{
+    if (steps == 0)
+        return data;
+
+    u32 result = 0;
+    u32 new_flags = 0;
+
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("rorl %%cl, %%eax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 2) {
+        asm volatile("rorw %%cl, %%ax\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    } else if constexpr (sizeof(T) == 1) {
+        asm volatile("rorb %%cl, %%al\n"
+                     : "=a"(result)
+                     : "a"(data), "c"(steps));
+    }
+
+    asm volatile(
+        "pushf\n"
+        "pop %%ebx"
+        : "=b"(new_flags));
+
+    cpu.set_flags_oc(new_flags);
+    return result;
+}
+
+DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(ROR, op_ror)
+
 void SoftCPU::SAHF(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::SALC(const X86::Instruction&)
