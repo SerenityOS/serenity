@@ -222,7 +222,7 @@ int main(int argc, char** argv)
     });
 
     auto add_existing_file_action = GUI::Action::create("Add existing file to project...", Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
-        auto result = GUI::FilePicker::get_open_filepath("Add existing file to project");
+        auto result = GUI::FilePicker::get_open_filepath(g_window, "Add existing file to project");
         if (!result.has_value())
             return;
         auto& filename = result.value();
@@ -425,7 +425,7 @@ int main(int argc, char** argv)
     });
 
     auto open_action = GUI::Action::create("Open project...", { Mod_Ctrl | Mod_Shift, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
-        auto open_path = GUI::FilePicker::get_open_filepath("Open project");
+        auto open_path = GUI::FilePicker::get_open_filepath(g_window, "Open project");
         if (!open_path.has_value())
             return;
         open_project(open_path.value());
