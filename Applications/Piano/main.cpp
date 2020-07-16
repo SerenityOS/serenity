@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
     auto& app_menu = menubar->add_menu("Piano");
     app_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
-        save_path = GUI::FilePicker::get_save_filepath("Untitled", "wav");
+        save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
         if (!save_path.has_value())
             return;
         wav_writer.set_file(save_path.value());

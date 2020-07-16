@@ -49,12 +49,12 @@ public:
         DisablePreview = (1 << 0)
     };
 
-    static Optional<String> get_open_filepath(Options options)
+    static Optional<String> get_open_filepath(Window* parent_window, Options options)
     {
-        return get_open_filepath({}, options);
+        return get_open_filepath(parent_window, {}, options);
     }
-    static Optional<String> get_open_filepath(const String& window_title = {}, Options options = Options::None);
-    static Optional<String> get_save_filepath(const String& title, const String& extension, Options options = Options::None);
+    static Optional<String> get_open_filepath(Window* parent_window, const String& window_title = {}, Options options = Options::None);
+    static Optional<String> get_save_filepath(Window* parent_window, const String& title, const String& extension, Options options = Options::None);
     static bool file_exists(const StringView& path);
 
     virtual ~FilePicker() override;
@@ -69,7 +69,7 @@ private:
 
     virtual void on_model_update(unsigned) override;
 
-    FilePicker(Mode type = Mode::Open, Options = Options::None, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory(), Window* parent_window = nullptr);
+    FilePicker(Window* parent_window, Mode type = Mode::Open, Options = Options::None, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory());
 
     static String ok_button_name(Mode mode)
     {

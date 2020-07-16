@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     });
 
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> path = GUI::FilePicker::get_open_filepath("Open wav file...");
+        Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open wav file...");
         if (path.has_value()) {
             player.open_file(path.value());
         }
