@@ -58,6 +58,10 @@ public:
 
         virtual u8* cacheable_ptr([[maybe_unused]] u32 offset) { return nullptr; }
         virtual bool is_shared_buffer() const { return false; }
+        virtual bool is_mmap() const { return false; }
+
+        bool is_stack() const { return m_stack; }
+        void set_stack(bool b) { m_stack = b; }
 
     protected:
         Region(u32 base, u32 size)
@@ -69,6 +73,8 @@ public:
     private:
         u32 m_base { 0 };
         u32 m_size { 0 };
+
+        bool m_stack { false };
     };
 
     u8 read8(X86::LogicalAddress);
