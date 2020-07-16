@@ -44,6 +44,8 @@ public:
     void audit_read(FlatPtr address, size_t);
     void audit_write(FlatPtr address, size_t);
 
+    void dump_leak_report();
+
 private:
     struct Mallocation {
         bool contains(FlatPtr a) const
@@ -57,8 +59,11 @@ private:
     };
 
     Mallocation* find_mallocation(FlatPtr);
+    bool is_reachable(const Mallocation&) const;
 
     Vector<Mallocation> m_mallocations;
+
+    bool m_auditing_enabled { true };
 };
 
 }

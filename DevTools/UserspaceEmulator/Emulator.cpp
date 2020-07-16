@@ -174,6 +174,10 @@ int Emulator::exec()
         if (trace)
             m_cpu.dump();
     }
+
+    if (auto* tracer = malloc_tracer())
+        tracer->dump_leak_report();
+
     return m_exit_status;
 }
 
