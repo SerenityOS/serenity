@@ -79,9 +79,11 @@ void Slider::paint_event(PaintEvent& event)
         track_rect = { 0, inner_rect().y(), track_size(), inner_rect().height() };
         track_rect.center_horizontally_within(inner_rect());
     }
-
     Gfx::StylePainter::paint_frame(painter, track_rect, palette(), Gfx::FrameShape::Panel, Gfx::FrameShadow::Sunken, 1);
-    Gfx::StylePainter::paint_button(painter, knob_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_knob_hovered);
+    if (is_enabled())
+        Gfx::StylePainter::paint_button(painter, knob_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_knob_hovered);
+    else
+        Gfx::StylePainter::paint_button(painter, knob_rect(), palette(), Gfx::ButtonStyle::Normal, true, m_knob_hovered);
 }
 
 Gfx::IntRect Slider::knob_rect() const
