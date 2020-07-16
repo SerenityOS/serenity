@@ -89,7 +89,8 @@ void Object::add_child(Object& object)
     ASSERT(!object.parent() || object.parent() == this);
     object.m_parent = this;
     m_children.append(object);
-    event(*make<Core::ChildEvent>(Core::Event::ChildAdded, object));
+    Core::ChildEvent child_event(Core::Event::ChildAdded, object);
+    event(child_event);
 }
 
 void Object::insert_child_before(Object& new_child, Object& before_child)
@@ -98,7 +99,8 @@ void Object::insert_child_before(Object& new_child, Object& before_child)
     ASSERT(!new_child.parent() || new_child.parent() == this);
     new_child.m_parent = this;
     m_children.insert_before_matching(new_child, [&](auto& existing_child) { return existing_child.ptr() == &before_child; });
-    event(*make<Core::ChildEvent>(Core::Event::ChildAdded, new_child, &before_child));
+    Core::ChildEvent child_event(Core::Event::ChildAdded, new_child, &before_child);
+    event(child_event);
 }
 
 void Object::remove_child(Object& object)
@@ -109,7 +111,8 @@ void Object::remove_child(Object& object)
             NonnullRefPtr<Object> protector = object;
             object.m_parent = nullptr;
             m_children.remove(i);
-            event(*make<Core::ChildEvent>(Core::Event::ChildRemoved, object));
+            Core::ChildEvent child_event(Core::Event::ChildRemoved, object);
+            event(child_event);
             return;
         }
     }
