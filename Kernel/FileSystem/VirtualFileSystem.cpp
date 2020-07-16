@@ -292,6 +292,23 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
     if (auto preopen_fd = inode.preopen_fd())
         return *preopen_fd;
 
+    if (metadata.is_fifo()) {
+        if (options & O_WRONLY) {
+            auto description = inode.fifo().open_direction_blocking(FIFO::Direction::Writer);
+            description->set_rw_mode(options);
+            description->set_file_flags(options);
+            description->set_original_inode({}, inode);
+            return description;
+        } else if (options & O_RDONLY) {
+            auto description = inode.fifo().open_direction_blocking(FIFO::Direction::Reader);
+            description->set_rw_mode(options);
+            description->set_file_flags(options);
+            description->set_original_inode({}, inode);
+            return description;
+        }
+        return KResult(-EINVAL);
+    }
+
     if (metadata.is_device()) {
         if (custody.mount_flags() & MS_NODEV)
             return KResult(-EACCES);

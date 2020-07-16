@@ -32,6 +32,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
+#include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -111,6 +112,8 @@ public:
     void register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 
+    FIFO& fifo();
+
     // For InlineLinkedListNode.
     Inode* m_next { nullptr };
     Inode* m_prev { nullptr };
@@ -134,6 +137,7 @@ private:
     RefPtr<LocalSocket> m_socket;
     HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };
+    RefPtr<FIFO> m_fifo;
 };
 
 }
