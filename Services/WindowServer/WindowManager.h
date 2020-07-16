@@ -193,7 +193,8 @@ public:
             Vector<Window*> modal_stack;
             auto* modal_stack_top = blocking_modal_window ? blocking_modal_window : &window;
             for (auto* parent = modal_stack_top->parent_window(); parent; parent = parent->parent_window()) {
-                if (parent->is_blocked_by_modal_window() != modal_stack_top)
+                auto* blocked_by = parent->is_blocked_by_modal_window();
+                if (!blocked_by || (blocked_by != modal_stack_top && !modal_stack_top->is_descendant_of(*blocked_by)))
                     break;
                 modal_stack.append(parent);
                 if (!parent->is_modal())

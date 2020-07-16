@@ -244,6 +244,8 @@ public:
     Vector<WeakPtr<Window>>& accessory_windows() { return m_accessory_windows; }
     const Vector<WeakPtr<Window>>& accessory_windows() const { return m_accessory_windows; }
 
+    bool is_descendant_of(Window&) const;
+
     void set_accessory(bool accessory) { m_accessory = accessory; }
     bool is_accessory() const;
     bool is_accessory_of(Window&) const;

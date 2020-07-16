@@ -634,4 +634,17 @@ void Window::set_progress(int progress)
     WindowManager::the().notify_progress_changed(*this);
 }
 
+bool Window::is_descendant_of(Window& window) const
+{
+    for (auto* parent = parent_window(); parent; parent = parent->parent_window()) {
+        if (parent == &window)
+            return true;
+        for (auto& accessory : parent->accessory_windows()) {
+            if (accessory == &window)
+                return true;
+        }
+    }
+    return false;
+}
+
 }
