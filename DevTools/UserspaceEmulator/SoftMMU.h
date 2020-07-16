@@ -98,7 +98,18 @@ public:
 
     SharedBufferRegion* shbuf_region(int shbuf_id);
 
-    NonnullOwnPtrVector<Region>& regions() { return m_regions; }
+    template<typename Callback>
+    void for_each_region(Callback callback)
+    {
+        if (m_tls_region) {
+            if (callback(*m_tls_region) == IterationDecision::Break)
+                return;
+        }
+        for (auto& region : m_regions) {
+            if (callback(region) == IterationDecision::Break)
+                return;
+        }
+    }
 
 private:
     OwnPtr<Region> m_tls_region;
