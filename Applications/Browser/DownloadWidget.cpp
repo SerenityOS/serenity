@@ -173,14 +173,14 @@ void DownloadWidget::did_finish(bool success, const ByteBuffer& payload, RefPtr<
     m_cancel_button->update();
 
     if (!success) {
-        GUI::MessageBox::show(String::format("Download failed for some reason"), "Download failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), String::format("Download failed for some reason"), "Download failed", GUI::MessageBox::Type::Error);
         window()->close();
         return;
     }
 
     auto file_or_error = Core::File::open(m_destination_path, Core::IODevice::WriteOnly);
     if (file_or_error.is_error()) {
-        GUI::MessageBox::show(String::format("Cannot open %s for writing", m_destination_path.characters()), "Download failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), String::format("Cannot open %s for writing", m_destination_path.characters()), "Download failed", GUI::MessageBox::Type::Error);
         window()->close();
         return;
     }
