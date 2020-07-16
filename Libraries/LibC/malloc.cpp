@@ -46,6 +46,16 @@
 #define MAGIC_BIGALLOC_HEADER 0x42697267
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
+ALWAYS_INLINE static void ue_notify_malloc(const void* ptr, size_t size)
+{
+    send_secret_data_to_userspace_emulator(1, size, (FlatPtr)ptr);
+}
+
+ALWAYS_INLINE static void ue_notify_free(const void* ptr)
+{
+    send_secret_data_to_userspace_emulator(2, (FlatPtr)ptr, 0);
+}
+
 static LibThread::Lock& malloc_lock()
 {
     static u32 lock_storage[sizeof(LibThread::Lock) / sizeof(u32)];
@@ -225,12 +235,15 @@ static void* malloc_impl(size_t size)
                 }
                 if (this_block_was_purged)
                     new (block) BigAllocationBlock(real_size);
+
+                ue_notify_malloc(&block->m_slot[0], size);
                 return &block->m_slot[0];
             }
         }
 #endif
         auto* block = (BigAllocationBlock*)os_alloc(real_size, "malloc: BigAllocationBlock");
         new (block) BigAllocationBlock(real_size);
+        ue_notify_malloc(&block->m_slot[0], size);
         return &block->m_slot[0];
     }
 
@@ -282,8 +295,7 @@ static void* malloc_impl(size_t size)
     dbgprintf("LibC: allocated %p (chunk in block %p, size %zu)\n", ptr, block, block->bytes_per_chunk());
 #endif
 
-    // Tell UserspaceEmulator about this malloc()
-    send_secret_data_to_userspace_emulator(1, size, reinterpret_cast<FlatPtr>(ptr));
+    ue_notify_malloc(ptr, size);
 
     if (s_scrub_malloc)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
@@ -386,9 +398,7 @@ void free(void* ptr)
     if (s_profiling)
         perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
     free_impl(ptr);
-
-    // Tell UserspaceEmulator about this free()
-    send_secret_data_to_userspace_emulator(2, reinterpret_cast<FlatPtr>(ptr), 0);
+    ue_notify_free(ptr);
 }
 
 void* calloc(size_t count, size_t size)
