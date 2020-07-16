@@ -187,6 +187,7 @@ void MallocTracer::dump_leak_report()
 {
     TemporaryChange change(m_auditing_enabled, false);
 
+    size_t bytes_leaked = 0;
     size_t leaks_found = 0;
     for (auto& mallocation : m_mallocations) {
         if (mallocation.freed)
@@ -194,12 +195,17 @@ void MallocTracer::dump_leak_report()
         if (is_reachable(mallocation))
             continue;
         ++leaks_found;
+        bytes_leaked += mallocation.size;
         dbgprintf("\n");
         dbgprintf("==%d==  \033[31;1mLeak\033[0m, %zu-byte allocation at address %p\n", s_pid, mallocation.size, mallocation.address);
         Emulator::the().dump_backtrace(mallocation.malloc_backtrace);
     }
 
-    dbgprintf("==%d==  \033[%d;1m%zu leak(s) found\033[0m\n", s_pid, leaks_found ? 31 : 32, leaks_found);
+    dbgprintf("\n");
+    if (!leaks_found)
+        dbgprintf("==%d==  \033[32;1mNo leaks found!\033[0m\n", s_pid);
+    else
+        dbgprintf("==%d==  \033[31;1m%zu leak(s) found: %zu byte(s) leaked\033[0m\n", s_pid, leaks_found, bytes_leaked);
 }
 
 }
