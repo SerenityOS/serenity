@@ -153,12 +153,10 @@ void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const Stri
         return;
     }
 
-    GUI::MessageBox::show(
+    GUI::MessageBox::show(parent_window,
         String::format("String value \"%s\" could not be converted to a value of type %s.", string_value.to_string().characters(), variable->type_name.characters()),
         "Set value failed",
-        GUI::MessageBox::Type::Error,
-        GUI::MessageBox::InputType::OK,
-        parent_window);
+        GUI::MessageBox::Type::Error);
 }
 
 GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, Role role) const

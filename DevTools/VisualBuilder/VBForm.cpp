@@ -383,7 +383,7 @@ void VBForm::load_from_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        GUI::MessageBox::show(String::format("Could not open '%s' for reading", path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), String::format("Could not open '%s' for reading", path.characters()), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 
@@ -392,7 +392,7 @@ void VBForm::load_from_file(const String& path)
     ASSERT(form_json.has_value());
 
     if (!form_json.value().is_object()) {
-        GUI::MessageBox::show(String::format("Could not parse '%s'", path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), String::format("Could not parse '%s'", path.characters()), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 
@@ -420,7 +420,7 @@ void VBForm::write_to_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::WriteOnly)) {
-        GUI::MessageBox::show(String::format("Could not open '%s' for writing", path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), String::format("Could not open '%s' for writing", path.characters()), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 

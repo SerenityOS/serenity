@@ -63,7 +63,7 @@ void ProcessChooser::build()
     auto& profile_button = button_container.add<GUI::Button>("Profile");
     profile_button.on_click = [&](auto) {
         if (table_view.selection().is_empty()) {
-            GUI::MessageBox::show("No process selected!", "Profiler", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, this);
+            GUI::MessageBox::show(this, "No process selected!", "Profiler", GUI::MessageBox::Type::Error);
             return;
         }
         auto index = table_view.selection().first();

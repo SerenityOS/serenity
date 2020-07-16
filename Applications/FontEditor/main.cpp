@@ -67,7 +67,7 @@ int main(int argc, char** argv)
         edited_font = Gfx::Font::load_from_file(path)->clone();
         if (!edited_font) {
             String message = String::format("Couldn't load font: %s\n", path);
-            GUI::MessageBox::show(message, "Font Editor", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+            GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);
             return 1;
         }
     }
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
         RefPtr<Gfx::Font> new_font = Gfx::Font::load_from_file(open_path.value())->clone();
         if (!new_font) {
             String message = String::format("Couldn't load font: %s\n", open_path.value().characters());
-            GUI::MessageBox::show(message, "Font Editor", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+            GUI::MessageBox::show(window, message, "Font Editor", GUI::MessageBox::Type::Error);
             return;
         }
 

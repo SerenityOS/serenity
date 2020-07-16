@@ -187,7 +187,7 @@ int main(int argc, char** argv)
     setenv("PATH", path.to_string().characters(), true);
 
     if (!make_is_available())
-        GUI::MessageBox::show("The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
+        GUI::MessageBox::show(g_window, "The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error);
 
     open_project("/home/anon/little/little.files");
 
@@ -209,11 +209,11 @@ int main(int argc, char** argv)
         auto filename = input_box->text_value();
         auto file = Core::File::construct(filename);
         if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
-            GUI::MessageBox::show(String::format("Failed to create '%s'", filename.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(g_window, String::format("Failed to create '%s'", filename.characters()), "Error", GUI::MessageBox::Type::Error);
             return;
         }
         if (!g_project->add_file(filename)) {
-            GUI::MessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(g_window, String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error);
             // FIXME: Should we unlink the file here maybe?
             return;
         }
@@ -227,7 +227,7 @@ int main(int argc, char** argv)
             return;
         auto& filename = result.value();
         if (!g_project->add_file(filename)) {
-            GUI::MessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(g_window, String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error);
             return;
         }
         g_project_tree_view->toggle_index(g_project_tree_view->model()->index(0, 0));
@@ -248,23 +248,20 @@ int main(int argc, char** argv)
             message = String::format("Really remove %d files from the project?", files.size());
         }
 
-        auto result = GUI::MessageBox::show(
+        auto result = GUI::MessageBox::show(g_window,
             message,
             "Confirm deletion",
             GUI::MessageBox::Type::Warning,
-            GUI::MessageBox::InputType::OKCancel,
-            g_window);
+            GUI::MessageBox::InputType::OKCancel);
         if (result == GUI::MessageBox::ExecCancel)
             return;
 
         for (auto& file : files) {
             if (!g_project->remove_file(file)) {
-                GUI::MessageBox::show(
+                GUI::MessageBox::show(g_window,
                     String::format("Removing file %s from the project failed.", file.characters()),
                     "Removal failed",
-                    GUI::MessageBox::Type::Error,
-                    GUI::MessageBox::InputType::OK,
-                    g_window);
+                    GUI::MessageBox::Type::Error);
                 break;
             }
         }
@@ -564,15 +561,15 @@ int main(int argc, char** argv)
     RefPtr<LibThread::Thread> debugger_thread;
     auto debug_action = GUI::Action::create("Debug", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"), [&](auto&) {
         if (g_project->type() != ProjectType::Cpp) {
-            GUI::MessageBox::show(String::format("Cannot debug current project type", get_project_executable_path().characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(g_window, String::format("Cannot debug current project type", get_project_executable_path().characters()), "Error", GUI::MessageBox::Type::Error);
             return;
         }
         if (!GUI::FilePicker::file_exists(get_project_executable_path())) {
-            GUI::MessageBox::show(String::format("Could not find file: %s. (did you build the project?)", get_project_executable_path().characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(g_window, String::format("Could not find file: %s. (did you build the project?)", get_project_executable_path().characters()), "Error", GUI::MessageBox::Type::Error);
             return;
         }
         if (Debugger::the().session()) {
-            GUI::MessageBox::show("Debugger is already running", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(g_window, "Debugger is already running", "Error", GUI::MessageBox::Type::Error);
             return;
         }
         Debugger::the().set_executable_path(get_project_executable_path());
@@ -637,7 +634,7 @@ int main(int argc, char** argv)
             debug_info_widget.program_stopped();
             hide_action_tabs();
             Core::EventLoop::main().post_event(*g_window, make<Core::DeferredInvocationEvent>([=](auto&) {
-                GUI::MessageBox::show("Program Exited", "Debugger", GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK, g_window);
+                GUI::MessageBox::show(g_window, "Program Exited", "Debugger", GUI::MessageBox::Type::Information);
             }));
             Core::EventLoop::wake();
         });

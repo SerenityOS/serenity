@@ -296,7 +296,7 @@ bool FontEditorWidget::save_as(const String& path)
 {
     auto ret_val = m_edited_font->write_to_file(path);
     if (!ret_val) {
-        GUI::MessageBox::show("The font file could not be saved.", "Save failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), "The font file could not be saved.", "Save failed", GUI::MessageBox::Type::Error);
         return false;
     }
     m_path = path;

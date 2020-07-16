@@ -149,7 +149,7 @@ int main(int argc, char** argv)
 
     Optional<Vector<ContentPage>> _pages = parse_welcome_file("/res/welcome.txt");
     if (!_pages.has_value()) {
-        GUI::MessageBox::show("Could not open Welcome file.", "Welcome", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, nullptr);
+        GUI::MessageBox::show(nullptr, "Could not open Welcome file.", "Welcome", GUI::MessageBox::Type::Error);
         return 1;
     }
     auto pages = _pages.value();

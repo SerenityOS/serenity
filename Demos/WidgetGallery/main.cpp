@@ -245,7 +245,7 @@ int main(int argc, char** argv)
     show_buton.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     show_buton.set_preferred_size(0, 20);
     show_buton.on_click = [&](auto) {
-        GUI::MessageBox::show(content_textbox.text(), title_textbox.text(), msg_box_type, msg_box_input_type, window);
+        GUI::MessageBox::show(window, content_textbox.text(), title_textbox.text(), msg_box_type, msg_box_input_type);
     };
 
     tab_msgbox.layout()->add_spacer();

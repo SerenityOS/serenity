@@ -162,7 +162,7 @@ bool generate_profile(pid_t pid)
 
     if (profiling_enable(pid) < 0) {
         int saved_errno = errno;
-        GUI::MessageBox::show(String::format("Unable to profile PID %d: %s", pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+        GUI::MessageBox::show(nullptr, String::format("Unable to profile PID %d: %s", pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error);
         return false;
     }
 

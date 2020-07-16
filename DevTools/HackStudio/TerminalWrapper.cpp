@@ -44,12 +44,10 @@
 void TerminalWrapper::run_command(const String& command)
 {
     if (m_pid != -1) {
-        GUI::MessageBox::show(
+        GUI::MessageBox::show(window(),
             "A command is already running in this TerminalWrapper",
             "Can't run command",
-            GUI::MessageBox::Type::Error,
-            GUI::MessageBox::InputType::OK,
-            window());
+            GUI::MessageBox::Type::Error);
         return;
     }
 

@@ -34,22 +34,20 @@
 
 namespace GUI {
 
-int MessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Window* parent_window)
+int MessageBox::show(Window* parent_window, const StringView& text, const StringView& title, Type type, InputType input_type)
 {
-    auto box = MessageBox::construct(text, title, type, input_type);
-    if (parent_window) {
-        parent_window->add_child(box);
+    auto box = MessageBox::construct(parent_window, text, title, type, input_type);
+    if (parent_window)
         box->set_icon(parent_window->icon());
-    }
     return box->exec();
 }
 
-int MessageBox::show_error(const StringView& text, Window* parent_window)
+int MessageBox::show_error(Window* parent_window, const StringView& text)
 {
-    return show(text, "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, parent_window);
+    return show(parent_window, text, "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
 }
 
-MessageBox::MessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, Window* parent_window)
+MessageBox::MessageBox(Window* parent_window, const StringView& text, const StringView& title, Type type, InputType input_type)
     : Dialog(parent_window)
     , m_text(text)
     , m_type(type)

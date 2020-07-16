@@ -172,7 +172,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
                     input_box->text_value().characters()));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
-                GUI::MessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                GUI::MessageBox::show(window, String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             }
         }
     });
@@ -187,16 +187,16 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {
-                GUI::MessageBox::show(String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                GUI::MessageBox::show(window, String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             if (rc == 0) {
-                GUI::MessageBox::show(String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                GUI::MessageBox::show(window, String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             int fd = creat(new_file_path.characters(), 0666);
             if (fd < 0) {
-                GUI::MessageBox::show(String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                GUI::MessageBox::show(window, String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             rc = close(fd);
@@ -330,7 +330,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                     input_box->text_value().characters()));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
-                GUI::MessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                GUI::MessageBox::show(window, String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             } else {
                 refresh_tree_view();
             }
@@ -347,16 +347,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {
-                GUI::MessageBox::show(String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                GUI::MessageBox::show(window, String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             if (rc == 0) {
-                GUI::MessageBox::show(String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                GUI::MessageBox::show(window, String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             int fd = creat(new_file_path.characters(), 0666);
             if (fd < 0) {
-                GUI::MessageBox::show(String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                GUI::MessageBox::show(window, String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             rc = close(fd);
@@ -518,7 +518,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             auto new_path = String::format("%s/%s", target_directory.characters(), url.basename().characters());
             if (!FileUtils::copy_file_or_directory(url.path(), new_path)) {
                 auto error_message = String::format("Could not paste %s.", url.path().characters());
-                GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
             } else {
                 refresh_tree_view();
             }
@@ -542,12 +542,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }
 
         if (confirm == ConfirmBeforeDelete::Yes) {
-            auto result = GUI::MessageBox::show(
+            auto result = GUI::MessageBox::show(window,
                 message,
                 "Confirm deletion",
                 GUI::MessageBox::Type::Warning,
-                GUI::MessageBox::InputType::OKCancel,
-                window);
+                GUI::MessageBox::InputType::OKCancel);
             if (result == GUI::MessageBox::ExecCancel)
                 return;
         }
@@ -555,12 +554,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         for (auto& path : paths) {
             struct stat st;
             if (lstat(path.characters(), &st)) {
-                GUI::MessageBox::show(
+                GUI::MessageBox::show(window,
                     String::format("lstat(%s) failed: %s", path.characters(), strerror(errno)),
                     "Delete failed",
-                    GUI::MessageBox::Type::Error,
-                    GUI::MessageBox::InputType::OK,
-                    window);
+                    GUI::MessageBox::Type::Error);
                 break;
             } else {
                 refresh_tree_view();
@@ -571,24 +568,20 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 int error = FileUtils::delete_directory(path, error_path);
 
                 if (error) {
-                    GUI::MessageBox::show(
+                    GUI::MessageBox::show(window,
                         String::format("Failed to delete directory \"%s\": %s", error_path.characters(), strerror(error)),
                         "Delete failed",
-                        GUI::MessageBox::Type::Error,
-                        GUI::MessageBox::InputType::OK,
-                        window);
+                        GUI::MessageBox::Type::Error);
                     break;
                 } else {
                     refresh_tree_view();
                 }
             } else if (unlink(path.characters()) < 0) {
                 int saved_errno = errno;
-                GUI::MessageBox::show(
+                GUI::MessageBox::show(window,
                     String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
                     "Delete failed",
-                    GUI::MessageBox::Type::Error,
-                    GUI::MessageBox::InputType::OK,
-                    window);
+                    GUI::MessageBox::Type::Error);
                 break;
             }
         }
@@ -726,7 +719,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     directory_view.on_error = [&](int, const char* error_string, bool quit) {
         auto error_message = String::format("Could not read directory: %s", error_string);
-        GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
 
         if (quit)
             exit(1);
@@ -880,7 +873,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 auto error_message = String::format("Could not copy %s into %s.",
                     url_to_copy.to_string().characters(),
                     new_path.characters());
-                GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
             } else {
                 refresh_tree_view();
             }

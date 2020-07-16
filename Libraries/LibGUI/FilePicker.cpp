@@ -160,7 +160,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
                                     .string();
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
-                MessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", MessageBox::Type::Error, MessageBox::InputType::OK, this);
+                MessageBox::show(this, String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", MessageBox::Type::Error);
             } else {
                 m_model->update();
             }
@@ -322,7 +322,7 @@ void FilePicker::on_file_return()
     LexicalPath path(String::format("%s/%s", m_model->root_path().characters(), m_filename_textbox->text().characters()));
 
     if (FilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
-        auto result = MessageBox::show("File already exists, overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
+        auto result = MessageBox::show(this, "File already exists, overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
         if (result == MessageBox::ExecCancel)
             return;
     }

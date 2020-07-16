@@ -101,7 +101,7 @@ int main(int argc, char** argv)
             return;
         wav_writer.set_file(save_path.value());
         if (wav_writer.has_error()) {
-            GUI::MessageBox::show(String::format("Failed to export WAV file: %s", wav_writer.error_string()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::format("Failed to export WAV file: %s", wav_writer.error_string()), "Error", GUI::MessageBox::Type::Error);
             wav_writer.clear_error();
             return;
         }

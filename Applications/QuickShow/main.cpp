@@ -138,11 +138,11 @@ int main(int argc, char** argv)
             if (path.is_empty())
                 return;
 
-            auto msgbox_result = GUI::MessageBox::show(String::format("Really delete %s?", path.characters()),
+            auto msgbox_result = GUI::MessageBox::show(window,
+                String::format("Really delete %s?", path.characters()),
                 "Confirm deletion",
                 GUI::MessageBox::Type::Warning,
-                GUI::MessageBox::InputType::OKCancel,
-                window);
+                GUI::MessageBox::InputType::OKCancel);
 
             if (msgbox_result == GUI::MessageBox::ExecCancel)
                 return;
@@ -152,11 +152,10 @@ int main(int argc, char** argv)
 
             if (unlink_result < 0) {
                 int saved_errno = errno;
-                GUI::MessageBox::show(String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
+                GUI::MessageBox::show(window,
+                    String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
                     "Delete failed",
-                    GUI::MessageBox::Type::Error,
-                    GUI::MessageBox::InputType::OK,
-                    window);
+                    GUI::MessageBox::Type::Error);
 
                 return;
             }
