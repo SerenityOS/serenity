@@ -54,6 +54,7 @@ int main(int argc, char** argv)
     auto instance = DisplaySettingsWidget::construct();
 
     auto window = GUI::Window::construct();
+    dbg() << "main window: " << window;
     window->set_title("Display settings");
     window->move_to(100, 100);
     window->resize(360, 390);

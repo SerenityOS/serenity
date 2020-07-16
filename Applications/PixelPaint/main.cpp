@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     auto& app_menu = menubar->add_menu("PixelPaint");
 
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath();
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
 
         if (!open_path.has_value())
             return;

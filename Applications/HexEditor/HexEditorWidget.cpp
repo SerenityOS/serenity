@@ -95,7 +95,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath();
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());
 
         if (!open_path.has_value())
             return;
@@ -118,7 +118,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_save_as_action = GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GUI::Action&) {
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "bin" : m_extension);
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "bin" : m_extension);
         if (!save_path.has_value())
             return;
 

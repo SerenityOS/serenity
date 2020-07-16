@@ -152,7 +152,7 @@ void DisplaySettingsWidget::create_frame()
     button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     button.set_preferred_size(22, 22);
     button.on_click = [this](auto) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath("Select wallpaper from file system.");
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(root_widget()->window(), "Select wallpaper from file system.");
 
         if (!open_path.has_value())
             return;

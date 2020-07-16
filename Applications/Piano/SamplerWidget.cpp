@@ -108,7 +108,7 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
     m_open_button->set_focusable(false);
     m_open_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
     m_open_button->on_click = [this](auto) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath();
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());
         if (!open_path.has_value())
             return;
         String error_string = m_track_manager.current_track().set_recorded_sample(open_path.value());

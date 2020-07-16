@@ -126,7 +126,7 @@ int main(int argc, char** argv)
     // Actions
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
-            Optional<String> path = GUI::FilePicker::get_open_filepath("Open image...");
+            Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open image...");
             if (path.has_value()) {
                 widget.load_from_file(path.value());
             }

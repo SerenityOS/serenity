@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     // Actions
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
-            Optional<String> path = GUI::FilePicker::get_open_filepath("Open");
+            Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open");
             if (path.has_value()) {
                 keyboard_mapper_widget->load_from_file(path.value());
             }
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     auto save_as_action = GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"),
         [&](auto&) {
             String m_name = "Unnamed";
-            Optional<String> save_path = GUI::FilePicker::get_save_filepath(m_name, "json");
+            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, m_name, "json");
             if (!save_path.has_value())
                 return;
 
