@@ -84,11 +84,10 @@ DebugInfoWidget::DebugInfoWidget()
         if (!is_valid_index(index))
             return;
 
-        auto input = GUI::InputBox::construct("Enter new value:", "Set variable value", window());
-
-        if (input->exec() == GUI::InputBox::ExecOK) {
+        String value;
+        if (GUI::InputBox::show(value, window(), "Enter new value:", "Set variable value") == GUI::InputBox::ExecOK) {
             auto& model = static_cast<VariablesModel&>(*m_variables_view->model());
-            model.set_variable_value(index, input->text_value(), window());
+            model.set_variable_value(index, value, window());
         }
     };
 }
