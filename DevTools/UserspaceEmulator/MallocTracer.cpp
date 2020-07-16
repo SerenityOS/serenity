@@ -156,14 +156,16 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         }
     }
 
+    bool reachable = false;
+
     // 2. Search in other memory regions for pointers to this mallocation
-    for (auto& region : Emulator::the().mmu().regions()) {
+    Emulator::the().mmu().for_each_region([&](auto& region) {
         // Skip the stack
         if (region.is_stack())
-            continue;
+            return IterationDecision::Continue;
         // Skip malloc blocks
         if (region.is_mmap() && static_cast<const MmapRegion&>(region).is_malloc_block())
-            continue;
+            return IterationDecision::Continue;
 
         size_t pointers_in_region = region.size() / sizeof(u32);
         for (size_t i = 0; i < pointers_in_region; ++i) {
@@ -172,12 +174,13 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
 #ifdef REACHABLE_DEBUG
                 dbgprintf("mallocation %p is reachable from region %p-%p\n", mallocation.address, region.base(), region.end() - 1);
 #endif
-                return true;
+                reachable = true;
+                return IterationDecision::Break;
             }
         }
-    }
-
-    return false;
+        return IterationDecision::Continue;
+    });
+    return reachable;
 }
 
 void MallocTracer::dump_leak_report()
