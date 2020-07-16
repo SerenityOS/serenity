@@ -45,7 +45,7 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
         existing_mallocation->freed = false;
         return;
     }
-    m_mallocations.append({ address, size });
+    m_mallocations.append({ address, size, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() });
 }
 
 void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
@@ -60,8 +60,10 @@ void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
                 dbgprintf("==%d==  \033[31;1mDouble free()\033[0m, %p\n", s_pid, address);
                 dbgprintf("==%d==  Address %p has already been passed to free()\n", s_pid, address);
                 Emulator::the().dump_backtrace();
+            } else {
+                mallocation.freed = true;
+                mallocation.free_backtrace = Emulator::the().raw_backtrace();
             }
-            mallocation.freed = true;
             return;
         }
     }
@@ -179,9 +181,10 @@ void MallocTracer::dump_leak_report()
         ++leaks_found;
         dbgprintf("\n");
         dbgprintf("==%d==  \033[31;1mLeak\033[0m, %zu-byte allocation at address %p\n", s_pid, mallocation.size, mallocation.address);
+        Emulator::the().dump_backtrace(mallocation.malloc_backtrace);
     }
 
-    dbgprintf("==%d==  %zu leak(s) found\n", s_pid, leaks_found);
+    dbgprintf("==%d==  \033[%d;1m%zu leak(s) found\033[0m\n", s_pid, leaks_found ? 31 : 32, leaks_found);
 }
 
 }
