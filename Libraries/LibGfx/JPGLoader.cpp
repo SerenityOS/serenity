@@ -155,24 +155,26 @@ struct ComponentSpec {
 
 struct StartOfFrame {
 
-    // Of these, only the first 3 are in mainstream use, and refers to SOF0-2.
-    enum class FrameType {
-        Baseline_DCT = 0,
-        Extended_Sequential_DCT = 1,
-        Progressive_DCT = 2,
-        Sequential_Lossless = 3,
-        Differential_Sequential_DCT = 5,
-        Differential_Progressive_DCT = 6,
-        Differential_Sequential_Lossless = 7,
-        Extended_Sequential_DCT_Arithmetic = 9,
-        Progressive_DCT_Arithmetic = 10,
-        Sequential_Lossless_Arithmetic = 11,
-        Differential_Sequential_DCT_Arithmetic = 13,
-        Differential_Progressive_DCT_Arithmetic = 14,
-        Differential_Sequential_Lossless_Arithmetic = 15,
+    // Only the combinations (Huffman, Baseline_DCT, false), (Huffman, Sequential_DCT, false), (Huffman, Progressive_DCT, false) are in mainstream use
+    struct FrameType {
+        enum class Encoding {
+            Huffman = 0,
+            Arithmetic = 1,
+        };
+
+        enum class Type {
+            Baseline_DCT = 0,
+            Sequential_DCT = 1,
+            Progressive_DCT = 2,
+            Lossless = 3,
+        };
+
+        Encoding encoding { Encoding::Huffman };
+        Type type { Type::Baseline_DCT };
+        bool differential { false };
     };
 
-    FrameType type { FrameType::Baseline_DCT };
+    FrameType type;
     u8 precision { 0 };
     u16 height { 0 };
     u16 width { 0 };
@@ -432,13 +434,13 @@ static inline bool bounds_okay(const size_t cursor, const size_t delta, const si
 
 static inline bool is_valid_marker(const Marker marker)
 {
-    if (marker >= JPG_APPN0 && marker <= JPG_APPNF) {
-        if (marker != JPG_APPN0)
-            dbg() << String::format("%04x not supported yet. The decoder may fail!", marker);
+    // APPn markers are application dependant. Since interpretation is left to the application, these can be safely ignored.
+    if (marker >= JPG_APPN0 && marker <= JPG_APPNF)
         return true;
-    }
+    // RES markers are unused, so they can be ignored.
     if (marker >= JPG_RESERVED1 && marker <= JPG_RESERVEDD)
         return true;
+
     if (marker >= JPG_RST0 && marker <= JPG_RST7)
         return true;
     switch (marker) {
@@ -532,6 +534,35 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
         stream >> table_ids;
         component->dc_destination_id = table_ids >> 4;
         component->ac_destination_id = table_ids & 0x0F;
+
+        u8 ac_max = 0;
+        u8 dc_max = 0;
+        switch (context.frame.type.type) {
+        case StartOfFrame::FrameType::Type::Baseline_DCT:
+            ac_max = 1;
+            dc_max = 1;
+            break;
+
+        case StartOfFrame::FrameType::Type::Sequential_DCT:
+        case StartOfFrame::FrameType::Type::Progressive_DCT:
+            ac_max = 3;
+            dc_max = 3;
+            break;
+
+        case StartOfFrame::FrameType::Type::Lossless:
+            dc_max = 3;
+            break;
+        }
+
+        if (component->dc_destination_id > dc_max) {
+            dbg() << stream.offset() << ": DC component destinations must be in range 0-" << dc_max;
+            return false;
+        }
+
+        if (component->ac_destination_id > ac_max) {
+            dbg() << stream.offset() << ": AC component destinations must be in range 0-" << ac_max;
+            return false;
+        }
     }
 
     u8 spectral_selection_start;
@@ -540,13 +571,66 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
     stream >> spectral_selection_end;
     u8 successive_approximation;
     stream >> successive_approximation;
-    // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
-    if (spectral_selection_start != 0 || spectral_selection_end != 63 || successive_approximation != 0) {
-        dbg() << stream.offset() << ": ERROR! Start of Selection: " << spectral_selection_start
-              << ", End of Selection: " << spectral_selection_end
-              << ", Successive Approximation: " << successive_approximation << "!";
+
+    u8 successive_approximation_high_bits = successive_approximation >> 4;
+    u8 successive_approximation_low_bits = successive_approximation & 0x0F;
+
+    u8 selection_start_min = 0;
+    u8 selection_start_max = 0;
+    u8 selection_end_min = 0;
+    u8 selection_end_max = 0;
+    u8 successive_approximation_low_max = 0;
+    u8 successive_approximation_high_max = 0;
+
+    switch (context.frame.type.type) {
+    case StartOfFrame::FrameType::Type::Baseline_DCT:
+    case StartOfFrame::FrameType::Type::Sequential_DCT:
+        selection_end_min = 63;
+        selection_end_max = 63;
+        break;
+
+    case StartOfFrame::FrameType::Type::Progressive_DCT:
+        selection_start_min = 0;
+        selection_start_max = 63;
+
+        if (spectral_selection_start != 0) {
+            selection_end_min = spectral_selection_start;
+            selection_end_max = 63;
+        }
+
+        successive_approximation_low_max = 13;
+        break;
+
+    case StartOfFrame::FrameType::Type::Lossless:
+        // FIXME: 0 if this is a hierarchical scan
+        selection_start_min = 1;
+        selection_start_max = 7;
+
+        successive_approximation_low_max = 13;
+        successive_approximation_high_max = 15;
+        break;
+    }
+
+    if (spectral_selection_start < selection_start_min || spectral_selection_start > selection_start_max) {
+        dbg() << stream.offset() << String::format(": ERROR! Start of Selection must be in range %i-%i was (%i)", selection_start_min, selection_start_max, spectral_selection_start);
         return false;
     }
+
+    if (spectral_selection_end < selection_end_min || spectral_selection_end > selection_end_max) {
+        dbg() << stream.offset() << String::format(": ERROR! End of Selection must be in range %i-%i was (%i)", selection_end_min, selection_end_max, spectral_selection_end);
+        return false;
+    }
+
+    if (successive_approximation_low_bits > successive_approximation_low_max) {
+        dbg() << stream.offset() << String::format(": ERROR! Successive Approximation low bits must be in range 0-%i was (%i)", successive_approximation_low_max, successive_approximation_low_bits);
+        return false;
+    }
+
+    if (successive_approximation_high_bits > successive_approximation_high_max) {
+        dbg() << stream.offset() << String::format(": ERROR! Successive Approximation high bits must be in range 0-%i was (%i)", successive_approximation_high_max, successive_approximation_high_bits);
+        return false;
+    }
+
     return true;
 }
 
@@ -576,13 +660,12 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
         stream >> table_info;
         u8 table_type = table_info >> 4;
         u8 table_destination_id = table_info & 0x0F;
-        if (table_type > 1) {
+        if (table_type > 1 || (context.frame.type.type == StartOfFrame::FrameType::Type::Lossless && table_type != 0)) {
             dbg() << stream.offset() << String::format(": Unrecognized huffman table: %i!", table_type);
             return false;
         }
-        if (table_destination_id > 3) {
-            dbg() << stream.offset()
-                  << String::format(": Invalid huffman table destination id: %i!", table_destination_id);
+        if ((context.frame.type.type == StartOfFrame::FrameType::Type::Baseline_DCT && table_destination_id > 1) || (context.frame.type.type != StartOfFrame::FrameType::Type::Baseline_DCT && table_destination_id > 3)) {
+            dbg() << stream.offset() << String::format(": Invalid huffman table destination id: %i!", table_destination_id);
             return false;
         }
         table.type = table_type;
@@ -661,24 +744,31 @@ static bool read_start_of_frame(BufferStream& stream, JPGLoadingContext& context
         return false;
 
     stream >> context.frame.precision;
-    if (context.frame.precision != 8) {
-        dbg() << stream.offset() << ": SOF precision != 8!";
+    if (context.frame.type.type == StartOfFrame::FrameType::Type::Baseline_DCT && context.frame.precision != 8) {
+        dbg() << stream.offset() << ": SOF precision not in bounds!";
+        return false;
+    }
+    if ((context.frame.type.type == StartOfFrame::FrameType::Type::Sequential_DCT || context.frame.type.type == StartOfFrame::FrameType::Type::Progressive_DCT) && (context.frame.precision != 8 && context.frame.precision != 12)) {
+        dbg() << stream.offset() << ": SOF precision not in bounds!";
+        return false;
+    }
+    if (context.frame.type.type == StartOfFrame::FrameType::Type::Lossless && (context.frame.precision < 2 || context.frame.precision > 16)) {
+        dbg() << stream.offset() << ": SOF precision not in bounds!";
         return false;
     }
 
     context.frame.height = read_be_word(stream);
     context.frame.width = read_be_word(stream);
-    if (!context.frame.width || !context.frame.height) {
-        dbg() << stream.offset() << ": ERROR! Image height: " << context.frame.height << ", Image width: "
-              << context.frame.width << "!";
+    // A height of 0 means its set later in the DNL marker, so only ensure width > 0.
+    if (!context.frame.width) {
+        dbg() << stream.offset() << ": ERROR! Image height: " << context.frame.height << ", Image width: " << context.frame.width << "!";
         return false;
     }
     set_macroblock_metadata(context);
 
     stream >> context.component_count;
-    if (context.component_count != 1 && context.component_count != 3) {
-        dbg() << stream.offset() << ": Unsupported number of components in SOF: "
-              << context.component_count << "!";
+    if (!context.component_count || (context.frame.type.type == StartOfFrame::FrameType::Type::Progressive_DCT && context.component_count > 4)) {
+        dbg() << stream.offset() << ": Unsupported number of components in SOF: " << context.component_count << "!";
         return false;
     }
 
@@ -712,9 +802,8 @@ static bool read_start_of_frame(BufferStream& stream, JPGLoadingContext& context
         }
 
         stream >> component.qtable_id;
-        if (component.qtable_id > 1) {
-            dbg() << stream.offset() << ": Unsupported quantization table id: "
-                  << component.qtable_id << "!";
+        if (component.qtable_id > 3 || (context.frame.type.type == StartOfFrame::FrameType::Type::Lossless && component.qtable_id != 0)) {
+            dbg() << stream.offset() << ": Unsupported quantization table id: " << component.qtable_id << "!";
             return false;
         }
     }
@@ -733,13 +822,12 @@ static bool read_quantization_table(BufferStream& stream, JPGLoadingContext& con
         u8 info_byte;
         stream >> info_byte;
         u8 element_unit_hint = info_byte >> 4;
-        if (element_unit_hint > 1) {
-            dbg() << stream.offset()
-                  << String::format(": Unsupported unit hint in quantization table: %i!", element_unit_hint);
+        if ((context.frame.type.type == StartOfFrame::FrameType::Type::Baseline_DCT && element_unit_hint != 0) || element_unit_hint > 1) {
+            dbg() << stream.offset() << String::format(": Unsupported unit hint in quantization table: %i!", element_unit_hint);
             return false;
         }
         u8 table_id = info_byte & 0x0F;
-        if (table_id > 1) {
+        if (table_id > 3) {
             dbg() << stream.offset() << String::format(": Unsupported quantization table id: %i!", table_id);
             return false;
         }
@@ -1024,11 +1112,10 @@ static bool parse_header(BufferStream& stream, JPGLoadingContext& context)
         marker = read_marker_at_cursor(stream);
 
         // Set frame type if the marker marks a new frame.
-        if (marker >= 0xFFC0 && marker <= 0xFFCF) {
-            // Ignore interleaved markers.
-            if (marker != 0xFFC4 && marker != 0xFFC8 && marker != 0xFFCC) {
-                context.frame.type = static_cast<StartOfFrame::FrameType>(marker & 0xF);
-            }
+        if (marker >= 0xFFC0 && marker <= 0xFFCF && marker != 0xFFC4 && marker != 0xFFC8 && marker != 0xFFCC) {
+            context.frame.type.type = static_cast<StartOfFrame::FrameType::Type>(marker & 0b11);
+            context.frame.type.differential = marker & 0b100;
+            context.frame.type.encoding = static_cast<StartOfFrame::FrameType::Encoding>(marker & 0b1000);
         }
 
         switch (marker) {
