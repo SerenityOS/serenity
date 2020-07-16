@@ -303,8 +303,10 @@ void Window::event(Core::Event& event)
             rects.append({ {}, paint_event.window_size() });
         }
 
-        for (auto& rect : rects)
-            m_main_widget->dispatch_event(*make<PaintEvent>(rect), this);
+        for (auto& rect : rects) {
+            PaintEvent paint_event(rect);
+            m_main_widget->dispatch_event(paint_event, this);
+        }
 
         if (m_double_buffering_enabled)
             flip(rects);
