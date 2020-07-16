@@ -63,6 +63,9 @@ public:
         bool is_stack() const { return m_stack; }
         void set_stack(bool b) { m_stack = b; }
 
+        bool is_text() const { return m_text; }
+        void set_text(bool b) { m_text = b; }
+
     protected:
         Region(u32 base, u32 size)
             : m_base(base)
@@ -75,6 +78,7 @@ public:
         u32 m_size { 0 };
 
         bool m_stack { false };
+        bool m_text { false };
     };
 
     u8 read8(X86::LogicalAddress);

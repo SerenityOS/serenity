@@ -108,6 +108,8 @@ bool Emulator::load_elf()
     m_elf->image().for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
         if (program_header.type() == PT_LOAD) {
             auto region = make<SimpleRegion>(program_header.vaddr().get(), program_header.size_in_memory());
+            if (program_header.is_executable() && !program_header.is_writable())
+                region->set_text(true);
             memcpy(region->data(), program_header.raw_data(), program_header.size_in_image());
             mmu().add_region(move(region));
             return;

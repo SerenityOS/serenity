@@ -163,6 +163,8 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         // Skip the stack
         if (region.is_stack())
             return IterationDecision::Continue;
+        if (region.is_text())
+            return IterationDecision::Continue;
         // Skip malloc blocks
         if (region.is_mmap() && static_cast<const MmapRegion&>(region).is_malloc_block())
             return IterationDecision::Continue;
