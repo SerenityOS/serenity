@@ -853,33 +853,139 @@ void SoftCPU::AAM(const X86::Instruction&) { TODO(); }
 void SoftCPU::AAS(const X86::Instruction&) { TODO(); }
 void SoftCPU::ARPL(const X86::Instruction&) { TODO(); }
 void SoftCPU::BOUND(const X86::Instruction&) { TODO(); }
-void SoftCPU::BSF_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::BSF_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::BSR_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::BSR_reg32_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::BSF_reg16_RM16(const X86::Instruction&) {  }
+void SoftCPU::BSF_reg32_RM32(const X86::Instruction&) { }
+void SoftCPU::BSR_reg16_RM16(const X86::Instruction&) { }
+void SoftCPU::BSR_reg32_RM32(const X86::Instruction&) { }
 
 void SoftCPU::BSWAP_reg32(const X86::Instruction& insn)
 {
     gpr32(insn.reg32()) = __builtin_bswap32(gpr32(insn.reg32()));
 }
 
-void SoftCPU::BTC_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTC_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTC_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTC_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTR_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTR_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTR_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTR_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTS_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTS_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTS_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::BTS_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::BT_RM16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::BT_RM16_reg16(const X86::Instruction&) { TODO(); }
-void SoftCPU::BT_RM32_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::BT_RM32_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::CALL_FAR_mem16(const X86::Instruction&) { TODO(); }
+template<typename T>
+ALWAYS_INLINE static T op_bt(T value, T)
+{
+    return value;
+}
+
+template<typename T>
+ALWAYS_INLINE static T op_bts(T value, T bit_mask)
+{
+    return value | bit_mask;
+}
+
+template<typename T>
+ALWAYS_INLINE static T op_btr(T value, T bit_mask)
+{
+    return value & ~bit_mask;
+}
+
+template<typename T>
+ALWAYS_INLINE static T op_btc(T value, T bit_mask)
+{
+    return value ^ bit_mask;
+}
+
+template<bool should_update, typename Op>
+ALWAYS_INLINE void BTx_RM16_reg16(SoftCPU& cpu, const X86::Instruction& insn, Op op)
+{
+    if (insn.modrm().is_register()) {
+        unsigned bit_index = cpu.gpr16(insn.reg16()) & (X86::TypeTrivia<u16>::bits - 1);
+        u16 original = insn.modrm().read16(cpu, insn);
+        u16 bit_mask = 1 << bit_index;
+        u16 result = op(original, bit_mask);
+        cpu.set_cf((original & bit_mask) != 0);
+        if (should_update)
+            insn.modrm().write16(cpu, insn, result);
+        return;
+    }
+    // FIXME: Is this supposed to perform a full 16-bit read/modify/write?
+    unsigned bit_offset_in_array = cpu.gpr16(insn.reg16()) / 8;
+    unsigned bit_offset_in_byte = cpu.gpr16(insn.reg16()) & 7;
+    auto address = insn.modrm().resolve(cpu, insn);
+    address.set_offset(address.offset() + bit_offset_in_array);
+    u8 dest = cpu.read_memory8(address);
+    u8 bit_mask = 1 << bit_offset_in_byte;
+    u8 result = op(dest, bit_mask);
+    cpu.set_cf((dest & bit_mask) != 0);
+    if (should_update)
+        cpu.write_memory8(address, result);
+}
+
+template<bool should_update, typename Op>
+ALWAYS_INLINE void BTx_RM32_reg32(SoftCPU& cpu, const X86::Instruction& insn, Op op)
+{
+    if (insn.modrm().is_register()) {
+        unsigned bit_index = cpu.gpr32(insn.reg32()) & (X86::TypeTrivia<u32>::bits - 1);
+        u32 original = insn.modrm().read32(cpu, insn);
+        u32 bit_mask = 1 << bit_index;
+        u32 result = op(original, bit_mask);
+        cpu.set_cf((original & bit_mask) != 0);
+        if (should_update)
+            insn.modrm().write32(cpu, insn, result);
+        return;
+    }
+    // FIXME: Is this supposed to perform a full 32-bit read/modify/write?
+    unsigned bit_offset_in_array = cpu.gpr32(insn.reg32()) / 8;
+    unsigned bit_offset_in_byte = cpu.gpr32(insn.reg32()) & 7;
+    auto address = insn.modrm().resolve(cpu, insn);
+    address.set_offset(address.offset() + bit_offset_in_array);
+    u8 dest = cpu.read_memory8(address);
+    u8 bit_mask = 1 << bit_offset_in_byte;
+    u8 result = op(dest, bit_mask);
+    cpu.set_cf((dest & bit_mask) != 0);
+    if (should_update)
+        cpu.write_memory8(address, result);
+}
+
+template<bool should_update, typename Op>
+ALWAYS_INLINE void BTx_RM16_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op op)
+{
+    unsigned bit_index = insn.imm8() & (X86::TypeTrivia<u16>::mask);
+
+    // FIXME: Support higher bit indices
+    ASSERT(bit_index < 16);
+
+    u16 original = insn.modrm().read16(cpu, insn);
+    u16 bit_mask = 1 << bit_index;
+    u16 result = op(original, bit_mask);
+    cpu.set_cf((original & bit_mask) != 0);
+    if (should_update)
+        insn.modrm().write16(cpu, insn, result);
+}
+
+template<bool should_update, typename Op>
+ALWAYS_INLINE void BTx_RM32_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op op)
+{
+    unsigned bit_index = insn.imm8() & (X86::TypeTrivia<u32>::mask);
+
+    // FIXME: Support higher bit indices
+    ASSERT(bit_index < 32);
+
+    u32 original = insn.modrm().read32(cpu, insn);
+    u32 bit_mask = 1 << bit_index;
+    u32 result = op(original, bit_mask);
+    cpu.set_cf((original & bit_mask) != 0);
+    if (should_update)
+        insn.modrm().write32(cpu, insn, result);
+}
+
+#define DEFINE_GENERIC_BTx_INSN_HANDLERS(mnemonic, op, update_dest)                                                          \
+    void SoftCPU::mnemonic##_RM32_reg32(const X86::Instruction& insn) { BTx_RM32_reg32<update_dest>(*this, insn, op<u32>); } \
+    void SoftCPU::mnemonic##_RM16_reg16(const X86::Instruction& insn) { BTx_RM16_reg16<update_dest>(*this, insn, op<u16>); } \
+    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { BTx_RM32_imm8<update_dest>(*this, insn, op<u32>); }   \
+    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { BTx_RM16_imm8<update_dest>(*this, insn, op<u16>); }
+
+DEFINE_GENERIC_BTx_INSN_HANDLERS(BTS, op_bts, true);
+DEFINE_GENERIC_BTx_INSN_HANDLERS(BTR, op_btr, true);
+DEFINE_GENERIC_BTx_INSN_HANDLERS(BTC, op_btc, true);
+DEFINE_GENERIC_BTx_INSN_HANDLERS(BT, op_bt, false);
+
+void SoftCPU::CALL_FAR_mem16(const X86::Instruction&)
+{
+    TODO();
+}
 void SoftCPU::CALL_FAR_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::CALL_RM16(const X86::Instruction&) { TODO(); }
 
