@@ -614,7 +614,7 @@ ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, u8 steps)
                      : "=a"(result)
                      : "a"(data), "d"(extra_bits), "c"(steps));
     } else if constexpr (sizeof(T) == 2) {
-        asm volatile("shrb %%cl, %%dx, %%ax\n"
+        asm volatile("shrd %%cl, %%dx, %%ax\n"
                      : "=a"(result)
                      : "a"(data), "d"(extra_bits), "c"(steps));
     }
@@ -642,7 +642,7 @@ ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, u8 steps)
                      : "=a"(result)
                      : "a"(data), "d"(extra_bits), "c"(steps));
     } else if constexpr (sizeof(T) == 2) {
-        asm volatile("shlb %%cl, %%dx, %%ax\n"
+        asm volatile("shld %%cl, %%dx, %%ax\n"
                      : "=a"(result)
                      : "a"(data), "d"(extra_bits), "c"(steps));
     }
@@ -1665,24 +1665,47 @@ void SoftCPU::SETcc_RM8(const X86::Instruction& insn)
 }
 
 void SoftCPU::SGDT(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHLD_RM16_reg16_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHLD_RM16_reg16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHLD_RM32_reg32_CL(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::SHLD_RM16_reg16_CL(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, op_shld(*this, insn.modrm().read16(*this, insn), gpr16(insn.reg16()), cl()));
+}
+
+void SoftCPU::SHLD_RM16_reg16_imm8(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, op_shld(*this, insn.modrm().read16(*this, insn), gpr16(insn.reg16()), insn.imm8()));
+}
+
+void SoftCPU::SHLD_RM32_reg32_CL(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, op_shld(*this, insn.modrm().read32(*this, insn), gpr32(insn.reg32()), cl()));
+}
 
 void SoftCPU::SHLD_RM32_reg32_imm8(const X86::Instruction& insn)
 {
-    insn.modrm().write32(*this, insn, op_shld(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn), insn.imm8()));
+    insn.modrm().write32(*this, insn, op_shld(*this, insn.modrm().read32(*this, insn), gpr32(insn.reg32()), insn.imm8()));
 }
 
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(SHL, op_shl)
 
-void SoftCPU::SHRD_RM16_reg16_CL(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHRD_RM16_reg16_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::SHRD_RM32_reg32_CL(const X86::Instruction&) { TODO(); }
+void SoftCPU::SHRD_RM16_reg16_CL(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, op_shrd(*this, insn.modrm().read16(*this, insn), gpr16(insn.reg16()), cl()));
+}
+
+void SoftCPU::SHRD_RM16_reg16_imm8(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, op_shrd(*this, insn.modrm().read16(*this, insn), gpr16(insn.reg16()), insn.imm8()));
+}
+
+void SoftCPU::SHRD_RM32_reg32_CL(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, op_shrd(*this, insn.modrm().read32(*this, insn), gpr32(insn.reg32()), cl()));
+}
 
 void SoftCPU::SHRD_RM32_reg32_imm8(const X86::Instruction& insn)
 {
-    insn.modrm().write32(*this, insn, op_shrd(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn), insn.imm8()));
+    insn.modrm().write32(*this, insn, op_shrd(*this, insn.modrm().read32(*this, insn), gpr32(insn.reg32()), insn.imm8()));
 }
 
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(SHR, op_shr)
