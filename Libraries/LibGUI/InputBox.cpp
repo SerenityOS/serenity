@@ -34,7 +34,7 @@
 
 namespace GUI {
 
-InputBox::InputBox(const StringView& prompt, const StringView& title, GUI::Window* parent_window)
+InputBox::InputBox(Window* parent_window, const StringView& prompt, const StringView& title)
     : Dialog(parent_window)
     , m_prompt(prompt)
 {
@@ -44,6 +44,14 @@ InputBox::InputBox(const StringView& prompt, const StringView& title, GUI::Windo
 
 InputBox::~InputBox()
 {
+}
+
+int InputBox::show(String& text_value, Window* parent_window, const StringView& prompt, const StringView& title)
+{
+    auto box = InputBox::construct(parent_window, prompt, title);
+    auto result = box->exec();
+    text_value = box->text_value();
+    return result;
 }
 
 void InputBox::build()

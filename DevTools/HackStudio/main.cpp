@@ -203,10 +203,9 @@ int main(int argc, char** argv)
     };
 
     auto new_action = GUI::Action::create("Add new file to project...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter name of new file:", "Add new file to project", g_window);
-        if (input_box->exec() == GUI::InputBox::ExecCancel)
+        String filename;
+        if (GUI::InputBox::show(filename, g_window, "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecOK)
             return;
-        auto filename = input_box->text_value();
         auto file = Core::File::construct(filename);
         if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
             GUI::MessageBox::show(g_window, String::format("Failed to create '%s'", filename.characters()), "Error", GUI::MessageBox::Type::Error);

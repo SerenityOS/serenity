@@ -164,12 +164,12 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
 
     auto mkdir_action = GUI::Action::create("New directory...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter name:", "New directory", window);
-        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
+        String value;
+        if (GUI::InputBox::show(value, window, "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_dir_path = LexicalPath::canonicalized_path(
                 String::format("%s/%s",
                     model->root_path().characters(),
-                    input_box->text_value().characters()));
+                    value.characters()));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
                 GUI::MessageBox::show(window, String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
@@ -178,12 +178,12 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     });
 
     auto touch_action = GUI::Action::create("New file...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter name:", "New file", window);
-        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
+        String value;
+        if (GUI::InputBox::show(value, window, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_file_path = LexicalPath::canonicalized_path(
                 String::format("%s/%s",
                     model->root_path().characters(),
-                    input_box->text_value().characters()));
+                    value.characters()));
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {
@@ -322,12 +322,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     });
 
     auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter name:", "New directory", window);
-        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
+        String value;
+        if (GUI::InputBox::show(value, window, "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_dir_path = LexicalPath::canonicalized_path(
                 String::format("%s/%s",
                     directory_view.path().characters(),
-                    input_box->text_value().characters()));
+                    value.characters()));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
                 GUI::MessageBox::show(window, String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
@@ -338,12 +338,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     });
 
     auto touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter name:", "New file", window);
-        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
+        String value;
+        if (GUI::InputBox::show(value, window, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_file_path = LexicalPath::canonicalized_path(
                 String::format("%s/%s",
                                directory_view.path().characters(),
-                               input_box->text_value().characters()));
+                               value.characters()));
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {

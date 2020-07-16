@@ -96,7 +96,6 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                auto input_box = GUI::InputBox::construct("Enter reason:", "Reason");
                 m_client.handle_voice_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
@@ -143,9 +142,9 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                     return;
                 if (IRCClient::is_nick_prefix(nick[0]))
                     nick = nick.substring(1, nick.length() - 1);
-                auto input_box = GUI::InputBox::construct("Enter reason:", "Reason");
-                if (input_box->exec() == GUI::InputBox::ExecOK)
-                    m_client.handle_kick_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()), input_box->text_value());
+                String value;
+                if (GUI::InputBox::show(value, window(), "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
+                    m_client.handle_kick_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()), value);
             }));
 
             auto& context_ctcp_menu = m_context_menu->add_submenu("CTCP");

@@ -33,12 +33,15 @@ namespace GUI {
 class InputBox : public Dialog {
     C_OBJECT(InputBox)
 public:
-    explicit InputBox(const StringView& prompt, const StringView& title, Window* parent_window = nullptr);
     virtual ~InputBox() override;
+
+    static int show(String& text_value, Window* parent_window, const StringView& prompt, const StringView& title);
+
+private:
+    explicit InputBox(Window* parent_window, const StringView& prompt, const StringView& title);
 
     String text_value() const { return m_text_value; }
 
-private:
     void build();
     String m_prompt;
     String m_text_value;
