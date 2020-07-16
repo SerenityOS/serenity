@@ -512,10 +512,16 @@ ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 template<typename T>
 ALWAYS_INLINE static T op_imul(SoftCPU& cpu, const T& dest, const T& src)
 {
+    u32 result_high = 0;
+    u32 result_low = 0;
     T result = 0;
     u32 new_flags = 0;
 
-    if constexpr (sizeof(T) == 4) {
+    if constexpr (sizeof(T) == 8) {
+        asm volatile("imull %%ecx"
+                     : "=a"(result_low), "=d"(result_high)
+                     : "a"((i32)dest), "c"((i32)src));
+    } else if constexpr (sizeof(T) == 4) {
         asm volatile("imull %%ecx, %%eax\n"
                      : "=a"(result)
                      : "a"(dest), "c"((i32)src));
@@ -532,7 +538,10 @@ ALWAYS_INLINE static T op_imul(SoftCPU& cpu, const T& dest, const T& src)
         "pop %%ebx"
         : "=b"(new_flags));
 
-    cpu.set_flags_oszapc(new_flags);
+    if constexpr (sizeof(T) == 8)
+        result = ((u64)result_high << 32) | result_low;
+
+    cpu.set_flags_oc(new_flags);
     return result;
 }
 
@@ -1063,8 +1072,18 @@ void SoftCPU::IDIV_RM32(const X86::Instruction& insn)
 
 void SoftCPU::IDIV_RM8(const X86::Instruction&) { TODO(); }
 void SoftCPU::IMUL_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_RM8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::IMUL_RM32(const X86::Instruction& insn)
+{
+    i64 value = op_imul<i64>(*this, insn.modrm().read32(*this, insn), eax());
+    set_edx(value >> 32);
+    set_eax(value & 0xffffffff);
+}
+
+void SoftCPU::IMUL_RM8(const X86::Instruction& insn)
+{
+    set_ax(op_imul<i16>(*this, insn.modrm().read8(*this, insn), al()));
+}
 
 void SoftCPU::IMUL_reg16_RM16(const X86::Instruction& insn)
 {
