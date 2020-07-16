@@ -126,6 +126,12 @@ Window::~Window()
     WindowManager::the().remove_window(*this);
 }
 
+void Window::destroy()
+{
+    m_destroyed = true;
+    invalidate();
+}
+
 void Window::set_title(const String& title)
 {
     if (m_title == title)
@@ -389,7 +395,7 @@ Window* Window::is_blocked_by_modal_window()
     // A window is blocked if any immediate child, or any child further
     // down the chain is modal
     for (auto& window: m_child_windows) {
-        if (window) {
+        if (window && !window->is_destroyed()) {
             if (window->is_modal())
                 return window;
             
