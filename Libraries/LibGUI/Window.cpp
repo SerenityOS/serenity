@@ -460,8 +460,10 @@ void Window::set_main_widget(Widget* widget)
 {
     if (m_main_widget == widget)
         return;
-    if (m_main_widget)
+    if (m_main_widget) {
+        m_main_widget->set_window(nullptr);
         remove_child(*m_main_widget);
+    }
     m_main_widget = widget;
     if (m_main_widget) {
         add_child(*widget);
