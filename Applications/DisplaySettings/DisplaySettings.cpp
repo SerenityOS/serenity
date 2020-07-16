@@ -338,8 +338,8 @@ void DisplaySettingsWidget::send_settings_to_window_server()
 {
     auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution());
     if (!result->success()) {
-        GUI::MessageBox::show(String::format("Reverting to resolution %dx%d", result->resolution().width(), result->resolution().height()),
-            "Unable to set resolution", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+        GUI::MessageBox::show(root_widget()->window(), String::format("Reverting to resolution %dx%d", result->resolution().width(), result->resolution().height()),
+            "Unable to set resolution", GUI::MessageBox::Type::Error);
     }
 
     if (!m_monitor_widget->wallpaper().is_empty()) {

@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     Vector<String> character_map_files;
     Core::DirIterator iterator("/res/keymaps/", Core::DirIterator::Flags::SkipDots);
     if (iterator.has_error()) {
-        GUI::MessageBox::show(String::format("Error on reading mapping file list: %d", iterator.error_string()), "Keyboard settings", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+        GUI::MessageBox::show(nullptr, String::format("Error on reading mapping file list: %d", iterator.error_string()), "Keyboard settings", GUI::MessageBox::Type::Error);
         return -1;
     }
 
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
     auto apply_settings = [&](bool quit) {
         String character_map_file = character_map_file_combo.text();
         if (character_map_file.is_empty()) {
-            GUI::MessageBox::show("Please select character mapping file.", "Keyboard settings", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+            GUI::MessageBox::show(window, "Please select character mapping file.", "Keyboard settings", GUI::MessageBox::Type::Error);
             return;
         }
         pid_t child_pid;

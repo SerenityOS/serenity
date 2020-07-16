@@ -124,11 +124,10 @@ TextEditorWidget::TextEditorWidget()
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {
-            GUI::MessageBox::show(
+            GUI::MessageBox::show(window(),
                 String::format("Not found: \"%s\"", needle.characters()),
                 "Not found",
-                GUI::MessageBox::Type::Information,
-                GUI::MessageBox::InputType::OK, window());
+                GUI::MessageBox::Type::Information);
         }
     });
 
@@ -149,11 +148,10 @@ TextEditorWidget::TextEditorWidget()
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {
-            GUI::MessageBox::show(
+            GUI::MessageBox::show(window(),
                 String::format("Not found: \"%s\"", needle.characters()),
                 "Not found",
-                GUI::MessageBox::Type::Information,
-                GUI::MessageBox::InputType::OK, window());
+                GUI::MessageBox::Type::Information);
         }
     });
 
@@ -174,11 +172,10 @@ TextEditorWidget::TextEditorWidget()
             m_editor->set_selection(found_range);
             m_editor->insert_at_cursor_or_replace_selection(substitute);
         } else {
-            GUI::MessageBox::show(
+            GUI::MessageBox::show(window(),
                 String::format("Not found: \"%s\"", needle.characters()),
                 "Not found",
-                GUI::MessageBox::Type::Information,
-                GUI::MessageBox::InputType::OK, window());
+                GUI::MessageBox::Type::Information);
         }
     });
 
@@ -198,11 +195,10 @@ TextEditorWidget::TextEditorWidget()
             m_editor->set_selection(found_range);
             m_editor->insert_at_cursor_or_replace_selection(substitute);
         } else {
-            GUI::MessageBox::show(
+            GUI::MessageBox::show(window(),
                 String::format("Not found: \"%s\"", needle.characters()),
                 "Not found",
-                GUI::MessageBox::Type::Information,
-                GUI::MessageBox::InputType::OK, window());
+                GUI::MessageBox::Type::Information);
         }
     });
 
@@ -290,7 +286,7 @@ TextEditorWidget::TextEditorWidget()
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
-            auto save_document_first_result = GUI::MessageBox::show("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+            auto save_document_first_result = GUI::MessageBox::show(window(), "Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
@@ -310,7 +306,7 @@ TextEditorWidget::TextEditorWidget()
             return;
 
         if (m_document_dirty) {
-            auto save_document_first_result = GUI::MessageBox::show("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window());
+            auto save_document_first_result = GUI::MessageBox::show(window(), "Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
@@ -326,7 +322,7 @@ TextEditorWidget::TextEditorWidget()
             return;
 
         if (!m_editor->write_to_file(save_path.value())) {
-            GUI::MessageBox::show("Unable to save file.\n", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+            GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             return;
         }
 
@@ -338,7 +334,7 @@ TextEditorWidget::TextEditorWidget()
     m_save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GUI::Action&) {
         if (!m_path.is_empty()) {
             if (!m_editor->write_to_file(m_path)) {
-                GUI::MessageBox::show("Unable to save file.\n", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+                GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             } else {
                 m_document_dirty = false;
                 update_title();
@@ -523,7 +519,7 @@ void TextEditorWidget::open_sesame(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
-        GUI::MessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 
@@ -540,7 +536,7 @@ bool TextEditorWidget::request_close()
 {
     if (!m_document_dirty)
         return true;
-    auto result = GUI::MessageBox::show("The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window());
+    auto result = GUI::MessageBox::show(window(), "The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
 
     if (result == GUI::MessageBox::ExecYes) {
         m_save_action->activate();
@@ -563,7 +559,7 @@ void TextEditorWidget::drop_event(GUI::DropEvent& event)
         if (urls.is_empty())
             return;
         if (urls.size() > 1) {
-            GUI::MessageBox::show("TextEditor can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+            GUI::MessageBox::show(window(), "TextEditor can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error);
             return;
         }
         open_sesame(urls.first().path());

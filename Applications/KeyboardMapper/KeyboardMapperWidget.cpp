@@ -205,7 +205,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
         sb.append(" for write. Error: ");
         sb.append(file->error_string());
 
-        GUI::MessageBox::show(sb.to_string(), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 
@@ -216,7 +216,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
         sb.append("Unable to save file. Error: ");
         sb.append(strerror(error_number));
 
-        GUI::MessageBox::show(sb.to_string(), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 

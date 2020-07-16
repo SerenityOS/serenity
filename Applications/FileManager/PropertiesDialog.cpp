@@ -198,12 +198,12 @@ bool PropertiesDialog::apply_changes()
         String new_file = make_full_path(new_name).characters();
 
         if (GUI::FilePicker::file_exists(new_file)) {
-            GUI::MessageBox::show(String::format("A file \"%s\" already exists!", new_name.characters()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::format("A file \"%s\" already exists!", new_name.characters()), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 
         if (rename(make_full_path(m_name).characters(), new_file.characters())) {
-            GUI::MessageBox::show(String::format("Could not rename file: %s!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::format("Could not rename file: %s!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -214,7 +214,7 @@ bool PropertiesDialog::apply_changes()
 
     if (m_permissions_dirty) {
         if (chmod(make_full_path(m_name).characters(), m_mode)) {
-            GUI::MessageBox::show(String::format("Could not update permissions: %s!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::format("Could not update permissions: %s!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 

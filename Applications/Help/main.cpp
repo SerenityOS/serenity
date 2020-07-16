@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 
         if (!file->open(Core::IODevice::OpenMode::ReadOnly)) {
             int saved_errno = errno;
-            GUI::MessageBox::show(strerror(saved_errno), "Failed to open man page", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+            GUI::MessageBox::show(window, strerror(saved_errno), "Failed to open man page", GUI::MessageBox::Type::Error);
             return;
         }
         auto buffer = file->read_all();
@@ -167,12 +167,10 @@ int main(int argc, char* argv[])
 
     auto open_external = [&](auto& url) {
         if (!Desktop::Launcher::open(url)) {
-            GUI::MessageBox::show(
+            GUI::MessageBox::show(window,
                 String::format("The link to '%s' could not be opened.", url.to_string().characters()),
                 "Failed to open link",
-                GUI::MessageBox::Type::Error,
-                GUI::MessageBox::InputType::OK,
-                window);
+                GUI::MessageBox::Type::Error);
         }
     };
 
