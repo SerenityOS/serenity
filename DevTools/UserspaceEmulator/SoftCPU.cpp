@@ -36,6 +36,17 @@
 
 //#define MEMORY_DEBUG
 
+#define DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(mnemonic, op)                                                  \
+    void SoftCPU::mnemonic##_RM8_1(const X86::Instruction& insn) { generic_RM8_1(op<u8>, insn); }                \
+    void SoftCPU::mnemonic##_RM8_CL(const X86::Instruction& insn) { generic_RM8_CL(op<u8>, insn); }              \
+    void SoftCPU::mnemonic##_RM8_imm8(const X86::Instruction& insn) { generic_RM8_imm8<true>(op<u8>, insn); }    \
+    void SoftCPU::mnemonic##_RM16_1(const X86::Instruction& insn) { generic_RM16_1(op<u16>, insn); }             \
+    void SoftCPU::mnemonic##_RM16_CL(const X86::Instruction& insn) { generic_RM16_CL(op<u16>, insn); }           \
+    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { generic_RM16_imm8<true>(op<u16>, insn); } \
+    void SoftCPU::mnemonic##_RM32_1(const X86::Instruction& insn) { generic_RM32_1(op<u32>, insn); }             \
+    void SoftCPU::mnemonic##_RM32_CL(const X86::Instruction& insn) { generic_RM32_CL(op<u32>, insn); }           \
+    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { generic_RM32_imm8<true>(op<u32>, insn); }
+
 namespace UserspaceEmulator {
 
 template<typename T, typename U>
@@ -783,6 +794,48 @@ ALWAYS_INLINE void SoftCPU::generic_reg8_RM8(Op op, const X86::Instruction& insn
     auto result = op(*this, dest, src);
     if (update_dest)
         gpr8(insn.reg8()) = result;
+}
+
+template<typename Op>
+ALWAYS_INLINE void SoftCPU::generic_RM8_1(Op op, const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, op(*this, data, 1));
+}
+
+template<typename Op>
+ALWAYS_INLINE void SoftCPU::generic_RM8_CL(Op op, const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read8(*this, insn);
+    insn.modrm().write8(*this, insn, op(*this, data, cl()));
+}
+
+template<typename Op>
+ALWAYS_INLINE void SoftCPU::generic_RM16_1(Op op, const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, op(*this, data, 1));
+}
+
+template<typename Op>
+ALWAYS_INLINE void SoftCPU::generic_RM16_CL(Op op, const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read16(*this, insn);
+    insn.modrm().write16(*this, insn, op(*this, data, cl()));
+}
+
+template<typename Op>
+ALWAYS_INLINE void SoftCPU::generic_RM32_1(Op op, const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, op(*this, data, 1));
+}
+
+template<typename Op>
+ALWAYS_INLINE void SoftCPU::generic_RM32_CL(Op op, const X86::Instruction& insn)
+{
+    auto data = insn.modrm().read32(*this, insn);
+    insn.modrm().write32(*this, insn, op(*this, data, cl()));
 }
 
 void SoftCPU::AAA(const X86::Instruction&) { TODO(); }
@@ -1600,59 +1653,7 @@ static T op_sar(SoftCPU& cpu, T data, u8 steps)
     return result;
 }
 
-void SoftCPU::SAR_RM16_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_sar(*this, data, 1));
-}
-
-void SoftCPU::SAR_RM16_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_sar(*this, data, cl()));
-}
-
-void SoftCPU::SAR_RM16_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_sar(*this, data, insn.imm8()));
-}
-
-void SoftCPU::SAR_RM32_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_sar(*this, data, 1));
-}
-
-void SoftCPU::SAR_RM32_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_sar(*this, data, cl()));
-}
-
-void SoftCPU::SAR_RM32_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_sar(*this, data, insn.imm8()));
-}
-
-void SoftCPU::SAR_RM8_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_sar(*this, data, 1));
-}
-
-void SoftCPU::SAR_RM8_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_sar(*this, data, cl()));
-}
-
-void SoftCPU::SAR_RM8_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_sar(*this, data, insn.imm8()));
-}
+DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(SAR, op_sar)
 
 void SoftCPU::SCASB(const X86::Instruction&) { TODO(); }
 void SoftCPU::SCASD(const X86::Instruction&) { TODO(); }
@@ -1673,59 +1674,7 @@ void SoftCPU::SHLD_RM32_reg32_imm8(const X86::Instruction& insn)
     insn.modrm().write32(*this, insn, op_shld(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn), insn.imm8()));
 }
 
-void SoftCPU::SHL_RM16_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_shl(*this, data, 1));
-}
-
-void SoftCPU::SHL_RM16_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_shl(*this, data, cl()));
-}
-
-void SoftCPU::SHL_RM16_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_shl(*this, data, insn.imm8()));
-}
-
-void SoftCPU::SHL_RM32_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_shl(*this, data, 1));
-}
-
-void SoftCPU::SHL_RM32_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_shl(*this, data, cl()));
-}
-
-void SoftCPU::SHL_RM32_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_shl(*this, data, insn.imm8()));
-}
-
-void SoftCPU::SHL_RM8_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_shl(*this, data, 1));
-}
-
-void SoftCPU::SHL_RM8_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_shl(*this, data, cl()));
-}
-
-void SoftCPU::SHL_RM8_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_shl(*this, data, insn.imm8()));
-}
+DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(SHL, op_shl)
 
 void SoftCPU::SHRD_RM16_reg16_CL(const X86::Instruction&) { TODO(); }
 void SoftCPU::SHRD_RM16_reg16_imm8(const X86::Instruction&) { TODO(); }
@@ -1736,59 +1685,7 @@ void SoftCPU::SHRD_RM32_reg32_imm8(const X86::Instruction& insn)
     insn.modrm().write32(*this, insn, op_shrd(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn), insn.imm8()));
 }
 
-void SoftCPU::SHR_RM16_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_shr(*this, data, 1));
-}
-
-void SoftCPU::SHR_RM16_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_shr(*this, data, cl()));
-}
-
-void SoftCPU::SHR_RM16_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read16(*this, insn);
-    insn.modrm().write16(*this, insn, op_shr(*this, data, insn.imm8()));
-}
-
-void SoftCPU::SHR_RM32_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_shr(*this, data, 1));
-}
-
-void SoftCPU::SHR_RM32_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_shr(*this, data, cl()));
-}
-
-void SoftCPU::SHR_RM32_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read32(*this, insn);
-    insn.modrm().write32(*this, insn, op_shr(*this, data, insn.imm8()));
-}
-
-void SoftCPU::SHR_RM8_1(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_shr(*this, data, 1));
-}
-
-void SoftCPU::SHR_RM8_CL(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_shr(*this, data, cl()));
-}
-
-void SoftCPU::SHR_RM8_imm8(const X86::Instruction& insn)
-{
-    auto data = insn.modrm().read8(*this, insn);
-    insn.modrm().write8(*this, insn, op_shr(*this, data, insn.imm8()));
-}
+DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(SHR, op_shr)
 
 void SoftCPU::SIDT(const X86::Instruction&) { TODO(); }
 void SoftCPU::SLDT_RM16(const X86::Instruction&) { TODO(); }
