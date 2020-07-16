@@ -433,7 +433,10 @@ void MenuManager::set_current_menu(Menu* menu)
     auto& wm = WindowManager::the();
     if (!previous_current_menu) {
         // When opening the first menu, store the current active input window
-        m_previous_input_window = wm.active_input_window()->make_weak_ptr();
+        if (auto* active_input = wm.active_input_window())
+            m_previous_input_window = active_input->make_weak_ptr();
+        else
+            m_previous_input_window = nullptr;
     }
 
     wm.set_active_input_window(m_current_menu->menu_window());
