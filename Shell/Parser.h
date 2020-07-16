@@ -125,7 +125,9 @@ variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
 pipe_sequence :: command '|' pipe_sequence
                | command
 
-control_structure :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
+control_structure :: for_loop
+
+for_loop :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
 
 command :: redirection command
          | list_expression command?
