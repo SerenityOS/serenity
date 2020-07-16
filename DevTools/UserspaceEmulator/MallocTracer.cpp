@@ -146,6 +146,8 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
     for (auto& other_mallocation : m_mallocations) {
         if (&mallocation == &other_mallocation)
             continue;
+        if (other_mallocation.freed)
+            continue;
         size_t pointers_in_mallocation = other_mallocation.size / sizeof(u32);
         for (size_t i = 0; i < pointers_in_mallocation; ++i) {
             auto value = Emulator::the().mmu().read32({ 0x20, other_mallocation.address + i * sizeof(u32) });
