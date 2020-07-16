@@ -66,10 +66,8 @@ void KeyboardMapperWidget::create_frame()
         tmp_button.set_enabled(keys[i].enabled);
 
         tmp_button.on_click = [&]() {
-            auto input_box = GUI::InputBox::construct("New Character:", "Select Character", window());
-            if (input_box->exec() == GUI::InputBox::ExecOK) {
-                auto value = input_box->text_value();
-
+            String value;
+            if (GUI::InputBox::show(value, window(), "New Character:", "Select Character") == GUI::InputBox::ExecOK) {
                 int i = m_keys.find_first_index(&tmp_button).value_or(0);
                 ASSERT(i > 0);
 

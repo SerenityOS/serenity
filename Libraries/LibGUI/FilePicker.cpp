@@ -152,11 +152,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     toolbar.add_separator();
 
     auto mkdir_action = Action::create("New directory...", Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
-        auto& input_box = add<InputBox>("Enter name:", "New directory");
-        if (input_box.exec() == InputBox::ExecOK && !input_box.text_value().is_empty()) {
+        String value;
+        if (InputBox::show(value, this, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
             auto new_dir_path = LexicalPath(String::format("%s/%s",
                                                 m_model->root_path().characters(),
-                                                input_box.text_value().characters()))
+                                                value.characters()))
                                     .string();
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {

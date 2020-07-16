@@ -87,10 +87,9 @@ void TextEditor::create_actions()
     if (is_multi_line()) {
         m_go_to_line_action = Action::create(
             "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
-                auto input_box = InputBox::construct("Line:", "Go to line", window());
-                auto result = input_box->exec();
-                if (result == InputBox::ExecOK) {
-                    auto line_number = input_box->text_value().to_uint();
+                String value;
+                if (InputBox::show(value, window(), "Line:", "Go to line") == InputBox::ExecOK) {
+                    auto line_number = value.to_uint();
                     if (line_number.has_value())
                         set_cursor(line_number.value() - 1, 0);
                 }
