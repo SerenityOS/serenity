@@ -36,7 +36,7 @@ inline constexpr unsigned encoded_device(unsigned major, unsigned minor)
 
 static int usage()
 {
-    printf("usage: mknod <name> <c|b|p> <major> <minor>\n");
+    printf("usage: mknod <name> <c|b|p> [<major> <minor>]\n");
     return 0;
 }
 
@@ -47,10 +47,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // FIXME: When invoked with type "p", no need for major/minor numbers.
     // FIXME: Add some kind of option for specifying the file permissions.
-    if (argc != 5)
+    if (argc < 3)
         return usage();
+
+    if (argv[2][0] == 'p') {
+        if (argc != 3)
+            return usage();
+    } else if (argc != 5) {
+        return usage();
+    }
 
     const char* name = argv[1];
     mode_t mode = 0666;
@@ -69,8 +75,12 @@ int main(int argc, char** argv)
         return usage();
     }
 
-    int major = atoi(argv[3]);
-    int minor = atoi(argv[4]);
+    int major = 0;
+    int minor = 0;
+    if (argc == 5) {
+        major = atoi(argv[3]);
+        minor = atoi(argv[4]);
+    }
 
     int rc = mknod(name, mode, encoded_device(major, minor));
     if (rc < 0) {
