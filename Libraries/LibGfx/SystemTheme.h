@@ -47,6 +47,8 @@ enum class ColorRole {
     HighlightWindowBorder1,
     HighlightWindowBorder2,
     HighlightWindowTitle,
+    WindowTitleShadow,
+    WindowTitleStripes,
     MenuStripe,
     MenuBase,
     MenuBaseText,
@@ -95,8 +97,17 @@ enum class ColorRole {
     DisabledText = ThreedShadow1,
 };
 
+enum class MetricRole {
+    NoRole,
+    TitleHeight,
+    TitleButtonWidth,
+    TitleButtonHeight,
+    __Count,
+};
+
 struct SystemTheme {
     Color color[(int)ColorRole::__Count];
+    int metric[(int)MetricRole::__Count];
 };
 
 const SystemTheme& current_system_theme();

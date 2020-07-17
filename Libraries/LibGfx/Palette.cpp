@@ -61,6 +61,12 @@ Color PaletteImpl::color(ColorRole role) const
     return theme().color[(int)role];
 }
 
+int PaletteImpl::metric(MetricRole role) const
+{
+    ASSERT((int)role < (int)MetricRole::__Count);
+    return theme().metric[(int)role];
+}
+
 NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
 {
     auto new_theme_buffer = SharedBuffer::create_with_size(m_theme_buffer->size());
@@ -74,6 +80,14 @@ void Palette::set_color(ColorRole role, Color color)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
     theme.color[(int)role] = color;
+}
+
+void Palette::set_metric(MetricRole role, int value)
+{
+    if (m_impl->ref_count() != 1)
+        m_impl = m_impl->clone();
+    auto& theme = const_cast<SystemTheme&>(impl().theme());
+    theme.metric[(int)role] = value;
 }
 
 PaletteImpl::~PaletteImpl()

@@ -39,8 +39,6 @@
 
 namespace WindowServer {
 
-static const int window_titlebar_height = 19;
-
 static const char* s_close_button_bitmap_data = {
     "##    ##"
     "###  ###"
@@ -153,6 +151,7 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 
 Gfx::IntRect WindowFrame::title_bar_rect() const
 {
+    auto window_titlebar_height = WindowManager::the().palette().window_title_height();
     if (m_window.type() == WindowType::Notification)
         return { m_window.width() + 3, 3, window_titlebar_height, m_window.height() };
     return { 4, 4, m_window.width(), window_titlebar_height };
@@ -207,8 +206,8 @@ void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
     int stripe_top = m_buttons.last().relative_rect().bottom() + 4;
     int stripe_bottom = m_window.height() - 3;
     if (stripe_top && stripe_bottom && stripe_top < stripe_bottom) {
-        for (int i = 2; i <= window_titlebar_height - 2; i += 2) {
-            painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.active_window_border1());
+        for (int i = 2; i <= palette.window_title_height() - 2; i += 2) {
+            painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.window_title_stripes());
         }
     }
 }
@@ -241,7 +240,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     int stripe_right = leftmost_button_rect.left() - 3;
     if (stripe_left && stripe_right && stripe_left < stripe_right) {
         for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
-            painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, border_color);
+            painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, palette.window_title_stripes());
         }
     }
 
@@ -259,7 +258,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, border_color.darkened(0.4), Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, palette.window_title_shadow(), Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
         painter.draw_text(clipped_title_rect.translated(0, 1), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
     }
@@ -293,6 +292,7 @@ static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& re
         return rect;
 
     auto type = window.type();
+    auto window_titlebar_height = WindowManager::the().palette().window_title_height();
 
     switch (type) {
     case WindowType::Normal:
@@ -331,8 +331,9 @@ void WindowFrame::invalidate_title_bar()
 
 void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
 {
-    int window_button_width = 15;
-    int window_button_height = 15;
+    auto palette = WindowManager::the().palette();
+    int window_button_width = palette.window_title_button_width();
+    int window_button_height = palette.window_title_button_height();
     int pos;
     if (m_window.type() == WindowType::Notification)
         pos = title_bar_rect().top() + 2;
@@ -341,10 +342,11 @@ void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const
 
     for (auto& button : m_buttons) {
         if (m_window.type() == WindowType::Notification) {
-            Gfx::IntRect rect { 0, pos, window_button_width, window_button_height };
+            // The button height & width have to be equal or it leaks out of its area
+            Gfx::IntRect rect { 0, pos, window_button_height, window_button_height };
             rect.center_horizontally_within(title_bar_rect());
             button.set_relative_rect(rect);
-            pos += window_button_width;
+            pos += window_button_height;
         } else {
             pos -= window_button_width;
             Gfx::IntRect rect { pos, 0, window_button_width, window_button_height };

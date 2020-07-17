@@ -67,6 +67,24 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
         return color.value();
     };
 
+    auto get_metric = [&](auto& name, auto role) {
+        int metric = file->read_num_entry("Metrics", name, -1);
+        if (metric == -1) {
+            switch (role) {
+            case (int)MetricRole::TitleHeight:
+                return 19;
+            case (int)MetricRole::TitleButtonHeight:
+                return 15;
+            case (int)MetricRole::TitleButtonWidth:
+                return 15;
+            default:
+                dbg() << "Metric " << name << " has no fallback value!";
+                return 16;
+            }
+        }
+        return metric;
+    };
+
 #define DO_COLOR(x) \
     data->color[(int)ColorRole::x] = get_color(#x)
 
@@ -98,6 +116,8 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(HighlightWindowBorder1);
     DO_COLOR(HighlightWindowBorder2);
     DO_COLOR(HighlightWindowTitle);
+    DO_COLOR(WindowTitleShadow);
+    DO_COLOR(WindowTitleStripes);
     DO_COLOR(MenuStripe);
     DO_COLOR(MenuBase);
     DO_COLOR(MenuBaseText);
@@ -125,6 +145,13 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(SyntaxIdentifier);
     DO_COLOR(SyntaxPreprocessorStatement);
     DO_COLOR(SyntaxPreprocessorValue);
+
+#define DO_METRIC(x) \
+    data->metric[(int)MetricRole::x] = get_metric(#x, (int)MetricRole::x)
+
+    DO_METRIC(TitleHeight);
+    DO_METRIC(TitleButtonWidth);
+    DO_METRIC(TitleButtonHeight);
 
     buffer->seal();
     buffer->share_globally();
