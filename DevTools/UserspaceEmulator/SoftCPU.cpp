@@ -1074,7 +1074,7 @@ void SoftCPU::CMPSW(const X86::Instruction& insn)
 void SoftCPU::CMPXCHG_RM16_reg16(const X86::Instruction& insn)
 {
     auto current = insn.modrm().read16(*this, insn);
-    if (current == eax()) {
+    if (current == ax()) {
         set_zf(true);
         insn.modrm().write16(*this, insn, gpr16(insn.reg16()));
     } else {
@@ -1098,7 +1098,7 @@ void SoftCPU::CMPXCHG_RM32_reg32(const X86::Instruction& insn)
 void SoftCPU::CMPXCHG_RM8_reg8(const X86::Instruction& insn)
 {
     auto current = insn.modrm().read8(*this, insn);
-    if (current == eax()) {
+    if (current == al()) {
         set_zf(true);
         insn.modrm().write8(*this, insn, gpr8(insn.reg8()));
     } else {
