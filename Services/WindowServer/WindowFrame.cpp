@@ -217,6 +217,15 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     auto palette = WindowManager::the().palette();
     auto& window = m_window;
     Gfx::IntRect outer_rect = { {}, rect().size() };
+    String title_text;
+    if (window.client() && window.client()->is_unresponsive()) {
+        StringBuilder builder;
+        builder.append(window.title());
+        builder.append(" (Not responding)");
+        title_text = builder.to_string();
+    } else {
+        title_text = window.title();
+    }
 
     Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
 
@@ -224,7 +233,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     auto titlebar_icon_rect = title_bar_icon_rect();
     auto titlebar_inner_rect = title_bar_text_rect();
     auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(Gfx::Font::default_bold_font().width(window.title()));
+    titlebar_title_rect.set_width(Gfx::Font::default_bold_font().width(title_text));
 
     auto [title_color, border_color, border_color2] = compute_frame_colors();
 
@@ -242,17 +251,6 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
         for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
             painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, palette.window_title_stripes());
         }
-    }
-
-    String title_text;
-
-    if (window.client() && window.client()->is_unresponsive()) {
-        StringBuilder builder;
-        builder.append(window.title());
-        builder.append(" (Not responding)");
-        title_text = builder.to_string();
-    } else {
-        title_text = window.title();
     }
 
     auto clipped_title_rect = titlebar_title_rect;
