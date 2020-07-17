@@ -195,23 +195,9 @@ void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
     if (!insn.has_rep_prefix())
         return callback();
 
-    if (insn.has_address_size_override_prefix()) {
-        while (cx()) {
-            callback();
-            set_cx(cx() - 1);
-            if constexpr (check_zf) {
-                if (insn.rep_prefix() == X86::Prefix::REPZ && !zf())
-                    break;
-                if (insn.rep_prefix() == X86::Prefix::REPNZ && zf())
-                    break;
-            }
-        }
-        return;
-    }
-
-    while (ecx()) {
+    while (loop_index(insn.a32())) {
         callback();
-        set_ecx(ecx() - 1);
+        decrement_loop_index(insn.a32());
         if constexpr (check_zf) {
             if (insn.rep_prefix() == X86::Prefix::REPZ && !zf())
                 break;
@@ -1057,9 +1043,33 @@ void SoftCPU::CMOVcc_reg32_RM32(const X86::Instruction& insn)
         gpr32(insn.reg32()) = insn.modrm().read32(*this, insn);
 }
 
-void SoftCPU::CMPSB(const X86::Instruction&) { TODO(); }
-void SoftCPU::CMPSD(const X86::Instruction&) { TODO(); }
-void SoftCPU::CMPSW(const X86::Instruction&) { TODO(); }
+template<typename T>
+ALWAYS_INLINE static void do_cmps(SoftCPU& cpu, const X86::Instruction& insn)
+{
+    auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
+    cpu.do_once_or_repeat<true>(insn, [&] {
+        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.a32()) });
+        auto dest = cpu.read_memory<T>({ cpu.es(), cpu.destination_index(insn.a32()) });
+        op_sub(cpu, dest, src);
+        cpu.step_source_index(insn.a32(), sizeof(T));
+        cpu.step_destination_index(insn.a32(), sizeof(T));
+    });
+}
+
+void SoftCPU::CMPSB(const X86::Instruction& insn)
+{
+    do_cmps<u8>(*this, insn);
+}
+
+void SoftCPU::CMPSD(const X86::Instruction& insn)
+{
+    do_cmps<u32>(*this, insn);
+}
+
+void SoftCPU::CMPSW(const X86::Instruction& insn)
+{
+    do_cmps<u16>(*this, insn);
+}
 
 void SoftCPU::CMPXCHG_RM16_reg16(const X86::Instruction& insn)
 {

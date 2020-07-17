@@ -140,6 +140,90 @@ public:
     u32 gpr32(X86::RegisterIndex32 reg) const { return m_gpr[reg].full_u32; }
     u32& gpr32(X86::RegisterIndex32 reg) { return m_gpr[reg].full_u32; }
 
+    template<typename T>
+    T gpr(unsigned register_index) const
+    {
+        if constexpr (sizeof(T) == 1)
+            return gpr8((X86::RegisterIndex8)register_index);
+        if constexpr (sizeof(T) == 2)
+            return gpr16((X86::RegisterIndex16)register_index);
+        if constexpr (sizeof(T) == 4)
+            return gpr32((X86::RegisterIndex32)register_index);
+    }
+
+    template<typename T>
+    T& gpr(unsigned register_index)
+    {
+        if constexpr (sizeof(T) == 1)
+            return gpr8((X86::RegisterIndex8)register_index);
+        if constexpr (sizeof(T) == 2)
+            return gpr16((X86::RegisterIndex16)register_index);
+        if constexpr (sizeof(T) == 4)
+            return gpr32((X86::RegisterIndex32)register_index);
+    }
+
+    u32 source_index(bool a32) const
+    {
+        if (a32)
+            return esi();
+        return si();
+    }
+
+    u32 destination_index(bool a32) const
+    {
+        if (a32)
+            return edi();
+        return di();
+    }
+
+    u32 loop_index(bool a32) const
+    {
+        if (a32)
+            return ecx();
+        return cx();
+    }
+
+    bool decrement_loop_index(bool a32)
+    {
+        if (a32) {
+            set_ecx(ecx() - 1);
+            return ecx() == 0;
+        }
+        set_cx(cx() - 1);
+        return cx() == 0;
+    }
+
+    ALWAYS_INLINE void step_source_index(bool a32, u32 step)
+    {
+        if (a32) {
+            if (df())
+                set_esi(esi() - step);
+            else
+                set_esi(esi() + step);
+        } else {
+            if (df())
+                set_si(si() - step);
+            else
+                set_si(si() + step);
+        }
+    }
+
+    ALWAYS_INLINE void step_destination_index(bool a32, u32 step)
+    {
+        if (a32) {
+            if (df())
+                set_edi(edi() - step);
+            else
+                set_edi(edi() + step);
+        } else {
+            if (df())
+                set_di(di() - step);
+            else
+                set_di(di() + step);
+        }
+    }
+
+
     u32 eax() const { return gpr32(X86::RegisterEAX); }
     u32 ebx() const { return gpr32(X86::RegisterEBX); }
     u32 ecx() const { return gpr32(X86::RegisterECX); }
@@ -253,9 +337,31 @@ public:
     u16 read_memory16(X86::LogicalAddress);
     u32 read_memory32(X86::LogicalAddress);
 
+    template<typename T>
+    T read_memory(X86::LogicalAddress address)
+    {
+        if constexpr (sizeof(T) == 1)
+            return read_memory8(address);
+        if constexpr (sizeof(T) == 2)
+            return read_memory16(address);
+        if constexpr (sizeof(T) == 4)
+            return read_memory32(address);
+    }
+
     void write_memory8(X86::LogicalAddress, u8);
     void write_memory16(X86::LogicalAddress, u16);
     void write_memory32(X86::LogicalAddress, u32);
+
+    template<typename T>
+    void write_memory(X86::LogicalAddress address, T data)
+    {
+        if constexpr (sizeof(T) == 1)
+            return write_memory8(address, data);
+        if constexpr (sizeof(T) == 2)
+            return write_memory16(address, data);
+        if constexpr (sizeof(T) == 4)
+            return write_memory32(address, data);
+    }
 
     bool evaluate_condition(u8 condition) const
     {
@@ -297,6 +403,9 @@ public:
         }
         return 0;
     }
+
+    template<bool check_zf, typename Callback>
+    void do_once_or_repeat(const X86::Instruction& insn, Callback);
 
     // ^X86::InstructionStream
     virtual bool can_read() override { return false; }
@@ -817,9 +926,6 @@ private:
     void generic_RM32_1(Op, const X86::Instruction&);
     template<typename Op>
     void generic_RM32_CL(Op, const X86::Instruction&);
-
-    template<bool check_zf, typename Callback>
-    void do_once_or_repeat(const X86::Instruction& insn, Callback);
 
     void update_code_cache();
 
