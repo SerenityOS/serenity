@@ -211,7 +211,7 @@ void Emulator::dump_backtrace(const Vector<FlatPtr>& backtrace)
     for (auto& address : backtrace) {
         u32 offset = 0;
         String symbol = m_elf->symbolicate(address, &offset);
-        dbgprintf("==%d==    %#08x  %s +%#x\n", s_pid, m_cpu.eip(), symbol.characters(), offset);
+        dbgprintf("==%d==    %#08x  %s +%#x\n", s_pid, address, symbol.characters(), offset);
     }
 }
 
