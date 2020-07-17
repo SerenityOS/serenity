@@ -2126,7 +2126,11 @@ void SoftCPU::XCHG_reg8_RM8(const X86::Instruction& insn)
     gpr8(insn.reg8()) = temp;
 }
 
-void SoftCPU::XLAT(const X86::Instruction&) { TODO(); }
+void SoftCPU::XLAT(const X86::Instruction& insn)
+{
+    u32 offset = (insn.a32() ? ebx() : bx()) + al();
+    set_al(read_memory8({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), offset }));
+}
 
 #define DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest)                                                   \
     void SoftCPU::mnemonic##_AL_imm8(const X86::Instruction& insn) { generic_AL_imm8<update_dest>(op<u8>, insn); }        \
