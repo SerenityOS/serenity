@@ -1369,9 +1369,32 @@ void SoftCPU::LGS_reg32_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LIDT(const X86::Instruction&) { TODO(); }
 void SoftCPU::LLDT_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LMSW_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LODSB(const X86::Instruction&) { TODO(); }
-void SoftCPU::LODSD(const X86::Instruction&) { TODO(); }
-void SoftCPU::LODSW(const X86::Instruction&) { TODO(); }
+
+template<typename T>
+ALWAYS_INLINE static void do_lods(SoftCPU& cpu, const X86::Instruction& insn)
+{
+    auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
+    cpu.do_once_or_repeat<true>(insn, [&] {
+        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.a32()) });
+        cpu.gpr<T>(X86::RegisterAL) = src;
+        cpu.step_source_index(insn.a32(), sizeof(T));
+    });
+}
+
+void SoftCPU::LODSB(const X86::Instruction& insn)
+{
+    do_lods<u8>(*this, insn);
+}
+
+void SoftCPU::LODSD(const X86::Instruction& insn)
+{
+    do_lods<u32>(*this, insn);
+}
+
+void SoftCPU::LODSW(const X86::Instruction& insn)
+{
+    do_lods<u16>(*this, insn);
+}
 
 void SoftCPU::LOOPNZ_imm8(const X86::Instruction& insn)
 {
