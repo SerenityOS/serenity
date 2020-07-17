@@ -44,6 +44,7 @@ public:
     NonnullRefPtr<PaletteImpl> clone() const;
 
     Color color(ColorRole) const;
+    int metric(MetricRole) const;
     const SystemTheme& theme() const;
 
     void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer);
@@ -79,6 +80,8 @@ public:
     Color highlight_window_border1() const { return color(ColorRole::HighlightWindowBorder1); }
     Color highlight_window_border2() const { return color(ColorRole::HighlightWindowBorder2); }
     Color highlight_window_title() const { return color(ColorRole::HighlightWindowTitle); }
+    Color window_title_stripes() const { return color(ColorRole::WindowTitleStripes); }
+    Color window_title_shadow() const { return color(ColorRole::WindowTitleShadow); }
     Color menu_stripe() const { return color(ColorRole::MenuStripe); }
     Color menu_base() const { return color(ColorRole::MenuBase); }
     Color menu_base_text() const { return color(ColorRole::MenuBaseText); }
@@ -117,9 +120,15 @@ public:
     Color syntax_preprocessor_statement() const { return color(ColorRole::SyntaxPreprocessorStatement); }
     Color syntax_preprocessor_value() const { return color(ColorRole::SyntaxPreprocessorValue); }
 
+    int window_title_height() const { return metric(MetricRole::TitleHeight); }
+    int window_title_button_width() const { return metric(MetricRole::TitleButtonWidth); }
+    int window_title_button_height() const { return metric(MetricRole::TitleButtonHeight); }
+
     Color color(ColorRole role) const { return m_impl->color(role); }
+    int metric(MetricRole role) const { return m_impl->metric(role); }
 
     void set_color(ColorRole, Color);
+    void set_metric(MetricRole, int);
 
     const SystemTheme& theme() const { return m_impl->theme(); }
 
