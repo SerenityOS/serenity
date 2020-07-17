@@ -2076,47 +2076,26 @@ void SoftCPU::STI(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::STOSB(const X86::Instruction& insn)
 {
-    if (insn.has_address_size_override_prefix()) {
-        do_once_or_repeat<false>(insn, [&] {
-            write_memory8({ es(), di() }, al());
-            set_di(di() + (df() ? -1 : 1));
-        });
-    } else {
-        do_once_or_repeat<false>(insn, [&] {
-            write_memory8({ es(), edi() }, al());
-            set_edi(edi() + (df() ? -1 : 1));
-        });
-    }
+    do_once_or_repeat<false>(insn, [&] {
+        write_memory8({ es(), destination_index(insn.a32()) }, al());
+        step_destination_index(insn.a32(), 1);
+    });
 }
 
 void SoftCPU::STOSD(const X86::Instruction& insn)
 {
-    if (insn.has_address_size_override_prefix()) {
-        do_once_or_repeat<false>(insn, [&] {
-            write_memory32({ es(), di() }, eax());
-            set_di(di() + (df() ? -4 : 4));
-        });
-    } else {
-        do_once_or_repeat<false>(insn, [&] {
-            write_memory32({ es(), edi() }, eax());
-            set_edi(edi() + (df() ? -4 : 4));
-        });
-    }
+    do_once_or_repeat<false>(insn, [&] {
+        write_memory32({ es(), destination_index(insn.a32()) }, eax());
+        step_destination_index(insn.a32(), 4);
+    });
 }
 
 void SoftCPU::STOSW(const X86::Instruction& insn)
 {
-    if (insn.has_address_size_override_prefix()) {
-        do_once_or_repeat<false>(insn, [&] {
-            write_memory16({ es(), di() }, ax());
-            set_di(di() + (df() ? -2 : 2));
-        });
-    } else {
-        do_once_or_repeat<false>(insn, [&] {
-            write_memory16({ es(), edi() }, ax());
-            set_edi(edi() + (df() ? -2 : 2));
-        });
-    }
+    do_once_or_repeat<false>(insn, [&] {
+        write_memory16({ es(), destination_index(insn.a32()) }, ax());
+        step_destination_index(insn.a32(), 2);
+    });
 }
 
 void SoftCPU::STR_RM16(const X86::Instruction&) { TODO(); }
