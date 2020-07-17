@@ -2014,9 +2014,31 @@ static T op_sar(SoftCPU& cpu, T data, u8 steps)
 
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(SAR, op_sar)
 
-void SoftCPU::SCASB(const X86::Instruction&) { TODO(); }
-void SoftCPU::SCASD(const X86::Instruction&) { TODO(); }
-void SoftCPU::SCASW(const X86::Instruction&) { TODO(); }
+template<typename T>
+ALWAYS_INLINE static void do_scas(SoftCPU& cpu, const X86::Instruction& insn)
+{
+    cpu.do_once_or_repeat<true>(insn, [&] {
+        auto src = cpu.gpr<T>(X86::RegisterAL);
+        auto dest = cpu.read_memory<T>({ cpu.es(), cpu.destination_index(insn.a32()) });
+        op_sub(cpu, dest, src);
+        cpu.step_destination_index(insn.a32(), sizeof(T));
+    });
+}
+
+void SoftCPU::SCASB(const X86::Instruction& insn)
+{
+    do_scas<u8>(*this, insn);
+}
+
+void SoftCPU::SCASD(const X86::Instruction& insn)
+{
+    do_scas<u32>(*this, insn);
+}
+
+void SoftCPU::SCASW(const X86::Instruction& insn)
+{
+    do_scas<u16>(*this, insn);
+}
 
 void SoftCPU::SETcc_RM8(const X86::Instruction& insn)
 {
