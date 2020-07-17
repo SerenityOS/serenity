@@ -125,15 +125,7 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
-    // Special handling of the "gettid" syscall since it's extremely hot.
-    // FIXME: Remove this hack once userspace locks stop calling it so damn much.
     auto current_thread = Thread::current();
-    auto& process = current_thread->process();
-    if (regs.eax == SC_gettid) {
-        regs.eax = process.sys$gettid();
-        current_thread->did_syscall();
-        return;
-    }
 
     if (current_thread->tracer() && current_thread->tracer()->is_tracing_syscalls()) {
         current_thread->tracer()->set_trace_syscalls(false);
@@ -149,6 +141,7 @@ void syscall_handler(TrapFrame* trap)
     asm volatile(""
                  : "=m"(*ptr));
 
+    auto& process = current_thread->process();
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
         dbg() << "Invalid stack pointer: " << String::format("%p", regs.userspace_esp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
