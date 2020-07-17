@@ -1289,7 +1289,13 @@ void SoftCPU::IN_AX_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::IN_EAX_DX(const X86::Instruction&) { TODO(); }
 void SoftCPU::IN_EAX_imm8(const X86::Instruction&) { TODO(); }
 void SoftCPU::IRET(const X86::Instruction&) { TODO(); }
-void SoftCPU::JCXZ_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::JCXZ_imm8(const X86::Instruction& insn)
+{
+    if ((insn.a32() && ecx() == 0) || (!insn.a32() && cx() == 0))
+        set_eip(eip() + (i8)insn.imm8());
+}
+
 void SoftCPU::JMP_FAR_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_FAR_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::JMP_RM16(const X86::Instruction&) { TODO(); }
