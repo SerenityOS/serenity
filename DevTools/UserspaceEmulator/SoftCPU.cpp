@@ -2138,7 +2138,7 @@ void SoftCPU::XCHG_AX_reg16(const X86::Instruction& insn)
 {
     auto temp = gpr16(insn.reg16());
     gpr16(insn.reg16()) = eax();
-    set_eax(temp);
+    set_ax(temp);
 }
 
 void SoftCPU::XCHG_EAX_reg32(const X86::Instruction& insn)
