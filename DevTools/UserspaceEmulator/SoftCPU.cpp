@@ -176,6 +176,19 @@ u32 SoftCPU::pop32()
     return value;
 }
 
+void SoftCPU::push16(u16 value)
+{
+    set_esp(esp() - sizeof(value));
+    write_memory16({ ss(), esp() }, value);
+}
+
+u16 SoftCPU::pop16()
+{
+    auto value = read_memory16({ ss(), esp() });
+    set_esp(esp() + sizeof(value));
+    return value;
+}
+
 template<bool check_zf, typename Callback>
 void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
 {
@@ -1615,10 +1628,23 @@ void SoftCPU::POP_DS(const X86::Instruction&) { TODO(); }
 void SoftCPU::POP_ES(const X86::Instruction&) { TODO(); }
 void SoftCPU::POP_FS(const X86::Instruction&) { TODO(); }
 void SoftCPU::POP_GS(const X86::Instruction&) { TODO(); }
-void SoftCPU::POP_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::POP_RM32(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::POP_RM16(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, pop16());
+}
+
+void SoftCPU::POP_RM32(const X86::Instruction& insn)
+{
+    insn.modrm().write32(*this, insn, pop32());
+}
+
 void SoftCPU::POP_SS(const X86::Instruction&) { TODO(); }
-void SoftCPU::POP_reg16(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::POP_reg16(const X86::Instruction& insn)
+{
+    gpr16(insn.reg16()) = pop16();
+}
 
 void SoftCPU::POP_reg32(const X86::Instruction& insn)
 {
@@ -1648,7 +1674,11 @@ void SoftCPU::PUSH_RM32(const X86::Instruction& insn)
 
 void SoftCPU::PUSH_SP_8086_80186(const X86::Instruction&) { TODO(); }
 void SoftCPU::PUSH_SS(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_imm16(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::PUSH_imm16(const X86::Instruction& insn)
+{
+    push16(insn.imm16());
+}
 
 void SoftCPU::PUSH_imm32(const X86::Instruction& insn)
 {
@@ -1661,7 +1691,10 @@ void SoftCPU::PUSH_imm8(const X86::Instruction& insn)
     push32(sign_extended_to<i32>(insn.imm8()));
 }
 
-void SoftCPU::PUSH_reg16(const X86::Instruction&) { TODO(); }
+void SoftCPU::PUSH_reg16(const X86::Instruction& insn)
+{
+    push16(gpr16(insn.reg16()));
+}
 
 void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
 {
