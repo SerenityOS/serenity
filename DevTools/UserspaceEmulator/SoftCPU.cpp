@@ -1356,9 +1356,45 @@ void SoftCPU::LMSW_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LODSB(const X86::Instruction&) { TODO(); }
 void SoftCPU::LODSD(const X86::Instruction&) { TODO(); }
 void SoftCPU::LODSW(const X86::Instruction&) { TODO(); }
-void SoftCPU::LOOPNZ_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::LOOPZ_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::LOOP_imm8(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::LOOPNZ_imm8(const X86::Instruction& insn)
+{
+    if (insn.a32()) {
+        set_ecx(ecx() - 1);
+        if (ecx() != 0 && !zf())
+            set_eip(eip() + (i8)insn.imm8());
+    } else {
+        set_cx(cx() - 1);
+        if (cx() != 0 && !zf())
+            set_eip(eip() + (i8)insn.imm8());
+    }
+}
+void SoftCPU::LOOPZ_imm8(const X86::Instruction& insn)
+{
+    if (insn.a32()) {
+        set_ecx(ecx() - 1);
+        if (ecx() != 0 && zf())
+            set_eip(eip() + (i8)insn.imm8());
+    } else {
+        set_cx(cx() - 1);
+        if (cx() != 0 && zf())
+            set_eip(eip() + (i8)insn.imm8());
+    }
+}
+
+void SoftCPU::LOOP_imm8(const X86::Instruction& insn)
+{
+    if (insn.a32()) {
+        set_ecx(ecx() - 1);
+        if (ecx() != 0)
+            set_eip(eip() + (i8)insn.imm8());
+    } else {
+        set_cx(cx() - 1);
+        if (cx() != 0)
+            set_eip(eip() + (i8)insn.imm8());
+    }
+}
+
 void SoftCPU::LSL_reg16_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LSL_reg32_RM32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LSS_reg16_mem16(const X86::Instruction&) { TODO(); }
