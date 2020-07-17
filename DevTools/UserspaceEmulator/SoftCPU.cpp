@@ -1440,64 +1440,31 @@ void SoftCPU::LSS_reg16_mem16(const X86::Instruction&) { TODO(); }
 void SoftCPU::LSS_reg32_mem32(const X86::Instruction&) { TODO(); }
 void SoftCPU::LTR_RM16(const X86::Instruction&) { TODO(); }
 
+template<typename T>
+ALWAYS_INLINE static void do_movs(SoftCPU& cpu, const X86::Instruction& insn)
+{
+    auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
+    cpu.do_once_or_repeat<false>(insn, [&] {
+        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.a32()) });
+        cpu.write_memory<T>({ cpu.es(), cpu.destination_index(insn.a32()) }, src);
+        cpu.step_source_index(insn.a32(), sizeof(T));
+        cpu.step_destination_index(insn.a32(), sizeof(T));
+   });
+}
+
 void SoftCPU::MOVSB(const X86::Instruction& insn)
 {
-    auto src_segment = segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
-    if (insn.has_address_size_override_prefix()) {
-        do_once_or_repeat<false>(insn, [&] {
-            auto src = read_memory8({ src_segment, si() });
-            write_memory8({ es(), di() }, src);
-            set_di(di() + (df() ? -1 : 1));
-            set_si(si() + (df() ? -1 : 1));
-        });
-    } else {
-        do_once_or_repeat<false>(insn, [&] {
-            auto src = read_memory8({ src_segment, esi() });
-            write_memory8({ es(), edi() }, src);
-            set_edi(edi() + (df() ? -1 : 1));
-            set_esi(esi() + (df() ? -1 : 1));
-        });
-    }
+    do_movs<u8>(*this, insn);
 }
 
 void SoftCPU::MOVSD(const X86::Instruction& insn)
 {
-    auto src_segment = segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
-    if (insn.has_address_size_override_prefix()) {
-        do_once_or_repeat<false>(insn, [&] {
-            auto src = read_memory32({ src_segment, si() });
-            write_memory32({ es(), di() }, src);
-            set_di(di() + (df() ? -4 : 4));
-            set_si(si() + (df() ? -4 : 4));
-        });
-    } else {
-        do_once_or_repeat<false>(insn, [&] {
-            auto src = read_memory32({ src_segment, esi() });
-            write_memory32({ es(), edi() }, src);
-            set_edi(edi() + (df() ? -4 : 4));
-            set_esi(esi() + (df() ? -4 : 4));
-        });
-    }
+    do_movs<u32>(*this, insn);
 }
 
 void SoftCPU::MOVSW(const X86::Instruction& insn)
 {
-    auto src_segment = segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
-    if (insn.has_address_size_override_prefix()) {
-        do_once_or_repeat<false>(insn, [&] {
-            auto src = read_memory16({ src_segment, si() });
-            write_memory16({ es(), di() }, src);
-            set_di(di() + (df() ? -2 : 2));
-            set_si(si() + (df() ? -2 : 2));
-        });
-    } else {
-        do_once_or_repeat<false>(insn, [&] {
-            auto src = read_memory16({ src_segment, esi() });
-            write_memory16({ es(), edi() }, src);
-            set_edi(edi() + (df() ? -2 : 2));
-            set_esi(esi() + (df() ? -2 : 2));
-        });
-    }
+    do_movs<u16>(*this, insn);
 }
 void SoftCPU::MOVSX_reg16_RM8(const X86::Instruction& insn)
 {
