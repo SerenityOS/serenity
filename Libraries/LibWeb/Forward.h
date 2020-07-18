@@ -30,6 +30,7 @@ namespace Web {
 
 class CanvasRenderingContext2D;
 class Document;
+class DocumentType;
 class Element;
 class Event;
 class EventHandler;
@@ -72,11 +73,13 @@ class Text;
 class Timer;
 class Window;
 class XMLHttpRequest;
+enum class QuirksMode;
 
 namespace Bindings {
 
 class CanvasRenderingContext2DWrapper;
 class DocumentWrapper;
+class DocumentTypeWrapper;
 class ElementWrapper;
 class EventWrapper;
 class EventListenerWrapper;

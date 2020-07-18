@@ -455,6 +455,7 @@ _StartOfFunction:
                 {
                     create_new_token(HTMLToken::Type::DOCTYPE);
                     m_current_token.m_doctype.name.append(tolower(current_input_character.value()));
+                    m_current_token.m_doctype.missing_name = false;
                     SWITCH_TO(DOCTYPEName);
                 }
                 ON(0)
@@ -462,6 +463,7 @@ _StartOfFunction:
                     PARSE_ERROR();
                     create_new_token(HTMLToken::Type::DOCTYPE);
                     m_current_token.m_doctype.name.append_codepoint(0xFFFD);
+                    m_current_token.m_doctype.missing_name = false;
                     SWITCH_TO(DOCTYPEName);
                 }
                 ON('>')
@@ -483,6 +485,7 @@ _StartOfFunction:
                 {
                     create_new_token(HTMLToken::Type::DOCTYPE);
                     m_current_token.m_doctype.name.append_codepoint(current_input_character.value());
+                    m_current_token.m_doctype.missing_name = false;
                     SWITCH_TO(DOCTYPEName);
                 }
             }
@@ -566,12 +569,14 @@ _StartOfFunction:
                 {
                     PARSE_ERROR();
                     m_current_token.m_doctype.public_identifier.clear();
+                    m_current_token.m_doctype.missing_public_identifier = false;
                     SWITCH_TO(DOCTYPEPublicIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     PARSE_ERROR();
                     m_current_token.m_doctype.public_identifier.clear();
+                    m_current_token.m_doctype.missing_public_identifier = false;
                     SWITCH_TO(DOCTYPEPublicIdentifierSingleQuoted);
                 }
                 ON('>')
@@ -606,12 +611,14 @@ _StartOfFunction:
                 {
                     PARSE_ERROR();
                     m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     PARSE_ERROR();
                     m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
                 ON('>')
@@ -645,11 +652,13 @@ _StartOfFunction:
                 ON('"')
                 {
                     m_current_token.m_doctype.public_identifier.clear();
+                    m_current_token.m_doctype.missing_public_identifier = false;
                     SWITCH_TO(DOCTYPEPublicIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     m_current_token.m_doctype.public_identifier.clear();
+                    m_current_token.m_doctype.missing_public_identifier = false;
                     SWITCH_TO(DOCTYPEPublicIdentifierSingleQuoted);
                 }
                 ON('>')
@@ -683,11 +692,13 @@ _StartOfFunction:
                 ON('"')
                 {
                     m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
                 ON('>')
@@ -858,12 +869,14 @@ _StartOfFunction:
                 {
                     PARSE_ERROR();
                     m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     PARSE_ERROR();
                     m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
                 ON_EOF
@@ -895,11 +908,13 @@ _StartOfFunction:
                 ON('"')
                 {
                     m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
                 ON_EOF

@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/HTMLElementWrapper.h>
@@ -41,6 +42,8 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, Node& node)
 {
     if (is<Document>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, to<Document>(node)));
+    if (is<DocumentType>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, to<DocumentType>(node)));
     if (is<HTMLCanvasElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, to<HTMLCanvasElement>(node)));
     if (is<HTMLImageElement>(node))

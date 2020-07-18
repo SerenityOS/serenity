@@ -477,4 +477,20 @@ void Document::adopt_node(Node& subtree_root)
     });
 }
 
+const DocumentType* Document::doctype() const
+{
+    return first_child_of_type<DocumentType>();
+}
+
+const String& Document::compat_mode() const
+{
+    static String back_compat = "BackCompat";
+    static String css1_compat = "CSS1Compat";
+
+    if (m_quirks_mode == QuirksMode::Yes)
+        return back_compat;
+
+    return css1_compat;
+}
+
 }
