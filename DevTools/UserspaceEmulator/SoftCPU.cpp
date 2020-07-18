@@ -1198,7 +1198,23 @@ void SoftCPU::DEC_reg32(const X86::Instruction& insn)
     gpr32(insn.reg32()) = op_dec(*this, gpr32(insn.reg32()));
 }
 
-void SoftCPU::DIV_RM16(const X86::Instruction&) { TODO(); }
+void SoftCPU::DIV_RM16(const X86::Instruction& insn)
+{
+    auto divisor = insn.modrm().read16(*this, insn);
+    if (divisor == 0) {
+        warn() << "Divide by zero";
+        TODO();
+    }
+    u32 dividend = ((u32)dx() << 16) | ax();
+    auto result = dividend / divisor;
+    if (result > NumericLimits<u16>::max()) {
+        warn() << "Divide overflow";
+        TODO();
+    }
+
+    set_ax(result);
+    set_dx(dividend % divisor);
+}
 
 void SoftCPU::DIV_RM32(const X86::Instruction& insn)
 {
@@ -1218,7 +1234,24 @@ void SoftCPU::DIV_RM32(const X86::Instruction& insn)
     set_edx(dividend % divisor);
 }
 
-void SoftCPU::DIV_RM8(const X86::Instruction&) { TODO(); }
+void SoftCPU::DIV_RM8(const X86::Instruction& insn)
+{
+    auto divisor = insn.modrm().read8(*this, insn);
+    if (divisor == 0) {
+        warn() << "Divide by zero";
+        TODO();
+    }
+    u16 dividend = ax();
+    auto result = dividend / divisor;
+    if (result > NumericLimits<u8>::max()) {
+        warn() << "Divide overflow";
+        TODO();
+    }
+
+    set_al(result);
+    set_ah(dividend % divisor);
+}
+
 void SoftCPU::ENTER16(const X86::Instruction&) { TODO(); }
 void SoftCPU::ENTER32(const X86::Instruction&) { TODO(); }
 
@@ -1647,7 +1680,16 @@ void SoftCPU::MOV_reg8_imm8(const X86::Instruction& insn)
 
 void SoftCPU::MOV_seg_RM16(const X86::Instruction&) { TODO(); }
 void SoftCPU::MOV_seg_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::MUL_RM16(const X86::Instruction&) { TODO(); }
+
+void SoftCPU::MUL_RM16(const X86::Instruction& insn)
+{
+    u32 result = (u32)ax() * (u32)insn.modrm().read16(*this, insn);
+    set_ax(result & 0xffff);
+    set_dx(result >> 16);
+
+    set_cf(dx() != 0);
+    set_of(dx() != 0);
+}
 
 void SoftCPU::MUL_RM32(const X86::Instruction& insn)
 {
@@ -1659,7 +1701,14 @@ void SoftCPU::MUL_RM32(const X86::Instruction& insn)
     set_of(edx() != 0);
 }
 
-void SoftCPU::MUL_RM8(const X86::Instruction&) { TODO(); }
+void SoftCPU::MUL_RM8(const X86::Instruction& insn)
+{
+    u16 result = (u16)al() * insn.modrm().read8(*this, insn);
+    set_ax(result);
+
+    set_cf((result & 0xff00) != 0);
+    set_of((result & 0xff00) != 0);
+}
 
 void SoftCPU::NEG_RM16(const X86::Instruction& insn)
 {
