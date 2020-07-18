@@ -24,49 +24,74 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <unistd.h>
+
+void print_error_then_exit_on_fail(int result, const char* function_name)
+{
+    if (result < 0) {
+        perror(function_name);
+        exit(1);
+    }
+}
+
+void copy_over_text(int from_file_descriptor, int to_file_descriptor)
+{
+    for (;;) {
+        char buffer[32768];
+        int count = read(from_file_descriptor, buffer, sizeof(buffer));
+        print_error_then_exit_on_fail(count, "read");
+        if (count == 0)
+            break;
+        print_error_then_exit_on_fail(write(to_file_descriptor, buffer, count), "write");
+    }
+}
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio wpath cpath rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    auto in_file = Core::File::construct("/dev/stdin");
-    if (!in_file->open(Core::IODevice::ReadOnly)) {
-        perror("open");
-        return 1;
-    }
-    auto output_buffer = in_file->read_all();
-
-    if (pledge("stdio wpath cpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    print_error_then_exit_on_fail(pledge("stdio wpath cpath rpath fattr chown", nullptr), "pledge");
 
     bool append = false;
-    const char* output_file_name = "/dev/stdout";
+    const char* output_file_name = nullptr;
 
     Core::ArgsParser parser;
     parser.add_option(append, "Append input to output file", "append", 'a');
     parser.add_positional_argument(output_file_name, "Output file", "file", Core::ArgsParser::Required::No);
     parser.parse(argc, argv);
 
-    auto open_mode = Core::IODevice::WriteOnly;
-    if (append)
-        open_mode = (Core::IODevice::OpenMode)(Core::IODevice::Append | open_mode);
-
-    auto output_file = Core::File::construct(output_file_name);
-    if (!output_file->open(open_mode)) {
-        perror("open");
+    if (!output_file_name) {
+        copy_over_text(0, 1);
         return 1;
     }
-    output_file->write(output_buffer);
+
+    const char* temp_file_name = "..spng_temp.Uav78GHg";
+    int open_mode = O_WRONLY | O_CREAT;
+    if (append)
+        open_mode |= O_APPEND;
+    int temp_file_descriptor = open(temp_file_name, open_mode);
+    print_error_then_exit_on_fail(temp_file_descriptor, "open");
+
+    if (append) {
+        int output_file_descriptor = open(output_file_name, O_RDONLY);
+        print_error_then_exit_on_fail(output_file_descriptor, "open");
+        copy_over_text(output_file_descriptor, temp_file_descriptor);
+        close(output_file_descriptor);
+    }
+    copy_over_text(0, temp_file_descriptor);
+
+    print_error_then_exit_on_fail(pledge("stdio cpath rpath fattr chown", nullptr), "pledge");
+    struct stat st;
+    print_error_then_exit_on_fail(stat(output_file_name, &st), "stat");
+    print_error_then_exit_on_fail(pledge("stdio cpath fattr chown", nullptr), "pledge");
+    print_error_then_exit_on_fail(chown(temp_file_name, st.st_uid, st.st_gid), "chown");
+    print_error_then_exit_on_fail(pledge("stdio cpath fattr", nullptr), "pledge");
+    print_error_then_exit_on_fail(chmod(temp_file_name, st.st_mode), "chmod");
+    print_error_then_exit_on_fail(pledge("stdio cpath", nullptr), "pledge");
+    print_error_then_exit_on_fail(rename(temp_file_name, output_file_name), "rename");
 
     return 0;
 }
