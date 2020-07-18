@@ -174,6 +174,7 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
     auto window = GUI::Window::construct();
     window->set_title("Mouse button demo");
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-mouse.png"));
     window->resize(160, 155);
 
     auto& main_widget = window->set_main_widget<MainFrame>();
