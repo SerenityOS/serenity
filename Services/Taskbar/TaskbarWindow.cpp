@@ -104,6 +104,7 @@ void TaskbarWindow::create_quick_launch_bar()
         auto af_path = String::format("/res/apps/%s", af_name.characters());
         auto af = Core::ConfigFile::open(af_path);
         auto app_executable = af->read_entry("App", "Executable");
+        auto app_name = af->read_entry("App", "Name");
         auto app_icon_path = af->read_entry("Icons", "16x16");
 
         auto& button = quick_launch_bar.add<GUI::Button>();
@@ -112,7 +113,7 @@ void TaskbarWindow::create_quick_launch_bar()
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
 
         button.set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
-        button.set_tooltip(name);
+        button.set_tooltip(app_name);
         button.on_click = [app_executable](auto) {
             pid_t pid = fork();
             if (pid < 0) {
