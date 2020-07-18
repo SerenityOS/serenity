@@ -509,39 +509,33 @@ ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_imul(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static void op_imul(SoftCPU& cpu, const T& dest, const T& src, T& result_high, T& result_low)
 {
-    u32 result_high = 0;
-    u32 result_low = 0;
-    T result = 0;
-    u32 new_flags = 0;
-
-    if constexpr (sizeof(T) == 8) {
-        asm volatile("imull %%ecx"
-                     : "=a"(result_low), "=d"(result_high)
-                     : "a"((i32)dest), "c"((i32)src));
-    } else if constexpr (sizeof(T) == 4) {
-        asm volatile("imull %%ecx, %%eax\n"
-                     : "=a"(result)
-                     : "a"(dest), "c"((i32)src));
+    bool did_overflow = false;
+    if constexpr (sizeof(T) == 4) {
+        i64 result = (i64)src * (i64)dest;
+        result_low = result & 0xffffffff;
+        result_high = result >> 32;
+        did_overflow = (result > NumericLimits<T>::max() || result < NumericLimits<T>::min());
     } else if constexpr (sizeof(T) == 2) {
-        asm volatile("imulw %%cx, %%ax\n"
-                     : "=a"(result)
-                     : "a"(dest), "c"((i16)src));
-    } else {
-        ASSERT_NOT_REACHED();
+        i32 result = (i32)src * (i32)dest;
+        result_low = result & 0xffff;
+        result_high = result >> 16;
+        did_overflow = (result > NumericLimits<T>::max() || result < NumericLimits<T>::min());
+    } else if constexpr (sizeof(T) == 1) {
+        i16 result = (i16)src * (i16)dest;
+        result_low = result & 0xff;
+        result_high = result >> 8;
+        did_overflow = (result > NumericLimits<T>::max() || result < NumericLimits<T>::min());
     }
 
-    asm volatile(
-        "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
-
-    if constexpr (sizeof(T) == 8)
-        result = ((u64)result_high << 32) | result_low;
-
-    cpu.set_flags_oc(new_flags);
-    return result;
+    if (did_overflow) {
+        cpu.set_cf(true);
+        cpu.set_of(true);
+    } else {
+        cpu.set_cf(false);
+        cpu.set_of(false);
+    }
 }
 
 template<typename T>
@@ -1283,49 +1277,82 @@ void SoftCPU::IDIV_RM32(const X86::Instruction& insn)
     set_edx(dividend % divisor);
 }
 
-void SoftCPU::IDIV_RM8(const X86::Instruction&) { TODO(); }
-void SoftCPU::IMUL_RM16(const X86::Instruction&) { TODO(); }
+void SoftCPU::IDIV_RM8(const X86::Instruction& insn)
+{
+    auto divisor = (i16)insn.modrm().read8(*this, insn);
+    if (divisor == 0) {
+        warn() << "Divide by zero";
+        TODO();
+    }
+    i16 dividend = ax();
+    i16 result = dividend / divisor;
+    if (result > NumericLimits<i8>::max() || result < NumericLimits<i8>::min()) {
+        warn() << "Divide overflow";
+        TODO();
+    }
+
+    set_al(result);
+    set_ah(dividend % divisor);
+}
+
+void SoftCPU::IMUL_RM16(const X86::Instruction& insn)
+{
+    op_imul<i16>(*this, insn.modrm().read16(*this, insn), ax(), (i16&)gpr16(X86::RegisterDX), (i16&)gpr16(X86::RegisterAX));
+}
 
 void SoftCPU::IMUL_RM32(const X86::Instruction& insn)
 {
-    i64 value = op_imul<i64>(*this, insn.modrm().read32(*this, insn), eax());
-    set_edx(value >> 32);
-    set_eax(value & 0xffffffff);
+    op_imul<i32>(*this, insn.modrm().read32(*this, insn), eax(), (i32&)gpr32(X86::RegisterEDX), (i32&)gpr32(X86::RegisterEAX));
 }
 
 void SoftCPU::IMUL_RM8(const X86::Instruction& insn)
 {
-    set_ax(op_imul<i16>(*this, insn.modrm().read8(*this, insn), al()));
+    op_imul<i8>(*this, insn.modrm().read8(*this, insn), al(), (i8&)gpr8(X86::RegisterAH), (i8&)gpr8(X86::RegisterAL));
 }
 
 void SoftCPU::IMUL_reg16_RM16(const X86::Instruction& insn)
 {
-    gpr16(insn.reg16()) = op_imul<i16>(*this, gpr16(insn.reg16()), insn.modrm().read16(*this, insn));
+    PartAddressableRegister result;
+    op_imul<i16>(*this, gpr16(insn.reg16()), insn.modrm().read16(*this, insn), (i16&)result.high_u16, (i16&)result.low_u16);
+    gpr16(insn.reg16()) = result.low_u16;
 }
 
 void SoftCPU::IMUL_reg16_RM16_imm16(const X86::Instruction& insn)
 {
-    gpr16(insn.reg16()) = op_imul<i16>(*this, insn.modrm().read16(*this, insn), insn.imm16());
+    PartAddressableRegister result;
+    op_imul<i16>(*this, insn.modrm().read16(*this, insn), insn.imm16(), (i16&)result.high_u16, (i16&)result.low_u16);
+    gpr16(insn.reg16()) = result.low_u16;
 }
 
 void SoftCPU::IMUL_reg16_RM16_imm8(const X86::Instruction& insn)
 {
-    gpr16(insn.reg16()) = op_imul<i16>(*this, insn.modrm().read16(*this, insn), sign_extended_to<i16>(insn.imm8()));
+    PartAddressableRegister result;
+    op_imul<i16>(*this, insn.modrm().read16(*this, insn), sign_extended_to<i16>(insn.imm8()), (i16&)result.high_u16, (i16&)result.low_u16);
+    gpr16(insn.reg16()) = result.low_u16;
 }
 
 void SoftCPU::IMUL_reg32_RM32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = op_imul<i32>(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn));
+    i32 result_high;
+    i32 result_low;
+    op_imul<i32>(*this, gpr32(insn.reg32()), insn.modrm().read32(*this, insn), result_high, result_low);
+    gpr32(insn.reg32()) = result_low;
 }
 
 void SoftCPU::IMUL_reg32_RM32_imm32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = op_imul<i32>(*this, insn.modrm().read32(*this, insn), insn.imm32());
+    i32 result_high;
+    i32 result_low;
+    op_imul<i32>(*this, insn.modrm().read32(*this, insn), insn.imm32(), result_high, result_low);
+    gpr32(insn.reg32()) = result_low;
 }
 
 void SoftCPU::IMUL_reg32_RM32_imm8(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = op_imul<i32>(*this, insn.modrm().read32(*this, insn), sign_extended_to<i32>(insn.imm8()));
+    i32 result_high;
+    i32 result_low;
+    op_imul<i32>(*this, insn.modrm().read32(*this, insn), sign_extended_to<i32>(insn.imm8()), result_high, result_low);
+    gpr32(insn.reg32()) = result_low;
 }
 
 void SoftCPU::INC_RM16(const X86::Instruction& insn)
@@ -1533,7 +1560,7 @@ ALWAYS_INLINE static void do_movs(SoftCPU& cpu, const X86::Instruction& insn)
         cpu.write_memory<T>({ cpu.es(), cpu.destination_index(insn.a32()) }, src);
         cpu.step_source_index(insn.a32(), sizeof(T));
         cpu.step_destination_index(insn.a32(), sizeof(T));
-   });
+    });
 }
 
 void SoftCPU::MOVSB(const X86::Instruction& insn)
