@@ -162,6 +162,9 @@ public:
         return Core::DateTime::from_timestamp(timestamp).to_string();
     }
 
+    bool should_show_dotfiles() const { return m_should_show_dotfiles; }
+    void set_should_show_dotfiles(bool);
+
 private:
     FileSystemModel(const StringView& root_path, Mode);
 
@@ -192,6 +195,8 @@ private:
 
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };
+
+    bool m_should_show_dotfiles { false };
 };
 
 }
