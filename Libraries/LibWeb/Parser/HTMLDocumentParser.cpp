@@ -46,6 +46,64 @@
 
 namespace Web {
 
+static Vector<FlyString> s_quirks_public_ids = {
+    "+//Silmaril//dtd html Pro v0r11 19970101//",
+    "-//AS//DTD HTML 3.0 asWedit + extensions//",
+    "-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//",
+    "-//IETF//DTD HTML 2.0 Level 1//",
+    "-//IETF//DTD HTML 2.0 Level 2//",
+    "-//IETF//DTD HTML 2.0 Strict Level 1//",
+    "-//IETF//DTD HTML 2.0 Strict Level 2//",
+    "-//IETF//DTD HTML 2.0 Strict//",
+    "-//IETF//DTD HTML 2.0//",
+    "-//IETF//DTD HTML 2.1E//",
+    "-//IETF//DTD HTML 3.0//",
+    "-//IETF//DTD HTML 3.2 Final//",
+    "-//IETF//DTD HTML 3.2//",
+    "-//IETF//DTD HTML 3//",
+    "-//IETF//DTD HTML Level 0//",
+    "-//IETF//DTD HTML Level 1//",
+    "-//IETF//DTD HTML Level 2//",
+    "-//IETF//DTD HTML Level 3//",
+    "-//IETF//DTD HTML Strict Level 0//",
+    "-//IETF//DTD HTML Strict Level 1//",
+    "-//IETF//DTD HTML Strict Level 2//",
+    "-//IETF//DTD HTML Strict Level 3//",
+    "-//IETF//DTD HTML Strict//",
+    "-//IETF//DTD HTML//",
+    "-//Metrius//DTD Metrius Presentational//",
+    "-//Microsoft//DTD Internet Explorer 2.0 HTML Strict//",
+    "-//Microsoft//DTD Internet Explorer 2.0 HTML//",
+    "-//Microsoft//DTD Internet Explorer 2.0 Tables//",
+    "-//Microsoft//DTD Internet Explorer 3.0 HTML Strict//",
+    "-//Microsoft//DTD Internet Explorer 3.0 HTML//",
+    "-//Microsoft//DTD Internet Explorer 3.0 Tables//",
+    "-//Netscape Comm. Corp.//DTD HTML//",
+    "-//Netscape Comm. Corp.//DTD Strict HTML//",
+    "-//O'Reilly and Associates//DTD HTML 2.0//",
+    "-//O'Reilly and Associates//DTD HTML Extended 1.0//",
+    "-//O'Reilly and Associates//DTD HTML Extended Relaxed 1.0//",
+    "-//SQ//DTD HTML 2.0 HoTMetaL + extensions//",
+    "-//SoftQuad Software//DTD HoTMetaL PRO 6.0::19990601::extensions to HTML 4.0//",
+    "-//SoftQuad//DTD HoTMetaL PRO 4.0::19971010::extensions to HTML 4.0//",
+    "-//Spyglass//DTD HTML 2.0 Extended//",
+    "-//Sun Microsystems Corp.//DTD HotJava HTML//",
+    "-//Sun Microsystems Corp.//DTD HotJava Strict HTML//",
+    "-//W3C//DTD HTML 3 1995-03-24//",
+    "-//W3C//DTD HTML 3.2 Draft//",
+    "-//W3C//DTD HTML 3.2 Final//",
+    "-//W3C//DTD HTML 3.2//",
+    "-//W3C//DTD HTML 3.2S Draft//",
+    "-//W3C//DTD HTML 4.0 Frameset//",
+    "-//W3C//DTD HTML 4.0 Transitional//",
+    "-//W3C//DTD HTML Experimental 19960712//",
+    "-//W3C//DTD HTML Experimental 970421//",
+    "-//W3C//DTD W3 HTML//",
+    "-//W3O//DTD W3 HTML 3.0//",
+    "-//WebTechs//DTD Mozilla HTML 2.0//",
+    "-//WebTechs//DTD Mozilla HTML//"
+};
+
 RefPtr<Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
 {
     HTMLDocumentParser parser(data, encoding);
@@ -181,6 +239,60 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     }
 }
 
+QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_token) const
+{
+    if (doctype_token.m_doctype.force_quirks)
+        return QuirksMode::Yes;
+
+    // NOTE: The tokenizer puts the name into lower case for us.
+    if (doctype_token.m_doctype.name.to_string() != "html")
+        return QuirksMode::Yes;
+
+    auto public_identifier = doctype_token.m_doctype.public_identifier.to_string();
+    auto system_identifier = doctype_token.m_doctype.system_identifier.to_string();
+
+    if (public_identifier.equals_ignoring_case("-//W3O//DTD W3 HTML Strict 3.0//EN//"))
+        return QuirksMode::Yes;
+
+    if (public_identifier.equals_ignoring_case("-/W3C/DTD HTML 4.0 Transitional/EN"))
+        return QuirksMode::Yes;
+
+    if (public_identifier.equals_ignoring_case("HTML"))
+        return QuirksMode::Yes;
+
+    if (system_identifier.equals_ignoring_case("http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"))
+        return QuirksMode::Yes;
+
+    for (auto& public_id : s_quirks_public_ids) {
+        if (public_identifier.starts_with(public_id, CaseSensitivity::CaseInsensitive))
+            return QuirksMode::Yes;
+    }
+
+    if (doctype_token.m_doctype.missing_system_identifier) {
+        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//", CaseSensitivity::CaseInsensitive))
+            return QuirksMode::Yes;
+
+        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//", CaseSensitivity::CaseInsensitive))
+            return QuirksMode::Yes;
+    }
+
+    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Frameset//", CaseSensitivity::CaseInsensitive))
+        return QuirksMode::Limited;
+
+    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Transitional//", CaseSensitivity::CaseInsensitive))
+        return QuirksMode::Limited;
+
+    if (!doctype_token.m_doctype.missing_system_identifier) {
+        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//", CaseSensitivity::CaseInsensitive))
+            return QuirksMode::Limited;
+
+        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//", CaseSensitivity::CaseInsensitive))
+            return QuirksMode::Limited;
+    }
+
+    return QuirksMode::No;
+}
+
 void HTMLDocumentParser::handle_initial(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
@@ -196,14 +308,16 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
     if (token.is_doctype()) {
         auto doctype = adopt(*new DocumentType(document()));
         doctype->set_name(token.m_doctype.name.to_string());
+        doctype->set_public_id(token.m_doctype.public_identifier.to_string());
+        doctype->set_system_id(token.m_doctype.system_identifier.to_string());
         document().append_child(move(doctype));
-        document().set_quirks_mode(token.m_doctype.force_quirks);
+        document().set_quirks_mode(which_quirks_mode(token));
         m_insertion_mode = InsertionMode::BeforeHTML;
         return;
     }
 
     PARSE_ERROR();
-    document().set_quirks_mode(true);
+    document().set_quirks_mode(QuirksMode::Yes);
     m_insertion_mode = InsertionMode::BeforeHTML;
     process_using_the_rules_for(InsertionMode::BeforeHTML, token);
 }
@@ -2612,7 +2726,7 @@ NonnullRefPtrVector<Node> HTMLDocumentParser::parse_html_fragment(Element& conte
 {
     HTMLDocumentParser parser(markup, "utf-8");
     parser.m_parsing_fragment = true;
-    parser.document().set_quirks_mode(context_element.document().in_quirks_mode());
+    parser.document().set_quirks_mode(context_element.document().mode());
 
     if (context_element.tag_name().is_one_of(HTML::TagNames::title, HTML::TagNames::textarea)) {
         parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);

@@ -85,6 +85,8 @@ public:
 private:
     const char* insertion_mode_name() const;
 
+    QuirksMode which_quirks_mode(const HTMLToken&) const;
+
     void handle_initial(HTMLToken&);
     void handle_before_html(HTMLToken&);
     void handle_before_head(HTMLToken&);

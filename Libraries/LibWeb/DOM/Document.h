@@ -43,6 +43,12 @@
 
 namespace Web {
 
+enum class QuirksMode {
+    No,
+    Limited,
+    Yes
+};
+
 class Document
     : public ParentNode
     , public NonElementParentNode<Document> {
@@ -142,10 +148,14 @@ public:
     void add_script_to_execute_as_soon_as_possible(Badge<HTMLScriptElement>, HTMLScriptElement&);
     NonnullRefPtrVector<HTMLScriptElement> take_scripts_to_execute_as_soon_as_possible(Badge<HTMLDocumentParser>);
 
-    bool in_quirks_mode() const { return m_quirks_mode; }
-    void set_quirks_mode(bool mode) { m_quirks_mode = mode; }
+    QuirksMode mode() const { return m_quirks_mode; }
+    bool in_quirks_mode() const { return m_quirks_mode == QuirksMode::Yes; }
+    void set_quirks_mode(QuirksMode mode) { m_quirks_mode = mode; }
 
     void adopt_node(Node&);
+
+    const DocumentType* doctype() const;
+    const String& compat_mode() const;
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
@@ -175,7 +185,7 @@ private:
     NonnullRefPtrVector<HTMLScriptElement> m_scripts_to_execute_when_parsing_has_finished;
     NonnullRefPtrVector<HTMLScriptElement> m_scripts_to_execute_as_soon_as_possible;
 
-    bool m_quirks_mode { false };
+    QuirksMode m_quirks_mode { QuirksMode::No };
 };
 
 template<>
