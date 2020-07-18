@@ -423,6 +423,7 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/DOM/Element.h>";
     out() << "#include <LibWeb/DOM/HTMLElement.h>";
     out() << "#include <LibWeb/DOM/EventListener.h>";
+    out() << "#include <LibWeb/Bindings/DocumentTypeWrapper.h>";
     out() << "#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>";
     out() << "#include <LibWeb/Bindings/HTMLImageElementWrapper.h>";
     out() << "#include <LibWeb/Bindings/ImageDataWrapper.h>";
