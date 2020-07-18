@@ -85,6 +85,7 @@ public:
     Optional<int> to_int() const;
 
     bool equals_ignoring_case(const StringView&) const;
+    bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 
     static void did_destroy_impl(Badge<StringImpl>, StringImpl&);

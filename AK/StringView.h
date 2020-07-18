@@ -72,7 +72,7 @@ public:
 
     unsigned hash() const;
 
-    bool starts_with(const StringView&) const;
+    bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     bool starts_with(char) const;
     bool ends_with(char) const;
