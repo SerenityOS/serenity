@@ -202,6 +202,31 @@ bool ends_with(const StringView& str, const StringView& end, CaseSensitivity cas
     return true;
 }
 
+bool starts_with(const StringView& str, const StringView& start, CaseSensitivity case_sensitivity)
+{
+    if (start.is_empty())
+        return true;
+    if (str.is_empty())
+        return false;
+    if (start.length() > str.length())
+        return false;
+    if (str.characters_without_null_termination() == start.characters_without_null_termination())
+        return true;
+
+    if (case_sensitivity == CaseSensitivity::CaseSensitive)
+        return !memcmp(str.characters_without_null_termination(), start.characters_without_null_termination(), start.length());
+
+    auto str_chars = str.characters_without_null_termination();
+    auto start_chars = start.characters_without_null_termination();
+
+    size_t si = 0;
+    for (size_t starti = 0; starti < start.length(); ++si, ++starti) {
+        if (to_lowercase(str_chars[si]) != to_lowercase(start_chars[starti]))
+            return false;
+    }
+    return true;
+}
+
 }
 
 }
