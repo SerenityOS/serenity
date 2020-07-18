@@ -260,15 +260,9 @@ String String::format(const char* fmt, ...)
     return builder.to_string();
 }
 
-bool String::starts_with(const StringView& str) const
+bool String::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
 {
-    if (str.is_empty())
-        return true;
-    if (is_empty())
-        return false;
-    if (str.length() > length())
-        return false;
-    return !memcmp(characters(), str.characters_without_null_termination(), str.length());
+    return StringUtils::starts_with(*this, str, case_sensitivity);
 }
 
 bool String::starts_with(char ch) const

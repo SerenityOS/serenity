@@ -147,17 +147,9 @@ bool StringView::starts_with(char ch) const
     return ch == characters_without_null_termination()[0];
 }
 
-bool StringView::starts_with(const StringView& str) const
+bool StringView::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
 {
-    if (str.is_empty())
-        return true;
-    if (is_empty())
-        return false;
-    if (str.length() > length())
-        return false;
-    if (characters_without_null_termination() == str.characters_without_null_termination())
-        return true;
-    return !memcmp(characters_without_null_termination(), str.characters_without_null_termination(), str.length());
+    return StringUtils::starts_with(*this, str, case_sensitivity);
 }
 
 bool StringView::ends_with(char ch) const

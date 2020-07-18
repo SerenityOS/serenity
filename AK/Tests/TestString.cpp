@@ -87,6 +87,8 @@ TEST_CASE(starts_with)
     EXPECT(!test_string.starts_with('B'));
     EXPECT(test_string.starts_with("ABCDEF"));
     EXPECT(!test_string.starts_with("DEF"));
+    EXPECT(test_string.starts_with("abc",  CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string.starts_with("abc",  CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(ends_with)
