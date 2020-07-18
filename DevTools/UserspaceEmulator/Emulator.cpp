@@ -226,6 +226,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
+    case SC_ioctl:
+        return virt$ioctl(arg1, arg2, arg3);
+    case SC_get_dir_entries:
+        return virt$get_dir_entries(arg1, arg2, arg3);
     case SC_usleep:
         return virt$usleep(arg1);
     case SC_shbuf_create:
@@ -777,6 +781,25 @@ ssize_t Emulator::virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned in
         return rc;
     mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
     return rc;
+}
+
+int Emulator::virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t size)
+{
+    auto host_buffer = ByteBuffer::create_uninitialized(size);
+    int rc = syscall(SC_get_dir_entries, fd, host_buffer.data(), host_buffer.size());
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
+    return rc;
+}
+
+int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
+{
+    (void)fd;
+    (void)arg;
+    dbg() << "Unsupported ioctl: " << request;
+    dump_backtrace();
+    TODO();
 }
 
 }
