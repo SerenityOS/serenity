@@ -42,9 +42,9 @@ struct NumericLimits<bool> {
 };
 
 template<>
-struct NumericLimits<char> {
-    static constexpr char min() { return -__SCHAR_MAX__ - 1; }
-    static constexpr char max() { return __SCHAR_MAX__; }
+struct NumericLimits<signed char> {
+    static constexpr signed char min() { return -__SCHAR_MAX__ - 1; }
+    static constexpr signed char max() { return __SCHAR_MAX__; }
     static constexpr bool is_signed() { return true; }
 };
 
