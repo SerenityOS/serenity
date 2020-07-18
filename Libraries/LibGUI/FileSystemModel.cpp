@@ -91,7 +91,7 @@ void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
     total_size = 0;
 
     auto full_path = this->full_path(model);
-    Core::DirIterator di(full_path, Core::DirIterator::SkipDots);
+    Core::DirIterator di(full_path, model.should_show_dotfiles() ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
     if (di.has_error()) {
         m_error = di.error();
         fprintf(stderr, "DirIterator: %s\n", di.error_string());
@@ -598,6 +598,14 @@ bool FileSystemModel::accepts_drag(const ModelIndex& index, const StringView& da
         return false;
     auto& node = this->node(index);
     return node.is_directory();
+}
+
+void FileSystemModel::set_should_show_dotfiles(bool show)
+{
+    if (m_should_show_dotfiles == show)
+        return;
+    m_should_show_dotfiles = show;
+    update();
 }
 
 }
