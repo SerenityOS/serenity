@@ -31,10 +31,15 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+const char* temp_file_name = "..spng_temp.Uav78GHg";
+
 void print_error_then_exit_on_fail(int result, const char* function_name)
 {
     if (result < 0) {
         perror(function_name);
+        if (access(temp_file_name, F_OK) != -1)
+            if (remove(temp_file_name) < 0)
+                perror("remove");
         exit(1);
     }
 }
@@ -68,7 +73,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* temp_file_name = "..spng_temp.Uav78GHg";
     int open_mode = O_WRONLY | O_CREAT;
     if (append)
         open_mode |= O_APPEND;
