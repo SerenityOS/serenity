@@ -1257,18 +1257,35 @@ void SoftCPU::ESCAPE(const X86::Instruction&)
 }
 
 void SoftCPU::HLT(const X86::Instruction&) { TODO(); }
-void SoftCPU::IDIV_RM16(const X86::Instruction&) { TODO(); }
 
-void SoftCPU::IDIV_RM32(const X86::Instruction& insn)
+void SoftCPU::IDIV_RM16(const X86::Instruction& insn)
 {
-    auto divisor = insn.modrm().read32(*this, insn);
+    auto divisor = (i16)insn.modrm().read16(*this, insn);
     if (divisor == 0) {
         warn() << "Divide by zero";
         TODO();
     }
-    i64 dividend = ((i64)edx() << 32) | eax();
-    auto result = dividend / divisor;
-    if (result > NumericLimits<i32>::max()) {
+    i32 dividend = (i32)(((u32)dx() << 16) | (u32)ax());
+    i32 result = dividend / divisor;
+    if (result > NumericLimits<i16>::max() || result < NumericLimits<i16>::min()) {
+        warn() << "Divide overflow";
+        TODO();
+    }
+
+    set_ax(result);
+    set_dx(dividend % divisor);
+}
+
+void SoftCPU::IDIV_RM32(const X86::Instruction& insn)
+{
+    auto divisor = (i32)insn.modrm().read32(*this, insn);
+    if (divisor == 0) {
+        warn() << "Divide by zero";
+        TODO();
+    }
+    i64 dividend = (i64)(((u64)edx() << 32) | (u64)eax());
+    i64 result = dividend / divisor;
+    if (result > NumericLimits<i32>::max() || result < NumericLimits<i32>::min()) {
         warn() << "Divide overflow";
         TODO();
     }
@@ -1279,7 +1296,7 @@ void SoftCPU::IDIV_RM32(const X86::Instruction& insn)
 
 void SoftCPU::IDIV_RM8(const X86::Instruction& insn)
 {
-    auto divisor = (i16)insn.modrm().read8(*this, insn);
+    auto divisor = (i8)insn.modrm().read8(*this, insn);
     if (divisor == 0) {
         warn() << "Divide by zero";
         TODO();
