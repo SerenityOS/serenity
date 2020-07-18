@@ -852,10 +852,61 @@ void SoftCPU::AAM(const X86::Instruction&) { TODO(); }
 void SoftCPU::AAS(const X86::Instruction&) { TODO(); }
 void SoftCPU::ARPL(const X86::Instruction&) { TODO(); }
 void SoftCPU::BOUND(const X86::Instruction&) { TODO(); }
-void SoftCPU::BSF_reg16_RM16(const X86::Instruction&) {  }
-void SoftCPU::BSF_reg32_RM32(const X86::Instruction&) { }
-void SoftCPU::BSR_reg16_RM16(const X86::Instruction&) { }
-void SoftCPU::BSR_reg32_RM32(const X86::Instruction&) { }
+
+template<typename T>
+ALWAYS_INLINE static unsigned op_bsf(SoftCPU&, T value)
+{
+    return __builtin_ctz(value);
+}
+
+template<typename T>
+ALWAYS_INLINE static unsigned op_bsr(SoftCPU&, T value)
+{
+    T bit_index = 0;
+    if constexpr (sizeof(T) == 4) {
+        asm volatile("bsrl %%eax, %%edx"
+                     : "=d"(bit_index)
+                     : "a"(value));
+    }
+    if constexpr (sizeof(T) == 2) {
+        asm volatile("bsrw %%ax, %%dx"
+                     : "=d"(bit_index)
+                     : "a"(value));
+    }
+    return bit_index;
+}
+
+void SoftCPU::BSF_reg16_RM16(const X86::Instruction& insn)
+{
+    auto src = insn.modrm().read16(*this, insn);
+    set_zf(!src);
+    if (src)
+        gpr16(insn.reg16()) = op_bsf(*this, src);
+}
+
+void SoftCPU::BSF_reg32_RM32(const X86::Instruction& insn)
+{
+    auto src = insn.modrm().read32(*this, insn);
+    set_zf(!src);
+    if (src)
+        gpr32(insn.reg32()) = op_bsf(*this, insn.modrm().read32(*this, insn));
+}
+
+void SoftCPU::BSR_reg16_RM16(const X86::Instruction& insn)
+{
+    auto src = insn.modrm().read16(*this, insn);
+    set_zf(!src);
+    if (src)
+        gpr16(insn.reg16()) = op_bsr(*this, insn.modrm().read16(*this, insn));
+}
+
+void SoftCPU::BSR_reg32_RM32(const X86::Instruction& insn)
+{
+    auto src = insn.modrm().read32(*this, insn);
+    set_zf(!src);
+    if (src)
+        gpr32(insn.reg32()) = op_bsr(*this, insn.modrm().read32(*this, insn));
+}
 
 void SoftCPU::BSWAP_reg32(const X86::Instruction& insn)
 {
