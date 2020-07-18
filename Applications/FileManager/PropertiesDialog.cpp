@@ -80,7 +80,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     m_name_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_name_box->set_preferred_size({ 0, 22 });
     m_name_box->set_text(m_name);
-    m_name_box->set_enabled(!disable_rename);
+    m_name_box->set_mode(disable_rename ? GUI::TextBox::Mode::DisplayOnly : GUI::TextBox::Mode::Editable);
     m_name_box->on_change = [&]() {
         m_name_dirty = m_name != m_name_box->text();
         m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
