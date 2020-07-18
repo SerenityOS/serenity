@@ -51,8 +51,7 @@ void LibThread::Thread::start()
         [](void* arg) -> void* {
             Thread* self = static_cast<Thread*>(arg);
             size_t exit_code = self->m_action();
-            self->m_tid = 0;
-            pthread_exit((void*)exit_code);
+            self->m_tid = 0;            
             return (void*)exit_code;
         },
         static_cast<void*>(this));
