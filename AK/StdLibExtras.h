@@ -313,7 +313,7 @@ struct MakeUnsigned {
 };
 
 template<>
-struct MakeUnsigned<char> {
+struct MakeUnsigned<signed char> {
     typedef unsigned char type;
 };
 
@@ -367,8 +367,8 @@ struct MakeSigned {
 };
 
 template<>
-struct MakeSigned<char> {
-    typedef char type;
+struct MakeSigned<signed char> {
+    typedef signed char type;
 };
 
 template<>
