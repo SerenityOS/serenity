@@ -30,3 +30,6 @@ set(SOURCES
 
 serenity_lib(LibCore core)
 target_link_libraries(LibCore LibC)
+
+serenity_shared_lib(LibCoreShared core)
+target_link_libraries(LibCoreShared LibCShared)

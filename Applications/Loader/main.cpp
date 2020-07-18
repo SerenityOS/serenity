@@ -256,6 +256,7 @@ void do_relocations(DynamicObject& dynamic_object)
                 // TODO this is a hack
                 ASSERT(!strcmp(symbol.name(), "__deregister_frame_info") || !strcmp(symbol.name(), "_ITM_registerTMCloneTable")
                     || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info"));
+                // ASSERT_NOT_REACHED();
                 return IterationDecision::Continue;
             }
             // ASSERT(res.found);
