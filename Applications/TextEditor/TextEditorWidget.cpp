@@ -483,7 +483,8 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
     m_name = lexical_path.title();
     m_extension = lexical_path.extension();
 
-    if (m_extension == "cpp" || m_extension == "h") {
+    if (m_extension == "c" || m_extension == "cc" || m_extension == "cxx" ||
+        m_extension == "cpp" || m_extension == "h") {
         m_cpp_highlight->activate();
     } else if (m_extension == "js" || m_extension == "json") {
         m_js_highlight->activate();
