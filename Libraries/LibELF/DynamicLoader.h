@@ -57,7 +57,7 @@ public:
     bool load_stage_2(unsigned flags);
 
     // Intended for use by dlsym or other internal methods
-    void* symbol_for_name(const char*);
+    void* symbol_for_name(const char*) const;
 
     void dump();
 
@@ -66,6 +66,10 @@ public:
 
     // Requested program interpreter from program headers. May be empty string
     StringView program_interpreter() const { return m_program_interpreter; }
+
+    VirtualAddress entry_point() const { return m_entry_point; }
+
+    const char* soname() const { return m_dynamic_object->soname(); }
 
 private:
     class ProgramHeaderRegion {
@@ -103,7 +107,10 @@ private:
     // Stage 2
     void do_relocations();
     void setup_plt_trampoline();
+    // void relocate_got_plt();
     void call_object_init_functions();
+
+    Optional<u32> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
 
     String m_filename;
     String m_program_interpreter;
@@ -119,6 +126,7 @@ private:
 
     VirtualAddress m_tls_segment_address;
     VirtualAddress m_dynamic_section_address;
+    VirtualAddress m_entry_point;
 };
 
 } // end namespace ELF

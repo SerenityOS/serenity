@@ -142,6 +142,18 @@ void DynamicObject::parse()
             m_soname_index = entry.val();
             m_has_soname = true;
             break;
+        case DT_NEEDED: {
+            m_needed_libraries_string_table_offsets.append(entry.val());
+            break;
+        }
+        case DT_DEBUG: {
+            dbg() << "skipping DT_DEBUG";
+            break;
+        }
+        case DT_FLAGS_1: {
+            dbg() << "skipping DT_FLAGS_1";
+            break;
+        }
         default:
             dbgprintf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
             printf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
@@ -178,23 +190,31 @@ const DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
     return Symbol(*this, index, *symbol_entry);
 }
 
-const DynamicObject::Section DynamicObject::init_section() const
+Optional<const DynamicObject::Section> DynamicObject::init_section() const
 {
+    if (!m_init_offset)
+        return {};
     return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT");
 }
 
-const DynamicObject::Section DynamicObject::fini_section() const
+Optional<const DynamicObject::Section> DynamicObject::fini_section() const
 {
+    if (!m_fini_offset)
+        return {};
     return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI");
 }
 
-const DynamicObject::Section DynamicObject::init_array_section() const
+Optional<const DynamicObject::Section> DynamicObject::init_array_section() const
 {
+    if (!m_init_array_offset)
+        return {};
     return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY");
 }
 
-const DynamicObject::Section DynamicObject::fini_array_section() const
+Optional<const DynamicObject::Section> DynamicObject::fini_array_section() const
 {
+    if (!m_fini_array_offset)
+        return {};
     return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY");
 }
 
@@ -268,7 +288,8 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char
             return symbol;
         }
     }
-    return m_dynamic.the_undefined_symbol();
+    // dbg() << "Symbol::create_undefined";
+    return Symbol::create_undefined(m_dynamic);
 }
 
 const char* DynamicObject::symbol_string_table_string(Elf32_Word index) const

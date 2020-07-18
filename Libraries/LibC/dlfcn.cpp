@@ -32,8 +32,8 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include <AK/LexicalPath.h>
 #include <AK/HashMap.h>
+#include <AK/LexicalPath.h>
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
@@ -78,14 +78,62 @@ void* dlopen(const char* filename, int flags)
     }
 
     int fd = open(filename, O_RDONLY);
-    if (!fd) {
-        g_dlerror_msg = String::format("Unable to open file %s", filename);
+    if (fd < 0) {
+        g_dlerror_msg = String::format("Dependency error: Unable to open file %s", filename);
+        fprintf(stderr, "%s\n", g_dlerror_msg.characters());
+        ASSERT_NOT_REACHED();
         return nullptr;
     }
 
     ScopeGuard close_fd_guard([fd]() { close(fd); });
 
-    struct stat file_stats{};
+    return serenity_dlopen(fd, filename, flags);
+}
+
+static void* search_symbol_in_all_objects(const char* symbol_name)
+{
+    for (const auto& entry : g_elf_objects) {
+        const auto& dso = entry.value;
+        void* symbol = dso->symbol_for_name(symbol_name);
+        if (symbol) {
+            return symbol;
+        }
+    }
+    return nullptr;
+}
+
+void* dlsym(void* handle, const char* symbol_name)
+{
+    // When called with a NULL handle, we search every loaded dso in the process
+    if (!handle) {
+        return search_symbol_in_all_objects(symbol_name);
+    }
+    auto* dso = reinterpret_cast<ELF::DynamicLoader*>(handle);
+    void* symbol = dso->symbol_for_name(symbol_name);
+    if (!symbol) {
+        g_dlerror_msg = "Symbol not found";
+        return nullptr;
+    }
+    return symbol;
+}
+
+} // extern "C"
+
+void* serenity_dlopen(int fd, const char* filename, int flags)
+{
+    if (!filename) {
+        ASSERT_NOT_REACHED();
+    }
+
+    auto basename = LexicalPath(filename).basename();
+
+    auto existing_elf_object = g_elf_objects.get(basename);
+    if (existing_elf_object.has_value()) {
+        return const_cast<ELF::DynamicLoader*>(existing_elf_object.value());
+    }
+
+    struct stat file_stats {
+    };
 
     int ret = fstat(fd, &file_stats);
     if (ret < 0) {
@@ -96,6 +144,7 @@ void* dlopen(const char* filename, int flags)
     auto loader = ELF::DynamicLoader::construct(filename, fd, file_stats.st_size);
 
     if (!loader->is_valid()) {
+
         g_dlerror_msg = String::format("%s is not a valid ELF dynamic shared object!", filename);
         return nullptr;
     }
@@ -111,18 +160,3 @@ void* dlopen(const char* filename, int flags)
     // we have one refcount already
     return const_cast<ELF::DynamicLoader*>(g_elf_objects.get(basename).value());
 }
-
-void* dlsym(void* handle, const char* symbol_name)
-{
-    // FIXME: When called with a NULL handle we're supposed to search every dso in the process... that'll get expensive
-    ASSERT(handle);
-    auto* dso = reinterpret_cast<ELF::DynamicLoader*>(handle);
-    void* symbol = dso->symbol_for_name(symbol_name);
-    if (!symbol) {
-        g_dlerror_msg = "Symbol not found";
-        return nullptr;
-    }
-    return symbol;
-}
-
-} // extern "C"

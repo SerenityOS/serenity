@@ -185,6 +185,7 @@ public:
     const Symbol symbol(unsigned) const;
     const Section section(unsigned) const;
     const ProgramHeader program_header(unsigned const) const;
+    Elf32_Off program_headers_offset() const;
 
     template<typename F>
     void for_each_section(F) const;

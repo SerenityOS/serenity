@@ -137,6 +137,11 @@ unsigned Image::program_header_count() const
     return header().e_phnum;
 }
 
+Elf32_Off Image::program_headers_offset() const
+{
+    return header().e_phoff;
+}
+
 bool Image::parse()
 {
     if (!validate_elf_header(header(), m_size)) {

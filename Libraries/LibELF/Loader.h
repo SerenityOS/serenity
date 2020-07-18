@@ -32,6 +32,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibELF/AuxiliaryData.h>
 #include <LibELF/Image.h>
 
 #ifdef KERNEL
@@ -48,7 +49,7 @@ public:
     static NonnullRefPtr<Loader> create(const u8* data, size_t size) { return adopt(*new Loader(data, size)); }
     ~Loader();
 
-    bool load();
+    Optional<AuxiliaryData> load();
 #if defined(KERNEL)
     Function<void*(VirtualAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
     Function<void*(size_t, size_t)> tls_section_hook;
@@ -56,7 +57,11 @@ public:
 #endif
     VirtualAddress entry() const
     {
-        return m_image.entry();
+        u32 offset = 0;
+        if (m_image.is_dynamic()) {
+            offset = (u32)m_base_address;
+        }
+        return m_image.entry().offset(offset);
     }
     const Image& image() const { return m_image; }
     char* symbol_ptr(const char* name) const;
@@ -70,7 +75,8 @@ public:
 private:
     explicit Loader(const u8*, size_t);
 
-    bool layout();
+    bool layout_dynamic();
+    bool layout_static();
     bool perform_relocations();
     void* lookup(const ELF::Image::Symbol&);
     char* area_for_section(const ELF::Image::Section&);
@@ -87,9 +93,13 @@ private:
         char* ptr { nullptr };
         unsigned size { 0 };
     };
+
     Image m_image;
 
+    void* m_base_address { nullptr };
     size_t m_symbol_count { 0 };
+    size_t m_tls_section_size { 0 };
+    size_t m_text_segment_size { 0 };
 
     struct SortedSymbol {
         u32 address;

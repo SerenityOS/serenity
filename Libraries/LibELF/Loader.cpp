@@ -50,21 +50,102 @@ Loader::~Loader()
 {
 }
 
-bool Loader::load()
+Optional<AuxiliaryData> Loader::load()
 {
 #ifdef Loader_DEBUG
     m_image.dump();
 #endif
     if (!m_image.is_valid())
-        return false;
+        return {};
 
-    if (!layout())
-        return false;
+    if (m_image.is_dynamic()) {
+        if (!layout_dynamic())
+            return {};
+    } else {
+        ASSERT(m_image.is_executable());
+        if (!layout_static())
+            return {};
+    }
 
-    return true;
+    AuxiliaryData aux;
+    aux.program_headers = (u32)m_base_address + m_image.program_headers_offset();
+    aux.num_program_headers = m_image.program_header_count();
+    aux.entry_point = m_image.entry().offset((u32)m_base_address).get();
+    aux.base_address = (u32)m_base_address;
+    aux.tls_section_size = m_tls_section_size;
+    aux.text_segment_size = m_text_segment_size;
+    return aux;
 }
 
-bool Loader::layout()
+#define ALIGN_ROUND_UP(x, align) ((((size_t)(x)) + align - 1) & (~(align - 1)))
+
+bool Loader::layout_dynamic()
+{
+#ifndef KERNEL
+    ASSERT_NOT_REACHED();
+#else
+
+    Optional<Image::ProgramHeader> text_header;
+    Optional<Image::ProgramHeader> data_header;
+    Optional<Image::ProgramHeader> dynamic_header;
+
+    m_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
+        if (program_header.type() == PT_LOAD) {
+            if (program_header.is_executable()) {
+                text_header = program_header;
+                m_text_segment_size = program_header.size_in_memory();
+            } else {
+                ASSERT(program_header.is_readable() && program_header.is_writable());
+            }
+            data_header = program_header;
+        } else if (program_header.type() == PT_DYNAMIC) {
+            dynamic_header = program_header;
+        } else if (program_header.type() == PT_TLS) {
+            m_tls_section_size = program_header.size_in_memory();
+        }
+    });
+
+    ASSERT(text_header.has_value());
+    ASSERT(data_header.has_value());
+    ASSERT(dynamic_header.has_value());
+
+    m_base_address = map_section_hook(
+        {},
+        text_header.value().size_in_memory(),
+        text_header.value().alignment(),
+        text_header.value().offset(),
+        text_header.value().is_readable(),
+        text_header.value().is_writable(),
+        text_header.value().is_executable(),
+        String::format("elf-map-%s%s%s", text_header.value().is_readable() ? "r" : "", text_header.value().is_writable() ? "w" : "", text_header.value().is_executable() ? "x" : ""));
+    if (!m_base_address) {
+        return false;
+    }
+
+    u32 text_segment_size = ALIGN_ROUND_UP(text_header.value().size_in_memory(), text_header.value().alignment());
+
+    // TODO: use this
+    // void* dynamic_section_address = dynamic_header.value().vaddr().offset((u32)m_base_address).as_ptr();
+
+    void* data_segment_begin = alloc_section_hook(
+        VirtualAddress((u32)m_base_address + text_segment_size),
+        data_header.value().size_in_memory(),
+        data_header.value().alignment(),
+        data_header.value().is_readable(),
+        data_header.value().is_writable(),
+        String::format("elf-alloc-%s%s", data_header.value().is_readable() ? "r" : "", data_header.value().is_writable() ? "w" : ""));
+
+    if (!data_segment_begin) {
+        return false;
+    }
+
+    VirtualAddress data_segment_actual_addr = data_header.value().vaddr().offset((u32)m_base_address);
+    copy_to_user(data_segment_actual_addr.as_ptr(), (const u8*)data_header.value().raw_data(), data_header.value().size_in_image());
+    return true;
+#endif
+}
+
+bool Loader::layout_static()
 {
     bool failed = false;
     m_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
@@ -133,6 +214,8 @@ bool Loader::layout()
         }
 #endif
     });
+    if (failed)
+        return {};
     return !failed;
 }
 

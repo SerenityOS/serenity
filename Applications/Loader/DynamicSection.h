@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,22 +24,29 @@
  */
 
 #pragma once
+#include "List.h"
+#include "Syscalls.h"
+#include "Utils.h"
+#include <LibELF/exec_elf.h>
 
-#include <sys/cdefs.h>
+class DynamicObject {
+public:
+    explicit DynamicObject(Elf32_Addr base_adderss, Elf32_Addr dynamic_section_address);
+    ~DynamicObject() = default;
 
-__BEGIN_DECLS
+    List<const char*>& needed_libraries() { return m_needed_libraries; }
+    const char* object_name() const
+    {
+        return m_object_name ? m_object_name : "[UNNAMED]";
+    };
 
-#define RTLD_DEFAULT 0
-#define RTLD_LAZY 1
-#define RTLD_NOW 2
-#define RTLD_GLOBAL 3
-#define RTLD_LOCAL 4
+private:
+    void iterate_entries();
 
-int dlclose(void*);
-char* dlerror();
-void* dlopen(const char*, int);
-void* dlsym(void*, const char*);
+    Elf32_Addr m_base_adderss { 0 };
+    const Elf32_Dyn* m_entries { nullptr };
 
-__END_DECLS
-
-void* serenity_dlopen(int fd, const char* filename, int flags);
+    Elf32_Addr m_string_table { 0 };
+    List<const char*> m_needed_libraries;
+    const char* m_object_name { nullptr };
+};

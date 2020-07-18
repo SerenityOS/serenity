@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 {
     editor = Line::Editor::construct();
 
-    if (pledge("stdio proc exec rpath tty sigaction", nullptr) < 0) {
+    if (pledge("stdio proc exec rpath tty sigaction cpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -199,8 +199,8 @@ int main(int argc, char** argv)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
-    ASSERT(rc);
+    // bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
+    // ASSERT(rc);
 
     DebugInfo::SourcePosition previous_source_position;
     bool in_step_line = false;

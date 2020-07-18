@@ -571,7 +571,8 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     m_signal_mask |= new_signal_mask;
 
-    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32* stack) {
+    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32 * stack)
+    {
         u32 old_esp = *stack;
         u32 ret_eip = state.eip;
         u32 ret_eflags = state.eflags;
@@ -658,7 +659,7 @@ RegisterState& Thread::get_register_dump_from_stack()
     return *(RegisterState*)(kernel_stack_top() - sizeof(RegisterState));
 }
 
-u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
+u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Optional<ELF::AuxiliaryData> aux_data)
 {
     auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
     ASSERT(region);
@@ -692,6 +693,15 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     }
     env[environment.size()] = nullptr;
 
+    ELF::AuxiliaryData* aux_pointer = nullptr;
+    if (aux_data.has_value()) {
+        // TODO: Create ELF_aux structs & insert them into bufptr
+        // *((uint32_t*)bufptr) = aux
+        memcpy(bufptr, &aux_data.value(), sizeof(ELF::AuxiliaryData));
+        aux_pointer = (ELF::AuxiliaryData*)bufptr;
+        bufptr += sizeof(ELF::AuxiliaryData);
+    }
+
     auto push_on_new_stack = [&new_esp](u32 value) {
         new_esp -= 4;
         u32* stack_ptr = (u32*)new_esp;
@@ -703,6 +713,13 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     push_on_new_stack((FlatPtr)argv);
     push_on_new_stack((FlatPtr)argc);
     push_on_new_stack(0);
+    if (aux_pointer) {
+        push_on_new_stack(0);
+        push_on_new_stack(0);
+        // aux_pointer->
+        push_on_new_stack((FlatPtr)aux_pointer);
+        push_on_new_stack(0);
+    }
     return new_esp;
 }
 

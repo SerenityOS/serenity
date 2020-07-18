@@ -39,6 +39,7 @@
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
+#include <LibELF/AuxiliaryData.h>
 
 namespace Kernel {
 
@@ -362,7 +363,7 @@ public:
 
     ShouldUnblockThread dispatch_one_pending_signal();
     ShouldUnblockThread dispatch_signal(u8 signal);
-    bool has_unmasked_pending_signals() const {  return m_pending_signals & ~m_signal_mask; }
+    bool has_unmasked_pending_signals() const { return m_pending_signals & ~m_signal_mask; }
     void terminate_due_to_signal(u8 signal);
     bool should_ignore_signal(u8 signal) const;
     bool has_signal_handler(u8 signal) const;
@@ -373,7 +374,7 @@ public:
     void set_default_signal_dispositions();
     void push_value_on_stack(FlatPtr);
 
-    u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
+    u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Optional<ELF::AuxiliaryData>);
 
     void make_thread_specific_region(Badge<Process>);
 

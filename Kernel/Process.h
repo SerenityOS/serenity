@@ -36,12 +36,13 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>
-#include <Kernel/StdLib.h>
 #include <LibC/signal_numbers.h>
+#include <LibELF/AuxiliaryData.h>
 
 namespace ELF {
 class Loader;
@@ -54,25 +55,25 @@ void kgettimeofday(timeval&);
 
 extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
 
-#define ENUMERATE_PLEDGE_PROMISES       \
-    __ENUMERATE_PLEDGE_PROMISE(stdio)   \
-    __ENUMERATE_PLEDGE_PROMISE(rpath)   \
-    __ENUMERATE_PLEDGE_PROMISE(wpath)   \
-    __ENUMERATE_PLEDGE_PROMISE(cpath)   \
-    __ENUMERATE_PLEDGE_PROMISE(dpath)   \
-    __ENUMERATE_PLEDGE_PROMISE(inet)    \
-    __ENUMERATE_PLEDGE_PROMISE(id)      \
-    __ENUMERATE_PLEDGE_PROMISE(proc)    \
-    __ENUMERATE_PLEDGE_PROMISE(exec)    \
-    __ENUMERATE_PLEDGE_PROMISE(unix)    \
-    __ENUMERATE_PLEDGE_PROMISE(fattr)   \
-    __ENUMERATE_PLEDGE_PROMISE(tty)     \
-    __ENUMERATE_PLEDGE_PROMISE(chown)   \
-    __ENUMERATE_PLEDGE_PROMISE(chroot)  \
-    __ENUMERATE_PLEDGE_PROMISE(thread)  \
-    __ENUMERATE_PLEDGE_PROMISE(video)   \
-    __ENUMERATE_PLEDGE_PROMISE(accept)  \
-    __ENUMERATE_PLEDGE_PROMISE(settime) \
+#define ENUMERATE_PLEDGE_PROMISES         \
+    __ENUMERATE_PLEDGE_PROMISE(stdio)     \
+    __ENUMERATE_PLEDGE_PROMISE(rpath)     \
+    __ENUMERATE_PLEDGE_PROMISE(wpath)     \
+    __ENUMERATE_PLEDGE_PROMISE(cpath)     \
+    __ENUMERATE_PLEDGE_PROMISE(dpath)     \
+    __ENUMERATE_PLEDGE_PROMISE(inet)      \
+    __ENUMERATE_PLEDGE_PROMISE(id)        \
+    __ENUMERATE_PLEDGE_PROMISE(proc)      \
+    __ENUMERATE_PLEDGE_PROMISE(exec)      \
+    __ENUMERATE_PLEDGE_PROMISE(unix)      \
+    __ENUMERATE_PLEDGE_PROMISE(fattr)     \
+    __ENUMERATE_PLEDGE_PROMISE(tty)       \
+    __ENUMERATE_PLEDGE_PROMISE(chown)     \
+    __ENUMERATE_PLEDGE_PROMISE(chroot)    \
+    __ENUMERATE_PLEDGE_PROMISE(thread)    \
+    __ENUMERATE_PLEDGE_PROMISE(video)     \
+    __ENUMERATE_PLEDGE_PROMISE(accept)    \
+    __ENUMERATE_PLEDGE_PROMISE(settime)   \
     __ENUMERATE_PLEDGE_PROMISE(sigaction) \
     __ENUMERATE_PLEDGE_PROMISE(shared_buffer)
 
@@ -453,6 +454,7 @@ private:
 
     int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description);
     ssize_t do_write(FileDescription&, const u8*, int data_size);
+    KResultOr<ELF::AuxiliaryData> load_program(FileDescription&);
 
     KResultOr<NonnullRefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size);
 

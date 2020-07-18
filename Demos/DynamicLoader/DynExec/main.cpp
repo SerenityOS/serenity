@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, Andrew Kaster <andrewdkaster@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,24 +23,41 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <Kernel/Syscall.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#pragma once
+extern int g_lib_var1;
+extern int g_lib_var2;
+// extern __thread int g_tls_lib_var;
+extern __thread int g_tls_lib_var2;
 
-#include <sys/cdefs.h>
+const char* g_string = "Hello, World!\n";
 
-__BEGIN_DECLS
+int libfunc();
+int libfunc2();
+// int libfunc_tls();
+void local_dbgputstr(const char* str, int len);
 
-#define RTLD_DEFAULT 0
-#define RTLD_LAZY 1
-#define RTLD_NOW 2
-#define RTLD_GLOBAL 3
-#define RTLD_LOCAL 4
+int main(int, char**)
+{
+    local_dbgputstr(g_string, 15);
+    int sum = 0;
+    sum += libfunc() + g_lib_var1 + g_lib_var2;
+    sum += libfunc2();
+    local_dbgputstr("1\n", 2);
+    sum += g_tls_lib_var2;
+    // sum += libfunc_tls();
+    local_dbgputstr("2\n", 2);
+    // sum += g_tls_lib_var + g_tls_lib_var2;
+    local_dbgputstr("3\n", 2);
+    printf("ho ho!\n");
+    open("/does/not/exist", 0);
+    perror("open");
+    open("/etc/passwd", O_RDWR);
+    perror("open");
 
-int dlclose(void*);
-char* dlerror();
-void* dlopen(const char*, int);
-void* dlsym(void*, const char*);
-
-__END_DECLS
-
-void* serenity_dlopen(int fd, const char* filename, int flags);
+    return sum;
+}

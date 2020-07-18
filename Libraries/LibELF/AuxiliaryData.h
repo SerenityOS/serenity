@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,22 +25,17 @@
  */
 
 #pragma once
+#include "exec_elf.h"
 
-#include <sys/cdefs.h>
+namespace ELF {
 
-__BEGIN_DECLS
+struct AuxiliaryData {
+    Elf32_Addr program_headers { 0 };
+    size_t num_program_headers { 0 };
+    Elf32_Addr entry_point { 0 };
+    Elf32_Addr base_address { 0 };
+    size_t tls_section_size { 0 };
+    size_t text_segment_size { 0 };
+};
 
-#define RTLD_DEFAULT 0
-#define RTLD_LAZY 1
-#define RTLD_NOW 2
-#define RTLD_GLOBAL 3
-#define RTLD_LOCAL 4
-
-int dlclose(void*);
-char* dlerror();
-void* dlopen(const char*, int);
-void* dlsym(void*, const char*);
-
-__END_DECLS
-
-void* serenity_dlopen(int fd, const char* filename, int flags);
+}
