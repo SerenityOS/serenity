@@ -66,6 +66,18 @@
 static int run_in_desktop_mode(RefPtr<Core::ConfigFile>, String initial_location);
 static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location);
 
+static Gfx::Bitmap& folder_icon()
+{
+    static RefPtr<Gfx::Bitmap> icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png");
+    return *icon;
+}
+
+static Gfx::Bitmap& home_directory_icon()
+{
+    static RefPtr<Gfx::Bitmap> icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/home-directory.png");
+    return *icon;
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio thread shared_buffer accept unix cpath rpath wpath fattr proc exec sigaction", nullptr) < 0) {
@@ -256,7 +268,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto& location_textbox = location_toolbar.add<GUI::TextBox>();
     location_textbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     location_textbox.set_preferred_size(0, 22);
-    location_textbox.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
     auto& tree_view = splitter.add<GUI::TreeView>();
@@ -697,6 +708,15 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(*view_as_columns_action);
 
     directory_view.on_path_change = [&](const String& new_path) {
+        const  Gfx::Bitmap* icon = nullptr;
+        if (new_path == Core::StandardPaths::home_directory())
+            icon = &home_directory_icon();
+        else
+            icon = &folder_icon();
+
+        window->set_icon(icon);
+        location_textbox.set_icon(icon);
+
         window->set_title(String::format("%s - File Manager", new_path.characters()));
         location_textbox.set_text(new_path);
         auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
@@ -915,8 +935,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     paste_action->set_enabled(GUI::Clipboard::the().type() == "text/uri-list" && access(initial_location.characters(), W_OK) == 0);
 
     window->show();
-
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
 
     // Read direcory read mode from config.
     auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");
