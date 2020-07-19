@@ -30,6 +30,8 @@
 
 namespace GUI {
 
+class ControlBoxButton;
+
 class SpinBox : public Widget {
     C_OBJECT(SpinBox)
 public:
@@ -55,8 +57,8 @@ protected:
 
 private:
     RefPtr<TextEditor> m_editor;
-    RefPtr<Button> m_increment_button;
-    RefPtr<Button> m_decrement_button;
+    RefPtr<ControlBoxButton> m_increment_button;
+    RefPtr<ControlBoxButton> m_decrement_button;
 
     int m_min { 0 };
     int m_max { 100 };
