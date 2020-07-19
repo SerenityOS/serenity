@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/ControlBoxButton.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
@@ -89,9 +89,8 @@ ComboBox::ComboBox()
             m_open_button->click();
     };
 
-    m_open_button = add<Button>();
+    m_open_button = add<ControlBoxButton>(ControlBoxButton::DownArrow);
     m_open_button->set_focusable(false);
-    m_open_button->set_text("\xE2\xAC\x87"); // DOWNWARDS BLACK ARROW
     m_open_button->on_click = [this](auto) {
         if (m_list_window->is_visible())
             close();
