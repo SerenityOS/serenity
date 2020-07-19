@@ -26,6 +26,7 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -81,15 +82,15 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     , m_mode(mode)
 {
     switch (m_mode) {
-        case Mode::Open:
-            set_title("Open File");
-            break;
-        case Mode::OpenMultiple:
-            set_title("Open Files");
-            break;
-        case Mode::Save:
-            set_title("Save File");
-            break;
+    case Mode::Open:
+        set_title("Open File");
+        break;
+    case Mode::OpenMultiple:
+        set_title("Open Files");
+        break;
+    case Mode::Save:
+        set_title("Save File");
+        break;
     }
     set_title(m_mode == Mode::Open ? "Open File" : "Save File");
     set_rect(200, 200, 700, 400);
@@ -121,7 +122,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     m_location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_location_textbox->set_preferred_size(0, 22);
     m_location_textbox->set_text(path);
-    m_location_textbox->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
 
     m_view = vertical_container.add<MultiView>();
     m_view->set_multi_select(m_mode == Mode::OpenMultiple);
@@ -133,20 +133,22 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     m_view->set_column_hidden(FileSystemModel::Column::Permissions, true);
     m_view->set_column_hidden(FileSystemModel::Column::Inode, true);
     m_view->set_column_hidden(FileSystemModel::Column::SymlinkTarget, true);
-    m_model->set_root_path(path);
+
+    set_path(path);
+
     m_model->register_client(*this);
 
     m_location_textbox->on_return_pressed = [this] {
-        m_model->set_root_path(m_location_textbox->text());
+        set_path(m_location_textbox->text());
     };
 
     auto open_parent_directory_action = Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
-        m_model->set_root_path(String::format("%s/..", m_model->root_path().characters()));
+        set_path(String::format("%s/..", m_model->root_path().characters()));
     });
     toolbar.add_action(*open_parent_directory_action);
 
     auto go_home_action = CommonActions::make_go_home_action([this](auto&) {
-        m_model->set_root_path(Core::StandardPaths::home_directory());
+        set_path(Core::StandardPaths::home_directory());
     });
     toolbar.add_action(go_home_action);
     toolbar.add_separator();
@@ -249,7 +251,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         auto path = node.full_path(m_model);
 
         if (node.is_directory()) {
-            m_model->set_root_path(path);
+            set_path(path);
             // NOTE: 'node' is invalid from here on
         } else {
             on_file_return();
@@ -343,6 +345,15 @@ bool FilePicker::file_exists(const StringView& path)
         return true;
     }
     return false;
+}
+
+void FilePicker::set_path(const String& path)
+{
+    if (path == Core::StandardPaths::home_directory())
+        m_location_textbox->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/home-directory.png"));
+    else
+        m_location_textbox->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
+    m_model->set_root_path(path);
 }
 
 }
