@@ -183,6 +183,8 @@ private:
 
     GUI::Icon m_directory_icon;
     GUI::Icon m_directory_open_icon;
+    GUI::Icon m_home_directory_icon;
+    GUI::Icon m_home_directory_open_icon;
     GUI::Icon m_file_icon;
     GUI::Icon m_symlink_icon;
     GUI::Icon m_socket_icon;

@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -205,6 +206,8 @@ FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
 {
     m_directory_icon = Icon::default_icon("filetype-folder");
     m_directory_open_icon = Icon::default_icon("filetype-folder-open");
+    m_home_directory_icon = Icon::default_icon("home-directory");
+    m_home_directory_open_icon = Icon::default_icon("home-directory-open");
     m_file_icon = Icon::default_icon("filetype-unknown");
     m_symlink_icon = Icon::default_icon("filetype-symlink");
     m_socket_icon = Icon::default_icon("filetype-socket");
@@ -486,6 +489,11 @@ Icon FileSystemModel::icon_for(const Node& node) const
     }
 
     if (node.is_directory()) {
+        if (node.full_path(*this) == Core::StandardPaths::home_directory()) {
+            if (node.is_selected())
+                return m_home_directory_open_icon;
+            return m_home_directory_icon;
+        }
         if (node.is_selected())
             return m_directory_open_icon;
     }
