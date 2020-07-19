@@ -67,6 +67,8 @@ private:
     void clear_preview();
     void on_file_return();
 
+    void set_path(const String&);
+
     virtual void on_model_update(unsigned) override;
 
     FilePicker(Window* parent_window, Mode type = Mode::Open, Options = Options::None, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory());
