@@ -15,6 +15,7 @@ set(SOURCES
     ColumnsView.cpp
     ComboBox.cpp
     Command.cpp
+    ControlBoxButton.cpp
     CppLexer.cpp
     CppSyntaxHighlighter.cpp
     Desktop.cpp
