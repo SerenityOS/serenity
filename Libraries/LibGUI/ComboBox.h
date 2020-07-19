@@ -31,6 +31,7 @@
 namespace GUI {
 
 class ComboBoxEditor;
+class ControlBoxButton;
 
 class ComboBox : public Widget {
     C_OBJECT(ComboBox)
@@ -65,7 +66,7 @@ protected:
 
 private:
     RefPtr<ComboBoxEditor> m_editor;
-    RefPtr<Button> m_open_button;
+    RefPtr<ControlBoxButton> m_open_button;
     RefPtr<Window> m_list_window;
     RefPtr<ListView> m_list_view;
     bool m_only_allow_values_from_model { false };
