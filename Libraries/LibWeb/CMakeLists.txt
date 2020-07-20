@@ -46,8 +46,10 @@ set(SOURCES
     DOM/HTMLInputElement.cpp
     DOM/HTMLObjectElement.cpp
     DOM/HTMLLinkElement.cpp
+    DOM/HTMLPathElement.cpp
     DOM/HTMLScriptElement.cpp
     DOM/HTMLStyleElement.cpp
+    DOM/HTMLSvgElement.cpp
     DOM/HTMLTableElement.cpp
     DOM/HTMLTableCellElement.cpp
     DOM/HTMLTableRowElement.cpp
@@ -79,6 +81,7 @@ set(SOURCES
     Layout/LayoutNode.cpp
     Layout/LayoutPosition.cpp
     Layout/LayoutReplaced.cpp
+    Layout/LayoutSvg.cpp
     Layout/LayoutTable.cpp
     Layout/LayoutTableCell.cpp
     Layout/LayoutTableRow.cpp
