@@ -110,6 +110,7 @@ void initialize();
     __ENUMERATE_HTML_TAG(option)     \
     __ENUMERATE_HTML_TAG(p)          \
     __ENUMERATE_HTML_TAG(param)      \
+    __ENUMERATE_HTML_TAG(path)       \
     __ENUMERATE_HTML_TAG(plaintext)  \
     __ENUMERATE_HTML_TAG(pre)        \
     __ENUMERATE_HTML_TAG(ruby)       \
