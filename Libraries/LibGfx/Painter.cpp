@@ -1412,7 +1412,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
             });
 #ifdef FILL_PATH_DEBUG
             if ((int)scanline % 10 == 0) {
-                draw_text(Rect(active_list.last().x - 20, scanline, 20, 10), String::format("%d", (int)scanline));
+                draw_text(IntRect(active_list.last().x - 20, scanline, 20, 10), String::format("%d", (int)scanline));
             }
 #endif
 
@@ -1499,7 +1499,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 #ifdef FILL_PATH_DEBUG
     size_t i { 0 };
     for (auto& segment : segments)
-        draw_line(Point(segment.from.x(), segment.from.y()), Point(segment.to.x(), segment.to.y()), Color::from_hsv(++i / segments.size() * 255, 255, 255), 1);
+        draw_line(IntPoint(segment.from.x(), segment.from.y()), IntPoint(segment.to.x(), segment.to.y()), Color::from_hsv(++i / segments.size() * 255, 255, 255), 1);
 #endif
 }
 
