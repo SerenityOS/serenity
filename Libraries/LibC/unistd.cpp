@@ -47,6 +47,7 @@
 extern "C" {
 
 static __thread int s_cached_tid = 0;
+static __thread int s_cached_pid = 0;
 
 int chown(const char* pathname, uid_t uid, gid_t gid)
 {
@@ -68,8 +69,10 @@ int fchown(int fd, uid_t uid, gid_t gid)
 pid_t fork()
 {
     int rc = syscall(SC_fork);
-    if (rc == 0)
+    if (rc == 0) {
         s_cached_tid = 0;
+        s_cached_pid = 0;
+    }
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -199,7 +202,9 @@ gid_t getgid()
 
 pid_t getpid()
 {
-    return syscall(SC_getpid);
+    if (!s_cached_pid)
+        s_cached_pid = syscall(SC_getpid);
+    return s_cached_pid;
 }
 
 pid_t getppid()
