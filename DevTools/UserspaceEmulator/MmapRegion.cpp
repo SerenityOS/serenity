@@ -26,6 +26,7 @@
 
 #include "MmapRegion.h"
 #include "Emulator.h"
+#include <string.h>
 #include <sys/mman.h>
 
 namespace UserspaceEmulator {
@@ -51,7 +52,8 @@ MmapRegion::MmapRegion(u32 base, u32 size, int prot)
     : Region(base, size)
     , m_prot(prot)
 {
-    m_shadow_data = (u8*)calloc(1, size);
+    m_shadow_data = (u8*)malloc(size);
+    memset(m_shadow_data, 1, size);
 }
 
 MmapRegion::~MmapRegion()
