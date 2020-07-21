@@ -64,7 +64,7 @@ void SoftMMU::set_tls_region(NonnullOwnPtr<Region> region)
     m_tls_region = move(region);
 }
 
-u8 SoftMMU::read8(X86::LogicalAddress address)
+ValueWithShadow<u8> SoftMMU::read8(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -75,7 +75,7 @@ u8 SoftMMU::read8(X86::LogicalAddress address)
     return region->read8(address.offset() - region->base());
 }
 
-u16 SoftMMU::read16(X86::LogicalAddress address)
+ValueWithShadow<u16> SoftMMU::read16(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -86,7 +86,7 @@ u16 SoftMMU::read16(X86::LogicalAddress address)
     return region->read16(address.offset() - region->base());
 }
 
-u32 SoftMMU::read32(X86::LogicalAddress address)
+ValueWithShadow<u32> SoftMMU::read32(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -97,7 +97,7 @@ u32 SoftMMU::read32(X86::LogicalAddress address)
     return region->read32(address.offset() - region->base());
 }
 
-void SoftMMU::write8(X86::LogicalAddress address, u8 value)
+void SoftMMU::write8(X86::LogicalAddress address, ValueWithShadow<u8> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -108,7 +108,7 @@ void SoftMMU::write8(X86::LogicalAddress address, u8 value)
     region->write8(address.offset() - region->base(), value);
 }
 
-void SoftMMU::write16(X86::LogicalAddress address, u16 value)
+void SoftMMU::write16(X86::LogicalAddress address, ValueWithShadow<u16> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -119,7 +119,7 @@ void SoftMMU::write16(X86::LogicalAddress address, u16 value)
     region->write16(address.offset() - region->base(), value);
 }
 
-void SoftMMU::write32(X86::LogicalAddress address, u32 value)
+void SoftMMU::write32(X86::LogicalAddress address, ValueWithShadow<u32> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -132,14 +132,16 @@ void SoftMMU::write32(X86::LogicalAddress address, u32 value)
 
 void SoftMMU::copy_to_vm(FlatPtr destination, const void* source, size_t size)
 {
+    // FIXME: We should have a way to preserve the shadow data here as well.
     for (size_t i = 0; i < size; ++i)
-        write8({ 0x20, destination + i }, ((const u8*)source)[i]);
+        write8({ 0x20, destination + i }, shadow_wrap_as_initialized(((const u8*)source)[i]));
 }
 
 void SoftMMU::copy_from_vm(void* destination, const FlatPtr source, size_t size)
 {
+    // FIXME: We should have a way to preserve the shadow data here as well.
     for (size_t i = 0; i < size; ++i)
-        ((u8*)destination)[i] = read8({ 0x20, source + i });
+        ((u8*)destination)[i] = read8({ 0x20, source + i }).value();
 }
 
 ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)

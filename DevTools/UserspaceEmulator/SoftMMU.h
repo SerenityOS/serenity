@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "ValueWithShadow.h"
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
@@ -48,13 +49,13 @@ public:
 
         bool contains(u32 address) const { return address >= base() && address < end(); }
 
-        virtual void write8(u32 offset, u8 value) = 0;
-        virtual void write16(u32 offset, u16 value) = 0;
-        virtual void write32(u32 offset, u32 value) = 0;
+        virtual void write8(u32 offset, ValueWithShadow<u8>) = 0;
+        virtual void write16(u32 offset, ValueWithShadow<u16>) = 0;
+        virtual void write32(u32 offset, ValueWithShadow<u32>) = 0;
 
-        virtual u8 read8(u32 offset) = 0;
-        virtual u16 read16(u32 offset) = 0;
-        virtual u32 read32(u32 offset) = 0;
+        virtual ValueWithShadow<u8> read8(u32 offset) = 0;
+        virtual ValueWithShadow<u16> read16(u32 offset) = 0;
+        virtual ValueWithShadow<u32> read32(u32 offset) = 0;
 
         virtual u8* cacheable_ptr([[maybe_unused]] u32 offset) { return nullptr; }
         virtual bool is_shared_buffer() const { return false; }
@@ -81,13 +82,13 @@ public:
         bool m_text { false };
     };
 
-    u8 read8(X86::LogicalAddress);
-    u16 read16(X86::LogicalAddress);
-    u32 read32(X86::LogicalAddress);
+    ValueWithShadow<u8> read8(X86::LogicalAddress);
+    ValueWithShadow<u16> read16(X86::LogicalAddress);
+    ValueWithShadow<u32> read32(X86::LogicalAddress);
 
-    void write8(X86::LogicalAddress, u8);
-    void write16(X86::LogicalAddress, u16);
-    void write32(X86::LogicalAddress, u32);
+    void write8(X86::LogicalAddress, ValueWithShadow<u8>);
+    void write16(X86::LogicalAddress, ValueWithShadow<u16>);
+    void write32(X86::LogicalAddress, ValueWithShadow<u32>);
 
     Region* find_region(X86::LogicalAddress);
 

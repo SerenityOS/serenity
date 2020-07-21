@@ -28,6 +28,7 @@
 #include "Emulator.h"
 #include "MmapRegion.h"
 #include <AK/LogStream.h>
+#include <string.h>
 
 //#define REACHABLE_DEBUG
 
@@ -41,6 +42,13 @@ MallocTracer::MallocTracer()
 
 void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t size)
 {
+    auto* region = Emulator::the().mmu().find_region({ 0x20, address });
+    ASSERT(region);
+    ASSERT(region->is_mmap());
+    auto& mmap_region = static_cast<MmapRegion&>(*region);
+    auto* shadow_bits = mmap_region.shadow_data() + address - mmap_region.base();
+    memset(shadow_bits, 0, size);
+
     if (auto* existing_mallocation = find_mallocation(address)) {
         ASSERT(existing_mallocation->freed);
         existing_mallocation->size = size;
@@ -151,7 +159,7 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         size_t pointers_in_mallocation = other_mallocation.size / sizeof(u32);
         for (size_t i = 0; i < pointers_in_mallocation; ++i) {
             auto value = Emulator::the().mmu().read32({ 0x20, other_mallocation.address + i * sizeof(u32) });
-            if (value == mallocation.address) {
+            if (value.value() == mallocation.address && !value.is_uninitialized()) {
 #ifdef REACHABLE_DEBUG
                 dbgprintf("mallocation %p is reachable from other mallocation %p\n", mallocation.address, other_mallocation.address);
 #endif
@@ -176,7 +184,7 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         size_t pointers_in_region = region.size() / sizeof(u32);
         for (size_t i = 0; i < pointers_in_region; ++i) {
             auto value = region.read32(i * sizeof(u32));
-            if (value == mallocation.address) {
+            if (value.value() == mallocation.address && !value.is_uninitialized()) {
 #ifdef REACHABLE_DEBUG
                 dbgprintf("mallocation %p is reachable from region %p-%p\n", mallocation.address, region.base(), region.end() - 1);
 #endif
