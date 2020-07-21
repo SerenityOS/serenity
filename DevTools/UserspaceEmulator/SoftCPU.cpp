@@ -2484,7 +2484,7 @@ void SoftCPU::XLAT(const X86::Instruction& insn)
     if (insn.a32())
         warn_if_uninitialized(ebx(), "xlat ebx");
     else
-        warn_if_uninitialized(ebx(), "xlat bx");
+        warn_if_uninitialized(bx(), "xlat bx");
     warn_if_uninitialized(al(), "xlat al");
     u32 offset = (insn.a32() ? ebx().value() : bx().value()) + al().value();
     set_al(read_memory8({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), offset }));
