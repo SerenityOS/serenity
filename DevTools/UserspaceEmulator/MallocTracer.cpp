@@ -209,7 +209,7 @@ void MallocTracer::dump_leak_report()
         ++leaks_found;
         bytes_leaked += mallocation.size;
         dbgprintf("\n");
-        dbgprintf("==%d==  \033[31;1mLeak\033[0m, %zu-byte allocation at address %p\n", getpid(), mallocation.size, mallocation.address);
+        dbgprintf("==%d==  \033[31;1mLeak\033[0m, %zu-byte allocation at address %#08x\n", getpid(), mallocation.size, mallocation.address);
         Emulator::the().dump_backtrace(mallocation.malloc_backtrace);
     }
 
