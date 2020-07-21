@@ -86,6 +86,7 @@ void SoftCPU::dump() const
     printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", of(), sf(), zf(), af(), pf(), cf());
     printf("#ax=%08x #bx=%08x #cx=%08x #dx=%08x ", eax().shadow(), ebx().shadow(), ecx().shadow(), edx().shadow());
     printf("#bp=%08x #sp=%08x #si=%08x #di=%08x\n", ebp().shadow(), esp().shadow(), esi().shadow(), edi().shadow());
+    fflush(stdout);
 }
 
 void SoftCPU::did_receive_secret_data()
