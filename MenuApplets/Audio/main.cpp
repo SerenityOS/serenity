@@ -52,10 +52,10 @@ public:
                 update();
         };
 
-        m_volume_level_bitmaps.append({66, Gfx::Bitmap::load_from_file("/res/icons/audio-2.png")});
-        m_volume_level_bitmaps.append({33, Gfx::Bitmap::load_from_file("/res/icons/audio-1.png")});
-        m_volume_level_bitmaps.append({1,  Gfx::Bitmap::load_from_file("/res/icons/audio-0.png")});
-        m_volume_level_bitmaps.append({0,  Gfx::Bitmap::load_from_file("/res/icons/audio-muted.png")});
+        m_volume_level_bitmaps.append({66, Gfx::Bitmap::load_from_file("/res/icons/audio-volume-high.png")});
+        m_volume_level_bitmaps.append({33, Gfx::Bitmap::load_from_file("/res/icons/audio-volume-medium.png")});
+        m_volume_level_bitmaps.append({1,  Gfx::Bitmap::load_from_file("/res/icons/audio-volume-low.png")});
+        m_volume_level_bitmaps.append({0,  Gfx::Bitmap::load_from_file("/res/icons/audio-volume-muted.png")});
     }
 
     virtual ~AudioWidget() override {}
