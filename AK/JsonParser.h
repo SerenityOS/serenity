@@ -27,13 +27,14 @@
 #pragma once
 
 #include <AK/JsonValue.h>
+#include <AK/GenericLexer.h>
 
 namespace AK {
 
-class JsonParser {
+class JsonParser : private GenericLexer {
 public:
     explicit JsonParser(const StringView& input)
-        : m_input(input)
+        : GenericLexer(input)
     {
     }
     ~JsonParser()
@@ -45,12 +46,7 @@ public:
 private:
     Optional<JsonValue> parse_helper();
 
-    char peek() const;
-    char consume();
-    void consume_whitespace();
-    bool consume_specific(char expected_ch);
-    bool consume_string(const char*);
-    String consume_quoted_string();
+    String consume_and_unescape_string();
     Optional<JsonValue> parse_array();
     Optional<JsonValue> parse_object();
     Optional<JsonValue> parse_number();
@@ -58,12 +54,6 @@ private:
     Optional<JsonValue> parse_false();
     Optional<JsonValue> parse_true();
     Optional<JsonValue> parse_null();
-
-    template<typename C>
-    void consume_while(C);
-
-    StringView m_input;
-    size_t m_index { 0 };
 
     String m_last_string_starting_with_character[256];
 };
