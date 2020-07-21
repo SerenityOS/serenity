@@ -30,6 +30,7 @@
 #include "SoftCPU.h"
 #include "SoftMMU.h"
 #include <AK/Types.h>
+#include <LibDebug/DebugInfo.h>
 #include <LibELF/Loader.h>
 #include <LibX86/Instruction.h>
 #include <sys/types.h>
@@ -60,6 +61,7 @@ public:
 
 private:
     NonnullRefPtr<ELF::Loader> m_elf;
+    OwnPtr<DebugInfo> m_debug_info;
 
     SoftMMU m_mmu;
     SoftCPU m_cpu;

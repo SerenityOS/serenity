@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_bin(UserspaceEmulator)
-target_link_libraries(UserspaceEmulator LibX86 LibCore)
+target_link_libraries(UserspaceEmulator LibX86 LibDebug LibCore)

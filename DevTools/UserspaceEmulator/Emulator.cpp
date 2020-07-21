@@ -139,6 +139,8 @@ bool Emulator::load_elf()
     m_malloc_symbol_end = m_malloc_symbol_start + malloc_symbol.value().size();
     m_free_symbol_start = free_symbol.value().value();
     m_free_symbol_end = m_free_symbol_start + free_symbol.value().size();
+
+    m_debug_info = make<DebugInfo>(m_elf);
     return true;
 }
 
@@ -214,7 +216,11 @@ void Emulator::dump_backtrace(const Vector<FlatPtr>& backtrace)
     for (auto& address : backtrace) {
         u32 offset = 0;
         String symbol = m_elf->symbolicate(address, &offset);
-        dbgprintf("==%d==    %#08x  %s +%#x\n", s_pid, address, symbol.characters(), offset);
+        auto source_position = m_debug_info->get_source_position(address);
+        dbgprintf("==%d==    %#08x  %s +%#x", getpid(), address, symbol.characters(), offset);
+        if (source_position.has_value())
+            dbgprintf(" (%s:%zu)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
+        dbgprintf("\n");
     }
 }
 
