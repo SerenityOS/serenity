@@ -118,7 +118,7 @@ bool Emulator::load_elf()
         if (program_header.type() == PT_TLS) {
             auto tcb_region = make<SimpleRegion>(0x20000000, program_header.size_in_memory());
             memcpy(tcb_region->data(), program_header.raw_data(), program_header.size_in_image());
-            memset(tcb_region->shadow_data(), 0x01, program_header.size_in_image());
+            memset(tcb_region->shadow_data(), 0x01, program_header.size_in_memory());
 
             auto tls_region = make<SimpleRegion>(0, 4);
             tls_region->write32(0, shadow_wrap_as_initialized(tcb_region->base() + 8));
