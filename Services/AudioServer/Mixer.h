@@ -118,7 +118,7 @@ public:
     NonnullRefPtr<BufferQueue> create_queue(ClientConnection&);
 
     int main_volume() const { return m_main_volume; }
-    void set_main_volume(int volume) { m_main_volume = volume; }
+    void set_main_volume(int volume);
 
     bool is_muted() const { return m_muted; }
     void set_muted(bool);

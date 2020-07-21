@@ -116,4 +116,10 @@ void ClientConnection::handle(const Messages::AudioClient::MutedStateChanged& me
         on_muted_state_change(message.muted());
 }
 
+void ClientConnection::handle(const Messages::AudioClient::MainMixVolumeChanged& message)
+{
+    if (on_main_mix_volume_change)
+        on_main_mix_volume_change(message.volume());
+}
+
 }
