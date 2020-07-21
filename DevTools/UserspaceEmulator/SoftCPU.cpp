@@ -94,7 +94,8 @@ void SoftCPU::dump() const
     printf("ebp=%08x esp=%08x esi=%08x edi=%08x ", ebp().value(), esp().value(), esi().value(), edi().value());
     printf("o=%u s=%u z=%u a=%u p=%u c=%u\n", of(), sf(), zf(), af(), pf(), cf());
     printf("#ax=%08x #bx=%08x #cx=%08x #dx=%08x ", eax().shadow(), ebx().shadow(), ecx().shadow(), edx().shadow());
-    printf("#bp=%08x #sp=%08x #si=%08x #di=%08x\n", ebp().shadow(), esp().shadow(), esi().shadow(), edi().shadow());
+    printf("#bp=%08x #sp=%08x #si=%08x #di=%08x ", ebp().shadow(), esp().shadow(), esi().shadow(), edi().shadow());
+    printf("#f=%u\n", m_flags_tainted);
     fflush(stdout);
 }
 
