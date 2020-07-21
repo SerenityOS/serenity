@@ -51,6 +51,8 @@ public:
     const Gfx::Bitmap* bitmap() const;
 
 private:
+    virtual void apply_presentational_hints(StyleProperties&) const override;
+
     void animate();
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;

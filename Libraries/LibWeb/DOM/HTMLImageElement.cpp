@@ -33,6 +33,7 @@
 #include <LibWeb/DOM/HTMLImageElement.h>
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Parser/CSSParser.h>
 
 namespace Web {
 
@@ -58,6 +59,21 @@ HTMLImageElement::HTMLImageElement(Document& document, const FlyString& tag_name
 
 HTMLImageElement::~HTMLImageElement()
 {
+}
+
+void HTMLImageElement::apply_presentational_hints(StyleProperties& style) const
+{
+    for_each_attribute([&](auto& name, auto& value) {
+        if (name == HTML::AttributeNames::width) {
+            if (auto parsed_value = parse_html_length(document(), value)) {
+                style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
+            }
+        } else if (name == HTML::AttributeNames::height) {
+            if (auto parsed_value = parse_html_length(document(), value)) {
+                style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
+            }
+        }
+    });
 }
 
 void HTMLImageElement::parse_attribute(const FlyString& name, const String& value)
