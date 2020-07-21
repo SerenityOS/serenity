@@ -116,7 +116,7 @@ struct ChunkedBlock
     ChunkedBlock* m_next { nullptr };
     FreelistEntry* m_freelist { nullptr };
     unsigned short m_free_chunks { 0 };
-    unsigned char m_slot[0];
+    [[gnu::aligned(8)]] unsigned char m_slot[0];
 
     void* chunk(size_t index)
     {
