@@ -138,7 +138,7 @@ private:
     void increment_script_nesting_level();
     void decrement_script_nesting_level();
     size_t script_nesting_level() const { return m_script_nesting_level; }
-    void reset_the_insertion_mode_appropriately(const Element* context_element = nullptr);
+    void reset_the_insertion_mode_appropriately();
 
     void adjust_mathml_attributes(HTMLToken&);
     void adjust_svg_attributes(HTMLToken&);
@@ -177,6 +177,7 @@ private:
     RefPtr<Document> m_document;
     RefPtr<HTMLHeadElement> m_head_element;
     RefPtr<HTMLFormElement> m_form_element;
+    RefPtr<Element> m_context_element;
 
     Vector<HTMLToken> m_pending_table_character_tokens;
 
