@@ -34,8 +34,6 @@
 
 namespace UserspaceEmulator {
 
-static pid_t s_pid = getpid();
-
 MallocTracer::MallocTracer()
 {
 }
@@ -69,8 +67,8 @@ void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
         if (mallocation.address == address) {
             if (mallocation.freed) {
                 dbgprintf("\n");
-                dbgprintf("==%d==  \033[31;1mDouble free()\033[0m, %p\n", s_pid, address);
-                dbgprintf("==%d==  Address %p has already been passed to free()\n", s_pid, address);
+                dbgprintf("==%d==  \033[31;1mDouble free()\033[0m, %p\n", getpid(), address);
+                dbgprintf("==%d==  Address %p has already been passed to free()\n", getpid(), address);
                 Emulator::the().dump_backtrace();
             } else {
                 mallocation.freed = true;
@@ -80,8 +78,8 @@ void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
         }
     }
     dbgprintf("\n");
-    dbgprintf("==%d==  \033[31;1mInvalid free()\033[0m, %p\n", s_pid, address);
-    dbgprintf("==%d==  Address %p has never been returned by malloc()\n", s_pid, address);
+    dbgprintf("==%d==  \033[31;1mInvalid free()\033[0m, %p\n", getpid(), address);
+    dbgprintf("==%d==  Address %p has never been returned by malloc()\n", getpid(), address);
     Emulator::the().dump_backtrace();
 }
 
@@ -110,11 +108,11 @@ void MallocTracer::audit_read(FlatPtr address, size_t size)
 
     if (mallocation->freed) {
         dbgprintf("\n");
-        dbgprintf("==%d==  \033[31;1mUse-after-free\033[0m, invalid %zu-byte read at address %p\n", s_pid, size, address);
+        dbgprintf("==%d==  \033[31;1mUse-after-free\033[0m, invalid %zu-byte read at address %p\n", getpid(), size, address);
         Emulator::the().dump_backtrace();
-        dbgprintf("==%d==  Address is %zu bytes into block of size %zu, allocated at:\n", s_pid, offset_into_mallocation, mallocation->size);
+        dbgprintf("==%d==  Address is %zu bytes into block of size %zu, allocated at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
-        dbgprintf("==%d==  Later freed at:\n", s_pid, offset_into_mallocation, mallocation->size);
+        dbgprintf("==%d==  Later freed at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->free_backtrace);
         return;
     }
@@ -136,11 +134,11 @@ void MallocTracer::audit_write(FlatPtr address, size_t size)
 
     if (mallocation->freed) {
         dbgprintf("\n");
-        dbgprintf("==%d==  \033[31;1mUse-after-free\033[0m, invalid %zu-byte write at address %p\n", s_pid, size, address);
+        dbgprintf("==%d==  \033[31;1mUse-after-free\033[0m, invalid %zu-byte write at address %p\n", getpid(), size, address);
         Emulator::the().dump_backtrace();
-        dbgprintf("==%d==  Address is %zu bytes into block of size %zu, allocated at:\n", s_pid, offset_into_mallocation, mallocation->size);
+        dbgprintf("==%d==  Address is %zu bytes into block of size %zu, allocated at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
-        dbgprintf("==%d==  Later freed at:\n", s_pid, offset_into_mallocation, mallocation->size);
+        dbgprintf("==%d==  Later freed at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->free_backtrace);
         return;
     }
@@ -211,15 +209,15 @@ void MallocTracer::dump_leak_report()
         ++leaks_found;
         bytes_leaked += mallocation.size;
         dbgprintf("\n");
-        dbgprintf("==%d==  \033[31;1mLeak\033[0m, %zu-byte allocation at address %p\n", s_pid, mallocation.size, mallocation.address);
+        dbgprintf("==%d==  \033[31;1mLeak\033[0m, %zu-byte allocation at address %p\n", getpid(), mallocation.size, mallocation.address);
         Emulator::the().dump_backtrace(mallocation.malloc_backtrace);
     }
 
     dbgprintf("\n");
     if (!leaks_found)
-        dbgprintf("==%d==  \033[32;1mNo leaks found!\033[0m\n", s_pid);
+        dbgprintf("==%d==  \033[32;1mNo leaks found!\033[0m\n", getpid());
     else
-        dbgprintf("==%d==  \033[31;1m%zu leak(s) found: %zu byte(s) leaked\033[0m\n", s_pid, leaks_found, bytes_leaked);
+        dbgprintf("==%d==  \033[31;1m%zu leak(s) found: %zu byte(s) leaked\033[0m\n", getpid(), leaks_found, bytes_leaked);
 }
 
 }
