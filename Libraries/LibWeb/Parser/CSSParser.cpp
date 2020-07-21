@@ -928,4 +928,12 @@ RefPtr<StyleDeclaration> parse_css_declaration(const CSS::ParsingContext& contex
     return parser.parse_standalone_declaration();
 }
 
+RefPtr<StyleValue> parse_html_length(const Document& document, const StringView& string)
+{
+    auto integer = string.to_int();
+    if (integer.has_value())
+        return LengthStyleValue::create(Length::make_px(integer.value()));
+    return parse_css_value(CSS::ParsingContext(document), string);
+}
+
 }

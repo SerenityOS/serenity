@@ -53,4 +53,6 @@ RefPtr<LengthStyleValue> parse_line_width(const CSS::ParsingContext&, const Stri
 RefPtr<ColorStyleValue> parse_color(const CSS::ParsingContext&, const StringView&);
 RefPtr<StringStyleValue> parse_line_style(const CSS::ParsingContext&, const StringView&);
 
+RefPtr<StyleValue> parse_html_length(const Document&, const StringView&);
+
 }
