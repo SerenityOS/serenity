@@ -56,6 +56,9 @@ public:
     explicit SoftCPU(Emulator&);
     void dump() const;
 
+    u32 base_eip() const { return m_base_eip; }
+    void save_base_eip() { m_base_eip = m_eip; }
+
     u32 eip() const { return m_eip; }
     void set_eip(u32 eip)
     {
@@ -981,6 +984,7 @@ private:
     bool m_flags_tainted { false };
 
     u32 m_eip { 0 };
+    u32 m_base_eip { 0 };
 
     const u8* m_cached_code_ptr { nullptr };
     const u8* m_cached_code_end { nullptr };

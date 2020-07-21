@@ -167,14 +167,12 @@ int Emulator::exec()
     bool trace = false;
 
     while (!m_shutdown) {
-        u32 base_eip = 0;
-        if (trace)
-            base_eip = m_cpu.eip();
+        m_cpu.save_base_eip();
 
         auto insn = X86::Instruction::from_stream(m_cpu, true, true);
 
         if (trace)
-            out() << (const void*)base_eip << "  \033[33;1m" << insn.to_string(base_eip, &symbol_provider) << "\033[0m";
+            out() << (const void*)m_cpu.base_eip() << "  \033[33;1m" << insn.to_string(m_cpu.base_eip(), &symbol_provider) << "\033[0m";
 
         (m_cpu.*insn.handler())(insn);
 
@@ -190,13 +188,13 @@ int Emulator::exec()
 
 bool Emulator::is_in_malloc_or_free() const
 {
-    return (m_cpu.eip() >= m_malloc_symbol_start && m_cpu.eip() < m_malloc_symbol_end) || (m_cpu.eip() >= m_free_symbol_start && m_cpu.eip() < m_free_symbol_end);
+    return (m_cpu.base_eip() >= m_malloc_symbol_start && m_cpu.base_eip() < m_malloc_symbol_end) || (m_cpu.base_eip() >= m_free_symbol_start && m_cpu.base_eip() < m_free_symbol_end);
 }
 
 Vector<FlatPtr> Emulator::raw_backtrace()
 {
     Vector<FlatPtr> backtrace;
-    backtrace.append(m_cpu.eip());
+    backtrace.append(m_cpu.base_eip());
 
     // FIXME: Maybe do something if the backtrace has uninitialized data in the frame chain.
 
