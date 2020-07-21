@@ -122,18 +122,28 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
         deferred_invoke([&](auto&) {
             m_handshake_timeout_timer = Core::Timer::create_single_shot(
                 m_max_wait_time_for_handshake_in_seconds * 1000, [&] {
-                    // The server did not respond fast enough,
-                    // time the connection out.
-                    alert(AlertLevel::Critical, AlertDescription::UserCanceled);
-                    m_context.connection_finished = true;
-                    m_context.tls_buffer.clear();
-                    m_context.error_code = Error::TimedOut;
-                    m_context.critical_error = (u8)Error::TimedOut;
-                    check_connection_state(false); // Notify the client.
+                    auto timeout_diff = Core::DateTime::now().timestamp() - m_context.handshake_initiation_timestamp;
+                    // If the timeout duration was actually within the max wait time (with a margin of error),
+                    // we're not operating slow, so the server timed out.
+                    // otherwise, it's our fault that the negotitation is taking too long, so extend the timer :P
+                    if (timeout_diff < m_max_wait_time_for_handshake_in_seconds + 1) {
+                        // The server did not respond fast enough,
+                        // time the connection out.
+                        alert(AlertLevel::Critical, AlertDescription::UserCanceled);
+                        m_context.connection_finished = true;
+                        m_context.tls_buffer.clear();
+                        m_context.error_code = Error::TimedOut;
+                        m_context.critical_error = (u8)Error::TimedOut;
+                        check_connection_state(false); // Notify the client.
+                    } else {
+                        // Extend the timer, we are too slow.
+                        m_handshake_timeout_timer->restart(m_max_wait_time_for_handshake_in_seconds * 1000);
+                    }
                 },
                 this);
             write_into_socket();
             m_handshake_timeout_timer->start();
+            m_context.handshake_initiation_timestamp = Core::DateTime::now().timestamp();
         });
         m_has_scheduled_write_flush = true;
 
