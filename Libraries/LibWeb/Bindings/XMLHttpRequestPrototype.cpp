@@ -32,8 +32,7 @@
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 XMLHttpRequestPrototype::XMLHttpRequestPrototype(JS::GlobalObject& global_object)
     : Object(*global_object.object_prototype())
@@ -111,5 +110,4 @@ JS_DEFINE_NATIVE_GETTER(XMLHttpRequestPrototype::response_text_getter)
     return JS::js_string(interpreter, impl->response_text());
 }
 
-}
 }

@@ -75,7 +75,9 @@ class Window;
 class XMLHttpRequest;
 enum class QuirksMode;
 
-namespace Bindings {
+}
+
+namespace Web::Bindings {
 
 class CanvasRenderingContext2DWrapper;
 class DocumentWrapper;
@@ -97,7 +99,5 @@ class Wrapper;
 class XMLHttpRequestConstructor;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
-
-}
 
 }

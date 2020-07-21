@@ -28,8 +28,7 @@
 
 #include <LibWeb/Bindings/EventTargetWrapper.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 class XMLHttpRequestWrapper final : public EventTargetWrapper {
 public:
@@ -45,5 +44,4 @@ private:
 
 XMLHttpRequestWrapper* wrap(JS::GlobalObject&, XMLHttpRequest&);
 
-}
 }

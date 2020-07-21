@@ -33,8 +33,7 @@
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 XMLHttpRequestConstructor::XMLHttpRequestConstructor(JS::GlobalObject& global_object)
     : NativeFunction(*global_object.function_prototype())
@@ -68,5 +67,4 @@ JS::Value XMLHttpRequestConstructor::construct(JS::Interpreter& interpreter, Fun
     return interpreter.heap().allocate<XMLHttpRequestWrapper>(window, window, XMLHttpRequest::create(window.impl()));
 }
 
-}
 }

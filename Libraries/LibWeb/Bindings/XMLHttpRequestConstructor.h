@@ -28,8 +28,7 @@
 
 #include <LibJS/Runtime/NativeFunction.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 class XMLHttpRequestConstructor final : public JS::NativeFunction {
 public:
@@ -45,5 +44,4 @@ private:
     virtual const char* class_name() const override { return "XMLHttpRequestConstructor"; }
 };
 
-}
 }

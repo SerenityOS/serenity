@@ -31,8 +31,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 class Wrappable {
 public:
@@ -55,5 +54,4 @@ inline Wrapper* wrap_impl(JS::GlobalObject& global_object, NativeObject& native_
     return native_object.wrapper();
 }
 
-}
 }

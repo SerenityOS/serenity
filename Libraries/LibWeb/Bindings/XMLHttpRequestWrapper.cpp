@@ -32,8 +32,7 @@
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 XMLHttpRequestWrapper* wrap(JS::GlobalObject& global_object, XMLHttpRequest& impl)
 {
@@ -60,5 +59,4 @@ const XMLHttpRequest& XMLHttpRequestWrapper::impl() const
     return static_cast<const XMLHttpRequest&>(EventTargetWrapper::impl());
 }
 
-}
 }
