@@ -217,7 +217,7 @@ void Emulator::dump_backtrace(const Vector<FlatPtr>& backtrace)
         auto source_position = m_debug_info->get_source_position(address);
         dbgprintf("==%d==    %#08x  %s +%#x", getpid(), address, symbol.characters(), offset);
         if (source_position.has_value())
-            dbgprintf(" (%s:%zu)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
+            dbgprintf(" (\033[34;1m%s\033[0m:%zu)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
         dbgprintf("\n");
     }
 }
@@ -775,7 +775,7 @@ u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
 
 void Emulator::virt$exit(int status)
 {
-    dbg() << "exit(" << status << "), shutting down!";
+    dbgprintf("\n==%d==  \033[33;1mSyscall: exit(%d)\033[0m, shutting down!\n", getpid(), status);
     m_exit_status = status;
     m_shutdown = true;
 }

@@ -62,7 +62,7 @@ void SoftCPU::warn_if_flags_tainted(const char* message) const
 {
     if (m_flags_tainted) {
         dbgprintf("\n");
-        dbgprintf("==%d==  \033[31;1mConditional instruction depends on uninitialized data (%s)\033[0m\n", getpid(), message);
+        dbgprintf("==%d==  \033[31;1mConditional depends on uninitialized data\033[0m (%s)\n", getpid(), message);
         Emulator::the().dump_backtrace();
     }
 }
