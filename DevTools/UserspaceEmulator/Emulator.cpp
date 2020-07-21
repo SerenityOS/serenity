@@ -191,8 +191,6 @@ bool Emulator::is_in_malloc_or_free() const
     return (m_cpu.eip() >= m_malloc_symbol_start && m_cpu.eip() < m_malloc_symbol_end) || (m_cpu.eip() >= m_free_symbol_start && m_cpu.eip() < m_free_symbol_end);
 }
 
-static pid_t s_pid = getpid();
-
 Vector<FlatPtr> Emulator::raw_backtrace()
 {
     Vector<FlatPtr> backtrace;
