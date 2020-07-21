@@ -54,12 +54,23 @@ int LayoutImage::preferred_height() const
 
 void LayoutImage::layout(LayoutMode layout_mode)
 {
-    if (preferred_width() && preferred_height()) {
+    if (m_image_loader.width()) {
         set_has_intrinsic_width(true);
+        set_intrinsic_width(m_image_loader.width());
+    }
+    if (m_image_loader.height()) {
         set_has_intrinsic_height(true);
-        set_intrinsic_width(preferred_width());
-        set_intrinsic_height(preferred_height());
-    } else if (renders_as_alt_text()) {
+        set_intrinsic_height(m_image_loader.height());
+    }
+
+    if (m_image_loader.width() && m_image_loader.height()) {
+        set_has_intrinsic_ratio(true);
+        set_intrinsic_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
+    } else {
+        set_has_intrinsic_ratio(false);
+    }
+
+    if (renders_as_alt_text()) {
         auto& image_element = to<HTMLImageElement>(node());
         auto& font = Gfx::Font::default_font();
         auto alt = image_element.alt();
@@ -67,7 +78,9 @@ void LayoutImage::layout(LayoutMode layout_mode)
             alt = image_element.src();
         set_width(font.width(alt) + 16);
         set_height(font.glyph_height() + 16);
-    } else {
+    }
+
+    if (!has_intrinsic_width() && !has_intrinsic_height()) {
         set_width(16);
         set_height(16);
     }
