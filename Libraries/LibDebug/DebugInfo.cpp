@@ -30,6 +30,8 @@
 #include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibDebug/Dwarf/Expression.h>
 
+//#define DEBUG_SPAM
+
 DebugInfo::DebugInfo(NonnullRefPtr<const ELF::Loader> elf)
     : m_elf(elf)
     , m_dwarf_info(Dwarf::DwarfInfo::create(m_elf))
@@ -55,11 +57,15 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
             return;
 
         if (child.get_attribute(Dwarf::Attribute::Inline).has_value()) {
+#ifdef DEBUG_SPAM
             dbg() << "DWARF inlined functions are not supported";
+#endif
             return;
         }
         if (child.get_attribute(Dwarf::Attribute::Ranges).has_value()) {
+#ifdef DEBUG_SPAM
             dbg() << "DWARF ranges are not supported";
+#endif
             return;
         }
         auto name = child.get_attribute(Dwarf::Attribute::Name);
@@ -70,7 +76,9 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
             scope.name = name.value().data.as_string;
 
         if (!child.get_attribute(Dwarf::Attribute::LowPc).has_value()) {
+#ifdef DEBUG_SPAM
             dbg() << "DWARF: Couldn't find attribtue LowPc for scope";
+#endif
             return;
         }
         scope.address_low = child.get_attribute(Dwarf::Attribute::LowPc).value().data.as_u32;
