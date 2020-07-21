@@ -108,7 +108,7 @@ float LayoutReplaced::calculate_height() const
     if (specified_width.is_auto() && specified_height.is_auto() && has_intrinsic_height())
         used_height = intrinsic_height();
     else if (specified_height.is_auto() && has_intrinsic_ratio())
-        used_height = calculate_width() * intrinsic_ratio();
+        used_height = calculate_width() / intrinsic_ratio();
     else if (specified_height.is_auto() && has_intrinsic_height())
         used_height = intrinsic_height();
     else if (specified_height.is_auto())
