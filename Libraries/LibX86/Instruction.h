@@ -348,19 +348,19 @@ public:
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
     RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
 
-    template<typename CPU>
-    void write8(CPU&, const Instruction&, u8);
-    template<typename CPU>
-    void write16(CPU&, const Instruction&, u16);
-    template<typename CPU>
-    void write32(CPU&, const Instruction&, u32);
+    template<typename CPU, typename T>
+    void write8(CPU&, const Instruction&, T);
+    template<typename CPU, typename T>
+    void write16(CPU&, const Instruction&, T);
+    template<typename CPU, typename T>
+    void write32(CPU&, const Instruction&, T);
 
-    template<typename CPU>
-    u8 read8(CPU&, const Instruction&);
-    template<typename CPU>
-    u16 read16(CPU&, const Instruction&);
-    template<typename CPU>
-    u32 read32(CPU&, const Instruction&);
+    template<typename T, typename CPU>
+    T read8(CPU&, const Instruction&);
+    template<typename T, typename CPU>
+    T read16(CPU&, const Instruction&);
+    template<typename T, typename CPU>
+    T read32(CPU&, const Instruction&);
 
     template<typename CPU>
     LogicalAddress resolve(const CPU&, const Instruction&);
@@ -519,35 +519,35 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu
 
     switch (m_rm & 7) {
     case 0:
-        offset = cpu.bx() + cpu.si() + m_displacement16;
+        offset = cpu.bx().value() + cpu.si().value() + m_displacement16;
         break;
     case 1:
-        offset = cpu.bx() + cpu.di() + m_displacement16;
+        offset = cpu.bx().value() + cpu.di().value() + m_displacement16;
         break;
     case 2:
         default_segment = SegmentRegister::SS;
-        offset = cpu.bp() + cpu.si() + m_displacement16;
+        offset = cpu.bp().value() + cpu.si().value() + m_displacement16;
         break;
     case 3:
         default_segment = SegmentRegister::SS;
-        offset = cpu.bp() + cpu.di() + m_displacement16;
+        offset = cpu.bp().value() + cpu.di().value() + m_displacement16;
         break;
     case 4:
-        offset = cpu.si() + m_displacement16;
+        offset = cpu.si().value() + m_displacement16;
         break;
     case 5:
-        offset = cpu.di() + m_displacement16;
+        offset = cpu.di().value() + m_displacement16;
         break;
     case 6:
         if ((m_rm & 0xc0) == 0)
             offset = m_displacement16;
         else {
             default_segment = SegmentRegister::SS;
-            offset = cpu.bp() + m_displacement16;
+            offset = cpu.bp().value() + m_displacement16;
         }
         break;
     default:
-        offset = cpu.bx() + m_displacement16;
+        offset = cpu.bx().value() + m_displacement16;
         break;
     }
 
@@ -563,25 +563,25 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
 
     switch (m_rm & 0x07) {
     case 0:
-        offset = cpu.eax() + m_displacement32;
+        offset = cpu.eax().value() + m_displacement32;
         break;
     case 1:
-        offset = cpu.ecx() + m_displacement32;
+        offset = cpu.ecx().value() + m_displacement32;
         break;
     case 2:
-        offset = cpu.edx() + m_displacement32;
+        offset = cpu.edx().value() + m_displacement32;
         break;
     case 3:
-        offset = cpu.ebx() + m_displacement32;
+        offset = cpu.ebx().value() + m_displacement32;
         break;
     case 4:
         offset = evaluate_sib(cpu, default_segment);
         break;
     case 6:
-        offset = cpu.esi() + m_displacement32;
+        offset = cpu.esi().value() + m_displacement32;
         break;
     case 7:
-        offset = cpu.edi() + m_displacement32;
+        offset = cpu.edi().value() + m_displacement32;
         break;
     default: // 5
         if ((m_rm & 0xc0) == 0x00) {
@@ -589,7 +589,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
             break;
         } else {
             default_segment = SegmentRegister::SS;
-            offset = cpu.ebp() + m_displacement32;
+            offset = cpu.ebp().value() + m_displacement32;
             break;
         }
         break;
@@ -619,54 +619,54 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
     u32 index = 0;
     switch ((m_sib >> 3) & 0x07) {
     case 0:
-        index = cpu.eax();
+        index = cpu.eax().value();
         break;
     case 1:
-        index = cpu.ecx();
+        index = cpu.ecx().value();
         break;
     case 2:
-        index = cpu.edx();
+        index = cpu.edx().value();
         break;
     case 3:
-        index = cpu.ebx();
+        index = cpu.ebx().value();
         break;
     case 4:
         index = 0;
         break;
     case 5:
-        index = cpu.ebp();
+        index = cpu.ebp().value();
         break;
     case 6:
-        index = cpu.esi();
+        index = cpu.esi().value();
         break;
     case 7:
-        index = cpu.edi();
+        index = cpu.edi().value();
         break;
     }
 
     u32 base = m_displacement32;
     switch (m_sib & 0x07) {
     case 0:
-        base += cpu.eax();
+        base += cpu.eax().value();
         break;
     case 1:
-        base += cpu.ecx();
+        base += cpu.ecx().value();
         break;
     case 2:
-        base += cpu.edx();
+        base += cpu.edx().value();
         break;
     case 3:
-        base += cpu.ebx();
+        base += cpu.ebx().value();
         break;
     case 4:
         default_segment = SegmentRegister::SS;
-        base += cpu.esp();
+        base += cpu.esp().value();
         break;
     case 6:
-        base += cpu.esi();
+        base += cpu.esi().value();
         break;
     case 7:
-        base += cpu.edi();
+        base += cpu.edi().value();
         break;
     default: // 5
         switch ((m_rm >> 6) & 3) {
@@ -675,7 +675,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
         case 1:
         case 2:
             default_segment = SegmentRegister::SS;
-            base += cpu.ebp();
+            base += cpu.ebp().value();
             break;
         default:
             ASSERT_NOT_REACHED();
@@ -687,8 +687,8 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
     return (scale * index) + base;
 }
 
-template<typename CPU>
-ALWAYS_INLINE void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction& insn, u8 value)
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction& insn, T value)
 {
     if (is_register()) {
         cpu.gpr8(reg8()) = value;
@@ -699,8 +699,8 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction
     cpu.write_memory8(address, value);
 }
 
-template<typename CPU>
-ALWAYS_INLINE void MemoryOrRegisterReference::write16(CPU& cpu, const Instruction& insn, u16 value)
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write16(CPU& cpu, const Instruction& insn, T value)
 {
     if (is_register()) {
         cpu.gpr16(reg16()) = value;
@@ -711,8 +711,8 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write16(CPU& cpu, const Instructio
     cpu.write_memory16(address, value);
 }
 
-template<typename CPU>
-ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn, u32 value)
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn, T value)
 {
     if (is_register()) {
         cpu.gpr32(reg32()) = value;
@@ -723,31 +723,31 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instructio
     cpu.write_memory32(address, value);
 }
 
-template<typename CPU>
-ALWAYS_INLINE u8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
+template<typename T, typename CPU>
+ALWAYS_INLINE T MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
-        return cpu.gpr8(reg8());
+        return cpu.const_gpr8(reg8());
 
     auto address = resolve(cpu, insn);
     return cpu.read_memory8(address);
 }
 
-template<typename CPU>
-ALWAYS_INLINE u16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
+template<typename T, typename CPU>
+ALWAYS_INLINE T MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
-        return cpu.gpr16(reg16());
+        return cpu.const_gpr16(reg16());
 
     auto address = resolve(cpu, insn);
     return cpu.read_memory16(address);
 }
 
-template<typename CPU>
-ALWAYS_INLINE u32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
+template<typename T, typename CPU>
+ALWAYS_INLINE T MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
-        return cpu.gpr32(reg32());
+        return cpu.const_gpr32(reg32());
 
     auto address = resolve(cpu, insn);
     return cpu.read_memory32(address);

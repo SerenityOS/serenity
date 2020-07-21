@@ -77,30 +77,30 @@ void Emulator::setup_stack(const Vector<String>& arguments)
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     stack_region->set_stack(true);
     m_mmu.add_region(move(stack_region));
-    m_cpu.set_esp(stack_location + stack_size);
+    m_cpu.set_esp(shadow_wrap_as_initialized<u32>(stack_location + stack_size));
 
     Vector<u32> argv_entries;
 
     for (auto& argument : arguments) {
         m_cpu.push_string(argument.characters());
-        argv_entries.append(m_cpu.esp());
+        argv_entries.append(m_cpu.esp().value());
     }
 
-    m_cpu.push32(0); // char** envp = { nullptr }
-    u32 envp = m_cpu.esp();
+    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // char** envp = { nullptr }
+    u32 envp = m_cpu.esp().value();
 
-    m_cpu.push32(0); // char** argv = { argv_entries..., nullptr }
+    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // char** argv = { argv_entries..., nullptr }
     for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
-        m_cpu.push32(argv_entries[i]);
-    u32 argv = m_cpu.esp();
+        m_cpu.push32(shadow_wrap_as_initialized(argv_entries[i]));
+    u32 argv = m_cpu.esp().value();
 
-    m_cpu.push32(0); // (alignment)
+    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // (alignment)
 
     u32 argc = argv_entries.size();
-    m_cpu.push32(envp);
-    m_cpu.push32(argv);
-    m_cpu.push32(argc);
-    m_cpu.push32(0); // (alignment)
+    m_cpu.push32(shadow_wrap_as_initialized(envp));
+    m_cpu.push32(shadow_wrap_as_initialized(argv));
+    m_cpu.push32(shadow_wrap_as_initialized(argc));
+    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // (alignment)
 }
 
 bool Emulator::load_elf()
@@ -111,15 +111,18 @@ bool Emulator::load_elf()
             if (program_header.is_executable() && !program_header.is_writable())
                 region->set_text(true);
             memcpy(region->data(), program_header.raw_data(), program_header.size_in_image());
+            memset(region->shadow_data(), 0x01, program_header.size_in_memory());
             mmu().add_region(move(region));
             return;
         }
         if (program_header.type() == PT_TLS) {
             auto tcb_region = make<SimpleRegion>(0x20000000, program_header.size_in_memory());
             memcpy(tcb_region->data(), program_header.raw_data(), program_header.size_in_image());
+            memset(tcb_region->shadow_data(), 0x01, program_header.size_in_image());
 
             auto tls_region = make<SimpleRegion>(0, 4);
-            tls_region->write32(0, tcb_region->base() + 8);
+            tls_region->write32(0, shadow_wrap_as_initialized(tcb_region->base() + 8));
+            memset(tls_region->shadow_data(), 0x01, 4);
 
             mmu().add_region(move(tcb_region));
             mmu().set_tls_region(move(tls_region));
@@ -195,13 +198,15 @@ Vector<FlatPtr> Emulator::raw_backtrace()
     Vector<FlatPtr> backtrace;
     backtrace.append(m_cpu.eip());
 
-    u32 frame_ptr = m_cpu.ebp();
+    // FIXME: Maybe do something if the backtrace has uninitialized data in the frame chain.
+
+    u32 frame_ptr = m_cpu.ebp().value();
     while (frame_ptr) {
-        u32 ret_ptr = m_mmu.read32({ 0x20, frame_ptr + 4 });
+        u32 ret_ptr = m_mmu.read32({ 0x20, frame_ptr + 4 }).value();
         if (!ret_ptr)
             break;
         backtrace.append(ret_ptr);
-        frame_ptr = m_mmu.read32({ 0x20, frame_ptr });
+        frame_ptr = m_mmu.read32({ 0x20, frame_ptr }).value();
     }
     return backtrace;
 }

@@ -51,10 +51,12 @@ MmapRegion::MmapRegion(u32 base, u32 size, int prot)
     : Region(base, size)
     , m_prot(prot)
 {
+    m_shadow_data = (u8*)calloc(1, size);
 }
 
 MmapRegion::~MmapRegion()
 {
+    free(m_shadow_data);
     if (m_file_backed)
         munmap(m_data, size());
     else
@@ -68,7 +70,7 @@ bool MmapRegion::is_malloc_block() const
     return !m_file_backed;
 }
 
-u8 MmapRegion::read8(FlatPtr offset)
+ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
 {
     if (!is_readable()) {
         warn() << "8-bit read from unreadable MmapRegion @ " << (const void*)(base() + offset);
@@ -82,10 +84,10 @@ u8 MmapRegion::read8(FlatPtr offset)
     }
 
     ASSERT(offset < size());
-    return *reinterpret_cast<const u8*>(m_data + offset);
+    return { *reinterpret_cast<const u8*>(m_data + offset), *reinterpret_cast<const u8*>(m_shadow_data + offset) };
 }
 
-u16 MmapRegion::read16(u32 offset)
+ValueWithShadow<u16> MmapRegion::read16(u32 offset)
 {
     if (!is_readable()) {
         warn() << "16-bit from unreadable MmapRegion @ " << (const void*)(base() + offset);
@@ -99,10 +101,10 @@ u16 MmapRegion::read16(u32 offset)
     }
 
     ASSERT(offset + 1 < size());
-    return *reinterpret_cast<const u16*>(m_data + offset);
+    return { *reinterpret_cast<const u16*>(m_data + offset), *reinterpret_cast<const u16*>(m_shadow_data + offset) };
 }
 
-u32 MmapRegion::read32(u32 offset)
+ValueWithShadow<u32> MmapRegion::read32(u32 offset)
 {
     if (!is_readable()) {
         warn() << "32-bit read from unreadable MmapRegion @ " << (const void*)(base() + offset);
@@ -116,10 +118,10 @@ u32 MmapRegion::read32(u32 offset)
     }
 
     ASSERT(offset + 3 < size());
-    return *reinterpret_cast<const u32*>(m_data + offset);
+    return { *reinterpret_cast<const u32*>(m_data + offset), *reinterpret_cast<const u32*>(m_shadow_data + offset) };
 }
 
-void MmapRegion::write8(u32 offset, u8 value)
+void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     if (!is_writable()) {
         warn() << "8-bit write to unreadable MmapRegion @ " << (const void*)(base() + offset);
@@ -133,10 +135,11 @@ void MmapRegion::write8(u32 offset, u8 value)
     }
 
     ASSERT(offset < size());
-    *reinterpret_cast<u8*>(m_data + offset) = value;
+    *reinterpret_cast<u8*>(m_data + offset) = value.value();
+    *reinterpret_cast<u8*>(m_shadow_data + offset) = value.shadow();
 }
 
-void MmapRegion::write16(u32 offset, u16 value)
+void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)
 {
     if (!is_writable()) {
         warn() << "16-bit write to unreadable MmapRegion @ " << (const void*)(base() + offset);
@@ -150,10 +153,11 @@ void MmapRegion::write16(u32 offset, u16 value)
     }
 
     ASSERT(offset + 1 < size());
-    *reinterpret_cast<u16*>(m_data + offset) = value;
+    *reinterpret_cast<u16*>(m_data + offset) = value.value();
+    *reinterpret_cast<u16*>(m_shadow_data + offset) = value.shadow();
 }
 
-void MmapRegion::write32(u32 offset, u32 value)
+void MmapRegion::write32(u32 offset, ValueWithShadow<u32> value)
 {
     if (!is_writable()) {
         warn() << "32-bit write to unreadable MmapRegion @ " << (const void*)(base() + offset);
@@ -167,7 +171,9 @@ void MmapRegion::write32(u32 offset, u32 value)
     }
 
     ASSERT(offset + 3 < size());
-    *reinterpret_cast<u32*>(m_data + offset) = value;
+    ASSERT(m_data != m_shadow_data);
+    *reinterpret_cast<u32*>(m_data + offset) = value.value();
+    *reinterpret_cast<u32*>(m_shadow_data + offset) = value.shadow();
 }
 
 }

@@ -32,47 +32,52 @@ SimpleRegion::SimpleRegion(u32 base, u32 size)
     : Region(base, size)
 {
     m_data = (u8*)calloc(1, size);
+    m_shadow_data = (u8*)calloc(1, size);
 }
 
 SimpleRegion::~SimpleRegion()
 {
+    free(m_shadow_data);
     free(m_data);
 }
 
-u8 SimpleRegion::read8(FlatPtr offset)
+ValueWithShadow<u8> SimpleRegion::read8(FlatPtr offset)
 {
     ASSERT(offset < size());
-    return *reinterpret_cast<const u8*>(m_data + offset);
+    return { *reinterpret_cast<const u8*>(m_data + offset), *reinterpret_cast<const u8*>(m_shadow_data + offset) };
 }
 
-u16 SimpleRegion::read16(u32 offset)
+ValueWithShadow<u16> SimpleRegion::read16(u32 offset)
 {
     ASSERT(offset + 1 < size());
-    return *reinterpret_cast<const u16*>(m_data + offset);
+    return { *reinterpret_cast<const u16*>(m_data + offset), *reinterpret_cast<const u16*>(m_shadow_data + offset) };
 }
 
-u32 SimpleRegion::read32(u32 offset)
+ValueWithShadow<u32> SimpleRegion::read32(u32 offset)
 {
     ASSERT(offset + 3 < size());
-    return *reinterpret_cast<const u32*>(m_data + offset);
+    return { *reinterpret_cast<const u32*>(m_data + offset), *reinterpret_cast<const u32*>(m_shadow_data + offset) };
 }
 
-void SimpleRegion::write8(u32 offset, u8 value)
+void SimpleRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     ASSERT(offset < size());
-    *reinterpret_cast<u8*>(m_data + offset) = value;
+    *reinterpret_cast<u8*>(m_data + offset) = value.value();
+    *reinterpret_cast<u8*>(m_shadow_data + offset) = value.shadow();
 }
 
-void SimpleRegion::write16(u32 offset, u16 value)
+void SimpleRegion::write16(u32 offset, ValueWithShadow<u16> value)
 {
     ASSERT(offset + 1 < size());
-    *reinterpret_cast<u16*>(m_data + offset) = value;
+    *reinterpret_cast<u16*>(m_data + offset) = value.value();
+    *reinterpret_cast<u16*>(m_shadow_data + offset) = value.shadow();
 }
 
-void SimpleRegion::write32(u32 offset, u32 value)
+void SimpleRegion::write32(u32 offset, ValueWithShadow<u32> value)
 {
     ASSERT(offset + 3 < size());
-    *reinterpret_cast<u32*>(m_data + offset) = value;
+    *reinterpret_cast<u32*>(m_data + offset) = value.value();
+    *reinterpret_cast<u32*>(m_shadow_data + offset) = value.shadow();
 }
 
 u8* SimpleRegion::cacheable_ptr(u32 offset)
