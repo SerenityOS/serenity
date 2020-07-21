@@ -76,6 +76,11 @@ void ClientConnection::did_change_muted_state(Badge<Mixer>, bool muted)
     post_message(Messages::AudioClient::MutedStateChanged(muted));
 }
 
+void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, int volume)
+{
+    post_message(Messages::AudioClient::MainMixVolumeChanged(volume));
+}
+
 OwnPtr<Messages::AudioServer::GreetResponse> ClientConnection::handle(const Messages::AudioServer::Greet&)
 {
     return make<Messages::AudioServer::GreetResponse>(client_id());

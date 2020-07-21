@@ -59,10 +59,12 @@ public:
 
     Function<void(i32 buffer_id)> on_finish_playing_buffer;
     Function<void(bool muted)> on_muted_state_change;
+    Function<void(int volume)> on_main_mix_volume_change;
 
 private:
     virtual void handle(const Messages::AudioClient::FinishedPlayingBuffer&) override;
     virtual void handle(const Messages::AudioClient::MutedStateChanged&) override;
+    virtual void handle(const Messages::AudioClient::MainMixVolumeChanged&) override;
 };
 
 }

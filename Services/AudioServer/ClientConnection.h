@@ -48,6 +48,7 @@ public:
 
     void did_finish_playing_buffer(Badge<BufferQueue>, int buffer_id);
     void did_change_muted_state(Badge<Mixer>, bool muted);
+    void did_change_main_mix_volume(Badge<Mixer>, int volume);
 
     virtual void die() override;
 
