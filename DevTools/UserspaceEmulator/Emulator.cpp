@@ -121,7 +121,7 @@ bool Emulator::load_elf()
             memset(tcb_region->shadow_data(), 0x01, program_header.size_in_memory());
 
             auto tls_region = make<SimpleRegion>(0, 4);
-            tls_region->write32(0, shadow_wrap_as_initialized(tcb_region->base() + 8));
+            tls_region->write32(0, shadow_wrap_as_initialized(tcb_region->base() + program_header.size_in_memory()));
             memset(tls_region->shadow_data(), 0x01, 4);
 
             mmu().add_region(move(tcb_region));
