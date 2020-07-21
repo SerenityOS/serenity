@@ -70,7 +70,7 @@ SoftCPU::SoftCPU(Emulator& emulator)
     : m_emulator(emulator)
 {
     memset(m_gpr, 0, sizeof(m_gpr));
-    memset(m_gpr_shadow, 0, sizeof(m_gpr_shadow));
+    memset(m_gpr_shadow, 1, sizeof(m_gpr_shadow));
 
     m_segment[(int)X86::SegmentRegister::CS] = 0x18;
     m_segment[(int)X86::SegmentRegister::DS] = 0x20;
