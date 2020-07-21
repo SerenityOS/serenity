@@ -58,6 +58,14 @@ void warn_if_uninitialized(T value_with_shadow, const char* message)
     }
 }
 
+void SoftCPU::warn_if_flags_tainted(const char* message) const
+{
+    if (m_flags_tainted) {
+        dbgprintf("\033[31;1mWarning! Conditional instruction depends on uninitialized data (%s)\033[0m\n", message);
+        Emulator::the().dump_backtrace();
+    }
+}
+
 template<typename T, typename U>
 inline constexpr T sign_extended_to(U value)
 {
@@ -216,6 +224,7 @@ void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
         callback();
         decrement_loop_index(insn.a32());
         if constexpr (check_zf) {
+            warn_if_flags_tainted("repz/repnz");
             if (insn.rep_prefix() == X86::Prefix::REPZ && !zf())
                 break;
             if (insn.rep_prefix() == X86::Prefix::REPNZ && zf())
@@ -250,6 +259,7 @@ ALWAYS_INLINE static T op_inc(SoftCPU& cpu, T data)
         : "=b"(new_flags));
 
     cpu.set_flags_oszap(new_flags);
+    cpu.taint_flags_from(data);
     return shadow_wrap_with_taint_from(result, data);
 }
 
@@ -279,6 +289,7 @@ ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
         : "=b"(new_flags));
 
     cpu.set_flags_oszap(new_flags);
+    cpu.taint_flags_from(data);
     return shadow_wrap_with_taint_from(result, data);
 }
 
@@ -310,6 +321,7 @@ ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
         : "=b"(new_flags));
 
     cpu.set_flags_oszpc(new_flags);
+    cpu.taint_flags_from(dest, src);
     return shadow_wrap_with_taint_from(result, dest, src);
 }
 
@@ -341,6 +353,7 @@ ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
         : "=b"(new_flags));
 
     cpu.set_flags_oszpc(new_flags);
+    cpu.taint_flags_from(dest, src);
     return shadow_wrap_with_taint_from(result, dest, src);
 }
 
@@ -372,6 +385,7 @@ ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
         : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
+    cpu.taint_flags_from(dest, src);
     return shadow_wrap_with_taint_from(result, dest, src);
 }
 
@@ -408,12 +422,14 @@ ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
         : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
+    cpu.taint_flags_from(dest, src);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, dest, src);
 }
 
 template<typename T>
 ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
 {
+    cpu.warn_if_flags_tainted("sbb");
     if (cpu.cf())
         return op_sbb_impl<T, true>(cpu, dest, src);
     return op_sbb_impl<T, false>(cpu, dest, src);
@@ -447,6 +463,7 @@ ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
         : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
+    cpu.taint_flags_from(dest, src);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, dest, src);
 }
 
@@ -483,12 +500,14 @@ ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
         : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
+    cpu.taint_flags_from(dest, src);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, dest, src);
 }
 
 template<typename T>
 ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
 {
+    cpu.warn_if_flags_tainted("adc");
     if (cpu.cf())
         return op_adc_impl<T, true>(cpu, dest, src);
     return op_adc_impl<T, false>(cpu, dest, src);
@@ -522,6 +541,7 @@ ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
         : "=b"(new_flags));
 
     cpu.set_flags_oszpc(new_flags);
+    cpu.taint_flags_from(dest, src);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, dest, src);
 }
 
@@ -584,6 +604,7 @@ ALWAYS_INLINE static T op_shr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
         : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
+    cpu.taint_flags_from(data, steps);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
 }
 
@@ -616,6 +637,7 @@ ALWAYS_INLINE static T op_shl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
         : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
+    cpu.taint_flags_from(data, steps);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
 }
 
@@ -644,6 +666,7 @@ ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, ValueWithShad
         : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
+    cpu.taint_flags_from(data, steps);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
 }
 
@@ -672,6 +695,7 @@ ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, ValueWithShad
         : "=b"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
+    cpu.taint_flags_from(data, steps);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
 }
 
@@ -910,37 +934,40 @@ ALWAYS_INLINE static T op_bsr(SoftCPU&, T value)
 void SoftCPU::BSF_reg16_RM16(const X86::Instruction& insn)
 {
     auto src = insn.modrm().read16<ValueWithShadow<u16>>(*this, insn);
-    // FIXME: Shadow flags.
     set_zf(!src.value());
     if (src.value())
         gpr16(insn.reg16()) = op_bsf(*this, src);
+    taint_flags_from(src);
 }
 
 void SoftCPU::BSF_reg32_RM32(const X86::Instruction& insn)
 {
     auto src = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
-    // FIXME: Shadow flags.
     set_zf(!src.value());
-    if (src.value())
-        gpr32(insn.reg32()) = op_bsf(*this, insn.modrm().read32<ValueWithShadow<u32>>(*this, insn));
+    if (src.value()) {
+        gpr32(insn.reg32()) = op_bsf(*this, src);
+        taint_flags_from(src);
+    }
 }
 
 void SoftCPU::BSR_reg16_RM16(const X86::Instruction& insn)
 {
     auto src = insn.modrm().read16<ValueWithShadow<u16>>(*this, insn);
-    // FIXME: Shadow flags.
     set_zf(!src.value());
-    if (src.value())
-        gpr16(insn.reg16()) = op_bsr(*this, insn.modrm().read16<ValueWithShadow<u16>>(*this, insn));
+    if (src.value()) {
+        gpr16(insn.reg16()) = op_bsr(*this, src);
+        taint_flags_from(src);
+    }
 }
 
 void SoftCPU::BSR_reg32_RM32(const X86::Instruction& insn)
 {
     auto src = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
-    // FIXME: Shadow flags.
     set_zf(!src.value());
-    if (src.value())
-        gpr32(insn.reg32()) = op_bsr(*this, insn.modrm().read32<ValueWithShadow<u32>>(*this, insn));
+    if (src.value()) {
+        gpr32(insn.reg32()) = op_bsr(*this, src);
+        taint_flags_from(src);
+    }
 }
 
 void SoftCPU::BSWAP_reg32(const X86::Instruction& insn)
@@ -980,8 +1007,8 @@ ALWAYS_INLINE void BTx_RM16_reg16(SoftCPU& cpu, const X86::Instruction& insn, Op
         auto original = insn.modrm().read16<ValueWithShadow<u16>>(cpu, insn);
         u16 bit_mask = 1 << bit_index;
         u16 result = op(original.value(), bit_mask);
-        // FIXME: Shadow flags.
         cpu.set_cf((original.value() & bit_mask) != 0);
+        cpu.taint_flags_from(cpu.gpr16(insn.reg16()), original);
         if (should_update)
             insn.modrm().write16(cpu, insn, shadow_wrap_with_taint_from(result, cpu.gpr16(insn.reg16()), original));
         return;
@@ -994,8 +1021,8 @@ ALWAYS_INLINE void BTx_RM16_reg16(SoftCPU& cpu, const X86::Instruction& insn, Op
     auto dest = cpu.read_memory8(address);
     u8 bit_mask = 1 << bit_offset_in_byte;
     u8 result = op(dest.value(), bit_mask);
-    // FIXME: Shadow flags.
     cpu.set_cf((dest.value() & bit_mask) != 0);
+    cpu.taint_flags_from(cpu.gpr16(insn.reg16()), dest);
     if (should_update)
         cpu.write_memory8(address, shadow_wrap_with_taint_from(result, cpu.gpr16(insn.reg16()), dest));
 }
@@ -1008,8 +1035,8 @@ ALWAYS_INLINE void BTx_RM32_reg32(SoftCPU& cpu, const X86::Instruction& insn, Op
         auto original = insn.modrm().read32<ValueWithShadow<u32>>(cpu, insn);
         u32 bit_mask = 1 << bit_index;
         u32 result = op(original.value(), bit_mask);
-        // FIXME: Shadow flags.
         cpu.set_cf((original.value() & bit_mask) != 0);
+        cpu.taint_flags_from(cpu.gpr32(insn.reg32()), original);
         if (should_update)
             insn.modrm().write32(cpu, insn, shadow_wrap_with_taint_from(result, cpu.gpr32(insn.reg32()), original));
         return;
@@ -1022,8 +1049,8 @@ ALWAYS_INLINE void BTx_RM32_reg32(SoftCPU& cpu, const X86::Instruction& insn, Op
     auto dest = cpu.read_memory8(address);
     u8 bit_mask = 1 << bit_offset_in_byte;
     u8 result = op(dest.value(), bit_mask);
-    // FIXME: Shadow flags.
     cpu.set_cf((dest.value() & bit_mask) != 0);
+    cpu.taint_flags_from(cpu.gpr32(insn.reg32()), dest);
     if (should_update)
         cpu.write_memory8(address, shadow_wrap_with_taint_from(result, cpu.gpr32(insn.reg32()), dest));
 }
@@ -1038,8 +1065,9 @@ ALWAYS_INLINE void BTx_RM16_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op 
 
     auto original = insn.modrm().read16<ValueWithShadow<u16>>(cpu, insn);
     u16 bit_mask = 1 << bit_index;
-    auto result = op(original.value(), bit_mask); // FIXME: Shadow flags.
+    auto result = op(original.value(), bit_mask);
     cpu.set_cf((original.value() & bit_mask) != 0);
+    cpu.taint_flags_from(original);
     if (should_update)
         insn.modrm().write16(cpu, insn, shadow_wrap_with_taint_from(result, original));
 }
@@ -1055,8 +1083,8 @@ ALWAYS_INLINE void BTx_RM32_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op 
     auto original = insn.modrm().read32<ValueWithShadow<u32>>(cpu, insn);
     u32 bit_mask = 1 << bit_index;
     auto result = op(original.value(), bit_mask);
-    // FIXME: Shadow flags.
     cpu.set_cf((original.value() & bit_mask) != 0);
+    cpu.taint_flags_from(original);
     if (should_update)
         insn.modrm().write32(cpu, insn, shadow_wrap_with_taint_from(result, original));
 }
@@ -1126,12 +1154,14 @@ void SoftCPU::CMC(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::CMOVcc_reg16_RM16(const X86::Instruction& insn)
 {
+    warn_if_flags_tainted("cmovcc reg16, rm16");
     if (evaluate_condition(insn.cc()))
         gpr16(insn.reg16()) = insn.modrm().read16<ValueWithShadow<u16>>(*this, insn);
 }
 
 void SoftCPU::CMOVcc_reg32_RM32(const X86::Instruction& insn)
 {
+    warn_if_flags_tainted("cmovcc reg32, rm32");
     if (evaluate_condition(insn.cc()))
         gpr32(insn.reg32()) = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
 }
@@ -1167,7 +1197,7 @@ void SoftCPU::CMPSW(const X86::Instruction& insn)
 void SoftCPU::CMPXCHG_RM16_reg16(const X86::Instruction& insn)
 {
     auto current = insn.modrm().read16<ValueWithShadow<u16>>(*this, insn);
-    // FIXME: Shadow flags.
+    taint_flags_from(current, ax());
     if (current.value() == ax().value()) {
         set_zf(true);
         insn.modrm().write16(*this, insn, const_gpr16(insn.reg16()));
@@ -1180,7 +1210,7 @@ void SoftCPU::CMPXCHG_RM16_reg16(const X86::Instruction& insn)
 void SoftCPU::CMPXCHG_RM32_reg32(const X86::Instruction& insn)
 {
     auto current = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
-    // FIXME: Shadow flags.
+    taint_flags_from(current, eax());
     if (current.value() == eax().value()) {
         set_zf(true);
         insn.modrm().write32(*this, insn, const_gpr32(insn.reg32()));
@@ -1193,7 +1223,7 @@ void SoftCPU::CMPXCHG_RM32_reg32(const X86::Instruction& insn)
 void SoftCPU::CMPXCHG_RM8_reg8(const X86::Instruction& insn)
 {
     auto current = insn.modrm().read8<ValueWithShadow<u8>>(*this, insn);
-    // FIXME: Shadow flags.
+    taint_flags_from(current, al());
     if (current.value() == al().value()) {
         set_zf(true);
         insn.modrm().write8(*this, insn, const_gpr8(insn.reg8()));
@@ -1550,12 +1580,14 @@ void SoftCPU::JMP_short_imm8(const X86::Instruction& insn)
 
 void SoftCPU::Jcc_NEAR_imm(const X86::Instruction& insn)
 {
+    warn_if_flags_tainted("jcc near imm32");
     if (evaluate_condition(insn.cc()))
         set_eip(eip() + (i32)insn.imm32());
 }
 
 void SoftCPU::Jcc_imm8(const X86::Instruction& insn)
 {
+    warn_if_flags_tainted("jcc imm8");
     if (evaluate_condition(insn.cc()))
         set_eip(eip() + (i8)insn.imm8());
 }
@@ -1625,6 +1657,7 @@ void SoftCPU::LODSW(const X86::Instruction& insn)
 
 void SoftCPU::LOOPNZ_imm8(const X86::Instruction& insn)
 {
+    warn_if_flags_tainted("loopnz");
     if (insn.a32()) {
         set_ecx({ ecx().value() - 1, ecx().shadow() });
         if (ecx().value() != 0 && !zf())
@@ -1637,6 +1670,7 @@ void SoftCPU::LOOPNZ_imm8(const X86::Instruction& insn)
 }
 void SoftCPU::LOOPZ_imm8(const X86::Instruction& insn)
 {
+    warn_if_flags_tainted("loopz");
     if (insn.a32()) {
         set_ecx({ ecx().value() - 1, ecx().shadow() });
         if (ecx().value() != 0 && zf())
@@ -1838,8 +1872,8 @@ void SoftCPU::MUL_RM16(const X86::Instruction& insn)
     auto original_ax = ax();
     set_ax(shadow_wrap_with_taint_from<u16>(result & 0xffff, src, original_ax));
     set_dx(shadow_wrap_with_taint_from<u16>(result >> 16, src, original_ax));
+    taint_flags_from(src, original_ax);
 
-    // FIXME: Shadow flags.
     set_cf(dx().value() != 0);
     set_of(dx().value() != 0);
 }
@@ -1851,8 +1885,8 @@ void SoftCPU::MUL_RM32(const X86::Instruction& insn)
     auto original_eax = eax();
     set_eax(shadow_wrap_with_taint_from<u32>(result, src, original_eax));
     set_edx(shadow_wrap_with_taint_from<u32>(result >> 32, src, original_eax));
+    taint_flags_from(src, original_eax);
 
-    // FIXME: Shadow flags.
     set_cf(edx().value() != 0);
     set_of(edx().value() != 0);
 }
@@ -1861,9 +1895,10 @@ void SoftCPU::MUL_RM8(const X86::Instruction& insn)
 {
     auto src = insn.modrm().read8<ValueWithShadow<u8>>(*this, insn);
     u16 result = (u16)al().value() * src.value();
-    set_ax(shadow_wrap_with_taint_from(result, src, al()));
+    auto original_al = al();
+    set_ax(shadow_wrap_with_taint_from(result, src, original_al));
+    taint_flags_from(src, original_al);
 
-    // FIXME: Shadow flags.
     set_cf((result & 0xff00) != 0);
     set_of((result & 0xff00) != 0);
 }
@@ -1923,9 +1958,10 @@ void SoftCPU::POPF(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::POPFD(const X86::Instruction&)
 {
-    // FIXME: Shadow flags.
+    auto popped_value = pop32();
     m_eflags &= ~0x00fcffff;
-    m_eflags |= pop32().value() & 0x00fcffff;
+    m_eflags |= popped_value.value() & 0x00fcffff;
+    taint_flags_from(popped_value);
 }
 
 void SoftCPU::POP_DS(const X86::Instruction&) { TODO(); }
@@ -2052,12 +2088,14 @@ ALWAYS_INLINE static T op_rcl_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> ste
         : "=b"(new_flags));
 
     cpu.set_flags_oc(new_flags);
+    cpu.taint_flags_from(data, steps);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
 }
 
 template<typename T>
 ALWAYS_INLINE static T op_rcl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
+    cpu.warn_if_flags_tainted("rcl");
     if (cpu.cf())
         return op_rcl_impl<T, true>(cpu, data, steps);
     return op_rcl_impl<T, false>(cpu, data, steps);
@@ -2105,6 +2143,7 @@ ALWAYS_INLINE static T op_rcr_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> ste
 template<typename T>
 ALWAYS_INLINE static T op_rcr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
+    cpu.warn_if_flags_tainted("rcr");
     if (cpu.cf())
         return op_rcr_impl<T, true>(cpu, data, steps);
     return op_rcr_impl<T, false>(cpu, data, steps);
@@ -2277,7 +2316,7 @@ void SoftCPU::SCASW(const X86::Instruction& insn)
 
 void SoftCPU::SETcc_RM8(const X86::Instruction& insn)
 {
-    // FIXME: Shadow flags.
+    warn_if_flags_tainted("setcc");
     insn.modrm().write8(*this, insn, shadow_wrap_as_initialized<u8>(evaluate_condition(insn.cc())));
 }
 

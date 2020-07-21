@@ -421,6 +421,26 @@ public:
     template<bool check_zf, typename Callback>
     void do_once_or_repeat(const X86::Instruction& insn, Callback);
 
+    template<typename A>
+    void taint_flags_from(const A& a)
+    {
+        m_flags_tainted = a.is_uninitialized();
+    }
+
+    template<typename A, typename B>
+    void taint_flags_from(const A& a, const B& b)
+    {
+        m_flags_tainted = a.is_uninitialized() || b.is_uninitialized();
+    }
+
+    template<typename A, typename B, typename C>
+    void taint_flags_from(const A& a, const B& b, const C& c)
+    {
+        m_flags_tainted = a.is_uninitialized() || b.is_uninitialized() || c.is_uninitialized();
+    }
+
+    void warn_if_flags_tainted(const char* message) const;
+
     // ^X86::InstructionStream
     virtual bool can_read() override { return false; }
     virtual u8 read8() override;
@@ -957,6 +977,8 @@ private:
 
     u16 m_segment[8] { 0 };
     u32 m_eflags { 0 };
+
+    bool m_flags_tainted { false };
 
     u32 m_eip { 0 };
 
