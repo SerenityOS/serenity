@@ -61,6 +61,7 @@ void warn_if_uninitialized(T value_with_shadow, const char* message)
 void SoftCPU::warn_if_flags_tainted(const char* message) const
 {
     if (m_flags_tainted) {
+        dbgprintf("\n");
         dbgprintf("==%d==  \033[31;1mConditional instruction depends on uninitialized data (%s)\033[0m\n", getpid(), message);
         Emulator::the().dump_backtrace();
     }
