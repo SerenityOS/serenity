@@ -295,10 +295,10 @@ static void* malloc_impl(size_t size)
     dbgprintf("LibC: allocated %p (chunk in block %p, size %zu)\n", ptr, block, block->bytes_per_chunk());
 #endif
 
-    ue_notify_malloc(ptr, size);
-
     if (s_scrub_malloc)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
+
+    ue_notify_malloc(ptr, size);
     return ptr;
 }
 
