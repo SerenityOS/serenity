@@ -36,13 +36,11 @@
 #include <LibGfx/Color.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/Loader/ImageResource.h>
 
-namespace Web {
+namespace Web::CSS {
 
-class Document;
-
-namespace CSS {
 enum class ValueID {
     Invalid,
     VendorSpecificLink,
@@ -152,6 +150,8 @@ enum class Float {
 };
 
 }
+
+namespace Web {
 
 class StyleValue : public RefCounted<StyleValue> {
 public:

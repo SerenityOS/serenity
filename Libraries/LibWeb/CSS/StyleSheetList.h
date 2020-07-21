@@ -29,8 +29,7 @@
 #include <AK/RefCounted.h>
 #include <LibWeb/CSS/StyleSheet.h>
 
-namespace Web {
-namespace CSS {
+namespace Web::CSS {
 
 class StyleSheetList : public RefCounted<StyleSheetList> {
 public:
@@ -50,5 +49,4 @@ private:
     NonnullRefPtrVector<StyleSheet> m_sheets;
 };
 
-}
 }

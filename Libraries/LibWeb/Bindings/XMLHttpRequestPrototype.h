@@ -28,8 +28,7 @@
 
 #include <LibJS/Runtime/Object.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 class XMLHttpRequestPrototype final : public JS::Object {
     JS_OBJECT(XMLHttpRequestPrototype, JS::Object);
@@ -47,5 +46,4 @@ private:
     JS_DECLARE_NATIVE_GETTER(response_text_getter);
 };
 
-}
 }

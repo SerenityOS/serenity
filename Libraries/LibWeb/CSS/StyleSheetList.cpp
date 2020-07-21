@@ -26,8 +26,7 @@
 
 #include <LibWeb/CSS/StyleSheetList.h>
 
-namespace Web {
-namespace CSS {
+namespace Web::CSS {
 
 void StyleSheetList::add_sheet(NonnullRefPtr<StyleSheet> sheet)
 {
@@ -39,5 +38,4 @@ StyleSheetList::StyleSheetList(Document& document)
 {
 }
 
-}
 }

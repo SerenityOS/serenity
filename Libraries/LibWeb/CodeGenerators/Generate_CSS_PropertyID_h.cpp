@@ -63,8 +63,7 @@ int main(int argc, char** argv)
     out() << "#include <AK/StringView.h>";
     out() << "#include <AK/Traits.h>";
 
-    out() << "namespace Web {";
-    out() << "namespace CSS {";
+    out() << "namespace Web::CSS {";
     out() << "enum class PropertyID {";
     out() << "    Invalid,";
 
@@ -76,7 +75,6 @@ int main(int argc, char** argv)
     out() << "};\n\
 PropertyID property_id_from_string(const StringView&);\n\
 const char* string_from_property_id(PropertyID);\n\
-}\n\
 }\n\
 \n\
 namespace AK {\n\

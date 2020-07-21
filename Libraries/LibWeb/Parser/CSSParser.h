@@ -29,9 +29,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <LibWeb/CSS/StyleSheet.h>
 
-namespace Web {
-
-namespace CSS {
+namespace Web::CSS {
 class ParsingContext {
 public:
     ParsingContext();
@@ -43,6 +41,8 @@ private:
     const Document* m_document { nullptr };
 };
 }
+
+namespace Web {
 
 RefPtr<StyleSheet> parse_css(const CSS::ParsingContext&, const StringView&);
 RefPtr<StyleDeclaration> parse_css_declaration(const CSS::ParsingContext&, const StringView&);

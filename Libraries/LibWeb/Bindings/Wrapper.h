@@ -31,8 +31,7 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 class Wrapper
     : public JS::Object
@@ -47,5 +46,4 @@ protected:
     }
 };
 
-}
 }
