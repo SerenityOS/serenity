@@ -442,8 +442,8 @@ TextPosition TextDocument::first_word_break_before(const TextPosition& position,
     auto is_start_alphanumeric = isalnum(line.codepoints()[target.column() - (start_at_column_before ? 1 : 0)]);
 
     while (target.column() > 0) {
-        auto next_codepoint = line.codepoints()[target.column() - 1];
-        if ((is_start_alphanumeric && !isalnum(next_codepoint)) || (!is_start_alphanumeric && isalnum(next_codepoint)))
+        auto prev_codepoint = line.codepoints()[target.column() - 1];
+        if ((is_start_alphanumeric && !isalnum(prev_codepoint)) || (!is_start_alphanumeric && isalnum(prev_codepoint)))
             break;
         target.set_column(target.column() - 1);
     }
