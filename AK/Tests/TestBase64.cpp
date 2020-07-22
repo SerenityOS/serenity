@@ -49,8 +49,8 @@ TEST_CASE(test_decode)
 TEST_CASE(test_encode)
 {
     auto encode_equal = [&](const char* input, const char* expected) {
-        auto encoded = encode_base64(StringView(input));
-        EXPECT(String::copy(encoded) == String(expected));
+        auto encoded = encode_base64(ByteBuffer::wrap(input, strlen(input)));
+        EXPECT(encoded == String(expected));
     };
 
     encode_equal("", "");
