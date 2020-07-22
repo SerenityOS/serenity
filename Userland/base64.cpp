@@ -75,6 +75,6 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto encoded = encode_base64(StringView(buffer));
-    printf("%s\n", String::copy(encoded).characters());
+    auto encoded = encode_base64(buffer);
+    printf("%s\n", encoded.characters());
 }
