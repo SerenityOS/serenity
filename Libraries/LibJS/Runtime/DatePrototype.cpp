@@ -53,9 +53,9 @@ DatePrototype::DatePrototype(GlobalObject& global_object)
 {
 }
 
-void DatePrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void DatePrototype::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("getDate", get_date, 0, attr);
     define_native_function("getDay", get_day, 0, attr);

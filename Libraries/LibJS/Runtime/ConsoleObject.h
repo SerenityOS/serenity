@@ -35,7 +35,7 @@ class ConsoleObject final : public Object {
 
 public:
     explicit ConsoleObject(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ConsoleObject() override;
 
 private:

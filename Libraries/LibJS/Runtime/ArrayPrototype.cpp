@@ -46,9 +46,9 @@ ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
 {
 }
 
-void ArrayPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ArrayPrototype::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function("filter", filter, 1, attr);
@@ -81,7 +81,7 @@ void ArrayPrototype::initialize(Interpreter& interpreter, GlobalObject& global_o
     // Use define_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
-    define_property(interpreter.well_known_symbol_iterator(), get("values"), attr);
+    define_property(global_object.interpreter().well_known_symbol_iterator(), get("values"), attr);
 }
 
 ArrayPrototype::~ArrayPrototype()

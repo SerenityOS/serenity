@@ -59,7 +59,7 @@ public:
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         auto* cell = static_cast<T*>(memory);
-        cell->initialize(m_interpreter, global_object);
+        cell->initialize(global_object);
         return cell;
     }
 

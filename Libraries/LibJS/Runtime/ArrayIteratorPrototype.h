@@ -35,7 +35,7 @@ class ArrayIteratorPrototype final : public Object {
 
 public:
     ArrayIteratorPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ArrayIteratorPrototype() override;
 
 private:

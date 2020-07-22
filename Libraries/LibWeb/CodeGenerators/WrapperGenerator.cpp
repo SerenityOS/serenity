@@ -365,7 +365,7 @@ static void generate_header(const IDL::Interface& interface)
     out() << "    JS_OBJECT(" << wrapper_class << ", " << wrapper_base_class << ");";
     out() << "public:";
     out() << "    " << wrapper_class << "(JS::GlobalObject&, " << interface.name << "&);";
-    out() << "    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;";
+    out() << "    virtual void initialize(JS::GlobalObject&) override;";
     out() << "    virtual ~" << wrapper_class << "() override;";
 
     if (wrapper_base_class == "Wrapper") {
@@ -444,10 +444,10 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "}";
 
     // Implementation: Wrapper initialize()
-    out() << "void " << wrapper_class << "::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)";
+    out() << "void " << wrapper_class << "::initialize(JS::GlobalObject& global_object)";
     out() << "{";
     out() << "    [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable;";
-    out() << "    " << wrapper_base_class << "::initialize(interpreter, global_object);";
+    out() << "    " << wrapper_base_class << "::initialize(global_object);";
 
     for (auto& attribute : interface.attributes) {
         out() << "    define_native_property(\"" << attribute.name << "\", " << attribute.getter_callback_name << ", " << (attribute.readonly ? "nullptr" : attribute.setter_callback_name) << ", default_attributes);";

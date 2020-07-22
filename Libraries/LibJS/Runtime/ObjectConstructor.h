@@ -35,7 +35,7 @@ class ObjectConstructor final : public NativeFunction {
 
 public:
     explicit ObjectConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ObjectConstructor() override;
 
     virtual Value call(Interpreter&) override;

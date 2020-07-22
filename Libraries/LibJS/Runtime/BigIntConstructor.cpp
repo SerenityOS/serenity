@@ -39,9 +39,9 @@ BigIntConstructor::BigIntConstructor(GlobalObject& global_object)
 {
 }
 
-void BigIntConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void BigIntConstructor::initialize(GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("prototype", global_object.bigint_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 

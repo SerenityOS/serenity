@@ -35,7 +35,7 @@ class DateConstructor final : public NativeFunction {
 
 public:
     explicit DateConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~DateConstructor() override;
 
     virtual Value call(Interpreter&) override;

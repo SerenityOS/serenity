@@ -35,7 +35,7 @@ class StringPrototype final : public StringObject {
 
 public:
     explicit StringPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~StringPrototype() override;
 
 private:

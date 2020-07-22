@@ -63,11 +63,11 @@ ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& nam
 {
 }
 
-void ScriptFunction::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ScriptFunction::initialize(GlobalObject& global_object)
 {
-    Function::initialize(interpreter, global_object);
+    Function::initialize(global_object);
     if (!m_is_arrow_function) {
-        Object* prototype = Object::create_empty(interpreter, global_object);
+        Object* prototype = Object::create_empty(global_object);
         prototype->define_property("constructor", this, Attribute::Writable | Attribute::Configurable);
         define_property("prototype", prototype, 0);
     }

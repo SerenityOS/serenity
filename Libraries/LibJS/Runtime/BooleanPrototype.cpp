@@ -37,9 +37,9 @@ BooleanPrototype::BooleanPrototype(GlobalObject& global_object)
 {
 }
 
-void BooleanPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void BooleanPrototype::initialize(GlobalObject& global_object)
 {
-    BooleanObject::initialize(interpreter, global_object);
+    BooleanObject::initialize(global_object);
     define_native_function("toString", to_string, 0, Attribute::Writable | Attribute::Configurable);
     define_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
 }

@@ -82,7 +82,7 @@ PropertyDescriptor PropertyDescriptor::from_dictionary(Interpreter& interpreter,
     return descriptor;
 }
 
-Object* Object::create_empty(Interpreter&, GlobalObject& global_object)
+Object* Object::create_empty(GlobalObject& global_object)
 {
     return global_object.heap().allocate<Object>(global_object, *global_object.object_prototype());
 }
@@ -105,7 +105,7 @@ Object::Object(Object& prototype)
     set_prototype(&prototype);
 }
 
-void Object::initialize(Interpreter&, GlobalObject&)
+void Object::initialize(GlobalObject&)
 {
 }
 
@@ -301,7 +301,7 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
         return js_undefined();
     auto descriptor = descriptor_opt.value();
 
-    auto* descriptor_object = Object::create_empty(interpreter(), global_object());
+    auto* descriptor_object = Object::create_empty(global_object());
     descriptor_object->define_property("enumerable", Value(descriptor.attributes.is_enumerable()));
     if (interpreter().exception())
         return {};

@@ -40,9 +40,9 @@ LocationObject::LocationObject(JS::GlobalObject& global_object)
 {
 }
 
-void LocationObject::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
+void LocationObject::initialize(JS::GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_property("href", href_getter, href_setter, attr);
     define_native_property("host", host_getter, nullptr, attr);

@@ -39,9 +39,9 @@ DateConstructor::DateConstructor(GlobalObject& global_object)
 {
 }
 
-void DateConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void DateConstructor::initialize(GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("prototype", global_object.date_prototype(), 0);
     define_property("length", Value(7), Attribute::Configurable);
 

@@ -39,9 +39,9 @@ MathObject::MathObject(GlobalObject& global_object)
 {
 }
 
-void MathObject::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void MathObject::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("abs", abs, 1, attr);
     define_native_function("random", random, 0, attr);
@@ -75,7 +75,7 @@ void MathObject::initialize(Interpreter& interpreter, GlobalObject& global_objec
     define_property("SQRT1_2", Value(M_SQRT1_2), 0);
     define_property("SQRT2", Value(M_SQRT2), 0);
 
-    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "Math"), Attribute::Configurable);
+    define_property(global_object.interpreter().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Math"), Attribute::Configurable);
 }
 
 MathObject::~MathObject()

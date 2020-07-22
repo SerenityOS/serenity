@@ -40,9 +40,9 @@ XMLHttpRequestConstructor::XMLHttpRequestConstructor(JS::GlobalObject& global_ob
 {
 }
 
-void XMLHttpRequestConstructor::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
+void XMLHttpRequestConstructor::initialize(JS::GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("length", JS::Value(1), JS::Attribute::Configurable);
 
     define_property("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);

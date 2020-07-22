@@ -35,7 +35,7 @@ class ProxyConstructor final : public NativeFunction {
 
 public:
     explicit ProxyConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ProxyConstructor() override;
 
     virtual Value call(Interpreter&) override;

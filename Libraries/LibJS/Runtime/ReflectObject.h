@@ -35,7 +35,7 @@ class ReflectObject final : public Object {
 
 public:
     explicit ReflectObject(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ReflectObject() override;
 
 private:

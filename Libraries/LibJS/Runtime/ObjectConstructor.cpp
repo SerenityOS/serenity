@@ -40,9 +40,9 @@ ObjectConstructor::ObjectConstructor(GlobalObject& global_object)
 {
 }
 
-void ObjectConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ObjectConstructor::initialize(GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("prototype", global_object.object_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 
@@ -64,9 +64,9 @@ ObjectConstructor::~ObjectConstructor()
 {
 }
 
-Value ObjectConstructor::call(Interpreter& interpreter)
+Value ObjectConstructor::call(Interpreter&)
 {
-    return Object::create_empty(interpreter, global_object());
+    return Object::create_empty(global_object());
 }
 
 Value ObjectConstructor::construct(Interpreter& interpreter, Function&)

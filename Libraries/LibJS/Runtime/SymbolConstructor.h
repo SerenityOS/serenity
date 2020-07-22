@@ -35,7 +35,7 @@ class SymbolConstructor final : public NativeFunction {
 
 public:
     explicit SymbolConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~SymbolConstructor() override;
 
     virtual Value call(Interpreter&) override;

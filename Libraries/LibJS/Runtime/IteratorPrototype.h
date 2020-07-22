@@ -35,7 +35,7 @@ class IteratorPrototype : public Object {
 
 public:
     IteratorPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~IteratorPrototype() override;
 
 private:

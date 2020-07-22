@@ -35,7 +35,7 @@ class BoundFunction final : public Function {
 
 public:
     BoundFunction(GlobalObject&, Function& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~BoundFunction();
 
     virtual Value call(Interpreter& interpreter) override;

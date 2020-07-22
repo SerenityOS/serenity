@@ -35,7 +35,7 @@ class StringIteratorPrototype final : public Object {
 
 public:
     StringIteratorPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~StringIteratorPrototype() override;
 
 private:

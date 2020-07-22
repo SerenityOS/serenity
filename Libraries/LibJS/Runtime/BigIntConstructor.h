@@ -35,7 +35,7 @@ class BigIntConstructor final : public NativeFunction {
 
 public:
     explicit BigIntConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~BigIntConstructor() override;
 
     virtual Value call(Interpreter&) override;

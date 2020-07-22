@@ -35,7 +35,7 @@ class FunctionPrototype final : public Object {
 
 public:
     explicit FunctionPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~FunctionPrototype() override;
 
 private:

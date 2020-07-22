@@ -40,9 +40,9 @@ ErrorPrototype::ErrorPrototype(GlobalObject& global_object)
 {
 }
 
-void ErrorPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ErrorPrototype::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_property("name", name_getter, name_setter, attr);
     define_native_property("message", message_getter, nullptr, attr);

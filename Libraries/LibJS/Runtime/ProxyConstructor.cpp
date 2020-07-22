@@ -38,9 +38,9 @@ ProxyConstructor::ProxyConstructor(GlobalObject& global_object)
 {
 }
 
-void ProxyConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ProxyConstructor::initialize(GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("prototype", global_object.proxy_prototype(), 0);
     define_property("length", Value(2), Attribute::Configurable);
 }
