@@ -154,10 +154,8 @@ void Path::segmentize_path()
         float ymax = p0.y(), ymin = p1.y(), x_of_ymin = p1.x(), x_of_ymax = p0.x();
         auto slope = p0.x() == p1.x() ? 0 : ((float)(p0.y() - p1.y())) / ((float)(p0.x() - p1.x()));
         if (p0.y() < p1.y()) {
-            ymin = ymax;
-            ymax = p1.y();
-            x_of_ymax = x_of_ymin;
-            x_of_ymin = p0.x();
+            swap(ymin, ymax);
+            swap(x_of_ymin, x_of_ymax);
         }
 
         segments.append({ FloatPoint(p0.x(), p0.y()),

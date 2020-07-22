@@ -24,32 +24,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibGfx/Color.h>
-#include <LibGfx/Painter.h>
+#include <AK/FlyString.h>
+#include <LibWeb/DOM/SvgContext.h>
 
 namespace Web {
 
-struct SvgPaintingContext {
-    Gfx::Color fill_color { Gfx::Color::Black };
-    Gfx::Color stroke_color { Gfx::Color::Black };
-    float stroke_width { 1 };
-};
+void SvgGraphicElement::parse_attribute(const FlyString& name, const String& value)
+{
+    if (name == "stroke-width") {
+        m_stroke_width = strtof(value.characters(), nullptr);
+    } else if (name == "stroke") {
+        auto result = Gfx::Color::from_string(value);
+        m_stroke_color = result.value_or(Gfx::Color::Transparent);
+    } else if (name == "fill") {
+        auto result = Gfx::Color::from_string(value);
+        m_fill_color = result.value_or(Gfx::Color::Transparent);
+    }
+}
 
-class SvgGraphicElement {
-public:
-    virtual void paint(const SvgPaintingContext&, Gfx::Painter& painter) = 0;
-    void parse_attribute(const FlyString& name, const String& value);
+Gfx::Color SvgGraphicElement::fill_color(const SvgPaintingContext& context) const
+{
+    return m_fill_color.value_or(context.fill_color);
+}
 
-protected:
-    Gfx::Color fill_color(const SvgPaintingContext&) const;
-    Gfx::Color stroke_color(const SvgPaintingContext&) const;
-    float stroke_width(const SvgPaintingContext&) const;
+Gfx::Color SvgGraphicElement::stroke_color(const SvgPaintingContext& context) const
+{
+    return m_stroke_color.value_or(context.stroke_color);
+}
 
-    Optional<Gfx::Color> m_fill_color;
-    Optional<Gfx::Color> m_stroke_color;
-    Optional<float> m_stroke_width;
-};
+float SvgGraphicElement::stroke_width(const SvgPaintingContext& context) const
+{
+    return m_stroke_width.value_or(context.stroke_width);
+}
 
 }

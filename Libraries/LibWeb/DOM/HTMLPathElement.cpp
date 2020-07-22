@@ -417,6 +417,8 @@ static void print_instruction(const PathInstruction& instruction)
 void HTMLPathElement::parse_attribute(const FlyString& name, const String& value)
 {
     HTMLElement::parse_attribute(name, value);
+    SvgGraphicElement::parse_attribute(name, value);
+
     if (name == "d")
         m_instructions = PathDataParser(value).parse();
 }
@@ -586,11 +588,16 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
         }
     }
 
-    painter.stroke_path(path, context.stroke_color, context.stroke_width);
+    // We need to fill the path before applying the stroke, however the filled
+    // path must be closed, whereas the stroke path may not necessary be closed.
+    // Copy the path and close it for filling, but use the previous path for stroke
+    auto closed_path = path;
+    closed_path.close();
 
     // Fills are computed as though all paths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
-    path.close();
-    painter.fill_path(path, context.fill_color, Gfx::Painter::WindingRule::EvenOdd);
+    painter.fill_path(closed_path, fill_color(context), Gfx::Painter::WindingRule::EvenOdd);
+    painter.stroke_path(path, stroke_color(context), stroke_width(context));
+
 }
 
 }
