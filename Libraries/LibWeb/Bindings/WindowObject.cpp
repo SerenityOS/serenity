@@ -267,8 +267,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     if (interpreter.exception())
         return {};
     // FIXME: This should convert string to a non-UTF-8 byte string first.
-    auto encoded = encode_base64(StringView(string));
-    return JS::js_string(interpreter, String::copy(encoded));
+    auto encoded = encode_base64(ByteBuffer::wrap(string.characters(), string.length()));
+    return JS::js_string(interpreter, move(encoded));
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)

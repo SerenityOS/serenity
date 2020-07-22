@@ -25,6 +25,8 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -84,20 +86,20 @@ ByteBuffer decode_base64(const StringView& input)
     return ByteBuffer::copy(output.data(), output.size());
 }
 
-ByteBuffer encode_base64(const StringView& input)
+String encode_base64(const ByteBuffer& input)
 {
-    Vector<u8> output;
+    StringBuilder output;
 
     auto get = [&](size_t offset, bool* need_padding = nullptr) -> u8 {
-        if (offset >= input.length()) {
+        if (offset >= input.size()) {
             if (need_padding)
                 *need_padding = true;
             return 0;
         }
-        return (u8)input[offset];
+        return input[offset];
     };
 
-    for (size_t i = 0; i < input.length(); i += 3) {
+    for (size_t i = 0; i < input.size(); i += 3) {
         bool is_8bit = false;
         bool is_16bit = false;
 
@@ -121,7 +123,7 @@ ByteBuffer encode_base64(const StringView& input)
         output.append(out3);
     }
 
-    return ByteBuffer::copy(output.data(), output.size());
+    return output.to_string();
 }
 
 }

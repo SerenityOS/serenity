@@ -32,7 +32,7 @@ namespace AK {
 
 ByteBuffer decode_base64(const StringView&);
 
-ByteBuffer encode_base64(const StringView&);
+String encode_base64(const ByteBuffer&);
 
 }
 
