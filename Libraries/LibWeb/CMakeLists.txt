@@ -57,6 +57,7 @@ set(SOURCES
     DOM/ImageData.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
+    DOM/SvgContext.cpp
     DOM/TagNames.cpp
     DOM/Text.cpp
     DOM/Timer.cpp
