@@ -30,6 +30,7 @@
 #include <AK/String.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
+#include <LibM/math.h>
 
 namespace Gfx {
 
@@ -38,7 +39,20 @@ class FloatRect;
 class FloatPoint {
 public:
     FloatPoint() { }
+
+    FloatPoint(int x, int y)
+        : m_x(x)
+        , m_y(y)
+    {
+    }
+
     FloatPoint(float x, float y)
+        : m_x(x)
+        , m_y(y)
+    {
+    }
+
+    FloatPoint(double x, double y)
         : m_x(x)
         , m_y(y)
     {
@@ -96,6 +110,7 @@ public:
 
     FloatPoint operator-() const { return { -m_x, -m_y }; }
 
+    FloatPoint operator-(float number) const { return { m_x - number, m_y - number }; }
     FloatPoint operator-(const FloatPoint& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
     FloatPoint& operator-=(const FloatPoint& other)
     {
@@ -104,19 +119,36 @@ public:
         return *this;
     }
 
+    FloatPoint operator+(float number) const { return { m_x + number, m_y + number }; }
+    FloatPoint operator+(const FloatPoint& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
     FloatPoint& operator+=(const FloatPoint& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
         return *this;
     }
-    FloatPoint operator+(const FloatPoint& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
 
+    FloatPoint operator*(float factor) const { return { m_x * factor, m_y * factor }; }
+    FloatPoint& operator*=(float factor)
+    {
+        m_x *= factor;
+        m_y *= factor;
+        return *this;
+    }
+
+    FloatPoint operator/(float factor) const { return { m_x / factor, m_y / factor }; }
     FloatPoint& operator/=(float factor)
     {
         m_x /= factor;
         m_y /= factor;
         return *this;
+    }
+
+    float distance_from(const FloatPoint& other) const
+    {
+        if (*this == other)
+            return 0;
+        return sqrtf(powf(m_x - other.m_x, 2.0f) + powf(m_y - other.m_y, 2.0f));
     }
 
     String to_string() const { return String::format("[%g,%g]", x(), y()); }
