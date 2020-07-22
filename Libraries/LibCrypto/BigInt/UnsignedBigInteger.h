@@ -46,12 +46,17 @@ public:
     {
     }
 
+    explicit UnsignedBigInteger(const u8* ptr, size_t length);
+
     UnsignedBigInteger() { }
 
     static UnsignedBigInteger create_invalid();
 
     static UnsignedBigInteger import_data(const AK::StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
-    static UnsignedBigInteger import_data(const u8* ptr, size_t length);
+    static UnsignedBigInteger import_data(const u8* ptr, size_t length)
+    {
+        return UnsignedBigInteger(ptr, length);
+    }
 
     size_t export_data(AK::ByteBuffer& data) const;
     size_t export_data(const u8* ptr, size_t length) const
@@ -129,7 +134,7 @@ struct UnsignedDivisionResult {
 }
 
 inline const LogStream&
-operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger value)
+operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger& value)
 {
     if (value.is_invalid()) {
         stream << "Invalid BigInt";
