@@ -69,7 +69,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     file_container.layout()->set_spacing(20);
     file_container.set_preferred_size(0, 34);
 
-    m_icon = file_container.add<GUI::Image>();
+    m_icon = file_container.add<GUI::ImageWidget>();
     m_icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_icon->set_preferred_size(32, 32);
 
