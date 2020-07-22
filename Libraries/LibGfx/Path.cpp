@@ -42,14 +42,14 @@ void Path::close()
 
     invalidate_split_lines();
 
-    auto& last_point = m_segments.last().point;
+    auto& last_point = m_segments.last().point();
 
     for (ssize_t i = m_segments.size() - 1; i >= 0; --i) {
         auto& segment = m_segments[i];
-        if (segment.type == Segment::Type::MoveTo) {
-            if (last_point == segment.point)
+        if (segment.type() == Segment::Type::MoveTo) {
+            if (last_point == segment.point())
                 return;
-            m_segments.append({ Segment::Type::LineTo, segment.point });
+            append_segment<LineSegment>(segment.point());
             return;
         }
     }
@@ -66,7 +66,7 @@ void Path::close_all_subpaths()
     bool is_first_point_in_subpath { false };
 
     for (auto& segment : m_segments) {
-        switch (segment.type) {
+        switch (segment.type()) {
         case Segment::Type::MoveTo: {
             if (cursor.has_value() && !is_first_point_in_subpath) {
                 // This is a move from a subpath to another
@@ -74,20 +74,21 @@ void Path::close_all_subpaths()
                 // moving on to the next one
                 ASSERT(start_of_subpath.has_value());
 
-                m_segments.append({ Segment::Type::MoveTo, cursor.value() });
-                m_segments.append({ Segment::Type::LineTo, start_of_subpath.value() });
+                append_segment<MoveSegment>(cursor.value());
+                append_segment<LineSegment>(start_of_subpath.value());
             }
             is_first_point_in_subpath = true;
-            cursor = segment.point;
+            cursor = segment.point();
             break;
         }
         case Segment::Type::LineTo:
         case Segment::Type::QuadraticBezierCurveTo:
+        case Segment::Type::EllipticalArcTo:
             if (is_first_point_in_subpath) {
                 start_of_subpath = cursor;
                 is_first_point_in_subpath = false;
             }
-            cursor = segment.point;
+            cursor = segment.point();
             break;
         case Segment::Type::Invalid:
             ASSERT_NOT_REACHED();
@@ -101,7 +102,7 @@ String Path::to_string() const
     StringBuilder builder;
     builder.append("Path { ");
     for (auto& segment : m_segments) {
-        switch (segment.type) {
+        switch (segment.type()) {
         case Segment::Type::MoveTo:
             builder.append("MoveTo");
             break;
@@ -111,19 +112,35 @@ String Path::to_string() const
         case Segment::Type::QuadraticBezierCurveTo:
             builder.append("QuadraticBezierCurveTo");
             break;
+        case Segment::Type::EllipticalArcTo:
+            builder.append("EllipticalArcTo");
+            break;
         case Segment::Type::Invalid:
             builder.append("Invalid");
             break;
         }
-        builder.append('(');
-        builder.append(segment.point.to_string());
-        if (segment.through.has_value()) {
-            builder.append(", ");
-            builder.append(segment.through.value().to_string());
-        }
-        builder.append(')');
+        builder.appendf("(%s", segment.point().to_string().characters());
 
-        builder.append(' ');
+        switch (segment.type()) {
+        case Segment::Type::QuadraticBezierCurveTo:
+            builder.append(", ");
+            builder.append(static_cast<const QuadraticBezierCurveSegment&>(segment).through().to_string());
+            break;
+        case Segment::Type::EllipticalArcTo: {
+            auto& arc = static_cast<const EllipticalArcSegment&>(segment);
+            builder.appendf(", %s, %s, %f, %f, %f",
+                arc.radii().to_string().characters(),
+                arc.center().to_string().characters(),
+                arc.x_axis_rotation(),
+                arc.theta_1(),
+                arc.theta_delta());
+            break;
+        }
+        default:
+            break;
+        }
+
+        builder.append(") ");
     }
     builder.append("}");
     return builder.to_string();
@@ -131,7 +148,7 @@ String Path::to_string() const
 
 void Path::segmentize_path()
 {
-    Vector<LineSegment> segments;
+    Vector<SplitLineSegment> segments;
 
     auto add_line = [&](const auto& p0, const auto& p1) {
         float ymax = p0.y(), ymin = p1.y(), x_of_ymin = p1.x(), x_of_ymax = p0.x();
@@ -152,26 +169,33 @@ void Path::segmentize_path()
 
     FloatPoint cursor { 0, 0 };
     for (auto& segment : m_segments) {
-        switch (segment.type) {
+        switch (segment.type()) {
         case Segment::Type::MoveTo:
-            cursor = segment.point;
+            cursor = segment.point();
             break;
         case Segment::Type::LineTo: {
-            add_line(cursor, segment.point);
-            cursor = segment.point;
+            add_line(cursor, segment.point());
+            cursor = segment.point();
             break;
         }
         case Segment::Type::QuadraticBezierCurveTo: {
-            auto& control = segment.through.value();
-            Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment.point, [&](const FloatPoint& p0, const FloatPoint& p1) {
+            auto& control = static_cast<QuadraticBezierCurveSegment&>(segment).through();
+            Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment.point(), [&](const FloatPoint& p0, const FloatPoint& p1) {
                 add_line(p0, p1);
             });
-            cursor = segment.point;
+            cursor = segment.point();
+            break;
+        }
+        case Segment::Type::EllipticalArcTo: {
+            auto& arc = static_cast<EllipticalArcSegment&>(segment);
+            Painter::for_each_line_segment_on_elliptical_arc(cursor, arc.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), [&](const FloatPoint& p0, const FloatPoint& p1) {
+                add_line(p0, p1);
+            });
+            cursor = segment.point();
             break;
         }
         case Segment::Type::Invalid:
             ASSERT_NOT_REACHED();
-            break;
         }
     }
 

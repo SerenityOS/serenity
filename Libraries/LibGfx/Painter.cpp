@@ -1297,10 +1297,70 @@ void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_po
     for_each_line_segment_on_bezier_curve(control_point, p1, p2, callback);
 }
 
+static void split_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
+{
+    auto half_theta_delta = theta_delta / 2;
+    auto theta_mid = theta_1 + half_theta_delta;
+
+    auto xc = cosf(x_axis_rotation);
+    auto xs = sinf(x_axis_rotation);
+    auto tc = cosf(theta_1 + half_theta_delta);
+    auto ts = sinf(theta_1 + half_theta_delta);
+
+    auto x2 = xc * radii.x() * tc - xs * radii.y() * ts + center.x();
+    auto y2 = xs * radii.x() * tc + xc * radii.y() * ts + center.y();
+
+    FloatPoint mid_point = { x2, y2 };
+
+    Painter::for_each_line_segment_on_elliptical_arc(p1, mid_point, center, radii, x_axis_rotation, theta_1, half_theta_delta, callback);
+    Painter::for_each_line_segment_on_elliptical_arc(mid_point, p2, center, radii, x_axis_rotation, theta_mid, half_theta_delta, callback);
+}
+
+static bool can_approximate_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta)
+{
+    constexpr static float tolerance = 1;
+
+    auto half_theta_delta = theta_delta / 2.0f;
+
+    auto xc = cosf(x_axis_rotation);
+    auto xs = sinf(x_axis_rotation);
+    auto tc = cosf(theta_1 + half_theta_delta);
+    auto ts = sinf(theta_1 + half_theta_delta);
+
+    auto x2 = xc * radii.x() * tc - xs * radii.y() * ts + center.x();
+    auto y2 = xs * radii.x() * tc + xc * radii.y() * ts + center.y();
+
+    auto ellipse_mid_point = FloatPoint { x2, y2 };
+    auto line_mid_point = p1 + (p2 - p1) / 2.0f;
+
+    return ellipse_mid_point.distance_from(line_mid_point) < tolerance;
+}
+
 void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const IntPoint& p1, const IntPoint& p2, Color color, int thickness, LineStyle style)
 {
-    for_each_line_segment_on_bezier_curve(FloatPoint(control_point.x(), control_point.y()), FloatPoint(p1.x(), p1.y()), FloatPoint(p2.x(), p2.y()), [&](const FloatPoint& p1, const FloatPoint& p2) {
-        draw_line(IntPoint(p1.x(), p1.y()), IntPoint(p2.x(), p2.y()), color, thickness, style);
+    for_each_line_segment_on_bezier_curve(FloatPoint(control_point), FloatPoint(p1), FloatPoint(p2), [&](const FloatPoint& fp1, const FloatPoint& fp2) {
+        draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
+    });
+}
+
+void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
+{
+    if (can_approximate_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta))  {
+        callback(p1, p2);
+    } else {
+        split_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, callback);
+    }
+}
+
+void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>&& callback)
+{
+    for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, callback);
+}
+
+void Painter::draw_elliptical_arc(const IntPoint& p1, const IntPoint& p2, const IntPoint& center, const FloatPoint& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
+{
+    for_each_line_segment_on_elliptical_arc(FloatPoint(p1), FloatPoint(p2), FloatPoint(center), radii, x_axis_rotation, theta_1, theta_delta, [&](const FloatPoint& fp1, const FloatPoint& fp2) {
+        draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
     });
 }
 
@@ -1331,21 +1391,27 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
     FloatPoint cursor;
 
     for (auto& segment : path.segments()) {
-        switch (segment.type) {
-        case Path::Segment::Type::Invalid:
+        switch (segment.type()) {
+        case Segment::Type::Invalid:
             ASSERT_NOT_REACHED();
             break;
-        case Path::Segment::Type::MoveTo:
-            cursor = segment.point;
+        case Segment::Type::MoveTo:
+            cursor = segment.point();
             break;
-        case Path::Segment::Type::LineTo:
-            draw_line(IntPoint(cursor.x(), cursor.y()), IntPoint(segment.point.x(), segment.point.y()), color, thickness);
-            cursor = segment.point;
+        case Segment::Type::LineTo:
+            draw_line(cursor, segment.point(), color, thickness);
+            cursor = segment.point();
             break;
-        case Path::Segment::Type::QuadraticBezierCurveTo:
-            ASSERT(segment.through.has_value());
-            draw_quadratic_bezier_curve(IntPoint(segment.through.value().x(), segment.through.value().y()), IntPoint(cursor.x(), cursor.y()), IntPoint(segment.point.x(), segment.point.y()), color, thickness);
-            cursor = segment.point;
+        case Segment::Type::QuadraticBezierCurveTo: {
+            auto& through = static_cast<const QuadraticBezierCurveSegment&>(segment).through();
+            draw_quadratic_bezier_curve(through, cursor, segment.point(), color, thickness);
+            cursor = segment.point();
+            break;
+        }
+        case Segment::Type::EllipticalArcTo:
+            auto& arc = static_cast<const EllipticalArcSegment&>(segment);
+            draw_elliptical_arc(cursor, segment.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
+            cursor = segment.point();
             break;
         }
     }
@@ -1360,7 +1426,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
     if (segments.size() == 0)
         return;
 
-    Vector<Path::LineSegment> active_list;
+    Vector<Path::SplitLineSegment> active_list;
     active_list.ensure_capacity(segments.size());
 
     // first, grab the segments for the very first scanline

@@ -35,6 +35,7 @@
 namespace Gfx {
 
 class IntRect;
+class FloatPoint;
 
 class IntPoint {
 public:
@@ -44,6 +45,8 @@ public:
         , m_y(y)
     {
     }
+
+    IntPoint(const FloatPoint&);
 
     int x() const { return m_x; }
     int y() const { return m_y; }
