@@ -24,15 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Image.h"
 #include <AK/MappedFile.h>
+#include <LibGUI/Image.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 
 namespace GUI {
 
-Image::Image(const StringView&)
+ImageWidget::ImageWidget(const StringView&)
     : m_timer(Core::Timer::construct())
 
 {
@@ -43,11 +43,11 @@ Image::Image(const StringView&)
     set_auto_resize(true);
 }
 
-Image::~Image()
+ImageWidget::~ImageWidget()
 {
 }
 
-void Image::set_bitmap(const Gfx::Bitmap* bitmap)
+void ImageWidget::set_bitmap(const Gfx::Bitmap* bitmap)
 {
     if (m_bitmap == bitmap)
         return;
@@ -59,7 +59,7 @@ void Image::set_bitmap(const Gfx::Bitmap* bitmap)
     update();
 }
 
-void Image::set_auto_resize(bool value)
+void ImageWidget::set_auto_resize(bool value)
 {
     m_auto_resize = value;
 
@@ -67,7 +67,7 @@ void Image::set_auto_resize(bool value)
         set_preferred_size(m_bitmap->width(), m_bitmap->height());
 }
 
-void Image::animate()
+void ImageWidget::animate()
 {
     m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
 
@@ -86,7 +86,7 @@ void Image::animate()
     }
 }
 
-void Image::load_from_file(const StringView& path)
+void ImageWidget::load_from_file(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -108,13 +108,13 @@ void Image::load_from_file(const StringView& path)
     }
 }
 
-void Image::mousedown_event(GUI::MouseEvent&)
+void ImageWidget::mousedown_event(GUI::MouseEvent&)
 {
     if (on_click)
         on_click();
 }
 
-void Image::paint_event(PaintEvent& event)
+void ImageWidget::paint_event(PaintEvent& event)
 {
     Frame::paint_event(event);
 

@@ -31,7 +31,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Image.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     container.set_preferred_size(0, 36);
     container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& flag_image = container.add<GUI::Image>();
+    auto& flag_image = container.add<GUI::ImageWidget>();
     flag_image.load_from_file("/res/icons/minesweeper/flag.png");
 
     auto& flag_label = container.add<GUI::Label>();
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     face_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     face_button.set_preferred_size(36, 0);
 
-    auto& time_image = container.add<GUI::Image>();
+    auto& time_image = container.add<GUI::ImageWidget>();
     time_image.load_from_file("/res/icons/minesweeper/timer.png");
 
     auto& time_label = container.add<GUI::Label>();

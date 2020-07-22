@@ -31,10 +31,10 @@
 
 namespace GUI {
 
-class Image : public Frame {
-    C_OBJECT(Image)
+class ImageWidget : public Frame {
+    C_OBJECT(ImageWidget)
 public:
-    virtual ~Image() override;
+    virtual ~ImageWidget() override;
 
     void set_bitmap(const Gfx::Bitmap*);
     Gfx::Bitmap* bitmap() { return m_bitmap.ptr(); }
@@ -51,7 +51,7 @@ public:
     Function<void()> on_click;
 
 protected:
-    explicit Image(const StringView& text = {});
+    explicit ImageWidget(const StringView& text = {});
 
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;

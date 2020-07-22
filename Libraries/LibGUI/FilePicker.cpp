@@ -266,7 +266,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         m_preview_container->set_layout<VerticalBoxLayout>();
         m_preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 
-        m_preview_image = m_preview_container->add<Image>();
+        m_preview_image = m_preview_container->add<ImageWidget>();
         m_preview_image->set_should_stretch(true);
         m_preview_image->set_auto_resize(false);
         m_preview_image->set_preferred_size(160, 160);

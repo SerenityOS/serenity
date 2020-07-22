@@ -30,7 +30,7 @@
 #include <AK/Optional.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Dialog.h>
-#include <LibGUI/Image.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Model.h>
 
 namespace GUI {
@@ -93,7 +93,7 @@ private:
     RefPtr<TextBox> m_filename_textbox;
     RefPtr<TextBox> m_location_textbox;
     RefPtr<Frame> m_preview_container;
-    RefPtr<Image> m_preview_image;
+    RefPtr<ImageWidget> m_preview_image;
     RefPtr<Label> m_preview_name_label;
     RefPtr<Label> m_preview_geometry_label;
     Mode m_mode { Mode::Open };

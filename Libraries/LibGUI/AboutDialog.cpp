@@ -30,7 +30,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Image.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font.h>
 
@@ -53,7 +53,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     widget.set_layout<VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto& banner_image = widget.add<GUI::Image>();
+    auto& banner_image = widget.add<GUI::ImageWidget>();
     banner_image.load_from_file("/res/brand-banner.png");
 
     auto& content_container = widget.add<Widget>();
@@ -72,7 +72,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
         icon_wrapper.set_preferred_size(32, 48);
         icon_wrapper.set_layout<VerticalBoxLayout>();
 
-        auto& icon_image = icon_wrapper.add<Image>();
+        auto& icon_image = icon_wrapper.add<ImageWidget>();
         icon_image.set_bitmap(m_icon);
     }
 

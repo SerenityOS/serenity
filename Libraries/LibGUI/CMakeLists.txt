@@ -29,11 +29,11 @@ set(SOURCES
     FontDatabase.cpp
     Frame.cpp
     GroupBox.cpp
-    Icon.cpp
-    IconView.cpp
-    Image.cpp
     INILexer.cpp
     INISyntaxHighlighter.cpp
+    Icon.cpp
+    IconView.cpp
+    ImageWidget.cpp
     InputBox.cpp
     JsonArrayModel.cpp
     JSSyntaxHighlighter.cpp
