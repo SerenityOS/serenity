@@ -28,11 +28,13 @@
 #include <AK/ByteBuffer.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
+#include <AK/Utf8View.h>
 #include <AK/String.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
@@ -251,9 +253,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
     auto string = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
-    // FIXME: This should convert string from a byte string to LibJS's internal string encoding (UTF-8).
     auto decoded = decode_base64(StringView(string));
-    return JS::js_string(interpreter, String::copy(decoded));
+
+    // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
+    return JS::js_string(interpreter, TextCodec::decoder_for("iso-8859-1")->to_utf8(decoded));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
@@ -266,8 +269,16 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     auto string = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
-    // FIXME: This should convert string to a non-UTF-8 byte string first.
-    auto encoded = encode_base64(ByteBuffer::wrap(string.characters(), string.length()));
+
+    Vector<u8> byte_string;
+    byte_string.ensure_capacity(string.length());
+    for (u32 codepoint : Utf8View(string)) {
+        if (codepoint > 0xff)
+            return interpreter.throw_exception<JS::InvalidCharacterError>(JS::ErrorType::NotAByteString, "btoa");
+        byte_string.append(codepoint);
+    }
+
+    auto encoded = encode_base64(ByteBuffer::wrap(byte_string.data(), byte_string.size()));
     return JS::js_string(interpreter, move(encoded));
 }
 
