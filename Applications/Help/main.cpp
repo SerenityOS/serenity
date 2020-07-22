@@ -27,6 +27,7 @@
 #include "History.h"
 #include "ManualModel.h"
 #include <AK/URL.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
@@ -82,6 +83,13 @@ int main(int argc, char* argv[])
     }
 
     unveil(nullptr, nullptr);
+
+    const char* term_to_search_for_at_launch = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(term_to_search_for_at_launch, "Term to search for at launch", "term", Core::ArgsParser::Required::No);
+
+    args_parser.parse(argc, argv);
 
     auto app_icon = GUI::Icon::default_icon("app-help");
 
@@ -278,6 +286,15 @@ int main(int argc, char* argv[])
     go_menu.add_action(*go_forward_action);
 
     app->set_menubar(move(menubar));
+
+    if (term_to_search_for_at_launch) {
+        left_tab_bar.set_active_widget(&search_view);
+        search_box.set_text(term_to_search_for_at_launch);
+        if (auto model = search_list_view.model()) {
+            auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
+            search_model.set_filter_term(search_box.text());
+        }
+    }
 
     window->set_focused_widget(&left_tab_bar);
     window->show();
