@@ -72,6 +72,7 @@ void StringPrototype::initialize(Interpreter& interpreter, GlobalObject& global_
 
     define_native_property("length", length_getter, nullptr, 0);
     define_native_function("charAt", char_at, 1, attr);
+    define_native_function("charCodeAt", char_code_at, 1, attr);
     define_native_function("repeat", repeat, 1, attr);
     define_native_function("startsWith", starts_with, 1, attr);
     define_native_function("indexOf", index_of, 1, attr);
@@ -109,6 +110,22 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     if (index < 0 || index >= static_cast<i32>(string.length()))
         return js_string(interpreter, String::empty());
     return js_string(interpreter, string.substring(index, 1));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
+{
+    auto string = ak_string_from(interpreter, global_object);
+    if (string.is_null())
+        return {};
+    i32 index = 0;
+    if (interpreter.argument_count()) {
+        index = interpreter.argument(0).to_i32(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
+    if (index < 0 || index >= static_cast<i32>(string.length()))
+        return js_nan();
+    return Value((i32)string[index]);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
