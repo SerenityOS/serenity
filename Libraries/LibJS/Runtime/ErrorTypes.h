@@ -152,6 +152,7 @@
     M(ToObjectNullOrUndef, "ToObject on null or undefined")                                            \
     M(UnknownIdentifier, "'%s' is not defined")                                                        \
     /* LibWeb bindings */                                                                              \
+    M(NotAByteString, "Argument to %s() must be a byte string")                                        \
     M(BadArgCountOne, "%s() needs one argument")                                                       \
     M(BadArgCountAtLeastOne, "%s() needs at least one argument")                                       \
     M(BadArgCountMany, "%s() needs %s arguments")

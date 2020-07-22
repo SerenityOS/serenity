@@ -61,6 +61,7 @@
 #define JS_ENUMERATE_ERROR_SUBCLASSES                                                                   \
     __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor)                     \
     __JS_ENUMERATE(InternalError, internal_error, InternalErrorPrototype, InternalErrorConstructor)     \
+    __JS_ENUMERATE(InvalidCharacterError, invalid_character_error, InvalidCharacterErrorPrototype, InvalidCharacterErrorConstructor)     \
     __JS_ENUMERATE(RangeError, range_error, RangeErrorPrototype, RangeErrorConstructor)                 \
     __JS_ENUMERATE(ReferenceError, reference_error, ReferenceErrorPrototype, ReferenceErrorConstructor) \
     __JS_ENUMERATE(SyntaxError, syntax_error, SyntaxErrorPrototype, SyntaxErrorConstructor)             \
