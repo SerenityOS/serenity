@@ -109,6 +109,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     }
     if (index < 0 || index >= static_cast<i32>(string.length()))
         return js_string(interpreter, String::empty());
+    // FIXME: This should return a character corresponding to the i'th UTF-16 code point.
     return js_string(interpreter, string.substring(index, 1));
 }
 
@@ -125,6 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
     }
     if (index < 0 || index >= static_cast<i32>(string.length()))
         return js_nan();
+    // FIXME: This should return the i'th UTF-16 code point.
     return Value((i32)string[index]);
 }
 
@@ -319,6 +321,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
     if (interpreter.argument_count() == 0)
         return js_string(interpreter, string);
 
+    // FIXME: index_start and index_end should index a UTF-16 codepoint view of the string.
     auto string_length = string.length();
     auto index_start = min(interpreter.argument(0).to_size_t(interpreter), string_length);
     if (interpreter.exception())
@@ -355,6 +358,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
     if (interpreter.exception())
         return {};
 
+    // FIXME: position should index a UTF-16 codepoint view of the string.
     size_t position = 0;
     if (interpreter.argument_count() >= 2) {
         position = interpreter.argument(1).to_size_t(interpreter);
@@ -381,6 +385,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     if (interpreter.argument_count() == 0)
         return js_string(interpreter, string);
 
+    // FIXME: index_start and index_end should index a UTF-16 codepoint view of the string.
     auto string_length = static_cast<i32>(string.length());
     auto index_start = interpreter.argument(0).to_i32(interpreter);
     if (interpreter.exception())
@@ -429,10 +434,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
         return {};
     if (search_string.length() > string.length())
         return Value(-1);
-
     auto max_index = string.length() - search_string.length();
     auto from_index = max_index;
     if (interpreter.argument_count() >= 2) {
+        // FIXME: from_index should index a UTF-16 codepoint view of the string.
         from_index = min(interpreter.argument(1).to_size_t(interpreter), max_index);
         if (interpreter.exception())
             return {};
