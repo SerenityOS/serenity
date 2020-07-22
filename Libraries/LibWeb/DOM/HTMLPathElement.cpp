@@ -434,25 +434,29 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
 #endif
 
         switch (instruction.type) {
-        case PathInstructionType::Move:
+        case PathInstructionType::Move: {
+            Gfx::FloatPoint point = { data[0], data[1] };
             if (absolute) {
-                path.move_to({ data[0], data[1] });
+                path.move_to(point);
             } else {
                 ASSERT(!path.segments().is_empty());
-                path.move_to(Gfx::FloatPoint { data[0], data[1] } + path.segments().last().point());
+                path.move_to(point + path.segments().last().point());
             }
             break;
+        }
         case PathInstructionType::ClosePath:
             path.close();
             break;
-        case PathInstructionType::Line:
+        case PathInstructionType::Line: {
+            Gfx::FloatPoint point = { data[0], data[1] };
             if (absolute) {
-                path.line_to({ data[0], data[1] });
+                path.line_to(point);
             } else {
                 ASSERT(!path.segments().is_empty());
-                path.line_to(Gfx::FloatPoint { data[0], data[1] } + path.segments().last().point());
+                path.line_to(point + path.segments().last().point());
             }
             break;
+        }
         case PathInstructionType::HorizontalLine: {
             ASSERT(!path.segments().is_empty());
             auto last_point = path.segments().last().point();
@@ -467,9 +471,9 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
             ASSERT(!path.segments().is_empty());
             auto last_point = path.segments().last().point();
             if (absolute) {
-                path.line_to(Gfx::FloatPoint{ last_point.x(), data[0] });
+                path.line_to(Gfx::FloatPoint { last_point.x(), data[0] });
             } else {
-                path.line_to(Gfx::FloatPoint{ last_point.x(), data[0] + last_point.y() });
+                path.line_to(Gfx::FloatPoint { last_point.x(), data[0] + last_point.y() });
             }
             break;
         }
@@ -560,15 +564,19 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
 
             break;
         }
-        case PathInstructionType::QuadraticBezierCurve:
+        case PathInstructionType::QuadraticBezierCurve: {
+            Gfx::FloatPoint through = { data[0], data[1] };
+            Gfx::FloatPoint point = { data[2], data[3] };
+
             if (absolute) {
-                path.quadratic_bezier_curve_to({ data[0], data[1] }, { data[2], data[3] });
+                path.quadratic_bezier_curve_to(through, point);
             } else {
                 ASSERT(!path.segments().is_empty());
                 auto last_point = path.segments().last().point();
-                path.quadratic_bezier_curve_to({ data[0] + last_point.x(), data[1] + last_point.y() }, { data[2] + last_point.x(), data[3] + last_point.y() });
+                path.quadratic_bezier_curve_to(through + last_point, point + last_point);
             }
             break;
+        }
         case PathInstructionType::Curve:
         case PathInstructionType::SmoothCurve:
         case PathInstructionType::SmoothQuadraticBezierCurve:
