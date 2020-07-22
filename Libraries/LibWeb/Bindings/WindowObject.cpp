@@ -251,6 +251,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
     auto string = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
+    // FIXME: This should convert string from a byte string to LibJS's internal string encoding (UTF-8).
     auto decoded = decode_base64(StringView(string));
     return JS::js_string(interpreter, String::copy(decoded));
 }
@@ -265,6 +266,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     auto string = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
+    // FIXME: This should convert string to a non-UTF-8 byte string first.
     auto encoded = encode_base64(StringView(string));
     return JS::js_string(interpreter, String::copy(encoded));
 }
