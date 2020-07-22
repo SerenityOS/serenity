@@ -28,7 +28,6 @@
 
 #include <LibGUI/Frame.h>
 #include <LibGUI/ToolBar.h>
-#include <LibHTTP/HttpJob.h>
 
 namespace GUI {
 
@@ -36,7 +35,6 @@ class ToolBarContainer : public Frame {
     C_OBJECT(ToolBarContainer);
 
 public:
-
 private:
     explicit ToolBarContainer(Gfx::Orientation = Gfx::Orientation::Horizontal);
 
