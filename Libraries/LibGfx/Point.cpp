@@ -26,10 +26,17 @@
 
 #include <AK/String.h>
 #include <LibGfx/Point.h>
+#include <LibGfx/FloatPoint.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 
 namespace Gfx {
+
+IntPoint::IntPoint(const FloatPoint& other)
+    : m_x(other.x())
+    , m_y(other.y())
+{
+}
 
 String IntPoint::to_string() const
 {

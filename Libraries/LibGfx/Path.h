@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibGfx/FloatPoint.h>
@@ -34,44 +35,133 @@
 
 namespace Gfx {
 
-class Path {
+class Segment : public RefCounted<Segment> {
 public:
-    struct Segment {
-        enum class Type {
-            Invalid,
-            MoveTo,
-            LineTo,
-            QuadraticBezierCurveTo,
-        };
-
-        Type type { Type::Invalid };
-        FloatPoint point;
-        Optional<FloatPoint> through {};
+    enum class Type {
+        Invalid,
+        MoveTo,
+        LineTo,
+        QuadraticBezierCurveTo,
+        EllipticalArcTo,
     };
 
+    Segment(const FloatPoint& point)
+        : m_point(point)
+    {
+    }
+
+    virtual ~Segment() = default;
+
+    const FloatPoint& point() const { return m_point; }
+    virtual Type type() const = 0;
+
+protected:
+    FloatPoint m_point;
+};
+
+class MoveSegment final : public Segment {
+public:
+    MoveSegment(const FloatPoint& point)
+        : Segment(point)
+    {
+    }
+
+private:
+    virtual Type type() const override { return Segment::Type::MoveTo; }
+};
+
+class LineSegment final : public Segment {
+public:
+    LineSegment(const FloatPoint& point)
+        : Segment(point)
+    {
+    }
+
+    virtual ~LineSegment() override = default;
+
+private:
+    virtual Type type() const override { return Segment::Type::LineTo; }
+};
+
+class QuadraticBezierCurveSegment final : public Segment {
+public:
+    QuadraticBezierCurveSegment(const FloatPoint& point, const FloatPoint& through)
+        : Segment(point)
+        , m_through(through)
+    {
+    }
+
+    virtual ~QuadraticBezierCurveSegment() override = default;
+
+    const FloatPoint& through() const { return m_through; }
+
+private:
+    virtual Type type() const override { return Segment::Type::QuadraticBezierCurveTo; }
+
+    FloatPoint m_through;
+};
+
+class EllipticalArcSegment final : public Segment {
+public:
+    EllipticalArcSegment(const FloatPoint& point, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta)
+        : Segment(point)
+        , m_center(center)
+        , m_radii(radii)
+        , m_x_axis_rotation(x_axis_rotation)
+        , m_theta_1(theta_1)
+        , m_theta_delta(theta_delta)
+    {
+    }
+
+    virtual ~EllipticalArcSegment() override = default;
+
+    const FloatPoint& center() const { return m_center; }
+    const FloatPoint& radii() const { return m_radii; }
+    float x_axis_rotation() const { return m_x_axis_rotation; }
+    float theta_1() const { return m_theta_1; }
+    float theta_delta() const { return m_theta_delta; }
+
+private:
+    virtual Type type() const override { return Segment::Type::EllipticalArcTo; }
+
+    FloatPoint m_center;
+    FloatPoint m_radii;
+    float m_x_axis_rotation;
+    float m_theta_1;
+    float m_theta_delta;
+};
+
+class Path {
+public:
     Path() { }
 
     void move_to(const FloatPoint& point)
     {
-        m_segments.append({ Segment::Type::MoveTo, point });
+        append_segment<MoveSegment>(point);
     }
 
     void line_to(const FloatPoint& point)
     {
-        m_segments.append({ Segment::Type::LineTo, point });
+        append_segment<LineSegment>(point);
         invalidate_split_lines();
     }
 
     void quadratic_bezier_curve_to(const FloatPoint& through, const FloatPoint& point)
     {
-        m_segments.append({ Segment::Type::QuadraticBezierCurveTo, point, through });
+        append_segment<QuadraticBezierCurveSegment>(point, through);
+        invalidate_split_lines();
+    }
+
+    void elliptical_arc_to(const FloatPoint& point, const FloatPoint& center, const FloatPoint& radii, float x_axis_rotation, float theta_1, float theta_delta)
+    {
+        append_segment<EllipticalArcSegment>(point, center, radii, x_axis_rotation, theta_1, theta_delta);
         invalidate_split_lines();
     }
 
     void close();
     void close_all_subpaths();
 
-    struct LineSegment {
+    struct SplitLineSegment {
         FloatPoint from, to;
         float inverse_slope;
         float x_of_minimum_y;
@@ -80,7 +170,7 @@ public:
         float x;
     };
 
-    const Vector<Segment>& segments() const { return m_segments; }
+    const NonnullRefPtrVector<Segment>& segments() const { return m_segments; }
     const auto& split_lines()
     {
         if (m_split_lines.has_value())
@@ -99,9 +189,15 @@ private:
     }
     void segmentize_path();
 
-    Vector<Segment> m_segments;
+    template<typename T, typename... Args>
+    void append_segment(Args&&... args)
+    {
+        m_segments.append(adopt(*new T(forward<Args>(args)...)));
+    }
 
-    Optional<Vector<LineSegment>> m_split_lines {};
+    NonnullRefPtrVector<Segment> m_segments {};
+
+    Optional<Vector<SplitLineSegment>> m_split_lines {};
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const Path& path)
