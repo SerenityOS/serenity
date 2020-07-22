@@ -35,7 +35,7 @@ class ErrorPrototype final : public Object {
 
 public:
     explicit ErrorPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ErrorPrototype() override;
 
 private:
@@ -53,7 +53,7 @@ private:
                                                                                                 \
     public:                                                                                     \
         explicit PrototypeName(GlobalObject&);                                                  \
-        virtual void initialize(Interpreter&, GlobalObject&) override { }                       \
+        virtual void initialize(GlobalObject&) override { }                       \
         virtual ~PrototypeName() override;                                                      \
     };
 

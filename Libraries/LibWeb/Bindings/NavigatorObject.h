@@ -37,7 +37,7 @@ class NavigatorObject final : public JS::Object {
 
 public:
     NavigatorObject(JS::GlobalObject&);
-    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
+    virtual void initialize(JS::GlobalObject&) override;
     virtual ~NavigatorObject() override;
 
 private:

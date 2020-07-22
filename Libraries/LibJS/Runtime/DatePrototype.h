@@ -34,7 +34,7 @@ class DatePrototype final : public Object {
     JS_OBJECT(DatePrototype, Object);
 public:
     explicit DatePrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~DatePrototype() override;
 
 private:

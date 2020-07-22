@@ -35,7 +35,7 @@ class XMLHttpRequestPrototype final : public JS::Object {
 
 public:
     explicit XMLHttpRequestPrototype(JS::GlobalObject&);
-    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
+    virtual void initialize(JS::GlobalObject&) override;
     virtual ~XMLHttpRequestPrototype() override;
 
 private:

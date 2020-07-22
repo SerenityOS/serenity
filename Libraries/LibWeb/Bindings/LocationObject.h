@@ -37,7 +37,7 @@ class LocationObject final : public JS::Object {
 
 public:
     explicit LocationObject(JS::GlobalObject&);
-    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;
+    virtual void initialize(JS::GlobalObject&) override;
     virtual ~LocationObject() override;
 
 private:

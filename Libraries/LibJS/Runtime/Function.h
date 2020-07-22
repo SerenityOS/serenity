@@ -41,7 +41,7 @@ public:
     };
 
     virtual ~Function();
-    virtual void initialize(Interpreter&, GlobalObject&) override { }
+    virtual void initialize(GlobalObject&) override { }
 
     virtual Value call(Interpreter&) = 0;
     virtual Value construct(Interpreter&, Function& new_target) = 0;

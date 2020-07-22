@@ -40,9 +40,9 @@ FunctionConstructor::FunctionConstructor(GlobalObject& global_object)
 {
 }
 
-void FunctionConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void FunctionConstructor::initialize(GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("prototype", global_object.function_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 }

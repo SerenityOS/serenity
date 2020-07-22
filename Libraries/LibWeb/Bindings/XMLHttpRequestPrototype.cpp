@@ -39,9 +39,9 @@ XMLHttpRequestPrototype::XMLHttpRequestPrototype(JS::GlobalObject& global_object
 {
 }
 
-void XMLHttpRequestPrototype::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
+void XMLHttpRequestPrototype::initialize(JS::GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     define_native_function("open", open, 2);
     define_native_function("send", send, 0);
     define_native_property("readyState", ready_state_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);

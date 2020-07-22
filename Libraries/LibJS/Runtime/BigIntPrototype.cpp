@@ -37,15 +37,15 @@ BigIntPrototype::BigIntPrototype(GlobalObject& global_object)
 {
 }
 
-void BigIntPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void BigIntPrototype::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("toString", to_string, 0, attr);
     define_native_function("toLocaleString", to_locale_string, 0, attr);
     define_native_function("valueOf", value_of, 0, attr);
 
-    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "BigInt"), Attribute::Configurable);
+    define_property(global_object.interpreter().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "BigInt"), Attribute::Configurable);
 }
 
 BigIntPrototype::~BigIntPrototype()

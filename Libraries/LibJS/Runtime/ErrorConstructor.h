@@ -36,7 +36,7 @@ class ErrorConstructor final : public NativeFunction {
 
 public:
     explicit ErrorConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ErrorConstructor() override;
 
     virtual Value call(Interpreter&) override;
@@ -52,7 +52,7 @@ private:
                                                                                                   \
     public:                                                                                       \
         explicit ConstructorName(GlobalObject&);                                                  \
-        virtual void initialize(Interpreter&, GlobalObject&) override;                            \
+        virtual void initialize(GlobalObject&) override;                            \
         virtual ~ConstructorName() override;                                                      \
         virtual Value call(Interpreter&) override;                                                \
         virtual Value construct(Interpreter&, Function& new_target) override;                     \

@@ -40,9 +40,9 @@ ConsoleObject::ConsoleObject(GlobalObject& global_object)
 {
 }
 
-void ConsoleObject::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ConsoleObject::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     define_native_function("log", log);
     define_native_function("debug", debug);
     define_native_function("info", info);

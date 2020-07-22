@@ -60,10 +60,10 @@ struct PropertyDescriptor {
 
 class Object : public Cell {
 public:
-    static Object* create_empty(Interpreter&, GlobalObject&);
+    static Object* create_empty(GlobalObject&);
 
     explicit Object(Object& prototype);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~Object();
 
     virtual bool inherits(const StringView& class_name) const { return class_name == this->class_name(); }

@@ -35,7 +35,7 @@ class StringConstructor final : public NativeFunction {
 
 public:
     explicit StringConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~StringConstructor() override;
 
     virtual Value call(Interpreter&) override;

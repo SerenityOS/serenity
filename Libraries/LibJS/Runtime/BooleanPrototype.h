@@ -35,7 +35,7 @@ class BooleanPrototype final : public BooleanObject {
 
 public:
     explicit BooleanPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~BooleanPrototype() override;
 
 private:

@@ -37,9 +37,9 @@ RegExpConstructor::RegExpConstructor(GlobalObject& global_object)
 {
 }
 
-void RegExpConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void RegExpConstructor::initialize(GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("prototype", global_object.regexp_prototype(), 0);
     define_property("length", Value(2), Attribute::Configurable);
 }

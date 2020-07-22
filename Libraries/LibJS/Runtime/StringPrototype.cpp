@@ -65,9 +65,9 @@ StringPrototype::StringPrototype(GlobalObject& global_object)
 {
 }
 
-void StringPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void StringPrototype::initialize(GlobalObject& global_object)
 {
-    StringObject::initialize(interpreter, global_object);
+    StringObject::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_property("length", length_getter, nullptr, 0);
@@ -89,7 +89,7 @@ void StringPrototype::initialize(Interpreter& interpreter, GlobalObject& global_
     define_native_function("includes", includes, 1, attr);
     define_native_function("slice", slice, 2, attr);
     define_native_function("lastIndexOf", last_index_of, 1, attr);
-    define_native_function(interpreter.well_known_symbol_iterator(), symbol_iterator, 0, attr);
+    define_native_function(global_object.interpreter().well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
 StringPrototype::~StringPrototype()
