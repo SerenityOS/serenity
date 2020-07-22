@@ -439,7 +439,7 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
                 path.move_to({ data[0], data[1] });
             } else {
                 ASSERT(!path.segments().is_empty());
-                path.move_to(Gfx::FloatPoint { data[0], data[1] } + path.segments().last().point);
+                path.move_to(Gfx::FloatPoint { data[0], data[1] } + path.segments().last().point());
             }
             break;
         case PathInstructionType::ClosePath:
@@ -450,12 +450,12 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
                 path.line_to({ data[0], data[1] });
             } else {
                 ASSERT(!path.segments().is_empty());
-                path.line_to(Gfx::FloatPoint { data[0], data[1] } + path.segments().last().point);
+                path.line_to(Gfx::FloatPoint { data[0], data[1] } + path.segments().last().point());
             }
             break;
         case PathInstructionType::HorizontalLine: {
             ASSERT(!path.segments().is_empty());
-            auto last_point = path.segments().last().point;
+            auto last_point = path.segments().last().point();
             if (absolute) {
                 path.line_to(Gfx::FloatPoint { data[0], last_point.y() });
             } else {
@@ -465,7 +465,7 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
         }
         case PathInstructionType::VerticalLine: {
             ASSERT(!path.segments().is_empty());
-            auto last_point = path.segments().last().point;
+            auto last_point = path.segments().last().point();
             if (absolute) {
                 path.line_to(Gfx::FloatPoint{ last_point.x(), data[0] });
             } else {
@@ -473,27 +473,116 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
             }
             break;
         }
+        case PathInstructionType::EllipticalArc: {
+            double rx = data[0];
+            double ry = data[1];
+            double x_axis_rotation = data[2] * M_DEG2RAD;
+            double large_arc_flag = data[3];
+            double sweep_flag = data[4];
+
+            double x_axis_rotation_c = cos(x_axis_rotation);
+            double x_axis_rotation_s = sin(x_axis_rotation);
+
+            auto& last_point = path.segments().last().point();
+
+            Gfx::FloatPoint next_point;
+
+            if (absolute) {
+                next_point = { data[5], data[6] };
+            } else {
+                next_point = { data[5] + last_point.x(), data[6] + last_point.y() };
+            }
+
+            // Step 1 of out-of-range radii correction
+            if (rx == 0.0 || ry == 0.0) {
+                path.line_to(next_point);
+                break;
+            }
+
+            // Step 2 of out-of-range radii correction
+            if (rx < 0)
+                rx *= -1.0;
+            if (ry < 0)
+                ry *= -1.0;
+
+            // Find (cx, cy), theta_1, theta_delta
+            // Step 1: Compute (x1', y1')
+            auto x_avg = (last_point.x() - next_point.x()) / 2.0f;
+            auto y_avg = (last_point.y() - next_point.y()) / 2.0f;
+            auto x1p = x_axis_rotation_c * x_avg + x_axis_rotation_s * y_avg;
+            auto y1p = -x_axis_rotation_s * x_avg + x_axis_rotation_c * y_avg;
+
+            // Step 2: Compute (cx', cy')
+            double x1p_sq = pow(x1p, 2.0);
+            double y1p_sq = pow(y1p, 2.0);
+            double rx_sq = pow(rx, 2.0);
+            double ry_sq = pow(ry, 2.0);
+
+            // Step 3 of out-of-range radii correction
+            double lambda = x1p_sq / rx_sq + y1p_sq / ry_sq;
+            double multiplier;
+
+            if (lambda > 1.0) {
+                auto lambda_sqrt = sqrt(lambda);
+                rx *= lambda_sqrt;
+                ry *= lambda_sqrt;
+                multiplier = 0.0;
+            } else {
+                double numerator = rx_sq * ry_sq - rx_sq * y1p_sq - ry_sq * x1p_sq;
+                double denominator = rx_sq * y1p_sq + ry_sq * x1p_sq;
+                multiplier = sqrt(numerator / denominator);
+            }
+
+            if (large_arc_flag == sweep_flag)
+                multiplier *= -1.0;
+
+            double cxp = multiplier * rx * y1p / ry;
+            double cyp = multiplier * -ry * x1p / rx;
+
+            // Step 3: Compute (cx, cy) from (cx', cy')
+            x_avg = (last_point.x() + next_point.x()) / 2.0f;
+            y_avg = (last_point.y() + next_point.y()) / 2.0f;
+            double cx = x_axis_rotation_c * cxp - x_axis_rotation_s * cyp + x_avg;
+            double cy = x_axis_rotation_s * cxp + x_axis_rotation_c * cyp + y_avg;
+
+            double theta_1 = atan2((y1p - cyp) / ry, (x1p - cxp) / rx);
+            double theta_2 = atan2((-y1p - cyp) / ry, (-x1p - cxp) / rx);
+
+            auto theta_delta = theta_2 - theta_1;
+
+            if (sweep_flag == 0 && theta_delta > 0.0f) {
+                theta_delta -= M_TAU;
+            } else if (sweep_flag != 0 && theta_delta < 0) {
+                theta_delta += M_TAU;
+            }
+
+            path.elliptical_arc_to(next_point, { cx, cy }, { rx, ry }, x_axis_rotation, theta_1, theta_delta);
+
+            break;
+        }
         case PathInstructionType::QuadraticBezierCurve:
             if (absolute) {
                 path.quadratic_bezier_curve_to({ data[0], data[1] }, { data[2], data[3] });
             } else {
                 ASSERT(!path.segments().is_empty());
-                auto last_point = path.segments().last().point;
+                auto last_point = path.segments().last().point();
                 path.quadratic_bezier_curve_to({ data[0] + last_point.x(), data[1] + last_point.y() }, { data[2] + last_point.x(), data[3] + last_point.y() });
             }
             break;
         case PathInstructionType::Curve:
         case PathInstructionType::SmoothCurve:
         case PathInstructionType::SmoothQuadraticBezierCurve:
-        case PathInstructionType::EllipticalArc:
             TODO();
         case PathInstructionType::Invalid:
             ASSERT_NOT_REACHED();
         }
     }
 
-    painter.fill_path(path, context.fill_color, Gfx::Painter::WindingRule::EvenOdd);
     painter.stroke_path(path, context.stroke_color, context.stroke_width);
+
+    // Fills are computed as though all paths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
+    path.close();
+    painter.fill_path(path, context.fill_color, Gfx::Painter::WindingRule::EvenOdd);
 }
 
 }
