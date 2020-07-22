@@ -136,7 +136,7 @@ String Token::string_value(StringValueStatus& status) const
                 auto digit2 = m_value[++i];
                 if (!isxdigit(digit1) || !isxdigit(digit2))
                     return encoding_failure(StringValueStatus::MalformedHexEscape);
-                builder.append(static_cast<char>(hex2int(digit1) * 16 + hex2int(digit2)));
+                builder.append_codepoint(hex2int(digit1) * 16 + hex2int(digit2));
                 break;
             }
             case 'u': {
@@ -174,7 +174,7 @@ String Token::string_value(StringValueStatus& status) const
                     }
                 }
 
-                builder.append({ &code_point, 1 });
+                builder.append_codepoint(code_point);
                 break;
             }
             default:
