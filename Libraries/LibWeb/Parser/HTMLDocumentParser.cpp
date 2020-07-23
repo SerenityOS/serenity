@@ -393,7 +393,7 @@ HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropria
     return { target, nullptr };
 }
 
-NonnullRefPtr<Element> HTMLDocumentParser::create_element_for(HTMLToken& token)
+NonnullRefPtr<Element> HTMLDocumentParser::create_element_for(const HTMLToken& token)
 {
     auto element = create_element(document(), token.tag_name());
     for (auto& attribute : token.m_tag.attributes) {
@@ -402,7 +402,7 @@ NonnullRefPtr<Element> HTMLDocumentParser::create_element_for(HTMLToken& token)
     return element;
 }
 
-RefPtr<Element> HTMLDocumentParser::insert_html_element(HTMLToken& token)
+RefPtr<Element> HTMLDocumentParser::insert_html_element(const HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     auto element = create_element_for(token);
@@ -450,10 +450,7 @@ void HTMLDocumentParser::handle_before_head(HTMLToken& token)
     }
 
 AnythingElse:
-    HTMLToken fake_head_token;
-    fake_head_token.m_type = HTMLToken::Type::StartTag;
-    fake_head_token.m_tag.tag_name.append(HTML::TagNames::head);
-    m_head_element = to<HTMLHeadElement>(insert_html_element(fake_head_token));
+    m_head_element = to<HTMLHeadElement>(insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head)));
     m_insertion_mode = InsertionMode::InHead;
     process_using_the_rules_for(InsertionMode::InHead, token);
     return;
@@ -725,10 +722,7 @@ void HTMLDocumentParser::handle_after_head(HTMLToken& token)
     }
 
 AnythingElse:
-    HTMLToken fake_body_token;
-    fake_body_token.m_type = HTMLToken::Type::StartTag;
-    fake_body_token.m_tag.tag_name.append(HTML::TagNames::body);
-    insert_html_element(fake_body_token);
+    insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::body));
     m_insertion_mode = InsertionMode::InBody;
     process_using_the_rules_for(m_insertion_mode, token);
 }
@@ -850,10 +844,7 @@ Advance:
 
 Create:
     // FIXME: Hold on to the real token!
-    HTMLToken fake_token;
-    fake_token.m_type = HTMLToken::Type::StartTag;
-    fake_token.m_tag.tag_name.append(entry->tag_name());
-    auto new_element = insert_html_element(fake_token);
+    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->tag_name()));
 
     m_list_of_active_formatting_elements.entries().at(index).element = *new_element;
 
@@ -1307,10 +1298,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::p) {
         if (!m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p)) {
             PARSE_ERROR();
-            HTMLToken fake_p_token;
-            fake_p_token.m_type = HTMLToken::Type::StartTag;
-            fake_p_token.m_tag.tag_name.append(HTML::TagNames::p);
-            insert_html_element(fake_p_token);
+            insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::p));
         }
         close_a_p_element();
         return;
@@ -2025,12 +2013,7 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::th, HTML::TagNames::td)) {
         PARSE_ERROR();
         clear_the_stack_back_to_a_table_body_context();
-
-        HTMLToken fake_tr_token;
-        fake_tr_token.m_type = HTMLToken::Type::StartTag;
-        fake_tr_token.m_tag.tag_name.append(HTML::TagNames::tr);
-        insert_html_element(fake_tr_token);
-
+        insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tr));
         m_insertion_mode = InsertionMode::InRow;
         process_using_the_rules_for(m_insertion_mode, token);
         return;
@@ -2104,10 +2087,7 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
     }
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::col) {
         clear_the_stack_back_to_a_table_context();
-        HTMLToken fake_colgroup_token;
-        fake_colgroup_token.m_type = HTMLToken::Type::StartTag;
-        fake_colgroup_token.m_tag.tag_name.append(HTML::TagNames::colgroup);
-        insert_html_element(fake_colgroup_token);
+        insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::colgroup));
         m_insertion_mode = InsertionMode::InColumnGroup;
         process_using_the_rules_for(m_insertion_mode, token);
         return;
@@ -2120,10 +2100,7 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
     }
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th, HTML::TagNames::tr)) {
         clear_the_stack_back_to_a_table_context();
-        HTMLToken fake_tbody_token;
-        fake_tbody_token.m_type = HTMLToken::Type::StartTag;
-        fake_tbody_token.m_tag.tag_name.append(HTML::TagNames::tbody);
-        insert_html_element(fake_tbody_token);
+        insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tbody));
         m_insertion_mode = InsertionMode::InTableBody;
         process_using_the_rules_for(m_insertion_mode, token);
         return;
