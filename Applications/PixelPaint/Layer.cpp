@@ -69,4 +69,12 @@ void Layer::set_opacity_percent(int opacity_percent)
     m_image.layer_did_modify_properties({}, *this);
 }
 
+void Layer::set_name(const String& name)
+{
+    if (m_name == name)
+        return;
+    m_name = name;
+    m_image.layer_did_modify_properties({}, *this);
+}
+
 }
