@@ -31,6 +31,7 @@
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Slider.h>
+#include <LibGUI/TextBox.h>
 #include <LibGfx/Font.h>
 
 namespace PixelPaint {
@@ -43,6 +44,24 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     auto& layout = group_box.set_layout<GUI::VerticalBoxLayout>();
 
     layout.set_margins({ 10, 20, 10, 10 });
+
+    auto& name_container = group_box.add<GUI::Widget>();
+    name_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    name_container.set_preferred_size(0, 20);
+    name_container.set_layout<GUI::HorizontalBoxLayout>();
+
+    auto& name_label = name_container.add<GUI::Label>("Name:");
+    name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    name_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    name_label.set_preferred_size(80, 20);
+
+    m_name_textbox = name_container.add<GUI::TextBox>();
+    m_name_textbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    m_name_textbox->set_preferred_size(0, 20);
+    m_name_textbox->on_change = [this] {
+        if (m_layer)
+            m_layer->set_name(m_name_textbox->text());
+    };
 
     auto& opacity_container = group_box.add<GUI::Widget>();
     opacity_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -83,6 +102,7 @@ void LayerPropertiesWidget::set_layer(Layer* layer)
 
     if (layer) {
         m_layer = layer->make_weak_ptr();
+        m_name_textbox->set_text(layer->name());
         m_opacity_slider->set_value(layer->opacity_percent());
         m_visibility_checkbox->set_checked(layer->is_visible());
         set_enabled(true);

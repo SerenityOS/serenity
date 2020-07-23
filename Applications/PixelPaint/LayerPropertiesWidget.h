@@ -45,6 +45,7 @@ private:
 
     RefPtr<GUI::CheckBox> m_visibility_checkbox;
     RefPtr<GUI::HorizontalSlider> m_opacity_slider;
+    RefPtr<GUI::TextBox> m_name_textbox;
 
     WeakPtr<Layer> m_layer;
 };

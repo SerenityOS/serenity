@@ -59,7 +59,7 @@ public:
     Gfx::IntRect rect() const { return { {}, size() }; }
 
     const String& name() const { return m_name; }
-    void set_name(const String& name) { m_name = name; }
+    void set_name(const String&);
 
     void did_modify_bitmap(Image&);
 
