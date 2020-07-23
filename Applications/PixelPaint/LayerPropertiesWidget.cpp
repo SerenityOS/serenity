@@ -28,6 +28,7 @@
 #include "Layer.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Slider.h>
 #include <LibGfx/Font.h>
@@ -37,17 +38,34 @@ namespace PixelPaint {
 LayerPropertiesWidget::LayerPropertiesWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
-    auto& label = add<GUI::Label>("Layer properties");
-    label.set_font(Gfx::Font::default_bold_font());
 
-    m_opacity_slider = add<GUI::HorizontalSlider>();
+    auto& group_box = add<GUI::GroupBox>("Layer properties");
+    auto& layout = group_box.set_layout<GUI::VerticalBoxLayout>();
+
+    layout.set_margins({ 10, 20, 10, 10 });
+
+    auto& opacity_container = group_box.add<GUI::Widget>();
+    opacity_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    opacity_container.set_preferred_size(0, 20);
+    opacity_container.set_layout<GUI::HorizontalBoxLayout>();
+
+    auto& opacity_label = opacity_container.add<GUI::Label>("Opacity:");
+    opacity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    opacity_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    opacity_label.set_preferred_size(80, 20);
+
+    m_opacity_slider = opacity_container.add<GUI::HorizontalSlider>();
+    m_opacity_slider->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    m_opacity_slider->set_preferred_size(0, 20);
     m_opacity_slider->set_range(0, 100);
     m_opacity_slider->on_value_changed = [this](int value) {
         if (m_layer)
             m_layer->set_opacity_percent(value);
     };
 
-    m_visibility_checkbox = add<GUI::CheckBox>("Visible");
+    m_visibility_checkbox = group_box.add<GUI::CheckBox>("Visible");
+    m_visibility_checkbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    m_visibility_checkbox->set_preferred_size(0, 20);
     m_visibility_checkbox->on_checked = [this](bool checked) {
         if (m_layer)
             m_layer->set_visible(checked);
