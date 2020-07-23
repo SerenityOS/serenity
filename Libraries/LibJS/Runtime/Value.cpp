@@ -409,8 +409,11 @@ Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
     auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (both_number(lhs_numeric, rhs_numeric))
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        if (!lhs_numeric.is_finite_number() || !rhs_numeric.is_finite_number())
+            return Value(0);
         return Value((i32)lhs_numeric.as_double() & (i32)rhs_numeric.as_double());
+    }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
     interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
@@ -448,8 +451,15 @@ Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
     auto rhs_numeric = rhs.to_numeric(interpreter);
     if (interpreter.exception())
         return {};
-    if (both_number(lhs_numeric, rhs_numeric))
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
+            return Value(0);
+        if (!lhs_numeric.is_finite_number())
+            return rhs_numeric;
+        if (!rhs_numeric.is_finite_number())
+            return lhs_numeric;
         return Value((i32)lhs_numeric.as_double() ^ (i32)rhs_numeric.as_double());
+    }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
     interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
