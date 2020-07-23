@@ -50,6 +50,8 @@ public:
 private:
     friend class ToolButton;
 
+    void setup_tools();
+
     explicit ToolboxWidget();
     GUI::ActionGroup m_action_group;
     Vector<Tool*> m_tools;
