@@ -338,6 +338,8 @@ Layer* ImageEditor::layer_at_editor_position(const Gfx::IntPoint& editor_positio
     auto image_position = editor_position_to_image_position(editor_position);
     for (ssize_t i = m_image->layer_count() - 1; i >= 0; --i) {
         auto& layer = m_image->layer(i);
+        if (!layer.is_visible())
+            continue;
         if (layer.relative_rect().contains(Gfx::IntPoint(image_position.x(), image_position.y())))
             return const_cast<Layer*>(&layer);
     }
