@@ -165,4 +165,8 @@ void ConsoleWidget::clear_output()
     m_output_view->update();
 }
 
+void ConsoleWidget::focusin_event(Core::Event&)
+{
+    m_input->set_focus(true);
+}
 }
