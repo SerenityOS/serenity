@@ -138,7 +138,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, Role role) cons
         } else {
             auto& element = to<Element>(*node.node());
             builder.append('<');
-            builder.append(element.tag_name());
+            builder.append(element.local_name());
             element.for_each_attribute([&](auto& name, auto& value) {
                 builder.append(' ');
                 builder.append(name);

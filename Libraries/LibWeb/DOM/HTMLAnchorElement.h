@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLAnchorElement : public HTMLElement {
 public:
-    HTMLAnchorElement(Document&, const FlyString& tag_name);
+    HTMLAnchorElement(Document&, const FlyString& local_name);
     virtual ~HTMLAnchorElement() override;
 
     String href() const { return attribute(HTML::AttributeNames::href); }
@@ -42,7 +42,7 @@ public:
 template<>
 inline bool is<HTMLAnchorElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::a;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::a;
 }
 
 }

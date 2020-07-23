@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLBRElement final : public HTMLElement {
 public:
-    HTMLBRElement(Document&, const FlyString& tag_name);
+    HTMLBRElement(Document&, const FlyString& local_name);
     virtual ~HTMLBRElement() override;
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
@@ -41,7 +41,7 @@ public:
 template<>
 inline bool is<HTMLBRElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::br;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::br;
 }
 
 }

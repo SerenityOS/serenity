@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLFontElement : public HTMLElement {
 public:
-    HTMLFontElement(Document&, const FlyString& tag_name);
+    HTMLFontElement(Document&, const FlyString& local_name);
     virtual ~HTMLFontElement() override;
 
     virtual void apply_presentational_hints(StyleProperties&) const override;
@@ -41,7 +41,7 @@ public:
 template<>
 inline bool is<HTMLFontElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::font;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::font;
 }
 
 }

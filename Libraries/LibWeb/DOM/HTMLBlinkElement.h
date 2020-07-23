@@ -33,7 +33,7 @@ namespace Web {
 
 class HTMLBlinkElement : public HTMLElement {
 public:
-    HTMLBlinkElement(Document&, const FlyString& tag_name);
+    HTMLBlinkElement(Document&, const FlyString& local_name);
     virtual ~HTMLBlinkElement() override;
 
 private:
@@ -45,7 +45,7 @@ private:
 template<>
 inline bool is<HTMLBlinkElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::blink;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::blink;
 }
 
 }

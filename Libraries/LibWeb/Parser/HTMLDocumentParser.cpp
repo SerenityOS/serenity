@@ -379,7 +379,7 @@ Element& HTMLDocumentParser::node_before_current_node()
 HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropriate_place_for_inserting_node()
 {
     auto& target = current_node();
-    if (m_foster_parenting && target.tag_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
+    if (m_foster_parenting && target.local_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
         // FIXME: There's a bunch of steps for <template> elements here.
         auto last_table = m_stack_of_open_elements.last_element_with_tag_name(HTML::TagNames::table);
         if (!last_table) {
@@ -558,7 +558,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
 
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_) {
         // FIXME: Support this properly
-        ASSERT(current_node().tag_name() == HTML::TagNames::template_);
+        ASSERT(current_node().local_name() == HTML::TagNames::template_);
         m_stack_of_open_elements.pop();
         return;
     }
@@ -729,14 +729,14 @@ AnythingElse:
 
 void HTMLDocumentParser::generate_implied_end_tags(const FlyString& exception)
 {
-    while (current_node().tag_name() != exception && current_node().tag_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
+    while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
         m_stack_of_open_elements.pop();
 }
 
 void HTMLDocumentParser::close_a_p_element()
 {
     generate_implied_end_tags(HTML::TagNames::p);
-    if (current_node().tag_name() != HTML::TagNames::p) {
+    if (current_node().local_name() != HTML::TagNames::p) {
         PARSE_ERROR();
     }
     m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::p);
@@ -844,7 +844,7 @@ Advance:
 
 Create:
     // FIXME: Hold on to the real token!
-    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->tag_name()));
+    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->local_name()));
 
     m_list_of_active_formatting_elements.entries().at(index).element = *new_element;
 
@@ -859,7 +859,7 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
     // If the current node is an HTML element whose tag name is subject,
     // and the current node is not in the list of active formatting elements,
     // then pop the current node off the stack of open elements, and return.
-    if (current_node().tag_name() == subject && !m_list_of_active_formatting_elements.contains(current_node())) {
+    if (current_node().local_name() == subject && !m_list_of_active_formatting_elements.contains(current_node())) {
         m_stack_of_open_elements.pop();
         return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
@@ -1047,7 +1047,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::body) {
         PARSE_ERROR();
         if (m_stack_of_open_elements.elements().size() == 1
-            || m_stack_of_open_elements.elements().at(1).tag_name() != HTML::TagNames::body
+            || m_stack_of_open_elements.elements().at(1).local_name() != HTML::TagNames::body
             || m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
             ASSERT(m_parsing_fragment);
             return;
@@ -1066,7 +1066,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         PARSE_ERROR();
 
         if (m_stack_of_open_elements.elements().size() == 1
-            || m_stack_of_open_elements.elements().at(1).tag_name() != HTML::TagNames::body) {
+            || m_stack_of_open_elements.elements().at(1).local_name() != HTML::TagNames::body) {
             ASSERT(m_parsing_fragment);
             return;
         }
@@ -1098,7 +1098,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
 
         for (auto& node : m_stack_of_open_elements.elements()) {
-            if (!node.tag_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::body, HTML::TagNames::html)) {
+            if (!node.local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::body, HTML::TagNames::html)) {
                 PARSE_ERROR();
                 break;
             }
@@ -1115,7 +1115,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
 
         for (auto& node : m_stack_of_open_elements.elements()) {
-            if (!node.tag_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::body, HTML::TagNames::html)) {
+            if (!node.local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::body, HTML::TagNames::html)) {
                 PARSE_ERROR();
                 break;
             }
@@ -1136,7 +1136,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6)) {
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
-        if (current_node().tag_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6)) {
+        if (current_node().local_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6)) {
             PARSE_ERROR();
             m_stack_of_open_elements.pop();
         }
@@ -1183,16 +1183,16 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
             RefPtr<Element> node = m_stack_of_open_elements.elements()[i];
 
-            if (node->tag_name() == HTML::TagNames::li) {
+            if (node->local_name() == HTML::TagNames::li) {
                 generate_implied_end_tags(HTML::TagNames::li);
-                if (current_node().tag_name() != HTML::TagNames::li) {
+                if (current_node().local_name() != HTML::TagNames::li) {
                     PARSE_ERROR();
                 }
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::li);
                 break;
             }
 
-            if (is_special_tag(node->tag_name()) && !node->tag_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
+            if (is_special_tag(node->local_name()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
         }
 
@@ -1207,23 +1207,23 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         m_frameset_ok = false;
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
             RefPtr<Element> node = m_stack_of_open_elements.elements()[i];
-            if (node->tag_name() == HTML::TagNames::dd) {
+            if (node->local_name() == HTML::TagNames::dd) {
                 generate_implied_end_tags(HTML::TagNames::dd);
-                if (current_node().tag_name() != HTML::TagNames::dd) {
+                if (current_node().local_name() != HTML::TagNames::dd) {
                     PARSE_ERROR();
                 }
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::dd);
                 break;
             }
-            if (node->tag_name() == HTML::TagNames::dt) {
+            if (node->local_name() == HTML::TagNames::dt) {
                 generate_implied_end_tags(HTML::TagNames::dt);
-                if (current_node().tag_name() != HTML::TagNames::dt) {
+                if (current_node().local_name() != HTML::TagNames::dt) {
                     PARSE_ERROR();
                 }
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::dt);
                 break;
             }
-            if (is_special_tag(node->tag_name()) && !node->tag_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
+            if (is_special_tag(node->local_name()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
         }
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
@@ -1260,7 +1260,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 
         generate_implied_end_tags();
 
-        if (current_node().tag_name() != token.tag_name()) {
+        if (current_node().local_name() != token.tag_name()) {
             PARSE_ERROR();
         }
 
@@ -1287,7 +1287,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
                 return;
             }
             generate_implied_end_tags();
-            if (current_node().tag_name() != HTML::TagNames::form) {
+            if (current_node().local_name() != HTML::TagNames::form) {
                 PARSE_ERROR();
             }
             m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::form);
@@ -1310,9 +1310,9 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             return;
         }
         generate_implied_end_tags(HTML::TagNames::li);
-        if (current_node().tag_name() != HTML::TagNames::li) {
+        if (current_node().local_name() != HTML::TagNames::li) {
             PARSE_ERROR();
-            dbg() << "Expected <li> current node, but had <" << current_node().tag_name() << ">";
+            dbg() << "Expected <li> current node, but had <" << current_node().local_name() << ">";
         }
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::li);
         return;
@@ -1324,7 +1324,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             return;
         }
         generate_implied_end_tags(token.tag_name());
-        if (current_node().tag_name() != token.tag_name()) {
+        if (current_node().local_name() != token.tag_name()) {
             PARSE_ERROR();
         }
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
@@ -1343,13 +1343,13 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
 
         generate_implied_end_tags();
-        if (current_node().tag_name() != token.tag_name()) {
+        if (current_node().local_name() != token.tag_name()) {
             PARSE_ERROR();
         }
 
         for (;;) {
             auto popped_element = m_stack_of_open_elements.pop();
-            if (popped_element->tag_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6))
+            if (popped_element->local_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6))
                 break;
         }
         return;
@@ -1411,7 +1411,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
 
         generate_implied_end_tags();
-        if (current_node().tag_name() != token.tag_name()) {
+        if (current_node().local_name() != token.tag_name()) {
             PARSE_ERROR();
         }
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
@@ -1546,7 +1546,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::optgroup, HTML::TagNames::option)) {
-        if (current_node().tag_name() == HTML::TagNames::option)
+        if (current_node().local_name() == HTML::TagNames::option)
             m_stack_of_open_elements.pop();
         reconstruct_the_active_formatting_elements();
         insert_html_element(token);
@@ -1557,7 +1557,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         if (m_stack_of_open_elements.has_in_scope(HTML::TagNames::ruby))
             generate_implied_end_tags();
 
-        if (current_node().tag_name() != HTML::TagNames::ruby)
+        if (current_node().local_name() != HTML::TagNames::ruby)
             PARSE_ERROR();
 
         insert_html_element(token);
@@ -1568,7 +1568,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         if (m_stack_of_open_elements.has_in_scope(HTML::TagNames::ruby))
             generate_implied_end_tags(HTML::TagNames::rtc);
 
-        if (current_node().tag_name() != HTML::TagNames::rtc || current_node().tag_name() != HTML::TagNames::ruby)
+        if (current_node().local_name() != HTML::TagNames::rtc || current_node().local_name() != HTML::TagNames::ruby)
             PARSE_ERROR();
 
         insert_html_element(token);
@@ -1624,7 +1624,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         RefPtr<Element> node;
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
             node = m_stack_of_open_elements.elements()[i];
-            if (node->tag_name() == token.tag_name()) {
+            if (node->local_name() == token.tag_name()) {
                 generate_implied_end_tags(token.tag_name());
                 if (node != current_node()) {
                     PARSE_ERROR();
@@ -1635,7 +1635,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
                 m_stack_of_open_elements.pop();
                 break;
             }
-            if (is_special_tag(node->tag_name())) {
+            if (is_special_tag(node->local_name())) {
                 PARSE_ERROR();
                 return;
             }
@@ -1749,7 +1749,7 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
     }
     if (token.is_end_of_file()) {
         PARSE_ERROR();
-        if (current_node().tag_name() == HTML::TagNames::script)
+        if (current_node().local_name() == HTML::TagNames::script)
             to<HTMLScriptElement>(current_node()).set_already_started({}, true);
         m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
@@ -1825,28 +1825,28 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
 
 void HTMLDocumentParser::clear_the_stack_back_to_a_table_context()
 {
-    while (!current_node().tag_name().is_one_of(HTML::TagNames::table, HTML::TagNames::template_, HTML::TagNames::html))
+    while (!current_node().local_name().is_one_of(HTML::TagNames::table, HTML::TagNames::template_, HTML::TagNames::html))
         m_stack_of_open_elements.pop();
 
-    if (current_node().tag_name() == HTML::TagNames::html)
+    if (current_node().local_name() == HTML::TagNames::html)
         ASSERT(m_parsing_fragment);
 }
 
 void HTMLDocumentParser::clear_the_stack_back_to_a_table_row_context()
 {
-    while (!current_node().tag_name().is_one_of(HTML::TagNames::tr, HTML::TagNames::template_, HTML::TagNames::html))
+    while (!current_node().local_name().is_one_of(HTML::TagNames::tr, HTML::TagNames::template_, HTML::TagNames::html))
         m_stack_of_open_elements.pop();
 
-    if (current_node().tag_name() == HTML::TagNames::html)
+    if (current_node().local_name() == HTML::TagNames::html)
         ASSERT(m_parsing_fragment);
 }
 
 void HTMLDocumentParser::clear_the_stack_back_to_a_table_body_context()
 {
-    while (!current_node().tag_name().is_one_of(HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::template_, HTML::TagNames::html))
+    while (!current_node().local_name().is_one_of(HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::template_, HTML::TagNames::html))
         m_stack_of_open_elements.pop();
 
-    if (current_node().tag_name() == HTML::TagNames::html)
+    if (current_node().local_name() == HTML::TagNames::html)
         ASSERT(m_parsing_fragment);
 }
 
@@ -1910,10 +1910,10 @@ void HTMLDocumentParser::handle_in_row(HTMLToken& token)
 void HTMLDocumentParser::close_the_cell()
 {
     generate_implied_end_tags();
-    if (!current_node().tag_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th)) {
+    if (!current_node().local_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th)) {
         PARSE_ERROR();
     }
-    while (!current_node().tag_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th))
+    while (!current_node().local_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th))
         m_stack_of_open_elements.pop();
     m_stack_of_open_elements.pop();
     m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
@@ -1929,7 +1929,7 @@ void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
         }
         generate_implied_end_tags();
 
-        if (current_node().tag_name() != token.tag_name()) {
+        if (current_node().local_name() != token.tag_name()) {
             PARSE_ERROR();
         }
 
@@ -2057,7 +2057,7 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
 
 void HTMLDocumentParser::handle_in_table(HTMLToken& token)
 {
-    if (token.is_character() && current_node().tag_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
+    if (token.is_character() && current_node().local_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
         m_pending_table_character_tokens.clear();
         m_original_insertion_mode = m_insertion_mode;
         m_insertion_mode = InsertionMode::InTableText;
@@ -2228,7 +2228,7 @@ void HTMLDocumentParser::handle_in_select(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::option) {
-        if (current_node().tag_name() == HTML::TagNames::option) {
+        if (current_node().local_name() == HTML::TagNames::option) {
             m_stack_of_open_elements.pop();
         }
         insert_html_element(token);
@@ -2236,10 +2236,10 @@ void HTMLDocumentParser::handle_in_select(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::optgroup) {
-        if (current_node().tag_name() == HTML::TagNames::option) {
+        if (current_node().local_name() == HTML::TagNames::option) {
             m_stack_of_open_elements.pop();
         }
-        if (current_node().tag_name() == HTML::TagNames::optgroup) {
+        if (current_node().local_name() == HTML::TagNames::optgroup) {
             m_stack_of_open_elements.pop();
         }
         insert_html_element(token);
@@ -2247,10 +2247,10 @@ void HTMLDocumentParser::handle_in_select(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::optgroup) {
-        if (current_node().tag_name() == HTML::TagNames::option && node_before_current_node().tag_name() == HTML::TagNames::optgroup)
+        if (current_node().local_name() == HTML::TagNames::option && node_before_current_node().local_name() == HTML::TagNames::optgroup)
             m_stack_of_open_elements.pop();
 
-        if (current_node().tag_name() == HTML::TagNames::optgroup) {
+        if (current_node().local_name() == HTML::TagNames::optgroup) {
             m_stack_of_open_elements.pop();
         } else {
             PARSE_ERROR();
@@ -2260,7 +2260,7 @@ void HTMLDocumentParser::handle_in_select(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::option) {
-        if (current_node().tag_name() == HTML::TagNames::option) {
+        if (current_node().local_name() == HTML::TagNames::option) {
             m_stack_of_open_elements.pop();
         } else {
             PARSE_ERROR();
@@ -2336,7 +2336,7 @@ void HTMLDocumentParser::handle_in_caption(HTMLToken& token)
 
         generate_implied_end_tags();
 
-        if (current_node().tag_name() != HTML::TagNames::caption)
+        if (current_node().local_name() != HTML::TagNames::caption)
             PARSE_ERROR();
 
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::caption);
@@ -2356,7 +2356,7 @@ void HTMLDocumentParser::handle_in_caption(HTMLToken& token)
 
         generate_implied_end_tags();
 
-        if (current_node().tag_name() != HTML::TagNames::caption)
+        if (current_node().local_name() != HTML::TagNames::caption)
             PARSE_ERROR();
 
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::caption);
@@ -2405,7 +2405,7 @@ void HTMLDocumentParser::handle_in_column_group(HTMLToken& token)
     }
 
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::colgroup) {
-        if (current_node().tag_name() != HTML::TagNames::colgroup) {
+        if (current_node().local_name() != HTML::TagNames::colgroup) {
             PARSE_ERROR();
             return;
         }
@@ -2430,7 +2430,7 @@ void HTMLDocumentParser::handle_in_column_group(HTMLToken& token)
         return;
     }
 
-    if (current_node().tag_name() != HTML::TagNames::colgroup) {
+    if (current_node().local_name() != HTML::TagNames::colgroup) {
         PARSE_ERROR();
         return;
     }
@@ -2550,7 +2550,7 @@ void HTMLDocumentParser::handle_in_frameset(HTMLToken& token)
 
         m_stack_of_open_elements.pop();
 
-        if (!m_parsing_fragment && current_node().tag_name() != HTML::TagNames::frameset) {
+        if (!m_parsing_fragment && current_node().local_name() != HTML::TagNames::frameset) {
             m_insertion_mode = InsertionMode::AfterFrameset;
         }
         return;
@@ -2656,61 +2656,61 @@ void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
             node = m_stack_of_open_elements.elements().at(i);
         }
 
-        if (node->tag_name() == HTML::TagNames::select) {
+        if (node->local_name() == HTML::TagNames::select) {
             TODO();
         }
 
-        if (!last && node->tag_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th)) {
+        if (!last && node->local_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th)) {
             m_insertion_mode = InsertionMode::InCell;
             return;
         }
 
-        if (node->tag_name() == HTML::TagNames::tr) {
+        if (node->local_name() == HTML::TagNames::tr) {
             m_insertion_mode = InsertionMode::InRow;
             return;
         }
 
-        if (node->tag_name().is_one_of(HTML::TagNames::tbody, HTML::TagNames::thead, HTML::TagNames::tfoot)) {
+        if (node->local_name().is_one_of(HTML::TagNames::tbody, HTML::TagNames::thead, HTML::TagNames::tfoot)) {
             m_insertion_mode = InsertionMode::InTableBody;
             return;
         }
 
-        if (node->tag_name() == HTML::TagNames::caption) {
+        if (node->local_name() == HTML::TagNames::caption) {
             m_insertion_mode = InsertionMode::InCaption;
             return;
         }
 
-        if (node->tag_name() == HTML::TagNames::colgroup) {
+        if (node->local_name() == HTML::TagNames::colgroup) {
             m_insertion_mode = InsertionMode::InColumnGroup;
             return;
         }
 
-        if (node->tag_name() == HTML::TagNames::table) {
+        if (node->local_name() == HTML::TagNames::table) {
             m_insertion_mode = InsertionMode::InTable;
             return;
         }
 
-        if (node->tag_name() == HTML::TagNames::template_) {
+        if (node->local_name() == HTML::TagNames::template_) {
             TODO();
         }
 
-        if (!last && node->tag_name() == HTML::TagNames::head) {
+        if (!last && node->local_name() == HTML::TagNames::head) {
             m_insertion_mode = InsertionMode::InHead;
             return;
         }
 
-        if (node->tag_name() == HTML::TagNames::body) {
+        if (node->local_name() == HTML::TagNames::body) {
             m_insertion_mode = InsertionMode::InBody;
             return;
         }
 
-        if (node->tag_name() == HTML::TagNames::frameset) {
+        if (node->local_name() == HTML::TagNames::frameset) {
             ASSERT(m_parsing_fragment);
             m_insertion_mode = InsertionMode::InFrameset;
             return;
         }
 
-        if (node->tag_name() == HTML::TagNames::html) {
+        if (node->local_name() == HTML::TagNames::html) {
             if (!m_head_element) {
                 ASSERT(m_parsing_fragment);
                 m_insertion_mode = InsertionMode::BeforeHead;
@@ -2750,16 +2750,16 @@ NonnullRefPtrVector<Node> HTMLDocumentParser::parse_html_fragment(Element& conte
     parser.m_parsing_fragment = true;
     parser.document().set_quirks_mode(context_element.document().mode());
 
-    if (context_element.tag_name().is_one_of(HTML::TagNames::title, HTML::TagNames::textarea)) {
+    if (context_element.local_name().is_one_of(HTML::TagNames::title, HTML::TagNames::textarea)) {
         parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);
-    } else if (context_element.tag_name().is_one_of(HTML::TagNames::style, HTML::TagNames::xmp, HTML::TagNames::iframe, HTML::TagNames::noembed, HTML::TagNames::noframes)) {
+    } else if (context_element.local_name().is_one_of(HTML::TagNames::style, HTML::TagNames::xmp, HTML::TagNames::iframe, HTML::TagNames::noembed, HTML::TagNames::noframes)) {
         parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
-    } else if (context_element.tag_name().is_one_of(HTML::TagNames::script)) {
+    } else if (context_element.local_name().is_one_of(HTML::TagNames::script)) {
         parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::ScriptData);
-    } else if (context_element.tag_name().is_one_of(HTML::TagNames::noscript)) {
+    } else if (context_element.local_name().is_one_of(HTML::TagNames::noscript)) {
         if (context_element.document().is_scripting_enabled())
             parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
-    } else if (context_element.tag_name().is_one_of(HTML::TagNames::plaintext)) {
+    } else if (context_element.local_name().is_one_of(HTML::TagNames::plaintext)) {
         parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::PLAINTEXT);
     }
 
@@ -2767,7 +2767,7 @@ NonnullRefPtrVector<Node> HTMLDocumentParser::parse_html_fragment(Element& conte
     parser.document().append_child(root);
     parser.m_stack_of_open_elements.push(root);
 
-    if (context_element.tag_name() == HTML::TagNames::template_) {
+    if (context_element.local_name() == HTML::TagNames::template_) {
         TODO();
     }
 

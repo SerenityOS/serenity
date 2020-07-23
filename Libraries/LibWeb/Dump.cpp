@@ -51,7 +51,7 @@ void dump_tree(const Node& node)
     if (is<Document>(node)) {
         dbgprintf("*Document*\n");
     } else if (is<Element>(node)) {
-        dbgprintf("<%s", to<Element>(node).tag_name().characters());
+        dbgprintf("<%s", to<Element>(node).local_name().characters());
         to<Element>(node).for_each_attribute([](auto& name, auto& value) {
             dbgprintf(" %s=%s", name.characters(), value.characters());
         });
@@ -88,7 +88,7 @@ void dump_tree(const LayoutNode& layout_node)
     else if (is<Document>(layout_node.node()))
         tag_name = "#document";
     else if (is<Element>(layout_node.node()))
-        tag_name = to<Element>(*layout_node.node()).tag_name();
+        tag_name = to<Element>(*layout_node.node()).local_name();
     else
         tag_name = "???";
 

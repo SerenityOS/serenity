@@ -37,7 +37,7 @@ class LayoutDocument;
 
 class HTMLObjectElement final : public HTMLElement {
 public:
-    HTMLObjectElement(Document&, const FlyString& tag_name);
+    HTMLObjectElement(Document&, const FlyString& local_name);
     virtual ~HTMLObjectElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
@@ -55,7 +55,7 @@ private:
 template<>
 inline bool is<HTMLObjectElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::object;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::object;
 }
 
 }

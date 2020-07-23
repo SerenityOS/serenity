@@ -40,9 +40,9 @@ bool StackOfOpenElements::has_in_scope_impl(const FlyString& tag_name, const Vec
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& node = m_elements.at(i);
-        if (node.tag_name() == tag_name)
+        if (node.local_name() == tag_name)
             return true;
-        if (list.contains_slow(node.tag_name()))
+        if (list.contains_slow(node.local_name()))
             return false;
     }
     ASSERT_NOT_REACHED();
@@ -59,7 +59,7 @@ bool StackOfOpenElements::has_in_scope_impl(const Element& target_node, const Ve
         auto& node = m_elements.at(i);
         if (&node == &target_node)
             return true;
-        if (list.contains_slow(node.tag_name()))
+        if (list.contains_slow(node.local_name()))
             return false;
     }
     ASSERT_NOT_REACHED();
@@ -107,7 +107,7 @@ bool StackOfOpenElements::contains(const Element& element) const
 bool StackOfOpenElements::contains(const FlyString& tag_name) const
 {
     for (auto& element_on_stack : m_elements) {
-        if (element_on_stack.tag_name() == tag_name)
+        if (element_on_stack.local_name() == tag_name)
             return true;
     }
     return false;
@@ -115,7 +115,7 @@ bool StackOfOpenElements::contains(const FlyString& tag_name) const
 
 void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(const FlyString& tag_name)
 {
-    while (m_elements.last().tag_name() != tag_name)
+    while (m_elements.last().local_name() != tag_name)
         pop();
     pop();
 }
@@ -127,7 +127,7 @@ Element* StackOfOpenElements::topmost_special_node_below(const Element& formatti
         auto& element = m_elements[i];
         if (&element == &formatting_element)
             break;
-        if (HTMLDocumentParser::is_special_tag(element.tag_name()))
+        if (HTMLDocumentParser::is_special_tag(element.local_name()))
             found_element = &element;
     }
     return found_element;
@@ -137,7 +137,7 @@ Element* StackOfOpenElements::last_element_with_tag_name(const FlyString& tag_na
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& element = m_elements[i];
-        if (element.tag_name() == tag_name)
+        if (element.local_name() == tag_name)
             return &element;
     }
     return nullptr;

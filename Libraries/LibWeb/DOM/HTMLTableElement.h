@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLTableElement final : public HTMLElement {
 public:
-    HTMLTableElement(Document&, const FlyString& tag_name);
+    HTMLTableElement(Document&, const FlyString& local_name);
     virtual ~HTMLTableElement() override;
 
 private:
@@ -42,7 +42,7 @@ private:
 template<>
 inline bool is<HTMLTableElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::table;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::table;
 }
 
 }
