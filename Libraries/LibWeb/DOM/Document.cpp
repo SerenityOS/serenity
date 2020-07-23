@@ -56,6 +56,7 @@
 #include <LibWeb/Origin.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/Parser/CSSParser.h>
+#include <LibWeb/SVG/TagNames.h>
 #include <stdio.h>
 
 namespace Web {
@@ -69,6 +70,7 @@ Document::Document(const URL& url)
 {
     HTML::AttributeNames::initialize();
     HTML::TagNames::initialize();
+    SVG::TagNames::initialize();
 
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();

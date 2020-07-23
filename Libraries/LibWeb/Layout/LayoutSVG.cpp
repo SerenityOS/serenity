@@ -24,32 +24,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibGfx/Color.h>
-#include <LibGfx/Painter.h>
+#include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/StylePainter.h>
+#include <LibWeb/Layout/LayoutSVG.h>
 
 namespace Web {
 
-struct SvgPaintingContext {
-    Gfx::Color fill_color { Gfx::Color::Black };
-    Gfx::Color stroke_color { Gfx::Color::Black };
-    float stroke_width { 1 };
-};
+LayoutSVG::LayoutSVG(Document& document, const SVG::SVGSVGElement& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutReplaced(document, element, move(style))
+{
+}
 
-class SvgGraphicElement {
-public:
-    virtual void paint(const SvgPaintingContext&, Gfx::Painter& painter) = 0;
-    void parse_attribute(const FlyString& name, const String& value);
+void LayoutSVG::layout(LayoutMode layout_mode)
+{
+    set_has_intrinsic_width(true);
+    set_has_intrinsic_height(true);
+    set_intrinsic_width(node().width());
+    set_intrinsic_height(node().height());
+    LayoutReplaced::layout(layout_mode);
+}
 
-protected:
-    Gfx::Color fill_color(const SvgPaintingContext&) const;
-    Gfx::Color stroke_color(const SvgPaintingContext&) const;
-    float stroke_width(const SvgPaintingContext&) const;
+void LayoutSVG::paint(PaintContext& context, PaintPhase phase)
+{
+    if (!is_visible())
+        return;
 
-    Optional<Gfx::Color> m_fill_color;
-    Optional<Gfx::Color> m_stroke_color;
-    Optional<float> m_stroke_width;
-};
+    LayoutReplaced::paint(context, phase);
+
+    if (phase == PaintPhase::Foreground) {
+        if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
+            return;
+
+        if (!node().bitmap())
+            node().create_bitmap_as_top_level_svg_element();
+
+        ASSERT(node().bitmap());
+        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
+    }
+}
 
 }

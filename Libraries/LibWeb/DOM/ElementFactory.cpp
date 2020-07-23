@@ -41,14 +41,15 @@
 #include <LibWeb/DOM/HTMLInputElement.h>
 #include <LibWeb/DOM/HTMLLinkElement.h>
 #include <LibWeb/DOM/HTMLObjectElement.h>
-#include <LibWeb/DOM/HTMLPathElement.h>
 #include <LibWeb/DOM/HTMLScriptElement.h>
 #include <LibWeb/DOM/HTMLStyleElement.h>
-#include <LibWeb/DOM/HTMLSvgElement.h>
 #include <LibWeb/DOM/HTMLTableCellElement.h>
 #include <LibWeb/DOM/HTMLTableElement.h>
 #include <LibWeb/DOM/HTMLTableRowElement.h>
 #include <LibWeb/DOM/HTMLTitleElement.h>
+#include <LibWeb/SVG/SVGPathElement.h>
+#include <LibWeb/SVG/SVGSVGElement.h>
+#include <LibWeb/SVG/TagNames.h>
 
 namespace Web {
 
@@ -99,10 +100,10 @@ NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_n
         return adopt(*new HTMLCanvasElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::object)
         return adopt(*new HTMLObjectElement(document, lowercase_tag_name));
-    if (lowercase_tag_name == HTML::TagNames::svg)
-        return adopt(*new HTMLSvgElement(document, lowercase_tag_name));
-    if (lowercase_tag_name == HTML::TagNames::path)
-        return adopt(*new HTMLPathElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == SVG::TagNames::svg)
+        return adopt(*new SVG::SVGSVGElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == SVG::TagNames::path)
+        return adopt(*new SVG::SVGPathElement(document, lowercase_tag_name));
     return adopt(*new Element(document, lowercase_tag_name));
 }
 

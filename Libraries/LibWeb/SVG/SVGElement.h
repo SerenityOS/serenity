@@ -26,25 +26,13 @@
 
 #pragma once
 
-#include <LibWeb/DOM/HTMLSvgElement.h>
-#include <LibWeb/Layout/LayoutReplaced.h>
+#include <LibWeb/DOM/Element.h>
 
-namespace Web {
+namespace Web::SVG {
 
-class HTMLSvgElement;
-
-class LayoutSvg : public LayoutReplaced {
+class SVGElement : public Element {
 public:
-    LayoutSvg(Document&, const HTMLSvgElement&, NonnullRefPtr<StyleProperties>);
-    virtual ~LayoutSvg() override = default;
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
-    virtual void paint(PaintContext&, PaintPhase) override;
-
-    HTMLSvgElement& node() { return static_cast<HTMLSvgElement&>(LayoutReplaced::node()); }
-
-private:
-    virtual const char* class_name() const override { return "LayoutSvg"; }
-    virtual bool is_canvas() const override { return true; }
+    SVGElement(Document&, const FlyString& tag_name);
 };
 
 }
