@@ -25,7 +25,7 @@
  */
 
 #include <AK/MappedFile.h>
-#include <LibGUI/Image.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
