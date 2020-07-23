@@ -46,10 +46,8 @@ set(SOURCES
     DOM/HTMLInputElement.cpp
     DOM/HTMLObjectElement.cpp
     DOM/HTMLLinkElement.cpp
-    DOM/HTMLPathElement.cpp
     DOM/HTMLScriptElement.cpp
     DOM/HTMLStyleElement.cpp
-    DOM/HTMLSvgElement.cpp
     DOM/HTMLTableElement.cpp
     DOM/HTMLTableCellElement.cpp
     DOM/HTMLTableRowElement.cpp
@@ -57,7 +55,6 @@ set(SOURCES
     DOM/ImageData.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
-    DOM/SvgContext.cpp
     DOM/TagNames.cpp
     DOM/Text.cpp
     DOM/Timer.cpp
@@ -82,7 +79,7 @@ set(SOURCES
     Layout/LayoutNode.cpp
     Layout/LayoutPosition.cpp
     Layout/LayoutReplaced.cpp
-    Layout/LayoutSvg.cpp
+    Layout/LayoutSVG.cpp
     Layout/LayoutTable.cpp
     Layout/LayoutTableCell.cpp
     Layout/LayoutTableRow.cpp
@@ -109,6 +106,12 @@ set(SOURCES
     Parser/ListOfActiveFormattingElements.cpp
     Parser/StackOfOpenElements.cpp
     StylePropertiesModel.cpp
+    SVG/SVGElement.cpp
+    SVG/SVGGeometryElement.cpp
+    SVG/SVGGraphicsElement.cpp
+    SVG/SVGPathElement.cpp
+    SVG/SVGSVGElement.cpp
+    SVG/TagNames.cpp
     URLEncoder.cpp
     CSS/PropertyID.h
     CSS/PropertyID.cpp

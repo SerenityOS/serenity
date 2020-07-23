@@ -24,44 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/Painter.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/StylePainter.h>
-#include <LibWeb/Layout/LayoutSvg.h>
+#include <LibWeb/SVG/TagNames.h>
 
-namespace Web {
+namespace Web::SVG::TagNames {
 
-LayoutSvg::LayoutSvg(Document& document, const HTMLSvgElement& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutReplaced(document, element, move(style))
+#define __ENUMERATE_SVG_TAG(name) FlyString name;
+    ENUMERATE_SVG_TAGS
+#undef __ENUMERATE_SVG_TAG
+
+void initialize()
 {
-}
-
-void LayoutSvg::layout(LayoutMode layout_mode)
-{
-    set_has_intrinsic_width(true);
-    set_has_intrinsic_height(true);
-    set_intrinsic_width(node().width());
-    set_intrinsic_height(node().height());
-    LayoutReplaced::layout(layout_mode);
-}
-
-void LayoutSvg::paint(PaintContext& context, PaintPhase phase)
-{
-    if (!is_visible())
+    static bool s_initialized = false;
+    if (s_initialized)
         return;
 
-    LayoutReplaced::paint(context, phase);
+#define __ENUMERATE_SVG_TAG(name) name = #name;
+    ENUMERATE_SVG_TAGS
+#undef __ENUMERATE_SVG_TAG
 
-    if (phase == PaintPhase::Foreground) {
-        if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
-            return;
-
-        if (!node().bitmap())
-            node().create_bitmap();
-
-        ASSERT(node().bitmap());
-        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
-    }
+    s_initialized = true;
 }
 
 }
