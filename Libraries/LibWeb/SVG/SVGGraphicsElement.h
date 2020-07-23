@@ -24,37 +24,62 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FlyString.h>
-#include <LibWeb/DOM/SvgContext.h>
+#pragma once
+
+#include <LibGfx/Path.h>
+#include <LibWeb/DOM/Node.h>
+#include <LibWeb/SVG/SVGElement.h>
+#include <LibWeb/SVG/TagNames.h>
+
+namespace Web::SVG {
+
+struct SVGPaintingContext {
+    Gfx::Color fill_color;
+    Gfx::Color stroke_color;
+    float stroke_width;
+};
+
+static const SVGPaintingContext default_painting_context = {
+    Gfx::Color::Black,
+    Gfx::Color::Black,
+    1.0f
+};
+
+class SVGGraphicsElement : public SVGElement {
+public:
+    SVGGraphicsElement(Document&, const FlyString& tag_name);
+
+    virtual void parse_attribute(const FlyString& name, const String& value) override;
+
+    virtual void paint(Gfx::Painter& painter, const SVGPaintingContext& context) = 0;
+
+    SVGPaintingContext make_painting_context_from(const SVGPaintingContext& context);
+
+protected:
+    Optional<Gfx::Color> m_fill_color;
+    Optional<Gfx::Color> m_stroke_color;
+    Optional<float> m_stroke_width;
+};
+
+}
 
 namespace Web {
 
-void SvgGraphicElement::parse_attribute(const FlyString& name, const String& value)
+template<>
+inline bool is<SVG::SVGGraphicsElement>(const Node& node)
 {
-    if (name == "stroke-width") {
-        m_stroke_width = strtof(value.characters(), nullptr);
-    } else if (name == "stroke") {
-        auto result = Gfx::Color::from_string(value);
-        m_stroke_color = result.value_or(Gfx::Color::Transparent);
-    } else if (name == "fill") {
-        auto result = Gfx::Color::from_string(value);
-        m_fill_color = result.value_or(Gfx::Color::Transparent);
-    }
-}
+    if (!is<Element>(node))
+        return false;
 
-Gfx::Color SvgGraphicElement::fill_color(const SvgPaintingContext& context) const
-{
-    return m_fill_color.value_or(context.fill_color);
-}
+    auto tag_name = to<Element>(node).tag_name();
 
-Gfx::Color SvgGraphicElement::stroke_color(const SvgPaintingContext& context) const
-{
-    return m_stroke_color.value_or(context.stroke_color);
-}
+#define __ENUMERATE_SVG_TAG(name) \
+    if (tag_name == #name)        \
+        return true;
+    ENUMERATE_SVG_TAGS
+#undef ENUMERATE_SVG_TAG
 
-float SvgGraphicElement::stroke_width(const SvgPaintingContext& context) const
-{
-    return m_stroke_width.value_or(context.stroke_width);
+    return false;
 }
 
 }

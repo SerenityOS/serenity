@@ -25,15 +25,16 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/DOM/HTMLPathElement.h>
+#include <LibWeb/SVG/SVGPathElement.h>
 #include <ctype.h>
 
 //#define PATH_DEBUG
 
-namespace Web {
+namespace Web::SVG {
 
 PathDataParser::PathDataParser(const String& source)
     : m_source(source)
@@ -269,7 +270,7 @@ void PathDataParser::parse_whitespace(bool must_match_once)
         matched = true;
     }
 
-        ASSERT(!must_match_once || matched);
+    ASSERT(!must_match_once || matched);
 }
 
 void PathDataParser::parse_comma_whitespace()
@@ -326,7 +327,7 @@ float PathDataParser::parse_number()
 float PathDataParser::parse_flag()
 {
     auto number = parse_number();
-        ASSERT(number == 0 || number == 1);
+    ASSERT(number == 0 || number == 1);
     return number;
 }
 
@@ -348,8 +349,8 @@ bool PathDataParser::match_number() const
     return !done() && (isdigit(ch()) || ch() == '-' || ch() == '+');
 }
 
-HTMLPathElement::HTMLPathElement(Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+SVGPathElement::SVGPathElement(Document& document, const FlyString& tag_name)
+    : SVGGeometryElement(document, tag_name)
 {
 }
 
@@ -414,16 +415,15 @@ static void print_instruction(const PathInstruction& instruction)
 }
 #endif
 
-void HTMLPathElement::parse_attribute(const FlyString& name, const String& value)
+void SVGPathElement::parse_attribute(const FlyString& name, const String& value)
 {
-    HTMLElement::parse_attribute(name, value);
-    SvgGraphicElement::parse_attribute(name, value);
+    SVGGeometryElement::parse_attribute(name, value);
 
     if (name == "d")
         m_instructions = PathDataParser(value).parse();
 }
 
-void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& painter)
+void SVGPathElement::paint(Gfx::Painter& painter, const SVGPaintingContext& context)
 {
     Gfx::Path path;
 
@@ -595,9 +595,8 @@ void HTMLPathElement::paint(const SvgPaintingContext& context, Gfx::Painter& pai
     closed_path.close();
 
     // Fills are computed as though all paths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
-    painter.fill_path(closed_path, fill_color(context), Gfx::Painter::WindingRule::EvenOdd);
-    painter.stroke_path(path, stroke_color(context), stroke_width(context));
-
+    painter.fill_path(closed_path, m_fill_color.value_or(context.fill_color), Gfx::Painter::WindingRule::EvenOdd);
+    painter.stroke_path(path, m_stroke_color.value_or(context.stroke_color), m_stroke_width.value_or(context.stroke_width));
 }
 
 }

@@ -24,43 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibWeb/SVG/SVGGeometryElement.h>
 
-#include <LibGfx/Bitmap.h>
-#include <LibWeb/DOM/HTMLElement.h>
-#include <LibWeb/DOM/SvgContext.h>
+namespace Web::SVG {
 
-namespace Web {
-
-class HTMLSvgElement final : public HTMLElement {
-public:
-    HTMLSvgElement(Document&, const FlyString& tag_name);
-    virtual ~HTMLSvgElement() override = default;
-
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
-
-    const RefPtr<Gfx::Bitmap> bitmap() const { return m_bitmap; }
-    bool create_bitmap();
-    SvgPaintingContext make_context() const;
-
-    unsigned width() const;
-    unsigned height() const;
-
-private:
-    void paint(Gfx::Painter&);
-
-    RefPtr<Gfx::Bitmap> m_bitmap;
-
-    Optional<float> m_stroke_width;
-    Optional<Color> m_stroke_color;
-    Optional<Color> m_fill_color;
-};
-
-template<>
-inline bool is<HTMLSvgElement>(const Node& node)
+SVGGeometryElement::SVGGeometryElement(Document& document, const FlyString& tag_name)
+    : SVGGraphicsElement(document, tag_name)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::svg;
 }
 
 }

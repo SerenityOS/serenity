@@ -28,9 +28,9 @@
 
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/DOM/HTMLElement.h>
-#include <LibWeb/DOM/SvgContext.h>
+#include <LibWeb/SVG/SVGGeometryElement.h>
 
-namespace Web {
+namespace Web::SVG {
 
 enum class PathInstructionType {
     Move,
@@ -100,24 +100,16 @@ private:
     Vector<PathInstruction> m_instructions;
 };
 
-class HTMLPathElement final
-    : public HTMLElement
-    , public SvgGraphicElement {
+class SVGPathElement final : public SVGGeometryElement {
 public:
-    HTMLPathElement(Document&, const FlyString& tag_name);
-    virtual ~HTMLPathElement() override = default;
+    SVGPathElement(Document&, const FlyString& tag_name);
+    virtual ~SVGPathElement() override = default;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
-    virtual void paint(const SvgPaintingContext&, Gfx::Painter& painter) override;
+    virtual void paint(Gfx::Painter& painter, const SVGPaintingContext& context) override;
 
 private:
     Vector<PathInstruction> m_instructions;
 };
-
-template<>
-inline bool is<HTMLPathElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::path;
-}
 
 }

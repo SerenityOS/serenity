@@ -24,47 +24,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/DOM/HTMLPathElement.h>
-#include <LibWeb/DOM/HTMLSvgElement.h>
-#include <LibWeb/Layout/LayoutSvg.h>
+#include <LibWeb/SVG/SVGPathElement.h>
+#include <LibWeb/SVG/SVGSVGElement.h>
+#include <LibWeb/Layout/LayoutSVG.h>
 #include <ctype.h>
 
-namespace Web {
+namespace Web::SVG {
 
 static constexpr auto max_svg_area = 16384 * 16384;
 
-HTMLSvgElement::HTMLSvgElement(Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+SVGSVGElement::SVGSVGElement(Document& document, const FlyString& tag_name)
+    : SVGGraphicsElement(document, tag_name)
 {
 }
 
-void HTMLSvgElement::parse_attribute(const FlyString& name, const String& value)
-{
-    HTMLElement::parse_attribute(name, value);
-    if (name == "stroke") {
-        m_stroke_color = Gfx::Color::from_string(value);
-    } else if (name == "stroke-width") {
-        auto result = value.to_int();
-        if (result.has_value())
-            m_stroke_width = result.value();
-    } else if (name == "fill") {
-        m_fill_color = Gfx::Color::from_string(value);
-    }
-}
-
-RefPtr<LayoutNode> HTMLSvgElement::create_layout_node(const StyleProperties* parent_style)
+RefPtr<LayoutNode> SVGSVGElement::create_layout_node(const StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new LayoutSvg(document(), *this, move(style)));
+    return adopt(*new LayoutSVG(document(), *this, move(style)));
 }
 
-static Gfx::IntSize bitmap_size_for_canvas(const HTMLSvgElement& canvas)
+static Gfx::IntSize bitmap_size_for_canvas(const SVGSVGElement& canvas)
 {
     auto width = canvas.width();
     auto height = canvas.height();
@@ -83,7 +70,7 @@ static Gfx::IntSize bitmap_size_for_canvas(const HTMLSvgElement& canvas)
     return Gfx::IntSize(width, height);
 }
 
-bool HTMLSvgElement::create_bitmap()
+bool SVGSVGElement::create_bitmap_as_top_level_svg_element()
 {
     auto size = bitmap_size_for_canvas(*this);
     if (size.is_empty()) {
@@ -95,55 +82,26 @@ bool HTMLSvgElement::create_bitmap()
         m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
 
     Gfx::Painter painter(*m_bitmap);
-    paint(painter);
+    paint(painter, make_painting_context_from(default_painting_context));
 
     return m_bitmap;
 }
 
-SvgPaintingContext HTMLSvgElement::make_context() const
-{
-    SvgPaintingContext context;
-
-    if (m_stroke_width.has_value())
-        context.stroke_width = m_stroke_width.value();
-    if (m_stroke_color.has_value())
-        context.stroke_color = m_stroke_color.value();
-    if (m_fill_color.has_value())
-        context.fill_color = m_fill_color.value();
-
-    return context;
-}
-
-unsigned HTMLSvgElement::width() const
+unsigned SVGSVGElement::width() const
 {
     return attribute(HTML::AttributeNames::width).to_uint().value_or(300);
 }
 
-unsigned HTMLSvgElement::height() const
+unsigned SVGSVGElement::height() const
 {
     return attribute(HTML::AttributeNames::height).to_uint().value_or(150);
 }
 
-static bool is_svg_graphic_element(const HTMLElement& element)
-{
-    return is<HTMLPathElement>(element);
-}
-
-static SvgGraphicElement& as_svg_graphic_element(HTMLElement& element)
-{
-    if (is<HTMLPathElement>(element))
-        return to<HTMLPathElement>(element);
-    ASSERT_NOT_REACHED();
-}
-
-void HTMLSvgElement::paint(Gfx::Painter& painter)
+void SVGSVGElement::paint(Gfx::Painter& painter, const SVGPaintingContext& context)
 {
     for_each_child([&](Node& child) {
-        if (is<HTMLElement>(child)) {
-            auto& element = to<HTMLElement>(child);
-            if (is_svg_graphic_element(element)) {
-                as_svg_graphic_element(element).paint(make_context(), painter);
-            }
+        if (is<SVGGraphicsElement>(child)) {
+            to<SVGGraphicsElement>(child).paint(painter, make_painting_context_from(context));
         }
     });
 }
