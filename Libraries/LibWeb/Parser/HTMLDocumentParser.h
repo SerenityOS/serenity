@@ -115,7 +115,7 @@ private:
 
     void generate_implied_end_tags(const FlyString& exception = {});
     bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
-    NonnullRefPtr<Element> create_element_for(HTMLToken&);
+    NonnullRefPtr<Element> create_element_for(const HTMLToken&);
 
     struct AdjustedInsertionLocation {
         RefPtr<Node> parent;
@@ -126,7 +126,7 @@ private:
 
     Text* find_character_insertion_node();
     void flush_character_insertions();
-    RefPtr<Element> insert_html_element(HTMLToken&);
+    RefPtr<Element> insert_html_element(const HTMLToken&);
     Element& current_node();
     Element& node_before_current_node();
     void insert_character(u32 data);

@@ -58,6 +58,14 @@ public:
         return token;
     }
 
+    static HTMLToken make_start_tag(const FlyString& tag_name)
+    {
+        HTMLToken token;
+        token.m_type = Type::StartTag;
+        token.m_tag.tag_name.append(tag_name);
+        return token;
+    }
+
     bool is_doctype() const { return m_type == Type::DOCTYPE; }
     bool is_start_tag() const { return m_type == Type::StartTag; }
     bool is_end_tag() const { return m_type == Type::EndTag; }
