@@ -227,186 +227,217 @@ void Window::set_override_cursor(const Gfx::Bitmap& cursor)
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomOverrideCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
 }
 
+void Window::handle_drop_event(DropEvent& event)
+{
+    if (!m_main_widget)
+        return;
+    auto result = m_main_widget->hit_test(event.position());
+    auto local_event = make<DropEvent>(result.local_position, event.text(), event.mime_data());
+    ASSERT(result.widget);
+    return result.widget->dispatch_event(*local_event, this);
+}
+
+void Window::handle_mouse_event(MouseEvent& event)
+{
+    if (m_global_cursor_tracking_widget) {
+        auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
+        Gfx::IntPoint local_point { event.x() - window_relative_rect.x(), event.y() - window_relative_rect.y() };
+        auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
+        m_global_cursor_tracking_widget->dispatch_event(*local_event, this);
+        return;
+    }
+    if (m_automatic_cursor_tracking_widget) {
+        auto window_relative_rect = m_automatic_cursor_tracking_widget->window_relative_rect();
+        Gfx::IntPoint local_point { event.x() - window_relative_rect.x(), event.y() - window_relative_rect.y() };
+        auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
+        m_automatic_cursor_tracking_widget->dispatch_event(*local_event, this);
+        if (event.buttons() == 0)
+            m_automatic_cursor_tracking_widget = nullptr;
+        return;
+    }
+    if (!m_main_widget)
+        return;
+    auto result = m_main_widget->hit_test(event.position());
+    auto local_event = make<MouseEvent>((Event::Type)event.type(), result.local_position, event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
+    ASSERT(result.widget);
+    set_hovered_widget(result.widget);
+    if (event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
+        m_automatic_cursor_tracking_widget = result.widget->make_weak_ptr();
+    if (result.widget != m_global_cursor_tracking_widget.ptr())
+        return result.widget->dispatch_event(*local_event, this);
+    return;
+}
+
+void Window::handle_multi_paint_event(MultiPaintEvent& event)
+{
+    if (!is_visible())
+        return;
+    if (!m_main_widget)
+        return;
+    auto rects = event.rects();
+    ASSERT(!rects.is_empty());
+    if (m_back_bitmap && m_back_bitmap->size() != event.window_size()) {
+        // Eagerly discard the backing store if we learn from this paint event that it needs to be bigger.
+        // Otherwise we would have to wait for a resize event to tell us. This way we don't waste the
+        // effort on painting into an undersized bitmap that will be thrown away anyway.
+        m_back_bitmap = nullptr;
+    }
+    bool created_new_backing_store = !m_back_bitmap;
+    if (!m_back_bitmap) {
+        m_back_bitmap = create_backing_bitmap(event.window_size());
+        ASSERT(m_back_bitmap);
+    } else if (m_double_buffering_enabled) {
+        bool still_has_pixels = m_back_bitmap->shared_buffer()->set_nonvolatile();
+        if (!still_has_pixels) {
+            m_back_bitmap = create_backing_bitmap(event.window_size());
+            ASSERT(m_back_bitmap);
+            created_new_backing_store = true;
+        }
+    }
+
+    auto rect = rects.first();
+    if (rect.is_empty() || created_new_backing_store) {
+        rects.clear();
+        rects.append({ {}, event.window_size() });
+    }
+
+    for (auto& rect : rects) {
+        PaintEvent paint_event(rect);
+        m_main_widget->dispatch_event(paint_event, this);
+    }
+
+    if (m_double_buffering_enabled)
+        flip(rects);
+    else if (created_new_backing_store)
+        set_current_backing_bitmap(*m_back_bitmap, true);
+
+    if (is_visible()) {
+        Vector<Gfx::IntRect> rects_to_send;
+        for (auto& r : rects)
+            rects_to_send.append(r);
+        WindowServerConnection::the().post_message(Messages::WindowServer::DidFinishPainting(m_window_id, rects_to_send));
+    }
+}
+
+void Window::handle_key_event(KeyEvent& event)
+{
+    if (m_focused_widget)
+        return m_focused_widget->dispatch_event(event, this);
+    if (m_main_widget)
+        return m_main_widget->dispatch_event(event, this);
+}
+
+void Window::handle_resize_event(ResizeEvent& event)
+{
+    auto new_size = event.size();
+    if (m_back_bitmap && m_back_bitmap->size() != new_size)
+        m_back_bitmap = nullptr;
+    if (!m_pending_paint_event_rects.is_empty()) {
+        m_pending_paint_event_rects.clear_with_capacity();
+        m_pending_paint_event_rects.append({ {}, new_size });
+    }
+    m_rect_when_windowless = { {}, new_size };
+    m_main_widget->set_relative_rect({ {}, new_size });
+}
+
+void Window::handle_input_entered_or_left_event(Core::Event& event)
+{
+    m_is_active_input = event.type() == Event::WindowInputEntered;
+    if (on_active_input_change)
+        on_active_input_change(m_is_active_input);
+    if (m_main_widget)
+        m_main_widget->dispatch_event(event, this);
+    if (m_focused_widget)
+        m_focused_widget->update();
+}
+
+void Window::handle_became_active_or_inactive_event(Core::Event& event)
+{
+    m_is_active = event.type() == Event::WindowBecameActive;
+    if (on_activity_change)
+        on_activity_change(m_is_active);
+    if (m_main_widget)
+        m_main_widget->dispatch_event(event, this);
+    if (m_focused_widget)
+        m_focused_widget->update();
+}
+
+void Window::handle_close_request()
+{
+    if (on_close_request) {
+        if (on_close_request() == Window::CloseRequestDecision::StayOpen)
+            return;
+    }
+    close();
+}
+
+void Window::handle_theme_change_event(ThemeChangeEvent& event)
+{
+    if (!m_main_widget)
+        return;
+    auto dispatch_theme_change = [&](auto& widget, auto recursive) {
+        widget.dispatch_event(event, this);
+        widget.for_each_child_widget([&](auto& widget) -> IterationDecision {
+            widget.dispatch_event(event, this);
+            recursive(widget, recursive);
+            return IterationDecision::Continue;
+        });
+    };
+    dispatch_theme_change(*m_main_widget.ptr(), dispatch_theme_change);
+}
+
+void Window::handle_drag_move_event(DragEvent& event)
+{
+    if (!m_main_widget)
+        return;
+    auto result = m_main_widget->hit_test(event.position());
+    auto local_event = make<DragEvent>(static_cast<Event::Type>(event.type()), result.local_position, event.data_type());
+    ASSERT(result.widget);
+    return result.widget->dispatch_event(*local_event, this);
+}
+
+void Window::handle_left_event()
+{
+    set_hovered_widget(nullptr);
+}
+
 void Window::event(Core::Event& event)
 {
-    if (event.type() == Event::Drop) {
-        auto& drop_event = static_cast<DropEvent&>(event);
-        if (!m_main_widget)
-            return;
-        auto result = m_main_widget->hit_test(drop_event.position());
-        auto local_event = make<DropEvent>(result.local_position, drop_event.text(), drop_event.mime_data());
-        ASSERT(result.widget);
-        return result.widget->dispatch_event(*local_event, this);
-    }
+    if (event.type() == Event::Drop)
+        return handle_drop_event(static_cast<DropEvent&>(event));
 
-    if (event.type() == Event::MouseUp || event.type() == Event::MouseDown || event.type() == Event::MouseDoubleClick || event.type() == Event::MouseMove || event.type() == Event::MouseWheel) {
-        auto& mouse_event = static_cast<MouseEvent&>(event);
-        if (m_global_cursor_tracking_widget) {
-            auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
-            Gfx::IntPoint local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
-            auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
-            m_global_cursor_tracking_widget->dispatch_event(*local_event, this);
-            return;
-        }
-        if (m_automatic_cursor_tracking_widget) {
-            auto window_relative_rect = m_automatic_cursor_tracking_widget->window_relative_rect();
-            Gfx::IntPoint local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
-            auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
-            m_automatic_cursor_tracking_widget->dispatch_event(*local_event, this);
-            if (mouse_event.buttons() == 0)
-                m_automatic_cursor_tracking_widget = nullptr;
-            return;
-        }
-        if (!m_main_widget)
-            return;
-        auto result = m_main_widget->hit_test(mouse_event.position());
-        auto local_event = make<MouseEvent>((Event::Type)event.type(), result.local_position, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
-        ASSERT(result.widget);
-        set_hovered_widget(result.widget);
-        if (mouse_event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
-            m_automatic_cursor_tracking_widget = result.widget->make_weak_ptr();
-        if (result.widget != m_global_cursor_tracking_widget.ptr())
-            return result.widget->dispatch_event(*local_event, this);
-        return;
-    }
+    if (event.type() == Event::MouseUp || event.type() == Event::MouseDown || event.type() == Event::MouseDoubleClick || event.type() == Event::MouseMove || event.type() == Event::MouseWheel)
+        return handle_mouse_event(static_cast<MouseEvent&>(event));
 
-    if (event.type() == Event::MultiPaint) {
-        if (!is_visible())
-            return;
-        if (!m_main_widget)
-            return;
-        auto& paint_event = static_cast<MultiPaintEvent&>(event);
-        auto rects = paint_event.rects();
-        ASSERT(!rects.is_empty());
-        if (m_back_bitmap && m_back_bitmap->size() != paint_event.window_size()) {
-            // Eagerly discard the backing store if we learn from this paint event that it needs to be bigger.
-            // Otherwise we would have to wait for a resize event to tell us. This way we don't waste the
-            // effort on painting into an undersized bitmap that will be thrown away anyway.
-            m_back_bitmap = nullptr;
-        }
-        bool created_new_backing_store = !m_back_bitmap;
-        if (!m_back_bitmap) {
-            m_back_bitmap = create_backing_bitmap(paint_event.window_size());
-            ASSERT(m_back_bitmap);
-        } else if (m_double_buffering_enabled) {
-            bool still_has_pixels = m_back_bitmap->shared_buffer()->set_nonvolatile();
-            if (!still_has_pixels) {
-                m_back_bitmap = create_backing_bitmap(paint_event.window_size());
-                ASSERT(m_back_bitmap);
-                created_new_backing_store = true;
-            }
-        }
+    if (event.type() == Event::MultiPaint)
+        return handle_multi_paint_event(static_cast<MultiPaintEvent&>(event));
 
-        auto rect = rects.first();
-        if (rect.is_empty() || created_new_backing_store) {
-            rects.clear();
-            rects.append({ {}, paint_event.window_size() });
-        }
+    if (event.type() == Event::KeyUp || event.type() == Event::KeyDown)
+        return handle_key_event(static_cast<KeyEvent&>(event));
 
-        for (auto& rect : rects) {
-            PaintEvent paint_event(rect);
-            m_main_widget->dispatch_event(paint_event, this);
-        }
+    if (event.type() == Event::WindowBecameActive || event.type() == Event::WindowBecameInactive)
+        return handle_became_active_or_inactive_event(event);
 
-        if (m_double_buffering_enabled)
-            flip(rects);
-        else if (created_new_backing_store)
-            set_current_backing_bitmap(*m_back_bitmap, true);
+    if (event.type() == Event::WindowInputEntered || event.type() == Event::WindowInputLeft)
+        return handle_input_entered_or_left_event(event);
 
-        if (is_visible()) {
-            Vector<Gfx::IntRect> rects_to_send;
-            for (auto& r : rects)
-                rects_to_send.append(r);
-            WindowServerConnection::the().post_message(Messages::WindowServer::DidFinishPainting(m_window_id, rects_to_send));
-        }
-        return;
-    }
+    if (event.type() == Event::WindowCloseRequest)
+        return handle_close_request();
 
-    if (event.type() == Event::KeyUp || event.type() == Event::KeyDown) {
-        if (m_focused_widget)
-            return m_focused_widget->dispatch_event(event, this);
-        if (m_main_widget)
-            return m_main_widget->dispatch_event(event, this);
-        return;
-    }
+    if (event.type() == Event::WindowLeft)
+        return handle_left_event();
 
-    if (event.type() == Event::WindowBecameActive || event.type() == Event::WindowBecameInactive) {
-        m_is_active = event.type() == Event::WindowBecameActive;
-        if (on_activity_change)
-            on_activity_change(m_is_active);
-        if (m_main_widget)
-            m_main_widget->dispatch_event(event, this);
-        if (m_focused_widget)
-            m_focused_widget->update();
-        return;
-    }
-
-    if (event.type() == Event::WindowInputEntered || event.type() == Event::WindowInputLeft) {
-        m_is_active_input = event.type() == Event::WindowInputEntered;
-        if (on_active_input_change)
-            on_active_input_change(m_is_active_input);
-        if (m_main_widget)
-            m_main_widget->dispatch_event(event, this);
-        if (m_focused_widget)
-            m_focused_widget->update();
-        return;
-    }
-
-    if (event.type() == Event::WindowCloseRequest) {
-        if (on_close_request) {
-            if (on_close_request() == Window::CloseRequestDecision::StayOpen)
-                return;
-        }
-        close();
-        return;
-    }
-
-    if (event.type() == Event::WindowLeft) {
-        set_hovered_widget(nullptr);
-        return;
-    }
-
-    if (event.type() == Event::Resize) {
-        auto new_size = static_cast<ResizeEvent&>(event).size();
-        if (m_back_bitmap && m_back_bitmap->size() != new_size)
-            m_back_bitmap = nullptr;
-        if (!m_pending_paint_event_rects.is_empty()) {
-            m_pending_paint_event_rects.clear_with_capacity();
-            m_pending_paint_event_rects.append({ {}, new_size });
-        }
-        m_rect_when_windowless = { {}, new_size };
-        m_main_widget->set_relative_rect({ {}, new_size });
-        return;
-    }
+    if (event.type() == Event::Resize)
+        return handle_resize_event(static_cast<ResizeEvent&>(event));
 
     if (event.type() > Event::__Begin_WM_Events && event.type() < Event::__End_WM_Events)
         return wm_event(static_cast<WMEvent&>(event));
 
-    if (event.type() == Event::DragMove) {
-        if (!m_main_widget)
-            return;
-        auto& drag_event = static_cast<DragEvent&>(event);
-        auto result = m_main_widget->hit_test(drag_event.position());
-        auto local_event = make<DragEvent>(static_cast<Event::Type>(drag_event.type()), result.local_position, drag_event.data_type());
-        ASSERT(result.widget);
-        return result.widget->dispatch_event(*local_event, this);
-    }
+    if (event.type() == Event::DragMove)
+        return handle_drag_move_event(static_cast<DragEvent&>(event));
 
-    if (event.type() == Event::ThemeChange) {
-        if (!m_main_widget)
-            return;
-        auto theme_event = static_cast<ThemeChangeEvent&>(event);
-        auto dispatch_theme_change = [&](auto& widget, auto recursive) {
-            widget.dispatch_event(theme_event, this);
-            widget.for_each_child_widget([&](auto& widget) -> IterationDecision {
-                widget.dispatch_event(theme_event, this);
-                recursive(widget, recursive);
-                return IterationDecision::Continue;
-            });
-        };
-        dispatch_theme_change(*m_main_widget.ptr(), dispatch_theme_change);
-        return;
-    }
+    if (event.type() == Event::ThemeChange)
+        return handle_theme_change_event(static_cast<ThemeChangeEvent&>(event));
 
     Core::Object::event(event);
 }
@@ -810,5 +841,4 @@ void Window::set_progress(int progress)
     ASSERT(m_window_id);
     WindowServerConnection::the().post_message(Messages::WindowServer::SetWindowProgress(m_window_id, progress));
 }
-
 }
