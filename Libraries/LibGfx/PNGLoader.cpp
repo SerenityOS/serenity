@@ -32,12 +32,15 @@
 #include <LibGfx/PNGLoader.h>
 #include <LibM/math.h>
 #include <fcntl.h>
-#include <serenity.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#ifdef __serenity__
+#    include <serenity.h>
+#endif
 
 //#define PNG_DEBUG
 
@@ -747,7 +750,11 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
         return false;
     }
     context.decompression_buffer_size = destlen;
+#ifdef __serenity__
     context.decompression_buffer = (u8*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
+#else
+    context.decompression_buffer = (u8*)mmap(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+#endif
 
     ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
     if (ret != 0) {

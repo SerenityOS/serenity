@@ -466,7 +466,7 @@ static inline bool is_valid_marker(const Marker marker)
 
 static inline u16 read_be_word(BufferStream& stream)
 {
-    u8 tmp1, tmp2;
+    u8 tmp1 = 0, tmp2 = 0;
     stream >> tmp1 >> tmp2;
     return ((u16)tmp1 << 8) | ((u16)tmp2);
 }
@@ -505,6 +505,8 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
         return false;
     u8 component_count;
     stream >> component_count;
+    if (stream.handle_read_failure())
+        return false;
     if (component_count != context.component_count) {
         dbg() << stream.offset()
               << String::format(": Unsupported number of components: %i!", component_count);
@@ -515,6 +517,8 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
         ComponentSpec* component = nullptr;
         u8 component_id;
         stream >> component_id;
+        if (stream.handle_read_failure())
+            return false;
         component_id += context.has_zero_based_ids ? 1 : 0;
 
         if (component_id == context.components[0].id)
@@ -530,16 +534,24 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
 
         u8 table_ids;
         stream >> table_ids;
+        if (stream.handle_read_failure())
+            return false;
         component->dc_destination_id = table_ids >> 4;
         component->ac_destination_id = table_ids & 0x0F;
     }
 
     u8 spectral_selection_start;
     stream >> spectral_selection_start;
+    if (stream.handle_read_failure())
+        return false;
     u8 spectral_selection_end;
     stream >> spectral_selection_end;
+    if (stream.handle_read_failure())
+        return false;
     u8 successive_approximation;
     stream >> successive_approximation;
+    if (stream.handle_read_failure())
+        return false;
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
     if (spectral_selection_start != 0 || spectral_selection_end != 63 || successive_approximation != 0) {
         dbg() << stream.offset() << ": ERROR! Start of Selection: " << spectral_selection_start
@@ -574,6 +586,8 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
         HuffmanTableSpec table;
         u8 table_info;
         stream >> table_info;
+        if (stream.handle_read_failure())
+            return false;
         u8 table_type = table_info >> 4;
         u8 table_destination_id = table_info & 0x0F;
         if (table_type > 1) {
@@ -593,6 +607,8 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
         for (int i = 0; i < 16; i++) {
             u8 count;
             stream >> count;
+            if (stream.handle_read_failure())
+                return false;
             total_codes += count;
             table.code_counts[i] = count;
         }
@@ -601,10 +617,13 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
 
         // Read symbols. Read X bytes, where X is the sum of the counts of codes read in the previous step.
         for (u32 i = 0; i < total_codes; i++) {
-            u8 symbol;
+            u8 symbol = 0;
             stream >> symbol;
             table.symbols.append(symbol);
         }
+
+        if (stream.handle_read_failure())
+            return false;
 
         if (table_type == 0)
             context.dc_tables.append(move(table));
@@ -690,8 +709,10 @@ static bool read_start_of_frame(BufferStream& stream, JPGLoadingContext& context
             context.has_zero_based_ids = component.id == 0;
         component.id += context.has_zero_based_ids ? 1 : 0;
 
-        u8 subsample_factors;
+        u8 subsample_factors = 0;
         stream >> subsample_factors;
+        if (stream.handle_read_failure())
+            return false;
         component.hsample_factor = subsample_factors >> 4;
         component.vsample_factor = subsample_factors & 0x0F;
 
@@ -732,6 +753,8 @@ static bool read_quantization_table(BufferStream& stream, JPGLoadingContext& con
     while (bytes_to_read > 0) {
         u8 info_byte;
         stream >> info_byte;
+        if (stream.handle_read_failure())
+            return false;
         u8 element_unit_hint = info_byte >> 4;
         if (element_unit_hint > 1) {
             dbg() << stream.offset()
@@ -746,12 +769,15 @@ static bool read_quantization_table(BufferStream& stream, JPGLoadingContext& con
         u32* table = table_id == 0 ? context.luma_table : context.chroma_table;
         for (int i = 0; i < 64; i++) {
             if (element_unit_hint == 0) {
-                u8 tmp;
+                u8 tmp = 0;
                 stream >> tmp;
                 table[zigzag_map[i]] = tmp;
             } else
                 table[zigzag_map[i]] = read_be_word(stream);
         }
+        if (stream.handle_read_failure())
+            return false;
+
         bytes_to_read -= 1 + (element_unit_hint == 0 ? 64 : 128);
     }
     if (bytes_to_read != 0) {
@@ -1081,6 +1107,8 @@ static bool scan_huffman_stream(BufferStream& stream, JPGLoadingContext& context
     u8 last_byte;
     u8 current_byte;
     stream >> current_byte;
+    if (stream.handle_read_failure())
+        return false;
 
     for (;;) {
         last_byte = current_byte;

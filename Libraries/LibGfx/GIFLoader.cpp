@@ -432,7 +432,7 @@ bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 if (sub_block_length == 0)
                     break;
 
-                u8 dummy;
+                u8 dummy = 0;
                 for (u16 i = 0; i < sub_block_length; ++i) {
                     stream >> dummy;
                     sub_block.append(dummy);
