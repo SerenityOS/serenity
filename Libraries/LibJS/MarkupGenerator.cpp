@@ -106,7 +106,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
 
     if (value.is_string())
         output_html.append('"');
-    output_html.append(value.to_string_without_side_effects());
+    output_html.append(escape_html_entities(value.to_string_without_side_effects()));
     if (value.is_string())
         output_html.append('"');
 
@@ -146,7 +146,7 @@ void MarkupGenerator::object_to_html(const Object& object, StringBuilder& html_o
 
     size_t index = 0;
     for (auto& it : object.shape().property_table_ordered()) {
-        html_output.append(wrap_string_in_style(String::format("\"%s\"", it.key.to_display_string().characters()), StyleType::String));
+        html_output.append(wrap_string_in_style(String::format("\"%s\"", escape_html_entities(it.key.to_display_string()).characters()), StyleType::String));
         html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
         value_to_html(object.get_direct(it.value.offset), html_output, seen_objects);
         if (index != object.shape().property_count() - 1)
@@ -172,7 +172,7 @@ void MarkupGenerator::error_to_html(const Object& object, StringBuilder& html_ou
     auto& error = static_cast<const Error&>(object);
     html_output.append(wrap_string_in_style(String::format("[%s]", error.name().characters()), StyleType::Invalid));
     if (!error.message().is_empty()) {
-        html_output.appendf(": %s", error.message().characters());
+        html_output.appendf(": %s", escape_html_entities(error.message()).characters());
     }
 }
 
@@ -342,7 +342,7 @@ String MarkupGenerator::open_style_type(StyleType type)
 
 String MarkupGenerator::wrap_string_in_style(String source, StyleType type)
 {
-    return String::format("<span style=\"%s\">%s</span>", style_from_style_type(type).characters(), source.characters());
+    return String::format("<span style=\"%s\">%s</span>", style_from_style_type(type).characters(), escape_html_entities(source).characters());
 }
 
 }
