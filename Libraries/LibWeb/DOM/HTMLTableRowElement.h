@@ -32,14 +32,14 @@ namespace Web {
 
 class HTMLTableRowElement : public HTMLElement {
 public:
-    HTMLTableRowElement(Document&, const FlyString& tag_name);
+    HTMLTableRowElement(Document&, const FlyString& local_name);
     virtual ~HTMLTableRowElement() override;
 };
 
 template<>
 inline bool is<HTMLTableRowElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::tr;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::tr;
 }
 
 }

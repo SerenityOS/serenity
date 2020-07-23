@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLBodyElement : public HTMLElement {
 public:
-    HTMLBodyElement(Document&, const FlyString& tag_name);
+    HTMLBodyElement(Document&, const FlyString& local_name);
     virtual ~HTMLBodyElement() override;
 
     virtual void parse_attribute(const FlyString&, const String&) override;
@@ -45,7 +45,7 @@ private:
 template<>
 inline bool is<HTMLBodyElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::body;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::body;
 }
 
 }

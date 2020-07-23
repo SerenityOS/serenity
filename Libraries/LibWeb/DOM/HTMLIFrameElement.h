@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLIFrameElement final : public HTMLElement {
 public:
-    HTMLIFrameElement(Document&, const FlyString& tag_name);
+    HTMLIFrameElement(Document&, const FlyString& local_name);
     virtual ~HTMLIFrameElement() override;
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
@@ -54,7 +54,7 @@ private:
 template<>
 inline bool is<HTMLIFrameElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::iframe;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::iframe;
 }
 
 }

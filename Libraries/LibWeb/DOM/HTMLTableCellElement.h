@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLTableCellElement final : public HTMLElement {
 public:
-    HTMLTableCellElement(Document&, const FlyString& tag_name);
+    HTMLTableCellElement(Document&, const FlyString& local_name);
     virtual ~HTMLTableCellElement() override;
 
 private:
@@ -42,7 +42,7 @@ private:
 template<>
 inline bool is<HTMLTableCellElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th);
+    return is<Element>(node) && to<Element>(node).local_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th);
 }
 
 }

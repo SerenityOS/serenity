@@ -58,7 +58,7 @@ Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_marke
         auto& entry = m_entries[i];
         if (entry.is_marker())
             return nullptr;
-        if (entry.element->tag_name() == tag_name)
+        if (entry.element->local_name() == tag_name)
             return entry.element;
     }
     return nullptr;

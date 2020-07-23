@@ -110,7 +110,7 @@ bool matches(const Selector::SimpleSelector& component, const Element& element)
     case Selector::SimpleSelector::Type::Class:
         return element.has_class(component.value);
     case Selector::SimpleSelector::Type::TagName:
-        return component.value == element.tag_name();
+        return component.value == element.local_name();
     default:
         ASSERT_NOT_REACHED();
     }

@@ -40,7 +40,7 @@ class HTMLImageElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLImageElementWrapper;
 
-    HTMLImageElement(Document&, const FlyString& tag_name);
+    HTMLImageElement(Document&, const FlyString& local_name);
     virtual ~HTMLImageElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
@@ -63,7 +63,7 @@ private:
 template<>
 inline bool is<HTMLImageElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::img;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::img;
 }
 
 }

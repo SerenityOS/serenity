@@ -116,7 +116,7 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
     if (display == CSS::Display::None)
         return nullptr;
 
-    if (tag_name() == "noscript" && document().is_scripting_enabled())
+    if (local_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;
 
     if (display == CSS::Display::Block)
@@ -271,13 +271,13 @@ String Element::inner_html() const
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             if (child->is_element()) {
                 builder.append('<');
-                builder.append(to<Element>(*child).tag_name());
+                builder.append(to<Element>(*child).local_name());
                 builder.append('>');
 
                 recurse(*child);
 
                 builder.append("</");
-                builder.append(to<Element>(*child).tag_name());
+                builder.append(to<Element>(*child).local_name());
                 builder.append('>');
             }
             if (child->is_text()) {

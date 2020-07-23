@@ -33,7 +33,7 @@ namespace Web {
 
 class HTMLScriptElement : public HTMLElement {
 public:
-    HTMLScriptElement(Document&, const FlyString& tag_name);
+    HTMLScriptElement(Document&, const FlyString& local_name);
     virtual ~HTMLScriptElement() override;
 
     bool is_non_blocking() const { return m_non_blocking; }
@@ -68,7 +68,7 @@ private:
 template<>
 inline bool is<HTMLScriptElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::script;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::script;
 }
 
 }

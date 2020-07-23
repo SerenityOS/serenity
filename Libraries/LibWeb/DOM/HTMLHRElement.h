@@ -32,14 +32,14 @@ namespace Web {
 
 class HTMLHRElement : public HTMLElement {
 public:
-    HTMLHRElement(Document&, const FlyString& tag_name);
+    HTMLHRElement(Document&, const FlyString& local_name);
     virtual ~HTMLHRElement() override;
 };
 
 template<>
 inline bool is<HTMLHRElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::hr;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::hr;
 }
 
 }

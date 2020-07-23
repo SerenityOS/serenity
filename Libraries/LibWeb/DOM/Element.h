@@ -42,11 +42,14 @@ class Element : public ParentNode {
 public:
     using WrapperType = Bindings::ElementWrapper;
 
-    Element(Document&, const FlyString& tag_name);
+    Element(Document&, const FlyString& local_name);
     virtual ~Element() override;
 
     virtual FlyString node_name() const final { return m_tag_name; }
-    const FlyString& tag_name() const { return m_tag_name; }
+    const FlyString& local_name() const { return m_tag_name; }
+
+    // NOTE: This is for the JS bindings
+    const FlyString& tag_name() const { return local_name(); }
 
     bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
     String attribute(const FlyString& name) const;

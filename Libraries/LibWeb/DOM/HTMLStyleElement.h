@@ -34,7 +34,7 @@ class StyleSheet;
 
 class HTMLStyleElement : public HTMLElement {
 public:
-    HTMLStyleElement(Document&, const FlyString& tag_name);
+    HTMLStyleElement(Document&, const FlyString& local_name);
     virtual ~HTMLStyleElement() override;
 
     virtual void children_changed() override;
@@ -47,7 +47,7 @@ private:
 template<>
 inline bool is<HTMLStyleElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::style;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::style;
 }
 
 

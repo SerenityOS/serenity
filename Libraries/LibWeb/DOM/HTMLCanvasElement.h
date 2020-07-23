@@ -38,7 +38,7 @@ class HTMLCanvasElement : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLCanvasElementWrapper;
 
-    HTMLCanvasElement(Document&, const FlyString& tag_name);
+    HTMLCanvasElement(Document&, const FlyString& local_name);
     virtual ~HTMLCanvasElement() override;
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap; }
@@ -60,7 +60,7 @@ private:
 template<>
 inline bool is<HTMLCanvasElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::canvas;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::canvas;
 }
 
 }

@@ -134,7 +134,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, Role role) const
         auto& element = to<Element>(node);
         StringBuilder builder;
         builder.append('<');
-        builder.append(element.tag_name());
+        builder.append(element.local_name());
         element.for_each_attribute([&](auto& name, auto& value) {
             builder.append(' ');
             builder.append(name);

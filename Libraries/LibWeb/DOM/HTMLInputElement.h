@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLInputElement : public HTMLElement {
 public:
-    HTMLInputElement(Document&, const FlyString& tag_name);
+    HTMLInputElement(Document&, const FlyString& local_name);
     virtual ~HTMLInputElement() override;
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
@@ -45,7 +45,7 @@ public:
 template<>
 inline bool is<HTMLInputElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name() == HTML::TagNames::input;
+    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::input;
 }
 
 }
