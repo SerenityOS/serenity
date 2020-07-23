@@ -29,6 +29,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/MenuItem.h>
+#include <LibGUI/Window.h>
 
 namespace GUI {
 
@@ -157,8 +158,9 @@ Action::Action(const StringView& text, const Shortcut& shortcut, RefPtr<Gfx::Bit
         m_scope = ShortcutScope::WindowLocal;
     } else {
         m_scope = ShortcutScope::ApplicationGlobal;
-        if (auto* app = Application::the())
+        if (auto* app = Application::the()) {
             app->register_global_shortcut_action({}, *this);
+        }
     }
 }
 
