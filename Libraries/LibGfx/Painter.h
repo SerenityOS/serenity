@@ -65,7 +65,7 @@ public:
     void set_pixel(const IntPoint&, Color);
     void draw_line(const IntPoint&, const IntPoint&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void draw_quadratic_bezier_curve(const IntPoint& control_point, const IntPoint&, const IntPoint&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
-    void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const IntRect& src_rect);
+    void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const IntRect& src_rect, float opacity = 1.0f);
     void blit(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity = 1.0f);
     void blit_dimmed(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
     void blit_brightened(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
