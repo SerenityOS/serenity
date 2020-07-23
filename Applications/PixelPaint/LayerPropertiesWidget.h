@@ -24,49 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Layer.h"
-#include "Image.h"
-#include <LibGfx/Bitmap.h>
+#pragma once
+
+#include <LibGUI/Widget.h>
 
 namespace PixelPaint {
 
-RefPtr<Layer> Layer::create_with_size(Image& image, const Gfx::IntSize& size, const String& name)
-{
-    if (size.is_empty())
-        return nullptr;
+class Layer;
 
-    if (size.width() > 16384 || size.height() > 16384)
-        return nullptr;
+class LayerPropertiesWidget final : public GUI::Widget {
+    C_OBJECT(LayerPropertiesWidget);
 
-    return adopt(*new Layer(image, size, name));
-}
+public:
+    virtual ~LayerPropertiesWidget() override;
 
-Layer::Layer(Image& image, const Gfx::IntSize& size, const String& name)
-    : m_image(image)
-    , m_name(name)
-{
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
-}
+    void set_layer(Layer*);
 
-void Layer::did_modify_bitmap(Image& image)
-{
-    image.layer_did_modify_bitmap({}, *this);
-}
+private:
+    LayerPropertiesWidget();
 
-void Layer::set_visible(bool visible)
-{
-    if (m_visible == visible)
-        return;
-    m_visible = visible;
-    m_image.layer_did_modify_properties({}, *this);
-}
+    RefPtr<GUI::CheckBox> m_visibility_checkbox;
+    RefPtr<GUI::HorizontalSlider> m_opacity_slider;
 
-void Layer::set_opacity_percent(int opacity_percent)
-{
-    if (m_opacity_percent == opacity_percent)
-        return;
-    m_opacity_percent = opacity_percent;
-    m_image.layer_did_modify_properties({}, *this);
-}
+    WeakPtr<Layer> m_layer;
+};
 
 }

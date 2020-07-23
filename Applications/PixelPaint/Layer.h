@@ -29,20 +29,24 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <AK/Weakable.h>
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
 
 class Image;
 
-class Layer : public RefCounted<Layer> {
+class Layer
+    : public RefCounted<Layer>
+    , public Weakable<Layer> {
+
     AK_MAKE_NONCOPYABLE(Layer);
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static RefPtr<Layer> create_with_size(const Gfx::IntSize&, const String& name);
+    static RefPtr<Layer> create_with_size(Image&, const Gfx::IntSize&, const String& name);
 
-    ~Layer() {}
+    ~Layer() { }
 
     const Gfx::IntPoint& location() const { return m_location; }
     void set_location(const Gfx::IntPoint& location) { m_location = location; }
@@ -62,14 +66,25 @@ public:
     void set_selected(bool selected) { m_selected = selected; }
     bool is_selected() const { return m_selected; }
 
+    bool is_visible() const { return m_visible; }
+    void set_visible(bool visible);
+
+    int opacity_percent() const { return m_opacity_percent; }
+    void set_opacity_percent(int);
+
 private:
-    explicit Layer(const Gfx::IntSize&, const String& name);
+    explicit Layer(Image&, const Gfx::IntSize&, const String& name);
+
+    Image& m_image;
 
     String m_name;
     Gfx::IntPoint m_location;
     RefPtr<Gfx::Bitmap> m_bitmap;
 
     bool m_selected { false };
+    bool m_visible { true };
+
+    int m_opacity_percent { 100 };
 };
 
 }

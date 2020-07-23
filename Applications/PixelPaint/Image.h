@@ -75,6 +75,7 @@ public:
     void remove_client(ImageClient&);
 
     void layer_did_modify_bitmap(Badge<Layer>, const Layer&);
+    void layer_did_modify_properties(Badge<Layer>, const Layer&);
 
     size_t index_of(const Layer&) const;
 

@@ -24,49 +24,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "LayerPropertiesWidget.h"
 #include "Layer.h"
-#include "Image.h"
-#include <LibGfx/Bitmap.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/CheckBox.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Slider.h>
+#include <LibGfx/Font.h>
 
 namespace PixelPaint {
 
-RefPtr<Layer> Layer::create_with_size(Image& image, const Gfx::IntSize& size, const String& name)
+LayerPropertiesWidget::LayerPropertiesWidget()
 {
-    if (size.is_empty())
-        return nullptr;
+    set_layout<GUI::VerticalBoxLayout>();
+    auto& label = add<GUI::Label>("Layer properties");
+    label.set_font(Gfx::Font::default_bold_font());
 
-    if (size.width() > 16384 || size.height() > 16384)
-        return nullptr;
+    m_opacity_slider = add<GUI::HorizontalSlider>();
+    m_opacity_slider->set_range(0, 100);
+    m_opacity_slider->on_value_changed = [this](int value) {
+        if (m_layer)
+            m_layer->set_opacity_percent(value);
+    };
 
-    return adopt(*new Layer(image, size, name));
+    m_visibility_checkbox = add<GUI::CheckBox>("Visible");
+    m_visibility_checkbox->on_checked = [this](bool checked) {
+        if (m_layer)
+            m_layer->set_visible(checked);
+    };
 }
 
-Layer::Layer(Image& image, const Gfx::IntSize& size, const String& name)
-    : m_image(image)
-    , m_name(name)
+LayerPropertiesWidget::~LayerPropertiesWidget()
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
 }
 
-void Layer::did_modify_bitmap(Image& image)
+void LayerPropertiesWidget::set_layer(Layer* layer)
 {
-    image.layer_did_modify_bitmap({}, *this);
-}
-
-void Layer::set_visible(bool visible)
-{
-    if (m_visible == visible)
+    if (m_layer == layer)
         return;
-    m_visible = visible;
-    m_image.layer_did_modify_properties({}, *this);
-}
 
-void Layer::set_opacity_percent(int opacity_percent)
-{
-    if (m_opacity_percent == opacity_percent)
-        return;
-    m_opacity_percent = opacity_percent;
-    m_image.layer_did_modify_properties({}, *this);
+    if (layer) {
+        m_layer = layer->make_weak_ptr();
+        m_opacity_slider->set_value(layer->opacity_percent());
+        m_visibility_checkbox->set_checked(layer->is_visible());
+        set_enabled(true);
+    } else {
+        m_layer = nullptr;
+        set_enabled(false);
+    }
 }
 
 }

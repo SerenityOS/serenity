@@ -32,6 +32,7 @@
 #include "PaletteWidget.h"
 #include "Tool.h"
 #include "ToolboxWidget.h"
+#include "LayerPropertiesWidget.h"
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -94,6 +95,8 @@ int main(int argc, char** argv)
 
     auto& layer_list_widget = right_panel.add<PixelPaint::LayerListWidget>();
 
+    auto& layer_properties_widget = right_panel.add<PixelPaint::LayerPropertiesWidget>();
+
     window->show();
 
     auto menubar = GUI::MenuBar::construct();
@@ -131,7 +134,7 @@ int main(int argc, char** argv)
         "Create new layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(image_editor.image()->size(), window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
-                auto layer = PixelPaint::Layer::create_with_size(dialog->layer_size(), dialog->layer_name());
+                auto layer = PixelPaint::Layer::create_with_size(*image_editor.image(), dialog->layer_size(), dialog->layer_name());
                 if (!layer) {
                     GUI::MessageBox::show_error(window, String::format("Unable to create layer with size %s", dialog->size().to_string().characters()));
                     return;
@@ -200,20 +203,21 @@ int main(int argc, char** argv)
 
     image_editor.on_active_layer_change = [&](auto* layer) {
         layer_list_widget.set_selected_layer(layer);
+        layer_properties_widget.set_layer(layer);
     };
 
     auto image = PixelPaint::Image::create_with_size({ 640, 480 });
 
-    auto bg_layer = PixelPaint::Layer::create_with_size({ 640, 480 }, "Background");
+    auto bg_layer = PixelPaint::Layer::create_with_size(*image, { 640, 480 }, "Background");
     image->add_layer(*bg_layer);
     bg_layer->bitmap().fill(Color::White);
 
-    auto fg_layer1 = PixelPaint::Layer::create_with_size({ 200, 200 }, "FG Layer 1");
+    auto fg_layer1 = PixelPaint::Layer::create_with_size(*image, { 200, 200 }, "FG Layer 1");
     fg_layer1->set_location({ 50, 50 });
     image->add_layer(*fg_layer1);
     fg_layer1->bitmap().fill(Color::Yellow);
 
-    auto fg_layer2 = PixelPaint::Layer::create_with_size({ 100, 100 }, "FG Layer 2");
+    auto fg_layer2 = PixelPaint::Layer::create_with_size(*image, { 100, 100 }, "FG Layer 2");
     fg_layer2->set_location({ 300, 300 });
     image->add_layer(*fg_layer2);
     fg_layer2->bitmap().fill(Color::Blue);
