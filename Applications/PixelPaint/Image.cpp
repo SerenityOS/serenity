@@ -54,9 +54,11 @@ void Image::paint_into(GUI::Painter& painter, const Gfx::IntRect& dest_rect)
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(dest_rect);
     for (auto& layer : m_layers) {
+        if (!layer.is_visible())
+            continue;
         auto target = dest_rect.translated(layer.location().x() * scale, layer.location().y() * scale);
         target.set_size(layer.size().width() * scale, layer.size().height() * scale);
-        painter.draw_scaled_bitmap(target, layer.bitmap(), layer.rect());
+        painter.draw_scaled_bitmap(target, layer.bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
     }
 }
 
@@ -166,6 +168,15 @@ void Image::remove_client(ImageClient& client)
 }
 
 void Image::layer_did_modify_bitmap(Badge<Layer>, const Layer& layer)
+{
+    auto layer_index = index_of(layer);
+    for (auto* client : m_clients)
+        client->image_did_modify_layer(layer_index);
+
+    did_change();
+}
+
+void Image::layer_did_modify_properties(Badge<Layer>, const Layer& layer)
 {
     auto layer_index = index_of(layer);
     for (auto* client : m_clients)
