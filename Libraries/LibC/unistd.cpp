@@ -202,9 +202,12 @@ gid_t getgid()
 
 pid_t getpid()
 {
-    if (!s_cached_pid)
-        s_cached_pid = syscall(SC_getpid);
-    return s_cached_pid;
+    int cached_pid = s_cached_pid;
+    if (!cached_pid) {
+        cached_pid = syscall(SC_getpid);
+        s_cached_pid = cached_pid;
+    }
+    return cached_pid;
 }
 
 pid_t getppid()
@@ -608,9 +611,12 @@ int truncate(const char* path, off_t length)
 
 int gettid()
 {
-    if (!s_cached_tid)
-        s_cached_tid = syscall(SC_gettid);
-    return s_cached_tid;
+    int cached_tid = s_cached_tid;
+    if (!cached_tid) {
+        cached_tid = syscall(SC_gettid);
+        s_cached_tid = cached_tid;
+    }
+    return cached_tid;
 }
 
 int donate(int tid)
