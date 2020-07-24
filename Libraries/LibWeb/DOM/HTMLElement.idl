@@ -1,5 +1,6 @@
 interface HTMLElement : Element {
 
-    attribute DOMString title;
+    [Reflect] attribute DOMString title;
+    [Reflect] attribute DOMString lang;
 
 }
