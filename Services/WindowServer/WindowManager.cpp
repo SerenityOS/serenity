@@ -210,7 +210,7 @@ void WindowManager::move_to_front_and_make_active(Window& window)
             auto* parent = wnd.parent_window();
             do_move_to_front(*parent, true, false);
             make_active = false;
-                
+
             for (auto& accessory_window : parent->accessory_windows()) {
                 if (accessory_window && accessory_window.ptr() != &wnd)
                     do_move_to_front(*accessory_window, false, false);
@@ -378,6 +378,9 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_
     Compositor::the().recompute_occlusions();
 
     tell_wm_listeners_window_rect_changed(window);
+
+    if (window.type() == WindowType::MenuApplet)
+        AppletManager::the().calculate_applet_rects(MenuManager::the().window());
 
     MenuManager::the().refresh();
 }
@@ -811,7 +814,7 @@ bool WindowManager::is_menu_doubleclick(Window& window, const MouseEvent& event)
     auto& metadata = m_double_click_info.metadata_for_button(event.button());
     if (!metadata.clock.is_valid())
         return false;
-    
+
     return is_considered_doubleclick(event, metadata);
 }
 
@@ -1140,7 +1143,7 @@ void WindowManager::restore_active_input_window(Window* window)
     // If the current active window is also gone, pick some other window
     if (!window && pick_new_active_window(nullptr))
         return;
-    
+
     set_active_input_window(window);
 }
 
