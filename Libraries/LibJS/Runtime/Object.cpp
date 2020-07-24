@@ -392,7 +392,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
               << "setter=" << setter.to_string_without_side_effects() << "}";
 #endif
 
-        return define_property(property_name, Accessor::create(interpreter(), global_object(), getter_function, setter_function), attributes, throw_exceptions);
+        return define_property(property_name, Accessor::create(interpreter(), getter_function, setter_function), attributes, throw_exceptions);
     }
 
     auto value = descriptor.get("value");
@@ -438,7 +438,7 @@ bool Object::define_accessor(const PropertyName& property_name, Function& getter
             accessor = &existing_property.as_accessor();
     }
     if (!accessor) {
-        accessor = Accessor::create(interpreter(), global_object(), nullptr, nullptr);
+        accessor = Accessor::create(interpreter(), nullptr, nullptr);
         bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
         if (interpreter().exception())
             return {};
@@ -762,7 +762,7 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
 
 bool Object::define_native_property(const StringOrSymbol& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
-    return define_property(property_name, heap().allocate<NativeProperty>(global_object(), move(getter), move(setter)), attribute);
+    return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
 
 void Object::visit_children(Cell::Visitor& visitor)
