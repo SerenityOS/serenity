@@ -28,6 +28,7 @@
 
 #include <AK/BinarySearch.h>
 #include <cstring>
+#include <new>
 
 TEST_CASE(vector_ints)
 {
@@ -104,6 +105,34 @@ TEST_CASE(no_elements)
 
     auto test1 = binary_search(ints.data(), ints.size(), 1, AK::integral_compare<int>);
     EXPECT_EQ(test1, nullptr);
+}
+
+TEST_CASE(huge_char_array)
+{
+    const size_t N = 2147483680;
+    char* v = new (std::nothrow) char[N];
+
+    EXPECT(v != nullptr);
+    for (size_t i = 0; i < N; ++i)
+        v[i] = 'a';
+    size_t index = N - 1;
+    for (char c = 'z'; c > 'a'; --c)
+        v[index--] = c;
+
+    EXPECT_EQ(v[N - 1], 'z');
+
+    auto where = binary_search(v, N, 'a', AK::integral_compare<char>);
+    EXPECT(where != nullptr);
+    EXPECT_EQ(*where, 'a');
+
+    auto z = binary_search(v, N, 'z', AK::integral_compare<char>);
+    EXPECT(z != nullptr);
+    EXPECT_EQ(*z, 'z');
+
+    auto tilde = binary_search(v, N, '~', AK::integral_compare<char>);
+    EXPECT_EQ(tilde, nullptr);
+
+    delete[] v;
 }
 
 TEST_MAIN(BinarySearch)
