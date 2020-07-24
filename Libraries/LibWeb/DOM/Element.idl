@@ -6,8 +6,8 @@ interface Element : Node {
     void setAttribute(DOMString qualifiedName, DOMString value);
 
     attribute DOMString innerHTML;
-    attribute DOMString id;
-    attribute DOMString className;
+    [Reflect] attribute DOMString id;
+    [Reflect=class] attribute DOMString className;
 
 }
 

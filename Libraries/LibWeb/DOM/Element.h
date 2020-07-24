@@ -84,12 +84,6 @@ public:
     String inner_html() const;
     void set_inner_html(StringView);
 
-    String id() const { return attribute(HTML::AttributeNames::id); }
-    void set_id(const String& value) { set_attribute(HTML::AttributeNames::id, value); }
-
-    String class_name() const { return attribute(HTML::AttributeNames::class_); }
-    void set_class_name(const String& value) { set_attribute(HTML::AttributeNames::class_, value); }
-
 protected:
     RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 
