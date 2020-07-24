@@ -109,6 +109,7 @@ private:
     virtual OwnPtr<Messages::WindowServer::IsMaximizedResponse> handle(const Messages::WindowServer::IsMaximized&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowRectResponse> handle(const Messages::WindowServer::SetWindowRect&) override;
     virtual OwnPtr<Messages::WindowServer::GetWindowRectResponse> handle(const Messages::WindowServer::GetWindowRect&) override;
+    virtual OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> handle(const Messages::WindowServer::GetWindowRectInMenubar&) override;
     virtual void handle(const Messages::WindowServer::InvalidateRect&) override;
     virtual void handle(const Messages::WindowServer::DidFinishPainting&) override;
     virtual OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> handle(const Messages::WindowServer::SetGlobalCursorTracking&) override;
