@@ -25,6 +25,7 @@
  */
 
 #include <AK/URL.h>
+#include <AK/Function.h>
 #include <AK/JsonValue.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
@@ -91,6 +92,47 @@ struct JSTestRunnerCounts {
     int suites_passed { 0 };
     int files_total { 0 };
 };
+
+Function<void(const URL&)> g_on_page_change;
+
+class TestRunnerObject final : public JS::Object {
+    JS_OBJECT(TestRunnerObject, JS::Object);
+
+public:
+    explicit TestRunnerObject(JS::GlobalObject&);
+    virtual void initialize(JS::GlobalObject&) override;
+    virtual ~TestRunnerObject() override;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(change_page);
+};
+
+TestRunnerObject::TestRunnerObject(JS::GlobalObject& global_object)
+    : Object(*global_object.object_prototype())
+{
+}
+
+void TestRunnerObject::initialize(JS::GlobalObject& global_object)
+{
+    Object::initialize(global_object);
+    define_native_function("changePage", change_page, 1);
+}
+
+TestRunnerObject::~TestRunnerObject()
+{
+}
+
+JS_DEFINE_NATIVE_FUNCTION(TestRunnerObject::change_page)
+{
+    auto url = interpreter.argument(0).to_string(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    if (g_on_page_change)
+        g_on_page_change(url);
+
+    return JS::js_undefined();
+}
 
 class TestRunner {
 public:
@@ -163,6 +205,33 @@ Vector<String> get_test_paths(const String& test_root)
 void TestRunner::run() {
     size_t progress_counter = 0;
     auto test_paths = get_test_paths(m_web_test_root);
+
+    g_on_page_change = [this](auto& page_to_load) {
+        if (!page_to_load.is_valid()) {
+            printf("Invalid page URL (%s) on page change", page_to_load.to_string().characters());
+            exit(1);
+        }
+
+        ASSERT(m_page_view->document());
+
+        // We want to keep the same document since the interpreter is tied to the document,
+        // and we don't want to lose the test state. So, we just clear the document and
+        // give a new parser the existing document to work on.
+        m_page_view->document()->remove_all_children();
+
+        Web::ResourceLoader::the().load_sync(
+            page_to_load,
+            [&](auto data, auto&) {
+                Web::HTMLDocumentParser parser(data, "utf-8", *m_page_view->document());
+                parser.run(page_to_load);
+            },
+            [page_to_load](auto error) {
+                printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
+                exit(1);
+            }
+        );
+    };
+
     for (auto& path : test_paths) {
         ++progress_counter;
         print_file_result(run_file_test(path));
@@ -260,21 +329,26 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             Web::HTMLDocumentParser parser(data, "utf-8");
             auto& new_interpreter = parser.document().interpreter();
 
-            // Setup the test environment and call "__BeforePageLoad__"
+            // Setup the test environment and call "__BeforeInitialPageLoad__"
+            new_interpreter.global_object().define_property(
+                "libweb_tester",
+                new_interpreter.heap().allocate<TestRunnerObject>(new_interpreter.global_object(), new_interpreter.global_object()),
+                JS::Attribute::Enumerable | JS::Attribute::Configurable
+            );
             new_interpreter.run(new_interpreter.global_object(), *m_js_test_common);
             new_interpreter.run(new_interpreter.global_object(), *m_web_test_common);
             new_interpreter.run(new_interpreter.global_object(), *file_program.value());
 
-            auto& before_page_load = new_interpreter.get_variable("__BeforePageLoad__", new_interpreter.global_object()).as_function();
-            new_interpreter.call(before_page_load, JS::js_undefined());
+            auto& before_initial_page_load = new_interpreter.get_variable("__BeforeInitialPageLoad__", new_interpreter.global_object()).as_function();
+            new_interpreter.call(before_initial_page_load, JS::js_undefined());
 
             // Now parse the HTML page.
             parser.run(page_to_load);
             m_page_view->set_document(&parser.document());
 
-            // Finally run the test by calling "__AfterPageLoad__"
-            auto& after_page_load = new_interpreter.get_variable("__AfterPageLoad__", new_interpreter.global_object()).as_function();
-            new_interpreter.call(after_page_load, JS::js_undefined());
+            // Finally run the test by calling "__AfterInitialPageLoad__"
+            auto& after_initial_page_load = new_interpreter.get_variable("__AfterInitialPageLoad__", new_interpreter.global_object()).as_function();
+            new_interpreter.call(after_initial_page_load, JS::js_undefined());
 
             auto test_json = get_test_results(new_interpreter);
             if (!test_json.has_value()) {
@@ -340,7 +414,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             m_total_elapsed_time_in_ms += file_result.time_taken;
         },
         [page_to_load](auto error) {
-            dbg() << "Failed to load test page: " << error << " (" << page_to_load << ")";
+            printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
             exit(1);
         }
     );
@@ -555,9 +629,11 @@ void TestRunner::print_test_results() const
 int main(int argc, char** argv)
 {
     bool print_times = false;
+    bool show_window = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
+    args_parser.add_option(show_window, "Show window while running tests", "window", 'w');
     args_parser.parse(argc, argv);
 
     auto app = GUI::Application::construct(argc, argv);
@@ -568,6 +644,12 @@ int main(int argc, char** argv)
     auto& view = main_widget.add<Web::PageView>();
 
     view.set_document(adopt(*new Web::Document));
+
+    if (show_window) {
+        window->set_title("LibWeb Test Window");
+        window->set_rect(100, 100, 640, 480);
+        window->show();
+    }
 
 #ifdef __serenity__
     TestRunner("/home/anon/web-tests", "/home/anon/js-tests", view, print_times).run();
