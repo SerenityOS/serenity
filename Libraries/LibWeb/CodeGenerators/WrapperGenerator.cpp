@@ -50,6 +50,17 @@ static String snake_name(const StringView& title_name)
     return builder.to_string();
 }
 
+static String add_underscore_to_cpp_keywords(const String& input)
+{
+    if (input == "class" || input == "template") {
+        StringBuilder builder;
+        builder.append(input);
+        builder.append('_');
+        return builder.to_string();
+    }
+    return input;
+}
+
 namespace IDL {
 
 struct Type {
@@ -598,7 +609,11 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "        return {};";
 
         if (attribute.extended_attributes.contains("Reflect")) {
-            out() << "    auto retval = impl->attribute(HTML::AttributeNames::" << attribute.name << ");";
+            auto attribute_name = attribute.extended_attributes.get("Reflect").value();
+            if (attribute_name.is_null())
+                attribute_name = attribute.name;
+            attribute_name = add_underscore_to_cpp_keywords(attribute_name);
+            out() << "    auto retval = impl->attribute(HTML::AttributeNames::" << attribute_name << ");";
         } else {
             out() << "    auto retval = impl->" << snake_name(attribute.name) << "();";
         }
@@ -616,7 +631,11 @@ void generate_implementation(const IDL::Interface& interface)
             generate_to_cpp(attribute, "value", "", "cpp_value", true);
 
             if (attribute.extended_attributes.contains("Reflect")) {
-                out() << "    impl->set_attribute(HTML::AttributeNames::" << attribute.name << ", cpp_value);";
+                auto attribute_name = attribute.extended_attributes.get("Reflect").value();
+                if (attribute_name.is_null())
+                    attribute_name = attribute.name;
+                attribute_name = add_underscore_to_cpp_keywords(attribute_name);
+                out() << "    impl->set_attribute(HTML::AttributeNames::" << attribute_name << ", cpp_value);";
             } else {
                 out() << "    impl->set_" << snake_name(attribute.name) << "(cpp_value);";
             }
