@@ -1,6 +1,6 @@
 loadPage("file:///res/html/misc/blank.html");
 
-afterPageLoad(() => {
+afterInitialPageLoad(() => {
     test("atob", () => {
         expect(atob("YQ==")).toBe("a");
         expect(atob("YWE=")).toBe("aa");

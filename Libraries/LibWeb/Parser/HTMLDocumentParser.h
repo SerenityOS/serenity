@@ -64,6 +64,7 @@ RefPtr<Document> parse_html_document(const StringView&, const URL&, const String
 class HTMLDocumentParser {
 public:
     HTMLDocumentParser(const StringView& input, const String& encoding);
+    HTMLDocumentParser(const StringView& input, const String& encoding, Document& existing_document);
     ~HTMLDocumentParser();
 
     void run(const URL&);

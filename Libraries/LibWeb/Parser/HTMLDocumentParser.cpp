@@ -117,6 +117,12 @@ HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& en
     m_document = adopt(*new Document);
 }
 
+HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding, Document& existing_document)
+    : m_tokenizer(input, encoding)
+    , m_document(existing_document)
+{
+}
+
 HTMLDocumentParser::~HTMLDocumentParser()
 {
 }
