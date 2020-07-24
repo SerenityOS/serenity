@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -65,6 +66,7 @@ struct Function {
     Type return_type;
     String name;
     Vector<Parameter> parameters;
+    HashMap<String, String> extended_attributes;
 
     size_t length() const
     {
@@ -78,6 +80,7 @@ struct Attribute {
     bool unsigned_ { false };
     Type type;
     String name;
+    HashMap<String, String> extended_attributes;
 
     // Added for convenience after parsing
     String getter_callback_name;
@@ -174,7 +177,7 @@ OwnPtr<Interface> parse_interface(const StringView& input)
         return Type { name, nullable };
     };
 
-    auto parse_attribute = [&] {
+    auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
         bool readonly = false;
         bool unsigned_ = false;
         if (next_is("readonly")) {
@@ -202,10 +205,11 @@ OwnPtr<Interface> parse_interface(const StringView& input)
         attribute.name = name;
         attribute.getter_callback_name = String::format("%s_getter", snake_name(attribute.name).characters());
         attribute.setter_callback_name = String::format("%s_setter", snake_name(attribute.name).characters());
+        attribute.extended_attributes = move(extended_attributes);
         interface->attributes.append(move(attribute));
     };
 
-    auto parse_function = [&] {
+    auto parse_function = [&](HashMap<String, String>& extended_attributes) {
         auto return_type = parse_type();
         consume_whitespace();
         auto name = consume_while([](auto ch) { return !isspace(ch) && ch != '('; });
@@ -228,22 +232,45 @@ OwnPtr<Interface> parse_interface(const StringView& input)
 
         consume_specific(';');
 
-        interface->functions.append(Function { return_type, name, move(parameters) });
+        interface->functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
+    };
+
+    auto parse_extended_attributes = [&] {
+        HashMap<String, String> extended_attributes;
+        for (;;) {
+            consume_whitespace();
+            if (consume_if(']'))
+                break;
+            auto name = consume_while([](auto ch) { return ch != ']' && ch != '=' && ch != ','; });
+            if (consume_if('=')) {
+                auto value = consume_while([](auto ch) { return ch != ']' && ch != ','; });
+                extended_attributes.set(name, value);
+            } else {
+                extended_attributes.set(name, {});
+            }
+        }
+        consume_whitespace();
+        return extended_attributes;
     };
 
     for (;;) {
+        HashMap<String, String> extended_attributes;
 
         consume_whitespace();
 
         if (consume_if('}'))
             break;
 
+        if (consume_if('[')) {
+            extended_attributes = parse_extended_attributes();
+        }
+
         if (next_is("readonly") || next_is("attribute")) {
-            parse_attribute();
+            parse_attribute(extended_attributes);
             continue;
         }
 
-        parse_function();
+        parse_function(extended_attributes);
     }
 
     interface->wrapper_class = String::format("%sWrapper", interface->name.characters());
@@ -569,7 +596,13 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "    auto* impl = impl_from(interpreter, global_object);";
         out() << "    if (!impl)";
         out() << "        return {};";
-        out() << "    auto retval = impl->" << snake_name(attribute.name) << "();";
+
+        if (attribute.extended_attributes.contains("Reflect")) {
+            out() << "    auto retval = impl->attribute(HTML::AttributeNames::" << attribute.name << ");";
+        } else {
+            out() << "    auto retval = impl->" << snake_name(attribute.name) << "();";
+        }
+
         generate_return_statement(attribute.type);
         out() << "}";
 
@@ -582,7 +615,11 @@ void generate_implementation(const IDL::Interface& interface)
 
             generate_to_cpp(attribute, "value", "", "cpp_value", true);
 
-            out() << "    impl->set_" << snake_name(attribute.name) << "(cpp_value);";
+            if (attribute.extended_attributes.contains("Reflect")) {
+                out() << "    impl->set_attribute(HTML::AttributeNames::" << attribute.name << ", cpp_value);";
+            } else {
+                out() << "    impl->set_" << snake_name(attribute.name) << "(cpp_value);";
+            }
             out() << "}";
         }
     }
