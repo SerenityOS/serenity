@@ -1,3 +1,6 @@
 interface HTMLImageElement : HTMLElement {
 
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString alt;
+
 }
