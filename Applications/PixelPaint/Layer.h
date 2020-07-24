@@ -61,6 +61,8 @@ public:
     const String& name() const { return m_name; }
     void set_name(const String&);
 
+    void set_bitmap(Gfx::Bitmap& bitmap) { m_bitmap = bitmap; }
+
     void did_modify_bitmap(Image&);
 
     void set_selected(bool selected) { m_selected = selected; }
