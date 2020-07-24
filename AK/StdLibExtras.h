@@ -99,6 +99,11 @@ struct EnableIf<true, T> {
 };
 
 template<class T>
+struct AddConst {
+    typedef const T Type;
+};
+
+template<class T>
 struct RemoveConst {
     typedef T Type;
 };
@@ -416,6 +421,18 @@ struct MakeSigned<unsigned long long> {
     typedef long long type;
 };
 
+template<class T>
+struct IsVoid : IsSame<void, typename RemoveCV<T>::Type> {
+};
+
+template<class T>
+struct IsConst : FalseType {
+};
+
+template<class T>
+struct IsConst<const T> : TrueType {
+};
+
 template<typename T, typename U = T>
 inline constexpr T exchange(T& slot, U&& value)
 {
@@ -426,12 +443,15 @@ inline constexpr T exchange(T& slot, U&& value)
 
 }
 
+using AK::AddConst;
 using AK::ceil_div;
 using AK::clamp;
 using AK::Conditional;
 using AK::exchange;
 using AK::forward;
+using AK::IsConst;
 using AK::IsSame;
+using AK::IsVoid;
 using AK::MakeSigned;
 using AK::MakeUnsigned;
 using AK::max;
