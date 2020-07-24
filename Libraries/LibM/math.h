@@ -28,6 +28,12 @@
 
 #include <sys/cdefs.h>
 
+#if __cplusplus >= 201103L
+#define NOEXCEPT noexcept
+#else
+#define NOEXCEPT
+#endif
+
 __BEGIN_DECLS
 
 #define HUGE_VAL 1e10000
@@ -47,74 +53,72 @@ __BEGIN_DECLS
 #define DOUBLE_MAX ((double)0b0111111111101111111111111111111111111111111111111111111111111111)
 #define DOUBLE_MIN ((double)0b0000000000010000000000000000000000000000000000000000000000000000)
 
-double acos(double);
-float acosf(float);
-double asin(double);
-float asinf(float);
-double atan(double);
-float atanf(float);
-double atan2(double, double);
-float atan2f(float, float);
-double cos(double);
-float cosf(float);
-double cosh(double);
-float coshf(float);
-double sin(double);
-float sinf(float);
-double sinh(double);
-float sinhf(float);
-double tan(double);
-float tanf(float);
-double tanh(double);
-float tanhf(float);
-double ceil(double);
-float ceilf(float);
-double floor(double);
-float floorf(float);
-double round(double);
-float roundf(float);
-double fabs(double);
-float fabsf(float);
-double fmod(double, double);
-float fmodf(float, float);
-double exp(double);
-float expf(float);
-double exp2(double);
-float exp2f(float);
-double frexp(double, int* exp);
-float frexpf(float, int* exp);
-double log(double);
-float logf(float);
-double log10(double);
-float log10f(float);
-double sqrt(double);
-float sqrtf(float);
-double modf(double, double*);
-float modff(float, float*);
-double ldexp(double, int exp);
-float ldexpf(float, int exp);
+double acos(double) NOEXCEPT;
+float acosf(float) NOEXCEPT;
+double asin(double) NOEXCEPT;
+float asinf(float) NOEXCEPT;
+double atan(double) NOEXCEPT;
+float atanf(float) NOEXCEPT;
+double atan2(double, double) NOEXCEPT;
+float atan2f(float, float) NOEXCEPT;
+double cos(double) NOEXCEPT;
+float cosf(float) NOEXCEPT;
+double cosh(double) NOEXCEPT;
+float coshf(float) NOEXCEPT;
+double sin(double) NOEXCEPT;
+float sinf(float) NOEXCEPT;
+double sinh(double) NOEXCEPT;
+float sinhf(float) NOEXCEPT;
+double tan(double) NOEXCEPT;
+float tanf(float) NOEXCEPT;
+double tanh(double) NOEXCEPT;
+float tanhf(float) NOEXCEPT;
+double ceil(double) NOEXCEPT;
+float ceilf(float) NOEXCEPT;
+double floor(double) NOEXCEPT;
+float floorf(float) NOEXCEPT;
+double round(double) NOEXCEPT;
+float roundf(float) NOEXCEPT;
+double fabs(double) NOEXCEPT;
+float fabsf(float) NOEXCEPT;
+double fmod(double, double) NOEXCEPT;
+float fmodf(float, float) NOEXCEPT;
+double exp(double) NOEXCEPT;
+float expf(float) NOEXCEPT;
+double exp2(double) NOEXCEPT;
+float exp2f(float) NOEXCEPT;
+double frexp(double, int* exp) NOEXCEPT;
+float frexpf(float, int* exp) NOEXCEPT;
+double log(double) NOEXCEPT;
+float logf(float) NOEXCEPT;
+double log10(double) NOEXCEPT;
+float log10f(float) NOEXCEPT;
+double sqrt(double) NOEXCEPT;
+float sqrtf(float) NOEXCEPT;
+double modf(double, double*) NOEXCEPT;
+float modff(float, float*) NOEXCEPT;
+double ldexp(double, int exp) NOEXCEPT;
+float ldexpf(float, int exp) NOEXCEPT;
 
-double pow(double x, double y);
-float powf(float x, float y);
+double pow(double x, double y) NOEXCEPT;
+float powf(float x, float y) NOEXCEPT;
 
-double log2(double);
-float log2f(float);
-long double log2l(long double);
-double frexp(double, int*);
-float frexpf(float, int*);
-long double frexpl(long double, int*);
+double log2(double) NOEXCEPT;
+float log2f(float) NOEXCEPT;
+long double log2l(long double) NOEXCEPT;
+double frexp(double, int*) NOEXCEPT;
+float frexpf(float, int*) NOEXCEPT;
+long double frexpl(long double, int*) NOEXCEPT;
 
-double gamma(double);
-double expm1(double);
-double cbrt(double);
-double log1p(double);
-double acosh(double);
-double asinh(double);
-double atanh(double);
-double hypot(double, double);
-double erf(double);
-double erfc(double);
-
-int isnormal(double);
+double gamma(double) NOEXCEPT;
+double expm1(double) NOEXCEPT;
+double cbrt(double) NOEXCEPT;
+double log1p(double) NOEXCEPT;
+double acosh(double) NOEXCEPT;
+double asinh(double) NOEXCEPT;
+double atanh(double) NOEXCEPT;
+double hypot(double, double) NOEXCEPT;
+double erf(double) NOEXCEPT;
+double erfc(double) NOEXCEPT;
 
 __END_DECLS
