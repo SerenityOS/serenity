@@ -311,7 +311,6 @@ static UnsignedBigInteger random_number(const UnsignedBigInteger& min, const Uns
     ASSERT(min < max);
     auto range = max.minus(min);
     UnsignedBigInteger base;
-    // FIXME: Need a cryptographically secure rng
     auto size = range.trimmed_length() * sizeof(u32);
     u8 buf[size];
     AK::fill_with_random(buf, size);
