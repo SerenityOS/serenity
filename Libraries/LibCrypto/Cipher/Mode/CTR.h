@@ -82,8 +82,9 @@ namespace Cipher {
  *
  * Due to this plethora of mutually-incompatible counters,
  * the method of counting should be a template parameter.
- * This currently implements BIGINT_MIXEDENDIAN_INCR_0, which is not used
- * anywhere else.
+ * This currently implements BIGINT_INCR_0, which means perfect
+ * interoperability with openssl. The test vectors from RFC 3686 just need to be
+ * incremented by 1.
  * TODO: Implement other counters?
  */
 
@@ -112,6 +113,8 @@ public:
 
     virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
     {
+        // Our interpretation of "ivec" is what AES-CTR
+        // would define as nonce + IV + 4 zero bytes.
         return this->encrypt_or_stream(&in, out, ivec);
     }
 
@@ -129,20 +132,17 @@ public:
     }
 
 private:
-    static ByteBuffer increment(const ByteBuffer& in)
+    static void increment_inplace(ByteBuffer& in)
     {
-        ByteBuffer new_buffer(in);
-        size_t* num_view = (size_t*)new_buffer.data();
-
-        for (size_t i = 0; i < in.size() / sizeof(size_t); ++i) {
-            if (num_view[i] == (size_t)-1) {
-                num_view[i] = 0;
+        for (size_t i = in.size(); i > 0;) {
+            --i;
+            if (in[i] == (u8)-1) {
+                in[i] = 0;
             } else {
-                num_view[i]++;
+                in[i]++;
                 break;
             }
         }
-        return new_buffer;
     }
 
     Optional<ByteBuffer> encrypt_or_stream(const ByteBuffer* in, ByteBuffer& out, Optional<ByteBuffer> ivec)
@@ -178,7 +178,7 @@ private:
             auto write_size = min(block_size, length);
             out.overwrite(offset, block.get().data(), write_size);
 
-            iv = increment(iv);
+            increment_inplace(iv);
             length -= write_size;
             offset += write_size;
         }
