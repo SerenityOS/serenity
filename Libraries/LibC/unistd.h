@@ -179,4 +179,12 @@ enum {
 };
 long sysconf(int name);
 
+struct crypt_data {
+    int initialized;
+    char result[65];
+};
+
+char* crypt(const char* key, const char* salt);
+char* crypt_r(const char* key, const char* salt, struct crypt_data* data);
+
 __END_DECLS
