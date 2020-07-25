@@ -50,6 +50,12 @@ class Utf32View;
 class Utf8View;
 
 template<typename T>
+class Span;
+
+using ReadonlyBytes = Span<const u8>;
+using Bytes = Span<u8>;
+
+template<typename T>
 class Atomic;
 
 template<typename T>
@@ -113,6 +119,7 @@ using AK::Badge;
 using AK::Bitmap;
 using AK::BufferStream;
 using AK::ByteBuffer;
+using AK::Bytes;
 using AK::CircularQueue;
 using AK::DebugLogStream;
 using AK::DoublyLinkedList;
@@ -131,9 +138,11 @@ using AK::NonnullOwnPtr;
 using AK::NonnullRefPtr;
 using AK::Optional;
 using AK::OwnPtr;
+using AK::ReadonlyBytes;
 using AK::RefPtr;
 using AK::SharedBuffer;
 using AK::SinglyLinkedList;
+using AK::Span;
 using AK::String;
 using AK::StringBuilder;
 using AK::StringImpl;
