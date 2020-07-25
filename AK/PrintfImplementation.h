@@ -178,7 +178,7 @@ ALWAYS_INLINE int print_u64(PutChFunc putch, char*& bufptr, u64 number, bool lef
 }
 
 template<typename PutChFunc>
-ALWAYS_INLINE int print_double(PutChFunc putch, char*& bufptr, double number, bool left_pad, bool zero_pad, u32 field_width, u32 fraction_length = 6)
+ALWAYS_INLINE int print_double(PutChFunc putch, char*& bufptr, double number, bool left_pad, bool zero_pad, u32 field_width, u32 fraction_length)
 {
     int length = 0;
 
@@ -296,7 +296,8 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
         bool zero_pad = false;
         bool dot = false;
         unsigned field_width = 0;
-        unsigned fraction_length = 0;
+        bool has_fraction_length = false;
+        unsigned fraction_length = 6;
         unsigned long_qualifiers = 0;
         bool size_qualifier = false;
         (void)size_qualifier;
@@ -332,6 +333,10 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                     if (*(p + 1))
                         goto one_more;
                 } else {
+                    if (!has_fraction_length) {
+                        has_fraction_length = true;
+                        fraction_length = 0;
+                    }
                     fraction_length *= 10;
                     fraction_length += *p - '0';
                     if (*(p + 1))
