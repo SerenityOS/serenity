@@ -238,7 +238,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     auto titlebar_icon_rect = title_bar_icon_rect();
     auto titlebar_inner_rect = title_bar_text_rect();
     auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(Gfx::Font::default_bold_font().width(title_text));
+    titlebar_title_rect.set_width(WindowManager::the().window_title_font().width(title_text));
 
     auto [title_color, border_color, border_color2] = compute_frame_colors();
 
