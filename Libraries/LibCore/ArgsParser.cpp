@@ -324,6 +324,28 @@ void ArgsParser::add_positional_argument(int& value, const char* help_string, co
     add_positional_argument(move(arg));
 }
 
+static constexpr bool isnan(double __x) { return __builtin_isnan(__x); }
+
+void ArgsParser::add_positional_argument(double& value, const char* help_string, const char* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](const char* s) {
+            char *p;
+            double v = strtod(s, &p);
+            bool valid_value = !isnan(v) && p != s;
+            if (valid_value) {
+                value = v;
+            }
+            return valid_value;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
 void ArgsParser::add_positional_argument(Vector<const char*>& values, const char* help_string, const char* name, Required required)
 {
     Arg arg {
