@@ -135,6 +135,8 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_RM8:
     case OP_RM16:
     case OP_RM32:
+    case OP_FPU_RM32:
+    case OP_FPU_RM64:
     case OP_RM8_reg8:
     case OP_RM32_reg32:
     case OP_reg32_RM32:
@@ -434,9 +436,34 @@ static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFor
     build(0xD6, "SALC", OP, &Interpreter::SALC);
     build(0xD7, "XLAT", OP, &Interpreter::XLAT);
 
-    // FIXME: D8-DF == FPU
-    for (u8 i = 0; i <= 7; ++i)
-        build(0xD8 + i, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+    // D8-DF == FPU
+    build_slash(0xD8, 0, "FADD", OP_FPU_RM32, &Interpreter::FADD_RM32);
+    build_slash(0xD8, 1, "FMUL", OP_FPU_RM32, &Interpreter::FMUL_RM32);
+    build_slash(0xD8, 2, "FCOM", OP_FPU_RM32, &Interpreter::FCOM_RM32);
+    // FIXME: D8/2 D1 (...but isn't this what D8/2 does naturally, with D1 just being normal R/M?)
+    build_slash(0xD8, 3, "FCOMP", OP_FPU_RM32, &Interpreter::FCOMP_RM32);
+    // FIXME: D8/3 D9 (...but isn't this what D8/3 does naturally, with D9 just being normal R/M?)
+    build_slash(0xD8, 4, "FSUB", OP_FPU_RM32, &Interpreter::FSUB_RM32);
+    build_slash(0xD8, 5, "FSUBR", OP_FPU_RM32, &Interpreter::FSUBR_RM32);
+    build_slash(0xD8, 6, "FDIV", OP_FPU_RM32, &Interpreter::FDIV_RM32);
+    build_slash(0xD8, 7, "FDIVR", OP_FPU_RM32, &Interpreter::FDIVR_RM32);
+
+    // FIXME
+    for (u8 i = 0; i <= 3; ++i)
+        build(0xD9 + i, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+
+    build_slash(0xDC, 0, "FADD", OP_FPU_RM64, &Interpreter::FADD_RM64);
+    build_slash(0xDC, 1, "FMUL", OP_FPU_RM64, &Interpreter::FMUL_RM64);
+    build_slash(0xDC, 2, "FCOM", OP_FPU_RM64, &Interpreter::FCOM_RM64);
+    build_slash(0xDC, 3, "FCOMP", OP_FPU_RM64, &Interpreter::FCOMP_RM64);
+    build_slash(0xDC, 4, "FSUB", OP_FPU_RM64, &Interpreter::FSUB_RM64);
+    build_slash(0xDC, 5, "FSUBR", OP_FPU_RM64, &Interpreter::FSUBR_RM64);
+    build_slash(0xDC, 6, "FDIV", OP_FPU_RM64, &Interpreter::FDIV_RM64);
+    build_slash(0xDC, 7, "FDIVR", OP_FPU_RM64, &Interpreter::FDIVR_RM64);
+
+    // FIXME
+    for (u8 i = 0; i <= 2; ++i)
+        build(0xDD + i, "FPU?", OP_RM8, &Interpreter::ESCAPE);
 
     build(0xE0, "LOOPNZ", OP_imm8, &Interpreter::LOOPNZ_imm8);
     build(0xE1, "LOOPZ", OP_imm8, &Interpreter::LOOPZ_imm8);
@@ -707,6 +734,7 @@ static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFor
 static const char* register_name(RegisterIndex8);
 static const char* register_name(RegisterIndex16);
 static const char* register_name(RegisterIndex32);
+static const char* register_name(FpuRegisterIndex);
 static const char* register_name(SegmentRegister);
 static const char* register_name(MMXRegisterIndex);
 
@@ -728,22 +756,36 @@ const char* Instruction::reg32_name() const
 String MemoryOrRegisterReference::to_string_o8(const Instruction& insn) const
 {
     if (is_register())
-        return register_name(static_cast<RegisterIndex8>(m_register_index));
+        return register_name(reg8());
     return String::format("[%s]", to_string(insn).characters());
 }
 
 String MemoryOrRegisterReference::to_string_o16(const Instruction& insn) const
 {
     if (is_register())
-        return register_name(static_cast<RegisterIndex16>(m_register_index));
+        return register_name(reg16());
     return String::format("[%s]", to_string(insn).characters());
 }
 
 String MemoryOrRegisterReference::to_string_o32(const Instruction& insn) const
 {
     if (is_register())
-        return register_name(static_cast<RegisterIndex32>(m_register_index));
+        return register_name(reg32());
     return String::format("[%s]", to_string(insn).characters());
+}
+
+String MemoryOrRegisterReference::to_string_fpu32(const Instruction& insn) const
+{
+    if (is_register())
+        return register_name(reg_fpu());
+    return String::format("dword ptr [%s]", to_string(insn).characters());
+}
+
+String MemoryOrRegisterReference::to_string_fpu64(const Instruction& insn) const
+{
+    if (is_register())
+        return register_name(reg_fpu());
+    return String::format("qword ptr [%s]", to_string(insn).characters());
 }
 
 String MemoryOrRegisterReference::to_string_mm(const Instruction& insn) const
@@ -1035,6 +1077,8 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
     auto append_rm8 = [&] { builder.append(m_modrm.to_string_o8(*this)); };
     auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16(*this)); };
     auto append_rm32 = [&] { builder.append(m_modrm.to_string_o32(*this)); };
+    auto append_fpu_rm32 = [&] { builder.append(m_modrm.to_string_fpu32(*this)); };
+    auto append_fpu_rm64 = [&] { builder.append(m_modrm.to_string_fpu64(*this)); };
     auto append_imm8 = [&] { builder.appendf("%#02x", imm8()); };
     auto append_imm8_2 = [&] { builder.appendf("%#02x", imm8_2()); };
     auto append_imm16 = [&] { builder.appendf("%#04x", imm16()); };
@@ -1298,6 +1342,12 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
     case OP_RM32:
         append_rm32();
         break;
+    case OP_FPU_RM32:
+        append_fpu_rm32();
+        break;
+    case OP_FPU_RM64:
+        append_fpu_rm64();
+        break;
     case OP_RM8_reg8:
         append_rm8();
         append(", ");
@@ -1502,6 +1552,12 @@ const char* register_name(RegisterIndex16 register_index)
 const char* register_name(RegisterIndex32 register_index)
 {
     static constexpr const char* names[] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
+    return names[register_index & 7];
+}
+
+const char* register_name(FpuRegisterIndex register_index)
+{
+    static constexpr const char* names[] = { "st0", "st1", "st2", "st3", "st4", "st5", "st6", "st7" };
     return names[register_index & 7];
 }
 
