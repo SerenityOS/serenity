@@ -53,6 +53,8 @@ public:
 
     void did_set_maximized(Badge<Window>, bool);
 
+    void layout_buttons();
+
 private:
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);

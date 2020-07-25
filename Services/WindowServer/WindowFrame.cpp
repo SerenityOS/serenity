@@ -329,6 +329,16 @@ void WindowFrame::invalidate_title_bar()
 
 void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
 {
+    layout_buttons();
+
+    auto& wm = WindowManager::the();
+    wm.invalidate(frame_rect_for_window(m_window, old_rect));
+    wm.invalidate(frame_rect_for_window(m_window, new_rect));
+    wm.notify_rect_changed(m_window, old_rect, new_rect);
+}
+
+void WindowFrame::layout_buttons()
+{
     auto palette = WindowManager::the().palette();
     int window_button_width = palette.window_title_button_width();
     int window_button_height = palette.window_title_button_height();
@@ -352,11 +362,6 @@ void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const
             button.set_relative_rect(rect);
         }
     }
-
-    auto& wm = WindowManager::the();
-    wm.invalidate(frame_rect_for_window(m_window, old_rect));
-    wm.invalidate(frame_rect_for_window(m_window, new_rect));
-    wm.notify_rect_changed(m_window, old_rect, new_rect);
 }
 
 void WindowFrame::on_mouse_event(const MouseEvent& event)
@@ -390,7 +395,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
             return;
         } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
             // Since the MouseDown event opened a menu, another MouseUp
-            // from the second click outside the menu wouldn't be considered 
+            // from the second click outside the menu wouldn't be considered
             // a double click, so let's manually check if it would otherwise
             // have been be considered to be one
             auto& wm = WindowManager::the();
