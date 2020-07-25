@@ -152,20 +152,25 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 Gfx::IntRect WindowFrame::title_bar_rect() const
 {
     auto window_titlebar_height = WindowManager::the().palette().window_title_height();
+    int total_vertical_padding = window_titlebar_height - WindowManager::the().window_title_font().glyph_height();
+
     if (m_window.type() == WindowType::Notification)
-        return { m_window.width() + 3, 3, window_titlebar_height, m_window.height() };
-    return { 4, 4, m_window.width(), window_titlebar_height };
+        return { m_window.width() + 3, total_vertical_padding / 2 - 1, window_titlebar_height, m_window.height() };
+    return { 4, total_vertical_padding / 2, m_window.width(), window_titlebar_height };
 }
 
 Gfx::IntRect WindowFrame::title_bar_icon_rect() const
 {
     auto titlebar_rect = title_bar_rect();
-    return {
+    Gfx::IntRect icon_rect {
         titlebar_rect.x() + 2,
-        titlebar_rect.y() + 2,
+        titlebar_rect.y(),
         16,
-        titlebar_rect.height(),
+        16,
     };
+    icon_rect.center_vertically_within(titlebar_rect);
+    icon_rect.move_by(0, 1);
+    return icon_rect;
 }
 
 Gfx::IntRect WindowFrame::title_bar_text_rect() const
