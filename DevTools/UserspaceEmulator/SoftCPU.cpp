@@ -1347,6 +1347,22 @@ void SoftCPU::ESCAPE(const X86::Instruction&)
     TODO();
 }
 
+void SoftCPU::FADD_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::FMUL_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::FCOM_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::FCOMP_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::FSUB_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::FSUBR_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::FDIV_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::FDIVR_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::FADD_RM64(const X86::Instruction&) { TODO(); }
+void SoftCPU::FMUL_RM64(const X86::Instruction&) { TODO(); }
+void SoftCPU::FCOM_RM64(const X86::Instruction&) { TODO(); }
+void SoftCPU::FCOMP_RM64(const X86::Instruction&) { TODO(); }
+void SoftCPU::FSUB_RM64(const X86::Instruction&) { TODO(); }
+void SoftCPU::FSUBR_RM64(const X86::Instruction&) { TODO(); }
+void SoftCPU::FDIV_RM64(const X86::Instruction&) { TODO(); }
+void SoftCPU::FDIVR_RM64(const X86::Instruction&) { TODO(); }
 void SoftCPU::HLT(const X86::Instruction&) { TODO(); }
 
 void SoftCPU::IDIV_RM16(const X86::Instruction& insn)
