@@ -29,6 +29,7 @@
 #include <AK/Assertions.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/kmalloc.h>
@@ -185,6 +186,9 @@ public:
         TypedTransfer<T>::copy(data(), other.data(), other.size());
         m_size = other.size();
     }
+
+    Span<T> span() { return { data(), size() }; }
+    Span<const T> span() const { return { data(), size() }; }
 
     // FIXME: What about assigning from a vector with lower inline capacity?
     Vector& operator=(Vector&& other)

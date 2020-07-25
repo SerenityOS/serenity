@@ -37,14 +37,14 @@ void usage(void)
     exit(1);
 }
 
-enum Unit { Bytes,
+enum class Unit { Bytes,
     KiloBytes,
     MegaBytes };
 
 int main(int argc, char** argv)
 {
     int count = 50;
-    Unit unit = MegaBytes;
+    auto unit = Unit::MegaBytes;
 
     if (argc >= 2) {
         auto number = String(argv[1]).to_uint();
@@ -56,22 +56,22 @@ int main(int argc, char** argv)
 
     if (argc >= 3) {
         if (strcmp(argv[2], "B") == 0)
-            unit = Bytes;
+            unit = Unit::Bytes;
         else if (strcmp(argv[2], "KB") == 0)
-            unit = KiloBytes;
+            unit = Unit::KiloBytes;
         else if (strcmp(argv[2], "MB") == 0)
-            unit = MegaBytes;
+            unit = Unit::MegaBytes;
         else
             usage();
     }
 
     switch (unit) {
-    case Bytes:
+    case Unit::Bytes:
         break;
-    case KiloBytes:
+    case Unit::KiloBytes:
         count *= 1024;
         break;
-    case MegaBytes:
+    case Unit::MegaBytes:
         count *= 1024 * 1024;
         break;
     }
