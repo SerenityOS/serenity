@@ -7,6 +7,7 @@ set(SOURCES
     Event.cpp
     EventLoop.cpp
     File.cpp
+    GetPassword.cpp
     Gzip.cpp
     IODevice.cpp
     LocalServer.cpp
