@@ -82,6 +82,8 @@ enum InstructionFormat {
     OP_RM8,
     OP_RM16,
     OP_RM32,
+    OP_FPU_RM32,
+    OP_FPU_RM64,
     OP_RM8_reg8,
     OP_RM32_reg32,
     OP_reg32_RM32,
@@ -256,6 +258,17 @@ enum RegisterIndex32 {
     RegisterEDI
 };
 
+enum FpuRegisterIndex {
+    ST0 = 0,
+    ST1,
+    ST2,
+    ST3,
+    ST4,
+    ST5,
+    ST6,
+    ST7
+};
+
 enum MMXRegisterIndex {
     RegisterMM0 = 0,
     RegisterMM1,
@@ -339,6 +352,8 @@ public:
     String to_string_o8(const Instruction&) const;
     String to_string_o16(const Instruction&) const;
     String to_string_o32(const Instruction&) const;
+    String to_string_fpu32(const Instruction&) const;
+    String to_string_fpu64(const Instruction&) const;
     String to_string_mm(const Instruction&) const;
 
     bool is_register() const { return m_register_index != 0xffffffff; }
@@ -347,6 +362,7 @@ public:
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
     RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
+    FpuRegisterIndex reg_fpu() const { return static_cast<FpuRegisterIndex>(register_index()); }
 
     template<typename CPU, typename T>
     void write8(CPU&, const Instruction&, T);
