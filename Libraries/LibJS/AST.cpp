@@ -930,6 +930,7 @@ void ClassDeclaration::dump(int indent) const
 void ClassExpression::dump(int indent) const
 {
     print_indent(indent);
+    ASSERT(m_name.characters());
     printf("ClassExpression: \"%s\"\n", m_name.characters());
 
     print_indent(indent);
