@@ -145,6 +145,7 @@ next_entry:
     __pwdb_entry->pw_gecos = __pwdb_entry->gecos_buffer;
     __pwdb_entry->pw_dir = __pwdb_entry->dir_buffer;
     __pwdb_entry->pw_shell = __pwdb_entry->shell_buffer;
+
     strncpy(__pwdb_entry->name_buffer, e_name.characters(), PWDB_STR_MAX_LEN - 1);
     strncpy(__pwdb_entry->passwd_buffer, e_passwd.characters(), PWDB_STR_MAX_LEN - 1);
     strncpy(__pwdb_entry->gecos_buffer, e_gecos.characters(), PWDB_STR_MAX_LEN - 1);
@@ -155,7 +156,7 @@ next_entry:
 
 int putpwent(const struct passwd* p, FILE* stream)
 {
-    if (!p || !stream || !p->pw_name || !p->pw_dir || !p->pw_gecos || !p->pw_shell) {
+    if (!p || !stream || !p->pw_passwd || !p->pw_name || !p->pw_dir || !p->pw_gecos || !p->pw_shell) {
         errno = EINVAL;
         return -1;
     }
@@ -169,7 +170,7 @@ int putpwent(const struct passwd* p, FILE* stream)
         return -1;
     }
 
-    int nwritten = fprintf(stream, "%s:x:%u:%u:%s,,,:%s:%s\n", p->pw_name, p->pw_uid, p->pw_gid, p->pw_gecos, p->pw_dir, p->pw_shell);
+    int nwritten = fprintf(stream, "%s:%s:%u:%u:%s,,,:%s:%s\n", p->pw_name, p->pw_passwd, p->pw_uid, p->pw_gid, p->pw_gecos, p->pw_dir, p->pw_shell);
     if (!nwritten || nwritten < 0) {
         errno = ferror(stream);
         return -1;
