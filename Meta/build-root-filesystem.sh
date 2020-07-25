@@ -37,6 +37,7 @@ chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
 echo "/bin/sh" > mnt/etc/shells
 
 chown 0:$wheel_gid mnt/bin/su
+chown 0:$wheel_gid mnt/bin/passwd
 chown 0:$phys_gid mnt/bin/keymap
 chown 0:$phys_gid mnt/bin/shutdown
 chown 0:$phys_gid mnt/bin/reboot
@@ -45,6 +46,7 @@ chown 0:0 mnt/res/kernel.map
 chmod 0400 mnt/res/kernel.map
 chmod 0400 mnt/boot/Kernel
 chmod 4750 mnt/bin/su
+chmod 4755 mnt/bin/passwd
 chmod 4755 mnt/bin/ping
 chmod 4750 mnt/bin/reboot
 chmod 4750 mnt/bin/shutdown
