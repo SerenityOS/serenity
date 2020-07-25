@@ -441,10 +441,9 @@ HitTestResult CastToCommand::hit_test_position(size_t offset)
 Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
-    if (!matching_node)
+    if (!matching_node || !matching_node->is_bareword())
         return {};
 
-    ASSERT(matching_node->is_bareword());
     auto corrected_offset = offset - matching_node->position().start_offset;
     auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
 
@@ -953,10 +952,9 @@ HitTestResult Execute::hit_test_position(size_t offset)
 Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
-    if (!matching_node)
+    if (!matching_node || !matching_node->is_bareword())
         return {};
 
-    ASSERT(matching_node->is_bareword());
     auto corrected_offset = offset - matching_node->position().start_offset;
     auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
 
@@ -1204,10 +1202,9 @@ HitTestResult PathRedirectionNode::hit_test_position(size_t offset)
 Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
-    if (!matching_node)
+    if (!matching_node || !matching_node->is_bareword())
         return {};
 
-    ASSERT(matching_node->is_bareword());
     auto corrected_offset = offset - matching_node->position().start_offset;
     auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
 
