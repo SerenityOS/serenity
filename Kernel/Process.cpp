@@ -1118,7 +1118,7 @@ Vector<AuxiliaryValue> Process::generate_auxiliary_vector() const
     auxv.append({ AuxiliaryValue::Secure, ((m_uid != m_euid) || (m_gid != m_egid)) ? 1 : 0 });
 
     char random_bytes[16] {};
-    get_good_random_bytes((u8*)random_bytes, sizeof(random_bytes));
+    get_fast_random_bytes((u8*)random_bytes, sizeof(random_bytes));
 
     auxv.append({ AuxiliaryValue::Random, String(random_bytes, sizeof(random_bytes)) });
 
