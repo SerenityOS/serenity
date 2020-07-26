@@ -43,6 +43,15 @@ namespace GUI {
     __TOKEN(RightCurly)            \
     __TOKEN(LeftBracket)           \
     __TOKEN(RightBracket)          \
+    __TOKEN(Less)                  \
+    __TOKEN(Greater)               \
+    __TOKEN(LessEquals)            \
+    __TOKEN(GreaterEquals)         \
+    __TOKEN(LessLess)              \
+    __TOKEN(GreaterGreater)        \
+    __TOKEN(LessLessEquals)        \
+    __TOKEN(GreaterGreaterEquals)  \
+    __TOKEN(LessGreater)           \
     __TOKEN(Comma)                 \
     __TOKEN(Plus)                  \
     __TOKEN(PlusEquals)            \
@@ -52,6 +61,8 @@ namespace GUI {
     __TOKEN(AsteriskEquals)        \
     __TOKEN(Slash)                 \
     __TOKEN(SlashEquals)           \
+    __TOKEN(Percent)               \
+    __TOKEN(PercentEquals)         \
     __TOKEN(Equals)                \
     __TOKEN(EqualsEquals)          \
     __TOKEN(Semicolon)             \
