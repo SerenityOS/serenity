@@ -54,8 +54,10 @@ namespace GUI {
     __TOKEN(LessGreater)           \
     __TOKEN(Comma)                 \
     __TOKEN(Plus)                  \
+    __TOKEN(PlusPlus)              \
     __TOKEN(PlusEquals)            \
     __TOKEN(Minus)                 \
+    __TOKEN(MinusMinus)            \
     __TOKEN(MinusEquals)           \
     __TOKEN(Asterisk)              \
     __TOKEN(AsteriskEquals)        \
