@@ -28,7 +28,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 
-namespace Web {
+namespace Web::CSS {
 
 float Length::relative_length_to_px(const LayoutNode& layout_node) const
 {

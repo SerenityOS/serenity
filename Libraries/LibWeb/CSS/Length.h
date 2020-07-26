@@ -29,7 +29,7 @@
 #include <AK/String.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::CSS {
 
 class Length {
 public:

@@ -34,7 +34,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PageView.h>
 
-namespace Web {
+namespace Web::CSS {
 
 StyleValue::StyleValue(Type type)
     : m_type(type)

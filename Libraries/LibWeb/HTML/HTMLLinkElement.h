@@ -61,7 +61,7 @@ private:
     };
 
     unsigned m_relationship { 0 };
-    RefPtr<StyleSheet> m_style_sheet;
+    RefPtr<CSS::StyleSheet> m_style_sheet;
 };
 
 }

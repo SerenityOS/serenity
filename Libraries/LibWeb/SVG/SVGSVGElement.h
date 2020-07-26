@@ -35,7 +35,7 @@ class SVGSVGElement final : public SVGGraphicsElement {
 public:
     SVGSVGElement(DOM::Document&, const FlyString& tag_name);
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
+    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
     const RefPtr<Gfx::Bitmap> bitmap() const { return m_bitmap; }
     bool create_bitmap_as_top_level_svg_element();

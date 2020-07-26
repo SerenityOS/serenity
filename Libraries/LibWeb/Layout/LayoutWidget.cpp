@@ -37,7 +37,7 @@
 namespace Web {
 
 LayoutWidget::LayoutWidget(DOM::Document& document, const DOM::Element& element, GUI::Widget& widget)
-    : LayoutReplaced(document, element, StyleProperties::create())
+    : LayoutReplaced(document, element, CSS::StyleProperties::create())
     , m_widget(widget)
 {
     set_has_intrinsic_width(true);

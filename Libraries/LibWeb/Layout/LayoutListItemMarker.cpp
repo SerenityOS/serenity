@@ -30,7 +30,7 @@
 namespace Web {
 
 LayoutListItemMarker::LayoutListItemMarker(DOM::Document& document)
-    : LayoutBox(document, nullptr, StyleProperties::create())
+    : LayoutBox(document, nullptr, CSS::StyleProperties::create())
 {
 }
 

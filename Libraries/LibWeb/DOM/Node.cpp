@@ -110,7 +110,7 @@ const Element* Node::previous_element_sibling() const
     return nullptr;
 }
 
-RefPtr<LayoutNode> Node::create_layout_node(const StyleProperties*)
+RefPtr<LayoutNode> Node::create_layout_node(const CSS::StyleProperties*)
 {
     return nullptr;
 }

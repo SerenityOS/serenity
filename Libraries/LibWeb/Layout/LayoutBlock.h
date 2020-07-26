@@ -33,7 +33,7 @@ namespace Web {
 
 class LayoutBlock : public LayoutBox {
 public:
-    LayoutBlock(DOM::Document&, const DOM::Node*, NonnullRefPtr<StyleProperties>);
+    LayoutBlock(DOM::Document&, const DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutBlock() override;
 
     virtual const char* class_name() const override { return "LayoutBlock"; }
@@ -87,7 +87,7 @@ private:
     void place_block_level_replaced_element_in_normal_flow(LayoutReplaced&);
     void layout_absolutely_positioned_descendant(LayoutBox&);
 
-    NonnullRefPtr<StyleProperties> style_for_anonymous_block() const;
+    NonnullRefPtr<CSS::StyleProperties> style_for_anonymous_block() const;
 
     void layout_inline_children(LayoutMode);
     void layout_contained_boxes(LayoutMode);

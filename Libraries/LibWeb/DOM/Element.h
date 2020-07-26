@@ -66,7 +66,7 @@ public:
     bool has_class(const FlyString&) const;
     const Vector<FlyString>& class_names() const { return m_classes; }
 
-    virtual void apply_presentational_hints(StyleProperties&) const { }
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
     virtual void parse_attribute(const FlyString& name, const String& value);
 
     void recompute_style();
@@ -76,14 +76,14 @@ public:
 
     String name() const { return attribute(HTML::AttributeNames::name); }
 
-    const StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
-    NonnullRefPtr<StyleProperties> computed_style();
+    const CSS::StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
+    NonnullRefPtr<CSS::StyleProperties> computed_style();
 
     String inner_html() const;
     void set_inner_html(StringView);
 
 protected:
-    RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
+    RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
 private:
     Attribute* find_attribute(const FlyString& name);
@@ -92,7 +92,7 @@ private:
     FlyString m_tag_name;
     Vector<Attribute> m_attributes;
 
-    RefPtr<StyleProperties> m_resolved_style;
+    RefPtr<CSS::StyleProperties> m_resolved_style;
 
     Vector<FlyString> m_classes;
 };

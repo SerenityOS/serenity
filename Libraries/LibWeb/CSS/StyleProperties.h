@@ -33,7 +33,7 @@
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/StyleValue.h>
 
-namespace Web {
+namespace Web::CSS {
 
 class StyleProperties : public RefCounted<StyleProperties> {
 public:

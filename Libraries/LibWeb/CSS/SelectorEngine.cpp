@@ -30,9 +30,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
 
-namespace Web {
-
-namespace SelectorEngine {
+namespace Web::SelectorEngine {
 
 static bool matches_hover_pseudo_class(const DOM::Element& element)
 {
@@ -44,57 +42,57 @@ static bool matches_hover_pseudo_class(const DOM::Element& element)
     return element.is_ancestor_of(*hovered_node);
 }
 
-bool matches(const Selector::SimpleSelector& component, const DOM::Element& element)
+bool matches(const CSS::Selector::SimpleSelector& component, const DOM::Element& element)
 {
     switch (component.pseudo_class) {
-    case Selector::SimpleSelector::PseudoClass::None:
+    case CSS::Selector::SimpleSelector::PseudoClass::None:
         break;
-    case Selector::SimpleSelector::PseudoClass::Link:
+    case CSS::Selector::SimpleSelector::PseudoClass::Link:
         if (!element.is_link())
             return false;
         break;
-    case Selector::SimpleSelector::PseudoClass::Visited:
+    case CSS::Selector::SimpleSelector::PseudoClass::Visited:
         // FIXME: Maybe match this selector sometimes?
         return false;
-    case Selector::SimpleSelector::PseudoClass::Hover:
+    case CSS::Selector::SimpleSelector::PseudoClass::Hover:
         if (!matches_hover_pseudo_class(element))
             return false;
         break;
-    case Selector::SimpleSelector::PseudoClass::Focus:
+    case CSS::Selector::SimpleSelector::PseudoClass::Focus:
         // FIXME: Implement matches_focus_pseudo_class(element)
         return false;
-    case Selector::SimpleSelector::PseudoClass::FirstChild:
+    case CSS::Selector::SimpleSelector::PseudoClass::FirstChild:
         if (element.previous_element_sibling())
             return false;
         break;
-    case Selector::SimpleSelector::PseudoClass::LastChild:
+    case CSS::Selector::SimpleSelector::PseudoClass::LastChild:
         if (element.next_element_sibling())
             return false;
         break;
-    case Selector::SimpleSelector::PseudoClass::OnlyChild:
+    case CSS::Selector::SimpleSelector::PseudoClass::OnlyChild:
         if (element.previous_element_sibling() || element.next_element_sibling())
             return false;
         break;
-    case Selector::SimpleSelector::PseudoClass::Empty:
+    case CSS::Selector::SimpleSelector::PseudoClass::Empty:
         if (element.first_child_of_type<DOM::Element>() || element.first_child_of_type<DOM::Text>())
             return false;
         break;
-    case Selector::SimpleSelector::PseudoClass::Root:
+    case CSS::Selector::SimpleSelector::PseudoClass::Root:
         if (!element.is_html_element())
             return false;
         break;
     }
 
     switch (component.attribute_match_type) {
-    case Selector::SimpleSelector::AttributeMatchType::HasAttribute:
+    case CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute:
         if (!element.has_attribute(component.attribute_name))
             return false;
         break;
-    case Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
+    case CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
         if (element.attribute(component.attribute_name) != component.attribute_value)
             return false;
         break;
-    case Selector::SimpleSelector::AttributeMatchType::Contains:
+    case CSS::Selector::SimpleSelector::AttributeMatchType::Contains:
         if (!element.attribute(component.attribute_name).split(' ').contains_slow(component.attribute_value))
             return false;
         break;
@@ -103,20 +101,20 @@ bool matches(const Selector::SimpleSelector& component, const DOM::Element& elem
     }
 
     switch (component.type) {
-    case Selector::SimpleSelector::Type::Universal:
+    case CSS::Selector::SimpleSelector::Type::Universal:
         return true;
-    case Selector::SimpleSelector::Type::Id:
+    case CSS::Selector::SimpleSelector::Type::Id:
         return component.value == element.attribute(HTML::AttributeNames::id);
-    case Selector::SimpleSelector::Type::Class:
+    case CSS::Selector::SimpleSelector::Type::Class:
         return element.has_class(component.value);
-    case Selector::SimpleSelector::Type::TagName:
+    case CSS::Selector::SimpleSelector::Type::TagName:
         return component.value == element.local_name();
     default:
         ASSERT_NOT_REACHED();
     }
 }
 
-bool matches(const Selector& selector, int component_list_index, const DOM::Element& element)
+bool matches(const CSS::Selector& selector, int component_list_index, const DOM::Element& element)
 {
     auto& component_list = selector.complex_selectors()[component_list_index];
     for (auto& component : component_list.compound_selector) {
@@ -124,9 +122,9 @@ bool matches(const Selector& selector, int component_list_index, const DOM::Elem
             return false;
     }
     switch (component_list.relation) {
-    case Selector::ComplexSelector::Relation::None:
+    case CSS::Selector::ComplexSelector::Relation::None:
         return true;
-    case Selector::ComplexSelector::Relation::Descendant:
+    case CSS::Selector::ComplexSelector::Relation::Descendant:
         ASSERT(component_list_index != 0);
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
             if (!is<DOM::Element>(*ancestor))
@@ -135,17 +133,17 @@ bool matches(const Selector& selector, int component_list_index, const DOM::Elem
                 return true;
         }
         return false;
-    case Selector::ComplexSelector::Relation::ImmediateChild:
+    case CSS::Selector::ComplexSelector::Relation::ImmediateChild:
         ASSERT(component_list_index != 0);
         if (!element.parent() || !is<DOM::Element>(*element.parent()))
             return false;
         return matches(selector, component_list_index - 1, downcast<DOM::Element>(*element.parent()));
-    case Selector::ComplexSelector::Relation::AdjacentSibling:
+    case CSS::Selector::ComplexSelector::Relation::AdjacentSibling:
         ASSERT(component_list_index != 0);
         if (auto* sibling = element.previous_element_sibling())
             return matches(selector, component_list_index - 1, *sibling);
         return false;
-    case Selector::ComplexSelector::Relation::GeneralSibling:
+    case CSS::Selector::ComplexSelector::Relation::GeneralSibling:
         ASSERT(component_list_index != 0);
         for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
             if (matches(selector, component_list_index - 1, *sibling))
@@ -156,12 +154,10 @@ bool matches(const Selector& selector, int component_list_index, const DOM::Elem
     ASSERT_NOT_REACHED();
 }
 
-bool matches(const Selector& selector, const DOM::Element& element)
+bool matches(const CSS::Selector& selector, const DOM::Element& element)
 {
     ASSERT(!selector.complex_selectors().is_empty());
     return matches(selector, selector.complex_selectors().size() - 1, element);
-}
-
 }
 
 }

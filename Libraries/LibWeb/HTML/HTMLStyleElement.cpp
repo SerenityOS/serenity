@@ -52,7 +52,7 @@ void HTMLStyleElement::children_changed()
     if (m_stylesheet)
         document().style_sheets().add_sheet(*m_stylesheet);
     else
-        document().style_sheets().add_sheet(StyleSheet::create({}));
+        document().style_sheets().add_sheet(CSS::StyleSheet::create({}));
     HTMLElement::children_changed();
 }
 

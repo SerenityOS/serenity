@@ -61,7 +61,7 @@ HTMLImageElement::~HTMLImageElement()
 {
 }
 
-void HTMLImageElement::apply_presentational_hints(StyleProperties& style) const
+void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     for_each_attribute([&](auto& name, auto& value) {
         if (name == HTML::AttributeNames::width) {
@@ -84,7 +84,7 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
         m_image_loader.load(document().complete_url(value));
 }
 
-RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style)
+RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     if (style->display() == CSS::Display::None)

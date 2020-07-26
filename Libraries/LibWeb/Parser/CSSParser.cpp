@@ -264,31 +264,31 @@ static Optional<float> try_parse_float(const StringView& string)
     return is_negative ? -value : value;
 }
 
-static Length parse_length(const CSS::ParsingContext& context, const StringView& view, bool& is_bad_length)
+static CSS::Length parse_length(const CSS::ParsingContext& context, const StringView& view, bool& is_bad_length)
 {
-    Length::Type type = Length::Type::Undefined;
+    CSS::Length::Type type = CSS::Length::Type::Undefined;
     Optional<float> value;
 
     if (view.ends_with('%')) {
-        type = Length::Type::Percentage;
+        type = CSS::Length::Type::Percentage;
         value = try_parse_float(view.substring_view(0, view.length() - 1));
     } else if (view.to_string().to_lowercase().ends_with("px")) {
-        type = Length::Type::Px;
+        type = CSS::Length::Type::Px;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
     } else if (view.to_string().to_lowercase().ends_with("pt")) {
-        type = Length::Type::Pt;
+        type = CSS::Length::Type::Pt;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
     } else if (view.to_string().to_lowercase().ends_with("rem")) {
-        type = Length::Type::Rem;
+        type = CSS::Length::Type::Rem;
         value = try_parse_float(view.substring_view(0, view.length() - 3));
     } else if (view.to_string().to_lowercase().ends_with("em")) {
-        type = Length::Type::Em;
+        type = CSS::Length::Type::Em;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
     } else if (view == "0") {
-        type = Length::Type::Px;
+        type = CSS::Length::Type::Px;
         value = 0;
     } else if (context.in_quirks_mode()) {
-        type = Length::Type::Px;
+        type = CSS::Length::Type::Px;
         value = try_parse_float(view);
     } else {
         value = try_parse_float(view);
@@ -299,61 +299,61 @@ static Length parse_length(const CSS::ParsingContext& context, const StringView&
     if (!value.has_value())
         return {};
 
-    return Length(value.value(), type);
+    return CSS::Length(value.value(), type);
 }
 
-RefPtr<StyleValue> parse_css_value(const CSS::ParsingContext& context, const StringView& string)
+RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, const StringView& string)
 {
     bool is_bad_length = false;
     auto length = parse_length(context, string, is_bad_length);
     if (is_bad_length)
         return nullptr;
     if (!length.is_undefined())
-        return LengthStyleValue::create(length);
+        return CSS::LengthStyleValue::create(length);
 
     if (string.equals_ignoring_case("inherit"))
-        return InheritStyleValue::create();
+        return CSS::InheritStyleValue::create();
     if (string.equals_ignoring_case("initial"))
-        return InitialStyleValue::create();
+        return CSS::InitialStyleValue::create();
     if (string.equals_ignoring_case("auto"))
-        return LengthStyleValue::create(Length::make_auto());
+        return CSS::LengthStyleValue::create(CSS::Length::make_auto());
 
     auto color = parse_css_color(context, string);
     if (color.has_value())
-        return ColorStyleValue::create(color.value());
+        return CSS::ColorStyleValue::create(color.value());
 
     if (string == "-libweb-link")
-        return IdentifierStyleValue::create(CSS::ValueID::VendorSpecificLink);
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::VendorSpecificLink);
     else if (string.starts_with("-libweb-palette-")) {
         auto value_id = value_id_for_palette_string(string.substring_view(16, string.length() - 16));
-        return IdentifierStyleValue::create(value_id);
+        return CSS::IdentifierStyleValue::create(value_id);
     }
 
-    return StringStyleValue::create(string);
+    return CSS::StringStyleValue::create(string);
 }
 
-RefPtr<LengthStyleValue> parse_line_width(const CSS::ParsingContext& context, const StringView& part)
+RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::ParsingContext& context, const StringView& part)
 {
     auto value = parse_css_value(context, part);
     if (value && value->is_length())
-        return static_ptr_cast<LengthStyleValue>(value);
+        return static_ptr_cast<CSS::LengthStyleValue>(value);
     return nullptr;
 }
 
-RefPtr<ColorStyleValue> parse_color(const CSS::ParsingContext& context, const StringView& part)
+RefPtr<CSS::ColorStyleValue> parse_color(const CSS::ParsingContext& context, const StringView& part)
 {
     auto value = parse_css_value(context, part);
     if (value && value->is_color())
-        return static_ptr_cast<ColorStyleValue>(value);
+        return static_ptr_cast<CSS::ColorStyleValue>(value);
     return nullptr;
 }
 
-RefPtr<StringStyleValue> parse_line_style(const CSS::ParsingContext& context, const StringView& part)
+RefPtr<CSS::StringStyleValue> parse_line_style(const CSS::ParsingContext& context, const StringView& part)
 {
     auto parsed_value = parse_css_value(context, part);
     if (!parsed_value || !parsed_value->is_string())
         return nullptr;
-    auto value = static_ptr_cast<StringStyleValue>(parsed_value);
+    auto value = static_ptr_cast<CSS::StringStyleValue>(parsed_value);
     if (value->to_string() == "dotted")
         return value;
     if (value->to_string() == "dashed")
@@ -448,7 +448,7 @@ public:
         return ch == '~' || ch == '>' || ch == '+';
     }
 
-    Optional<Selector::SimpleSelector> parse_simple_selector()
+    Optional<CSS::Selector::SimpleSelector> parse_simple_selector()
     {
         auto index_at_start = index;
 
@@ -458,34 +458,34 @@ public:
         if (!peek() || peek() == '{' || peek() == ',' || is_combinator(peek()))
             return {};
 
-        Selector::SimpleSelector::Type type;
+        CSS::Selector::SimpleSelector::Type type;
 
         if (peek() == '*') {
-            type = Selector::SimpleSelector::Type::Universal;
+            type = CSS::Selector::SimpleSelector::Type::Universal;
             consume_one();
-            return Selector::SimpleSelector {
+            return CSS::Selector::SimpleSelector {
                 type,
-                Selector::SimpleSelector::PseudoClass::None,
+                CSS::Selector::SimpleSelector::PseudoClass::None,
                 String(),
-                Selector::SimpleSelector::AttributeMatchType::None,
+                CSS::Selector::SimpleSelector::AttributeMatchType::None,
                 String(),
                 String()
             };
         }
 
         if (peek() == '.') {
-            type = Selector::SimpleSelector::Type::Class;
+            type = CSS::Selector::SimpleSelector::Type::Class;
             consume_one();
         } else if (peek() == '#') {
-            type = Selector::SimpleSelector::Type::Id;
+            type = CSS::Selector::SimpleSelector::Type::Id;
             consume_one();
         } else if (isalpha(peek())) {
-            type = Selector::SimpleSelector::Type::TagName;
+            type = CSS::Selector::SimpleSelector::Type::TagName;
         } else {
-            type = Selector::SimpleSelector::Type::Universal;
+            type = CSS::Selector::SimpleSelector::Type::Universal;
         }
 
-        if (type != Selector::SimpleSelector::Type::Universal) {
+        if (type != CSS::Selector::SimpleSelector::Type::Universal) {
             while (is_valid_selector_char(peek()))
                 buffer.append(consume_one());
             PARSE_ASSERT(!buffer.is_null());
@@ -493,23 +493,23 @@ public:
 
         auto value = String::copy(buffer);
 
-        if (type == Selector::SimpleSelector::Type::TagName) {
+        if (type == CSS::Selector::SimpleSelector::Type::TagName) {
             // Some stylesheets use uppercase tag names, so here's a hack to just lowercase them internally.
             value = value.to_lowercase();
         }
 
-        Selector::SimpleSelector simple_selector {
+        CSS::Selector::SimpleSelector simple_selector {
             type,
-            Selector::SimpleSelector::PseudoClass::None,
+            CSS::Selector::SimpleSelector::PseudoClass::None,
             value,
-            Selector::SimpleSelector::AttributeMatchType::None,
+            CSS::Selector::SimpleSelector::AttributeMatchType::None,
             String(),
             String()
         };
         buffer.clear();
 
         if (peek() == '[') {
-            Selector::SimpleSelector::AttributeMatchType attribute_match_type = Selector::SimpleSelector::AttributeMatchType::HasAttribute;
+            CSS::Selector::SimpleSelector::AttributeMatchType attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute;
             String attribute_name;
             String attribute_value;
             bool in_value = false;
@@ -519,10 +519,10 @@ public:
                 char ch = consume_one();
                 if (ch == '=' || (ch == '~' && peek() == '=')) {
                     if (ch == '=') {
-                        attribute_match_type = Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
+                        attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
                     } else if (ch == '~') {
                         consume_one();
-                        attribute_match_type = Selector::SimpleSelector::AttributeMatchType::Contains;
+                        attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::Contains;
                     }
                     attribute_name = String::copy(buffer);
                     buffer.clear();
@@ -586,23 +586,23 @@ public:
                 return {};
 
             if (pseudo_name.equals_ignoring_case("link"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Link;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Link;
             else if (pseudo_name.equals_ignoring_case("visited"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Visited;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Visited;
             else if (pseudo_name.equals_ignoring_case("hover"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Hover;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Hover;
             else if (pseudo_name.equals_ignoring_case("focus"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Focus;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Focus;
             else if (pseudo_name.equals_ignoring_case("first-child"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::FirstChild;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstChild;
             else if (pseudo_name.equals_ignoring_case("last-child"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::LastChild;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::LastChild;
             else if (pseudo_name.equals_ignoring_case("only-child"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::OnlyChild;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::OnlyChild;
             else if (pseudo_name.equals_ignoring_case("empty"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Empty;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Empty;
             else if (pseudo_name.equals_ignoring_case("root"))
-                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Root;
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Root;
         }
 
         if (index == index_at_start) {
@@ -613,9 +613,9 @@ public:
         return simple_selector;
     }
 
-    Optional<Selector::ComplexSelector> parse_complex_selector()
+    Optional<CSS::Selector::ComplexSelector> parse_complex_selector()
     {
-        auto relation = Selector::ComplexSelector::Relation::Descendant;
+        auto relation = CSS::Selector::ComplexSelector::Relation::Descendant;
 
         if (peek() == '{' || peek() == ',')
             return {};
@@ -623,13 +623,13 @@ public:
         if (is_combinator(peek())) {
             switch (peek()) {
             case '>':
-                relation = Selector::ComplexSelector::Relation::ImmediateChild;
+                relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
                 break;
             case '+':
-                relation = Selector::ComplexSelector::Relation::AdjacentSibling;
+                relation = CSS::Selector::ComplexSelector::Relation::AdjacentSibling;
                 break;
             case '~':
-                relation = Selector::ComplexSelector::Relation::GeneralSibling;
+                relation = CSS::Selector::ComplexSelector::Relation::GeneralSibling;
                 break;
             }
             consume_one();
@@ -638,7 +638,7 @@ public:
 
         consume_whitespace_or_comments();
 
-        Vector<Selector::SimpleSelector> simple_selectors;
+        Vector<CSS::Selector::SimpleSelector> simple_selectors;
         for (;;) {
             auto component = parse_simple_selector();
             if (!component.has_value())
@@ -651,12 +651,12 @@ public:
         if (simple_selectors.is_empty())
             return {};
 
-        return Selector::ComplexSelector { relation, move(simple_selectors) };
+        return CSS::Selector::ComplexSelector { relation, move(simple_selectors) };
     }
 
     void parse_selector()
     {
-        Vector<Selector::ComplexSelector> complex_selectors;
+        Vector<CSS::Selector::ComplexSelector> complex_selectors;
 
         for (;;) {
             auto index_before = index;
@@ -673,12 +673,12 @@ public:
 
         if (complex_selectors.is_empty())
             return;
-        complex_selectors.first().relation = Selector::ComplexSelector::Relation::None;
+        complex_selectors.first().relation = CSS::Selector::ComplexSelector::Relation::None;
 
-        current_rule.selectors.append(Selector(move(complex_selectors)));
+        current_rule.selectors.append(CSS::Selector(move(complex_selectors)));
     }
 
-    Optional<Selector> parse_individual_selector()
+    Optional<CSS::Selector> parse_individual_selector()
     {
         parse_selector();
         if (current_rule.selectors.is_empty())
@@ -785,7 +785,7 @@ public:
         return { string, important };
     }
 
-    Optional<StyleProperty> parse_property()
+    Optional<CSS::StyleProperty> parse_property()
     {
         consume_whitespace_or_comments();
         if (peek() == ';') {
@@ -817,7 +817,7 @@ public:
         auto value = parse_css_value(m_context, property_value);
         if (!value)
             return {};
-        return StyleProperty { property_id, value.release_nonnull(), important };
+        return CSS::StyleProperty { property_id, value.release_nonnull(), important };
     }
 
     void parse_declaration()
@@ -861,20 +861,20 @@ public:
         consume_specific('{');
         parse_declaration();
         consume_specific('}');
-        rules.append(StyleRule::create(move(current_rule.selectors), StyleDeclaration::create(move(current_rule.properties))));
+        rules.append(CSS::StyleRule::create(move(current_rule.selectors), CSS::StyleDeclaration::create(move(current_rule.properties))));
         consume_whitespace_or_comments();
     }
 
-    RefPtr<StyleSheet> parse_sheet()
+    RefPtr<CSS::StyleSheet> parse_sheet()
     {
         while (index < css.length()) {
             parse_rule();
         }
 
-        return StyleSheet::create(move(rules));
+        return CSS::StyleSheet::create(move(rules));
     }
 
-    RefPtr<StyleDeclaration> parse_standalone_declaration()
+    RefPtr<CSS::StyleDeclaration> parse_standalone_declaration()
     {
         consume_whitespace_or_comments();
         for (;;) {
@@ -885,17 +885,17 @@ public:
             if (!peek())
                 break;
         }
-        return StyleDeclaration::create(move(current_rule.properties));
+        return CSS::StyleDeclaration::create(move(current_rule.properties));
     }
 
 private:
     CSS::ParsingContext m_context;
 
-    NonnullRefPtrVector<StyleRule> rules;
+    NonnullRefPtrVector<CSS::StyleRule> rules;
 
     struct CurrentRule {
-        Vector<Selector> selectors;
-        Vector<StyleProperty> properties;
+        Vector<CSS::Selector> selectors;
+        Vector<CSS::StyleProperty> properties;
     };
 
     CurrentRule current_rule;
@@ -906,33 +906,33 @@ private:
     StringView css;
 };
 
-Optional<Selector> parse_selector(const CSS::ParsingContext& context, const StringView& selector_text)
+Optional<CSS::Selector> parse_selector(const CSS::ParsingContext& context, const StringView& selector_text)
 {
     CSSParser parser(context, selector_text);
     return parser.parse_individual_selector();
 }
 
-RefPtr<StyleSheet> parse_css(const CSS::ParsingContext& context, const StringView& css)
+RefPtr<CSS::StyleSheet> parse_css(const CSS::ParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
-        return StyleSheet::create({});
+        return CSS::StyleSheet::create({});
     CSSParser parser(context, css);
     return parser.parse_sheet();
 }
 
-RefPtr<StyleDeclaration> parse_css_declaration(const CSS::ParsingContext& context, const StringView& css)
+RefPtr<CSS::StyleDeclaration> parse_css_declaration(const CSS::ParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
-        return StyleDeclaration::create({});
+        return CSS::StyleDeclaration::create({});
     CSSParser parser(context, css);
     return parser.parse_standalone_declaration();
 }
 
-RefPtr<StyleValue> parse_html_length(const DOM::Document& document, const StringView& string)
+RefPtr<CSS::StyleValue> parse_html_length(const DOM::Document& document, const StringView& string)
 {
     auto integer = string.to_int();
     if (integer.has_value())
-        return LengthStyleValue::create(Length::make_px(integer.value()));
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(integer.value()));
     return parse_css_value(CSS::ParsingContext(document), string);
 }
 

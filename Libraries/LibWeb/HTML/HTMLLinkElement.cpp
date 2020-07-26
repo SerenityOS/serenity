@@ -79,7 +79,7 @@ void HTMLLinkElement::load_stylesheet(const URL& url)
 {
     // First insert an empty style sheet in the document sheet list.
     // There's probably a nicer way to do this, but this ensures that sheets are in document order.
-    m_style_sheet = StyleSheet::create({});
+    m_style_sheet = CSS::StyleSheet::create({});
     document().style_sheets().add_sheet(*m_style_sheet);
 
     LoadRequest request;

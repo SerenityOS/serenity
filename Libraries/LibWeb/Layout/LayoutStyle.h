@@ -51,16 +51,16 @@ public:
     CSS::TextAlign text_align() const { return m_text_align; }
     CSS::Position position() const { return m_position; }
     CSS::WhiteSpace white_space() const { return m_white_space; }
-    const Length& width() const { return m_width; }
-    const Length& min_width() const { return m_min_width; }
-    const Length& max_width() const { return m_max_width; }
-    const Length& height() const { return m_height; }
-    const Length& min_height() const { return m_min_height; }
-    const Length& max_height() const { return m_max_height; }
+    const CSS::Length& width() const { return m_width; }
+    const CSS::Length& min_width() const { return m_min_width; }
+    const CSS::Length& max_width() const { return m_max_width; }
+    const CSS::Length& height() const { return m_height; }
+    const CSS::Length& min_height() const { return m_min_height; }
+    const CSS::Length& max_height() const { return m_max_height; }
 
-    const LengthBox& offset() const { return m_offset; }
-    const LengthBox& margin() const { return m_margin; }
-    const LengthBox& padding() const { return m_padding; }
+    const CSS::LengthBox& offset() const { return m_offset; }
+    const CSS::LengthBox& margin() const { return m_margin; }
+    const CSS::LengthBox& padding() const { return m_padding; }
 
     const BorderData& border_left() const { return m_border_left; }
     const BorderData& border_top() const { return m_border_top; }
@@ -73,15 +73,15 @@ protected:
     CSS::TextAlign m_text_align;
     CSS::Position m_position;
     CSS::WhiteSpace m_white_space { InitialValues::white_space() };
-    Length m_width;
-    Length m_min_width;
-    Length m_max_width;
-    Length m_height;
-    Length m_min_height;
-    Length m_max_height;
-    LengthBox m_offset;
-    LengthBox m_margin;
-    LengthBox m_padding;
+    CSS::Length m_width;
+    CSS::Length m_min_width;
+    CSS::Length m_max_width;
+    CSS::Length m_height;
+    CSS::Length m_min_height;
+    CSS::Length m_max_height;
+    CSS::LengthBox m_offset;
+    CSS::LengthBox m_margin;
+    CSS::LengthBox m_padding;
     BorderData m_border_left;
     BorderData m_border_top;
     BorderData m_border_right;
@@ -98,15 +98,15 @@ public:
     void set_text_align(CSS::TextAlign text_align) { m_text_align = text_align; }
     void set_position(CSS::Position position) { m_position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_white_space = value; }
-    void set_width(const Length& width) { m_width = width; }
-    void set_min_width(const Length& width) { m_min_width = width; }
-    void set_max_width(const Length& width) { m_max_width = width; }
-    void set_height(const Length& height) { m_height = height; }
-    void set_min_height(const Length& height) { m_min_height = height; }
-    void set_max_height(const Length& height) { m_max_height = height; }
-    void set_offset(const LengthBox& offset) { m_offset = offset; }
-    void set_margin(const LengthBox& margin) { m_margin = margin; }
-    void set_padding(const LengthBox& padding) { m_padding = padding; }
+    void set_width(const CSS::Length& width) { m_width = width; }
+    void set_min_width(const CSS::Length& width) { m_min_width = width; }
+    void set_max_width(const CSS::Length& width) { m_max_width = width; }
+    void set_height(const CSS::Length& height) { m_height = height; }
+    void set_min_height(const CSS::Length& height) { m_min_height = height; }
+    void set_max_height(const CSS::Length& height) { m_max_height = height; }
+    void set_offset(const CSS::LengthBox& offset) { m_offset = offset; }
+    void set_margin(const CSS::LengthBox& margin) { m_margin = margin; }
+    void set_padding(const CSS::LengthBox& padding) { m_padding = padding; }
     BorderData& border_left() { return m_border_left; }
     BorderData& border_top() { return m_border_top; }
     BorderData& border_right() { return m_border_right; }

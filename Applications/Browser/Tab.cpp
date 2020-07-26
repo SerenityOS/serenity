@@ -338,7 +338,7 @@ Tab::Tab(Type type)
         "Dump Style sheets", [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 for (auto& sheet : m_page_view->document()->style_sheets().sheets()) {
-                    dump_sheet(sheet);
+                    Web::dump_sheet(sheet);
                 }
             } else {
                 TODO();

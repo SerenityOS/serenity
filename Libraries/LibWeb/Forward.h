@@ -26,6 +26,14 @@
 
 #pragma once
 
+namespace Web::CSS {
+class Selector;
+class StyleProperties;
+class StyleResolver;
+class StyleRule;
+class StyleSheet;
+}
+
 namespace Web::DOM {
 class Document;
 class DocumentType;
@@ -72,12 +80,7 @@ class PageView;
 class PaintContext;
 class Resource;
 class ResourceLoader;
-class Selector;
 class StackingContext;
-class StyleProperties;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
 class XMLHttpRequest;
 }
 

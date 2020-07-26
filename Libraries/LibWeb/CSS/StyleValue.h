@@ -149,10 +149,6 @@ enum class Float {
     Right,
 };
 
-}
-
-namespace Web {
-
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();

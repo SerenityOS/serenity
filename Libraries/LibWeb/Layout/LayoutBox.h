@@ -71,7 +71,7 @@ public:
     virtual void paint(PaintContext&, PaintPhase) override;
 
 protected:
-    LayoutBox(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<StyleProperties> style)
+    LayoutBox(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : LayoutNodeWithStyleAndBoxModelMetrics(document, node, move(style))
     {
     }

@@ -37,7 +37,7 @@ LayoutTreeBuilder::LayoutTreeBuilder()
 {
 }
 
-static RefPtr<LayoutNode> create_layout_tree(DOM::Node& node, const StyleProperties* parent_style)
+static RefPtr<LayoutNode> create_layout_tree(DOM::Node& node, const CSS::StyleProperties* parent_style)
 {
     auto layout_node = node.create_layout_node(parent_style);
     if (!layout_node)

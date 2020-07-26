@@ -30,8 +30,6 @@
 
 namespace Web {
 
-class StyleSheet;
-
 class HTMLStyleElement : public HTMLElement {
 public:
     HTMLStyleElement(DOM::Document&, const FlyString& local_name);
@@ -41,7 +39,7 @@ public:
     virtual void removed_from(Node&) override;
 
 private:
-    RefPtr<StyleSheet> m_stylesheet;
+    RefPtr<CSS::StyleSheet> m_stylesheet;
 };
 
 }

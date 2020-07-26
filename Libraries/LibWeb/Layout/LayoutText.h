@@ -40,7 +40,7 @@ public:
 
     const DOM::Text& node() const { return static_cast<const DOM::Text&>(*LayoutNode::node()); }
 
-    const String& text_for_style(const StyleProperties&) const;
+    const String& text_for_style(const CSS::StyleProperties&) const;
     const String& text_for_rendering() const { return m_text_for_rendering; }
 
     virtual const char* class_name() const override { return "LayoutText"; }
@@ -50,7 +50,7 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
 
-    const StyleProperties& specified_style() const { return parent()->specified_style(); }
+    const CSS::StyleProperties& specified_style() const { return parent()->specified_style(); }
 
 private:
     void split_into_lines_by_rules(LayoutBlock& container, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);

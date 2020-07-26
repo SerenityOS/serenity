@@ -26,7 +26,7 @@
 
 #include <LibWeb/CSS/Selector.h>
 
-namespace Web {
+namespace Web::CSS {
 
 Selector::Selector(Vector<ComplexSelector>&& component_lists)
     : m_complex_selectors(move(component_lists))
