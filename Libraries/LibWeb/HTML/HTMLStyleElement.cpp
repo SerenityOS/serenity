@@ -46,7 +46,7 @@ void HTMLStyleElement::children_changed()
     StringBuilder builder;
     for_each_child([&](auto& child) {
         if (is<Text>(child))
-            builder.append(to<Text>(child).text_content());
+            builder.append(downcast<Text>(child).text_content());
     });
     m_stylesheet = parse_css(CSS::ParsingContext(document()), builder.to_string());
     if (m_stylesheet)

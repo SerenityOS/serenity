@@ -29,6 +29,7 @@
 #include <AK/Badge.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <AK/TypeCasts.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
@@ -116,9 +117,9 @@ public:
     template<typename T>
     const T* first_ancestor_of_type() const;
 
-    virtual void inserted_into(Node&) {}
-    virtual void removed_from(Node&) {}
-    virtual void children_changed() {}
+    virtual void inserted_into(Node&) { }
+    virtual void removed_from(Node&) { }
+    virtual void children_changed() { }
 
     const LayoutNode* layout_node() const { return m_layout_node; }
     LayoutNode* layout_node() { return m_layout_node; }
@@ -137,8 +138,8 @@ public:
 
     bool is_link() const;
 
-    virtual void document_did_attach_to_frame(Frame&) {}
-    virtual void document_will_detach_from_frame(Frame&) {}
+    virtual void document_did_attach_to_frame(Frame&) { }
+    virtual void document_will_detach_from_frame(Frame&) { }
 
     void set_document(Badge<Document>, Document&);
 
@@ -152,63 +153,11 @@ protected:
 };
 
 template<typename T>
-inline bool is(const Node&)
-{
-    return false;
-}
-
-template<typename T>
-inline bool is(const Node* node)
-{
-    return !node || is<T>(*node);
-}
-
-template<>
-inline bool is<Node>(const Node&)
-{
-    return true;
-}
-
-template<>
-inline bool is<ParentNode>(const Node& node)
-{
-    return node.is_parent_node();
-}
-
-template<typename T>
-inline const T& to(const Node& node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<const T&>(node);
-}
-
-template<typename T>
-inline T* to(Node* node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<T*>(node);
-}
-
-template<typename T>
-inline const T* to(const Node* node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<const T*>(node);
-}
-
-template<typename T>
-inline T& to(Node& node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<T&>(node);
-}
-
-template<typename T>
 inline const T* Node::first_child_of_type() const
 {
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<T>(*child))
-            return to<T>(child);
+            return downcast<T>(child);
     }
     return nullptr;
 }
@@ -218,7 +167,7 @@ inline const T* Node::first_ancestor_of_type() const
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (is<T>(*ancestor))
-            return to<T>(ancestor);
+            return downcast<T>(ancestor);
     }
     return nullptr;
 }

@@ -52,10 +52,8 @@ private:
     bool m_should_show_fallback_content { false };
 };
 
-template<>
-inline bool is<HTMLObjectElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::object;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLObjectElement)
+static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::object; }
+AK_END_TYPE_TRAITS()

@@ -42,7 +42,7 @@ void LineBoxFragment::paint(PaintContext& context)
     }
 
     if (is<LayoutText>(layout_node())) {
-        to<LayoutText>(layout_node()).paint_fragment(context, *this);
+        downcast<LayoutText>(layout_node()).paint_fragment(context, *this);
     }
 }
 
@@ -63,7 +63,7 @@ StringView LineBoxFragment::text() const
 {
     if (!is<LayoutText>(layout_node()))
         return {};
-    return to<LayoutText>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
+    return downcast<LayoutText>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
 }
 
 const Gfx::FloatRect LineBoxFragment::absolute_rect() const
@@ -78,7 +78,7 @@ int LineBoxFragment::text_index_at(float x) const
 {
     if (!layout_node().is_text())
         return 0;
-    auto& layout_text = to<LayoutText>(layout_node());
+    auto& layout_text = downcast<LayoutText>(layout_node());
     auto& font = layout_text.specified_style().font();
     Utf8View view(text());
 

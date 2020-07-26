@@ -43,10 +43,8 @@ private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 };
 
-template<>
-inline bool is<Text>(const Node& node)
-{
-    return node.is_text();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::Text)
+static bool is_type(const Web::Node& node) { return node.is_text(); }
+AK_END_TYPE_TRAITS()

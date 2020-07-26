@@ -42,10 +42,8 @@ private:
     RefPtr<ImageStyleValue> m_background_style_value;
 };
 
-template<>
-inline bool is<HTMLBodyElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::body;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLBodyElement)
+static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::body; }
+AK_END_TYPE_TRAITS()

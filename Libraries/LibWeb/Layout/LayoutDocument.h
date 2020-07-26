@@ -58,11 +58,8 @@ private:
     LayoutRange m_selection;
 };
 
-template<>
-inline bool is<LayoutDocument>(const LayoutNode& node)
-{
-    return node.is_root();
 }
 
-
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutDocument)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_root(); }
+AK_END_TYPE_TRAITS()

@@ -80,7 +80,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     if (result.layout_node && result.layout_node->node()) {
         RefPtr<Node> node = result.layout_node->node();
         if (is<HTMLIFrameElement>(*node)) {
-            if (auto* subframe = to<HTMLIFrameElement>(*node).hosted_frame())
+            if (auto* subframe = downcast<HTMLIFrameElement>(*node).hosted_frame())
                 return subframe->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
@@ -113,7 +113,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return false;
 
     if (is<HTMLIFrameElement>(*node)) {
-        if (auto* subframe = to<HTMLIFrameElement>(*node).hosted_frame())
+        if (auto* subframe = downcast<HTMLIFrameElement>(*node).hosted_frame())
             return subframe->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
         return false;
     }
@@ -176,7 +176,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         RefPtr<Node> node = result.layout_node->node();
 
         if (node && is<HTMLIFrameElement>(*node)) {
-            if (auto* subframe = to<HTMLIFrameElement>(*node).hosted_frame())
+            if (auto* subframe = downcast<HTMLIFrameElement>(*node).hosted_frame())
                 return subframe->event_handler().handle_mousemove(position.translated(compute_mouse_event_offset({}, *result.layout_node)), buttons, modifiers);
             return false;
         }

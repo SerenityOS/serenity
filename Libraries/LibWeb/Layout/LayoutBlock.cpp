@@ -155,13 +155,13 @@ void LayoutBlock::layout_contained_boxes(LayoutMode layout_mode)
             return IterationDecision::Continue;
         box.layout(layout_mode);
         if (box.is_replaced())
-            place_block_level_replaced_element_in_normal_flow(to<LayoutReplaced>(box));
+            place_block_level_replaced_element_in_normal_flow(downcast<LayoutReplaced>(box));
         else if (box.is_block())
-            place_block_level_non_replaced_element_in_normal_flow(to<LayoutBlock>(box));
+            place_block_level_non_replaced_element_in_normal_flow(downcast<LayoutBlock>(box));
         else
             dbg() << "FIXME: LayoutBlock::layout_contained_boxes doesn't know how to place a " << box.class_name();
         content_height = max(content_height, box.effective_offset().y() + box.height() + box.box_model().margin_box(*this).bottom);
-        content_width = max(content_width, to<LayoutBox>(box).width());
+        content_width = max(content_width, downcast<LayoutBox>(box).width());
         return IterationDecision::Continue;
     });
 
@@ -257,7 +257,7 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
             }
 
             if (fragment.layout_node().is_inline_block()) {
-                auto& inline_block = const_cast<LayoutBlock&>(to<LayoutBlock>(fragment.layout_node()));
+                auto& inline_block = const_cast<LayoutBlock&>(downcast<LayoutBlock>(fragment.layout_node()));
                 inline_block.set_size(fragment.size());
                 inline_block.layout(layout_mode);
             }
@@ -587,7 +587,7 @@ LayoutBlock::ShrinkToFitResult LayoutBlock::calculate_shrink_to_fit_width()
         } else {
             for_each_child([&](auto& child) {
                 if (child.is_box())
-                    max_width = max(max_width, to<LayoutBox>(child).width());
+                    max_width = max(max_width, downcast<LayoutBox>(child).width());
             });
         }
         return max_width;
@@ -725,11 +725,11 @@ HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position) const
     HitTestResult last_good_candidate;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
-            if (is<LayoutBox>(fragment.layout_node()) && to<LayoutBox>(fragment.layout_node()).stacking_context())
+            if (is<LayoutBox>(fragment.layout_node()) && downcast<LayoutBox>(fragment.layout_node()).stacking_context())
                 continue;
             if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
                 if (fragment.layout_node().is_block())
-                    return to<LayoutBlock>(fragment.layout_node()).hit_test(position);
+                    return downcast<LayoutBlock>(fragment.layout_node()).hit_test(position);
                 return { fragment.layout_node(), fragment.text_index_at(position.x()) };
             }
             if (fragment.absolute_rect().top() <= position.y())

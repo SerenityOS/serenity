@@ -67,7 +67,7 @@ const LayoutBlock* LayoutNode::containing_block() const
         auto* ancestor = parent();
         while (ancestor && !is<LayoutBlock>(*ancestor))
             ancestor = ancestor->parent();
-        return to<LayoutBlock>(ancestor);
+        return downcast<LayoutBlock>(ancestor);
     };
 
     if (is_text())
@@ -81,7 +81,7 @@ const LayoutBlock* LayoutNode::containing_block() const
             ancestor = ancestor->parent();
         while (ancestor && (!is<LayoutBlock>(ancestor) || ancestor->is_anonymous()))
             ancestor = ancestor->containing_block();
-        return to<LayoutBlock>(ancestor);
+        return downcast<LayoutBlock>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)
@@ -96,7 +96,7 @@ void LayoutNode::paint(PaintContext& context, PaintPhase phase)
         return;
 
     for_each_child([&](auto& child) {
-        if (child.is_box() && to<LayoutBox>(child).stacking_context())
+        if (child.is_box() && downcast<LayoutBox>(child).stacking_context())
             return;
         child.paint(context, phase);
     });
@@ -108,7 +108,7 @@ HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position) const
     for_each_child([&](auto& child) {
         // Skip over children that establish their own stacking context.
         // The outer loop who called us will take care of those.
-        if (is<LayoutBox>(child) && to<LayoutBox>(child).stacking_context())
+        if (is<LayoutBox>(child) && downcast<LayoutBox>(child).stacking_context())
             return;
         auto child_result = child.hit_test(position);
         if (child_result.layout_node)
@@ -170,7 +170,7 @@ float LayoutNode::font_size() const
 Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
 {
     if (is_box())
-        return to<LayoutBox>(*this).absolute_position();
+        return downcast<LayoutBox>(*this).absolute_position();
     ASSERT(is_inline());
     Gfx::FloatPoint position;
     if (auto* block = containing_block()) {

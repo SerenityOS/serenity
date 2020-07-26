@@ -60,10 +60,8 @@ private:
     ImageLoader m_image_loader;
 };
 
-template<>
-inline bool is<HTMLImageElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::img;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLImageElement)
+static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::img; }
+AK_END_TYPE_TRAITS()

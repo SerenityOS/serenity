@@ -39,10 +39,8 @@ public:
     String target() const { return attribute(HTML::AttributeNames::target); }
 };
 
-template<>
-inline bool is<HTMLAnchorElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::a;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLAnchorElement)
+static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::a; }
+AK_END_TYPE_TRAITS()

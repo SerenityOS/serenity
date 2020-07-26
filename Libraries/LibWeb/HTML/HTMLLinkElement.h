@@ -64,10 +64,8 @@ private:
     RefPtr<StyleSheet> m_style_sheet;
 };
 
-template<>
-inline bool is<HTMLLinkElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::link;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLLinkElement)
+static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::link; }
+AK_END_TYPE_TRAITS()

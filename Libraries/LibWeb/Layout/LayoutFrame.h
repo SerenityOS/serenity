@@ -48,10 +48,8 @@ private:
     virtual void did_set_rect() override;
 };
 
-template<>
-inline bool is<LayoutFrame>(const LayoutNode& node)
-{
-    return node.is_frame();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutFrame)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_frame(); }
+AK_END_TYPE_TRAITS()

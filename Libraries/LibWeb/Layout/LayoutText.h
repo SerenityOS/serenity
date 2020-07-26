@@ -61,10 +61,8 @@ private:
     String m_text_for_rendering;
 };
 
-template<>
-inline bool is<LayoutText>(const LayoutNode& node)
-{
-    return node.is_text();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutText)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_text(); }
+AK_END_TYPE_TRAITS()

@@ -99,10 +99,8 @@ private:
     Vector<FlyString> m_classes;
 };
 
-template<>
-inline bool is<Element>(const Node& node)
-{
-    return node.is_element();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::Element)
+static bool is_type(const Web::Node& node) { return node.is_element(); }
+AK_END_TYPE_TRAITS()

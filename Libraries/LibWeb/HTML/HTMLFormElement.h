@@ -42,10 +42,8 @@ public:
     void submit(RefPtr<HTMLInputElement> submitter);
 };
 
-template<>
-inline bool is<HTMLFormElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::form;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLFormElement)
+static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::form; }
+AK_END_TYPE_TRAITS()

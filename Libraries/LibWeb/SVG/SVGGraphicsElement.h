@@ -63,15 +63,13 @@ protected:
 
 }
 
-namespace Web {
-
-template<>
-inline bool is<SVG::SVGGraphicsElement>(const Node& node)
+AK_BEGIN_TYPE_TRAITS(Web::SVG::SVGGraphicsElement)
+static bool is_type(const Web::Node& node)
 {
-    if (!is<Element>(node))
+    if (!is<Web::Element>(node))
         return false;
 
-    auto tag_name = to<Element>(node).tag_name();
+    auto tag_name = downcast<Web::Element>(node).tag_name();
 
 #define __ENUMERATE_SVG_TAG(name) \
     if (tag_name == #name)        \
@@ -81,5 +79,4 @@ inline bool is<SVG::SVGGraphicsElement>(const Node& node)
 
     return false;
 }
-
-}
+AK_END_TYPE_TRAITS()

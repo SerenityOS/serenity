@@ -36,10 +36,8 @@ public:
     virtual ~HTMLTitleElement() override;
 };
 
-template<>
-inline bool is<HTMLTitleElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name().equals_ignoring_case("title");
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLTitleElement)
+static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::title; }
+AK_END_TYPE_TRAITS()

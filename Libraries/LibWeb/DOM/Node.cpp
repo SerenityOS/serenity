@@ -65,8 +65,8 @@ Node::~Node()
 const HTMLAnchorElement* Node::enclosing_link_element() const
 {
     for (auto* node = this; node; node = node->parent()) {
-        if (is<HTMLAnchorElement>(*node) && to<HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
-            return to<HTMLAnchorElement>(node);
+        if (is<HTMLAnchorElement>(*node) && downcast<HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
+            return downcast<HTMLAnchorElement>(node);
     }
     return nullptr;
 }
@@ -160,9 +160,9 @@ String Node::child_text_content() const
         return String::empty();
 
     StringBuilder builder;
-    to<ParentNode>(*this).for_each_child([&](auto& child) {
+    downcast<ParentNode>(*this).for_each_child([&](auto& child) {
         if (is<Text>(child))
-            builder.append(to<Text>(child).text_content());
+            builder.append(downcast<Text>(child).text_content());
     });
     return builder.build();
 }
@@ -184,14 +184,14 @@ Element* Node::parent_element()
 {
     if (!parent() || !is<Element>(parent()))
         return nullptr;
-    return to<Element>(parent());
+    return downcast<Element>(parent());
 }
 
 const Element* Node::parent_element() const
 {
     if (!parent() || !is<Element>(parent()))
         return nullptr;
-    return to<Element>(parent());
+    return downcast<Element>(parent());
 }
 
 RefPtr<Node> Node::append_child(NonnullRefPtr<Node> node, bool notify)

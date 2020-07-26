@@ -36,11 +36,16 @@ public:
     LayoutBreak(Document&, const HTMLBRElement&);
     virtual ~LayoutBreak() override;
 
-    const HTMLBRElement& node() const { return to<HTMLBRElement>(*LayoutNode::node()); }
+    const HTMLBRElement& node() const { return downcast<HTMLBRElement>(*LayoutNode::node()); }
 
 private:
+    virtual bool is_break() const override { return true; }
     virtual const char* class_name() const override { return "LayoutBreak"; }
     virtual void split_into_lines(LayoutBlock&, LayoutMode) override;
 };
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::LayoutBreak)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_break(); }
+AK_END_TYPE_TRAITS()

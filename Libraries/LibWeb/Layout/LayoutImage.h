@@ -57,10 +57,8 @@ private:
     const ImageLoader& m_image_loader;
 };
 
-template<>
-inline bool is<LayoutImage>(const LayoutNode& node)
-{
-    return node.is_image();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutImage)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_image(); }
+AK_END_TYPE_TRAITS()

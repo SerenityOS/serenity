@@ -101,7 +101,7 @@ void SVGSVGElement::paint(Gfx::Painter& painter, const SVGPaintingContext& conte
 {
     for_each_child([&](Node& child) {
         if (is<SVGGraphicsElement>(child)) {
-            to<SVGGraphicsElement>(child).paint(painter, make_painting_context_from(context));
+            downcast<SVGGraphicsElement>(child).paint(painter, make_painting_context_from(context));
         }
     });
 }

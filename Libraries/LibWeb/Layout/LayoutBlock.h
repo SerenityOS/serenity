@@ -53,10 +53,10 @@ public:
 
     virtual HitTestResult hit_test(const Gfx::IntPoint&) const override;
 
-    LayoutBlock* previous_sibling() { return to<LayoutBlock>(LayoutNode::previous_sibling()); }
-    const LayoutBlock* previous_sibling() const { return to<LayoutBlock>(LayoutNode::previous_sibling()); }
-    LayoutBlock* next_sibling() { return to<LayoutBlock>(LayoutNode::next_sibling()); }
-    const LayoutBlock* next_sibling() const { return to<LayoutBlock>(LayoutNode::next_sibling()); }
+    LayoutBlock* previous_sibling() { return downcast<LayoutBlock>(LayoutNode::previous_sibling()); }
+    const LayoutBlock* previous_sibling() const { return downcast<LayoutBlock>(LayoutNode::previous_sibling()); }
+    LayoutBlock* next_sibling() { return downcast<LayoutBlock>(LayoutNode::next_sibling()); }
+    const LayoutBlock* next_sibling() const { return downcast<LayoutBlock>(LayoutNode::next_sibling()); }
 
     template<typename Callback>
     void for_each_fragment(Callback);
@@ -119,10 +119,8 @@ void LayoutBlock::for_each_fragment(Callback callback) const
     }
 }
 
-template<>
-ALWAYS_INLINE bool is<LayoutBlock>(const LayoutNode& node)
-{
-    return node.is_block();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutBlock)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_block(); }
+AK_END_TYPE_TRAITS()

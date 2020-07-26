@@ -107,7 +107,7 @@ void PageView::select_all()
 
     int last_layout_node_index_in_node = 0;
     if (is<LayoutText>(*last_layout_node))
-        last_layout_node_index_in_node = to<LayoutText>(*last_layout_node).text_for_rendering().length() - 1;
+        last_layout_node_index_in_node = downcast<LayoutText>(*last_layout_node).text_for_rendering().length() - 1;
 
     layout_root->selection().set({ first_layout_node, 0 }, { last_layout_node, last_layout_node_index_in_node });
     update();
@@ -127,13 +127,13 @@ String PageView::selected_text() const
     if (selection.start().layout_node == selection.end().layout_node) {
         if (!is<LayoutText>(*selection.start().layout_node))
             return "";
-        return to<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node + 1);
+        return downcast<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node + 1);
     }
 
     // Start node
     auto layout_node = selection.start().layout_node;
     if (is<LayoutText>(*layout_node)) {
-        auto& text = to<LayoutText>(*layout_node).text_for_rendering();
+        auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
         builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
     }
 
@@ -141,7 +141,7 @@ String PageView::selected_text() const
     layout_node = layout_node->next_in_pre_order();
     while (layout_node && layout_node != selection.end().layout_node) {
         if (is<LayoutText>(*layout_node))
-            builder.append(to<LayoutText>(*layout_node).text_for_rendering());
+            builder.append(downcast<LayoutText>(*layout_node).text_for_rendering());
         else if (is<LayoutBreak>(*layout_node) || is<LayoutBlock>(*layout_node))
             builder.append('\n');
 
@@ -151,7 +151,7 @@ String PageView::selected_text() const
     // End node
     ASSERT(layout_node == selection.end().layout_node);
     if (is<LayoutText>(*layout_node)) {
-        auto& text = to<LayoutText>(*layout_node).text_for_rendering();
+        auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
         builder.append(text.substring(0, selection.end().index_in_node + 1));
     }
 

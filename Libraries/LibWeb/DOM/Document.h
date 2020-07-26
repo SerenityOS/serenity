@@ -188,10 +188,9 @@ private:
     QuirksMode m_quirks_mode { QuirksMode::No };
 };
 
-template<>
-inline bool is<Document>(const Node& node)
-{
-    return node.is_document();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::Document)
+static bool is_type(const Web::Node& node) { return node.is_document(); }
+AK_END_TYPE_TRAITS()
+

@@ -39,10 +39,8 @@ private:
     virtual void apply_presentational_hints(StyleProperties&) const override;
 };
 
-template<>
-inline bool is<HTMLTableCellElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th);
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLTableCellElement)
+static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::td; }
+AK_END_TYPE_TRAITS()

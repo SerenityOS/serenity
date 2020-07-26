@@ -47,7 +47,7 @@ void LineBox::add_fragment(const LayoutNode& layout_node, int start, int length,
     m_width += width;
 
     if (is<LayoutBox>(layout_node))
-        const_cast<LayoutBox&>(to<LayoutBox>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
+        const_cast<LayoutBox&>(downcast<LayoutBox>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
 }
 
 void LineBox::trim_trailing_whitespace()

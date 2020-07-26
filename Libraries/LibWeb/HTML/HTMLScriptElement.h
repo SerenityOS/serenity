@@ -65,10 +65,8 @@ private:
     String m_script_source;
 };
 
-template<>
-inline bool is<HTMLScriptElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::script;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLScriptElement)
+static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::script; }
+AK_END_TYPE_TRAITS()

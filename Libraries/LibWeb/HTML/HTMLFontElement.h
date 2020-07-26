@@ -38,10 +38,8 @@ public:
     virtual void apply_presentational_hints(StyleProperties&) const override;
 };
 
-template<>
-inline bool is<HTMLFontElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::font;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLFontElement)
+static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::font; }
+AK_END_TYPE_TRAITS()
