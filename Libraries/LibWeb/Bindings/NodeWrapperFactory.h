@@ -32,7 +32,7 @@
 namespace Web {
 namespace Bindings {
 
-NodeWrapper* wrap(JS::GlobalObject&, Node&);
+NodeWrapper* wrap(JS::GlobalObject&, DOM::Node&);
 
 }
 }

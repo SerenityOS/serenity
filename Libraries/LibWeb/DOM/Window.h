@@ -33,7 +33,7 @@
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class Window : public RefCounted<Window> {
 public:

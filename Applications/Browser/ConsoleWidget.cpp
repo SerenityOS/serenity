@@ -47,13 +47,13 @@ ConsoleWidget::ConsoleWidget()
     set_layout<GUI::VerticalBoxLayout>();
     set_fill_with_background_color(true);
 
-    auto base_document = adopt(*new Web::Document);
-    base_document->append_child(adopt(*new Web::DocumentType(base_document)));
-    auto html_element = create_element(base_document, "html");
+    auto base_document = adopt(*new Web::DOM::Document);
+    base_document->append_child(adopt(*new Web::DOM::DocumentType(base_document)));
+    auto html_element = Web::DOM::create_element(base_document, "html");
     base_document->append_child(html_element);
-    auto head_element = create_element(base_document, "head");
+    auto head_element = Web::DOM::create_element(base_document, "head");
     html_element->append_child(head_element);
-    auto body_element = create_element(base_document, "body");
+    auto body_element = Web::DOM::create_element(base_document, "body");
     html_element->append_child(body_element);
     m_output_container = body_element;
 

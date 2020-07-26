@@ -30,7 +30,7 @@
 #include <AK/String.h>
 #include <LibWeb/DOM/CharacterData.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class Text final : public CharacterData {
 public:
@@ -45,6 +45,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::Text)
-static bool is_type(const Web::Node& node) { return node.is_text(); }
+AK_BEGIN_TYPE_TRAITS(Web::DOM::Text)
+static bool is_type(const Web::DOM::Node& node) { return node.is_text(); }
 AK_END_TYPE_TRAITS()

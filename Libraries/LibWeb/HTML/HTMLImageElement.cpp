@@ -37,18 +37,18 @@
 
 namespace Web {
 
-HTMLImageElement::HTMLImageElement(Document& document, const FlyString& tag_name)
+HTMLImageElement::HTMLImageElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
     m_image_loader.on_load = [this] {
         this->document().update_layout();
-        dispatch_event(Event::create("load"));
+        dispatch_event(DOM::Event::create("load"));
     };
 
     m_image_loader.on_fail = [this] {
         dbg() << "HTMLImageElement: Resource did fail: " << this->src();
         this->document().update_layout();
-        dispatch_event(Event::create("error"));
+        dispatch_event(DOM::Event::create("error"));
     };
 
     m_image_loader.on_animate = [this] {

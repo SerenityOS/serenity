@@ -349,7 +349,7 @@ bool PathDataParser::match_number() const
     return !done() && (isdigit(ch()) || ch() == '-' || ch() == '+');
 }
 
-SVGPathElement::SVGPathElement(Document& document, const FlyString& tag_name)
+SVGPathElement::SVGPathElement(DOM::Document& document, const FlyString& tag_name)
     : SVGGeometryElement(document, tag_name)
 {
 }

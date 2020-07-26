@@ -34,7 +34,7 @@ class StyleSheet;
 
 class HTMLStyleElement : public HTMLElement {
 public:
-    HTMLStyleElement(Document&, const FlyString& local_name);
+    HTMLStyleElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLStyleElement() override;
 
     virtual void children_changed() override;
@@ -47,5 +47,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLStyleElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::style; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::style; }
 AK_END_TYPE_TRAITS()

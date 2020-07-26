@@ -32,7 +32,7 @@ namespace Web {
 
 class LayoutListItemMarker final : public LayoutBox {
 public:
-    explicit LayoutListItemMarker(Document&);
+    explicit LayoutListItemMarker(DOM::Document&);
     virtual ~LayoutListItemMarker() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;

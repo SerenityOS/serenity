@@ -29,7 +29,7 @@
 #include <AK/FlyString.h>
 #include <LibWeb/DOM/Node.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class DocumentType final : public Node {
 public:
@@ -57,6 +57,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::DocumentType)
-static bool is_type(const Web::Node& node) { return node.type() == Web::NodeType::DOCUMENT_TYPE_NODE; }
+AK_BEGIN_TYPE_TRAITS(Web::DOM::DocumentType)
+static bool is_type(const Web::DOM::Node& node) { return node.type() == Web::DOM::NodeType::DOCUMENT_TYPE_NODE; }
 AK_END_TYPE_TRAITS()

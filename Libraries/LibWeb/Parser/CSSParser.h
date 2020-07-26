@@ -33,12 +33,12 @@ namespace Web::CSS {
 class ParsingContext {
 public:
     ParsingContext();
-    explicit ParsingContext(const Document&);
+    explicit ParsingContext(const DOM::Document&);
 
     bool in_quirks_mode() const;
 
 private:
-    const Document* m_document { nullptr };
+    const DOM::Document* m_document { nullptr };
 };
 }
 
@@ -53,6 +53,6 @@ RefPtr<LengthStyleValue> parse_line_width(const CSS::ParsingContext&, const Stri
 RefPtr<ColorStyleValue> parse_color(const CSS::ParsingContext&, const StringView&);
 RefPtr<StringStyleValue> parse_line_style(const CSS::ParsingContext&, const StringView&);
 
-RefPtr<StyleValue> parse_html_length(const Document&, const StringView&);
+RefPtr<StyleValue> parse_html_length(const DOM::Document&, const StringView&);
 
 }

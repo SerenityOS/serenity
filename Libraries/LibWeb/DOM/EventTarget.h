@@ -31,7 +31,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class EventTarget {
     AK_MAKE_NONCOPYABLE(EventTarget);

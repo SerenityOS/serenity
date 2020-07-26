@@ -167,7 +167,7 @@ String IdentifierStyleValue::to_string() const
     }
 }
 
-Color IdentifierStyleValue::to_color(const Document& document) const
+Color IdentifierStyleValue::to_color(const DOM::Document& document) const
 {
     if (id() == CSS::ValueID::VendorSpecificLink)
         return document.link_color();
@@ -287,7 +287,7 @@ Color IdentifierStyleValue::to_color(const Document& document) const
     }
 }
 
-ImageStyleValue::ImageStyleValue(const URL& url, Document& document)
+ImageStyleValue::ImageStyleValue(const URL& url, DOM::Document& document)
     : StyleValue(Type::Image)
     , m_url(url)
     , m_document(document.make_weak_ptr())

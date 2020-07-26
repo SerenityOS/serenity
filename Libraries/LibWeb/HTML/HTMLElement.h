@@ -30,11 +30,11 @@
 
 namespace Web {
 
-class HTMLElement : public Element {
+class HTMLElement : public DOM::Element {
 public:
     using WrapperType = Bindings::HTMLElementWrapper;
 
-    HTMLElement(Document&, const FlyString& local_name);
+    HTMLElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLElement() override;
 
     String title() const { return attribute(HTML::AttributeNames::title); }
@@ -46,5 +46,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element(); }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element(); }
 AK_END_TYPE_TRAITS()

@@ -34,7 +34,7 @@ class LayoutTableRow;
 
 class LayoutTable final : public LayoutBlock {
 public:
-    LayoutTable(Document&, const Element&, NonnullRefPtr<StyleProperties>);
+    LayoutTable(DOM::Document&, const DOM::Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutTable() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;

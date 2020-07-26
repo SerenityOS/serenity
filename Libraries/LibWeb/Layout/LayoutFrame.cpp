@@ -37,7 +37,7 @@
 
 namespace Web {
 
-LayoutFrame::LayoutFrame(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+LayoutFrame::LayoutFrame(DOM::Document& document, const DOM::Element& element, NonnullRefPtr<StyleProperties> style)
     : LayoutReplaced(document, element, move(style))
 {
 }

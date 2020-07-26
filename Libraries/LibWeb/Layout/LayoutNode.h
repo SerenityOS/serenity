@@ -53,11 +53,11 @@ public:
     virtual HitTestResult hit_test(const Gfx::IntPoint&) const;
 
     bool is_anonymous() const { return !m_node; }
-    const Node* node() const { return m_node; }
-    Node* node() { return const_cast<Node*>(m_node); }
+    const DOM::Node* node() const { return m_node; }
+    DOM::Node* node() { return const_cast<DOM::Node*>(m_node); }
 
-    Document& document() { return m_document; }
-    const Document& document() const { return m_document; }
+    DOM::Document& document() { return m_document; }
+    const DOM::Document& document() const { return m_document; }
 
     const Frame& frame() const;
     Frame& frame();
@@ -196,13 +196,13 @@ public:
     float font_size() const;
 
 protected:
-    LayoutNode(Document&, const Node*);
+    LayoutNode(DOM::Document&, const DOM::Node*);
 
 private:
     friend class LayoutNodeWithStyle;
 
-    Document& m_document;
-    const Node* m_node { nullptr };
+    DOM::Document& m_document;
+    const DOM::Node* m_node { nullptr };
 
     bool m_inline { false };
     bool m_has_style { false };
@@ -222,7 +222,7 @@ public:
     void apply_style(const StyleProperties&);
 
 protected:
-    LayoutNodeWithStyle(Document&, const Node*, NonnullRefPtr<StyleProperties>);
+    LayoutNodeWithStyle(DOM::Document&, const DOM::Node*, NonnullRefPtr<StyleProperties>);
 
 private:
     LayoutStyle m_style;
@@ -238,7 +238,7 @@ public:
     const BoxModelMetrics& box_model() const { return m_box_model; }
 
 protected:
-    LayoutNodeWithStyleAndBoxModelMetrics(Document& document, const Node* node, NonnullRefPtr<StyleProperties> style)
+    LayoutNodeWithStyleAndBoxModelMetrics(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<StyleProperties> style)
         : LayoutNodeWithStyle(document, node, move(style))
     {
     }

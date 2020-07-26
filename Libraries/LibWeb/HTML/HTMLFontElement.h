@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLFontElement : public HTMLElement {
 public:
-    HTMLFontElement(Document&, const FlyString& local_name);
+    HTMLFontElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLFontElement() override;
 
     virtual void apply_presentational_hints(StyleProperties&) const override;
@@ -41,5 +41,5 @@ public:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLFontElement)
-static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::font; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::font; }
 AK_END_TYPE_TRAITS()

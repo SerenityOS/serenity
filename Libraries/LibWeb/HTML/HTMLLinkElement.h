@@ -35,7 +35,7 @@ class HTMLLinkElement final
     : public HTMLElement
     , public ResourceClient {
 public:
-    HTMLLinkElement(Document&, const FlyString& local_name);
+    HTMLLinkElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLLinkElement() override;
 
     virtual void inserted_into(Node&) override;
@@ -67,5 +67,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLLinkElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::link; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::link; }
 AK_END_TYPE_TRAITS()

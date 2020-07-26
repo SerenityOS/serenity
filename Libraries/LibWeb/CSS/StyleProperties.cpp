@@ -94,7 +94,7 @@ String StyleProperties::string_or_fallback(CSS::PropertyID id, const StringView&
     return value.value()->to_string();
 }
 
-Color StyleProperties::color_or_fallback(CSS::PropertyID id, const Document& document, Color fallback) const
+Color StyleProperties::color_or_fallback(CSS::PropertyID id, const DOM::Document& document, Color fallback) const
 {
     auto value = property(id);
     if (!value.has_value())

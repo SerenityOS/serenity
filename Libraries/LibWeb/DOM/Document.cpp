@@ -59,7 +59,7 @@
 #include <LibWeb/SVG/TagNames.h>
 #include <stdio.h>
 
-namespace Web {
+namespace Web::DOM {
 
 Document::Document(const URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
@@ -433,7 +433,7 @@ JS::Value Document::run_javascript(const StringView& source)
 
 NonnullRefPtr<Element> Document::create_element(const String& tag_name)
 {
-    return Web::create_element(*this, tag_name);
+    return DOM::create_element(*this, tag_name);
 }
 
 NonnullRefPtr<Text> Document::create_text_node(const String& data)

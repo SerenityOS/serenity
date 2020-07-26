@@ -33,7 +33,7 @@ namespace Web {
 
 class HTMLFormElement : public HTMLElement {
 public:
-    HTMLFormElement(Document&, const FlyString& local_name);
+    HTMLFormElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLFormElement() override;
 
     String action() const { return attribute(HTML::AttributeNames::action); }
@@ -45,5 +45,5 @@ public:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLFormElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::form; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::form; }
 AK_END_TYPE_TRAITS()

@@ -35,7 +35,7 @@ class HTMLCanvasElement;
 
 class LayoutCanvas : public LayoutReplaced {
 public:
-    LayoutCanvas(Document&, const HTMLCanvasElement&, NonnullRefPtr<StyleProperties>);
+    LayoutCanvas(DOM::Document&, const HTMLCanvasElement&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutCanvas() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;

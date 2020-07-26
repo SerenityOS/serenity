@@ -53,7 +53,7 @@ bool StackOfOpenElements::has_in_scope(const FlyString& tag_name) const
     return has_in_scope_impl(tag_name, s_base_list);
 }
 
-bool StackOfOpenElements::has_in_scope_impl(const Element& target_node, const Vector<FlyString>& list) const
+bool StackOfOpenElements::has_in_scope_impl(const DOM::Element& target_node, const Vector<FlyString>& list) const
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& node = m_elements.at(i);
@@ -65,7 +65,7 @@ bool StackOfOpenElements::has_in_scope_impl(const Element& target_node, const Ve
     ASSERT_NOT_REACHED();
 }
 
-bool StackOfOpenElements::has_in_scope(const Element& target_node) const
+bool StackOfOpenElements::has_in_scope(const DOM::Element& target_node) const
 {
     return has_in_scope_impl(target_node, s_base_list);
 }
@@ -95,7 +95,7 @@ bool StackOfOpenElements::has_in_select_scope(const FlyString& tag_name) const
     return has_in_scope_impl(tag_name, { "option", "optgroup" });
 }
 
-bool StackOfOpenElements::contains(const Element& element) const
+bool StackOfOpenElements::contains(const DOM::Element& element) const
 {
     for (auto& element_on_stack : m_elements) {
         if (&element == &element_on_stack)
@@ -120,9 +120,9 @@ void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(con
     pop();
 }
 
-Element* StackOfOpenElements::topmost_special_node_below(const Element& formatting_element)
+DOM::Element* StackOfOpenElements::topmost_special_node_below(const DOM::Element& formatting_element)
 {
-    Element* found_element = nullptr;
+    DOM::Element* found_element = nullptr;
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& element = m_elements[i];
         if (&element == &formatting_element)
@@ -133,7 +133,7 @@ Element* StackOfOpenElements::topmost_special_node_below(const Element& formatti
     return found_element;
 }
 
-Element* StackOfOpenElements::last_element_with_tag_name(const FlyString& tag_name)
+DOM::Element* StackOfOpenElements::last_element_with_tag_name(const FlyString& tag_name)
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& element = m_elements[i];
@@ -143,7 +143,7 @@ Element* StackOfOpenElements::last_element_with_tag_name(const FlyString& tag_na
     return nullptr;
 }
 
-Element* StackOfOpenElements::element_before(const Element& target)
+DOM::Element* StackOfOpenElements::element_before(const DOM::Element& target)
 {
     bool found_target = false;
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {

@@ -34,9 +34,7 @@
 #include <LibWeb/DOM/TagNames.h>
 #include <LibWeb/Layout/LayoutNode.h>
 
-namespace Web {
-
-class LayoutNodeWithStyle;
+namespace Web::DOM {
 
 class Element : public ParentNode {
 public:
@@ -101,6 +99,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::Element)
-static bool is_type(const Web::Node& node) { return node.is_element(); }
+AK_BEGIN_TYPE_TRAITS(Web::DOM::Element)
+static bool is_type(const Web::DOM::Node& node) { return node.is_element(); }
 AK_END_TYPE_TRAITS()

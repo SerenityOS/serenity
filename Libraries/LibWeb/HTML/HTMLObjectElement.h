@@ -37,7 +37,7 @@ class LayoutDocument;
 
 class HTMLObjectElement final : public HTMLElement {
 public:
-    HTMLObjectElement(Document&, const FlyString& local_name);
+    HTMLObjectElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLObjectElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
@@ -55,5 +55,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLObjectElement)
-static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::object; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::object; }
 AK_END_TYPE_TRAITS()

@@ -52,7 +52,7 @@ private:
 
     RefPtr<GUI::TextBox> m_input;
     RefPtr<Web::PageView> m_output_view;
-    RefPtr<Web::Element> m_output_container;
+    RefPtr<Web::DOM::Element> m_output_container;
     WeakPtr<JS::Interpreter> m_interpreter;
     OwnPtr<BrowserConsoleClient> m_console_client;
 };

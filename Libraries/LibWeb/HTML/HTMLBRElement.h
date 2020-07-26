@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLBRElement final : public HTMLElement {
 public:
-    HTMLBRElement(Document&, const FlyString& local_name);
+    HTMLBRElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLBRElement() override;
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
@@ -41,5 +41,5 @@ public:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLBRElement)
-static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::br; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::br; }
 AK_END_TYPE_TRAITS()

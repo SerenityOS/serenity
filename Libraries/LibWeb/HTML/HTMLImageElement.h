@@ -40,7 +40,7 @@ class HTMLImageElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLImageElementWrapper;
 
-    HTMLImageElement(Document&, const FlyString& local_name);
+    HTMLImageElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLImageElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
@@ -63,5 +63,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLImageElement)
-static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::img; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::img; }
 AK_END_TYPE_TRAITS()

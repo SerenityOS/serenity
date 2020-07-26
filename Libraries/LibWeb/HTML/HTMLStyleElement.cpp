@@ -32,7 +32,7 @@
 
 namespace Web {
 
-HTMLStyleElement::HTMLStyleElement(Document& document, const FlyString& tag_name)
+HTMLStyleElement::HTMLStyleElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }
@@ -45,8 +45,8 @@ void HTMLStyleElement::children_changed()
 {
     StringBuilder builder;
     for_each_child([&](auto& child) {
-        if (is<Text>(child))
-            builder.append(downcast<Text>(child).text_content());
+        if (is<DOM::Text>(child))
+            builder.append(downcast<DOM::Text>(child).text_content());
     });
     m_stylesheet = parse_css(CSS::ParsingContext(document()), builder.to_string());
     if (m_stylesheet)

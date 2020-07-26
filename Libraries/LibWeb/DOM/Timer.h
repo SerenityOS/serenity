@@ -31,7 +31,7 @@
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class Timer final : public RefCounted<Timer> {
 public:

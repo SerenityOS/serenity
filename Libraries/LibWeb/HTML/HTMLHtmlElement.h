@@ -32,12 +32,12 @@ namespace Web {
 
 class HTMLHtmlElement : public HTMLElement {
 public:
-    HTMLHtmlElement(Document&, const FlyString& local_name);
+    HTMLHtmlElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLHtmlElement() override;
 };
 
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLHtmlElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::html; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::html; }
 AK_END_TYPE_TRAITS()

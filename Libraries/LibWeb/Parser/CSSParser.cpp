@@ -53,7 +53,7 @@ ParsingContext::ParsingContext()
 {
 }
 
-ParsingContext::ParsingContext(const Document& document)
+ParsingContext::ParsingContext(const DOM::Document& document)
     : m_document(&document)
 {
 }
@@ -928,7 +928,7 @@ RefPtr<StyleDeclaration> parse_css_declaration(const CSS::ParsingContext& contex
     return parser.parse_standalone_declaration();
 }
 
-RefPtr<StyleValue> parse_html_length(const Document& document, const StringView& string)
+RefPtr<StyleValue> parse_html_length(const DOM::Document& document, const StringView& string)
 {
     auto integer = string.to_int();
     if (integer.has_value())

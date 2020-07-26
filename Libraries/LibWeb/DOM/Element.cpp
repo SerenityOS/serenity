@@ -43,7 +43,7 @@
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 
-namespace Web {
+namespace Web::DOM {
 
 Element::Element(Document& document, const FlyString& tag_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)

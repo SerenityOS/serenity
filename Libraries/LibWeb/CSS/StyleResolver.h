@@ -29,14 +29,9 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/Forward.h>
 
 namespace Web {
-
-class Document;
-class Element;
-class ParentNode;
-class StyleRule;
-class StyleSheet;
 
 struct MatchingRule {
     RefPtr<StyleRule> rule;
@@ -47,15 +42,15 @@ struct MatchingRule {
 
 class StyleResolver {
 public:
-    explicit StyleResolver(Document&);
+    explicit StyleResolver(DOM::Document&);
     ~StyleResolver();
 
-    Document& document() { return m_document; }
-    const Document& document() const { return m_document; }
+    DOM::Document& document() { return m_document; }
+    const DOM::Document& document() const { return m_document; }
 
-    NonnullRefPtr<StyleProperties> resolve_style(const Element&, const StyleProperties* parent_style) const;
+    NonnullRefPtr<StyleProperties> resolve_style(const DOM::Element&, const StyleProperties* parent_style) const;
 
-    Vector<MatchingRule> collect_matching_rules(const Element&) const;
+    Vector<MatchingRule> collect_matching_rules(const DOM::Element&) const;
 
     static bool is_inherited_property(CSS::PropertyID);
 
@@ -63,7 +58,7 @@ private:
     template<typename Callback>
     void for_each_stylesheet(Callback) const;
 
-    Document& m_document;
+    DOM::Document& m_document;
 };
 
 }

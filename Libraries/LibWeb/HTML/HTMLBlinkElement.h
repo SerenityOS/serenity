@@ -33,7 +33,7 @@ namespace Web {
 
 class HTMLBlinkElement : public HTMLElement {
 public:
-    HTMLBlinkElement(Document&, const FlyString& local_name);
+    HTMLBlinkElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLBlinkElement() override;
 
 private:
@@ -45,5 +45,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLBlinkElement)
-static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::blink; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::blink; }
 AK_END_TYPE_TRAITS()

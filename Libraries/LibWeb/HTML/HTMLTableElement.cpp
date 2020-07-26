@@ -29,7 +29,7 @@
 
 namespace Web {
 
-HTMLTableElement::HTMLTableElement(Document& document, const FlyString& tag_name)
+HTMLTableElement::HTMLTableElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }

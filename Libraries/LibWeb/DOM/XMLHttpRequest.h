@@ -37,7 +37,7 @@ namespace Web {
 class XMLHttpRequest final
     : public RefCounted<XMLHttpRequest>
     , public Weakable<XMLHttpRequest>
-    , public EventTarget
+    , public DOM::EventTarget
     , public Bindings::Wrappable {
 public:
     enum class ReadyState {
@@ -50,7 +50,7 @@ public:
 
     using WrapperType = Bindings::XMLHttpRequestWrapper;
 
-    static NonnullRefPtr<XMLHttpRequest> create(Window& window) { return adopt(*new XMLHttpRequest(window)); }
+    static NonnullRefPtr<XMLHttpRequest> create(DOM::Window& window) { return adopt(*new XMLHttpRequest(window)); }
 
     virtual ~XMLHttpRequest() override;
 
@@ -65,13 +65,13 @@ public:
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
-    virtual void dispatch_event(NonnullRefPtr<Event>) override;
+    virtual void dispatch_event(NonnullRefPtr<DOM::Event>) override;
 
     void set_ready_state(ReadyState);
 
-    explicit XMLHttpRequest(Window&);
+    explicit XMLHttpRequest(DOM::Window&);
 
-    NonnullRefPtr<Window> m_window;
+    NonnullRefPtr<DOM::Window> m_window;
 
     ReadyState m_ready_state { ReadyState::Unsent };
 

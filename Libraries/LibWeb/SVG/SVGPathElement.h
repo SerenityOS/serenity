@@ -102,7 +102,7 @@ private:
 
 class SVGPathElement final : public SVGGeometryElement {
 public:
-    SVGPathElement(Document&, const FlyString& tag_name);
+    SVGPathElement(DOM::Document&, const FlyString& tag_name);
     virtual ~SVGPathElement() override = default;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;

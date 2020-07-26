@@ -37,7 +37,7 @@ LayoutTreeBuilder::LayoutTreeBuilder()
 {
 }
 
-static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* parent_style)
+static RefPtr<LayoutNode> create_layout_tree(DOM::Node& node, const StyleProperties* parent_style)
 {
     auto layout_node = node.create_layout_node(parent_style);
     if (!layout_node)
@@ -50,7 +50,7 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
     bool have_inline_children = false;
     bool have_noninline_children = false;
 
-    downcast<ParentNode>(node).for_each_child([&](Node& child) {
+    downcast<DOM::ParentNode>(node).for_each_child([&](DOM::Node& child) {
         auto layout_child = create_layout_tree(child, &layout_node->specified_style());
         if (!layout_child)
             return;
@@ -77,9 +77,9 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
     return layout_node;
 }
 
-RefPtr<LayoutNode> LayoutTreeBuilder::build(Node& node)
+RefPtr<LayoutNode> LayoutTreeBuilder::build(DOM::Node& node)
 {
-    if (!is<Document>(node) && node.has_children()) {
+    if (!is<DOM::Document>(node) && node.has_children()) {
         dbg() << "FIXME: Support building partial layout trees.";
         return nullptr;
     }

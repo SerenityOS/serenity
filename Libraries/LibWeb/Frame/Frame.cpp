@@ -33,7 +33,7 @@
 
 namespace Web {
 
-Frame::Frame(Element& host_element, Frame& main_frame)
+Frame::Frame(DOM::Element& host_element, Frame& main_frame)
     : m_page(main_frame.page())
     , m_main_frame(main_frame)
     , m_loader(*this)
@@ -54,7 +54,7 @@ Frame::~Frame()
 {
 }
 
-void Frame::set_document(Document* document)
+void Frame::set_document(DOM::Document* document)
 {
     if (m_document == document)
         return;

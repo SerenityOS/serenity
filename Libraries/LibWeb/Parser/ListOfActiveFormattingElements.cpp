@@ -33,7 +33,7 @@ ListOfActiveFormattingElements::~ListOfActiveFormattingElements()
 {
 }
 
-void ListOfActiveFormattingElements::add(Element& element)
+void ListOfActiveFormattingElements::add(DOM::Element& element)
 {
     m_entries.append({ element });
 }
@@ -43,7 +43,7 @@ void ListOfActiveFormattingElements::add_marker()
     m_entries.append({ nullptr });
 }
 
-bool ListOfActiveFormattingElements::contains(const Element& element) const
+bool ListOfActiveFormattingElements::contains(const DOM::Element& element) const
 {
     for (auto& entry : m_entries) {
         if (entry.element == &element)
@@ -52,7 +52,7 @@ bool ListOfActiveFormattingElements::contains(const Element& element) const
     return false;
 }
 
-Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_marker(const FlyString& tag_name)
+DOM::Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_marker(const FlyString& tag_name)
 {
     for (ssize_t i = m_entries.size() - 1; i >= 0; --i) {
         auto& entry = m_entries[i];
@@ -64,7 +64,7 @@ Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_marke
     return nullptr;
 }
 
-void ListOfActiveFormattingElements::remove(Element& element)
+void ListOfActiveFormattingElements::remove(DOM::Element& element)
 {
     m_entries.remove_first_matching([&](auto& entry) {
         return entry.element == &element;

@@ -35,10 +35,10 @@ class LineBoxFragment;
 
 class LayoutText : public LayoutNode {
 public:
-    LayoutText(Document&, const Text&);
+    LayoutText(DOM::Document&, const DOM::Text&);
     virtual ~LayoutText() override;
 
-    const Text& node() const { return static_cast<const Text&>(*LayoutNode::node()); }
+    const DOM::Text& node() const { return static_cast<const DOM::Text&>(*LayoutNode::node()); }
 
     const String& text_for_style(const StyleProperties&) const;
     const String& text_for_rendering() const { return m_text_for_rendering; }

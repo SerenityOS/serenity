@@ -34,7 +34,7 @@
 
 namespace Web {
 
-DOMTreeModel::DOMTreeModel(Document& document)
+DOMTreeModel::DOMTreeModel(DOM::Document& document)
     : m_document(document)
 {
     m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
@@ -51,7 +51,7 @@ GUI::ModelIndex DOMTreeModel::index(int row, int column, const GUI::ModelIndex& 
     if (!parent.is_valid()) {
         return create_index(row, column, m_document.ptr());
     }
-    auto& parent_node = *static_cast<Node*>(parent.internal_data());
+    auto& parent_node = *static_cast<DOM::Node*>(parent.internal_data());
     return create_index(row, column, parent_node.child_at_index(row));
 }
 
@@ -59,7 +59,7 @@ GUI::ModelIndex DOMTreeModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto& node = *static_cast<Node*>(index.internal_data());
+    auto& node = *static_cast<DOM::Node*>(index.internal_data());
     if (!node.parent())
         return {};
 
@@ -85,7 +85,7 @@ int DOMTreeModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return 1;
-    auto& node = *static_cast<Node*>(index.internal_data());
+    auto& node = *static_cast<DOM::Node*>(index.internal_data());
     return node.child_count();
 }
 
@@ -117,7 +117,7 @@ static String with_whitespace_collapsed(const StringView& string)
 
 GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, Role role) const
 {
-    auto& node = *static_cast<Node*>(index.internal_data());
+    auto& node = *static_cast<DOM::Node*>(index.internal_data());
     if (role == Role::Icon) {
         if (node.is_document())
             return m_document_icon;
@@ -128,10 +128,10 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, Role role) const
     }
     if (role == Role::Display) {
         if (node.is_text())
-            return String::format("%s", with_whitespace_collapsed(downcast<Text>(node).data()).characters());
+            return String::format("%s", with_whitespace_collapsed(downcast<DOM::Text>(node).data()).characters());
         if (!node.is_element())
             return node.node_name();
-        auto& element = downcast<Element>(node);
+        auto& element = downcast<DOM::Element>(node);
         StringBuilder builder;
         builder.append('<');
         builder.append(element.local_name());

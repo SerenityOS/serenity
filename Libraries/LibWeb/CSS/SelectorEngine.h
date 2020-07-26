@@ -27,15 +27,10 @@
 #pragma once
 
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/DOM/Element.h>
 
-namespace Web {
+namespace Web::SelectorEngine {
 
-class Element;
-
-namespace SelectorEngine {
-
-bool matches(const Selector&, const Element&);
-
-}
+bool matches(const Selector&, const DOM::Element&);
 
 }

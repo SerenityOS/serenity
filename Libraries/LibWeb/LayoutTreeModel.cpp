@@ -35,7 +35,7 @@
 
 namespace Web {
 
-LayoutTreeModel::LayoutTreeModel(Document& document)
+LayoutTreeModel::LayoutTreeModel(DOM::Document& document)
     : m_document(document)
 {
     m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
@@ -136,7 +136,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, Role role) cons
         } else if (!node.node()->is_element()) {
             builder.append(node.node()->node_name());
         } else {
-            auto& element = downcast<Element>(*node.node());
+            auto& element = downcast<DOM::Element>(*node.node());
             builder.append('<');
             builder.append(element.local_name());
             element.for_each_attribute([&](auto& name, auto& value) {

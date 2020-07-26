@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLIFrameElement final : public HTMLElement {
 public:
-    HTMLIFrameElement(Document&, const FlyString& local_name);
+    HTMLIFrameElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLIFrameElement() override;
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
@@ -40,7 +40,7 @@ public:
     Frame* hosted_frame() { return m_hosted_frame; }
     const Frame* hosted_frame() const { return m_hosted_frame; }
 
-    const Document* hosted_document() const;
+    const DOM::Document* hosted_document() const;
 
 private:
     virtual void document_did_attach_to_frame(Frame&) override;
@@ -54,5 +54,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLIFrameElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::iframe; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::iframe; }
 AK_END_TYPE_TRAITS()

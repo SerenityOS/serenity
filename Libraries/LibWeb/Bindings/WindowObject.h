@@ -37,12 +37,12 @@ class WindowObject final
     : public JS::GlobalObject
     , public Weakable<WindowObject> {
 public:
-    explicit WindowObject(Window&);
+    explicit WindowObject(DOM::Window&);
     virtual void initialize() override;
     virtual ~WindowObject() override;
 
-    Window& impl() { return *m_impl; }
-    const Window& impl() const { return *m_impl; }
+    DOM::Window& impl() { return *m_impl; }
+    const DOM::Window& impl() const { return *m_impl; }
 
     XMLHttpRequestPrototype* xhr_prototype() { return m_xhr_prototype; }
     XMLHttpRequestConstructor* xhr_constructor() { return m_xhr_constructor; }
@@ -65,7 +65,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(atob);
     JS_DECLARE_NATIVE_FUNCTION(btoa);
 
-    NonnullRefPtr<Window> m_impl;
+    NonnullRefPtr<DOM::Window> m_impl;
 
     XMLHttpRequestConstructor* m_xhr_constructor { nullptr };
     XMLHttpRequestPrototype* m_xhr_prototype { nullptr };

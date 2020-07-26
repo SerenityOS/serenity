@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLAnchorElement : public HTMLElement {
 public:
-    HTMLAnchorElement(Document&, const FlyString& local_name);
+    HTMLAnchorElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLAnchorElement() override;
 
     String href() const { return attribute(HTML::AttributeNames::href); }
@@ -42,5 +42,5 @@ public:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLAnchorElement)
-static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::a; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::a; }
 AK_END_TYPE_TRAITS()

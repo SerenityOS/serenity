@@ -35,14 +35,14 @@ class EventListenerWrapper final : public Wrapper {
     JS_OBJECT(EventListenerWrapper, Wrapper);
 
 public:
-    EventListenerWrapper(JS::GlobalObject&, EventListener&);
+    EventListenerWrapper(JS::GlobalObject&, DOM::EventListener&);
     virtual ~EventListenerWrapper() override;
 
-    EventListener& impl() { return *m_impl; }
-    const EventListener& impl() const { return *m_impl; }
+    DOM::EventListener& impl() { return *m_impl; }
+    const DOM::EventListener& impl() const { return *m_impl; }
 
 private:
-    NonnullRefPtr<EventListener> m_impl;
+    NonnullRefPtr<DOM::EventListener> m_impl;
 };
 
 }

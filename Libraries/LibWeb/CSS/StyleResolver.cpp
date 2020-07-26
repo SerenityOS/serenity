@@ -37,7 +37,7 @@
 
 namespace Web {
 
-StyleResolver::StyleResolver(Document& document)
+StyleResolver::StyleResolver(DOM::Document& document)
     : m_document(document)
 {
 }
@@ -66,7 +66,7 @@ void StyleResolver::for_each_stylesheet(Callback callback) const
     }
 }
 
-Vector<MatchingRule> StyleResolver::collect_matching_rules(const Element& element) const
+Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& element) const
 {
     Vector<MatchingRule> matching_rules;
 
@@ -203,7 +203,7 @@ static inline void set_property_border_style(StyleProperties& style, const Style
         style.set_property(CSS::PropertyID::BorderLeftStyle, value);
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, Document& document)
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, DOM::Document& document)
 {
     CSS::ParsingContext context(document);
 
@@ -519,7 +519,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_style) const
+NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const DOM::Element& element, const StyleProperties* parent_style) const
 {
     auto style = StyleProperties::create();
 

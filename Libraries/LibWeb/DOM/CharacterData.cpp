@@ -26,7 +26,7 @@
 
 #include <LibWeb/DOM/CharacterData.h>
 
-namespace Web {
+namespace Web::DOM {
 
 CharacterData::CharacterData(Document& document, NodeType type, const String& data)
     : Node(document, type)

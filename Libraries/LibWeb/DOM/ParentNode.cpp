@@ -26,7 +26,7 @@
 
 #include <LibWeb/DOM/ParentNode.h>
 
-namespace Web {
+namespace Web::DOM {
 
 void ParentNode::remove_all_children()
 {

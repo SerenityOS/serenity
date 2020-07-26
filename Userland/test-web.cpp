@@ -643,7 +643,7 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
     auto& view = main_widget.add<Web::PageView>();
 
-    view.set_document(adopt(*new Web::Document));
+    view.set_document(adopt(*new Web::DOM::Document));
 
     if (show_window) {
         window->set_title("LibWeb Test Window");

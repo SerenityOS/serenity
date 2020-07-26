@@ -48,7 +48,7 @@
 
 //#define EVENT_DEBUG
 
-namespace Web {
+namespace Web::DOM {
 
 Node::Node(Document& document, NodeType type)
     : m_document(&document)

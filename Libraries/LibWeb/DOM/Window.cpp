@@ -35,7 +35,7 @@
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/PageView.h>
 
-namespace Web {
+namespace Web::DOM {
 
 NonnullRefPtr<Window> Window::create_with_document(Document& document)
 {

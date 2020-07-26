@@ -46,10 +46,10 @@ public:
     void load_html(const StringView&, const URL&);
     void load_empty_document();
 
-    Document* document();
-    const Document* document() const;
+    DOM::Document* document();
+    const DOM::Document* document() const;
 
-    void set_document(Document*);
+    void set_document(DOM::Document*);
 
     const LayoutDocument* layout_root() const;
     LayoutDocument* layout_root();
@@ -88,7 +88,7 @@ private:
     // ^Web::PageClient
     virtual Gfx::Palette palette() const override { return GUI::ScrollableWidget::palette(); }
     virtual void page_did_change_title(const String&) override;
-    virtual void page_did_set_document_in_main_frame(Document*) override;
+    virtual void page_did_set_document_in_main_frame(DOM::Document*) override;
     virtual void page_did_start_loading(const URL&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(GUI::StandardCursor) override;
