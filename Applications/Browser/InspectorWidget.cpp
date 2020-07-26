@@ -42,7 +42,7 @@ void InspectorWidget::set_inspected_node(Web::Node* node)
 {
     m_document->set_inspected_node(node);
     if (node && node->is_element()) {
-        auto& element = Web::to<Web::Element>(*node);
+        auto& element = downcast<Web::Element>(*node);
         if (element.resolved_style()) {
             m_style_table_view->set_model(Web::StylePropertiesModel::create(*element.resolved_style()));
             m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(*element.computed_style()));

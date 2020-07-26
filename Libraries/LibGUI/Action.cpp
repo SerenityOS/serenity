@@ -152,9 +152,9 @@ Action::Action(const StringView& text, const Shortcut& shortcut, RefPtr<Gfx::Bit
     , m_shortcut(shortcut)
     , m_checkable(checkable)
 {
-    if (parent && Core::is<Widget>(*parent)) {
+    if (parent && is<Widget>(*parent)) {
         m_scope = ShortcutScope::WidgetLocal;
-    } else if (parent && Core::is<Window>(*parent)) {
+    } else if (parent && is<Window>(*parent)) {
         m_scope = ShortcutScope::WindowLocal;
     } else {
         m_scope = ShortcutScope::ApplicationGlobal;
