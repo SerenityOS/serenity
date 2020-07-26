@@ -43,10 +43,8 @@ private:
     virtual bool is_html_element() const final { return true; }
 };
 
-template<>
-inline bool is<HTMLElement>(const Node& node)
-{
-    return node.is_html_element();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLElement)
+static bool is_type(const Web::Node& node) { return node.is_html_element(); }
+AK_END_TYPE_TRAITS()

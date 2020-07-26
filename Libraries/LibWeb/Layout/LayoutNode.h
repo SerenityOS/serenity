@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/TypeCasts.h>
 #include <AK/Vector.h>
 #include <LibGfx/FloatRect.h>
 #include <LibGfx/Rect.h>
@@ -39,52 +40,6 @@
 #include <LibWeb/TreeNode.h>
 
 namespace Web {
-
-template<typename T>
-inline bool is(const LayoutNode&)
-{
-    return false;
-}
-
-template<typename T>
-inline bool is(const LayoutNode* node)
-{
-    return !node || is<T>(*node);
-}
-
-template<>
-inline bool is<LayoutNode>(const LayoutNode&)
-{
-    return true;
-}
-
-template<typename T>
-inline const T& to(const LayoutNode& node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<const T&>(node);
-}
-
-template<typename T>
-inline T* to(LayoutNode* node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<T*>(node);
-}
-
-template<typename T>
-inline const T* to(const LayoutNode* node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<const T*>(node);
-}
-
-template<typename T>
-inline T& to(LayoutNode& node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<T&>(node);
-}
 
 struct HitTestResult {
     RefPtr<LayoutNode> layout_node;
@@ -130,7 +85,7 @@ public:
         for (auto* node = first_child(); node; node = node->next_sibling()) {
             if (!is<T>(node))
                 continue;
-            callback(to<T>(*node));
+            callback(downcast<T>(*node));
         }
     }
 
@@ -140,7 +95,7 @@ public:
         for (auto* node = first_child(); node; node = node->next_sibling()) {
             if (!is<T>(node))
                 continue;
-            callback(to<T>(*node));
+            callback(downcast<T>(*node));
         }
     }
 
@@ -158,6 +113,7 @@ public:
     virtual bool is_table_row() const { return false; }
     virtual bool is_table_cell() const { return false; }
     virtual bool is_table_row_group() const { return false; }
+    virtual bool is_break() const { return false; }
     bool has_style() const { return m_has_style; }
 
     bool is_inline() const { return m_inline; }
@@ -269,7 +225,6 @@ protected:
     LayoutNodeWithStyle(Document&, const Node*, NonnullRefPtr<StyleProperties>);
 
 private:
-
     LayoutStyle m_style;
 
     NonnullRefPtr<StyleProperties> m_specified_style;
@@ -321,7 +276,7 @@ inline const T* LayoutNode::next_sibling_of_type() const
 {
     for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
         if (is<T>(*sibling))
-            return &to<T>(*sibling);
+            return &downcast<T>(*sibling);
     }
     return nullptr;
 }
@@ -331,7 +286,7 @@ inline T* LayoutNode::next_sibling_of_type()
 {
     for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
         if (is<T>(*sibling))
-            return &to<T>(*sibling);
+            return &downcast<T>(*sibling);
     }
     return nullptr;
 }
@@ -341,7 +296,7 @@ inline const T* LayoutNode::previous_sibling_of_type() const
 {
     for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
         if (is<T>(*sibling))
-            return &to<T>(*sibling);
+            return &downcast<T>(*sibling);
     }
     return nullptr;
 }
@@ -351,7 +306,7 @@ inline T* LayoutNode::previous_sibling_of_type()
 {
     for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
         if (is<T>(*sibling))
-            return &to<T>(*sibling);
+            return &downcast<T>(*sibling);
     }
     return nullptr;
 }
@@ -361,7 +316,7 @@ inline const T* LayoutNode::first_child_of_type() const
 {
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<T>(*child))
-            return &to<T>(*child);
+            return &downcast<T>(*child);
     }
     return nullptr;
 }
@@ -371,7 +326,7 @@ inline T* LayoutNode::first_child_of_type()
 {
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<T>(*child))
-            return &to<T>(*child);
+            return &downcast<T>(*child);
     }
     return nullptr;
 }
@@ -381,7 +336,7 @@ inline const T* LayoutNode::first_ancestor_of_type() const
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (is<T>(*ancestor))
-            return &to<T>(*ancestor);
+            return &downcast<T>(*ancestor);
     }
     return nullptr;
 }
@@ -391,15 +346,13 @@ inline T* LayoutNode::first_ancestor_of_type()
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (is<T>(*ancestor))
-            return &to<T>(*ancestor);
+            return &downcast<T>(*ancestor);
     }
     return nullptr;
 }
 
-template<>
-inline bool is<LayoutNodeWithStyle>(const LayoutNode& node)
-{
-    return node.has_style();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutNodeWithStyle)
+static bool is_type(const Web::LayoutNode& node) { return node.has_style(); }
+AK_END_TYPE_TRAITS()

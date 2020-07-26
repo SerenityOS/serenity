@@ -125,7 +125,7 @@ void Frame::scroll_to_anchor(const String& fragment)
         auto candidates = document()->get_elements_by_name(fragment);
         for (auto* candidate : candidates) {
             if (is<HTMLAnchorElement>(*candidate)) {
-                element = to<HTMLAnchorElement>(candidate);
+                element = downcast<HTMLAnchorElement>(candidate);
                 break;
             }
         }
@@ -138,7 +138,7 @@ void Frame::scroll_to_anchor(const String& fragment)
 
     Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)viewport_rect().width(), (float)viewport_rect().height() } };
     if (is<LayoutBox>(layout_node)) {
-        auto& layout_box = to<LayoutBox>(layout_node);
+        auto& layout_box = downcast<LayoutBox>(layout_node);
         auto padding_box = layout_box.box_model().padding_box(layout_box);
         float_rect.move_by(-padding_box.left, -padding_box.top);
     }

@@ -44,10 +44,8 @@ public:
     virtual FlyString node_name() const override { return "#document-fragment"; }
 };
 
-template<>
-inline bool is<DocumentFragment>(const Node& node)
-{
-    return node.is_document_fragment();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::DocumentFragment)
+static bool is_type(const Web::Node& node) { return node.is_document_fragment(); }
+AK_END_TYPE_TRAITS()

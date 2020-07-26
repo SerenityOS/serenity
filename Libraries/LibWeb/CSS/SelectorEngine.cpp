@@ -131,7 +131,7 @@ bool matches(const Selector& selector, int component_list_index, const Element& 
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
             if (!is<Element>(*ancestor))
                 continue;
-            if (matches(selector, component_list_index - 1, to<Element>(*ancestor)))
+            if (matches(selector, component_list_index - 1, downcast<Element>(*ancestor)))
                 return true;
         }
         return false;
@@ -139,7 +139,7 @@ bool matches(const Selector& selector, int component_list_index, const Element& 
         ASSERT(component_list_index != 0);
         if (!element.parent() || !is<Element>(*element.parent()))
             return false;
-        return matches(selector, component_list_index - 1, to<Element>(*element.parent()));
+        return matches(selector, component_list_index - 1, downcast<Element>(*element.parent()));
     case Selector::ComplexSelector::Relation::AdjacentSibling:
         ASSERT(component_list_index != 0);
         if (auto* sibling = element.previous_element_sibling())

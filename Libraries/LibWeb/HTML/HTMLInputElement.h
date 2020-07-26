@@ -42,10 +42,8 @@ public:
     String name() const { return attribute(HTML::AttributeNames::name); }
 };
 
-template<>
-inline bool is<HTMLInputElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::input;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLInputElement)
+static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::input; }
+AK_END_TYPE_TRAITS()

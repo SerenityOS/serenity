@@ -39,10 +39,8 @@ public:
     virtual FlyString node_name() const override { return "#comment"; }
 };
 
-template<>
-inline bool is<Comment>(const Node& node)
-{
-    return node.is_comment();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::Comment)
+static bool is_type(const Web::Node& node) { return node.is_comment(); }
+AK_END_TYPE_TRAITS()

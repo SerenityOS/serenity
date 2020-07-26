@@ -55,10 +55,8 @@ private:
     String m_system_id;
 };
 
-template<>
-inline bool is<DocumentType>(const Node& node)
-{
-    return node.type() == NodeType::DOCUMENT_TYPE_NODE;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::DocumentType)
+static bool is_type(const Web::Node& node) { return node.type() == Web::NodeType::DOCUMENT_TYPE_NODE; }
+AK_END_TYPE_TRAITS()

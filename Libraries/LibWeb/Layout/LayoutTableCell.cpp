@@ -42,7 +42,7 @@ LayoutTableCell::~LayoutTableCell()
 size_t LayoutTableCell::colspan() const
 {
     ASSERT(node());
-    return to<Element>(*node()).attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
+    return downcast<Element>(*node()).attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
 }
 
 float LayoutTableCell::width_of_logical_containing_block() const

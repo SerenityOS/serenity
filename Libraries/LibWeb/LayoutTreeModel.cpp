@@ -127,7 +127,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, Role role) cons
     }
     if (role == Role::Display) {
         if (node.is_text())
-            return String::format("LayoutText: %s", with_whitespace_collapsed(to<LayoutText>(node).text_for_rendering()).characters());
+            return String::format("LayoutText: %s", with_whitespace_collapsed(downcast<LayoutText>(node).text_for_rendering()).characters());
         StringBuilder builder;
         builder.append(node.class_name());
         builder.append(' ');
@@ -136,7 +136,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, Role role) cons
         } else if (!node.node()->is_element()) {
             builder.append(node.node()->node_name());
         } else {
-            auto& element = to<Element>(*node.node());
+            auto& element = downcast<Element>(*node.node());
             builder.append('<');
             builder.append(element.local_name());
             element.for_each_attribute([&](auto& name, auto& value) {

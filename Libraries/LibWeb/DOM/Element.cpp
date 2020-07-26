@@ -271,17 +271,17 @@ String Element::inner_html() const
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             if (child->is_element()) {
                 builder.append('<');
-                builder.append(to<Element>(*child).local_name());
+                builder.append(downcast<Element>(*child).local_name());
                 builder.append('>');
 
                 recurse(*child);
 
                 builder.append("</");
-                builder.append(to<Element>(*child).local_name());
+                builder.append(downcast<Element>(*child).local_name());
                 builder.append('>');
             }
             if (child->is_text()) {
-                builder.append(to<Text>(*child).data());
+                builder.append(downcast<Text>(*child).data());
             }
         }
     };

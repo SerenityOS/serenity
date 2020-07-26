@@ -76,7 +76,7 @@ void LayoutDocument::layout(LayoutMode layout_mode)
     float lowest_bottom = 0;
     for_each_child([&](auto& child) {
         ASSERT(is<LayoutBlock>(child));
-        auto& child_block = to<LayoutBlock>(child);
+        auto& child_block = downcast<LayoutBlock>(child);
         lowest_bottom = max(lowest_bottom, child_block.absolute_rect().bottom());
     });
     set_height(lowest_bottom);

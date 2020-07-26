@@ -441,7 +441,7 @@ void HTMLDocumentParser::handle_before_head(HTMLToken& token)
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::head) {
         auto element = insert_html_element(token);
-        m_head_element = to<HTMLHeadElement>(element);
+        m_head_element = downcast<HTMLHeadElement>(*element);
         m_insertion_mode = InsertionMode::InHead;
         return;
     }
@@ -456,7 +456,7 @@ void HTMLDocumentParser::handle_before_head(HTMLToken& token)
     }
 
 AnythingElse:
-    m_head_element = to<HTMLHeadElement>(insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head)));
+    m_head_element = downcast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head)));
     m_insertion_mode = InsertionMode::InHead;
     process_using_the_rules_for(InsertionMode::InHead, token);
     return;
@@ -527,7 +527,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::script) {
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
         auto element = create_element_for(token);
-        auto& script_element = to<HTMLScriptElement>(*element);
+        auto& script_element = downcast<HTMLScriptElement>(*element);
         script_element.set_parser_document({}, document());
         script_element.set_non_blocking({}, false);
 
@@ -636,7 +636,7 @@ Text* HTMLDocumentParser::find_character_insertion_node()
     if (adjusted_insertion_location.parent->is_document())
         return nullptr;
     if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
-        return to<Text>(adjusted_insertion_location.parent->last_child());
+        return downcast<Text>(adjusted_insertion_location.parent->last_child());
     auto new_text_node = adopt(*new Text(document(), ""));
     adjusted_insertion_location.parent->append_child(new_text_node);
     return new_text_node;
@@ -1179,7 +1179,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             close_a_p_element();
         auto element = insert_html_element(token);
         if (!m_stack_of_open_elements.contains(HTML::TagNames::template_))
-            m_form_element = to<HTMLFormElement>(*element);
+            m_form_element = downcast<HTMLFormElement>(*element);
         return;
     }
 
@@ -1756,7 +1756,7 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
     if (token.is_end_of_file()) {
         PARSE_ERROR();
         if (current_node().local_name() == HTML::TagNames::script)
-            to<HTMLScriptElement>(current_node()).set_already_started({}, true);
+            downcast<HTMLScriptElement>(current_node()).set_already_started({}, true);
         m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
         process_using_the_rules_for(m_insertion_mode, token);
@@ -1766,7 +1766,7 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         // Make sure the <script> element has up-to-date text content before preparing the script.
         flush_character_insertions();
 
-        NonnullRefPtr<HTMLScriptElement> script = to<HTMLScriptElement>(current_node());
+        NonnullRefPtr<HTMLScriptElement> script = downcast<HTMLScriptElement>(current_node());
         m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
         // FIXME: Handle tokenizer insertion point stuff here.
@@ -2164,7 +2164,7 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
             return;
         }
 
-        m_form_element = to<HTMLFormElement>(insert_html_element(token));
+        m_form_element = downcast<HTMLFormElement>(*insert_html_element(token));
 
         // FIXME: See previous FIXME, as this is the same situation but for form.
         m_stack_of_open_elements.pop();
@@ -2783,7 +2783,7 @@ NonnullRefPtrVector<Node> HTMLDocumentParser::parse_html_fragment(Element& conte
 
     for (auto* form_candidate = &context_element; form_candidate; form_candidate = form_candidate->parent_element()) {
         if (is<HTMLFormElement>(*form_candidate)) {
-            parser.m_form_element = to<HTMLFormElement>(*form_candidate);
+            parser.m_form_element = downcast<HTMLFormElement>(*form_candidate);
             break;
         }
     }

@@ -47,10 +47,8 @@ private:
     String m_data;
 };
 
-template<>
-inline bool is<CharacterData>(const Node& node)
-{
-    return node.is_character_data();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::CharacterData)
+static bool is_type(const Web::Node& node) { return node.is_character_data(); }
+AK_END_TYPE_TRAITS()

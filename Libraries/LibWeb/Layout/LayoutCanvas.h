@@ -48,10 +48,9 @@ private:
     virtual bool is_canvas() const override { return true; }
 };
 
-template<>
-inline bool is<LayoutCanvas>(const LayoutNode& node)
-{
-    return node.is_canvas();
-}
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::LayoutCanvas)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_canvas(); }
+AK_END_TYPE_TRAITS()

@@ -51,8 +51,8 @@ void dump_tree(const Node& node)
     if (is<Document>(node)) {
         dbgprintf("*Document*\n");
     } else if (is<Element>(node)) {
-        dbgprintf("<%s", to<Element>(node).local_name().characters());
-        to<Element>(node).for_each_attribute([](auto& name, auto& value) {
+        dbgprintf("<%s", downcast<Element>(node).local_name().characters());
+        downcast<Element>(node).for_each_attribute([](auto& name, auto& value) {
             dbgprintf(" %s=%s", name.characters(), value.characters());
         });
         dbgprintf(">\n");
@@ -61,7 +61,7 @@ void dump_tree(const Node& node)
     } else if (is<DocumentType>(node)) {
         dbgprintf("<!DOCTYPE html>\n");
     } else if (is<Comment>(node)) {
-        dbgprintf("<!--%s-->\n", to<Comment>(node).data().characters());
+        dbgprintf("<!--%s-->\n", downcast<Comment>(node).data().characters());
     } else if (is<DocumentFragment>(node)) {
         dbgprintf("#document-fragment\n");
     }
@@ -88,13 +88,13 @@ void dump_tree(const LayoutNode& layout_node)
     else if (is<Document>(layout_node.node()))
         tag_name = "#document";
     else if (is<Element>(layout_node.node()))
-        tag_name = to<Element>(*layout_node.node()).local_name();
+        tag_name = downcast<Element>(*layout_node.node()).local_name();
     else
         tag_name = "???";
 
     String identifier = "";
     if (layout_node.node() && is<Element>(*layout_node.node())) {
-        auto& element = to<Element>(*layout_node.node());
+        auto& element = downcast<Element>(*layout_node.node());
         StringBuilder builder;
         auto id = element.attribute(HTML::AttributeNames::id);
         if (!id.is_empty()) {
@@ -111,7 +111,7 @@ void dump_tree(const LayoutNode& layout_node)
     if (!layout_node.is_box()) {
         dbgprintf("%s {\033[33m%s\033[0m%s}\n", layout_node.class_name(), tag_name.characters(), identifier.characters());
     } else {
-        auto& layout_box = to<LayoutBox>(layout_node);
+        auto& layout_box = downcast<LayoutBox>(layout_node);
         dbgprintf("%s {\033[34m%s\033[0m%s} at (%g,%g) size %gx%g",
             layout_box.class_name(),
             tag_name.characters(),

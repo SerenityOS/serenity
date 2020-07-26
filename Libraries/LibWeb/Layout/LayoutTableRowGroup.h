@@ -44,10 +44,8 @@ private:
     virtual const char* class_name() const override { return "LayoutTableRowGroup"; }
 };
 
-template<>
-inline bool is<LayoutTableRowGroup>(const LayoutNode& node)
-{
-    return node.is_table_row_group();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutTableRowGroup)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_table_row_group(); }
+AK_END_TYPE_TRAITS()

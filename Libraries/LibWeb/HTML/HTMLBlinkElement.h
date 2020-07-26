@@ -42,10 +42,8 @@ private:
     NonnullRefPtr<Core::Timer> m_timer;
 };
 
-template<>
-inline bool is<HTMLBlinkElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::blink;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLBlinkElement)
+static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::blink; }
+AK_END_TYPE_TRAITS()

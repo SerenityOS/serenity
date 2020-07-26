@@ -50,7 +50,7 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
     bool have_inline_children = false;
     bool have_noninline_children = false;
 
-    to<ParentNode>(node).for_each_child([&](Node& child) {
+    downcast<ParentNode>(node).for_each_child([&](Node& child) {
         auto layout_child = create_layout_tree(child, &layout_node->specified_style());
         if (!layout_child)
             return;
@@ -63,7 +63,7 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
 
     for (auto& layout_child : layout_children) {
         if (have_noninline_children && have_inline_children && layout_child.is_inline()) {
-            if (is<LayoutText>(layout_child) && to<LayoutText>(layout_child).text_for_style(*parent_style) == " ")
+            if (is<LayoutText>(layout_child) && downcast<LayoutText>(layout_child).text_for_style(*parent_style) == " ")
                 continue;
             layout_node->inline_wrapper().append_child(layout_child);
         } else {

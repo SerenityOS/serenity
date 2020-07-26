@@ -231,7 +231,7 @@ HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position) const
     //        m_rect.contains() since inline text rects can't be trusted..
     HitTestResult result { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
     for_each_child([&](auto& child) {
-        if (is<LayoutBox>(child) && to<LayoutBox>(child).stacking_context())
+        if (is<LayoutBox>(child) && downcast<LayoutBox>(child).stacking_context())
             return;
         auto child_result = child.hit_test(position);
         if (child_result.layout_node)
@@ -297,7 +297,7 @@ StackingContext* LayoutBox::enclosing_stacking_context()
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (!ancestor->is_box())
             continue;
-        auto& ancestor_box = to<LayoutBox>(*ancestor);
+        auto& ancestor_box = downcast<LayoutBox>(*ancestor);
         if (!ancestor_box.establishes_stacking_context())
             continue;
         ASSERT(ancestor_box.stacking_context());

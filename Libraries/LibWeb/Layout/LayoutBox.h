@@ -98,10 +98,8 @@ private:
     OwnPtr<StackingContext> m_stacking_context;
 };
 
-template<>
-ALWAYS_INLINE bool is<LayoutBox>(const LayoutNode& node)
-{
-    return node.is_box();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutBox)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_box(); }
+AK_END_TYPE_TRAITS()

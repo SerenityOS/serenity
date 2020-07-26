@@ -36,8 +36,8 @@ public:
     LayoutReplaced(Document&, const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutReplaced() override;
 
-    const Element& node() const { return to<Element>(*LayoutNode::node()); }
-    Element& node() { return to<Element>(*LayoutNode::node()); }
+    const Element& node() const { return downcast<Element>(*LayoutNode::node()); }
+    Element& node() { return downcast<Element>(*LayoutNode::node()); }
 
     virtual bool is_replaced() const final { return true; }
 
@@ -75,10 +75,8 @@ private:
     float m_intrinsic_ratio { 0 };
 };
 
-template<>
-inline bool is<LayoutReplaced>(const LayoutNode& node)
-{
-    return node.is_replaced();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutReplaced)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_replaced(); }
+AK_END_TYPE_TRAITS()

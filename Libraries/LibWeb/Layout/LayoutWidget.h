@@ -50,10 +50,8 @@ private:
     NonnullRefPtr<GUI::Widget> m_widget;
 };
 
-template<>
-inline bool is<LayoutWidget>(const LayoutNode& node)
-{
-    return node.is_widget();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutWidget)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_widget(); }
+AK_END_TYPE_TRAITS()

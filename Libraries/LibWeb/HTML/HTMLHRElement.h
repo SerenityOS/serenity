@@ -36,10 +36,8 @@ public:
     virtual ~HTMLHRElement() override;
 };
 
-template<>
-inline bool is<HTMLHRElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::hr;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLHRElement)
+static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::hr; }
+AK_END_TYPE_TRAITS()

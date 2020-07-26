@@ -54,7 +54,7 @@ void StackingContext::paint(PaintContext& context, LayoutNode::PaintPhase phase)
     } else {
         // NOTE: LayoutDocument::paint() merely calls StackingContext::paint()
         //       so we call its base class instead.
-        to<LayoutDocument>(m_box).LayoutBlock::paint(context, phase);
+        downcast<LayoutDocument>(m_box).LayoutBlock::paint(context, phase);
     }
     for (auto* child : m_children) {
         child->paint(context, phase);
@@ -69,7 +69,7 @@ HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position) const
     } else {
         // NOTE: LayoutDocument::hit_test() merely calls StackingContext::hit_test()
         //       so we call its base class instead.
-        result = to<LayoutDocument>(m_box).LayoutBlock::hit_test(position);
+        result = downcast<LayoutDocument>(m_box).LayoutBlock::hit_test(position);
     }
 
     for (auto* child : m_children) {

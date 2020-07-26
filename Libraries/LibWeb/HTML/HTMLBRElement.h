@@ -38,10 +38,8 @@ public:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 };
 
-template<>
-inline bool is<HTMLBRElement>(const Node& node)
-{
-    return is<Element>(node) && to<Element>(node).local_name() == HTML::TagNames::br;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::HTMLBRElement)
+static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::br; }
+AK_END_TYPE_TRAITS()

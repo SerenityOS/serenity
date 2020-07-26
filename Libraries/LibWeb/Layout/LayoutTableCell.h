@@ -46,10 +46,8 @@ private:
     virtual float width_of_logical_containing_block() const override;
 };
 
-template<>
-inline bool is<LayoutTableCell>(const LayoutNode& node)
-{
-    return node.is_table_cell();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutTableCell)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_table_cell(); }
+AK_END_TYPE_TRAITS()
