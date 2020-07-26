@@ -44,8 +44,7 @@ public:
     SVG::SVGSVGElement& node() { return static_cast<SVG::SVGSVGElement&>(LayoutReplaced::node()); }
 
 private:
-    virtual const char* class_name() const override { return "LayoutSvg"; }
-    virtual bool is_canvas() const override { return true; }
+    virtual const char* class_name() const override { return "LayoutSVG"; }
 };
 
 }
