@@ -63,6 +63,11 @@ Menu::~Menu()
     unrealize_menu();
 }
 
+void Menu::set_icon(const Gfx::Bitmap* icon)
+{
+    m_icon = icon;
+}
+
 void Menu::add_action(NonnullRefPtr<Action> action)
 {
     m_items.append(make<MenuItem>(m_menu_id, move(action)));
@@ -143,7 +148,8 @@ int Menu::realize_menu(RefPtr<Action> default_action)
         if (item.type() == MenuItem::Type::Submenu) {
             auto& submenu = *item.submenu();
             submenu.realize_if_needed(default_action);
-            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", -1, false);
+            int icon_buffer_id = ensure_realized_icon(submenu);
+            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", icon_buffer_id, false);
             continue;
         }
         if (item.type() == MenuItem::Type::Action) {
