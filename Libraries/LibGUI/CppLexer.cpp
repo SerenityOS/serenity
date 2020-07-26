@@ -394,11 +394,35 @@ Vector<CppToken> CppLexer::lex()
             continue;
         }
         if (ch == '+') {
-            emit_token_equals(CppToken::Type::Plus, CppToken::Type::PlusEquals);
+            begin_token();
+            consume();
+            if (peek() == '+') {
+                consume();
+                commit_token(CppToken::Type::PlusPlus);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::PlusEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::Plus);
             continue;
         }
         if (ch == '-') {
-            emit_token_equals(CppToken::Type::Minus, CppToken::Type::MinusEquals);
+            begin_token();
+            consume();
+            if (peek() == '-') {
+                consume();
+                commit_token(CppToken::Type::MinusMinus);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::MinusEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::Minus);
             continue;
         }
         if (ch == '*') {
