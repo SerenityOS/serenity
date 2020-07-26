@@ -63,6 +63,15 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     BufferStream& debug_info_stream) const
 {
     AttributeValue value;
+
+    auto assign_raw_bytes_value = [&](size_t length) {
+        value.data.as_raw_bytes.length = length;
+        value.data.as_raw_bytes.bytes = reinterpret_cast<const u8*>(m_compilation_unit.dwarf_info().debug_info_data().data()
+            + debug_info_stream.offset());
+
+        debug_info_stream.advance(length);
+    };
+
     switch (form) {
     case AttributeDataForm::StringPointer: {
         u32 offset = 0;
@@ -124,11 +133,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         size_t length = 0;
         debug_info_stream.read_LEB128_unsigned(length);
         value.type = AttributeValue::Type::DwarfExpression;
-
-        value.data.as_dwarf_expression.length = length;
-        value.data.as_dwarf_expression.bytes = reinterpret_cast<const u8*>(m_compilation_unit.dwarf_info().debug_info_data().data() + debug_info_stream.offset());
-
-        debug_info_stream.advance(length);
+        assign_raw_bytes_value(length);
         break;
     }
     case AttributeDataForm::String: {
@@ -137,6 +142,34 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         debug_info_stream >> str;
         value.type = AttributeValue::Type::String;
         value.data.as_string = reinterpret_cast<const char*>(str_offset + m_compilation_unit.dwarf_info().debug_info_data().data());
+        break;
+    }
+    case AttributeDataForm::Block1: {
+        value.type = AttributeValue::Type::RawBytes;
+        u8 length = 0;
+        debug_info_stream >> length;
+        assign_raw_bytes_value(length);
+        break;
+    }
+    case AttributeDataForm::Block2: {
+        value.type = AttributeValue::Type::RawBytes;
+        u16 length = 0;
+        debug_info_stream >> length;
+        assign_raw_bytes_value(length);
+        break;
+    }
+    case AttributeDataForm::Block4: {
+        value.type = AttributeValue::Type::RawBytes;
+        u32 length = 0;
+        debug_info_stream >> length;
+        assign_raw_bytes_value(length);
+        break;
+    }
+    case AttributeDataForm::Block: {
+        value.type = AttributeValue::Type::RawBytes;
+        size_t length = 0;
+        debug_info_stream.read_LEB128_unsigned(length);
+        assign_raw_bytes_value(length);
         break;
     }
     default:

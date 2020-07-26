@@ -204,7 +204,7 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
         }
 
         if (location_info.value().type == Dwarf::DIE::AttributeValue::Type::DwarfExpression) {
-            auto expression_bytes = ByteBuffer::wrap(location_info.value().data.as_dwarf_expression.bytes, location_info.value().data.as_dwarf_expression.length);
+            auto expression_bytes = ByteBuffer::wrap(location_info.value().data.as_raw_bytes.bytes, location_info.value().data.as_raw_bytes.length);
             auto value = Dwarf::Expression::evaluate(expression_bytes, regs);
 
             if (value.type != Dwarf::Expression::Type::None) {
