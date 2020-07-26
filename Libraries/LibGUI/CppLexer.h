@@ -45,6 +45,7 @@ namespace GUI {
     __TOKEN(RightBracket)          \
     __TOKEN(Comma)                 \
     __TOKEN(Asterisk)              \
+    __TOKEN(AsteriskEquals)        \
     __TOKEN(Semicolon)             \
     __TOKEN(DoubleQuotedString)    \
     __TOKEN(SingleQuotedString)    \
