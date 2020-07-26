@@ -368,6 +368,27 @@ Vector<CppToken> CppLexer::lex()
             commit_token(CppToken::Type::Less);
             continue;
         }
+        if (ch == '>') {
+            begin_token();
+            consume();
+            if (peek() == '>') {
+                consume();
+                if (peek() == '=') {
+                    consume();
+                    commit_token(CppToken::Type::GreaterGreaterEquals);
+                    continue;
+                }
+                commit_token(CppToken::Type::GreaterGreater);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::GreaterEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::Greater);
+            continue;
+        }
         if (ch == ',') {
             emit_token(CppToken::Type::Comma);
             continue;
