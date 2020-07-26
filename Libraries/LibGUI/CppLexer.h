@@ -67,6 +67,8 @@ namespace GUI {
     __TOKEN(PercentEquals)         \
     __TOKEN(Caret)                 \
     __TOKEN(CaretEquals)           \
+    __TOKEN(ExclamationMark)       \
+    __TOKEN(ExclamationMarkEquals) \
     __TOKEN(Equals)                \
     __TOKEN(EqualsEquals)          \
     __TOKEN(And)                   \
@@ -75,6 +77,9 @@ namespace GUI {
     __TOKEN(Pipe)                  \
     __TOKEN(PipePipe)              \
     __TOKEN(PipeEquals)            \
+    __TOKEN(Tilde)                 \
+    __TOKEN(QuestionMark)          \
+    __TOKEN(Colon)                 \
     __TOKEN(Semicolon)             \
     __TOKEN(DoubleQuotedString)    \
     __TOKEN(SingleQuotedString)    \

@@ -437,6 +437,10 @@ Vector<CppToken> CppLexer::lex()
             emit_token_equals(CppToken::Type::Caret, CppToken::Type::CaretEquals);
             continue;
         }
+        if (ch == '!') {
+            emit_token_equals(CppToken::Type::ExclamationMark, CppToken::Type::ExclamationMarkEquals);
+            continue;
+        }
         if (ch == '=') {
             emit_token_equals(CppToken::Type::Equals, CppToken::Type::EqualsEquals);
             continue;
@@ -471,6 +475,18 @@ Vector<CppToken> CppLexer::lex()
                 continue;
             }
             commit_token(CppToken::Type::Pipe);
+            continue;
+        }
+        if (ch == '~') {
+            emit_token(CppToken::Type::Tilde);
+            continue;
+        }
+        if (ch == '?') {
+            emit_token(CppToken::Type::QuestionMark);
+            continue;
+        }
+        if (ch == ':') {
+            emit_token(CppToken::Type::Colon);
             continue;
         }
         if (ch == ';') {
