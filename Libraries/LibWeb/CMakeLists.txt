@@ -20,7 +20,6 @@ set(SOURCES
     CSS/StyleSheetList.cpp
     CSS/StyleValue.cpp
     DOM/AttributeNames.cpp
-    DOM/CanvasRenderingContext2D.cpp
     DOM/CharacterData.cpp
     DOM/Comment.cpp
     DOM/Document.cpp
@@ -29,30 +28,6 @@ set(SOURCES
     DOM/ElementFactory.cpp
     DOM/EventListener.cpp
     DOM/EventTarget.cpp
-    DOM/HTMLAnchorElement.cpp
-    DOM/HTMLBlinkElement.cpp
-    DOM/HTMLBodyElement.cpp
-    DOM/HTMLBRElement.cpp
-    DOM/HTMLCanvasElement.cpp
-    DOM/HTMLElement.cpp
-    DOM/HTMLFontElement.cpp
-    DOM/HTMLFormElement.cpp
-    DOM/HTMLHeadElement.cpp
-    DOM/HTMLHeadingElement.cpp
-    DOM/HTMLHRElement.cpp
-    DOM/HTMLHtmlElement.cpp
-    DOM/HTMLIFrameElement.cpp
-    DOM/HTMLImageElement.cpp
-    DOM/HTMLInputElement.cpp
-    DOM/HTMLObjectElement.cpp
-    DOM/HTMLLinkElement.cpp
-    DOM/HTMLScriptElement.cpp
-    DOM/HTMLStyleElement.cpp
-    DOM/HTMLTableElement.cpp
-    DOM/HTMLTableCellElement.cpp
-    DOM/HTMLTableRowElement.cpp
-    DOM/HTMLTitleElement.cpp
-    DOM/ImageData.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
     DOM/TagNames.cpp
@@ -65,6 +40,31 @@ set(SOURCES
     FontCache.cpp
     Frame/EventHandler.cpp
     Frame/Frame.cpp
+    HTML/CanvasRenderingContext2D.cpp
+    HTML/HTMLAnchorElement.cpp
+    HTML/HTMLBRElement.cpp
+    HTML/HTMLBlinkElement.cpp
+    HTML/HTMLBodyElement.cpp
+    HTML/HTMLCanvasElement.cpp
+    HTML/HTMLElement.cpp
+    HTML/HTMLFontElement.cpp
+    HTML/HTMLFormElement.cpp
+    HTML/HTMLHRElement.cpp
+    HTML/HTMLHeadElement.cpp
+    HTML/HTMLHeadingElement.cpp
+    HTML/HTMLHtmlElement.cpp
+    HTML/HTMLIFrameElement.cpp
+    HTML/HTMLImageElement.cpp
+    HTML/HTMLInputElement.cpp
+    HTML/HTMLLinkElement.cpp
+    HTML/HTMLObjectElement.cpp
+    HTML/HTMLScriptElement.cpp
+    HTML/HTMLStyleElement.cpp
+    HTML/HTMLTableCellElement.cpp
+    HTML/HTMLTableElement.cpp
+    HTML/HTMLTableRowElement.cpp
+    HTML/HTMLTitleElement.cpp
+    HTML/ImageData.cpp
     Layout/BoxModelMetrics.cpp
     Layout/LayoutBlock.cpp
     Layout/LayoutBox.cpp
@@ -139,39 +139,40 @@ function(add_wrapper_sources)
 endfunction(add_wrapper_sources)
 
 function(libweb_js_wrapper class)
-    add_wrapper_sources(Bindings/${class}Wrapper.cpp Bindings/${class}Wrapper.h)
+    get_filename_component(basename ${class} NAME)
+    add_wrapper_sources(Bindings/${basename}Wrapper.cpp Bindings/${basename}Wrapper.h)
     add_custom_command(
-        OUTPUT Bindings/${class}Wrapper.h
+        OUTPUT Bindings/${basename}Wrapper.h
         COMMAND /bin/mkdir -p Bindings
-        COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/DOM/${class}.idl > Bindings/${class}Wrapper.h
+        COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl > Bindings/${basename}Wrapper.h
         VERBATIM
         DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY DOM/${class}.idl
+        MAIN_DEPENDENCY ${class}.idl
     )
     add_custom_command(
-        OUTPUT Bindings/${class}Wrapper.cpp
+        OUTPUT Bindings/${basename}Wrapper.cpp
         COMMAND /bin/mkdir -p Bindings
-        COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/DOM/${class}.idl > Bindings/${class}Wrapper.cpp
+        COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl > Bindings/${basename}Wrapper.cpp
         VERBATIM
         DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY DOM/${class}.idl
+        MAIN_DEPENDENCY ${class}.idl
     )
-    add_custom_target(generate_${class}Wrapper.h DEPENDS Bindings/${class}Wrapper.h)
-    add_custom_target(generate_${class}Wrapper.cpp DEPENDS Bindings/${class}Wrapper.cpp)
+    add_custom_target(generate_${basename}Wrapper.h DEPENDS Bindings/${class}Wrapper.h)
+    add_custom_target(generate_${basename}Wrapper.cpp DEPENDS Bindings/${class}Wrapper.cpp)
 endfunction()
 
-libweb_js_wrapper(EventTarget)
-libweb_js_wrapper(Node)
-libweb_js_wrapper(Document)
-libweb_js_wrapper(DocumentType)
-libweb_js_wrapper(Element)
-libweb_js_wrapper(HTMLElement)
-libweb_js_wrapper(HTMLImageElement)
-libweb_js_wrapper(HTMLCanvasElement)
-libweb_js_wrapper(ImageData)
-libweb_js_wrapper(Event)
-libweb_js_wrapper(MouseEvent)
-libweb_js_wrapper(CanvasRenderingContext2D)
+libweb_js_wrapper(DOM/Document)
+libweb_js_wrapper(DOM/DocumentType)
+libweb_js_wrapper(DOM/Element)
+libweb_js_wrapper(DOM/Event)
+libweb_js_wrapper(DOM/EventTarget)
+libweb_js_wrapper(DOM/MouseEvent)
+libweb_js_wrapper(DOM/Node)
+libweb_js_wrapper(HTML/CanvasRenderingContext2D)
+libweb_js_wrapper(HTML/HTMLCanvasElement)
+libweb_js_wrapper(HTML/HTMLElement)
+libweb_js_wrapper(HTML/HTMLImageElement)
+libweb_js_wrapper(HTML/ImageData)
 
 get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
 set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})

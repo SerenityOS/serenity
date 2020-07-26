@@ -38,7 +38,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>

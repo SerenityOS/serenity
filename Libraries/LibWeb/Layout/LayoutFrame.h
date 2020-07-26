@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibWeb/Layout/LayoutReplaced.h>
-#include <LibWeb/DOM/HTMLIFrameElement.h>
+#include <LibWeb/HTML/HTMLIFrameElement.h>
 
 namespace Web {
 

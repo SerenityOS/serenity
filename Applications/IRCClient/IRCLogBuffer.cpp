@@ -29,7 +29,7 @@
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/DOM/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <time.h>
 

@@ -391,7 +391,13 @@ static void generate_header(const IDL::Interface& interface)
 
     out() << "#pragma once";
     out() << "#include <LibWeb/Bindings/Wrapper.h>";
+
+    // FIXME: This is very strange.
+    out() << "#if __has_include(<LibWeb/DOM/" << interface.name << ".h>)";
     out() << "#include <LibWeb/DOM/" << interface.name << ".h>";
+    out() << "#else";
+    out() << "#include <LibWeb/HTML/" << interface.name << ".h>";
+    out() << "#endif";
 
     if (wrapper_base_class != "Wrapper")
         out() << "#include <LibWeb/Bindings/" << wrapper_base_class << ".h>";
@@ -459,7 +465,7 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/Bindings/NodeWrapperFactory.h>";
     out() << "#include <LibWeb/Bindings/" << wrapper_class << ".h>";
     out() << "#include <LibWeb/DOM/Element.h>";
-    out() << "#include <LibWeb/DOM/HTMLElement.h>";
+    out() << "#include <LibWeb/HTML/HTMLElement.h>";
     out() << "#include <LibWeb/DOM/EventListener.h>";
     out() << "#include <LibWeb/Bindings/DocumentTypeWrapper.h>";
     out() << "#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>";

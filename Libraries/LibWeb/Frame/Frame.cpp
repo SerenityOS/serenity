@@ -25,7 +25,7 @@
  */
 
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutWidget.h>

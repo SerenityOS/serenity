@@ -25,7 +25,7 @@
  */
 
 #include <AK/Function.h>
-#include <LibWeb/DOM/HTMLImageElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Loader/Resource.h>
 
 namespace Web {
