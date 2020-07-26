@@ -32,6 +32,7 @@ namespace Web::SVG {
 
 class SVGGeometryElement : public SVGGraphicsElement {
 public:
+protected:
     SVGGeometryElement(Document& document, const FlyString& tag_name);
 };
 

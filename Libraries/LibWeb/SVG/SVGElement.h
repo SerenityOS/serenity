@@ -32,9 +32,10 @@ namespace Web::SVG {
 
 class SVGElement : public Element {
 public:
-    SVGElement(Document&, const FlyString& tag_name);
-
     virtual bool is_graphics_element() const { return false; }
+
+protected:
+    SVGElement(Document&, const FlyString& tag_name);
 
 private:
     virtual bool is_svg_element() const final { return true; }
