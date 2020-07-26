@@ -52,6 +52,7 @@ public:
             Boolean,
             DwarfExpression,
             SecOffset,
+            RawBytes,
         } type;
 
         union {
@@ -62,7 +63,7 @@ public:
             struct {
                 u32 length;
                 const u8* bytes; // points to bytes in the memory mapped elf image
-            } as_dwarf_expression;
+            } as_raw_bytes;
         } data {};
     };
 
