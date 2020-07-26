@@ -433,6 +433,10 @@ Vector<CppToken> CppLexer::lex()
             emit_token_equals(CppToken::Type::Percent, CppToken::Type::PercentEquals);
             continue;
         }
+        if (ch == '^') {
+            emit_token_equals(CppToken::Type::Caret, CppToken::Type::CaretEquals);
+            continue;
+        }
         if (ch == '=') {
             emit_token_equals(CppToken::Type::Equals, CppToken::Type::EqualsEquals);
             continue;

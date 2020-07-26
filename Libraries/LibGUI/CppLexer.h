@@ -65,6 +65,8 @@ namespace GUI {
     __TOKEN(SlashEquals)           \
     __TOKEN(Percent)               \
     __TOKEN(PercentEquals)         \
+    __TOKEN(Caret)                 \
+    __TOKEN(CaretEquals)           \
     __TOKEN(Equals)                \
     __TOKEN(EqualsEquals)          \
     __TOKEN(And)                   \
