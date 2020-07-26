@@ -878,7 +878,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
 
 Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& name, size_t offset)
 {
-    auto match = binary_search(cached_path.data(), cached_path.size(), name, [](const String& name, const String& program) -> int {
+    auto match = binary_search(cached_path.span(), name, [](const String& name, const String& program) -> int {
         return strncmp(name.characters(), program.characters(), name.length());
     });
 
