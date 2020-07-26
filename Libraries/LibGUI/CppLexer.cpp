@@ -342,6 +342,32 @@ Vector<CppToken> CppLexer::lex()
             emit_token(CppToken::Type::RightBracket);
             continue;
         }
+        if (ch == '<') {
+            begin_token();
+            consume();
+            if (peek() == '<') {
+                consume();
+                if (peek() == '=') {
+                    consume();
+                    commit_token(CppToken::Type::LessLessEquals);
+                    continue;
+                }
+                commit_token(CppToken::Type::LessLess);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::LessEquals);
+                continue;
+            }
+            if (peek() == '>') {
+                consume();
+                commit_token(CppToken::Type::LessGreater);
+                continue;
+            }
+            commit_token(CppToken::Type::Less);
+            continue;
+        }
         if (ch == ',') {
             emit_token(CppToken::Type::Comma);
             continue;
@@ -356,6 +382,10 @@ Vector<CppToken> CppLexer::lex()
         }
         if (ch == '*') {
             emit_token_equals(CppToken::Type::Asterisk, CppToken::Type::AsteriskEquals);
+            continue;
+        }
+        if (ch == '%') {
+            emit_token_equals(CppToken::Type::Percent, CppToken::Type::PercentEquals);
             continue;
         }
         if (ch == '=') {
