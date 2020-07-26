@@ -187,7 +187,7 @@ size_t XtermSuggestionDisplay::fit_to_page_boundary(size_t selection_index)
     int index = 0;
 
     auto* match = binary_search(
-        m_pages.data(), m_pages.size(), { selection_index, selection_index }, [](auto& a, auto& b) -> int {
+        m_pages.span(), { selection_index, selection_index }, [](auto& a, auto& b) -> int {
             if (a.start >= b.start && a.start < b.end)
                 return 0;
             return a.start - b.start;
