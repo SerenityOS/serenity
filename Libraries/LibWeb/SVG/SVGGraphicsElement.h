@@ -59,24 +59,13 @@ protected:
     Optional<Gfx::Color> m_fill_color;
     Optional<Gfx::Color> m_stroke_color;
     Optional<float> m_stroke_width;
+
+private:
+    virtual bool is_graphics_element() const final { return true; }
 };
 
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::SVG::SVGGraphicsElement)
-static bool is_type(const Web::Node& node)
-{
-    if (!is<Web::Element>(node))
-        return false;
-
-    auto tag_name = downcast<Web::Element>(node).tag_name();
-
-#define __ENUMERATE_SVG_TAG(name) \
-    if (tag_name == #name)        \
-        return true;
-    ENUMERATE_SVG_TAGS
-#undef ENUMERATE_SVG_TAG
-
-    return false;
-}
+static bool is_type(const Web::Node& node) { return is<Web::SVG::SVGElement>(node) && downcast<Web::SVG::SVGElement>(node).is_graphics_element(); }
 AK_END_TYPE_TRAITS()
