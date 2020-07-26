@@ -346,8 +346,20 @@ Vector<CppToken> CppLexer::lex()
             emit_token(CppToken::Type::Comma);
             continue;
         }
+        if (ch == '+') {
+            emit_token_equals(CppToken::Type::Plus, CppToken::Type::PlusEquals);
+            continue;
+        }
+        if (ch == '-') {
+            emit_token_equals(CppToken::Type::Minus, CppToken::Type::MinusEquals);
+            continue;
+        }
         if (ch == '*') {
             emit_token_equals(CppToken::Type::Asterisk, CppToken::Type::AsteriskEquals);
+            continue;
+        }
+        if (ch == '=') {
+            emit_token_equals(CppToken::Type::Equals, CppToken::Type::EqualsEquals);
             continue;
         }
         if (ch == ';') {
@@ -420,6 +432,10 @@ Vector<CppToken> CppLexer::lex()
             }
 
             commit_token(CppToken::Type::Comment);
+            continue;
+        }
+        if (ch == '/') {
+            emit_token_equals(CppToken::Type::Slash, CppToken::Type::SlashEquals);
             continue;
         }
         if (ch == '"') {
