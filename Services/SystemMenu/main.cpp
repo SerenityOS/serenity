@@ -202,7 +202,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ);
     }));
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("Exit...", [](auto&) {
+    system_menu->add_action(GUI::Action::create("Exit...", Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"), [](auto&) {
         auto command = ShutdownDialog::show();
 
         if (command.size() == 0)
