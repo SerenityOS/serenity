@@ -107,10 +107,12 @@ template<class T>
 struct RemoveConst {
     typedef T Type;
 };
+
 template<class T>
 struct RemoveConst<const T> {
     typedef T Type;
 };
+
 template<class T>
 struct RemoveVolatile {
     typedef T Type;
@@ -441,6 +443,22 @@ inline constexpr T exchange(T& slot, U&& value)
     return old_value;
 }
 
+template<typename T>
+struct IsUnion : public IntegralConstant<bool, __is_union(T)> {
+};
+
+template<typename T>
+struct IsClass : public IntegralConstant<bool, __is_class(T)> {
+};
+
+template<typename Base, typename Derived>
+struct IsBaseOf : public IntegralConstant<bool, __is_base_of(Base, Derived)> {
+};
+
+template<typename ReferenceType, typename T>
+using CopyConst =
+    typename Conditional<IsConst<ReferenceType>::value, typename AddConst<T>::Type, typename RemoveConst<T>::Type>::Type;
+
 }
 
 using AK::AddConst;
@@ -449,8 +467,11 @@ using AK::clamp;
 using AK::Conditional;
 using AK::exchange;
 using AK::forward;
+using AK::IsBaseOf;
+using AK::IsClass;
 using AK::IsConst;
 using AK::IsSame;
+using AK::IsUnion;
 using AK::IsVoid;
 using AK::MakeSigned;
 using AK::MakeUnsigned;
