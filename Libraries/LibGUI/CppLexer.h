@@ -81,6 +81,8 @@ namespace GUI {
     __TOKEN(QuestionMark)          \
     __TOKEN(Colon)                 \
     __TOKEN(Semicolon)             \
+    __TOKEN(Dot)                   \
+    __TOKEN(Arrow)                 \
     __TOKEN(DoubleQuotedString)    \
     __TOKEN(SingleQuotedString)    \
     __TOKEN(EscapeSequence)        \

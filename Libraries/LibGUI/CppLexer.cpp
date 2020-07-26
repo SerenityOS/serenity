@@ -422,6 +422,11 @@ Vector<CppToken> CppLexer::lex()
                 commit_token(CppToken::Type::MinusEquals);
                 continue;
             }
+            if (peek() == '>') {
+                consume();
+                commit_token(CppToken::Type::Arrow);
+                continue;
+            }
             commit_token(CppToken::Type::Minus);
             continue;
         }
@@ -491,6 +496,10 @@ Vector<CppToken> CppLexer::lex()
         }
         if (ch == ';') {
             emit_token(CppToken::Type::Semicolon);
+            continue;
+        }
+        if (ch == '.') {
+            emit_token(CppToken::Type::Dot);
             continue;
         }
         if (ch == '#') {
