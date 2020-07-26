@@ -413,6 +413,38 @@ Vector<CppToken> CppLexer::lex()
             emit_token_equals(CppToken::Type::Equals, CppToken::Type::EqualsEquals);
             continue;
         }
+        if (ch == '&') {
+            begin_token();
+            consume();
+            if (peek() == '&') {
+                consume();
+                commit_token(CppToken::Type::AndAnd);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::AndEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::And);
+            continue;
+        }
+        if (ch == '|') {
+            begin_token();
+            consume();
+            if (peek() == '|') {
+                consume();
+                commit_token(CppToken::Type::PipePipe);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::PipeEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::Pipe);
+            continue;
+        }
         if (ch == ';') {
             emit_token(CppToken::Type::Semicolon);
             continue;
