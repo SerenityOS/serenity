@@ -424,6 +424,11 @@ Vector<CppToken> CppLexer::lex()
             }
             if (peek() == '>') {
                 consume();
+                if (peek() == '*') {
+                    consume();
+                    commit_token(CppToken::Type::ArrowAsterisk);
+                    continue;
+                }
                 commit_token(CppToken::Type::Arrow);
                 continue;
             }
@@ -491,7 +496,19 @@ Vector<CppToken> CppLexer::lex()
             continue;
         }
         if (ch == ':') {
-            emit_token(CppToken::Type::Colon);
+            begin_token();
+            consume();
+            if (peek() == ':') {
+                consume();
+                if (peek() == '*') {
+                    consume();
+                    commit_token(CppToken::Type::ColonColonAsterisk);
+                    continue;
+                }
+                commit_token(CppToken::Type::ColonColon);
+                continue;
+            }
+            commit_token(CppToken::Type::Colon);
             continue;
         }
         if (ch == ';') {
@@ -499,7 +516,14 @@ Vector<CppToken> CppLexer::lex()
             continue;
         }
         if (ch == '.') {
-            emit_token(CppToken::Type::Dot);
+            begin_token();
+            consume();
+            if (peek() == '*') {
+                consume();
+                commit_token(CppToken::Type::DotAsterisk);
+                continue;
+            }
+            commit_token(CppToken::Type::Dot);
             continue;
         }
         if (ch == '#') {
