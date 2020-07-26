@@ -34,6 +34,59 @@
 namespace Crypto {
 namespace Cipher {
 
+/*
+ * Heads up: CTR is a *family* of modes, because the "counter" function is
+ * implementation-defined. This makes interoperability a pain in the neurons.
+ * Here are several contradicting(!) interpretations:
+ *
+ * "The counter can be *any function* which produces a sequence which is
+ * guaranteed not to repeat for a long time, although an actual increment-by-one
+ * counter is the simplest and most popular."
+ * The illustrations show that first increment should happen *after* the first
+ * round. I call this variant BIGINT_INCR_0.
+ * The AESAVS goes a step further and requires only that "counters" do not
+ * repeat, leaving the method of counting completely open.
+ * See: https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Counter_(CTR)
+ * See: https://csrc.nist.gov/csrc/media/projects/cryptographic-algorithm-validation-program/documents/aes/aesavs.pdf
+ *
+ * BIGINT_INCR_0 is the behavior of the OpenSSL command "openssl enc -aes-128-ctr",
+ * and the behavior of CRYPTO_ctr128_encrypt(). OpenSSL is not alone in the
+ * assumption that BIGINT_INCR_0 is all there is; even some NIST
+ * specification/survey(?) doesn't consider counting any other way.
+ * See: https://github.com/openssl/openssl/blob/33388b44b67145af2181b1e9528c381c8ea0d1b6/crypto/modes/ctr128.c#L71
+ * See: http://www.cryptogrium.com/aes-ctr.html
+ * See: https://web.archive.org/web/20150226072817/http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/ctr/ctr-spec.pdf
+ *
+ * "[T]he successive counter blocks are derived by applying an incrementing
+ * function."
+ * It defines a *family* of functions called "Standard Incrementing Function"
+ * which only increment the lower-m bits, for some number 0<m<=blocksize.
+ * The included test vectors suggest that the first increment should happen
+ * *after* the first round. I call this INT32_INCR_0, or in general INTm_INCR_0.
+ * This in particular is the behavior of CRYPTO_ctr128_encrypt_ctr32() in OpenSSL.
+ * See: https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
+ * See: https://github.com/openssl/openssl/blob/33388b44b67145af2181b1e9528c381c8ea0d1b6/crypto/modes/ctr128.c#L147
+ *
+ * The python package "cryptography" and RFC 3686 (which appears among the
+ * first online search results when searching for "AES CTR 128 test vector")
+ * share a peculiar interpretation of CTR mode: the counter is incremented *before*
+ * the first round. RFC 3686 does not consider any other interpretation. I call
+ * this variant BIGINT_INCR_1.
+ * See: https://tools.ietf.org/html/rfc3686.html#section-6
+ * See: https://cryptography.io/en/latest/development/test-vectors/#symmetric-ciphers
+ *
+ * And finally, because the method is left open, a different increment could be
+ * used, for example little endian, or host endian, or mixed endian. Or any crazy
+ * LSFR with sufficiently large period. That is the reason for the constant part
+ * "INCR" in the previous counters.
+ *
+ * Due to this plethora of mutually-incompatible counters,
+ * the method of counting should be a template parameter.
+ * This currently implements BIGINT_MIXEDENDIAN_INCR_0, which is not used
+ * anywhere else.
+ * TODO: Implement other counters?
+ */
+
 template<typename T>
 class CTR : public Mode<T> {
 public:
