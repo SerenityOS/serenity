@@ -65,6 +65,12 @@ namespace GUI {
     __TOKEN(PercentEquals)         \
     __TOKEN(Equals)                \
     __TOKEN(EqualsEquals)          \
+    __TOKEN(And)                   \
+    __TOKEN(AndAnd)                \
+    __TOKEN(AndEquals)             \
+    __TOKEN(Pipe)                  \
+    __TOKEN(PipePipe)              \
+    __TOKEN(PipeEquals)            \
     __TOKEN(Semicolon)             \
     __TOKEN(DoubleQuotedString)    \
     __TOKEN(SingleQuotedString)    \
