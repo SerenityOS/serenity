@@ -26,7 +26,7 @@
 
 #include <LibWeb/CSS/StyleDeclaration.h>
 
-namespace Web {
+namespace Web::CSS {
 
 StyleDeclaration::StyleDeclaration(Vector<StyleProperty>&& properties)
     : m_properties(move(properties))

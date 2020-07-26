@@ -30,7 +30,7 @@
 
 namespace Web {
 
-LayoutTableCell::LayoutTableCell(DOM::Document& document, const DOM::Element& element, NonnullRefPtr<StyleProperties> style)
+LayoutTableCell::LayoutTableCell(DOM::Document& document, const DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutBlock(document, &element, move(style))
 {
 }

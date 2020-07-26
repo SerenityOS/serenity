@@ -32,7 +32,7 @@ namespace Web {
 
 class LayoutTableRowGroup final : public LayoutBlock {
 public:
-    LayoutTableRowGroup(DOM::Document&, const DOM::Element&, NonnullRefPtr<StyleProperties>);
+    LayoutTableRowGroup(DOM::Document&, const DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutTableRowGroup() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;

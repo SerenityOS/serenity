@@ -55,7 +55,7 @@ unsigned HTMLCanvasElement::height() const
     return attribute(HTML::AttributeNames::height).to_uint().value_or(150);
 }
 
-RefPtr<LayoutNode> HTMLCanvasElement::create_layout_node(const StyleProperties* parent_style)
+RefPtr<LayoutNode> HTMLCanvasElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     if (style->display() == CSS::Display::None)

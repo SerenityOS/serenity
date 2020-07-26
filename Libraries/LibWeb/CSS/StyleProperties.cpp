@@ -29,7 +29,7 @@
 #include <LibWeb/FontCache.h>
 #include <ctype.h>
 
-namespace Web {
+namespace Web::CSS {
 
 StyleProperties::StyleProperties()
 {

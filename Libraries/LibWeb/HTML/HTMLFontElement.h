@@ -35,7 +35,7 @@ public:
     HTMLFontElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLFontElement() override;
 
-    virtual void apply_presentational_hints(StyleProperties&) const override;
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
 }

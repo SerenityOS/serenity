@@ -36,10 +36,10 @@ public:
     virtual ~HTMLBodyElement() override;
 
     virtual void parse_attribute(const FlyString&, const String&) override;
-    virtual void apply_presentational_hints(StyleProperties&) const override;
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
 private:
-    RefPtr<ImageStyleValue> m_background_style_value;
+    RefPtr<CSS::ImageStyleValue> m_background_style_value;
 };
 
 }

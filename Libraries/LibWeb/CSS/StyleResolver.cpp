@@ -35,7 +35,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
-namespace Web {
+namespace Web::CSS {
 
 StyleResolver::StyleResolver(DOM::Document& document)
     : m_document(document)

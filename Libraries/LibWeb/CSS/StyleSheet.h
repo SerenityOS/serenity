@@ -29,7 +29,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibWeb/CSS/StyleRule.h>
 
-namespace Web {
+namespace Web::CSS {
 
 class StyleSheet : public RefCounted<StyleSheet> {
 public:

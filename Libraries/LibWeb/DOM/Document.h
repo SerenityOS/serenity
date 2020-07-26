@@ -69,8 +69,8 @@ public:
 
     void fixup();
 
-    StyleResolver& style_resolver() { return *m_style_resolver; }
-    const StyleResolver& style_resolver() const { return *m_style_resolver; }
+    CSS::StyleResolver& style_resolver() { return *m_style_resolver; }
+    const CSS::StyleResolver& style_resolver() const { return *m_style_resolver; }
 
     CSS::StyleSheetList& style_sheets() { return *m_style_sheets; }
     const CSS::StyleSheetList& style_sheets() const { return *m_style_sheets; }
@@ -158,9 +158,9 @@ public:
     const String& compat_mode() const;
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
+    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
-    OwnPtr<StyleResolver> m_style_resolver;
+    OwnPtr<CSS::StyleResolver> m_style_resolver;
     RefPtr<CSS::StyleSheetList> m_style_sheets;
     RefPtr<Node> m_hovered_node;
     RefPtr<Node> m_inspected_node;

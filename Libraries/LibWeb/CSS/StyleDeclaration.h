@@ -30,7 +30,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/CSS/StyleValue.h>
 
-namespace Web {
+namespace Web::CSS {
 
 struct StyleProperty {
     CSS::PropertyID property_id;

@@ -147,7 +147,7 @@ public:
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 
-    const StyleProperties& specified_style() const;
+    const CSS::StyleProperties& specified_style() const;
     const ImmutableLayoutStyle& style() const;
 
     LayoutNodeWithStyle* parent();
@@ -214,20 +214,20 @@ class LayoutNodeWithStyle : public LayoutNode {
 public:
     virtual ~LayoutNodeWithStyle() override { }
 
-    const StyleProperties& specified_style() const { return m_specified_style; }
-    void set_specified_style(const StyleProperties& style) { m_specified_style = style; }
+    const CSS::StyleProperties& specified_style() const { return m_specified_style; }
+    void set_specified_style(const CSS::StyleProperties& style) { m_specified_style = style; }
 
     const ImmutableLayoutStyle& style() const { return static_cast<const ImmutableLayoutStyle&>(m_style); }
 
-    void apply_style(const StyleProperties&);
+    void apply_style(const CSS::StyleProperties&);
 
 protected:
-    LayoutNodeWithStyle(DOM::Document&, const DOM::Node*, NonnullRefPtr<StyleProperties>);
+    LayoutNodeWithStyle(DOM::Document&, const DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
 
 private:
     LayoutStyle m_style;
 
-    NonnullRefPtr<StyleProperties> m_specified_style;
+    NonnullRefPtr<CSS::StyleProperties> m_specified_style;
     CSS::Position m_position;
     CSS::TextAlign m_text_align;
 };
@@ -238,7 +238,7 @@ public:
     const BoxModelMetrics& box_model() const { return m_box_model; }
 
 protected:
-    LayoutNodeWithStyleAndBoxModelMetrics(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<StyleProperties> style)
+    LayoutNodeWithStyleAndBoxModelMetrics(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : LayoutNodeWithStyle(document, node, move(style))
     {
     }
@@ -247,7 +247,7 @@ private:
     BoxModelMetrics m_box_model;
 };
 
-inline const StyleProperties& LayoutNode::specified_style() const
+inline const CSS::StyleProperties& LayoutNode::specified_style() const
 {
     if (m_has_style)
         return static_cast<const LayoutNodeWithStyle*>(this)->specified_style();

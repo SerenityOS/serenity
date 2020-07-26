@@ -36,7 +36,7 @@ class SVGSVGElement;
 
 class LayoutSVG : public LayoutReplaced {
 public:
-    LayoutSVG(DOM::Document&, const SVG::SVGSVGElement&, NonnullRefPtr<StyleProperties>);
+    LayoutSVG(DOM::Document&, const SVG::SVGSVGElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutSVG() override = default;
     virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void paint(PaintContext&, PaintPhase) override;

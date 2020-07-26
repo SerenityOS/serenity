@@ -199,28 +199,28 @@ void dump_tree(const LayoutNode& layout_node)
     --indent;
 }
 
-void dump_selector(const Selector& selector)
+void dump_selector(const CSS::Selector& selector)
 {
-    dbgprintf("  Selector:\n");
+    dbgprintf("  CSS::Selector:\n");
 
     for (auto& complex_selector : selector.complex_selectors()) {
         dbgprintf("    ");
 
         const char* relation_description = "";
         switch (complex_selector.relation) {
-        case Selector::ComplexSelector::Relation::None:
+        case CSS::Selector::ComplexSelector::Relation::None:
             relation_description = "None";
             break;
-        case Selector::ComplexSelector::Relation::ImmediateChild:
+        case CSS::Selector::ComplexSelector::Relation::ImmediateChild:
             relation_description = "ImmediateChild";
             break;
-        case Selector::ComplexSelector::Relation::Descendant:
+        case CSS::Selector::ComplexSelector::Relation::Descendant:
             relation_description = "Descendant";
             break;
-        case Selector::ComplexSelector::Relation::AdjacentSibling:
+        case CSS::Selector::ComplexSelector::Relation::AdjacentSibling:
             relation_description = "AdjacentSibling";
             break;
-        case Selector::ComplexSelector::Relation::GeneralSibling:
+        case CSS::Selector::ComplexSelector::Relation::GeneralSibling:
             relation_description = "GeneralSibling";
             break;
         }
@@ -232,75 +232,75 @@ void dump_selector(const Selector& selector)
             auto& simple_selector = complex_selector.compound_selector[i];
             const char* type_description = "Unknown";
             switch (simple_selector.type) {
-            case Selector::SimpleSelector::Type::Invalid:
+            case CSS::Selector::SimpleSelector::Type::Invalid:
                 type_description = "Invalid";
                 break;
-            case Selector::SimpleSelector::Type::Universal:
+            case CSS::Selector::SimpleSelector::Type::Universal:
                 type_description = "Universal";
                 break;
-            case Selector::SimpleSelector::Type::Id:
+            case CSS::Selector::SimpleSelector::Type::Id:
                 type_description = "Id";
                 break;
-            case Selector::SimpleSelector::Type::Class:
+            case CSS::Selector::SimpleSelector::Type::Class:
                 type_description = "Class";
                 break;
-            case Selector::SimpleSelector::Type::TagName:
+            case CSS::Selector::SimpleSelector::Type::TagName:
                 type_description = "TagName";
                 break;
             }
             const char* attribute_match_type_description = "";
             switch (simple_selector.attribute_match_type) {
-            case Selector::SimpleSelector::AttributeMatchType::None:
+            case CSS::Selector::SimpleSelector::AttributeMatchType::None:
                 break;
-            case Selector::SimpleSelector::AttributeMatchType::HasAttribute:
+            case CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute:
                 attribute_match_type_description = "HasAttribute";
                 break;
-            case Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
+            case CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
                 attribute_match_type_description = "ExactValueMatch";
                 break;
-            case Selector::SimpleSelector::AttributeMatchType::Contains:
+            case CSS::Selector::SimpleSelector::AttributeMatchType::Contains:
                 attribute_match_type_description = "Contains";
                 break;
             }
 
             const char* pseudo_class_description = "";
             switch (simple_selector.pseudo_class) {
-            case Selector::SimpleSelector::PseudoClass::Link:
+            case CSS::Selector::SimpleSelector::PseudoClass::Link:
                 pseudo_class_description = "Link";
                 break;
-            case Selector::SimpleSelector::PseudoClass::Visited:
+            case CSS::Selector::SimpleSelector::PseudoClass::Visited:
                 pseudo_class_description = "Visited";
                 break;
-            case Selector::SimpleSelector::PseudoClass::None:
+            case CSS::Selector::SimpleSelector::PseudoClass::None:
                 pseudo_class_description = "None";
                 break;
-            case Selector::SimpleSelector::PseudoClass::Root:
+            case CSS::Selector::SimpleSelector::PseudoClass::Root:
                 pseudo_class_description = "Root";
                 break;
-            case Selector::SimpleSelector::PseudoClass::Focus:
+            case CSS::Selector::SimpleSelector::PseudoClass::Focus:
                 pseudo_class_description = "Focus";
                 break;
-            case Selector::SimpleSelector::PseudoClass::Empty:
+            case CSS::Selector::SimpleSelector::PseudoClass::Empty:
                 pseudo_class_description = "Empty";
                 break;
-            case Selector::SimpleSelector::PseudoClass::Hover:
+            case CSS::Selector::SimpleSelector::PseudoClass::Hover:
                 pseudo_class_description = "Hover";
                 break;
-            case Selector::SimpleSelector::PseudoClass::LastChild:
+            case CSS::Selector::SimpleSelector::PseudoClass::LastChild:
                 pseudo_class_description = "LastChild";
                 break;
-            case Selector::SimpleSelector::PseudoClass::FirstChild:
+            case CSS::Selector::SimpleSelector::PseudoClass::FirstChild:
                 pseudo_class_description = "FirstChild";
                 break;
-            case Selector::SimpleSelector::PseudoClass::OnlyChild:
+            case CSS::Selector::SimpleSelector::PseudoClass::OnlyChild:
                 pseudo_class_description = "OnlyChild";
                 break;
             }
 
             dbgprintf("%s:%s", type_description, simple_selector.value.characters());
-            if (simple_selector.pseudo_class != Selector::SimpleSelector::PseudoClass::None)
+            if (simple_selector.pseudo_class != CSS::Selector::SimpleSelector::PseudoClass::None)
                 dbgprintf(" pseudo_class=%s", pseudo_class_description);
-            if (simple_selector.attribute_match_type != Selector::SimpleSelector::AttributeMatchType::None) {
+            if (simple_selector.attribute_match_type != CSS::Selector::SimpleSelector::AttributeMatchType::None) {
                 dbgprintf(" [%s, name='%s', value='%s']", attribute_match_type_description, simple_selector.attribute_name.characters(), simple_selector.attribute_value.characters());
             }
 
@@ -311,7 +311,7 @@ void dump_selector(const Selector& selector)
     }
 }
 
-void dump_rule(const StyleRule& rule)
+void dump_rule(const CSS::StyleRule& rule)
 {
     dbgprintf("Rule:\n");
     for (auto& selector : rule.selectors()) {
@@ -323,7 +323,7 @@ void dump_rule(const StyleRule& rule)
     }
 }
 
-void dump_sheet(const StyleSheet& sheet)
+void dump_sheet(const CSS::StyleSheet& sheet)
 {
     dbgprintf("StyleSheet{%p}: %d rule(s)\n", &sheet, sheet.rules().size());
 

@@ -46,7 +46,7 @@ HTMLInputElement::~HTMLInputElement()
 {
 }
 
-RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties* parent_style)
+RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     ASSERT(document().frame());
     auto& frame = *document().frame();

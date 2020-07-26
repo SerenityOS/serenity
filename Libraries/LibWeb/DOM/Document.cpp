@@ -63,7 +63,7 @@ namespace Web::DOM {
 
 Document::Document(const URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
-    , m_style_resolver(make<StyleResolver>(*this))
+    , m_style_resolver(make<CSS::StyleResolver>(*this))
     , m_style_sheets(CSS::StyleSheetList::create(*this))
     , m_url(url)
     , m_window(Window::create_with_document(*this))
@@ -213,7 +213,7 @@ RefPtr<Gfx::Bitmap> Document::background_image() const
     if (!background_image.has_value() || !background_image.value()->is_image())
         return {};
 
-    auto& image_value = static_cast<const ImageStyleValue&>(*background_image.value());
+    auto& image_value = static_cast<const CSS::ImageStyleValue&>(*background_image.value());
     if (!image_value.bitmap())
         return {};
 
@@ -270,9 +270,9 @@ void Document::update_layout()
     layout();
 }
 
-RefPtr<LayoutNode> Document::create_layout_node(const StyleProperties*)
+RefPtr<LayoutNode> Document::create_layout_node(const CSS::StyleProperties*)
 {
-    return adopt(*new LayoutDocument(*this, StyleProperties::create()));
+    return adopt(*new LayoutDocument(*this, CSS::StyleProperties::create()));
 }
 
 void Document::set_link_color(Color color)

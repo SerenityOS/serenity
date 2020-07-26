@@ -29,7 +29,7 @@
 #include <AK/FlyString.h>
 #include <AK/Vector.h>
 
-namespace Web {
+namespace Web::CSS {
 
 class Selector {
 public:

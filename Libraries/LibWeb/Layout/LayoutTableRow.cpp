@@ -31,7 +31,7 @@
 
 namespace Web {
 
-LayoutTableRow::LayoutTableRow(DOM::Document& document, const DOM::Element& element, NonnullRefPtr<StyleProperties> style)
+LayoutTableRow::LayoutTableRow(DOM::Document& document, const DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutBox(document, &element, move(style))
 {
 }

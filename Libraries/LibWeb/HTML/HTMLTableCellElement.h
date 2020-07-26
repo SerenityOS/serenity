@@ -36,7 +36,7 @@ public:
     virtual ~HTMLTableCellElement() override;
 
 private:
-    virtual void apply_presentational_hints(StyleProperties&) const override;
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
 }

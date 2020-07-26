@@ -26,7 +26,7 @@
 
 #include <LibWeb/CSS/StyleRule.h>
 
-namespace Web {
+namespace Web::CSS {
 
 StyleRule::StyleRule(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
     : m_selectors(move(selectors))

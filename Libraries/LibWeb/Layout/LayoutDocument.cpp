@@ -33,7 +33,7 @@
 
 namespace Web {
 
-LayoutDocument::LayoutDocument(DOM::Document& document, NonnullRefPtr<StyleProperties> style)
+LayoutDocument::LayoutDocument(DOM::Document& document, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutBlock(document, &document, move(style))
 {
 }

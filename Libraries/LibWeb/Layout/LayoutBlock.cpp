@@ -38,7 +38,7 @@
 
 namespace Web {
 
-LayoutBlock::LayoutBlock(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<StyleProperties> style)
+LayoutBlock::LayoutBlock(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutBox(document, node, move(style))
 {
 }
@@ -69,7 +69,7 @@ void LayoutBlock::layout_absolutely_positioned_descendant(LayoutBox& box)
 {
     box.layout(LayoutMode::Default);
     auto& box_model = box.box_model();
-    auto zero_value = Length::make_px(0);
+    auto zero_value = CSS::Length::make_px(0);
 
     auto specified_width = box.style().width().resolved_or_auto(box, width());
 
@@ -78,10 +78,10 @@ void LayoutBlock::layout_absolutely_positioned_descendant(LayoutBox& box)
     box_model.margin.right = box.style().margin().right.resolved_or_auto(box, width());
     box_model.margin.bottom = box.style().margin().bottom.resolved_or_auto(box, height());
 
-    box_model.border.left = Length::make_px(box.style().border_left().width);
-    box_model.border.right = Length::make_px(box.style().border_right().width);
-    box_model.border.top = Length::make_px(box.style().border_top().width);
-    box_model.border.bottom = Length::make_px(box.style().border_bottom().width);
+    box_model.border.left = CSS::Length::make_px(box.style().border_left().width);
+    box_model.border.right = CSS::Length::make_px(box.style().border_right().width);
+    box_model.border.top = CSS::Length::make_px(box.style().border_top().width);
+    box_model.border.bottom = CSS::Length::make_px(box.style().border_bottom().width);
 
     box_model.offset.left = box.style().offset().left.resolved_or_auto(box, width());
     box_model.offset.top = box.style().offset().top.resolved_or_auto(box, height());
@@ -283,10 +283,10 @@ void LayoutBlock::layout_inline_children(LayoutMode layout_mode)
 void LayoutBlock::compute_width_for_absolutely_positioned_block()
 {
     auto& containing_block = *this->containing_block();
-    auto zero_value = Length::make_px(0);
+    auto zero_value = CSS::Length::make_px(0);
 
-    auto margin_left = Length::make_auto();
-    auto margin_right = Length::make_auto();
+    auto margin_left = CSS::Length::make_auto();
+    auto margin_right = CSS::Length::make_auto();
     const auto border_left = style().border_left().width;
     const auto border_right = style().border_right().width;
     const auto padding_left = style().padding().left.resolved(zero_value, *this, containing_block.width());
@@ -301,29 +301,29 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
         auto width = a_width;
 
         auto solve_for_left = [&] {
-            return Length(containing_block.width() - margin_left.to_px(*this) - border_left - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
+            return CSS::Length(containing_block.width() - margin_left.to_px(*this) - border_left - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right - margin_right.to_px(*this) - right.to_px(*this), CSS::Length::Type::Px);
         };
 
         auto solve_for_width = [&] {
-            return Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left - padding_left.to_px(*this) - padding_right.to_px(*this) - border_right - margin_right.to_px(*this) - right.to_px(*this), Length::Type::Px);
+            return CSS::Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left - padding_left.to_px(*this) - padding_right.to_px(*this) - border_right - margin_right.to_px(*this) - right.to_px(*this), CSS::Length::Type::Px);
         };
 
         auto solve_for_right = [&] {
-            return Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right - margin_right.to_px(*this), Length::Type::Px);
+            return CSS::Length(containing_block.width() - left.to_px(*this) - margin_left.to_px(*this) - border_left - padding_left.to_px(*this) - width.to_px(*this) - padding_right.to_px(*this) - border_right - margin_right.to_px(*this), CSS::Length::Type::Px);
         };
 
         // If all three of 'left', 'width', and 'right' are 'auto':
         if (left.is_auto() && width.is_auto() && right.is_auto()) {
             // First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
             if (margin_left.is_auto())
-                margin_left = Length::make_px(0);
+                margin_left = CSS::Length::make_px(0);
             if (margin_right.is_auto())
-                margin_right = Length::make_px(0);
+                margin_right = CSS::Length::make_px(0);
             // Then, if the 'direction' property of the element establishing the static-position containing block
             // is 'ltr' set 'left' to the static position and apply rule number three below;
             // otherwise, set 'right' to the static position and apply rule number one below.
             // FIXME: This is very hackish.
-            left = Length::make_px(0);
+            left = CSS::Length::make_px(0);
             goto Rule3;
         }
 
@@ -333,9 +333,9 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
         }
 
         if (margin_left.is_auto())
-            margin_left = Length::make_px(0);
+            margin_left = CSS::Length::make_px(0);
         if (margin_right.is_auto())
-            margin_right = Length::make_px(0);
+            margin_right = CSS::Length::make_px(0);
 
         // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto',
         //    then the width is shrink-to-fit. Then solve for 'left'
@@ -343,7 +343,7 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
             auto result = calculate_shrink_to_fit_width();
             solve_for_left();
             auto available_width = solve_for_width();
-            width = Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), Length::Type::Px);
+            width = CSS::Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), CSS::Length::Type::Px);
         }
 
         // 2. 'left' and 'right' are 'auto' and 'width' is not 'auto',
@@ -365,7 +365,7 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
             auto result = calculate_shrink_to_fit_width();
             right = solve_for_right();
             auto available_width = solve_for_width();
-            width = Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), Length::Type::Px);
+            width = CSS::Length(min(max(result.preferred_minimum_width, available_width.to_px(*this)), result.preferred_width), CSS::Length::Type::Px);
         }
 
         // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
@@ -413,8 +413,8 @@ void LayoutBlock::compute_width_for_absolutely_positioned_block()
 
     box_model().margin.left = margin_left;
     box_model().margin.right = margin_right;
-    box_model().border.left = Length::make_px(border_left);
-    box_model().border.right = Length::make_px(border_right);
+    box_model().border.left = CSS::Length::make_px(border_left);
+    box_model().border.right = CSS::Length::make_px(border_right);
     box_model().padding.left = padding_left;
     box_model().padding.right = padding_right;
 }
@@ -433,15 +433,15 @@ void LayoutBlock::compute_width()
 
     float width_of_containing_block = this->width_of_logical_containing_block();
 
-    auto zero_value = Length::make_px(0);
+    auto zero_value = CSS::Length::make_px(0);
 
-    auto margin_left = Length::make_auto();
-    auto margin_right = Length::make_auto();
+    auto margin_left = CSS::Length::make_auto();
+    auto margin_right = CSS::Length::make_auto();
     const auto padding_left = style().padding().left.resolved_or_zero(*this, width_of_containing_block);
     const auto padding_right = style().padding().right.resolved_or_zero(*this, width_of_containing_block);
 
     auto try_compute_width = [&](const auto& a_width) {
-        Length width = a_width;
+        CSS::Length width = a_width;
         margin_left = style().margin().left.resolved_or_zero(*this, width_of_containing_block);
         margin_right = style().margin().right.resolved_or_zero(*this, width_of_containing_block);
 
@@ -473,20 +473,20 @@ void LayoutBlock::compute_width()
                 if (margin_right.is_auto())
                     margin_right = zero_value;
                 if (underflow_px >= 0) {
-                    width = Length(underflow_px, Length::Type::Px);
+                    width = CSS::Length(underflow_px, CSS::Length::Type::Px);
                 } else {
                     width = zero_value;
-                    margin_right = Length(margin_right.to_px(*this) + underflow_px, Length::Type::Px);
+                    margin_right = CSS::Length(margin_right.to_px(*this) + underflow_px, CSS::Length::Type::Px);
                 }
             } else {
                 if (!margin_left.is_auto() && !margin_right.is_auto()) {
-                    margin_right = Length(margin_right.to_px(*this) + underflow_px, Length::Type::Px);
+                    margin_right = CSS::Length(margin_right.to_px(*this) + underflow_px, CSS::Length::Type::Px);
                 } else if (!margin_left.is_auto() && margin_right.is_auto()) {
-                    margin_right = Length(underflow_px, Length::Type::Px);
+                    margin_right = CSS::Length(underflow_px, CSS::Length::Type::Px);
                 } else if (margin_left.is_auto() && !margin_right.is_auto()) {
-                    margin_left = Length(underflow_px, Length::Type::Px);
+                    margin_left = CSS::Length(underflow_px, CSS::Length::Type::Px);
                 } else { // margin_left.is_auto() && margin_right.is_auto()
-                    auto half_of_the_underflow = Length(underflow_px / 2, Length::Type::Px);
+                    auto half_of_the_underflow = CSS::Length(underflow_px / 2, CSS::Length::Type::Px);
                     margin_left = half_of_the_underflow;
                     margin_right = half_of_the_underflow;
                 }
@@ -514,7 +514,7 @@ void LayoutBlock::compute_width()
                 auto result = calculate_shrink_to_fit_width();
 
                 // Then the shrink-to-fit width is: min(max(preferred minimum width, available width), preferred width).
-                width = Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), Length::Type::Px);
+                width = CSS::Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), CSS::Length::Type::Px);
             }
         }
 
@@ -547,8 +547,8 @@ void LayoutBlock::compute_width()
     set_width(used_width.to_px(*this));
     box_model().margin.left = margin_left;
     box_model().margin.right = margin_right;
-    box_model().border.left = Length::make_px(style().border_left().width);
-    box_model().border.right = Length::make_px(style().border_right().width);
+    box_model().border.left = CSS::Length::make_px(style().border_left().width);
+    box_model().border.right = CSS::Length::make_px(style().border_right().width);
     box_model().padding.left = padding_left;
     box_model().padding.right = padding_right;
 }
@@ -561,8 +561,8 @@ void LayoutBlock::place_block_level_replaced_element_in_normal_flow(LayoutReplac
 
     replaced_element_box_model.margin.top = box.style().margin().top.resolved_or_zero(*this, containing_block.width());
     replaced_element_box_model.margin.bottom = box.style().margin().bottom.resolved_or_zero(*this, containing_block.width());
-    replaced_element_box_model.border.top = Length::make_px(box.style().border_top().width);
-    replaced_element_box_model.border.bottom = Length::make_px(box.style().border_bottom().width);
+    replaced_element_box_model.border.top = CSS::Length::make_px(box.style().border_top().width);
+    replaced_element_box_model.border.bottom = CSS::Length::make_px(box.style().border_bottom().width);
     replaced_element_box_model.padding.top = box.style().padding().top.resolved_or_zero(*this, containing_block.width());
     replaced_element_box_model.padding.bottom = box.style().padding().bottom.resolved_or_zero(*this, containing_block.width());
 
@@ -609,15 +609,15 @@ LayoutBlock::ShrinkToFitResult LayoutBlock::calculate_shrink_to_fit_width()
 
 void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBlock& block)
 {
-    auto zero_value = Length::make_px(0);
+    auto zero_value = CSS::Length::make_px(0);
     auto& containing_block = *this;
     auto& box = block.box_model();
     auto& style = block.style();
 
     box.margin.top = style.margin().top.resolved(zero_value, *this, containing_block.width());
     box.margin.bottom = style.margin().bottom.resolved(zero_value, *this, containing_block.width());
-    box.border.top = Length::make_px(style.border_top().width);
-    box.border.bottom = Length::make_px(style.border_bottom().width);
+    box.border.top = CSS::Length::make_px(style.border_top().width);
+    box.border.bottom = CSS::Length::make_px(style.border_bottom().width);
     box.padding.top = style.padding().top.resolved(zero_value, *this, containing_block.width());
     box.padding.bottom = style.padding().bottom.resolved(zero_value, *this, containing_block.width());
 
@@ -671,10 +671,10 @@ void LayoutBlock::compute_height()
 {
     auto& containing_block = *this->containing_block();
 
-    Length specified_height;
+    CSS::Length specified_height;
 
     if (style().height().is_percentage() && !containing_block.style().height().is_absolute()) {
-        specified_height = Length::make_auto();
+        specified_height = CSS::Length::make_auto();
     } else {
         specified_height = style().height().resolved_or_auto(*this, containing_block.height());
     }
@@ -683,8 +683,8 @@ void LayoutBlock::compute_height()
 
     box_model().margin.top = style().margin().top.resolved_or_zero(*this, containing_block.width());
     box_model().margin.bottom = style().margin().bottom.resolved_or_zero(*this, containing_block.width());
-    box_model().border.top = Length::make_px(style().border_top().width);
-    box_model().border.bottom = Length::make_px(style().border_bottom().width);
+    box_model().border.top = CSS::Length::make_px(style().border_top().width);
+    box_model().border.bottom = CSS::Length::make_px(style().border_bottom().width);
     box_model().padding.top = style().padding().top.resolved_or_zero(*this, containing_block.width());
     box_model().padding.bottom = style().padding().bottom.resolved_or_zero(*this, containing_block.width());
 
@@ -742,12 +742,12 @@ HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position) const
     return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
-NonnullRefPtr<StyleProperties> LayoutBlock::style_for_anonymous_block() const
+NonnullRefPtr<CSS::StyleProperties> LayoutBlock::style_for_anonymous_block() const
 {
-    auto new_style = StyleProperties::create();
+    auto new_style = CSS::StyleProperties::create();
 
     specified_style().for_each_property([&](auto property_id, auto& value) {
-        if (StyleResolver::is_inherited_property(property_id))
+        if (CSS::StyleResolver::is_inherited_property(property_id))
             new_style->set_property(property_id, value);
     });
 

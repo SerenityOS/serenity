@@ -163,7 +163,7 @@ void LayoutNode::set_needs_display()
 float LayoutNode::font_size() const
 {
     // FIXME: This doesn't work right for relative font-sizes
-    auto length = specified_style().length_or_fallback(CSS::PropertyID::FontSize, Length(10, Length::Type::Px));
+    auto length = specified_style().length_or_fallback(CSS::PropertyID::FontSize, CSS::Length(10, CSS::Length::Type::Px));
     return length.raw_value();
 }
 
@@ -208,7 +208,7 @@ bool LayoutNode::is_fixed_position() const
     return position == CSS::Position::Fixed;
 }
 
-LayoutNodeWithStyle::LayoutNodeWithStyle(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<StyleProperties> specified_style)
+LayoutNodeWithStyle::LayoutNodeWithStyle(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> specified_style)
     : LayoutNode(document, node)
     , m_specified_style(move(specified_style))
 {
@@ -216,7 +216,7 @@ LayoutNodeWithStyle::LayoutNodeWithStyle(DOM::Document& document, const DOM::Nod
     apply_style(*m_specified_style);
 }
 
-void LayoutNodeWithStyle::apply_style(const StyleProperties& specified_style)
+void LayoutNodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 {
     auto& style = static_cast<MutableLayoutStyle&>(m_style);
 

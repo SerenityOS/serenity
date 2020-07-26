@@ -44,15 +44,15 @@ private:
 
 namespace Web {
 
-RefPtr<StyleSheet> parse_css(const CSS::ParsingContext&, const StringView&);
-RefPtr<StyleDeclaration> parse_css_declaration(const CSS::ParsingContext&, const StringView&);
-RefPtr<StyleValue> parse_css_value(const CSS::ParsingContext&, const StringView&);
-Optional<Selector> parse_selector(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::StyleSheet> parse_css(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::StyleDeclaration> parse_css_declaration(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext&, const StringView&);
+Optional<CSS::Selector> parse_selector(const CSS::ParsingContext&, const StringView&);
 
-RefPtr<LengthStyleValue> parse_line_width(const CSS::ParsingContext&, const StringView&);
-RefPtr<ColorStyleValue> parse_color(const CSS::ParsingContext&, const StringView&);
-RefPtr<StringStyleValue> parse_line_style(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::ColorStyleValue> parse_color(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::StringStyleValue> parse_line_style(const CSS::ParsingContext&, const StringView&);
 
-RefPtr<StyleValue> parse_html_length(const DOM::Document&, const StringView&);
+RefPtr<CSS::StyleValue> parse_html_length(const DOM::Document&, const StringView&);
 
 }

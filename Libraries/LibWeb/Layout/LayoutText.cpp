@@ -55,7 +55,7 @@ static bool is_all_whitespace(const StringView& string)
     return true;
 }
 
-const String& LayoutText::text_for_style(const StyleProperties& style) const
+const String& LayoutText::text_for_style(const CSS::StyleProperties& style) const
 {
     static String one_space = " ";
     if (is_all_whitespace(node().data())) {

@@ -51,11 +51,11 @@ public:
     const Gfx::Bitmap* bitmap() const;
 
 private:
-    virtual void apply_presentational_hints(StyleProperties&) const override;
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     void animate();
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
+    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
     ImageLoader m_image_loader;
 };

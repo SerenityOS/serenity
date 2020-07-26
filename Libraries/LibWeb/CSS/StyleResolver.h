@@ -31,7 +31,7 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::CSS {
 
 struct MatchingRule {
     RefPtr<StyleRule> rule;

@@ -30,7 +30,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleDeclaration.h>
 
-namespace Web {
+namespace Web::CSS {
 
 class StyleRule : public RefCounted<StyleRule> {
     AK_MAKE_NONCOPYABLE(StyleRule);

@@ -186,7 +186,7 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
 
         auto bgimage = specified_style().property(CSS::PropertyID::BackgroundImage);
         if (bgimage.has_value() && bgimage.value()->is_image()) {
-            auto& image_value = static_cast<const ImageStyleValue&>(*bgimage.value());
+            auto& image_value = static_cast<const CSS::ImageStyleValue&>(*bgimage.value());
             if (image_value.bitmap()) {
                 context.painter().draw_tiled_bitmap(enclosing_int_rect(padded_rect), *image_value.bitmap());
             }

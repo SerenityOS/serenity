@@ -107,7 +107,7 @@ bool Element::has_class(const FlyString& class_name) const
     return false;
 }
 
-RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_style)
+RefPtr<LayoutNode> Element::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     const_cast<Element&>(*this).m_resolved_style = style;
@@ -164,7 +164,7 @@ enum class StyleDifference {
     NeedsRelayout,
 };
 
-static StyleDifference compute_style_difference(const StyleProperties& old_style, const StyleProperties& new_style, const Document& document)
+static StyleDifference compute_style_difference(const CSS::StyleProperties& old_style, const CSS::StyleProperties& new_style, const Document& document)
 {
     if (old_style == new_style)
         return StyleDifference::None;
@@ -223,7 +223,7 @@ void Element::recompute_style()
     }
 }
 
-NonnullRefPtr<StyleProperties> Element::computed_style()
+NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
 {
     auto properties = m_resolved_style->clone();
     if (layout_node() && layout_node()->has_style()) {

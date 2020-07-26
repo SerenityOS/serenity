@@ -40,7 +40,7 @@ public:
     virtual FlyString node_name() const override { return "#text"; }
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
+    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 };
 
 }
