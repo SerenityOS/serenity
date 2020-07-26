@@ -175,6 +175,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     g_themes_group.set_unchecking_allowed(false);
 
     g_themes_menu = &system_menu->add_submenu("Themes");
+    g_themes_menu->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/themes.png"));
 
     {
         Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
