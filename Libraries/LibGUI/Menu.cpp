@@ -159,7 +159,7 @@ void Menu::unrealize_menu()
         return;
     all_menus().remove(m_menu_id);
     WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyMenu>(m_menu_id);
-    m_menu_id = 0;
+    m_menu_id = -1;
 }
 
 void Menu::realize_menu_if_needed()
