@@ -51,6 +51,7 @@ public:
     virtual void shutdown() override;
 
 protected:
+    virtual bool should_fail_on_empty_payload() const override { return false; }
     virtual void register_on_ready_to_read(Function<void()>) override;
     virtual void register_on_ready_to_write(Function<void()>) override;
     virtual bool can_read_line() const override;

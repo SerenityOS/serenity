@@ -122,6 +122,12 @@ void Job::on_socket_connected()
                 return;
             auto line = read_line(PAGE_SIZE);
             if (line.is_null()) {
+                if (m_state == State::AfterChunkedEncodingTrailer) {
+                    // Some servers like to send two ending chunks
+                    // use this fact as an excuse to ignore anything after the last chunk
+                    // that is not a valid trailing header.
+                    return finish_up();
+                }
                 fprintf(stderr, "Job: Expected HTTP header\n");
                 return did_fail(Core::NetworkJob::Error::ProtocolFailed);
             }
@@ -136,11 +142,23 @@ void Job::on_socket_connected()
             }
             auto parts = chomped_line.split(':');
             if (parts.is_empty()) {
+                if (m_state == State::AfterChunkedEncodingTrailer) {
+                    // Some servers like to send two ending chunks
+                    // use this fact as an excuse to ignore anything after the last chunk
+                    // that is not a valid trailing header.
+                    return finish_up();
+                }
                 fprintf(stderr, "Job: Expected HTTP header with key/value\n");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto name = parts[0];
             if (chomped_line.length() < name.length() + 2) {
+                if (m_state == State::AfterChunkedEncodingTrailer) {
+                    // Some servers like to send two ending chunks
+                    // use this fact as an excuse to ignore anything after the last chunk
+                    // that is not a valid trailing header.
+                    return finish_up();
+                }
                 fprintf(stderr, "Job: Malformed HTTP header: '%s' (%zu)\n", chomped_line.characters(), chomped_line.length());
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
