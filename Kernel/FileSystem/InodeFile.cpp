@@ -64,7 +64,6 @@ ssize_t InodeFile::write(FileDescription& description, size_t offset, const u8* 
 
 KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared)
 {
-    ASSERT(offset == 0);
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<InodeVMObject> vmobject;
     if (shared)
