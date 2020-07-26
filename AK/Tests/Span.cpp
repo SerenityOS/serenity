@@ -36,6 +36,14 @@ TEST_CASE(default_constructor_is_empty)
     EXPECT(span.is_empty());
 }
 
+TEST_CASE(implicit_converson_to_const)
+{
+    Bytes bytes0;
+    ReadonlyBytes bytes1 { bytes0 };
+    [[maybe_unused]] ReadonlyBytes bytes2 = bytes0;
+    [[maybe_unused]] ReadonlyBytes bytes3 = static_cast<ReadonlyBytes>(bytes2);
+}
+
 TEST_CASE(span_works_with_constant_types)
 {
     const u8 buffer[4] { 1, 2, 3, 4 };
