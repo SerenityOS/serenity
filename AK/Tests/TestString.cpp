@@ -188,6 +188,16 @@ TEST_CASE(replace)
     EXPECT(test_string == "111._.|||._.|||");
 }
 
+TEST_CASE(substring)
+{
+    String test = "abcdef";
+    EXPECT_EQ(test.substring(0, 6), test);
+    EXPECT_EQ(test.substring(0, 3), "abc");
+    EXPECT_EQ(test.substring(3, 3), "def");
+    EXPECT_EQ(test.substring(3, 0), "");
+    EXPECT_EQ(test.substring(6, 0), "");
+}
+
 TEST_CASE(split)
 {
     String test = "foo bar baz";
@@ -200,6 +210,21 @@ TEST_CASE(split)
     EXPECT_EQ(parts[0].characters()[3], '\0');
     EXPECT_EQ(parts[1].characters()[3], '\0');
     EXPECT_EQ(parts[2].characters()[3], '\0');
+
+    test = "a    b";
+
+    parts = test.split(' ');
+    EXPECT_EQ(parts.size(), 2u);
+    EXPECT_EQ(parts[0], "a");
+    EXPECT_EQ(parts[1], "b");
+
+    parts = test.split(' ', true);
+    EXPECT_EQ(parts.size(), 5u);
+    EXPECT_EQ(parts[0], "a");
+    EXPECT_EQ(parts[1], "");
+    EXPECT_EQ(parts[2], "");
+    EXPECT_EQ(parts[3], "");
+    EXPECT_EQ(parts[4], "b");
 }
 
 TEST_CASE(builder_zero_initial_capacity)
