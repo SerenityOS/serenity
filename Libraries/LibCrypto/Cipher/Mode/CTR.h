@@ -95,9 +95,12 @@ public:
 
     virtual ~CTR() { }
 
+    // Must intercept `Intent`, because AES must always be set to
+    // Encryption, even when decrypting AES-CTR.
+    // TODO: How to deal with ciphers that take different arguments?
     template<typename... Args>
-    explicit constexpr CTR<T>(Args... args)
-        : Mode<T>(args...)
+    explicit constexpr CTR<T>(const ByteBuffer& user_key, size_t key_bits, Intent = Intent::Encryption, Args... args)
+        : Mode<T>(user_key, key_bits, args...)
     {
     }
 
@@ -125,10 +128,8 @@ public:
 
     virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
     {
-        (void)in;
-        (void)out;
-        (void)ivec;
-        // FIXME: Implement CTR decryption when it is needed.
+        // XOR (and thus CTR) is the most symmetric mode.
+        this->encrypt(in, out, ivec);
     }
 
 private:
