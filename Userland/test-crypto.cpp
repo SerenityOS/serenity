@@ -869,8 +869,40 @@ void aes_ctr_test_encrypt()
 
 void aes_ctr_test_decrypt()
 {
-    // FIXME Test not implemented yet
-    // Also, CTR implementation not done yet, even though it's trivial: Just ignore "intent".
+    auto test_it = [](auto key, auto ivec, auto in, auto out_expected) {
+        // nonce is already included in ivec.
+        Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Decryption);
+        ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
+        cipher.decrypt(in, out_actual, ivec);
+        if (out_expected.size() != out_actual.size()) {
+            FAIL(size mismatch);
+            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_actual.size());
+            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
+        } else if (memcmp(out_expected.data(), out_actual.data(), out_expected.size()) != 0) {
+            FAIL(invalid data);
+            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
+        } else
+            PASS;
+    };
+    // From RFC 3686, Section 6
+    {
+        // Test Vector #1
+        I_TEST((AES CTR 16 octets with 128 bit key | Decrypt))
+        u8 key[] {
+            0xae, 0x68, 0x52, 0xf8, 0x12, 0x10, 0x67, 0xcc, 0x4b, 0xf7, 0xa5, 0x76, 0x55, 0x77, 0xf3, 0x9e
+        };
+        u8 ivec[] {
+            0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 out[] {
+            0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x20, 0x6d, 0x73, 0x67
+        };
+        u8 in[] {
+            0xe4, 0x09, 0x5d, 0x4f, 0xb7, 0xa7, 0xb3, 0x79, 0x2d, 0x61, 0x75, 0xa3, 0x26, 0x13, 0x11, 0xb8
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    // If encryption works, then decryption works, too.
 }
 
 int md5_tests()
