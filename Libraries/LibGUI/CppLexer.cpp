@@ -243,6 +243,17 @@ Vector<CppToken> CppLexer::lex()
         tokens.append(token);
     };
 
+    auto emit_token_equals = [&](auto type, auto equals_type) {
+        if (peek(1) == '=') {
+            begin_token();
+            consume();
+            consume();
+            commit_token(equals_type);
+            return;
+        }
+        emit_token(type);
+    };
+
     auto match_escape_sequence = [&]() -> size_t {
         switch (peek(1)) {
         case '\'':
@@ -336,7 +347,7 @@ Vector<CppToken> CppLexer::lex()
             continue;
         }
         if (ch == '*') {
-            emit_token(CppToken::Type::Asterisk);
+            emit_token_equals(CppToken::Type::Asterisk, CppToken::Type::AsteriskEquals);
             continue;
         }
         if (ch == ';') {
