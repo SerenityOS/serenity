@@ -29,7 +29,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
-#include <LibGfx/FloatRect.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>

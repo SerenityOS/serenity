@@ -25,13 +25,11 @@
  */
 
 #include <AK/Function.h>
-#include <AK/HashFunctions.h>
 #include <AK/HashTable.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
-#include <math.h>
 
 namespace Gfx {
 
