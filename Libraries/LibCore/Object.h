@@ -31,6 +31,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
+#include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
 #include <LibCore/Forward.h>
 
@@ -147,8 +148,8 @@ protected:
     // NOTE: You may get child events for children that are not yet fully constructed!
     virtual void child_event(ChildEvent&);
 
-    virtual void did_begin_inspection() {}
-    virtual void did_end_inspection() {}
+    virtual void did_begin_inspection() { }
+    virtual void did_end_inspection() { }
 
 private:
     Object* m_parent { nullptr };
@@ -159,29 +160,15 @@ private:
     NonnullRefPtrVector<Object> m_children;
 };
 
-template<typename T>
-inline bool is(const Object&) { return false; }
-
-template<typename T>
-inline T& to(Object& object)
-{
-    ASSERT(is<typename RemoveConst<T>::Type>(object));
-    return static_cast<T&>(object);
 }
 
-template<typename T>
-inline const T& to(const Object& object)
-{
-    ASSERT(is<typename RemoveConst<T>::Type>(object));
-    return static_cast<const T&>(object);
-}
-
+namespace Core {
 template<typename T, typename Callback>
 inline void Object::for_each_child_of_type(Callback callback)
 {
     for_each_child([&](auto& child) {
         if (is<T>(child))
-            return callback(to<T>(child));
+            return callback(downcast<T>(child));
         return IterationDecision::Continue;
     });
 }

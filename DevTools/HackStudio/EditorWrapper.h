@@ -55,8 +55,6 @@ private:
     RefPtr<Editor> m_editor;
 };
 
-template<>
-inline bool Core::is<EditorWrapper>(const Core::Object& object)
-{
-    return !strcmp(object.class_name(), "EditorWrapper");
-}
+AK_BEGIN_TYPE_TRAITS(EditorWrapper)
+static bool is_type(const Core::Object& object) { return !strcmp(object.class_name(), "EditorWrapper"); }
+AK_END_TYPE_TRAITS()

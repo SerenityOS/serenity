@@ -107,7 +107,6 @@ public:
     int height() const { return rect().height(); }
 
     Gfx::IntRect rect() const;
-    Gfx::IntRect rect_in_menubar() const;
     Gfx::IntSize size() const { return rect().size(); }
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
@@ -266,6 +265,8 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(GUI::Window)
-static bool is_type(const Core::Object& object) { return object.is_window(); }
-AK_END_TYPE_TRAITS()
+template<>
+inline bool Core::is<GUI::Window>(const Core::Object& object)
+{
+    return object.is_window();
+}

@@ -74,7 +74,7 @@ void RadioButton::for_each_in_group(Callback callback)
     if (!parent())
         return;
     parent()->for_each_child_of_type<RadioButton>([&](auto& child) {
-        return callback(static_cast<RadioButton&>(child));
+        return callback(downcast<RadioButton>(child));
     });
 }
 
