@@ -28,9 +28,9 @@
 
 #include <LibWeb/DOM/Event.h>
 
-namespace Web {
+namespace Web::DOM {
 
-class MouseEvent final : public Event {
+class MouseEvent final : public DOM::Event {
 public:
     using WrapperType = Bindings::MouseEventWrapper;
 

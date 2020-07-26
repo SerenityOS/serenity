@@ -29,7 +29,7 @@
 
 namespace Web {
 
-HTMLBRElement::HTMLBRElement(Document& document, const FlyString& tag_name)
+HTMLBRElement::HTMLBRElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }

@@ -34,7 +34,7 @@ class LayoutBlock;
 
 class LayoutInline : public LayoutNodeWithStyleAndBoxModelMetrics {
 public:
-    LayoutInline(Document&, const Element&, NonnullRefPtr<StyleProperties>);
+    LayoutInline(DOM::Document&, const DOM::Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutInline() override;
     virtual const char* class_name() const override { return "LayoutInline"; }
 };

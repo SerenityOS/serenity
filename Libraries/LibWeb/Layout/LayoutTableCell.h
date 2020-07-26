@@ -32,7 +32,7 @@ namespace Web {
 
 class LayoutTableCell final : public LayoutBlock {
 public:
-    LayoutTableCell(Document&, const Element&, NonnullRefPtr<StyleProperties>);
+    LayoutTableCell(DOM::Document&, const DOM::Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutTableCell() override;
 
     LayoutTableCell* next_cell() { return next_sibling_of_type<LayoutTableCell>(); }

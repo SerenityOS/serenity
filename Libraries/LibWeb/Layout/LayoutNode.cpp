@@ -35,7 +35,7 @@
 
 namespace Web {
 
-LayoutNode::LayoutNode(Document& document, const Node* node)
+LayoutNode::LayoutNode(DOM::Document& document, const DOM::Node* node)
     : m_document(document)
     , m_node(node)
 {
@@ -208,7 +208,7 @@ bool LayoutNode::is_fixed_position() const
     return position == CSS::Position::Fixed;
 }
 
-LayoutNodeWithStyle::LayoutNodeWithStyle(Document& document, const Node* node, NonnullRefPtr<StyleProperties> specified_style)
+LayoutNodeWithStyle::LayoutNodeWithStyle(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<StyleProperties> specified_style)
     : LayoutNode(document, node)
     , m_specified_style(move(specified_style))
 {

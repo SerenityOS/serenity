@@ -29,7 +29,7 @@
 
 namespace Web {
 
-LayoutListItem::LayoutListItem(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+LayoutListItem::LayoutListItem(DOM::Document& document, const DOM::Element& element, NonnullRefPtr<StyleProperties> style)
     : LayoutBlock(document, &element, move(style))
 {
 }

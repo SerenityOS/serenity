@@ -40,21 +40,21 @@ public:
     struct Entry {
         bool is_marker() const { return !element; }
 
-        RefPtr<Element> element;
+        RefPtr<DOM::Element> element;
     };
 
     bool is_empty() const { return m_entries.is_empty(); }
-    bool contains(const Element&) const;
+    bool contains(const DOM::Element&) const;
 
-    void add(Element& element);
+    void add(DOM::Element& element);
     void add_marker();
 
-    void remove(Element&);
+    void remove(DOM::Element&);
 
     const Vector<Entry>& entries() const { return m_entries; }
     Vector<Entry>& entries() { return m_entries; }
 
-    Element* last_element_with_tag_name_before_marker(const FlyString& tag_name);
+    DOM::Element* last_element_with_tag_name_before_marker(const FlyString& tag_name);
 
     void clear_up_to_the_last_marker();
 

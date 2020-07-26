@@ -35,7 +35,7 @@
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/TreeNode.h>
 
-namespace Web {
+namespace Web::DOM {
 
 enum class NodeType : unsigned {
     INVALID = 0,
@@ -46,15 +46,6 @@ enum class NodeType : unsigned {
     DOCUMENT_TYPE_NODE = 10,
     DOCUMENT_FRAGMENT_NODE = 11,
 };
-
-class Document;
-class Element;
-class HTMLElement;
-class HTMLAnchorElement;
-class ParentNode;
-class LayoutNode;
-class StyleResolver;
-class StyleProperties;
 
 class Node
     : public TreeNode<Node>

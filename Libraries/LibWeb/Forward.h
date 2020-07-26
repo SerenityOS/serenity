@@ -26,9 +26,7 @@
 
 #pragma once
 
-namespace Web {
-
-class CanvasRenderingContext2D;
+namespace Web::DOM {
 class Document;
 class DocumentType;
 class Element;
@@ -36,7 +34,19 @@ class Event;
 class EventHandler;
 class EventListener;
 class EventTarget;
+class MouseEvent;
+class Node;
+class ParentNode;
+class Text;
+class Timer;
+class Window;
+enum class QuirksMode;
+}
+
+namespace Web {
+class CanvasRenderingContext2D;
 class Frame;
+class HTMLAnchorElement;
 class HTMLBodyElement;
 class HTMLCanvasElement;
 class HTMLDocumentParser;
@@ -46,35 +56,29 @@ class HTMLHeadElement;
 class HTMLHtmlElement;
 class HTMLImageElement;
 class HTMLScriptElement;
-class PageView;
 class ImageData;
-class LineBox;
-class LineBoxFragment;
 class LayoutBlock;
 class LayoutDocument;
 class LayoutNode;
 class LayoutNodeWithStyle;
 class LayoutReplaced;
+class LineBox;
+class LineBoxFragment;
 class LoadRequest;
-class MouseEvent;
-class Node;
 class Origin;
 class Page;
 class PageClient;
+class PageView;
 class PaintContext;
 class Resource;
 class ResourceLoader;
 class Selector;
 class StackingContext;
+class StyleProperties;
 class StyleResolver;
 class StyleRule;
 class StyleSheet;
-class Text;
-class Timer;
-class Window;
 class XMLHttpRequest;
-enum class QuirksMode;
-
 }
 
 namespace Web::Bindings {

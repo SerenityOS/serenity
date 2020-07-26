@@ -30,7 +30,7 @@
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
 
-namespace Web {
+namespace Web::DOM {
 
 NonnullRefPtr<Timer> Timer::create_interval(Window& window, int milliseconds, JS::Function& callback)
 {

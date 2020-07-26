@@ -27,7 +27,7 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/DOM/EventListener.h>
 
-namespace Web {
+namespace Web::DOM {
 
 JS::Function& EventListener::function()
 {

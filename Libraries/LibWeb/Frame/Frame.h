@@ -41,16 +41,16 @@ namespace Web {
 
 class Frame : public TreeNode<Frame> {
 public:
-    static NonnullRefPtr<Frame> create_subframe(Element& host_element, Frame& main_frame) { return adopt(*new Frame(host_element, main_frame)); }
+    static NonnullRefPtr<Frame> create_subframe(DOM::Element& host_element, Frame& main_frame) { return adopt(*new Frame(host_element, main_frame)); }
     static NonnullRefPtr<Frame> create(Page& page) { return adopt(*new Frame(page)); }
     ~Frame();
 
     bool is_main_frame() const { return this == &m_main_frame; }
 
-    const Document* document() const { return m_document; }
-    Document* document() { return m_document; }
+    const DOM::Document* document() const { return m_document; }
+    DOM::Document* document() { return m_document; }
 
-    void set_document(Document*);
+    void set_document(DOM::Document*);
 
     Page& page() { return m_page; }
     const Page& page() const { return m_page; }
@@ -77,15 +77,15 @@ public:
     Frame& main_frame() { return m_main_frame; }
     const Frame& main_frame() const { return m_main_frame; }
 
-    Element* host_element() { return m_host_element; }
-    const Element* host_element() const { return m_host_element; }
+    DOM::Element* host_element() { return m_host_element; }
+    const DOM::Element* host_element() const { return m_host_element; }
 
     Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
     Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
 
 
 private:
-    explicit Frame(Element& host_element, Frame& main_frame);
+    explicit Frame(DOM::Element& host_element, Frame& main_frame);
     explicit Frame(Page&);
 
     Page& m_page;
@@ -94,8 +94,8 @@ private:
     FrameLoader m_loader;
     EventHandler m_event_handler;
 
-    WeakPtr<Element> m_host_element;
-    RefPtr<Document> m_document;
+    WeakPtr<DOM::Element> m_host_element;
+    RefPtr<DOM::Document> m_document;
     Gfx::IntSize m_size;
     Gfx::IntRect m_viewport_rect;
 };

@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLHeadingElement : public HTMLElement {
 public:
-    HTMLHeadingElement(Document&, const FlyString& local_name);
+    HTMLHeadingElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLHeadingElement() override;
 };
 

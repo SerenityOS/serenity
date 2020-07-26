@@ -33,7 +33,7 @@ namespace Web::SVG {
 
 class SVGSVGElement final : public SVGGraphicsElement {
 public:
-    SVGSVGElement(Document&, const FlyString& tag_name);
+    SVGSVGElement(DOM::Document&, const FlyString& tag_name);
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
 

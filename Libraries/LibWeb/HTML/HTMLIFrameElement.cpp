@@ -41,7 +41,7 @@
 
 namespace Web {
 
-HTMLIFrameElement::HTMLIFrameElement(Document& document, const FlyString& tag_name)
+HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }
@@ -82,7 +82,7 @@ void HTMLIFrameElement::load_src(const String& value)
     m_hosted_frame->loader().load(url, FrameLoader::Type::IFrame);
 }
 
-const Document* HTMLIFrameElement::hosted_document() const
+const DOM::Document* HTMLIFrameElement::hosted_document() const
 {
     return m_hosted_frame ? m_hosted_frame->document() : nullptr;
 }

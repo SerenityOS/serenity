@@ -104,7 +104,7 @@ static Vector<FlyString> s_quirks_public_ids = {
     "-//WebTechs//DTD Mozilla HTML//"
 };
 
-RefPtr<Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
+RefPtr<DOM::Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
 {
     HTMLDocumentParser parser(data, encoding);
     parser.run(url);
@@ -114,10 +114,10 @@ RefPtr<Document> parse_html_document(const StringView& data, const URL& url, con
 HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding)
     : m_tokenizer(input, encoding)
 {
-    m_document = adopt(*new Document);
+    m_document = adopt(*new DOM::Document);
 }
 
-HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding, Document& existing_document)
+HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding, DOM::Document& existing_document)
     : m_tokenizer(input, encoding)
     , m_document(existing_document)
 {
@@ -160,7 +160,7 @@ void HTMLDocumentParser::run(const URL& url)
         script.execute_script();
     }
 
-    m_document->dispatch_event(Event::create("DOMContentLoaded"));
+    m_document->dispatch_event(DOM::Event::create("DOMContentLoaded"));
 
     auto scripts_to_execute_as_soon_as_possible = m_document->take_scripts_to_execute_as_soon_as_possible({});
     for (auto& script : scripts_to_execute_as_soon_as_possible) {
@@ -245,58 +245,58 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     }
 }
 
-QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_token) const
+DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_token) const
 {
     if (doctype_token.m_doctype.force_quirks)
-        return QuirksMode::Yes;
+        return DOM::QuirksMode::Yes;
 
     // NOTE: The tokenizer puts the name into lower case for us.
     if (doctype_token.m_doctype.name.to_string() != "html")
-        return QuirksMode::Yes;
+        return DOM::QuirksMode::Yes;
 
     auto public_identifier = doctype_token.m_doctype.public_identifier.to_string();
     auto system_identifier = doctype_token.m_doctype.system_identifier.to_string();
 
     if (public_identifier.equals_ignoring_case("-//W3O//DTD W3 HTML Strict 3.0//EN//"))
-        return QuirksMode::Yes;
+        return DOM::QuirksMode::Yes;
 
     if (public_identifier.equals_ignoring_case("-/W3C/DTD HTML 4.0 Transitional/EN"))
-        return QuirksMode::Yes;
+        return DOM::QuirksMode::Yes;
 
     if (public_identifier.equals_ignoring_case("HTML"))
-        return QuirksMode::Yes;
+        return DOM::QuirksMode::Yes;
 
     if (system_identifier.equals_ignoring_case("http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"))
-        return QuirksMode::Yes;
+        return DOM::QuirksMode::Yes;
 
     for (auto& public_id : s_quirks_public_ids) {
         if (public_identifier.starts_with(public_id, CaseSensitivity::CaseInsensitive))
-            return QuirksMode::Yes;
+            return DOM::QuirksMode::Yes;
     }
 
     if (doctype_token.m_doctype.missing_system_identifier) {
         if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//", CaseSensitivity::CaseInsensitive))
-            return QuirksMode::Yes;
+            return DOM::QuirksMode::Yes;
 
         if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//", CaseSensitivity::CaseInsensitive))
-            return QuirksMode::Yes;
+            return DOM::QuirksMode::Yes;
     }
 
     if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Frameset//", CaseSensitivity::CaseInsensitive))
-        return QuirksMode::Limited;
+        return DOM::QuirksMode::Limited;
 
     if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Transitional//", CaseSensitivity::CaseInsensitive))
-        return QuirksMode::Limited;
+        return DOM::QuirksMode::Limited;
 
     if (!doctype_token.m_doctype.missing_system_identifier) {
         if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//", CaseSensitivity::CaseInsensitive))
-            return QuirksMode::Limited;
+            return DOM::QuirksMode::Limited;
 
         if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//", CaseSensitivity::CaseInsensitive))
-            return QuirksMode::Limited;
+            return DOM::QuirksMode::Limited;
     }
 
-    return QuirksMode::No;
+    return DOM::QuirksMode::No;
 }
 
 void HTMLDocumentParser::handle_initial(HTMLToken& token)
@@ -306,13 +306,13 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = adopt(*new Comment(document(), token.m_comment_or_character.data.to_string()));
+        auto comment = adopt(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
         document().append_child(move(comment));
         return;
     }
 
     if (token.is_doctype()) {
-        auto doctype = adopt(*new DocumentType(document()));
+        auto doctype = adopt(*new DOM::DocumentType(document()));
         doctype->set_name(token.m_doctype.name.to_string());
         doctype->set_public_id(token.m_doctype.public_identifier.to_string());
         doctype->set_system_id(token.m_doctype.system_identifier.to_string());
@@ -323,7 +323,7 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
     }
 
     PARSE_ERROR();
-    document().set_quirks_mode(QuirksMode::Yes);
+    document().set_quirks_mode(DOM::QuirksMode::Yes);
     m_insertion_mode = InsertionMode::BeforeHTML;
     process_using_the_rules_for(InsertionMode::BeforeHTML, token);
 }
@@ -336,7 +336,7 @@ void HTMLDocumentParser::handle_before_html(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = adopt(*new Comment(document(), token.m_comment_or_character.data.to_string()));
+        auto comment = adopt(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
         document().append_child(move(comment));
         return;
     }
@@ -372,12 +372,12 @@ AnythingElse:
     return;
 }
 
-Element& HTMLDocumentParser::current_node()
+DOM::Element& HTMLDocumentParser::current_node()
 {
     return m_stack_of_open_elements.current_node();
 }
 
-Element& HTMLDocumentParser::node_before_current_node()
+DOM::Element& HTMLDocumentParser::node_before_current_node()
 {
     return m_stack_of_open_elements.elements().at(m_stack_of_open_elements.elements().size() - 2);
 }
@@ -399,7 +399,7 @@ HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropria
     return { target, nullptr };
 }
 
-NonnullRefPtr<Element> HTMLDocumentParser::create_element_for(const HTMLToken& token)
+NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLToken& token)
 {
     auto element = create_element(document(), token.tag_name());
     for (auto& attribute : token.m_tag.attributes) {
@@ -408,7 +408,7 @@ NonnullRefPtr<Element> HTMLDocumentParser::create_element_for(const HTMLToken& t
     return element;
 }
 
-RefPtr<Element> HTMLDocumentParser::insert_html_element(const HTMLToken& token)
+RefPtr<DOM::Element> HTMLDocumentParser::insert_html_element(const HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     auto element = create_element_for(token);
@@ -466,7 +466,7 @@ void HTMLDocumentParser::insert_comment(HTMLToken& token)
 {
     auto data = token.m_comment_or_character.data.to_string();
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location.parent->insert_before(adopt(*new Comment(document(), data)), adjusted_insertion_location.insert_before_sibling);
+    adjusted_insertion_location.parent->insert_before(adopt(*new DOM::Comment(document(), data)), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLDocumentParser::handle_in_head(HTMLToken& token)
@@ -627,7 +627,7 @@ void HTMLDocumentParser::parse_generic_raw_text_element(HTMLToken& token)
     m_insertion_mode = InsertionMode::Text;
 }
 
-Text* HTMLDocumentParser::find_character_insertion_node()
+DOM::Text* HTMLDocumentParser::find_character_insertion_node()
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     if (adjusted_insertion_location.insert_before_sibling) {
@@ -636,8 +636,8 @@ Text* HTMLDocumentParser::find_character_insertion_node()
     if (adjusted_insertion_location.parent->is_document())
         return nullptr;
     if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
-        return downcast<Text>(adjusted_insertion_location.parent->last_child());
-    auto new_text_node = adopt(*new Text(document(), ""));
+        return downcast<DOM::Text>(adjusted_insertion_location.parent->last_child());
+    auto new_text_node = adopt(*new DOM::Text(document(), ""));
     adjusted_insertion_location.parent->append_child(new_text_node);
     return new_text_node;
 }
@@ -758,7 +758,7 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
     if (token.is_comment()) {
         auto data = token.m_comment_or_character.data.to_string();
         auto& insertion_location = m_stack_of_open_elements.first();
-        insertion_location.append_child(adopt(*new Comment(document(), data)));
+        insertion_location.append_child(adopt(*new DOM::Comment(document(), data)));
         return;
     }
 
@@ -794,7 +794,7 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
 void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = adopt(*new Comment(document(), token.m_comment_or_character.data.to_string()));
+        auto comment = adopt(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
         document().append_child(move(comment));
         return;
     }
@@ -828,7 +828,7 @@ void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
         return;
 
     ssize_t index = m_list_of_active_formatting_elements.entries().size() - 1;
-    RefPtr<Element> entry = m_list_of_active_formatting_elements.entries().at(index).element;
+    RefPtr<DOM::Element> entry = m_list_of_active_formatting_elements.entries().at(index).element;
     ASSERT(entry);
 
 Rewind:
@@ -898,7 +898,7 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
         PARSE_ERROR();
     }
 
-    RefPtr<Element> furthest_block = m_stack_of_open_elements.topmost_special_node_below(*formatting_element);
+    RefPtr<DOM::Element> furthest_block = m_stack_of_open_elements.topmost_special_node_below(*formatting_element);
 
     if (!furthest_block) {
         while (&current_node() != formatting_element)
@@ -1187,7 +1187,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         m_frameset_ok = false;
 
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
-            RefPtr<Element> node = m_stack_of_open_elements.elements()[i];
+            RefPtr<DOM::Element> node = m_stack_of_open_elements.elements()[i];
 
             if (node->local_name() == HTML::TagNames::li) {
                 generate_implied_end_tags(HTML::TagNames::li);
@@ -1212,7 +1212,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt)) {
         m_frameset_ok = false;
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
-            RefPtr<Element> node = m_stack_of_open_elements.elements()[i];
+            RefPtr<DOM::Element> node = m_stack_of_open_elements.elements()[i];
             if (node->local_name() == HTML::TagNames::dd) {
                 generate_implied_end_tags(HTML::TagNames::dd);
                 if (current_node().local_name() != HTML::TagNames::dd) {
@@ -1627,7 +1627,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 
     if (token.is_end_tag()) {
     AnyOtherEndTag:
-        RefPtr<Element> node;
+        RefPtr<DOM::Element> node;
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
             node = m_stack_of_open_elements.elements()[i];
             if (node->local_name() == token.tag_name()) {
@@ -2627,7 +2627,7 @@ void HTMLDocumentParser::handle_after_frameset(HTMLToken& token)
 void HTMLDocumentParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = adopt(*new Comment(document(), token.m_comment_or_character.data.to_string()));
+        auto comment = adopt(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
         document().append_child(move(comment));
         return;
     }
@@ -2655,7 +2655,7 @@ void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
     for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
         bool last = i == 0;
         // NOTE: When parsing fragments, we substitute the context element for the root of the stack of open elements.
-        RefPtr<Element> node;
+        RefPtr<DOM::Element> node;
         if (last && m_parsing_fragment) {
             node = m_context_element;
         } else {
@@ -2744,12 +2744,12 @@ const char* HTMLDocumentParser::insertion_mode_name() const
     ASSERT_NOT_REACHED();
 }
 
-Document& HTMLDocumentParser::document()
+DOM::Document& HTMLDocumentParser::document()
 {
     return *m_document;
 }
 
-NonnullRefPtrVector<Node> HTMLDocumentParser::parse_html_fragment(Element& context_element, const StringView& markup)
+NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Element& context_element, const StringView& markup)
 {
     HTMLDocumentParser parser(markup, "utf-8");
     parser.m_context_element = context_element;
@@ -2790,8 +2790,8 @@ NonnullRefPtrVector<Node> HTMLDocumentParser::parse_html_fragment(Element& conte
 
     parser.run(context_element.document().url());
 
-    NonnullRefPtrVector<Node> children;
-    while (RefPtr<Node> child = root->first_child()) {
+    NonnullRefPtrVector<DOM::Node> children;
+    while (RefPtr<DOM::Node> child = root->first_child()) {
         root->remove_child(*child);
         context_element.document().adopt_node(*child);
         children.append(*child);

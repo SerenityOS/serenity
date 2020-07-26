@@ -28,7 +28,7 @@
 
 namespace Web {
 
-HTMLTableRowElement::HTMLTableRowElement(Document& document, const FlyString& tag_name)
+HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }

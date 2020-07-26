@@ -40,14 +40,14 @@ NonnullRefPtr<IRCLogBuffer> IRCLogBuffer::create()
 
 IRCLogBuffer::IRCLogBuffer()
 {
-    m_document = adopt(*new Web::Document);
-    m_document->append_child(adopt(*new Web::DocumentType(document())));
+    m_document = adopt(*new Web::DOM::Document);
+    m_document->append_child(adopt(*new Web::DOM::DocumentType(document())));
     auto html_element = create_element(document(), "html");
     m_document->append_child(html_element);
     auto head_element = create_element(document(), "head");
     html_element->append_child(head_element);
     auto style_element = create_element(document(), "style");
-    style_element->append_child(adopt(*new Web::Text(document(), "div { font-family: Csilla; font-weight: lighter; }")));
+    style_element->append_child(adopt(*new Web::DOM::Text(document(), "div { font-family: Csilla; font-weight: lighter; }")));
     head_element->append_child(style_element);
     auto body_element = create_element(document(), "body");
     html_element->append_child(body_element);
@@ -76,7 +76,7 @@ void IRCLogBuffer::add_message(char prefix, const String& name, const String& te
         escape_html_entities(nick_string).characters(),
         escape_html_entities(text).characters());
 
-    auto wrapper = Web::create_element(*m_document, Web::HTML::TagNames::div);
+    auto wrapper = Web::DOM::create_element(*m_document, Web::HTML::TagNames::div);
     wrapper->set_attribute(Web::HTML::AttributeNames::style, String::format("color: %s", color.to_string().characters()));
     wrapper->set_inner_html(html);
     m_container_element->append_child(wrapper);
@@ -90,7 +90,7 @@ void IRCLogBuffer::add_message(const String& text, Color color)
         "<span>%s</span>",
         timestamp_string().characters(),
         escape_html_entities(text).characters());
-    auto wrapper = Web::create_element(*m_document, Web::HTML::TagNames::div);
+    auto wrapper = Web::DOM::create_element(*m_document, Web::HTML::TagNames::div);
     wrapper->set_attribute(Web::HTML::AttributeNames::style, String::format("color: %s", color.to_string().characters()));
     wrapper->set_inner_html(html);
     m_container_element->append_child(wrapper);

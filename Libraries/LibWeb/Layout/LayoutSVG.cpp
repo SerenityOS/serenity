@@ -31,7 +31,7 @@
 
 namespace Web {
 
-LayoutSVG::LayoutSVG(Document& document, const SVG::SVGSVGElement& element, NonnullRefPtr<StyleProperties> style)
+LayoutSVG::LayoutSVG(DOM::Document& document, const SVG::SVGSVGElement& element, NonnullRefPtr<StyleProperties> style)
     : LayoutReplaced(document, element, move(style))
 {
 }

@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLTableElement final : public HTMLElement {
 public:
-    HTMLTableElement(Document&, const FlyString& local_name);
+    HTMLTableElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLTableElement() override;
 
 private:
@@ -42,5 +42,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLTableElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::table; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::table; }
 AK_END_TYPE_TRAITS()

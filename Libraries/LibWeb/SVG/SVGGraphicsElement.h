@@ -47,7 +47,7 @@ static const SVGPaintingContext default_painting_context = {
 
 class SVGGraphicsElement : public SVGElement {
 public:
-    SVGGraphicsElement(Document&, const FlyString& tag_name);
+    SVGGraphicsElement(DOM::Document&, const FlyString& tag_name);
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
@@ -67,5 +67,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::SVG::SVGGraphicsElement)
-static bool is_type(const Web::Node& node) { return is<Web::SVG::SVGElement>(node) && downcast<Web::SVG::SVGElement>(node).is_graphics_element(); }
+static bool is_type(const Web::DOM::Node& node) { return is<Web::SVG::SVGElement>(node) && downcast<Web::SVG::SVGElement>(node).is_graphics_element(); }
 AK_END_TYPE_TRAITS()

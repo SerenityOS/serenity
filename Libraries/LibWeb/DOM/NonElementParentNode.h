@@ -31,7 +31,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/TreeNode.h>
 
-namespace Web {
+namespace Web::DOM {
 
 template<typename NodeType>
 class NonElementParentNode {

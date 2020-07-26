@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLInputElement : public HTMLElement {
 public:
-    HTMLInputElement(Document&, const FlyString& local_name);
+    HTMLInputElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLInputElement() override;
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
@@ -45,5 +45,5 @@ public:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLInputElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::input; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::input; }
 AK_END_TYPE_TRAITS()

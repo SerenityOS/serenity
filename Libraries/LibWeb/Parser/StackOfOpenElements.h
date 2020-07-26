@@ -37,15 +37,15 @@ public:
     StackOfOpenElements() { }
     ~StackOfOpenElements();
 
-    Element& first() { return m_elements.first(); }
-    Element& last() { return m_elements.last(); }
+    DOM::Element& first() { return m_elements.first(); }
+    DOM::Element& last() { return m_elements.last(); }
 
     bool is_empty() const { return m_elements.is_empty(); }
-    void push(NonnullRefPtr<Element> element) { m_elements.append(move(element)); }
-    NonnullRefPtr<Element> pop() { return m_elements.take_last(); }
+    void push(NonnullRefPtr<DOM::Element> element) { m_elements.append(move(element)); }
+    NonnullRefPtr<DOM::Element> pop() { return m_elements.take_last(); }
 
-    const Element& current_node() const { return m_elements.last(); }
-    Element& current_node() { return m_elements.last(); }
+    const DOM::Element& current_node() const { return m_elements.last(); }
+    DOM::Element& current_node() { return m_elements.last(); }
 
     bool has_in_scope(const FlyString& tag_name) const;
     bool has_in_button_scope(const FlyString& tag_name) const;
@@ -53,26 +53,26 @@ public:
     bool has_in_list_item_scope(const FlyString& tag_name) const;
     bool has_in_select_scope(const FlyString& tag_name) const;
 
-    bool has_in_scope(const Element&) const;
+    bool has_in_scope(const DOM::Element&) const;
 
-    bool contains(const Element&) const;
+    bool contains(const DOM::Element&) const;
     bool contains(const FlyString& tag_name) const;
 
-    const NonnullRefPtrVector<Element>& elements() const { return m_elements; }
-    NonnullRefPtrVector<Element>& elements() { return m_elements; }
+    const NonnullRefPtrVector<DOM::Element>& elements() const { return m_elements; }
+    NonnullRefPtrVector<DOM::Element>& elements() { return m_elements; }
 
     void pop_until_an_element_with_tag_name_has_been_popped(const FlyString&);
 
-    Element* topmost_special_node_below(const Element&);
+    DOM::Element* topmost_special_node_below(const DOM::Element&);
 
-    Element* last_element_with_tag_name(const FlyString&);
-    Element* element_before(const Element&);
+    DOM::Element* last_element_with_tag_name(const FlyString&);
+    DOM::Element* element_before(const DOM::Element&);
 
 private:
     bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
-    bool has_in_scope_impl(const Element& target_node, const Vector<FlyString>&) const;
+    bool has_in_scope_impl(const DOM::Element& target_node, const Vector<FlyString>&) const;
 
-    NonnullRefPtrVector<Element> m_elements;
+    NonnullRefPtrVector<DOM::Element> m_elements;
 };
 
 }

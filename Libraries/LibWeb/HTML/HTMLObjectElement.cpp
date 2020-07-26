@@ -35,7 +35,7 @@
 
 namespace Web {
 
-HTMLObjectElement::HTMLObjectElement(Document& document, const FlyString& tag_name)
+HTMLObjectElement::HTMLObjectElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
     m_image_loader.on_load = [this] {

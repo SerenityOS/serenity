@@ -38,20 +38,20 @@
 namespace Web {
 namespace Bindings {
 
-NodeWrapper* wrap(JS::GlobalObject& global_object, Node& node)
+NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
 {
-    if (is<Document>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<Document>(node)));
-    if (is<DocumentType>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DocumentType>(node)));
+    if (is<DOM::Document>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Document>(node)));
+    if (is<DOM::DocumentType>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::DocumentType>(node)));
     if (is<HTMLCanvasElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLCanvasElement>(node)));
     if (is<HTMLImageElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLImageElement>(node)));
     if (is<HTMLElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLElement>(node)));
-    if (is<Element>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<Element>(node)));
+    if (is<DOM::Element>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Element>(node)));
     return static_cast<NodeWrapper*>(wrap_impl(global_object, node));
 }
 

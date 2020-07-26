@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLBodyElement : public HTMLElement {
 public:
-    HTMLBodyElement(Document&, const FlyString& local_name);
+    HTMLBodyElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLBodyElement() override;
 
     virtual void parse_attribute(const FlyString&, const String&) override;
@@ -45,5 +45,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLBodyElement)
-static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::body; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::body; }
 AK_END_TYPE_TRAITS()

@@ -27,7 +27,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Layout/LayoutText.h>
 
-namespace Web {
+namespace Web::DOM {
 
 Text::Text(Document& document, const String& data)
     : CharacterData(document, NodeType::TEXT_NODE, data)

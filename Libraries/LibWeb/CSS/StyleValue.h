@@ -182,7 +182,7 @@ public:
 
     virtual String to_string() const = 0;
     virtual Length to_length() const { return Length::make_auto(); }
-    virtual Color to_color(const Document&) const { return {}; }
+    virtual Color to_color(const DOM::Document&) const { return {}; }
 
     virtual bool is_auto() const { return false; }
 
@@ -276,7 +276,7 @@ public:
 
     Color color() const { return m_color; }
     String to_string() const override { return m_color.to_string(); }
-    Color to_color(const Document&) const override { return m_color; }
+    Color to_color(const DOM::Document&) const override { return m_color; }
 
 private:
     explicit ColorStyleValue(Color color)
@@ -299,7 +299,7 @@ public:
     CSS::ValueID id() const { return m_id; }
 
     virtual String to_string() const override;
-    virtual Color to_color(const Document&) const override;
+    virtual Color to_color(const DOM::Document&) const override;
 
 private:
     explicit IdentifierStyleValue(CSS::ValueID id)
@@ -315,7 +315,7 @@ class ImageStyleValue final
     : public StyleValue
     , public ImageResourceClient {
 public:
-    static NonnullRefPtr<ImageStyleValue> create(const URL& url, Document& document) { return adopt(*new ImageStyleValue(url, document)); }
+    static NonnullRefPtr<ImageStyleValue> create(const URL& url, DOM::Document& document) { return adopt(*new ImageStyleValue(url, document)); }
     virtual ~ImageStyleValue() override { }
 
     String to_string() const override { return String::format("Image{%s}", m_url.to_string().characters()); }
@@ -323,13 +323,13 @@ public:
     const Gfx::Bitmap* bitmap() const { return m_bitmap; }
 
 private:
-    ImageStyleValue(const URL&, Document&);
+    ImageStyleValue(const URL&, DOM::Document&);
 
     // ^ResourceClient
     virtual void resource_did_load() override;
 
     URL m_url;
-    WeakPtr<Document> m_document;
+    WeakPtr<DOM::Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
 

@@ -48,7 +48,7 @@
 namespace Web {
 namespace Bindings {
 
-WindowObject::WindowObject(Window& impl)
+WindowObject::WindowObject(DOM::Window& impl)
     : m_impl(impl)
 {
     impl.set_wrapper({}, *this);
@@ -91,7 +91,7 @@ void WindowObject::visit_children(Visitor& visitor)
     visitor.visit(m_xhr_prototype);
 }
 
-static Window* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
+static DOM::Window* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
     auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object) {

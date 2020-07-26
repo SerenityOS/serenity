@@ -69,7 +69,7 @@ private:
 class PageClient {
 public:
     virtual Gfx::Palette palette() const = 0;
-    virtual void page_did_set_document_in_main_frame(Document*) { }
+    virtual void page_did_set_document_in_main_frame(DOM::Document*) { }
     virtual void page_did_change_title(const String&) { }
     virtual void page_did_start_loading(const URL&) { }
     virtual void page_did_change_selection() { }

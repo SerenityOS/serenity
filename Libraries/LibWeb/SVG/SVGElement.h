@@ -30,12 +30,12 @@
 
 namespace Web::SVG {
 
-class SVGElement : public Element {
+class SVGElement : public DOM::Element {
 public:
     virtual bool is_graphics_element() const { return false; }
 
 protected:
-    SVGElement(Document&, const FlyString& tag_name);
+    SVGElement(DOM::Document&, const FlyString& tag_name);
 
 private:
     virtual bool is_svg_element() const final { return true; }
@@ -44,5 +44,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::SVG::SVGElement)
-static bool is_type(const Web::Node& node) { return node.is_svg_element(); }
+static bool is_type(const Web::DOM::Node& node) { return node.is_svg_element(); }
 AK_END_TYPE_TRAITS()

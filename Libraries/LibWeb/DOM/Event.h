@@ -29,7 +29,7 @@
 #include <AK/FlyString.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class Event
     : public RefCounted<Event>

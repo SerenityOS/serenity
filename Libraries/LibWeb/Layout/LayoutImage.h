@@ -35,13 +35,13 @@ class HTMLImageElement;
 
 class LayoutImage : public LayoutReplaced {
 public:
-    LayoutImage(Document&, const Element&, NonnullRefPtr<StyleProperties>, const ImageLoader&);
+    LayoutImage(DOM::Document&, const DOM::Element&, NonnullRefPtr<StyleProperties>, const ImageLoader&);
     virtual ~LayoutImage() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    const Element& node() const { return static_cast<const Element&>(LayoutReplaced::node()); }
+    const DOM::Element& node() const { return static_cast<const DOM::Element&>(LayoutReplaced::node()); }
 
     bool renders_as_alt_text() const;
 

@@ -78,14 +78,14 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 
     auto result = layout_root()->hit_test(position);
     if (result.layout_node && result.layout_node->node()) {
-        RefPtr<Node> node = result.layout_node->node();
+        RefPtr<DOM::Node> node = result.layout_node->node();
         if (is<HTMLIFrameElement>(*node)) {
             if (auto* subframe = downcast<HTMLIFrameElement>(*node).hosted_frame())
                 return subframe->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
-        node->dispatch_event(MouseEvent::create("mouseup", offset.x(), offset.y()));
+        node->dispatch_event(DOM::MouseEvent::create("mouseup", offset.x(), offset.y()));
         handled_event = true;
     }
 
@@ -107,7 +107,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (!result.layout_node)
         return false;
 
-    RefPtr<Node> node = result.layout_node->node();
+    RefPtr<DOM::Node> node = result.layout_node->node();
     document->set_hovered_node(node);
     if (!node)
         return false;
@@ -119,7 +119,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     }
 
     auto offset = compute_mouse_event_offset(position, *result.layout_node);
-    node->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
+    node->dispatch_event(DOM::MouseEvent::create("mousedown", offset.x(), offset.y()));
     if (!layout_root())
         return true;
 
@@ -173,7 +173,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     auto result = layout_root()->hit_test(position);
     const HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
-        RefPtr<Node> node = result.layout_node->node();
+        RefPtr<DOM::Node> node = result.layout_node->node();
 
         if (node && is<HTMLIFrameElement>(*node)) {
             if (auto* subframe = downcast<HTMLIFrameElement>(*node).hosted_frame())
@@ -192,7 +192,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 is_hovering_link = true;
             }
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
-            node->dispatch_event(MouseEvent::create("mousemove", offset.x(), offset.y()));
+            node->dispatch_event(DOM::MouseEvent::create("mousemove", offset.x(), offset.y()));
             if (!layout_root())
                 return true;
         }

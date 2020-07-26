@@ -26,7 +26,7 @@
 
 #include <LibWeb/DOM/DocumentType.h>
 
-namespace Web {
+namespace Web::DOM {
 
 DocumentType::DocumentType(Document& document)
     : Node(document, NodeType::DOCUMENT_TYPE_NODE)

@@ -37,7 +37,7 @@
 
 namespace Web {
 
-HTMLInputElement::HTMLInputElement(Document& document, const FlyString& tag_name)
+HTMLInputElement::HTMLInputElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }
@@ -76,7 +76,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties* p
         int text_width = Gfx::Font::default_font().width(value());
         button.set_relative_rect(0, 0, text_width + 20, 20);
         button.on_click = [this](auto) {
-            const_cast<HTMLInputElement*>(this)->dispatch_event(Event::create("click"));
+            const_cast<HTMLInputElement*>(this)->dispatch_event(DOM::Event::create("click"));
         };
         widget = button;
     } else {

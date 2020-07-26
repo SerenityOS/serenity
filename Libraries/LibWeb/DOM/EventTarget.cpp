@@ -27,7 +27,7 @@
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/EventTarget.h>
 
-namespace Web {
+namespace Web::DOM {
 
 EventTarget::EventTarget()
 {

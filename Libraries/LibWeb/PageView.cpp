@@ -170,7 +170,7 @@ void PageView::page_did_change_title(const String& title)
         on_title_change(title);
 }
 
-void PageView::page_did_set_document_in_main_frame(Document* document)
+void PageView::page_did_set_document_in_main_frame(DOM::Document* document)
 {
     if (on_set_document)
         on_set_document(document);
@@ -419,17 +419,17 @@ void PageView::load_empty_document()
     page().main_frame().set_document(nullptr);
 }
 
-Document* PageView::document()
+DOM::Document* PageView::document()
 {
     return page().main_frame().document();
 }
 
-const Document* PageView::document() const
+const DOM::Document* PageView::document() const
 {
     return page().main_frame().document();
 }
 
-void PageView::set_document(Document* document)
+void PageView::set_document(DOM::Document* document)
 {
     page().main_frame().set_document(document);
 }

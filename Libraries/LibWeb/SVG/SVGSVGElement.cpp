@@ -38,7 +38,7 @@ namespace Web::SVG {
 
 static constexpr auto max_svg_area = 16384 * 16384;
 
-SVGSVGElement::SVGSVGElement(Document& document, const FlyString& tag_name)
+SVGSVGElement::SVGSVGElement(DOM::Document& document, const FlyString& tag_name)
     : SVGGraphicsElement(document, tag_name)
 {
 }

@@ -27,17 +27,15 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <LibWeb/Forward.h>
 
 namespace Web {
-
-class Node;
-class LayoutNode;
 
 class LayoutTreeBuilder {
 public:
     LayoutTreeBuilder();
 
-    RefPtr<LayoutNode> build(Node&);
+    RefPtr<LayoutNode> build(DOM::Node&);
 };
 
 }

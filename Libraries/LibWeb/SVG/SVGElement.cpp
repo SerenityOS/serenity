@@ -28,7 +28,7 @@
 
 namespace Web::SVG {
 
-SVGElement::SVGElement(Document& document, const FlyString& tag_name)
+SVGElement::SVGElement(DOM::Document& document, const FlyString& tag_name)
     : Element(document, tag_name)
 {
 }

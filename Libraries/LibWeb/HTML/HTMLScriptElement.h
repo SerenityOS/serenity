@@ -33,14 +33,14 @@ namespace Web {
 
 class HTMLScriptElement : public HTMLElement {
 public:
-    HTMLScriptElement(Document&, const FlyString& local_name);
+    HTMLScriptElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLScriptElement() override;
 
     bool is_non_blocking() const { return m_non_blocking; }
     bool is_ready_to_be_parser_executed() const { return m_ready_to_be_parser_executed; }
     bool failed_to_load() const { return m_failed_to_load; }
 
-    void set_parser_document(Badge<HTMLDocumentParser>, Document&);
+    void set_parser_document(Badge<HTMLDocumentParser>, DOM::Document&);
     void set_non_blocking(Badge<HTMLDocumentParser>, bool);
     void set_already_started(Badge<HTMLDocumentParser>, bool b) { m_already_started = b; }
     void prepare_script(Badge<HTMLDocumentParser>);
@@ -50,8 +50,8 @@ private:
     void script_became_ready();
     void when_the_script_is_ready(Function<void()>);
 
-    WeakPtr<Document> m_parser_document;
-    WeakPtr<Document> m_preparation_time_document;
+    WeakPtr<DOM::Document> m_parser_document;
+    WeakPtr<DOM::Document> m_preparation_time_document;
     bool m_non_blocking { false };
     bool m_already_started { false };
     bool m_parser_inserted { false };
@@ -68,5 +68,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLScriptElement)
-static bool is_type(const Web::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::script; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::script; }
 AK_END_TYPE_TRAITS()

@@ -214,7 +214,7 @@ IRCWindow::~IRCWindow()
 void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
 {
     m_log_buffer = &log_buffer;
-    m_page_view->set_document(const_cast<Web::Document*>(&log_buffer.document()));
+    m_page_view->set_document(const_cast<Web::DOM::Document*>(&log_buffer.document()));
 }
 
 bool IRCWindow::is_active() const

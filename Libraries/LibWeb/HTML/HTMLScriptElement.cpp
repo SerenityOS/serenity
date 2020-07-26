@@ -34,7 +34,7 @@
 
 namespace Web {
 
-HTMLScriptElement::HTMLScriptElement(Document& document, const FlyString& tag_name)
+HTMLScriptElement::HTMLScriptElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }
@@ -43,7 +43,7 @@ HTMLScriptElement::~HTMLScriptElement()
 {
 }
 
-void HTMLScriptElement::set_parser_document(Badge<HTMLDocumentParser>, Document& document)
+void HTMLScriptElement::set_parser_document(Badge<HTMLDocumentParser>, DOM::Document& document)
 {
     m_parser_document = document.make_weak_ptr();
 }
@@ -62,7 +62,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 {
     if (m_already_started)
         return;
-    RefPtr<Document> parser_document = m_parser_document.ptr();
+    RefPtr<DOM::Document> parser_document = m_parser_document.ptr();
     m_parser_document = nullptr;
 
     if (parser_document && !has_attribute(HTML::AttributeNames::async)) {

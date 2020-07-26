@@ -41,7 +41,7 @@
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 
-namespace Web {
+namespace Web::DOM {
 
 enum class QuirksMode {
     No,
@@ -190,7 +190,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::Document)
-static bool is_type(const Web::Node& node) { return node.is_document(); }
+AK_BEGIN_TYPE_TRAITS(Web::DOM::Document)
+static bool is_type(const Web::DOM::Node& node) { return node.is_document(); }
 AK_END_TYPE_TRAITS()
-

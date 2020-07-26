@@ -59,19 +59,19 @@
 
 namespace Web {
 
-RefPtr<Document> parse_html_document(const StringView&, const URL&, const String& encoding);
+RefPtr<DOM::Document> parse_html_document(const StringView&, const URL&, const String& encoding);
 
 class HTMLDocumentParser {
 public:
     HTMLDocumentParser(const StringView& input, const String& encoding);
-    HTMLDocumentParser(const StringView& input, const String& encoding, Document& existing_document);
+    HTMLDocumentParser(const StringView& input, const String& encoding, DOM::Document& existing_document);
     ~HTMLDocumentParser();
 
     void run(const URL&);
 
-    Document& document();
+    DOM::Document& document();
 
-    static NonnullRefPtrVector<Node> parse_html_fragment(Element& context_element, const StringView&);
+    static NonnullRefPtrVector<DOM::Node> parse_html_fragment(DOM::Element& context_element, const StringView&);
 
     enum class InsertionMode {
 #define __ENUMERATE_INSERTION_MODE(mode) mode,
@@ -86,7 +86,7 @@ public:
 private:
     const char* insertion_mode_name() const;
 
-    QuirksMode which_quirks_mode(const HTMLToken&) const;
+    DOM::QuirksMode which_quirks_mode(const HTMLToken&) const;
 
     void handle_initial(HTMLToken&);
     void handle_before_html(HTMLToken&);
@@ -116,20 +116,20 @@ private:
 
     void generate_implied_end_tags(const FlyString& exception = {});
     bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
-    NonnullRefPtr<Element> create_element_for(const HTMLToken&);
+    NonnullRefPtr<DOM::Element> create_element_for(const HTMLToken&);
 
     struct AdjustedInsertionLocation {
-        RefPtr<Node> parent;
-        RefPtr<Node> insert_before_sibling;
+        RefPtr<DOM::Node> parent;
+        RefPtr<DOM::Node> insert_before_sibling;
     };
 
     AdjustedInsertionLocation find_appropriate_place_for_inserting_node();
 
-    Text* find_character_insertion_node();
+    DOM::Text* find_character_insertion_node();
     void flush_character_insertions();
-    RefPtr<Element> insert_html_element(const HTMLToken&);
-    Element& current_node();
-    Element& node_before_current_node();
+    RefPtr<DOM::Element> insert_html_element(const HTMLToken&);
+    DOM::Element& current_node();
+    DOM::Element& node_before_current_node();
     void insert_character(u32 data);
     void insert_comment(HTMLToken&);
     void reconstruct_the_active_formatting_elements();
@@ -175,14 +175,14 @@ private:
     bool m_stop_parsing { false };
     size_t m_script_nesting_level { 0 };
 
-    RefPtr<Document> m_document;
+    RefPtr<DOM::Document> m_document;
     RefPtr<HTMLHeadElement> m_head_element;
     RefPtr<HTMLFormElement> m_form_element;
-    RefPtr<Element> m_context_element;
+    RefPtr<DOM::Element> m_context_element;
 
     Vector<HTMLToken> m_pending_table_character_tokens;
 
-    RefPtr<Text> m_character_insertion_node;
+    RefPtr<DOM::Text> m_character_insertion_node;
     StringBuilder m_character_insertion_builder;
 };
 

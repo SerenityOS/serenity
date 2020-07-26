@@ -43,31 +43,31 @@
 
 namespace Web {
 
-void dump_tree(const Node& node)
+void dump_tree(const DOM::Node& node)
 {
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
         dbgprintf("  ");
-    if (is<Document>(node)) {
+    if (is<DOM::Document>(node)) {
         dbgprintf("*Document*\n");
-    } else if (is<Element>(node)) {
-        dbgprintf("<%s", downcast<Element>(node).local_name().characters());
-        downcast<Element>(node).for_each_attribute([](auto& name, auto& value) {
+    } else if (is<DOM::Element>(node)) {
+        dbgprintf("<%s", downcast<DOM::Element>(node).local_name().characters());
+        downcast<DOM::Element>(node).for_each_attribute([](auto& name, auto& value) {
             dbgprintf(" %s=%s", name.characters(), value.characters());
         });
         dbgprintf(">\n");
-    } else if (is<Text>(node)) {
-        dbgprintf("\"%s\"\n", static_cast<const Text&>(node).data().characters());
-    } else if (is<DocumentType>(node)) {
+    } else if (is<DOM::Text>(node)) {
+        dbgprintf("\"%s\"\n", downcast<DOM::Text>(node).data().characters());
+    } else if (is<DOM::DocumentType>(node)) {
         dbgprintf("<!DOCTYPE html>\n");
-    } else if (is<Comment>(node)) {
-        dbgprintf("<!--%s-->\n", downcast<Comment>(node).data().characters());
-    } else if (is<DocumentFragment>(node)) {
+    } else if (is<DOM::Comment>(node)) {
+        dbgprintf("<!--%s-->\n", downcast<DOM::Comment>(node).data().characters());
+    } else if (is<DOM::DocumentFragment>(node)) {
         dbgprintf("#document-fragment\n");
     }
     ++indent;
-    if (is<ParentNode>(node)) {
-        static_cast<const ParentNode&>(node).for_each_child([](auto& child) {
+    if (is<DOM::ParentNode>(node)) {
+        static_cast<const DOM::ParentNode&>(node).for_each_child([](auto& child) {
             dump_tree(child);
         });
     }
@@ -83,18 +83,18 @@ void dump_tree(const LayoutNode& layout_node)
     FlyString tag_name;
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)";
-    else if (is<Text>(layout_node.node()))
+    else if (is<DOM::Text>(layout_node.node()))
         tag_name = "#text";
-    else if (is<Document>(layout_node.node()))
+    else if (is<DOM::Document>(layout_node.node()))
         tag_name = "#document";
-    else if (is<Element>(layout_node.node()))
-        tag_name = downcast<Element>(*layout_node.node()).local_name();
+    else if (is<DOM::Element>(layout_node.node()))
+        tag_name = downcast<DOM::Element>(*layout_node.node()).local_name();
     else
         tag_name = "???";
 
     String identifier = "";
-    if (layout_node.node() && is<Element>(*layout_node.node())) {
-        auto& element = downcast<Element>(*layout_node.node());
+    if (layout_node.node() && is<DOM::Element>(*layout_node.node())) {
+        auto& element = downcast<DOM::Element>(*layout_node.node());
         StringBuilder builder;
         auto id = element.attribute(HTML::AttributeNames::id);
         if (!id.is_empty()) {

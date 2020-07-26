@@ -35,7 +35,7 @@ class LayoutListItemMarker;
 
 class LayoutListItem final : public LayoutBlock {
 public:
-    LayoutListItem(Document&, const Element&, NonnullRefPtr<StyleProperties>);
+    LayoutListItem(DOM::Document&, const DOM::Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutListItem() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;

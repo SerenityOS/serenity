@@ -51,7 +51,7 @@
 #include <LibWeb/SVG/SVGSVGElement.h>
 #include <LibWeb/SVG/TagNames.h>
 
-namespace Web {
+namespace Web::DOM {
 
 NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_name)
 {

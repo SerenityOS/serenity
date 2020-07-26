@@ -28,7 +28,7 @@
 
 #include <LibWeb/DOM/Element.h>
 
-namespace Web {
+namespace Web::DOM {
 
 NonnullRefPtr<Element> create_element(Document&, const FlyString& tag_name);
 

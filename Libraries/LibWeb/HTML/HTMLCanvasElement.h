@@ -38,7 +38,7 @@ class HTMLCanvasElement : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLCanvasElementWrapper;
 
-    HTMLCanvasElement(Document&, const FlyString& local_name);
+    HTMLCanvasElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLCanvasElement() override;
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap; }
@@ -60,5 +60,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLCanvasElement)
-static bool is_type(const Web::Node& node) { return node.is_element() && downcast<Web::Element>(node).local_name() == Web::HTML::TagNames::canvas; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::canvas; }
 AK_END_TYPE_TRAITS()

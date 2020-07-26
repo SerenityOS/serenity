@@ -34,7 +34,7 @@
 
 namespace Web {
 
-HTMLLinkElement::HTMLLinkElement(Document& document, const FlyString& tag_name)
+HTMLLinkElement::HTMLLinkElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }
