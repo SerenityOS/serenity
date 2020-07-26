@@ -7,6 +7,7 @@ compiler:
 - gcc
 
 cache:
+  ccache: true
   directories:
   - /var/cache/apt/archives/*.deb
   - Toolchain/Cache/
