@@ -25,6 +25,7 @@
  */
 
 #include <AK/Vector.h>
+#include <LibCore/GetPassword.h>
 #include <alloca.h>
 #include <grp.h>
 #include <pwd.h>
@@ -38,9 +39,6 @@ int main(int argc, char** argv)
 {
     if (geteuid() != 0) {
         fprintf(stderr, "Not running as root :(\n");
-    } else if (getuid() != 0) {
-        const char* target_user = argc > 1 ? argv[1] : "root";
-        fprintf(stderr, "Access to account '%s' granted\n", target_user);
     }
 
     uid_t uid = 0;
@@ -62,6 +60,20 @@ int main(int argc, char** argv)
     if (!pwd) {
         fprintf(stderr, "No passwd entry.\n");
         return 1;
+    }
+
+    if (getuid() != 0 && pwd->pw_passwd[0] != '\0') {
+        auto password = Core::get_password();
+        if (password.is_error()) {
+            fprintf(stderr, strerror(password.error()));
+            return 1;
+        }
+
+        char* hash = crypt(password.value().characters(), pwd->pw_passwd);
+        if (hash == NULL || strcmp(hash, pwd->pw_passwd) != 0) {
+            fprintf(stderr, "Incorrect or disabled password.\n");
+            return 1;
+        }
     }
 
     Vector<gid_t> extra_gids;
@@ -88,7 +100,7 @@ int main(int argc, char** argv)
         perror("setuid");
         return 1;
     }
-    rc = execl("/bin/sh", "sh", nullptr);
+    rc = execl(pwd->pw_shell, pwd->pw_shell, nullptr);
     perror("execl");
     return 1;
 }
