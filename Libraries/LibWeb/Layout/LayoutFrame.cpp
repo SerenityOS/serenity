@@ -90,7 +90,7 @@ void LayoutFrame::did_set_rect()
     LayoutReplaced::did_set_rect();
 
     ASSERT(node().hosted_frame());
-    node().hosted_frame()->set_size(size().to_int_size());
+    node().hosted_frame()->set_size(size().to_type<int>());
 }
 
 }

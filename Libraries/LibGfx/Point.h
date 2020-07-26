@@ -29,159 +29,206 @@
 #include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/Orientation.h>
+#include <LibGfx/Forward.h>
 #include <LibIPC/Forward.h>
+#include <LibM/math.h>
 #include <stdlib.h>
 
 namespace Gfx {
 
-class IntRect;
-class FloatPoint;
-
-class IntPoint {
+template<typename T>
+class Point {
 public:
-    IntPoint() { }
-    IntPoint(int x, int y)
+    Point() { }
+
+    Point(T x, T y)
         : m_x(x)
         , m_y(y)
     {
     }
 
-    IntPoint(const FloatPoint&);
+    template<typename U>
+    Point(U x, U y)
+        : m_x(x)
+        , m_y(y)
+    {
+    }
 
-    int x() const { return m_x; }
-    int y() const { return m_y; }
+    template<typename U>
+    explicit Point(const Point<U>& other)
+        : m_x(other.x())
+        , m_y(other.y())
+    {
+    }
 
-    void set_x(int x) { m_x = x; }
-    void set_y(int y) { m_y = y; }
+    T x() const { return m_x; }
+    T y() const { return m_y; }
 
-    void move_by(int dx, int dy)
+    void set_x(T x) { m_x = x; }
+    void set_y(T y) { m_y = y; }
+
+    void move_by(T dx, T dy)
     {
         m_x += dx;
         m_y += dy;
     }
 
-    void move_by(const IntPoint& delta)
+    void move_by(const Point<T>& delta)
     {
         move_by(delta.x(), delta.y());
     }
 
-    IntPoint translated(const IntPoint& delta) const
+    Point<T> translated(const Point<T>& delta) const
     {
-        IntPoint point = *this;
+        Point<T> point = *this;
         point.move_by(delta);
         return point;
     }
 
-    IntPoint translated(int dx, int dy) const
+    Point<T> translated(T dx, T dy) const
     {
-        IntPoint point = *this;
+        Point<T> point = *this;
         point.move_by(dx, dy);
         return point;
     }
 
-    void constrain(const IntRect&);
-
-    bool operator==(const IntPoint& other) const
+    Point<T> translated(T dboth) const
     {
-        return m_x == other.m_x
-            && m_y == other.m_y;
+        Point<T> point = *this;
+        point.move_by(dboth, dboth);
+        return point;
     }
 
-    bool operator!=(const IntPoint& other) const
+    void constrain(const Rect<T>&);
+
+    bool operator==(const Point<T>& other) const
+    {
+        return m_x == other.m_x && m_y == other.m_y;
+    }
+
+    bool operator!=(const Point<T>& other) const
     {
         return !(*this == other);
     }
 
-    IntPoint operator-() const { return { -m_x, -m_y }; }
+    Point<T> operator+(const Point<T>& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
 
-    IntPoint operator-(const IntPoint& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
-    IntPoint& operator-=(const IntPoint& other)
+    Point<T>& operator+=(const Point<T>& other)
+    {
+        m_x += other.m_x;
+        m_y += other.m_y;
+        return *this;
+    }
+
+    Point<T> operator-() const { return { -m_x, -m_y }; }
+
+    Point<T> operator-(const Point<T>& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
+
+    Point<T>& operator-=(const Point<T>& other)
     {
         m_x -= other.m_x;
         m_y -= other.m_y;
         return *this;
     }
 
-    IntPoint& operator+=(const IntPoint& other)
-    {
-        m_x += other.m_x;
-        m_y += other.m_y;
-        return *this;
-    }
-    IntPoint operator+(const IntPoint& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
+    Point<T> operator*(int factor) const { return { m_x * factor, m_y * factor }; }
 
-    IntPoint& operator*=(int factor)
+    Point<T>& operator*=(T factor)
     {
         m_x *= factor;
         m_y *= factor;
         return *this;
     }
-    IntPoint operator*(int factor) const { return { m_x * factor, m_y * factor }; }
 
-    IntPoint& operator/=(int factor)
+    Point<T> operator/(int factor) const { return { m_x / factor, m_y / factor }; }
+
+    Point<T>& operator/=(int factor)
     {
         m_x /= factor;
         m_y /= factor;
         return *this;
     }
-    IntPoint operator/(int factor) const { return { m_x / factor, m_y / factor }; }
-
-    String to_string() const;
 
     bool is_null() const { return !m_x && !m_y; }
 
-    int primary_offset_for_orientation(Orientation orientation) const
+    T primary_offset_for_orientation(Orientation orientation) const
     {
         return orientation == Orientation::Vertical ? y() : x();
     }
 
-    void set_primary_offset_for_orientation(Orientation orientation, int value)
+    void set_primary_offset_for_orientation(Orientation orientation, T value)
     {
-        if (orientation == Orientation::Vertical)
+        if (orientation == Orientation::Vertical) {
             set_y(value);
-        else
+        } else {
             set_x(value);
+        }
     }
 
-    int secondary_offset_for_orientation(Orientation orientation) const
+    T secondary_offset_for_orientation(Orientation orientation) const
     {
         return orientation == Orientation::Vertical ? x() : y();
     }
 
-    void set_secondary_offset_for_orientation(Orientation orientation, int value)
+    void set_secondary_offset_for_orientation(Orientation orientation, T value)
     {
-        if (orientation == Orientation::Vertical)
+        if (orientation == Orientation::Vertical) {
             set_x(value);
-        else
+        } else {
             set_y(value);
+        }
     }
 
-    int dx_relative_to(const IntPoint& other) const
+    T dx_relative_to(const Point<T>& other) const
     {
         return x() - other.x();
     }
 
-    int dy_relative_to(const IntPoint& other) const
+    T dy_relative_to(const Point<T>& other) const
     {
         return y() - other.y();
     }
 
     // Returns pixels moved from other in either direction
-    int pixels_moved(const IntPoint& other) const
+    T pixels_moved(const Point<T>& other) const
     {
         return max(abs(dx_relative_to(other)), abs(dy_relative_to(other)));
     }
 
+    float distance_from(const Point<T>& other) const
+    {
+        if (*this == other)
+            return 0;
+        return sqrtf(powf(m_x - other.m_x, 2.0f) + powf(m_y - other.m_y, 2.0f));
+    }
+
+    template<typename U>
+    Point<U> to_type() const
+    {
+        return Point<U>(*this);
+    }
+
+    String to_string() const;
+
 private:
-    int m_x { 0 };
-    int m_y { 0 };
+    T m_x { 0 };
+    T m_y { 0 };
 };
 
-const LogStream& operator<<(const LogStream&, const IntPoint&);
+template<typename T>
+const LogStream& operator<<(const LogStream& stream, const Point<T>& point)
+{
+    return stream << point.to_string();
+}
+
+using IntPoint = Point<int>;
+using FloatPoint = Point<float>;
 
 }
 
 namespace IPC {
+
 bool encode(Encoder&, const Gfx::IntPoint&);
 bool decode(Decoder&, Gfx::IntPoint&);
+
 }

@@ -27,7 +27,6 @@
 #include <AK/LogStream.h>
 #include <AK/Optional.h>
 #include <LibGfx/AffineTransform.h>
-#include <LibGfx/FloatRect.h>
 #include <LibGfx/Rect.h>
 
 namespace Gfx {
@@ -97,35 +96,34 @@ void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, f
     mapped_y = (m_values[1] * unmapped_x + m_values[3] * unmapped_y + m_values[5]);
 }
 
+template<>
 IntPoint AffineTransform::map(const IntPoint& point) const
 {
     float mapped_x;
     float mapped_y;
     map(point.x(), point.y(), mapped_x, mapped_y);
-    return IntPoint(roundf(mapped_x), roundf(mapped_y));
+    return { roundf(mapped_x), roundf(mapped_y) };
 }
 
+template<>
 FloatPoint AffineTransform::map(const FloatPoint& point) const
 {
     float mapped_x;
     float mapped_y;
     map(point.x(), point.y(), mapped_x, mapped_y);
-    return FloatPoint(mapped_x, mapped_y);
+    return { mapped_x, mapped_y };
 }
 
+template<>
 IntSize AffineTransform::map(const IntSize& size) const
 {
-    return IntSize(roundf(size.width() * x_scale()), roundf(y_scale()));
+    return { roundf(size.width() * x_scale()), roundf(size.height() * y_scale()) };
 }
 
+template<>
 FloatSize AffineTransform::map(const FloatSize& size) const
 {
     return { size.width() * x_scale(), size.height() * y_scale() };
-}
-
-IntRect AffineTransform::map(const IntRect& rect) const
-{
-    return enclosing_int_rect(map(FloatRect(rect)));
 }
 
 template<typename T>
@@ -140,6 +138,7 @@ static T largest_of(T p1, T p2, T p3, T p4)
     return max(max(p1, p2), max(p3, p4));
 }
 
+template<>
 FloatRect AffineTransform::map(const FloatRect& rect) const
 {
     FloatPoint p1 = map(rect.top_left());
@@ -151,6 +150,12 @@ FloatRect AffineTransform::map(const FloatRect& rect) const
     float right = largest_of(p1.x(), p2.x(), p3.x(), p4.x());
     float bottom = largest_of(p1.y(), p2.y(), p3.y(), p4.y());
     return { left, top, right - left, bottom - top };
+}
+
+template<>
+IntRect AffineTransform::map(const IntRect& rect) const
+{
+    return enclosing_int_rect(map(FloatRect(rect)));
 }
 
 const LogStream& operator<<(const LogStream& stream, const AffineTransform& value)

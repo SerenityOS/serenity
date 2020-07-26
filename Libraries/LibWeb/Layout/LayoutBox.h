@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <LibGfx/FloatRect.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Painting/StackingContext.h>
 

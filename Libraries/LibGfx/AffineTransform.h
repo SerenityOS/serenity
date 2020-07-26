@@ -48,14 +48,14 @@ public:
 
     void map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const;
 
-    IntPoint map(const IntPoint&) const;
-    FloatPoint map(const FloatPoint&) const;
+    template<typename T>
+    Point<T> map(const Point<T>&) const;
 
-    IntSize map(const IntSize&) const;
-    FloatSize map(const FloatSize&) const;
+    template<typename T>
+    Size<T> map(const Size<T>&) const;
 
-    IntRect map(const IntRect&) const;
-    FloatRect map(const FloatRect&) const;
+    template<typename T>
+    Rect<T> map(const Rect<T>&) const;
 
     float a() const { return m_values[0]; }
     float b() const { return m_values[1]; }

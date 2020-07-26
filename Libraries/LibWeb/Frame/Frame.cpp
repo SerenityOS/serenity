@@ -163,7 +163,7 @@ Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
             return {};
         if (!ancestor->host_element()->layout_node())
             return {};
-        position.move_by(ancestor->host_element()->layout_node()->box_type_agnostic_position().to_int_point());
+        position.move_by(ancestor->host_element()->layout_node()->box_type_agnostic_position().to_type<int>());
     }
     return position;
 }

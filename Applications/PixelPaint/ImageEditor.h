@@ -28,7 +28,7 @@
 
 #include "Image.h"
 #include <LibGUI/Frame.h>
-#include <LibGfx/FloatPoint.h>
+#include <LibGfx/Point.h>
 
 namespace PixelPaint {
 

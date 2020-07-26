@@ -27,6 +27,7 @@
 #include <AK/SharedBuffer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibGfx/Size.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 

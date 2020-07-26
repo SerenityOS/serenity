@@ -31,14 +31,16 @@
 
 namespace Gfx {
 
+template<>
 String IntSize::to_string() const
 {
     return String::format("[%dx%d]", m_width, m_height);
 }
 
-const LogStream& operator<<(const LogStream& stream, const IntSize& value)
+template<>
+String FloatSize::to_string() const
 {
-    return stream << value.to_string();
+    return String::format("[%fx%f]", m_width, m_height);
 }
 
 }
@@ -64,3 +66,6 @@ bool decode(Decoder& decoder, Gfx::IntSize& size)
 }
 
 }
+
+template class Gfx::Size<int>;
+template class Gfx::Size<float>;

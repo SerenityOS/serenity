@@ -26,26 +26,38 @@
 
 #include <AK/String.h>
 #include <LibGfx/Point.h>
-#include <LibGfx/FloatPoint.h>
+#include <LibGfx/Rect.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 
 namespace Gfx {
 
-IntPoint::IntPoint(const FloatPoint& other)
-    : m_x(other.x())
-    , m_y(other.y())
+template<typename T>
+void Point<T>::constrain(const Rect<T>& rect)
 {
+    if (x() < rect.left()) {
+        set_x(rect.left());
+    } else if (x() > rect.right()) {
+        set_x(rect.right());
+    }
+
+    if (y() < rect.top()) {
+        set_y(rect.top());
+    } else if (y() > rect.bottom()) {
+        set_y(rect.bottom());
+    }
 }
 
+template<>
 String IntPoint::to_string() const
 {
     return String::format("[%d,%d]", x(), y());
 }
 
-const LogStream& operator<<(const LogStream& stream, const IntPoint& value)
+template<>
+String FloatPoint::to_string() const
 {
-    return stream << value.to_string();
+    return String::format("[%f,%f]", x(), y());
 }
 
 }
@@ -71,3 +83,6 @@ bool decode(Decoder& decoder, Gfx::IntPoint& point)
 }
 
 }
+
+template class Gfx::Point<int>;
+template class Gfx::Point<float>;

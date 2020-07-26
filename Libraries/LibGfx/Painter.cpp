@@ -40,7 +40,6 @@
 #include <LibGfx/Path.h>
 #include <math.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #if defined(__GNUC__) && !defined(__clang__)
 #    pragma GCC optimize("O3")
@@ -1399,18 +1398,18 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
             cursor = segment.point();
             break;
         case Segment::Type::LineTo:
-            draw_line(cursor, segment.point(), color, thickness);
+            draw_line(cursor.to_type<int>(), segment.point().to_type<int>(), color, thickness);
             cursor = segment.point();
             break;
         case Segment::Type::QuadraticBezierCurveTo: {
             auto& through = static_cast<const QuadraticBezierCurveSegment&>(segment).through();
-            draw_quadratic_bezier_curve(through, cursor, segment.point(), color, thickness);
+            draw_quadratic_bezier_curve(through.to_type<int>(), cursor.to_type<int>(), segment.point().to_type<int>(), color, thickness);
             cursor = segment.point();
             break;
         }
         case Segment::Type::EllipticalArcTo:
             auto& arc = static_cast<const EllipticalArcSegment&>(segment);
-            draw_elliptical_arc(cursor, segment.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
+            draw_elliptical_arc(cursor.to_type<int>(), segment.point().to_type<int>(), arc.center().to_type<int>(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
             cursor = segment.point();
             break;
         }

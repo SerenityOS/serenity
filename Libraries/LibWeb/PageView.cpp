@@ -161,7 +161,7 @@ String PageView::selected_text() const
 void PageView::page_did_layout()
 {
     ASSERT(layout_root());
-    set_content_size(layout_root()->size().to_int_size());
+    set_content_size(layout_root()->size().to_type<int>());
 }
 
 void PageView::page_did_change_title(const String& title)
@@ -263,14 +263,14 @@ void PageView::layout_and_sync_size()
 
     page().main_frame().set_size(available_size());
     document()->layout();
-    set_content_size(layout_root()->size().to_int_size());
+    set_content_size(layout_root()->size().to_type<int>());
 
     // NOTE: If layout caused us to gain or lose scrollbars, we have to lay out again
     //       since the scrollbars now take up some of the available space.
     if (had_vertical_scrollbar != vertical_scrollbar().is_visible() || had_horizontal_scrollbar != horizontal_scrollbar().is_visible()) {
         page().main_frame().set_size(available_size());
         document()->layout();
-        set_content_size(layout_root()->size().to_int_size());
+        set_content_size(layout_root()->size().to_type<int>());
     }
 
     page().main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());

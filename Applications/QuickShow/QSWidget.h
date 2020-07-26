@@ -28,7 +28,7 @@
 
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/FloatPoint.h>
+#include <LibGfx/Point.h>
 
 class QSLabel;
 
