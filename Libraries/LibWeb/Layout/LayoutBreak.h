@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/HTMLBRElement.h>
+#include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/Layout/LayoutNode.h>
 
 namespace Web {

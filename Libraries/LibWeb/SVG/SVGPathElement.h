@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibGfx/Bitmap.h>
-#include <LibWeb/DOM/HTMLElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/SVG/SVGGeometryElement.h>
 
 namespace Web::SVG {

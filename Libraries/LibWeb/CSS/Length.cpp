@@ -26,7 +26,7 @@
 
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLHtmlElement.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 
 namespace Web {
 

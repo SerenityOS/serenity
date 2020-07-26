@@ -31,8 +31,8 @@
 #include <LibWeb/Bindings/HTMLElementWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLCanvasElement.h>
-#include <LibWeb/DOM/HTMLImageElement.h>
+#include <LibWeb/HTML/HTMLCanvasElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/DOM/Node.h>
 
 namespace Web {

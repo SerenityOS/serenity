@@ -26,7 +26,7 @@
 
 #include <LibGUI/Painter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutBox.h>

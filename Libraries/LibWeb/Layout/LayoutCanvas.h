@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/HTMLCanvasElement.h>
+#include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/Layout/LayoutReplaced.h>
 
 namespace Web {

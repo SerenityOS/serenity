@@ -38,7 +38,7 @@
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/DOM/HTMLHeadElement.h>
+#include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/PageView.h>
 

@@ -32,9 +32,9 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/DOM/HTMLFormElement.h>
-#include <LibWeb/DOM/HTMLHeadElement.h>
-#include <LibWeb/DOM/HTMLScriptElement.h>
+#include <LibWeb/HTML/HTMLFormElement.h>
+#include <LibWeb/HTML/HTMLHeadElement.h>
+#include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLToken.h>

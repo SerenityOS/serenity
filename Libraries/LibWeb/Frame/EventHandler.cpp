@@ -28,8 +28,8 @@
 #include <LibGUI/Window.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLAnchorElement.h>
-#include <LibWeb/DOM/HTMLIFrameElement.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/DOM/MouseEvent.h>
 #include <LibWeb/Frame/EventHandler.h>
 #include <LibWeb/Frame/Frame.h>
