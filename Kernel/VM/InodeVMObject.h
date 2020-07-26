@@ -66,10 +66,8 @@ protected:
     Bitmap m_dirty_pages;
 };
 
-template<>
-inline bool is<InodeVMObject>(const VMObject& vmobject)
-{
-    return vmobject.is_inode();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Kernel::InodeVMObject)
+static bool is_type(const Kernel::VMObject& vmobject) { return vmobject.is_inode(); }
+AK_END_TYPE_TRAITS()

@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <Kernel/VM/VMObject.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
 
@@ -56,10 +56,8 @@ private:
     virtual bool is_anonymous() const override { return true; }
 };
 
-template<>
-inline bool is<AnonymousVMObject>(const VMObject& vmobject)
-{
-    return vmobject.is_anonymous();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Kernel::AnonymousVMObject)
+static bool is_type(const Kernel::VMObject& vmobject) { return vmobject.is_anonymous(); }
+AK_END_TYPE_TRAITS()

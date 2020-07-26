@@ -64,10 +64,8 @@ private:
     bool m_volatile { false };
 };
 
-template<>
-inline bool is<PurgeableVMObject>(const VMObject& vmobject)
-{
-    return vmobject.is_purgeable();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Kernel::PurgeableVMObject)
+static bool is_type(const Kernel::VMObject& vmobject) { return vmobject.is_purgeable(); }
+AK_END_TYPE_TRAITS()
