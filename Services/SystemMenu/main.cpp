@@ -132,10 +132,16 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
 
     // First we construct all the necessary app category submenus.
     HashMap<String, NonnullRefPtr<GUI::Menu>> app_category_menus;
+    auto category_icons = Core::ConfigFile::open("/res/icons/SystemMenu.ini");
     for (const auto& category : sorted_app_categories) {
         if (app_category_menus.contains(category))
             continue;
         auto& category_menu = system_menu->add_submenu(category);
+        auto category_icon_path = category_icons->read_entry("16x16", category);
+        if (!category_icon_path.is_empty()) {
+            auto icon = Gfx::Bitmap::load_from_file(category_icon_path);
+            category_menu.set_icon(icon);
+        }
         app_category_menus.set(category, category_menu);
     }
 
