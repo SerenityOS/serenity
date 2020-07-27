@@ -33,7 +33,7 @@
 namespace Crypto {
 namespace PK {
 
-RSA::KeyPairType RSA::parse_rsa_key(const ByteBuffer& in)
+RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
 {
     // we are going to assign to at least one of these
     KeyPairType keypair;
@@ -167,7 +167,7 @@ void RSA::import_private_key(const ByteBuffer& buffer, bool pem)
 {
     // so gods help me, I hate DER
     auto decoded_buffer = pem ? decode_pem(buffer) : buffer;
-    auto key = parse_rsa_key(decoded_buffer);
+    auto key = parse_rsa_key(decoded_buffer.span());
     if (!key.private_key.length()) {
         dbg() << "We expected to see a private key, but we found none";
         ASSERT_NOT_REACHED();
@@ -179,7 +179,7 @@ void RSA::import_public_key(const ByteBuffer& buffer, bool pem)
 {
     // so gods help me, I hate DER
     auto decoded_buffer = pem ? decode_pem(buffer) : buffer;
-    auto key = parse_rsa_key(decoded_buffer);
+    auto key = parse_rsa_key(decoded_buffer.span());
     if (!key.public_key.length()) {
         dbg() << "We expected to see a public key, but we found none";
         ASSERT_NOT_REACHED();
