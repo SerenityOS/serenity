@@ -35,23 +35,11 @@
 #    include <string.h>
 #endif
 
-#if defined(__serenity__) && !defined(KERNEL)
-extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
-#endif
-
 ALWAYS_INLINE void fast_u32_copy(u32* dest, const u32* src, size_t count)
 {
-#if defined(__serenity__) && !defined(KERNEL)
-    if (count >= 256) {
-        mmx_memcpy(dest, src, count * sizeof(count));
-        return;
-    }
-#endif
     asm volatile(
         "rep movsl\n"
-        : "=S"(src), "=D"(dest), "=c"(count)
-        : "S"(src), "D"(dest), "c"(count)
-        : "memory");
+        : "+S"(src), "+D"(dest), "+c"(count)::"memory");
 }
 
 ALWAYS_INLINE void fast_u32_fill(u32* dest, u32 value, size_t count)
