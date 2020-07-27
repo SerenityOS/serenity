@@ -25,6 +25,7 @@
  */
 
 #include "Client.h"
+#include <AK/MappedFile.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -74,6 +75,11 @@ int main(int argc, char** argv)
 
     server->listen({}, port);
     printf("Listening on 0.0.0.0:%d\n", port);
+
+    if (unveil("/res/icons", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
 
     if (unveil(real_root_path.characters(), "r") < 0) {
         perror("unveil");
