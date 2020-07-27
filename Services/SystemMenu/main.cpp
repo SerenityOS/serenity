@@ -48,8 +48,6 @@ struct AppMetadata {
 };
 Vector<AppMetadata> g_apps;
 
-HashMap<String, NonnullRefPtr<GUI::Menu>> g_app_category_menus;
-
 struct ThemeMetadata {
     String name;
     String path;
@@ -61,6 +59,7 @@ Vector<ThemeMetadata> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
 GUI::ActionGroup g_themes_group;
 
+static Vector<String> discover_apps_and_categories();
 static NonnullRefPtr<GUI::Menu> build_system_menu();
 
 int main(int argc, char** argv)
@@ -98,41 +97,46 @@ int main(int argc, char** argv)
     return app->exec();
 }
 
-NonnullRefPtr<GUI::Menu> build_system_menu()
+Vector<String> discover_apps_and_categories()
 {
     HashTable<String> seen_app_categories;
-    {
-        Core::DirIterator dt("/res/apps", Core::DirIterator::SkipDots);
-        while (dt.has_next()) {
-            auto af_name = dt.next_path();
-            auto af_path = String::format("/res/apps/%s", af_name.characters());
-            auto af = Core::ConfigFile::open(af_path);
-            if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
-                continue;
-            auto app_name = af->read_entry("App", "Name");
-            auto app_executable = af->read_entry("App", "Executable");
-            auto app_category = af->read_entry("App", "Category");
-            auto app_icon_path = af->read_entry("Icons", "16x16");
-            g_apps.append({ app_executable, app_name, app_icon_path, app_category });
-            seen_app_categories.set(app_category);
-        }
-        quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
+    Core::DirIterator dt("/res/apps", Core::DirIterator::SkipDots);
+    while (dt.has_next()) {
+        auto af_name = dt.next_path();
+        auto af_path = String::format("/res/apps/%s", af_name.characters());
+        auto af = Core::ConfigFile::open(af_path);
+        if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
+            continue;
+        auto app_name = af->read_entry("App", "Name");
+        auto app_executable = af->read_entry("App", "Executable");
+        auto app_category = af->read_entry("App", "Category");
+        auto app_icon_path = af->read_entry("Icons", "16x16");
+        g_apps.append({ app_executable, app_name, app_icon_path, app_category });
+        seen_app_categories.set(app_category);
     }
+    quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
 
     Vector<String> sorted_app_categories;
-    for (auto& category : seen_app_categories)
+    for (auto& category : seen_app_categories) {
         sorted_app_categories.append(category);
+    }
     quick_sort(sorted_app_categories);
 
+    return sorted_app_categories;
+}
+
+NonnullRefPtr<GUI::Menu> build_system_menu()
+{
+    const Vector<String> sorted_app_categories = discover_apps_and_categories();
     auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"); // HIGH VOLTAGE SIGN
 
     // First we construct all the necessary app category submenus.
+    HashMap<String, NonnullRefPtr<GUI::Menu>> app_category_menus;
     for (const auto& category : sorted_app_categories) {
-
-        if (g_app_category_menus.contains(category))
+        if (app_category_menus.contains(category))
             continue;
         auto& category_menu = system_menu->add_submenu(category);
-        g_app_category_menus.set(category, category_menu);
+        app_category_menus.set(category, category_menu);
     }
 
     // Then we create and insert all the app menu items into the right place.
@@ -147,7 +151,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             dbg() << "App " << app.name << " has icon with size " << icon->size();
 #endif
 
-        auto parent_menu = g_app_category_menus.get(app.category).value_or(*system_menu);
+        auto parent_menu = app_category_menus.get(app.category).value_or(*system_menu);
         parent_menu->add_action(GUI::Action::create(app.name, icon.ptr(), [app_identifier](auto&) {
             dbg() << "Activated app with ID " << app_identifier;
             const auto& bin = g_apps[app_identifier].executable;
