@@ -88,6 +88,8 @@ private:
     u32 virt$pledge(u32);
     uid_t virt$getuid();
     gid_t virt$getgid();
+    int virt$setuid(uid_t);
+    int virt$setgid(gid_t);
     u32 virt$read(int, FlatPtr, ssize_t);
     u32 virt$write(int, FlatPtr, ssize_t);
     u32 virt$mprotect(FlatPtr, size_t, int);

@@ -278,6 +278,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getuid();
     case SC_getgid:
         return virt$getgid();
+    case SC_setuid:
+        return virt$setuid(arg1);
+    case SC_setgid:
+        return virt$setgid(arg2);
     case SC_close:
         return virt$close(arg1);
     case SC_fstat:
@@ -789,6 +793,16 @@ uid_t Emulator::virt$getuid()
 gid_t Emulator::virt$getgid()
 {
     return getgid();
+}
+
+int Emulator::virt$setuid(uid_t uid)
+{
+    return syscall(SC_setuid, uid);
+}
+
+int Emulator::virt$setgid(gid_t gid)
+{
+    return syscall(SC_setgid, gid);
 }
 
 u32 Emulator::virt$write(int fd, FlatPtr data, ssize_t size)
