@@ -33,8 +33,10 @@
 #include <AK/Vector.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 struct ThreadData {
@@ -131,9 +133,12 @@ static Snapshot get_snapshot()
     return snapshot;
 }
 
+static bool g_window_size_changed = true;
+static struct winsize g_window_size;
+
 int main(int, char**)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
+    if (pledge("stdio rpath tty sigaction ", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -150,10 +155,28 @@ int main(int, char**)
 
     unveil(nullptr, nullptr);
 
+    signal(SIGWINCH, [](int) {
+        g_window_size_changed = true;
+    });
+
+    if (pledge("stdio rpath tty", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     Vector<ThreadData*> threads;
     auto prev = get_snapshot();
     usleep(10000);
     for (;;) {
+        if (g_window_size_changed) {
+            int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &g_window_size);
+            if (rc < 0) {
+                perror("ioctl(TIOCGWINSZ)");
+                return 1;
+            }
+            g_window_size_changed = false;
+        }
+
         auto current = get_snapshot();
         auto sum_diff = current.sum_times_scheduled - prev.sum_times_scheduled;
 
@@ -189,7 +212,7 @@ int main(int, char**)
         });
 
         for (auto* thread : threads) {
-            printf("%6d %3d %2u   %-9s  %-10s  %6zu  %6zu  %2u.%1u  %s\n",
+            int nprinted = printf("%6d %3d %2u   %-9s  %-10s  %6zu  %6zu  %2u.%1u  ",
                 thread->pid,
                 thread->tid,
                 thread->priority,
@@ -198,8 +221,11 @@ int main(int, char**)
                 thread->amount_virtual / 1024,
                 thread->amount_resident / 1024,
                 thread->cpu_percent,
-                thread->cpu_percent_decimal,
-                thread->name.characters());
+                thread->cpu_percent_decimal);
+
+            int remaining = g_window_size.ws_col - nprinted;
+            fwrite(thread->name.characters(), 1, max(0, min(remaining, (int)thread->name.length())), stdout);
+            putchar('\n');
         }
         threads.clear_with_capacity();
         prev = move(current);
