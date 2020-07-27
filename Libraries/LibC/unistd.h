@@ -55,6 +55,7 @@ __BEGIN_DECLS
 extern char** environ;
 
 int get_process_name(char* buffer, int buffer_size);
+int set_process_name(const char* name, size_t name_length);
 void dump_backtrace();
 int fsync(int fd);
 void sysbeep();

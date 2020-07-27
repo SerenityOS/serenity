@@ -192,7 +192,8 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(minherit)           \
     __ENUMERATE_SYSCALL(sendfd)             \
     __ENUMERATE_SYSCALL(recvfd)             \
-    __ENUMERATE_SYSCALL(sysconf)
+    __ENUMERATE_SYSCALL(sysconf)            \
+    __ENUMERATE_SYSCALL(set_process_name)
 
 namespace Syscall {
 
