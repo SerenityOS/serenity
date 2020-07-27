@@ -43,7 +43,7 @@ class Emulator {
 public:
     static Emulator& the();
 
-    Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader>);
+    Emulator(const Vector<String>& arguments, const Vector<String>& environment, NonnullRefPtr<ELF::Loader>);
 
     bool load_elf();
     void dump_backtrace();
@@ -68,7 +68,7 @@ private:
 
     OwnPtr<MallocTracer> m_malloc_tracer;
 
-    void setup_stack(const Vector<String>& arguments);
+    void setup_stack(const Vector<String>& arguments, const Vector<String>& environment);
 
     int virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t);
     int virt$ioctl(int fd, unsigned, FlatPtr);

@@ -32,7 +32,7 @@
 #include <LibELF/Loader.h>
 #include <getopt.h>
 
-int main(int argc, char** argv)
+int main(int argc, char** argv, char** env)
 {
     if (argc == 1) {
         out() << "usage: UserspaceEmulator <command>";
@@ -55,7 +55,12 @@ int main(int argc, char** argv)
         arguments.append(argv[i]);
     }
 
-    UserspaceEmulator::Emulator emulator(arguments, move(elf));
+    Vector<String> environment;
+    for (int i = 0; env[i]; ++i) {
+        environment.append(env[i]);
+    }
+
+    UserspaceEmulator::Emulator emulator(arguments, environment, move(elf));
     if (!emulator.load_elf())
         return 1;
 

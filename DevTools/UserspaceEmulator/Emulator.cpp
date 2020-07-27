@@ -62,17 +62,17 @@ Emulator& Emulator::the()
     return *s_the;
 }
 
-Emulator::Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader> elf)
+Emulator::Emulator(const Vector<String>& arguments, const Vector<String>& environment, NonnullRefPtr<ELF::Loader> elf)
     : m_elf(move(elf))
     , m_cpu(*this)
 {
     m_malloc_tracer = make<MallocTracer>();
     ASSERT(!s_the);
     s_the = this;
-    setup_stack(arguments);
+    setup_stack(arguments, environment);
 }
 
-void Emulator::setup_stack(const Vector<String>& arguments)
+void Emulator::setup_stack(const Vector<String>& arguments, const Vector<String>& environment)
 {
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     stack_region->set_stack(true);
@@ -86,7 +86,16 @@ void Emulator::setup_stack(const Vector<String>& arguments)
         argv_entries.append(m_cpu.esp().value());
     }
 
-    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // char** envp = { nullptr }
+    Vector<u32> env_entries;
+
+    for (auto& variable : environment) {
+        m_cpu.push_string(variable.characters());
+        env_entries.append(m_cpu.esp().value());
+    }
+
+    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // char** envp = { envv_entries..., nullptr }
+    for (ssize_t i = env_entries.size() - 1; i >= 0; --i)
+        m_cpu.push32(shadow_wrap_as_initialized(env_entries[i]));
     u32 envp = m_cpu.esp().value();
 
     m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // char** argv = { argv_entries..., nullptr }
