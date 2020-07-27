@@ -242,6 +242,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
+    case SC_execve:
+        return virt$execve(arg1);
     case SC_ioctl:
         return virt$ioctl(arg1, arg2, arg3);
     case SC_get_dir_entries:
@@ -870,6 +872,48 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
 int Emulator::virt$fork()
 {
     return fork();
+}
+
+int Emulator::virt$execve(FlatPtr params_addr)
+{
+    Syscall::SC_execve_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto path = String::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
+    Vector<String> arguments;
+    Vector<String> environment;
+
+    auto copy_string_list = [this](auto& output_vector, auto& string_list) {
+        for (size_t i = 0; i < string_list.length; ++i) {
+            Syscall::StringArgument string;
+            mmu().copy_from_vm(&string, (FlatPtr)&string_list.strings[i], sizeof(string));
+            output_vector.append(String::copy(mmu().copy_buffer_from_vm((FlatPtr)string.characters, string.length)));
+        }
+    };
+
+    copy_string_list(arguments, params.arguments);
+    copy_string_list(environment, params.environment);
+
+    dbgprintf("\n");
+    dbgprintf("==%d==  \033[33;1mSyscall:\033[0m execve\n", getpid());
+    for (auto& argument : arguments)
+        dbgprintf("==%d==    - %s\n", getpid(), argument.characters());
+
+    Vector<char*> argv;
+    Vector<char*> envp;
+
+    argv.append(const_cast<char*>("/bin/UserspaceEmulator"));
+
+    auto create_string_vector = [](auto& output_vector, auto& input_vector) {
+        for (auto& string : input_vector)
+            output_vector.append(const_cast<char*>(string.characters()));
+        output_vector.append(nullptr);
+    };
+
+    create_string_vector(argv, arguments);
+    create_string_vector(envp, environment);
+
+    return execve(argv[0], (char* const*)argv.data(), (char* const*)envp.data());
 }
 
 }
