@@ -245,6 +245,12 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     switch (function) {
     case SC_execve:
         return virt$execve(arg1);
+    case SC_stat:
+        return virt$stat(arg1);
+    case SC_realpath:
+        return virt$realpath(arg1);
+    case SC_gethostname:
+        return virt$gethostname(arg1, arg2);
     case SC_ioctl:
         return virt$ioctl(arg1, arg2, arg3);
     case SC_get_dir_entries:
@@ -925,6 +931,54 @@ int Emulator::virt$execve(FlatPtr params_addr)
     create_string_vector(envp, environment);
 
     return execve(argv[0], (char* const*)argv.data(), (char* const*)envp.data());
+}
+
+int Emulator::virt$stat(FlatPtr params_addr)
+{
+    Syscall::SC_stat_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto path = String::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
+    struct stat host_statbuf;
+    int rc;
+    if (params.follow_symlinks)
+        rc = stat(path.characters(), &host_statbuf);
+    else
+        rc = lstat(path.characters(), &host_statbuf);
+    if (rc < 0)
+        return -errno;
+    mmu().copy_to_vm((FlatPtr)params.statbuf, &host_statbuf, sizeof(host_statbuf));
+    return rc;
+}
+
+int Emulator::virt$realpath(FlatPtr params_addr)
+{
+    Syscall::SC_realpath_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto path = String::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
+    char host_buffer[PATH_MAX] = {};
+
+    Syscall::SC_realpath_params host_params;
+    host_params.path = { path.characters(), path.length() };
+    host_params.buffer = { host_buffer, sizeof(host_buffer) };
+    int rc = syscall(SC_realpath, &host_params);
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm((FlatPtr)params.buffer.data, host_buffer, min(params.buffer.size, sizeof(host_buffer)));
+    return rc;
+}
+
+int Emulator::virt$gethostname(FlatPtr buffer, ssize_t buffer_size)
+{
+    if (buffer_size < 0)
+        return -EINVAL;
+    auto host_buffer = ByteBuffer::create_zeroed(buffer_size);
+    int rc = syscall(SC_gethostname, host_buffer.data(), host_buffer.size());
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
+    return rc;
 }
 
 }

@@ -74,6 +74,9 @@ private:
     int virt$execve(FlatPtr);
     int virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t);
     int virt$ioctl(int fd, unsigned, FlatPtr);
+    int virt$stat(FlatPtr);
+    int virt$realpath(FlatPtr);
+    int virt$gethostname(FlatPtr, ssize_t);
     int virt$usleep(useconds_t);
     int virt$shbuf_create(int size, FlatPtr buffer);
     int virt$shbuf_allow_pid(int, pid_t peer_pid);
