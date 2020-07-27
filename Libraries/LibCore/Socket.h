@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/Span.h>
 #include <LibCore/IODevice.h>
 #include <LibCore/SocketAddress.h>
 
@@ -50,7 +51,7 @@ public:
     bool connect(const SocketAddress&);
 
     ByteBuffer receive(int max_size);
-    bool send(const ByteBuffer&);
+    bool send(ReadonlyBytes);
 
     bool is_connected() const { return m_connected; }
     void set_blocking(bool blocking);

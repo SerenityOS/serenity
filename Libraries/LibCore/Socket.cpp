@@ -167,7 +167,7 @@ ByteBuffer Socket::receive(int max_size)
     return buffer;
 }
 
-bool Socket::send(const ByteBuffer& data)
+bool Socket::send(ReadonlyBytes data)
 {
     ssize_t nsent = ::send(fd(), data.data(), data.size(), 0);
     if (nsent < 0) {
@@ -182,8 +182,8 @@ void Socket::did_update_fd(int fd)
 {
     if (fd < 0) {
         if (m_read_notifier) {
-             m_read_notifier->remove_from_parent();
-             m_read_notifier = nullptr;
+            m_read_notifier->remove_from_parent();
+            m_read_notifier = nullptr;
         }
         if (m_notifier) {
             m_notifier->remove_from_parent();
