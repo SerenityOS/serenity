@@ -166,7 +166,7 @@ void RSA::verify(const ByteBuffer& in, ByteBuffer& out)
 void RSA::import_private_key(const ByteBuffer& buffer, bool pem)
 {
     // so gods help me, I hate DER
-    auto decoded_buffer = pem ? decode_pem(buffer) : buffer;
+    auto decoded_buffer = pem ? decode_pem(buffer.span()) : buffer;
     auto key = parse_rsa_key(decoded_buffer.span());
     if (!key.private_key.length()) {
         dbg() << "We expected to see a private key, but we found none";
@@ -178,7 +178,7 @@ void RSA::import_private_key(const ByteBuffer& buffer, bool pem)
 void RSA::import_public_key(const ByteBuffer& buffer, bool pem)
 {
     // so gods help me, I hate DER
-    auto decoded_buffer = pem ? decode_pem(buffer) : buffer;
+    auto decoded_buffer = pem ? decode_pem(buffer.span()) : buffer;
     auto key = parse_rsa_key(decoded_buffer.span());
     if (!key.public_key.length()) {
         dbg() << "We expected to see a public key, but we found none";
