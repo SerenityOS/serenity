@@ -28,8 +28,8 @@
 #include <AK/ByteBuffer.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
-#include <AK/Utf8View.h>
 #include <AK/String.h>
+#include <AK/Utf8View.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
@@ -278,7 +278,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
         byte_string.append(codepoint);
     }
 
-    auto encoded = encode_base64(ByteBuffer::wrap(byte_string.data(), byte_string.size()));
+    auto encoded = encode_base64(byte_string.span());
     return JS::js_string(interpreter, move(encoded));
 }
 

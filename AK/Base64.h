@@ -27,12 +27,13 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Span.h>
 
 namespace AK {
 
 ByteBuffer decode_base64(const StringView&);
 
-String encode_base64(const ByteBuffer&);
+String encode_base64(ReadonlyBytes);
 
 }
 
