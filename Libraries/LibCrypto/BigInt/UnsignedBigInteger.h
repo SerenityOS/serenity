@@ -59,8 +59,9 @@ public:
     }
 
     size_t export_data(AK::ByteBuffer& data) const;
-    size_t export_data(const u8* ptr, size_t length) const
+    size_t export_data(u8* ptr, size_t length) const
     {
+        // Note: ByteBuffer::wrap() does a const_cast!
         auto buffer = ByteBuffer::wrap(ptr, length);
         return export_data(buffer);
     }
