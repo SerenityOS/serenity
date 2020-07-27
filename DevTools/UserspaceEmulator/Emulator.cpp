@@ -36,6 +36,7 @@
 #include <serenity.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -864,6 +865,14 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
 {
     (void)fd;
     (void)arg;
+    if (request == TIOCGWINSZ) {
+        struct winsize ws;
+        int rc = syscall(SC_ioctl, fd, TIOCGWINSZ, &ws);
+        if (rc < 0)
+            return rc;
+        mmu().copy_to_vm(arg, &ws, sizeof(winsize));
+        return 0;
+    }
     dbg() << "Unsupported ioctl: " << request;
     dump_backtrace();
     TODO();
