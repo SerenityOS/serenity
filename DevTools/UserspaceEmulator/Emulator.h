@@ -113,7 +113,9 @@ private:
     int virt$lseek(int fd, off_t offset, int whence);
     int virt$socket(int, int, int);
     int virt$getsockopt(FlatPtr);
+    int virt$setsockopt(FlatPtr);
     int virt$select(FlatPtr);
+    int virt$accept(int sockfd, FlatPtr address, FlatPtr address_length);
     int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
     int virt$recvfrom(FlatPtr);
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
