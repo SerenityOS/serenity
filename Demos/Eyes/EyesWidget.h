@@ -42,7 +42,7 @@ private:
         , m_extra_columns(extra)
     {
         m_num_rows = m_extra_columns > 0 ? m_full_rows + 1 : m_full_rows;
-        m_eyes_in_row = (num_eyes - extra) / full_rows;
+        m_eyes_in_row = m_full_rows > 0 ? (num_eyes - m_extra_columns) / m_full_rows : m_extra_columns;
     }
 
     virtual void mousemove_event(GUI::MouseEvent&) override;
