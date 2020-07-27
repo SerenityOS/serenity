@@ -32,9 +32,17 @@
 int main(int argc, char* argv[])
 {
     int num_eyes = 2;
+    int max_in_row = 13;
+
+    // Alternatively, allow the user to ask for a grid.
+    int grid_rows = -1;
+    int grid_columns = -1;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(num_eyes, "Number of eyes", "num-eyes", 'n', "number");
+    args_parser.add_option(max_in_row, "Maximum number of eyes in a row", "max-in-row", 'm', "number");
+    args_parser.add_option(grid_rows, "Number of rows in grid (incompatible with --number)", "grid-rows", 'r', "number");
+    args_parser.add_option(grid_columns, "Number of columns in grid (incompatible with --number)", "grid-cols", 'c', "number");
     args_parser.parse(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath unix cpath wpath fattr thread", nullptr) < 0) {
@@ -49,12 +57,29 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    if ((grid_rows > 0) ^ (grid_columns > 0)) {
+        fprintf(stderr, "Expected either both or none of 'grid-rows' and 'grid-cols' to be passed.\n");
+        return 1;
+    }
+
+    int full_rows, extra_columns;
+
+    if (grid_rows > 0) {
+        full_rows = grid_rows;
+        extra_columns = 0;
+        num_eyes = grid_rows * grid_columns;
+        max_in_row = grid_columns;
+    } else {
+        full_rows = num_eyes / max_in_row;
+        extra_columns = num_eyes % max_in_row;
+    }
+
     auto window = GUI::Window::construct();
     window->set_title("Eyes");
-    window->set_rect(350, 270, 75 * num_eyes, 100);
+    window->set_rect(350, 270, 75 * (full_rows > 0 ? max_in_row : extra_columns), 100 * (full_rows + (extra_columns > 0 ? 1 : 0)));
     window->set_has_alpha_channel(true);
 
-    auto& eyes = window->set_main_widget<EyesWidget>(num_eyes);
+    auto& eyes = window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns);
     window->show();
     eyes.track_cursor_globally();
 

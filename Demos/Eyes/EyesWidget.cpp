@@ -57,16 +57,21 @@ void EyesWidget::paint_event(GUI::PaintEvent& event)
 
     painter.clear_rect(event.rect(), Gfx::Color());
 
-    for (int i = 0; i < m_num_eyes; i++)
-        render_eyeball(i, painter);
+    for (int i = 0; i < m_full_rows; i++) {
+        for (int j = 0; j < m_eyes_in_row; j++)
+            render_eyeball(i, j, painter);
+    }
+    for (int i = 0; i < m_extra_columns; ++i)
+        render_eyeball(m_full_rows, i, painter);
 }
 
-void EyesWidget::render_eyeball(int index, GUI::Painter& painter) const
+void EyesWidget::render_eyeball(int row, int column, GUI::Painter& painter) const
 {
-    auto eye_width = width() / m_num_eyes;
-    Gfx::IntRect bounds { index * eye_width, 0, eye_width, height() };
+    auto eye_width = width() / m_eyes_in_row;
+    auto eye_height = height() / m_num_rows;
+    Gfx::IntRect bounds { column * eye_width, row * eye_height, eye_width, eye_height };
     auto width_thickness = max(int(eye_width / 5.5), 1);
-    auto height_thickness = max(int(height() / 5.5), 1);
+    auto height_thickness = max(int(eye_height / 5.5), 1);
 
     bounds.shrink(int(eye_width / 12.5), 0);
     painter.fill_ellipse(bounds, palette().base_text());
@@ -103,6 +108,7 @@ Gfx::IntPoint EyesWidget::pupil_center(Gfx::IntRect& eyeball_bounds) const
 
     double max_distance_along_this_direction;
 
+    // clang-format off
     if (dx != 0 && abs(dx) >= abs(dy)) {
         double slope = dy / dx;
         double slope_squared = slope * slope;
@@ -120,6 +126,7 @@ Gfx::IntPoint EyesWidget::pupil_center(Gfx::IntRect& eyeball_bounds) const
     } else {
         ASSERT_NOT_REACHED();
     }
+    // clang-format on
 
     double scale = min(1.0, max_distance_along_this_direction / mouse_distance);
 
