@@ -316,6 +316,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$dbgputch(arg1);
     case SC_fchmod:
         return virt$fchmod(arg1, arg2);
+    case SC_accept:
+        return virt$accept(arg1, arg2, arg3);
+    case SC_setsockopt:
+        return virt$setsockopt(arg1);
     case SC_bind:
         return virt$bind(arg1, arg2, arg3);
     case SC_connect:
@@ -343,7 +347,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getrandom(arg1, arg2, arg3);
 
     default:
-        warn() << "Unimplemented syscall: " << Syscall::to_string((Syscall::Function)function);
+        dbg() << "Unimplemented syscall: " << Syscall::to_string((Syscall::Function)function);
         dump_backtrace();
         TODO();
     }
@@ -454,6 +458,36 @@ int Emulator::virt$dbgputstr(FlatPtr characters, int length)
 int Emulator::virt$fchmod(int fd, mode_t mode)
 {
     return syscall(SC_fchmod, fd, mode);
+}
+
+int Emulator::virt$setsockopt(FlatPtr params_addr)
+{
+    Syscall::SC_setsockopt_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    if (params.option == SO_RCVTIMEO) {
+        auto host_value_buffer = ByteBuffer::create_zeroed(params.value_size);
+        mmu().copy_from_vm(host_value_buffer.data(), (FlatPtr)params.value, params.value_size);
+        int rc = setsockopt(params.sockfd, params.level, SO_RCVTIMEO, host_value_buffer.data(), host_value_buffer.size());
+        if (rc < 0)
+            return -errno;
+        return rc;
+    }
+
+    TODO();
+}
+
+int Emulator::virt$accept(int sockfd, FlatPtr address, FlatPtr address_length)
+{
+    socklen_t host_address_length = 0;
+    mmu().copy_from_vm(&host_address_length, address_length, sizeof(host_address_length));
+    auto host_buffer = ByteBuffer::create_zeroed(host_address_length);
+    int rc = syscall(SC_accept, sockfd, host_buffer.data(), &host_address_length);
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm(address, host_buffer.data(), min((socklen_t)host_buffer.size(), host_address_length));
+    mmu().copy_to_vm(address_length, &host_address_length, sizeof(host_address_length));
+    return rc;
 }
 
 int Emulator::virt$bind(int sockfd, FlatPtr address, socklen_t address_length)
