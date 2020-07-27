@@ -32,6 +32,8 @@ namespace Web {
 
 class HTMLStyleElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLStyleElementWrapper;
+
     HTMLStyleElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLStyleElement() override;
 

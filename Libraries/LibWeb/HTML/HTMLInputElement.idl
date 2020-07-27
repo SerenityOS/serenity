@@ -1,0 +1,14 @@
+interface HTMLInputElement : HTMLElement {
+
+    [Reflect] attribute DOMString accept;
+    [Reflect] attribute DOMString alt;
+    [Reflect] attribute DOMString max;
+    [Reflect] attribute DOMString min;
+    [Reflect] attribute DOMString pattern;
+    [Reflect] attribute DOMString placeholder;
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString step;
+    [Reflect=dirname] attribute DOMString dirName;
+    [Reflect=value] attribute DOMString defaultValue;
+
+}

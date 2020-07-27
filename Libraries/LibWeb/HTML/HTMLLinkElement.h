@@ -35,6 +35,8 @@ class HTMLLinkElement final
     : public HTMLElement
     , public ResourceClient {
 public:
+    using WrapperType = Bindings::HTMLLinkElementWrapper;
+
     HTMLLinkElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLLinkElement() override;
 

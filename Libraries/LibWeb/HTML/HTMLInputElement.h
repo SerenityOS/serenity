@@ -32,6 +32,8 @@ namespace Web {
 
 class HTMLInputElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLInputElementWrapper;
+
     HTMLInputElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLInputElement() override;
 

@@ -1,0 +1,7 @@
+interface HTMLScriptElement : HTMLElement {
+
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString type;
+    [Reflect] attribute DOMString integrity;
+
+}

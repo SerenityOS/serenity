@@ -37,6 +37,8 @@ class LayoutDocument;
 
 class HTMLObjectElement final : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLObjectElementWrapper;
+
     HTMLObjectElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLObjectElement() override;
 

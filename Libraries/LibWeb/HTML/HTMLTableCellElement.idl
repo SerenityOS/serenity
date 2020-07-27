@@ -1,0 +1,6 @@
+interface HTMLTableCellElement : HTMLElement {
+
+    [Reflect] attribute DOMString headers;
+    [Reflect] attribute DOMString abbr;
+
+}

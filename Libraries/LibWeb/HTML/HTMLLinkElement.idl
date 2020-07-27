@@ -1,0 +1,12 @@
+interface HTMLLinkElement : HTMLElement {
+
+    [Reflect] attribute DOMString href;
+    [Reflect] attribute DOMString hreflang;
+    [Reflect] attribute DOMString integrity;
+    [Reflect] attribute DOMString media;
+    [Reflect] attribute DOMString rel;
+    [Reflect] attribute DOMString type;
+    [Reflect=imagesrcset] attribute DOMString imageSrcset;
+    [Reflect=imagesizes] attribute DOMString imageSizes;
+
+}
