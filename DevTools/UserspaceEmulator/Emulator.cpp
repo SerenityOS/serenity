@@ -559,10 +559,12 @@ int Emulator::virt$set_mmap_name(FlatPtr)
 
 int Emulator::virt$get_process_name(FlatPtr buffer, int size)
 {
-    if (size < 9)
-        return -ENAMETOOLONG;
-    mmu().copy_to_vm(buffer, "EMULATED", 9);
-    return 0;
+    if (size < 0)
+        return -EINVAL;
+    auto host_buffer = ByteBuffer::create_zeroed((size_t)size);
+    int rc = syscall(SC_get_process_name, host_buffer.data(), host_buffer.size());
+    mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
+    return rc;
 }
 
 int Emulator::virt$lseek(int fd, off_t offset, int whence)
