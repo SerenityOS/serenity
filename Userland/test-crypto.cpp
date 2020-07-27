@@ -1560,7 +1560,7 @@ void bigint_import_export()
         u8 target_buffer[128];
         AK::fill_with_random(random_bytes, 128);
         auto encoded = Crypto::UnsignedBigInteger::import_data(random_bytes, 128);
-        encoded.export_data(target_buffer, 128);
+        encoded.export_data({ target_buffer, 128 });
         if (memcmp(target_buffer, random_bytes, 128) != 0)
             FAIL(Could not roundtrip);
         else
@@ -1570,7 +1570,7 @@ void bigint_import_export()
         I_TEST((BigInteger | BigEndian Encode / Decode roundtrip));
         u8 target_buffer[128];
         auto encoded = "12345678901234567890"_bigint;
-        auto size = encoded.export_data(target_buffer, 128);
+        auto size = encoded.export_data({ target_buffer, 128 });
         auto decoded = Crypto::UnsignedBigInteger::import_data(target_buffer, size);
         if (encoded != decoded)
             FAIL(Could not roundtrip);
@@ -1590,7 +1590,7 @@ void bigint_import_export()
         I_TEST((BigInteger | BigEndian Export));
         auto number = "448378203247"_bigint;
         char exported[8] { 0 };
-        auto exported_length = number.export_data((u8*)exported, 8);
+        auto exported_length = number.export_data({ exported, 8 });
         if (exported_length == 5 && memcmp(exported + 3, "hello", 5) == 0) {
             PASS;
         } else {
@@ -1877,7 +1877,7 @@ void bigint_signed_import_export()
         random_bytes[0] = 1;
         AK::fill_with_random(random_bytes + 1, 128);
         auto encoded = Crypto::SignedBigInteger::import_data(random_bytes, 129);
-        encoded.export_data(target_buffer, 129);
+        encoded.export_data({ target_buffer, 129 });
         if (memcmp(target_buffer, random_bytes, 129) != 0)
             FAIL(Could not roundtrip);
         else
@@ -1887,7 +1887,7 @@ void bigint_signed_import_export()
         I_TEST((Signed BigInteger | BigEndian Encode / Decode roundtrip));
         u8 target_buffer[128];
         auto encoded = "-12345678901234567890"_sbigint;
-        auto size = encoded.export_data(target_buffer, 128);
+        auto size = encoded.export_data({ target_buffer, 128 });
         auto decoded = Crypto::SignedBigInteger::import_data(target_buffer, size);
         if (encoded != decoded)
             FAIL(Could not roundtrip);

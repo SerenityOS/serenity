@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Span.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 namespace Crypto {
@@ -66,13 +67,7 @@ public:
     static SignedBigInteger import_data(const AK::StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
     static SignedBigInteger import_data(const u8* ptr, size_t length);
 
-    size_t export_data(AK::ByteBuffer& data) const;
-    size_t export_data(u8* ptr, size_t length) const
-    {
-        // Note: ByteBuffer::wrap() does a const_cast!
-        auto buffer = ByteBuffer::wrap(ptr, length);
-        return export_data(buffer);
-    }
+    size_t export_data(Bytes) const;
 
     static SignedBigInteger from_base10(StringView str);
     String to_base10() const;

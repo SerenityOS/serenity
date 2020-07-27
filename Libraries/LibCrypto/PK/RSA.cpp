@@ -125,7 +125,7 @@ void RSA::encrypt(const ByteBuffer& in, ByteBuffer& out)
         return;
     }
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
-    auto size = exp.export_data(out);
+    auto size = exp.export_data(out.span());
     // FIXME: We should probably not do this...
     if (size != out.size())
         out = out.slice(out.size() - size, size);
@@ -137,7 +137,7 @@ void RSA::decrypt(const ByteBuffer& in, ByteBuffer& out)
 
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_private_key.private_exponent(), m_private_key.modulus());
-    auto size = exp.export_data(out);
+    auto size = exp.export_data(out.span());
 
     auto align = m_private_key.length();
     auto aligned_size = (size + align - 1) / align * align;
@@ -151,7 +151,7 @@ void RSA::sign(const ByteBuffer& in, ByteBuffer& out)
 {
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_private_key.private_exponent(), m_private_key.modulus());
-    auto size = exp.export_data(out);
+    auto size = exp.export_data(out.span());
     out = out.slice(out.size() - size, size);
 }
 
@@ -159,7 +159,7 @@ void RSA::verify(const ByteBuffer& in, ByteBuffer& out)
 {
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
-    auto size = exp.export_data(out);
+    auto size = exp.export_data(out.span());
     out = out.slice(out.size() - size, size);
 }
 
