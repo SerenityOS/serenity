@@ -150,6 +150,12 @@ public:
         return { this->m_values + start, size };
     }
 
+    ALWAYS_INLINE T* offset(size_t start) const
+    {
+        ASSERT(start < this->m_size);
+        return this->m_values + start;
+    }
+
     ALWAYS_INLINE const T& at(size_t index) const
     {
         ASSERT(index < this->m_size);
