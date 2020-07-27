@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
@@ -119,7 +120,7 @@ class RSA : public PKSystem<RSAPrivateKey<IntegerType>, RSAPublicKey<IntegerType
 public:
     using KeyPairType = RSAKeyPair<PublicKeyType, PrivateKeyType>;
 
-    static KeyPairType parse_rsa_key(const ByteBuffer&);
+    static KeyPairType parse_rsa_key(ReadonlyBytes);
     static KeyPairType generate_key_pair(size_t bits = 256)
     {
         IntegerType e { 65537 }; // :P
