@@ -294,15 +294,17 @@ Vector<CppToken> CppLexer::lex()
             }
             return 2 + hex_digits;
         }
-        case 'u': {
+        case 'u':
+        case 'U': {
             bool is_unicode = true;
-            for (size_t i = 0; i < 4; ++i) {
+            size_t number_of_digits = peek(1) == 'u' ? 4 : 8;
+            for (size_t i = 0; i < number_of_digits; ++i) {
                 if (!isxdigit(peek(2 + i))) {
                     is_unicode = false;
                     break;
                 }
             }
-            return is_unicode ? 6 : 0;
+            return is_unicode ? 2 + number_of_digits : 0;
         }
         default:
             return 0;
