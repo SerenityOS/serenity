@@ -163,11 +163,15 @@ void RSA::verify(const ByteBuffer& in, ByteBuffer& out)
     out = out.slice(out.size() - size, size);
 }
 
-void RSA::import_private_key(const ByteBuffer& buffer, bool pem)
+void RSA::import_private_key(ReadonlyBytes bytes, bool pem)
 {
-    // so gods help me, I hate DER
-    auto decoded_buffer = pem ? decode_pem(buffer.span()) : buffer;
-    auto key = parse_rsa_key(decoded_buffer.span());
+    ByteBuffer buffer;
+    if (pem) {
+        buffer = decode_pem(bytes);
+        bytes = buffer.span();
+    }
+
+    auto key = parse_rsa_key(bytes);
     if (!key.private_key.length()) {
         dbg() << "We expected to see a private key, but we found none";
         ASSERT_NOT_REACHED();
@@ -175,11 +179,15 @@ void RSA::import_private_key(const ByteBuffer& buffer, bool pem)
     m_private_key = key.private_key;
 }
 
-void RSA::import_public_key(const ByteBuffer& buffer, bool pem)
+void RSA::import_public_key(ReadonlyBytes bytes, bool pem)
 {
-    // so gods help me, I hate DER
-    auto decoded_buffer = pem ? decode_pem(buffer.span()) : buffer;
-    auto key = parse_rsa_key(decoded_buffer.span());
+    ByteBuffer buffer;
+    if (pem) {
+        buffer = decode_pem(bytes);
+        bytes = buffer.span();
+    }
+
+    auto key = parse_rsa_key(bytes);
     if (!key.public_key.length()) {
         dbg() << "We expected to see a public key, but we found none";
         ASSERT_NOT_REACHED();
