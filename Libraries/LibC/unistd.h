@@ -62,7 +62,7 @@ void sysbeep();
 int gettid();
 int donate(int tid);
 int set_process_icon(int icon_id);
-inline int getpagesize() { return 4096; }
+int getpagesize();
 pid_t fork();
 int execv(const char* path, char* const argv[]);
 int execve(const char* filename, char* const argv[], char* const envp[]);
