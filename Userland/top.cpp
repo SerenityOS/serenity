@@ -211,6 +211,7 @@ int main(int, char**)
             return p2->times_scheduled_since_prev < p1->times_scheduled_since_prev;
         });
 
+        int row = 0;
         for (auto* thread : threads) {
             int nprinted = printf("%6d %3d %2u   %-9s  %-10s  %6zu  %6zu  %2u.%1u  ",
                 thread->pid,
@@ -226,6 +227,9 @@ int main(int, char**)
             int remaining = g_window_size.ws_col - nprinted;
             fwrite(thread->name.characters(), 1, max(0, min(remaining, (int)thread->name.length())), stdout);
             putchar('\n');
+
+            if (++row >= (g_window_size.ws_row - 2))
+                break;
         }
         threads.clear_with_capacity();
         prev = move(current);
