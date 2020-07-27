@@ -59,6 +59,16 @@ public:
             return (m_shadow & 0x01) != 0x01;
     }
 
+    void set_initialized()
+    {
+        if constexpr (sizeof(T) == 4)
+            m_shadow = 0x01010101;
+        if constexpr (sizeof(T) == 2)
+            m_shadow = 0x0101;
+        if constexpr (sizeof(T) == 1)
+            m_shadow = 0x01;
+    }
+
 private:
     T m_value;
     T m_shadow;
