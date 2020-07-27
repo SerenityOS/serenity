@@ -32,87 +32,17 @@
 
 namespace AK {
 
+namespace Detail {
+
 template<typename T>
 class Span {
 public:
-    using Iterator = T*;
-    using ConstIterator = const T*;
-
-    static_assert(!IsPointer<T>::value);
-
     ALWAYS_INLINE Span() = default;
+
     ALWAYS_INLINE Span(T* values, size_t size)
         : m_values(values)
         , m_size(size)
     {
-        ASSERT(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)values, size * sizeof(T)));
-    }
-    ALWAYS_INLINE Span(const Span& other)
-        : m_values(other.m_values)
-        , m_size(other.m_size)
-    {
-    }
-
-    ALWAYS_INLINE const T* data() const { return m_values; }
-    ALWAYS_INLINE T* data() { return m_values; }
-
-    ALWAYS_INLINE ConstIterator begin() const
-    {
-        return m_values;
-    }
-    ALWAYS_INLINE ConstIterator end() const
-    {
-        return begin() + m_size;
-    }
-
-    ALWAYS_INLINE Iterator begin()
-    {
-        return m_values;
-    }
-    ALWAYS_INLINE Iterator end()
-    {
-        return begin() + m_size;
-    }
-
-    ALWAYS_INLINE size_t size() const { return m_size; }
-
-    ALWAYS_INLINE bool is_empty() const { return m_size == 0; }
-
-    ALWAYS_INLINE Span<T> subspan(size_t start, size_t size) const
-    {
-        ASSERT(start + size <= m_size);
-        return { m_values + start, size };
-    }
-
-    ALWAYS_INLINE const T& at(size_t index) const
-    {
-        ASSERT(index < m_size);
-        return m_values[index];
-    }
-    ALWAYS_INLINE T& at(size_t index)
-    {
-        ASSERT(index < m_size);
-        return m_values[index];
-    }
-
-    ALWAYS_INLINE T& operator[](size_t index) const
-    {
-        return m_values[index];
-    }
-    ALWAYS_INLINE T& operator[](size_t index)
-    {
-        return m_values[index];
-    }
-
-    ALWAYS_INLINE T& operator=(const T& other)
-    {
-        m_size = other.m_size;
-        m_values = other.m_values;
-    }
-
-    ALWAYS_INLINE operator Span<const T>() const
-    {
-        return { data(), size() };
     }
 
 protected:
@@ -120,9 +50,135 @@ protected:
     size_t m_size { 0 };
 };
 
+template<>
+class Span<u8> {
+public:
+    ALWAYS_INLINE Span() = default;
+
+    ALWAYS_INLINE Span(u8* values, size_t size)
+        : m_values(values)
+        , m_size(size)
+    {
+    }
+    ALWAYS_INLINE Span(void* values, size_t size)
+        : m_values(reinterpret_cast<u8*>(values))
+        , m_size(size)
+    {
+    }
+
+protected:
+    u8* m_values { nullptr };
+    size_t m_size { 0 };
+};
+
+template<>
+class Span<const u8> {
+public:
+    ALWAYS_INLINE Span() = default;
+
+    ALWAYS_INLINE Span(const u8* values, size_t size)
+        : m_values(values)
+        , m_size(size)
+    {
+    }
+    ALWAYS_INLINE Span(const void* values, size_t size)
+        : m_values(reinterpret_cast<const u8*>(values))
+        , m_size(size)
+    {
+    }
+    ALWAYS_INLINE Span(const char* values, size_t size)
+        : m_values(reinterpret_cast<const u8*>(values))
+        , m_size(size)
+    {
+    }
+
+protected:
+    const u8* m_values { nullptr };
+    size_t m_size { 0 };
+};
+
+}
+
+template<typename T>
+class Span : public Detail::Span<T> {
+public:
+    using Iterator = T*;
+    using ConstIterator = const T*;
+
+    static_assert(!IsPointer<T>::value);
+
+    using Detail::Span<T>::Span;
+
+    ALWAYS_INLINE Span(const Span& other)
+        : Span(other.m_values, other.m_size)
+    {
+    }
+
+    ALWAYS_INLINE const T* data() const { return this->m_values; }
+    ALWAYS_INLINE T* data() { return this->m_values; }
+
+    ALWAYS_INLINE ConstIterator begin() const
+    {
+        return this->m_values;
+    }
+    ALWAYS_INLINE ConstIterator end() const
+    {
+        return begin() + size();
+    }
+
+    ALWAYS_INLINE Iterator begin()
+    {
+        return this->m_values;
+    }
+    ALWAYS_INLINE Iterator end()
+    {
+        return begin() + size();
+    }
+
+    ALWAYS_INLINE size_t size() const { return this->m_size; }
+
+    ALWAYS_INLINE bool is_empty() const { return this->m_size == 0; }
+
+    ALWAYS_INLINE Span<T> subspan(size_t start, size_t size) const
+    {
+        ASSERT(start + size <= this->m_size);
+        return { this->m_values + start, size };
+    }
+
+    ALWAYS_INLINE const T& at(size_t index) const
+    {
+        ASSERT(index < this->m_size);
+        return this->m_values[index];
+    }
+    ALWAYS_INLINE T& at(size_t index)
+    {
+        ASSERT(index < this->m_size);
+        return this->m_values[index];
+    }
+
+    ALWAYS_INLINE T& operator[](size_t index) const
+    {
+        return this->m_values[index];
+    }
+    ALWAYS_INLINE T& operator[](size_t index)
+    {
+        return this->m_values[index];
+    }
+
+    ALWAYS_INLINE T& operator=(const T& other)
+    {
+        this->m_size = other.m_size;
+        this->m_values = other.m_values;
+    }
+
+    ALWAYS_INLINE operator Span<const T>() const
+    {
+        return { data(), size() };
+    }
+};
+
 using ReadonlyBytes = Span<const u8>;
 using Bytes = Span<u8>;
-
 }
 
 using AK::Bytes;

@@ -131,4 +131,17 @@ TEST_CASE(can_subspan_as_intended)
     EXPECT_EQ(subspan[1], 5);
 }
 
+TEST_CASE(span_from_void_pointer)
+{
+    int value = 0;
+    [[maybe_unused]] Bytes bytes0 { reinterpret_cast<void*>(value), 4 };
+    [[maybe_unused]] ReadonlyBytes bytes1 { reinterpret_cast<const void*>(value), 4 };
+}
+
+TEST_CASE(span_from_c_string)
+{
+    const char* str = "Serenity";
+    [[maybe_unused]] ReadonlyBytes bytes { str, strlen(str) };
+}
+
 TEST_MAIN(Span)
