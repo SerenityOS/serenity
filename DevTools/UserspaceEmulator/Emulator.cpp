@@ -349,7 +349,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$clock_gettime(arg1, arg2);
     case SC_getrandom:
         return virt$getrandom(arg1, arg2, arg3);
-
+    case SC_fork:
+        return virt$fork();
     default:
         dbg() << "Unimplemented syscall: " << Syscall::to_string((Syscall::Function)function);
         dump_backtrace();
@@ -864,6 +865,11 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
     dbg() << "Unsupported ioctl: " << request;
     dump_backtrace();
     TODO();
+}
+
+int Emulator::virt$fork()
+{
+    return fork();
 }
 
 }

@@ -70,6 +70,7 @@ private:
 
     void setup_stack(const Vector<String>& arguments, const Vector<String>& environment);
 
+    int virt$fork();
     int virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t);
     int virt$ioctl(int fd, unsigned, FlatPtr);
     int virt$usleep(useconds_t);
