@@ -28,6 +28,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
+#include <AK/Span.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -58,13 +59,7 @@ public:
         return UnsignedBigInteger(ptr, length);
     }
 
-    size_t export_data(AK::ByteBuffer& data) const;
-    size_t export_data(u8* ptr, size_t length) const
-    {
-        // Note: ByteBuffer::wrap() does a const_cast!
-        auto buffer = ByteBuffer::wrap(ptr, length);
-        return export_data(buffer);
-    }
+    size_t export_data(Bytes) const;
 
     static UnsignedBigInteger from_base10(const String& str);
     String to_base10() const;

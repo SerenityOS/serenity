@@ -55,7 +55,7 @@ UnsignedBigInteger UnsignedBigInteger::create_invalid()
     return invalid;
 }
 
-size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data) const
+size_t UnsignedBigInteger::export_data(Bytes data) const
 {
     size_t word_count = trimmed_length();
     size_t out = 0;
