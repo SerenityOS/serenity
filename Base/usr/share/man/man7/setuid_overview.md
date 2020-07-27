@@ -12,7 +12,7 @@ In addition to the access permissions bits, executables may have the "Set User I
 
 The motivation behind SUID binaries is that they allow users to do tasks that would normally require elevated permissions, without having to give users these permissions fully.
 
-For example, `/usr/ping` has the Set User ID bit set and is owned by user root in group root. So if any process executes `/usr/ping`, it will run as root, which means it will be able to send network packets, even if the current process doesn't normally have network access.
+For example, `/bin/ping` has the Set User ID bit set and is owned by user root in group root. So if any process executes `/bin/ping`, it will run as root, which means it will be able to send network packets, even if the current process doesn't normally have network access.
 
 For another example, many other Unix systems contain a utility `passwd` that changes the password of the current user. To store the password, it has to write to `/etc/shadow` -- but the current user is not supposed to have write access to `/etc/shadow` so that they cannot change passwords of other users. The solution is to make `passwd` a SUID binary. (SerenityOS currently doesn't have support for user passwords.)
 
