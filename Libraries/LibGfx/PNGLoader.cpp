@@ -364,7 +364,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
         } else if (context.bit_depth == 16) {
             unpack_grayscale_without_alpha<u16>(context);
         } else if (context.bit_depth == 1 || context.bit_depth == 2 || context.bit_depth == 4) {
-            auto bit_depth_squared = context.bit_depth = context.bit_depth;
+            auto bit_depth_squared = context.bit_depth * context.bit_depth;
             auto pixels_per_byte = 8 / context.bit_depth;
             auto mask = (1 << context.bit_depth) - 1;
             for (int y = 0; y < context.height; ++y) {
