@@ -144,7 +144,7 @@ RefPtr<AST::Node> Parser::parse_toplevel()
 
 RefPtr<AST::Node> Parser::parse_sequence()
 {
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n;")); // ignore whitespaces or terminators without effect.
 
     auto rule_start = push_start();
     auto var_decls = parse_variable_decls();
