@@ -33,6 +33,8 @@ namespace Web {
 
 class HTMLScriptElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLScriptElementWrapper;
+
     HTMLScriptElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLScriptElement() override;
 

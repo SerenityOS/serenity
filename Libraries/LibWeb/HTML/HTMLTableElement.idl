@@ -1,0 +1,5 @@
+interface HTMLTableElement : HTMLElement {
+
+
+
+}

@@ -33,6 +33,8 @@ namespace Web {
 
 class HTMLFormElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLFormElementWrapper;
+
     HTMLFormElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLFormElement() override;
 

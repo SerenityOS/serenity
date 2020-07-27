@@ -1,0 +1,10 @@
+interface HTMLAnchorElement : HTMLElement {
+
+    [Reflect] attribute DOMString target;
+    [Reflect] attribute DOMString download;
+    [Reflect] attribute DOMString ping;
+    [Reflect] attribute DOMString rel;
+    [Reflect] attribute DOMString hreflang;
+    [Reflect] attribute DOMString type;
+
+}

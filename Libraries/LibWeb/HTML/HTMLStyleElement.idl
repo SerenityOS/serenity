@@ -1,0 +1,5 @@
+interface HTMLStyleElement : HTMLElement {
+
+    [Reflect] attribute DOMString media;
+
+}

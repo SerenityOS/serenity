@@ -32,6 +32,8 @@ namespace Web {
 
 class HTMLAnchorElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLAnchorElementWrapper;
+
     HTMLAnchorElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLAnchorElement() override;
 

@@ -1,0 +1,12 @@
+interface HTMLIFrameElement : HTMLElement {
+
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString srcdoc;
+    [Reflect] attribute DOMString name;
+    [Reflect] attribute DOMString allow;
+    [Reflect] attribute DOMString width;
+    [Reflect] attribute DOMString height;
+
+    readonly attribute Document? contentDocument;
+
+}
