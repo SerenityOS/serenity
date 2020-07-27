@@ -70,4 +70,30 @@ void MimeData::set_text(const String& text)
     set_data("text/plain", text.to_byte_buffer());
 }
 
+String guess_mime_type_based_on_filename(const URL& url)
+{
+    String lowercase_url = url.path().to_lowercase();
+    if (lowercase_url.ends_with(".pbm"))
+        return "image/x‑portable‑bitmap";
+    if (url.path().ends_with(".pgm"))
+        return "image/x‑portable‑graymap";
+    if (url.path().ends_with(".png"))
+        return "image/png";
+    if (lowercase_url.ends_with(".ppm"))
+        return "image/x‑portable‑pixmap";
+    if (lowercase_url.ends_with(".gif"))
+        return "image/gif";
+    if (lowercase_url.ends_with(".bmp"))
+        return "image/bmp";
+    if (lowercase_url.ends_with(".jpg") || lowercase_url.ends_with(".jpeg"))
+        return "image/jpeg";
+    if (lowercase_url.ends_with(".md"))
+        return "text/markdown";
+    if (lowercase_url.ends_with(".html") || lowercase_url.ends_with(".htm"))
+        return "text/html";
+    if (lowercase_url.ends_with("/"))
+        return "text/html";
+    return "text/plain";
+}
+
 }
