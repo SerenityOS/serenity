@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <LibCore/MimeData.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Loader/Resource.h>
 
@@ -83,32 +84,6 @@ String mime_type_from_content_type(const String& content_type)
     return content_type;
 }
 
-static String guess_mime_type_based_on_filename(const URL& url)
-{
-    String lowercase_url = url.path().to_lowercase();
-    if (lowercase_url.ends_with(".pbm"))
-        return "image/x‑portable‑bitmap";
-    if (url.path().ends_with(".pgm"))
-        return "image/x‑portable‑graymap";
-    if (url.path().ends_with(".png"))
-        return "image/png";
-    if (lowercase_url.ends_with(".ppm"))
-        return "image/x‑portable‑pixmap";
-    if (lowercase_url.ends_with(".gif"))
-        return "image/gif";
-    if (lowercase_url.ends_with(".bmp"))
-        return "image/bmp";
-    if (lowercase_url.ends_with(".jpg") || lowercase_url.ends_with(".jpeg"))
-        return "image/jpeg";
-    if (lowercase_url.ends_with(".md"))
-        return "text/markdown";
-    if (lowercase_url.ends_with(".html") || lowercase_url.ends_with(".htm"))
-        return "text/html";
-    if (lowercase_url.ends_with("/"))
-        return "text/html";
-    return "text/plain";
-}
-
 void Resource::did_load(Badge<ResourceLoader>, const ByteBuffer& data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers)
 {
     ASSERT(!m_loaded);
@@ -134,7 +109,7 @@ void Resource::did_load(Badge<ResourceLoader>, const ByteBuffer& data, const Has
         dbg() << "No Content-Type header to go on! Guessing based on filename...";
 #endif
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
-        m_mime_type = guess_mime_type_based_on_filename(url());
+        m_mime_type = Core::guess_mime_type_based_on_filename(url());
     }
 
     for_each_client([](auto& client) {
