@@ -113,10 +113,10 @@ TEST_CASE(can_subspan_whole_span)
     u8 buffer[16];
     Bytes bytes { buffer, 16 };
 
-    Bytes subspan = bytes.subspan(0, 16);
+    Bytes slice = bytes.slice(0, 16);
 
-    EXPECT_EQ(subspan.data(), buffer);
-    EXPECT_EQ(subspan.size(), 16u);
+    EXPECT_EQ(slice.data(), buffer);
+    EXPECT_EQ(slice.size(), 16u);
 }
 
 TEST_CASE(can_subspan_as_intended)
@@ -124,11 +124,11 @@ TEST_CASE(can_subspan_as_intended)
     const u16 buffer[8] { 1, 2, 3, 4, 5, 6, 7, 8 };
 
     Span<const u16> span { buffer, 8 };
-    auto subspan = span.subspan(3, 2);
+    auto slice = span.slice(3, 2);
 
-    EXPECT_EQ(subspan.size(), 2u);
-    EXPECT_EQ(subspan[0], 4);
-    EXPECT_EQ(subspan[1], 5);
+    EXPECT_EQ(slice.size(), 2u);
+    EXPECT_EQ(slice[0], 4);
+    EXPECT_EQ(slice[1], 5);
 }
 
 TEST_CASE(span_from_void_pointer)
