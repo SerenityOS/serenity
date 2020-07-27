@@ -25,6 +25,7 @@
  */
 
 #include "Client.h"
+#include <AK/URLParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DateTime.h>
@@ -172,8 +173,7 @@ void Client::handle_directory_listing(const String& requested_path, const String
     while (dt.has_next()) {
         auto name = dt.next_path();
         builder.append("<a href=\"");
-        // FIXME: urlencode
-        builder.append(name);
+        builder.append(urlencode(name));
         builder.append("\">");
         builder.append(escape_html_entities(name));
         builder.append("</a>");
