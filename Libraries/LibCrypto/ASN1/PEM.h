@@ -26,12 +26,13 @@
 
 #pragma once
 
+#include <AK/Span.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
 
 namespace Crypto {
 
-static ByteBuffer decode_pem(const ByteBuffer& data_in, size_t cert_index = 0)
+static ByteBuffer decode_pem(ReadonlyBytes data_in, size_t cert_index = 0)
 {
     size_t i { 0 };
     size_t start_at { 0 };
@@ -61,7 +62,7 @@ static ByteBuffer decode_pem(const ByteBuffer& data_in, size_t cert_index = 0)
                     cert_index--;
                     start_at = 0;
                 } else {
-                    idx = decode_b64(data_in.offset_pointer(start_at), end_idx - start_at, output);
+                    idx = decode_b64(data_in.offset(start_at), end_idx - start_at, output);
                     break;
                 }
             } else
