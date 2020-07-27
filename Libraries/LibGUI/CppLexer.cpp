@@ -308,6 +308,22 @@ Vector<CppToken> CppLexer::lex()
         }
     };
 
+    auto match_string_prefix = [&](char quote) -> size_t {
+        if (peek() == quote)
+            return 1;
+        if (peek() == 'L' && peek(1) == quote)
+            return 2;
+        if (peek() == 'u') {
+            if (peek(1) == quote)
+                return 2;
+            if (peek(1) == '8' && peek(2) == quote)
+                return 3;
+        }
+        if (peek() == 'U' && peek(1) == quote)
+            return 2;
+        return 0;
+    };
+
     while (m_index < m_input.length()) {
         auto ch = peek();
         if (isspace(ch)) {
@@ -597,13 +613,13 @@ Vector<CppToken> CppLexer::lex()
             emit_token_equals(CppToken::Type::Slash, CppToken::Type::SlashEquals);
             continue;
         }
-        if (ch == '"') {
+        if (size_t prefix = match_string_prefix('"'); prefix > 0) {
             begin_token();
-            consume();
+            for (size_t i = 0; i < prefix; ++i)
+                consume();
             while (peek()) {
                 if (peek() == '\\') {
-                    size_t escape = match_escape_sequence();
-                    if (escape > 0) {
+                    if (size_t escape = match_escape_sequence(); escape > 0) {
                         commit_token(CppToken::Type::DoubleQuotedString);
                         begin_token();
                         for (size_t i = 0; i < escape; ++i)
@@ -620,13 +636,13 @@ Vector<CppToken> CppLexer::lex()
             commit_token(CppToken::Type::DoubleQuotedString);
             continue;
         }
-        if (ch == '\'') {
+        if (size_t prefix = match_string_prefix('\''); prefix > 0) {
             begin_token();
-            consume();
+            for (size_t i = 0; i < prefix; ++i)
+                consume();
             while (peek()) {
                 if (peek() == '\\') {
-                    size_t escape = match_escape_sequence();
-                    if (escape > 0) {
+                    if (size_t escape = match_escape_sequence(); escape > 0) {
                         commit_token(CppToken::Type::SingleQuotedString);
                         begin_token();
                         for (size_t i = 0; i < escape; ++i)
