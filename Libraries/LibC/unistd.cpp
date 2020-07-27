@@ -683,6 +683,12 @@ int get_process_name(char* buffer, int buffer_size)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int set_process_name(const char* name, size_t name_length)
+{
+    int rc = syscall(SC_set_process_name, name, name_length);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int chroot(const char* path)
 {
     return chroot_with_mount_flags(path, -1);

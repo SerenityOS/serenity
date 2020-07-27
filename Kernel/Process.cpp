@@ -4489,6 +4489,18 @@ int Process::sys$get_process_name(char* buffer, int buffer_size)
     return 0;
 }
 
+int Process::sys$set_process_name(const char* user_name, size_t user_name_length)
+{
+    REQUIRE_PROMISE(proc);
+    if (user_name_length > 256)
+        return -ENAMETOOLONG;
+    auto name = validate_and_copy_string_from_user(user_name, user_name_length);
+    if (name.is_null())
+        return -EFAULT;
+    m_name = move(name);
+    return 0;
+}
+
 // We don't use the flag yet, but we could use it for distinguishing
 // random source like Linux, unlike the OpenBSD equivalent. However, if we
 // do, we should be able of the caveats that Linux has dealt with.
