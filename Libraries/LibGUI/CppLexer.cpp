@@ -636,6 +636,28 @@ Vector<CppToken> CppLexer::lex()
             commit_token(CppToken::Type::DoubleQuotedString);
             continue;
         }
+        if (size_t prefix = match_string_prefix('R'); prefix > 0 && peek(prefix) == '"') {
+            begin_token();
+            for (size_t i = 0; i < prefix + 1; ++i)
+                consume();
+            size_t prefix_start = m_index;
+            while (peek() && peek() != '(')
+                consume();
+            StringView prefix_string = m_input.substring_view(prefix_start, m_index - prefix_start);
+            while (peek()) {
+                if (consume() == '"') {
+                    ASSERT(m_index >= prefix_string.length() + 2);
+                    ASSERT(m_input[m_index - 1] == '"');
+                    if (m_input[m_index - 1 - prefix_string.length() - 1] == ')') {
+                        StringView suffix_string = m_input.substring_view(m_index - 1 - prefix_string.length(), prefix_string.length());
+                        if (prefix_string == suffix_string)
+                            break;
+                    }
+                }
+            }
+            commit_token(CppToken::Type::DoubleQuotedString);
+            continue;
+        }
         if (size_t prefix = match_string_prefix('\''); prefix > 0) {
             begin_token();
             for (size_t i = 0; i < prefix; ++i)
