@@ -26,11 +26,15 @@
 
 #include "Emulator.h"
 #include "SoftCPU.h"
+#include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <AK/MappedFile.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibELF/Loader.h>
 #include <getopt.h>
+#include <pthread.h>
+#include <string.h>
 
 int main(int argc, char** argv, char** env)
 {
@@ -64,5 +68,17 @@ int main(int argc, char** argv, char** env)
     if (!emulator.load_elf())
         return 1;
 
+    StringBuilder builder;
+    builder.append("(UE) ");
+    builder.append(LexicalPath(arguments[0]).basename());
+    if (set_process_name(builder.string_view().characters_without_null_termination(), builder.string_view().length()) < 0) {
+        perror("set_process_name");
+        return 1;
+    }
+    int rc = pthread_setname_np(pthread_self(), builder.to_string().characters());
+    if (rc != 0) {
+        fprintf(stderr, "pthread_setname_np: %s\n", strerror(rc));
+        return 1;
+    }
     return emulator.exec();
 }
