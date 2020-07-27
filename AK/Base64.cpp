@@ -86,7 +86,7 @@ ByteBuffer decode_base64(const StringView& input)
     return ByteBuffer::copy(output.data(), output.size());
 }
 
-String encode_base64(const ByteBuffer& input)
+String encode_base64(ReadonlyBytes input)
 {
     StringBuilder output;
 
