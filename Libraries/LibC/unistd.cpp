@@ -47,7 +47,7 @@
 extern "C" {
 
 static __thread int s_cached_tid = 0;
-static __thread int s_cached_pid = 0;
+static int s_cached_pid = 0;
 
 int chown(const char* pathname, uid_t uid, gid_t gid)
 {
