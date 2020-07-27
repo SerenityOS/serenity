@@ -287,11 +287,8 @@ Vector<CppToken> CppLexer::lex()
         }
         case 'x': {
             size_t hex_digits = 0;
-            for (size_t i = 0; i < 2; ++i) {
-                if (!isxdigit(peek(2 + i)))
-                    break;
+            while (isxdigit(peek(2 + hex_digits)))
                 ++hex_digits;
-            }
             return 2 + hex_digits;
         }
         case 'u':
