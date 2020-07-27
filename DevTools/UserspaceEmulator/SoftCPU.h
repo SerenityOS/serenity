@@ -950,7 +950,7 @@ private:
     void generic_RM16_imm8(Op, const X86::Instruction&);
     template<bool update_dest, typename Op>
     void generic_RM16_unsigned_imm8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_RM16_reg16(Op, const X86::Instruction&);
     template<bool update_dest, typename Op>
     void generic_RM32_imm32(Op, const X86::Instruction&);
@@ -958,17 +958,17 @@ private:
     void generic_RM32_imm8(Op, const X86::Instruction&);
     template<bool update_dest, typename Op>
     void generic_RM32_unsigned_imm8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_RM32_reg32(Op, const X86::Instruction&);
     template<bool update_dest, typename Op>
     void generic_RM8_imm8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_RM8_reg8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_reg16_RM16(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_reg32_RM32(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_reg8_RM8(Op, const X86::Instruction&);
 
     template<typename Op>
