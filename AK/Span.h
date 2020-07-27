@@ -109,6 +109,11 @@ public:
 
     using Detail::Span<T>::Span;
 
+    ALWAYS_INLINE Span(std::nullptr_t)
+        : Span()
+    {
+    }
+
     ALWAYS_INLINE Span(const Span& other)
         : Span(other.m_values, other.m_size)
     {
