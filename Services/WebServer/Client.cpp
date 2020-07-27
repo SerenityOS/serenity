@@ -25,12 +25,13 @@
  */
 
 #include "Client.h"
-#include <AK/URLParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
+#include <AK/URLParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -122,15 +123,17 @@ void Client::handle_request(ByteBuffer raw_request)
         return;
     }
 
-    send_response(file->read_all(), request);
+    send_response(file->read_all(), request, Core::guess_mime_type_based_on_filename(request.url()));
 }
 
-void Client::send_response(StringView response, const HTTP::HttpRequest& request)
+void Client::send_response(StringView response, const HTTP::HttpRequest& request, const String& content_type)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
     builder.append("Server: WebServer (SerenityOS)\r\n");
-    builder.append("Content-Type: text/html\r\n");
+    builder.append("Content-Type: ");
+    builder.append(content_type);
+    builder.append("\r\n");
     builder.append("\r\n");
 
     m_socket->write(builder.to_string());
@@ -201,7 +204,7 @@ void Client::handle_directory_listing(const String& requested_path, const String
     builder.append("</body>\n");
     builder.append("</html>\n");
 
-    send_response(builder.to_string(), request);
+    send_response(builder.to_string(), request, "text/html");
 }
 
 void Client::send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest& request)
