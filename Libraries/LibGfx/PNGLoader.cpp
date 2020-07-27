@@ -364,6 +364,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
         } else if (context.bit_depth == 16) {
             unpack_grayscale_without_alpha<u16>(context);
         } else if (context.bit_depth == 1 || context.bit_depth == 2 || context.bit_depth == 4) {
+            auto bit_depth_squared = context.bit_depth = context.bit_depth;
             auto pixels_per_byte = 8 / context.bit_depth;
             auto mask = (1 << context.bit_depth) - 1;
             for (int y = 0; y < context.height; ++y) {
@@ -372,9 +373,9 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
                     auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (x % pixels_per_byte));
                     auto value = (gray_values[x / pixels_per_byte] >> bit_offset) & mask;
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[x];
-                    pixel.r = value * (0xff / pow(context.bit_depth, 2));
-                    pixel.g = value * (0xff / pow(context.bit_depth, 2));
-                    pixel.b = value * (0xff / pow(context.bit_depth, 2));
+                    pixel.r = value * (0xff / bit_depth_squared);
+                    pixel.g = value * (0xff / bit_depth_squared);
+                    pixel.b = value * (0xff / bit_depth_squared);
                     pixel.a = 0xff;
                 }
             }
