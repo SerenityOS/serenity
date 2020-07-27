@@ -32,6 +32,8 @@ namespace Web {
 
 class HTMLTableRowElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLTableRowElementWrapper;
+
     HTMLTableRowElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLTableRowElement() override;
 };

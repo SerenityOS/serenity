@@ -32,6 +32,8 @@ namespace Web {
 
 class HTMLBodyElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLBodyElementWrapper;
+
     HTMLBodyElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLBodyElement() override;
 

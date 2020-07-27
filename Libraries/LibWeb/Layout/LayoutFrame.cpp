@@ -64,7 +64,7 @@ void LayoutFrame::paint(PaintContext& context, PaintPhase phase)
     LayoutReplaced::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        auto* hosted_document = node().hosted_document();
+        auto* hosted_document = node().content_document();
         if (!hosted_document)
             return;
         auto* hosted_layout_tree = hosted_document->layout_node();

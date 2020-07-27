@@ -32,6 +32,8 @@ namespace Web {
 
 class HTMLTableCellElement final : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLTableCellElementWrapper;
+
     HTMLTableCellElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLTableCellElement() override;
 
@@ -42,5 +44,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTMLTableCellElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::td; }
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name().is_one_of(Web::HTML::TagNames::td, Web::HTML::TagNames::th); }
 AK_END_TYPE_TRAITS()

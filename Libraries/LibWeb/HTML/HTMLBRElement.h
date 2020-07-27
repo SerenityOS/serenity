@@ -32,6 +32,8 @@ namespace Web {
 
 class HTMLBRElement final : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLBRElementWrapper;
+
     HTMLBRElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLBRElement() override;
 
