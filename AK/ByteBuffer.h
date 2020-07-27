@@ -29,6 +29,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
@@ -71,6 +72,9 @@ public:
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }
 
+    Bytes span() { return { data(), size() }; }
+    ReadonlyBytes span() const { return { data(), size() }; }
+
     u8* offset_pointer(int offset) { return m_data + offset; }
     const u8* offset_pointer(int offset) const { return m_data + offset; }
 
@@ -93,10 +97,10 @@ private:
         Wrap,
         Adopt
     };
-    explicit ByteBufferImpl(size_t); // For ConstructionMode=Uninitialized
+    explicit ByteBufferImpl(size_t);                       // For ConstructionMode=Uninitialized
     ByteBufferImpl(const void*, size_t, ConstructionMode); // For ConstructionMode=Copy
-    ByteBufferImpl(void*, size_t, ConstructionMode); // For ConstructionMode=Wrap/Adopt
-    ByteBufferImpl() {}
+    ByteBufferImpl(void*, size_t, ConstructionMode);       // For ConstructionMode=Wrap/Adopt
+    ByteBufferImpl() { }
 
     u8* m_data { nullptr };
     size_t m_size { 0 };
@@ -105,8 +109,8 @@ private:
 
 class ByteBuffer {
 public:
-    ByteBuffer() {}
-    ByteBuffer(std::nullptr_t) {}
+    ByteBuffer() { }
+    ByteBuffer(std::nullptr_t) { }
     ByteBuffer(const ByteBuffer& other)
         : m_impl(other.m_impl)
     {
@@ -157,6 +161,9 @@ public:
 
     u8* data() { return m_impl ? m_impl->data() : nullptr; }
     const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
+
+    Bytes span() { return m_impl ? m_impl->span() : nullptr; }
+    ReadonlyBytes span() const { return m_impl ? m_impl->span() : nullptr; }
 
     u8* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
     const u8* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }

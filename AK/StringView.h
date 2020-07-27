@@ -29,6 +29,7 @@
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
 #include <AK/Forward.h>
+#include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringUtils.h>
 
@@ -63,8 +64,12 @@ public:
 
     bool is_null() const { return !m_characters; }
     bool is_empty() const { return m_length == 0; }
+
     const char* characters_without_null_termination() const { return m_characters; }
     size_t length() const { return m_length; }
+
+    ReadonlyBytes bytes() const { return { m_characters, m_length }; }
+
     const char& operator[](size_t index) const { return m_characters[index]; }
 
     ConstIterator begin() const { return characters_without_null_termination(); }
