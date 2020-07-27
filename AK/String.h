@@ -137,6 +137,9 @@ public:
     ALWAYS_INLINE bool is_empty() const { return length() == 0; }
     ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
     ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
+
+    ALWAYS_INLINE ReadonlyBytes bytes() const { return m_impl ? m_impl->bytes() : nullptr; }
+
     ALWAYS_INLINE const char& operator[](size_t i) const
     {
         return (*m_impl)[i];

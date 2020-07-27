@@ -29,6 +29,7 @@
 #include <AK/Badge.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/Span.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
 
@@ -58,6 +59,9 @@ public:
 
     size_t length() const { return m_length; }
     const char* characters() const { return &m_inline_buffer[0]; }
+
+    ALWAYS_INLINE ReadonlyBytes bytes() const { return { characters(), length() }; }
+
     const char& operator[](size_t i) const
     {
         ASSERT(i < m_length);
