@@ -89,6 +89,7 @@ namespace GUI {
     __TOKEN(ArrowAsterisk)         \
     __TOKEN(DoubleQuotedString)    \
     __TOKEN(SingleQuotedString)    \
+    __TOKEN(RawString)             \
     __TOKEN(EscapeSequence)        \
     __TOKEN(Comment)               \
     __TOKEN(Integer)               \
