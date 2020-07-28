@@ -32,7 +32,7 @@ namespace Web {
 
 class LayoutWidget final : public LayoutReplaced {
 public:
-    LayoutWidget(DOM::Document&, const DOM::Element&, GUI::Widget&);
+    LayoutWidget(DOM::Document&, DOM::Element&, GUI::Widget&);
     virtual ~LayoutWidget() override;
 
     GUI::Widget& widget() { return m_widget; }

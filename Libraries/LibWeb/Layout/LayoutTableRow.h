@@ -34,7 +34,7 @@ class LayoutTableCell;
 
 class LayoutTableRow final : public LayoutBox {
 public:
-    LayoutTableRow(DOM::Document&, const DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
+    LayoutTableRow(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutTableRow() override;
 
     void layout_row(const Vector<float>& column_widths);

@@ -36,7 +36,7 @@
 
 namespace Web {
 
-LayoutWidget::LayoutWidget(DOM::Document& document, const DOM::Element& element, GUI::Widget& widget)
+LayoutWidget::LayoutWidget(DOM::Document& document, DOM::Element& element, GUI::Widget& widget)
     : LayoutReplaced(document, element, CSS::StyleProperties::create())
     , m_widget(widget)
 {

@@ -53,7 +53,7 @@ public:
 
     bool is_anonymous() const { return !m_node; }
     const DOM::Node* node() const { return m_node; }
-    DOM::Node* node() { return const_cast<DOM::Node*>(m_node); }
+    DOM::Node* node() { return m_node; }
 
     DOM::Document& document() { return m_document; }
     const DOM::Document& document() const { return m_document; }
@@ -195,13 +195,13 @@ public:
     float font_size() const;
 
 protected:
-    LayoutNode(DOM::Document&, const DOM::Node*);
+    LayoutNode(DOM::Document&, DOM::Node*);
 
 private:
     friend class LayoutNodeWithStyle;
 
     DOM::Document& m_document;
-    const DOM::Node* m_node { nullptr };
+    DOM::Node* m_node { nullptr };
 
     bool m_inline { false };
     bool m_has_style { false };
@@ -221,7 +221,7 @@ public:
     void apply_style(const CSS::StyleProperties&);
 
 protected:
-    LayoutNodeWithStyle(DOM::Document&, const DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
+    LayoutNodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
 
 private:
     LayoutStyle m_style;
@@ -237,7 +237,7 @@ public:
     const BoxModelMetrics& box_model() const { return m_box_model; }
 
 protected:
-    LayoutNodeWithStyleAndBoxModelMetrics(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
+    LayoutNodeWithStyleAndBoxModelMetrics(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : LayoutNodeWithStyle(document, node, move(style))
     {
     }

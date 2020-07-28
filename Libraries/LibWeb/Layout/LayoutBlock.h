@@ -33,7 +33,7 @@ namespace Web {
 
 class LayoutBlock : public LayoutBox {
 public:
-    LayoutBlock(DOM::Document&, const DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
+    LayoutBlock(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutBlock() override;
 
     virtual const char* class_name() const override { return "LayoutBlock"; }

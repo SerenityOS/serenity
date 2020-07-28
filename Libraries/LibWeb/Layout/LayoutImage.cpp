@@ -32,7 +32,7 @@
 
 namespace Web {
 
-LayoutImage::LayoutImage(DOM::Document& document, const DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, const ImageLoader& image_loader)
+LayoutImage::LayoutImage(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, const ImageLoader& image_loader)
     : LayoutReplaced(document, element, move(style))
     , m_image_loader(image_loader)
 {
