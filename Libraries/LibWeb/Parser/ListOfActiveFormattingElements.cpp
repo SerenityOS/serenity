@@ -27,7 +27,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Parser/ListOfActiveFormattingElements.h>
 
-namespace Web {
+namespace Web::HTML {
 
 ListOfActiveFormattingElements::~ListOfActiveFormattingElements()
 {

@@ -30,7 +30,7 @@
 #include <LibWeb/HTML/HTMLBlinkElement.h>
 #include <LibWeb/Layout/LayoutNode.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLBlinkElement::HTMLBlinkElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

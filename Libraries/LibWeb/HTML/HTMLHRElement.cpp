@@ -26,7 +26,7 @@
 
 #include <LibWeb/HTML/HTMLHRElement.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLHRElement::HTMLHRElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

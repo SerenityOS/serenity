@@ -325,7 +325,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_ == "DOM" || namespace_ == "UIEvents") {
+    if (namespace_.is_one_of("DOM", "HTML", "UIEvents")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -491,11 +491,8 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>";
 
     // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
-    out() << "using Web::DOM::Node;";
-    out() << "using Web::DOM::Document;";
-    out() << "using Web::DOM::DocumentType;";
-    out() << "using Web::DOM::Element;";
-    out() << "using Web::DOM::EventListener;";
+    out() << "using namespace Web::DOM;";
+    out() << "using namespace Web::HTML;";
 
     out() << "namespace Web::Bindings {";
 

@@ -27,7 +27,7 @@
 #include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/Layout/LayoutBreak.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLBRElement::HTMLBRElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

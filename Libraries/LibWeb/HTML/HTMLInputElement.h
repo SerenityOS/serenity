@@ -28,7 +28,7 @@
 
 #include <LibWeb/HTML/HTMLElement.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class HTMLInputElement : public HTMLElement {
 public:
@@ -46,6 +46,6 @@ public:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTMLInputElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::input; }
+AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLInputElement)
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::input; }
 AK_END_TYPE_TRAITS()

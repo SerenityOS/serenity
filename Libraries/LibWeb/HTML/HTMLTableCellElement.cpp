@@ -27,7 +27,7 @@
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/Parser/CSSParser.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

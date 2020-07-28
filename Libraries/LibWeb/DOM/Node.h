@@ -87,8 +87,8 @@ public:
     Document& document() { return *m_document; }
     const Document& document() const { return *m_document; }
 
-    const HTMLAnchorElement* enclosing_link_element() const;
-    const HTMLElement* enclosing_html_element() const;
+    const HTML::HTMLAnchorElement* enclosing_link_element() const;
+    const HTML::HTMLElement* enclosing_html_element() const;
 
     String child_text_content() const;
 

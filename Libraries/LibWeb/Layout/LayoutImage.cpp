@@ -71,7 +71,7 @@ void LayoutImage::layout(LayoutMode layout_mode)
     }
 
     if (renders_as_alt_text()) {
-        auto& image_element = downcast<HTMLImageElement>(node());
+        auto& image_element = downcast<HTML::HTMLImageElement>(node());
         auto& font = Gfx::Font::default_font();
         auto alt = image_element.alt();
         if (alt.is_empty())
@@ -101,7 +101,7 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Foreground) {
         if (renders_as_alt_text()) {
-            auto& image_element = downcast<HTMLImageElement>(node());
+            auto& image_element = downcast<HTML::HTMLImageElement>(node());
             context.painter().set_font(Gfx::Font::default_font());
             Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
             auto alt = image_element.alt();
@@ -116,7 +116,7 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
 
 bool LayoutImage::renders_as_alt_text() const
 {
-    if (is<HTMLImageElement>(node()))
+    if (is<HTML::HTMLImageElement>(node()))
         return !m_image_loader.has_image();
     return false;
 }

@@ -26,7 +26,7 @@
 
 #include <LibWeb/HTML/HTMLTitleElement.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLTitleElement::HTMLTitleElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

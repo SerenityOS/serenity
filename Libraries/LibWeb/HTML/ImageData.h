@@ -30,7 +30,7 @@
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class ImageData
     : public RefCounted<ImageData>

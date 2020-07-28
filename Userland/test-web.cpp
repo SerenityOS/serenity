@@ -222,7 +222,7 @@ void TestRunner::run() {
         Web::ResourceLoader::the().load_sync(
             page_to_load,
             [&](auto data, auto&) {
-                Web::HTMLDocumentParser parser(data, "utf-8", *m_page_view->document());
+                Web::HTML::HTMLDocumentParser parser(data, "utf-8", *m_page_view->document());
                 parser.run(page_to_load);
             },
             [page_to_load](auto error) {
@@ -326,7 +326,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         page_to_load,
         [&](auto data, auto&) {
             // Create a new parser and immediately get its document to replace the old interpreter.
-            Web::HTMLDocumentParser parser(data, "utf-8");
+            Web::HTML::HTMLDocumentParser parser(data, "utf-8");
             auto& new_interpreter = parser.document().interpreter();
 
             // Setup the test environment and call "__BeforeInitialPageLoad__"

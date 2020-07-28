@@ -57,49 +57,49 @@ NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_n
 {
     auto lowercase_tag_name = tag_name.to_lowercase();
     if (lowercase_tag_name == HTML::TagNames::a)
-        return adopt(*new HTMLAnchorElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLAnchorElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::html)
-        return adopt(*new HTMLHtmlElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLHtmlElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::head)
-        return adopt(*new HTMLHeadElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLHeadElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::body)
-        return adopt(*new HTMLBodyElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLBodyElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::font)
-        return adopt(*new HTMLFontElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLFontElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::hr)
-        return adopt(*new HTMLHRElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLHRElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::style)
-        return adopt(*new HTMLStyleElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLStyleElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::title)
-        return adopt(*new HTMLTitleElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLTitleElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::link)
-        return adopt(*new HTMLLinkElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLLinkElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::img)
-        return adopt(*new HTMLImageElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLImageElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::blink)
-        return adopt(*new HTMLBlinkElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLBlinkElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::form)
-        return adopt(*new HTMLFormElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLFormElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::input)
-        return adopt(*new HTMLInputElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLInputElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::br)
-        return adopt(*new HTMLBRElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLBRElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::iframe)
-        return adopt(*new HTMLIFrameElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLIFrameElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::table)
-        return adopt(*new HTMLTableElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLTableElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::tr)
-        return adopt(*new HTMLTableRowElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLTableRowElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::td || lowercase_tag_name == HTML::TagNames::th)
-        return adopt(*new HTMLTableCellElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLTableCellElement(document, lowercase_tag_name));
     if (lowercase_tag_name.is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6))
-        return adopt(*new HTMLHeadingElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLHeadingElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::script)
-        return adopt(*new HTMLScriptElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLScriptElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::canvas)
-        return adopt(*new HTMLCanvasElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLCanvasElement(document, lowercase_tag_name));
     if (lowercase_tag_name == HTML::TagNames::object)
-        return adopt(*new HTMLObjectElement(document, lowercase_tag_name));
+        return adopt(*new HTML::HTMLObjectElement(document, lowercase_tag_name));
     if (lowercase_tag_name == SVG::TagNames::svg)
         return adopt(*new SVG::SVGSVGElement(document, lowercase_tag_name));
     if (lowercase_tag_name == SVG::TagNames::path)

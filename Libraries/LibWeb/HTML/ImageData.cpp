@@ -28,7 +28,7 @@
 #include <LibJS/Runtime/Uint8ClampedArray.h>
 #include <LibWeb/HTML/ImageData.h>
 
-namespace Web {
+namespace Web::HTML {
 
 RefPtr<ImageData> ImageData::create_with_size(JS::GlobalObject& global_object, int width, int height)
 {

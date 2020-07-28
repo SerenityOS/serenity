@@ -29,7 +29,7 @@
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class HTMLFormElement : public HTMLElement {
 public:
@@ -46,6 +46,6 @@ public:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTMLFormElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::form; }
+AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLFormElement)
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::form; }
 AK_END_TYPE_TRAITS()

@@ -32,19 +32,19 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
-#include <LibWeb/DOM/Text.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/HTMLToken.h>
+
+namespace Web::HTML {
 
 #define PARSE_ERROR()                                                         \
     do {                                                                      \
         dbg() << "Parse error! " << __PRETTY_FUNCTION__ << " @ " << __LINE__; \
     } while (0)
-
-namespace Web {
 
 static Vector<FlyString> s_quirks_public_ids = {
     "+//Silmaril//dtd html Pro v0r11 19970101//",

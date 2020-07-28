@@ -252,7 +252,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
 
 void Element::set_inner_html(StringView markup)
 {
-    auto new_children = HTMLDocumentParser::parse_html_fragment(*this, markup);
+    auto new_children = HTML::HTMLDocumentParser::parse_html_fragment(*this, markup);
     remove_all_children();
     while (!new_children.is_empty()) {
         append_child(new_children.take_first());

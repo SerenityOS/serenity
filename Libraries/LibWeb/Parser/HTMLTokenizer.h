@@ -33,6 +33,8 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/Parser/HTMLToken.h>
 
+namespace Web::HTML {
+
 #define ENUMERATE_TOKENIZER_STATES                                        \
     __ENUMERATE_TOKENIZER_STATE(Data)                                     \
     __ENUMERATE_TOKENIZER_STATE(RCDATA)                                   \
@@ -114,8 +116,6 @@
     __ENUMERATE_TOKENIZER_STATE(HexadecimalCharacterReference)            \
     __ENUMERATE_TOKENIZER_STATE(DecimalCharacterReference)                \
     __ENUMERATE_TOKENIZER_STATE(NumericCharacterReferenceEnd)
-
-namespace Web {
 
 class HTMLTokenizer {
 public:

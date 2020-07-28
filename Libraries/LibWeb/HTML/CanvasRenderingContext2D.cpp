@@ -32,7 +32,7 @@
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/ImageData.h>
 
-namespace Web {
+namespace Web::HTML {
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(HTMLCanvasElement& element)
     : m_element(element.make_weak_ptr())

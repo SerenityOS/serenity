@@ -26,7 +26,7 @@
 
 #include <LibWeb/Parser/HTMLToken.h>
 
-namespace Web {
+namespace Web::HTML {
 
 String HTMLToken::to_string() const
 {

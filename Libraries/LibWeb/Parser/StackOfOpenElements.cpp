@@ -28,7 +28,7 @@
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Parser/StackOfOpenElements.h>
 
-namespace Web {
+namespace Web::HTML {
 
 static Vector<FlyString> s_base_list { "applet", "caption", "html", "table", "td", "th", "marquee", "object", "template" };
 

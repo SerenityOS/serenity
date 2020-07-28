@@ -30,7 +30,7 @@
 #include <LibGfx/Forward.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class LayoutDocument;
 
@@ -59,6 +59,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTMLCanvasElement)
+AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLCanvasElement)
 static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::canvas; }
 AK_END_TYPE_TRAITS()

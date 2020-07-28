@@ -39,8 +39,8 @@ public:
     virtual void paint(PaintContext&, PaintPhase) override;
     virtual void layout(LayoutMode) override;
 
-    const HTMLIFrameElement& node() const { return static_cast<const HTMLIFrameElement&>(LayoutReplaced::node()); }
-    HTMLIFrameElement& node() { return static_cast<HTMLIFrameElement&>(LayoutReplaced::node()); }
+    const HTML::HTMLIFrameElement& node() const { return downcast<HTML::HTMLIFrameElement>(LayoutReplaced::node()); }
+    HTML::HTMLIFrameElement& node() { return downcast<HTML::HTMLIFrameElement>(LayoutReplaced::node()); }
 
 private:
     virtual bool is_frame() const final { return true; }

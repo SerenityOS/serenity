@@ -34,7 +34,7 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class CanvasRenderingContext2D
     : public RefCounted<CanvasRenderingContext2D>

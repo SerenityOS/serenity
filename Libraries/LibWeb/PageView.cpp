@@ -383,7 +383,7 @@ void PageView::reload()
 
 void PageView::load_html(const StringView& html, const URL& url)
 {
-    HTMLDocumentParser parser(html, "utf-8");
+    HTML::HTMLDocumentParser parser(html, "utf-8");
     parser.run(url);
     set_document(&parser.document());
 }

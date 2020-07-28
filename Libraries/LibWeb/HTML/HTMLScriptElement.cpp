@@ -32,7 +32,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLScriptElement::HTMLScriptElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
