@@ -34,7 +34,7 @@ namespace Web::HTML {
 
 class LayoutDocument;
 
-class HTMLCanvasElement : public HTMLElement {
+class HTMLCanvasElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLCanvasElementWrapper;
 

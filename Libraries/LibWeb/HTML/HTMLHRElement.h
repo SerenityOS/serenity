@@ -30,7 +30,7 @@
 
 namespace Web::HTML {
 
-class HTMLHRElement : public HTMLElement {
+class HTMLHRElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLHRElementWrapper;
 

@@ -30,7 +30,7 @@
 
 namespace Web::HTML {
 
-class HTMLBodyElement : public HTMLElement {
+class HTMLBodyElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLBodyElementWrapper;
 

@@ -31,7 +31,7 @@
 
 namespace Web::HTML {
 
-class HTMLScriptElement : public HTMLElement {
+class HTMLScriptElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLScriptElementWrapper;
 
