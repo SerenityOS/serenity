@@ -136,8 +136,12 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_RM32:
     case OP_FPU:
     case OP_FPU_reg:
+    case OP_FPU_mem:
+    case OP_FPU_AX16:
+    case OP_FPU_RM16:
     case OP_FPU_RM32:
     case OP_FPU_RM64:
+    case OP_FPU_M80:
     case OP_RM8_reg8:
     case OP_RM32_reg32:
     case OP_reg32_RM32:
@@ -285,6 +289,12 @@ static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, Instruc
 {
     build_slash_rm(s_table16, op, slash, rm, mnemonic, format, impl, lock_prefix_allowed);
     build_slash_rm(s_table32, op, slash, rm, mnemonic, format, impl, lock_prefix_allowed);
+}
+
+static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+{
+    for (int i = 0; i < 8; ++i)
+        build_slash_rm(op, slash, 0xc0 | (slash << 3) | i, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 [[gnu::constructor]] static void build_opcode_tables()
@@ -487,7 +497,7 @@ static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, Instruc
     build_slash_rm(0xD9, 4, 0xE1, "FABS", OP_FPU, &Interpreter::FABS);
     build_slash_rm(0xD9, 4, 0xE2, "FTST", OP_FPU, &Interpreter::FTST);
     build_slash_rm(0xD9, 4, 0xE3, "FXAM", OP_FPU, &Interpreter::FXAM);
-    build_slash(0xD9, 5, "FLDCW", OP_FPU_RM32, &Interpreter::FLDCW);
+    build_slash(0xD9, 5, "FLDCW", OP_FPU_RM16, &Interpreter::FLDCW);
     build_slash_rm(0xD9, 5, 0xE8, "FLD1", OP_FPU, &Interpreter::FLD1);
     build_slash_rm(0xD9, 5, 0xE9, "FLDL2T", OP_FPU, &Interpreter::FLDL2T);
     build_slash_rm(0xD9, 5, 0xEA, "FLDL2E", OP_FPU, &Interpreter::FLDL2E);
@@ -505,7 +515,7 @@ static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, Instruc
     build_slash_rm(0xD9, 6, 0xF5, "FPREM1", OP_FPU, &Interpreter::FPREM1);
     build_slash_rm(0xD9, 6, 0xF6, "FDECSTP", OP_FPU, &Interpreter::FDECSTP);
     build_slash_rm(0xD9, 6, 0xF7, "FINCSTP", OP_FPU, &Interpreter::FINCSTP);
-    build_slash(0xD9, 7, "FNSTCW", OP_FPU_RM32, &Interpreter::FNSTCW);
+    build_slash(0xD9, 7, "FNSTCW", OP_FPU_RM16, &Interpreter::FNSTCW);
     // FIXME: Extraodinary prefix 0x9B + 0xD9/7: FSTCW
     build_slash_rm(0xD9, 7, 0xF8, "FPREM", OP_FPU, &Interpreter::FPREM);
     build_slash_rm(0xD9, 7, 0xF9, "FYL2XP1", OP_FPU, &Interpreter::FYL2XP1);
@@ -516,9 +526,40 @@ static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, Instruc
     build_slash_rm(0xD9, 7, 0xFE, "FSIN", OP_FPU, &Interpreter::FSIN);
     build_slash_rm(0xD9, 7, 0xFF, "FCOS", OP_FPU, &Interpreter::FCOS);
 
-    // FIXME
-    build(0xDA, "FPU?", OP_RM8, &Interpreter::ESCAPE);
-    build(0xDB, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+    build_slash(0xDA, 0, "FIADD", OP_FPU_RM32, &Interpreter::FIADD_RM32);
+    build_slash_reg(0xDA, 0, "FCMOVB", OP_FPU_reg, &Interpreter::FCMOVB);
+    build_slash(0xDA, 1, "FIMUL", OP_FPU_RM32, &Interpreter::FIMUL_RM32);
+    build_slash_reg(0xDA, 1, "FCMOVE", OP_FPU_reg, &Interpreter::FCMOVE);
+    build_slash(0xDA, 2, "FICOM", OP_FPU_RM32, &Interpreter::FICOM_RM32);
+    build_slash_reg(0xDA, 2, "FCMOVBE", OP_FPU_reg, &Interpreter::FCMOVBE);
+    build_slash(0xDA, 3, "FICOMP", OP_FPU_RM32, &Interpreter::FICOMP_RM32);
+    build_slash_reg(0xDA, 3, "FCMOVU", OP_FPU_reg, &Interpreter::FCMOVU);
+    build_slash(0xDA, 4, "FISUB", OP_FPU_RM32, &Interpreter::FISUB_RM32);
+    build_slash(0xDA, 5, "FISUBR", OP_FPU_RM32, &Interpreter::FISUBR_RM32);
+    build_slash_rm(0xDA, 5, 0xE9, "FUCOMPP", OP_FPU, &Interpreter::FUCOMPP);
+    build_slash(0xDA, 6, "FIDIV", OP_FPU_RM32, &Interpreter::FIDIV_RM32);
+    build_slash(0xDA, 7, "FIDIVR", OP_FPU_RM32, &Interpreter::FIDIVR_RM32);
+
+    build_slash(0xDB, 0, "FILD", OP_FPU_RM32, &Interpreter::FILD_RM32);
+    build_slash_reg(0xDB, 0, "FCMOVNB", OP_FPU_reg, &Interpreter::FCMOVNB);
+    build_slash(0xDB, 1, "FISTTP", OP_FPU_RM32, &Interpreter::FISTTP_RM32);
+    build_slash_reg(0xDB, 1, "FCMOVNE", OP_FPU_reg, &Interpreter::FCMOVNE);
+    build_slash(0xDB, 2, "FIST", OP_FPU_RM32, &Interpreter::FIST_RM32);
+    build_slash_reg(0xDB, 2, "FCMOVNBE", OP_FPU_reg, &Interpreter::FCMOVNBE);
+    build_slash(0xDB, 3, "FISTP", OP_FPU_RM32, &Interpreter::FISTP_RM32);
+    build_slash_reg(0xDB, 3, "FCMOVNU", OP_FPU_reg, &Interpreter::FCMOVNU);
+    build_slash(0xDB, 4, "FUNASSIGNED", OP_FPU, &Interpreter::ESCAPE);
+    build_slash_rm(0xDB, 4, 0xE0, "FNENI", OP_FPU_reg, &Interpreter::FNENI);
+    build_slash_rm(0xDB, 4, 0xE1, "FNDISI", OP_FPU_reg, &Interpreter::FNDISI);
+    build_slash_rm(0xDB, 4, 0xE2, "FNCLEX", OP_FPU_reg, &Interpreter::FNCLEX);
+    // FIXME: Extraodinary prefix 0x9B + 0xDB/4: FCLEX
+    build_slash_rm(0xDB, 4, 0xE3, "FNINIT", OP_FPU_reg, &Interpreter::FNINIT);
+    // FIXME: Extraodinary prefix 0x9B + 0xDB/4: FINIT
+    build_slash_rm(0xDB, 4, 0xE4, "FNSETPM", OP_FPU_reg, &Interpreter::FNSETPM);
+    build_slash(0xDB, 5, "FLD", OP_FPU_M80, &Interpreter::FLD_RM80);
+    build_slash_reg(0xDB, 5, "FUCOMI", OP_FPU_reg, &Interpreter::FUCOMI);
+    build_slash(0xDB, 6, "FCOMI", OP_FPU_reg, &Interpreter::FCOMI);
+    build_slash(0xDB, 7, "FSTP", OP_FPU_M80, &Interpreter::FSTP_RM80);
 
     build_slash(0xDC, 0, "FADD", OP_FPU_RM64, &Interpreter::FADD_RM64);
     build_slash(0xDC, 1, "FMUL", OP_FPU_RM64, &Interpreter::FMUL_RM64);
@@ -529,10 +570,61 @@ static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, Instruc
     build_slash(0xDC, 6, "FDIV", OP_FPU_RM64, &Interpreter::FDIV_RM64);
     build_slash(0xDC, 7, "FDIVR", OP_FPU_RM64, &Interpreter::FDIVR_RM64);
 
-    // FIXME
-    build(0xDD, "FPU?", OP_RM8, &Interpreter::ESCAPE);
-    build(0xDE, "FPU?", OP_RM8, &Interpreter::ESCAPE);
-    build(0xDF, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+    build_slash(0xDD, 0, "FLD", OP_FPU_RM64, &Interpreter::FLD_RM64);
+    build_slash_reg(0xDD, 0, "FFREE", OP_FPU_reg, &Interpreter::FFREE);
+    build_slash(0xDD, 1, "FISTTP", OP_FPU_RM64, &Interpreter::FISTTP_RM64);
+    build_slash_reg(0xDD, 1, "FXCH4", OP_FPU_reg, &Interpreter::FXCH);
+    build_slash(0xDD, 2, "FST", OP_FPU_RM64, &Interpreter::FST_RM64);
+    build_slash(0xDD, 3, "FSTP", OP_FPU_RM64, &Interpreter::FSTP_RM64);
+    build_slash(0xDD, 4, "FRSTOR", OP_FPU_mem, &Interpreter::FRSTOR);
+    build_slash_reg(0xDD, 4, "FUCOM", OP_FPU_reg, &Interpreter::FUCOM);
+    // FIXME: DD/4 E1 (...but isn't this what DD/4 does naturally, with E1 just being normal R/M?)
+    build_slash(0xDD, 5, "FUCOMP", OP_FPU_reg, &Interpreter::FUCOMP);
+    // FIXME: DD/5 E9 (...but isn't this what DD/5 does naturally, with E9 just being normal R/M?)
+    build_slash(0xDD, 6, "FNSAVE", OP_FPU_mem, &Interpreter::FNSAVE);
+    // FIXME: Extraodinary prefix 0x9B + 0xDD/6: FSAVE
+    build_slash(0xDD, 7, "FNSTSW", OP_FPU_RM16, &Interpreter::FNSTSW);
+    // FIXME: Extraodinary prefix 0x9B + 0xDD/7: FSTSW
+
+    build_slash(0xDE, 0, "FIADD", OP_FPU_RM16, &Interpreter::FIADD_RM16);
+    build_slash_reg(0xDE, 0, "FADDP", OP_FPU_reg, &Interpreter::FADDP);
+    // FIXME: DE/0 C1 (...but isn't this what DE/0 does naturally, with C1 just being normal R/M?)
+    build_slash(0xDE, 1, "FIMUL", OP_FPU_RM16, &Interpreter::FIMUL_RM16);
+    build_slash_reg(0xDE, 1, "FMULP", OP_FPU_reg, &Interpreter::FMULP);
+    // FIXME: DE/1 C9 (...but isn't this what DE/1 does naturally, with C9 just being normal R/M?)
+    build_slash(0xDE, 2, "FICOM", OP_FPU_RM16, &Interpreter::FICOM_RM16);
+    build_slash_reg(0xDE, 2, "FCOMP5", OP_FPU_reg, &Interpreter::FCOMP_RM32);
+    build_slash(0xDE, 3, "FICOMP", OP_FPU_RM16, &Interpreter::FICOMP_RM16);
+    build_slash_reg(0xDE, 3, "FCOMPP", OP_FPU_reg, &Interpreter::FCOMPP);
+    build_slash(0xDE, 4, "FISUB", OP_FPU_RM16, &Interpreter::FISUB_RM16);
+    build_slash_reg(0xDE, 4, "FSUBRP", OP_FPU_reg, &Interpreter::FSUBRP);
+    // FIXME: DE/4 E1 (...but isn't this what DE/4 does naturally, with E1 just being normal R/M?)
+    build_slash(0xDE, 5, "FISUBR", OP_FPU_RM16, &Interpreter::FISUBR_RM16);
+    build_slash_reg(0xDE, 5, "FSUBP", OP_FPU_reg, &Interpreter::FSUBP);
+    // FIXME: DE/5 E9 (...but isn't this what DE/5 does naturally, with E9 just being normal R/M?)
+    build_slash(0xDE, 6, "FIDIV", OP_FPU_RM16, &Interpreter::FIDIV_RM16);
+    build_slash_reg(0xDE, 6, "FDIVRP", OP_FPU_reg, &Interpreter::FDIVRP);
+    // FIXME: DE/6 F1 (...but isn't this what DE/6 does naturally, with F1 just being normal R/M?)
+    build_slash(0xDE, 7, "FIDIVR", OP_FPU_RM16, &Interpreter::FIDIVR_RM16);
+    build_slash_reg(0xDE, 7, "FDIVP", OP_FPU_reg, &Interpreter::FDIVP);
+    // FIXME: DE/7 F9 (...but isn't this what DE/7 does naturally, with F9 just being normal R/M?)
+
+    build_slash(0xDF, 0, "FILD", OP_FPU_RM32, &Interpreter::FILD_RM16);
+    build_slash_reg(0xDF, 0, "FFREEP", OP_FPU_reg, &Interpreter::FFREEP);
+    build_slash(0xDF, 1, "FISTTP", OP_FPU_RM32, &Interpreter::FISTTP_RM16);
+    build_slash_reg(0xDF, 1, "FXCH7", OP_FPU_reg, &Interpreter::FXCH);
+    build_slash(0xDF, 2, "FIST", OP_FPU_RM32, &Interpreter::FIST_RM16);
+    build_slash_reg(0xDF, 2, "FSTP8", OP_FPU_reg, &Interpreter::FSTP_RM32);
+    build_slash(0xDF, 3, "FISTP", OP_FPU_RM32, &Interpreter::FISTP_RM16);
+    build_slash_reg(0xDF, 3, "FSTP9", OP_FPU_reg, &Interpreter::FSTP_RM32);
+    build_slash(0xDF, 4, "FBLD", OP_FPU_M80, &Interpreter::FBLD_M80);
+    build_slash_reg(0xDF, 4, "FNSTSW", OP_FPU_AX16, &Interpreter::FNSTSW_AX);
+    // FIXME: Extraodinary prefix 0x9B + 0xDF/e: FSTSW_AX
+    build_slash(0xDF, 5, "FILD", OP_FPU_RM64, &Interpreter::FILD_RM64);
+    build_slash_reg(0xDF, 5, "FUCOMIP", OP_FPU_reg, &Interpreter::FUCOMIP);
+    build_slash(0xDF, 6, "FBSTP", OP_FPU_M80, &Interpreter::FBSTP_M80);
+    build_slash_reg(0xDF, 6, "FCOMIP", OP_FPU_reg, &Interpreter::FCOMIP);
+    build_slash(0xDF, 7, "FISTP", OP_FPU_RM64, &Interpreter::FISTP_RM64);
 
     build(0xE0, "LOOPNZ", OP_imm8, &Interpreter::LOOPNZ_imm8);
     build(0xE1, "LOOPZ", OP_imm8, &Interpreter::LOOPZ_imm8);
@@ -849,6 +941,25 @@ String MemoryOrRegisterReference::to_string_fpu_reg() const
     return register_name(reg_fpu());
 }
 
+String MemoryOrRegisterReference::to_string_fpu_mem(const Instruction& insn) const
+{
+    ASSERT(!is_register());
+    return String::format("[%s]", to_string(insn).characters());
+}
+
+String MemoryOrRegisterReference::to_string_fpu_ax16() const
+{
+    ASSERT(is_register());
+    return register_name(reg16());
+}
+
+String MemoryOrRegisterReference::to_string_fpu16(const Instruction& insn) const
+{
+    if (is_register())
+        return register_name(reg_fpu());
+    return String::format("word ptr [%s]", to_string(insn).characters());
+}
+
 String MemoryOrRegisterReference::to_string_fpu32(const Instruction& insn) const
 {
     if (is_register())
@@ -863,6 +974,11 @@ String MemoryOrRegisterReference::to_string_fpu64(const Instruction& insn) const
     return String::format("qword ptr [%s]", to_string(insn).characters());
 }
 
+String MemoryOrRegisterReference::to_string_fpu80(const Instruction& insn) const
+{
+    ASSERT(!is_register());
+    return String::format("tbyte ptr [%s]", to_string(insn).characters());
+}
 String MemoryOrRegisterReference::to_string_mm(const Instruction& insn) const
 {
     if (is_register())
@@ -1153,8 +1269,12 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
     auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16(*this)); };
     auto append_rm32 = [&] { builder.append(m_modrm.to_string_o32(*this)); };
     auto append_fpu_reg = [&] { builder.append(m_modrm.to_string_fpu_reg()); };
+    auto append_fpu_mem = [&] { builder.append(m_modrm.to_string_fpu_mem(*this)); };
+    auto append_fpu_ax16 = [&] { builder.append(m_modrm.to_string_fpu_ax16()); };
+    auto append_fpu_rm16 = [&] { builder.append(m_modrm.to_string_fpu16(*this)); };
     auto append_fpu_rm32 = [&] { builder.append(m_modrm.to_string_fpu32(*this)); };
     auto append_fpu_rm64 = [&] { builder.append(m_modrm.to_string_fpu64(*this)); };
+    auto append_fpu_rm80 = [&] { builder.append(m_modrm.to_string_fpu80(*this)); };
     auto append_imm8 = [&] { builder.appendf("%#02x", imm8()); };
     auto append_imm8_2 = [&] { builder.appendf("%#02x", imm8_2()); };
     auto append_imm16 = [&] { builder.appendf("%#04x", imm16()); };
@@ -1423,11 +1543,23 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
     case OP_FPU_reg:
         append_fpu_reg();
         break;
+    case OP_FPU_mem:
+        append_fpu_mem();
+        break;
+    case OP_FPU_AX16:
+        append_fpu_ax16();
+        break;
+    case OP_FPU_RM16:
+        append_fpu_rm16();
+        break;
     case OP_FPU_RM32:
         append_fpu_rm32();
         break;
     case OP_FPU_RM64:
         append_fpu_rm64();
+        break;
+    case OP_FPU_M80:
+        append_fpu_rm80();
         break;
     case OP_RM8_reg8:
         append_rm8();
