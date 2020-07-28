@@ -37,7 +37,7 @@ public:
 
     virtual ~LoopbackAdapter() override;
 
-    virtual void send_raw(const u8*, size_t) override;
+    virtual void send_raw(ReadonlyBytes) override;
     virtual const char* class_name() const override { return "LoopbackAdapter"; }
 
 private:

@@ -45,7 +45,7 @@ public:
     RTL8139NetworkAdapter(PCI::Address, u8 irq);
     virtual ~RTL8139NetworkAdapter() override;
 
-    virtual void send_raw(const u8*, size_t) override;
+    virtual void send_raw(ReadonlyBytes) override;
     virtual bool link_up() override { return m_link_up; }
 
     virtual const char* purpose() const override { return class_name(); }

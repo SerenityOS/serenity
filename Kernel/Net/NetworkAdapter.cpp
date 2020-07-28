@@ -88,7 +88,7 @@ NetworkAdapter::~NetworkAdapter()
 
 void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet)
 {
-    int size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
+    size_t size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     auto buffer = ByteBuffer::create_zeroed(size_in_bytes);
     auto* eth = (EthernetFrameHeader*)buffer.data();
     eth->set_source(mac_address());
@@ -97,18 +97,18 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     m_packets_out++;
     m_bytes_out += size_in_bytes;
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
-    send_raw((const u8*)eth, size_in_bytes);
+    send_raw({ (const u8*)eth, size_in_bytes });
 }
 
-void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const u8* payload, size_t payload_size, u8 ttl)
+void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, ReadonlyBytes payload, u8 ttl)
 {
-    size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
+    size_t ipv4_packet_size = sizeof(IPv4Packet) + payload.size();
     if (ipv4_packet_size > mtu()) {
-        send_ipv4_fragmented(destination_mac, destination_ipv4, protocol, payload, payload_size, ttl);
+        send_ipv4_fragmented(destination_mac, destination_ipv4, protocol, payload, ttl);
         return;
     }
 
-    size_t ethernet_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload_size;
+    size_t ethernet_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload.size();
     auto buffer = ByteBuffer::create_zeroed(ethernet_frame_size);
     auto& eth = *(EthernetFrameHeader*)buffer.data();
     eth.set_source(mac_address());
@@ -120,22 +120,22 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
     ipv4.set_source(ipv4_address());
     ipv4.set_destination(destination_ipv4);
     ipv4.set_protocol((u8)protocol);
-    ipv4.set_length(sizeof(IPv4Packet) + payload_size);
+    ipv4.set_length(sizeof(IPv4Packet) + payload.size());
     ipv4.set_ident(1);
     ipv4.set_ttl(ttl);
     ipv4.set_checksum(ipv4.compute_checksum());
     m_packets_out++;
     m_bytes_out += ethernet_frame_size;
-    memcpy(ipv4.payload(), payload, payload_size);
-    send_raw((const u8*)&eth, ethernet_frame_size);
+    memcpy(ipv4.payload(), payload.data(), payload.size());
+    send_raw({ (const u8*)&eth, ethernet_frame_size });
 }
 
-void NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const u8* payload, size_t payload_size, u8 ttl)
+void NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, ReadonlyBytes payload, u8 ttl)
 {
     // packets must be split on the 64-bit boundary
     auto packet_boundary_size = (mtu() - sizeof(IPv4Packet) - sizeof(EthernetFrameHeader)) & 0xfffffff8;
-    auto fragment_block_count = (payload_size + packet_boundary_size) / packet_boundary_size;
-    auto last_block_size = payload_size - packet_boundary_size * (fragment_block_count - 1);
+    auto fragment_block_count = (payload.size() + packet_boundary_size) / packet_boundary_size;
+    auto last_block_size = payload.size() - packet_boundary_size * (fragment_block_count - 1);
     auto number_of_blocks_in_fragment = packet_boundary_size / 8;
 
     auto identification = get_good_random<u16>();
@@ -163,29 +163,29 @@ void NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, con
         ipv4.set_checksum(ipv4.compute_checksum());
         m_packets_out++;
         m_bytes_out += ethernet_frame_size;
-        memcpy(ipv4.payload(), payload + packet_index * packet_boundary_size, packet_payload_size);
-        send_raw((const u8*)&eth, ethernet_frame_size);
+        memcpy(ipv4.payload(), payload.data() + packet_index * packet_boundary_size, packet_payload_size);
+        send_raw({ (const u8*)&eth, ethernet_frame_size });
     }
 }
 
-void NetworkAdapter::did_receive(const u8* data, size_t length)
+void NetworkAdapter::did_receive(ReadonlyBytes payload)
 {
     InterruptDisabler disabler;
     m_packets_in++;
-    m_bytes_in += length;
+    m_bytes_in += payload.size();
 
     Optional<KBuffer> buffer;
 
     if (m_unused_packet_buffers.is_empty()) {
-        buffer = KBuffer::copy(data, length);
+        buffer = KBuffer::copy(payload.data(), payload.size());
     } else {
         buffer = m_unused_packet_buffers.take_first();
         --m_unused_packet_buffers_count;
-        if (length <= buffer.value().size()) {
-            memcpy(buffer.value().data(), data, length);
-            buffer.value().set_size(length);
+        if (payload.size() <= buffer.value().size()) {
+            memcpy(buffer.value().data(), payload.data(), payload.size());
+            buffer.value().set_size(payload.size());
         } else {
-            buffer = KBuffer::copy(data, length);
+            buffer = KBuffer::copy(payload.data(), payload.size());
         }
     }
 
