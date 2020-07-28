@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 #ifndef __serenity__
             if (child_pid == 0) {
                 // Linux: if child didn't "change state", but existed.
-                child_pid = job.value->pid();
+                continue;
             }
 #endif
             if (child_pid == job.value->pid()) {
