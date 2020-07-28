@@ -24,46 +24,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ProcessChooser.h"
-#include "RunningProcessesModel.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/ProcessChooser.h>
+#include <LibGUI/RunningProcessesModel.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 
-namespace Profiler {
+namespace GUI {
 
-ProcessChooser::ProcessChooser(GUI::Window* parent_window)
+ProcessChooser::ProcessChooser(const StringView& window_title, const StringView& button_label, const Gfx::Bitmap* window_icon, GUI::Window* parent_window)
     : Dialog(parent_window)
+    , m_window_title(window_title)
+    , m_button_label(button_label)
+    , m_window_icon(window_icon)
 {
-    build();
-}
+    set_title(m_window_title);
 
-void ProcessChooser::build()
-{
-    set_title("Profiler");
-    Gfx::IntRect window_rect { 0, 0, 480, 360 };
+    if (m_window_icon)
+        set_icon(m_window_icon);
+    else if (parent_window)
+        set_icon(parent_window->icon());
+
+    Gfx::IntRect window_rect { 0, 0, 300, 340 };
     window_rect.center_within(GUI::Desktop::the().rect());
     set_rect(window_rect);
 
     auto& widget = set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
     widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_margins({ 0, 0, 0, 2 });
+
     auto& table_view = widget.add<GUI::TableView>();
-    auto sorting_model = GUI::SortingProxyModel::create(Profiler::RunningProcessesModel::create());
+    auto sorting_model = GUI::SortingProxyModel::create(RunningProcessesModel::create());
     sorting_model->set_sort_role(GUI::Model::Role::Display);
-    sorting_model->set_key_column_and_sort_order(Profiler::RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
+    sorting_model->set_key_column_and_sort_order(RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
     table_view.set_model(sorting_model);
+
     auto& button_container = widget.add<GUI::Widget>();
     button_container.set_preferred_size(0, 30);
     button_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
-    auto& profile_button = button_container.add<GUI::Button>("Profile");
-    profile_button.on_click = [&](auto) {
+    button_container.layout()->set_margins({ 0, 0, 4, 0 });
+    button_container.layout()->add_spacer();
+
+    auto& select_button = button_container.add<GUI::Button>(m_button_label);
+    select_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    select_button.set_preferred_size(80, 24);
+    select_button.on_click = [&](auto) {
         if (table_view.selection().is_empty()) {
-            GUI::MessageBox::show(this, "No process selected!", "Profiler", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, "No process selected!", m_window_title, GUI::MessageBox::Type::Error);
             return;
         }
         auto index = table_view.selection().first();
@@ -72,11 +84,17 @@ void ProcessChooser::build()
         done(ExecOK);
     };
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
+    cancel_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    cancel_button.set_preferred_size(80, 24);
     cancel_button.on_click = [this](auto) {
         done(ExecCancel);
     };
 
     table_view.model()->update();
+}
+
+ProcessChooser::~ProcessChooser()
+{
 }
 
 }
