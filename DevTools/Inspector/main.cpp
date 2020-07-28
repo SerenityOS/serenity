@@ -28,9 +28,13 @@
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObjectPropertyModel.h"
 #include "RemoteProcess.h"
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/ModelEditingDelegate.h>
+#include <LibGUI/ProcessChooser.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
@@ -60,22 +64,47 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/proc/all", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
-    if (argc != 2)
-        print_usage_and_exit();
-
-    auto pid_opt = String(argv[1]).to_int();
-    if (!pid_opt.has_value())
-        print_usage_and_exit();
-
-    pid_t pid = pid_opt.value();
+    pid_t pid;
 
     auto app = GUI::Application::construct(argc, argv);
+    auto app_icon = GUI::Icon::default_icon("app-inspector");
+    if (argc != 2) {
+        auto process_chooser = GUI::ProcessChooser::construct("Inspector", "Inspect", app_icon.bitmap_for_size(16));
+        if (process_chooser->exec() == GUI::Dialog::ExecCancel)
+            return 0;
+        pid = process_chooser->pid();
+    } else {
+        auto pid_opt = String(argv[1]).to_int();
+        if (!pid_opt.has_value())
+            print_usage_and_exit();
+        pid = pid_opt.value();
+    }
 
     auto window = GUI::Window::construct();
     window->set_title("Inspector");
-    window->set_rect(150, 150, 300, 500);
+    window->set_rect(150, 150, 550, 500);
+    window->set_icon(app_icon.bitmap_for_size(16));
+
+    auto menubar = GUI::MenuBar::construct();
+    auto& app_menu = menubar->add_menu("Inspector");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("Inspector", app_icon.bitmap_for_size(32), window);
+    }));
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
@@ -106,6 +135,7 @@ int main(int argc, char** argv)
         remote_process.set_inspected_object(remote_object->address);
     };
 
+    app->set_menubar(move(menubar));
     window->show();
     remote_process.update();
 
