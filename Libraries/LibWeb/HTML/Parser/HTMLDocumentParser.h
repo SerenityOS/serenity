@@ -28,9 +28,9 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <LibWeb/DOM/Node.h>
-#include <LibWeb/Parser/HTMLTokenizer.h>
-#include <LibWeb/Parser/ListOfActiveFormattingElements.h>
-#include <LibWeb/Parser/StackOfOpenElements.h>
+#include <LibWeb/HTML/Parser/HTMLTokenizer.h>
+#include <LibWeb/HTML/Parser/ListOfActiveFormattingElements.h>
+#include <LibWeb/HTML/Parser/StackOfOpenElements.h>
 
 namespace Web::HTML {
 

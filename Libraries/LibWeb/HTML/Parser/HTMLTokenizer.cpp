@@ -25,9 +25,9 @@
  */
 
 #include <LibTextCodec/Decoder.h>
-#include <LibWeb/Parser/Entities.h>
-#include <LibWeb/Parser/HTMLToken.h>
-#include <LibWeb/Parser/HTMLTokenizer.h>
+#include <LibWeb/HTML/Parser/Entities.h>
+#include <LibWeb/HTML/Parser/HTMLToken.h>
+#include <LibWeb/HTML/Parser/HTMLTokenizer.h>
 #include <ctype.h>
 
 namespace Web::HTML {
@@ -2215,12 +2215,7 @@ _StartOfFunction:
                         return false;
 
                     // FIXME: Is there a better way of doing this?
-                    return m_temporary_buffer[0] == 's' &&
-                           m_temporary_buffer[1] == 'c' &&
-                           m_temporary_buffer[2] == 'r' &&
-                           m_temporary_buffer[3] == 'i' &&
-                           m_temporary_buffer[4] == 'p' &&
-                           m_temporary_buffer[5] == 't';
+                    return m_temporary_buffer[0] == 's' && m_temporary_buffer[1] == 'c' && m_temporary_buffer[2] == 'r' && m_temporary_buffer[3] == 'i' && m_temporary_buffer[4] == 'p' && m_temporary_buffer[5] == 't';
                 };
                 ON_WHITESPACE
                 {
@@ -2366,12 +2361,7 @@ _StartOfFunction:
                         return false;
 
                     // FIXME: Is there a better way of doing this?
-                    return m_temporary_buffer[0] == 's' &&
-                           m_temporary_buffer[1] == 'c' &&
-                           m_temporary_buffer[2] == 'r' &&
-                           m_temporary_buffer[3] == 'i' &&
-                           m_temporary_buffer[4] == 'p' &&
-                           m_temporary_buffer[5] == 't';
+                    return m_temporary_buffer[0] == 's' && m_temporary_buffer[1] == 'c' && m_temporary_buffer[2] == 'r' && m_temporary_buffer[3] == 'i' && m_temporary_buffer[4] == 'p' && m_temporary_buffer[5] == 't';
                 };
                 ON_WHITESPACE
                 {

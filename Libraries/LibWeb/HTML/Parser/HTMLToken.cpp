@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/Parser/HTMLToken.h>
+#include <LibWeb/HTML/Parser/HTMLToken.h>
 
 namespace Web::HTML {
 

@@ -25,7 +25,7 @@
  */
 
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Parser/ListOfActiveFormattingElements.h>
+#include <LibWeb/HTML/Parser/ListOfActiveFormattingElements.h>
 
 namespace Web::HTML {
 

@@ -51,7 +51,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/Painting/PaintContext.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 #include <stdio.h>
 

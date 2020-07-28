@@ -36,8 +36,8 @@
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
-#include <LibWeb/Parser/HTMLToken.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLToken.h>
 
 namespace Web::HTML {
 

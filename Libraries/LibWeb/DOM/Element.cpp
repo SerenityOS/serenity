@@ -41,7 +41,7 @@
 #include <LibWeb/Layout/LayoutTableRow.h>
 #include <LibWeb/Layout/LayoutTableRowGroup.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 
 namespace Web::DOM {
 

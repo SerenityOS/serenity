@@ -35,7 +35,7 @@
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 
 namespace Web {
 

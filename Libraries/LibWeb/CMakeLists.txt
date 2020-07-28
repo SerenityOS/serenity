@@ -9,7 +9,10 @@ set(SOURCES
     Bindings/XMLHttpRequestConstructor.cpp
     Bindings/XMLHttpRequestPrototype.cpp
     Bindings/XMLHttpRequestWrapper.cpp
+    CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
+    CSS/PropertyID.cpp
+    CSS/PropertyID.h
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/StyleDeclaration.cpp
@@ -65,6 +68,12 @@ set(SOURCES
     HTML/HTMLTableRowElement.cpp
     HTML/HTMLTitleElement.cpp
     HTML/ImageData.cpp
+    HTML/Parser/Entities.cpp
+    HTML/Parser/HTMLDocumentParser.cpp
+    HTML/Parser/HTMLToken.cpp
+    HTML/Parser/HTMLTokenizer.cpp
+    HTML/Parser/ListOfActiveFormattingElements.cpp
+    HTML/Parser/StackOfOpenElements.cpp
     Layout/BoxModelMetrics.cpp
     Layout/LayoutBlock.cpp
     Layout/LayoutBox.cpp
@@ -99,25 +108,16 @@ set(SOURCES
     PageView.cpp
     Painting/StackingContext.cpp
     Parser/CSSParser.cpp
-    Parser/Entities.cpp
-    Parser/HTMLDocumentParser.cpp
-    Parser/HTMLToken.cpp
-    Parser/HTMLTokenizer.cpp
-    Parser/ListOfActiveFormattingElements.cpp
-    Parser/StackOfOpenElements.cpp
-    StylePropertiesModel.cpp
     SVG/SVGElement.cpp
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
     SVG/SVGPathElement.cpp
     SVG/SVGSVGElement.cpp
     SVG/TagNames.cpp
+    StylePropertiesModel.cpp
     URLEncoder.cpp
-    CSS/PropertyID.h
-    CSS/PropertyID.cpp
-    CSS/DefaultStyleSheetSource.cpp
-    WebContentView.cpp
     WebContentClient.cpp
+    WebContentView.cpp
 )
 
 set(GENERATED_SOURCES

@@ -25,8 +25,8 @@
  */
 
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
-#include <LibWeb/Parser/StackOfOpenElements.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/StackOfOpenElements.h>
 
 namespace Web::HTML {
 
