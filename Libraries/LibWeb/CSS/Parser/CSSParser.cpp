@@ -25,10 +25,10 @@
  */
 
 #include <AK/HashMap.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Parser/CSSParser.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
