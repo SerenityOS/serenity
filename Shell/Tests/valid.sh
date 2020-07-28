@@ -5,6 +5,13 @@
 true || exit 2
 false && exit 2
 
+# Can we chain &&'s?
+false && exit 2 && echo "can't chain &&'s" && exit 2
+
+# Proper precedence between &&'s and ||'s
+false && exit 2 || true && false && exit 2
+
+
 # Sanity check: can we pass arguments to 'test'?
 test yes = yes || exit 2
 
