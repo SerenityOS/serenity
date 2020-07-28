@@ -37,7 +37,7 @@
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 
 namespace Web::HTML {
 

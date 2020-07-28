@@ -31,7 +31,7 @@
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/Parser/HTMLToken.h>
+#include <LibWeb/HTML/Parser/HTMLToken.h>
 
 namespace Web::HTML {
 

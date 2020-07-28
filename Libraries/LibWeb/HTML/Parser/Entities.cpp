@@ -26,7 +26,7 @@
 
 #include <AK/LogStream.h>
 #include <AK/StringView.h>
-#include <LibWeb/Parser/Entities.h>
+#include <LibWeb/HTML/Parser/Entities.h>
 
 namespace Web {
 namespace HTML {

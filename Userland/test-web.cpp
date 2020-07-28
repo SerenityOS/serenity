@@ -43,7 +43,7 @@
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <sys/time.h>
 
