@@ -133,7 +133,7 @@ int main(int argc, char** argv)
         char addr_str[100];
 
         struct sockaddr_in dst_addr;
-        memset(&addr, 0, sizeof(addr));
+        memset(&dst_addr, 0, sizeof(dst_addr));
 
         dst_addr.sin_family = AF_INET;
         dst_addr.sin_port = htons(port);
