@@ -25,13 +25,13 @@
  */
 
 #include <AK/QuickSort.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Parser/CSSParser.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -344,7 +344,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             auto right = parse_css_value(context, parts[1]);
             auto bottom = parse_css_value(context, parts[2]);
             auto left = parse_css_value(context, parts[3]);
-            if (top && right && bottom &&left) {
+            if (top && right && bottom && left) {
                 style.set_property(CSS::PropertyID::BorderTopColor, *top);
                 style.set_property(CSS::PropertyID::BorderRightColor, *right);
                 style.set_property(CSS::PropertyID::BorderBottomColor, *bottom);

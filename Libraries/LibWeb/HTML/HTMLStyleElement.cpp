@@ -25,10 +25,10 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Parser/CSSParser.h>
+#include <LibWeb/HTML/HTMLStyleElement.h>
 
 namespace Web::HTML {
 

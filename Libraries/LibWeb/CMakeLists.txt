@@ -11,6 +11,7 @@ set(SOURCES
     Bindings/XMLHttpRequestWrapper.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
+    CSS/Parser/CSSParser.cpp
     CSS/PropertyID.cpp
     CSS/PropertyID.h
     CSS/Selector.cpp
@@ -107,7 +108,6 @@ set(SOURCES
     Page.cpp
     PageView.cpp
     Painting/StackingContext.cpp
-    Parser/CSSParser.cpp
     SVG/SVGElement.cpp
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp

@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/AttributeNames.h>
@@ -42,20 +43,19 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOM/Window.h>
+#include <LibWeb/Dump.h>
+#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
-#include <LibWeb/DOM/Text.h>
-#include <LibWeb/DOM/Window.h>
-#include <LibWeb/Dump.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/Parser/CSSParser.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <stdio.h>
 
