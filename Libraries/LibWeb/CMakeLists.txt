@@ -191,6 +191,7 @@ libweb_js_wrapper(HTML/HTMLTableRowElement)
 libweb_js_wrapper(HTML/HTMLTitleElement)
 libweb_js_wrapper(HTML/ImageData)
 libweb_js_wrapper(UIEvents/MouseEvent)
+libweb_js_wrapper(UIEvents/UIEvent)
 
 get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
 set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})

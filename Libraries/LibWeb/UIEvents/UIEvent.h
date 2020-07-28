@@ -26,37 +26,24 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/Event.h>
 
-namespace Web::DOM {
+namespace Web::UIEvents {
 
-class Event
-    : public RefCounted<Event>
-    , public Bindings::Wrappable {
+class UIEvent : public DOM::Event {
 public:
-    using WrapperType = Bindings::EventWrapper;
+    using WrapperType = Bindings::MouseEventWrapper;
 
-    static NonnullRefPtr<Event> create(const FlyString& event_name)
-    {
-        return adopt(*new Event(event_name));
-    }
-
-    virtual ~Event() { }
-
-    const FlyString& type() const { return m_type; }
-
-    virtual bool is_ui_event() const { return false; }
-    virtual bool is_mouse_event() const { return false; }
+    virtual ~UIEvent() override { }
 
 protected:
-    explicit Event(const FlyString& type)
-        : m_type(type)
+    explicit UIEvent(const FlyString& event_name)
+        : Event(event_name)
     {
     }
 
 private:
-    FlyString m_type;
+    virtual bool is_ui_event() const final { return true; }
 };
 
 }
