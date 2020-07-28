@@ -27,10 +27,10 @@
 #include <AK/ByteBuffer.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLLinkElement.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Parser/CSSParser.h>
 
 namespace Web::HTML {
 

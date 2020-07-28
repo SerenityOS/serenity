@@ -27,13 +27,13 @@
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Parser/CSSParser.h>
 
 namespace Web::HTML {
 
