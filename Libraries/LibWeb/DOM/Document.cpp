@@ -46,7 +46,6 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
@@ -55,6 +54,7 @@
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <stdio.h>

@@ -29,8 +29,8 @@
 #include <AK/SharedBuffer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/SystemTheme.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Page/Frame.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
 namespace WebContent {

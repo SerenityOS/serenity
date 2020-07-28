@@ -40,18 +40,18 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame/EventHandler.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/LayoutBreak.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page/EventHandler.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/Painting/PaintContext.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 #include <stdio.h>
 

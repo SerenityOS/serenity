@@ -29,7 +29,7 @@
 #include <AK/URL.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Page.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/WebViewHooks.h>
 
 namespace Web {

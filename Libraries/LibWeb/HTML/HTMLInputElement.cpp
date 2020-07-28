@@ -31,8 +31,8 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 
 namespace Web::HTML {

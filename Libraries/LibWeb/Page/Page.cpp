@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/Frame/Frame.h>
-#include <LibWeb/Page.h>
+#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/PageView.h>
 
 namespace Web {
