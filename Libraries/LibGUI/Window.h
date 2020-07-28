@@ -116,6 +116,8 @@ public:
 
     void move_to(int x, int y) { move_to({ x, y }); }
     void move_to(const Gfx::IntPoint& point) { set_rect({ point, size() }); }
+    Gfx::IntPoint move_to_recommended_position(int x, int y) { return move_to_recommended_position({ x, y }); }
+    Gfx::IntPoint move_to_recommended_position(const Gfx::IntPoint& point);
 
     void resize(int width, int height) { resize({ width, height }); }
     void resize(const Gfx::IntSize& size) { set_rect({ position(), size }); }

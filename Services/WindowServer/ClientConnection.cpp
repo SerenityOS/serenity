@@ -424,6 +424,12 @@ OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(c
     return make<Messages::WindowServer::GetWindowRectResponse>(it->value->rect());
 }
 
+OwnPtr<Messages::WindowServer::GetRecommendedPositionResponse> ClientConnection::handle(const Messages::WindowServer::GetRecommendedPosition& message)
+{
+    return make<Messages::WindowServer::GetRecommendedPositionResponse>(
+        WindowManager::the().get_recommended_position(message.desired()));
+}
+
 OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowRectInMenubar& message)
 {
     int window_id = message.window_id();

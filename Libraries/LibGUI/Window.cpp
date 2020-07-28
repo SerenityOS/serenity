@@ -177,6 +177,13 @@ String Window::title() const
     return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowTitle>(m_window_id)->title();
 }
 
+Gfx::IntPoint Window::move_to_recommended_position(const Gfx::IntPoint& point)
+{
+    auto real_position = WindowServerConnection::the().send_sync<Messages::WindowServer::GetRecommendedPosition>(point)->position();
+    move_to(real_position);
+    return real_position;
+}
+
 Gfx::IntRect Window::rect_in_menubar() const
 {
     ASSERT(m_window_type == WindowType::MenuApplet);

@@ -1427,4 +1427,34 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
     });
 }
 
+Gfx::IntPoint WindowManager::get_recommended_position(const Gfx::IntPoint& desired)
+{
+    // FIXME: Find a  better source for the width and height to shift by.
+    Gfx::IntPoint shift(8, palette().window_title_height() + 10);
+    Gfx::IntPoint desired_point = desired;
+
+    // FIXME: Find a better source for this.
+    int taskbar_height = 28;
+    int menubar_height = MenuManager::the().menubar_rect().height();
+
+    bool found_point;
+    do {
+        found_point = true;
+        for_each_window([&](Window& window) {
+            if (window.position() == desired_point) {
+                found_point = false;
+                desired_point += shift;
+                desired_point = { desired_point.x() % Screen::the().width(),
+                    (desired_point.y() >= (Screen::the().height() - taskbar_height))
+                        ? menubar_height + palette().window_title_height()
+                        : desired_point.y() };
+
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+    } while (!found_point);
+
+    return desired_point;
+}
 }

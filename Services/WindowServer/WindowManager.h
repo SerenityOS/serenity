@@ -185,6 +185,8 @@ public:
     void minimize_windows(Window&, bool);
     void maximize_windows(Window&, bool);
 
+    Gfx::IntPoint get_recommended_position(const Gfx::IntPoint& desired);
+
     template<typename Function>
     void for_each_window_in_modal_stack(Window& window, Function f)
     {
