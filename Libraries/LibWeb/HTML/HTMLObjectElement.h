@@ -31,9 +31,7 @@
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Loader/ImageLoader.h>
 
-namespace Web {
-
-class LayoutDocument;
+namespace Web::HTML {
 
 class HTMLObjectElement final : public HTMLElement {
 public:
@@ -56,6 +54,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTMLObjectElement)
+AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLObjectElement)
 static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::object; }
 AK_END_TYPE_TRAITS()

@@ -32,7 +32,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Parser/CSSParser.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLLinkElement::HTMLLinkElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

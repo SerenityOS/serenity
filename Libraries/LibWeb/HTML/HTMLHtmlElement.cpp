@@ -26,7 +26,7 @@
 
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLHtmlElement::HTMLHtmlElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

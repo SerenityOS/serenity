@@ -35,7 +35,7 @@
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/PageView.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLInputElement::HTMLInputElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

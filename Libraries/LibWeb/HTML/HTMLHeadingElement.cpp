@@ -26,7 +26,7 @@
 
 #include <LibWeb/HTML/HTMLHeadingElement.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLHeadingElement::HTMLHeadingElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

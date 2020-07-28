@@ -32,6 +32,8 @@
 #include <LibWeb/Parser/ListOfActiveFormattingElements.h>
 #include <LibWeb/Parser/StackOfOpenElements.h>
 
+namespace Web::HTML {
+
 #define ENUMERATE_INSERTION_MODES               \
     __ENUMERATE_INSERTION_MODE(Initial)         \
     __ENUMERATE_INSERTION_MODE(BeforeHTML)      \
@@ -56,8 +58,6 @@
     __ENUMERATE_INSERTION_MODE(AfterFrameset)   \
     __ENUMERATE_INSERTION_MODE(AfterAfterBody)  \
     __ENUMERATE_INSERTION_MODE(AfterAfterFrameset)
-
-namespace Web {
 
 RefPtr<DOM::Document> parse_html_document(const StringView&, const URL&, const String& encoding);
 

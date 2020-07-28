@@ -28,7 +28,7 @@
 
 #include <LibWeb/HTML/HTMLElement.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class HTMLTableElement final : public HTMLElement {
 public:
@@ -43,6 +43,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTMLTableElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::table; }
+AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLTableElement)
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::table; }
 AK_END_TYPE_TRAITS()

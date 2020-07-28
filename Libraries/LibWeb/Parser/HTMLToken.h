@@ -33,7 +33,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class HTMLToken {
     friend class HTMLDocumentParser;

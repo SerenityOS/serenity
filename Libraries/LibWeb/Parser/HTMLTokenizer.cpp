@@ -30,6 +30,8 @@
 #include <LibWeb/Parser/HTMLTokenizer.h>
 #include <ctype.h>
 
+namespace Web::HTML {
+
 #pragma GCC diagnostic ignored "-Wunused-label"
 
 //#define TOKENIZER_TRACE
@@ -210,8 +212,6 @@ static inline bool is_control(u32 codepoint)
 {
     return is_c0_control(codepoint) || (codepoint >= 0x7f && codepoint <= 0x9f);
 }
-
-namespace Web {
 
 Optional<u32> HTMLTokenizer::next_codepoint()
 {

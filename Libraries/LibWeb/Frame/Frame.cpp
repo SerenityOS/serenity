@@ -124,8 +124,8 @@ void Frame::scroll_to_anchor(const String& fragment)
     if (!element) {
         auto candidates = document()->get_elements_by_name(fragment);
         for (auto* candidate : candidates) {
-            if (is<HTMLAnchorElement>(*candidate)) {
-                element = downcast<HTMLAnchorElement>(candidate);
+            if (is<HTML::HTMLAnchorElement>(*candidate)) {
+                element = downcast<HTML::HTMLAnchorElement>(candidate);
                 break;
             }
         }

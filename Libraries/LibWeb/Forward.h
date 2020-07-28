@@ -51,9 +51,8 @@ class Window;
 enum class QuirksMode;
 }
 
-namespace Web {
+namespace Web::HTML {
 class CanvasRenderingContext2D;
-class Frame;
 class HTMLAnchorElement;
 class HTMLBodyElement;
 class HTMLCanvasElement;
@@ -65,6 +64,10 @@ class HTMLHtmlElement;
 class HTMLImageElement;
 class HTMLScriptElement;
 class ImageData;
+}
+
+namespace Web {
+class Frame;
 class LayoutBlock;
 class LayoutDocument;
 class LayoutNode;

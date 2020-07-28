@@ -31,8 +31,6 @@
 
 namespace Web {
 
-class HTMLImageElement;
-
 class LayoutImage : public LayoutReplaced {
 public:
     LayoutImage(DOM::Document&, const DOM::Element&, NonnullRefPtr<CSS::StyleProperties>, const ImageLoader&);

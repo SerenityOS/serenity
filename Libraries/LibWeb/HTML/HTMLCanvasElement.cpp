@@ -32,7 +32,7 @@
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/Layout/LayoutCanvas.h>
 
-namespace Web {
+namespace Web::HTML {
 
 static constexpr auto max_canvas_area = 16384 * 16384;
 

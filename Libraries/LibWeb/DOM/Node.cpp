@@ -62,18 +62,18 @@ Node::~Node()
         layout_node()->parent()->remove_child(*layout_node());
 }
 
-const HTMLAnchorElement* Node::enclosing_link_element() const
+const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
 {
     for (auto* node = this; node; node = node->parent()) {
-        if (is<HTMLAnchorElement>(*node) && downcast<HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
-            return downcast<HTMLAnchorElement>(node);
+        if (is<HTML::HTMLAnchorElement>(*node) && downcast<HTML::HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
+            return downcast<HTML::HTMLAnchorElement>(node);
     }
     return nullptr;
 }
 
-const HTMLElement* Node::enclosing_html_element() const
+const HTML::HTMLElement* Node::enclosing_html_element() const
 {
-    return first_ancestor_of_type<HTMLElement>();
+    return first_ancestor_of_type<HTML::HTMLElement>();
 }
 
 String Node::text_content() const

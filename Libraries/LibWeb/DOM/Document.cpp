@@ -117,7 +117,7 @@ void Document::fixup()
     if (!first_child() || !is<DocumentType>(*first_child()))
         prepend_child(adopt(*new DocumentType(*this)));
 
-    if (is<HTMLHtmlElement>(first_child()->next_sibling()))
+    if (is<HTML::HTMLHtmlElement>(first_child()->next_sibling()))
         return;
 
     auto body = create_element("body");
@@ -127,25 +127,25 @@ void Document::fixup()
     this->append_child(html);
 }
 
-const HTMLHtmlElement* Document::document_element() const
+const HTML::HTMLHtmlElement* Document::document_element() const
 {
-    return first_child_of_type<HTMLHtmlElement>();
+    return first_child_of_type<HTML::HTMLHtmlElement>();
 }
 
-const HTMLHeadElement* Document::head() const
+const HTML::HTMLHeadElement* Document::head() const
 {
     auto* html = document_element();
     if (!html)
         return nullptr;
-    return html->first_child_of_type<HTMLHeadElement>();
+    return html->first_child_of_type<HTML::HTMLHeadElement>();
 }
 
-const HTMLElement* Document::body() const
+const HTML::HTMLElement* Document::body() const
 {
     auto* html = document_element();
     if (!html)
         return nullptr;
-    return html->first_child_of_type<HTMLBodyElement>();
+    return html->first_child_of_type<HTML::HTMLBodyElement>();
 }
 
 String Document::title() const
@@ -154,7 +154,7 @@ String Document::title() const
     if (!head_element)
         return {};
 
-    auto* title_element = head_element->first_child_of_type<HTMLTitleElement>();
+    auto* title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
     if (!title_element)
         return {};
 
@@ -441,32 +441,32 @@ NonnullRefPtr<Text> Document::create_text_node(const String& data)
     return adopt(*new Text(*this, data));
 }
 
-void Document::set_pending_parsing_blocking_script(Badge<HTMLScriptElement>, HTMLScriptElement* script)
+void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement* script)
 {
     m_pending_parsing_blocking_script = script;
 }
 
-NonnullRefPtr<HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTMLDocumentParser>)
+NonnullRefPtr<HTML::HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTML::HTMLDocumentParser>)
 {
     return m_pending_parsing_blocking_script.release_nonnull();
 }
 
-void Document::add_script_to_execute_when_parsing_has_finished(Badge<HTMLScriptElement>, HTMLScriptElement& script)
+void Document::add_script_to_execute_when_parsing_has_finished(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
     m_scripts_to_execute_when_parsing_has_finished.append(script);
 }
 
-NonnullRefPtrVector<HTMLScriptElement> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTMLDocumentParser>)
+NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTML::HTMLDocumentParser>)
 {
     return move(m_scripts_to_execute_when_parsing_has_finished);
 }
 
-void Document::add_script_to_execute_as_soon_as_possible(Badge<HTMLScriptElement>, HTMLScriptElement& script)
+void Document::add_script_to_execute_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
     m_scripts_to_execute_as_soon_as_possible.append(script);
 }
 
-NonnullRefPtrVector<HTMLScriptElement> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTMLDocumentParser>)
+NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLDocumentParser>)
 {
     return move(m_scripts_to_execute_as_soon_as_possible);
 }

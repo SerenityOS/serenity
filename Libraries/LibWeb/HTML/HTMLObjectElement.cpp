@@ -33,7 +33,7 @@
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLObjectElement::HTMLObjectElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

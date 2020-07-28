@@ -29,7 +29,7 @@
 
 namespace Web {
 
-LayoutBreak::LayoutBreak(DOM::Document& document, const HTMLBRElement& element)
+LayoutBreak::LayoutBreak(DOM::Document& document, const HTML::HTMLBRElement& element)
     : LayoutNodeWithStyleAndBoxModelMetrics(document, &element, CSS::StyleProperties::create())
 {
     set_inline(true);

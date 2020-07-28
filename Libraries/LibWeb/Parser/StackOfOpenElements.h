@@ -30,7 +30,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class StackOfOpenElements {
 public:

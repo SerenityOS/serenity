@@ -39,7 +39,7 @@
 #include <LibWeb/PageView.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
 
-namespace Web {
+namespace Web::HTML {
 
 HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)

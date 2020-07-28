@@ -79,8 +79,8 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     auto result = layout_root()->hit_test(position);
     if (result.layout_node && result.layout_node->node()) {
         RefPtr<DOM::Node> node = result.layout_node->node();
-        if (is<HTMLIFrameElement>(*node)) {
-            if (auto* subframe = downcast<HTMLIFrameElement>(*node).hosted_frame())
+        if (is<HTML::HTMLIFrameElement>(*node)) {
+            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).hosted_frame())
                 return subframe->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
@@ -112,8 +112,8 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (!node)
         return false;
 
-    if (is<HTMLIFrameElement>(*node)) {
-        if (auto* subframe = downcast<HTMLIFrameElement>(*node).hosted_frame())
+    if (is<HTML::HTMLIFrameElement>(*node)) {
+        if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).hosted_frame())
             return subframe->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
         return false;
     }
@@ -123,7 +123,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (!layout_root())
         return true;
 
-    if (RefPtr<HTMLAnchorElement> link = node->enclosing_link_element()) {
+    if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
         auto href = link->href();
         auto url = document->complete_url(href);
         dbg() << "Web::EventHandler: Clicking on a link to " << url;
@@ -170,12 +170,12 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
     auto result = layout_root()->hit_test(position);
-    const HTMLAnchorElement* hovered_link_element = nullptr;
+    const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
         RefPtr<DOM::Node> node = result.layout_node->node();
 
-        if (node && is<HTMLIFrameElement>(*node)) {
-            if (auto* subframe = downcast<HTMLIFrameElement>(*node).hosted_frame())
+        if (node && is<HTML::HTMLIFrameElement>(*node)) {
+            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).hosted_frame())
                 return subframe->event_handler().handle_mousemove(position.translated(compute_mouse_event_offset({}, *result.layout_node)), buttons, modifiers);
             return false;
         }
@@ -203,7 +203,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     }
     page_client.page_did_request_cursor_change(is_hovering_link ? GUI::StandardCursor::Hand : GUI::StandardCursor::None);
     if (hovered_node_changed) {
-        RefPtr<HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element() : nullptr;
+        RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element() : nullptr;
         if (hovered_html_element && !hovered_html_element->title().is_null()) {
             page_client.page_did_enter_tooltip_area(m_frame.to_main_frame_position(position), hovered_html_element->title());
         } else {

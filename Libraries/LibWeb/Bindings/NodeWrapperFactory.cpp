@@ -80,48 +80,48 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Document>(node)));
     if (is<DOM::DocumentType>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::DocumentType>(node)));
-    if (is<HTMLAnchorElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLAnchorElement>(node)));
-    if (is<HTMLBodyElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLBodyElement>(node)));
-    if (is<HTMLBRElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLBRElement>(node)));
-    if (is<HTMLCanvasElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLCanvasElement>(node)));
-    if (is<HTMLFormElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLFormElement>(node)));
-    if (is<HTMLHeadElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLHeadElement>(node)));
-    if (is<HTMLHeadingElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLHeadingElement>(node)));
-    if (is<HTMLHRElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLHRElement>(node)));
-    if (is<HTMLHtmlElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLHtmlElement>(node)));
-    if (is<HTMLIFrameElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLIFrameElement>(node)));
-    if (is<HTMLImageElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLImageElement>(node)));
-    if (is<HTMLInputElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLInputElement>(node)));
-    if (is<HTMLLinkElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLLinkElement>(node)));
-    if (is<HTMLObjectElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLObjectElement>(node)));
-    if (is<HTMLScriptElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLScriptElement>(node)));
-    if (is<HTMLStyleElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLStyleElement>(node)));
-    if (is<HTMLTableCellElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLTableCellElement>(node)));
-    if (is<HTMLTableElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLTableElement>(node)));
-    if (is<HTMLTableRowElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLTableRowElement>(node)));
-    if (is<HTMLTitleElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLTitleElement>(node)));
-    if (is<HTMLElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTMLElement>(node)));
+    if (is<HTML::HTMLAnchorElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLAnchorElement>(node)));
+    if (is<HTML::HTMLBodyElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLBodyElement>(node)));
+    if (is<HTML::HTMLBRElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLBRElement>(node)));
+    if (is<HTML::HTMLCanvasElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLCanvasElement>(node)));
+    if (is<HTML::HTMLFormElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLFormElement>(node)));
+    if (is<HTML::HTMLHeadElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLHeadElement>(node)));
+    if (is<HTML::HTMLHeadingElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLHeadingElement>(node)));
+    if (is<HTML::HTMLHRElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLHRElement>(node)));
+    if (is<HTML::HTMLHtmlElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLHtmlElement>(node)));
+    if (is<HTML::HTMLIFrameElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLIFrameElement>(node)));
+    if (is<HTML::HTMLImageElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLImageElement>(node)));
+    if (is<HTML::HTMLInputElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLInputElement>(node)));
+    if (is<HTML::HTMLLinkElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLLinkElement>(node)));
+    if (is<HTML::HTMLObjectElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLObjectElement>(node)));
+    if (is<HTML::HTMLScriptElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLScriptElement>(node)));
+    if (is<HTML::HTMLStyleElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLStyleElement>(node)));
+    if (is<HTML::HTMLTableCellElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLTableCellElement>(node)));
+    if (is<HTML::HTMLTableElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLTableElement>(node)));
+    if (is<HTML::HTMLTableRowElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLTableRowElement>(node)));
+    if (is<HTML::HTMLTitleElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLTitleElement>(node)));
+    if (is<HTML::HTMLElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLElement>(node)));
     if (is<DOM::Element>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Element>(node)));
     return static_cast<NodeWrapper*>(wrap_impl(global_object, node));

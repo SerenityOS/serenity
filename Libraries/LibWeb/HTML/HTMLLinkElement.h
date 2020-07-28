@@ -29,7 +29,7 @@
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Loader/Resource.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class HTMLLinkElement final
     : public HTMLElement
@@ -68,6 +68,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTMLLinkElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTMLElement>(node).local_name() == Web::HTML::TagNames::link; }
+AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLLinkElement)
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::link; }
 AK_END_TYPE_TRAITS()

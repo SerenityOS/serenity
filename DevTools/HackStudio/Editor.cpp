@@ -175,7 +175,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
     m_documentation_page_view->load_html(html_text, {});
 
     if (auto* document = m_documentation_page_view->document()) {
-        const_cast<Web::HTMLElement*>(document->body())->set_attribute(Web::HTML::AttributeNames::style, "background-color: #dac7b5;");
+        const_cast<Web::HTML::HTMLElement*>(document->body())->set_attribute(Web::HTML::AttributeNames::style, "background-color: #dac7b5;");
     }
 
     m_documentation_tooltip_window->move_to(screen_location.translated(4, 4));

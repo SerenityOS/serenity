@@ -28,7 +28,7 @@
 
 #include <LibWeb/DOM/Element.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class HTMLElement : public DOM::Element {
 public:
@@ -45,6 +45,6 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTMLElement)
+AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLElement)
 static bool is_type(const Web::DOM::Node& node) { return node.is_html_element(); }
 AK_END_TYPE_TRAITS()
