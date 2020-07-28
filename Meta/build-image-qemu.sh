@@ -19,7 +19,7 @@ if [ "$(uname -s)" = "Darwin" ]; then
 fi
 
 disk_usage() {
-    du -sm $1 | cut -f1
+    du -sm "$1" | cut -f1
 }
 
 DISK_SIZE=$(($(disk_usage "$SERENITY_ROOT/Base") + $(disk_usage Root) + 100))
