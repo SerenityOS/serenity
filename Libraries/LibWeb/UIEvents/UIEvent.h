@@ -32,7 +32,7 @@ namespace Web::UIEvents {
 
 class UIEvent : public DOM::Event {
 public:
-    using WrapperType = Bindings::MouseEventWrapper;
+    using WrapperType = Bindings::UIEventWrapper;
 
     virtual ~UIEvent() override { }
 
