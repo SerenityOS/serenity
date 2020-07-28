@@ -124,7 +124,6 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     //default:
     case InvalidFormat:
     case MultibyteWithSlash:
-    case MultibyteWithSubopcode:
     case InstructionPrefix:
     case __BeginFormatsWithRMByte:
     case OP_RM16_reg16:
@@ -135,6 +134,8 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_RM8:
     case OP_RM16:
     case OP_RM32:
+    case OP_FPU:
+    case OP_FPU_reg:
     case OP_FPU_RM32:
     case OP_FPU_RM64:
     case OP_RM8_reg8:
@@ -190,13 +191,34 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
 static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     InstructionDescriptor& d = table[op];
-    d.handler = handler;
+    ASSERT(d.handler == nullptr);
     d.format = MultibyteWithSlash;
     d.has_rm = true;
     if (!d.slashes)
         d.slashes = new InstructionDescriptor[8];
 
     build(d.slashes, slash, mnemonic, format, handler, lock_prefix_allowed);
+}
+
+static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+{
+    ASSERT((rm & 0xc0) == 0xc0);
+    ASSERT(((rm >> 3) & 7) == slash);
+
+    InstructionDescriptor& d0 = table[op];
+    ASSERT(d0.format == MultibyteWithSlash);
+    InstructionDescriptor& d = d0.slashes[slash];
+
+    if (!d.slashes) {
+        // Slash/RM instructions are not always dense, so make them all default to the slash instruction.
+        d.slashes = new InstructionDescriptor[8];
+        for (int i = 0; i < 8; ++i) {
+            d.slashes[i] = d;
+            d.slashes[i].slashes = nullptr;
+        }
+    }
+
+    build(d.slashes, rm & 7, mnemonic, format, handler, lock_prefix_allowed);
 }
 
 static void build_0f(u8 op, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
@@ -257,6 +279,12 @@ static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFor
 {
     build_slash(s_0f_table16, op, slash, mnemonic, format, impl, lock_prefix_allowed);
     build_slash(s_0f_table32, op, slash, mnemonic, format, impl, lock_prefix_allowed);
+}
+
+static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+{
+    build_slash_rm(s_table16, op, slash, rm, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash_rm(s_table32, op, slash, rm, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 [[gnu::constructor]] static void build_opcode_tables()
@@ -448,9 +476,49 @@ static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFor
     build_slash(0xD8, 6, "FDIV", OP_FPU_RM32, &Interpreter::FDIV_RM32);
     build_slash(0xD8, 7, "FDIVR", OP_FPU_RM32, &Interpreter::FDIVR_RM32);
 
+    build_slash(0xD9, 0, "FLD", OP_FPU_RM32, &Interpreter::FLD_RM32);
+    build_slash(0xD9, 1, "FXCH", OP_FPU_reg, &Interpreter::FXCH);
+    // FIXME: D9/1 C9 (...but isn't this what D9/1 does naturally, with C9 just being normal R/M?)
+    build_slash(0xD9, 2, "FST", OP_FPU_RM32, &Interpreter::FST_RM32);
+    build_slash_rm(0xD9, 2, 0xD0, "FNOP", OP_FPU, &Interpreter::FNOP);
+    build_slash(0xD9, 3, "FSTP", OP_FPU_RM32, &Interpreter::FSTP_RM32);
+    build_slash(0xD9, 4, "FLDENV", OP_FPU_RM32, &Interpreter::FLDENV);
+    build_slash_rm(0xD9, 4, 0xE0, "FCHS", OP_FPU, &Interpreter::FCHS);
+    build_slash_rm(0xD9, 4, 0xE1, "FABS", OP_FPU, &Interpreter::FABS);
+    build_slash_rm(0xD9, 4, 0xE2, "FTST", OP_FPU, &Interpreter::FTST);
+    build_slash_rm(0xD9, 4, 0xE3, "FXAM", OP_FPU, &Interpreter::FXAM);
+    build_slash(0xD9, 5, "FLDCW", OP_FPU_RM32, &Interpreter::FLDCW);
+    build_slash_rm(0xD9, 5, 0xE8, "FLD1", OP_FPU, &Interpreter::FLD1);
+    build_slash_rm(0xD9, 5, 0xE9, "FLDL2T", OP_FPU, &Interpreter::FLDL2T);
+    build_slash_rm(0xD9, 5, 0xEA, "FLDL2E", OP_FPU, &Interpreter::FLDL2E);
+    build_slash_rm(0xD9, 5, 0xEB, "FLDPI", OP_FPU, &Interpreter::FLDPI);
+    build_slash_rm(0xD9, 5, 0xEC, "FLDLG2", OP_FPU, &Interpreter::FLDLG2);
+    build_slash_rm(0xD9, 5, 0xED, "FLDLN2", OP_FPU, &Interpreter::FLDLN2);
+    build_slash_rm(0xD9, 5, 0xEE, "FLDZ", OP_FPU, &Interpreter::FLDZ);
+    build_slash(0xD9, 6, "FNSTENV", OP_FPU_RM32, &Interpreter::FNSTENV);
+    // FIXME: Extraodinary prefix 0x9B + 0xD9/6: FSTENV
+    build_slash_rm(0xD9, 6, 0xF0, "F2XM1", OP_FPU, &Interpreter::F2XM1);
+    build_slash_rm(0xD9, 6, 0xF1, "FYL2X", OP_FPU, &Interpreter::FYL2X);
+    build_slash_rm(0xD9, 6, 0xF2, "FPTAN", OP_FPU, &Interpreter::FPTAN);
+    build_slash_rm(0xD9, 6, 0xF3, "FPATAN", OP_FPU, &Interpreter::FPATAN);
+    build_slash_rm(0xD9, 6, 0xF4, "FXTRACT", OP_FPU, &Interpreter::FXTRACT);
+    build_slash_rm(0xD9, 6, 0xF5, "FPREM1", OP_FPU, &Interpreter::FPREM1);
+    build_slash_rm(0xD9, 6, 0xF6, "FDECSTP", OP_FPU, &Interpreter::FDECSTP);
+    build_slash_rm(0xD9, 6, 0xF7, "FINCSTP", OP_FPU, &Interpreter::FINCSTP);
+    build_slash(0xD9, 7, "FNSTCW", OP_FPU_RM32, &Interpreter::FNSTCW);
+    // FIXME: Extraodinary prefix 0x9B + 0xD9/7: FSTCW
+    build_slash_rm(0xD9, 7, 0xF8, "FPREM", OP_FPU, &Interpreter::FPREM);
+    build_slash_rm(0xD9, 7, 0xF9, "FYL2XP1", OP_FPU, &Interpreter::FYL2XP1);
+    build_slash_rm(0xD9, 7, 0xFA, "FSQRT", OP_FPU, &Interpreter::FSQRT);
+    build_slash_rm(0xD9, 7, 0xFB, "FSINCOS", OP_FPU, &Interpreter::FSINCOS);
+    build_slash_rm(0xD9, 7, 0xFC, "FRNDINT", OP_FPU, &Interpreter::FRNDINT);
+    build_slash_rm(0xD9, 7, 0xFD, "FSCALE", OP_FPU, &Interpreter::FSCALE);
+    build_slash_rm(0xD9, 7, 0xFE, "FSIN", OP_FPU, &Interpreter::FSIN);
+    build_slash_rm(0xD9, 7, 0xFF, "FCOS", OP_FPU, &Interpreter::FCOS);
+
     // FIXME
-    for (u8 i = 0; i <= 3; ++i)
-        build(0xD9 + i, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+    build(0xDA, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+    build(0xDB, "FPU?", OP_RM8, &Interpreter::ESCAPE);
 
     build_slash(0xDC, 0, "FADD", OP_FPU_RM64, &Interpreter::FADD_RM64);
     build_slash(0xDC, 1, "FMUL", OP_FPU_RM64, &Interpreter::FMUL_RM64);
@@ -462,8 +530,9 @@ static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFor
     build_slash(0xDC, 7, "FDIVR", OP_FPU_RM64, &Interpreter::FDIVR_RM64);
 
     // FIXME
-    for (u8 i = 0; i <= 2; ++i)
-        build(0xDD + i, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+    build(0xDD, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+    build(0xDE, "FPU?", OP_RM8, &Interpreter::ESCAPE);
+    build(0xDF, "FPU?", OP_RM8, &Interpreter::ESCAPE);
 
     build(0xE0, "LOOPNZ", OP_imm8, &Interpreter::LOOPNZ_imm8);
     build(0xE1, "LOOPZ", OP_imm8, &Interpreter::LOOPZ_imm8);
@@ -774,6 +843,12 @@ String MemoryOrRegisterReference::to_string_o32(const Instruction& insn) const
     return String::format("[%s]", to_string(insn).characters());
 }
 
+String MemoryOrRegisterReference::to_string_fpu_reg() const
+{
+    ASSERT(is_register());
+    return register_name(reg_fpu());
+}
+
 String MemoryOrRegisterReference::to_string_fpu32(const Instruction& insn) const
 {
     if (is_register())
@@ -1077,6 +1152,7 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
     auto append_rm8 = [&] { builder.append(m_modrm.to_string_o8(*this)); };
     auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16(*this)); };
     auto append_rm32 = [&] { builder.append(m_modrm.to_string_o32(*this)); };
+    auto append_fpu_reg = [&] { builder.append(m_modrm.to_string_fpu_reg()); };
     auto append_fpu_rm32 = [&] { builder.append(m_modrm.to_string_fpu32(*this)); };
     auto append_fpu_rm64 = [&] { builder.append(m_modrm.to_string_fpu64(*this)); };
     auto append_imm8 = [&] { builder.appendf("%#02x", imm8()); };
@@ -1342,6 +1418,11 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
     case OP_RM32:
         append_rm32();
         break;
+    case OP_FPU:
+        break;
+    case OP_FPU_reg:
+        append_fpu_reg();
+        break;
     case OP_FPU_RM32:
         append_fpu_rm32();
         break;
@@ -1515,7 +1596,6 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
         return mnemonic;
     case InvalidFormat:
     case MultibyteWithSlash:
-    case MultibyteWithSubopcode:
     case __BeginFormatsWithRMByte:
     case __EndFormatsWithRMByte:
         return String::format("(!%s)", mnemonic.characters());
