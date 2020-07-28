@@ -66,7 +66,6 @@ enum IsLockPrefixAllowed {
 enum InstructionFormat {
     InvalidFormat,
     MultibyteWithSlash,
-    MultibyteWithSubopcode,
     InstructionPrefix,
 
     __BeginFormatsWithRMByte,
@@ -82,6 +81,8 @@ enum InstructionFormat {
     OP_RM8,
     OP_RM16,
     OP_RM32,
+    OP_FPU,
+    OP_FPU_reg,
     OP_FPU_RM32,
     OP_FPU_RM64,
     OP_RM8_reg8,
@@ -179,6 +180,11 @@ struct InstructionDescriptor {
     bool has_rm { false };
     unsigned imm1_bytes { 0 };
     unsigned imm2_bytes { 0 };
+
+    // Addressed by the 3 REG bits in the MOD-REG-R/M byte.
+    // Some slash instructions have further subgroups when MOD is 11,
+    // in that case the InstructionDescriptors in slashes have themselves
+    // a non-null slashes member that's indexed by the three R/M bits.
     InstructionDescriptor* slashes { nullptr };
 
     unsigned imm1_bytes_for_address_size(bool a32)
@@ -352,6 +358,7 @@ public:
     String to_string_o8(const Instruction&) const;
     String to_string_o16(const Instruction&) const;
     String to_string_o32(const Instruction&) const;
+    String to_string_fpu_reg() const;
     String to_string_fpu32(const Instruction&) const;
     String to_string_fpu64(const Instruction&) const;
     String to_string_mm(const Instruction&) const;
@@ -864,20 +871,21 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
             m_register_index = m_op & 7;
     }
 
-    bool hasSlash = m_descriptor->format == MultibyteWithSlash;
-
-    if (hasSlash) {
+    bool has_slash = m_descriptor->format == MultibyteWithSlash;
+    if (has_slash) {
         m_descriptor = &m_descriptor->slashes[slash()];
+        if ((rm() & 0xc0) == 0xc0 && m_descriptor->slashes)
+            m_descriptor = &m_descriptor->slashes[rm() & 7];
     }
 
     if (!m_descriptor->mnemonic) {
         if (has_sub_op()) {
-            if (hasSlash)
+            if (has_slash)
                 fprintf(stderr, "Instruction %02X %02X /%u not understood\n", m_op, m_sub_op, slash());
             else
                 fprintf(stderr, "Instruction %02X %02X not understood\n", m_op, m_sub_op);
         } else {
-            if (hasSlash)
+            if (has_slash)
                 fprintf(stderr, "Instruction %02X /%u not understood\n", m_op, slash());
             else
                 fprintf(stderr, "Instruction %02X not understood\n", m_op);
