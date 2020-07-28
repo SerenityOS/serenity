@@ -230,7 +230,7 @@ public:
     template<typename T, typename... Rest>
     bool is_one_of(const T& string, Rest... rest) const
     {
-        if (string == *this)
+        if (*this == string)
             return true;
         return is_one_of(rest...);
     }
