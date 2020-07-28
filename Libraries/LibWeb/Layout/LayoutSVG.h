@@ -26,17 +26,14 @@
 
 #pragma once
 
-#include <LibWeb/SVG/SVGSVGElement.h>
 #include <LibWeb/Layout/LayoutReplaced.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web {
 
-class SVGSVGElement;
-
 class LayoutSVG : public LayoutReplaced {
 public:
-    LayoutSVG(DOM::Document&, const SVG::SVGSVGElement&, NonnullRefPtr<CSS::StyleProperties>);
+    LayoutSVG(DOM::Document&, SVG::SVGSVGElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutSVG() override = default;
     virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void paint(PaintContext&, PaintPhase) override;

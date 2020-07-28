@@ -33,7 +33,7 @@ namespace Web {
 
 class LayoutCanvas : public LayoutReplaced {
 public:
-    LayoutCanvas(DOM::Document&, const HTML::HTMLCanvasElement&, NonnullRefPtr<CSS::StyleProperties>);
+    LayoutCanvas(DOM::Document&, HTML::HTMLCanvasElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutCanvas() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;

@@ -38,7 +38,7 @@
 
 namespace Web {
 
-LayoutBlock::LayoutBlock(DOM::Document& document, const DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
+LayoutBlock::LayoutBlock(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutBox(document, node, move(style))
 {
 }
