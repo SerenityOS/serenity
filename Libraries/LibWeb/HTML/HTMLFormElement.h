@@ -31,7 +31,7 @@
 
 namespace Web::HTML {
 
-class HTMLFormElement : public HTMLElement {
+class HTMLFormElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLFormElementWrapper;
 

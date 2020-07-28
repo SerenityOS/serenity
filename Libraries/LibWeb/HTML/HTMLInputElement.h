@@ -30,7 +30,7 @@
 
 namespace Web::HTML {
 
-class HTMLInputElement : public HTMLElement {
+class HTMLInputElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLInputElementWrapper;
 
