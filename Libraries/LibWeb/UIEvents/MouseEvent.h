@@ -28,7 +28,7 @@
 
 #include <LibWeb/DOM/Event.h>
 
-namespace Web::DOM {
+namespace Web::UIEvents {
 
 class MouseEvent final : public DOM::Event {
 public:

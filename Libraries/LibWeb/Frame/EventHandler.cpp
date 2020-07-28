@@ -28,13 +28,13 @@
 #include <LibGUI/Window.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/HTML/HTMLIFrameElement.h>
-#include <LibWeb/DOM/MouseEvent.h>
 #include <LibWeb/Frame/EventHandler.h>
 #include <LibWeb/Frame/Frame.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/PageView.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web {
 
@@ -85,7 +85,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
             return false;
         }
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
-        node->dispatch_event(DOM::MouseEvent::create("mouseup", offset.x(), offset.y()));
+        node->dispatch_event(UIEvents::MouseEvent::create("mouseup", offset.x(), offset.y()));
         handled_event = true;
     }
 
@@ -119,7 +119,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     }
 
     auto offset = compute_mouse_event_offset(position, *result.layout_node);
-    node->dispatch_event(DOM::MouseEvent::create("mousedown", offset.x(), offset.y()));
+    node->dispatch_event(UIEvents::MouseEvent::create("mousedown", offset.x(), offset.y()));
     if (!layout_root())
         return true;
 
@@ -153,8 +153,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
             dump_selection("MouseDown");
             m_in_mouse_selection = true;
-        }
-        else if (button == GUI::MouseButton::Right) {
+        } else if (button == GUI::MouseButton::Right) {
             page_client.page_did_request_context_menu(m_frame.to_main_frame_position(position));
         }
     }
@@ -192,7 +191,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 is_hovering_link = true;
             }
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
-            node->dispatch_event(DOM::MouseEvent::create("mousemove", offset.x(), offset.y()));
+            node->dispatch_event(UIEvents::MouseEvent::create("mousemove", offset.x(), offset.y()));
             if (!layout_root())
                 return true;
         }
