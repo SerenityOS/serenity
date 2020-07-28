@@ -26,22 +26,40 @@
 
 #pragma once
 
-#include <LibGUI/Dialog.h>
+#include <LibGUI/Model.h>
+#include <LibGfx/Bitmap.h>
 
-namespace Profiler {
+namespace GUI {
 
-class ProcessChooser final : public GUI::Dialog {
-    C_OBJECT(ProcessChooser);
-
+class RunningProcessesModel final : public GUI::Model {
 public:
-    pid_t pid() const { return m_pid; }
+    static NonnullRefPtr<RunningProcessesModel> create();
+    virtual ~RunningProcessesModel() override;
+
+    enum Column {
+        Icon,
+        PID,
+        UID,
+        Name,
+        __Count,
+    };
+
+    virtual int row_count(const GUI::ModelIndex&) const override;
+    virtual int column_count(const GUI::ModelIndex&) const override;
+    virtual String column_name(int column_index) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
+    virtual void update() override;
 
 private:
-    ProcessChooser(GUI::Window* parent_window = nullptr);
+    RunningProcessesModel();
 
-    void build();
-
-    pid_t m_pid { 0 };
+    struct Process {
+        pid_t pid;
+        uid_t uid;
+        RefPtr<Gfx::Bitmap> icon;
+        String name;
+    };
+    Vector<Process> m_processes;
 };
 
 }

@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ProcessChooser.h"
 #include "Profile.h"
 #include "ProfileTimelineWidget.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -41,6 +41,7 @@
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/ProcessChooser.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
@@ -59,6 +60,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv, false);
 
     auto app = GUI::Application::construct(argc, argv);
+    auto app_icon = GUI::Icon::default_icon("app-profiler");
 
     const char* path = nullptr;
     if (argc != 2) {
@@ -79,6 +81,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("Profiler");
     window->set_rect(100, 100, 800, 600);
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
@@ -118,6 +121,11 @@ int main(int argc, char** argv)
     percent_action->set_checked(false);
     view_menu.add_action(percent_action);
 
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("Profiler", app_icon.bitmap_for_size(32), window);
+    }));
+
     app->set_menubar(move(menubar));
 
     window->show();
@@ -128,6 +136,7 @@ bool prompt_to_stop_profiling()
 {
     auto window = GUI::Window::construct();
     window->set_title("Profiling");
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"));
     Gfx::IntRect window_rect { 0, 0, 320, 200 };
     window_rect.center_within(GUI::Desktop::the().rect());
     window->set_rect(window_rect);
@@ -154,7 +163,7 @@ bool prompt_to_stop_profiling()
 bool generate_profile(pid_t pid)
 {
     if (!pid) {
-        auto process_chooser = Profiler::ProcessChooser::construct();
+        auto process_chooser = GUI::ProcessChooser::construct("Profiler", "Profile", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"));
         if (process_chooser->exec() == GUI::Dialog::ExecCancel)
             return false;
         pid = process_chooser->pid();

@@ -51,9 +51,11 @@ set(SOURCES
     MultiView.cpp
     Notification.cpp
     Painter.cpp
+    ProcessChooser.cpp
     ProgressBar.cpp
     RadioButton.cpp
     ResizeCorner.cpp
+    RunningProcessesModel.cpp
     ScrollableWidget.cpp
     ScrollBar.cpp
     Shortcut.cpp

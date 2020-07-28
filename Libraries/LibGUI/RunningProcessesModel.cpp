@@ -24,11 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "RunningProcessesModel.h"
 #include <AK/SharedBuffer.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibGUI/RunningProcessesModel.h>
 
-namespace Profiler {
+namespace GUI {
 
 NonnullRefPtr<RunningProcessesModel> RunningProcessesModel::create()
 {

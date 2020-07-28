@@ -26,40 +26,26 @@
 
 #pragma once
 
-#include <LibGUI/Model.h>
-#include <LibGfx/Bitmap.h>
+#include <LibGUI/Dialog.h>
 
-namespace Profiler {
+namespace GUI {
 
-class RunningProcessesModel final : public GUI::Model {
+class ProcessChooser final : public GUI::Dialog {
+    C_OBJECT(ProcessChooser);
+
 public:
-    static NonnullRefPtr<RunningProcessesModel> create();
-    virtual ~RunningProcessesModel() override;
+    virtual ~ProcessChooser() override;
 
-    enum Column {
-        Icon,
-        PID,
-        UID,
-        Name,
-        __Count,
-    };
-
-    virtual int row_count(const GUI::ModelIndex&) const override;
-    virtual int column_count(const GUI::ModelIndex&) const override;
-    virtual String column_name(int column_index) const override;
-    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
-    virtual void update() override;
+    pid_t pid() const { return m_pid; }
 
 private:
-    RunningProcessesModel();
+    ProcessChooser(const StringView& window_title = "Process Chooser", const StringView& button_label = "Select", const Gfx::Bitmap* window_icon = nullptr, GUI::Window* parent_window = nullptr);
 
-    struct Process {
-        pid_t pid;
-        uid_t uid;
-        RefPtr<Gfx::Bitmap> icon;
-        String name;
-    };
-    Vector<Process> m_processes;
+    pid_t m_pid { 0 };
+
+    String m_window_title;
+    String m_button_label;
+    RefPtr<Gfx::Bitmap> m_window_icon;
 };
 
 }
