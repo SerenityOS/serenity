@@ -30,7 +30,7 @@
 
 namespace Web::HTML {
 
-class HTMLTableRowElement : public HTMLElement {
+class HTMLTableRowElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableRowElementWrapper;
 

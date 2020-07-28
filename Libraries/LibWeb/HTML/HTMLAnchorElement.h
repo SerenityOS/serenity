@@ -30,7 +30,7 @@
 
 namespace Web::HTML {
 
-class HTMLAnchorElement : public HTMLElement {
+class HTMLAnchorElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLAnchorElementWrapper;
 
