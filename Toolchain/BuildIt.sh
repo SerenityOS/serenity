@@ -19,9 +19,10 @@ MAKE="make"
 MD5SUM="md5sum"
 NPROC="nproc"
 
-# Each cache entry is 260 MB. 8 entries are 4 GiB.
-# It seems that Travis starts having trouble at 35 entries, so I think this is a good amount.
-KEEP_CACHE_COUNT=8
+# Each cache entry is 70 MB. 10 entries are 700 MiB.
+# It seems that Travis starts having trouble around a total
+# cache size of 9 GiB, so I think this is a good amount.
+KEEP_CACHE_COUNT=10
 
 if command -v ginstall &>/dev/null; then
     INSTALL=ginstall
@@ -110,7 +111,6 @@ pushd "$DIR"
                 ls -l
             popd
         fi
-
     fi
 popd
 
@@ -262,7 +262,6 @@ popd
 
 pushd "$DIR"
     if [ "${TRY_USE_LOCAL_TOOLCHAIN}" = "y" ] ; then
-        # TODO: Compress with -z.  It's factor 3, and costs no time.
         echo "Caching toolchain:"
 
         if [ -z "${DEPS_HASH}" ] ; then
@@ -275,6 +274,23 @@ pushd "$DIR"
             echo "Not touching cache then."
         else
             mkdir -p Cache/
+            # We *most definitely* don't need debug symbols in the linker/compiler.
+            # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 250 MiB.
+            pushd "Local/libexec/gcc/i686-pc-serenity/${GCC_VERSION}"
+                for binary in cc1plus lto1; do
+                    echo "Before: $(du -h "${binary}")"
+                    strip "${binary}"
+                    echo "After: $(du -h "${binary}")"
+                done
+                # C is forbidden anyway by the Contribution Guidelines, so we can delete the C compiler:
+                echo "Before: $(du -h "cc1")"
+                rm cc1
+                echo "After: 0	cc1"
+            popd
+            binary=Local/bin/i686-pc-serenity-lto-dump
+            echo "Before: $(du -h "${binary}")"
+            strip "${binary}"
+            echo "After: $(du -h "${binary}")"
             tar czf "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" Local/
         fi
     fi
