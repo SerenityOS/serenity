@@ -102,7 +102,7 @@ int UDPSocket::protocol_send(const void* data, size_t data_length)
     udp_packet.set_length(sizeof(UDPPacket) + data_length);
     memcpy(udp_packet.payload(), data, data_length);
     klog() << "sending as udp packet from " << routing_decision.adapter->ipv4_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << "!";
-    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, buffer.data(), buffer.size(), ttl());
+    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, buffer.span(), ttl());
     return data_length;
 }
 

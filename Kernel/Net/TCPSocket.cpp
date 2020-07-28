@@ -217,7 +217,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, size_t payload_s
 
     routing_decision.adapter->send_ipv4(
         routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-        buffer.data(), buffer.size(), ttl());
+        buffer.span(), ttl());
 
     m_packets_out++;
     m_bytes_out += buffer.size();
@@ -245,7 +245,7 @@ void TCPSocket::send_outgoing_packets()
 #endif
         routing_decision.adapter->send_ipv4(
             routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-            packet.buffer.data(), packet.buffer.size(), ttl());
+            packet.buffer.span(), ttl());
 
         m_packets_out++;
         m_bytes_out += packet.buffer.size();

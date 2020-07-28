@@ -47,10 +47,10 @@ LoopbackAdapter::~LoopbackAdapter()
 {
 }
 
-void LoopbackAdapter::send_raw(const u8* data, size_t size)
+void LoopbackAdapter::send_raw(ReadonlyBytes payload)
 {
-    dbg() << "LoopbackAdapter: Sending " << size << " byte(s) to myself.";
-    did_receive(data, size);
+    dbg() << "LoopbackAdapter: Sending " << payload.size() << " byte(s) to myself.";
+    did_receive(payload);
 }
 
 }
