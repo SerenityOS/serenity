@@ -79,7 +79,7 @@ pushd "$DIR"
 
         DEPS_CONFIG="
             uname=$(uname),TARGET=${TARGET},
-            BuildItHash=$($MD5SUM $(basename $0)),
+            BuildItHash=$($MD5SUM "$(basename "$0")"),
             MAKE=${MAKE},MD5SUM=${MD5SUM},NPROC=${NPROC},
             CC=${CC},CXX=${CXX},with_gmp=${with_gmp},LDFLAGS=${LDFLAGS},
             BINUTILS_VERSION=${BINUTILS_VERSION},BINUTILS_MD5SUM=${BINUTILS_MD5SUM},
@@ -106,6 +106,9 @@ pushd "$DIR"
                 # Travis preserves timestamps. Don't ask me why, but it does.
                 # We can exploit this to get an easy approximation of recent-ness.
                 # Our purging algorithm is simple: keep only the newest X entries.
+                # Note that `find` doesn't easily support ordering by date,
+                # and we control the filenames anyway.
+                # shellcheck disable=SC2012
                 ls -t | tail "-n+${KEEP_CACHE_COUNT}" | xargs -r rm -v
                 echo "After deletion:"
                 ls -l
