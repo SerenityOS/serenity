@@ -81,7 +81,7 @@ public:
     const void* payload() const { return this + 1; }
 
     u16 flags_and_fragment() const { return m_flags_and_fragment; }
-    u16 fragment_offset() const { return ((u16)m_flags_and_fragment & 0x2fff); }
+    u16 fragment_offset() const { return ((u16)m_flags_and_fragment & 0x1fff); }
     u16 flags() const { return (((u16)m_flags_and_fragment) & (((u16)IPv4PacketFlags::MoreFragments) | ((u16)IPv4PacketFlags::DontFragment))); }
 
     void set_has_more_fragments(bool more_fragments)
@@ -93,13 +93,13 @@ public:
     }
     void set_fragment_offset(u16 offset)
     {
-        m_flags_and_fragment = flags() | (offset & 0x2fff);
+        m_flags_and_fragment = flags() | (offset & 0x1fff);
     }
 
     bool is_a_fragment() const
     {
         // either has More-Fragments set, or has a fragment offset
-        return (((u16)m_flags_and_fragment) & ((u16)IPv4PacketFlags::MoreFragments)) || ((u16)m_flags_and_fragment & 0x2fff);
+        return (((u16)m_flags_and_fragment) & ((u16)IPv4PacketFlags::MoreFragments)) || ((u16)m_flags_and_fragment & 0x1fff);
     }
 
     u16 payload_size() const { return m_length - sizeof(IPv4Packet); }
