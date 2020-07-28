@@ -38,13 +38,12 @@
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/HTML/HTMLImageElement.h>
-#include <LibWeb/DOM/MouseEvent.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame/EventHandler.h>
 #include <LibWeb/Frame/Frame.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/LayoutBreak.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
@@ -53,6 +52,7 @@
 #include <LibWeb/PageView.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 #include <stdio.h>
 
 //#define SELECTION_DEBUG

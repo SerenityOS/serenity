@@ -325,7 +325,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_ == "DOM") {
+    if (namespace_ == "DOM" || namespace_ == "UIEvents") {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -411,8 +411,10 @@ static void generate_header(const IDL::Interface& interface)
     // FIXME: This is very strange.
     out() << "#if __has_include(<LibWeb/DOM/" << interface.name << ".h>)";
     out() << "#include <LibWeb/DOM/" << interface.name << ".h>";
-    out() << "#else";
+    out() << "#elif __has_include(<LibWeb/HTML/" << interface.name << ".h>)";
     out() << "#include <LibWeb/HTML/" << interface.name << ".h>";
+    out() << "#elif __has_include(<LibWeb/UIEvents/" << interface.name << ".h>)";
+    out() << "#include <LibWeb/UIEvents/" << interface.name << ".h>";
     out() << "#endif";
 
     if (wrapper_base_class != "Wrapper")
