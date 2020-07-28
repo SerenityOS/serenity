@@ -23,28 +23,30 @@ notifications:
       - "Details: %{build_url}"
 
 before_install:
-- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-- sudo apt-get update -qq
-- sudo apt-get install -y g++-8 libstdc++-8-dev shellcheck libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
-- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
-- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
-- sudo python2 -m pip install cmake
-- export PATH=/usr/local/bin/:$PATH
-- cmake --version
+#- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+#- sudo apt-get update -qq
+#- sudo apt-get install -y g++-8 libstdc++-8-dev shellcheck libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
+#- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
+#- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
+#- sudo python2 -m pip install cmake
+#- export PATH=/usr/local/bin/:$PATH
+#- cmake --version
 
 script:
 - export SERENITY_ROOT=$(pwd)
-- Meta/lint-shell-scripts.sh
-- Meta/check-style.sh
-- cd Toolchain
-- TRY_USE_LOCAL_TOOLCHAIN=y ./BuildIt.sh
-- cd "$SERENITY_ROOT"
-- mkdir -p Build
-- cd Build
-- cmake .. -DBUILD_LAGOM=1
-- make
-- CTEST_OUTPUT_ON_FAILURE=1 make test
-- cd Meta/Lagom
-- ./test-js
+#- Meta/lint-shell-scripts.sh
+#- Meta/check-style.sh
+#- cd Toolchain
+#- TRY_USE_LOCAL_TOOLCHAIN=y ./BuildIt.sh
+#- cd "$SERENITY_ROOT"
+#- mkdir -p Build
+#- cd Build
+#- cmake .. -DBUILD_LAGOM=1
+#- make
+#- CTEST_OUTPUT_ON_FAILURE=1 make test
+#- cd Meta/Lagom
+#- ./test-js
 - cd "$SERENITY_ROOT"/Toolchain/Cache
 - du -ch * || true
+- du -sch /home/travis/.ccache/* || true
+- du -sch /var/cache/apt/archives/*.deb || true
