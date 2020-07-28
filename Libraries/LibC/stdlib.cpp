@@ -873,8 +873,7 @@ long long strtoll(const char* str, char** endptr, int base)
     // Parse base
     if (base == 0) {
         if (*parse_ptr == '0') {
-            parse_ptr += 1;
-            if (*parse_ptr == 'x' || *parse_ptr == 'X') {
+            if (tolower(*(parse_ptr + 1)) == 'x') {
                 base = 16;
                 parse_ptr += 2;
             } else {
@@ -950,8 +949,7 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
     // Parse base
     if (base == 0) {
         if (*parse_ptr == '0') {
-            parse_ptr += 1;
-            if (*parse_ptr == 'x' || *parse_ptr == 'X') {
+            if (tolower(*(parse_ptr + 1)) == 'x') {
                 base = 16;
                 parse_ptr += 2;
             } else {
