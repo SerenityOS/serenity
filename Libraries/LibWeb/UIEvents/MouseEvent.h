@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include <LibWeb/DOM/Event.h>
+#include <LibWeb/UIEvents/UIEvent.h>
 
 namespace Web::UIEvents {
 
-class MouseEvent final : public DOM::Event {
+class MouseEvent final : public UIEvents::UIEvent {
 public:
     using WrapperType = Bindings::MouseEventWrapper;
 
@@ -39,14 +39,14 @@ public:
         return adopt(*new MouseEvent(event_name, offset_x, offset_y));
     }
 
-    virtual ~MouseEvent() override {}
+    virtual ~MouseEvent() override { }
 
     i32 offset_x() const { return m_offset_x; }
     i32 offset_y() const { return m_offset_y; }
 
 protected:
     MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y)
-        : Event(event_name)
+        : UIEvent(event_name)
         , m_offset_x(offset_x)
         , m_offset_y(offset_y)
     {
