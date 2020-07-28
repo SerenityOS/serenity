@@ -83,8 +83,12 @@ enum InstructionFormat {
     OP_RM32,
     OP_FPU,
     OP_FPU_reg,
+    OP_FPU_mem,
+    OP_FPU_AX16,
+    OP_FPU_RM16,
     OP_FPU_RM32,
     OP_FPU_RM64,
+    OP_FPU_M80,
     OP_RM8_reg8,
     OP_RM32_reg32,
     OP_reg32_RM32,
@@ -359,8 +363,12 @@ public:
     String to_string_o16(const Instruction&) const;
     String to_string_o32(const Instruction&) const;
     String to_string_fpu_reg() const;
+    String to_string_fpu_mem(const Instruction&) const;
+    String to_string_fpu_ax16() const;
+    String to_string_fpu16(const Instruction&) const;
     String to_string_fpu32(const Instruction&) const;
     String to_string_fpu64(const Instruction&) const;
+    String to_string_fpu80(const Instruction&) const;
     String to_string_mm(const Instruction&) const;
 
     bool is_register() const { return m_register_index != 0xffffffff; }
