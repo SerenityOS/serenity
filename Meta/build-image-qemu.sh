@@ -17,6 +17,13 @@ if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/usr/local/opt/e2fsprogs/bin:$PATH"
     export PATH="/usr/local/opt/e2fsprogs/sbin:$PATH"
 fi
+
+disk_usage() {
+    du -sm $1 | cut -f1
+}
+
+DISK_SIZE=$(($(disk_usage "$SERENITY_ROOT/Base") + $(disk_usage Root) + 100))
+
 echo "setting up disk image..."
 qemu-img create _disk_image "${DISK_SIZE:-600}"m || die "could not create disk image"
 chown "$SUDO_UID":"$SUDO_GID" _disk_image || die "could not adjust permissions on disk image"
