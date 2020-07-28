@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -34,11 +35,20 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    for (int i = 1; i < argc; ++i) {
-        fputs(argv[i], stdout);
-        if (i != argc - 1)
+    Vector<const char*> values;
+    bool no_trailing_newline = false;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(no_trailing_newline, "Do not output a trailing newline", nullptr, 'n');
+    args_parser.add_positional_argument(values, "Values to print out", "string", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    for (size_t i = 0; i < values.size(); ++i) {
+        fputs(values[i], stdout);
+        if (i != values.size() - 1)
             fputc(' ', stdout);
     }
-    printf("\n");
+    if (!no_trailing_newline)
+        printf("\n");
     return 0;
 }
