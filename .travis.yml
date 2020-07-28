@@ -46,5 +46,8 @@ script:
 - CTEST_OUTPUT_ON_FAILURE=1 make test
 - cd Meta/Lagom
 - ./test-js
+# These feel like they should go into a script. However, that would be a Travis-specific script, and this is *the* right place for travis-specific stuff.
 - cd "$SERENITY_ROOT"/Toolchain/Cache
 - du -ch * || true
+- du -sch /home/travis/.ccache/* || true
+- du -sch /var/cache/apt/archives/*.deb || true
