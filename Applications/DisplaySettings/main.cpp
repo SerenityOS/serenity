@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     dbg() << "main window: " << window;
     window->set_title("Display settings");
-    window->move_to(100, 100);
+    window->move_to_recommended_position(100, 100);
     window->resize(360, 390);
     window->set_resizable(false);
     window->set_main_widget(instance->root_widget());

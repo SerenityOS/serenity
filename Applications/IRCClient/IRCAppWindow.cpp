@@ -58,7 +58,8 @@ IRCAppWindow::IRCAppWindow(String server, int port)
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-irc-client.png"));
 
     update_title();
-    set_rect(200, 200, 600, 400);
+    move_to_recommended_position(200, 200);
+    resize(640, 400);
     setup_actions();
     setup_menus();
     setup_widgets();

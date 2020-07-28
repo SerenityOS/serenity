@@ -77,16 +77,17 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto set_edited_font = [&](const String& path, RefPtr<Gfx::Font>&& font, Gfx::IntPoint point) {
+    auto set_edited_font = [&](const String& path, RefPtr<Gfx::Font>&& font) {
         // Convert 256 char font to 384 char font.
         if (font->type() == Gfx::FontTypes::Default)
             font->set_type(Gfx::FontTypes::LatinExtendedA);
 
         window->set_title(String::format("%s - Font Editor", path.characters()));
         auto& font_editor_widget = window->set_main_widget<FontEditorWidget>(path, move(font));
-        window->set_rect({ point, { font_editor_widget.preferred_width(), font_editor_widget.preferred_height() } });
+        window->resize({ font_editor_widget.preferred_width(), font_editor_widget.preferred_height() });
     };
-    set_edited_font(path, move(edited_font), { 50, 50 });
+    window->move_to_recommended_position(50, 50);
+    set_edited_font(path, move(edited_font));
 
     auto menubar = GUI::MenuBar::construct();
 
@@ -103,7 +104,7 @@ int main(int argc, char** argv)
             return;
         }
 
-        set_edited_font(open_path.value(), move(new_font), window->position());
+        set_edited_font(open_path.value(), move(new_font));
     }));
     app_menu.add_action(GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
         FontEditorWidget* editor = static_cast<FontEditorWidget*>(window->main_widget());

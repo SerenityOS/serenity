@@ -69,7 +69,8 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
-    window->set_rect(200, 200, 300, 200);
+    window->move_to_recommended_position(200, 200);
+    window->resize(300, 200);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"));
     window->set_title("QuickShow");
 

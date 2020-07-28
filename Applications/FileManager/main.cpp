@@ -248,8 +248,9 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto left = config->read_num_entry("Window", "Left", 150);
     auto top = config->read_num_entry("Window", "Top", 75);
     auto width = config->read_num_entry("Window", "Width", 640);
-    auto heigth = config->read_num_entry("Window", "Heigth", 480);
-    window->set_rect({ left, top, width, heigth });
+    auto height = config->read_num_entry("Window", "Heigth", 480);
+    window->move_to_recommended_position(left, top);
+    window->resize(width, height);
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_layout<GUI::VerticalBoxLayout>();
@@ -846,7 +847,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 } else {
                     file_context_menu_action_default_action.clear();
                 }
-                
+
                 if (current_file_handlers.size() > 1) {
                     added_open_menu_items = true;
                     auto& file_open_with_menu = file_context_menu->add_submenu("Open with");

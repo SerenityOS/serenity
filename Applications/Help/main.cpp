@@ -86,7 +86,8 @@ int main(int argc, char* argv[])
     auto window = GUI::Window::construct();
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Help");
-    window->set_rect(300, 200, 570, 500);
+    window->move_to_recommended_position(300, 200);
+    window->resize(570, 500);
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_layout<GUI::VerticalBoxLayout>();
