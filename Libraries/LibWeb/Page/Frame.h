@@ -33,8 +33,8 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
-#include <LibWeb/Frame/EventHandler.h>
 #include <LibWeb/Loader/FrameLoader.h>
+#include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web {
@@ -82,7 +82,6 @@ public:
 
     Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
     Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
-
 
 private:
     explicit Frame(DOM::Element& host_element, Frame& main_frame);

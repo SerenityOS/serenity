@@ -26,9 +26,9 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 
 namespace Web {

@@ -25,10 +25,10 @@
  */
 
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web {

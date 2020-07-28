@@ -32,7 +32,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
-#include <LibWeb/Frame/Frame.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 
 namespace Web::DOM {

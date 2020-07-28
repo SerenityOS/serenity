@@ -30,9 +30,9 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutFrame.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 
 namespace Web {

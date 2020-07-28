@@ -31,11 +31,11 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Frame/Frame.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Page.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web {
 

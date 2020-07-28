@@ -29,15 +29,15 @@
 #include <LibGUI/TextBox.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
-#include <LibWeb/Dump.h>
-#include <LibWeb/Frame/Frame.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/LayoutFrame.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 
 namespace Web::HTML {
 

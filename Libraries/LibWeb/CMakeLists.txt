@@ -42,8 +42,6 @@ set(SOURCES
     DOMTreeModel.cpp
     Dump.cpp
     FontCache.cpp
-    Frame/EventHandler.cpp
-    Frame/Frame.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/HTMLAnchorElement.cpp
     HTML/HTMLBRElement.cpp
@@ -105,7 +103,9 @@ set(SOURCES
     Loader/ImageResource.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
-    Page.cpp
+    Page/EventHandler.cpp
+    Page/Frame.cpp
+    Page/Page.cpp
     PageView.cpp
     Painting/StackingContext.cpp
     SVG/SVGElement.cpp
