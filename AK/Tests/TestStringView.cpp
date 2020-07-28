@@ -68,8 +68,8 @@ TEST_CASE(starts_with)
     EXPECT(test_string_view.starts_with("AB"));
     EXPECT(test_string_view.starts_with("ABCDEF"));
     EXPECT(!test_string_view.starts_with("DEF"));
-    EXPECT(test_string_view.starts_with("abc",  CaseSensitivity::CaseInsensitive));
-    EXPECT(!test_string_view.starts_with("abc",  CaseSensitivity::CaseSensitive));
+    EXPECT(test_string_view.starts_with("abc", CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string_view.starts_with("abc", CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(ends_with)
@@ -82,8 +82,8 @@ TEST_CASE(ends_with)
     EXPECT(test_string_view.ends_with("ABCDEF"));
     EXPECT(!test_string_view.ends_with("ABCDE"));
     EXPECT(!test_string_view.ends_with("ABCDEFG"));
-    EXPECT(test_string_view.ends_with("def",  CaseSensitivity::CaseInsensitive));
-    EXPECT(!test_string_view.ends_with("def",  CaseSensitivity::CaseSensitive));
+    EXPECT(test_string_view.ends_with("def", CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string_view.ends_with("def", CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(lines)
@@ -157,5 +157,23 @@ TEST_CASE(find_last_of)
     EXPECT_EQ(test_string_view.find_last_of("fghi").has_value(), false);
 }
 
+TEST_CASE(split_view)
+{
+    StringView test_string_view = "axxbxcxd";
+    EXPECT_EQ(test_string_view.split_view('x'), Vector<StringView>({ "a", "b", "c", "d" }));
+    EXPECT_EQ(test_string_view.split_view('x', true), Vector<StringView>({ "a", "", "b", "c", "d" }));
+    EXPECT_EQ(test_string_view.split_view("x"), Vector<StringView>({ "a", "b", "c", "d" }));
+    EXPECT_EQ(test_string_view.split_view("x", true), Vector<StringView>({ "a", "", "b", "c", "d" }));
+
+    test_string_view = "axxbx";
+    EXPECT_EQ(test_string_view.split_view('x'), Vector<StringView>({ "a", "b" }));
+    EXPECT_EQ(test_string_view.split_view('x', true), Vector<StringView>({ "a", "", "b", "" }));
+    EXPECT_EQ(test_string_view.split_view("x"), Vector<StringView>({ "a", "b" }));
+    EXPECT_EQ(test_string_view.split_view("x", true), Vector<StringView>({ "a", "", "b", "" }));
+
+    test_string_view = "axxbcxxdxx";
+    EXPECT_EQ(test_string_view.split_view("xx"), Vector<StringView>({ "a", "bc", "d" }));
+    EXPECT_EQ(test_string_view.split_view("xx", true), Vector<StringView>({ "a", "bc", "d", "" }));
+}
 
 TEST_MAIN(StringView)
