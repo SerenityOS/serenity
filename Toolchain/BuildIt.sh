@@ -285,10 +285,6 @@ pushd "$DIR"
                     strip "${binary}"
                     echo "After: $(du -h "${binary}")"
                 done
-                # C is forbidden anyway by the Contribution Guidelines, so we can delete the C compiler:
-                echo "Before: $(du -h "cc1")"
-                rm cc1
-                echo "After: 0	cc1"
             popd
             binary=Local/bin/i686-pc-serenity-lto-dump
             echo "Before: $(du -h "${binary}")"
