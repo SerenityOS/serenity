@@ -39,7 +39,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 file(GLOB AK_SOURCES "../../AK/*.cpp")
-file(GLOB LIBCORE_SOURCES "../../Libraries/LibCore/*.c*")
+file(GLOB LIBCORE_SOURCES "../../Libraries/LibCore/*.cpp")
 file(GLOB LIBGEMINI_SOURCES "../../Libraries/LibGemini/*.cpp")
 file(GLOB LIBGFX_SOURCES "../../Libraries/LibGfx/*.cpp")
 file(GLOB LIBIPC_SOURCES "../../Libraries/LibIPC/*.cpp")
