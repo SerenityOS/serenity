@@ -27,10 +27,9 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
-#include <LibGfx/Rect.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Rect.h>
 
 namespace WindowServer {
 
@@ -39,7 +38,7 @@ class WindowFrame;
 
 class Button : public Weakable<Button> {
 public:
-    Button(WindowFrame&, NonnullRefPtr<Gfx::CharacterBitmap>&&, Function<void(Button&)>&& on_click_handler);
+    Button(WindowFrame&, Function<void(Button&)>&& on_click_handler);
     ~Button();
 
     Gfx::IntRect relative_rect() const { return m_relative_rect; }
@@ -56,12 +55,12 @@ public:
 
     bool is_visible() const { return m_visible; }
 
-    void set_bitmap(const Gfx::CharacterBitmap& bitmap) { m_bitmap = bitmap; }
+    void set_icon(const Gfx::Bitmap& icon) { m_icon = icon; }
 
 private:
     WindowFrame& m_frame;
     Gfx::IntRect m_relative_rect;
-    NonnullRefPtr<Gfx::CharacterBitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap> m_icon;
     bool m_pressed { false };
     bool m_visible { true };
     bool m_hovered { false };

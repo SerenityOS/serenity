@@ -1392,6 +1392,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
             }
         }
         window.frame().layout_buttons();
+        window.frame().set_button_icons();
         return IterationDecision::Continue;
     });
     MenuManager::the().did_change_theme();
