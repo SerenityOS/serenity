@@ -54,6 +54,7 @@ public:
     void did_set_maximized(Badge<Window>, bool);
 
     void layout_buttons();
+    void set_button_icons();
 
 private:
     void paint_notification_frame(Gfx::Painter&);
@@ -69,6 +70,7 @@ private:
 
     Window& m_window;
     NonnullOwnPtrVector<Button> m_buttons;
+    Button* m_close_button { nullptr };
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
 };
