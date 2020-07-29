@@ -88,7 +88,22 @@ namespace Cipher {
  * TODO: Implement other counters?
  */
 
-template<typename T>
+struct IncrementInplace {
+    void operator()(Bytes& in) const
+    {
+        for (size_t i = in.size(); i > 0;) {
+            --i;
+            if (in[i] == (u8)-1) {
+                in[i] = 0;
+            } else {
+                in[i]++;
+                break;
+            }
+        }
+    }
+};
+
+template<typename T, typename IncrementFunctionType = IncrementInplace>
 class CTR : public Mode<T> {
 public:
     constexpr static size_t IVSizeInBits = 128;
@@ -99,8 +114,8 @@ public:
     // Encryption, even when decrypting AES-CTR.
     // TODO: How to deal with ciphers that take different arguments?
     template<typename KeyType, typename... Args>
-    explicit constexpr CTR<T>(const KeyType& user_key, size_t key_bits, Intent = Intent::Encryption, Args... args)
-        : Mode<T>(user_key, key_bits, args...)
+    explicit constexpr CTR(const KeyType& user_key, size_t key_bits, Intent = Intent::Encryption, Args... args)
+        : Mode<T>(user_key, key_bits, Intent::Encryption, args...)
     {
     }
 
@@ -136,18 +151,8 @@ private:
     u8 m_ivec_storage[IVSizeInBits / 8];
     typename T::BlockType m_cipher_block {};
 
-    static void increment_inplace(Bytes& in)
-    {
-        for (size_t i = in.size(); i > 0;) {
-            --i;
-            if (in[i] == (u8)-1) {
-                in[i] = 0;
-            } else {
-                in[i]++;
-                break;
-            }
-        }
-    }
+protected:
+    constexpr static IncrementFunctionType increment {};
 
     void encrypt_or_stream(const ReadonlyBytes* in, Bytes& out, const Bytes& ivec, Bytes* ivec_out = nullptr)
     {
@@ -188,7 +193,7 @@ private:
             ASSERT(offset + write_size <= out.size());
             __builtin_memcpy(out.offset(offset), m_cipher_block.get().data(), write_size);
 
-            increment_inplace(iv);
+            increment(iv);
             length -= write_size;
             offset += write_size;
         }
