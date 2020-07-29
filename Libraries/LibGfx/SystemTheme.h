@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibGfx/Color.h>
 
@@ -105,9 +106,16 @@ enum class MetricRole {
     __Count,
 };
 
+enum class PathRole {
+    NoRole,
+    TitleButtonIcons,
+    __Count,
+};
+
 struct SystemTheme {
     Color color[(int)ColorRole::__Count];
     int metric[(int)MetricRole::__Count];
+    String path[(int)PathRole::__Count];
 };
 
 const SystemTheme& current_system_theme();

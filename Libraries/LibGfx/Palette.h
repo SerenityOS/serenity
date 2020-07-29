@@ -45,6 +45,7 @@ public:
 
     Color color(ColorRole) const;
     int metric(MetricRole) const;
+    String path(PathRole) const;
     const SystemTheme& theme() const;
 
     void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer);
@@ -124,11 +125,15 @@ public:
     int window_title_button_width() const { return metric(MetricRole::TitleButtonWidth); }
     int window_title_button_height() const { return metric(MetricRole::TitleButtonHeight); }
 
+    String title_button_icons_path() const { return path(PathRole::TitleButtonIcons); }
+
     Color color(ColorRole role) const { return m_impl->color(role); }
     int metric(MetricRole role) const { return m_impl->metric(role); }
+    String path(PathRole role) const { return m_impl->path(role); }
 
     void set_color(ColorRole, Color);
     void set_metric(MetricRole, int);
+    void set_path(PathRole, String);
 
     const SystemTheme& theme() const { return m_impl->theme(); }
 
