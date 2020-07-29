@@ -37,6 +37,7 @@ done < <(git ls-files -- \
     ':!:Kernel/FileSystem/ext2_fs.h' \
     ':!:Libraries/LibC/getopt.cpp' \
     ':!:Libraries/LibCore/puff.h' \
+    ':!:Libraries/LibCore/puff.cpp' \
     ':!:Libraries/LibELF/exec_elf.h' \
 )
 
