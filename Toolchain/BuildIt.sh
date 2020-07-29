@@ -280,7 +280,7 @@ pushd "$DIR"
             # We *most definitely* don't need debug symbols in the linker/compiler.
             # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 250 MiB.
             pushd "Local/libexec/gcc/i686-pc-serenity/${GCC_VERSION}"
-                for binary in cc1plus lto1; do
+                for binary in cc1 cc1plus lto1; do
                     echo "Before: $(du -h "${binary}")"
                     strip "${binary}"
                     echo "After: $(du -h "${binary}")"
