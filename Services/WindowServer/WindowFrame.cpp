@@ -26,7 +26,6 @@
 
 #include "ClientConnection.h"
 #include <AK/Badge.h>
-#include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
@@ -39,91 +38,24 @@
 
 namespace WindowServer {
 
-static const char* s_close_button_bitmap_data = {
-    "##    ##"
-    "###  ###"
-    " ###### "
-    "  ####  "
-    "  ####  "
-    " ###### "
-    "###  ###"
-    "##    ##"
-    "        "
-};
+static Gfx::Bitmap* s_minimize_icon;
+static Gfx::Bitmap* s_maximize_icon;
+static Gfx::Bitmap* s_restore_icon;
+static Gfx::Bitmap* s_close_icon;
 
-static Gfx::CharacterBitmap* s_close_button_bitmap;
-static const int s_close_button_bitmap_width = 8;
-static const int s_close_button_bitmap_height = 9;
-
-static const char* s_minimize_button_bitmap_data = {
-    "        "
-    "        "
-    "        "
-    " ###### "
-    "  ####  "
-    "   ##   "
-    "        "
-    "        "
-    "        "
-};
-
-static Gfx::CharacterBitmap* s_minimize_button_bitmap;
-static const int s_minimize_button_bitmap_width = 8;
-static const int s_minimize_button_bitmap_height = 9;
-
-static const char* s_maximize_button_bitmap_data = {
-    "        "
-    "        "
-    "        "
-    "   ##   "
-    "  ####  "
-    " ###### "
-    "        "
-    "        "
-    "        "
-};
-
-static Gfx::CharacterBitmap* s_maximize_button_bitmap;
-static const int s_maximize_button_bitmap_width = 8;
-static const int s_maximize_button_bitmap_height = 9;
-
-static const char* s_unmaximize_button_bitmap_data = {
-    "        "
-    "   ##   "
-    "  ####  "
-    " ###### "
-    "        "
-    " ###### "
-    "  ####  "
-    "   ##   "
-    "        "
-};
-
-static Gfx::CharacterBitmap* s_unmaximize_button_bitmap;
-static const int s_unmaximize_button_bitmap_width = 8;
-static const int s_unmaximize_button_bitmap_height = 9;
+static String s_last_title_button_icons_path;
 
 WindowFrame::WindowFrame(Window& window)
     : m_window(window)
 {
-    if (!s_close_button_bitmap)
-        s_close_button_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
-
-    if (!s_minimize_button_bitmap)
-        s_minimize_button_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_minimize_button_bitmap_data, s_minimize_button_bitmap_width, s_minimize_button_bitmap_height).leak_ref();
-
-    if (!s_maximize_button_bitmap)
-        s_maximize_button_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_maximize_button_bitmap_data, s_maximize_button_bitmap_width, s_maximize_button_bitmap_height).leak_ref();
-
-    if (!s_unmaximize_button_bitmap)
-        s_unmaximize_button_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_unmaximize_button_bitmap_data, s_unmaximize_button_bitmap_width, s_unmaximize_button_bitmap_height).leak_ref();
-
-    m_buttons.append(make<Button>(*this, *s_close_button_bitmap, [this](auto&) {
+    auto button = make<Button>(*this, [this](auto&) {
         m_window.request_close();
-    }));
+    });
+    m_close_button = button.ptr();
+    m_buttons.append(move(button));
 
     if (window.is_resizable()) {
-        auto button = make<Button>(*this, *s_maximize_button_bitmap, [this](auto&) {
+        auto button = make<Button>(*this, [this](auto&) {
             m_window.set_maximized(!m_window.is_maximized());
         });
         m_maximize_button = button.ptr();
@@ -131,22 +63,70 @@ WindowFrame::WindowFrame(Window& window)
     }
 
     if (window.is_minimizable()) {
-        auto button = make<Button>(*this, *s_minimize_button_bitmap, [this](auto&) {
+        auto button = make<Button>(*this, [this](auto&) {
             m_window.set_minimized(true);
         });
         m_minimize_button = button.ptr();
         m_buttons.append(move(button));
     }
+
+    set_button_icons();
 }
 
 WindowFrame::~WindowFrame()
 {
 }
 
+void WindowFrame::set_button_icons()
+{
+    if (m_window.is_frameless())
+        return;
+
+    String icons_path = WindowManager::the().palette().title_button_icons_path();
+
+    StringBuilder full_path;
+    if (!s_minimize_icon || s_last_title_button_icons_path != icons_path) {
+        full_path.append(icons_path);
+        full_path.append("window-minimize.png");
+        if (!(s_minimize_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
+            s_minimize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-minimize.png").leak_ref();
+        full_path.clear();
+    }
+    if (!s_maximize_icon || s_last_title_button_icons_path != icons_path) {
+        full_path.append(icons_path);
+        full_path.append("window-maximize.png");
+        if (!(s_maximize_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
+            s_maximize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-maximize.png").leak_ref();
+        full_path.clear();
+    }
+    if (!s_restore_icon || s_last_title_button_icons_path != icons_path) {
+        full_path.append(icons_path);
+        full_path.append("window-restore.png");
+        if (!(s_restore_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
+            s_restore_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png").leak_ref();
+        full_path.clear();
+    }
+    if (!s_close_icon || s_last_title_button_icons_path != icons_path) {
+        full_path.append(icons_path);
+        full_path.append("window-close.png");
+        if (!(s_close_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
+            s_close_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png").leak_ref();
+        full_path.clear();
+    }
+
+    m_close_button->set_icon(*s_close_icon);
+    if (m_window.is_minimizable())
+        m_minimize_button->set_icon(*s_minimize_icon);
+    if (m_window.is_resizable())
+        m_maximize_button->set_icon(m_window.is_maximized() ? *s_restore_icon : *s_maximize_icon);
+
+    s_last_title_button_icons_path = icons_path;
+}
+
 void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 {
     ASSERT(m_maximize_button);
-    m_maximize_button->set_bitmap(maximized ? *s_unmaximize_button_bitmap : *s_maximize_button_bitmap);
+    m_maximize_button->set_icon(maximized ? *s_restore_icon : *s_maximize_icon);
 }
 
 Gfx::IntRect WindowFrame::title_bar_rect() const
