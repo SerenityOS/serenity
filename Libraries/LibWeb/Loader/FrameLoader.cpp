@@ -212,7 +212,7 @@ void FrameLoader::resource_did_load()
     // FIXME: Also check HTTP status code before redirecting
     auto location = resource()->response_headers().get("Location");
     if (location.has_value()) {
-        load(location.value(), FrameLoader::Type::Navigation);
+        load(url.complete_url(location.value()), FrameLoader::Type::Navigation);
         return;
     }
 
