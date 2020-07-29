@@ -204,7 +204,7 @@ static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, const cha
     build(d.slashes, slash, mnemonic, format, handler, lock_prefix_allowed);
 }
 
-static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler handler)
 {
     ASSERT((rm & 0xc0) == 0xc0);
     ASSERT(((rm >> 3) & 7) == slash);
@@ -222,7 +222,7 @@ static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm,
         }
     }
 
-    build(d.slashes, rm & 7, mnemonic, format, handler, lock_prefix_allowed);
+    build(d.slashes, rm & 7, mnemonic, format, handler, LockPrefixNotAllowed);
 }
 
 static void build_0f(u8 op, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
@@ -285,16 +285,16 @@ static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFor
     build_slash(s_0f_table32, op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
-static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler impl)
 {
-    build_slash_rm(s_table16, op, slash, rm, mnemonic, format, impl, lock_prefix_allowed);
-    build_slash_rm(s_table32, op, slash, rm, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash_rm(s_table16, op, slash, rm, mnemonic, format, impl);
+    build_slash_rm(s_table32, op, slash, rm, mnemonic, format, impl);
 }
 
-static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler impl)
 {
     for (int i = 0; i < 8; ++i)
-        build_slash_rm(op, slash, 0xc0 | (slash << 3) | i, mnemonic, format, impl, lock_prefix_allowed);
+        build_slash_rm(op, slash, 0xc0 | (slash << 3) | i, mnemonic, format, impl);
 }
 
 [[gnu::constructor]] static void build_opcode_tables()
