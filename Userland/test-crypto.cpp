@@ -31,6 +31,8 @@
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibCrypto/Checksum/Adler32.h>
+#include <LibCrypto/Checksum/CRC32.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA1.h>
@@ -61,6 +63,7 @@ static bool g_some_test_failed = false;
 static bool encrypting = true;
 
 constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
+constexpr const char* DEFAULT_CHECKSUM_SUITE { "CRC32" };
 constexpr const char* DEFAULT_HASH_SUITE { "SHA256" };
 constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
 constexpr const char* DEFAULT_SERVER { "www.google.com" };
@@ -89,6 +92,10 @@ int tls_tests();
 
 // Big Integer
 int bigint_tests();
+
+// Checksum
+int adler32_tests();
+int crc32_tests();
 
 // stop listing tests
 
@@ -204,6 +211,18 @@ void aes_cbc(const char* message, size_t len)
     }
 }
 
+void adler32(const char* message, size_t len)
+{
+    auto checksum = Crypto::Checksum::Adler32({ (const u8*)message, len });
+    printf("%#10X\n", checksum.digest());
+}
+
+void crc32(const char* message, size_t len)
+{
+    auto checksum = Crypto::Checksum::CRC32({ (const u8*)message, len });
+    printf("%#10X\n", checksum.digest());
+}
+
 void md5(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::MD5::hash((const u8*)message, len);
@@ -293,6 +312,7 @@ auto main(int argc, char** argv) -> int
         puts("test-crypto modes");
         puts("\tdigest - Access digest (authentication) functions");
         puts("\thash - Access hash functions");
+        puts("\tchecksum - Access checksum functions");
         puts("\tencrypt -- Access encryption functions");
         puts("\tdecrypt -- Access decryption functions");
         puts("\ttls -- Connect to a peer over TLS 1.2");
@@ -330,6 +350,24 @@ auto main(int argc, char** argv) -> int
             return run(sha512);
         }
         printf("unknown hash function '%s'\n", suite);
+        return 1;
+    }
+    if (mode_sv == "checksum") {
+        if (suite == nullptr)
+            suite = DEFAULT_CHECKSUM_SUITE;
+        StringView suite_sv { suite };
+
+        if (suite_sv == "CRC32") {
+            if (run_tests)
+                return crc32_tests();
+            return run(crc32);
+        }
+        if (suite_sv == "Adler32") {
+            if (run_tests)
+                return adler32_tests();
+            return run(adler32);
+        }
+        printf("unknown checksum function '%s'\n", suite);
         return 1;
     }
     if (mode_sv == "digest") {
@@ -1556,6 +1594,50 @@ void tls_test_client_hello()
         return;
     }
     loop.exec();
+}
+
+int adler32_tests()
+{
+    auto do_test = [](ReadonlyBytes input, u32 expected_result) {
+        I_TEST((CRC32));
+
+        auto pass = Crypto::Checksum::Adler32(input).digest() == expected_result;
+
+        if (pass) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    };
+
+    do_test(String("").bytes(), 0x1);
+    do_test(String("a").bytes(), 0x00620062);
+    do_test(String("abc").bytes(), 0x024d0127);
+    do_test(String("message digest").bytes(), 0x29750586);
+    do_test(String("abcdefghijklmnopqrstuvwxyz").bytes(), 0x90860b20);
+
+    return g_some_test_failed ? 1 : 0;
+}
+
+int crc32_tests()
+{
+    auto do_test = [](ReadonlyBytes input, u32 expected_result) {
+        I_TEST((Adler32));
+
+        auto pass = Crypto::Checksum::CRC32(input).digest() == expected_result;
+
+        if (pass) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    };
+
+    do_test(String("").bytes(), 0x0);
+    do_test(String("The quick brown fox jumps over the lazy dog").bytes(), 0x414FA339);
+    do_test(String("various CRC algorithms input data").bytes(), 0x9BD366AE);
+
+    return g_some_test_failed ? 1 : 0;
 }
 
 int bigint_tests()
