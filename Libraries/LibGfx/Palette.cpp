@@ -67,6 +67,12 @@ int PaletteImpl::metric(MetricRole role) const
     return theme().metric[(int)role];
 }
 
+String PaletteImpl::path(PathRole role) const
+{
+    ASSERT((int)role < (int)PathRole::__Count);
+    return theme().path[(int)role];
+}
+
 NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
 {
     auto new_theme_buffer = SharedBuffer::create_with_size(m_theme_buffer->size());
@@ -88,6 +94,14 @@ void Palette::set_metric(MetricRole role, int value)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
     theme.metric[(int)role] = value;
+}
+
+void Palette::set_path(PathRole role, String path)
+{
+    if (m_impl->ref_count() != 1)
+        m_impl = m_impl->clone();
+    auto& theme = const_cast<SystemTheme&>(impl().theme());
+    theme.path[(int)role] = path;
 }
 
 PaletteImpl::~PaletteImpl()

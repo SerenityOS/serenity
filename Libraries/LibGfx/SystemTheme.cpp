@@ -85,6 +85,19 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
         return metric;
     };
 
+    auto get_path = [&](auto& name, auto role) {
+        auto path = file->read_entry("Paths", name);
+        if (path.is_empty()) {
+            switch (role) {
+            case (int)PathRole::TitleButtonIcons:
+                return "/res/icons/16x16/";
+            default:
+                return "/res/";
+            }
+        }
+        return &path[0];
+    };
+
 #define DO_COLOR(x) \
     data->color[(int)ColorRole::x] = get_color(#x)
 
@@ -152,6 +165,11 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_METRIC(TitleHeight);
     DO_METRIC(TitleButtonWidth);
     DO_METRIC(TitleButtonHeight);
+
+#define DO_PATH(x) \
+    data->path[(int)PathRole::x] = get_path(#x, (int)PathRole::x)
+
+    DO_PATH(TitleButtonIcons);
 
     buffer->seal();
     buffer->share_globally();
