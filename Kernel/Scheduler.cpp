@@ -610,6 +610,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_irq());
+
     if (Processor::current().id() > 0)
         return;
     auto current_thread = Processor::current().current_thread();

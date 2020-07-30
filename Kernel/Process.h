@@ -385,20 +385,32 @@ public:
             return false;
         return validate_write(value, size.value());
     }
+    template<typename DataType, typename SizeType>
+    [[nodiscard]] bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>& buffer)
+    {
+        return validate_write(buffer.data, buffer.size);
+    }
 
     template<typename DataType, typename SizeType>
-    [[nodiscard]] bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
-    template<typename DataType, typename SizeType>
-    [[nodiscard]] bool validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>&);
+    [[nodiscard]] bool validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>& buffer)
+    {
+        return validate_read(buffer.data, buffer.size);
+    }
 
     [[nodiscard]] String validate_and_copy_string_from_user(const char*, size_t) const;
     [[nodiscard]] String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
 
     Custody& current_directory();
-    Custody* executable() { return m_executable.ptr(); }
+    Custody* executable()
+    {
+        return m_executable.ptr();
+    }
 
     int number_of_open_file_descriptors() const;
-    int max_open_file_descriptors() const { return m_max_open_file_descriptors; }
+    int max_open_file_descriptors() const
+    {
+        return m_max_open_file_descriptors;
+    }
 
     size_t amount_clean_inode() const;
     size_t amount_dirty_private() const;
@@ -410,7 +422,10 @@ public:
 
     int exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
-    bool is_superuser() const { return m_euid == 0; }
+    bool is_superuser() const
+    {
+        return m_euid == 0;
+    }
 
     Region* allocate_region_with_vmobject(VirtualAddress, size_t, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot);
     Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool should_commit = true);
@@ -421,14 +436,23 @@ public:
     Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
     Vector<Region*, 2> split_region_around_range(const Region& source_region, const Range&);
 
-    bool is_being_inspected() const { return m_inspector_count; }
+    bool is_being_inspected() const
+    {
+        return m_inspector_count;
+    }
 
     void terminate_due_to_signal(u8 signal);
     KResult send_signal(u8 signal, Process* sender);
 
-    u16 thread_count() const { return m_thread_count.load(AK::MemoryOrder::memory_order_consume); }
+    u16 thread_count() const
+    {
+        return m_thread_count.load(AK::MemoryOrder::memory_order_consume);
+    }
 
-    Lock& big_lock() { return m_big_lock; }
+    Lock& big_lock()
+    {
+        return m_big_lock;
+    }
 
     struct ELFBundle {
         OwnPtr<Region> region;
@@ -436,25 +460,55 @@ public:
     };
     OwnPtr<ELFBundle> elf_bundle() const;
 
-    int icon_id() const { return m_icon_id; }
+    int icon_id() const
+    {
+        return m_icon_id;
+    }
 
-    u32 priority_boost() const { return m_priority_boost; }
+    u32 priority_boost() const
+    {
+        return m_priority_boost;
+    }
 
     Custody& root_directory();
     Custody& root_directory_relative_to_global_root();
     void set_root_directory(const Custody&);
 
-    bool has_promises() const { return m_promises; }
-    bool has_promised(Pledge pledge) const { return m_promises & (1u << (u32)pledge); }
+    bool has_promises() const
+    {
+        return m_promises;
+    }
+    bool has_promised(Pledge pledge) const
+    {
+        return m_promises & (1u << (u32)pledge);
+    }
 
-    VeilState veil_state() const { return m_veil_state; }
-    const Vector<UnveiledPath>& unveiled_paths() const { return m_unveiled_paths; }
+    VeilState veil_state() const
+    {
+        return m_veil_state;
+    }
+    const Vector<UnveiledPath>& unveiled_paths() const
+    {
+        return m_unveiled_paths;
+    }
 
-    void increment_inspector_count(Badge<ProcessInspectionHandle>) { ++m_inspector_count; }
-    void decrement_inspector_count(Badge<ProcessInspectionHandle>) { --m_inspector_count; }
+    void increment_inspector_count(Badge<ProcessInspectionHandle>)
+    {
+        ++m_inspector_count;
+    }
+    void decrement_inspector_count(Badge<ProcessInspectionHandle>)
+    {
+        --m_inspector_count;
+    }
 
-    bool wait_for_tracer_at_next_execve() const { return m_wait_for_tracer_at_next_execve; }
-    void set_wait_for_tracer_at_next_execve(bool val) { m_wait_for_tracer_at_next_execve = val; }
+    bool wait_for_tracer_at_next_execve() const
+    {
+        return m_wait_for_tracer_at_next_execve;
+    }
+    void set_wait_for_tracer_at_next_execve(bool val)
+    {
+        m_wait_for_tracer_at_next_execve = val;
+    }
 
     KResultOr<u32> peek_user_data(u32* address);
     KResult poke_user_data(u32* address, u32 data);
