@@ -466,6 +466,8 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(inet);
 
+    SmapDisabler disabler;
+
     auto ioctl_route = [request, arg]() {
         auto* route = (rtentry*)arg;
         if (!Process::current()->validate_read_typed(route))

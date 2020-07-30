@@ -26,11 +26,11 @@
 
 #include <AK/Checked.h>
 #include <Kernel/Devices/BXVGADevice.h>
+#include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/IO.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
@@ -200,14 +200,16 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         auto* out = (size_t*)arg;
         if (!Process::current()->validate_write_typed(out))
             return -EFAULT;
-        *out = framebuffer_size_in_bytes();
+        size_t value = framebuffer_size_in_bytes();
+        copy_to_user(out, &value);
         return 0;
     }
     case FB_IOCTL_GET_BUFFER: {
         auto* index = (int*)arg;
         if (!Process::current()->validate_write_typed(index))
             return -EFAULT;
-        *index = m_y_offset == 0 ? 0 : 1;
+        int value = m_y_offset == 0 ? 0 : 1;
+        copy_to_user(index, &value);
         return 0;
     }
     case FB_IOCTL_SET_BUFFER: {
@@ -217,35 +219,42 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_GET_RESOLUTION: {
-        auto* resolution = (FBResolution*)arg;
-        if (!Process::current()->validate_write_typed(resolution))
+        auto* user_resolution = (FBResolution*)arg;
+        if (!Process::current()->validate_write_typed(user_resolution))
             return -EFAULT;
-        resolution->pitch = m_framebuffer_pitch;
-        resolution->width = m_framebuffer_width;
-        resolution->height = m_framebuffer_height;
+        FBResolution resolution;
+        resolution.pitch = m_framebuffer_pitch;
+        resolution.width = m_framebuffer_width;
+        resolution.height = m_framebuffer_height;
+        copy_to_user(user_resolution, &resolution);
         return 0;
     }
     case FB_IOCTL_SET_RESOLUTION: {
-        auto* resolution = (FBResolution*)arg;
-        if (!Process::current()->validate_read_typed(resolution) || !Process::current()->validate_write_typed(resolution))
+        auto* user_resolution = (FBResolution*)arg;
+        if (!Process::current()->validate_write_typed(user_resolution))
             return -EFAULT;
-        if (resolution->width > MAX_RESOLUTION_WIDTH || resolution->height > MAX_RESOLUTION_HEIGHT)
+        FBResolution resolution;
+        if (!Process::current()->validate_read_and_copy_typed(&resolution, user_resolution))
+            return -EFAULT;
+        if (resolution.width > MAX_RESOLUTION_WIDTH || resolution.height > MAX_RESOLUTION_HEIGHT)
             return -EINVAL;
-        if (!set_resolution(resolution->width, resolution->height)) {
+        if (!set_resolution(resolution.width, resolution.height)) {
 #ifdef BXVGA_DEBUG
             dbg() << "Reverting Resolution: [" << m_framebuffer_width << "x" << m_framebuffer_height << "]";
 #endif
-            resolution->pitch = m_framebuffer_pitch;
-            resolution->width = m_framebuffer_width;
-            resolution->height = m_framebuffer_height;
+            resolution.pitch = m_framebuffer_pitch;
+            resolution.width = m_framebuffer_width;
+            resolution.height = m_framebuffer_height;
+            copy_to_user(user_resolution, &resolution);
             return -EINVAL;
         }
 #ifdef BXVGA_DEBUG
         dbg() << "New resolution: [" << m_framebuffer_width << "x" << m_framebuffer_height << "]";
 #endif
-        resolution->pitch = m_framebuffer_pitch;
-        resolution->width = m_framebuffer_width;
-        resolution->height = m_framebuffer_height;
+        resolution.pitch = m_framebuffer_pitch;
+        resolution.width = m_framebuffer_width;
+        resolution.height = m_framebuffer_height;
+        copy_to_user(user_resolution, &resolution);
         return 0;
     }
     default:
