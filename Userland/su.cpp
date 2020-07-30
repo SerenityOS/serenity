@@ -26,10 +26,8 @@
 
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Account.h>
 #include <LibCore/GetPassword.h>
-#include <alloca.h>
-#include <grp.h>
-#include <pwd.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -47,66 +45,33 @@ int main(int argc, char** argv)
     if (geteuid() != 0)
         fprintf(stderr, "Not running as root :(\n");
 
-    uid_t uid = 0;
-    gid_t gid = 0;
-    struct passwd* pwd = nullptr;
-    if (user) {
-        pwd = getpwnam(user);
-        if (!pwd) {
-            fprintf(stderr, "No such user: %s\n", user);
-            return 1;
-        }
-        uid = pwd->pw_uid;
-        gid = pwd->pw_gid;
-    }
-
-    if (!pwd)
-        pwd = getpwuid(0);
-
-    if (!pwd) {
-        fprintf(stderr, "No passwd entry.\n");
+    auto account_or_error = (user) ? Core::Account::from_name(user) : Core::Account::from_uid(0);
+    if (account_or_error.is_error()) {
+        fprintf(stderr, "Core::Account::from_name: %s\n", account_or_error.error().characters());
         return 1;
     }
 
-    if (getuid() != 0 && pwd->pw_passwd[0] != '\0') {
+    Core::Account account = account_or_error.value();
+
+    if (getuid() != 0 && account.has_password()) {
         auto password = Core::get_password();
         if (password.is_error()) {
-            fprintf(stderr, strerror(password.error()));
+            fprintf(stderr, "%s\n", strerror(password.error()));
             return 1;
         }
 
-        char* hash = crypt(password.value().characters(), pwd->pw_passwd);
-        if (hash == NULL || strcmp(hash, pwd->pw_passwd) != 0) {
+        if (!account.authenticate(password.value().characters())) {
             fprintf(stderr, "Incorrect or disabled password.\n");
             return 1;
         }
     }
 
-    Vector<gid_t> extra_gids;
-    for (auto* group = getgrent(); group; group = getgrent()) {
-        for (size_t i = 0; group->gr_mem[i]; ++i) {
-            if (!strcmp(pwd->pw_name, group->gr_mem[i]))
-                extra_gids.append(group->gr_gid);
-        }
+    if (!account.login()) {
+        perror("Core::Account::login");
+        return 1;
     }
-    endgrent();
 
-    int rc = setgroups(extra_gids.size(), extra_gids.data());
-    if (rc < 0) {
-        perror("setgroups");
-        return 1;
-    }
-    rc = setgid(gid);
-    if (rc < 0) {
-        perror("setgid");
-        return 1;
-    }
-    rc = setuid(uid);
-    if (rc < 0) {
-        perror("setuid");
-        return 1;
-    }
-    rc = execl(pwd->pw_shell, pwd->pw_shell, nullptr);
+    execl(account.shell().characters(), account.shell().characters(), nullptr);
     perror("execl");
     return 1;
 }
