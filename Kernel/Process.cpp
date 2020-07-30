@@ -224,7 +224,7 @@ bool Process::deallocate_region(Region& region)
     return false;
 }
 
-Region* Process::region_from_range(const Range& range)
+Region* Process::find_region_from_range(const Range& range)
 {
     ScopedSpinLock lock(m_lock);
     if (m_region_lookup_cache.range == range && m_region_lookup_cache.region)
@@ -241,7 +241,7 @@ Region* Process::region_from_range(const Range& range)
     return nullptr;
 }
 
-Region* Process::region_containing(const Range& range)
+Region* Process::find_region_containing(const Range& range)
 {
     ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
