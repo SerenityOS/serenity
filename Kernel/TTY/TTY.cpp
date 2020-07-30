@@ -284,8 +284,8 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     REQUIRE_PROMISE(tty);
     auto& current_process = *Process::current();
     pid_t pgid;
-    termios* tp;
-    winsize* ws;
+    termios* user_termios;
+    winsize* user_winsize;
 
 #if 0
     // FIXME: When should we block things?
@@ -313,22 +313,26 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         }
         m_pgid = pgid;
         return 0;
-    case TCGETS:
-        tp = reinterpret_cast<termios*>(arg);
-        if (!current_process.validate_write(tp, sizeof(termios)))
+    case TCGETS: {
+        user_termios = reinterpret_cast<termios*>(arg);
+        if (!current_process.validate_write(user_termios, sizeof(termios)))
             return -EFAULT;
-        *tp = m_termios;
+        copy_to_user(user_termios, &m_termios);
         return 0;
+    }
     case TCSETS:
     case TCSETSF:
-    case TCSETSW:
-        tp = reinterpret_cast<termios*>(arg);
-        if (!current_process.validate_read(tp, sizeof(termios)))
+    case TCSETSW: {
+        user_termios = reinterpret_cast<termios*>(arg);
+        if (!current_process.validate_read(user_termios, sizeof(termios)))
             return -EFAULT;
-        set_termios(*tp);
+        termios termios;
+        copy_from_user(&termios, user_termios);
+        set_termios(termios);
         if (request == TCSETSF)
             flush_input();
         return 0;
+    }
     case TCFLSH:
         // Serenity's TTY implementation does not use an output buffer, so ignore TCOFLUSH.
         if (arg == TCIFLUSH || arg == TCIOFLUSH) {
@@ -338,22 +342,29 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         }
         return 0;
     case TIOCGWINSZ:
-        ws = reinterpret_cast<winsize*>(arg);
-        if (!current_process.validate_write(ws, sizeof(winsize)))
+        user_winsize = reinterpret_cast<winsize*>(arg);
+        if (!current_process.validate_write(user_winsize, sizeof(winsize)))
             return -EFAULT;
-        ws->ws_row = m_rows;
-        ws->ws_col = m_columns;
+        winsize ws;
+        ws.ws_row = m_rows;
+        ws.ws_col = m_columns;
+        ws.ws_xpixel = 0;
+        ws.ws_ypixel = 0;
+        copy_to_user(user_winsize, &ws);
         return 0;
-    case TIOCSWINSZ:
-        ws = reinterpret_cast<winsize*>(arg);
-        if (!current_process.validate_read(ws, sizeof(winsize)))
+    case TIOCSWINSZ: {
+        user_winsize = reinterpret_cast<winsize*>(arg);
+        if (!current_process.validate_read(user_winsize, sizeof(winsize)))
             return -EFAULT;
-        if (ws->ws_col == m_columns && ws->ws_row == m_rows)
+        winsize ws;
+        copy_from_user(&ws, user_winsize);
+        if (ws.ws_col == m_columns && ws.ws_row == m_rows)
             return 0;
-        m_rows = ws->ws_row;
-        m_columns = ws->ws_col;
+        m_rows = ws.ws_row;
+        m_columns = ws.ws_col;
         generate_signal(SIGWINCH);
         return 0;
+    }
     case TIOCSCTTY:
         current_process.set_tty(this);
         return 0;

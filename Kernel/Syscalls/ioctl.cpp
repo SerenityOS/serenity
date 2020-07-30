@@ -34,7 +34,6 @@ int Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
-    SmapDisabler disabler;
     return description->file().ioctl(*description, request, arg);
 }
 
