@@ -1,4 +1,5 @@
 set(SOURCES
+    Account.cpp
     ArgsParser.cpp
     ConfigFile.cpp
     Command.cpp
