@@ -428,19 +428,23 @@ String IPv4Socket::absolute_path(const FileDescription&) const
     return builder.to_string();
 }
 
-KResult IPv4Socket::setsockopt(int level, int option, const void* value, socklen_t value_size)
+KResult IPv4Socket::setsockopt(int level, int option, const void* user_value, socklen_t user_value_size)
 {
     if (level != IPPROTO_IP)
-        return Socket::setsockopt(level, option, value, value_size);
+        return Socket::setsockopt(level, option, user_value, user_value_size);
 
     switch (option) {
-    case IP_TTL:
-        if (value_size < sizeof(int))
+    case IP_TTL: {
+        if (user_value_size < sizeof(int))
             return KResult(-EINVAL);
-        if (*(const int*)value < 0 || *(const int*)value > 255)
+        int value;
+        if (!Process::current()->validate_read_and_copy_typed(&value, (const int*)user_value))
+            return KResult(-EFAULT);
+        if (value < 0 || value > 255)
             return KResult(-EINVAL);
-        m_ttl = (u8) * (const int*)value;
+        m_ttl = value;
         return KSuccess;
+    }
     default:
         return KResult(-ENOPROTOOPT);
     }
