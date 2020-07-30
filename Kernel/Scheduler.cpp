@@ -78,7 +78,7 @@ timeval Scheduler::time_since_boot()
 
 Thread* g_finalizer;
 WaitQueue* g_finalizer_wait_queue;
-Atomic<bool> g_finalizer_has_work{false};
+Atomic<bool> g_finalizer_has_work { false };
 static Process* s_colonel_process;
 u64 g_uptime;
 
@@ -319,7 +319,7 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
 void Scheduler::start()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    
+
     // We need to acquire our scheduler lock, which will be released
     // by the idle thread once control transferred there
     g_scheduler_lock.lock();
@@ -497,7 +497,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     (void)reason;
     unsigned ticks_left = Thread::current()->ticks_left();
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
-         return Scheduler::yield();
+        return Scheduler::yield();
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
 #ifdef SCHEDULER_DEBUG
@@ -610,7 +610,8 @@ void Scheduler::timer_tick(const RegisterState& regs)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_irq());
-if (Processor::current().id() > 0) return;
+    if (Processor::current().id() > 0)
+        return;
     auto current_thread = Processor::current().current_thread();
     if (!current_thread)
         return;
@@ -661,8 +662,9 @@ void Scheduler::idle_loop()
 
     for (;;) {
         asm("hlt");
-        
-if (Processor::current().id() == 0)        yield();
+
+        if (Processor::current().id() == 0)
+            yield();
     }
 }
 
