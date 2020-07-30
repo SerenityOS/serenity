@@ -127,7 +127,7 @@ private:
     u32 m_recursions { 0 };
 };
 
-template<typename BaseType = u32, typename LockType = SpinLock<BaseType>>
+template<typename LockType>
 class ScopedSpinLock {
     AK_MAKE_NONCOPYABLE(ScopedSpinLock);
 
