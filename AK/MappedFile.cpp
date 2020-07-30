@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/MappedFile.h>
+#include <AK/String.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -38,7 +38,6 @@ namespace AK {
 
 MappedFile::MappedFile(const StringView& file_name)
 {
-    m_size = PAGE_SIZE;
     int fd = open_with_path_length(file_name.characters_without_null_termination(), file_name.length(), O_RDONLY | O_CLOEXEC, 0);
 
     if (fd == -1) {
