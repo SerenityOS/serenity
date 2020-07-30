@@ -225,4 +225,17 @@ private:
     mutable OwnPtr<Bitmap> m_cow_map;
 };
 
+inline unsigned prot_to_region_access_flags(int prot)
+{
+    unsigned access = 0;
+    if (prot & PROT_READ)
+        access |= Region::Access::Read;
+    if (prot & PROT_WRITE)
+        access |= Region::Access::Write;
+    if (prot & PROT_EXEC)
+        access |= Region::Access::Execute;
+    return access;
+}
+
+
 }

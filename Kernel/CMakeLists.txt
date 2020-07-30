@@ -87,6 +87,74 @@ set(KERNEL_SOURCES
     SharedBuffer.cpp
     StdLib.cpp
     Syscall.cpp
+    Syscalls/access.cpp
+    Syscalls/alarm.cpp
+    Syscalls/beep.cpp
+    Syscalls/chdir.cpp
+    Syscalls/chmod.cpp
+    Syscalls/chown.cpp
+    Syscalls/chroot.cpp
+    Syscalls/clock.cpp
+    Syscalls/debug.cpp
+    Syscalls/dup.cpp
+    Syscalls/execve.cpp
+    Syscalls/exit.cpp
+    Syscalls/fcntl.cpp
+    Syscalls/fork.cpp
+    Syscalls/ftruncate.cpp
+    Syscalls/futex.cpp
+    Syscalls/get_dir_entries.cpp
+    Syscalls/get_stack_bounds.cpp
+    Syscalls/getrandom.cpp
+    Syscalls/getuid.cpp
+    Syscalls/hostname.cpp
+    Syscalls/ioctl.cpp
+    Syscalls/kill.cpp
+    Syscalls/link.cpp
+    Syscalls/lseek.cpp
+    Syscalls/mkdir.cpp
+    Syscalls/mknod.cpp
+    Syscalls/mmap.cpp
+    Syscalls/module.cpp
+    Syscalls/mount.cpp
+    Syscalls/open.cpp
+    Syscalls/perf_event.cpp
+    Syscalls/pipe.cpp
+    Syscalls/pledge.cpp
+    Syscalls/process.cpp
+    Syscalls/profiling.cpp
+    Syscalls/ptrace.cpp
+    Syscalls/purge.cpp
+    Syscalls/read.cpp
+    Syscalls/readlink.cpp
+    Syscalls/realpath.cpp
+    Syscalls/rename.cpp
+    Syscalls/rmdir.cpp
+    Syscalls/sched.cpp
+    Syscalls/select.cpp
+    Syscalls/sendfd.cpp
+    Syscalls/setkeymap.cpp
+    Syscalls/setpgid.cpp
+    Syscalls/setuid.cpp
+    Syscalls/shbuf.cpp
+    Syscalls/shutdown.cpp
+    Syscalls/sigaction.cpp
+    Syscalls/sleep.cpp
+    Syscalls/socket.cpp
+    Syscalls/stat.cpp
+    Syscalls/sync.cpp
+    Syscalls/sysconf.cpp
+    Syscalls/thread.cpp
+    Syscalls/times.cpp
+    Syscalls/ttyname.cpp
+    Syscalls/umask.cpp
+    Syscalls/uname.cpp
+    Syscalls/unlink.cpp
+    Syscalls/unveil.cpp
+    Syscalls/utime.cpp
+    Syscalls/waitid.cpp
+    Syscalls/watch_file.cpp
+    Syscalls/write.cpp
     TTY/MasterPTY.cpp
     TTY/PTYMultiplexer.cpp
     TTY/SlavePTY.cpp
