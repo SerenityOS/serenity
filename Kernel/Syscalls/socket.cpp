@@ -317,29 +317,21 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
     return socket.getsockopt(*description, level, option, value, value_size);
 }
 
-int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
+int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* user_params)
 {
-    if (!validate_read_typed(params))
+    Syscall::SC_setsockopt_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
-
-    SmapDisabler disabler;
-
-    int sockfd = params->sockfd;
-    int level = params->level;
-    int option = params->option;
-    const void* value = params->value;
-    socklen_t value_size = params->value_size;
-
-    if (!validate_read(value, value_size))
+    if (!validate_read(params.value, params.value_size))
         return -EFAULT;
-    auto description = file_description(sockfd);
+    auto description = file_description(params.sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    return socket.setsockopt(level, option, value, value_size);
+    return socket.setsockopt(params.level, params.option, params.value, params.value_size);
 }
 
 }
