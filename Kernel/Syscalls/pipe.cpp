@@ -46,12 +46,12 @@ int Process::sys$pipe(int pipefd[2], int flags)
 
     int reader_fd = alloc_fd();
     m_fds[reader_fd].set(fifo->open_direction(FIFO::Direction::Reader), fd_flags);
-    m_fds[reader_fd].description->set_readable(true);
+    m_fds[reader_fd].description()->set_readable(true);
     copy_to_user(&pipefd[0], &reader_fd);
 
     int writer_fd = alloc_fd();
     m_fds[writer_fd].set(fifo->open_direction(FIFO::Direction::Writer), fd_flags);
-    m_fds[writer_fd].description->set_writable(true);
+    m_fds[writer_fd].description()->set_writable(true);
     copy_to_user(&pipefd[1], &writer_fd);
 
     return 0;

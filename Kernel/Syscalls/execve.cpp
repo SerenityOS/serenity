@@ -244,10 +244,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     disown_all_shared_buffers();
 
     for (size_t i = 0; i < m_fds.size(); ++i) {
-        auto& daf = m_fds[i];
-        if (daf.description && daf.flags & FD_CLOEXEC) {
-            daf.description->close();
-            daf = {};
+        auto& description_and_flags = m_fds[i];
+        if (description_and_flags.description() && description_and_flags.flags() & FD_CLOEXEC) {
+            description_and_flags.description()->close();
+            description_and_flags = {};
         }
     }
 

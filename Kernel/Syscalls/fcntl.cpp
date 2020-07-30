@@ -52,9 +52,9 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
         return new_fd;
     }
     case F_GETFD:
-        return m_fds[fd].flags;
+        return m_fds[fd].flags();
     case F_SETFD:
-        m_fds[fd].flags = arg;
+        m_fds[fd].set_flags(arg);
         break;
     case F_GETFL:
         return description->file_flags();

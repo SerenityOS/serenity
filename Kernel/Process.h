@@ -573,12 +573,22 @@ private:
 
     static const int m_max_open_file_descriptors { FD_SETSIZE };
 
-    struct FileDescriptionAndFlags {
-        operator bool() const { return !!description; }
+    class FileDescriptionAndFlags {
+    public:
+        operator bool() const { return !!m_description; }
+
+        FileDescription* description() { return m_description; }
+        const FileDescription* description() const { return m_description; }
+
+        u32 flags() const { return m_flags; }
+        void set_flags(u32 flags) { m_flags = flags; }
+
         void clear();
-        void set(NonnullRefPtr<FileDescription>&& d, u32 f = 0);
-        RefPtr<FileDescription> description;
-        u32 flags { 0 };
+        void set(NonnullRefPtr<FileDescription>&&, u32 flags = 0);
+
+    private:
+        RefPtr<FileDescription> m_description;
+        u32 m_flags { 0 };
     };
     Vector<FileDescriptionAndFlags> m_fds;
 
