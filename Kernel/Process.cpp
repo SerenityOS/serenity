@@ -488,7 +488,7 @@ RefPtr<FileDescription> Process::file_description(int fd) const
     if (fd < 0)
         return nullptr;
     if (static_cast<size_t>(fd) < m_fds.size())
-        return m_fds[fd].description.ptr();
+        return m_fds[fd].description();
     return nullptr;
 }
 
@@ -497,7 +497,7 @@ int Process::fd_flags(int fd) const
     if (fd < 0)
         return -1;
     if (static_cast<size_t>(fd) < m_fds.size())
-        return m_fds[fd].flags;
+        return m_fds[fd].flags();
     return -1;
 }
 
@@ -800,14 +800,14 @@ Thread* Process::create_kernel_thread(void (*entry)(), u32 priority, const Strin
 
 void Process::FileDescriptionAndFlags::clear()
 {
-    description = nullptr;
-    flags = 0;
+    m_description = nullptr;
+    m_flags = 0;
 }
 
-void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& d, u32 f)
+void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& description, u32 flags)
 {
-    description = move(d);
-    flags = f;
+    m_description = move(description);
+    m_flags = flags;
 }
 
 KBuffer Process::backtrace(ProcessInspectionHandle& handle) const

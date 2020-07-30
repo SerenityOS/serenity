@@ -221,13 +221,13 @@ bool Thread::SelectBlocker::should_unblock(Thread& thread, time_t now_sec, long 
     for (int fd : m_select_read_fds) {
         if (!process.m_fds[fd])
             continue;
-        if (process.m_fds[fd].description->can_read())
+        if (process.m_fds[fd].description()->can_read())
             return true;
     }
     for (int fd : m_select_write_fds) {
         if (!process.m_fds[fd])
             continue;
-        if (process.m_fds[fd].description->can_write())
+        if (process.m_fds[fd].description()->can_write())
             return true;
     }
 

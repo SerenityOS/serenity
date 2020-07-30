@@ -53,7 +53,7 @@ int Process::sys$watch_file(const char* user_path, size_t path_length)
         return fd;
 
     m_fds[fd].set(FileDescription::create(*InodeWatcher::create(inode)));
-    m_fds[fd].description->set_readable(true);
+    m_fds[fd].description()->set_readable(true);
     return fd;
 }
 
