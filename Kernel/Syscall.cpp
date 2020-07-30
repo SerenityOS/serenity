@@ -148,7 +148,7 @@ void syscall_handler(TrapFrame* trap)
         ASSERT_NOT_REACHED();
     }
 
-    auto* calling_region = MM.region_from_vaddr(process, VirtualAddress(regs.eip));
+    auto* calling_region = MM.find_region_from_vaddr(process, VirtualAddress(regs.eip));
     if (!calling_region) {
         dbg() << "Syscall from " << String::format("%p", regs.eip) << " which has no region";
         handle_crash(regs, "Syscall from unknown region", SIGSEGV);

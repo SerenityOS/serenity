@@ -244,7 +244,7 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
     return nullptr;
 }
 
-Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
+Region* MemoryManager::find_region_from_vaddr(Process& process, VirtualAddress vaddr)
 {
     ScopedSpinLock lock(s_mm_lock);
     if (auto* region = user_region_from_vaddr(process, vaddr))
@@ -252,7 +252,7 @@ Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
     return kernel_region_from_vaddr(vaddr);
 }
 
-const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAddress vaddr)
+const Region* MemoryManager::find_region_from_vaddr(const Process& process, VirtualAddress vaddr)
 {
     ScopedSpinLock lock(s_mm_lock);
     if (auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr))
@@ -260,7 +260,7 @@ const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAd
     return kernel_region_from_vaddr(vaddr);
 }
 
-Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
+Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 {
     ScopedSpinLock lock(s_mm_lock);
     if (auto* region = kernel_region_from_vaddr(vaddr))
@@ -285,7 +285,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 #ifdef PAGE_FAULT_DEBUG
     dbg() << "MM: CPU[" << Processor::current().id() << "] handle_page_fault(" << String::format("%w", fault.code()) << ") at " << fault.vaddr();
 #endif
-    auto* region = region_from_vaddr(fault.vaddr());
+    auto* region = find_region_from_vaddr(fault.vaddr());
     if (!region) {
         klog() << "CPU[" << Processor::current().id() << "] NP(error) fault at invalid address " << fault.vaddr();
         return PageFaultResponse::ShouldCrash;

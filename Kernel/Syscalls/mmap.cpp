@@ -203,7 +203,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 
     Range range_to_mprotect = { VirtualAddress(addr), size };
 
-    if (auto* whole_region = region_from_range(range_to_mprotect)) {
+    if (auto* whole_region = find_region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
             return -EPERM;
         if (!validate_mmap_prot(prot, whole_region->is_stack()))
@@ -222,7 +222,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
     }
 
     // Check if we can carve out the desired range from an existing region
-    if (auto* old_region = region_containing(range_to_mprotect)) {
+    if (auto* old_region = find_region_containing(range_to_mprotect)) {
         if (!old_region->is_mmap())
             return -EPERM;
         if (!validate_mmap_prot(prot, old_region->is_stack()))
@@ -271,7 +271,7 @@ int Process::sys$madvise(void* address, size_t size, int advice)
     if (!is_user_range(VirtualAddress(address), size))
         return -EFAULT;
 
-    auto* region = region_from_range({ VirtualAddress(address), size });
+    auto* region = find_region_from_range({ VirtualAddress(address), size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -309,7 +309,7 @@ int Process::sys$minherit(void* address, size_t size, int inherit)
 {
     REQUIRE_PROMISE(stdio);
 
-    auto* region = region_from_range({ VirtualAddress(address), size });
+    auto* region = find_region_from_range({ VirtualAddress(address), size });
     if (!region)
         return -EINVAL;
 
@@ -346,7 +346,7 @@ int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_para
     if (name.is_null())
         return -EFAULT;
 
-    auto* region = region_from_range({ VirtualAddress(params.addr), params.size });
+    auto* region = find_region_from_range({ VirtualAddress(params.addr), params.size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -384,7 +384,7 @@ int Process::sys$munmap(void* addr, size_t size)
         return -EFAULT;
 
     Range range_to_unmap { VirtualAddress(addr), size };
-    if (auto* whole_region = region_from_range(range_to_unmap)) {
+    if (auto* whole_region = find_region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return -EPERM;
         bool success = deallocate_region(*whole_region);
@@ -392,7 +392,7 @@ int Process::sys$munmap(void* addr, size_t size)
         return 0;
     }
 
-    if (auto* old_region = region_containing(range_to_unmap)) {
+    if (auto* old_region = find_region_containing(range_to_unmap)) {
         if (!old_region->is_mmap())
             return -EPERM;
 

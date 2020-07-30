@@ -37,7 +37,7 @@ int Process::sys$get_stack_bounds(FlatPtr* user_stack_base, size_t* user_stack_s
         return -EFAULT;
 
     FlatPtr stack_pointer = Thread::current()->get_register_dump_from_stack().userspace_esp;
-    auto* stack_region = MM.region_from_vaddr(*this, VirtualAddress(stack_pointer));
+    auto* stack_region = MM.find_region_from_vaddr(*this, VirtualAddress(stack_pointer));
     if (!stack_region) {
         ASSERT_NOT_REACHED();
         return -EINVAL;

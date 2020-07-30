@@ -84,7 +84,7 @@ KResult Process::poke_user_data(u32* address, u32 data)
     }
     ProcessPagingScope scope(*this);
     Range range = { VirtualAddress(address), sizeof(u32) };
-    auto* region = region_containing(range);
+    auto* region = find_region_containing(range);
     ASSERT(region != nullptr);
     if (region->is_shared()) {
         // If the region is shared, we change its vmobject to a PrivateInodeVMObject

@@ -607,8 +607,8 @@ private:
 
     RefPtr<TTY> m_tty;
 
-    Region* region_from_range(const Range&);
-    Region* region_containing(const Range&);
+    Region* find_region_from_range(const Range&);
+    Region* find_region_containing(const Range&);
 
     NonnullOwnPtrVector<Region> m_regions;
     struct RegionLookupCache {
