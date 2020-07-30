@@ -212,7 +212,7 @@ void init_stage2()
     } else {
         bool bxvga_found = false;
         PCI::enumerate([&](const PCI::Address&, PCI::ID id) {
-            if (id.vendor_id == 0x1234 && id.device_id == 0x1111)
+            if ((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef))
                 bxvga_found = true;
         });
 
