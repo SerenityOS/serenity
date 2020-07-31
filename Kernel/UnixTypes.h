@@ -58,6 +58,7 @@
 enum {
     _SC_NPROCESSORS_CONF,
     _SC_NPROCESSORS_ONLN,
+    _SC_PAGESIZE,
 };
 
 #define PERF_EVENT_MALLOC 1

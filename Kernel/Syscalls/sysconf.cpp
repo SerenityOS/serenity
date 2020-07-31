@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -34,6 +35,8 @@ long Process::sys$sysconf(int name)
     case _SC_NPROCESSORS_CONF:
     case _SC_NPROCESSORS_ONLN:
         return Processor::processor_count();
+    case _SC_PAGESIZE:
+        return PAGE_SIZE;
     default:
         return -EINVAL;
     }
