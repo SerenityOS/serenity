@@ -31,7 +31,7 @@
 
 namespace Kernel {
 
-int Process::sys$chdir(const char* user_path, size_t path_length)
+int Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
 {
     REQUIRE_PROMISE(rpath);
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -61,7 +61,7 @@ int Process::sys$fchdir(int fd)
     return 0;
 }
 
-int Process::sys$getcwd(char* buffer, ssize_t size)
+int Process::sys$getcwd(Userspace<char*> buffer, ssize_t size)
 {
     REQUIRE_PROMISE(rpath);
     if (size < 0)
