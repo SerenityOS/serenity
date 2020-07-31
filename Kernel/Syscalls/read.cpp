@@ -57,7 +57,7 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
         }
     }
     // FIXME: We should have a read() that takes a Userspace<u8*>
-    return description->read((u8*)buffer.ptr(), size);
+    return description->read(buffer.unsafe_userspace_ptr(), size);
 }
 
 }

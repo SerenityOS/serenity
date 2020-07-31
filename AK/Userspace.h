@@ -45,6 +45,7 @@ public:
     }
 
     FlatPtr ptr() const { return m_ptr; }
+    T unsafe_userspace_ptr() const { return (T)m_ptr; }
 #else
     Userspace(T ptr)
         : m_ptr(ptr)

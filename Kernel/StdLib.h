@@ -75,23 +75,23 @@ inline void copy_to_user(T* dest, const T* src)
 template<typename T>
 inline void copy_from_user(T* dest, Userspace<const T*> src)
 {
-    copy_from_user(dest, (const T*)src.ptr(), sizeof(T));
+    copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
 }
 
 template<typename T>
 inline void copy_to_user(Userspace<T*> dest, const T* src)
 {
-    copy_to_user((T*)dest.ptr(), src, sizeof(T));
+    copy_to_user(dest.unsafe_userspace_ptr(), src, sizeof(T));
 }
 
 template<typename T>
 inline void copy_to_user(Userspace<T*> dest, const void* src, size_t size)
 {
-    copy_to_user((void*)dest.ptr(), src, size);
+    copy_to_user(dest.unsafe_userspace_ptr(), src, size);
 }
 
 template<typename T>
 inline void copy_from_user(void* dest, Userspace<const T*> src, size_t size)
 {
-    copy_from_user(dest, (const void*)src.ptr(), size);
+    copy_from_user(dest, src.unsafe_userspace_ptr(), size);
 }
