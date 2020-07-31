@@ -55,21 +55,23 @@ UnsignedBigInteger UnsignedBigInteger::create_invalid()
     return invalid;
 }
 
-size_t UnsignedBigInteger::export_data(Bytes data) const
+size_t UnsignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) const
 {
     size_t word_count = trimmed_length();
     size_t out = 0;
     if (word_count > 0) {
         ssize_t leading_zeros = -1;
-        u32 word = m_words[word_count - 1];
-        for (size_t i = 0; i < sizeof(u32); i++) {
-            u8 byte = (u8)(word >> ((sizeof(u32) - i - 1) * 8));
-            data[out++] = byte;
-            if (leading_zeros < 0 && byte != 0)
-                leading_zeros = (int)i;
+        if (remove_leading_zeros) {
+            u32 word = m_words[word_count - 1];
+            for (size_t i = 0; i < sizeof(u32); i++) {
+                u8 byte = (u8)(word >> ((sizeof(u32) - i - 1) * 8));
+                data[out++] = byte;
+                if (leading_zeros < 0 && byte != 0)
+                    leading_zeros = (int)i;
+            }
         }
-        for (size_t i = word_count - 1; i > 0; i--) {
-            word = m_words[i - 1];
+        for (size_t i = word_count - (remove_leading_zeros ? 1 : 0); i > 0; i--) {
+            auto word = m_words[i - 1];
             data[out++] = (u8)(word >> 24);
             data[out++] = (u8)(word >> 16);
             data[out++] = (u8)(word >> 8);
