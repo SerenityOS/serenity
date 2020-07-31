@@ -1933,7 +1933,7 @@ void bigint_import_export()
         I_TEST((BigInteger | BigEndian Export));
         auto number = "448378203247"_bigint;
         char exported[8] { 0 };
-        auto exported_length = number.export_data({ exported, 8 });
+        auto exported_length = number.export_data({ exported, 8 }, true);
         if (exported_length == 5 && memcmp(exported + 3, "hello", 5) == 0) {
             PASS;
         } else {
