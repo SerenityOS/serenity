@@ -37,6 +37,10 @@ int main(int argc, char** argv)
     }
 
     MappedFile file(argv[1]);
+    if (!file.is_valid()) {
+        // Already printed some error message.
+        return 1;
+    }
 
     X86::SimpleInstructionStream stream((const u8*)file.data(), file.size());
     X86::Disassembler disassembler(stream);
