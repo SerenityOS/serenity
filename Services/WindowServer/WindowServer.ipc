@@ -32,6 +32,7 @@ endpoint WindowServer = 2
 
     CreateWindow(
         Gfx::IntRect rect,
+        bool auto_position,
         bool has_alpha_channel,
         bool modal,
         bool minimizable,

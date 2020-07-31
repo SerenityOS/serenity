@@ -62,7 +62,7 @@ Window::Window(Core::Object* parent)
     : Core::Object(parent)
 {
     all_windows->set(this);
-    m_rect_when_windowless = { 100, 400, 140, 140 };
+    m_rect_when_windowless = { -5000, -5000, 140, 140 };
     m_title_when_windowless = "GUI::Window";
 }
 
@@ -95,6 +95,7 @@ void Window::show()
     m_override_cursor = StandardCursor::None;
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
         m_rect_when_windowless,
+        !m_moved_by_client,
         m_has_alpha_channel,
         m_modal,
         m_minimizable,
@@ -192,6 +193,10 @@ Gfx::IntRect Window::rect() const
 
 void Window::set_rect(const Gfx::IntRect& a_rect)
 {
+    if (a_rect.location() != m_rect_when_windowless.location()) {
+        m_moved_by_client = true;
+    }
+
     m_rect_when_windowless = a_rect;
     if (!is_visible()) {
         if (m_main_widget)
