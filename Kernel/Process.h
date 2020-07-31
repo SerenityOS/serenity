@@ -360,13 +360,13 @@ public:
     template<typename T>
     [[nodiscard]] bool validate_read(Userspace<T*> ptr, size_t size) const
     {
-        return validate_read((const T*)ptr.ptr(), size);
+        return validate_read(ptr.unsafe_userspace_ptr(), size);
     }
 
     template<typename T>
     [[nodiscard]] bool validate_write(Userspace<T*> ptr, size_t size) const
     {
-        return validate_write((T*)ptr.ptr(), size);
+        return validate_write(ptr.unsafe_userspace_ptr(), size);
     }
 
     template<typename T>
@@ -402,9 +402,9 @@ public:
     template<typename T>
     [[nodiscard]] bool validate_read_and_copy_typed(T* dest, Userspace<const T*> src)
     {
-        bool validated = validate_read_typed((const T*)src.ptr());
+        bool validated = validate_read_typed(src);
         if (validated) {
-            copy_from_user(dest, (const T*)src.ptr());
+            copy_from_user(dest, src);
         }
         return validated;
     }
@@ -426,7 +426,7 @@ public:
         size *= count;
         if (size.has_overflow())
             return false;
-        return validate_write((T*)value.ptr(), size.value());
+        return validate_write(value, size.value());
     }
 
     template<typename DataType, typename SizeType>
@@ -445,7 +445,7 @@ public:
 
     [[nodiscard]] String validate_and_copy_string_from_user(Userspace<const char*> user_characters, size_t size) const
     {
-        return validate_and_copy_string_from_user((const char*)user_characters.ptr(), size);
+        return validate_and_copy_string_from_user(user_characters.unsafe_userspace_ptr(), size);
     }
 
     [[nodiscard]] String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
@@ -597,7 +597,7 @@ private:
     KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length) const;
     KResultOr<String> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const
     {
-        return get_syscall_path_argument((const char*)user_path.ptr(), path_length);
+        return get_syscall_path_argument(user_path.unsafe_userspace_ptr(), path_length);
     }
     KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
