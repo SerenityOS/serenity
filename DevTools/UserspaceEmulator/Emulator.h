@@ -140,4 +140,6 @@ private:
     FlatPtr m_free_symbol_end { 0 };
 };
 
+void report(const char*, ...);
+
 }
