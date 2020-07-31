@@ -273,6 +273,7 @@ void Window::set_maximized(bool maximized)
     }
     m_frame.did_set_maximized({}, maximized);
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
+    set_default_positioned(false);
 }
 
 void Window::set_resizable(bool resizable)
@@ -398,7 +399,7 @@ Window* Window::is_blocked_by_modal_window()
         if (window && !window->is_destroyed()) {
             if (window->is_modal())
                 return window;
-            
+
             if (auto* blocking_modal_window = window->is_blocked_by_modal_window())
                 return blocking_modal_window;
         }
@@ -601,7 +602,7 @@ bool Window::is_accessory() const
         return false;
     if (parent_window() != nullptr)
         return true;
-    
+
     // If accessory window was unparented, convert to a regular window
     const_cast<Window*>(this)->set_accessory(false);
     return false;

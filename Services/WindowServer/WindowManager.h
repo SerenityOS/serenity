@@ -212,6 +212,8 @@ public:
         }
     }
 
+    Gfx::IntPoint get_recommended_window_position(const Gfx::IntPoint& desired);
+
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
     NonnullRefPtr<Cursor> get_cursor(const String& name, const Gfx::IntPoint& hotspot);
