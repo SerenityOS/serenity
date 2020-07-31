@@ -83,3 +83,15 @@ inline void copy_to_user(Userspace<T*> dest, const T* src)
 {
     copy_to_user((T*)dest.ptr(), src, sizeof(T));
 }
+
+template<typename T>
+inline void copy_to_user(Userspace<T*> dest, const void* src, size_t size)
+{
+    copy_to_user((void*)dest.ptr(), src, size);
+}
+
+template<typename T>
+inline void copy_from_user(void* dest, Userspace<const T*> src, size_t size)
+{
+    copy_from_user(dest, (const void*)src.ptr(), size);
+}
