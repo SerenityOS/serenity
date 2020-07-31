@@ -268,7 +268,7 @@ public:
     int sys$ioctl(int fd, unsigned request, FlatPtr arg);
     int sys$mkdir(const char* pathname, size_t path_length, mode_t mode);
     clock_t sys$times(tms*);
-    int sys$utime(const char* pathname, size_t path_length, const struct utimbuf*);
+    int sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
     int sys$link(const Syscall::SC_link_params*);
     int sys$unlink(const char* pathname, size_t path_length);
     int sys$symlink(const Syscall::SC_symlink_params*);
@@ -371,6 +371,16 @@ public:
 
     template<typename T>
     [[nodiscard]] bool validate_read_typed(T* value, size_t count = 1)
+    {
+        Checked size = sizeof(T);
+        size *= count;
+        if (size.has_overflow())
+            return false;
+        return validate_read(value, size.value());
+    }
+
+    template<typename T>
+    [[nodiscard]] bool validate_read_typed(Userspace<T*> value, size_t count = 1)
     {
         Checked size = sizeof(T);
         size *= count;

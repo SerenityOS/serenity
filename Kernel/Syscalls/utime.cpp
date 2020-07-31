@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-int Process::sys$utime(const char* user_path, size_t path_length, const utimbuf* user_buf)
+int Process::sys$utime(Userspace<const char*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
 {
     REQUIRE_PROMISE(fattr);
     if (user_buf && !validate_read_typed(user_buf))
