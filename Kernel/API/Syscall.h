@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <AK/Userspace.h>
 
 #ifdef __serenity__
 #    include <LibC/fd_set.h>
@@ -230,7 +231,7 @@ inline constexpr const char* to_string(Function function)
 
 #ifdef __serenity__
 struct StringArgument {
-    const char* characters { nullptr };
+    Userspace<const char*> characters;
     size_t length { 0 };
 };
 
@@ -439,7 +440,7 @@ struct SC_waitid_params {
 
 struct SC_stat_params {
     StringArgument path;
-    struct stat* statbuf;
+    Userspace<struct stat*> statbuf;
     bool follow_symlinks;
 };
 

@@ -32,6 +32,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
+#include <AK/Userspace.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -209,11 +210,11 @@ public:
     mode_t sys$umask(mode_t);
     int sys$open(const Syscall::SC_open_params*);
     int sys$close(int fd);
-    ssize_t sys$read(int fd, u8*, ssize_t);
+    ssize_t sys$read(int fd, Userspace<u8*>, ssize_t);
     ssize_t sys$write(int fd, const u8*, ssize_t);
     ssize_t sys$writev(int fd, const struct iovec* iov, int iov_count);
     int sys$fstat(int fd, stat*);
-    int sys$stat(const Syscall::SC_stat_params*);
+    int sys$stat(Userspace<const Syscall::SC_stat_params*>);
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
@@ -357,6 +358,18 @@ public:
     [[nodiscard]] bool validate_write(void*, size_t) const;
 
     template<typename T>
+    [[nodiscard]] bool validate_read(Userspace<T*> ptr, size_t size) const
+    {
+        return validate_read((const T*)ptr.ptr(), size);
+    }
+
+    template<typename T>
+    [[nodiscard]] bool validate_write(Userspace<T*> ptr, size_t size) const
+    {
+        return validate_write((T*)ptr.ptr(), size);
+    }
+
+    template<typename T>
     [[nodiscard]] bool validate_read_typed(T* value, size_t count = 1)
     {
         Checked size = sizeof(T);
@@ -377,6 +390,16 @@ public:
     }
 
     template<typename T>
+    [[nodiscard]] bool validate_read_and_copy_typed(T* dest, Userspace<const T*> src)
+    {
+        bool validated = validate_read_typed((const T*)src.ptr());
+        if (validated) {
+            copy_from_user(dest, (const T*)src.ptr());
+        }
+        return validated;
+    }
+
+    template<typename T>
     [[nodiscard]] bool validate_write_typed(T* value, size_t count = 1)
     {
         Checked size = sizeof(T);
@@ -385,6 +408,17 @@ public:
             return false;
         return validate_write(value, size.value());
     }
+
+    template<typename T>
+    [[nodiscard]] bool validate_write_typed(Userspace<T*> value, size_t count = 1)
+    {
+        Checked size = sizeof(T);
+        size *= count;
+        if (size.has_overflow())
+            return false;
+        return validate_write((T*)value.ptr(), size.value());
+    }
+
     template<typename DataType, typename SizeType>
     [[nodiscard]] bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>& buffer)
     {
@@ -398,6 +432,12 @@ public:
     }
 
     [[nodiscard]] String validate_and_copy_string_from_user(const char*, size_t) const;
+
+    [[nodiscard]] String validate_and_copy_string_from_user(Userspace<const char*> user_characters, size_t size) const
+    {
+        return validate_and_copy_string_from_user((const char*)user_characters.ptr(), size);
+    }
+
     [[nodiscard]] String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
 
     Custody& current_directory();
@@ -545,6 +585,10 @@ private:
     KResultOr<siginfo_t> do_waitid(idtype_t idtype, int id, int options);
 
     KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length) const;
+    KResultOr<String> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const
+    {
+        return get_syscall_path_argument((const char*)user_path.ptr(), path_length);
+    }
     KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
     bool has_tracee_thread(int tracer_pid) const;

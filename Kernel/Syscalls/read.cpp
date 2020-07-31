@@ -29,7 +29,7 @@
 
 namespace Kernel {
 
-ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
+ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
 {
     REQUIRE_PROMISE(stdio);
     if (size < 0)
@@ -56,7 +56,8 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
                 return -EAGAIN;
         }
     }
-    return description->read(buffer, size);
+    // FIXME: We should have a read() that takes a Userspace<u8*>
+    return description->read((u8*)buffer.ptr(), size);
 }
 
 }

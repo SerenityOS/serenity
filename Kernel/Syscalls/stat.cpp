@@ -46,7 +46,7 @@ int Process::sys$fstat(int fd, stat* user_statbuf)
     return rc;
 }
 
-int Process::sys$stat(const Syscall::SC_stat_params* user_params)
+int Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
 {
     REQUIRE_PROMISE(rpath);
     Syscall::SC_stat_params params;

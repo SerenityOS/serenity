@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Userspace.h>
 
 namespace Syscall {
 struct StringArgument;
@@ -68,4 +69,17 @@ template<typename T>
 inline void copy_to_user(T* dest, const T* src)
 {
     copy_to_user(dest, src, sizeof(T));
+}
+
+
+template<typename T>
+inline void copy_from_user(T* dest, Userspace<const T*> src)
+{
+    copy_from_user(dest, (const T*)src.ptr(), sizeof(T));
+}
+
+template<typename T>
+inline void copy_to_user(Userspace<T*> dest, const T* src)
+{
+    copy_to_user((T*)dest.ptr(), src, sizeof(T));
 }
