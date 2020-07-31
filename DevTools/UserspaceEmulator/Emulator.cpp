@@ -225,10 +225,10 @@ void Emulator::dump_backtrace(const Vector<FlatPtr>& backtrace)
         u32 offset = 0;
         String symbol = m_elf->symbolicate(address, &offset);
         auto source_position = m_debug_info->get_source_position(address);
-        dbgprintf("==%d==    %#08x  %s +%#x", getpid(), address, symbol.characters(), offset);
+        report("==%d==    %#08x  %s +%#x", getpid(), address, symbol.characters(), offset);
         if (source_position.has_value())
-            dbgprintf(" (\033[34;1m%s\033[0m:%zu)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
-        dbgprintf("\n");
+            report(" (\033[34;1m%s\033[0m:%zu)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
+        report("\n");
     }
 }
 
@@ -844,7 +844,7 @@ u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
 
 void Emulator::virt$exit(int status)
 {
-    dbgprintf("\n==%d==  \033[33;1mSyscall: exit(%d)\033[0m, shutting down!\n", getpid(), status);
+    report("\n==%d==  \033[33;1mSyscall: exit(%d)\033[0m, shutting down!\n", getpid(), status);
     m_exit_status = status;
     m_shutdown = true;
 }
@@ -911,10 +911,10 @@ int Emulator::virt$execve(FlatPtr params_addr)
     copy_string_list(arguments, params.arguments);
     copy_string_list(environment, params.environment);
 
-    dbgprintf("\n");
-    dbgprintf("==%d==  \033[33;1mSyscall:\033[0m execve\n", getpid());
+    report("\n");
+    report("==%d==  \033[33;1mSyscall:\033[0m execve\n", getpid());
     for (auto& argument : arguments)
-        dbgprintf("==%d==    - %s\n", getpid(), argument.characters());
+        report("==%d==    - %s\n", getpid(), argument.characters());
 
     Vector<char*> argv;
     Vector<char*> envp;
@@ -979,6 +979,14 @@ int Emulator::virt$gethostname(FlatPtr buffer, ssize_t buffer_size)
         return rc;
     mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
     return rc;
+}
+
+void report(const char* format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
 }
 
 }
