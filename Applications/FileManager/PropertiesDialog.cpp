@@ -75,6 +75,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
 
     m_name = lexical_path.basename();
     m_path = lexical_path.string();
+    m_parent_path = lexical_path.dirname();
 
     m_name_box = file_container.add<GUI::TextBox>();
     m_name_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -188,7 +189,7 @@ void PropertiesDialog::permission_changed(mode_t mask, bool set)
 
 String PropertiesDialog::make_full_path(String name)
 {
-    return String::format("%s/%s", m_model.root_path().characters(), name.characters());
+    return String::format("%s/%s", m_parent_path.characters(), name.characters());
 }
 
 bool PropertiesDialog::apply_changes()

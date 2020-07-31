@@ -89,6 +89,7 @@ private:
     RefPtr<GUI::TextBox> m_name_box;
     RefPtr<GUI::ImageWidget> m_icon;
     String m_name;
+    String m_parent_path;
     String m_path;
     mode_t m_mode;
     mode_t m_old_mode;
