@@ -262,6 +262,7 @@ private:
     bool m_visible_for_timer_purposes { true };
     bool m_visible { false };
     bool m_accessory { false };
+    bool m_moved_by_client { false };
 };
 
 }

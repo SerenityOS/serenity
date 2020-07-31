@@ -259,6 +259,9 @@ public:
     bool is_destroyed() const { return m_destroyed; }
     void destroy();
 
+    bool default_positioned() const { return m_default_positioned; }
+    void set_default_positioned(bool p) { m_default_positioned = p; }
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
@@ -293,6 +296,7 @@ private:
     bool m_fullscreen { false };
     bool m_accessory { false };
     bool m_destroyed { false };
+    bool m_default_positioned { false };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };

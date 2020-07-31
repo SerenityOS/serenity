@@ -407,6 +407,10 @@ OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(c
         dbg() << "ClientConnection: Ignoring SetWindowRect request for fullscreen window";
         return nullptr;
     }
+
+    if (message.rect().location() != window.rect().location()) {
+        window.set_default_positioned(false);
+    }
     auto normalized_rect = normalize_window_rect(message.rect(), window.type());
     window.set_rect(normalized_rect);
     window.request_update(normalized_rect);
@@ -460,7 +464,12 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_has_alpha_channel(message.has_alpha_channel());
     window->set_title(message.title());
     if (!message.fullscreen()) {
-        auto normalized_rect = normalize_window_rect(message.rect(), window->type());
+        auto rect = message.rect();
+        if (message.auto_position() && window->type() == WindowType::Normal) {
+            rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), message.rect().size() };
+            window->set_default_positioned(true);
+        }
+        auto normalized_rect = normalize_window_rect(rect, window->type());
         window->set_rect(normalized_rect);
     }
     if (window->type() == WindowType::Desktop) {
