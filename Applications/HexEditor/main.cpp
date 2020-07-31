@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Hex Editor");
-    window->set_rect(20, 200, 640, 400);
+    window->resize(640, 400);
 
     auto& hex_editor_widget = window->set_main_widget<HexEditorWidget>();
 
