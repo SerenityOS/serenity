@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Keyboard settings");
-    window->set_rect(200, 200, 300, 70);
+    window->resize(300, 70);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& root_widget = window->set_main_widget<GUI::Widget>();

@@ -121,7 +121,7 @@ int main(int argc, char** argv)
     auto bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_filename, bookmarksbar_enabled);
 
     auto window = GUI::Window::construct();
-    window->set_rect(100, 100, 640, 480);
+    window->resize(640, 480);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"));
     window->set_title("Browser");
 

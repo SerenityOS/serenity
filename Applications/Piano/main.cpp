@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     auto& main_widget = window->set_main_widget<MainWidget>(track_manager);
     window->set_title("Piano");
-    window->set_rect(90, 90, 840, 600);
+    window->resize(840, 600);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-piano.png"));
     window->show();
 
