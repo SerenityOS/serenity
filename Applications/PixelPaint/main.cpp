@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("PixelPaint");
-    window->set_rect(40, 100, 950, 570);
+    window->resize(950, 570);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& horizontal_container = window->set_main_widget<GUI::Widget>();

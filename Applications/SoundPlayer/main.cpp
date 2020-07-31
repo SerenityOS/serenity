@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("SoundPlayer");
     window->set_resizable(false);
-    window->set_rect(300, 300, 350, 140);
+    window->resize(350, 140);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
 
     auto menubar = GUI::MenuBar::construct();

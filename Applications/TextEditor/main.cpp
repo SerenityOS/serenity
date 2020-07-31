@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Text Editor");
-    window->set_rect(20, 200, 640, 400);
+    window->resize(640, 400);
 
     auto& text_widget = window->set_main_widget<TextEditorWidget>();
 

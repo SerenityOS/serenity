@@ -50,7 +50,6 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_main_widget<KeyboardMapperWidget>();
     window->resize(775, 315);
-    window->move_to(50, 50);
     window->set_resizable(false);
     window->show();
 

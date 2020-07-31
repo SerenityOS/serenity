@@ -86,7 +86,7 @@ int main(int argc, char** argv)
         auto& font_editor_widget = window->set_main_widget<FontEditorWidget>(path, move(font));
         window->set_rect({ point, { font_editor_widget.preferred_width(), font_editor_widget.preferred_height() } });
     };
-    set_edited_font(path, move(edited_font), { 50, 50 });
+    set_edited_font(path, move(edited_font), window->position());
 
     auto menubar = GUI::MenuBar::construct();
 

@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Calendar");
-    window->set_rect(20, 200, 596, 475);
+    window->resize(596, 475);
 
     auto& calendar_widget = window->set_main_widget<CalendarWidget>();
     window->show();
