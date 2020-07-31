@@ -126,9 +126,11 @@ void RSA::encrypt(const ByteBuffer& in, ByteBuffer& out)
     }
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
     auto size = exp.export_data(out.span());
-    // FIXME: We should probably not do this...
-    if (size != out.size())
-        out = out.slice(out.size() - size, size);
+    auto outsize = out.size();
+    if (size != outsize) {
+        dbg() << "POSSIBLE RSA BUG!!! Size mismatch: " << outsize << " requested but " << size << " bytes generated";
+        out = out.slice(outsize - size, size);
+    }
 }
 
 void RSA::decrypt(const ByteBuffer& in, ByteBuffer& out)
@@ -252,8 +254,8 @@ void RSA_PKCS1_EME::encrypt(const ByteBuffer& in, ByteBuffer& out)
     // since arc4random can create zeros (shocking!)
     // we have to go through and un-zero the zeros
     for (size_t i = 0; i < ps_length; ++i)
-        if (!ps[i])
-            ps[i] = 0xfe;
+        while (!ps[i])
+            AK::fill_with_random(ps + i, 1);
 
     u8 paddings[] { 0x00, 0x02 };
 

@@ -59,7 +59,7 @@ public:
         return UnsignedBigInteger(ptr, length);
     }
 
-    size_t export_data(Bytes) const;
+    size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
     static UnsignedBigInteger from_base10(const String& str);
     String to_base10() const;

@@ -67,7 +67,7 @@ public:
     static SignedBigInteger import_data(const AK::StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
     static SignedBigInteger import_data(const u8* ptr, size_t length);
 
-    size_t export_data(Bytes) const;
+    size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
     static SignedBigInteger from_base10(StringView str);
     String to_base10() const;
