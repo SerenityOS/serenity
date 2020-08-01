@@ -254,7 +254,7 @@ pushd "$DIR/Build/"
         popd
 
         echo "XXX build libstdc++"
-        "$MAKE" all-target-libstdc++-v3 || exit 1
+        "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
         echo "XXX install libstdc++"
         "$MAKE" install-target-libstdc++-v3 || exit 1
 
