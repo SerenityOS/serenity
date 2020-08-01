@@ -33,7 +33,7 @@ before_install:
 - cmake --version
 
 script:
-- export SERENITY_ROOT=$(pwd)
+- export SERENITY_ROOT="$(pwd)"
 - Meta/lint-shell-scripts.sh
 - Meta/lint-executable-resources.sh
 - Meta/check-style.sh
@@ -43,7 +43,7 @@ script:
 - mkdir -p Build
 - cd Build
 - cmake .. -DBUILD_LAGOM=1
-- make
+- make -j2
 - CTEST_OUTPUT_ON_FAILURE=1 make test
 - cd Meta/Lagom
 - ./test-js
