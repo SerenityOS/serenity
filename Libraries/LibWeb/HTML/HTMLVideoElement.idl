@@ -1,0 +1,5 @@
+interface HTMLVideoElement : HTMLMediaElement {
+
+    [Reflect] attribute DOMString poster;
+
+}

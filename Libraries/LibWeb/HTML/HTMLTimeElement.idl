@@ -1,0 +1,5 @@
+interface HTMLTimeElement : HTMLElement {
+
+    [Reflect=datetime] attribute DOMString dateTime;
+
+}
