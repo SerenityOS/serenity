@@ -42,7 +42,7 @@ int Process::sys$dbgputch(u8 ch)
     return 0;
 }
 
-int Process::sys$dbgputstr(const u8* characters, int length)
+int Process::sys$dbgputstr(Userspace<const u8*> characters, int length)
 {
     if (!length)
         return 0;
@@ -50,7 +50,7 @@ int Process::sys$dbgputstr(const u8* characters, int length)
         return -EFAULT;
     SmapDisabler disabler;
     for (int i = 0; i < length; ++i)
-        IO::out8(0xe9, characters[i]);
+        IO::out8(0xe9, characters.unsafe_userspace_ptr()[i]);
     return 0;
 }
 

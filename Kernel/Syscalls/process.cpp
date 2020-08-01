@@ -55,23 +55,20 @@ int Process::sys$set_process_icon(int icon_id)
     return 0;
 }
 
-int Process::sys$get_process_name(char* buffer, int buffer_size)
+int Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
 {
     REQUIRE_PROMISE(stdio);
-    if (buffer_size <= 0)
-        return -EINVAL;
-
     if (!validate_write(buffer, buffer_size))
         return -EFAULT;
 
-    if (m_name.length() + 1 > (size_t)buffer_size)
+    if (m_name.length() + 1 > buffer_size)
         return -ENAMETOOLONG;
 
     copy_to_user(buffer, m_name.characters(), m_name.length() + 1);
     return 0;
 }
 
-int Process::sys$set_process_name(const char* user_name, size_t user_name_length)
+int Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
 {
     REQUIRE_PROMISE(proc);
     if (user_name_length > 256)
