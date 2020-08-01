@@ -34,7 +34,7 @@
 
 namespace Kernel {
 
-int Process::sys$ptrace(const Syscall::SC_ptrace_params* user_params)
+int Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
 {
     REQUIRE_PROMISE(proc);
     Syscall::SC_ptrace_params params;
@@ -58,10 +58,10 @@ bool Process::has_tracee_thread(int tracer_pid) const
     return has_tracee;
 }
 
-KResultOr<u32> Process::peek_user_data(u32* address)
+KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
 {
     if (!MM.validate_user_read(*this, VirtualAddress(address), sizeof(u32))) {
-        dbg() << "Invalid address for peek_user_data: " << address;
+        dbg() << "Invalid address for peek_user_data: " << address.ptr();
         return KResult(-EFAULT);
     }
     uint32_t result;
@@ -74,12 +74,12 @@ KResultOr<u32> Process::peek_user_data(u32* address)
     return result;
 }
 
-KResult Process::poke_user_data(u32* address, u32 data)
+KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
 {
     // We validate for read (rather than write) because PT_POKE can write to readonly pages.
     // So we effectively only care that the poke operation is trying to write to user pages.
     if (!MM.validate_user_read(*this, VirtualAddress(address), sizeof(u32))) {
-        dbg() << "Invalid address for poke_user_data: " << address;
+        dbg() << "Invalid address for poke_user_data: " << address.ptr();
         return KResult(-EFAULT);
     }
     ProcessPagingScope scope(*this);
@@ -88,7 +88,7 @@ KResult Process::poke_user_data(u32* address, u32 data)
     ASSERT(region != nullptr);
     if (region->is_shared()) {
         // If the region is shared, we change its vmobject to a PrivateInodeVMObject
-        // to prevent the write operation from chaning any shared inode data
+        // to prevent the write operation from changing any shared inode data
         ASSERT(region->vmobject().is_shared_inode());
         region->set_vmobject(PrivateInodeVMObject::create_with_inode(static_cast<SharedInodeVMObject&>(region->vmobject()).inode()));
         region->set_shared(false);

@@ -326,7 +326,7 @@ public:
     int sys$unveil(const Syscall::SC_unveil_params*);
     int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     int sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
-    int sys$ptrace(const Syscall::SC_ptrace_params*);
+    int sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>);
     int sys$sendfd(int sockfd, int fd);
     int sys$recvfd(int sockfd);
     long sys$sysconf(int name);
@@ -559,8 +559,8 @@ public:
         m_wait_for_tracer_at_next_execve = val;
     }
 
-    KResultOr<u32> peek_user_data(u32* address);
-    KResult poke_user_data(u32* address, u32 data);
+    KResultOr<u32> peek_user_data(Userspace<const u32*> address);
+    KResult poke_user_data(Userspace<u32*> address, u32 data);
 
 private:
     friend class MemoryManager;
