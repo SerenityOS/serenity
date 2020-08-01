@@ -4,5 +4,7 @@ interface HTMLObjectElement : HTMLElement {
     [Reflect] attribute DOMString type;
     [Reflect] attribute DOMString name;
     [Reflect=usemap] attribute DOMString useMap;
+    [Reflect] attribute DOMString width;
+    [Reflect] attribute DOMString height;
 
 }
