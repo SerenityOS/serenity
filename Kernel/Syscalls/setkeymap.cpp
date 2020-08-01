@@ -29,7 +29,7 @@
 
 namespace Kernel {
 
-int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* user_params)
+int Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_params)
 {
     REQUIRE_PROMISE(setkeymap);
 
