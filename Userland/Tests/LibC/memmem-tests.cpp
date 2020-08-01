@@ -66,5 +66,6 @@ int main()
         ++i;
     }
 
+    printf(failed ? "FAIL\n" : "PASS\n");
     return failed ? 1 : 0;
 }
