@@ -83,6 +83,8 @@ void AppletManager::add_applet(Window& applet)
     });
 
     calculate_applet_rects(MenuManager::the().window());
+
+    MenuManager::the().refresh();
 }
 
 void AppletManager::calculate_applet_rects(Window& window)
@@ -105,6 +107,8 @@ void AppletManager::remove_applet(Window& applet)
     m_applets.remove_first_matching([&](auto& entry) {
         return &applet == entry.ptr();
     });
+
+    MenuManager::the().refresh();
 }
 
 void AppletManager::draw()
