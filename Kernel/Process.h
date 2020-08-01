@@ -185,11 +185,11 @@ public:
     int sys$yield();
     int sys$sync();
     int sys$beep();
-    int sys$get_process_name(char* buffer, int buffer_size);
-    int sys$set_process_name(const char* user_name, size_t user_name_length);
-    int sys$watch_file(const char* path, size_t path_length);
+    int sys$get_process_name(Userspace<char*> buffer, size_t buffer_size);
+    int sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length);
+    int sys$watch_file(Userspace<const char*> path, size_t path_length);
     int sys$dbgputch(u8);
-    int sys$dbgputstr(const u8*, int length);
+    int sys$dbgputstr(Userspace<const u8*>, int length);
     int sys$dump_backtrace();
     int sys$gettid();
     int sys$donate(int tid);
@@ -445,8 +445,7 @@ public:
 
     [[nodiscard]] String validate_and_copy_string_from_user(Userspace<const char*> user_characters, size_t size) const
     {
-        return validate_and_copy_string_from_user(user_characters.unsafe_userspace_ptr(), size);
-    }
+        return validate_and_copy_string_from_user(user_characters.unsafe_userspace_ptr(), size); }
 
     [[nodiscard]] String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
 
