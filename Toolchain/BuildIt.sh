@@ -197,11 +197,13 @@ pushd "$DIR/Build/"
     unset PKG_CONFIG_LIBDIR # Just in case
 
     pushd binutils
+        echo "XXX configure binutils"
         "$DIR"/Tarballs/binutils-2.33.1/configure --prefix="$PREFIX" \
                                                 --target="$TARGET" \
                                                 --with-sysroot="$SYSROOT" \
                                                 --enable-shared \
-                                                --disable-nls || exit 1
+                                                --disable-nls \
+                                                ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
         if [ "$(uname)" = "Darwin" ]; then
             # under macOS generated makefiles are not resolving the "intl"
             # dependency properly to allow linking its own copy of
@@ -211,6 +213,7 @@ pushd "$DIR/Build/"
             "$MAKE" all-yes
             popd
         fi
+        echo "XXX build binutils"
         "$MAKE" -j "$MAKEJOBS" || exit 1
         "$MAKE" install || exit 1
     popd
@@ -220,13 +223,15 @@ pushd "$DIR/Build/"
             perl -pi -e 's/-no-pie/-nopie/g' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/configure"
         fi
 
+        echo "XXX configure gcc and libgcc"
         "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
                                             --target="$TARGET" \
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
                                             --with-newlib \
                                             --enable-shared \
-                                            --enable-languages=c,c++ || exit 1
+                                            --enable-languages=c,c++ \
+                                            ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
         echo "XXX build gcc and libgcc"
         "$MAKE" -j "$MAKEJOBS" all-gcc all-target-libgcc || exit 1
