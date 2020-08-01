@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+int main()
 {
     int res = pledge("stdio unix rpath", "stdio");
     if (res < 0) {
