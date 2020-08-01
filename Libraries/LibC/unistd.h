@@ -176,7 +176,13 @@ enum {
 enum {
     _SC_NPROCESSORS_CONF,
     _SC_NPROCESSORS_ONLN,
+    _SC_PAGESIZE,
 };
+
+#define _SC_NPROCESSORS_CONF _SC_NPROCESSORS_CONF
+#define _SC_NPROCESSORS_ONLN _SC_NPROCESSORS_ONLN
+#define _SC_PAGESIZE _SC_PAGESIZE
+
 long sysconf(int name);
 
 struct crypt_data {
