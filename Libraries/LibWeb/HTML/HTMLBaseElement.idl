@@ -1,0 +1,5 @@
+interface HTMLBaseElement : HTMLElement {
+
+    [Reflect] attribute DOMString target;
+
+}
