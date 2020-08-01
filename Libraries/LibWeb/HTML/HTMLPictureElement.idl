@@ -1,0 +1,5 @@
+interface HTMLPictureElement : HTMLElement {
+
+
+
+}

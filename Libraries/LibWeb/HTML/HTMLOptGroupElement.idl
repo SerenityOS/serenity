@@ -1,0 +1,5 @@
+interface HTMLOptGroupElement : HTMLElement {
+
+    [Reflect] attribute DOMString label;
+
+}

@@ -1,0 +1,5 @@
+interface HTMLMediaElement : HTMLElement {
+
+    [Reflect] attribute DOMString src;
+
+}

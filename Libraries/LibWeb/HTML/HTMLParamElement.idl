@@ -1,0 +1,6 @@
+interface HTMLParamElement : HTMLElement {
+
+    [Reflect] attribute DOMString name;
+    [Reflect] attribute DOMString value;
+
+}
