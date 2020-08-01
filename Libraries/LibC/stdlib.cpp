@@ -290,7 +290,7 @@ int unsetenv(const char* name)
 
 int setenv(const char* name, const char* value, int overwrite)
 {
-    if (!overwrite && !getenv(name))
+    if (!overwrite && getenv(name))
         return 0;
     auto length = strlen(name) + strlen(value) + 2;
     auto* var = (char*)malloc(length);
