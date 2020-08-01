@@ -37,3 +37,5 @@ target_link_libraries(test-crypto LibCrypto LibTLS LibLine)
 target_link_libraries(test-js LibJS LibLine LibCore)
 target_link_libraries(test-web LibWeb)
 target_link_libraries(tt LibPthread)
+
+add_subdirectory(Tests)
