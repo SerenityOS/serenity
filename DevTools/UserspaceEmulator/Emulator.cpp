@@ -225,9 +225,11 @@ void Emulator::dump_backtrace(const Vector<FlatPtr>& backtrace)
         u32 offset = 0;
         String symbol = m_elf->symbolicate(address, &offset);
         auto source_position = m_debug_info->get_source_position(address);
-        report("==%d==    %#08x  %s +%#x", getpid(), address, symbol.characters(), offset);
+        report("==%d==    %#08x  %s", getpid(), address, symbol.characters());
         if (source_position.has_value())
             report(" (\033[34;1m%s\033[0m:%zu)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
+        else
+            report(" +%#x", offset);
         report("\n");
     }
 }
