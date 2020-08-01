@@ -44,6 +44,10 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
     ASSERT(region);
     ASSERT(region->is_mmap());
     auto& mmap_region = static_cast<MmapRegion&>(*region);
+
+    // Mark the containing mmap region as a malloc block!
+    mmap_region.set_malloc(true);
+
     auto* shadow_bits = mmap_region.shadow_data() + address - mmap_region.base();
     memset(shadow_bits, 0, size);
 
