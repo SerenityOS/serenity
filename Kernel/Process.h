@@ -326,7 +326,7 @@ public:
     int sys$set_process_boost(pid_t, int amount);
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
     int sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
-    int sys$unveil(const Syscall::SC_unveil_params*);
+    int sys$unveil(Userspace<const Syscall::SC_unveil_params*>);
     int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     int sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
     int sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>);
