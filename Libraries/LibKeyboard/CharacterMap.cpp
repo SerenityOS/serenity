@@ -46,11 +46,15 @@ CharacterMap::CharacterMap(const String& file_name)
 #endif
 }
 
+#ifndef KERNEL
+
 int CharacterMap::set_system_map()
 {
     Syscall::SC_setkeymap_params params { m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map };
     return syscall(SC_setkeymap, &params);
 }
+
+#endif
 
 u32 CharacterMap::get_char(KeyEvent event)
 {
