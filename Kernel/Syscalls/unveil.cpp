@@ -31,7 +31,7 @@
 
 namespace Kernel {
 
-int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
+int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
 {
     Syscall::SC_unveil_params params;
     if (!validate_read_and_copy_typed(&params, user_params))
