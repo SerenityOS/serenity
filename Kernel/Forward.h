@@ -45,6 +45,7 @@ class KBuffer;
 class KResult;
 class LocalSocket;
 class MappedROM;
+class MasterPTY;
 class PageDirectory;
 class PerformanceEventBuffer;
 class PhysicalPage;
