@@ -72,17 +72,23 @@ public:
     Color active_window_border1() const { return color(ColorRole::ActiveWindowBorder1); }
     Color active_window_border2() const { return color(ColorRole::ActiveWindowBorder2); }
     Color active_window_title() const { return color(ColorRole::ActiveWindowTitle); }
+    Color active_window_title_stripes() const { return color(ColorRole::ActiveWindowTitleStripes); }
+    Color active_window_title_shadow() const { return color(ColorRole::ActiveWindowTitleShadow); }
     Color inactive_window_border1() const { return color(ColorRole::InactiveWindowBorder1); }
     Color inactive_window_border2() const { return color(ColorRole::InactiveWindowBorder2); }
     Color inactive_window_title() const { return color(ColorRole::InactiveWindowTitle); }
+    Color inactive_window_title_stripes() const { return color(ColorRole::InactiveWindowTitleStripes); }
+    Color inactive_window_title_shadow() const { return color(ColorRole::InactiveWindowTitleShadow); }
     Color moving_window_border1() const { return color(ColorRole::MovingWindowBorder1); }
     Color moving_window_border2() const { return color(ColorRole::MovingWindowBorder2); }
     Color moving_window_title() const { return color(ColorRole::MovingWindowTitle); }
+    Color moving_window_title_stripes() const { return color(ColorRole::MovingWindowTitleStripes); }
+    Color moving_window_title_shadow() const { return color(ColorRole::MovingWindowTitleShadow); }
     Color highlight_window_border1() const { return color(ColorRole::HighlightWindowBorder1); }
     Color highlight_window_border2() const { return color(ColorRole::HighlightWindowBorder2); }
     Color highlight_window_title() const { return color(ColorRole::HighlightWindowTitle); }
-    Color window_title_stripes() const { return color(ColorRole::WindowTitleStripes); }
-    Color window_title_shadow() const { return color(ColorRole::WindowTitleShadow); }
+    Color highlight_window_title_stripes() const { return color(ColorRole::HighlightWindowTitleStripes); }
+    Color highlight_window_title_shadow() const { return color(ColorRole::HighlightWindowTitleShadow); }
     Color menu_stripe() const { return color(ColorRole::MenuStripe); }
     Color menu_base() const { return color(ColorRole::MenuBase); }
     Color menu_base_text() const { return color(ColorRole::MenuBaseText); }
