@@ -52,7 +52,8 @@ public:
     bool is_writable() const { return m_prot & PROT_WRITE; }
     bool is_executable() const { return m_prot & PROT_EXEC; }
 
-    bool is_malloc_block() const;
+    bool is_malloc_block() const { return m_malloc; }
+    void set_malloc(bool b) { m_malloc = b; }
 
 private:
     MmapRegion(u32 base, u32 size, int prot);
@@ -62,6 +63,7 @@ private:
     u8* m_shadow_data { nullptr };
     int m_prot { 0 };
     bool m_file_backed { false };
+    bool m_malloc { false };
 };
 
 }

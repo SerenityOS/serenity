@@ -65,13 +65,6 @@ MmapRegion::~MmapRegion()
         free(m_data);
 }
 
-bool MmapRegion::is_malloc_block() const
-{
-    // FIXME: This is obviously incomplete!
-    //        We should somehow know which mmap regions are malloc blocks.
-    return !m_file_backed;
-}
-
 ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
 {
     if (!is_readable()) {
