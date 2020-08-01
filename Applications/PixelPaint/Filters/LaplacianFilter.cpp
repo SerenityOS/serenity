@@ -36,17 +36,12 @@ LaplacianFilter::~LaplacianFilter()
 {
 }
 
-void LaplacianFilter::apply(const Filter::Parameters& parameters)
-{
-    GenericConvolutionFilter::apply(parameters);
-}
-
-GenericConvolutionFilter<3>::Parameters LaplacianFilter::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect, bool diagonal)
+OwnPtr<GenericConvolutionFilter<3>::Parameters> LaplacianFilter::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect, bool diagonal)
 {
     if (diagonal)
-        return { bitmap, rect, Matrix<3, float>(-1, -1, -1, -1, 8, -1, -1, -1, -1) };
+        return make<GenericConvolutionFilter<3>::Parameters>(bitmap, rect, Matrix<3, float>(-1, -1, -1, -1, 8, -1, -1, -1, -1));
 
-    return { bitmap, rect, Matrix<3, float>(0, -1, 0, -1, 4, -1, 0, -1, 0) };
+    return make<GenericConvolutionFilter<3>::Parameters>(bitmap, rect, Matrix<3, float>(0, -1, 0, -1, 4, -1, 0, -1, 0));
 }
 
 }

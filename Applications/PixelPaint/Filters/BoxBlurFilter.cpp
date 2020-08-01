@@ -43,13 +43,8 @@ BoxBlurFilter<N>::~BoxBlurFilter()
 }
 
 template<size_t N>
-void BoxBlurFilter<N>::apply(const Filter::Parameters& parameters)
-{
-    GenericConvolutionFilter<N>::apply(parameters);
-}
-
-template<size_t N>
-typename GenericConvolutionFilter<N>::Parameters BoxBlurFilter<N>::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
+OwnPtr<typename GenericConvolutionFilter<N>::Parameters>
+BoxBlurFilter<N>::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
 {
     Matrix<N, float> kernel;
 
@@ -61,7 +56,7 @@ typename GenericConvolutionFilter<N>::Parameters BoxBlurFilter<N>::get_parameter
 
     normalize(kernel);
 
-    return { bitmap, rect, kernel };
+    return make<typename GenericConvolutionFilter<N>::Parameters>(bitmap, rect, kernel);
 }
 
 }

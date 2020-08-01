@@ -38,14 +38,9 @@ SpatialGaussianBlurFilter<N, T>::~SpatialGaussianBlurFilter()
 {
 }
 
-template<size_t N, typename T>
-void SpatialGaussianBlurFilter<N, T>::apply(const Filter::Parameters& parameters)
-{
-    GenericConvolutionFilter<N>::apply(parameters);
-}
-
 template<size_t N, typename _T>
-typename GenericConvolutionFilter<N>::Parameters SpatialGaussianBlurFilter<N, _T>::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
+OwnPtr<typename GenericConvolutionFilter<N>::Parameters>
+SpatialGaussianBlurFilter<N, _T>::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
 {
     Matrix<N, float> kernel;
     auto sigma = 1.0f;
@@ -60,7 +55,7 @@ typename GenericConvolutionFilter<N>::Parameters SpatialGaussianBlurFilter<N, _T
 
     normalize(kernel);
 
-    return { bitmap, rect, kernel };
+    return make<typename GenericConvolutionFilter<N>::Parameters>(bitmap, rect, kernel);
 }
 
 }

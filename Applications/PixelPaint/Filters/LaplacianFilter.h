@@ -37,9 +37,7 @@ public:
 
     virtual const char* class_name() const override { return "LaplacianFilter"; }
 
-    virtual void apply(const Filter::Parameters&) override;
-
-    GenericConvolutionFilter::Parameters get_parameters(Gfx::Bitmap&, const Gfx::IntRect&, bool diagonal);
+    OwnPtr<GenericConvolutionFilter::Parameters> get_parameters(Gfx::Bitmap&, const Gfx::IntRect&, bool diagonal);
 };
 
 }
