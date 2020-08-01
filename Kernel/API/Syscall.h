@@ -345,10 +345,10 @@ struct SC_futex_params {
 };
 
 struct SC_setkeymap_params {
-    const u32* map;
-    const u32* shift_map;
-    const u32* alt_map;
-    const u32* altgr_map;
+    Userspace<const u32*> map;
+    Userspace<const u32*> shift_map;
+    Userspace<const u32*> alt_map;
+    Userspace<const u32*> altgr_map;
 };
 
 struct SC_create_thread_params {
