@@ -38,6 +38,11 @@ DebugSession::DebugSession(int pid)
 
 DebugSession::~DebugSession()
 {
+    for (const auto& bp : m_breakpoints) {
+        disable_breakpoint(bp.key);
+    }
+    m_breakpoints.clear();
+
     if (!m_is_debugee_dead) {
         if (ptrace(PT_DETACH, m_debugee_pid, 0, 0) < 0) {
             perror("PT_DETACH");
