@@ -79,7 +79,7 @@ public:
 
     virtual void apply(const Filter::Parameters&) override;
 
-    Parameters get_parameters(Gfx::Bitmap&, const Gfx::IntRect&, GUI::Window* parent_window);
+    OwnPtr<Parameters> get_parameters(Gfx::Bitmap&, const Gfx::IntRect&, GUI::Window* parent_window);
 };
 
 template<size_t N>

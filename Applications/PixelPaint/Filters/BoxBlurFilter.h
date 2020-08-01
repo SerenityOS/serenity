@@ -38,9 +38,7 @@ public:
 
     virtual const char* class_name() const override { return "BoxBlurFilter"; }
 
-    virtual void apply(const Filter::Parameters&) override;
-
-    typename GenericConvolutionFilter<N>::Parameters get_parameters(Gfx::Bitmap&, const Gfx::IntRect&);
+    OwnPtr<typename GenericConvolutionFilter<N>::Parameters> get_parameters(Gfx::Bitmap&, const Gfx::IntRect&);
 };
 
 }

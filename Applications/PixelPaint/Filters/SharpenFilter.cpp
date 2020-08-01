@@ -37,14 +37,9 @@ SharpenFilter::~SharpenFilter()
 {
 }
 
-void SharpenFilter::apply(const Filter::Parameters& parameters)
+OwnPtr<GenericConvolutionFilter<3>::Parameters> SharpenFilter::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
 {
-    GenericConvolutionFilter::apply(parameters);
-}
-
-GenericConvolutionFilter<3>::Parameters SharpenFilter::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
-{
-    return { bitmap, rect, Matrix<3, float>(0, -1, 0, -1, 5, -1, 0, -1, 0) };
+    return make<GenericConvolutionFilter<3>::Parameters>(bitmap, rect, Matrix<3, float>(0, -1, 0, -1, 5, -1, 0, -1, 0));
 }
 
 }

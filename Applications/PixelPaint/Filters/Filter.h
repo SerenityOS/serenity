@@ -47,6 +47,8 @@ public:
         const Gfx::IntRect& rect() const { return m_target_rect; }
         virtual bool is_generic_convolution_filter() const { return false; }
 
+        virtual ~Parameters() { }
+
     private:
         Gfx::Bitmap& m_target_bitmap;
         Gfx::IntRect m_target_rect;
