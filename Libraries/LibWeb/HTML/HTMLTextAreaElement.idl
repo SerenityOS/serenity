@@ -1,0 +1,7 @@
+interface HTMLTextAreaElement : HTMLElement {
+
+    [Reflect] attribute DOMString placeholder;
+    [Reflect] attribute DOMString wrap;
+    readonly attribute DOMString type;
+
+}
