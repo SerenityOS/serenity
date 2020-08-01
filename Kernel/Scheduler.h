@@ -62,6 +62,9 @@ public:
     static bool donate_to(Thread*, const char* reason);
     static bool context_switch(Thread*);
     static void enter_current(Thread& prev_thread);
+    static void leave_on_first_switch(u32 flags);
+    static void prepare_after_exec();
+    static void prepare_for_idle_loop();
     static Process* colonel();
     static void beep();
     static void idle_loop();

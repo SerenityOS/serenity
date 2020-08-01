@@ -943,6 +943,7 @@ void Processor::early_initialize(u32 cpu)
     m_message_queue = nullptr;
     m_idle_thread = nullptr;
     m_current_thread = nullptr;
+    m_scheduler_data = nullptr;
     m_mm_data = nullptr;
     m_info = nullptr;
 
@@ -1188,9 +1189,9 @@ extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapF
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
-    // context), we need to unlock the scheduler lock manually. We're
-    // using the flags initially set up by init_context
-    g_scheduler_lock.unlock(trap->regs->eflags);
+    // context), we need to notify the scheduler so that it can release
+    // the scheduler lock.
+    Scheduler::leave_on_first_switch(trap->regs->eflags);
 }
 
 extern "C" void thread_context_first_enter(void);
@@ -1335,6 +1336,7 @@ void Processor::assume_context(Thread& thread, u32 flags)
     dbg() << "Assume context for thread " << VirtualAddress(&thread) << " " << thread;
 #endif
     ASSERT_INTERRUPTS_DISABLED();
+    Scheduler::prepare_after_exec();
     // in_critical() should be 2 here. The critical section in Process::exec
     // and then the scheduler lock
     ASSERT(Processor::current().in_critical() == 2);
@@ -1346,21 +1348,20 @@ extern "C" void pre_init_finished(void)
 {
     ASSERT(g_scheduler_lock.own_lock());
 
-    // The target flags will get restored upon leaving the trap
-    u32 prev_flags = cpu_flags();
-    g_scheduler_lock.unlock(prev_flags);
-
-    // We because init_finished() will wait on the other APs, we need
+    // Because init_finished() will wait on the other APs, we need
     // to release the scheduler lock so that the other APs can also get
     // to this point
+
+    // The target flags will get restored upon leaving the trap
+    u32 prev_flags = cpu_flags();
+    Scheduler::leave_on_first_switch(prev_flags);
 }
 
 extern "C" void post_init_finished(void)
 {
     // We need to re-acquire the scheduler lock before a context switch
     // transfers control into the idle loop, which needs the lock held
-    ASSERT(!g_scheduler_lock.own_lock());
-    g_scheduler_lock.lock();
+    Scheduler::prepare_for_idle_loop();
 }
 
 void Processor::initialize_context_switching(Thread& initial_thread)
