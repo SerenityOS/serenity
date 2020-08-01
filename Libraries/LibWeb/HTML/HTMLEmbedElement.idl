@@ -1,0 +1,8 @@
+interface HTMLEmbedElement : HTMLElement {
+
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString type;
+    [Reflect] attribute DOMString width;
+    [Reflect] attribute DOMString height;
+
+}
