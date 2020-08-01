@@ -680,7 +680,7 @@ private:
     size_t m_master_tls_alignment { 0 };
 
     Lock m_big_lock { "Process" };
-    SpinLock<u32> m_lock;
+    mutable SpinLock<u32> m_lock;
 
     u64 m_alarm_deadline { 0 };
 

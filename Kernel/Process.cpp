@@ -664,7 +664,10 @@ void Process::finalize()
         }
     }
 
-    m_regions.clear();
+    {
+        ScopedSpinLock lock(m_lock);
+        m_regions.clear();
+    }
 
     m_dead = true;
 }
@@ -686,6 +689,7 @@ size_t Process::amount_dirty_private() const
     //        The main issue I'm thinking of is when the VMObject has physical pages that none of the Regions are mapping.
     //        That's probably a situation that needs to be looked at in general.
     size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
         if (!region.is_shared())
             amount += region.amount_dirty();
@@ -696,9 +700,12 @@ size_t Process::amount_dirty_private() const
 size_t Process::amount_clean_inode() const
 {
     HashTable<const InodeVMObject*> vmobjects;
-    for (auto& region : m_regions) {
-        if (region.vmobject().is_inode())
-            vmobjects.set(&static_cast<const InodeVMObject&>(region.vmobject()));
+    {
+        ScopedSpinLock lock(m_lock);
+        for (auto& region : m_regions) {
+            if (region.vmobject().is_inode())
+                vmobjects.set(&static_cast<const InodeVMObject&>(region.vmobject()));
+        }
     }
     size_t amount = 0;
     for (auto& vmobject : vmobjects)
@@ -709,6 +716,7 @@ size_t Process::amount_clean_inode() const
 size_t Process::amount_virtual() const
 {
     size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
         amount += region.size();
     }
@@ -719,6 +727,7 @@ size_t Process::amount_resident() const
 {
     // FIXME: This will double count if multiple regions use the same physical page.
     size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
         amount += region.amount_resident();
     }
@@ -732,6 +741,7 @@ size_t Process::amount_shared() const
     //        and each PhysicalPage is only reffed by its VMObject. This needs to be refactored
     //        so that every Region contributes +1 ref to each of its PhysicalPages.
     size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
         amount += region.amount_shared();
     }
@@ -741,6 +751,7 @@ size_t Process::amount_shared() const
 size_t Process::amount_purgeable_volatile() const
 {
     size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
         if (region.vmobject().is_purgeable() && static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile())
             amount += region.amount_resident();
@@ -751,6 +762,7 @@ size_t Process::amount_purgeable_volatile() const
 size_t Process::amount_purgeable_nonvolatile() const
 {
     size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
         if (region.vmobject().is_purgeable() && !static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile())
             amount += region.amount_resident();
