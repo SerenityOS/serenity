@@ -106,12 +106,15 @@ void GenericConvolutionFilter<N>::apply(const Filter::Parameters& parameters)
 }
 
 template<size_t N>
-typename GenericConvolutionFilter<N>::Parameters GenericConvolutionFilter<N>::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect, GUI::Window* parent_window)
+OwnPtr<typename GenericConvolutionFilter<N>::Parameters>
+GenericConvolutionFilter<N>::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect, GUI::Window* parent_window)
 {
     auto input = GenericConvolutionFilterInputDialog<N>::construct(parent_window);
     input->exec();
+    if (input->result() == GUI::Dialog::ExecOK)
+        return make<Parameters>(bitmap, rect, input->matrix(), input->should_wrap());
 
-    return { bitmap, rect, input->matrix(), input->should_wrap() };
+    return {};
 }
 
 template<size_t N>
@@ -119,11 +122,18 @@ GenericConvolutionFilterInputDialog<N>::GenericConvolutionFilterInputDialog(Wind
     : Dialog(parent_window)
 {
     // FIXME: Help! Make this GUI less ugly.
+    StringBuilder builder;
+    builder.appendf("%zux%zu", N, N);
+    builder.append(" Convolution");
+    set_title(builder.string_view());
+
+    resize(200, 250);
     auto& main_widget = set_main_widget<GUI::Frame>();
     main_widget.set_frame_shape(Gfx::FrameShape::Container);
     main_widget.set_frame_shadow(Gfx::FrameShadow::Raised);
     main_widget.set_fill_with_background_color(true);
-    main_widget.template set_layout<GUI::VerticalBoxLayout>();
+    auto& layout = main_widget.template set_layout<GUI::VerticalBoxLayout>();
+    layout.set_margins({ 4, 4, 4, 4 });
 
     size_t index = 0;
     size_t columns = N;
@@ -158,7 +168,6 @@ GenericConvolutionFilterInputDialog<N>::GenericConvolutionFilterInputDialog(Wind
     wrap_checkbox.set_checked(m_should_wrap);
 
     auto& button = main_widget.template add<GUI::Button>("Done");
-    button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.on_click = [&](auto) {
         m_should_wrap = wrap_checkbox.is_checked();
         if (norm_checkbox.is_checked())
