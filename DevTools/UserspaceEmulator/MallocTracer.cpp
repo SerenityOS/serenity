@@ -96,6 +96,18 @@ MallocTracer::Mallocation* MallocTracer::find_mallocation(FlatPtr address)
     return nullptr;
 }
 
+MallocTracer::Mallocation* MallocTracer::find_mallocation_before(FlatPtr address)
+{
+    Mallocation* found_mallocation = nullptr;
+    for (auto& mallocation : m_mallocations) {
+        if (mallocation.address >= address)
+            continue;
+        if (!found_mallocation || (mallocation.address > found_mallocation->address))
+            found_mallocation = &mallocation;
+    }
+    return found_mallocation;
+}
+
 void MallocTracer::audit_read(FlatPtr address, size_t size)
 {
     if (!m_auditing_enabled)
@@ -105,8 +117,18 @@ void MallocTracer::audit_read(FlatPtr address, size_t size)
         return;
 
     auto* mallocation = find_mallocation(address);
-    if (!mallocation)
+
+    if (!mallocation) {
+        report("\n");
+        report("==%d==  \033[31;1mHeap buffer overflow\033[0m, invalid %zu-byte read at address %p\n", getpid(), size, address);
+        Emulator::the().dump_backtrace();
+        if ((mallocation = find_mallocation_before(address))) {
+            size_t offset_into_mallocation = address - mallocation->address;
+            report("==%d==  Address is %zu byte(s) after block of size %zu, allocated at:\n", getpid(), offset_into_mallocation - mallocation->size, mallocation->size);
+            Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
+        }
         return;
+    }
 
     size_t offset_into_mallocation = address - mallocation->address;
 
@@ -114,7 +136,7 @@ void MallocTracer::audit_read(FlatPtr address, size_t size)
         report("\n");
         report("==%d==  \033[31;1mUse-after-free\033[0m, invalid %zu-byte read at address %p\n", getpid(), size, address);
         Emulator::the().dump_backtrace();
-        report("==%d==  Address is %zu bytes into block of size %zu, allocated at:\n", getpid(), offset_into_mallocation, mallocation->size);
+        report("==%d==  Address is %zu byte(s) into block of size %zu, allocated at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
         report("==%d==  Later freed at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->free_backtrace);
@@ -131,8 +153,17 @@ void MallocTracer::audit_write(FlatPtr address, size_t size)
         return;
 
     auto* mallocation = find_mallocation(address);
-    if (!mallocation)
+    if (!mallocation) {
+        report("\n");
+        report("==%d==  \033[31;1mHeap buffer overflow\033[0m, invalid %zu-byte write at address %p\n", getpid(), size, address);
+        Emulator::the().dump_backtrace();
+        if ((mallocation = find_mallocation_before(address))) {
+            size_t offset_into_mallocation = address - mallocation->address;
+            report("==%d==  Address is %zu byte(s) after block of size %zu, allocated at:\n", getpid(), offset_into_mallocation - mallocation->size, mallocation->size);
+            Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
+        }
         return;
+    }
 
     size_t offset_into_mallocation = address - mallocation->address;
 
@@ -140,7 +171,7 @@ void MallocTracer::audit_write(FlatPtr address, size_t size)
         report("\n");
         report("==%d==  \033[31;1mUse-after-free\033[0m, invalid %zu-byte write at address %p\n", getpid(), size, address);
         Emulator::the().dump_backtrace();
-        report("==%d==  Address is %zu bytes into block of size %zu, allocated at:\n", getpid(), offset_into_mallocation, mallocation->size);
+        report("==%d==  Address is %zu byte(s) into block of size %zu, allocated at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
         report("==%d==  Later freed at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->free_backtrace);
