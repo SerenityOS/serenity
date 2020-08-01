@@ -888,7 +888,10 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
 
 int Emulator::virt$fork()
 {
-    return fork();
+    int rc = fork();
+    if (rc < 0)
+        return -errno;
+    return rc;
 }
 
 int Emulator::virt$execve(FlatPtr params_addr)
