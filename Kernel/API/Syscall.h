@@ -447,13 +447,13 @@ struct SC_stat_params {
 struct SC_ptrace_params {
     int request;
     pid_t pid;
-    u8* addr;
+    Userspace<u8*> addr;
     int data;
 };
 
 struct SC_ptrace_peek_params {
-    u32* address;
-    u32* out_data;
+    Userspace<const u32*> address;
+    Userspace<u32*> out_data;
 };
 
 void initialize();
