@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Maciej Zygmanowski <sppmacd@pm.me>
+ * Copyright (c) 2020, Maciej Zygmanowski <sppmacd@pm.me>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -88,9 +88,11 @@ int main(int argc, char* argv[])
 
     // needed by ProcessStatisticsReader::get_all()
     if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil /proc");
+        perror("unveil /etc/passwd");
         return 1;
     }
+
+    unveil(nullptr, nullptr);
 
     bool arg_all_processes { false };
     int arg_fd { -1 };
