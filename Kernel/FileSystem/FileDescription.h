@@ -38,14 +38,6 @@
 
 namespace Kernel {
 
-class CharacterDevice;
-class File;
-class MasterPTY;
-class Process;
-class Region;
-class Socket;
-class TTY;
-
 class FileDescription : public RefCounted<FileDescription> {
     MAKE_SLAB_ALLOCATED(FileDescription)
 public:
