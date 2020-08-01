@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pthread.h>
 #include <assert.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>

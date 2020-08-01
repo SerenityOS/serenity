@@ -38,6 +38,7 @@ static const char* TEXT_ERROR = "\x1b[01;35m";
 static const char* TEXT_WRONG = "\x1b[01;31m";
 static const char* TEXT_OFBY1 = "\x1b[01;97m";
 static const char* TEXT_RESET = "\x1b[0m";
+static const long long LENIENCY = 8;
 
 struct Testcase {
     const char* test_name;
@@ -307,7 +308,7 @@ bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, const char*
     long long actual_ll = cast_ll(readable.as_double);
     long long off_by = expect_ll - actual_ll;
 
-    bool ofby1_hex = off_by != 0 && -8 <= off_by && off_by <= 8;
+    bool ofby1_hex = off_by != 0 && -LENIENCY <= off_by && off_by <= LENIENCY;
     bool wrong_hex = !ofby1_hex && strcmp(expect_hex, actual_hex) != 0;
     bool error_cns = !actual_consume_possible;
     bool wrong_cns = !error_cns && (actual_consume != expect_consume);
@@ -374,5 +375,11 @@ int main()
         }
     }
     printf("Out of %lu tests, saw %d successes and %d fails.\n", NUM_TESTCASES, successes, fails);
+    if (fails != 0) {
+        printf("FAIL\n");
+        return 1;
+    }
+
+    printf("PASS (with leniency up to %lld ULP from the exact solution.\n", LENIENCY);
     return 0;
 }
