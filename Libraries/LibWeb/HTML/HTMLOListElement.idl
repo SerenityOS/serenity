@@ -1,0 +1,5 @@
+interface HTMLOListElement : HTMLElement {
+
+    [Reflect] attribute DOMString type;
+
+}
