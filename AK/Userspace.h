@@ -26,11 +26,15 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {
 
 template<typename T>
+concept PointerTypeName = IsPointer<T>::value;
+
+template<PointerTypeName T>
 class Userspace {
 public:
     Userspace() { }
