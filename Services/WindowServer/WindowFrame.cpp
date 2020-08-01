@@ -170,12 +170,12 @@ WindowFrame::FrameColors WindowFrame::compute_frame_colors() const
     auto& wm = WindowManager::the();
     auto palette = wm.palette();
     if (&m_window == wm.m_highlight_window)
-        return { palette.highlight_window_title(), palette.highlight_window_border1(), palette.highlight_window_border2() };
+        return { palette.highlight_window_title(), palette.highlight_window_border1(), palette.highlight_window_border2(), palette.highlight_window_title_stripes(), palette.highlight_window_title_shadow() };
     if (&m_window == wm.m_move_window)
-        return { palette.moving_window_title(), palette.moving_window_border1(), palette.moving_window_border2() };
+        return { palette.moving_window_title(), palette.moving_window_border1(), palette.moving_window_border2(), palette.moving_window_title_stripes(), palette.moving_window_title_shadow() };
     if (wm.is_active_window_or_accessory(m_window))
-        return { palette.active_window_title(), palette.active_window_border1(), palette.active_window_border2() };
-    return { palette.inactive_window_title(), palette.inactive_window_border1(), palette.inactive_window_border2() };
+        return { palette.active_window_title(), palette.active_window_border1(), palette.active_window_border2(), palette.active_window_title_stripes(), palette.active_window_title_shadow() };
+    return { palette.inactive_window_title(), palette.inactive_window_border1(), palette.inactive_window_border2(), palette.inactive_window_title_stripes(), palette.inactive_window_title_shadow() };
 }
 
 void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
@@ -192,7 +192,7 @@ void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
     int stripe_bottom = m_window.height() - 3;
     if (stripe_top && stripe_bottom && stripe_top < stripe_bottom) {
         for (int i = 2; i <= palette.window_title_height() - 2; i += 2) {
-            painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.window_title_stripes());
+            painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.active_window_title_stripes());
         }
     }
 }
@@ -220,7 +220,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     auto titlebar_title_rect = titlebar_inner_rect;
     titlebar_title_rect.set_width(WindowManager::the().window_title_font().width(title_text));
 
-    auto [title_color, border_color, border_color2] = compute_frame_colors();
+    auto [title_color, border_color, border_color2, stripes_color, shadow_color] = compute_frame_colors();
 
     auto& wm = WindowManager::the();
     painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), palette.button());
@@ -234,14 +234,14 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     int stripe_right = leftmost_button_rect.left() - 3;
     if (stripe_left && stripe_right && stripe_left < stripe_right) {
         for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
-            painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, palette.window_title_stripes());
+            painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
         }
     }
 
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, palette.window_title_shadow(), Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, shadow_color, Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
         painter.draw_text(clipped_title_rect.translated(0, 1), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
     }

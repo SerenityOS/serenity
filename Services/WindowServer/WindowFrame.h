@@ -64,6 +64,8 @@ private:
         Color title_color;
         Color border_color;
         Color border_color2;
+        Color title_stripes_color;
+        Color title_shadow_color;
     };
 
     FrameColors compute_frame_colors() const;
