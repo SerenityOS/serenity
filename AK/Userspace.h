@@ -42,7 +42,7 @@ public:
     operator bool() const { return m_ptr; }
     operator FlatPtr() const { return (FlatPtr)m_ptr; }
 
-#if defined(KERNEL)
+#ifdef KERNEL
     Userspace(FlatPtr ptr)
         : m_ptr(ptr)
     {
@@ -60,7 +60,7 @@ public:
 #endif
 
 private:
-#if defined(KERNEL)
+#ifdef KERNEL
     FlatPtr m_ptr { 0 };
 #else
     T m_ptr { nullptr };
