@@ -29,7 +29,7 @@
 
 namespace Kernel {
 
-int Process::sys$pledge(const Syscall::SC_pledge_params* user_params)
+int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 {
     Syscall::SC_pledge_params params;
     if (!validate_read_and_copy_typed(&params, user_params))
