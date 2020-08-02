@@ -208,17 +208,18 @@ int main(int argc, char** argv)
             kill(pid, SIGCONT);
     });
 
-    auto profile_action = GUI::Action::create("Profile process", { Mod_Ctrl, Key_P }, [&process_table_view](auto&) {
-        pid_t pid = process_table_view.selected_pid();
-        if (pid != -1) {
-            auto pid_string = String::format("%d", pid);
-            pid_t child;
-            const char* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
-            if ((errno = posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-                perror("posix_spawn");
+    auto profile_action = GUI::Action::create("Profile process", { Mod_Ctrl, Key_P },
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"), [&process_table_view](auto&) {
+            pid_t pid = process_table_view.selected_pid();
+            if (pid != -1) {
+                auto pid_string = String::format("%d", pid);
+                pid_t child;
+                const char* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
+                if ((errno = posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+                    perror("posix_spawn");
+                }
             }
-        }
-    });
+        });
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("System Monitor");
