@@ -76,10 +76,10 @@ int Process::sys$sched_setparam(int tid, Userspace<const struct sched_param*> us
     return 0;
 }
 
-int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
+int Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_param)
 {
     REQUIRE_PROMISE(proc);
-    if (!validate_write_typed(param))
+    if (!validate_write_typed(user_param))
         return -EFAULT;
 
     InterruptDisabler disabler;
@@ -93,8 +93,8 @@ int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
     if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
         return -EPERM;
 
-    int priority = peer->priority();
-    copy_to_user(&param->sched_priority, &priority);
+    struct sched_param param { (int) peer->priority() };
+    copy_to_user(user_param, &param);
     return 0;
 }
 
