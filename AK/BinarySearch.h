@@ -63,7 +63,7 @@ T* binary_search(T* haystack, size_t haystack_size, const T& needle, Compare com
     }
 
     if (nearby_index)
-        *nearby_index = max(static_cast<size_t>(0), min(low, high));
+        *nearby_index = min(low, high);
 
     return nullptr;
 }
