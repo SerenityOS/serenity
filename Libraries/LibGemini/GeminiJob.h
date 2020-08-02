@@ -48,6 +48,9 @@ public:
 
     virtual void start() override;
     virtual void shutdown() override;
+    void set_certificate(String certificate, String key);
+
+    Function<void(GeminiJob&)> on_certificate_requested;
 
 protected:
     virtual void register_on_ready_to_read(Function<void()>) override;

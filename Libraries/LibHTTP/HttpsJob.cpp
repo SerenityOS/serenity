@@ -64,6 +64,10 @@ void HttpsJob::start()
     m_socket->on_tls_finished = [&] {
         finish_up();
     };
+    m_socket->on_tls_certificate_request = [this](auto&) {
+        if (on_certificate_requested)
+            on_certificate_requested(*this);
+    };
     bool success = ((TLS::TLSv12&)*m_socket).connect(m_request.url().host(), m_request.url().port());
     if (!success) {
         deferred_invoke([this](auto&) {
@@ -80,6 +84,15 @@ void HttpsJob::shutdown()
     m_socket->on_tls_connected = nullptr;
     remove_child(*m_socket);
     m_socket = nullptr;
+}
+
+void HttpsJob::set_certificate(String certificate, String private_key)
+{
+    if (!m_socket->add_client_key(ByteBuffer::wrap(certificate.characters(), certificate.length()), ByteBuffer::wrap(private_key.characters(), private_key.length()))) {
+        dbg() << "LibHTTP: Failed to set a client certificate";
+        // FIXME: Do something about this failure
+        ASSERT_NOT_REACHED();
+    }
 }
 
 void HttpsJob::read_while_data_available(Function<IterationDecision()> read)
