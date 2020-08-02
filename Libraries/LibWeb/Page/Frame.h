@@ -85,6 +85,7 @@ public:
     Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
     Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
 
+    DOM::Position& cursor_position() { return m_cursor_position; }
     const DOM::Position& cursor_position() const { return m_cursor_position; }
     void set_cursor_position(const DOM::Position&);
 

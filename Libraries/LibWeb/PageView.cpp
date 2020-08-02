@@ -335,6 +335,8 @@ void PageView::mouseup_event(GUI::MouseEvent& event)
 
 void PageView::keydown_event(GUI::KeyEvent& event)
 {
+    page().handle_keydown(event.key(), event.modifiers(), event.code_point());
+
     if (event.modifiers() == 0) {
         switch (event.key()) {
         case Key_Home:

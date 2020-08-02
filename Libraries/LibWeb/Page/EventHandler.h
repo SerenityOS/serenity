@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
@@ -43,6 +44,8 @@ public:
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousemove(const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
+
+    bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
 
 private:
     LayoutDocument* layout_root();

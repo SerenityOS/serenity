@@ -38,6 +38,8 @@ public:
 
     ~Position();
 
+    bool is_valid() const { return m_node; }
+
     Node* node() { return m_node; }
     const Node* node() const { return m_node; }
 
