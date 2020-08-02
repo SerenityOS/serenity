@@ -231,31 +231,33 @@ void EventHandler::dump_selection(const char* event_name) const
 
 bool EventHandler::handle_keydown(KeyCode key, unsigned, u32 code_point)
 {
-    // FIXME: Support backspacing across DOM node boundaries.
-    if (key == KeyCode::Key_Backspace && m_frame.cursor_position().offset() > 0) {
-        auto& text_node = downcast<DOM::Text>(*m_frame.cursor_position().node());
-        StringBuilder builder;
-        builder.append(text_node.data().substring_view(0, m_frame.cursor_position().offset() - 1));
-        builder.append(text_node.data().substring_view(m_frame.cursor_position().offset(), text_node.data().length() - m_frame.cursor_position().offset()));
-        text_node.set_data(builder.to_string());
-        m_frame.set_cursor_position({ *m_frame.cursor_position().node(), m_frame.cursor_position().offset() - 1 });
-        // FIXME: This should definitely use incremental layout invalidation instead!
-        text_node.document().force_layout();
-        return true;
-    }
+    if (m_frame.cursor_position().node() && m_frame.cursor_position().node()->is_editable()) {
+        // FIXME: Support backspacing across DOM node boundaries.
+        if (key == KeyCode::Key_Backspace && m_frame.cursor_position().offset() > 0) {
+            auto& text_node = downcast<DOM::Text>(*m_frame.cursor_position().node());
+            StringBuilder builder;
+            builder.append(text_node.data().substring_view(0, m_frame.cursor_position().offset() - 1));
+            builder.append(text_node.data().substring_view(m_frame.cursor_position().offset(), text_node.data().length() - m_frame.cursor_position().offset()));
+            text_node.set_data(builder.to_string());
+            m_frame.set_cursor_position({ *m_frame.cursor_position().node(), m_frame.cursor_position().offset() - 1 });
+            // FIXME: This should definitely use incremental layout invalidation instead!
+            text_node.document().force_layout();
+            return true;
+        }
 
-    if (code_point && m_frame.cursor_position().is_valid() && is<DOM::Text>(*m_frame.cursor_position().node())) {
-        auto& text_node = downcast<DOM::Text>(*m_frame.cursor_position().node());
-        StringBuilder builder;
-        builder.append(text_node.data().substring_view(0, m_frame.cursor_position().offset()));
-        builder.append_codepoint(code_point);
-        builder.append(text_node.data().substring_view(m_frame.cursor_position().offset(), text_node.data().length() - m_frame.cursor_position().offset()));
-        text_node.set_data(builder.to_string());
-        // FIXME: This will advance the cursor incorrectly when inserting multiple whitespaces (DOM vs layout whitespace collapse difference.)
-        m_frame.set_cursor_position({ *m_frame.cursor_position().node(), m_frame.cursor_position().offset() + 1 });
-        // FIXME: This should definitely use incremental layout invalidation instead!
-        text_node.document().force_layout();
-        return true;
+        if (code_point && m_frame.cursor_position().is_valid() && is<DOM::Text>(*m_frame.cursor_position().node())) {
+            auto& text_node = downcast<DOM::Text>(*m_frame.cursor_position().node());
+            StringBuilder builder;
+            builder.append(text_node.data().substring_view(0, m_frame.cursor_position().offset()));
+            builder.append_codepoint(code_point);
+            builder.append(text_node.data().substring_view(m_frame.cursor_position().offset(), text_node.data().length() - m_frame.cursor_position().offset()));
+            text_node.set_data(builder.to_string());
+            // FIXME: This will advance the cursor incorrectly when inserting multiple whitespaces (DOM vs layout whitespace collapse difference.)
+            m_frame.set_cursor_position({ *m_frame.cursor_position().node(), m_frame.cursor_position().offset() + 1 });
+            // FIXME: This should definitely use incremental layout invalidation instead!
+            text_node.document().force_layout();
+            return true;
+        }
     }
     return false;
 }

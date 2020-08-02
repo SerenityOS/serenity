@@ -290,4 +290,22 @@ String Element::inner_html() const
     return builder.to_string();
 }
 
+bool Element::is_editable() const
+{
+    auto contenteditable = attribute(HTML::AttributeNames::contenteditable);
+    // "true" and the empty string map to the "true" state.
+    if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_case("true"))
+        return true;
+    // "false" maps to the "false" state.
+    if (contenteditable.equals_ignoring_case("false"))
+        return false;
+    // "inherit", an invalid value, and a missing value all map to the "inherit" state.
+    return parent() && parent()->is_editable();
+}
+
+bool Document::is_editable() const
+{
+    return m_editable;
+}
+
 }

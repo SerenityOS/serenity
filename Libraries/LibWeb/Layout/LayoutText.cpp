@@ -117,6 +117,9 @@ void LayoutText::paint_cursor_if_needed(PaintContext& context, const LineBoxFrag
     if (!(frame().cursor_position().offset() >= (unsigned)fragment.start() && frame().cursor_position().offset() < (unsigned)(fragment.start() + fragment.length())))
         return;
 
+    if (!fragment.layout_node().node() || !fragment.layout_node().node()->is_editable())
+        return;
+
     auto fragment_rect = fragment.absolute_rect();
 
     float cursor_x = fragment_rect.x() + specified_style().font().width(fragment.text().substring_view(0, frame().cursor_position().offset() - fragment.start()));

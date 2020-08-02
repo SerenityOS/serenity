@@ -157,6 +157,9 @@ public:
     const DocumentType* doctype() const;
     const String& compat_mode() const;
 
+    void set_editable(bool editable) { m_editable = editable; }
+    virtual bool is_editable() const final;
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
@@ -186,6 +189,7 @@ private:
     NonnullRefPtrVector<HTML::HTMLScriptElement> m_scripts_to_execute_as_soon_as_possible;
 
     QuirksMode m_quirks_mode { QuirksMode::No };
+    bool m_editable { false };
 };
 
 }
