@@ -45,6 +45,7 @@ class EventTarget;
 class MouseEvent;
 class Node;
 class ParentNode;
+class Position;
 class Text;
 class Timer;
 class Window;

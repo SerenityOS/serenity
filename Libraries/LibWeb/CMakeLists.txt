@@ -34,6 +34,7 @@ set(SOURCES
     DOM/EventTarget.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
+    DOM/Position.cpp
     DOM/TagNames.cpp
     DOM/Text.cpp
     DOM/Timer.cpp
