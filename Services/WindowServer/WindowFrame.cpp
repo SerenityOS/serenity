@@ -353,42 +353,45 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
 {
     ASSERT(!m_window.is_fullscreen());
 
-    if (m_window.is_blocked_by_modal_window())
-        return;
-
     auto& wm = WindowManager::the();
     if (m_window.type() != WindowType::Normal && m_window.type() != WindowType::Notification)
         return;
 
-    if (m_window.type() == WindowType::Normal && title_bar_icon_rect().contains(event.position())) {
+    if (m_window.type() == WindowType::Normal) {
         if (event.type() == Event::MouseDown)
             wm.move_to_front_and_make_active(m_window);
-        if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
-            // Manually start a potential double click. Since we're opening
-            // a menu, we will only receive the MouseDown event, so we
-            // need to record that fact. If the user subsequently clicks
-            // on the same area, the menu will get closed, and we will
-            // receive a MouseUp event, but because windows have changed
-            // we don't get a MouseDoubleClick event. We can however record
-            // this click, and when we receive the MouseUp event check if
-            // it would have been considered a double click, if it weren't
-            // for the fact that we opened and closed a window in the meanwhile
-            auto& wm = WindowManager::the();
-            wm.start_menu_doubleclick(m_window, event);
 
-            m_window.popup_window_menu(title_bar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
+        if (m_window.is_blocked_by_modal_window())
             return;
-        } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
-            // Since the MouseDown event opened a menu, another MouseUp
-            // from the second click outside the menu wouldn't be considered
-            // a double click, so let's manually check if it would otherwise
-            // have been be considered to be one
-            auto& wm = WindowManager::the();
-            if (wm.is_menu_doubleclick(m_window, event)) {
-                // It is a double click, so perform activate the default item
-                m_window.window_menu_activate_default();
+
+        if (title_bar_icon_rect().contains(event.position())) {
+            if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
+                // Manually start a potential double click. Since we're opening
+                // a menu, we will only receive the MouseDown event, so we
+                // need to record that fact. If the user subsequently clicks
+                // on the same area, the menu will get closed, and we will
+                // receive a MouseUp event, but because windows have changed
+                // we don't get a MouseDoubleClick event. We can however record
+                // this click, and when we receive the MouseUp event check if
+                // it would have been considered a double click, if it weren't
+                // for the fact that we opened and closed a window in the meanwhile
+                auto& wm = WindowManager::the();
+                wm.start_menu_doubleclick(m_window, event);
+
+                m_window.popup_window_menu(title_bar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
+                return;
+            } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
+                // Since the MouseDown event opened a menu, another MouseUp
+                // from the second click outside the menu wouldn't be considered
+                // a double click, so let's manually check if it would otherwise
+                // have been be considered to be one
+                auto& wm = WindowManager::the();
+                if (wm.is_menu_doubleclick(m_window, event)) {
+                    // It is a double click, so perform activate the default item
+                    m_window.window_menu_activate_default();
+                }
+                return;
             }
-            return;
         }
     }
 
