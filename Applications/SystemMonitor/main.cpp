@@ -149,6 +149,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/bin/Inspector", "x") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
     auto window = GUI::Window::construct();
@@ -221,6 +226,19 @@ int main(int argc, char** argv)
             }
         });
 
+    auto inspect_action = GUI::Action::create("Inspect process", { Mod_Ctrl, Key_I },
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-inspector.png"), [&process_table_view](auto&) {
+            pid_t pid = process_table_view.selected_pid();
+            if (pid != -1) {
+                auto pid_string = String::format("%d", pid);
+                pid_t child;
+                const char* argv[] = { "/bin/Inspector", pid_string.characters(), nullptr };
+                if ((errno = posix_spawn(&child, "/bin/Inspector", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+                    perror("posix_spawn");
+                }
+            }
+        });
+
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("System Monitor");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -234,6 +252,7 @@ int main(int argc, char** argv)
     process_menu.add_action(continue_action);
     process_menu.add_separator();
     process_menu.add_action(profile_action);
+    process_menu.add_action(inspect_action);
 
     auto process_context_menu = GUI::Menu::construct();
     process_context_menu->add_action(kill_action);
@@ -241,6 +260,7 @@ int main(int argc, char** argv)
     process_context_menu->add_action(continue_action);
     process_context_menu->add_separator();
     process_context_menu->add_action(profile_action);
+    process_context_menu->add_action(inspect_action);
     process_table_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         (void)index;
         process_context_menu->popup(event.screen_position());
