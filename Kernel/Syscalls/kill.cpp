@@ -139,7 +139,7 @@ int Process::sys$kill(pid_t pid, int signal)
         return do_killself(signal);
     }
     ScopedSpinLock lock(g_processes_lock);
-    auto* peer = Process::from_pid(pid);
+    auto peer = Process::from_pid(pid);
     if (!peer)
         return -ESRCH;
     return do_kill(*peer, signal);

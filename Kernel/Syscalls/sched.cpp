@@ -121,7 +121,7 @@ int Process::sys$set_process_boost(pid_t pid, int amount)
     if (amount < 0 || amount > 20)
         return -EINVAL;
     ScopedSpinLock lock(g_processes_lock);
-    auto* process = Process::from_pid(pid);
+    auto process = Process::from_pid(pid);
     if (!process || process->is_dead())
         return -ESRCH;
     if (!is_superuser() && process->uid() != euid())

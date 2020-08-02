@@ -81,7 +81,7 @@ int Process::sys$shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
         return -EPERM;
     {
         ScopedSpinLock lock(g_processes_lock);
-        auto* peer = Process::from_pid(peer_pid);
+        auto peer = Process::from_pid(peer_pid);
         if (!peer)
             return -ESRCH;
     }

@@ -54,7 +54,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
     ScopedSpinLock lock(g_processes_lock);
 
     // NOTE: If waitee was -1, m_waitee_pid will have been filled in by the scheduler.
-    Process* waitee_process = Process::from_pid(waitee_pid);
+    auto waitee_process = Process::from_pid(waitee_pid);
     if (!waitee_process)
         return KResult(-ECHILD);
 

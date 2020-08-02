@@ -33,7 +33,7 @@ int Process::sys$profiling_enable(pid_t pid)
 {
     REQUIRE_NO_PROMISES;
     ScopedSpinLock lock(g_processes_lock);
-    auto* process = Process::from_pid(pid);
+    auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     if (process->is_dead())
@@ -48,7 +48,7 @@ int Process::sys$profiling_enable(pid_t pid)
 int Process::sys$profiling_disable(pid_t pid)
 {
     ScopedSpinLock lock(g_processes_lock);
-    auto* process = Process::from_pid(pid);
+    auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     if (!is_superuser() && process->uid() != m_uid)

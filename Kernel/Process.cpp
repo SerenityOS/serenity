@@ -122,13 +122,13 @@ Vector<pid_t> Process::all_pids()
     return pids;
 }
 
-Vector<Process*> Process::all_processes()
+NonnullRefPtrVector<Process> Process::all_processes()
 {
-    Vector<Process*> processes;
+    NonnullRefPtrVector<Process> processes;
     ScopedSpinLock lock(g_processes_lock);
     processes.ensure_capacity((int)g_processes->size_slow());
     for (auto& process : *g_processes)
-        processes.append(&process);
+        processes.append(NonnullRefPtr<Process>(process));
     return processes;
 }
 
@@ -286,7 +286,7 @@ void Process::kill_all_threads()
     });
 }
 
-Process* Process::create_user_process(Thread*& first_thread, const String& path, uid_t uid, gid_t gid, pid_t parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
+RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String& path, uid_t uid, gid_t gid, pid_t parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
     auto parts = path.split('/');
     if (arguments.is_empty()) {
@@ -296,7 +296,7 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
     RefPtr<Custody> root;
     {
         ScopedSpinLock lock(g_processes_lock);
-        if (auto* parent = Process::from_pid(parent_pid)) {
+        if (auto parent = Process::from_pid(parent_pid)) {
             cwd = parent->m_cwd;
             root = parent->m_root_directory;
         }
@@ -308,7 +308,7 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
     if (!root)
         root = VFS::the().root_custody();
 
-    auto* process = new Process(first_thread, parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
+    auto process = adopt(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty));
     process->m_fds.resize(m_max_open_file_descriptors);
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
     auto description = device_to_use_as_tty.open(O_RDWR).value();
@@ -320,26 +320,27 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
     if (error != 0) {
         dbg() << "Failed to exec " << path << ": " << error;
         delete first_thread;
-        delete process;
-        return nullptr;
+        return {};
     }
 
     {
         ScopedSpinLock lock(g_processes_lock);
         g_processes->prepend(process);
+        process->ref();
     }
     error = 0;
     return process;
 }
 
-Process* Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)(), u32 affinity)
+NonnullRefPtr<Process> Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)(), u32 affinity)
 {
-    auto* process = new Process(first_thread, move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
+    auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0));
     first_thread->tss().eip = (FlatPtr)e;
 
     if (process->pid() != 0) {
         ScopedSpinLock lock(g_processes_lock);
         g_processes->prepend(process);
+        process->ref();
     }
 
     first_thread->set_affinity(affinity);
@@ -472,15 +473,14 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
     ASSERT_NOT_REACHED();
 }
 
-Process* Process::from_pid(pid_t pid)
+RefPtr<Process> Process::from_pid(pid_t pid)
 {
-    ASSERT_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(g_processes_lock);
     for (auto& process : *g_processes) {
         if (process.pid() == pid)
             return &process;
     }
-    return nullptr;
+    return {};
 }
 
 RefPtr<FileDescription> Process::file_description(int fd) const
@@ -567,7 +567,7 @@ siginfo_t Process::reap(Process& process)
     ASSERT(g_processes_lock.is_locked());
 
     if (process.ppid()) {
-        auto* parent = Process::from_pid(process.ppid());
+        auto parent = Process::from_pid(process.ppid());
         if (parent) {
             parent->m_ticks_in_user_for_dead_children += process.m_ticks_in_user + process.m_ticks_in_user_for_dead_children;
             parent->m_ticks_in_kernel_for_dead_children += process.m_ticks_in_kernel + process.m_ticks_in_kernel_for_dead_children;
@@ -579,8 +579,7 @@ siginfo_t Process::reap(Process& process)
 #endif
     ASSERT(process.is_dead());
     g_processes->remove(&process);
-
-    delete &process;
+    process.unref();
     return siginfo;
 }
 
@@ -822,12 +821,12 @@ void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& desc
     m_flags = flags;
 }
 
-KBuffer Process::backtrace(ProcessInspectionHandle& handle) const
+KBuffer Process::backtrace() const
 {
     KBufferBuilder builder;
     for_each_thread([&](Thread& thread) {
         builder.appendf("Thread %d (%s):\n", thread.tid(), thread.name().characters());
-        builder.append(thread.backtrace(handle));
+        builder.append(thread.backtrace());
         return IterationDecision::Continue;
     });
     return builder.build();
