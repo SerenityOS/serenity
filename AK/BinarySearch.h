@@ -39,15 +39,24 @@ int integral_compare(const T& a, const T& b)
 }
 
 template<typename T, typename Compare>
-T* binary_search(Span<T> haystack, const T& needle, Compare compare = integral_compare, int* nearby_index = nullptr)
+T* binary_search(Span<T> haystack, const T& needle, Compare compare = integral_compare, size_t* nearby_index = nullptr)
 {
-    int low = 0;
-    int high = haystack.size() - 1;
+    if (haystack.size() == 0) {
+        if (nearby_index)
+            *nearby_index = 0;
+        return nullptr;
+    }
+
+    size_t low = 0;
+    size_t high = haystack.size() - 1;
     while (low <= high) {
-        int middle = (low + high) / 2;
+        size_t middle = low + ((high - low) / 2);
         int comparison = compare(needle, haystack[middle]);
         if (comparison < 0)
-            high = middle - 1;
+            if (middle != 0)
+                high = middle - 1;
+            else
+                break;
         else if (comparison > 0)
             low = middle + 1;
         else {
@@ -58,7 +67,7 @@ T* binary_search(Span<T> haystack, const T& needle, Compare compare = integral_c
     }
 
     if (nearby_index)
-        *nearby_index = max(0, min(low, high));
+        *nearby_index = min(low, high);
 
     return nullptr;
 }
