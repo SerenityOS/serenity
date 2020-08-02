@@ -33,6 +33,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutListItem.h>
@@ -41,7 +42,6 @@
 #include <LibWeb/Layout/LayoutTableRow.h>
 #include <LibWeb/Layout/LayoutTableRowGroup.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 
 namespace Web::DOM {
 
@@ -88,6 +88,11 @@ void Element::set_attribute(const FlyString& name, const String& value)
         m_attributes.empend(name, value);
 
     parse_attribute(name, value);
+}
+
+void Element::remove_attribute(const FlyString& name)
+{
+    m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
 }
 
 void Element::set_attributes(Vector<Attribute>&& attributes)
@@ -290,22 +295,62 @@ String Element::inner_html() const
     return builder.to_string();
 }
 
-bool Element::is_editable() const
+Element::ContentEditableState Element::content_editable_state() const
 {
     auto contenteditable = attribute(HTML::AttributeNames::contenteditable);
     // "true" and the empty string map to the "true" state.
     if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_case("true"))
-        return true;
+        return ContentEditableState::True;
     // "false" maps to the "false" state.
     if (contenteditable.equals_ignoring_case("false"))
-        return false;
+        return ContentEditableState::False;
     // "inherit", an invalid value, and a missing value all map to the "inherit" state.
-    return parent() && parent()->is_editable();
+    return ContentEditableState::Inherit;
 }
 
-bool Document::is_editable() const
+bool Element::is_editable() const
 {
-    return m_editable;
+    switch (content_editable_state()) {
+    case ContentEditableState::True:
+        return true;
+    case ContentEditableState::False:
+        return false;
+    case ContentEditableState::Inherit:
+        return parent() && parent()->is_editable();
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+String Element::content_editable() const
+{
+    switch (content_editable_state()) {
+    case ContentEditableState::True:
+        return "true";
+    case ContentEditableState::False:
+        return "false";
+    case ContentEditableState::Inherit:
+        return "inherit";
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+void Element::set_content_editable(const String& content_editable)
+{
+    if (content_editable.equals_ignoring_case("inherit")) {
+        remove_attribute(HTML::AttributeNames::contenteditable);
+        return;
+    }
+    if (content_editable.equals_ignoring_case("true")) {
+        set_attribute(HTML::AttributeNames::contenteditable, "true");
+        return;
+    }
+    if (content_editable.equals_ignoring_case("false")) {
+        set_attribute(HTML::AttributeNames::contenteditable, "false");
+        return;
+    }
+    // FIXME: otherwise the attribute setter must throw a "SyntaxError" DOMException.
 }
 
 }

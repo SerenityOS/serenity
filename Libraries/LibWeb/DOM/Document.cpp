@@ -495,4 +495,9 @@ const String& Document::compat_mode() const
     return css1_compat;
 }
 
+bool Document::is_editable() const
+{
+    return m_editable;
+}
+
 }

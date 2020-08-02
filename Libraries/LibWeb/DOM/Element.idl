@@ -9,5 +9,6 @@ interface Element : Node {
     [Reflect] attribute DOMString id;
     [Reflect=class] attribute DOMString className;
 
+    attribute DOMString contentEditable;
 }
 
