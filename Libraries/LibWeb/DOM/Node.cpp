@@ -217,4 +217,9 @@ void Node::set_document(Badge<Document>, Document& document)
     m_document = &document;
 }
 
+bool Node::is_editable() const
+{
+    return parent() && parent()->is_editable();
+}
+
 }

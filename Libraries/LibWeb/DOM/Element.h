@@ -82,6 +82,8 @@ public:
     String inner_html() const;
     void set_inner_html(StringView);
 
+    virtual bool is_editable() const final;
+
 protected:
     RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 

@@ -75,6 +75,8 @@ public:
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
     virtual bool is_svg_element() const { return false; }
 
+    virtual bool is_editable() const;
+
     RefPtr<Node> append_child(NonnullRefPtr<Node>, bool notify = true);
     RefPtr<Node> insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify = true);
 
