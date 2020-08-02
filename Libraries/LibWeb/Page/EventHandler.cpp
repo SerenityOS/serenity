@@ -28,6 +28,7 @@
 #include <LibGUI/Window.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/Layout/LayoutDocument.h>
@@ -226,6 +227,24 @@ void EventHandler::dump_selection(const char* event_name) const
           << layout_root()->selection().start().layout_node << ":" << layout_root()->selection().start().index_in_node << ", end: "
           << layout_root()->selection().end().layout_node << ":" << layout_root()->selection().end().index_in_node;
 #endif
+}
+
+bool EventHandler::handle_keydown(KeyCode, unsigned, u32 code_point)
+{
+    if (code_point && m_frame.cursor_position().is_valid() && is<DOM::Text>(*m_frame.cursor_position().node())) {
+        auto& text_node = downcast<DOM::Text>(*m_frame.cursor_position().node());
+        StringBuilder builder;
+        builder.append(text_node.data().substring_view(0, m_frame.cursor_position().offset()));
+        builder.append_codepoint(code_point);
+        builder.append(text_node.data().substring_view(m_frame.cursor_position().offset(), text_node.data().length() - m_frame.cursor_position().offset()));
+        text_node.set_data(builder.to_string());
+        // FIXME: This will advance the cursor incorrectly when inserting multiple whitespaces (DOM vs layout whitespace collapse difference.)
+        m_frame.set_cursor_position({ *m_frame.cursor_position().node(), m_frame.cursor_position().offset() + 1 });
+        // FIXME: This should definitely use incremental layout invalidation instead!
+        text_node.document().force_layout();
+        return true;
+    }
+    return true;
 }
 
 }

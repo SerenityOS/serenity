@@ -29,6 +29,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
@@ -57,6 +58,8 @@ public:
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousemove(const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
+
+    bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
 
     Gfx::Palette palette() const;
 
