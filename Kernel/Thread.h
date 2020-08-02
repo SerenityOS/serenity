@@ -274,8 +274,6 @@ public:
     bool has_blocker() const { return m_blocker != nullptr; }
     const Blocker& blocker() const;
 
-    bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
-
     u32 cpu() const { return m_cpu.load(AK::MemoryOrder::memory_order_consume); }
     void set_cpu(u32 cpu) { m_cpu.store(cpu, AK::MemoryOrder::memory_order_release); }
     u32 affinity() const { return m_cpu_affinity; }
