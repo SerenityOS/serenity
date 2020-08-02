@@ -291,7 +291,7 @@ public:
     int sys$setsockopt(const Syscall::SC_setsockopt_params*);
     int sys$getsockname(const Syscall::SC_getsockname_params*);
     int sys$getpeername(const Syscall::SC_getpeername_params*);
-    int sys$sched_setparam(pid_t pid, const struct sched_param* param);
+    int sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
     int sys$sched_getparam(pid_t pid, struct sched_param* param);
     int sys$create_thread(void* (*)(void*), const Syscall::SC_create_thread_params*);
     void sys$exit_thread(void*);

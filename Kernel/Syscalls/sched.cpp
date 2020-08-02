@@ -48,14 +48,14 @@ int Process::sys$donate(int tid)
     return 0;
 }
 
-int Process::sys$sched_setparam(int tid, const struct sched_param* param)
+int Process::sys$sched_setparam(int tid, Userspace<const struct sched_param*> user_param)
 {
     REQUIRE_PROMISE(proc);
-    if (!validate_read_typed(param))
+    if (!validate_read_typed(user_param))
         return -EFAULT;
 
-    int desired_priority;
-    copy_from_user(&desired_priority, &param->sched_priority);
+    struct sched_param desired_param;
+    copy_from_user(&desired_param, user_param);
 
     InterruptDisabler disabler;
     auto* peer = Thread::current();
@@ -68,10 +68,11 @@ int Process::sys$sched_setparam(int tid, const struct sched_param* param)
     if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
         return -EPERM;
 
-    if (desired_priority < THREAD_PRIORITY_MIN || desired_priority > THREAD_PRIORITY_MAX)
+    if (desired_param.sched_priority < THREAD_PRIORITY_MIN ||
+        desired_param.sched_priority > THREAD_PRIORITY_MAX)
         return -EINVAL;
 
-    peer->set_priority((u32)desired_priority);
+    peer->set_priority((u32)desired_param.sched_priority);
     return 0;
 }
 
