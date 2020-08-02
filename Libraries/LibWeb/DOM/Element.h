@@ -53,6 +53,7 @@ public:
     String attribute(const FlyString& name) const;
     String get_attribute(const FlyString& name) const { return attribute(name); }
     void set_attribute(const FlyString& name, const String& value);
+    void remove_attribute(const FlyString& name);
 
     void set_attributes(Vector<Attribute>&&);
 
@@ -83,11 +84,20 @@ public:
     void set_inner_html(StringView);
 
     virtual bool is_editable() const final;
+    String content_editable() const;
+    void set_content_editable(const String&);
 
 protected:
     RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
 private:
+    enum class ContentEditableState {
+        True,
+        False,
+        Inherit,
+    };
+    ContentEditableState content_editable_state() const;
+
     Attribute* find_attribute(const FlyString& name);
     const Attribute* find_attribute(const FlyString& name) const;
 
