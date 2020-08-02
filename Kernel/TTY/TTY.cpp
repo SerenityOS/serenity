@@ -303,7 +303,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             return -EINVAL;
         {
             InterruptDisabler disabler;
-            auto* process = Process::from_pid(pgid);
+            auto process = Process::from_pid(pgid);
             if (!process)
                 return -EPERM;
             if (pgid != process->pgid())

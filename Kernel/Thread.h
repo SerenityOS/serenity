@@ -79,14 +79,11 @@ public:
         return Processor::current().current_thread();
     }
 
-    explicit Thread(Process&);
+    explicit Thread(NonnullRefPtr<Process>);
     ~Thread();
 
     static Thread* from_tid(int);
     static void finalize_dying_threads();
-
-    static Vector<Thread*> all_threads();
-    static bool is_thread(void*);
 
     int tid() const { return m_tid; }
     int pid() const;
@@ -105,7 +102,7 @@ public:
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
 
-    String backtrace(ProcessInspectionHandle&);
+    String backtrace();
     Vector<FlatPtr> raw_backtrace(FlatPtr ebp, FlatPtr eip) const;
 
     const String& name() const { return m_name; }
@@ -472,13 +469,13 @@ public:
 
     void set_active(bool active)
     {
-        ASSERT(g_scheduler_lock.is_locked());
+        ASSERT(g_scheduler_lock.own_lock());
         m_is_active = active;
     }
 
     bool is_finalizable() const
     {
-        ASSERT(g_scheduler_lock.is_locked());
+        ASSERT(g_scheduler_lock.own_lock());
         return !m_is_active;
     }
 
@@ -516,7 +513,7 @@ private:
     String backtrace_impl();
     void reset_fpu_state();
 
-    Process& m_process;
+    NonnullRefPtr<Process> m_process;
     int m_tid { -1 };
     TSS32 m_tss;
     Atomic<u32> m_cpu { 0 };
@@ -633,7 +630,7 @@ template<typename Callback>
 inline IterationDecision Scheduler::for_each_runnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_lock.is_locked());
+    ASSERT(g_scheduler_lock.own_lock());
     auto& tl = g_scheduler_data->m_runnable_threads;
     for (auto it = tl.begin(); it != tl.end();) {
         auto& thread = *it;
@@ -649,7 +646,7 @@ template<typename Callback>
 inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_lock.is_locked());
+    ASSERT(g_scheduler_lock.own_lock());
     auto& tl = g_scheduler_data->m_nonrunnable_threads;
     for (auto it = tl.begin(); it != tl.end();) {
         auto& thread = *it;

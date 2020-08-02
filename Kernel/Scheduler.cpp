@@ -66,6 +66,7 @@ void Scheduler::update_state_for_thread(Thread& thread)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(g_scheduler_data);
+    ASSERT(g_scheduler_lock.own_lock());
     auto& list = g_scheduler_data->thread_list_for_state(thread.state());
 
     if (list.contains(thread))
@@ -255,7 +256,7 @@ bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
 {
     bool should_unblock = m_wait_options & WNOHANG;
     if (m_waitee_pid != -1) {
-        auto* peer = Process::from_pid(m_waitee_pid);
+        auto peer = Process::from_pid(m_waitee_pid);
         if (!peer)
             return true;
     }
@@ -458,9 +459,6 @@ bool Scheduler::pick_next()
     Thread* thread_to_schedule = nullptr;
 
     for (auto* thread : sorted_runnables) {
-        if (thread->process().is_being_inspected())
-            continue;
-
         if (thread->process().exec_tid() && thread->process().exec_tid() != thread->tid())
             continue;
 
@@ -516,6 +514,8 @@ bool Scheduler::yield()
 
 bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 {
+    ASSERT(beneficiary);
+    
     // Set the m_in_scheduler flag before acquiring the spinlock. This
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
@@ -534,8 +534,6 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     ScopedSpinLock lock(g_scheduler_lock);
 
     ASSERT(!proc.in_irq());
-    if (!Thread::is_thread(beneficiary))
-        return false;
 
     if (proc.in_critical()) {
         proc.invoke_scheduler_async();
@@ -660,7 +658,7 @@ void Scheduler::initialize()
     g_finalizer_wait_queue = new WaitQueue;
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-    s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, 1);
+    s_colonel_process = &Process::create_kernel_process(idle_thread, "colonel", idle_loop, 1).leak_ref();
     ASSERT(s_colonel_process);
     ASSERT(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
