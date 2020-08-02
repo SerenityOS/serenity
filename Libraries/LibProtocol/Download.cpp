@@ -67,4 +67,14 @@ void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloa
     if (on_progress)
         on_progress(total_size, downloaded_size);
 }
+
+void Download::did_request_certificates(Badge<Client>)
+{
+    if (on_certificate_requested) {
+        auto result = on_certificate_requested();
+        if (!m_client->set_certificate({}, *this, result.certificate, result.key)) {
+            dbg() << "Download: set_certificate failed";
+        }
+    }
+}
 }

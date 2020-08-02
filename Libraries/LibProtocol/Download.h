@@ -40,6 +40,11 @@ class Client;
 
 class Download : public RefCounted<Download> {
 public:
+    struct CertificateAndKey {
+        String certificate;
+        String key;
+    };
+
     static NonnullRefPtr<Download> create_from_id(Badge<Client>, Client& client, i32 download_id)
     {
         return adopt(*new Download(client, download_id));
@@ -50,9 +55,11 @@ public:
 
     Function<void(bool success, const ByteBuffer& payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> on_finish;
     Function<void(Optional<u32> total_size, u32 downloaded_size)> on_progress;
+    Function<CertificateAndKey()> on_certificate_requested;
 
     void did_finish(Badge<Client>, bool success, Optional<u32> status_code, u32 total_size, i32 shbuf_id, const IPC::Dictionary& response_headers);
     void did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size);
+    void did_request_certificates(Badge<Client>);
 
 private:
     explicit Download(Client&, i32 download_id);

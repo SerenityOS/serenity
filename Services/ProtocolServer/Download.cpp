@@ -25,8 +25,8 @@
  */
 
 #include <AK/Badge.h>
-#include <ProtocolServer/Download.h>
 #include <ProtocolServer/ClientConnection.h>
+#include <ProtocolServer/Download.h>
 
 namespace ProtocolServer {
 
@@ -59,6 +59,10 @@ void Download::set_response_headers(const HashMap<String, String, CaseInsensitiv
     m_response_headers = response_headers;
 }
 
+void Download::set_certificate(String, String)
+{
+}
+
 void Download::did_finish(bool success)
 {
     m_client.did_finish_download({}, *this, success);
@@ -69,6 +73,11 @@ void Download::did_progress(Optional<u32> total_size, u32 downloaded_size)
     m_total_size = total_size;
     m_downloaded_size = downloaded_size;
     m_client.did_progress_download({}, *this);
+}
+
+void Download::did_request_certificates()
+{
+    m_client.did_request_certificates({}, *this);
 }
 
 }

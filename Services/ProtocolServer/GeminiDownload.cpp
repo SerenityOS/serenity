@@ -59,6 +59,14 @@ GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::G
     m_job->on_progress = [this](Optional<u32> total, u32 current) {
         did_progress(total, current);
     };
+    m_job->on_certificate_requested = [this](auto&) {
+        did_request_certificates();
+    };
+}
+
+void GeminiDownload::set_certificate(String certificate, String key)
+{
+    m_job->set_certificate(move(certificate), move(key));
 }
 
 GeminiDownload::~GeminiDownload()

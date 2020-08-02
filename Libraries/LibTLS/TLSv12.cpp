@@ -27,6 +27,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
+#include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 
@@ -719,6 +720,30 @@ TLSv12::TLSv12(Core::Object* parent, Version version)
         set_mode(IODevice::ReadWrite);
         set_error(0);
     }
+}
+
+bool TLSv12::add_client_key(const ByteBuffer& certificate_pem_buffer, const ByteBuffer& rsa_key) // FIXME: This should not be bound to RSA
+{
+    if (certificate_pem_buffer.is_empty() || rsa_key.is_empty()) {
+        return true;
+    }
+    auto decoded_certificate = decode_pem(certificate_pem_buffer.span(), 0);
+    if (decoded_certificate.is_empty()) {
+        dbg() << "Certificate not PEM";
+        return false;
+    }
+
+    auto maybe_certificate = parse_asn1(decoded_certificate);
+    if (!maybe_certificate.has_value()) {
+        dbg() << "Invalid certificate";
+        return false;
+    }
+
+    Crypto::PK::RSA rsa(rsa_key);
+    auto certificate = maybe_certificate.value();
+    certificate.private_key = rsa.private_key();
+
+    return add_client_key(certificate);
 }
 
 }

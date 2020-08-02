@@ -68,6 +68,13 @@ bool Client::stop_download(Badge<Download>, Download& download)
     return send_sync<Messages::ProtocolServer::StopDownload>(download.id())->success();
 }
 
+bool Client::set_certificate(Badge<Download>, Download& download, String certificate, String key)
+{
+    if (!m_downloads.contains(download.id()))
+        return false;
+    return send_sync<Messages::ProtocolServer::SetCertificate>(download.id(), move(certificate), move(key))->success();
+}
+
 void Client::handle(const Messages::ProtocolClient::DownloadFinished& message)
 {
     RefPtr<Download> download;
@@ -83,6 +90,15 @@ void Client::handle(const Messages::ProtocolClient::DownloadProgress& message)
     if (auto download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr))) {
         download->did_progress({}, message.total_size(), message.downloaded_size());
     }
+}
+
+OwnPtr<Messages::ProtocolClient::CertificateRequestedResponse> Client::handle(const Messages::ProtocolClient::CertificateRequested& message)
+{
+    if (auto download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr))) {
+        download->did_request_certificates({});
+    }
+
+    return make<Messages::ProtocolClient::CertificateRequestedResponse>();
 }
 
 }

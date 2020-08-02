@@ -41,6 +41,8 @@ public:
 private:
     explicit GeminiDownload(ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
 
+    virtual void set_certificate(String certificate, String key) override;
+
     NonnullRefPtr<Gemini::GeminiJob> m_job;
 };
 
