@@ -44,7 +44,7 @@ inline void timeval_add(const TimevalType& a, const TimevalType& b, TimevalType&
 {
     result.tv_sec = a.tv_sec + b.tv_sec;
     result.tv_usec = a.tv_usec + b.tv_usec;
-    if (result.tv_usec > 1'000'000) {
+    if (result.tv_usec >= 1'000'000) {
         ++result.tv_sec;
         result.tv_usec -= 1'000'000;
     }
@@ -66,7 +66,7 @@ inline void timespec_add(const TimespecType& a, const TimespecType& b, TimespecT
 {
     result.tv_sec = a.tv_sec + b.tv_sec;
     result.tv_nsec = a.tv_nsec + b.tv_nsec;
-    if (result.tv_nsec > 1000'000'000) {
+    if (result.tv_nsec >= 1000'000'000) {
         ++result.tv_sec;
         result.tv_nsec -= 1000'000'000;
     }
