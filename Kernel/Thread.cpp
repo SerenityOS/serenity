@@ -114,6 +114,7 @@ Thread::~Thread()
 
 void Thread::unblock()
 {
+    ASSERT(m_lock.own_lock());
     m_blocker = nullptr;
     if (Thread::current() == this) {
         if (m_should_die)
@@ -144,6 +145,7 @@ void Thread::set_should_die()
     m_should_die = true;
 
     if (is_blocked()) {
+        ScopedSpinLock lock(m_lock);
         ASSERT(m_blocker != nullptr);
         // We're blocked in the kernel.
         m_blocker->set_interrupted_by_death();
@@ -264,6 +266,7 @@ void Thread::finalize()
     set_state(Thread::State::Dead);
 
     if (m_joiner) {
+        ScopedSpinLock lock(m_joiner->m_lock);
         ASSERT(m_joiner->m_joinee == this);
         static_cast<JoinBlocker*>(m_joiner->m_blocker)->set_joinee_exit_value(m_exit_value);
         static_cast<JoinBlocker*>(m_joiner->m_blocker)->set_interrupted_by_death();
@@ -468,9 +471,11 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         set_state(m_stop_state);
         m_stop_state = State::Invalid;
         // make sure SemiPermanentBlocker is unblocked
-        if (m_state != Thread::Runnable && m_state != Thread::Running
-            && m_blocker && m_blocker->is_reason_signal())
-            unblock();
+        if (m_state != Thread::Runnable && m_state != Thread::Running) {
+            ScopedSpinLock lock(m_lock);
+            if (m_blocker && m_blocker->is_reason_signal())
+                unblock();
+        }
     }
 
     else {
@@ -482,6 +487,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
             if (!thread_tracer->has_pending_signal(signal)) {
                 m_stop_signal = signal;
                 // make sure SemiPermanentBlocker is unblocked
+                ScopedSpinLock lock(m_lock);
                 if (m_blocker && m_blocker->is_reason_signal())
                     unblock();
                 set_state(Stopped);
@@ -697,13 +703,15 @@ void Thread::set_state(State new_state)
         m_stop_state = m_state;
     }
 
+    auto previous_state = m_state;
     m_state = new_state;
 #ifdef THREAD_DEBUG
     dbg() << "Set Thread " << *this << " state to " << state_string();
 #endif
 
     if (m_process->pid() != 0) {
-        Scheduler::update_state_for_thread(*this);
+        update_state_for_thread(previous_state);
+        ASSERT(g_scheduler_data->has_thread(*this));
     }
 
     if (m_state == Dying && this != Thread::current() && is_finalizable()) {
@@ -711,6 +719,24 @@ void Thread::set_state(State new_state)
         // finalizer right away as it can be cleaned up now
         Scheduler::notify_finalizer();
     }
+}
+
+void Thread::update_state_for_thread(Thread::State previous_state)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(g_scheduler_data);
+    ASSERT(g_scheduler_lock.own_lock());
+    auto& previous_list = g_scheduler_data->thread_list_for_state(previous_state);
+    auto& list = g_scheduler_data->thread_list_for_state(state());
+
+    if (&previous_list != &list) {
+        previous_list.remove(*this);
+    }
+
+    if (list.contains(*this))
+        return;
+
+    list.append(*this);
 }
 
 String Thread::backtrace()

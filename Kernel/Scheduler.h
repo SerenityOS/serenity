@@ -78,7 +78,6 @@ public:
     static inline IterationDecision for_each_nonrunnable(Callback);
 
     static void init_thread(Thread& thread);
-    static void update_state_for_thread(Thread& thread);
 };
 
 }

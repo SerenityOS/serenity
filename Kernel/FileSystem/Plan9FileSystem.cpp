@@ -498,7 +498,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
     return KSuccess;
 }
 
-bool Plan9FS::Blocker::should_unblock(Thread&, time_t, long)
+bool Plan9FS::Blocker::should_unblock(Thread&)
 {
     if (m_completion.completed)
         return true;

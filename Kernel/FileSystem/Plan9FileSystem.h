@@ -81,7 +81,7 @@ private:
             : m_completion(completion)
         {
         }
-        virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual bool should_unblock(Thread&) override;
         virtual const char* state_string() const override { return "Waiting"; }
 
     private:

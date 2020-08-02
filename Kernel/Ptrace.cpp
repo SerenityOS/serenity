@@ -63,8 +63,11 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
             return KResult(-EBUSY);
         }
         peer->start_tracing_from(caller.pid());
-        if (peer->state() != Thread::State::Stopped && !(peer->has_blocker() && peer->blocker().is_reason_signal()))
-            peer->send_signal(SIGSTOP, &caller);
+        if (peer->state() != Thread::State::Stopped) {
+            ScopedSpinLock lock(peer->get_lock());
+            if (!(peer->has_blocker() && peer->blocker().is_reason_signal()))
+                peer->send_signal(SIGSTOP, &caller);
+        }
         return KSuccess;
     }
 
