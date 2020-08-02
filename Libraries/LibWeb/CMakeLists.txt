@@ -146,16 +146,14 @@ function(libweb_js_wrapper class)
     add_wrapper_sources(Bindings/${basename}Wrapper.cpp Bindings/${basename}Wrapper.h)
     add_custom_command(
         OUTPUT Bindings/${basename}Wrapper.h
-        COMMAND /bin/mkdir -p Bindings
-        COMMAND WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl > Bindings/${basename}Wrapper.h
+        COMMAND ${write_if_different} Bindings/${basename}Wrapper.h CodeGenerators/WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
         VERBATIM
         DEPENDS WrapperGenerator
         MAIN_DEPENDENCY ${class}.idl
     )
     add_custom_command(
         OUTPUT Bindings/${basename}Wrapper.cpp
-        COMMAND /bin/mkdir -p Bindings
-        COMMAND WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl > Bindings/${basename}Wrapper.cpp
+        COMMAND ${write_if_different} Bindings/${basename}Wrapper.cpp CodeGenerators/WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
         VERBATIM
         DEPENDS WrapperGenerator
         MAIN_DEPENDENCY ${class}.idl
@@ -203,8 +201,7 @@ set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})
 
 add_custom_command(
     OUTPUT CSS/PropertyID.h
-    COMMAND /bin/mkdir -p CSS
-    COMMAND Generate_CSS_PropertyID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json > CSS/PropertyID.h
+    COMMAND ${write_if_different} CSS/PropertyID.h CodeGenerators/Generate_CSS_PropertyID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_h
     MAIN_DEPENDENCY CSS/Properties.json
@@ -214,7 +211,7 @@ add_custom_target(generate_PropertyID.h DEPENDS CSS/PropertyID.h)
 add_custom_command(
     OUTPUT CSS/PropertyID.cpp
     COMMAND /bin/mkdir -p CSS
-    COMMAND Generate_CSS_PropertyID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json > CSS/PropertyID.cpp
+    COMMAND ${write_if_different} CSS/PropertyID.cpp CodeGenerators/Generate_CSS_PropertyID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_cpp
     MAIN_DEPENDENCY CSS/Properties.json
@@ -222,9 +219,7 @@ add_custom_command(
 
 add_custom_command(
     OUTPUT CSS/DefaultStyleSheetSource.cpp
-    COMMAND /bin/mkdir -p CSS
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh default_stylesheet_source
-            ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Default.css > CSS/DefaultStyleSheetSource.cpp
+    COMMAND ${write_if_different} CSS/DefaultStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh default_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Default.css
     VERBATIM
     DEPENDS Scripts/GenerateStyleSheetSource.sh
     MAIN_DEPENDENCY CSS/Default.css

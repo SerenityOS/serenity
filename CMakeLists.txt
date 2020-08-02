@@ -51,6 +51,8 @@ add_subdirectory(DevTools/FormCompiler)
 add_subdirectory(Libraries/LibWeb/CodeGenerators)
 add_subdirectory(AK/Tests)
 
+set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
+
 function(serenity_install_headers target_name)
     file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h")
     foreach(header ${headers})
@@ -96,7 +98,7 @@ function(compile_ipc source output)
     set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
     add_custom_command(
         OUTPUT ${output}
-        COMMAND IPCCompiler ${source} > ${output}
+        COMMAND ${write_if_different} ${output} ${CMAKE_BINARY_DIR}/DevTools/IPCCompiler/IPCCompiler ${source}
         VERBATIM
         DEPENDS IPCCompiler
         MAIN_DEPENDENCY ${source}
