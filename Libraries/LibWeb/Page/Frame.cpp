@@ -40,6 +40,7 @@ Frame::Frame(DOM::Element& host_element, Frame& main_frame)
     , m_event_handler({}, *this)
     , m_host_element(host_element.make_weak_ptr())
 {
+    setup();
 }
 
 Frame::Frame(Page& page)
@@ -48,10 +49,21 @@ Frame::Frame(Page& page)
     , m_loader(*this)
     , m_event_handler({}, *this)
 {
+    setup();
 }
 
 Frame::~Frame()
 {
+}
+
+void Frame::setup()
+{
+    m_cursor_blink_timer = Core::Timer::construct(500, [this] {
+        if (m_cursor_position.node() && m_cursor_position.node()->layout_node()) {
+            m_cursor_blink_state = !m_cursor_blink_state;
+            m_cursor_position.node()->layout_node()->set_needs_display();
+        }
+    });
 }
 
 void Frame::set_document(DOM::Document* document)
@@ -166,6 +178,22 @@ Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
         position.move_by(ancestor->host_element()->layout_node()->box_type_agnostic_position().to_type<int>());
     }
     return position;
+}
+
+void Frame::set_cursor_position(const DOM::Position & position)
+{
+    if (m_cursor_position == position)
+        return;
+
+    if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
+        m_cursor_position.node()->layout_node()->set_needs_display();
+
+    m_cursor_position = position;
+
+    if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
+        m_cursor_position.node()->layout_node()->set_needs_display();
+
+    dbg() << "Cursor position: " << m_cursor_position;
 }
 
 }

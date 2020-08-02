@@ -54,6 +54,7 @@ public:
 
 private:
     void split_into_lines_by_rules(LayoutBlock& container, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);
+    void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
 
     template<typename Callback>
     void for_each_chunk(Callback, LayoutMode, bool do_wrap_lines, bool do_wrap_breaks) const;

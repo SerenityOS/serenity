@@ -30,9 +30,11 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
+#include <LibWeb/DOM/Position.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/TreeNode.h>
@@ -83,9 +85,16 @@ public:
     Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
     Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
 
+    const DOM::Position& cursor_position() const { return m_cursor_position; }
+    void set_cursor_position(const DOM::Position&);
+
+    bool cursor_blink_state() const { return m_cursor_blink_state; }
+
 private:
     explicit Frame(DOM::Element& host_element, Frame& main_frame);
     explicit Frame(Page&);
+
+    void setup();
 
     Page& m_page;
     Frame& m_main_frame;
@@ -97,6 +106,10 @@ private:
     RefPtr<DOM::Document> m_document;
     Gfx::IntSize m_size;
     Gfx::IntRect m_viewport_rect;
+
+    DOM::Position m_cursor_position;
+    RefPtr<Core::Timer> m_cursor_blink_timer;
+    bool m_cursor_blink_state { false };
 };
 
 }

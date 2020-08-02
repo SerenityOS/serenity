@@ -150,6 +150,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         }
     } else {
         if (button == GUI::MouseButton::Left) {
+            m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
             layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
             dump_selection("MouseDown");
             m_in_mouse_selection = true;
