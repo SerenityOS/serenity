@@ -46,7 +46,7 @@ static ByteBuffer decode_pem(ReadonlyBytes data_in, size_t cert_index = 0)
             continue;
 
         if (data_in[i] != '-') {
-            // read entire line
+            // Read entire line.
             while ((i < input_length) && (data_in[i] != '\n'))
                 i++;
             continue;
@@ -54,7 +54,7 @@ static ByteBuffer decode_pem(ReadonlyBytes data_in, size_t cert_index = 0)
 
         if (data_in[i] == '-') {
             auto end_idx = i;
-            //read until end of line
+            // Read until end of line.
             while ((i < input_length) && (data_in[i] != '\n'))
                 i++;
             if (start_at) {
