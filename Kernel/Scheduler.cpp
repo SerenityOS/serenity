@@ -405,17 +405,6 @@ bool Scheduler::pick_next()
     Thread::for_each_living([&](Thread& thread) -> IterationDecision {
         if (!thread.has_unmasked_pending_signals())
             return IterationDecision::Continue;
-        // FIXME: It would be nice if the Scheduler didn't have to worry about who is "current"
-        //        For now, avoid dispatching signals to "current" and do it in a scheduling pass
-        //        while some other process is interrupted. Otherwise a mess will be made.
-        if (&thread == current_thread)
-            return IterationDecision::Continue;
-        // We know how to interrupt blocked processes, but if they are just executing
-        // at some random point in the kernel, let them continue.
-        // Before returning to userspace from a syscall, we will block a thread if it has any
-        // pending unmasked signals, allowing it to be dispatched then.
-        if (thread.in_kernel() && !thread.is_blocked() && !thread.is_stopped())
-            return IterationDecision::Continue;
         // NOTE: dispatch_one_pending_signal() may unblock the process.
         bool was_blocked = thread.is_blocked();
         if (thread.dispatch_one_pending_signal() == ShouldUnblockThread::No)

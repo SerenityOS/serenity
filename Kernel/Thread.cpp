@@ -144,12 +144,11 @@ void Thread::set_should_die()
     m_should_die = true;
 
     if (is_blocked()) {
-        ASSERT(in_kernel());
         ASSERT(m_blocker != nullptr);
         // We're blocked in the kernel.
         m_blocker->set_interrupted_by_death();
         unblock();
-    } else if (!in_kernel()) {
+    } else {
         // We're executing in userspace (and we're clearly
         // not the current thread). No need to unwind, so
         // set the state to dying right away. This also
@@ -446,7 +445,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     ASSERT(!process().is_ring0());
 
 #ifdef SIGNAL_DEBUG
-    klog() << "dispatch_signal <- " << signal;
+    klog() << "signal: dispatch signal " << signal << " to " << *this;
 #endif
 
     auto& action = m_signal_action_data[signal];
@@ -518,7 +517,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     if (handler_vaddr.as_ptr() == SIG_IGN) {
 #ifdef SIGNAL_DEBUG
-        klog() << "ignored signal " << signal;
+        klog() << "signal: " << *this << " ignored signal " << signal;
 #endif
         return ShouldUnblockThread::Yes;
     }
@@ -572,31 +571,16 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     };
 
     // We now place the thread state on the userspace stack.
-    // Note that when we are in the kernel (ie. blocking) we cannot use the
-    // tss, as that will contain kernel state; instead, we use a RegisterState.
+    // Note that we use a RegisterState.
     // Conversely, when the thread isn't blocking the RegisterState may not be
     // valid (fork, exec etc) but the tss will, so we use that instead.
-    if (!in_kernel()) {
-        u32* stack = &m_tss.esp;
-        setup_stack(m_tss, stack);
-
-        m_tss.cs = GDT_SELECTOR_CODE3 | 3;
-        m_tss.ds = GDT_SELECTOR_DATA3 | 3;
-        m_tss.es = GDT_SELECTOR_DATA3 | 3;
-        m_tss.fs = GDT_SELECTOR_DATA3 | 3;
-        m_tss.gs = GDT_SELECTOR_TLS | 3;
-        m_tss.eip = g_return_to_ring3_from_signal_trampoline.get();
-        // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
-        set_state(Skip1SchedulerPass);
-    } else {
-        auto& regs = get_register_dump_from_stack();
-        u32* stack = &regs.userspace_esp;
-        setup_stack(regs, stack);
-        regs.eip = g_return_to_ring3_from_signal_trampoline.get();
-    }
+    auto& regs = get_register_dump_from_stack();
+    u32* stack = &regs.userspace_esp;
+    setup_stack(regs, stack);
+    regs.eip = g_return_to_ring3_from_signal_trampoline.get();
 
 #ifdef SIGNAL_DEBUG
-    klog() << "signal: Okay, {" << state_string() << "} has been primed with signal handler " << String::format("%w", m_tss.cs) << ":" << String::format("%x", m_tss.eip);
+    klog() << "signal: Okay, " << *this << " {" << state_string() << "} has been primed with signal handler " << String::format("%w", m_tss.cs) << ":" << String::format("%x", m_tss.eip) << " to deliver " << signal;
 #endif
     return ShouldUnblockThread::Yes;
 }
