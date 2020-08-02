@@ -46,27 +46,18 @@
 
 namespace Kernel {
 
-HashTable<Thread*>& thread_table()
+Thread::Thread(NonnullRefPtr<Process> process)
+    : m_process(move(process))
+    , m_name(m_process->name())
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    static HashTable<Thread*>* table;
-    if (!table)
-        table = new HashTable<Thread*>;
-    return *table;
-}
-
-Thread::Thread(Process& process)
-    : m_process(process)
-    , m_name(process.name())
-{
-    if (m_process.m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel) == 0) {
+    if (m_process->m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel) == 0) {
         // First thread gets TID == PID
-        m_tid = process.pid();
+        m_tid = m_process->pid();
     } else {
         m_tid = Process::allocate_pid();
     }
 #ifdef THREAD_DEBUG
-    dbg() << "Created new thread " << process.name() << "(" << process.pid() << ":" << m_tid << ")";
+    dbg() << "Created new thread " << m_process->name() << "(" << m_process->pid() << ":" << m_tid << ")";
 #endif
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
@@ -77,7 +68,7 @@ Thread::Thread(Process& process)
     // Only IF is set when a process boots.
     m_tss.eflags = 0x0202;
 
-    if (m_process.is_ring0()) {
+    if (m_process->is_ring0()) {
         m_tss.cs = GDT_SELECTOR_CODE0;
         m_tss.ds = GDT_SELECTOR_DATA0;
         m_tss.es = GDT_SELECTOR_DATA0;
@@ -93,14 +84,14 @@ Thread::Thread(Process& process)
         m_tss.gs = GDT_SELECTOR_TLS | 3;
     }
 
-    m_tss.cr3 = m_process.page_directory().cr3();
+    m_tss.cr3 = m_process->page_directory().cr3();
 
     m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid), Region::Access::Read | Region::Access::Write, false, true);
     m_kernel_stack_region->set_stack(true);
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
 
-    if (m_process.is_ring0()) {
+    if (m_process->is_ring0()) {
         m_tss.esp = m_tss.esp0 = m_kernel_stack_top;
     } else {
         // Ring 3 processes get a separate stack for ring 0.
@@ -109,22 +100,15 @@ Thread::Thread(Process& process)
         m_tss.esp0 = m_kernel_stack_top;
     }
 
-    if (m_process.pid() != 0) {
-        InterruptDisabler disabler;
-        thread_table().set(this);
+    if (m_process->pid() != 0)
         Scheduler::init_thread(*this);
-    }
 }
 
 Thread::~Thread()
 {
     kfree_aligned(m_fpu_state);
-    {
-        InterruptDisabler disabler;
-        thread_table().remove(this);
-    }
 
-    auto thread_cnt_before = m_process.m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+    auto thread_cnt_before = m_process->m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
     ASSERT(thread_cnt_before != 0);
 }
 
@@ -318,9 +302,9 @@ bool Thread::tick()
 {
     ++m_ticks;
     if (tss().cs & 3)
-        ++m_process.m_ticks_in_user;
+        ++m_process->m_ticks_in_user;
     else
-        ++m_process.m_ticks_in_kernel;
+        ++m_process->m_ticks_in_kernel;
     return --m_ticks_left;
 }
 
@@ -522,7 +506,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
             });
             [[fallthrough]];
         case DefaultSignalAction::Terminate:
-            m_process.terminate_due_to_signal(signal);
+            m_process->terminate_due_to_signal(signal);
             return ShouldUnblockThread::No;
         case DefaultSignalAction::Ignore:
             ASSERT_NOT_REACHED();
@@ -642,7 +626,7 @@ RegisterState& Thread::get_register_dump_from_stack()
 
 u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue> auxv)
 {
-    auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
+    auto* region = m_process->allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
     ASSERT(region);
     region->set_stack(true);
 
@@ -714,22 +698,6 @@ Thread* Thread::clone(Process& process)
     return clone;
 }
 
-Vector<Thread*> Thread::all_threads()
-{
-    Vector<Thread*> threads;
-    InterruptDisabler disabler;
-    threads.ensure_capacity(thread_table().size());
-    for (auto* thread : thread_table())
-        threads.unchecked_append(thread);
-    return threads;
-}
-
-bool Thread::is_thread(void* ptr)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    return thread_table().contains((Thread*)ptr);
-}
-
 void Thread::set_state(State new_state)
 {
     ScopedSpinLock lock(g_scheduler_lock);
@@ -750,7 +718,7 @@ void Thread::set_state(State new_state)
     dbg() << "Set Thread " << *this << " state to " << state_string();
 #endif
 
-    if (m_process.pid() != 0) {
+    if (m_process->pid() != 0) {
         Scheduler::update_state_for_thread(*this);
     }
 
@@ -761,7 +729,7 @@ void Thread::set_state(State new_state)
     }
 }
 
-String Thread::backtrace(ProcessInspectionHandle&)
+String Thread::backtrace()
 {
     return backtrace_impl();
 }

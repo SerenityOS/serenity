@@ -31,6 +31,7 @@
 #include <AK/HashMap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
 #include <AK/Userspace.h>
 #include <AK/WeakPtr.h>
@@ -105,7 +106,7 @@ struct UnveiledPath {
     unsigned permissions { 0 };
 };
 
-class Process : public InlineLinkedListNode<Process> {
+class Process : public RefCounted<Process>, public InlineLinkedListNode<Process> {
     AK_MAKE_NONCOPYABLE(Process);
     AK_MAKE_NONMOVABLE(Process);
 
@@ -119,12 +120,12 @@ public:
         return current_thread ? &current_thread->process() : nullptr;
     }
 
-    static Process* create_kernel_process(Thread*& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
-    static Process* create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static NonnullRefPtr<Process> create_kernel_process(Thread*& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
+    static RefPtr<Process> create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
     static Vector<pid_t> all_pids();
-    static Vector<Process*> all_processes();
+    static AK::NonnullRefPtrVector<Process> all_processes();
 
     Thread* create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
@@ -136,7 +137,7 @@ public:
         Ring3 = 3,
     };
 
-    KBuffer backtrace(ProcessInspectionHandle&) const;
+    KBuffer backtrace() const;
 
     bool is_dead() const { return m_dead; }
 
@@ -146,7 +147,7 @@ public:
     PageDirectory& page_directory() { return *m_page_directory; }
     const PageDirectory& page_directory() const { return *m_page_directory; }
 
-    static Process* from_pid(pid_t);
+    static RefPtr<Process> from_pid(pid_t);
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
@@ -181,6 +182,8 @@ public:
 
     void die();
     void finalize();
+
+    ALWAYS_INLINE SpinLock<u32>& get_lock() const { return m_lock; }
 
     int sys$yield();
     int sys$sync();
@@ -343,7 +346,11 @@ public:
     void set_tty(TTY*);
 
     size_t region_count() const { return m_regions.size(); }
-    const NonnullOwnPtrVector<Region>& regions() const { return m_regions; }
+    const NonnullOwnPtrVector<Region>& regions() const
+    {
+        ASSERT(m_lock.is_locked());
+        return m_regions;
+    }
     void dump_regions();
 
     u32 m_ticks_in_user { 0 };
@@ -485,11 +492,6 @@ public:
     Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
     Vector<Region*, 2> split_region_around_range(const Region& source_region, const Range&);
 
-    bool is_being_inspected() const
-    {
-        return m_inspector_count;
-    }
-
     void terminate_due_to_signal(u8 signal);
     KResult send_signal(u8 signal, Process* sender);
 
@@ -539,15 +541,6 @@ public:
     const Vector<UnveiledPath>& unveiled_paths() const
     {
         return m_unveiled_paths;
-    }
-
-    void increment_inspector_count(Badge<ProcessInspectionHandle>)
-    {
-        ++m_inspector_count;
-    }
-    void decrement_inspector_count(Badge<ProcessInspectionHandle>)
-    {
-        --m_inspector_count;
     }
 
     bool wait_for_tracer_at_next_execve() const
@@ -699,48 +692,10 @@ private:
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 
-    u32 m_inspector_count { 0 };
-
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall
     // and wait for a tracer to attach.
     bool m_wait_for_tracer_at_next_execve { false };
-};
-
-class ProcessInspectionHandle {
-public:
-    ProcessInspectionHandle(Process& process)
-        : m_process(process)
-    {
-        if (&process != Process::current()) {
-            InterruptDisabler disabler;
-            m_process.increment_inspector_count({});
-        }
-    }
-    ~ProcessInspectionHandle()
-    {
-        if (&m_process != Process::current()) {
-            InterruptDisabler disabler;
-            m_process.decrement_inspector_count({});
-        }
-    }
-
-    Process& process() { return m_process; }
-
-    static OwnPtr<ProcessInspectionHandle> from_pid(pid_t pid)
-    {
-        InterruptDisabler disabler;
-        auto* process = Process::from_pid(pid);
-        if (process)
-            return make<ProcessInspectionHandle>(*process);
-        return nullptr;
-    }
-
-    Process* operator->() { return &m_process; }
-    Process& operator*() { return m_process; }
-
-private:
-    Process& m_process;
 };
 
 extern InlineLinkedList<Process>* g_processes;
@@ -833,7 +788,7 @@ inline bool InodeMetadata::may_execute(const Process& process) const
 
 inline int Thread::pid() const
 {
-    return m_process.pid();
+    return m_process->pid();
 }
 
 inline const LogStream& operator<<(const LogStream& stream, const Process& process)
@@ -843,7 +798,7 @@ inline const LogStream& operator<<(const LogStream& stream, const Process& proce
 
 inline u32 Thread::effective_priority() const
 {
-    return m_priority + m_process.priority_boost() + m_priority_boost + m_extra_priority;
+    return m_priority + m_process->priority_boost() + m_priority_boost + m_extra_priority;
 }
 
 #define REQUIRE_NO_PROMISES                        \

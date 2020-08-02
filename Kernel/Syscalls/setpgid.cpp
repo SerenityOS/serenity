@@ -35,7 +35,7 @@ pid_t Process::sys$getsid(pid_t pid)
     if (pid == 0)
         return m_sid;
     ScopedSpinLock lock(g_processes_lock);
-    auto* process = Process::from_pid(pid);
+    auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     if (m_sid != process->m_sid)
@@ -66,7 +66,7 @@ pid_t Process::sys$getpgid(pid_t pid)
     if (pid == 0)
         return m_pgid;
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
-    auto* process = Process::from_pid(pid);
+    auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     return process->m_pgid;
@@ -81,7 +81,7 @@ pid_t Process::sys$getpgrp()
 static pid_t get_sid_from_pgid(pid_t pgid)
 {
     ScopedSpinLock lock(g_processes_lock);
-    auto* group_leader = Process::from_pid(pgid);
+    auto group_leader = Process::from_pid(pgid);
     if (!group_leader)
         return -1;
     return group_leader->sid();
@@ -96,7 +96,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
         // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
         return -EINVAL;
     }
-    auto* process = Process::from_pid(pid);
+    auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     if (process != this && process->ppid() != m_pid) {
