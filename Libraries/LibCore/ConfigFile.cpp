@@ -114,7 +114,6 @@ void ConfigFile::reparse()
 String ConfigFile::read_entry(const String& group, const String& key, const String& default_value) const
 {
     if (!has_key(group, key)) {
-        const_cast<ConfigFile&>(*this).write_entry(group, key, default_value);
         return default_value;
     }
     auto it = m_groups.find(group);
@@ -125,7 +124,6 @@ String ConfigFile::read_entry(const String& group, const String& key, const Stri
 int ConfigFile::read_num_entry(const String& group, const String& key, int default_value) const
 {
     if (!has_key(group, key)) {
-        const_cast<ConfigFile&>(*this).write_num_entry(group, key, default_value);
         return default_value;
     }
 
