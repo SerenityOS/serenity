@@ -36,6 +36,67 @@
 
 namespace Web::SVG {
 
+#ifdef PATH_DEBUG
+static void print_instruction(const PathInstruction& instruction)
+{
+    auto& data = instruction.data;
+
+    switch (instruction.type) {
+    case PathInstructionType::Move:
+        dbg() << "Move (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); i += 2)
+            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
+        break;
+    case PathInstructionType::ClosePath:
+        dbg() << "ClosePath (absolute=" << instruction.absolute << ")";
+        break;
+    case PathInstructionType::Line:
+        dbg() << "Line (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); i += 2)
+            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
+        break;
+    case PathInstructionType::HorizontalLine:
+        dbg() << "HorizontalLine (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); ++i)
+            dbg() << "    x=" << data[i];
+        break;
+    case PathInstructionType::VerticalLine:
+        dbg() << "VerticalLine (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); ++i)
+            dbg() << "    y=" << data[i];
+        break;
+    case PathInstructionType::Curve:
+        dbg() << "Curve (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); i += 6)
+            dbg() << "    (x1=" << data[i] << ", y1=" << data[i + 1] << "), (x2=" << data[i + 2] << ", y2=" << data[i + 3] << "), (x=" << data[i + 4] << ", y=" << data[i + 5] << ")";
+        break;
+    case PathInstructionType::SmoothCurve:
+        dbg() << "SmoothCurve (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); i += 4)
+            dbg() << "    (x2=" << data[i] << ", y2=" << data[i + 1] << "), (x=" << data[i + 2] << ", y=" << data[i + 3] << ")";
+        break;
+    case PathInstructionType::QuadraticBezierCurve:
+        dbg() << "QuadraticBezierCurve (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); i += 4)
+            dbg() << "    (x1=" << data[i] << ", y1=" << data[i + 1] << "), (x=" << data[i + 2] << ", y=" << data[i + 3] << ")";
+        break;
+    case PathInstructionType::SmoothQuadraticBezierCurve:
+        dbg() << "SmoothQuadraticBezierCurve (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); i += 2)
+            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
+        break;
+    case PathInstructionType::EllipticalArc:
+        dbg() << "EllipticalArc (absolute=" << instruction.absolute << ")";
+        for (size_t i = 0; i < data.size(); i += 7)
+            dbg() << "    (rx=" << data[i] << ", ry=" << data[i + 1] << ") x-axis-rotation=" << data[i + 2] << ", large-arc-flag=" << data[i + 3] << ", sweep-flag=" << data[i + 4] << ", (x=" << data[i + 5] << ", y=" << data[i + 6] << ")";
+        break;
+    case PathInstructionType::Invalid:
+        dbg() << "Invalid";
+        break;
+    }
+}
+#endif
+
 PathDataParser::PathDataParser(const String& source)
     : m_source(source)
 {
@@ -119,7 +180,7 @@ void PathDataParser::parse_curveto()
     while (true) {
         m_instructions.append({ PathInstructionType::Curve, absolute, parse_coordinate_pair_triplet() });
         parse_whitespace();
-        if (!match_number())
+        if (!match_coordinate())
             break;
     }
 }
@@ -132,7 +193,7 @@ void PathDataParser::parse_smooth_curveto()
     while (true) {
         m_instructions.append({ PathInstructionType::SmoothCurve, absolute, parse_coordinate_pair_double() });
         parse_whitespace();
-        if (!match_number())
+        if (!match_coordinate())
             break;
     }
 }
@@ -145,7 +206,7 @@ void PathDataParser::parse_quadratic_bezier_curveto()
     while (true) {
         m_instructions.append({ PathInstructionType::QuadraticBezierCurve, absolute, parse_coordinate_pair_double() });
         parse_whitespace();
-        if (!match_number())
+        if (!match_coordinate())
             break;
     }
 }
@@ -158,7 +219,7 @@ void PathDataParser::parse_smooth_quadratic_bezier_curveto()
     while (true) {
         m_instructions.append({ PathInstructionType::SmoothQuadraticBezierCurve, absolute, parse_coordinate_pair_double() });
         parse_whitespace();
-        if (!match_number())
+        if (!match_coordinate())
             break;
     }
 }
@@ -171,14 +232,14 @@ void PathDataParser::parse_elliptical_arc()
     while (true) {
         m_instructions.append({ PathInstructionType::EllipticalArc, absolute, parse_elliptical_arg_argument() });
         parse_whitespace();
-        if (!match_number())
+        if (!match_coordinate())
             break;
     }
 }
 
 float PathDataParser::parse_coordinate()
 {
-    return parse_number();
+    return parse_sign() * parse_number();
 }
 
 Vector<float> PathDataParser::parse_coordinate_pair()
@@ -198,7 +259,7 @@ Vector<float> PathDataParser::parse_coordinate_sequence()
         sequence.append(parse_coordinate());
         if (match_comma_whitespace())
             parse_comma_whitespace();
-        if (!match_comma_whitespace() && !match_number())
+        if (!match_comma_whitespace() && !match_coordinate())
             break;
     }
     return sequence;
@@ -211,7 +272,7 @@ Vector<Vector<float>> PathDataParser::parse_coordinate_pair_sequence()
         sequence.append(parse_coordinate_pair());
         if (match_comma_whitespace())
             parse_comma_whitespace();
-        if (!match_comma_whitespace() && !match_number())
+        if (!match_comma_whitespace() && !match_coordinate())
             break;
     }
     return sequence;
@@ -311,24 +372,28 @@ float PathDataParser::parse_fractional_constant()
 
 float PathDataParser::parse_number()
 {
-    bool negative = false;
-    if (match('-')) {
-        consume();
-        negative = true;
-    } else if (match('+')) {
-        consume();
-    }
     auto number = parse_fractional_constant();
     if (match('e') || match('E'))
         TODO();
-    return negative ? number * -1 : number;
+    return number;
 }
 
 float PathDataParser::parse_flag()
 {
-    auto number = parse_number();
-    ASSERT(number == 0 || number == 1);
-    return number;
+    if (!match('0') && !match('1'))
+        ASSERT_NOT_REACHED();
+    return consume() - '0';
+}
+
+int PathDataParser::parse_sign()
+{
+    if (match('-')) {
+        consume();
+        return -1;
+    }
+    if (match('+'))
+        consume();
+    return 1;
 }
 
 bool PathDataParser::match_whitespace() const
@@ -344,76 +409,15 @@ bool PathDataParser::match_comma_whitespace() const
     return match_whitespace() || match(',');
 }
 
-bool PathDataParser::match_number() const
+bool PathDataParser::match_coordinate() const
 {
-    return !done() && (isdigit(ch()) || ch() == '-' || ch() == '+');
+    return !done() && (isdigit(ch()) || ch() == '-' || ch() == '+' || ch() == '.');
 }
 
 SVGPathElement::SVGPathElement(DOM::Document& document, const FlyString& tag_name)
     : SVGGeometryElement(document, tag_name)
 {
 }
-
-#ifdef PATH_DEBUG
-static void print_instruction(const PathInstruction& instruction)
-{
-    auto& data = instruction.data;
-
-    switch (instruction.type) {
-    case PathInstructionType::Move:
-        dbg() << "Move (absolute: " << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); i += 2)
-            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
-        break;
-    case PathInstructionType::ClosePath:
-        dbg() << "ClosePath (absolute=" << instruction.absolute << ")";
-        break;
-    case PathInstructionType::Line:
-        dbg() << "Line (absolute=" << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); i += 2)
-            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
-        break;
-    case PathInstructionType::HorizontalLine:
-        dbg() << "HorizontalLine (absolute=" << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); ++i)
-            dbg() << "    x=" << data[i];
-        break;
-    case PathInstructionType::VerticalLine:
-        dbg() << "VerticalLine (absolute=" << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); ++i)
-            dbg() << "    y=" << data[i];
-        break;
-    case PathInstructionType::Curve:
-        dbg() << "Curve (absolute=" << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); i += 6)
-            dbg() << "    (x1=" << data[i] << ", y1=" << data[i + 1] << "), (x2=" << data[i + 2] << ", y2=" << data[i + 3] << "), (x=" << data[i + 4] << ", y=" << data[i + 5] << ")";
-        break;
-    case PathInstructionType::SmoothCurve:
-        dbg() << "SmoothCurve (absolute: " << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); i += 4)
-            dbg() << "    (x2=" << data[i] << ", y2=" << data[i + 1] << "), (x=" << data[i + 2] << ", y=" << data[i + 3] << ")";
-        break;
-    case PathInstructionType::QuadraticBezierCurve:
-        dbg() << "QuadraticBezierCurve (absolute: " << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); i += 4)
-            dbg() << "    (x1=" << data[i] << ", y1=" << data[i + 1] << "), (x=" << data[i + 2] << ", y=" << data[i + 3] << ")";
-        break;
-    case PathInstructionType::SmoothQuadraticBezierCurve:
-        dbg() << "SmoothQuadraticBezierCurve (absolute: " << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); i += 2)
-            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
-        break;
-    case PathInstructionType::EllipticalArc:
-        dbg() << "EllipticalArc (absolute: " << instruction.absolute << ")";
-        for (size_t i = 0; i < data.size(); i += 7)
-            dbg() << "    (rx=" << data[i] << ", ry=" << data[i + 1] << ") x-axis-rotation=" << data[i + 2] << ", large-arc-flag=" << data[i + 3] << ", sweep-flag=" << data[i + 4] << ", (x=" << data[i + 5] << ", y=" << data[i + 6] << ")";
-        break;
-    case PathInstructionType::Invalid:
-        dbg() << "Invalid (absolute: " << instruction.absolute << ")";
-        break;
-    }
-}
-#endif
 
 void SVGPathElement::parse_attribute(const FlyString& name, const String& value)
 {
@@ -582,7 +586,9 @@ void SVGPathElement::paint(Gfx::Painter& painter, const SVGPaintingContext& cont
         case PathInstructionType::Curve:
         case PathInstructionType::SmoothCurve:
         case PathInstructionType::SmoothQuadraticBezierCurve:
-            TODO();
+            // Instead of crashing the browser every time we come across an SVG
+            // with these path instructions, let's just skip them
+            continue;
         case PathInstructionType::Invalid:
             ASSERT_NOT_REACHED();
         }

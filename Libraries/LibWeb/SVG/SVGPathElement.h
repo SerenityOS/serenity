@@ -85,10 +85,12 @@ private:
     float parse_fractional_constant();
     float parse_number();
     float parse_flag();
+    // -1 if negative, +1 otherwise
+    int parse_sign();
 
     bool match_whitespace() const;
     bool match_comma_whitespace() const;
-    bool match_number() const;
+    bool match_coordinate() const;
     bool match(char c) const { return !done() && ch() == c; }
 
     bool done() const { return m_cursor >= m_source.length(); }
