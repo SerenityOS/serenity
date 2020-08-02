@@ -49,6 +49,7 @@ public:
     const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
 
     void stop();
+    virtual void set_certificate(String, String);
 
 protected:
     explicit Download(ClientConnection&);
@@ -56,6 +57,7 @@ protected:
     void did_finish(bool success);
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void set_status_code(u32 status_code) { m_status_code = status_code; }
+    void did_request_certificates();
     void set_payload(const ByteBuffer&);
     void set_response_headers(const HashMap<String, String, CaseInsensitiveStringTraits>&);
 

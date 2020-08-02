@@ -179,6 +179,9 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
             }
             success_callback(ByteBuffer::copy(payload.data(), payload.size()), response_headers);
         };
+        download->on_certificate_requested = []() -> Protocol::Download::CertificateAndKey {
+            return {};
+        };
         ++m_pending_loads;
         if (on_load_counter_change)
             on_load_counter_change();

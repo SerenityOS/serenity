@@ -28,8 +28,8 @@
 
 #include <AK/HashMap.h>
 #include <LibIPC/ClientConnection.h>
-#include <ProtocolServer/ProtocolServerEndpoint.h>
 #include <ProtocolServer/Forward.h>
+#include <ProtocolServer/ProtocolServerEndpoint.h>
 
 namespace ProtocolServer {
 
@@ -46,6 +46,7 @@ public:
 
     void did_finish_download(Badge<Download>, Download&, bool success);
     void did_progress_download(Badge<Download>, Download&);
+    void did_request_certificates(Badge<Download>, Download&);
 
 private:
     virtual OwnPtr<Messages::ProtocolServer::GreetResponse> handle(const Messages::ProtocolServer::Greet&) override;
@@ -53,6 +54,7 @@ private:
     virtual OwnPtr<Messages::ProtocolServer::StartDownloadResponse> handle(const Messages::ProtocolServer::StartDownload&) override;
     virtual OwnPtr<Messages::ProtocolServer::StopDownloadResponse> handle(const Messages::ProtocolServer::StopDownload&) override;
     virtual OwnPtr<Messages::ProtocolServer::DisownSharedBufferResponse> handle(const Messages::ProtocolServer::DisownSharedBuffer&) override;
+    virtual OwnPtr<Messages::ProtocolServer::SetCertificateResponse> handle(const Messages::ProtocolServer::SetCertificate&);
 
     HashMap<i32, OwnPtr<Download>> m_downloads;
     HashMap<i32, RefPtr<AK::SharedBuffer>> m_shared_buffers;

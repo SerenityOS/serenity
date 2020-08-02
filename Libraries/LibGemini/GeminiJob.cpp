@@ -63,6 +63,10 @@ void GeminiJob::start()
     m_socket->on_tls_finished = [this] {
         finish_up();
     };
+    m_socket->on_tls_certificate_request = [this](auto&) {
+        if (on_certificate_requested)
+            on_certificate_requested(*this);
+    };
     bool success = ((TLS::TLSv12&)*m_socket).connect(m_request.url().host(), m_request.url().port());
     if (!success) {
         deferred_invoke([this](auto&) {
@@ -86,6 +90,15 @@ void GeminiJob::read_while_data_available(Function<IterationDecision()> read)
     while (m_socket->can_read()) {
         if (read() == IterationDecision::Break)
             break;
+    }
+}
+
+void GeminiJob::set_certificate(String certificate, String private_key)
+{
+    if (!m_socket->add_client_key(ByteBuffer::wrap(certificate.characters(), certificate.length()), ByteBuffer::wrap(private_key.characters(), private_key.length()))) {
+        dbg() << "LibGemini: Failed to set a client certificate";
+        // FIXME: Do something about this failure
+        ASSERT_NOT_REACHED();
     }
 }
 
