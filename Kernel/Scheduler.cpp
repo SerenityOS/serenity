@@ -62,19 +62,6 @@ void Scheduler::init_thread(Thread& thread)
     g_scheduler_data->m_nonrunnable_threads.append(thread);
 }
 
-void Scheduler::update_state_for_thread(Thread& thread)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_data);
-    ASSERT(g_scheduler_lock.own_lock());
-    auto& list = g_scheduler_data->thread_list_for_state(thread.state());
-
-    if (list.contains(thread))
-        return;
-
-    list.append(thread);
-}
-
 static u32 time_slice_for(const Thread& thread)
 {
     // One time slice unit == 1ms
@@ -104,7 +91,7 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, void*& joinee_exit_value)
     current_thread->m_joinee = &joinee;
 }
 
-bool Thread::JoinBlocker::should_unblock(Thread& joiner, time_t, long)
+bool Thread::JoinBlocker::should_unblock(Thread& joiner)
 {
     return !joiner.m_joinee;
 }
@@ -124,7 +111,7 @@ Thread::AcceptBlocker::AcceptBlocker(const FileDescription& description)
 {
 }
 
-bool Thread::AcceptBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::AcceptBlocker::should_unblock(Thread&)
 {
     auto& socket = *blocked_description().socket();
     return socket.can_accept();
@@ -135,7 +122,7 @@ Thread::ConnectBlocker::ConnectBlocker(const FileDescription& description)
 {
 }
 
-bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::ConnectBlocker::should_unblock(Thread&)
 {
     auto& socket = *blocked_description().socket();
     return socket.setup_state() == Socket::SetupState::Completed;
@@ -157,12 +144,17 @@ Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
     }
 }
 
-bool Thread::WriteBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
+bool Thread::WriteBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
 {
     if (m_deadline.has_value()) {
         bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
         return timed_out || blocked_description().can_write();
     }
+    return should_unblock(thread);
+}
+
+bool Thread::WriteBlocker::should_unblock(Thread&)
+{
     return blocked_description().can_write();
 }
 
@@ -182,12 +174,17 @@ Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
     }
 }
 
-bool Thread::ReadBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
+bool Thread::ReadBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
 {
     if (m_deadline.has_value()) {
         bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
         return timed_out || blocked_description().can_read();
     }
+    return should_unblock(thread);
+}
+
+bool Thread::ReadBlocker::should_unblock(Thread&)
+{
     return blocked_description().can_read();
 }
 
@@ -198,7 +195,7 @@ Thread::ConditionBlocker::ConditionBlocker(const char* state_string, Function<bo
     ASSERT(m_block_until_condition);
 }
 
-bool Thread::ConditionBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::ConditionBlocker::should_unblock(Thread&)
 {
     return m_block_until_condition();
 }
@@ -208,7 +205,7 @@ Thread::SleepBlocker::SleepBlocker(u64 wakeup_time)
 {
 }
 
-bool Thread::SleepBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::SleepBlocker::should_unblock(Thread&)
 {
     return m_wakeup_time <= g_uptime;
 }
@@ -228,7 +225,11 @@ bool Thread::SelectBlocker::should_unblock(Thread& thread, time_t now_sec, long 
         if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec * 1000 >= m_select_timeout.tv_nsec))
             return true;
     }
+    return should_unblock(thread);
+}
 
+bool Thread::SelectBlocker::should_unblock(Thread& thread)
+{
     auto& process = thread.process();
     for (int fd : m_select_read_fds) {
         if (!process.m_fds[fd])
@@ -252,7 +253,7 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, pid_t& waitee_pid)
 {
 }
 
-bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
+bool Thread::WaitBlocker::should_unblock(Thread& thread)
 {
     bool should_unblock = m_wait_options & WNOHANG;
     if (m_waitee_pid != -1) {
@@ -294,7 +295,7 @@ Thread::SemiPermanentBlocker::SemiPermanentBlocker(Reason reason)
 {
 }
 
-bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::SemiPermanentBlocker::should_unblock(Thread&)
 {
     // someone else has to unblock us
     return false;
@@ -304,6 +305,7 @@ bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
 // Make a decision as to whether to unblock them or not.
 void Thread::consider_unblock(time_t now_sec, long now_usec)
 {
+    ScopedSpinLock lock(m_lock);
     switch (state()) {
     case Thread::Invalid:
     case Thread::Runnable:
@@ -403,6 +405,7 @@ bool Scheduler::pick_next()
 
     // Dispatch any pending signals.
     Thread::for_each_living([&](Thread& thread) -> IterationDecision {
+        ScopedSpinLock lock(thread.get_lock());
         if (!thread.has_unmasked_pending_signals())
             return IterationDecision::Continue;
         // NOTE: dispatch_one_pending_signal() may unblock the process.
@@ -427,6 +430,8 @@ bool Scheduler::pick_next()
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Reason: " << (thread.wait_reason() ? thread.wait_reason() : "none");
         else if (thread.state() == Thread::Dying)
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Finalizable: " << thread.is_finalizable();
+        else
+            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
         return IterationDecision::Continue;
     });
 
