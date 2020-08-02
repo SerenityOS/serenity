@@ -439,7 +439,9 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
             } else {
                 // we do not support "certificate request"
                 dbg() << "certificate request";
-                ASSERT_NOT_REACHED();
+                if (on_tls_certificate_request)
+                    on_tls_certificate_request(*this);
+                m_context.client_verified = VerificationNeeded;
             }
             break;
         case ServerHelloDone:
@@ -590,8 +592,10 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
             // nothing to write
             break;
         case WritePacketStage::ClientHandshake:
-            // Note: currently not used
             if (m_context.client_verified == VerificationNeeded) {
+#ifdef TLS_DEBUG
+                dbg() << "> Client Certificate";
+#endif
                 auto packet = build_certificate();
                 write_packet(packet);
                 m_context.client_verified = Verified;

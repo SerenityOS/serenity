@@ -166,8 +166,57 @@ bool TLSv12::compute_master_secret(size_t length)
 
 ByteBuffer TLSv12::build_certificate()
 {
-    dbg() << "FIXME: build_certificate";
-    return {};
+    PacketBuilder builder { MessageType::Handshake, m_context.version };
+
+    Vector<const Certificate*> certificates;
+    Vector<Certificate>* local_certificates = nullptr;
+
+    if (m_context.is_server) {
+        dbg() << "Unsupported: Server mode";
+        ASSERT_NOT_REACHED();
+    } else {
+        local_certificates = &m_context.client_certificates;
+    }
+
+    constexpr size_t der_length_delta = 3;
+    constexpr size_t certificate_vector_header_size = 3;
+
+    size_t total_certificate_size = 0;
+
+    for (size_t i = 0; i < local_certificates->size(); ++i) {
+        auto& certificate = local_certificates->at(i);
+        if (!certificate.der.is_empty()) {
+            total_certificate_size += certificate.der.size() + der_length_delta;
+
+            // FIXME: Check for and respond with only the requested certificate types.
+            if (true) {
+                certificates.append(&certificate);
+            }
+        }
+    }
+
+    builder.append((u8)HandshakeType::CertificateMessage);
+
+    if (!total_certificate_size) {
+#ifdef TLS_DEBUG
+        dbg() << "No certificates, sending empty certificate message";
+#endif
+        builder.append_u24(certificate_vector_header_size);
+        builder.append_u24(total_certificate_size);
+    } else {
+        builder.append_u24(total_certificate_size + certificate_vector_header_size); // 3 bytes for header
+        builder.append_u24(total_certificate_size);
+
+        for (auto& certificate : certificates) {
+            if (!certificate->der.is_empty()) {
+                builder.append_u24(certificate->der.size());
+                builder.append(certificate->der);
+            }
+        }
+    }
+    auto packet = builder.build();
+    update_packet(packet);
+    return packet;
 }
 
 ByteBuffer TLSv12::build_change_cipher_spec()
