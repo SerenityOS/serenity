@@ -60,5 +60,8 @@ void ProcessStacksWidget::refresh()
         return;
     }
 
-    m_stacks_editor->set_text(file->read_all());
+    auto new_text = file->read_all();
+    if (m_stacks_editor->text() != new_text) {
+        m_stacks_editor->set_text(new_text);
+    }
 }
