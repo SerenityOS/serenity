@@ -32,6 +32,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Page/Frame.h>
 #include <ctype.h>
 
 namespace Web {
@@ -101,6 +102,28 @@ void LayoutText::paint_fragment(PaintContext& context, const LineBoxFragment& fr
         painter.add_clip_rect(enclosing_int_rect(selection_rect));
         painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::TopLeft, context.palette().selection_text());
     }
+
+    paint_cursor_if_needed(context, fragment);
+}
+
+void LayoutText::paint_cursor_if_needed(PaintContext& context, const LineBoxFragment& fragment) const
+{
+    if (!frame().cursor_blink_state())
+        return;
+
+    if (frame().cursor_position().node() != &node())
+        return;
+
+    if (!(frame().cursor_position().offset() >= (unsigned)fragment.start() && frame().cursor_position().offset() < (unsigned)(fragment.start() + fragment.length())))
+        return;
+
+    auto fragment_rect = fragment.absolute_rect();
+
+    float cursor_x = fragment_rect.x() + specified_style().font().width(fragment.text().substring_view(0, frame().cursor_position().offset() - fragment.start()));
+    float cursor_top = fragment_rect.top();
+    float cursor_height = fragment_rect.height();
+    Gfx::IntRect cursor_rect(cursor_x, cursor_top, 1, cursor_height);
+    context.painter().draw_rect(cursor_rect, context.palette().text_cursor());
 }
 
 template<typename Callback>
