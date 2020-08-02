@@ -52,75 +52,36 @@ TEST_CASE(dotdot_coalescing)
     EXPECT_EQ(LexicalPath("/../../../../").string(), "/");
 }
 
-// Temporarily disabled, as they were broken by commit a3e4dfdf9859a9b955bf4728328f740a47de5851
-//
-#if 0
-
-TEST_CASE(relative_paths)
-{
-    {
-        LexicalPath path("simple");
-        EXPECT_EQ(path.is_valid(), true);
-        EXPECT_EQ(path.string(), "./simple");
-        EXPECT_EQ(path.parts().size(), 2u);
-        EXPECT_EQ(path.basename(), "simple");
-    }
-    {
-        LexicalPath path("a/relative/path");
-        EXPECT_EQ(path.is_valid(), true);
-        EXPECT_EQ(path.string(), "./a/relative/path");
-        EXPECT_EQ(path.parts().size(), 4u);
-        EXPECT_EQ(path.basename(), "path");
-    }
-    {
-        LexicalPath path("./././foo");
-        EXPECT_EQ(path.is_valid(), true);
-        EXPECT_EQ(path.string(), "./foo");
-        EXPECT_EQ(path.parts().size(), 2u);
-        EXPECT_EQ(path.basename(), "foo");
-    }
-
-    {
-        LexicalPath path(".");
-        EXPECT_EQ(path.is_valid(), true);
-        EXPECT_EQ(path.string(), ".");
-        EXPECT_EQ(path.parts().size(), 1u);
-        EXPECT_EQ(path.basename(), ".");
-    }
-}
-
 TEST_CASE(has_extension)
 {
     {
-        FileSystemPath path("/tmp/simple.png");
+        LexicalPath path("/tmp/simple.png");
         EXPECT(path.has_extension(".png"));
         EXPECT(path.has_extension(".pnG"));
         EXPECT(path.has_extension(".PNG"));
     }
 
     {
-        FileSystemPath path("/TMP/SIMPLE.PNG");
+        LexicalPath path("/TMP/SIMPLE.PNG");
         EXPECT(path.has_extension(".png"));
         EXPECT(path.has_extension(".pnG"));
         EXPECT(path.has_extension(".PNG"));
     }
 
     {
-        FileSystemPath path(".png");
+        LexicalPath path(".png");
         EXPECT(path.has_extension(".png"));
     }
 
     {
-        FileSystemPath path;
+        LexicalPath path;
         EXPECT_EQ(path.has_extension(".png"), false);
     }
 
     {
-        FileSystemPath path("png");
+        LexicalPath path("png");
         EXPECT_EQ(path.has_extension(".png"), false);
     }
 }
-
-#endif
 
 TEST_MAIN(LexicalPath)
