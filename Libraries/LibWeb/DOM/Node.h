@@ -120,9 +120,6 @@ public:
 
     void set_layout_node(Badge<LayoutNode>, LayoutNode* layout_node) const { m_layout_node = layout_node; }
 
-    const Element* previous_element_sibling() const;
-    const Element* next_element_sibling() const;
-
     virtual bool is_child_allowed(const Node&) const { return true; }
 
     bool needs_style_update() const { return m_needs_style_update; }
