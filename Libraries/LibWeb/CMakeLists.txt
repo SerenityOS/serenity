@@ -25,6 +25,7 @@ set(SOURCES
     CSS/StyleValue.cpp
     DOM/AttributeNames.cpp
     DOM/CharacterData.cpp
+    DOM/CharacterData.idl
     DOM/Comment.cpp
     DOM/Document.cpp
     DOM/DocumentType.cpp
@@ -37,6 +38,7 @@ set(SOURCES
     DOM/Position.cpp
     DOM/TagNames.cpp
     DOM/Text.cpp
+    DOM/Text.idl
     DOM/Timer.cpp
     DOM/Window.cpp
     DOM/XMLHttpRequest.cpp
@@ -162,12 +164,14 @@ function(libweb_js_wrapper class)
     add_custom_target(generate_${basename}Wrapper.cpp DEPENDS Bindings/${class}Wrapper.cpp)
 endfunction()
 
+libweb_js_wrapper(DOM/CharacterData)
 libweb_js_wrapper(DOM/Document)
 libweb_js_wrapper(DOM/DocumentType)
 libweb_js_wrapper(DOM/Element)
 libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
 libweb_js_wrapper(DOM/Node)
+libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
 libweb_js_wrapper(HTML/HTMLAnchorElement)
 libweb_js_wrapper(HTML/HTMLBodyElement)

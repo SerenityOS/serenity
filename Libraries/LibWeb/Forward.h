@@ -91,6 +91,7 @@ class XMLHttpRequest;
 namespace Web::Bindings {
 
 class CanvasRenderingContext2DWrapper;
+class CharacterDataWrapper;
 class DocumentTypeWrapper;
 class DocumentWrapper;
 class ElementWrapper;
@@ -122,6 +123,7 @@ class ImageDataWrapper;
 class LocationObject;
 class MouseEventWrapper;
 class NodeWrapper;
+class TextWrapper;
 class UIEventWrapper;
 class WindowObject;
 class Wrappable;

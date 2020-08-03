@@ -1,0 +1,9 @@
+interface CharacterData : Node {
+
+    attribute DOMString data;
+    readonly attribute unsigned long length;
+
+    readonly attribute Element? nextElementSibling;
+    readonly attribute Element? previousElementSibling;
+
+}
