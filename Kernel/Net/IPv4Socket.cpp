@@ -246,7 +246,7 @@ ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* bu
             return -EAGAIN;
 
         locker.unlock();
-        auto res = Thread::current()->block<Thread::ReadBlocker>(description);
+        auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description);
         locker.lock();
 
         if (!m_can_read) {
@@ -296,7 +296,7 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
         }
 
         locker.unlock();
-        auto res = Thread::current()->block<Thread::ReadBlocker>(description);
+        auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description);
         locker.lock();
 
         if (!m_can_read) {

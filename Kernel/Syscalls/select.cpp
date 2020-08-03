@@ -105,7 +105,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
 #endif
 
     if (!timeout || select_has_timeout) {
-        if (current_thread->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds).was_interrupted())
+        if (current_thread->block<Thread::SelectBlocker>(select_has_timeout ? &computed_timeout : nullptr, rfds, wfds, efds).was_interrupted())
             return -EINTR;
         // While we blocked, the process lock was dropped. This gave other threads
         // the opportunity to mess with the memory. For example, it could free the
@@ -191,7 +191,7 @@ int Process::sys$poll(const Syscall::SC_poll_params* params)
 #endif
 
     if (!timeout || has_timeout) {
-        if (current_thread->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()).was_interrupted())
+        if (current_thread->block<Thread::SelectBlocker>(has_timeout ? &actual_timeout : nullptr, rfds, wfds, Thread::SelectBlocker::FDVector()).was_interrupted())
             return -EINTR;
     }
 
