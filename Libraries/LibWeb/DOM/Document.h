@@ -85,7 +85,7 @@ public:
     Node* inspected_node() { return m_inspected_node; }
     const Node* inspected_node() const { return m_inspected_node; }
 
-    const HTML::HTMLHtmlElement* document_element() const;
+    const Element* document_element() const;
     const HTML::HTMLHeadElement* head() const;
     const HTML::HTMLElement* body() const;
 

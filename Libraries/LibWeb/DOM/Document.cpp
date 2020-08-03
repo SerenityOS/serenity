@@ -127,9 +127,9 @@ void Document::fixup()
     this->append_child(html);
 }
 
-const HTML::HTMLHtmlElement* Document::document_element() const
+const Element* Document::document_element() const
 {
-    return first_child_of_type<HTML::HTMLHtmlElement>();
+    return first_child_of_type<Element>();
 }
 
 const HTML::HTMLHeadElement* Document::head() const
