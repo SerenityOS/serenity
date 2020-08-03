@@ -8,5 +8,8 @@ interface Element : Node {
     attribute DOMString innerHTML;
     [Reflect] attribute DOMString id;
     [Reflect=class] attribute DOMString className;
+
+    readonly attribute Element? nextElementSibling;
+    readonly attribute Element? previousElementSibling;
 }
 
