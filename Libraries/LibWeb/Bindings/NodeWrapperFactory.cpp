@@ -24,17 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/CharacterDataWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
+#include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/HTMLAnchorElementWrapper.h>
-#include <LibWeb/Bindings/HTMLBodyElementWrapper.h>
 #include <LibWeb/Bindings/HTMLBRElementWrapper.h>
+#include <LibWeb/Bindings/HTMLBodyElementWrapper.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLElementWrapper.h>
 #include <LibWeb/Bindings/HTMLFormElementWrapper.h>
+#include <LibWeb/Bindings/HTMLHRElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadingElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHRElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHtmlElementWrapper.h>
 #include <LibWeb/Bindings/HTMLIFrameElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
@@ -48,15 +49,17 @@
 #include <LibWeb/Bindings/HTMLTableRowElementWrapper.h>
 #include <LibWeb/Bindings/HTMLTitleElementWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
+#include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLBRElement.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
+#include <LibWeb/HTML/HTMLHRElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLHeadingElement.h>
-#include <LibWeb/HTML/HTMLHRElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
@@ -69,7 +72,6 @@
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
-#include <LibWeb/DOM/Node.h>
 
 namespace Web {
 namespace Bindings {
@@ -124,6 +126,10 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLElement>(node)));
     if (is<DOM::Element>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Element>(node)));
+    if (is<DOM::Text>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Text>(node)));
+    if (is<DOM::CharacterData>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::CharacterData>(node)));
     return static_cast<NodeWrapper*>(wrap_impl(global_object, node));
 }
 
