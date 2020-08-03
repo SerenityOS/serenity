@@ -50,7 +50,7 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
         return -EISDIR;
     if (description->is_blocking()) {
         if (!description->can_read()) {
-            if (Thread::current()->block<Thread::ReadBlocker>(*description).was_interrupted())
+            if (Thread::current()->block<Thread::ReadBlocker>(nullptr, *description).was_interrupted())
                 return -EINTR;
             if (!description->can_read())
                 return -EAGAIN;

@@ -100,7 +100,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 #ifdef IO_DEBUG
             dbg() << "block write on " << description.absolute_path();
 #endif
-            if (Thread::current()->block<Thread::WriteBlocker>(description).was_interrupted()) {
+            if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description).was_interrupted()) {
                 if (nwritten == 0)
                     return -EINTR;
             }
