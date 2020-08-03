@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-int Process::sys$link(const Syscall::SC_link_params* user_params)
+int Process::sys$link(Userspace<const Syscall::SC_link_params*> user_params)
 {
     REQUIRE_PROMISE(cpath);
     Syscall::SC_link_params params;
@@ -43,7 +43,7 @@ int Process::sys$link(const Syscall::SC_link_params* user_params)
     return VFS::the().link(old_path, new_path, current_directory());
 }
 
-int Process::sys$symlink(const Syscall::SC_symlink_params* user_params)
+int Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_params)
 {
     REQUIRE_PROMISE(cpath);
     Syscall::SC_symlink_params params;
