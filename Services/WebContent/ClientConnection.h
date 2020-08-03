@@ -57,6 +57,7 @@ private:
     virtual void handle(const Messages::WebContentServer::MouseDown&) override;
     virtual void handle(const Messages::WebContentServer::MouseMove&) override;
     virtual void handle(const Messages::WebContentServer::MouseUp&) override;
+    virtual void handle(const Messages::WebContentServer::KeyDown&) override;
 
     void flush_pending_paint_requests();
 

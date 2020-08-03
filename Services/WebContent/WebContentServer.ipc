@@ -12,4 +12,6 @@ endpoint WebContentServer = 89
     MouseDown(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
     MouseMove(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
     MouseUp(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+
+    KeyDown(i32 key, unsigned modifiers, u32 code_point) =|
 }

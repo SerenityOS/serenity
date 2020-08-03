@@ -76,6 +76,11 @@ void WebContentView::resize_event(GUI::ResizeEvent& event)
     request_repaint();
 }
 
+void WebContentView::keydown_event(GUI::KeyEvent& event)
+{
+    client().post_message(Messages::WebContentServer::KeyDown(event.key(), event.modifiers(), event.code_point()));
+}
+
 void WebContentView::mousedown_event(GUI::MouseEvent& event)
 {
     client().post_message(Messages::WebContentServer::MouseDown(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
