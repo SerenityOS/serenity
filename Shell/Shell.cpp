@@ -795,6 +795,24 @@ void Shell::cache_path()
     quick_sort(cached_path);
 }
 
+void Shell::add_entry_to_cache(const String& entry)
+{
+    size_t index = 0;
+    auto match = binary_search(
+        cached_path.span(), entry, [](const String& name, const String& program) -> int {
+            return strcmp(name.characters(), program.characters());
+        },
+        &index);
+
+    if (match)
+        return;
+
+    while (strcmp(cached_path[index].characters(), entry.characters()) < 0) {
+        index++;
+    }
+    cached_path.insert(index, entry);
+}
+
 void Shell::highlight(Line::Editor& editor) const
 {
     auto line = editor.line();

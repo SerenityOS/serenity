@@ -64,20 +64,7 @@ int Shell::builtin_alias(int argc, const char** argv)
             }
         } else {
             m_aliases.set(parts[0], parts[1]);
-            size_t index = 0;
-            auto match = binary_search(
-                cached_path.span(), parts[0], [](const String& name, const String& program) -> int {
-                    return strcmp(name.characters(), program.characters());
-                },
-                &index);
-
-            if (match)
-                continue;
-
-            while (strcmp(cached_path[index].characters(), parts[0].characters()) < 0) {
-                index++;
-            }
-            cached_path.insert(index, parts[0]);
+            add_entry_to_cache(parts[0]);
         }
     }
 
