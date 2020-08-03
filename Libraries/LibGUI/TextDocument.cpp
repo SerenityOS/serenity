@@ -87,8 +87,8 @@ void TextDocument::set_text(const StringView& text)
 size_t TextDocumentLine::first_non_whitespace_column() const
 {
     for (size_t i = 0; i < length(); ++i) {
-        auto codepoint = codepoints()[i];
-        if (!isspace(codepoint))
+        auto code_points = code_pointss()[i];
+        if (!isspace(code_points))
             return i;
     }
     return length();
@@ -131,35 +131,35 @@ void TextDocumentLine::set_text(TextDocument& document, const StringView& text)
     }
     m_text.clear();
     Utf8View utf8_view(text);
-    for (auto codepoint : utf8_view)
-        m_text.append(codepoint);
+    for (auto code_points : utf8_view)
+        m_text.append(code_points);
     document.update_views({});
 }
 
-void TextDocumentLine::append(TextDocument& document, const u32* codepoints, size_t length)
+void TextDocumentLine::append(TextDocument& document, const u32* code_pointss, size_t length)
 {
     if (length == 0)
         return;
-    m_text.append(codepoints, length);
+    m_text.append(code_pointss, length);
     document.update_views({});
 }
 
-void TextDocumentLine::append(TextDocument& document, u32 codepoint)
+void TextDocumentLine::append(TextDocument& document, u32 code_points)
 {
-    insert(document, length(), codepoint);
+    insert(document, length(), code_points);
 }
 
-void TextDocumentLine::prepend(TextDocument& document, u32 codepoint)
+void TextDocumentLine::prepend(TextDocument& document, u32 code_points)
 {
-    insert(document, 0, codepoint);
+    insert(document, 0, code_points);
 }
 
-void TextDocumentLine::insert(TextDocument& document, size_t index, u32 codepoint)
+void TextDocumentLine::insert(TextDocument& document, size_t index, u32 code_points)
 {
     if (index == length()) {
-        m_text.append(codepoint);
+        m_text.append(code_points);
     } else {
-        m_text.insert(index, codepoint);
+        m_text.insert(index, code_points);
     }
     document.update_views({});
 }
@@ -274,7 +274,7 @@ String TextDocument::text_in_range(const TextRange& a_range) const
         auto& line = this->line(i);
         size_t selection_start_column_on_line = range.start().line() == i ? range.start().column() : 0;
         size_t selection_end_column_on_line = range.end().line() == i ? range.end().column() : line.length();
-        builder.append(Utf32View(line.codepoints() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line));
+        builder.append(Utf32View(line.code_pointss() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line));
         if (i != range.end().line())
             builder.append('\n');
     }
@@ -282,13 +282,13 @@ String TextDocument::text_in_range(const TextRange& a_range) const
     return builder.to_string();
 }
 
-u32 TextDocument::codepoint_at(const TextPosition& position) const
+u32 TextDocument::code_points_at(const TextPosition& position) const
 {
     ASSERT(position.line() < line_count());
     auto& line = this->line(position.line());
     if (position.column() == line.length())
         return '\n';
-    return line.codepoints()[position.column()];
+    return line.code_pointss()[position.column()];
 }
 
 TextPosition TextDocument::next_position_after(const TextPosition& position, SearchShouldWrap should_wrap) const
@@ -333,7 +333,7 @@ TextRange TextDocument::find_next(const StringView& needle, const TextPosition& 
     size_t needle_index = 0;
 
     do {
-        auto ch = codepoint_at(position);
+        auto ch = code_points_at(position);
         // FIXME: This is not the right way to use a Unicode needle!
         if (ch == (u32)needle[needle_index]) {
             if (needle_index == 0)
@@ -365,7 +365,7 @@ TextRange TextDocument::find_previous(const StringView& needle, const TextPositi
     size_t needle_index = needle.length() - 1;
 
     do {
-        auto ch = codepoint_at(position);
+        auto ch = code_points_at(position);
         // FIXME: This is not the right way to use a Unicode needle!
         if (ch == (u32)needle[needle_index]) {
             if (needle_index == needle.length() - 1)
@@ -439,11 +439,11 @@ TextPosition TextDocument::first_word_break_before(const TextPosition& position,
 
     auto target = position;
     auto line = this->line(target.line());
-    auto is_start_alphanumeric = isalnum(line.codepoints()[target.column() - (start_at_column_before ? 1 : 0)]);
+    auto is_start_alphanumeric = isalnum(line.code_pointss()[target.column() - (start_at_column_before ? 1 : 0)]);
 
     while (target.column() > 0) {
-        auto prev_codepoint = line.codepoints()[target.column() - 1];
-        if ((is_start_alphanumeric && !isalnum(prev_codepoint)) || (!is_start_alphanumeric && isalnum(prev_codepoint)))
+        auto prev_code_points = line.code_pointss()[target.column() - 1];
+        if ((is_start_alphanumeric && !isalnum(prev_code_points)) || (!is_start_alphanumeric && isalnum(prev_code_points)))
             break;
         target.set_column(target.column() - 1);
     }
@@ -463,11 +463,11 @@ TextPosition TextDocument::first_word_break_after(const TextPosition& position) 
         return TextPosition(position.line() + 1, 0);
     }
 
-    auto is_start_alphanumeric = isalnum(line.codepoints()[target.column()]);
+    auto is_start_alphanumeric = isalnum(line.code_pointss()[target.column()]);
 
     while (target.column() < line.length()) {
-        auto next_codepoint = line.codepoints()[target.column()];
-        if ((is_start_alphanumeric && !isalnum(next_codepoint)) || (!is_start_alphanumeric && isalnum(next_codepoint)))
+        auto next_code_points = line.code_pointss()[target.column()];
+        if ((is_start_alphanumeric && !isalnum(next_code_points)) || (!is_start_alphanumeric && isalnum(next_code_points)))
             break;
         target.set_column(target.column() + 1);
     }
@@ -555,26 +555,26 @@ TextPosition TextDocument::insert_at(const TextPosition& position, const StringV
 {
     TextPosition cursor = position;
     Utf8View utf8_view(text);
-    for (auto codepoint : utf8_view)
-        cursor = insert_at(cursor, codepoint, client);
+    for (auto code_points : utf8_view)
+        cursor = insert_at(cursor, code_points, client);
     return cursor;
 }
 
-TextPosition TextDocument::insert_at(const TextPosition& position, u32 codepoint, const Client* client)
+TextPosition TextDocument::insert_at(const TextPosition& position, u32 code_points, const Client* client)
 {
     bool automatic_indentation_enabled = client ? client->is_automatic_indentation_enabled() : false;
     size_t m_soft_tab_width = client ? client->soft_tab_width() : 4;
 
     bool at_head = position.column() == 0;
     bool at_tail = position.column() == line(position.line()).length();
-    if (codepoint == '\n') {
+    if (code_points == '\n') {
         if (at_tail || at_head) {
             String new_line_contents;
             if (automatic_indentation_enabled && at_tail) {
                 size_t leading_spaces = 0;
                 auto& old_line = lines()[position.line()];
                 for (size_t i = 0; i < old_line.length(); ++i) {
-                    if (old_line.codepoints()[i] == ' ')
+                    if (old_line.code_pointss()[i] == ' ')
                         ++leading_spaces;
                     else
                         break;
@@ -586,23 +586,23 @@ TextPosition TextDocument::insert_at(const TextPosition& position, u32 codepoint
             size_t row = position.line();
             Vector<u32> line_content;
             for (size_t i = position.column(); i < line(row).length(); i++)
-                line_content.append(line(row).codepoints()[i]);
+                line_content.append(line(row).code_pointss()[i]);
             insert_line(position.line() + (at_tail ? 1 : 0), make<TextDocumentLine>(*this, new_line_contents));
             notify_did_change();
             return { position.line() + 1, line(position.line() + 1).length() };
         }
         auto new_line = make<TextDocumentLine>(*this);
-        new_line->append(*this, line(position.line()).codepoints() + position.column(), line(position.line()).length() - position.column());
+        new_line->append(*this, line(position.line()).code_pointss() + position.column(), line(position.line()).length() - position.column());
 
         Vector<u32> line_content;
         for (size_t i = 0; i < new_line->length(); i++)
-            line_content.append(new_line->codepoints()[i]);
+            line_content.append(new_line->code_pointss()[i]);
         line(position.line()).truncate(*this, position.column());
         insert_line(position.line() + 1, move(new_line));
         notify_did_change();
         return { position.line() + 1, 0 };
     }
-    if (codepoint == '\t') {
+    if (code_points == '\t') {
         size_t next_soft_tab_stop = ((position.column() + m_soft_tab_width) / m_soft_tab_width) * m_soft_tab_width;
         size_t spaces_to_insert = next_soft_tab_stop - position.column();
         for (size_t i = 0; i < spaces_to_insert; ++i) {
@@ -611,7 +611,7 @@ TextPosition TextDocument::insert_at(const TextPosition& position, u32 codepoint
         notify_did_change();
         return { position.line(), next_soft_tab_stop };
     }
-    line(position.line()).insert(*this, position.column(), codepoint);
+    line(position.line()).insert(*this, position.column(), code_points);
     notify_did_change();
     return { position.line(), position.column() + 1 };
 }
@@ -644,10 +644,10 @@ void TextDocument::remove(const TextRange& unnormalized_range)
         ASSERT(range.start().line() == range.end().line() - 1);
         auto& first_line = line(range.start().line());
         auto& second_line = line(range.end().line());
-        Vector<u32> codepoints;
-        codepoints.append(first_line.codepoints(), range.start().column());
-        codepoints.append(second_line.codepoints() + range.end().column(), second_line.length() - range.end().column());
-        first_line.set_text(*this, move(codepoints));
+        Vector<u32> code_pointss;
+        code_pointss.append(first_line.code_pointss(), range.start().column());
+        code_pointss.append(second_line.code_pointss() + range.end().column(), second_line.length() - range.end().column());
+        first_line.set_text(*this, move(code_pointss));
         remove_line(range.end().line());
     }
 

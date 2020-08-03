@@ -834,7 +834,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token)
             auto type = status == Token::StringValueStatus::MalformedUnicodeEscape ? "unicode" : "hexadecimal";
             message = String::format("Malformed %s escape sequence", type);
         } else if (status == Token::StringValueStatus::UnicodeEscapeOverflow) {
-            message = "Unicode codepoint must not be greater than 0x10ffff in escape sequence";
+            message = "Unicode code_points must not be greater than 0x10ffff in escape sequence";
         }
 
         syntax_error(
