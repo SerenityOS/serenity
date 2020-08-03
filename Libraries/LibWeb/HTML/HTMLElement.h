@@ -39,8 +39,19 @@ public:
 
     String title() const { return attribute(HTML::AttributeNames::title); }
 
+    virtual bool is_editable() const final;
+    String content_editable() const;
+    void set_content_editable(const String&);
+
 private:
     virtual bool is_html_element() const final { return true; }
+
+    enum class ContentEditableState {
+        True,
+        False,
+        Inherit,
+    };
+    ContentEditableState content_editable_state() const;
 };
 
 }
