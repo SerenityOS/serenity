@@ -272,9 +272,9 @@ public:
     int sys$mkdir(Userspace<const char*> pathname, size_t path_length, mode_t mode);
     clock_t sys$times(tms*);
     int sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
-    int sys$link(const Syscall::SC_link_params*);
+    int sys$link(Userspace<const Syscall::SC_link_params*>);
     int sys$unlink(const char* pathname, size_t path_length);
-    int sys$symlink(const Syscall::SC_symlink_params*);
+    int sys$symlink(Userspace<const Syscall::SC_symlink_params*>);
     int sys$rmdir(Userspace<const char*> pathname, size_t path_length);
     int sys$mount(const Syscall::SC_mount_params*);
     int sys$umount(const char* mountpoint, size_t mountpoint_length);
