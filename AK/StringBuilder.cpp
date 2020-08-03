@@ -113,22 +113,22 @@ void StringBuilder::clear()
     m_length = 0;
 }
 
-void StringBuilder::append_codepoint(u32 codepoint)
+void StringBuilder::append_code_points(u32 code_points)
 {
-    if (codepoint <= 0x7f) {
-        append((char)codepoint);
-    } else if (codepoint <= 0x07ff) {
-        append((char)(((codepoint >> 6) & 0x1f) | 0xc0));
-        append((char)(((codepoint >> 0) & 0x3f) | 0x80));
-    } else if (codepoint <= 0xffff) {
-        append((char)(((codepoint >> 12) & 0x0f) | 0xe0));
-        append((char)(((codepoint >> 6) & 0x3f) | 0x80));
-        append((char)(((codepoint >> 0) & 0x3f) | 0x80));
-    } else if (codepoint <= 0x10ffff) {
-        append((char)(((codepoint >> 18) & 0x07) | 0xf0));
-        append((char)(((codepoint >> 12) & 0x3f) | 0x80));
-        append((char)(((codepoint >> 6) & 0x3f) | 0x80));
-        append((char)(((codepoint >> 0) & 0x3f) | 0x80));
+    if (code_points <= 0x7f) {
+        append((char)code_points);
+    } else if (code_points <= 0x07ff) {
+        append((char)(((code_points >> 6) & 0x1f) | 0xc0));
+        append((char)(((code_points >> 0) & 0x3f) | 0x80));
+    } else if (code_points <= 0xffff) {
+        append((char)(((code_points >> 12) & 0x0f) | 0xe0));
+        append((char)(((code_points >> 6) & 0x3f) | 0x80));
+        append((char)(((code_points >> 0) & 0x3f) | 0x80));
+    } else if (code_points <= 0x10ffff) {
+        append((char)(((code_points >> 18) & 0x07) | 0xf0));
+        append((char)(((code_points >> 12) & 0x3f) | 0x80));
+        append((char)(((code_points >> 6) & 0x3f) | 0x80));
+        append((char)(((code_points >> 0) & 0x3f) | 0x80));
     } else {
         append(0xef);
         append(0xbf);
@@ -139,8 +139,8 @@ void StringBuilder::append_codepoint(u32 codepoint)
 void StringBuilder::append(const Utf32View& utf32_view)
 {
     for (size_t i = 0; i < utf32_view.length(); ++i) {
-        auto codepoint = utf32_view.codepoints()[i];
-        append_codepoint(codepoint);
+        auto code_points = utf32_view.code_pointss()[i];
+        append_code_points(code_points);
     }
 }
 

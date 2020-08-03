@@ -50,11 +50,11 @@ public:
         EndOfFile,
     };
 
-    static HTMLToken make_character(u32 codepoint)
+    static HTMLToken make_character(u32 code_points)
     {
         HTMLToken token;
         token.m_type = Type::Character;
-        token.m_comment_or_character.data.append(codepoint);
+        token.m_comment_or_character.data.append(code_points);
         return token;
     }
 
@@ -73,11 +73,11 @@ public:
     bool is_character() const { return m_type == Type::Character; }
     bool is_end_of_file() const { return m_type == Type::EndOfFile; }
 
-    u32 codepoint() const
+    u32 code_points() const
     {
         ASSERT(is_character());
         Utf8View view(m_comment_or_character.data.string_view());
-        ASSERT(view.length_in_codepoints() == 1);
+        ASSERT(view.length_in_code_pointss() == 1);
         return *view.begin();
     }
 
@@ -86,7 +86,7 @@ public:
         // NOTE: The parser considers '\r' to be whitespace, while the tokenizer does not.
         if (!is_character())
             return false;
-        switch (codepoint()) {
+        switch (code_points()) {
         case '\t':
         case '\n':
         case '\f':

@@ -472,7 +472,7 @@ void HTMLDocumentParser::insert_comment(HTMLToken& token)
 void HTMLDocumentParser::handle_in_head(HTMLToken& token)
 {
     if (token.is_parser_whitespace()) {
-        insert_character(token.codepoint());
+        insert_character(token.code_points());
         return;
     }
 
@@ -671,7 +671,7 @@ void HTMLDocumentParser::insert_character(u32 data)
 void HTMLDocumentParser::handle_after_head(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
-        insert_character(token.codepoint());
+        insert_character(token.code_points());
         return;
     }
 
@@ -1004,17 +1004,17 @@ bool HTMLDocumentParser::is_special_tag(const FlyString& tag_name)
 void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 {
     if (token.is_character()) {
-        if (token.codepoint() == 0) {
+        if (token.code_points() == 0) {
             PARSE_ERROR();
             return;
         }
         if (token.is_parser_whitespace()) {
             reconstruct_the_active_formatting_elements();
-            insert_character(token.codepoint());
+            insert_character(token.code_points());
             return;
         }
         reconstruct_the_active_formatting_elements();
-        insert_character(token.codepoint());
+        insert_character(token.code_points());
         m_frameset_ok = false;
         return;
     }
@@ -1162,7 +1162,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         // then ignore that token and move on to the next one.
         // (Newlines at the start of pre blocks are ignored as an authoring convenience.)
         auto next_token = m_tokenizer.next_token();
-        if (next_token.has_value() && next_token.value().is_character() && next_token.value().codepoint() == '\n') {
+        if (next_token.has_value() && next_token.value().is_character() && next_token.value().code_points() == '\n') {
             // Ignore it.
         } else {
             process_using_the_rules_for(m_insertion_mode, next_token.value());
@@ -1503,7 +1503,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         m_frameset_ok = false;
         m_insertion_mode = InsertionMode::Text;
 
-        if (next_token.has_value() && next_token.value().is_character() && next_token.value().codepoint() == '\n') {
+        if (next_token.has_value() && next_token.value().is_character() && next_token.value().code_points() == '\n') {
             // Ignore it.
         } else {
             process_using_the_rules_for(m_insertion_mode, next_token.value());
@@ -1750,7 +1750,7 @@ void HTMLDocumentParser::decrement_script_nesting_level()
 void HTMLDocumentParser::handle_text(HTMLToken& token)
 {
     if (token.is_character()) {
-        insert_character(token.codepoint());
+        insert_character(token.code_points());
         return;
     }
     if (token.is_end_of_file()) {
@@ -1979,7 +1979,7 @@ void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
 void HTMLDocumentParser::handle_in_table_text(HTMLToken& token)
 {
     if (token.is_character()) {
-        if (token.codepoint() == 0) {
+        if (token.code_points() == 0) {
             PARSE_ERROR();
             return;
         }
@@ -2000,7 +2000,7 @@ void HTMLDocumentParser::handle_in_table_text(HTMLToken& token)
     }
 
     for (auto& pending_token : m_pending_table_character_tokens) {
-        insert_character(pending_token.codepoint());
+        insert_character(pending_token.code_points());
     }
 
     m_insertion_mode = m_original_insertion_mode;
@@ -2210,11 +2210,11 @@ void HTMLDocumentParser::handle_in_select_in_table(HTMLToken& token)
 void HTMLDocumentParser::handle_in_select(HTMLToken& token)
 {
     if (token.is_character()) {
-        if (token.codepoint() == 0) {
+        if (token.code_points() == 0) {
             PARSE_ERROR();
             return;
         }
-        insert_character(token.codepoint());
+        insert_character(token.code_points());
         return;
     }
 
@@ -2384,7 +2384,7 @@ void HTMLDocumentParser::handle_in_caption(HTMLToken& token)
 void HTMLDocumentParser::handle_in_column_group(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
-        insert_character(token.codepoint());
+        insert_character(token.code_points());
         return;
     }
 
@@ -2527,7 +2527,7 @@ void HTMLDocumentParser::handle_in_template(HTMLToken& token)
 void HTMLDocumentParser::handle_in_frameset(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
-        insert_character(token.codepoint());
+        insert_character(token.code_points());
         return;
     }
 
@@ -2587,7 +2587,7 @@ void HTMLDocumentParser::handle_in_frameset(HTMLToken& token)
 void HTMLDocumentParser::handle_after_frameset(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
-        insert_character(token.codepoint());
+        insert_character(token.code_points());
         return;
     }
 

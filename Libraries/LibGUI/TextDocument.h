@@ -113,7 +113,7 @@ public:
     TextPosition next_position_after(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
     TextPosition previous_position_before(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
 
-    u32 codepoint_at(const TextPosition&) const;
+    u32 code_points_at(const TextPosition&) const;
 
     TextRange range_for_entire_line(size_t line_index) const;
 
@@ -159,8 +159,8 @@ public:
 
     String to_utf8() const;
 
-    Utf32View view() const { return { codepoints(), length() }; }
-    const u32* codepoints() const { return m_text.data(); }
+    Utf32View view() const { return { code_pointss(), length() }; }
+    const u32* code_pointss() const { return m_text.data(); }
     size_t length() const { return m_text.size(); }
     void set_text(TextDocument&, const StringView&);
     void set_text(TextDocument&, Vector<u32>);

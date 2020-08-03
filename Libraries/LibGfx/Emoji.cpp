@@ -33,21 +33,21 @@ namespace Gfx {
 
 static HashMap<u32, RefPtr<Gfx::Bitmap>> s_emojis;
 
-const Bitmap* Emoji::emoji_for_codepoint(u32 codepoint)
+const Bitmap* Emoji::emoji_for_code_points(u32 code_points)
 {
-    auto it = s_emojis.find(codepoint);
+    auto it = s_emojis.find(code_points);
     if (it != s_emojis.end())
         return (*it).value.ptr();
 
-    String path = String::format("/res/emoji/U+%X.png", codepoint);
+    String path = String::format("/res/emoji/U+%X.png", code_points);
 
     auto bitmap = Bitmap::load_from_file(path);
     if (!bitmap) {
-        s_emojis.set(codepoint, nullptr);
+        s_emojis.set(code_points, nullptr);
         return nullptr;
     }
 
-    s_emojis.set(codepoint, bitmap);
+    s_emojis.set(code_points, bitmap);
     return bitmap.ptr();
 }
 

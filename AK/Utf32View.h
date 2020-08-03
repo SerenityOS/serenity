@@ -35,14 +35,14 @@ namespace AK {
 class Utf32View {
 public:
     Utf32View() { }
-    Utf32View(const u32* codepoints, size_t length)
-        : m_codepoints(codepoints)
+    Utf32View(const u32* code_pointss, size_t length)
+        : m_code_pointss(code_pointss)
         , m_length(length)
     {
-        ASSERT(codepoints || length == 0);
+        ASSERT(code_pointss || length == 0);
     }
 
-    const u32* codepoints() const { return m_codepoints; }
+    const u32* code_pointss() const { return m_code_pointss; }
     bool is_empty() const { return m_length == 0; }
     size_t length() const { return m_length; }
 
@@ -53,11 +53,11 @@ public:
         ASSERT(offset < m_length);
         ASSERT(!Checked<size_t>::addition_would_overflow(offset, length));
         ASSERT((offset + length) <= m_length);
-        return Utf32View(m_codepoints + offset, length);
+        return Utf32View(m_code_pointss + offset, length);
     }
 
 private:
-    const u32* m_codepoints { nullptr };
+    const u32* m_code_pointss { nullptr };
     size_t m_length { 0 };
 };
 
