@@ -92,24 +92,6 @@ String Node::text_content() const
     return builder.to_string();
 }
 
-const Element* Node::next_element_sibling() const
-{
-    for (auto* node = next_sibling(); node; node = node->next_sibling()) {
-        if (node->is_element())
-            return static_cast<const Element*>(node);
-    }
-    return nullptr;
-}
-
-const Element* Node::previous_element_sibling() const
-{
-    for (auto* node = previous_sibling(); node; node = node->previous_sibling()) {
-        if (node->is_element())
-            return static_cast<const Element*>(node);
-    }
-    return nullptr;
-}
-
 RefPtr<LayoutNode> Node::create_layout_node(const CSS::StyleProperties*)
 {
     return nullptr;

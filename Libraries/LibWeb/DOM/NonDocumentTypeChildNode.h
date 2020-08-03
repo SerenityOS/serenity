@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,38 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <LibWeb/DOM/Node.h>
-#include <LibWeb/DOM/NonDocumentTypeChildNode.h>
+#include <AK/Forward.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/TreeNode.h>
 
 namespace Web::DOM {
 
-class CharacterData
-    : public Node
-    , public NonDocumentTypeChildNode<CharacterData> {
+template<typename NodeType>
+class NonDocumentTypeChildNode {
 public:
-    virtual ~CharacterData() override;
+    Element* previous_element_sibling()
+    {
+        for (auto* sibling = static_cast<NodeType*>(this)->previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
+            if (is<Element>(*sibling))
+                return downcast<Element>(sibling);
+        }
+        return nullptr;
+    }
 
-    const String& data() const { return m_data; }
-    void set_data(const String& data) { m_data = data; }
+    Element* next_element_sibling()
+    {
+        for (auto* sibling = static_cast<NodeType*>(this)->next_sibling(); sibling; sibling = sibling->next_sibling()) {
+            if (is<Element>(*sibling))
+                return downcast<Element>(sibling);
+        }
+        return nullptr;
+    }
 
-    virtual String text_content() const override { return m_data; }
+    const Element* previous_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->previous_element_sibling(); }
+    const Element* next_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_sibling(); }
 
 protected:
-    explicit CharacterData(Document&, NodeType, const String&);
-
-private:
-    String m_data;
+    NonDocumentTypeChildNode() { }
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::DOM::CharacterData)
-static bool is_type(const Web::DOM::Node& node) { return node.is_character_data(); }
-AK_END_TYPE_TRAITS()
