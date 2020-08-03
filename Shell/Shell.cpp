@@ -388,11 +388,6 @@ String Shell::resolve_alias(const String& name) const
 
 bool Shell::is_runnable(const StringView& name)
 {
-    // FIXME: for now, check aliases manually because cached path doesn't get
-    // updated with aliases. Should it?
-    if (!resolve_alias(name).is_null())
-        return true;
-
     if (access(name.to_string().characters(), X_OK) == 0)
         return true;
 
