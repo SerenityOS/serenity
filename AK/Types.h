@@ -42,7 +42,7 @@ typedef __INT8_TYPE__ i8;
 #ifdef __serenity__
 
 typedef __SIZE_TYPE__ size_t;
-typedef MakeSigned<size_t>::type ssize_t;
+typedef MakeSigned<size_t>::Type ssize_t;
 
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 
