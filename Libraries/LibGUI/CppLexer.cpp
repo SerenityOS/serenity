@@ -655,7 +655,7 @@ Vector<CppToken> CppLexer::lex()
                     }
                 }
             }
-            commit_token(CppToken::Type::DoubleQuotedString);
+            commit_token(CppToken::Type::RawString);
             continue;
         }
         if (size_t prefix = match_string_prefix('\''); prefix > 0) {
