@@ -118,7 +118,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen
 
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
-            if (Thread::current()->block<Thread::AcceptBlocker>(*accepting_socket_description).was_interrupted())
+            if (Thread::current()->block<Thread::AcceptBlocker>(nullptr, *accepting_socket_description).was_interrupted())
                 return -EINTR;
         } else {
             return -EAGAIN;

@@ -209,7 +209,7 @@ u64 Thread::sleep(u64 ticks)
 {
     ASSERT(state() == Thread::Running);
     u64 wakeup_time = g_uptime + ticks;
-    auto ret = Thread::current()->block<Thread::SleepBlocker>(wakeup_time);
+    auto ret = Thread::current()->block<Thread::SleepBlocker>(nullptr, wakeup_time);
     if (wakeup_time > g_uptime) {
         ASSERT(ret.was_interrupted());
     }
@@ -219,7 +219,7 @@ u64 Thread::sleep(u64 ticks)
 u64 Thread::sleep_until(u64 wakeup_time)
 {
     ASSERT(state() == Thread::Running);
-    auto ret = Thread::current()->block<Thread::SleepBlocker>(wakeup_time);
+    auto ret = Thread::current()->block<Thread::SleepBlocker>(nullptr, wakeup_time);
     if (wakeup_time > g_uptime)
         ASSERT(ret.was_interrupted());
     return wakeup_time;

@@ -146,7 +146,7 @@ int Process::sys$join_thread(int tid, void** exit_value)
 
     // NOTE: pthread_join() cannot be interrupted by signals. Only by death.
     for (;;) {
-        auto result = current_thread->block<Thread::JoinBlocker>(*thread, joinee_exit_value);
+        auto result = current_thread->block<Thread::JoinBlocker>(nullptr, *thread, joinee_exit_value);
         if (result == Thread::BlockResult::InterruptedByDeath) {
             // NOTE: This cleans things up so that Thread::finalize() won't
             //       get confused about a missing joiner when finalizing the joinee.

@@ -27,6 +27,7 @@
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
+#include <AK/Time.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
@@ -131,26 +132,21 @@ bool Thread::ConnectBlocker::should_unblock(Thread&)
 Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
+}
+
+timespec* Thread::WriteBlocker::override_timeout(timespec* timeout)
+{
+    auto& description =  blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            timeval deadline = Scheduler::time_since_boot();
-            deadline.tv_sec += socket.send_timeout().tv_sec;
-            deadline.tv_usec += socket.send_timeout().tv_usec;
-            deadline.tv_sec += (socket.send_timeout().tv_usec / 1000000) * 1;
-            deadline.tv_usec %= 1000000;
-            m_deadline = deadline;
+            timeval_to_timespec(Scheduler::time_since_boot(), m_deadline);
+            timespec_add_timeval(m_deadline, socket.send_timeout(), m_deadline);
+            if (!timeout || m_deadline < *timeout)
+                return &m_deadline;
         }
     }
-}
-
-bool Thread::WriteBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
-{
-    if (m_deadline.has_value()) {
-        bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
-        return timed_out || blocked_description().can_write();
-    }
-    return should_unblock(thread);
+    return timeout;
 }
 
 bool Thread::WriteBlocker::should_unblock(Thread&)
@@ -161,26 +157,21 @@ bool Thread::WriteBlocker::should_unblock(Thread&)
 Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
+}
+
+timespec* Thread::ReadBlocker::override_timeout(timespec* timeout)
+{
+    auto& description = blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            timeval deadline = Scheduler::time_since_boot();
-            deadline.tv_sec += socket.receive_timeout().tv_sec;
-            deadline.tv_usec += socket.receive_timeout().tv_usec;
-            deadline.tv_sec += (socket.receive_timeout().tv_usec / 1000000) * 1;
-            deadline.tv_usec %= 1000000;
-            m_deadline = deadline;
+            timeval_to_timespec(Scheduler::time_since_boot(), m_deadline);
+            timespec_add_timeval(m_deadline, socket.receive_timeout(), m_deadline);
+            if (!timeout || m_deadline < *timeout)
+                return &m_deadline;
         }
     }
-}
-
-bool Thread::ReadBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
-{
-    if (m_deadline.has_value()) {
-        bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
-        return timed_out || blocked_description().can_read();
-    }
-    return should_unblock(thread);
+    return timeout;
 }
 
 bool Thread::ReadBlocker::should_unblock(Thread&)
@@ -210,22 +201,11 @@ bool Thread::SleepBlocker::should_unblock(Thread&)
     return m_wakeup_time <= g_uptime;
 }
 
-Thread::SelectBlocker::SelectBlocker(const timespec& ts, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
-    : m_select_timeout(ts)
-    , m_select_has_timeout(select_has_timeout)
-    , m_select_read_fds(read_fds)
+Thread::SelectBlocker::SelectBlocker(const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
+    : m_select_read_fds(read_fds)
     , m_select_write_fds(write_fds)
     , m_select_exceptional_fds(except_fds)
 {
-}
-
-bool Thread::SelectBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
-{
-    if (m_select_has_timeout) {
-        if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec * 1000 >= m_select_timeout.tv_nsec))
-            return true;
-    }
-    return should_unblock(thread);
 }
 
 bool Thread::SelectBlocker::should_unblock(Thread& thread)
@@ -317,10 +297,16 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         /* don't know, don't care */
         return;
     case Thread::Blocked:
+    {
         ASSERT(m_blocker != nullptr);
-        if (m_blocker->should_unblock(*this, now_sec, now_usec))
+        timespec now;
+        now.tv_sec = now_sec,
+        now.tv_nsec = now_usec * 1000ull;
+        bool timed_out = m_blocker_timeout && now >= *m_blocker_timeout;
+        if (timed_out || m_blocker->should_unblock(*this))
             unblock();
         return;
+    }
     case Thread::Skip1SchedulerPass:
         set_state(Thread::Skip0SchedulerPasses);
         return;

@@ -48,7 +48,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         return KResult(-EINVAL);
     }
 
-    if (Thread::current()->block<Thread::WaitBlocker>(options, waitee_pid).was_interrupted())
+    if (Thread::current()->block<Thread::WaitBlocker>(nullptr, options, waitee_pid).was_interrupted())
         return KResult(-EINTR);
 
     ScopedSpinLock lock(g_processes_lock);

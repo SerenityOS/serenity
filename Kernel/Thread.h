@@ -126,13 +126,10 @@ public:
     class Blocker {
     public:
         virtual ~Blocker() { }
-        virtual bool should_unblock(Thread& thread, time_t, long)
-        {
-            return should_unblock(thread);
-        }
         virtual bool should_unblock(Thread&) = 0;
         virtual const char* state_string() const = 0;
         virtual bool is_reason_signal() const { return false; }
+        virtual timespec* override_timeout(timespec* timeout) { return timeout; }
         void set_interrupted_by_death() { m_was_interrupted_by_death = true; }
         bool was_interrupted_by_death() const { return m_was_interrupted_by_death; }
         void set_interrupted_by_signal() { m_was_interrupted_while_blocked = true; }
@@ -184,23 +181,23 @@ public:
     class WriteBlocker final : public FileDescriptionBlocker {
     public:
         explicit WriteBlocker(const FileDescription&);
-        virtual bool should_unblock(Thread&, time_t, long) override;
         virtual bool should_unblock(Thread&) override;
         virtual const char* state_string() const override { return "Writing"; }
+        virtual timespec* override_timeout(timespec*) override;
 
     private:
-        Optional<timeval> m_deadline;
+        timespec m_deadline;
     };
 
     class ReadBlocker final : public FileDescriptionBlocker {
     public:
         explicit ReadBlocker(const FileDescription&);
-        virtual bool should_unblock(Thread&, time_t, long) override;
         virtual bool should_unblock(Thread&) override;
         virtual const char* state_string() const override { return "Reading"; }
+        virtual timespec* override_timeout(timespec*) override;
 
     private:
-        Optional<timeval> m_deadline;
+        timespec m_deadline;
     };
 
     class ConditionBlocker final : public Blocker {
@@ -227,14 +224,11 @@ public:
     class SelectBlocker final : public Blocker {
     public:
         typedef Vector<int, FD_SETSIZE> FDVector;
-        SelectBlocker(const timespec& ts, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds);
-        virtual bool should_unblock(Thread&, time_t, long) override;
+        SelectBlocker(const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds);
         virtual bool should_unblock(Thread&) override;
         virtual const char* state_string() const override { return "Selecting"; }
 
     private:
-        timespec m_select_timeout;
-        bool m_select_has_timeout { false };
         const FDVector& m_select_read_fds;
         const FDVector& m_select_write_fds;
         const FDVector& m_select_exceptional_fds;
@@ -345,7 +339,7 @@ public:
     };
 
     template<typename T, class... Args>
-    [[nodiscard]] BlockResult block(Args&&... args)
+    [[nodiscard]] BlockResult block(timespec* timeout, Args&&... args)
     {
         T t(forward<Args>(args)...);
 
@@ -361,6 +355,7 @@ public:
             }
 
             m_blocker = &t;
+            m_blocker_timeout = t.override_timeout(timeout);
             set_state(Thread::Blocked);
         }
 
@@ -373,6 +368,7 @@ public:
 
         // Remove ourselves...
         m_blocker = nullptr;
+        m_blocker_timeout = nullptr;
 
         if (t.was_interrupted_by_signal())
             return BlockResult::InterruptedBySignal;
@@ -385,7 +381,7 @@ public:
 
     [[nodiscard]] BlockResult block_until(const char* state_string, Function<bool()>&& condition)
     {
-        return block<ConditionBlocker>(state_string, move(condition));
+        return block<ConditionBlocker>(nullptr, state_string, move(condition));
     }
 
     BlockResult wait_on(WaitQueue& queue, const char* reason, timeval* timeout = nullptr, Atomic<bool>* lock = nullptr, Thread* beneficiary = nullptr);
@@ -552,6 +548,7 @@ private:
     size_t m_thread_specific_region_size { 0 };
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
+    timespec* m_blocker_timeout { nullptr };
     const char* m_wait_reason { nullptr };
 
     bool m_is_active { false };

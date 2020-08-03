@@ -179,7 +179,7 @@ void syscall_handler(TrapFrame* trap)
     current_thread->die_if_needed();
 
     if (current_thread->has_unmasked_pending_signals())
-        (void)current_thread->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+        (void)current_thread->block<Thread::SemiPermanentBlocker>(nullptr, Thread::SemiPermanentBlocker::Reason::Signal);
 }
 
 }
