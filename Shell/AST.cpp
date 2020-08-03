@@ -367,9 +367,15 @@ RefPtr<Value> BarewordLiteral::run(RefPtr<Shell>)
 void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
     if (metadata.is_first_in_list) {
-        editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Bold });
+        if (shell.is_runnable(m_text))
+            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Bold });
+        else {
+            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Red) });
+        }
+
         return;
     }
+
     if (m_text.starts_with('-')) {
         if (m_text == "--") {
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
