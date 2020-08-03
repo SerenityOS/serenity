@@ -188,6 +188,7 @@ private:
     virtual void save_to(JsonObject&) override;
 
     void cache_path();
+    void add_entry_to_cache(const String&);
     void stop_all_jobs();
     const Job* m_current_job { nullptr };
     LocalFrame* find_frame_containing_local_variable(const String& name);
