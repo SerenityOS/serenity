@@ -83,29 +83,7 @@ public:
     template<typename MessageType>
     OwnPtr<MessageType> wait_for_specific_message()
     {
-        // Double check we don't already have the event waiting for us.
-        // Otherwise we might end up blocked for a while for no reason.
-        for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
-            if (m_unprocessed_messages[i].message_id() == MessageType::static_message_id())
-                return m_unprocessed_messages.take(i).template release_nonnull<MessageType>();
-        }
-        for (;;) {
-            fd_set rfds;
-            FD_ZERO(&rfds);
-            FD_SET(m_connection->fd(), &rfds);
-            int rc = Core::safe_syscall(select, m_connection->fd() + 1, &rfds, nullptr, nullptr, nullptr);
-            if (rc < 0) {
-                perror("select");
-            }
-            ASSERT(rc > 0);
-            ASSERT(FD_ISSET(m_connection->fd(), &rfds));
-            if (!drain_messages_from_server())
-                return nullptr;
-            for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
-                if (m_unprocessed_messages[i].message_id() == MessageType::static_message_id())
-                    return m_unprocessed_messages.take(i).template release_nonnull<MessageType>();
-            }
-        }
+        return wait_for_specific_endpoint_message<MessageType, LocalEndpoint>();
     }
 
     bool post_message(const Message& message)
@@ -126,12 +104,40 @@ public:
     {
         bool success = post_message(RequestType(forward<Args>(args)...));
         ASSERT(success);
-        auto response = wait_for_specific_message<typename RequestType::ResponseType>();
+        auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
         ASSERT(response);
         return response;
     }
 
 private:
+    template<typename MessageType, typename Endpoint>
+    OwnPtr<MessageType> wait_for_specific_endpoint_message()
+    {
+        for (;;) {
+            // Double check we don't already have the event waiting for us.
+            // Otherwise we might end up blocked for a while for no reason.
+            for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
+                auto& message = m_unprocessed_messages[i];
+                if (message.endpoint_magic() != Endpoint::static_magic())
+                    continue;
+                if (message.message_id() == MessageType::static_message_id())
+                    return m_unprocessed_messages.take(i).template release_nonnull<MessageType>();
+            }
+
+            fd_set rfds;
+            FD_ZERO(&rfds);
+            FD_SET(m_connection->fd(), &rfds);
+            int rc = Core::safe_syscall(select, m_connection->fd() + 1, &rfds, nullptr, nullptr, nullptr);
+            if (rc < 0) {
+                perror("select");
+            }
+            ASSERT(rc > 0);
+            ASSERT(FD_ISSET(m_connection->fd(), &rfds));
+            if (!drain_messages_from_server())
+                return nullptr;
+        }
+    }
+
     bool drain_messages_from_server()
     {
         Vector<u8> bytes;
