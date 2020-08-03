@@ -26,6 +26,11 @@
 
 #pragma once
 
+typedef __UINT64_TYPE__ u64;
+typedef __UINT32_TYPE__ u32;
+typedef __UINT16_TYPE__ u16;
+typedef __UINT8_TYPE__ u8;
+
 #define UNUSED_PARAM(x) (void)x
 
 inline constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned power_of_two)
@@ -454,6 +459,36 @@ struct IsClass : public IntegralConstant<bool, __is_class(T)> {
 template<typename Base, typename Derived>
 struct IsBaseOf : public IntegralConstant<bool, __is_base_of(Base, Derived)> {
 };
+
+template<typename T>
+struct __IsIntegral : FalseType {
+};
+template<>
+struct __IsIntegral<u8> : TrueType {
+};
+template<>
+struct __IsIntegral<u16> : TrueType {
+};
+template<>
+struct __IsIntegral<u32> : TrueType {
+};
+template<>
+struct __IsIntegral<u64> : TrueType {
+};
+template<typename T>
+using IsIntegral = __IsIntegral<typename MakeUnsigned<typename RemoveCV<T>::Type>::Type>;
+
+template<typename T>
+struct __IsFloatingPoint : FalseType {
+};
+template<>
+struct __IsFloatingPoint<float> : TrueType {
+};
+template<>
+struct __IsFloatingPoint<double> : TrueType {
+};
+template<typename T>
+using IsFloatingPoint = __IsFloatingPoint<typename RemoveCV<T>::Type>;
 
 template<typename ReferenceType, typename T>
 using CopyConst =
