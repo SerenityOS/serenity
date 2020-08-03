@@ -47,7 +47,7 @@ template<typename T>
 struct TypeTrivia {
     static const size_t bits = sizeof(T) * 8;
     static const T sign_bit = 1 << (bits - 1);
-    static const T mask = typename MakeUnsigned<T>::type(-1);
+    static const T mask = typename MakeUnsigned<T>::Type(-1);
 };
 
 template<typename T, typename U>

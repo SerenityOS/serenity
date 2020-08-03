@@ -321,52 +321,52 @@ struct MakeUnsigned {
 
 template<>
 struct MakeUnsigned<signed char> {
-    typedef unsigned char type;
+    typedef unsigned char Type;
 };
 
 template<>
 struct MakeUnsigned<short> {
-    typedef unsigned short type;
+    typedef unsigned short Type;
 };
 
 template<>
 struct MakeUnsigned<int> {
-    typedef unsigned type;
+    typedef unsigned Type;
 };
 
 template<>
 struct MakeUnsigned<long> {
-    typedef unsigned long type;
+    typedef unsigned long Type;
 };
 
 template<>
 struct MakeUnsigned<long long> {
-    typedef unsigned long long type;
+    typedef unsigned long long Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned char> {
-    typedef unsigned char type;
+    typedef unsigned char Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned short> {
-    typedef unsigned short type;
+    typedef unsigned short Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned int> {
-    typedef unsigned type;
+    typedef unsigned Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned long> {
-    typedef unsigned long type;
+    typedef unsigned long Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned long long> {
-    typedef unsigned long long type;
+    typedef unsigned long long Type;
 };
 
 template<typename T>
@@ -375,52 +375,52 @@ struct MakeSigned {
 
 template<>
 struct MakeSigned<signed char> {
-    typedef signed char type;
+    typedef signed char Type;
 };
 
 template<>
 struct MakeSigned<short> {
-    typedef short type;
+    typedef short Type;
 };
 
 template<>
 struct MakeSigned<int> {
-    typedef int type;
+    typedef int Type;
 };
 
 template<>
 struct MakeSigned<long> {
-    typedef long type;
+    typedef long Type;
 };
 
 template<>
 struct MakeSigned<long long> {
-    typedef long long type;
+    typedef long long Type;
 };
 
 template<>
 struct MakeSigned<unsigned char> {
-    typedef char type;
+    typedef char Type;
 };
 
 template<>
 struct MakeSigned<unsigned short> {
-    typedef short type;
+    typedef short Type;
 };
 
 template<>
 struct MakeSigned<unsigned int> {
-    typedef int type;
+    typedef int Type;
 };
 
 template<>
 struct MakeSigned<unsigned long> {
-    typedef long type;
+    typedef long Type;
 };
 
 template<>
 struct MakeSigned<unsigned long long> {
-    typedef long long type;
+    typedef long long Type;
 };
 
 template<class T>
