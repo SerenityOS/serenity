@@ -386,6 +386,21 @@ String Shell::resolve_alias(const String& name) const
     return m_aliases.get(name).value_or({});
 }
 
+bool Shell::is_runnable(const StringView& name)
+{
+    // FIXME: for now, check aliases manually because cached path doesn't get
+    // updated with aliases. Should it?
+    if (!resolve_alias(name).is_null())
+        return true;
+
+    if (access(name.to_string().characters(), X_OK) == 0)
+        return true;
+
+    return !!binary_search(cached_path.span(), name.to_string(), [](const String& name, const String& program) -> int {
+        return strcmp(name.characters(), program.characters());
+    });
+}
+
 int Shell::run_command(const StringView& cmd)
 {
     if (cmd.is_empty())

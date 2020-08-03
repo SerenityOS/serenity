@@ -73,6 +73,7 @@ public:
     constexpr static auto global_init_file_path = "/etc/shellrc";
 
     int run_command(const StringView&);
+    bool is_runnable(const StringView&);
     RefPtr<Job> run_command(const AST::Command&);
     Vector<RefPtr<Job>> run_commands(Vector<AST::Command>&);
     bool run_file(const String&, bool explicitly_invoked = true);
