@@ -287,8 +287,8 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
                         auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
                         subcommand_ast = ast->command();
                     }
-                    AST::Node& substitute = *new AST::Join(subcommand_ast->position(), subcommand_ast, *new AST::CommandLiteral(subcommand_ast->position(), command));
-                    for (auto& subst_command : substitute.run(*this)->resolve_as_commands(*this)) {
+                    RefPtr<AST::Node> substitute = adopt(*new AST::Join(subcommand_ast->position(), subcommand_ast, adopt(*new AST::CommandLiteral(subcommand_ast->position(), command))));
+                    for (auto& subst_command : substitute->run(*this)->resolve_as_commands(*this)) {
                         if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
                             commands.append(subst_command);
                         else
@@ -596,8 +596,7 @@ Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
                 auto path_redir = (const AST::PathRedirection*)redir.ptr();
                 dbg() << "redir path " << (int)path_redir->direction << " " << path_redir->path << " <-> " << path_redir->fd;
             } else if (redir->is_fd_redirection()) {
-                auto fd_redir = (const AST::FdRedirection*)redir.ptr();
-                dbg() << "redir fd " << fd_redir->source_fd << " -> " << fd_redir->dest_fd;
+                dbg() << "redir fd " << redir->source_fd << " -> " << redir->dest_fd;
             } else if (redir->is_close_redirection()) {
                 auto close_redir = (const AST::CloseRedirection*)redir.ptr();
                 dbg() << "close fd " << close_redir->fd;
