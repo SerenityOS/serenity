@@ -132,7 +132,7 @@ public:
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);
 
-    void restore_stdin();
+    void restore_ios();
 
     u64 find_last_job_id() const;
     const Job* find_job(u64 id);
